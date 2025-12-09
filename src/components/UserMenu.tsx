@@ -19,7 +19,7 @@ export function UserMenu() {
 
   if (isLoading) {
     return (
-      <Button variant="ghost" size="sm" disabled>
+      <Button variant="ghost" size="sm" disabled className="text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
       </Button>
     );
@@ -28,9 +28,14 @@ export function UserMenu() {
   if (!user) {
     return (
       <>
-        <Button variant="default" size="sm" onClick={() => setShowAuthModal(true)}>
-          <User className="h-4 w-4 mr-2" />
-          Sign In
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => setShowAuthModal(true)}
+          className="gap-2 text-muted-foreground hover:text-foreground"
+        >
+          <User className="h-4 w-4" />
+          <span className="hidden sm:inline">Sign In</span>
         </Button>
         <AuthModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
       </>
@@ -43,33 +48,34 @@ export function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2">
+        <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
           <Avatar className="h-7 w-7">
-            <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+            <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
               {initials}
             </AvatarFallback>
           </Avatar>
-          <span className="hidden sm:inline text-sm">
+          <span className="hidden sm:inline text-sm font-normal">
             {user.user_metadata?.display_name || user.email?.split('@')[0]}
           </span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuLabel>
-          {user.email}
+      <DropdownMenuContent align="end" className="w-52 p-1">
+        <DropdownMenuLabel className="font-normal">
+          <p className="text-sm font-medium">{user.user_metadata?.display_name || 'User'}</p>
+          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <Library className="h-4 w-4 mr-2" />
+        <DropdownMenuItem className="gap-2 cursor-pointer">
+          <Library className="h-4 w-4" />
           My Decks
         </DropdownMenuItem>
-        <DropdownMenuItem>
-          <Settings className="h-4 w-4 mr-2" />
+        <DropdownMenuItem className="gap-2 cursor-pointer">
+          <Settings className="h-4 w-4" />
           Settings
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOut()} className="text-destructive">
-          <LogOut className="h-4 w-4 mr-2" />
+        <DropdownMenuItem onClick={() => signOut()} className="gap-2 cursor-pointer text-destructive focus:text-destructive">
+          <LogOut className="h-4 w-4" />
           Sign Out
         </DropdownMenuItem>
       </DropdownMenuContent>
