@@ -6,11 +6,12 @@ import { ColorPieChart } from "./ColorPieChart";
 import { PriceCalculator } from "./PriceCalculator";
 import { FormatValidator } from "./FormatValidator";
 import { SampleHand } from "./SampleHand";
+import { DeckImport } from "./DeckImport";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Trash2, Library, Edit2, Check, Copy } from "lucide-react";
+import { Trash2, Library, Edit2, Check, Copy, Download } from "lucide-react";
 import { toast } from "sonner";
 import { ScryfallCard } from "@/types/card";
 import { DeckFormat } from "@/lib/format-validation";
@@ -39,6 +40,20 @@ export function DeckPanel({ deck, onDeckChange, onClearDeck }: DeckPanelProps) {
     const deckList = exportDeckList(deck);
     navigator.clipboard.writeText(deckList);
     toast.success("Deck list copied to clipboard!");
+  };
+
+  const handleDownload = () => {
+    const deckList = exportDeckList(deck);
+    const blob = new Blob([deckList], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${deck.name.replace(/[^a-z0-9]/gi, "_")}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("Deck list downloaded!");
   };
 
   const handleAddCard = (card: ScryfallCard, board: "mainboard" | "sideboard") => {
@@ -99,19 +114,28 @@ export function DeckPanel({ deck, onDeckChange, onClearDeck }: DeckPanelProps) {
             )}
           </div>
           <div className="flex items-center gap-1">
+            <DeckImport deck={deck} onDeckChange={onDeckChange} />
             <SampleHand deck={deck} />
-            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleExport}>
-              <Copy className="h-4 w-4" />
-            </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 text-destructive hover:text-destructive"
-              onClick={onClearDeck}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
           </div>
+        </div>
+
+        <div className="flex items-center gap-1">
+          <Button size="sm" variant="ghost" className="gap-1 flex-1" onClick={handleExport}>
+            <Copy className="h-3 w-3" />
+            Copy
+          </Button>
+          <Button size="sm" variant="ghost" className="gap-1 flex-1" onClick={handleDownload}>
+            <Download className="h-3 w-3" />
+            Download
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-destructive hover:text-destructive"
+            onClick={onClearDeck}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
         </div>
       </div>
 
