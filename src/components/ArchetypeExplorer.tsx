@@ -7,85 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Deck, addCardToDeck, createEmptyDeck } from '@/lib/deck';
 import { getCardByName } from '@/lib/scryfall';
+import { ARCHETYPES, Archetype } from '@/lib/archetypes';
 import { toast } from 'sonner';
 import { Sparkles, Star, DollarSign, TrendingDown, BookOpen, Loader2, Search, Beaker } from 'lucide-react';
-
-interface Archetype {
-  id: string;
-  name: string;
-  description: string;
-  gameplan: string;
-  colorIdentity: string[];
-  offMetaScore: number;
-  budgetTier: 'budget' | 'medium' | 'expensive';
-  coreCards: string[];
-  flexCards: string[];
-  tags: string[];
-}
-
-// Sample archetypes - in production these would come from the database
-const SAMPLE_ARCHETYPES: Archetype[] = [
-  {
-    id: '1',
-    name: 'Rakdos Treasure Storm',
-    description: 'Generate massive amounts of treasures and convert them into card advantage and damage.',
-    gameplan: 'Create treasure tokens, sacrifice them for value with payoffs like Marionette Master and Reckless Fireweaver. Close games with Disciple of the Vault triggers or massive X spells.',
-    colorIdentity: ['B', 'R'],
-    offMetaScore: 78,
-    budgetTier: 'medium',
-    coreCards: ['Marionette Master', 'Reckless Fireweaver', 'Disciple of the Vault', 'Pitiless Plunderer', 'Xorn', 'Academy Manufactor', 'Goldspan Dragon', 'Kalain, Reclusive Painter'],
-    flexCards: ['Prosper, Tome-Bound', 'Mahadi, Emporium Master', 'Hoarding Ogre', 'Treasure Nabber', 'Deadly Dispute', 'Unexpected Windfall'],
-    tags: ['treasures', 'artifacts', 'aristocrats', 'combo'],
-  },
-  {
-    id: '2',
-    name: 'Simic Landfall Tempo',
-    description: 'Abuse landfall triggers with extra land drops and blink effects.',
-    gameplan: 'Play lands, trigger landfall, bounce and replay lands for repeated value. Win through massive creatures or land-based combos.',
-    colorIdentity: ['G', 'U'],
-    offMetaScore: 65,
-    budgetTier: 'budget',
-    coreCards: ['Tatyova, Benthic Druid', 'Aesi, Tyrant of Gyre Strait', 'Scute Swarm', 'Avenger of Zendikar', 'Tireless Provisioner', 'Lotus Cobra', 'Oracle of Mul Daya', 'Azusa, Lost but Seeking'],
-    flexCards: ['Roil Elemental', 'Rampaging Baloths', 'Retreat to Coralhelm', 'Kodama of the East Tree', 'Khalni Heart Expedition', 'Growth Spiral'],
-    tags: ['landfall', 'ramp', 'value', 'tokens'],
-  },
-  {
-    id: '3',
-    name: 'Jeskai Spellslinger Control',
-    description: 'Cast spells, copy them, and overwhelm opponents with value.',
-    gameplan: 'Play instant/sorcery matters cards, copy key spells, and win through spell damage or storm-like finishes.',
-    colorIdentity: ['W', 'U', 'R'],
-    offMetaScore: 55,
-    budgetTier: 'expensive',
-    coreCards: ['Thousand-Year Storm', 'Archmage Emeritus', 'Storm-Kiln Artist', 'Veyran, Voice of Duality', 'Guttersnipe', 'Young Pyromancer', 'Monastery Mentor', 'Mizzix of the Izmagnus'],
-    flexCards: ['Expressive Iteration', 'Ponder', 'Preordain', 'Brainstorm', 'Seething Song', 'Pirate\'s Pillage'],
-    tags: ['spellslinger', 'storm', 'copy', 'control'],
-  },
-  {
-    id: '4',
-    name: 'Mono-Black Reanimator',
-    description: 'Fill your graveyard and cheat massive creatures into play.',
-    gameplan: 'Use discard and mill to fill graveyard with threats, then reanimate them for lethal attacks or devastating ETB effects.',
-    colorIdentity: ['B'],
-    offMetaScore: 70,
-    budgetTier: 'medium',
-    coreCards: ['Reanimate', 'Animate Dead', 'Entomb', 'Buried Alive', 'Vilis, Broker of Blood', 'Razaketh, the Foulblooded', 'K\'rrik, Son of Yawgmoth', 'Gray Merchant of Asphodel'],
-    flexCards: ['Victimize', 'Living Death', 'Rise of the Dark Realms', 'Sheoldred, Whispering One', 'Doom Whisperer', 'Chainer, Dementia Master'],
-    tags: ['reanimator', 'graveyard', 'combo', 'big-creatures'],
-  },
-  {
-    id: '5',
-    name: 'Selesnya Enchantress',
-    description: 'Draw cards by playing enchantments and overwhelm with constellation triggers.',
-    gameplan: 'Play enchantresses to draw cards, build an enchantment-heavy board, and win through massive token generation or aura-based voltron.',
-    colorIdentity: ['G', 'W'],
-    offMetaScore: 60,
-    budgetTier: 'budget',
-    coreCards: ['Enchantress\'s Presence', 'Argothian Enchantress', 'Mesa Enchantress', 'Sanctum Weaver', 'Destiny Spinner', 'Sythis, Harvest\'s Hand', 'Setessan Champion', 'Herald of the Pantheon'],
-    flexCards: ['Sigil of the Empty Throne', 'Sphere of Safety', 'Greater Auramancy', 'Sterling Grove', 'Mirari\'s Wake', 'Ancestral Mask'],
-    tags: ['enchantments', 'card-draw', 'tokens', 'pillowfort'],
-  },
-];
 
 interface ArchetypeExplorerProps {
   onLoadArchetype: (deck: Deck) => void;
@@ -98,7 +22,7 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
   const [selectedArchetype, setSelectedArchetype] = useState<Archetype | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const filteredArchetypes = SAMPLE_ARCHETYPES.filter(archetype => {
+  const filteredArchetypes = ARCHETYPES.filter(archetype => {
     const matchesSearch = archetype.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       archetype.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       archetype.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -127,7 +51,6 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
         console.error(`Failed to load: ${cardName}`);
         failed++;
       }
-      // Rate limiting
       await new Promise(resolve => setTimeout(resolve, 100));
     }
 
@@ -163,7 +86,7 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
       <CardHeader>
         <CardTitle className="font-display flex items-center gap-2">
           <Beaker className="h-5 w-5 text-primary" />
-          Brew Recipes
+          Brew Recipes ({ARCHETYPES.length})
         </CardTitle>
         <CardDescription>
           Off-meta archetypes to inspire your next deck
@@ -210,7 +133,7 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
         </div>
 
         {/* Archetype list */}
-        <ScrollArea className="h-[400px]">
+        <ScrollArea className="h-[500px]">
           <div className="space-y-3">
             {filteredArchetypes.map((archetype) => (
               <div
@@ -295,7 +218,10 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
 
                     <Button
                       className="w-full gap-2"
-                      onClick={() => handleLoadArchetype(archetype)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleLoadArchetype(archetype);
+                      }}
                       disabled={isLoading}
                     >
                       {isLoading ? (

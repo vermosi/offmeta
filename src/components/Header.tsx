@@ -1,5 +1,6 @@
-import { Sparkles, Search, Shuffle } from "lucide-react";
+import { Sparkles, Shuffle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { UserMenu } from "@/components/UserMenu";
 
 interface HeaderProps {
   onRandomCard: () => void;
@@ -17,23 +18,24 @@ export function Header({ onRandomCard, isLoading }: HeaderProps) {
           </div>
           <div>
             <h1 className="font-display text-xl font-bold tracking-wide text-foreground">
-              Arcane <span className="text-primary text-glow">Codex</span>
+              Off<span className="text-primary text-glow">Meta</span>
             </h1>
-            <p className="text-xs text-muted-foreground">MTG Card Explorer</p>
+            <p className="text-xs text-muted-foreground">MTG Deck Brewer</p>
           </div>
         </div>
         
         <div className="flex items-center gap-3">
           <Button
-            variant="mystical"
+            variant="outline"
             size="sm"
             onClick={onRandomCard}
             disabled={isLoading}
             className="gap-2"
           >
             <Shuffle className="h-4 w-4" />
-            <span className="hidden sm:inline">Random Card</span>
+            <span className="hidden sm:inline">Random</span>
           </Button>
+          <UserMenu />
         </div>
       </div>
     </header>
