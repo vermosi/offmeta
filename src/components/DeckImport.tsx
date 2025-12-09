@@ -29,6 +29,30 @@ interface ImportResult {
   error?: string;
 }
 
+/**
+ * Strips set code, collector number, and foil markers from card names.
+ * Examples:
+ * - "An Offer You Can't Refuse (SNC) 51" → "An Offer You Can't Refuse"
+ * - "Lotus Petal (P30M) 2 *E*" → "Lotus Petal"
+ * - "Gamble (UMA) 132 *F*" → "Gamble"
+ * - "Sink into Stupor / Soporific Springs (MH3) 241" → "Sink into Stupor // Soporific Springs"
+ */
+function cleanCardName(name: string): string {
+  // Remove foil/etched markers like *F*, *E*, *S*
+  let cleaned = name.replace(/\s*\*[FES]\*\s*/gi, "").trim();
+  
+  // Remove set code and collector number pattern: (ABC) 123 or (AB1C) 123a
+  cleaned = cleaned.replace(/\s*\([A-Z0-9]{2,5}\)\s*\d+[a-z]?\s*$/i, "").trim();
+  
+  // Also handle set codes without collector numbers: (ABC)
+  cleaned = cleaned.replace(/\s*\([A-Z0-9]{2,5}\)\s*$/i, "").trim();
+  
+  // Normalize split card separator: " / " to " // "
+  cleaned = cleaned.replace(/\s+\/\s+/g, " // ");
+  
+  return cleaned;
+}
+
 function parseDeckList(text: string): ParsedLine[] {
   const lines = text.split("\n");
   const parsed: ParsedLine[] = [];
@@ -49,13 +73,13 @@ function parseDeckList(text: string): ParsedLine[] {
     // Try to match patterns like:
     // "4 Birds of Paradise"
     // "4x Birds of Paradise"
-    // "Birds of Paradise x4"
-    // "Birds of Paradise"
+    // "1 An Offer You Can't Refuse (SNC) 51"
+    // "1 Lotus Petal (P30M) 2 *E*"
     let match = trimmed.match(/^(\d+)x?\s+(.+)$/i);
     if (match) {
       parsed.push({
         quantity: parseInt(match[1], 10),
-        cardName: match[2].trim(),
+        cardName: cleanCardName(match[2]),
         line: trimmed,
       });
       continue;
@@ -66,7 +90,7 @@ function parseDeckList(text: string): ParsedLine[] {
     if (match) {
       parsed.push({
         quantity: parseInt(match[2], 10),
-        cardName: match[1].trim(),
+        cardName: cleanCardName(match[1]),
         line: trimmed,
       });
       continue;
@@ -76,7 +100,7 @@ function parseDeckList(text: string): ParsedLine[] {
     if (trimmed.length > 0) {
       parsed.push({
         quantity: 1,
-        cardName: trimmed,
+        cardName: cleanCardName(trimmed),
         line: trimmed,
       });
     }
@@ -194,13 +218,13 @@ export function DeckImport({ deck, onDeckChange }: DeckImportProps) {
           <>
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Paste your deck list below. Supports formats like:
+                Paste your deck list below. Supports Moxfield, Archidekt, and other formats:
               </p>
               <div className="text-xs bg-muted p-3 rounded-lg font-mono space-y-1">
                 <p>4 Birds of Paradise</p>
-                <p>4x Lightning Bolt</p>
+                <p>1 Lightning Bolt (2X2) 117</p>
+                <p>1 Mox Diamond (STH) 138 *F*</p>
                 <p>2 Counterspell</p>
-                <p>1 Black Lotus</p>
               </div>
               <Textarea
                 value={deckText}
