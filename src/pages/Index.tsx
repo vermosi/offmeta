@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { SearchBar } from "@/components/SearchBar";
@@ -8,11 +8,13 @@ import { EmptyState } from "@/components/EmptyState";
 import { SearchFilters } from "@/components/SearchFilters";
 import { DeckPanel } from "@/components/DeckPanel";
 import { DeckMobileToggle } from "@/components/DeckMobileToggle";
+import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
 import { Button } from "@/components/ui/button";
 import { searchCards, getRandomCard } from "@/lib/scryfall";
 import { createEmptyDeck, addCardToDeck, Deck } from "@/lib/deck";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { ScryfallCard } from "@/types/card";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Keyboard } from "lucide-react";
 import { toast } from "sonner";
 
 const Index = () => {
@@ -21,6 +23,9 @@ const Index = () => {
   const [selectedCard, setSelectedCard] = useState<ScryfallCard | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [deck, setDeck] = useState<Deck>(createEmptyDeck());
+  const [hoveredCard, setHoveredCard] = useState<ScryfallCard | null>(null);
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   
   // Filters
   const [showFilters, setShowFilters] = useState(false);
@@ -55,19 +60,70 @@ const Index = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    setCurrentPage(1);
-    setHasSearched(true);
-  };
+  // Keyboard shortcuts
+  const handleAddHoveredToDeck = useCallback(() => {
+    if (hoveredCard) {
+      setDeck((prev) => addCardToDeck(prev, hoveredCard, "mainboard"));
+      toast.success(`Added ${hoveredCard.name} to deck`);
+    }
+  }, [hoveredCard]);
 
-  const handleRandomCard = async () => {
+  const handleAddHoveredToSideboard = useCallback(() => {
+    if (hoveredCard) {
+      setDeck((prev) => addCardToDeck(prev, hoveredCard, "sideboard"));
+      toast.success(`Added ${hoveredCard.name} to sideboard`);
+    }
+  }, [hoveredCard]);
+
+  const handleViewHoveredDetails = useCallback(() => {
+    if (hoveredCard) {
+      setSelectedCard(hoveredCard);
+    }
+  }, [hoveredCard]);
+
+  const handleRandomCard = useCallback(async () => {
     try {
       const card = await getRandomCard();
       setSelectedCard(card);
     } catch (error) {
       toast.error("Failed to fetch random card");
     }
+  }, []);
+
+  const handleFocusSearch = useCallback(() => {
+    // Find the search input and focus it
+    const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
+    if (searchInput) {
+      searchInput.focus();
+    }
+  }, []);
+
+  const handleEscape = useCallback(() => {
+    if (selectedCard) {
+      setSelectedCard(null);
+    } else if (showShortcutsHelp) {
+      setShowShortcutsHelp(false);
+    } else {
+      setSearchQuery("");
+      setSelectedColors([]);
+      setSelectedRarities([]);
+    }
+  }, [selectedCard, showShortcutsHelp]);
+
+  useKeyboardShortcuts([
+    { key: "a", description: "Add to deck", action: handleAddHoveredToDeck },
+    { key: "s", description: "Add to sideboard", action: handleAddHoveredToSideboard },
+    { key: "v", description: "View details", action: handleViewHoveredDetails },
+    { key: "r", description: "Random card", action: handleRandomCard },
+    { key: "/", description: "Focus search", action: handleFocusSearch },
+    { key: "Escape", description: "Clear/Close", action: handleEscape },
+    { key: "?", shift: true, description: "Show shortcuts", action: () => setShowShortcutsHelp(true) },
+  ]);
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+    setHasSearched(true);
   };
 
   const handleColorToggle = (color: string) => {
@@ -137,15 +193,27 @@ const Index = () => {
           {/* Search Section */}
           <div className="mb-8 space-y-4">
             <SearchBar onSearch={handleSearch} isLoading={isSearching} />
-            <SearchFilters
-              selectedColors={selectedColors}
-              selectedRarities={selectedRarities}
-              onColorToggle={handleColorToggle}
-              onRarityToggle={handleRarityToggle}
-              onClearFilters={handleClearFilters}
-              isOpen={showFilters}
-              onToggle={() => setShowFilters(!showFilters)}
-            />
+            <div className="flex items-center justify-between">
+              <SearchFilters
+                selectedColors={selectedColors}
+                selectedRarities={selectedRarities}
+                onColorToggle={handleColorToggle}
+                onRarityToggle={handleRarityToggle}
+                onClearFilters={handleClearFilters}
+                isOpen={showFilters}
+                onToggle={() => setShowFilters(!showFilters)}
+              />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2 text-muted-foreground"
+                onClick={() => setShowShortcutsHelp(true)}
+              >
+                <Keyboard className="h-4 w-4" />
+                <span className="hidden sm:inline">Shortcuts</span>
+                <kbd className="text-xs bg-muted px-1.5 py-0.5 rounded hidden sm:inline">?</kbd>
+              </Button>
+            </div>
           </div>
 
           {/* Results count */}
@@ -173,6 +241,8 @@ const Index = () => {
                     <CardItemWithDeck
                       card={card}
                       quantity={getCardQuantity(card.id)}
+                      isHovered={hoveredCard?.id === card.id}
+                      onHover={(hovered) => setHoveredCard(hovered ? card : null)}
                       onAddToDeck={() => handleAddToDeck(card)}
                       onAddToSideboard={() => handleAddToSideboard(card)}
                       onViewDetails={() => setSelectedCard(card)}
@@ -230,6 +300,12 @@ const Index = () => {
         card={selectedCard}
         open={!!selectedCard}
         onClose={() => setSelectedCard(null)}
+      />
+
+      {/* Keyboard Shortcuts Help */}
+      <KeyboardShortcutsHelp
+        open={showShortcutsHelp}
+        onClose={() => setShowShortcutsHelp(false)}
       />
     </div>
   );

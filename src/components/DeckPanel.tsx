@@ -7,6 +7,7 @@ import { PriceCalculator } from "./PriceCalculator";
 import { FormatValidator } from "./FormatValidator";
 import { SampleHand } from "./SampleHand";
 import { DeckImport } from "./DeckImport";
+import { DeckStats } from "./DeckStats";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -140,13 +141,14 @@ export function DeckPanel({ deck, onDeckChange, onClearDeck }: DeckPanelProps) {
       </div>
 
       {/* Stats */}
-      <ScrollArea className="flex-shrink-0 max-h-80">
+      <ScrollArea className="flex-shrink-0 max-h-[420px]">
         <div className="p-4 space-y-4 border-b border-border">
           <FormatValidator
             deck={deck}
             selectedFormat={selectedFormat}
             onFormatChange={setSelectedFormat}
           />
+          <DeckStats deck={deck} />
           <ManaCurveChart deck={deck} />
           <ColorPieChart deck={deck} />
           <PriceCalculator deck={deck} />

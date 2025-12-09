@@ -1,12 +1,15 @@
+import { useState, useEffect } from "react";
 import { ScryfallCard } from "@/types/card";
 import { getCardImage, getRarityColor } from "@/lib/scryfall";
+import { isInCollection, getCollectionQuantity } from "@/lib/collection";
 import { cn } from "@/lib/utils";
-import { Plus, Eye } from "lucide-react";
-import { useState } from "react";
+import { Plus, Eye, BookMarked } from "lucide-react";
 
 interface CardItemWithDeckProps {
   card: ScryfallCard;
   quantity: number;
+  isHovered: boolean;
+  onHover: (hovered: boolean) => void;
   onAddToDeck: () => void;
   onAddToSideboard: () => void;
   onViewDetails: () => void;
@@ -15,24 +18,34 @@ interface CardItemWithDeckProps {
 export function CardItemWithDeck({
   card,
   quantity,
+  isHovered,
+  onHover,
   onAddToDeck,
   onAddToSideboard,
   onViewDetails,
 }: CardItemWithDeckProps) {
   const imageUrl = getCardImage(card, "normal");
   const rarityClass = getRarityColor(card.rarity);
-  const [isHovered, setIsHovered] = useState(false);
+  const [inCollection, setInCollection] = useState(false);
+  const [collectionQty, setCollectionQty] = useState({ regular: 0, foil: 0 });
+
+  useEffect(() => {
+    setInCollection(isInCollection(card.id));
+    setCollectionQty(getCollectionQuantity(card.id));
+  }, [card.id]);
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     onAddToSideboard();
   };
 
+  const totalOwned = collectionQty.regular + collectionQty.foil;
+
   return (
     <div
       className="group relative w-full aspect-[2.5/3.5] rounded-xl overflow-hidden card-hover cursor-pointer"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => onHover(true)}
+      onMouseLeave={() => onHover(false)}
       onContextMenu={handleContextMenu}
     >
       <img
@@ -42,10 +55,18 @@ export function CardItemWithDeck({
         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
       />
       
-      {/* Quantity badge */}
+      {/* Quantity badge (in deck) */}
       {quantity > 0 && (
         <div className="absolute top-2 left-2 h-7 w-7 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold shadow-lg z-10">
           {quantity}
+        </div>
+      )}
+
+      {/* Collection indicator */}
+      {inCollection && (
+        <div className="absolute top-2 left-10 flex items-center gap-1 bg-green-500/90 text-white px-1.5 py-0.5 rounded-full text-xs font-semibold shadow-lg z-10">
+          <BookMarked className="h-3 w-3" />
+          {totalOwned}
         </div>
       )}
       
@@ -78,6 +99,7 @@ export function CardItemWithDeck({
         >
           <Plus className="h-4 w-4" />
           Add to Deck
+          <kbd className="ml-auto text-xs opacity-70 bg-black/20 px-1 rounded">A</kbd>
         </button>
         <button
           onClick={(e) => {
@@ -88,6 +110,7 @@ export function CardItemWithDeck({
         >
           <Eye className="h-4 w-4" />
           View Details
+          <kbd className="ml-auto text-xs opacity-70 bg-black/20 px-1 rounded">V</kbd>
         </button>
       </div>
 
