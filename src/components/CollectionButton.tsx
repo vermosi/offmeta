@@ -5,7 +5,6 @@ import {
   addToCollection, 
   removeFromCollection, 
   getCollectionQuantity,
-  isInCollection 
 } from "@/lib/collection";
 import { ScryfallCard } from "@/types/card";
 import { BookMarked, Plus, Minus, Sparkles, Check } from "lucide-react";
@@ -43,8 +42,10 @@ export function CollectionButton({ card, variant = "icon" }: CollectionButtonPro
             variant="ghost"
             size="icon"
             className={cn(
-              "h-8 w-8",
-              inCollection && "text-primary"
+              "h-8 w-8 transition-colors",
+              inCollection 
+                ? "text-primary hover:text-primary/80" 
+                : "text-muted-foreground hover:text-foreground"
             )}
           >
             {inCollection ? (
@@ -57,35 +58,38 @@ export function CollectionButton({ card, variant = "icon" }: CollectionButtonPro
           <Button
             variant={inCollection ? "secondary" : "outline"}
             size="sm"
-            className="gap-2"
+            className="gap-2 h-9"
           >
             <BookMarked className="h-4 w-4" />
             {inCollection ? `Owned (${totalOwned})` : "Add to Collection"}
           </Button>
         )}
       </PopoverTrigger>
-      <PopoverContent className="w-64" align="end">
-        <div className="space-y-3">
-          <h4 className="font-semibold text-sm">Collection</h4>
-          
+      <PopoverContent className="w-56 p-0" align="end">
+        <div className="p-3 border-b border-border/50">
+          <h4 className="font-medium text-sm text-foreground">Collection</h4>
+        </div>
+        <div className="p-3 space-y-3">
           {/* Regular copies */}
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Regular</span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <Button
                 variant="outline"
                 size="icon"
-                className="h-7 w-7"
+                className="h-7 w-7 rounded-md"
                 onClick={() => handleRemove(false)}
                 disabled={quantities.regular === 0}
               >
                 <Minus className="h-3 w-3" />
               </Button>
-              <span className="w-8 text-center font-semibold">{quantities.regular}</span>
+              <span className="w-8 text-center font-semibold text-sm tabular-nums">
+                {quantities.regular}
+              </span>
               <Button
                 variant="outline"
                 size="icon"
-                className="h-7 w-7"
+                className="h-7 w-7 rounded-md"
                 onClick={() => handleAdd(false)}
               >
                 <Plus className="h-3 w-3" />
@@ -95,25 +99,27 @@ export function CollectionButton({ card, variant = "icon" }: CollectionButtonPro
           
           {/* Foil copies */}
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground flex items-center gap-1">
-              <Sparkles className="h-3 w-3" />
+            <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+              <Sparkles className="h-3 w-3 text-amber-500" />
               Foil
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <Button
                 variant="outline"
                 size="icon"
-                className="h-7 w-7"
+                className="h-7 w-7 rounded-md"
                 onClick={() => handleRemove(true)}
                 disabled={quantities.foil === 0}
               >
                 <Minus className="h-3 w-3" />
               </Button>
-              <span className="w-8 text-center font-semibold">{quantities.foil}</span>
+              <span className="w-8 text-center font-semibold text-sm tabular-nums">
+                {quantities.foil}
+              </span>
               <Button
                 variant="outline"
                 size="icon"
-                className="h-7 w-7"
+                className="h-7 w-7 rounded-md"
                 onClick={() => handleAdd(true)}
               >
                 <Plus className="h-3 w-3" />

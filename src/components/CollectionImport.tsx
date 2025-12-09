@@ -1,15 +1,13 @@
 import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Upload, FileUp, Loader2, CheckCircle2, XCircle, Package } from 'lucide-react';
+import { Upload, Loader2, CheckCircle2, XCircle, Package, FileUp } from 'lucide-react';
 
 interface CollectionCard {
   name: string;
@@ -35,7 +33,6 @@ export function CollectionImport() {
     const lines = content.trim().split('\n');
     const cards: CollectionCard[] = [];
 
-    // Try to detect header
     const firstLine = lines[0].toLowerCase();
     const hasHeader = firstLine.includes('name') || firstLine.includes('quantity') || firstLine.includes('card');
     const startIndex = hasHeader ? 1 : 0;
@@ -43,11 +40,6 @@ export function CollectionImport() {
     for (let i = startIndex; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue;
-
-      // Try different formats
-      // Format 1: CSV with columns (Name, Set, Quantity, Foil)
-      // Format 2: Simple "Quantity Name"
-      // Format 3: "Name,Set,Quantity"
 
       const csvMatch = line.match(/^"?([^",]+)"?,?\s*"?([^",]*)"?,?\s*(\d+)?,?\s*(\d+)?/);
       const simpleMatch = line.match(/^(\d+)x?\s+(.+)$/);
@@ -71,7 +63,6 @@ export function CollectionImport() {
           quantity: parseInt(reverseMatch[2]),
         });
       } else if (line.length > 2) {
-        // Just a card name
         cards.push({
           name: line,
           quantity: 1,
@@ -107,7 +98,6 @@ export function CollectionImport() {
       const card = cards[i];
       
       try {
-        // Upsert into collection
         const { error } = await supabase
           .from('collection_cards')
           .upsert({
@@ -131,7 +121,6 @@ export function CollectionImport() {
 
       setProgress(((i + 1) / total) * 100);
 
-      // Rate limiting
       if (i % 10 === 0) {
         await new Promise(resolve => setTimeout(resolve, 50));
       }
@@ -161,20 +150,16 @@ export function CollectionImport() {
   };
 
   return (
-    <Card className="bg-card border-border">
-      <CardHeader>
-        <CardTitle className="font-display flex items-center gap-2">
-          <Package className="h-5 w-5 text-primary" />
-          Import Collection
-        </CardTitle>
-        <CardDescription>
-          Upload a CSV or paste your card list to track your collection
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="rounded-xl border border-border/50 bg-card/50">
+      <div className="flex items-center gap-2 p-4 border-b border-border/50">
+        <Package className="h-4 w-4 text-muted-foreground" />
+        <span className="text-sm font-medium text-foreground">Import Collection</span>
+      </div>
+
+      <div className="p-4 space-y-4">
         {!user && (
-          <div className="p-4 rounded-lg bg-muted text-center">
-            <p className="text-sm text-muted-foreground mb-2">
+          <div className="p-4 rounded-lg bg-muted/50 border border-border/50 text-center">
+            <p className="text-sm text-muted-foreground">
               Sign in to save your collection
             </p>
           </div>
@@ -182,39 +167,37 @@ export function CollectionImport() {
 
         {/* File upload */}
         <div className="space-y-2">
-          <Label>Upload CSV File</Label>
-          <div className="flex gap-2">
+          <Label className="text-xs text-muted-foreground">Upload CSV File</Label>
+          <div className="relative">
             <Input
               type="file"
               accept=".csv,.txt"
               onChange={handleFileUpload}
-              className="flex-1"
+              className="h-9 file:mr-3 file:h-7 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-muted file:text-muted-foreground hover:file:bg-muted/80"
             />
           </div>
         </div>
 
         {/* Or paste text */}
         <div className="space-y-2">
-          <Label>Or Paste Card List</Label>
+          <Label className="text-xs text-muted-foreground">Or Paste Card List</Label>
           <Textarea
             placeholder={`Supported formats:
 4 Birds of Paradise
 Lightning Bolt, M21, 2
-"Llanowar Elves", "M19", 4, 2
-
-Name, Set (optional), Quantity, Foil Quantity`}
+"Llanowar Elves", "M19", 4, 2`}
             value={csvContent}
             onChange={(e) => setCsvContent(e.target.value)}
-            rows={8}
-            className="font-mono text-sm"
+            rows={6}
+            className="font-mono text-xs resize-none"
           />
         </div>
 
         {/* Progress */}
         {isImporting && (
           <div className="space-y-2">
-            <Progress value={progress} />
-            <p className="text-sm text-muted-foreground text-center">
+            <Progress value={progress} className="h-1.5" />
+            <p className="text-xs text-muted-foreground text-center">
               Importing... {Math.round(progress)}%
             </p>
           </div>
@@ -222,24 +205,24 @@ Name, Set (optional), Quantity, Foil Quantity`}
 
         {/* Results */}
         {result && (
-          <div className="p-4 rounded-lg bg-muted space-y-2">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1 text-green-500">
+          <div className="p-3 rounded-lg bg-muted/50 border border-border/50 space-y-2">
+            <div className="flex items-center gap-4 text-sm">
+              <div className="flex items-center gap-1.5 text-emerald-500">
                 <CheckCircle2 className="h-4 w-4" />
                 <span>{result.success} imported</span>
               </div>
               {result.failed > 0 && (
-                <div className="flex items-center gap-1 text-red-500">
+                <div className="flex items-center gap-1.5 text-red-500">
                   <XCircle className="h-4 w-4" />
                   <span>{result.failed} failed</span>
                 </div>
               )}
             </div>
             {result.errors.length > 0 && (
-              <div className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Failed: {result.errors.slice(0, 5).join(', ')}
                 {result.errors.length > 5 && ` and ${result.errors.length - 5} more`}
-              </div>
+              </p>
             )}
           </div>
         )}
@@ -247,7 +230,7 @@ Name, Set (optional), Quantity, Foil Quantity`}
         <Button
           onClick={handleImport}
           disabled={isImporting || !csvContent.trim() || !user}
-          className="w-full gap-2"
+          className="w-full h-9 gap-2"
         >
           {isImporting ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -257,10 +240,10 @@ Name, Set (optional), Quantity, Foil Quantity`}
           Import Collection
         </Button>
 
-        <p className="text-xs text-muted-foreground text-center">
+        <p className="text-[11px] text-muted-foreground text-center">
           Your collection is always private. Only you can see it.
         </p>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
