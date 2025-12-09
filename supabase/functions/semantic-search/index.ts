@@ -84,6 +84,23 @@ Examples:
 - "burn spells" → game:paper (t:instant or t:sorcery) o:"damage" o:"target"
 - "draw spells" → game:paper (t:instant or t:sorcery) o:"draw"
 
+Set/Universe filters (use 'e:' for set code when user mentions these):
+- Avatar / Avatar: The Last Airbender / ATLA → e:tla (or e:tle for Eternal/Commander cards)
+- Final Fantasy / FF → e:fin (or e:fic for Commander)
+- Fallout → e:pip
+- Lord of the Rings / LOTR / LotR → e:ltr (or e:ltc for Commander)
+- Warhammer / 40k / WH40K → e:40k
+- Doctor Who → e:who
+- Marvel / Spider-Man → e:spm (or e:mar for Marvel Universe)
+- Jurassic World → e:rex
+- Assassin's Creed → e:acr
+- Bloomburrow → e:blb
+- Duskmourn → e:dsk
+- Modern Horizons 3 → e:mh3
+- Murders at Karlov Manor → e:mkm
+- Outlaws of Thunder Junction → e:otj
+- Wilds of Eldraine → e:woe
+
 Format restrictions (add if mentioned):
 - Commander/EDH legal: f:commander
 - Modern legal: f:modern
@@ -98,6 +115,11 @@ Budget considerations:
 - Cheap/budget cards: usd<5
 - Very cheap: usd<1
 - Expensive: usd>20
+
+Examples with sets:
+- "Avatar creatures" → game:paper e:tla t:creature
+- "Final Fantasy commanders" → game:paper e:fic t:legendary t:creature
+- "LOTR hobbits" → game:paper e:ltr t:halfling
 
 Remember: Return ONLY the Scryfall query, no explanation or formatting.`;
 
