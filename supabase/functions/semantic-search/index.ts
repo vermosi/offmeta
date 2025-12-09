@@ -56,7 +56,8 @@ serve(async (req) => {
     // Build the semantic search prompt
     const systemPrompt = `You are an expert Magic: The Gathering card search assistant. Your job is to translate natural language queries into Scryfall search syntax.
 
-CRITICAL MTG TERMINOLOGY:
+CRITICAL RULES:
+- ALWAYS include "game:paper" in every query to exclude digital-only cards (MTG Arena, MTGO exclusives).
 - "Spells" means ONLY instants and sorceries (t:instant or t:sorcery). Lands, creatures, artifacts, enchantments, and planeswalkers are NOT spells when searching.
 - If the user asks for "spells", ALWAYS include (t:instant or t:sorcery) in the query.
 - "Ramp spells" = instants/sorceries that add mana or search for lands
@@ -69,19 +70,19 @@ Given a user's natural language query about MTG cards, you must:
 3. Return ONLY the Scryfall query string, nothing else
 
 Examples:
-- "spells that add mana" → (t:instant or t:sorcery) o:"add" o:"mana"
-- "cards that double ETB effects" → o:"whenever" o:"enters" (o:"double" or o:"twice" or o:"additional")
-- "Rakdos sac outlets without mana costs" → c:br o:"sacrifice" -o:"{" t:creature
-- "cheap green ramp spells" → c:g cmc<=2 (t:instant or t:sorcery) (o:"add" o:"mana" or o:"search" o:"land")
-- "blue counterspells that draw cards" → c:u (t:instant or t:sorcery) o:"counter" o:"draw"
-- "creatures that make treasure tokens" → t:creature o:"create" o:"treasure"
-- "graveyard recursion in black" → c:b (o:"return" o:"graveyard" or o:"reanimate")
-- "white board wipes" → c:w o:"destroy all"
-- "lands that tap for any color" → t:land o:"add" o:"any color"
-- "enchantments that double damage" → t:enchantment (o:"double" o:"damage" or o:"deals twice")
-- "artifacts that reduce costs" → t:artifact (o:"cost" o:"less" or o:"reduce")
-- "burn spells" → (t:instant or t:sorcery) o:"damage" o:"target"
-- "draw spells" → (t:instant or t:sorcery) o:"draw"
+- "spells that add mana" → game:paper (t:instant or t:sorcery) o:"add" o:"mana"
+- "cards that double ETB effects" → game:paper o:"whenever" o:"enters" (o:"double" or o:"twice" or o:"additional")
+- "Rakdos sac outlets without mana costs" → game:paper c:br o:"sacrifice" -o:"{" t:creature
+- "cheap green ramp spells" → game:paper c:g cmc<=2 (t:instant or t:sorcery) (o:"add" o:"mana" or o:"search" o:"land")
+- "blue counterspells that draw cards" → game:paper c:u (t:instant or t:sorcery) o:"counter" o:"draw"
+- "creatures that make treasure tokens" → game:paper t:creature o:"create" o:"treasure"
+- "graveyard recursion in black" → game:paper c:b (o:"return" o:"graveyard" or o:"reanimate")
+- "white board wipes" → game:paper c:w o:"destroy all"
+- "lands that tap for any color" → game:paper t:land o:"add" o:"any color"
+- "enchantments that double damage" → game:paper t:enchantment (o:"double" o:"damage" or o:"deals twice")
+- "artifacts that reduce costs" → game:paper t:artifact (o:"cost" o:"less" or o:"reduce")
+- "burn spells" → game:paper (t:instant or t:sorcery) o:"damage" o:"target"
+- "draw spells" → game:paper (t:instant or t:sorcery) o:"draw"
 
 Format restrictions (add if mentioned):
 - Commander/EDH legal: f:commander
