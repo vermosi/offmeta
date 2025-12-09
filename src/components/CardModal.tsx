@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ScryfallCard } from "@/types/card";
 import { getCardImage, getRarityColor } from "@/lib/scryfall";
 import { getCardPrintings, getTCGPlayerUrl, getCardmarketUrl, CardPrinting } from "@/lib/card-printings";
+import { CollectionButton } from "./CollectionButton";
 import { ManaCost } from "./ManaSymbol";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -39,10 +40,6 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
   const imageUrl = getCardImage(card, "large");
   const rarityClass = getRarityColor(card.rarity);
 
-  const legalFormats = Object.entries(card.legalities)
-    .filter(([_, status]) => status === "legal")
-    .map(([format]) => format);
-
   // Filter English printings only, sorted by release date (newest first)
   const englishPrintings = printings
     .filter((p) => p.lang === "en")
@@ -66,8 +63,13 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
               <div className="absolute inset-0 rounded-xl glow-gold opacity-30" />
             </div>
             
+            {/* Collection button */}
+            <div className="mt-4 w-full max-w-[280px]">
+              <CollectionButton card={card} variant="full" />
+            </div>
+            
             {/* Buy buttons */}
-            <div className="mt-4 w-full max-w-[280px] space-y-2">
+            <div className="mt-2 w-full max-w-[280px] space-y-2">
               <Button
                 variant="gold"
                 className="w-full gap-2"
