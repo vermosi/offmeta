@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Search, X, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { SyntaxHelper } from "@/components/SyntaxHelper";
 import { autocomplete } from "@/lib/scryfall";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +21,9 @@ export function SearchBar({ onSearch, isLoading }: SearchBarProps) {
 
   useEffect(() => {
     const fetchSuggestions = async () => {
-      if (query.length >= 2) {
+      // Only show suggestions for simple card name searches
+      // Don't show for syntax queries
+      if (query.length >= 2 && !query.includes(":")) {
         const results = await autocomplete(query);
         setSuggestions(results.slice(0, 8));
         setShowSuggestions(true);
@@ -100,7 +103,7 @@ export function SearchBar({ onSearch, isLoading }: SearchBarProps) {
             <Input
               ref={inputRef}
               type="text"
-              placeholder="Search for Magic cards..."
+              placeholder="Search for Magic cards... (try c:green t:creature)"
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
@@ -142,10 +145,16 @@ export function SearchBar({ onSearch, isLoading }: SearchBarProps) {
         </div>
       </form>
 
+      {/* Syntax helper below search */}
+      <div className="mt-2 flex justify-start">
+        <SyntaxHelper />
+      </div>
+
       {showSuggestions && suggestions.length > 0 && (
         <div
           ref={suggestionsRef}
           className="absolute z-50 w-full mt-2 py-2 bg-popover border border-border rounded-xl shadow-2xl shadow-black/50 overflow-hidden animate-fade-in"
+          style={{ top: "56px" }}
         >
           {suggestions.map((suggestion, index) => (
             <button
