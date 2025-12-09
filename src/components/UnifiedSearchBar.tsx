@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Sparkles, Loader2, Filter, Search, Wand2, X } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface UnifiedSearchBarProps {
   onSearch: (query: string) => void;
@@ -14,10 +15,10 @@ interface UnifiedSearchBarProps {
 }
 
 const EXAMPLE_QUERIES = [
-  { label: "Double ETB effects", query: "cards that double ETB effects", semantic: true },
-  { label: "Rakdos sac outlets", query: "Rakdos sac outlets without mana costs", semantic: true },
-  { label: "Green ramp", query: "cheap green ramp spells", semantic: true },
-  { label: "Treasure makers", query: "creatures that make treasure tokens", semantic: true },
+  { label: "ETB doublers", query: "cards that double ETB effects", semantic: true },
+  { label: "Sac outlets", query: "Rakdos sac outlets without mana costs", semantic: true },
+  { label: "Ramp spells", query: "cheap green ramp spells", semantic: true },
+  { label: "Treasure", query: "creatures that make treasure tokens", semantic: true },
 ];
 
 const FORMATS = [
@@ -38,6 +39,7 @@ const COLORS = [
 ];
 
 export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps) {
+  const isMobile = useIsMobile();
   const [query, setQuery] = useState('');
   const [isSemanticMode, setIsSemanticMode] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
@@ -80,7 +82,6 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
         setIsSearching(false);
       }
     } else {
-      // Direct Scryfall syntax
       let fullQuery = query;
       if (colorIdentity.length > 0) {
         fullQuery += ` c:${colorIdentity.join('')}`;
@@ -108,47 +109,42 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
   const activeFiltersCount = (format ? 1 : 0) + (colorIdentity.length > 0 ? 1 : 0);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2 sm:space-y-3">
       {/* Main search bar */}
       <div className="flex gap-2">
         <div className="relative flex-1">
           {isSemanticMode ? (
-            <Wand2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
+            <Wand2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-primary" />
           ) : (
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
           )}
           <Input
             ref={inputRef}
             type="text"
-            placeholder={isSemanticMode 
-              ? 'Describe what you\'re looking for...' 
-              : 'Search with Scryfall syntax (e.g. t:creature c:green)'
-            }
+            placeholder={isSemanticMode ? 'Describe what you need...' : 'Scryfall syntax...'}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            className="pl-11 pr-24 h-12 text-base bg-card border-border focus:border-primary"
+            className="pl-10 sm:pl-11 pr-20 sm:pr-24 h-11 sm:h-12 text-sm sm:text-base bg-card border-border focus:border-primary"
           />
           
-          {/* Clear button */}
           {query && (
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-16 top-1/2 -translate-y-1/2 h-8 w-8"
+              className="absolute right-12 sm:right-16 top-1/2 -translate-y-1/2 h-7 w-7 sm:h-8 sm:w-8"
               onClick={() => setQuery('')}
             >
               <X className="h-4 w-4" />
             </Button>
           )}
           
-          {/* Filters popover */}
           <Popover open={showFilters} onOpenChange={setShowFilters}>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 sm:h-8 sm:w-8"
               >
                 <Filter className="h-4 w-4" />
                 {activeFiltersCount > 0 && (
@@ -161,7 +157,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-72" align="end">
+            <PopoverContent className="w-72 bg-popover" align="end">
               <div className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Format</label>
@@ -169,7 +165,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
                     <SelectTrigger>
                       <SelectValue placeholder="Any format" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-popover">
                       <SelectItem value="all">Any format</SelectItem>
                       {FORMATS.map(f => (
                         <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
@@ -187,9 +183,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
                         variant="outline"
                         size="sm"
                         onClick={() => toggleColor(c.value)}
-                        className={`w-8 h-8 p-0 font-bold ${
-                          colorIdentity.includes(c.value) ? c.color : ''
-                        }`}
+                        className={`w-9 h-9 p-0 font-bold ${colorIdentity.includes(c.value) ? c.color : ''}`}
                       >
                         {c.label}
                       </Button>
@@ -210,7 +204,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
         <Button
           onClick={handleSearch}
           disabled={isSearching || isLoading || !query.trim()}
-          className="h-12 px-5 gap-2"
+          className="h-11 sm:h-12 px-3 sm:px-5 gap-1.5"
         >
           {isSearching ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -224,31 +218,30 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
       </div>
 
       {/* Mode toggle + quick examples */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-1">
           <Button
             variant={isSemanticMode ? "default" : "outline"}
             size="sm"
             onClick={() => setIsSemanticMode(true)}
-            className="h-7 text-xs gap-1.5"
+            className="h-8 text-xs gap-1 px-2 sm:px-3"
           >
             <Wand2 className="h-3 w-3" />
-            AI Search
+            AI
           </Button>
           <Button
             variant={!isSemanticMode ? "default" : "outline"}
             size="sm"
             onClick={() => setIsSemanticMode(false)}
-            className="h-7 text-xs gap-1.5"
+            className="h-8 text-xs gap-1 px-2 sm:px-3"
           >
             <Search className="h-3 w-3" />
-            Scryfall
+            Syntax
           </Button>
         </div>
 
-        <div className="flex items-center gap-1.5 overflow-x-auto">
-          <span className="text-xs text-muted-foreground whitespace-nowrap">Try:</span>
-          {EXAMPLE_QUERIES.map((example) => (
+        <div className="flex items-center gap-1 overflow-x-auto flex-1 scrollbar-hide">
+          {EXAMPLE_QUERIES.slice(0, isMobile ? 2 : 4).map((example) => (
             <Button
               key={example.query}
               variant="ghost"
@@ -257,7 +250,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
                 setQuery(example.query);
                 setIsSemanticMode(example.semantic);
               }}
-              className="h-6 text-xs px-2 text-muted-foreground hover:text-foreground whitespace-nowrap"
+              className="h-7 text-xs px-2 text-muted-foreground hover:text-foreground whitespace-nowrap flex-shrink-0"
             >
               {example.label}
             </Button>

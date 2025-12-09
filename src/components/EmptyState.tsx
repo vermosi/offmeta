@@ -7,46 +7,30 @@ interface EmptyStateProps {
 export function EmptyState({ hasSearched }: EmptyStateProps) {
   if (hasSearched) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="relative">
-          <Search className="h-16 w-16 text-muted-foreground/50" />
-        </div>
-        <h2 className="mt-6 font-display text-2xl font-bold text-foreground">
+      <div className="flex flex-col items-center justify-center py-12 sm:py-16 text-center px-4">
+        <Search className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground/50" />
+        <h2 className="mt-4 sm:mt-6 font-display text-xl sm:text-2xl font-bold text-foreground">
           No Cards Found
         </h2>
-        <p className="mt-2 text-muted-foreground max-w-md">
-          Try adjusting your search terms or use Scryfall's advanced syntax for more specific results.
+        <p className="mt-2 text-sm sm:text-base text-muted-foreground max-w-md">
+          Try different search terms or adjust your filters.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
+    <div className="flex flex-col items-center justify-center py-10 sm:py-16 text-center px-4">
       <div className="relative">
         <div className="absolute inset-0 blur-3xl bg-primary/20 rounded-full animate-pulse" />
-        <Sparkles className="relative h-20 w-20 text-primary animate-float" />
+        <Sparkles className="relative h-14 w-14 sm:h-20 sm:w-20 text-primary animate-float" />
       </div>
-      <h2 className="mt-8 font-display text-3xl font-bold text-foreground">
+      <h2 className="mt-6 sm:mt-8 font-display text-2xl sm:text-3xl font-bold text-foreground">
         Explore the <span className="text-primary text-glow">Multiverse</span>
       </h2>
-      <p className="mt-3 text-muted-foreground max-w-md text-lg">
-        Search through thousands of Magic: The Gathering cards from every set and expansion.
+      <p className="mt-2 sm:mt-3 text-sm sm:text-base text-muted-foreground max-w-sm sm:max-w-md">
+        Use AI Search to describe cards naturally, or switch to Scryfall syntax for precise queries.
       </p>
-      <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-        <SearchTip>Try "lightning bolt"</SearchTip>
-        <SearchTip>Color: "c:blue"</SearchTip>
-        <SearchTip>Type: "t:dragon"</SearchTip>
-        <SearchTip>Set: "s:dmu"</SearchTip>
-      </div>
-    </div>
-  );
-}
-
-function SearchTip({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="px-4 py-2 bg-muted/50 rounded-lg border border-border/50 text-muted-foreground">
-      {children}
     </div>
   );
 }

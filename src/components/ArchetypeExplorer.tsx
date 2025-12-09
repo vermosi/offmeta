@@ -78,32 +78,32 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {/* Compact header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-display font-semibold">Brew Recipes</h2>
-          <p className="text-sm text-muted-foreground">{filteredArchetypes.length} off-meta archetypes</p>
+          <h2 className="text-base sm:text-lg font-display font-semibold">Brew Recipes</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground">{filteredArchetypes.length} archetypes</p>
         </div>
       </div>
 
-      {/* Filters - more compact */}
+      {/* Filters */}
       <div className="flex gap-2 flex-wrap">
-        <div className="relative flex-1 min-w-[180px]">
+        <div className="relative flex-1 min-w-[140px]">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8 h-9"
+            className="pl-8 h-9 text-sm"
           />
         </div>
         <Select value={colorFilter || "all"} onValueChange={(v) => setColorFilter(v === "all" ? "" : v)}>
-          <SelectTrigger className="w-28 h-9">
+          <SelectTrigger className="w-24 sm:w-28 h-9 text-sm">
             <SelectValue placeholder="Color" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All colors</SelectItem>
+          <SelectContent className="bg-popover">
+            <SelectItem value="all">All</SelectItem>
             <SelectItem value="W">White</SelectItem>
             <SelectItem value="U">Blue</SelectItem>
             <SelectItem value="B">Black</SelectItem>
@@ -112,11 +112,11 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
           </SelectContent>
         </Select>
         <Select value={budgetFilter || "all"} onValueChange={(v) => setBudgetFilter(v === "all" ? "" : v)}>
-          <SelectTrigger className="w-28 h-9">
+          <SelectTrigger className="w-24 sm:w-28 h-9 text-sm">
             <SelectValue placeholder="Budget" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All budgets</SelectItem>
+          <SelectContent className="bg-popover">
+            <SelectItem value="all">All</SelectItem>
             <SelectItem value="budget">Budget</SelectItem>
             <SelectItem value="medium">Medium</SelectItem>
             <SelectItem value="expensive">Expensive</SelectItem>
@@ -124,9 +124,9 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
         </Select>
       </div>
 
-      {/* Archetype list - cleaner cards */}
-      <ScrollArea className="h-[calc(100vh-320px)] min-h-[400px]">
-        <div className="space-y-2 pr-4">
+      {/* Archetype list */}
+      <ScrollArea className="h-[calc(100vh-280px)] min-h-[300px]">
+        <div className="space-y-2 pr-2 sm:pr-4">
           {filteredArchetypes.map((archetype) => {
             const isExpanded = expandedId === archetype.id;
             const isLoadingThis = loadingId === archetype.id;
@@ -142,7 +142,7 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
               >
                 {/* Main row - always visible */}
                 <button
-                  className="w-full p-3 text-left flex items-center gap-3"
+                  className="w-full p-2.5 sm:p-3 text-left flex items-center gap-2 sm:gap-3"
                   onClick={() => setExpandedId(isExpanded ? null : archetype.id)}
                 >
                   {/* Color pips */}
@@ -150,7 +150,7 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
                     {archetype.colorIdentity.map(color => (
                       <span 
                         key={color} 
-                        className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center ${getColorClass(color)}`}
+                        className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full text-[9px] sm:text-[10px] font-bold flex items-center justify-center ${getColorClass(color)}`}
                       >
                         {color}
                       </span>
@@ -159,17 +159,17 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
 
                   {/* Name & description */}
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium truncate">{archetype.name}</div>
+                    <div className="font-medium text-sm sm:text-base truncate">{archetype.name}</div>
                     <div className="text-xs text-muted-foreground truncate">{archetype.description}</div>
                   </div>
 
                   {/* Meta info */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                     <span className="text-xs text-primary flex items-center gap-0.5">
                       <TrendingDown className="h-3 w-3" />
                       {archetype.offMetaScore}%
                     </span>
-                    <span className="flex text-muted-foreground">
+                    <span className="flex text-muted-foreground hidden sm:flex">
                       {getBudgetIcon(archetype.budgetTier)}
                     </span>
                     {isExpanded ? (
