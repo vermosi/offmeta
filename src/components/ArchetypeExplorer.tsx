@@ -106,12 +106,12 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
               />
             </div>
           </div>
-          <Select value={colorFilter} onValueChange={setColorFilter}>
+          <Select value={colorFilter || "all"} onValueChange={(v) => setColorFilter(v === "all" ? "" : v)}>
             <SelectTrigger className="w-32">
               <SelectValue placeholder="Color" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Any color</SelectItem>
+              <SelectItem value="all">Any color</SelectItem>
               <SelectItem value="W">White</SelectItem>
               <SelectItem value="U">Blue</SelectItem>
               <SelectItem value="B">Black</SelectItem>
@@ -119,12 +119,12 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
               <SelectItem value="G">Green</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={budgetFilter} onValueChange={setBudgetFilter}>
+          <Select value={budgetFilter || "all"} onValueChange={(v) => setBudgetFilter(v === "all" ? "" : v)}>
             <SelectTrigger className="w-32">
               <SelectValue placeholder="Budget" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Any budget</SelectItem>
+              <SelectItem value="all">Any budget</SelectItem>
               <SelectItem value="budget">Budget</SelectItem>
               <SelectItem value="medium">Medium</SelectItem>
               <SelectItem value="expensive">Expensive</SelectItem>
