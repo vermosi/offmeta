@@ -1,6 +1,7 @@
 import { ScryfallCard } from "@/types/card";
 import { CardItem } from "./CardItem";
 import { Loader2 } from "lucide-react";
+import { CardGridSkeleton } from "./LoadingSkeletons";
 
 interface CardGridProps {
   cards: ScryfallCard[];
@@ -11,9 +12,12 @@ interface CardGridProps {
 export function CardGrid({ cards, isLoading, onCardClick }: CardGridProps) {
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <Loader2 className="h-12 w-12 text-primary animate-spin" />
-        <p className="mt-4 text-muted-foreground">Summoning cards...</p>
+      <div className="space-y-6">
+        <div className="flex items-center gap-3 text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span className="text-sm">Searching cards...</span>
+        </div>
+        <CardGridSkeleton count={12} />
       </div>
     );
   }
@@ -23,12 +27,15 @@ export function CardGrid({ cards, isLoading, onCardClick }: CardGridProps) {
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
       {cards.map((card, index) => (
         <div
           key={card.id}
           className="animate-fade-in"
-          style={{ animationDelay: `${index * 50}ms` }}
+          style={{ 
+            animationDelay: `${Math.min(index * 30, 300)}ms`,
+            animationFillMode: 'both',
+          }}
         >
           <CardItem card={card} onClick={() => onCardClick(card)} />
         </div>

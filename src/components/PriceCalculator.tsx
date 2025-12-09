@@ -42,35 +42,35 @@ export function PriceCalculator({ deck }: PriceCalculatorProps) {
   }
 
   return (
-    <div className="space-y-2">
-      <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-        <DollarSign className="h-4 w-4" />
-        Deck Price
-      </h4>
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <DollarSign className="h-4 w-4 text-muted-foreground" />
+        <span className="text-sm font-medium text-foreground">Deck Price</span>
+      </div>
       <div className="grid grid-cols-3 gap-2">
-        <div className="px-3 py-2 bg-muted/50 rounded-lg text-center">
-          <span className="text-xs text-muted-foreground block">USD</span>
+        <div className="rounded-lg border border-border/50 bg-muted/30 px-3 py-2.5 text-center transition-colors hover:bg-muted/50">
+          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider block mb-0.5">USD</span>
           <p className={cn(
-            "font-bold",
-            prices.usd > 0 ? "text-green-400" : "text-muted-foreground"
+            "text-sm font-semibold tabular-nums",
+            prices.usd > 0 ? "text-emerald-500" : "text-muted-foreground"
           )}>
             ${prices.usd.toFixed(2)}
           </p>
         </div>
-        <div className="px-3 py-2 bg-muted/50 rounded-lg text-center">
-          <span className="text-xs text-muted-foreground block">EUR</span>
+        <div className="rounded-lg border border-border/50 bg-muted/30 px-3 py-2.5 text-center transition-colors hover:bg-muted/50">
+          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider block mb-0.5">EUR</span>
           <p className={cn(
-            "font-bold",
-            prices.eur > 0 ? "text-blue-400" : "text-muted-foreground"
+            "text-sm font-semibold tabular-nums",
+            prices.eur > 0 ? "text-blue-500" : "text-muted-foreground"
           )}>
             €{prices.eur.toFixed(2)}
           </p>
         </div>
-        <div className="px-3 py-2 bg-muted/50 rounded-lg text-center">
-          <span className="text-xs text-muted-foreground block">Foil</span>
+        <div className="rounded-lg border border-border/50 bg-muted/30 px-3 py-2.5 text-center transition-colors hover:bg-muted/50">
+          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider block mb-0.5">Foil</span>
           <p className={cn(
-            "font-bold",
-            prices.usdFoil > 0 ? "text-primary" : "text-muted-foreground"
+            "text-sm font-semibold tabular-nums",
+            prices.usdFoil > 0 ? "text-amber-500" : "text-muted-foreground"
           )}>
             ${prices.usdFoil.toFixed(2)}
           </p>
