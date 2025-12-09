@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ExternalLink, ShoppingCart, Loader2 } from "lucide-react";
+import { ExternalLink, ShoppingCart, Loader2, Palette } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
@@ -45,51 +45,59 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
     .filter((p) => p.lang === "en")
     .sort((a, b) => new Date(b.released_at).getTime() - new Date(a.released_at).getTime());
 
+  const getRarityVariant = (rarity: string) => {
+    switch (rarity) {
+      case "mythic": return "mythic";
+      case "rare": return "rare";
+      case "uncommon": return "uncommon";
+      case "common": return "common";
+      default: return "secondary";
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl p-0 bg-card border-border overflow-hidden max-h-[90vh]">
+      <DialogContent className="max-w-4xl p-0 bg-background border-border/50 overflow-hidden max-h-[90vh] gap-0">
         <VisuallyHidden>
           <DialogTitle>{card.name}</DialogTitle>
         </VisuallyHidden>
-        <div className="grid md:grid-cols-[340px_1fr] gap-0 h-full">
+        <div className="grid md:grid-cols-[320px_1fr] gap-0 h-full">
           {/* Card Image */}
-          <div className="relative bg-gradient-to-br from-muted to-background p-6 flex flex-col items-center justify-start">
-            <div className="relative animate-float sticky top-6">
+          <div className="relative bg-muted/30 p-6 flex flex-col items-center justify-start border-r border-border/50">
+            <div className="relative sticky top-6">
               <img
                 src={imageUrl}
                 alt={card.name}
-                className="w-full max-w-[280px] rounded-xl shadow-2xl shadow-black/50"
+                className="w-full max-w-[260px] rounded-xl shadow-lg transition-transform duration-300 hover:scale-[1.02]"
               />
-              <div className="absolute inset-0 rounded-xl glow-gold opacity-30" />
             </div>
             
             {/* Collection button */}
-            <div className="mt-4 w-full max-w-[280px]">
+            <div className="mt-4 w-full max-w-[260px]">
               <CollectionButton card={card} variant="full" />
             </div>
             
             {/* Buy buttons */}
-            <div className="mt-2 w-full max-w-[280px] space-y-2">
+            <div className="mt-3 w-full max-w-[260px] space-y-2">
               <Button
-                variant="default"
-                className="w-full gap-2"
+                className="w-full gap-2 h-9"
                 onClick={() => window.open(getTCGPlayerUrl(card), "_blank")}
               >
                 <ShoppingCart className="h-4 w-4" />
-                Buy on TCGPlayer
+                TCGPlayer
                 {card.prices.usd && (
-                  <span className="ml-auto">${card.prices.usd}</span>
+                  <span className="ml-auto font-semibold">${card.prices.usd}</span>
                 )}
               </Button>
               <Button
                 variant="outline"
-                className="w-full gap-2"
+                className="w-full gap-2 h-9"
                 onClick={() => window.open(getCardmarketUrl(card), "_blank")}
               >
                 <ShoppingCart className="h-4 w-4" />
                 Cardmarket
                 {card.prices.eur && (
-                  <span className="ml-auto">€{card.prices.eur}</span>
+                  <span className="ml-auto font-semibold">€{card.prices.eur}</span>
                 )}
               </Button>
             </div>
@@ -98,83 +106,83 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
           {/* Card Details */}
           <div className="flex flex-col min-h-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-              <div className="p-4 border-b border-border">
-                <div className="flex items-start justify-between gap-4 mb-3">
-                  <div>
-                    <h2 className="font-display text-2xl font-bold text-foreground">
+              <div className="p-5 border-b border-border/50">
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <div className="space-y-1">
+                    <h2 className="text-xl font-semibold text-foreground tracking-tight">
                       {card.name}
                     </h2>
-                    <p className="text-muted-foreground mt-1">{card.type_line}</p>
+                    <p className="text-sm text-muted-foreground">{card.type_line}</p>
                   </div>
                   {card.mana_cost && (
                     <ManaCost cost={card.mana_cost} size="lg" />
                   )}
                 </div>
                 
-                <TabsList className="grid grid-cols-3 w-full">
-                  <TabsTrigger value="details">Details</TabsTrigger>
-                  <TabsTrigger value="printings" className="gap-1">
+                <TabsList className="w-full h-9 p-1 bg-muted/50">
+                  <TabsTrigger value="details" className="flex-1 text-xs h-7">Details</TabsTrigger>
+                  <TabsTrigger value="printings" className="flex-1 text-xs h-7 gap-1.5">
                     Printings
                     {!isLoadingPrintings && (
-                      <span className="text-xs bg-muted px-1.5 py-0.5 rounded">
+                      <span className="text-[10px] bg-background/50 px-1.5 py-0.5 rounded-full">
                         {englishPrintings.length}
                       </span>
                     )}
                   </TabsTrigger>
-                  <TabsTrigger value="legality">Legality</TabsTrigger>
+                  <TabsTrigger value="legality" className="flex-1 text-xs h-7">Legality</TabsTrigger>
                 </TabsList>
               </div>
 
               <TabsContent value="details" className="flex-1 m-0 min-h-0">
                 <ScrollArea className="h-full">
-                  <div className="p-4 space-y-4">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className={cn("capitalize", rarityClass)}>
+                  <div className="p-5 space-y-5">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant={getRarityVariant(card.rarity) as any} className="capitalize">
                         {card.rarity}
                       </Badge>
                       <Badge variant="secondary">{card.set_name}</Badge>
                     </div>
 
                     {card.oracle_text && (
-                      <div>
-                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                      <div className="space-y-2">
+                        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                           Card Text
                         </h3>
-                        <p className="text-foreground whitespace-pre-wrap leading-relaxed">
+                        <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
                           {card.oracle_text}
                         </p>
                       </div>
                     )}
 
                     {card.flavor_text && (
-                      <p className="text-muted-foreground italic border-l-2 border-primary/30 pl-4">
+                      <p className="text-sm text-muted-foreground italic border-l-2 border-border pl-3">
                         {card.flavor_text}
                       </p>
                     )}
 
                     {(card.power || card.toughness) && (
-                      <div className="inline-flex items-center gap-1 px-3 py-1 bg-muted rounded-lg">
-                        <span className="font-bold text-foreground">{card.power}</span>
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted/50 rounded-lg border border-border/50">
+                        <span className="font-semibold text-foreground">{card.power}</span>
                         <span className="text-muted-foreground">/</span>
-                        <span className="font-bold text-foreground">{card.toughness}</span>
+                        <span className="font-semibold text-foreground">{card.toughness}</span>
                       </div>
                     )}
 
                     {card.artist && (
-                      <div>
-                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                          Artist
-                        </h3>
-                        <p className="text-foreground">{card.artist}</p>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Palette className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">Artist:</span>
+                        <span className="text-foreground">{card.artist}</span>
                       </div>
                     )}
 
                     <Button
                       variant="outline"
+                      size="sm"
                       className="gap-2"
                       onClick={() => window.open(card.scryfall_uri, "_blank")}
                     >
-                      <ExternalLink className="h-4 w-4" />
+                      <ExternalLink className="h-3.5 w-3.5" />
                       View on Scryfall
                     </Button>
                   </div>
@@ -183,19 +191,19 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
 
               <TabsContent value="printings" className="flex-1 m-0 min-h-0">
                 <ScrollArea className="h-full">
-                  <div className="p-4">
+                  <div className="p-5">
                     {isLoadingPrintings ? (
-                      <div className="flex items-center justify-center py-8">
-                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      <div className="flex items-center justify-center py-12">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                       </div>
                     ) : englishPrintings.length === 0 ? (
-                      <p className="text-muted-foreground text-center py-8">
+                      <p className="text-muted-foreground text-center py-12 text-sm">
                         No printings found
                       </p>
                     ) : (
                       <div className="space-y-1">
                         {/* Header */}
-                        <div className="grid grid-cols-[1fr_80px_80px_60px] gap-2 px-2 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border">
+                        <div className="grid grid-cols-[1fr_70px_70px_50px] gap-2 px-3 py-2 text-[10px] font-medium text-muted-foreground uppercase tracking-wider border-b border-border/50">
                           <span>Set</span>
                           <span className="text-right">USD</span>
                           <span className="text-right">EUR</span>
@@ -205,28 +213,28 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                         {englishPrintings.map((printing) => (
                           <div
                             key={printing.id}
-                            className="grid grid-cols-[1fr_80px_80px_60px] gap-2 px-2 py-2 rounded hover:bg-muted/50 text-sm items-center"
+                            className="grid grid-cols-[1fr_70px_70px_50px] gap-2 px-3 py-2.5 rounded-lg hover:bg-muted/50 text-sm items-center transition-colors"
                           >
                             <div className="flex items-center gap-2 min-w-0">
                               <span className={cn(
                                 "h-2 w-2 rounded-full flex-shrink-0",
-                                printing.rarity === "mythic" && "bg-orange-400",
-                                printing.rarity === "rare" && "bg-amber-400",
-                                printing.rarity === "uncommon" && "bg-slate-300",
-                                printing.rarity === "common" && "bg-slate-500"
+                                printing.rarity === "mythic" && "bg-orange-500",
+                                printing.rarity === "rare" && "bg-amber-500",
+                                printing.rarity === "uncommon" && "bg-slate-400",
+                                printing.rarity === "common" && "bg-slate-600"
                               )} />
-                              <span className="truncate">{printing.set_name}</span>
+                              <span className="truncate text-foreground">{printing.set_name}</span>
                               <span className="text-xs text-muted-foreground flex-shrink-0">
                                 #{printing.collector_number}
                               </span>
                             </div>
-                            <span className="text-right font-medium text-green-400">
+                            <span className="text-right font-medium text-emerald-500">
                               {printing.prices.usd ? `$${printing.prices.usd}` : "—"}
                             </span>
-                            <span className="text-right font-medium text-blue-400">
+                            <span className="text-right font-medium text-blue-500">
                               {printing.prices.eur ? `€${printing.prices.eur}` : "—"}
                             </span>
-                            <span className="text-right text-muted-foreground">
+                            <span className="text-right text-muted-foreground text-xs">
                               {printing.prices.tix || "—"}
                             </span>
                           </div>
@@ -239,22 +247,22 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
 
               <TabsContent value="legality" className="flex-1 m-0 min-h-0">
                 <ScrollArea className="h-full">
-                  <div className="p-4">
+                  <div className="p-5">
                     <div className="grid grid-cols-2 gap-2">
                       {Object.entries(card.legalities).map(([format, status]) => (
                         <div
                           key={format}
-                          className="flex items-center justify-between px-3 py-2 rounded bg-muted/30"
+                          className="flex items-center justify-between px-3 py-2 rounded-lg bg-muted/30 border border-border/30"
                         >
-                          <span className="text-sm capitalize">{format}</span>
+                          <span className="text-sm capitalize text-foreground">{format}</span>
                           <Badge
                             variant="outline"
                             className={cn(
                               "text-xs capitalize",
-                              status === "legal" && "bg-green-500/10 text-green-400 border-green-500/30",
+                              status === "legal" && "bg-emerald-500/10 text-emerald-500 border-emerald-500/30",
                               status === "not_legal" && "bg-muted text-muted-foreground border-border",
-                              status === "banned" && "bg-red-500/10 text-red-400 border-red-500/30",
-                              status === "restricted" && "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                              status === "banned" && "bg-red-500/10 text-red-500 border-red-500/30",
+                              status === "restricted" && "bg-amber-500/10 text-amber-500 border-amber-500/30"
                             )}
                           >
                             {status.replace("_", " ")}
