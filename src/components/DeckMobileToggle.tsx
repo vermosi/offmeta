@@ -17,9 +17,9 @@ export function DeckMobileToggle({ deck, onDeckChange, onClearDeck }: DeckMobile
     <Sheet>
       <SheetTrigger asChild>
         <Button
-          variant="gold"
+          variant="default"
           size="lg"
-          className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-2xl md:hidden"
+          className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-xl md:hidden"
         >
           <Library className="h-6 w-6" />
           {count > 0 && (
