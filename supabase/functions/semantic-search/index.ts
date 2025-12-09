@@ -101,6 +101,34 @@ Set/Universe filters (use 'e:' for set code when user mentions these):
 - Outlaws of Thunder Junction → e:otj
 - Wilds of Eldraine → e:woe
 
+Block filters (use 'b:' for block code - blocks are groups of related sets):
+- Ice Age block → b:ice
+- Mirage block → b:mir
+- Tempest block → b:tmp
+- Urza's block / Urza block → b:usg
+- Masques block / Mercadian → b:mmq
+- Invasion block → b:inv
+- Odyssey block → b:ody
+- Onslaught block → b:ons
+- Mirrodin block → b:mrd
+- Kamigawa block → b:chk
+- Ravnica block (original) → b:rav
+- Time Spiral block → b:tsp
+- Lorwyn block → b:lrw
+- Shadowmoor block → b:shm
+- Alara block / Shards of Alara → b:ala
+- Zendikar block (original) → b:zen
+- Scars of Mirrodin block → b:som
+- Innistrad block (original) → b:isd
+- Return to Ravnica block → b:rtr
+- Theros block (original) → b:ths
+- Khans of Tarkir block / Tarkir block → b:ktk
+- Battle for Zendikar block → b:bfz
+- Shadows over Innistrad block → b:soi
+- Kaladesh block → b:kld
+- Amonkhet block → b:akh
+- Ixalan block → b:xln
+
 Format restrictions (add if mentioned):
 - Commander/EDH legal: f:commander
 - Modern legal: f:modern
@@ -116,10 +144,14 @@ Budget considerations:
 - Very cheap: usd<1
 - Expensive: usd>20
 
-Examples with sets:
+Examples with sets and blocks:
 - "Avatar creatures" → game:paper e:tla t:creature
 - "Final Fantasy commanders" → game:paper e:fic t:legendary t:creature
 - "LOTR hobbits" → game:paper e:ltr t:halfling
+- "Innistrad block vampires" → game:paper b:isd t:vampire
+- "Ravnica block guild cards" → game:paper b:rav
+- "Kamigawa block spirits" → game:paper b:chk t:spirit
+- "Zendikar block landfall" → game:paper b:zen o:landfall
 
 Remember: Return ONLY the Scryfall query, no explanation or formatting.`;
 
