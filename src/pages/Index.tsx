@@ -19,11 +19,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { searchCards, getRandomCard } from "@/lib/scryfall";
 import { createEmptyDeck, addCardToDeck, Deck } from "@/lib/deck";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { ScryfallCard } from "@/types/card";
-import { ChevronLeft, ChevronRight, Loader2, Keyboard, Search, Beaker, Package, Shuffle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Search, Beaker, Package, Shuffle } from "lucide-react";
 import { toast } from "sonner";
 
 const Index = () => {
+  const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCard, setSelectedCard] = useState<ScryfallCard | null>(null);
@@ -32,8 +34,6 @@ const Index = () => {
   const [hoveredCard, setHoveredCard] = useState<ScryfallCard | null>(null);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("search");
-  
-  // Filters
   const [showFilters, setShowFilters] = useState(false);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedRarities, setSelectedRarities] = useState<string[]>([]);
@@ -204,24 +204,24 @@ const Index = () => {
       
       <div className="flex-1 flex">
         {/* Main Content */}
-        <main className="flex-1 container px-4 py-6 max-w-5xl">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-flex h-9">
-              <TabsTrigger value="search" className="gap-1.5 text-sm">
+        <main className="flex-1 px-3 sm:px-4 py-4 sm:py-6 max-w-5xl mx-auto w-full pb-24 md:pb-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-3 sm:space-y-4">
+            <TabsList className="grid w-full grid-cols-4 h-10 sm:h-9">
+              <TabsTrigger value="search" className="gap-1 sm:gap-1.5 text-xs sm:text-sm px-1 sm:px-3">
                 <Search className="h-4 w-4" />
-                <span className="hidden sm:inline">Search</span>
+                <span className="hidden xs:inline">Search</span>
               </TabsTrigger>
-              <TabsTrigger value="archetypes" className="gap-1.5 text-sm">
+              <TabsTrigger value="archetypes" className="gap-1 sm:gap-1.5 text-xs sm:text-sm px-1 sm:px-3">
                 <Beaker className="h-4 w-4" />
-                <span className="hidden sm:inline">Brews</span>
+                <span className="hidden xs:inline">Brews</span>
               </TabsTrigger>
-              <TabsTrigger value="goldfish" className="gap-1.5 text-sm">
+              <TabsTrigger value="goldfish" className="gap-1 sm:gap-1.5 text-xs sm:text-sm px-1 sm:px-3">
                 <Shuffle className="h-4 w-4" />
-                <span className="hidden sm:inline">Playtest</span>
+                <span className="hidden xs:inline">Test</span>
               </TabsTrigger>
-              <TabsTrigger value="collection" className="gap-1.5 text-sm">
+              <TabsTrigger value="collection" className="gap-1 sm:gap-1.5 text-xs sm:text-sm px-1 sm:px-3">
                 <Package className="h-4 w-4" />
-                <span className="hidden sm:inline">Collection</span>
+                <span className="hidden xs:inline">Cards</span>
               </TabsTrigger>
             </TabsList>
 
@@ -247,14 +247,6 @@ const Index = () => {
                         {totalCards.toLocaleString()} cards
                       </span>
                     )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => setShowShortcutsHelp(true)}
-                    >
-                      <Keyboard className="h-4 w-4" />
-                    </Button>
                   </div>
                 </div>
               )}
