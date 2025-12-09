@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -9,7 +8,7 @@ import { Deck, addCardToDeck, createEmptyDeck } from '@/lib/deck';
 import { getCardByName } from '@/lib/scryfall';
 import { ARCHETYPES, Archetype } from '@/lib/archetypes';
 import { toast } from 'sonner';
-import { Sparkles, Star, DollarSign, TrendingDown, BookOpen, Loader2, Search, Beaker } from 'lucide-react';
+import { Sparkles, DollarSign, TrendingDown, Loader2, Search, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface ArchetypeExplorerProps {
   onLoadArchetype: (deck: Deck) => void;
@@ -19,8 +18,9 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [colorFilter, setColorFilter] = useState<string>('');
   const [budgetFilter, setBudgetFilter] = useState<string>('');
-  const [selectedArchetype, setSelectedArchetype] = useState<Archetype | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const filteredArchetypes = ARCHETYPES.filter(archetype => {
     const matchesSearch = archetype.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -35,12 +35,12 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
 
   const handleLoadArchetype = async (archetype: Archetype) => {
     setIsLoading(true);
+    setLoadingId(archetype.id);
     let deck = createEmptyDeck();
     deck.name = archetype.name;
 
-    const allCards = [...archetype.coreCards, ...archetype.flexCards.slice(0, 10)];
+    const allCards = [...archetype.coreCards, ...archetype.flexCards.slice(0, 8)];
     let loaded = 0;
-    let failed = 0;
 
     for (const cardName of allCards) {
       try {
@@ -49,28 +49,24 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
         loaded++;
       } catch (error) {
         console.error(`Failed to load: ${cardName}`);
-        failed++;
       }
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 80));
     }
 
     setIsLoading(false);
+    setLoadingId(null);
     onLoadArchetype(deck);
-    toast.success(`Loaded ${loaded} cards from "${archetype.name}"`, {
-      description: failed > 0 ? `${failed} cards could not be found` : undefined
-    });
+    toast.success(`Loaded ${loaded} cards from "${archetype.name}"`);
   };
 
   const getBudgetIcon = (tier: string) => {
-    switch (tier) {
-      case 'budget': return <DollarSign className="h-3 w-3" />;
-      case 'medium': return <><DollarSign className="h-3 w-3" /><DollarSign className="h-3 w-3" /></>;
-      case 'expensive': return <><DollarSign className="h-3 w-3" /><DollarSign className="h-3 w-3" /><DollarSign className="h-3 w-3" /></>;
-      default: return null;
-    }
+    const count = tier === 'budget' ? 1 : tier === 'medium' ? 2 : 3;
+    return Array(count).fill(null).map((_, i) => (
+      <DollarSign key={i} className="h-3 w-3" />
+    ));
   };
 
-  const getColorBadge = (color: string) => {
+  const getColorClass = (color: string) => {
     const colorMap: Record<string, string> = {
       'W': 'bg-amber-100 text-amber-900',
       'U': 'bg-blue-500 text-white',
@@ -82,118 +78,123 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
   };
 
   return (
-    <Card className="bg-card border-border">
-      <CardHeader>
-        <CardTitle className="font-display flex items-center gap-2">
-          <Beaker className="h-5 w-5 text-primary" />
-          Brew Recipes ({ARCHETYPES.length})
-        </CardTitle>
-        <CardDescription>
-          Off-meta archetypes to inspire your next deck
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Filters */}
-        <div className="flex gap-2 flex-wrap">
-          <div className="flex-1 min-w-[200px]">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search archetypes..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-          </div>
-          <Select value={colorFilter || "all"} onValueChange={(v) => setColorFilter(v === "all" ? "" : v)}>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="Color" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Any color</SelectItem>
-              <SelectItem value="W">White</SelectItem>
-              <SelectItem value="U">Blue</SelectItem>
-              <SelectItem value="B">Black</SelectItem>
-              <SelectItem value="R">Red</SelectItem>
-              <SelectItem value="G">Green</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={budgetFilter || "all"} onValueChange={(v) => setBudgetFilter(v === "all" ? "" : v)}>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="Budget" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Any budget</SelectItem>
-              <SelectItem value="budget">Budget</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="expensive">Expensive</SelectItem>
-            </SelectContent>
-          </Select>
+    <div className="space-y-4">
+      {/* Compact header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-display font-semibold">Brew Recipes</h2>
+          <p className="text-sm text-muted-foreground">{filteredArchetypes.length} off-meta archetypes</p>
         </div>
+      </div>
 
-        {/* Archetype list */}
-        <ScrollArea className="h-[500px]">
-          <div className="space-y-3">
-            {filteredArchetypes.map((archetype) => (
+      {/* Filters - more compact */}
+      <div className="flex gap-2 flex-wrap">
+        <div className="relative flex-1 min-w-[180px]">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8 h-9"
+          />
+        </div>
+        <Select value={colorFilter || "all"} onValueChange={(v) => setColorFilter(v === "all" ? "" : v)}>
+          <SelectTrigger className="w-28 h-9">
+            <SelectValue placeholder="Color" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All colors</SelectItem>
+            <SelectItem value="W">White</SelectItem>
+            <SelectItem value="U">Blue</SelectItem>
+            <SelectItem value="B">Black</SelectItem>
+            <SelectItem value="R">Red</SelectItem>
+            <SelectItem value="G">Green</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={budgetFilter || "all"} onValueChange={(v) => setBudgetFilter(v === "all" ? "" : v)}>
+          <SelectTrigger className="w-28 h-9">
+            <SelectValue placeholder="Budget" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All budgets</SelectItem>
+            <SelectItem value="budget">Budget</SelectItem>
+            <SelectItem value="medium">Medium</SelectItem>
+            <SelectItem value="expensive">Expensive</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Archetype list - cleaner cards */}
+      <ScrollArea className="h-[calc(100vh-320px)] min-h-[400px]">
+        <div className="space-y-2 pr-4">
+          {filteredArchetypes.map((archetype) => {
+            const isExpanded = expandedId === archetype.id;
+            const isLoadingThis = loadingId === archetype.id;
+            
+            return (
               <div
                 key={archetype.id}
-                className={`p-4 rounded-lg border cursor-pointer transition-all ${
-                  selectedArchetype?.id === archetype.id
+                className={`rounded-lg border transition-all ${
+                  isExpanded
                     ? 'border-primary bg-primary/5'
-                    : 'border-border hover:border-primary/50'
+                    : 'border-border hover:border-primary/40'
                 }`}
-                onClick={() => setSelectedArchetype(
-                  selectedArchetype?.id === archetype.id ? null : archetype
-                )}
               >
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <h3 className="font-display font-semibold">{archetype.name}</h3>
-                    <p className="text-sm text-muted-foreground">{archetype.description}</p>
-                  </div>
-                  <div className="flex gap-1">
+                {/* Main row - always visible */}
+                <button
+                  className="w-full p-3 text-left flex items-center gap-3"
+                  onClick={() => setExpandedId(isExpanded ? null : archetype.id)}
+                >
+                  {/* Color pips */}
+                  <div className="flex gap-0.5 flex-shrink-0">
                     {archetype.colorIdentity.map(color => (
-                      <Badge key={color} className={`${getColorBadge(color)} px-1.5`}>
+                      <span 
+                        key={color} 
+                        className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center ${getColorClass(color)}`}
+                      >
                         {color}
-                      </Badge>
+                      </span>
                     ))}
                   </div>
-                </div>
 
-                <div className="flex items-center gap-3 text-sm">
-                  <div className="flex items-center gap-1 text-primary">
-                    <TrendingDown className="h-4 w-4" />
-                    <span>{archetype.offMetaScore}% off-meta</span>
+                  {/* Name & description */}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{archetype.name}</div>
+                    <div className="text-xs text-muted-foreground truncate">{archetype.description}</div>
                   </div>
-                  <div className="flex items-center gap-0.5 text-muted-foreground">
-                    {getBudgetIcon(archetype.budgetTier)}
-                  </div>
-                  <div className="flex gap-1">
-                    {archetype.tags.slice(0, 3).map(tag => (
-                      <Badge key={tag} variant="outline" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
 
-                {/* Expanded view */}
-                {selectedArchetype?.id === archetype.id && (
-                  <div className="mt-4 pt-4 border-t border-border space-y-3">
-                    <div>
-                      <h4 className="text-sm font-medium flex items-center gap-1 mb-1">
-                        <BookOpen className="h-4 w-4" />
-                        Gameplan
-                      </h4>
-                      <p className="text-sm text-muted-foreground">{archetype.gameplan}</p>
+                  {/* Meta info */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-xs text-primary flex items-center gap-0.5">
+                      <TrendingDown className="h-3 w-3" />
+                      {archetype.offMetaScore}%
+                    </span>
+                    <span className="flex text-muted-foreground">
+                      {getBudgetIcon(archetype.budgetTier)}
+                    </span>
+                    {isExpanded ? (
+                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
+                </button>
+
+                {/* Expanded details */}
+                {isExpanded && (
+                  <div className="px-3 pb-3 space-y-3 border-t border-border pt-3">
+                    <p className="text-sm text-muted-foreground">{archetype.gameplan}</p>
+                    
+                    <div className="flex flex-wrap gap-1">
+                      {archetype.tags.map(tag => (
+                        <Badge key={tag} variant="outline" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
                     </div>
 
                     <div>
-                      <h4 className="text-sm font-medium flex items-center gap-1 mb-1">
-                        <Star className="h-4 w-4 text-primary" />
-                        Core Cards ({archetype.coreCards.length})
-                      </h4>
+                      <div className="text-xs font-medium mb-1.5 text-muted-foreground">Core Cards</div>
                       <div className="flex flex-wrap gap-1">
                         {archetype.coreCards.map(card => (
                           <Badge key={card} variant="secondary" className="text-xs">
@@ -203,20 +204,8 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
                       </div>
                     </div>
 
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">
-                        Flex Options ({archetype.flexCards.length})
-                      </h4>
-                      <div className="flex flex-wrap gap-1">
-                        {archetype.flexCards.map(card => (
-                          <Badge key={card} variant="outline" className="text-xs">
-                            {card}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-
                     <Button
+                      size="sm"
                       className="w-full gap-2"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -224,20 +213,26 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
                       }}
                       disabled={isLoading}
                     >
-                      {isLoading ? (
+                      {isLoadingThis ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
                         <Sparkles className="h-4 w-4" />
                       )}
-                      Start Deck from Archetype
+                      Load Archetype
                     </Button>
                   </div>
                 )}
               </div>
-            ))}
-          </div>
-        </ScrollArea>
-      </CardContent>
-    </Card>
+            );
+          })}
+
+          {filteredArchetypes.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              No archetypes match your filters
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+    </div>
   );
 }

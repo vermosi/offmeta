@@ -1,8 +1,7 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
-import { SearchBar } from "@/components/SearchBar";
-import { SemanticSearch } from "@/components/SemanticSearch";
+import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
 import { CardItemWithDeck } from "@/components/CardItemWithDeck";
 import { CardModal } from "@/components/CardModal";
 import { EmptyState } from "@/components/EmptyState";
@@ -21,7 +20,7 @@ import { searchCards, getRandomCard } from "@/lib/scryfall";
 import { createEmptyDeck, addCardToDeck, Deck } from "@/lib/deck";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { ScryfallCard } from "@/types/card";
-import { ChevronLeft, ChevronRight, Loader2, Keyboard, Wand2, Search, Beaker, Package, Shuffle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Keyboard, Search, Beaker, Package, Shuffle } from "lucide-react";
 import { toast } from "sonner";
 
 const Index = () => {
@@ -98,7 +97,7 @@ const Index = () => {
   }, []);
 
   const handleFocusSearch = useCallback(() => {
-    const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
+    const searchInput = document.querySelector('input[placeholder*="looking for"]') as HTMLInputElement;
     if (searchInput) {
       searchInput.focus();
     }
@@ -205,42 +204,33 @@ const Index = () => {
       
       <div className="flex-1 flex">
         {/* Main Content */}
-        <main className="flex-1 container px-4 py-6 max-w-6xl">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-flex">
-              <TabsTrigger value="search" className="gap-2">
-                <Wand2 className="h-4 w-4" />
-                <span className="hidden sm:inline">Semantic Search</span>
-                <span className="sm:hidden">Search</span>
+        <main className="flex-1 container px-4 py-6 max-w-5xl">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-flex h-9">
+              <TabsTrigger value="search" className="gap-1.5 text-sm">
+                <Search className="h-4 w-4" />
+                <span className="hidden sm:inline">Search</span>
               </TabsTrigger>
-              <TabsTrigger value="archetypes" className="gap-2">
+              <TabsTrigger value="archetypes" className="gap-1.5 text-sm">
                 <Beaker className="h-4 w-4" />
-                <span className="hidden sm:inline">Brew Recipes</span>
-                <span className="sm:hidden">Brews</span>
+                <span className="hidden sm:inline">Brews</span>
               </TabsTrigger>
-              <TabsTrigger value="goldfish" className="gap-2">
+              <TabsTrigger value="goldfish" className="gap-1.5 text-sm">
                 <Shuffle className="h-4 w-4" />
-                <span className="hidden sm:inline">Goldfish</span>
-                <span className="sm:hidden">Test</span>
+                <span className="hidden sm:inline">Playtest</span>
               </TabsTrigger>
-              <TabsTrigger value="collection" className="gap-2">
+              <TabsTrigger value="collection" className="gap-1.5 text-sm">
                 <Package className="h-4 w-4" />
                 <span className="hidden sm:inline">Collection</span>
-                <span className="sm:hidden">Cards</span>
               </TabsTrigger>
             </TabsList>
 
-            {/* Semantic Search Tab */}
-            <TabsContent value="search" className="space-y-6">
-              <SemanticSearch onSearch={handleSearch} isLoading={isSearching} />
-              
-              {/* Traditional search bar */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Search className="h-4 w-4" />
-                  <span>Or use traditional Scryfall syntax:</span>
-                </div>
-                <SearchBar onSearch={handleSearch} isLoading={isSearching} />
+            {/* Search Tab */}
+            <TabsContent value="search" className="space-y-4 mt-4">
+              <UnifiedSearchBar onSearch={handleSearch} isLoading={isSearching} />
+
+              {/* Additional filters row */}
+              {hasSearched && (
                 <div className="flex items-center justify-between">
                   <SearchFilters
                     selectedColors={selectedColors}
@@ -251,39 +241,33 @@ const Index = () => {
                     isOpen={showFilters}
                     onToggle={() => setShowFilters(!showFilters)}
                   />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-2 text-muted-foreground"
-                    onClick={() => setShowShortcutsHelp(true)}
-                  >
-                    <Keyboard className="h-4 w-4" />
-                    <kbd className="text-xs bg-muted px-1.5 py-0.5 rounded hidden sm:inline">?</kbd>
-                  </Button>
-                </div>
-              </div>
-
-              {/* Results count */}
-              {fullQuery && totalCards > 0 && (
-                <div className="flex items-center justify-between">
-                  <p className="text-muted-foreground">
-                    Found <span className="font-semibold text-foreground">{totalCards.toLocaleString()}</span> cards
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Page {currentPage}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    {totalCards > 0 && (
+                      <span className="text-sm text-muted-foreground">
+                        {totalCards.toLocaleString()} cards
+                      </span>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setShowShortcutsHelp(true)}
+                    >
+                      <Keyboard className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               )}
 
               {/* Cards Grid */}
               {cards.length > 0 ? (
                 <>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                     {cards.map((card, index) => (
                       <div
                         key={card.id}
                         className="animate-fade-in"
-                        style={{ animationDelay: `${index * 30}ms` }}
+                        style={{ animationDelay: `${index * 20}ms` }}
                       >
                         <CardItemWithDeck
                           card={card}
@@ -300,33 +284,35 @@ const Index = () => {
 
                   {/* Pagination */}
                   {(hasMore || currentPage > 1) && (
-                    <div className="mt-8 flex items-center justify-center gap-4">
+                    <div className="mt-6 flex items-center justify-center gap-3">
                       <Button
                         variant="outline"
+                        size="sm"
                         onClick={() => handlePageChange(currentPage - 1)}
                         disabled={currentPage === 1 || isSearching}
                       >
-                        <ChevronLeft className="h-4 w-4 mr-2" />
-                        Previous
+                        <ChevronLeft className="h-4 w-4" />
+                        Prev
                       </Button>
-                      <span className="text-muted-foreground px-4">
+                      <span className="text-sm text-muted-foreground px-2">
                         Page {currentPage}
                       </span>
                       <Button
                         variant="outline"
+                        size="sm"
                         onClick={() => handlePageChange(currentPage + 1)}
                         disabled={!hasMore || isSearching}
                       >
                         Next
-                        <ChevronRight className="h-4 w-4 ml-2" />
+                        <ChevronRight className="h-4 w-4" />
                       </Button>
                     </div>
                   )}
                 </>
               ) : isSearching ? (
-                <div className="flex flex-col items-center justify-center py-20">
-                  <Loader2 className="h-12 w-12 text-primary animate-spin" />
-                  <p className="mt-4 text-muted-foreground">Summoning cards...</p>
+                <div className="flex flex-col items-center justify-center py-16">
+                  <Loader2 className="h-10 w-10 text-primary animate-spin" />
+                  <p className="mt-3 text-sm text-muted-foreground">Searching...</p>
                 </div>
               ) : (
                 <EmptyState hasSearched={hasSearched && !isSearching} />
@@ -334,24 +320,22 @@ const Index = () => {
             </TabsContent>
 
             {/* Archetypes Tab */}
-            <TabsContent value="archetypes">
+            <TabsContent value="archetypes" className="mt-4">
               <ArchetypeExplorer onLoadArchetype={handleLoadArchetype} />
             </TabsContent>
 
-            {/* Goldfish Simulator Tab */}
-            <TabsContent value="goldfish" className="space-y-6">
-              <div className="grid gap-6 lg:grid-cols-2">
-                <GoldfishSimulator deck={deck} />
-                <div className="space-y-6">
-                  <DeckCollectionCheck deck={deck} />
-                  <SavedDecksPanel currentDeck={deck} onLoadDeck={handleLoadDeck} />
-                </div>
+            {/* Goldfish/Playtest Tab */}
+            <TabsContent value="goldfish" className="space-y-4 mt-4">
+              <GoldfishSimulator deck={deck} />
+              <div className="grid gap-4 md:grid-cols-2">
+                <SavedDecksPanel currentDeck={deck} onLoadDeck={handleLoadDeck} />
+                <DeckCollectionCheck deck={deck} />
               </div>
             </TabsContent>
 
             {/* Collection Tab */}
-            <TabsContent value="collection">
-              <div className="grid gap-6 lg:grid-cols-2">
+            <TabsContent value="collection" className="mt-4">
+              <div className="grid gap-4 md:grid-cols-2">
                 <CollectionImport />
                 <DeckCollectionCheck deck={deck} />
               </div>
