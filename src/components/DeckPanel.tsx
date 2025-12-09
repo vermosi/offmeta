@@ -1,17 +1,19 @@
 import { useState } from "react";
 import { Deck, DeckCard, getDeckCardCount, exportDeckList, addCardToDeck, removeCardFromDeck } from "@/lib/deck";
-import { DeckListItem } from "./DeckListItem";
+import { GroupedDeckList } from "./GroupedDeckList";
 import { ManaCurveChart } from "./ManaCurveChart";
 import { ColorPieChart } from "./ColorPieChart";
+import { PriceCalculator } from "./PriceCalculator";
+import { FormatValidator } from "./FormatValidator";
+import { SampleHand } from "./SampleHand";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Download, Trash2, Library, Edit2, Check, Copy, X } from "lucide-react";
+import { Trash2, Library, Edit2, Check, Copy } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import { ScryfallCard } from "@/types/card";
+import { DeckFormat } from "@/lib/format-validation";
 
 interface DeckPanelProps {
   deck: Deck;
@@ -23,6 +25,7 @@ export function DeckPanel({ deck, onDeckChange, onClearDeck }: DeckPanelProps) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [deckName, setDeckName] = useState(deck.name);
   const [activeTab, setActiveTab] = useState<"mainboard" | "sideboard">("mainboard");
+  const [selectedFormat, setSelectedFormat] = useState<DeckFormat>("modern");
 
   const mainboardCount = getDeckCardCount(deck, "mainboard");
   const sideboardCount = getDeckCardCount(deck, "sideboard");
@@ -51,9 +54,6 @@ export function DeckPanel({ deck, onDeckChange, onClearDeck }: DeckPanelProps) {
     newDeck[board] = deck[board].filter((dc) => dc.card.id !== cardId);
     onDeckChange(newDeck);
   };
-
-  const sortedMainboard = [...deck.mainboard].sort((a, b) => a.card.cmc - b.card.cmc);
-  const sortedSideboard = [...deck.sideboard].sort((a, b) => a.card.cmc - b.card.cmc);
 
   return (
     <div className="h-full flex flex-col bg-card border-l border-border">
@@ -99,6 +99,7 @@ export function DeckPanel({ deck, onDeckChange, onClearDeck }: DeckPanelProps) {
             )}
           </div>
           <div className="flex items-center gap-1">
+            <SampleHand deck={deck} />
             <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleExport}>
               <Copy className="h-4 w-4" />
             </Button>
@@ -115,10 +116,18 @@ export function DeckPanel({ deck, onDeckChange, onClearDeck }: DeckPanelProps) {
       </div>
 
       {/* Stats */}
-      <div className="p-4 border-b border-border space-y-4">
-        <ManaCurveChart deck={deck} />
-        <ColorPieChart deck={deck} />
-      </div>
+      <ScrollArea className="flex-shrink-0 max-h-80">
+        <div className="p-4 space-y-4 border-b border-border">
+          <FormatValidator
+            deck={deck}
+            selectedFormat={selectedFormat}
+            onFormatChange={setSelectedFormat}
+          />
+          <ManaCurveChart deck={deck} />
+          <ColorPieChart deck={deck} />
+          <PriceCalculator deck={deck} />
+        </div>
+      </ScrollArea>
 
       {/* Card List */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "mainboard" | "sideboard")} className="flex-1 flex flex-col min-h-0">
@@ -133,44 +142,26 @@ export function DeckPanel({ deck, onDeckChange, onClearDeck }: DeckPanelProps) {
         
         <TabsContent value="mainboard" className="flex-1 m-0 min-h-0">
           <ScrollArea className="h-full">
-            <div className="p-2 space-y-0.5">
-              {sortedMainboard.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  Click cards to add them to your deck
-                </p>
-              ) : (
-                sortedMainboard.map((dc) => (
-                  <DeckListItem
-                    key={dc.card.id}
-                    deckCard={dc}
-                    onAdd={() => handleAddCard(dc.card, "mainboard")}
-                    onRemove={() => handleRemoveCard(dc.card.id, "mainboard")}
-                    onRemoveAll={() => handleRemoveAllCopies(dc.card.id, "mainboard")}
-                  />
-                ))
-              )}
+            <div className="p-2">
+              <GroupedDeckList
+                cards={deck.mainboard}
+                onAddCard={(card) => handleAddCard(card, "mainboard")}
+                onRemoveCard={(cardId) => handleRemoveCard(cardId, "mainboard")}
+                onRemoveAllCopies={(cardId) => handleRemoveAllCopies(cardId, "mainboard")}
+              />
             </div>
           </ScrollArea>
         </TabsContent>
         
         <TabsContent value="sideboard" className="flex-1 m-0 min-h-0">
           <ScrollArea className="h-full">
-            <div className="p-2 space-y-0.5">
-              {sortedSideboard.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  Right-click cards to add to sideboard
-                </p>
-              ) : (
-                sortedSideboard.map((dc) => (
-                  <DeckListItem
-                    key={dc.card.id}
-                    deckCard={dc}
-                    onAdd={() => handleAddCard(dc.card, "sideboard")}
-                    onRemove={() => handleRemoveCard(dc.card.id, "sideboard")}
-                    onRemoveAll={() => handleRemoveAllCopies(dc.card.id, "sideboard")}
-                  />
-                ))
-              )}
+            <div className="p-2">
+              <GroupedDeckList
+                cards={deck.sideboard}
+                onAddCard={(card) => handleAddCard(card, "sideboard")}
+                onRemoveCard={(cardId) => handleRemoveCard(cardId, "sideboard")}
+                onRemoveAllCopies={(cardId) => handleRemoveAllCopies(cardId, "sideboard")}
+              />
             </div>
           </ScrollArea>
         </TabsContent>
