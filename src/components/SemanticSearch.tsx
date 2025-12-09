@@ -157,12 +157,12 @@ export function SemanticSearch({ onSearch, isLoading }: SemanticSearchProps) {
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Format</label>
-                <Select value={format} onValueChange={setFormat}>
+                <Select value={format || "all"} onValueChange={(v) => setFormat(v === "all" ? "" : v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Any format" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Any format</SelectItem>
+                    <SelectItem value="all">Any format</SelectItem>
                     {FORMATS.map(f => (
                       <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
                     ))}
