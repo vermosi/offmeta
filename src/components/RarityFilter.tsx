@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 
 interface RarityFilterProps {
   selectedRarities: string[];
@@ -7,15 +6,15 @@ interface RarityFilterProps {
 }
 
 const rarities = [
-  { id: "common", name: "Common", color: "bg-slate-600 text-slate-100" },
-  { id: "uncommon", name: "Uncommon", color: "bg-slate-400 text-slate-900" },
-  { id: "rare", name: "Rare", color: "bg-amber-500 text-amber-950" },
-  { id: "mythic", name: "Mythic", color: "bg-orange-500 text-orange-950" },
+  { id: "common", name: "Common", bg: "bg-slate-500", text: "text-white" },
+  { id: "uncommon", name: "Uncommon", bg: "bg-slate-400", text: "text-slate-900" },
+  { id: "rare", name: "Rare", bg: "bg-amber-500", text: "text-amber-950" },
+  { id: "mythic", name: "Mythic", bg: "bg-orange-500", text: "text-white" },
 ];
 
 export function RarityFilter({ selectedRarities, onRarityToggle }: RarityFilterProps) {
   return (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex items-center gap-1.5 flex-wrap">
       {rarities.map((rarity) => {
         const isSelected = selectedRarities.includes(rarity.id);
         return (
@@ -23,11 +22,12 @@ export function RarityFilter({ selectedRarities, onRarityToggle }: RarityFilterP
             key={rarity.id}
             onClick={() => onRarityToggle(rarity.id)}
             className={cn(
-              "px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200",
-              rarity.color,
+              "px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200",
+              rarity.bg,
+              rarity.text,
               isSelected
-                ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
-                : "opacity-50 hover:opacity-80"
+                ? "ring-2 ring-primary ring-offset-2 ring-offset-background shadow-md"
+                : "opacity-60 hover:opacity-90"
             )}
           >
             {rarity.name}
