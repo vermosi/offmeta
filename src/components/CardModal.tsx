@@ -71,7 +71,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
             {/* Buy buttons */}
             <div className="mt-2 w-full max-w-[280px] space-y-2">
               <Button
-                variant="gold"
+                variant="default"
                 className="w-full gap-2"
                 onClick={() => window.open(getTCGPlayerUrl(card), "_blank")}
               >

@@ -108,7 +108,7 @@ export function SampleHand({ deck }: SampleHandProps) {
           
           {/* Actions */}
           <div className="flex items-center justify-center gap-3">
-            <Button onClick={handleDraw} variant="gold" className="gap-2">
+            <Button onClick={handleDraw} variant="default" className="gap-2">
               <Shuffle className="h-4 w-4" />
               Draw New Hand
             </Button>

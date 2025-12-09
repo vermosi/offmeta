@@ -238,7 +238,7 @@ export function DeckImport({ deck, onDeckChange }: DeckImportProps) {
                 Cancel
               </Button>
               <Button
-                variant="gold"
+                variant="default"
                 onClick={handleImport}
                 disabled={!deckText.trim()}
               >
@@ -324,7 +324,7 @@ export function DeckImport({ deck, onDeckChange }: DeckImportProps) {
               <Button variant="outline" onClick={handleReset}>
                 Import More
               </Button>
-              <Button variant="gold" onClick={handleClose}>
+              <Button variant="default" onClick={handleClose}>
                 Done
               </Button>
             </DialogFooter>

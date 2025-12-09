@@ -130,7 +130,7 @@ export function SearchBar({ onSearch, isLoading }: SearchBarProps) {
             )}
             <Button
               type="submit"
-              variant="gold"
+              variant="default"
               size="sm"
               disabled={isLoading || !query.trim()}
               className="absolute right-2 h-10"
