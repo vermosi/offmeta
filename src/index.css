@@ -296,6 +296,22 @@
     }
   }
 
+  /* Slide in animation */
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: var(--slide-from, translateY(16px));
+    }
+    to {
+      opacity: 1;
+      transform: translate(0);
+    }
+  }
+
+  .animate-slide-in {
+    animation: slideIn 0.4s ease-out forwards;
+  }
+
   /* Subtle pulse */
   .animate-pulse-subtle {
     animation: pulseSoft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;

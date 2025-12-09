@@ -66,44 +66,44 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
     ));
   };
 
-  const getColorClass = (color: string) => {
-    const colorMap: Record<string, string> = {
-      'W': 'bg-amber-100 text-amber-900',
-      'U': 'bg-blue-500 text-white',
-      'B': 'bg-zinc-800 text-white',
-      'R': 'bg-red-500 text-white',
-      'G': 'bg-green-600 text-white',
+  const getColorBadgeVariant = (color: string) => {
+    const colorMap: Record<string, "white" | "blue" | "black" | "red" | "green"> = {
+      'W': 'white',
+      'U': 'blue',
+      'B': 'black',
+      'R': 'red',
+      'G': 'green',
     };
-    return colorMap[color] || 'bg-muted';
+    return colorMap[color] || 'secondary';
   };
 
   return (
-    <div className="space-y-3 sm:space-y-4">
-      {/* Compact header */}
+    <div className="space-y-4">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base sm:text-lg font-display font-semibold">Brew Recipes</h2>
-          <p className="text-xs sm:text-sm text-muted-foreground">{filteredArchetypes.length} archetypes</p>
+          <h2 className="text-lg font-semibold tracking-tight">Brew Recipes</h2>
+          <p className="text-sm text-muted-foreground">{filteredArchetypes.length} archetypes</p>
         </div>
       </div>
 
       {/* Filters */}
       <div className="flex gap-2 flex-wrap">
         <div className="relative flex-1 min-w-[140px]">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search..."
+            placeholder="Search archetypes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8 h-9 text-sm"
+            className="pl-9 h-9 bg-secondary/50 border-0 focus-visible:ring-1"
           />
         </div>
         <Select value={colorFilter || "all"} onValueChange={(v) => setColorFilter(v === "all" ? "" : v)}>
-          <SelectTrigger className="w-24 sm:w-28 h-9 text-sm">
+          <SelectTrigger className="w-24 h-9 bg-secondary/50 border-0">
             <SelectValue placeholder="Color" />
           </SelectTrigger>
-          <SelectContent className="bg-popover">
-            <SelectItem value="all">All</SelectItem>
+          <SelectContent>
+            <SelectItem value="all">All Colors</SelectItem>
             <SelectItem value="W">White</SelectItem>
             <SelectItem value="U">Blue</SelectItem>
             <SelectItem value="B">Black</SelectItem>
@@ -112,11 +112,11 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
           </SelectContent>
         </Select>
         <Select value={budgetFilter || "all"} onValueChange={(v) => setBudgetFilter(v === "all" ? "" : v)}>
-          <SelectTrigger className="w-24 sm:w-28 h-9 text-sm">
+          <SelectTrigger className="w-28 h-9 bg-secondary/50 border-0">
             <SelectValue placeholder="Budget" />
           </SelectTrigger>
-          <SelectContent className="bg-popover">
-            <SelectItem value="all">All</SelectItem>
+          <SelectContent>
+            <SelectItem value="all">All Budgets</SelectItem>
             <SelectItem value="budget">Budget</SelectItem>
             <SelectItem value="medium">Medium</SelectItem>
             <SelectItem value="expensive">Expensive</SelectItem>
@@ -126,109 +126,115 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
 
       {/* Archetype list */}
       <ScrollArea className="h-[calc(100vh-280px)] min-h-[300px]">
-        <div className="space-y-2 pr-2 sm:pr-4">
-          {filteredArchetypes.map((archetype) => {
+        <div className="space-y-2 pr-4">
+          {filteredArchetypes.map((archetype, index) => {
             const isExpanded = expandedId === archetype.id;
             const isLoadingThis = loadingId === archetype.id;
             
             return (
               <div
                 key={archetype.id}
-                className={`rounded-lg border transition-all ${
-                  isExpanded
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:border-primary/40'
-                }`}
+                className="animate-in"
+                style={{ animationDelay: `${index * 30}ms` }}
               >
-                {/* Main row - always visible */}
-                <button
-                  className="w-full p-2.5 sm:p-3 text-left flex items-center gap-2 sm:gap-3"
-                  onClick={() => setExpandedId(isExpanded ? null : archetype.id)}
+                <div
+                  className={`rounded-xl border transition-all duration-200 ${
+                    isExpanded
+                      ? 'border-border bg-card shadow-sm'
+                      : 'border-transparent bg-secondary/30 hover:bg-secondary/50'
+                  }`}
                 >
-                  {/* Color pips */}
-                  <div className="flex gap-0.5 flex-shrink-0">
-                    {archetype.colorIdentity.map(color => (
-                      <span 
-                        key={color} 
-                        className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full text-[9px] sm:text-[10px] font-bold flex items-center justify-center ${getColorClass(color)}`}
-                      >
-                        {color}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Name & description */}
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm sm:text-base truncate">{archetype.name}</div>
-                    <div className="text-xs text-muted-foreground truncate">{archetype.description}</div>
-                  </div>
-
-                  {/* Meta info */}
-                  <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-                    <span className="text-xs text-primary flex items-center gap-0.5">
-                      <TrendingDown className="h-3 w-3" />
-                      {archetype.offMetaScore}%
-                    </span>
-                    <span className="flex text-muted-foreground hidden sm:flex">
-                      {getBudgetIcon(archetype.budgetTier)}
-                    </span>
-                    {isExpanded ? (
-                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </div>
-                </button>
-
-                {/* Expanded details */}
-                {isExpanded && (
-                  <div className="px-3 pb-3 space-y-3 border-t border-border pt-3">
-                    <p className="text-sm text-muted-foreground">{archetype.gameplan}</p>
-                    
-                    <div className="flex flex-wrap gap-1">
-                      {archetype.tags.map(tag => (
-                        <Badge key={tag} variant="outline" className="text-xs">
-                          {tag}
+                  {/* Main row */}
+                  <button
+                    className="w-full p-3 text-left flex items-center gap-3"
+                    onClick={() => setExpandedId(isExpanded ? null : archetype.id)}
+                  >
+                    {/* Color pips */}
+                    <div className="flex gap-1 flex-shrink-0">
+                      {archetype.colorIdentity.map(color => (
+                        <Badge 
+                          key={color} 
+                          variant={getColorBadgeVariant(color)}
+                          size="sm"
+                          className="w-5 h-5 p-0 justify-center rounded-full font-bold"
+                        >
+                          {color}
                         </Badge>
                       ))}
                     </div>
 
-                    <div>
-                      <div className="text-xs font-medium mb-1.5 text-muted-foreground">Core Cards</div>
-                      <div className="flex flex-wrap gap-1">
-                        {archetype.coreCards.map(card => (
-                          <Badge key={card} variant="secondary" className="text-xs">
-                            {card}
+                    {/* Name & description */}
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm truncate">{archetype.name}</div>
+                      <div className="text-xs text-muted-foreground truncate">{archetype.description}</div>
+                    </div>
+
+                    {/* Meta info */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Badge variant="info" size="sm" className="gap-0.5">
+                        <TrendingDown className="h-3 w-3" />
+                        {archetype.offMetaScore}%
+                      </Badge>
+                      <span className="flex text-muted-foreground/60 hidden sm:flex">
+                        {getBudgetIcon(archetype.budgetTier)}
+                      </span>
+                      <div className="text-muted-foreground transition-transform duration-200" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                        <ChevronDown className="h-4 w-4" />
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Expanded details */}
+                  {isExpanded && (
+                    <div className="px-3 pb-3 space-y-3 border-t border-border/50 pt-3 animate-in">
+                      <p className="text-sm text-muted-foreground leading-relaxed">{archetype.gameplan}</p>
+                      
+                      <div className="flex flex-wrap gap-1.5">
+                        {archetype.tags.map(tag => (
+                          <Badge key={tag} variant="outline" size="sm">
+                            {tag}
                           </Badge>
                         ))}
                       </div>
-                    </div>
 
-                    <Button
-                      size="sm"
-                      className="w-full gap-2"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleLoadArchetype(archetype);
-                      }}
-                      disabled={isLoading}
-                    >
-                      {isLoadingThis ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Sparkles className="h-4 w-4" />
-                      )}
-                      Load Archetype
-                    </Button>
-                  </div>
-                )}
+                      <div>
+                        <div className="text-xs font-medium mb-2 text-muted-foreground uppercase tracking-wide">Core Cards</div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {archetype.coreCards.map(card => (
+                            <Badge key={card} variant="secondary" size="sm">
+                              {card}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+
+                      <Button
+                        size="sm"
+                        className="w-full gap-2 h-9"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLoadArchetype(archetype);
+                        }}
+                        disabled={isLoading}
+                      >
+                        {isLoadingThis ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-4 w-4" />
+                        )}
+                        Load Archetype
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })}
 
           {filteredArchetypes.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              No archetypes match your filters
+            <div className="text-center py-12 text-muted-foreground">
+              <Search className="h-8 w-8 mx-auto mb-3 opacity-50" />
+              <p className="text-sm">No archetypes match your filters</p>
             </div>
           )}
         </div>

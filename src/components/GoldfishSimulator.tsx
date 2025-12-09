@@ -1,12 +1,11 @@
 import { useState, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Deck, DeckCard } from '@/lib/deck';
 import { getCardImage } from '@/lib/scryfall';
-import { Shuffle, Hand, RotateCcw, ChevronRight, Mountain, Droplets } from 'lucide-react';
+import { Shuffle, Hand, RotateCcw, ChevronRight, Mountain, Droplets, Layers } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface GoldfishSimulatorProps {
@@ -149,7 +148,6 @@ export function GoldfishSimulator({ deck }: GoldfishSimulatorProps) {
     setGameState(null);
   }, []);
 
-  // Calculate statistics
   const stats = useMemo(() => {
     if (!gameState) return null;
 
@@ -177,170 +175,178 @@ export function GoldfishSimulator({ deck }: GoldfishSimulatorProps) {
 
   if (totalCards < 40) {
     return (
-      <Card className="bg-card border-border">
-        <CardContent className="py-12 text-center">
-          <Shuffle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="text-lg font-display mb-2">Goldfish Simulator</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Add at least 40 cards to your deck to test opening hands
-          </p>
-          <Badge variant="outline">{totalCards}/40 cards</Badge>
-        </CardContent>
-      </Card>
+      <div className="rounded-xl bg-secondary/30 p-8 text-center animate-in">
+        <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4">
+          <Shuffle className="h-6 w-6 text-muted-foreground" />
+        </div>
+        <h3 className="text-lg font-semibold mb-2">Goldfish Simulator</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Add at least 40 cards to test opening hands
+        </p>
+        <Badge variant="outline">{totalCards}/40 cards</Badge>
+      </div>
     );
   }
 
   if (!gameState) {
     return (
-      <Card className="bg-card border-border">
-        <CardContent className="py-12 text-center">
-          <Shuffle className="h-12 w-12 mx-auto mb-4 text-primary animate-pulse" />
-          <h3 className="text-lg font-display mb-2">Goldfish Simulator</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Test your deck's opening hands and early turns
-          </p>
-          <Button onClick={startGame} className="gap-2">
-            <Hand className="h-4 w-4" />
-            Draw Opening Hand
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="rounded-xl bg-secondary/30 p-8 text-center animate-in">
+        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+          <Hand className="h-6 w-6 text-primary" />
+        </div>
+        <h3 className="text-lg font-semibold mb-2">Goldfish Simulator</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Test your deck's opening hands and early turns
+        </p>
+        <Button onClick={startGame} className="gap-2">
+          <Shuffle className="h-4 w-4" />
+          Draw Opening Hand
+        </Button>
+      </div>
     );
   }
 
   return (
-    <Card className="bg-card border-border">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="font-display text-lg flex items-center gap-2">
-            <Shuffle className="h-5 w-5 text-primary" />
-            Turn {gameState.turn}
-          </CardTitle>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={reset}>
-              <RotateCcw className="h-4 w-4" />
-            </Button>
+    <div className="rounded-xl bg-card border border-border p-4 space-y-4 animate-in">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <span className="text-lg font-bold text-primary">{gameState.turn}</span>
+          </div>
+          <div>
+            <h3 className="font-semibold">Turn {gameState.turn}</h3>
+            <p className="text-xs text-muted-foreground">
+              {stats?.libraryCount} cards in library
+            </p>
           </div>
         </div>
-        
-        {/* Stats bar */}
-        {stats && (
-          <div className="flex gap-4 text-sm text-muted-foreground mt-2">
-            <span className="flex items-center gap-1">
-              <Mountain className="h-4 w-4" />
-              {stats.handLands} lands in hand
-            </span>
-            <span className="flex items-center gap-1">
-              <Droplets className="h-4 w-4" />
-              Avg CMC: {stats.avgCmc}
-            </span>
-            <span>Library: {stats.libraryCount}</span>
-          </div>
-        )}
-      </CardHeader>
+        <Button variant="ghost" size="icon" onClick={reset} className="h-9 w-9">
+          <RotateCcw className="h-4 w-4" />
+        </Button>
+      </div>
+      
+      {/* Stats bar */}
+      {stats && (
+        <div className="flex gap-3 text-xs">
+          <Badge variant="secondary" className="gap-1">
+            <Mountain className="h-3 w-3" />
+            {stats.handLands} lands
+          </Badge>
+          <Badge variant="secondary" className="gap-1">
+            <Droplets className="h-3 w-3" />
+            {stats.avgCmc} avg
+          </Badge>
+          <Badge variant="secondary" className="gap-1">
+            <Layers className="h-3 w-3" />
+            {gameState.battlefield.length} in play
+          </Badge>
+        </div>
+      )}
 
-      <CardContent className="space-y-4">
-        {/* Action buttons */}
-        <div className="flex gap-2 flex-wrap">
-          {gameState.turn === 0 && (
-            <Button variant="outline" size="sm" onClick={mulligan}>
-              Mulligan ({7 - gameState.mulliganCount - 1} cards)
-            </Button>
-          )}
-          <Button size="sm" onClick={drawCard} className="gap-1">
-            <ChevronRight className="h-4 w-4" />
-            Draw & Next Turn
+      {/* Action buttons */}
+      <div className="flex gap-2">
+        {gameState.turn === 0 && (
+          <Button variant="outline" size="sm" onClick={mulligan} className="h-8">
+            Mulligan ({7 - gameState.mulliganCount - 1})
           </Button>
-        </div>
+        )}
+        <Button size="sm" onClick={drawCard} className="gap-1.5 h-8">
+          <ChevronRight className="h-4 w-4" />
+          Next Turn
+        </Button>
+      </div>
 
-        {/* Zone tabs */}
-        <Tabs value={activeZone} onValueChange={(v) => setActiveZone(v as typeof activeZone)}>
-          <TabsList className="w-full">
-            <TabsTrigger value="hand" className="flex-1">
-              Hand ({gameState.hand.length})
-            </TabsTrigger>
-            <TabsTrigger value="battlefield" className="flex-1">
-              Battlefield ({gameState.battlefield.length})
-            </TabsTrigger>
-            <TabsTrigger value="graveyard" className="flex-1">
-              Graveyard ({gameState.graveyard.length})
-            </TabsTrigger>
-          </TabsList>
+      {/* Zone tabs */}
+      <Tabs value={activeZone} onValueChange={(v) => setActiveZone(v as typeof activeZone)}>
+        <TabsList className="w-full h-9">
+          <TabsTrigger value="hand" className="flex-1 text-xs">
+            Hand ({gameState.hand.length})
+          </TabsTrigger>
+          <TabsTrigger value="battlefield" className="flex-1 text-xs">
+            Field ({gameState.battlefield.length})
+          </TabsTrigger>
+          <TabsTrigger value="graveyard" className="flex-1 text-xs">
+            Yard ({gameState.graveyard.length})
+          </TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="hand" className="mt-2">
-            <ScrollArea className="h-48">
-              {gameState.hand.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">Empty hand</p>
-              ) : (
-                <div className="grid grid-cols-4 gap-2">
-                  {gameState.hand.map((card, index) => (
-                    <button
-                      key={`hand-${index}`}
-                      onClick={() => playCard(index)}
-                      className="relative group"
-                      title={`Click to play ${card.card.name}`}
-                    >
-                      <img
-                        src={getCardImage(card.card, 'small')}
-                        alt={card.card.name}
-                        className="rounded-md w-full transition-transform group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 rounded-md transition-opacity flex items-center justify-center">
-                        <span className="text-xs font-bold">Play</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
-          </TabsContent>
-
-          <TabsContent value="battlefield" className="mt-2">
-            <ScrollArea className="h-48">
-              {gameState.battlefield.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">No permanents</p>
-              ) : (
-                <div className="grid grid-cols-4 gap-2">
-                  {gameState.battlefield.map((card, index) => (
-                    <button
-                      key={`bf-${index}`}
-                      onClick={() => sacrificeCard(index)}
-                      className="relative group"
-                      title={`Click to sacrifice ${card.card.name}`}
-                    >
-                      <img
-                        src={getCardImage(card.card, 'small')}
-                        alt={card.card.name}
-                        className="rounded-md w-full"
-                      />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
-          </TabsContent>
-
-          <TabsContent value="graveyard" className="mt-2">
-            <ScrollArea className="h-48">
-              {gameState.graveyard.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">Empty graveyard</p>
-              ) : (
-                <div className="grid grid-cols-4 gap-2">
-                  {gameState.graveyard.map((card, index) => (
-                    <div key={`gy-${index}`} className="opacity-60">
-                      <img
-                        src={getCardImage(card.card, 'small')}
-                        alt={card.card.name}
-                        className="rounded-md w-full"
-                      />
+        <TabsContent value="hand" className="mt-3">
+          <ScrollArea className="h-48">
+            {gameState.hand.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">Empty hand</p>
+            ) : (
+              <div className="grid grid-cols-4 gap-2">
+                {gameState.hand.map((card, index) => (
+                  <button
+                    key={`hand-${index}`}
+                    onClick={() => playCard(index)}
+                    className="relative group rounded-lg overflow-hidden transition-all duration-200 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-ring"
+                    title={`Click to play ${card.card.name}`}
+                  >
+                    <img
+                      src={getCardImage(card.card, 'small')}
+                      alt={card.card.name}
+                      className="w-full"
+                    />
+                    <div className="absolute inset-0 bg-primary/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <span className="text-xs font-semibold text-primary-foreground bg-primary/80 px-2 py-0.5 rounded">Play</span>
                     </div>
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+                  </button>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        </TabsContent>
+
+        <TabsContent value="battlefield" className="mt-3">
+          <ScrollArea className="h-48">
+            {gameState.battlefield.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">No permanents</p>
+            ) : (
+              <div className="grid grid-cols-4 gap-2">
+                {gameState.battlefield.map((card, index) => (
+                  <button
+                    key={`bf-${index}`}
+                    onClick={() => sacrificeCard(index)}
+                    className="relative group rounded-lg overflow-hidden transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-ring"
+                    title={`Click to sacrifice ${card.card.name}`}
+                  >
+                    <img
+                      src={getCardImage(card.card, 'small')}
+                      alt={card.card.name}
+                      className="w-full"
+                    />
+                    <div className="absolute inset-0 bg-destructive/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <span className="text-xs font-semibold text-destructive-foreground bg-destructive/80 px-2 py-0.5 rounded">Sacrifice</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        </TabsContent>
+
+        <TabsContent value="graveyard" className="mt-3">
+          <ScrollArea className="h-48">
+            {gameState.graveyard.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">Empty graveyard</p>
+            ) : (
+              <div className="grid grid-cols-4 gap-2">
+                {gameState.graveyard.map((card, index) => (
+                  <div key={`gy-${index}`} className="opacity-50 rounded-lg overflow-hidden">
+                    <img
+                      src={getCardImage(card.card, 'small')}
+                      alt={card.card.name}
+                      className="w-full grayscale"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
