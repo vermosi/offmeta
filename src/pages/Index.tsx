@@ -199,34 +199,34 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header onRandomCard={handleRandomCard} isLoading={false} />
       
       <div className="flex-1 flex">
         {/* Main Content */}
-        <main className="flex-1 px-3 sm:px-4 py-4 sm:py-6 max-w-5xl mx-auto w-full pb-24 md:pb-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-3 sm:space-y-4">
-            <TabsList className="grid w-full grid-cols-4 h-10 sm:h-9">
-              <TabsTrigger value="search" className="gap-1 sm:gap-1.5 text-xs sm:text-sm px-1 sm:px-3">
+        <main className="flex-1 px-4 sm:px-6 py-6 sm:py-8 max-w-6xl mx-auto w-full pb-24 md:pb-8">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="w-full max-w-md mx-auto">
+              <TabsTrigger value="search" className="flex-1 gap-2">
                 <Search className="h-4 w-4" />
-                <span className="hidden xs:inline">Search</span>
+                <span className="hidden sm:inline">Search</span>
               </TabsTrigger>
-              <TabsTrigger value="archetypes" className="gap-1 sm:gap-1.5 text-xs sm:text-sm px-1 sm:px-3">
+              <TabsTrigger value="archetypes" className="flex-1 gap-2">
                 <Beaker className="h-4 w-4" />
-                <span className="hidden xs:inline">Brews</span>
+                <span className="hidden sm:inline">Brews</span>
               </TabsTrigger>
-              <TabsTrigger value="goldfish" className="gap-1 sm:gap-1.5 text-xs sm:text-sm px-1 sm:px-3">
+              <TabsTrigger value="goldfish" className="flex-1 gap-2">
                 <Shuffle className="h-4 w-4" />
-                <span className="hidden xs:inline">Test</span>
+                <span className="hidden sm:inline">Test</span>
               </TabsTrigger>
-              <TabsTrigger value="collection" className="gap-1 sm:gap-1.5 text-xs sm:text-sm px-1 sm:px-3">
+              <TabsTrigger value="collection" className="flex-1 gap-2">
                 <Package className="h-4 w-4" />
-                <span className="hidden xs:inline">Cards</span>
+                <span className="hidden sm:inline">Cards</span>
               </TabsTrigger>
             </TabsList>
 
             {/* Search Tab */}
-            <TabsContent value="search" className="space-y-4 mt-4">
+            <TabsContent value="search" className="space-y-6 mt-6">
               <UnifiedSearchBar onSearch={handleSearch} isLoading={isSearching} />
 
               {/* Additional filters row */}
@@ -241,25 +241,23 @@ const Index = () => {
                     isOpen={showFilters}
                     onToggle={() => setShowFilters(!showFilters)}
                   />
-                  <div className="flex items-center gap-2">
-                    {totalCards > 0 && (
-                      <span className="text-sm text-muted-foreground">
-                        {totalCards.toLocaleString()} cards
-                      </span>
-                    )}
-                  </div>
+                  {totalCards > 0 && (
+                    <span className="text-sm text-muted-foreground tabular-nums">
+                      {totalCards.toLocaleString()} results
+                    </span>
+                  )}
                 </div>
               )}
 
               {/* Cards Grid */}
               {cards.length > 0 ? (
                 <>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                     {cards.map((card, index) => (
                       <div
                         key={card.id}
                         className="animate-fade-in"
-                        style={{ animationDelay: `${index * 20}ms` }}
+                        style={{ animationDelay: `${index * 30}ms` }}
                       >
                         <CardItemWithDeck
                           card={card}
@@ -276,35 +274,37 @@ const Index = () => {
 
                   {/* Pagination */}
                   {(hasMore || currentPage > 1) && (
-                    <div className="mt-6 flex items-center justify-center gap-3">
+                    <div className="flex items-center justify-center gap-2 pt-4">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handlePageChange(currentPage - 1)}
                         disabled={currentPage === 1 || isSearching}
+                        className="gap-1"
                       >
                         <ChevronLeft className="h-4 w-4" />
-                        Prev
+                        <span className="hidden sm:inline">Previous</span>
                       </Button>
-                      <span className="text-sm text-muted-foreground px-2">
+                      <div className="px-4 py-2 text-sm text-muted-foreground tabular-nums">
                         Page {currentPage}
-                      </span>
+                      </div>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handlePageChange(currentPage + 1)}
                         disabled={!hasMore || isSearching}
+                        className="gap-1"
                       >
-                        Next
+                        <span className="hidden sm:inline">Next</span>
                         <ChevronRight className="h-4 w-4" />
                       </Button>
                     </div>
                   )}
                 </>
               ) : isSearching ? (
-                <div className="flex flex-col items-center justify-center py-16">
-                  <Loader2 className="h-10 w-10 text-primary animate-spin" />
-                  <p className="mt-3 text-sm text-muted-foreground">Searching...</p>
+                <div className="flex flex-col items-center justify-center py-20">
+                  <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
+                  <p className="mt-4 text-sm text-muted-foreground">Searching...</p>
                 </div>
               ) : (
                 <EmptyState hasSearched={hasSearched && !isSearching} />
@@ -312,22 +312,22 @@ const Index = () => {
             </TabsContent>
 
             {/* Archetypes Tab */}
-            <TabsContent value="archetypes" className="mt-4">
+            <TabsContent value="archetypes" className="mt-6">
               <ArchetypeExplorer onLoadArchetype={handleLoadArchetype} />
             </TabsContent>
 
             {/* Goldfish/Playtest Tab */}
-            <TabsContent value="goldfish" className="space-y-4 mt-4">
+            <TabsContent value="goldfish" className="space-y-6 mt-6">
               <GoldfishSimulator deck={deck} />
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-6 md:grid-cols-2">
                 <SavedDecksPanel currentDeck={deck} onLoadDeck={handleLoadDeck} />
                 <DeckCollectionCheck deck={deck} />
               </div>
             </TabsContent>
 
             {/* Collection Tab */}
-            <TabsContent value="collection" className="mt-4">
-              <div className="grid gap-4 md:grid-cols-2">
+            <TabsContent value="collection" className="mt-6">
+              <div className="grid gap-6 md:grid-cols-2">
                 <CollectionImport />
                 <DeckCollectionCheck deck={deck} />
               </div>
@@ -336,7 +336,7 @@ const Index = () => {
         </main>
 
         {/* Deck Panel - Desktop */}
-        <aside className="hidden md:block w-80 lg:w-96 flex-shrink-0 h-[calc(100vh-64px)] sticky top-16">
+        <aside className="hidden md:block w-80 lg:w-96 flex-shrink-0 h-[calc(100vh-57px)] sticky top-[57px]">
           <DeckPanel deck={deck} onDeckChange={setDeck} onClearDeck={handleClearDeck} />
         </aside>
       </div>

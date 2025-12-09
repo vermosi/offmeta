@@ -40,7 +40,7 @@ export function DeckPanel({ deck, onDeckChange, onClearDeck }: DeckPanelProps) {
   const handleExport = () => {
     const deckList = exportDeckList(deck);
     navigator.clipboard.writeText(deckList);
-    toast.success("Deck list copied to clipboard!");
+    toast.success("Copied to clipboard");
   };
 
   const handleDownload = () => {
@@ -54,7 +54,7 @@ export function DeckPanel({ deck, onDeckChange, onClearDeck }: DeckPanelProps) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast.success("Deck list downloaded!");
+    toast.success("Downloaded");
   };
 
   const handleAddCard = (card: ScryfallCard, board: "mainboard" | "sideboard") => {
@@ -72,9 +72,9 @@ export function DeckPanel({ deck, onDeckChange, onClearDeck }: DeckPanelProps) {
   };
 
   return (
-    <div className="h-full flex flex-col bg-card border-l border-border">
+    <div className="h-full flex flex-col bg-card/50 border-l border-border/50">
       {/* Header */}
-      <div className="p-4 border-b border-border space-y-3">
+      <div className="p-4 border-b border-border/50 space-y-3">
         <div className="flex items-center gap-2">
           {isEditingName ? (
             <div className="flex items-center gap-2 flex-1">
@@ -90,13 +90,13 @@ export function DeckPanel({ deck, onDeckChange, onClearDeck }: DeckPanelProps) {
               </Button>
             </div>
           ) : (
-            <div className="flex items-center gap-2 flex-1">
-              <Library className="h-5 w-5 text-primary" />
-              <h2 className="font-display font-bold text-lg truncate">{deck.name}</h2>
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <Library className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <h2 className="font-medium text-sm truncate">{deck.name}</h2>
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-6 w-6 opacity-50 hover:opacity-100"
+                className="h-6 w-6 opacity-0 group-hover:opacity-100 hover:opacity-100 flex-shrink-0"
                 onClick={() => setIsEditingName(true)}
               >
                 <Edit2 className="h-3 w-3" />
@@ -105,12 +105,12 @@ export function DeckPanel({ deck, onDeckChange, onClearDeck }: DeckPanelProps) {
           )}
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">{mainboardCount}</span> cards
+        <div className="flex items-center justify-between text-sm">
+          <div className="text-muted-foreground tabular-nums">
+            <span className="text-foreground font-medium">{mainboardCount}</span> cards
             {sideboardCount > 0 && (
-              <span className="ml-2">
-                / <span className="font-semibold text-foreground">{sideboardCount}</span> sideboard
+              <span className="ml-1.5">
+                · <span className="text-foreground font-medium">{sideboardCount}</span> sideboard
               </span>
             )}
           </div>
@@ -121,18 +121,18 @@ export function DeckPanel({ deck, onDeckChange, onClearDeck }: DeckPanelProps) {
         </div>
 
         <div className="flex items-center gap-1">
-          <Button size="sm" variant="ghost" className="gap-1 flex-1" onClick={handleExport}>
+          <Button size="sm" variant="ghost" className="flex-1 h-8 gap-1.5 text-xs" onClick={handleExport}>
             <Copy className="h-3 w-3" />
             Copy
           </Button>
-          <Button size="sm" variant="ghost" className="gap-1 flex-1" onClick={handleDownload}>
+          <Button size="sm" variant="ghost" className="flex-1 h-8 gap-1.5 text-xs" onClick={handleDownload}>
             <Download className="h-3 w-3" />
-            Download
+            Export
           </Button>
           <Button
             size="sm"
             variant="ghost"
-            className="text-destructive hover:text-destructive"
+            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
             onClick={onClearDeck}
           >
             <Trash2 className="h-3 w-3" />
@@ -141,8 +141,8 @@ export function DeckPanel({ deck, onDeckChange, onClearDeck }: DeckPanelProps) {
       </div>
 
       {/* Stats */}
-      <ScrollArea className="flex-shrink-0 max-h-[420px]">
-        <div className="p-4 space-y-4 border-b border-border">
+      <ScrollArea className="flex-shrink-0 max-h-[380px]">
+        <div className="p-4 space-y-4 border-b border-border/50">
           <FormatValidator
             deck={deck}
             selectedFormat={selectedFormat}
@@ -157,18 +157,18 @@ export function DeckPanel({ deck, onDeckChange, onClearDeck }: DeckPanelProps) {
 
       {/* Card List */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "mainboard" | "sideboard")} className="flex-1 flex flex-col min-h-0">
-        <TabsList className="mx-4 mt-2 grid grid-cols-2">
+        <TabsList className="mx-4 mt-3 grid grid-cols-2 h-9">
           <TabsTrigger value="mainboard" className="text-xs">
-            Mainboard ({mainboardCount})
+            Main ({mainboardCount})
           </TabsTrigger>
           <TabsTrigger value="sideboard" className="text-xs">
-            Sideboard ({sideboardCount})
+            Side ({sideboardCount})
           </TabsTrigger>
         </TabsList>
         
         <TabsContent value="mainboard" className="flex-1 m-0 min-h-0">
           <ScrollArea className="h-full">
-            <div className="p-2">
+            <div className="p-3">
               <GroupedDeckList
                 cards={deck.mainboard}
                 onAddCard={(card) => handleAddCard(card, "mainboard")}
@@ -181,7 +181,7 @@ export function DeckPanel({ deck, onDeckChange, onClearDeck }: DeckPanelProps) {
         
         <TabsContent value="sideboard" className="flex-1 m-0 min-h-0">
           <ScrollArea className="h-full">
-            <div className="p-2">
+            <div className="p-3">
               <GroupedDeckList
                 cards={deck.sideboard}
                 onAddCard={(card) => handleAddCard(card, "sideboard")}
