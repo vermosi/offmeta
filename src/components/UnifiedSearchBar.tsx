@@ -6,7 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Sparkles, Loader2, Filter, Search, Wand2, X } from 'lucide-react';
+import { Sparkles, Loader2, SlidersHorizontal, Search, Wand2, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface UnifiedSearchBarProps {
@@ -31,11 +31,11 @@ const FORMATS = [
 ];
 
 const COLORS = [
-  { value: 'W', label: 'W', color: 'bg-amber-100 text-amber-900 border-amber-300' },
+  { value: 'W', label: 'W', color: 'bg-amber-50 text-amber-900 border-amber-200' },
   { value: 'U', label: 'U', color: 'bg-blue-500 text-white border-blue-600' },
   { value: 'B', label: 'B', color: 'bg-zinc-800 text-white border-zinc-900' },
   { value: 'R', label: 'R', color: 'bg-red-500 text-white border-red-600' },
-  { value: 'G', label: 'G', color: 'bg-green-600 text-white border-green-700' },
+  { value: 'G', label: 'G', color: 'bg-emerald-500 text-white border-emerald-600' },
 ];
 
 export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps) {
@@ -109,30 +109,32 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
   const activeFiltersCount = (format ? 1 : 0) + (colorIdentity.length > 0 ? 1 : 0);
 
   return (
-    <div className="space-y-2 sm:space-y-3">
+    <div className="space-y-4">
       {/* Main search bar */}
-      <div className="flex gap-2">
+      <div className="flex gap-3">
         <div className="relative flex-1">
-          {isSemanticMode ? (
-            <Wand2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-          ) : (
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
-          )}
+          <div className="absolute left-4 top-1/2 -translate-y-1/2">
+            {isSemanticMode ? (
+              <Wand2 className="h-4 w-4 text-primary" />
+            ) : (
+              <Search className="h-4 w-4 text-muted-foreground" />
+            )}
+          </div>
           <Input
             ref={inputRef}
             type="text"
-            placeholder={isSemanticMode ? 'Describe what you need...' : 'Scryfall syntax...'}
+            placeholder={isSemanticMode ? 'Describe what you need...' : 'Enter Scryfall syntax...'}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            className="pl-10 sm:pl-11 pr-20 sm:pr-24 h-11 sm:h-12 text-sm sm:text-base bg-card border-border focus:border-primary"
+            className="pl-11 pr-20 h-12 text-sm bg-muted/30 border-border/50 focus:border-primary/50 focus:bg-background transition-colors"
           />
           
           {query && (
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-12 sm:right-16 top-1/2 -translate-y-1/2 h-7 w-7 sm:h-8 sm:w-8"
+              className="absolute right-12 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground"
               onClick={() => setQuery('')}
             >
               <X className="h-4 w-4" />
@@ -144,28 +146,25 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 sm:h-8 sm:w-8"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground"
               >
-                <Filter className="h-4 w-4" />
+                <SlidersHorizontal className="h-4 w-4" />
                 {activeFiltersCount > 0 && (
-                  <Badge 
-                    variant="secondary" 
-                    className="absolute -top-1 -right-1 h-4 w-4 p-0 text-[10px] justify-center"
-                  >
+                  <span className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-primary text-primary-foreground rounded-full text-[10px] font-medium flex items-center justify-center">
                     {activeFiltersCount}
-                  </Badge>
+                  </span>
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-72 bg-popover" align="end">
+            <PopoverContent className="w-72 p-4" align="end">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Format</label>
+                  <label className="text-sm font-medium text-foreground">Format</label>
                   <Select value={format || "all"} onValueChange={(v) => setFormat(v === "all" ? "" : v)}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-9">
                       <SelectValue placeholder="Any format" />
                     </SelectTrigger>
-                    <SelectContent className="bg-popover">
+                    <SelectContent>
                       <SelectItem value="all">Any format</SelectItem>
                       {FORMATS.map(f => (
                         <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
@@ -175,7 +174,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Colors</label>
+                  <label className="text-sm font-medium text-foreground">Colors</label>
                   <div className="flex gap-1.5">
                     {COLORS.map(c => (
                       <Button
@@ -183,7 +182,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
                         variant="outline"
                         size="sm"
                         onClick={() => toggleColor(c.value)}
-                        className={`w-9 h-9 p-0 font-bold ${colorIdentity.includes(c.value) ? c.color : ''}`}
+                        className={`w-8 h-8 p-0 font-semibold text-xs ${colorIdentity.includes(c.value) ? c.color : 'text-muted-foreground'}`}
                       >
                         {c.label}
                       </Button>
@@ -192,8 +191,8 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
                 </div>
 
                 {activeFiltersCount > 0 && (
-                  <Button variant="ghost" size="sm" className="w-full" onClick={clearFilters}>
-                    Clear Filters
+                  <Button variant="ghost" size="sm" className="w-full text-muted-foreground" onClick={clearFilters}>
+                    Clear filters
                   </Button>
                 )}
               </div>
@@ -204,7 +203,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
         <Button
           onClick={handleSearch}
           disabled={isSearching || isLoading || !query.trim()}
-          className="h-11 sm:h-12 px-3 sm:px-5 gap-1.5"
+          className="h-12 px-6 gap-2"
         >
           {isSearching ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -218,29 +217,29 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
       </div>
 
       {/* Mode toggle + quick examples */}
-      <div className="flex items-center gap-2 sm:gap-4">
-        <div className="flex items-center gap-1">
+      <div className="flex items-center gap-3 sm:gap-4">
+        <div className="flex items-center p-0.5 bg-muted/50 rounded-md">
           <Button
-            variant={isSemanticMode ? "default" : "outline"}
+            variant={isSemanticMode ? "default" : "ghost"}
             size="sm"
             onClick={() => setIsSemanticMode(true)}
-            className="h-8 text-xs gap-1 px-2 sm:px-3"
+            className="h-7 text-xs gap-1.5 px-3 rounded-sm"
           >
             <Wand2 className="h-3 w-3" />
             AI
           </Button>
           <Button
-            variant={!isSemanticMode ? "default" : "outline"}
+            variant={!isSemanticMode ? "default" : "ghost"}
             size="sm"
             onClick={() => setIsSemanticMode(false)}
-            className="h-8 text-xs gap-1 px-2 sm:px-3"
+            className="h-7 text-xs gap-1.5 px-3 rounded-sm"
           >
             <Search className="h-3 w-3" />
             Syntax
           </Button>
         </div>
 
-        <div className="flex items-center gap-1 overflow-x-auto flex-1 scrollbar-hide">
+        <div className="hidden sm:flex items-center gap-1 overflow-x-auto flex-1">
           {EXAMPLE_QUERIES.slice(0, isMobile ? 2 : 4).map((example) => (
             <Button
               key={example.query}
@@ -250,7 +249,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
                 setQuery(example.query);
                 setIsSemanticMode(example.semantic);
               }}
-              className="h-7 text-xs px-2 text-muted-foreground hover:text-foreground whitespace-nowrap flex-shrink-0"
+              className="h-7 text-xs px-2.5 text-muted-foreground hover:text-foreground whitespace-nowrap"
             >
               {example.label}
             </Button>
