@@ -83,44 +83,44 @@ export function DeckStats({ deck }: DeckStatsProps) {
   }
 
   return (
-    <div className="space-y-3">
-      <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-        <BarChart3 className="h-4 w-4" />
-        Statistics
-      </h4>
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <BarChart3 className="h-4 w-4 text-muted-foreground" />
+        <span className="text-sm font-medium text-foreground">Statistics</span>
+      </div>
 
       {/* Quick stats */}
       <div className="grid grid-cols-3 gap-2">
-        <div className="bg-muted/50 rounded-lg p-2 text-center">
-          <Zap className="h-4 w-4 mx-auto mb-1 text-primary" />
-          <div className="text-lg font-bold">{stats.avgManaValue.toFixed(2)}</div>
+        <div className="rounded-lg border border-border/50 bg-muted/30 p-3 text-center transition-colors hover:bg-muted/50">
+          <Zap className="h-4 w-4 mx-auto mb-1.5 text-primary" />
+          <div className="text-lg font-semibold text-foreground">{stats.avgManaValue.toFixed(2)}</div>
           <div className="text-xs text-muted-foreground">Avg MV</div>
         </div>
-        <div className="bg-muted/50 rounded-lg p-2 text-center">
-          <Mountain className="h-4 w-4 mx-auto mb-1 text-amber-500" />
-          <div className="text-lg font-bold">{stats.landCount}</div>
+        <div className="rounded-lg border border-border/50 bg-muted/30 p-3 text-center transition-colors hover:bg-muted/50">
+          <Mountain className="h-4 w-4 mx-auto mb-1.5 text-amber-500" />
+          <div className="text-lg font-semibold text-foreground">{stats.landCount}</div>
           <div className="text-xs text-muted-foreground">Lands</div>
         </div>
-        <div className="bg-muted/50 rounded-lg p-2 text-center">
-          <Layers className="h-4 w-4 mx-auto mb-1 text-blue-400" />
-          <div className="text-lg font-bold">{stats.nonLandCount}</div>
+        <div className="rounded-lg border border-border/50 bg-muted/30 p-3 text-center transition-colors hover:bg-muted/50">
+          <Layers className="h-4 w-4 mx-auto mb-1.5 text-blue-400" />
+          <div className="text-lg font-semibold text-foreground">{stats.nonLandCount}</div>
           <div className="text-xs text-muted-foreground">Spells</div>
         </div>
       </div>
 
       {/* Type breakdown bars */}
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         {stats.typeBreakdown.map((type) => (
-          <div key={type.type} className="space-y-0.5">
+          <div key={type.type} className="space-y-1">
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground">{type.type}</span>
-              <span className="font-medium">
+              <span className="font-medium text-foreground">
                 {type.count} <span className="text-muted-foreground">({type.percentage.toFixed(0)}%)</span>
               </span>
             </div>
-            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+            <div className="h-1.5 bg-muted/50 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-300"
+                className="h-full bg-primary/80 rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${type.percentage}%` }}
               />
             </div>
