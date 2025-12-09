@@ -66,7 +66,7 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
     ));
   };
 
-  const getColorBadgeVariant = (color: string) => {
+  const getColorBadgeVariant = (color: string): "white" | "blue" | "black" | "red" | "green" | "secondary" => {
     const colorMap: Record<string, "white" | "blue" | "black" | "red" | "green"> = {
       'W': 'white',
       'U': 'blue',
@@ -134,7 +134,7 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
             return (
               <div
                 key={archetype.id}
-                className="animate-in"
+                className="animate-in fade-in-0 slide-in-from-bottom-2 duration-300 fill-mode-both"
                 style={{ animationDelay: `${index * 30}ms` }}
               >
                 <div
@@ -186,7 +186,7 @@ export function ArchetypeExplorer({ onLoadArchetype }: ArchetypeExplorerProps) {
 
                   {/* Expanded details */}
                   {isExpanded && (
-                    <div className="px-3 pb-3 space-y-3 border-t border-border/50 pt-3 animate-in">
+                    <div className="px-3 pb-3 space-y-3 border-t border-border/50 pt-3 animate-in fade-in-0 duration-200">
                       <p className="text-sm text-muted-foreground leading-relaxed">{archetype.gameplan}</p>
                       
                       <div className="flex flex-wrap gap-1.5">
