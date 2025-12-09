@@ -138,7 +138,9 @@ export function SavedDecksPanel({ currentDeck, onLoadDeck }: SavedDecksPanelProp
                     <div className="font-medium truncate">{deck.name}</div>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Badge variant="outline" className="text-xs">
-                        {deck.mainboard.reduce((sum: number, c: any) => sum + (c.quantity || 1), 0)} cards
+                        {Array.isArray(deck.mainboard) 
+                          ? deck.mainboard.reduce((sum: number, c: any) => sum + (c.quantity || 1), 0) 
+                          : 0} cards
                       </Badge>
                       <span>
                         {formatDistanceToNow(new Date(deck.updated_at), { addSuffix: true })}

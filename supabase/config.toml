@@ -1,1 +1,4 @@
 project_id = "nxmzyykkzwomkcentctt"
+
+[functions.semantic-search]
+verify_jwt = false
