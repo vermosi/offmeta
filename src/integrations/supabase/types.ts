@@ -205,6 +205,81 @@ export type Database = {
         }
         Relationships: []
       }
+      scraped_decks: {
+        Row: {
+          archetype: string | null
+          budget_tier: string
+          color_identity: string[]
+          commander_name: string | null
+          created_at: string
+          description: string | null
+          estimated_price: number | null
+          format: string
+          id: string
+          mainboard: Json
+          name: string
+          popularity_score: number | null
+          scraped_at: string
+          sideboard: Json
+          source: string
+          source_deck_id: string | null
+          source_url: string | null
+          strategy_notes: string | null
+          tags: string[]
+          tournament_results: Json | null
+          updated_at: string
+          win_rate: number | null
+        }
+        Insert: {
+          archetype?: string | null
+          budget_tier?: string
+          color_identity?: string[]
+          commander_name?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_price?: number | null
+          format?: string
+          id?: string
+          mainboard?: Json
+          name: string
+          popularity_score?: number | null
+          scraped_at?: string
+          sideboard?: Json
+          source: string
+          source_deck_id?: string | null
+          source_url?: string | null
+          strategy_notes?: string | null
+          tags?: string[]
+          tournament_results?: Json | null
+          updated_at?: string
+          win_rate?: number | null
+        }
+        Update: {
+          archetype?: string | null
+          budget_tier?: string
+          color_identity?: string[]
+          commander_name?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_price?: number | null
+          format?: string
+          id?: string
+          mainboard?: Json
+          name?: string
+          popularity_score?: number | null
+          scraped_at?: string
+          sideboard?: Json
+          source?: string
+          source_deck_id?: string | null
+          source_url?: string | null
+          strategy_notes?: string | null
+          tags?: string[]
+          tournament_results?: Json | null
+          updated_at?: string
+          win_rate?: number | null
+        }
+        Relationships: []
+      }
       search_history: {
         Row: {
           created_at: string
