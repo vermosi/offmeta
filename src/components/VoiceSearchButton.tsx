@@ -27,6 +27,7 @@ export function VoiceSearchButton({
               variant="ghost"
               size="icon"
               disabled
+              aria-label="Voice input not supported"
               className={cn("h-12 w-12 rounded-full opacity-50", className)}
             >
               <MicOff className="h-5 w-5 text-muted-foreground" />
@@ -49,6 +50,7 @@ export function VoiceSearchButton({
             size="icon"
             onClick={onToggle}
             disabled={isProcessing}
+            aria-label={isListening ? "Stop listening" : "Start voice search"}
             className={cn(
               "h-12 w-12 rounded-full relative transition-all duration-300",
               isListening && "bg-destructive hover:bg-destructive/90 animate-pulse-ring",

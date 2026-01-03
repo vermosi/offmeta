@@ -277,6 +277,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
               <Button
                 variant="ghost"
                 size="icon"
+                aria-label="Search filters"
                 className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 h-9 w-9 sm:h-10 sm:w-10 text-muted-foreground hover:text-foreground min-h-0 min-w-0"
               >
                 <SlidersHorizontal className="h-4 w-4" />
