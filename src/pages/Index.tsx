@@ -4,7 +4,7 @@ import { UnifiedSearchBar, SearchResult } from "@/components/UnifiedSearchBar";
 import { SearchInterpretation } from "@/components/SearchInterpretation";
 import { AffiliateNotice } from "@/components/AffiliateNotice";
 import { CardItem } from "@/components/CardItem";
-import { EmptyState } from "@/components/EmptyState";
+import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { searchCards } from "@/lib/scryfall";
@@ -140,6 +140,9 @@ const Index = () => {
           ) : null}
         </div>
       </main>
+
+      {/* Footer */}
+      <Footer />
 
       {/* Card Modal - lazy loaded */}
       <Suspense fallback={null}>
