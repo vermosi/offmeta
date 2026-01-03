@@ -10,8 +10,8 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="format-detection" content="telephone=no" />
     
-    <title>OffMeta – Natural Language Magic Card Search</title>
-    <meta name="description" content="Search Magic: The Gathering cards by describing what you need. OffMeta translates how players describe cards into real Scryfall searches." />
+    <title>OffMeta — Natural Language MTG Card Search</title>
+    <meta name="description" content="OffMeta is a natural language Magic: The Gathering card search. Type what you mean and find cards without Scryfall syntax." />
     <meta name="author" content="OffMeta" />
     <meta name="keywords" content="MTG, Magic The Gathering, Scryfall, card search, deck builder, natural language search, MTG cards, Commander, EDH" />
     <link rel="canonical" href="https://offmeta.lovable.app/" />
@@ -19,8 +19,8 @@
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://offmeta.lovable.app/" />
-    <meta property="og:title" content="OffMeta – Natural Language Magic Card Search" />
-    <meta property="og:description" content="Describe what you need and find the perfect Magic cards. Type 'cheap green ramp spells' or 'creatures that make treasure' – we translate it to Scryfall." />
+    <meta property="og:title" content="OffMeta — Natural Language MTG Card Search" />
+    <meta property="og:description" content="Type what you mean and find Magic cards instantly. No syntax required." />
     <meta property="og:image" content="https://offmeta.lovable.app/og-image.png" />
     <meta property="og:site_name" content="OffMeta" />
     <meta property="og:locale" content="en_US" />
@@ -28,8 +28,8 @@
     <!-- Twitter/X Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="https://offmeta.lovable.app/" />
-    <meta name="twitter:title" content="OffMeta – Natural Language Magic Card Search" />
-    <meta name="twitter:description" content="Describe what you need and find the perfect Magic cards. Powered by Scryfall." />
+    <meta name="twitter:title" content="OffMeta — Natural Language MTG Card Search" />
+    <meta name="twitter:description" content="Magic card search without syntax." />
     <meta name="twitter:image" content="https://offmeta.lovable.app/og-image.png" />
 
     <!-- Structured Data -->
@@ -77,20 +77,23 @@
   </head>
 
   <body class="dark">
-    <!-- Indexable content for SEO -->
+    <!-- Static indexable content for SEO crawlers (visible but subtle) -->
+    <div id="seo-content" style="position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;">
+      <h1>OffMeta — Natural Language Magic Card Search</h1>
+      <p>OffMeta is a natural language Magic: The Gathering card search tool. It lets players describe cards the way they talk and translates that into real Scryfall searches. No syntax knowledge required.</p>
+    </div>
+
+    <!-- Fallback for JavaScript-disabled browsers -->
     <noscript>
       <div style="padding: 2rem; font-family: system-ui, sans-serif;">
-        <h1>OffMeta – Natural Language Magic Card Search</h1>
-        <p>Search Magic: The Gathering cards by describing what you need in plain English.</p>
-        <p>OffMeta translates how Magic players describe cards into real Scryfall searches, giving you accurate results from the official MTG card database.</p>
+        <h1>OffMeta — Natural Language Magic Card Search</h1>
+        <p>OffMeta is a natural language Magic: The Gathering card search tool. It lets players describe cards the way they talk and translates that into real Scryfall searches. No syntax knowledge required.</p>
         <h2>How it works</h2>
         <ul>
           <li>Type what you're looking for: "cheap green ramp spells" or "creatures that make treasure tokens"</li>
           <li>OffMeta translates your description into Scryfall syntax</li>
           <li>See real card results instantly from Scryfall's database</li>
         </ul>
-        <h2>Who it's for</h2>
-        <p>Perfect for Commander players building decks, brewers exploring card options, and anyone who wants to search MTG cards without learning complex search syntax.</p>
         <p>Please enable JavaScript to use OffMeta.</p>
       </div>
     </noscript>
