@@ -59,20 +59,19 @@ export function useVoiceInput({
   const [transcript, setTranscript] = useState('');
   const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  
-  // Store callbacks in refs to avoid recreating recognition on every render
   const onTranscriptRef = useRef(onTranscript);
   const onFinalTranscriptRef = useRef(onFinalTranscript);
-  
-  // Keep refs up to date
+
+  const isSupported = typeof window !== 'undefined' && 
+    ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+
+  // Keep callback refs up to date
   useEffect(() => {
     onTranscriptRef.current = onTranscript;
     onFinalTranscriptRef.current = onFinalTranscript;
   }, [onTranscript, onFinalTranscript]);
 
-  const isSupported = typeof window !== 'undefined' && 
-    ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
-
+  // Set up speech recognition
   useEffect(() => {
     if (!isSupported) return;
 
