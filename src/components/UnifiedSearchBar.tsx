@@ -1,3 +1,9 @@
+/**
+ * Unified search bar component for natural language MTG card search.
+ * Handles query input, AI translation, search history, and example queries.
+ * @module components/UnifiedSearchBar
+ */
+
 import { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,11 +16,16 @@ const SEARCH_CONTEXT_KEY = 'lastSearchContext';
 const SEARCH_HISTORY_KEY = 'offmeta_search_history';
 const MAX_HISTORY_ITEMS = 5;
 
+/** Context for follow-up searches to maintain conversation state */
 interface SearchContext {
   previousQuery: string;
   previousScryfall: string;
 }
 
+/**
+ * Hook to manage search context for follow-up queries.
+ * Stores context in sessionStorage for persistence within a session.
+ */
 function useSearchContext() {
   const [context, setContext] = useState<SearchContext | null>(null);
 
@@ -31,6 +42,10 @@ function useSearchContext() {
   return { saveContext, getContext };
 }
 
+/**
+ * Hook to manage recent search history.
+ * Stores up to 5 recent searches in localStorage.
+ */
 function useSearchHistory() {
   const [history, setHistory] = useState<string[]>(() => {
     if (typeof window === 'undefined') return [];
@@ -64,6 +79,7 @@ function useSearchHistory() {
   return { history, addToHistory, clearHistory };
 }
 
+/** Result from the semantic search AI translation */
 export interface SearchResult {
   scryfallQuery: string;
   explanation?: {
@@ -86,6 +102,12 @@ const EXAMPLE_QUERIES = [
   "Rakdos sacrifice outlets",
 ];
 
+/**
+ * Main search bar component with natural language input.
+ * Translates user queries to Scryfall syntax via Gemini AI.
+ * @param props.onSearch - Callback when search is executed with query and result
+ * @param props.isLoading - Whether parent is currently loading results
+ */
 export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps) {
   const isMobile = useIsMobile();
   const [query, setQuery] = useState('');

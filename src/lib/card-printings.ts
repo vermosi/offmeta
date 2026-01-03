@@ -1,3 +1,9 @@
+/**
+ * Card printings and purchase URL utilities.
+ * Fetches all printings of a card and generates marketplace links.
+ * @module lib/card-printings
+ */
+
 import { ScryfallCard } from "@/types/card";
 
 const BASE_URL = "https://api.scryfall.com";
@@ -56,6 +62,12 @@ async function rateLimitedFetch(url: string): Promise<Response> {
   return fetch(url);
 }
 
+/**
+ * Fetch all printings of a card from Scryfall.
+ * Results are cached for 5 minutes to reduce API calls.
+ * @param cardName - The exact card name to look up
+ * @returns Array of CardPrinting objects with set/price info
+ */
 export async function getCardPrintings(cardName: string): Promise<CardPrinting[]> {
   const cacheKey = cardName.toLowerCase();
   const cached = printingsCache.get(cacheKey);
@@ -101,6 +113,12 @@ export async function getCardPrintings(cardName: string): Promise<CardPrinting[]
   }
 }
 
+/**
+ * Generate a TCGPlayer purchase URL for a card.
+ * Uses the card's embedded purchase URI if available, otherwise falls back to search.
+ * @param card - The card to generate a URL for
+ * @returns TCGPlayer URL for purchasing the card
+ */
 export function getTCGPlayerUrl(card: ScryfallCard): string {
   const purchaseUris = (card as any).purchase_uris;
   if (purchaseUris?.tcgplayer) {
@@ -110,6 +128,12 @@ export function getTCGPlayerUrl(card: ScryfallCard): string {
   return `https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=${encodeURIComponent(card.name)}`;
 }
 
+/**
+ * Generate a Cardmarket purchase URL for a card.
+ * Uses the card's embedded purchase URI if available, otherwise falls back to search.
+ * @param card - The card to generate a URL for
+ * @returns Cardmarket URL for purchasing the card
+ */
 export function getCardmarketUrl(card: ScryfallCard): string {
   const purchaseUris = (card as any).purchase_uris;
   if (purchaseUris?.cardmarket) {

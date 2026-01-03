@@ -1,10 +1,18 @@
+/**
+ * Component to display how the AI interpreted a natural language search.
+ * Shows the resulting Scryfall query, confidence level, and assumptions made.
+ * @module components/SearchInterpretation
+ */
+
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, Copy, Check, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface SearchInterpretationProps {
+  /** The translated Scryfall query string */
   scryfallQuery: string;
+  /** Optional explanation from the AI including confidence and assumptions */
   explanation?: {
     readable: string;
     assumptions: string[];
@@ -12,6 +20,10 @@ interface SearchInterpretationProps {
   };
 }
 
+/**
+ * Expandable panel showing search interpretation details.
+ * Users can copy the Scryfall query and see what assumptions were made.
+ */
 export function SearchInterpretation({ scryfallQuery, explanation }: SearchInterpretationProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [copied, setCopied] = useState(false);

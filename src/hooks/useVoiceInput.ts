@@ -1,3 +1,9 @@
+/**
+ * Voice input hook using Web Speech API.
+ * Provides speech-to-text functionality for voice search.
+ * @module hooks/useVoiceInput
+ */
+
 import { useState, useCallback, useRef, useEffect } from 'react';
 
 // Type declarations for Web Speech API
@@ -50,6 +56,18 @@ interface UseVoiceInputReturn {
   error: string | null;
 }
 
+/**
+ * Hook for voice-to-text input using the Web Speech API.
+ * @param options - Configuration options
+ * @param options.onTranscript - Callback for interim transcripts (called as user speaks)
+ * @param options.onFinalTranscript - Callback when speech recognition completes
+ * @param options.language - BCP 47 language code (default: 'en-US')
+ * @returns Object with listening state, controls, and transcript
+ * @example
+ * const { isListening, startListening, transcript } = useVoiceInput({
+ *   onFinalTranscript: (text) => handleSearch(text)
+ * });
+ */
 export function useVoiceInput({
   onTranscript,
   onFinalTranscript,

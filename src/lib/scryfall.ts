@@ -1,3 +1,9 @@
+/**
+ * Scryfall API client for Magic: The Gathering card data.
+ * Handles rate limiting, search, and card image retrieval.
+ * @module lib/scryfall
+ */
+
 import { ScryfallCard, SearchResult, AutocompleteResult } from "@/types/card";
 
 const BASE_URL = "https://api.scryfall.com";
@@ -8,6 +14,12 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 let lastRequestTime = 0;
 const MIN_REQUEST_INTERVAL = 100;
 
+/**
+ * Fetch wrapper that enforces Scryfall's rate limiting requirements.
+ * Ensures at least 100ms between consecutive API requests.
+ * @param url - The URL to fetch
+ * @returns The fetch Response
+ */
 async function rateLimitedFetch(url: string): Promise<Response> {
   const now = Date.now();
   const timeSinceLastRequest = now - lastRequestTime;
@@ -20,6 +32,15 @@ async function rateLimitedFetch(url: string): Promise<Response> {
   return fetch(url);
 }
 
+/**
+ * Search for cards using Scryfall syntax.
+ * @param query - Scryfall search query (e.g., "t:creature c:green cmc<=3")
+ * @param page - Page number for paginated results (default: 1)
+ * @returns Search results with card data and pagination info
+ * @example
+ * const results = await searchCards("t:dragon c:red", 1);
+ * console.log(results.data); // Array of matching cards
+ */
 export async function searchCards(query: string, page: number = 1): Promise<SearchResult> {
   const encodedQuery = encodeURIComponent(query);
   const response = await rateLimitedFetch(
@@ -36,6 +57,11 @@ export async function searchCards(query: string, page: number = 1): Promise<Sear
   return response.json();
 }
 
+/**
+ * Get card name suggestions for autocomplete.
+ * @param query - Partial card name (minimum 2 characters)
+ * @returns Array of matching card names
+ */
 export async function autocomplete(query: string): Promise<string[]> {
   if (query.length < 2) return [];
   
@@ -50,6 +76,10 @@ export async function autocomplete(query: string): Promise<string[]> {
   return data.data;
 }
 
+/**
+ * Fetch a random Magic card from Scryfall.
+ * @returns A random ScryfallCard
+ */
 export async function getRandomCard(): Promise<ScryfallCard> {
   const response = await rateLimitedFetch(`${BASE_URL}/cards/random`);
   
@@ -60,6 +90,12 @@ export async function getRandomCard(): Promise<ScryfallCard> {
   return response.json();
 }
 
+/**
+ * Fetch a specific card by its exact name.
+ * @param name - The exact card name to look up
+ * @returns The matching ScryfallCard
+ * @throws Error if card is not found
+ */
 export async function getCardByName(name: string): Promise<ScryfallCard> {
   const encodedName = encodeURIComponent(name);
   const response = await rateLimitedFetch(
@@ -73,6 +109,13 @@ export async function getCardByName(name: string): Promise<ScryfallCard> {
   return response.json();
 }
 
+/**
+ * Get the image URL for a card at the specified size.
+ * Handles both single-faced and double-faced cards.
+ * @param card - The card to get the image for
+ * @param size - Image size: "small" (146px), "normal" (488px), or "large" (672px)
+ * @returns The image URL, or placeholder if no image available
+ */
 export function getCardImage(card: ScryfallCard, size: "small" | "normal" | "large" = "normal"): string {
   if (card.image_uris) {
     return card.image_uris[size];
@@ -85,6 +128,11 @@ export function getCardImage(card: ScryfallCard, size: "small" | "normal" | "lar
   return "/placeholder.svg";
 }
 
+/**
+ * Get the Tailwind CSS color class for a card's rarity.
+ * @param rarity - Card rarity: "mythic", "rare", "uncommon", or "common"
+ * @returns Tailwind text color class
+ */
 export function getRarityColor(rarity: string): string {
   switch (rarity) {
     case "mythic": return "text-orange-400";
@@ -94,6 +142,11 @@ export function getRarityColor(rarity: string): string {
   }
 }
 
+/**
+ * Parse a mana cost string into individual symbol codes.
+ * @param manaCost - Mana cost string (e.g., "{2}{W}{U}")
+ * @returns Array of symbol codes (e.g., ["2", "W", "U"])
+ */
 export function formatManaSymbols(manaCost: string): string[] {
   if (!manaCost) return [];
   const symbols = manaCost.match(/\{[^}]+\}/g) || [];
