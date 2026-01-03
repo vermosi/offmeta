@@ -256,6 +256,61 @@ TRIBAL TYPES & SYNERGIES:
 - "artifacts matter" / "artifact creatures" = t:artifact t:creature
 - "typal" = same as tribal, use appropriate creature type
 
+COMMANDER-SPECIFIC SLANG:
+- "partner" / "partner commanders" = t:legendary t:creature o:"partner" (pair two commanders)
+- "partner with" = o:"partner with" (specific partner pairs)
+- "backgrounds" = t:background (enchantments that pair with "choose a background" commanders)
+- "choose a background" = o:"choose a background" t:legendary t:creature
+- "experience counters" = o:"experience counter" (commanders that use experience)
+- "command zone" = o:"command zone" (cards that interact with command zone)
+- "commander tax" = o:"commander" o:"times" (cards referencing commander cost)
+- "commander damage" = o:"commander" o:"combat damage" or o:"commander" o:"dealt damage"
+- "CEDH staples" / "cEDH" = f:commander (o:"0:" or mv<=2) (o:"counter" or o:"tutor" or o:"combo" or o:"win")
+- "fast mana" = (t:artifact mv<=2 o:"add" o:"{") or o:"mana crypt" or o:"mana vault" or o:"sol ring"
+- "mana positive rocks" = t:artifact mv<=2 o:"add" o:"{"
+- "free counterspells" = t:instant o:"counter" (o:"without paying" or o:"if" or o:"rather than pay")
+- "interaction" = (t:instant or t:sorcery) (o:"counter" or o:"destroy" or o:"exile" or o:"return")
+- "protection pieces" = (o:"hexproof" or o:"shroud" or o:"indestructible" or o:"protection from")
+- "win conditions" / "wincons" = o:"win the game" or o:"lose the game" or (o:"infinite" and o:"combo")
+- "thoracle" / "thassa's oracle" = o:"win the game" o:"library" (oracle consultation combo)
+- "consultation" = o:"exile" o:"library" (demonic consultation style)
+- "breach lines" = o:"underworld breach" or (o:"graveyard" o:"cast" o:"exile")
+- "food chain" = o:"exile" o:"creature" o:"add" o:"mana" (food chain combo)
+- "dramatic scepter" = (o:"isochron scepter" or o:"dramatic reversal" or (o:"copy" o:"instant" o:"untap"))
+- "infinite mana" = o:"untap" o:"add" (infinite mana combos)
+- "aristocrat combos" = t:creature o:"whenever" o:"dies" o:"each opponent"
+- "blood artist effects" = t:creature o:"whenever" o:"dies" o:"loses" o:"life"
+- "altar effects" = t:artifact o:"sacrifice" o:"add" o:"{"
+- "flicker combo" = o:"exile" o:"return" o:"battlefield" o:"end"
+- "combat tricks" = t:instant (o:"target creature gets" or o:"indestructible" or o:"hexproof")
+- "political cards" = o:"each opponent" o:"vote" or o:"goad" or o:"monarch"
+- "goad" = o:"goad" (force creatures to attack)
+- "monarch" = o:"monarch" (monarch mechanic)
+- "initiative" = o:"initiative" or o:"undercity" (initiative/dungeon)
+- "dungeons" = o:"venture" or o:"dungeon" or o:"completed a dungeon"
+- "saga" = t:saga (saga enchantments)
+- "mutate" = o:"mutate" (mutate mechanic)
+- "cascade" = o:"cascade" (cascade mechanic)
+- "storm count" = o:"storm" or o:"for each spell cast"
+- "magecraft" = o:"magecraft" or (o:"whenever you cast" o:"instant or sorcery")
+- "heroic" = o:"heroic" or (o:"whenever you cast" o:"targets")
+- "constellation" = o:"constellation" or (o:"whenever" o:"enchantment enters")
+- "landfall payoffs" = o:"landfall" (o:"+" or o:"create" or o:"draw" or o:"damage")
+- "cost reducers" = o:"cost" (o:"less" or o:"reduce") o:"to cast"
+- "mana doublers" = o:"whenever" o:"tap" o:"for mana" o:"add" or o:"double"
+- "damage doublers" = o:"damage" o:"double" or o:"deals double"
+- "token doublers" = o:"create" o:"token" o:"double" or o:"twice that many"
+- "grave pact effects" = o:"whenever" o:"creature you control dies" o:"sacrifice"
+- "skullclamp" = t:equipment o:"dies" o:"draw"
+- "signets" = t:artifact o:"add" o:"one mana of" (mana fixing artifacts)
+- "talismans" = t:artifact o:"add" o:"or" o:"1 damage" (talisman cycle)
+- "fetch lands" = t:land o:"search your library" o:"land"
+- "shock lands" = t:land o:"pay 2 life" o:"tapped"
+- "dual lands" = t:land (o:"plains" o:"island" o:"swamp" o:"mountain" o:"forest")
+- "bounce lands" = t:land o:"return a land" o:"untapped"
+- "MDFCs" / "modal lands" = t:land is:mdfc (modal double-faced cards)
+- "utility lands" = t:land -t:basic (o:":" or o:"activated")
+
 QUERY TRANSLATION EXAMPLES:
 - "creatures that make treasure" → game:paper t:creature o:"create" o:"treasure"
 - "cheap green ramp spells" → game:paper c:g mv<=3 (t:instant or t:sorcery) o:"search" o:"land"
@@ -278,6 +333,14 @@ QUERY TRANSLATION EXAMPLES:
 - "goblin sacrifice synergy" → game:paper t:goblin o:"sacrifice"
 - "vampire lifegain" → game:paper t:vampire o:"life"
 - "merfolk lords" → game:paper t:merfolk o:"other" o:"merfolk"
+- "partner commanders" → game:paper t:legendary t:creature o:"partner"
+- "backgrounds" → game:paper t:background
+- "experience counter commanders" → game:paper t:legendary t:creature o:"experience counter"
+- "CEDH fast mana" → game:paper f:commander t:artifact mv<=2 o:"add" o:"{"
+- "free counterspells" → game:paper t:instant o:"counter" o:"without paying"
+- "grave pact effects" → game:paper o:"whenever" o:"creature you control dies" o:"sacrifice"
+- "mana doublers" → game:paper o:"whenever" o:"tap" o:"for mana" o:"add"
+- "fetch lands" → game:paper t:land o:"search your library" o:"land"
 
 SET & UNIVERSE CODES:
 - Avatar/ATLA: e:tla
