@@ -163,14 +163,22 @@ CRITICAL RULES:
 5. Never fabricate or guess card names, abilities, or mechanics
 6. If a term is ambiguous, translate it conservatively
 
+MTG SLANG DEFINITIONS:
+- "ramp" = cards that accelerate mana, PRIMARILY land-fetching spells like Rampant Growth, Farseek, Kodama's Reach. Use: o:"search" o:"land" (o:"onto the battlefield" or o:"put it onto")
+- "ramp spells" = instants/sorceries that search for lands: (t:instant or t:sorcery) o:"search" o:"land"
+- "mana dorks" = small creatures that tap for mana: t:creature o:"add" o:"{" mv<=2
+- "land ramp" vs "mana rocks" - land ramp searches libraries, rocks are artifacts that tap for mana
+
 QUERY TRANSLATION EXAMPLES:
 - "creatures that make treasure" → game:paper t:creature o:"create" o:"treasure"
-- "cheap green ramp spells" → game:paper c:g mv<=2 (t:instant or t:sorcery) o:"add" o:"mana"
+- "cheap green ramp spells" → game:paper c:g mv<=3 (t:instant or t:sorcery) o:"search" o:"land"
+- "green ramp" → game:paper c:g (o:"search" o:"land" or (t:creature o:"add" o:"{"))
 - "Rakdos sacrifice outlets" → game:paper c:br o:"sacrifice"
 - "blue counterspells that draw" → game:paper c:u t:instant o:"counter" o:"draw"
 - "white board wipes" → game:paper c:w o:"destroy all"
 - "lands that tap for any color" → game:paper t:land o:"add" o:"any color"
 - "mana dorks" → game:paper t:creature o:"add" o:"{" mv<=2
+- "mana rocks" → game:paper t:artifact o:"add" o:"{"
 - "wheel effects" → game:paper o:"each player" (o:"discards" o:"draws" or o:"discard" o:"hand")
 - "hatebears" → game:paper t:creature mv<=3 (o:"can't" or o:"opponent" o:"pay")
 - "aristocrats" → game:paper t:creature (o:"whenever" o:"dies" or o:"sacrifice")
