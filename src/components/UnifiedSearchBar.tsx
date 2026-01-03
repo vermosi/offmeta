@@ -221,10 +221,10 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
       {/* Hero search area */}
       <div className="text-center space-y-1.5 sm:space-y-2">
         <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
-          Type what you mean
+          Natural language Magic card search
         </h2>
         <p className="text-muted-foreground text-xs sm:text-sm">
-          Describe the cards you need in plain language—we'll translate it to Scryfall
+          Describe the cards you need—we translate it to Scryfall
         </p>
       </div>
 
