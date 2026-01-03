@@ -320,13 +320,10 @@ COMMANDER-SPECIFIC SLANG:
 - "utility lands" = t:land -t:basic (o:":" or o:"activated")
 
 PRECON & PRODUCT SLANG:
-- "precon" / "precon commanders" = is:commander (commanders released in preconstructed decks)
-- "precon cards" = is:promo:stamped or is:reprint (cards commonly in precons)
+- "precon" / "precon commanders" = is:commander t:legendary t:creature
 - "starter deck" = st:starter (starter deck products)
-- "secret lair" = e:sld or s:sld (Secret Lair drops)
+- "secret lair" = e:sld (Secret Lair drops)
 - "collector booster" = is:extendedart or is:borderless or is:showcase (collector booster exclusives)
-- "set boosters" = is:boosterfun or is:showcase (set booster special treatments)
-- "draft boosters" = -is:extendedart -is:borderless (standard pack cards)
 - "box toppers" = is:boxtopper (box topper promos)
 - "buy-a-box" = is:buyabox (buy-a-box promos)
 - "bundle promo" = is:bundle (bundle exclusive cards)
@@ -337,31 +334,26 @@ PRECON & PRODUCT SLANG:
 - "expedition" / "expeditions" = e:exp (Zendikar Expeditions)
 - "invention" / "inventions" = e:mps (Kaladesh Inventions)
 - "invocation" / "invocations" = e:mp2 (Amonkhet Invocations)
-- "retro frame" = frame:old or is:retro (old border/retro frame cards)
+- "retro frame" / "old border" = frame:1997 or frame:2003 (old border cards)
+- "modern frame" = frame:2015 (modern frame cards)
 - "showcase" = is:showcase (showcase frame treatments)
 - "borderless" = is:borderless (borderless card treatments)
 - "extended art" = is:extendedart (extended art treatments)
 - "full art" = is:fullart (full art cards)
 - "full art lands" = t:basic is:fullart (full art basic lands)
 - "textless" = is:textless (textless promos)
-- "stained glass" = is:showcase e:sld o:"planeswalker" (stained glass planeswalkers)
 - "serialized" = is:serialized (serialized numbered cards)
 - "commander collection" = e:cc1 or e:cc2 (Commander Collection products)
 - "signature spellbook" = e:ss1 or e:ss2 or e:ss3 (Signature Spellbook series)
 - "from the vault" = e:v09 or e:v10 or e:v11 or e:v12 or e:v13 or e:v14 or e:v15 or e:v16 or e:v17 (From the Vault series)
-- "game night" = e:gn1 or e:gn2 or e:gn3 (Game Night products)
+- "game night" = e:gn2 or e:gn3 (Game Night products)
 - "jumpstart" = e:jmp or e:j21 or e:j22 (Jumpstart products)
 - "mystery booster" = e:mb1 or e:mb2 or e:fmb1 (Mystery Booster cards)
-- "the list" = e:plist or s:list (The List reprints)
-- "universes beyond" = is:universesbeyond (non-Magic IP crossovers)
-- "universes within" = is:universeswithin (Magic-ified versions of UB cards)
-- "reskinned" = is:reskin (reskinned versions of cards)
-- "commander deck" / "commander precon" = is:commander st:commander (Commander precon products)
-- "pioneer challenger" = st:challenger_deck (Pioneer Challenger decks)
-- "event deck" = st:event_deck (event deck products)
-- "duel deck" = e:ddk or e:ddl or e:ddm or e:ddn or e:ddo or e:ddp or e:ddq or e:ddr or e:dds or e:ddt or e:ddu (Duel Deck products)
-- "anthology" = e:cma or e:cm2 (Commander Anthology)
-- "planechase" = e:pc2 or e:pca or e:opca (Planechase products)
+- "the list" = in:plist (The List reprints)
+- "universes beyond" = is:extra -is:funny (non-Magic IP crossovers - use set codes for specific UB)
+- "commander deck" / "commander precon" = st:commander (Commander precon products)
+- "duel deck" = st:duel_deck (Duel Deck products)
+- "planechase" = e:pc2 or e:pca (Planechase products)
 - "archenemy" = e:arc or e:e01 (Archenemy products)
 - "conspiracy" = e:cns or e:cn2 (Conspiracy sets)
 - "battlebond" = e:bbd (Battlebond)
@@ -377,9 +369,33 @@ PRECON & PRODUCT SLANG:
 - "eternal masters" = e:ema (Eternal Masters)
 - "iconic masters" = e:ima (Iconic Masters)
 - "ultimate masters" = e:uma (Ultimate Masters)
-- "masters edition" = e:me1 or e:me2 or e:me3 or e:me4 (MTGO Masters Edition)
-- "vault masters" = e:vma (Vintage Masters - MTGO)
-- "treasure chest" = e:pz1 or e:pz2 (MTGO Treasure Chest)
+
+RESERVED LIST & SPECIAL STATUS:
+- "reserved list" / "RL cards" = is:reserved (cards on the Reserved List)
+- "reserved list under $X" = is:reserved usd<X
+- "reprint" = is:reprint (cards that have been reprinted)
+- "first printing" = is:firstprint or not:reprint (original printings only)
+- "unique art" = unique:art (cards with unique art)
+- "unique prints" = unique:prints (unique printings)
+
+POWER/TOUGHNESS SEARCHES:
+- "big creatures" = pow>=5 or tou>=5
+- "creatures with power greater than toughness" = pow>tou
+- "creatures with toughness greater than power" = tou>pow
+- "X/X creatures" = pow=X tou=X (replace X with number)
+- "power 0" = pow=0
+- "0 power creatures" = t:creature pow=0
+
+COLOR IDENTITY (for Commander):
+- "mono white" = id=w or c=w
+- "mono blue" = id=u or c=u
+- "mono black" = id=b or c=b
+- "mono red" = id=r or c=r
+- "mono green" = id=g or c=g
+- "colorless" = c=c or id=c (no colors/colorless identity)
+- "exactly two colors" = c=2 (exactly 2 colors)
+- "three or more colors" = c>=3
+- "five color" / "WUBRG" = c=wubrg or id=wubrg
 
 QUERY TRANSLATION EXAMPLES:
 - "creatures that make treasure" → game:paper t:creature o:"create" o:"treasure"
