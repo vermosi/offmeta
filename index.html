@@ -2,21 +2,33 @@
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0a0a0a" />
-    <title>Arcane Codex - MTG Card Explorer</title>
-    <meta name="description" content="Explore thousands of Magic: The Gathering cards. Search, discover, and learn about cards from every set and expansion." />
-    <meta name="author" content="Arcane Codex" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="format-detection" content="telephone=no" />
+    <title>OracleText - MTG Card Search</title>
+    <meta name="description" content="Search Magic: The Gathering cards using natural language. Find the perfect cards for your deck." />
+    <meta name="author" content="OracleText" />
     <meta name="keywords" content="MTG, Magic The Gathering, cards, deck builder, Scryfall, card search" />
 
-    <meta property="og:title" content="Arcane Codex - MTG Card Explorer" />
-    <meta property="og:description" content="Explore thousands of Magic: The Gathering cards. Search, discover, and learn about cards from every set and expansion." />
+    <meta property="og:title" content="OracleText - MTG Card Search" />
+    <meta property="og:description" content="Search Magic: The Gathering cards using natural language. Find the perfect cards for your deck." />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@ArcaneCodex" />
+    <meta name="twitter:site" content="@OracleText" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+
+    <!-- Prevent pull-to-refresh on mobile -->
+    <style>
+      html, body {
+        overscroll-behavior-y: contain;
+      }
+    </style>
   </head>
 
   <body class="dark">
