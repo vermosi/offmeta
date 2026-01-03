@@ -9,41 +9,40 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { searchCards } from "@/lib/scryfall";
 import { ScryfallCard } from "@/types/card";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCard, setSelectedCard] = useState<ScryfallCard | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
-
-  const { data: searchResult, isLoading: isSearching } = useQuery({
+  const {
+    data: searchResult,
+    isLoading: isSearching
+  } = useQuery({
     queryKey: ["cards", searchQuery, currentPage],
     queryFn: () => searchCards(searchQuery, currentPage),
     enabled: !!searchQuery,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000
   });
-
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
     setCurrentPage(1);
     setHasSearched(true);
   }, []);
-
   const handlePageChange = useCallback((newPage: number) => {
     setCurrentPage(newPage);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
   }, []);
-
   const cards = searchResult?.data || [];
   const totalCards = searchResult?.total_cards || 0;
   const hasMore = searchResult?.has_more || false;
-
-  return (
-    <div className="min-h-screen flex flex-col bg-background">
+  return <div className="min-h-screen flex flex-col bg-background">
       {/* Minimal header */}
       <header className="border-b border-border/50 bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <h1 className="text-lg font-semibold tracking-tight">MTG Search</h1>
+          <h1 className="text-lg font-semibold tracking-tight">OracleText</h1>
           <ThemeToggle />
         </div>
       </header>
@@ -55,80 +54,45 @@ const Index = () => {
           <UnifiedSearchBar onSearch={handleSearch} isLoading={isSearching} />
 
           {/* Results count */}
-          {hasSearched && totalCards > 0 && (
-            <div className="text-center">
+          {hasSearched && totalCards > 0 && <div className="text-center">
               <span className="text-sm text-muted-foreground tabular-nums">
                 {totalCards.toLocaleString()} cards found
               </span>
-            </div>
-          )}
+            </div>}
 
           {/* Cards Grid */}
-          {cards.length > 0 ? (
-            <>
+          {cards.length > 0 ? <>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {cards.map((card, index) => (
-                  <div
-                    key={card.id}
-                    className="animate-fade-in"
-                    style={{ animationDelay: `${index * 30}ms` }}
-                  >
-                    <CardItem
-                      card={card}
-                      onClick={() => setSelectedCard(card)}
-                    />
-                  </div>
-                ))}
+                {cards.map((card, index) => <div key={card.id} className="animate-fade-in" style={{
+              animationDelay: `${index * 30}ms`
+            }}>
+                    <CardItem card={card} onClick={() => setSelectedCard(card)} />
+                  </div>)}
               </div>
 
               {/* Pagination */}
-              {(hasMore || currentPage > 1) && (
-                <div className="flex items-center justify-center gap-3 pt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1 || isSearching}
-                    className="gap-1.5"
-                  >
+              {(hasMore || currentPage > 1) && <div className="flex items-center justify-center gap-3 pt-4">
+                  <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1 || isSearching} className="gap-1.5">
                     <ChevronLeft className="h-4 w-4" />
                     <span className="hidden sm:inline">Previous</span>
                   </Button>
                   <div className="px-4 py-2 text-sm text-muted-foreground tabular-nums">
                     Page {currentPage}
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={!hasMore || isSearching}
-                    className="gap-1.5"
-                  >
+                  <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage + 1)} disabled={!hasMore || isSearching} className="gap-1.5">
                     <span className="hidden sm:inline">Next</span>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
-                </div>
-              )}
-            </>
-          ) : isSearching ? (
-            <div className="flex flex-col items-center justify-center py-20">
+                </div>}
+            </> : isSearching ? <div className="flex flex-col items-center justify-center py-20">
               <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
               <p className="mt-4 text-sm text-muted-foreground">Searching...</p>
-            </div>
-          ) : (
-            <EmptyState hasSearched={hasSearched && !isSearching} />
-          )}
+            </div> : <EmptyState hasSearched={hasSearched && !isSearching} />}
         </div>
       </main>
 
       {/* Card Modal */}
-      <CardModal
-        card={selectedCard}
-        open={!!selectedCard}
-        onClose={() => setSelectedCard(null)}
-      />
-    </div>
-  );
+      <CardModal card={selectedCard} open={!!selectedCard} onClose={() => setSelectedCard(null)} />
+    </div>;
 };
-
 export default Index;
