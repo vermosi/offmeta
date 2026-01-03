@@ -167,21 +167,63 @@ MTG SLANG DEFINITIONS:
 - "ramp" = cards that accelerate mana, PRIMARILY land-fetching spells like Rampant Growth, Farseek, Kodama's Reach. Use: o:"search" o:"land" (o:"onto the battlefield" or o:"put it onto")
 - "ramp spells" = instants/sorceries that search for lands: (t:instant or t:sorcery) o:"search" o:"land"
 - "mana dorks" = small creatures that tap for mana: t:creature o:"add" o:"{" mv<=2
+- "mana rocks" = artifacts that tap for mana: t:artifact o:"add" o:"{"
 - "land ramp" vs "mana rocks" - land ramp searches libraries, rocks are artifacts that tap for mana
+- "tutors" = cards that search your library for other cards: o:"search your library"
+- "creature tutors" = o:"search your library" o:"creature"
+- "land tutors" = o:"search your library" o:"land"
+- "removal" = cards that destroy/exile permanents: (o:"destroy target" or o:"exile target")
+- "creature removal" = (o:"destroy target creature" or o:"exile target creature")
+- "spot removal" = targeted removal, same as removal
+- "board wipes" / "wraths" = o:"destroy all" or o:"exile all"
+- "finishers" = big game-ending threats: t:creature mv>=6 (pow>=6 or o:"win the game" or o:"extra turn")
+- "stax" = cards that tax or restrict opponents: (o:"can't" or o:"pay" o:"or" or o:"each" o:"sacrifice" or o:"skip")
+- "pillowfort" = defensive cards discouraging attacks: (o:"can't attack you" or o:"prevent" o:"damage" or o:"protection from")
+- "voltron" = cards that buff a single creature: (t:aura or t:equipment or o:"target creature gets" o:"+")
+- "blink" / "flicker" = exile and return effects: o:"exile" o:"return" (o:"battlefield" or o:"to the battlefield")
+- "reanimator" / "reanimate" = return creatures from graveyard: o:"graveyard" o:"onto the battlefield" t:creature
+- "mill" = put cards from library into graveyard: o:"mill" or (o:"library" o:"into" o:"graveyard")
+- "discard" = make opponents discard: o:"opponent" o:"discard"
+- "draw engines" = repeatable card draw: o:"draw" (o:"whenever" or o:"at the beginning")
+- "cantrips" = cheap spells that draw a card: mv<=2 (t:instant or t:sorcery) o:"draw a card"
+- "counterspells" = t:instant o:"counter target"
+- "sweepers" = same as board wipes
+- "anthems" = effects that buff all your creatures: o:"creatures you control get" o:"+"
+- "lords" = creatures that buff a tribe: t:creature o:"other" o:"get" o:"+"
+- "tokens" = cards that create creature tokens: o:"create" o:"token"
+- "sacrifice outlets" / "sac outlets" = free sacrifice effects: o:"sacrifice" (o:":" or o:"0:")
+- "aristocrats" = creatures that benefit from deaths: t:creature (o:"whenever" o:"dies" or o:"sacrifice")
+- "clone" effects = copy creatures: o:"copy" o:"creature"
+- "extra turns" = o:"extra turn"
+- "storm" = storm mechanic or storm-like: o:"storm" or o:"copy" o:"for each"
+- "wheels" = everyone discards and draws: o:"each player" (o:"discards" o:"draws" or o:"discard" o:"hand")
+- "hatebears" = small creatures with taxing effects: t:creature mv<=3 (o:"can't" or o:"opponent" o:"pay")
+- "treasure" = cards making treasure tokens: o:"create" o:"treasure"
+- "untappers" = cards that untap permanents: o:"untap target"
+- "landfall" = triggers when lands enter: o:"landfall" or (o:"whenever a land enters" o:"control")
+- "protection" = protection keyword: o:"protection from"
+- "indestructible" = o:"indestructible"
+- "hexproof" = o:"hexproof"
+- "evasion" = creatures hard to block: (o:"flying" or o:"unblockable" or o:"can't be blocked" or o:"menace" or o:"trample")
+- "haste enablers" = give creatures haste: o:"creatures" o:"haste"
+- "free spells" = o:"without paying" or o:"cast" o:"free"
 
 QUERY TRANSLATION EXAMPLES:
 - "creatures that make treasure" → game:paper t:creature o:"create" o:"treasure"
 - "cheap green ramp spells" → game:paper c:g mv<=3 (t:instant or t:sorcery) o:"search" o:"land"
 - "green ramp" → game:paper c:g (o:"search" o:"land" or (t:creature o:"add" o:"{"))
-- "Rakdos sacrifice outlets" → game:paper c:br o:"sacrifice"
+- "Rakdos sacrifice outlets" → game:paper c:br o:"sacrifice" o:":"
 - "blue counterspells that draw" → game:paper c:u t:instant o:"counter" o:"draw"
 - "white board wipes" → game:paper c:w o:"destroy all"
 - "lands that tap for any color" → game:paper t:land o:"add" o:"any color"
-- "mana dorks" → game:paper t:creature o:"add" o:"{" mv<=2
-- "mana rocks" → game:paper t:artifact o:"add" o:"{"
-- "wheel effects" → game:paper o:"each player" (o:"discards" o:"draws" or o:"discard" o:"hand")
-- "hatebears" → game:paper t:creature mv<=3 (o:"can't" or o:"opponent" o:"pay")
-- "aristocrats" → game:paper t:creature (o:"whenever" o:"dies" or o:"sacrifice")
+- "black tutors" → game:paper c:b o:"search your library"
+- "white pillowfort cards" → game:paper c:w (o:"can't attack you" or o:"prevent" o:"damage")
+- "simic blink effects" → game:paper c:ug o:"exile" o:"return" o:"battlefield"
+- "red finishers" → game:paper c:r t:creature mv>=6 pow>=6
+- "stax pieces" → game:paper (o:"can't" or o:"pay" o:"or" or o:"each" o:"sacrifice")
+- "voltron equipment" → game:paper t:equipment o:"equipped creature gets"
+- "reanimation spells" → game:paper (t:instant or t:sorcery) o:"graveyard" o:"onto the battlefield"
+- "blue cantrips" → game:paper c:u mv<=2 (t:instant or t:sorcery) o:"draw a card"
 
 SET & UNIVERSE CODES:
 - Avatar/ATLA: e:tla
