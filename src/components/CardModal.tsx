@@ -8,12 +8,35 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExternalLink, ShoppingCart, Loader2, Palette, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useIsMobile } from "@/hooks/use-mobile";
+
+// Format names that need special handling
+const FORMAT_DISPLAY_NAMES: Record<string, string> = {
+  paupercommander: "Pauper Commander",
+  duel: "Duel Commander",
+  oldschool: "Old School",
+  premodern: "Premodern",
+  predh: "PreDH",
+  oathbreaker: "Oathbreaker",
+  gladiator: "Gladiator",
+  historicbrawl: "Historic Brawl",
+  standardbrawl: "Standard Brawl",
+  timeless: "Timeless",
+  explorer: "Explorer",
+  penny: "Penny Dreadful",
+};
+
+function formatFormatName(format: string): string {
+  if (FORMAT_DISPLAY_NAMES[format]) {
+    return FORMAT_DISPLAY_NAMES[format];
+  }
+  // Capitalize first letter for simple formats
+  return format.charAt(0).toUpperCase() + format.slice(1);
+}
 
 interface CardModalProps {
   card: ScryfallCard | null;
@@ -273,7 +296,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                     key={format}
                     className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-muted/30 border border-border/30"
                   >
-                    <span className="text-xs capitalize text-foreground">{format}</span>
+                    <span className="text-xs text-foreground">{formatFormatName(format)}</span>
                     <Badge
                       variant="outline"
                       className={cn(
