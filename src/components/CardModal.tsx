@@ -57,11 +57,11 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl p-0 bg-background border-border/50 overflow-hidden max-h-[90vh] gap-0">
+      <DialogContent className="max-w-4xl w-[95vw] p-0 bg-background border-border/50 overflow-hidden max-h-[85vh] gap-0 fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
         <VisuallyHidden>
           <DialogTitle>{card.name}</DialogTitle>
         </VisuallyHidden>
-        <div className="grid md:grid-cols-[320px_1fr] gap-0 h-full">
+        <div className="grid md:grid-cols-[320px_1fr] gap-0 max-h-[85vh] overflow-y-auto">
           {/* Card Image */}
           <div className="relative bg-muted/30 p-6 flex flex-col items-center justify-start border-r border-border/50">
             <div className="relative sticky top-6">
