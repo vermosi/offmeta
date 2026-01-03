@@ -176,19 +176,19 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
   const showExamples = !query && !isListening;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Hero search area */}
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+      <div className="text-center space-y-1.5 sm:space-y-2">
+        <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
           Find the perfect cards
         </h2>
-        <p className="text-muted-foreground text-sm">
+        <p className="text-muted-foreground text-xs sm:text-sm">
           Describe what you need in plain English, or tap the mic to speak
         </p>
       </div>
 
       {/* Main search bar with voice button */}
-      <div className="flex items-center gap-3 max-w-2xl mx-auto">
+      <div className="flex items-center gap-2 sm:gap-3 max-w-2xl mx-auto">
         <VoiceSearchButton
           isListening={isListening}
           isSupported={isSupported}
@@ -197,7 +197,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
         />
 
         <div className="relative flex-1">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2">
+          <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2">
             <Wand2 className="h-4 w-4 text-primary" />
           </div>
           <Input
@@ -208,7 +208,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             className={cn(
-              "pl-11 pr-12 h-14 text-base bg-muted/30 border-border/50 focus:border-primary/50 focus:bg-background transition-all rounded-xl",
+              "pl-9 sm:pl-11 pr-10 sm:pr-12 h-12 sm:h-14 text-sm sm:text-base bg-muted/30 border-border/50 focus:border-primary/50 focus:bg-background transition-all rounded-xl",
               isListening && "border-destructive/50 bg-destructive/5 animate-pulse-subtle"
             )}
             disabled={isListening}
@@ -218,7 +218,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-12 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground"
+              className="absolute right-10 sm:right-12 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground min-h-0 min-w-0"
               onClick={() => {
                 setQuery('');
                 setTranslatedQuery(null);
@@ -233,7 +233,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 text-muted-foreground hover:text-foreground"
+                className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 h-9 w-9 sm:h-10 sm:w-10 text-muted-foreground hover:text-foreground min-h-0 min-w-0"
               >
                 <SlidersHorizontal className="h-4 w-4" />
                 {activeFiltersCount > 0 && (
@@ -248,7 +248,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground">Format</label>
                   <Select value={format || "all"} onValueChange={(v) => setFormat(v === "all" ? "" : v)}>
-                    <SelectTrigger className="h-9">
+                    <SelectTrigger className="h-10">
                       <SelectValue placeholder="Any format" />
                     </SelectTrigger>
                     <SelectContent>
@@ -269,7 +269,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
                         variant="outline"
                         size="sm"
                         onClick={() => toggleColor(c.value)}
-                        className={`w-8 h-8 p-0 font-semibold text-xs ${colorIdentity.includes(c.value) ? c.color : 'text-muted-foreground'}`}
+                        className={`w-10 h-10 p-0 font-semibold text-xs min-h-0 min-w-0 ${colorIdentity.includes(c.value) ? c.color : 'text-muted-foreground'}`}
                       >
                         {c.label}
                       </Button>
@@ -278,7 +278,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
                 </div>
 
                 {activeFiltersCount > 0 && (
-                  <Button variant="ghost" size="sm" className="w-full text-muted-foreground" onClick={clearFilters}>
+                  <Button variant="ghost" size="sm" className="w-full text-muted-foreground h-10" onClick={clearFilters}>
                     Clear filters
                   </Button>
                 )}
@@ -290,7 +290,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
         <Button
           onClick={() => handleSearch()}
           disabled={isSearching || isLoading || !query.trim() || isListening}
-          className="h-14 px-6 gap-2 rounded-xl"
+          className="h-12 sm:h-14 px-3 sm:px-6 gap-2 rounded-xl min-w-0"
         >
           {isSearching ? (
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -304,7 +304,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
       {/* Listening indicator */}
       {isListening && (
         <div className="text-center animate-fade-in">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-destructive/10 text-destructive rounded-full text-sm font-medium">
+          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-destructive/10 text-destructive rounded-full text-xs sm:text-sm font-medium">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
@@ -316,17 +316,17 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
 
       {/* Translated query display */}
       {translatedQuery && !isListening && (
-        <div className="text-center animate-fade-in">
+        <div className="text-center animate-fade-in px-2">
           <p className="text-xs text-muted-foreground">
-            Translated to: <code className="px-1.5 py-0.5 bg-muted rounded text-foreground">{translatedQuery}</code>
+            Translated to: <code className="px-1.5 py-0.5 bg-muted rounded text-foreground text-[11px] break-all">{translatedQuery}</code>
           </p>
         </div>
       )}
 
       {/* Recent voice searches */}
       {voiceHistory.length > 0 && showExamples && (
-        <div className="flex flex-wrap items-center justify-center gap-2 animate-fade-in">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 animate-fade-in px-2">
+          <div className="flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground">
             <Mic className="h-3 w-3" />
             <span>Recent:</span>
           </div>
@@ -339,10 +339,10 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
                 setQuery(voiceQuery);
                 handleSearch(voiceQuery);
               }}
-              className="h-7 text-xs px-3 border-primary/20 text-foreground hover:bg-primary/10 hover:border-primary/40 rounded-full gap-1.5"
+              className="h-7 text-[10px] sm:text-xs px-2 sm:px-3 border-primary/20 text-foreground hover:bg-primary/10 hover:border-primary/40 rounded-full gap-1 sm:gap-1.5 min-h-0 min-w-0 inline-touch"
             >
               <History className="h-3 w-3" />
-              {voiceQuery.length > 25 ? `${voiceQuery.slice(0, 25)}...` : voiceQuery}
+              {voiceQuery.length > (isMobile ? 15 : 25) ? `${voiceQuery.slice(0, isMobile ? 15 : 25)}...` : voiceQuery}
             </Button>
           ))}
           {voiceHistory.length > 0 && (
@@ -350,7 +350,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
               variant="ghost"
               size="sm"
               onClick={clearVoiceHistory}
-              className="h-7 text-xs px-2 text-muted-foreground hover:text-destructive rounded-full"
+              className="h-7 text-xs px-2 text-muted-foreground hover:text-destructive rounded-full min-h-0 min-w-0 inline-touch"
             >
               <X className="h-3 w-3" />
             </Button>
@@ -360,17 +360,17 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
 
       {/* Example queries */}
       {showExamples && (
-        <div className="flex flex-wrap items-center justify-center gap-2 animate-fade-in">
-          <span className="text-xs text-muted-foreground">Try:</span>
+        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 animate-fade-in px-2">
+          <span className="text-[10px] sm:text-xs text-muted-foreground">Try:</span>
           {EXAMPLE_QUERIES.slice(0, isMobile ? 2 : 4).map((example) => (
             <Button
               key={example}
               variant="ghost"
               size="sm"
               onClick={() => setQuery(example)}
-              className="h-7 text-xs px-3 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full"
+              className="h-7 text-[10px] sm:text-xs px-2 sm:px-3 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full min-h-0 min-w-0 inline-touch"
             >
-              "{example}"
+              "{isMobile && example.length > 20 ? `${example.slice(0, 20)}...` : example}"
             </Button>
           ))}
         </div>
