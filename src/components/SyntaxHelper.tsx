@@ -15,7 +15,7 @@ const syntaxCategories = [
       { syntax: "c:green", description: "Green cards" },
       { syntax: "c:colorless", description: "Colorless cards" },
       { syntax: "c:multicolor", description: "Multicolored cards" },
-      { syntax: "c:uw", description: "Blue and white cards" },
+      { syntax: "id:esper", description: "Esper color identity" },
     ],
   },
   {
@@ -34,12 +34,13 @@ const syntaxCategories = [
   {
     title: "Mana & Stats",
     examples: [
-      { syntax: "cmc:3", description: "Mana value equals 3" },
-      { syntax: "cmc>=5", description: "Mana value 5 or more" },
-      { syntax: "cmc<3", description: "Mana value less than 3" },
+      { syntax: "mv=3", description: "Mana value equals 3" },
+      { syntax: "mv>=5", description: "Mana value 5 or more" },
+      { syntax: "mv<3", description: "Mana value less than 3" },
       { syntax: "pow:4", description: "Power equals 4" },
       { syntax: "tou>=5", description: "Toughness 5 or more" },
-      { syntax: "pow>tou", description: "Power greater than toughness" },
+      { syntax: "pow>tou", description: "Power > toughness" },
+      { syntax: "m:{G}{U}", description: "Costs green and blue" },
     ],
   },
   {
@@ -49,8 +50,8 @@ const syntaxCategories = [
       { syntax: "r:uncommon", description: "Uncommon cards" },
       { syntax: "r:rare", description: "Rare cards" },
       { syntax: "r:mythic", description: "Mythic rares" },
-      { syntax: "s:dmu", description: "From Dominaria United" },
-      { syntax: "s:one", description: "From Phyrexia: ONE" },
+      { syntax: "e:dmu", description: "From Dominaria United" },
+      { syntax: "b:zen", description: "From Zendikar block" },
     ],
   },
   {
@@ -59,8 +60,8 @@ const syntaxCategories = [
       { syntax: "o:flying", description: "Has 'flying' in text" },
       { syntax: "o:\"draw a card\"", description: "Exact phrase match" },
       { syntax: "kw:trample", description: "Has trample keyword" },
-      { syntax: "kw:deathtouch", description: "Has deathtouch keyword" },
-      { syntax: "fo:destroy", description: "Full oracle text search" },
+      { syntax: "kw:deathtouch", description: "Has deathtouch" },
+      { syntax: "fo:destroy", description: "Full oracle text" },
     ],
   },
   {
@@ -70,7 +71,27 @@ const syntaxCategories = [
       { syntax: "f:modern", description: "Legal in Modern" },
       { syntax: "f:commander", description: "Legal in Commander" },
       { syntax: "f:pioneer", description: "Legal in Pioneer" },
-      { syntax: "f:legacy", description: "Legal in Legacy" },
+      { syntax: "banned:legacy", description: "Banned in Legacy" },
+      { syntax: "is:reserved", description: "Reserved List cards" },
+    ],
+  },
+  {
+    title: "Date & Year",
+    examples: [
+      { syntax: "year=2024", description: "Released in 2024" },
+      { syntax: "year<=1994", description: "Released 1994 or before" },
+      { syntax: "date>=2020-01-01", description: "After Jan 1, 2020" },
+      { syntax: "date>ori", description: "After Magic Origins" },
+      { syntax: "date>now", description: "Future releases" },
+    ],
+  },
+  {
+    title: "Artist & Flavor",
+    examples: [
+      { syntax: "a:\"seb mckinnon\"", description: "Art by Seb McKinnon" },
+      { syntax: "ft:mishra", description: "Flavor mentions Mishra" },
+      { syntax: "wm:orzhov", description: "Orzhov watermark" },
+      { syntax: "new:art", description: "New illustrations" },
     ],
   },
   {
@@ -79,12 +100,44 @@ const syntaxCategories = [
       { syntax: "usd<1", description: "Under $1" },
       { syntax: "usd>=10", description: "$10 or more" },
       { syntax: "eur<5", description: "Under €5" },
+      { syntax: "cheapest:usd", description: "Cheapest printing" },
+    ],
+  },
+  {
+    title: "Frame & Promo",
+    examples: [
+      { syntax: "is:foil", description: "Foil available" },
+      { syntax: "border:borderless", description: "Borderless cards" },
+      { syntax: "frame:2015", description: "2015 frame style" },
+      { syntax: "is:promo", description: "Promo cards" },
+      { syntax: "is:full", description: "Full art cards" },
+    ],
+  },
+  {
+    title: "Game & Reprints",
+    examples: [
+      { syntax: "game:arena", description: "Available on Arena" },
+      { syntax: "game:paper", description: "Available in paper" },
+      { syntax: "is:reprint", description: "Reprinted cards" },
+      { syntax: "is:unique", description: "Single printing only" },
+      { syntax: "sets>=10", description: "In 10+ sets" },
+    ],
+  },
+  {
+    title: "Special Cards",
+    examples: [
+      { syntax: "is:commander", description: "Can be commander" },
+      { syntax: "is:fetchland", description: "Fetchlands" },
+      { syntax: "is:dual", description: "Dual lands" },
+      { syntax: "is:shockland", description: "Shocklands" },
+      { syntax: "is:transform", description: "Transform cards" },
+      { syntax: "is:mdfc", description: "Modal DFCs" },
     ],
   },
   {
     title: "Combining",
     examples: [
-      { syntax: "c:green t:creature cmc:1", description: "Green 1-drops" },
+      { syntax: "c:green t:creature mv:1", description: "Green 1-drops" },
       { syntax: "t:dragon pow>=5", description: "Big dragons" },
       { syntax: "-c:blue t:instant", description: "Non-blue instants" },
       { syntax: "(c:r or c:g) t:creature", description: "Red or green creatures" },
