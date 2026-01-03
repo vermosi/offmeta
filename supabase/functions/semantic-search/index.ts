@@ -504,19 +504,36 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
     const validation = validateQuery(scryfallQuery);
     scryfallQuery = validation.sanitized;
 
-    // Build explanation
+    // Build explanation based on what the query ACTUALLY contains
     const assumptions: string[] = [];
     
-    // Detect inferred assumptions
+    // Detect what the AI actually did based on the generated query
     if (!filters?.format && scryfallQuery.includes('f:commander')) {
       assumptions.push('Assumed Commander format based on context');
     }
+    
+    // Check how "cheap/budget" was interpreted by looking at the actual query
     if (query.toLowerCase().includes('cheap') || query.toLowerCase().includes('budget')) {
-      assumptions.push('Interpreted "cheap/budget" as under $5');
+      if (scryfallQuery.includes('usd<') || scryfallQuery.includes('usd<=')) {
+        const priceMatch = scryfallQuery.match(/usd[<>=]+(\d+)/);
+        assumptions.push(`Interpreted "cheap/budget" as under $${priceMatch?.[1] || '5'}`);
+      } else if (scryfallQuery.match(/mv[<>=]+\d/)) {
+        const mvMatch = scryfallQuery.match(/mv[<>=]+(\d+)/);
+        assumptions.push(`Interpreted "cheap" as low mana value (≤${mvMatch?.[1] || '3'})`);
+      } else if (scryfallQuery.match(/cmc[<>=]+\d/)) {
+        const cmcMatch = scryfallQuery.match(/cmc[<>=]+(\d+)/);
+        assumptions.push(`Interpreted "cheap" as low mana cost (≤${cmcMatch?.[1] || '3'})`);
+      }
     }
+    
     if (query.toLowerCase().includes('spells') && scryfallQuery.includes('t:instant')) {
       assumptions.push('"Spells" interpreted as instants and sorceries only');
     }
+    
+    if (query.toLowerCase().includes('ramp') && scryfallQuery.includes('o:"search"') && scryfallQuery.includes('o:"land"')) {
+      assumptions.push('"Ramp" interpreted as land-searching effects');
+    }
+    
     if (!scryfallQuery.includes('game:paper')) {
       scryfallQuery = 'game:paper ' + scryfallQuery;
       assumptions.push('Added paper game filter');
