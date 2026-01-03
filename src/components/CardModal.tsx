@@ -49,17 +49,37 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
   const [printings, setPrintings] = useState<CardPrinting[]>([]);
   const [isLoadingPrintings, setIsLoadingPrintings] = useState(false);
   const [activeTab, setActiveTab] = useState("details");
+  const [refreshedPrices, setRefreshedPrices] = useState<{usd?: string; eur?: string} | null>(null);
 
   useEffect(() => {
     if (card && open) {
       setIsLoadingPrintings(true);
+      setRefreshedPrices(null);
+      
       getCardPrintings(card.name)
-        .then(setPrintings)
+        .then((data) => {
+          setPrintings(data);
+          // Find the matching printing to get fresh price data
+          const matchingPrinting = data.find(p => p.id === card.id);
+          if (matchingPrinting && (matchingPrinting.prices.usd || matchingPrinting.prices.eur)) {
+            setRefreshedPrices({
+              usd: matchingPrinting.prices.usd,
+              eur: matchingPrinting.prices.eur
+            });
+          }
+        })
         .finally(() => setIsLoadingPrintings(false));
     } else {
       setPrintings([]);
+      setRefreshedPrices(null);
     }
   }, [card, open]);
+
+  // Use refreshed prices if available, otherwise fall back to original card prices
+  const displayPrices = {
+    usd: refreshedPrices?.usd || card?.prices.usd,
+    eur: refreshedPrices?.eur || card?.prices.eur
+  };
 
   if (!card) return null;
 
@@ -137,9 +157,11 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
           >
             <ShoppingCart className="h-3.5 w-3.5" />
             TCGPlayer
-            {card.prices.usd && (
-              <span className="ml-auto font-semibold">${card.prices.usd}</span>
-            )}
+            {displayPrices.usd ? (
+              <span className="ml-auto font-semibold">${displayPrices.usd}</span>
+            ) : isLoadingPrintings ? (
+              <Loader2 className="ml-auto h-3 w-3 animate-spin" />
+            ) : null}
           </Button>
           <Button
             variant="outline"
@@ -149,9 +171,11 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
           >
             <ShoppingCart className="h-3.5 w-3.5" />
             Cardmarket
-            {card.prices.eur && (
-              <span className="ml-auto font-semibold">€{card.prices.eur}</span>
-            )}
+            {displayPrices.eur ? (
+              <span className="ml-auto font-semibold">€{displayPrices.eur}</span>
+            ) : isLoadingPrintings ? (
+              <Loader2 className="ml-auto h-3 w-3 animate-spin" />
+            ) : null}
           </Button>
         </div>
       </div>
