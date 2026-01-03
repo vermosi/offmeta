@@ -1,52 +1,19 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Search, Loader2, SlidersHorizontal, X, Wand2, History, Mic } from 'lucide-react';
+import { Search, Loader2, SlidersHorizontal, X, Wand2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useVoiceInput } from '@/hooks/useVoiceInput';
-import { VoiceSearchButton } from '@/components/VoiceSearchButton';
 import { cn } from '@/lib/utils';
 
-const VOICE_HISTORY_KEY = 'recentVoiceSearches';
-const MAX_HISTORY_ITEMS = 5;
 const SEARCH_CONTEXT_KEY = 'lastSearchContext';
 
 interface SearchContext {
   previousQuery: string;
   previousScryfall: string;
-}
-
-function useVoiceSearchHistory() {
-  const [history, setHistory] = useState<string[]>(() => {
-    if (typeof window === 'undefined') return [];
-    try {
-      const stored = localStorage.getItem(VOICE_HISTORY_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const addSearch = useCallback((query: string) => {
-    if (!query.trim()) return;
-    setHistory(prev => {
-      const filtered = prev.filter(q => q.toLowerCase() !== query.toLowerCase());
-      const updated = [query, ...filtered].slice(0, MAX_HISTORY_ITEMS);
-      localStorage.setItem(VOICE_HISTORY_KEY, JSON.stringify(updated));
-      return updated;
-    });
-  }, []);
-
-  const clearHistory = useCallback(() => {
-    setHistory([]);
-    localStorage.removeItem(VOICE_HISTORY_KEY);
-  }, []);
-
-  return { history, addSearch, clearHistory };
 }
 
 function useSearchContext() {
@@ -119,36 +86,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
   const [colorIdentity, setColorIdentity] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { history: voiceHistory, addSearch: addVoiceSearch, clearHistory: clearVoiceHistory } = useVoiceSearchHistory();
   const { saveContext, getContext } = useSearchContext();
-
-  // Voice input hook
-  const {
-    isListening,
-    isSupported,
-    transcript,
-    startListening,
-    stopListening
-  } = useVoiceInput({
-    onTranscript: (text) => {
-      setQuery(text);
-    },
-    onFinalTranscript: (text) => {
-      setQuery(text);
-      // Auto-search when speech ends and save to voice history
-      if (text.trim()) {
-        addVoiceSearch(text.trim());
-        setTimeout(() => handleSearch(text), 300);
-      }
-    }
-  });
-
-  // Update query when transcript changes during listening
-  useEffect(() => {
-    if (isListening && transcript) {
-      setQuery(transcript);
-    }
-  }, [isListening, transcript]);
 
   const handleSearch = async (searchQuery?: string) => {
     const queryToSearch = searchQuery || query;
@@ -211,36 +149,20 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
     setColorIdentity([]);
   };
 
-  const handleVoiceToggle = () => {
-    if (isListening) {
-      stopListening();
-    } else {
-      setQuery('');
-      startListening();
-    }
-  };
-
   const activeFiltersCount = (format ? 1 : 0) + (colorIdentity.length > 0 ? 1 : 0);
-  const showExamples = !query && !isListening;
+  const showExamples = !query;
 
   return (
     <div className="space-y-3 sm:space-y-4">
       {/* Compact header */}
       <div className="text-center">
         <p className="text-muted-foreground text-xs sm:text-sm">
-          Describe the cards you need in plain English
+          Just ask for what you need — describe cards in plain English
         </p>
       </div>
 
-      {/* Main search bar with voice button */}
+      {/* Main search bar */}
       <div className="flex items-center gap-2 sm:gap-3 max-w-2xl mx-auto">
-        <VoiceSearchButton
-          isListening={isListening}
-          isSupported={isSupported}
-          isProcessing={isSearching}
-          onToggle={handleVoiceToggle}
-        />
-
         <div className="relative flex-1">
           <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2">
             <Wand2 className="h-4 w-4 text-primary" />
@@ -248,18 +170,14 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
           <Input
             ref={inputRef}
             type="text"
-            placeholder={isListening ? 'Listening...' : 'Describe what you need...'}
+            placeholder="e.g. creatures that make treasure tokens..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            className={cn(
-              "pl-9 sm:pl-11 pr-10 sm:pr-12 h-12 sm:h-14 text-sm sm:text-base bg-muted/30 border-border/50 focus:border-primary/50 focus:bg-background transition-all rounded-xl",
-              isListening && "border-destructive/50 bg-destructive/5 animate-pulse-subtle"
-            )}
-            disabled={isListening}
+            className="pl-9 sm:pl-11 pr-10 sm:pr-12 h-12 sm:h-14 text-sm sm:text-base bg-muted/30 border-border/50 focus:border-primary/50 focus:bg-background transition-all rounded-xl"
           />
           
-          {query && !isListening && (
+          {query && (
             <Button
               variant="ghost"
               size="icon"
@@ -334,7 +252,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
 
         <Button
           onClick={() => handleSearch()}
-          disabled={isSearching || isLoading || !query.trim() || isListening}
+          disabled={isSearching || isLoading || !query.trim()}
           className="h-12 sm:h-14 px-3 sm:px-6 gap-2 rounded-xl min-w-0"
         >
           {isSearching ? (
@@ -345,54 +263,6 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
           <span className="hidden sm:inline">Search</span>
         </Button>
       </div>
-
-      {/* Listening indicator */}
-      {isListening && (
-        <div className="text-center animate-fade-in">
-          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-destructive/10 text-destructive rounded-full text-xs sm:text-sm font-medium">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
-            </span>
-            Listening... speak now
-          </div>
-        </div>
-      )}
-
-      {/* Recent voice searches */}
-      {voiceHistory.length > 0 && showExamples && (
-        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 animate-fade-in px-2">
-          <div className="flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground">
-            <Mic className="h-3 w-3" />
-            <span>Recent:</span>
-          </div>
-          {voiceHistory.slice(0, isMobile ? 2 : 4).map((voiceQuery, index) => (
-            <Button
-              key={`${voiceQuery}-${index}`}
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setQuery(voiceQuery);
-                handleSearch(voiceQuery);
-              }}
-              className="h-7 text-[10px] sm:text-xs px-2 sm:px-3 border-primary/20 text-foreground hover:bg-primary/10 hover:border-primary/40 rounded-full gap-1 sm:gap-1.5 min-h-0 min-w-0 inline-touch"
-            >
-              <History className="h-3 w-3" />
-              {voiceQuery.length > (isMobile ? 15 : 25) ? `${voiceQuery.slice(0, isMobile ? 15 : 25)}...` : voiceQuery}
-            </Button>
-          ))}
-          {voiceHistory.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearVoiceHistory}
-              className="h-7 text-xs px-2 text-muted-foreground hover:text-destructive rounded-full min-h-0 min-w-0 inline-touch"
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          )}
-        </div>
-      )}
 
       {/* Example queries */}
       {showExamples && (
