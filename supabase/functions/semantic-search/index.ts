@@ -163,6 +163,14 @@ CRITICAL RULES:
 5. Never fabricate or guess card names, abilities, or mechanics
 6. If a term is ambiguous, translate it conservatively
 
+LEGALITY & BAN STATUS (CRITICAL - use these exact syntaxes):
+- "banned in X" = banned:X (e.g., "banned in commander" → banned:commander)
+- "restricted in X" = restricted:X (e.g., "restricted in vintage" → restricted:vintage)
+- "legal in X" = f:X or legal:X (e.g., "legal in modern" → f:modern)
+- "not legal in X" = -f:X (e.g., "not legal in standard" → -f:standard)
+- DO NOT use "is:banned" - it does not exist. Always use "banned:FORMAT"
+- DO NOT use "is:restricted" - it does not exist. Always use "restricted:FORMAT"
+
 MTG SLANG DEFINITIONS:
 - "ramp" = cards that accelerate mana, PRIMARILY land-fetching spells like Rampant Growth, Farseek, Kodama's Reach. Use: o:"search" o:"land" (o:"onto the battlefield" or o:"put it onto")
 - "ramp spells" = instants/sorceries that search for lands: (t:instant or t:sorcery) o:"search" o:"land"
