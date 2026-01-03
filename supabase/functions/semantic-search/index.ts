@@ -311,6 +311,68 @@ COMMANDER-SPECIFIC SLANG:
 - "MDFCs" / "modal lands" = t:land is:mdfc (modal double-faced cards)
 - "utility lands" = t:land -t:basic (o:":" or o:"activated")
 
+PRECON & PRODUCT SLANG:
+- "precon" / "precon commanders" = is:commander (commanders released in preconstructed decks)
+- "precon cards" = is:promo:stamped or is:reprint (cards commonly in precons)
+- "starter deck" = st:starter (starter deck products)
+- "secret lair" = e:sld or s:sld (Secret Lair drops)
+- "collector booster" = is:extendedart or is:borderless or is:showcase (collector booster exclusives)
+- "set boosters" = is:boosterfun or is:showcase (set booster special treatments)
+- "draft boosters" = -is:extendedart -is:borderless (standard pack cards)
+- "box toppers" = is:boxtopper (box topper promos)
+- "buy-a-box" = is:buyabox (buy-a-box promos)
+- "bundle promo" = is:bundle (bundle exclusive cards)
+- "promo" / "promos" = is:promo (any promotional card)
+- "foil only" = is:foilonly (cards only available in foil)
+- "nonfoil only" = is:nonfoilonly (cards only available in nonfoil)
+- "masterpiece" = is:masterpiece (masterpiece series cards)
+- "expedition" / "expeditions" = e:exp (Zendikar Expeditions)
+- "invention" / "inventions" = e:mps (Kaladesh Inventions)
+- "invocation" / "invocations" = e:mp2 (Amonkhet Invocations)
+- "retro frame" = frame:old or is:retro (old border/retro frame cards)
+- "showcase" = is:showcase (showcase frame treatments)
+- "borderless" = is:borderless (borderless card treatments)
+- "extended art" = is:extendedart (extended art treatments)
+- "full art" = is:fullart (full art cards)
+- "full art lands" = t:basic is:fullart (full art basic lands)
+- "textless" = is:textless (textless promos)
+- "stained glass" = is:showcase e:sld o:"planeswalker" (stained glass planeswalkers)
+- "serialized" = is:serialized (serialized numbered cards)
+- "commander collection" = e:cc1 or e:cc2 (Commander Collection products)
+- "signature spellbook" = e:ss1 or e:ss2 or e:ss3 (Signature Spellbook series)
+- "from the vault" = e:v09 or e:v10 or e:v11 or e:v12 or e:v13 or e:v14 or e:v15 or e:v16 or e:v17 (From the Vault series)
+- "game night" = e:gn1 or e:gn2 or e:gn3 (Game Night products)
+- "jumpstart" = e:jmp or e:j21 or e:j22 (Jumpstart products)
+- "mystery booster" = e:mb1 or e:mb2 or e:fmb1 (Mystery Booster cards)
+- "the list" = e:plist or s:list (The List reprints)
+- "universes beyond" = is:universesbeyond (non-Magic IP crossovers)
+- "universes within" = is:universeswithin (Magic-ified versions of UB cards)
+- "reskinned" = is:reskin (reskinned versions of cards)
+- "commander deck" / "commander precon" = is:commander st:commander (Commander precon products)
+- "pioneer challenger" = st:challenger_deck (Pioneer Challenger decks)
+- "event deck" = st:event_deck (event deck products)
+- "duel deck" = e:ddk or e:ddl or e:ddm or e:ddn or e:ddo or e:ddp or e:ddq or e:ddr or e:dds or e:ddt or e:ddu (Duel Deck products)
+- "anthology" = e:cma or e:cm2 (Commander Anthology)
+- "planechase" = e:pc2 or e:pca or e:opca (Planechase products)
+- "archenemy" = e:arc or e:e01 (Archenemy products)
+- "conspiracy" = e:cns or e:cn2 (Conspiracy sets)
+- "battlebond" = e:bbd (Battlebond)
+- "unfinity" = e:unf (Unfinity)
+- "unstable" = e:ust (Unstable)
+- "unhinged" = e:unh (Unhinged)
+- "unglued" = e:ugl (Unglued)
+- "sticker cards" = o:"sticker" (Unfinity stickers)
+- "attraction cards" = t:attraction (Unfinity attractions)
+- "commander masters" = e:cmm (Commander Masters)
+- "double masters" = e:2xm or e:2x2 (Double Masters sets)
+- "modern masters" = e:mma or e:mm2 or e:mm3 (Modern Masters sets)
+- "eternal masters" = e:ema (Eternal Masters)
+- "iconic masters" = e:ima (Iconic Masters)
+- "ultimate masters" = e:uma (Ultimate Masters)
+- "masters edition" = e:me1 or e:me2 or e:me3 or e:me4 (MTGO Masters Edition)
+- "vault masters" = e:vma (Vintage Masters - MTGO)
+- "treasure chest" = e:pz1 or e:pz2 (MTGO Treasure Chest)
+
 QUERY TRANSLATION EXAMPLES:
 - "creatures that make treasure" → game:paper t:creature o:"create" o:"treasure"
 - "cheap green ramp spells" → game:paper c:g mv<=3 (t:instant or t:sorcery) o:"search" o:"land"
@@ -341,6 +403,10 @@ QUERY TRANSLATION EXAMPLES:
 - "grave pact effects" → game:paper o:"whenever" o:"creature you control dies" o:"sacrifice"
 - "mana doublers" → game:paper o:"whenever" o:"tap" o:"for mana" o:"add"
 - "fetch lands" → game:paper t:land o:"search your library" o:"land"
+- "secret lair cards" → game:paper e:sld
+- "borderless planeswalkers" → game:paper is:borderless t:planeswalker
+- "commander precon staples" → game:paper is:commander f:commander
+- "showcase treatments" → game:paper is:showcase
 
 SET & UNIVERSE CODES:
 - Avatar/ATLA: e:tla
