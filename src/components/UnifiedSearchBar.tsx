@@ -3,11 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Search, Loader2, X, Wand2 } from 'lucide-react';
+import { Search, Loader2, X, Wand2, History } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { OnboardingTooltip } from '@/components/OnboardingTooltip';
 
 const SEARCH_CONTEXT_KEY = 'lastSearchContext';
+const SEARCH_HISTORY_KEY = 'offmeta_search_history';
+const MAX_HISTORY_ITEMS = 5;
 
 interface SearchContext {
   previousQuery: string;
@@ -28,6 +30,39 @@ function useSearchContext() {
   const getContext = useCallback(() => context, [context]);
 
   return { saveContext, getContext };
+}
+
+function useSearchHistory() {
+  const [history, setHistory] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const stored = localStorage.getItem(SEARCH_HISTORY_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const addToHistory = useCallback((query: string) => {
+    if (!query.trim()) return;
+    setHistory(prev => {
+      const filtered = prev.filter(q => q.toLowerCase() !== query.toLowerCase());
+      const updated = [query, ...filtered].slice(0, MAX_HISTORY_ITEMS);
+      try {
+        localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  }, []);
+
+  const clearHistory = useCallback(() => {
+    setHistory([]);
+    try {
+      localStorage.removeItem(SEARCH_HISTORY_KEY);
+    } catch {}
+  }, []);
+
+  return { history, addToHistory, clearHistory };
 }
 
 export interface SearchResult {
@@ -58,12 +93,14 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
   const [isSearching, setIsSearching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const { saveContext, getContext } = useSearchContext();
+  const { history, addToHistory, clearHistory } = useSearchHistory();
 
   const handleSearch = async (searchQuery?: string) => {
     const queryToSearch = searchQuery || query;
     if (!queryToSearch.trim()) return;
 
     setIsSearching(true);
+    addToHistory(queryToSearch.trim());
 
     try {
       const context = getContext();
@@ -165,6 +202,39 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
           <span className="hidden sm:inline">Search</span>
         </Button>
       </div>
+
+      {/* Recent searches */}
+      {history.length > 0 && showExamples && (
+        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 animate-fade-in px-2">
+          <div className="flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground">
+            <History className="h-3 w-3" />
+            <span>Recent:</span>
+          </div>
+          {history.slice(0, isMobile ? 2 : 4).map((historyQuery, index) => (
+            <Button
+              key={`${historyQuery}-${index}`}
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setQuery(historyQuery);
+                handleSearch(historyQuery);
+              }}
+              className="h-7 text-[10px] sm:text-xs px-2 sm:px-3 border-primary/20 text-foreground hover:bg-primary/10 hover:border-primary/40 rounded-full min-h-0 min-w-0 inline-touch"
+            >
+              {historyQuery.length > (isMobile ? 18 : 28) ? `${historyQuery.slice(0, isMobile ? 18 : 28)}...` : historyQuery}
+            </Button>
+          ))}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearHistory}
+            aria-label="Clear history"
+            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive rounded-full min-h-0 min-w-0"
+          >
+            <X className="h-3 w-3" />
+          </Button>
+        </div>
+      )}
 
       {/* Example queries */}
       {showExamples && (
