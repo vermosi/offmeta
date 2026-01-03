@@ -1,16 +1,18 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { UnifiedSearchBar, SearchResult } from "@/components/UnifiedSearchBar";
 import { SearchInterpretation } from "@/components/SearchInterpretation";
 import { AffiliateNotice } from "@/components/AffiliateNotice";
 import { CardItem } from "@/components/CardItem";
-import { CardModal } from "@/components/CardModal";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { searchCards } from "@/lib/scryfall";
 import { ScryfallCard } from "@/types/card";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+
+// Lazy load heavy modal component
+const CardModal = lazy(() => import("@/components/CardModal"));
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -141,8 +143,10 @@ const Index = () => {
         </div>
       </main>
 
-      {/* Card Modal */}
-      <CardModal card={selectedCard} open={!!selectedCard} onClose={() => setSelectedCard(null)} />
+      {/* Card Modal - lazy loaded */}
+      <Suspense fallback={null}>
+        <CardModal card={selectedCard} open={!!selectedCard} onClose={() => setSelectedCard(null)} />
+      </Suspense>
     </div>
   );
 };

@@ -354,3 +354,5 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
     </Dialog>
   );
 }
+
+export default CardModal;
