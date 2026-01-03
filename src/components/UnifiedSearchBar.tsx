@@ -94,6 +94,13 @@ const FORMATS = [
   { value: 'pioneer', label: 'Pioneer' },
   { value: 'legacy', label: 'Legacy' },
   { value: 'pauper', label: 'Pauper' },
+  { value: 'vintage', label: 'Vintage' },
+  { value: 'historic', label: 'Historic' },
+  { value: 'duel', label: 'Duel Commander' },
+  { value: 'paupercommander', label: 'Pauper Commander' },
+  { value: 'oldschool', label: 'Old School' },
+  { value: 'premodern', label: 'Premodern' },
+  { value: 'oathbreaker', label: 'Oathbreaker' },
 ];
 
 const COLORS = [
@@ -217,14 +224,11 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
   const showExamples = !query && !isListening;
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Hero search area */}
-      <div className="text-center space-y-1.5 sm:space-y-2">
-        <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
-          Natural language Magic card search
-        </h2>
+    <div className="space-y-3 sm:space-y-4">
+      {/* Compact header */}
+      <div className="text-center">
         <p className="text-muted-foreground text-xs sm:text-sm">
-          Describe the cards you need—we translate it to Scryfall
+          Describe the cards you need in plain English
         </p>
       </div>
 
