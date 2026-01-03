@@ -1,15 +1,47 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Sparkles, Loader2, SlidersHorizontal, X, Wand2 } from 'lucide-react';
+import { Sparkles, Loader2, SlidersHorizontal, X, Wand2, History, Mic } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
 import { VoiceSearchButton } from '@/components/VoiceSearchButton';
 import { cn } from '@/lib/utils';
+
+const VOICE_HISTORY_KEY = 'recentVoiceSearches';
+const MAX_HISTORY_ITEMS = 5;
+
+function useVoiceSearchHistory() {
+  const [history, setHistory] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const stored = localStorage.getItem(VOICE_HISTORY_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const addSearch = useCallback((query: string) => {
+    if (!query.trim()) return;
+    setHistory(prev => {
+      const filtered = prev.filter(q => q.toLowerCase() !== query.toLowerCase());
+      const updated = [query, ...filtered].slice(0, MAX_HISTORY_ITEMS);
+      localStorage.setItem(VOICE_HISTORY_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
+  const clearHistory = useCallback(() => {
+    setHistory([]);
+    localStorage.removeItem(VOICE_HISTORY_KEY);
+  }, []);
+
+  return { history, addSearch, clearHistory };
+}
 
 interface UnifiedSearchBarProps {
   onSearch: (query: string) => void;
@@ -49,6 +81,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
   const [showFilters, setShowFilters] = useState(false);
   const [translatedQuery, setTranslatedQuery] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { history: voiceHistory, addSearch: addVoiceSearch, clearHistory: clearVoiceHistory } = useVoiceSearchHistory();
 
   // Voice input hook
   const {
@@ -63,8 +96,9 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
     },
     onFinalTranscript: (text) => {
       setQuery(text);
-      // Auto-search when speech ends
+      // Auto-search when speech ends and save to voice history
       if (text.trim()) {
+        addVoiceSearch(text.trim());
         setTimeout(() => handleSearch(text), 300);
       }
     }
@@ -286,6 +320,41 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
           <p className="text-xs text-muted-foreground">
             Translated to: <code className="px-1.5 py-0.5 bg-muted rounded text-foreground">{translatedQuery}</code>
           </p>
+        </div>
+      )}
+
+      {/* Recent voice searches */}
+      {voiceHistory.length > 0 && showExamples && (
+        <div className="flex flex-wrap items-center justify-center gap-2 animate-fade-in">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Mic className="h-3 w-3" />
+            <span>Recent:</span>
+          </div>
+          {voiceHistory.slice(0, isMobile ? 2 : 4).map((voiceQuery, index) => (
+            <Button
+              key={`${voiceQuery}-${index}`}
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setQuery(voiceQuery);
+                handleSearch(voiceQuery);
+              }}
+              className="h-7 text-xs px-3 border-primary/20 text-foreground hover:bg-primary/10 hover:border-primary/40 rounded-full gap-1.5"
+            >
+              <History className="h-3 w-3" />
+              {voiceQuery.length > 25 ? `${voiceQuery.slice(0, 25)}...` : voiceQuery}
+            </Button>
+          ))}
+          {voiceHistory.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearVoiceHistory}
+              className="h-7 text-xs px-2 text-muted-foreground hover:text-destructive rounded-full"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
         </div>
       )}
 
