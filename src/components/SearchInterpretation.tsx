@@ -111,7 +111,7 @@ export function SearchInterpretation({ scryfallQuery, explanation }: SearchInter
           )}
 
           <p className="text-[10px] text-muted-foreground/70 pt-1 border-t border-border/30">
-            This search is powered by Scryfall's comprehensive database. Results are not generated—they're real cards.
+            Powered by Scryfall. Results are not generated—they're real cards.
           </p>
         </div>
       )}

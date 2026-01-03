@@ -13,7 +13,7 @@ export function AffiliateNotice({ searchQuery }: AffiliateNoticeProps) {
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <div className="flex-1 min-w-0">
           <p className="text-sm text-foreground">
-            Looking to buy? Find these cards on TCGplayer.
+            Looking to buy? Shop these cards on TCGplayer.
           </p>
           <p className="text-[10px] text-muted-foreground mt-0.5">
             This link may support this tool at no extra cost to you.

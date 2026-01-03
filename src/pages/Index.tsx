@@ -53,7 +53,7 @@ const Index = () => {
       {/* Minimal header */}
       <header className="border-b border-border/50 bg-background/80 backdrop-blur-sm sticky top-0 z-50 safe-top">
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between">
-          <h1 className="text-base sm:text-lg font-semibold tracking-tight">OracleText</h1>
+          <h1 className="text-base sm:text-lg font-semibold tracking-tight">OffMeta</h1>
           <ThemeToggle />
         </div>
       </header>

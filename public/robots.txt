@@ -1,4 +1,4 @@
-# OracleText - Natural Language MTG Card Search
+# OffMeta - Natural Language Magic Card Search
 # https://offmeta.lovable.app
 
 User-agent: Googlebot
