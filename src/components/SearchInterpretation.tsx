@@ -110,7 +110,7 @@ export function SearchInterpretation({ scryfallQuery, explanation }: SearchInter
             </div>
           )}
 
-          <p className="text-[10px] text-muted-foreground/70 pt-1 border-t border-border/30">
+          <p className="text-[10px] text-muted-foreground pt-1 border-t border-border/30">
             Powered by Scryfall. Results are not generated—they're real cards.
           </p>
         </div>

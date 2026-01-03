@@ -40,7 +40,7 @@ export function EmptyState({ hasSearched }: EmptyStateProps) {
           "I need cheap green ramp spells" or "creatures that make treasure tokens"
         </span>
       </p>
-      <p className="mt-6 text-xs text-muted-foreground/70 max-w-sm">
+      <p className="mt-6 text-xs text-muted-foreground max-w-sm">
         Your search is translated to Scryfall syntax—results come directly from the official database.
       </p>
     </div>
