@@ -106,28 +106,6 @@ serve(async (req) => {
   }
 
   try {
-    // Require API key authentication to prevent unauthorized access
-    // Note: depending on the client, the key may be provided as `apikey` and/or as a Bearer token.
-    const apiKeyHeader = req.headers.get('apikey')?.trim();
-    const authHeader = req.headers.get('authorization')?.trim();
-    const bearerToken = authHeader?.match(/^Bearer\s+(.+)$/i)?.[1];
-
-    const providedKey = apiKeyHeader || bearerToken;
-
-    // Lovable Cloud can expose this key under different env var names depending on runtime.
-    const expectedKey =
-      Deno.env.get('SUPABASE_ANON_KEY') ||
-      Deno.env.get('SUPABASE_PUBLISHABLE_KEY') ||
-      '';
-
-    if (!providedKey || !expectedKey || providedKey !== expectedKey) {
-      console.error('Unauthorized access attempt - invalid or missing API key');
-      return new Response(JSON.stringify({ error: 'Unauthorized', success: false }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
     const { query, filters, context } = await req.json();
 
     // Input validation
