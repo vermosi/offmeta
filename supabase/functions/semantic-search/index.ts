@@ -61,6 +61,20 @@ function validateQuery(query: string): { valid: boolean; sanitized: string; issu
     issues.push('Removed unbalanced parentheses');
   }
   
+  // Check for balanced quotes and fix if needed
+  const doubleQuoteCount = (sanitized.match(/"/g) || []).length;
+  if (doubleQuoteCount % 2 !== 0) {
+    // Add closing quote at the end of the last quoted term
+    sanitized = sanitized + '"';
+    issues.push('Added missing closing quote');
+  }
+  
+  const singleQuoteCount = (sanitized.match(/'/g) || []).length;
+  if (singleQuoteCount % 2 !== 0) {
+    sanitized = sanitized + "'";
+    issues.push('Added missing closing quote');
+  }
+  
   return { valid: issues.length === 0, sanitized, issues };
 }
 
