@@ -5,13 +5,94 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Valid Scryfall operators for validation
+const VALID_OPERATORS = [
+  'c:', 'c=', 'c<', 'c>', 'c<=', 'c>=',
+  'id:', 'id=', 'id<', 'id>', 'id<=', 'id>=',
+  'o:', 'oracle:', 't:', 'type:', 
+  'm:', 'mana:', 'cmc:', 'cmc=', 'cmc<', 'cmc>', 'cmc<=', 'cmc>=',
+  'mv:', 'mv=', 'mv<', 'mv>', 'mv<=', 'mv>=',
+  'power:', 'pow:', 'toughness:', 'tou:',
+  'loyalty:', 'loy:',
+  'e:', 'set:', 's:', 'b:', 'block:',
+  'r:', 'rarity:',
+  'f:', 'format:', 'legal:',
+  'banned:', 'restricted:',
+  'is:', 'not:', 'has:',
+  'usd:', 'usd<', 'usd>', 'usd<=', 'usd>=',
+  'eur:', 'eur<', 'eur>', 'eur<=', 'eur>=',
+  'tix:', 'tix<', 'tix>', 'tix<=', 'tix>=',
+  'a:', 'artist:', 'ft:', 'flavor:',
+  'wm:', 'watermark:', 'border:',
+  'frame:', 'game:', 'year:', 'date:',
+  'new:', 'prints:', 'lang:', 'in:',
+  'st:', 'cube:', 'order:', 'direction:',
+  'unique:', 'prefer:', 'include:',
+  'produces:', 'devotion:', 'name:'
+];
+
+// Validate and sanitize Scryfall query
+function validateQuery(query: string): { valid: boolean; sanitized: string; issues: string[] } {
+  const issues: string[] = [];
+  let sanitized = query;
+  
+  // Remove newlines and extra whitespace
+  sanitized = sanitized.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+  
+  // Enforce max length
+  if (sanitized.length > 400) {
+    sanitized = sanitized.substring(0, 400);
+    issues.push('Query truncated to 400 characters');
+  }
+  
+  // Remove potentially unsafe characters (keep alphanumeric, spaces, colons, quotes, parentheses, operators)
+  sanitized = sanitized.replace(/[^\w\s:="'()<>!+-/*]/g, '');
+  
+  // Check for balanced parentheses
+  let parenCount = 0;
+  for (const char of sanitized) {
+    if (char === '(') parenCount++;
+    if (char === ')') parenCount--;
+    if (parenCount < 0) break;
+  }
+  if (parenCount !== 0) {
+    // Fix unbalanced parentheses by removing all of them
+    sanitized = sanitized.replace(/[()]/g, '');
+    issues.push('Removed unbalanced parentheses');
+  }
+  
+  return { valid: issues.length === 0, sanitized, issues };
+}
+
+// Simplify query for fallback
+function simplifyQuery(query: string): string {
+  // Remove price constraints
+  let simplified = query.replace(/usd[<>=]+\S+/gi, '');
+  // Remove complex nested groups
+  simplified = simplified.replace(/\([^)]*\([^)]*\)[^)]*\)/g, '');
+  // Keep only core terms
+  simplified = simplified.replace(/\s+/g, ' ').trim();
+  return simplified;
+}
+
+// Detect purchase intent for affiliate links
+function hasPurchaseIntent(query: string): boolean {
+  const purchaseTerms = [
+    'cheap', 'budget', 'affordable', 'inexpensive', 'low cost',
+    'under $', 'under €', 'less than', 'replacement', 'upgrade',
+    'buy', 'purchase', 'price', 'worth', 'value'
+  ];
+  const lowerQuery = query.toLowerCase();
+  return purchaseTerms.some(term => lowerQuery.includes(term));
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { query, filters } = await req.json();
+    const { query, filters, context } = await req.json();
 
     // Input validation
     if (!query || typeof query !== 'string' || query.trim().length === 0) {
@@ -47,113 +128,61 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
+    // Build context from previous search if provided
+    const contextHint = context ? `\nPrevious search context: The user previously searched for "${context.previousQuery}" which translated to "${context.previousScryfall}". If this new query seems like a follow-up, inherit relevant constraints like colors or format.` : '';
+
     // Build the semantic search prompt
-    const systemPrompt = `You are an expert Magic: The Gathering card search assistant. Your job is to translate natural language queries into Scryfall search syntax.
+    const systemPrompt = `You are a Scryfall query translator. Your ONLY job is to convert natural language descriptions into valid Scryfall search syntax.
 
 CRITICAL RULES:
-- ALWAYS include "game:paper" in every query to exclude digital-only cards (MTG Arena, MTGO exclusives).
-- "Spells" means ONLY instants and sorceries (t:instant or t:sorcery). Lands, creatures, artifacts, enchantments, and planeswalkers are NOT spells when searching.
-- If the user asks for "spells", ALWAYS include (t:instant or t:sorcery) in the query.
-- "Ramp spells" = instants/sorceries that add mana or search for lands
-- "Counterspells" = instants that counter spells
-- "Removal spells" = instants/sorceries that destroy/exile
+1. Output ONLY the Scryfall query string - no explanations, no card names, no formatting
+2. ALWAYS include "game:paper" to exclude digital-only cards
+3. Prefer BROADER queries when uncertain - it's better to return more results than miss relevant cards
+4. "Spells" means ONLY instants and sorceries: (t:instant or t:sorcery)
+5. Never fabricate or guess card names, abilities, or mechanics
+6. If a term is ambiguous, translate it conservatively
 
-Given a user's natural language query about MTG cards, you must:
-1. Understand the intent and meaning behind the query
-2. Translate it into valid Scryfall search syntax
-3. Return ONLY the Scryfall query string, nothing else
-
-Examples:
-- "spells that add mana" → game:paper (t:instant or t:sorcery) o:"add" o:"mana"
-- "cards that double ETB effects" → game:paper o:"whenever" o:"enters" (o:"double" or o:"twice" or o:"additional")
-- "Rakdos sac outlets without mana costs" → game:paper c:br o:"sacrifice" -o:"{" t:creature
-- "cheap green ramp spells" → game:paper c:g cmc<=2 (t:instant or t:sorcery) (o:"add" o:"mana" or o:"search" o:"land")
-- "blue counterspells that draw cards" → game:paper c:u (t:instant or t:sorcery) o:"counter" o:"draw"
-- "creatures that make treasure tokens" → game:paper t:creature o:"create" o:"treasure"
-- "graveyard recursion in black" → game:paper c:b (o:"return" o:"graveyard" or o:"reanimate")
+QUERY TRANSLATION EXAMPLES:
+- "creatures that make treasure" → game:paper t:creature o:"create" o:"treasure"
+- "cheap green ramp spells" → game:paper c:g mv<=2 (t:instant or t:sorcery) o:"add" o:"mana"
+- "Rakdos sacrifice outlets" → game:paper c:br o:"sacrifice"
+- "blue counterspells that draw" → game:paper c:u t:instant o:"counter" o:"draw"
 - "white board wipes" → game:paper c:w o:"destroy all"
 - "lands that tap for any color" → game:paper t:land o:"add" o:"any color"
-- "enchantments that double damage" → game:paper t:enchantment (o:"double" o:"damage" or o:"deals twice")
-- "artifacts that reduce costs" → game:paper t:artifact (o:"cost" o:"less" or o:"reduce")
-- "burn spells" → game:paper (t:instant or t:sorcery) o:"damage" o:"target"
-- "draw spells" → game:paper (t:instant or t:sorcery) o:"draw"
+- "mana dorks" → game:paper t:creature o:"add" o:"{" mv<=2
+- "wheel effects" → game:paper o:"each player" (o:"discards" o:"draws" or o:"discard" o:"hand")
+- "hatebears" → game:paper t:creature mv<=3 (o:"can't" or o:"opponent" o:"pay")
+- "aristocrats" → game:paper t:creature (o:"whenever" o:"dies" or o:"sacrifice")
 
-Set/Universe filters (use 'e:' for set code when user mentions these):
-- Avatar / Avatar: The Last Airbender / ATLA → e:tla (or e:tle for Eternal/Commander cards)
-- Final Fantasy / FF → e:fin (or e:fic for Commander)
-- Fallout → e:pip
-- Lord of the Rings / LOTR / LotR → e:ltr (or e:ltc for Commander)
-- Warhammer / 40k / WH40K → e:40k
-- Doctor Who → e:who
-- Marvel / Spider-Man → e:spm (or e:mar for Marvel Universe)
-- Jurassic World → e:rex
-- Assassin's Creed → e:acr
-- Bloomburrow → e:blb
-- Duskmourn → e:dsk
-- Modern Horizons 3 → e:mh3
-- Murders at Karlov Manor → e:mkm
-- Outlaws of Thunder Junction → e:otj
-- Wilds of Eldraine → e:woe
+SET & UNIVERSE CODES:
+- Avatar/ATLA: e:tla
+- Final Fantasy: e:fin
+- Lord of the Rings/LOTR: e:ltr
+- Warhammer 40k: e:40k
+- Doctor Who: e:who
+- Fallout: e:pip
 
-Block filters (use 'b:' for block code - blocks are groups of related sets):
-- Ice Age block → b:ice
-- Mirage block → b:mir
-- Tempest block → b:tmp
-- Urza's block / Urza block → b:usg
-- Masques block / Mercadian → b:mmq
-- Invasion block → b:inv
-- Odyssey block → b:ody
-- Onslaught block → b:ons
-- Mirrodin block → b:mrd
-- Kamigawa block → b:chk
-- Ravnica block (original) → b:rav
-- Time Spiral block → b:tsp
-- Lorwyn block → b:lrw
-- Shadowmoor block → b:shm
-- Alara block / Shards of Alara → b:ala
-- Zendikar block (original) → b:zen
-- Scars of Mirrodin block → b:som
-- Innistrad block (original) → b:isd
-- Return to Ravnica block → b:rtr
-- Theros block (original) → b:ths
-- Khans of Tarkir block / Tarkir block → b:ktk
-- Battle for Zendikar block → b:bfz
-- Shadows over Innistrad block → b:soi
-- Kaladesh block → b:kld
-- Amonkhet block → b:akh
-- Ixalan block → b:xln
+FORMAT LEGALITY:
+- Commander/EDH: f:commander
+- Modern: f:modern
+- Standard: f:standard
 
-Format restrictions (add if mentioned):
-- Commander/EDH legal: f:commander
-- Modern legal: f:modern
-- Standard legal: f:standard
-- Pioneer legal: f:pioneer
+BUDGET TRANSLATIONS:
+- "cheap" or "budget": usd<5
+- "very cheap": usd<1
+- "expensive": usd>20
+${contextHint}
 
-Color identity filters (use 'c:' for color, 'id:' for commander identity):
-- Only use 'id:' when user mentions commander/EDH identity
-- Use 'c:' for regular color matching
+Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`;
 
-Budget considerations:
-- Cheap/budget cards: usd<5
-- Very cheap: usd<1
-- Expensive: usd>20
-
-Examples with sets and blocks:
-- "Avatar creatures" → game:paper e:tla t:creature
-- "Final Fantasy commanders" → game:paper e:fic t:legendary t:creature
-- "LOTR hobbits" → game:paper e:ltr t:halfling
-- "Innistrad block vampires" → game:paper b:isd t:vampire
-- "Ravnica block guild cards" → game:paper b:rav
-- "Kamigawa block spirits" → game:paper b:chk t:spirit
-- "Zendikar block landfall" → game:paper b:zen o:landfall
-
-Remember: Return ONLY the Scryfall query, no explanation or formatting.`;
+    const userMessage = `Translate to Scryfall syntax: "${query}"${filters?.format ? ` (format: ${filters.format})` : ''}${filters?.colorIdentity?.length ? ` (colors: ${filters.colorIdentity.join('')})` : ''}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -165,45 +194,84 @@ Remember: Return ONLY the Scryfall query, no explanation or formatting.`;
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Translate this natural language MTG card search to Scryfall syntax: "${query}"${filters?.format ? ` (for ${filters.format} format)` : ''}${filters?.colorIdentity?.length ? ` (colors: ${filters.colorIdentity.join('')})` : ''}${filters?.maxCmc ? ` (max mana value: ${filters.maxCmc})` : ''}` }
+          { role: "user", content: userMessage }
         ],
-        temperature: 0.3,
+        temperature: 0.2,
         max_tokens: 200,
       }),
     });
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
+        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment.", success: false }), {
           status: 429,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add credits to continue." }), {
+        return new Response(JSON.stringify({ error: "Service temporarily unavailable. Please try again later.", success: false }), {
           status: 402,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
       const errorText = await response.text();
       console.error("AI gateway error:", response.status, errorText);
-      throw new Error("Failed to process semantic search");
+      throw new Error("Failed to process search");
     }
 
     const data = await response.json();
-    const scryfallQuery = data.choices?.[0]?.message?.content?.trim() || query;
+    let scryfallQuery = data.choices?.[0]?.message?.content?.trim() || '';
 
     // Clean up the query (remove any markdown or extra formatting)
-    const cleanQuery = scryfallQuery
+    scryfallQuery = scryfallQuery
       .replace(/```[a-z]*\n?/g, '')
       .replace(/`/g, '')
+      .replace(/^["']|["']$/g, '')
       .trim();
 
-    console.log("Semantic search:", query, "→", cleanQuery);
+    // Validate and sanitize
+    const validation = validateQuery(scryfallQuery);
+    scryfallQuery = validation.sanitized;
+
+    // Build explanation
+    const assumptions: string[] = [];
+    
+    // Detect inferred assumptions
+    if (!filters?.format && scryfallQuery.includes('f:commander')) {
+      assumptions.push('Assumed Commander format based on context');
+    }
+    if (query.toLowerCase().includes('cheap') || query.toLowerCase().includes('budget')) {
+      assumptions.push('Interpreted "cheap/budget" as under $5');
+    }
+    if (query.toLowerCase().includes('spells') && scryfallQuery.includes('t:instant')) {
+      assumptions.push('"Spells" interpreted as instants and sorceries only');
+    }
+    if (!scryfallQuery.includes('game:paper')) {
+      scryfallQuery = 'game:paper ' + scryfallQuery;
+      assumptions.push('Added paper game filter');
+    }
+
+    // Calculate confidence (simple heuristic)
+    let confidence = 0.85;
+    if (query.split(' ').length <= 3) confidence = 0.95;
+    if (query.split(' ').length > 10) confidence = 0.7;
+    if (validation.issues.length > 0) confidence -= 0.1;
+    confidence = Math.max(0.5, Math.min(1, confidence));
+
+    // Detect purchase intent
+    const showAffiliate = hasPurchaseIntent(query);
+
+    console.log("Search translated:", query, "→", scryfallQuery);
 
     return new Response(JSON.stringify({ 
       originalQuery: query,
-      scryfallQuery: cleanQuery,
+      scryfallQuery,
+      explanation: {
+        readable: `Searching for: ${query}`,
+        assumptions,
+        confidence: Math.round(confidence * 100) / 100
+      },
+      showAffiliate,
       success: true 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -211,7 +279,7 @@ Remember: Return ONLY the Scryfall query, no explanation or formatting.`;
   } catch (error) {
     console.error("Semantic search error:", error);
     return new Response(JSON.stringify({ 
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: "Something went wrong. Please try rephrasing your search.",
       success: false 
     }), {
       status: 500,

@@ -9,19 +9,64 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="format-detection" content="telephone=no" />
-    <title>OracleText - MTG Card Search</title>
-    <meta name="description" content="Search Magic: The Gathering cards using natural language. Find the perfect cards for your deck." />
+    
+    <title>OracleText – Natural Language MTG Card Search</title>
+    <meta name="description" content="Search Magic: The Gathering cards by describing what you need. OracleText translates your words into Scryfall queries and shows real card results instantly." />
     <meta name="author" content="OracleText" />
-    <meta name="keywords" content="MTG, Magic The Gathering, cards, deck builder, Scryfall, card search" />
+    <meta name="keywords" content="MTG, Magic The Gathering, Scryfall, card search, deck builder, natural language search, MTG cards" />
+    <link rel="canonical" href="https://offmeta.lovable.app/" />
 
-    <meta property="og:title" content="OracleText - MTG Card Search" />
-    <meta property="og:description" content="Search Magic: The Gathering cards using natural language. Find the perfect cards for your deck." />
+    <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:url" content="https://offmeta.lovable.app/" />
+    <meta property="og:title" content="OracleText – Natural Language MTG Card Search" />
+    <meta property="og:description" content="Describe what you need and find the perfect Magic cards. Type 'cheap green ramp spells' or 'creatures that make treasure' – we translate it to Scryfall." />
+    <meta property="og:image" content="https://offmeta.lovable.app/og-image.png" />
+    <meta property="og:site_name" content="OracleText" />
+    <meta property="og:locale" content="en_US" />
 
+    <!-- Twitter/X Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@OracleText" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta name="twitter:url" content="https://offmeta.lovable.app/" />
+    <meta name="twitter:title" content="OracleText – Natural Language MTG Card Search" />
+    <meta name="twitter:description" content="Describe what you need and find the perfect Magic cards. Powered by Scryfall." />
+    <meta name="twitter:image" content="https://offmeta.lovable.app/og-image.png" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "OracleText",
+      "url": "https://offmeta.lovable.app/",
+      "description": "Natural language search translator for Magic: The Gathering cards. Describe what you need in plain English and get real card results from Scryfall.",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "browserRequirements": "Requires JavaScript",
+      "author": {
+        "@type": "Organization",
+        "name": "OracleText"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "OracleText",
+      "url": "https://offmeta.lovable.app/",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://offmeta.lovable.app/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
 
     <!-- Prevent pull-to-refresh on mobile -->
     <style>
@@ -32,6 +77,23 @@
   </head>
 
   <body class="dark">
+    <!-- Indexable content for SEO -->
+    <noscript>
+      <div style="padding: 2rem; font-family: system-ui, sans-serif;">
+        <h1>OracleText – Natural Language MTG Card Search</h1>
+        <p>Search Magic: The Gathering cards by describing what you need in plain English.</p>
+        <p>OracleText translates your natural language queries into Scryfall search syntax, giving you accurate results from the official MTG card database.</p>
+        <h2>How it works</h2>
+        <ul>
+          <li>Type what you're looking for: "cheap green ramp spells" or "creatures that make treasure tokens"</li>
+          <li>OracleText translates your description into Scryfall syntax</li>
+          <li>See real card results instantly from Scryfall's database</li>
+        </ul>
+        <h2>Who it's for</h2>
+        <p>Perfect for Commander players building decks, brewers exploring card options, and anyone who wants to search MTG cards without learning complex search syntax.</p>
+        <p>Please enable JavaScript to use OracleText.</p>
+      </div>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
