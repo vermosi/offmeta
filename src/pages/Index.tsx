@@ -52,10 +52,16 @@ const Index = () => {
 
   return (
     <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background">
-      {/* Minimal header */}
-      <header className="border-b border-border/50 bg-background/80 backdrop-blur-sm sticky top-0 z-50 safe-top">
+      {/* Header with subtle gradient accent */}
+      <header className="border-b border-border/60 bg-gradient-to-r from-background via-background to-background sticky top-0 z-50 safe-top">
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between">
-          <h1 className="text-base sm:text-lg font-semibold tracking-tight">OffMeta</h1>
+          <div className="flex items-center gap-2">
+            <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center shadow-sm">
+              <span className="text-accent-foreground font-bold text-xs sm:text-sm">OM</span>
+            </div>
+            <h1 className="text-base sm:text-lg font-semibold tracking-tight text-foreground">OffMeta</h1>
+          </div>
           <ThemeToggle />
         </div>
       </header>

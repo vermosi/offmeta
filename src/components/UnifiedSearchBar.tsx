@@ -161,7 +161,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
       <div className="flex items-center gap-2 sm:gap-3 max-w-2xl mx-auto">
         <div className="relative flex-1">
           <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2">
-            <Wand2 className="h-4 w-4 text-primary" />
+            <Wand2 className="h-4 w-4 text-accent" />
           </div>
           <Input
             ref={inputRef}
@@ -192,7 +192,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
         <Button
           onClick={() => handleSearch()}
           disabled={isSearching || isLoading || !query.trim()}
-          className="h-12 sm:h-14 px-3 sm:px-6 gap-2 rounded-xl min-w-0"
+          className="h-12 sm:h-14 px-3 sm:px-6 gap-2 rounded-xl min-w-0 bg-accent hover:bg-accent/90 text-accent-foreground"
         >
           {isSearching ? (
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -219,7 +219,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
                 setQuery(historyQuery);
                 handleSearch(historyQuery);
               }}
-              className="h-7 text-[10px] sm:text-xs px-2 sm:px-3 border-primary/20 text-foreground hover:bg-primary/10 hover:border-primary/40 rounded-full min-h-0 min-w-0 inline-touch"
+              className="h-7 text-[10px] sm:text-xs px-2 sm:px-3 border-accent/30 text-foreground hover:bg-accent/10 hover:border-accent/50 rounded-full min-h-0 min-w-0 inline-touch"
             >
               {historyQuery.length > (isMobile ? 18 : 28) ? `${historyQuery.slice(0, isMobile ? 18 : 28)}...` : historyQuery}
             </Button>

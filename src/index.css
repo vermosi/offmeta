@@ -36,71 +36,79 @@
 
 @layer base {
   :root {
-    /* Light mode - Clean, Apple-inspired */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 9%;
+    /* Light mode - Inspired by MTGGoldfish/Scryfall warmth */
+    --background: 220 20% 97%;
+    --foreground: 222 47% 11%;
 
-    --card: 0 0% 98%;
-    --card-foreground: 0 0% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 222 47% 20%;
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 9%;
+    --secondary: 217 33% 92%;
+    --secondary-foreground: 222 47% 20%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 217 33% 92%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 9%;
+    --accent: 38 92% 50%;
+    --accent-foreground: 222 47% 11%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 0% 9%;
+    --border: 220 13% 87%;
+    --input: 220 13% 87%;
+    --ring: 222 47% 31%;
 
-    --radius: 0.75rem;
+    --radius: 0.625rem;
 
-    /* Brand accent - subtle blue */
-    --brand: 217 91% 60%;
-    --brand-foreground: 0 0% 100%;
+    /* Brand accent - MTG gold/amber inspired */
+    --brand: 38 92% 50%;
+    --brand-foreground: 222 47% 11%;
 
     /* Success/Warning states */
-    --success: 142 76% 36%;
+    --success: 142 71% 35%;
     --warning: 38 92% 50%;
 
-    /* Shadows - softer, more refined */
-    --shadow-2xs: 0 1px 2px 0 hsl(0 0% 0% / 0.03);
-    --shadow-xs: 0 1px 3px 0 hsl(0 0% 0% / 0.04);
-    --shadow-sm: 0 2px 4px 0 hsl(0 0% 0% / 0.05);
-    --shadow-md: 0 4px 8px -1px hsl(0 0% 0% / 0.06), 0 2px 4px -2px hsl(0 0% 0% / 0.04);
-    --shadow-lg: 0 10px 20px -3px hsl(0 0% 0% / 0.08), 0 4px 8px -4px hsl(0 0% 0% / 0.04);
-    --shadow-xl: 0 20px 40px -5px hsl(0 0% 0% / 0.1), 0 8px 16px -6px hsl(0 0% 0% / 0.05);
-    --shadow-2xl: 0 25px 50px -12px hsl(0 0% 0% / 0.15);
+    /* MTG Color identity accents */
+    --mtg-white: 48 100% 96%;
+    --mtg-blue: 217 91% 60%;
+    --mtg-black: 270 3% 20%;
+    --mtg-red: 0 72% 51%;
+    --mtg-green: 142 71% 35%;
+    --mtg-gold: 38 92% 50%;
+
+    /* Shadows - warm tinted */
+    --shadow-2xs: 0 1px 2px 0 hsl(222 47% 11% / 0.03);
+    --shadow-xs: 0 1px 3px 0 hsl(222 47% 11% / 0.04);
+    --shadow-sm: 0 2px 4px 0 hsl(222 47% 11% / 0.05);
+    --shadow-md: 0 4px 8px -1px hsl(222 47% 11% / 0.08), 0 2px 4px -2px hsl(222 47% 11% / 0.04);
+    --shadow-lg: 0 10px 20px -3px hsl(222 47% 11% / 0.1), 0 4px 8px -4px hsl(222 47% 11% / 0.05);
+    --shadow-xl: 0 20px 40px -5px hsl(222 47% 11% / 0.12), 0 8px 16px -6px hsl(222 47% 11% / 0.06);
+    --shadow-2xl: 0 25px 50px -12px hsl(222 47% 11% / 0.18);
 
     /* Sidebar */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 9%;
-    --sidebar-primary: 0 0% 9%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 96%;
-    --sidebar-accent-foreground: 0 0% 9%;
-    --sidebar-border: 0 0% 90%;
-    --sidebar-ring: 0 0% 9%;
-    --sidebar: 0 0% 98%;
+    --sidebar-background: 220 20% 97%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 222 47% 20%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 217 33% 92%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 220 13% 87%;
+    --sidebar-ring: 222 47% 31%;
+    --sidebar: 220 20% 97%;
 
-    /* Charts */
+    /* Charts - MTG colors */
     --chart-1: 217 91% 60%;
-    --chart-2: 142 76% 36%;
+    --chart-2: 142 71% 35%;
     --chart-3: 38 92% 50%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 0 84% 60%;
+    --chart-4: 270 60% 50%;
+    --chart-5: 0 72% 51%;
 
     /* Typography */
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -108,65 +116,65 @@
   }
 
   .dark {
-    /* Dark mode - Netflix/Spotify inspired */
-    --background: 0 0% 4%;
-    --foreground: 0 0% 95%;
+    /* Dark mode - Deep navy/slate inspired by Scryfall/Aetherhub dark */
+    --background: 222 47% 7%;
+    --foreground: 210 40% 96%;
 
-    --card: 0 0% 7%;
-    --card-foreground: 0 0% 95%;
+    --card: 222 41% 10%;
+    --card-foreground: 210 40% 96%;
 
-    --popover: 0 0% 9%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 222 41% 12%;
+    --popover-foreground: 210 40% 96%;
 
-    --primary: 0 0% 100%;
-    --primary-foreground: 0 0% 4%;
+    --primary: 38 92% 50%;
+    --primary-foreground: 222 47% 7%;
 
-    --secondary: 0 0% 12%;
-    --secondary-foreground: 0 0% 95%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 96%;
 
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 55%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 55%;
 
-    --accent: 0 0% 15%;
-    --accent-foreground: 0 0% 95%;
+    --accent: 38 92% 50%;
+    --accent-foreground: 222 47% 7%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
-    --ring: 0 0% 100%;
+    --border: 217 33% 17%;
+    --input: 217 33% 20%;
+    --ring: 38 92% 50%;
 
     /* Brand accent */
-    --brand: 217 91% 60%;
-    --brand-foreground: 0 0% 100%;
+    --brand: 38 92% 50%;
+    --brand-foreground: 222 47% 7%;
 
-    /* Shadows for dark mode */
-    --shadow-2xs: 0 1px 2px 0 hsl(0 0% 0% / 0.2);
-    --shadow-xs: 0 1px 3px 0 hsl(0 0% 0% / 0.25);
-    --shadow-sm: 0 2px 4px 0 hsl(0 0% 0% / 0.3);
-    --shadow-md: 0 4px 8px -1px hsl(0 0% 0% / 0.35), 0 2px 4px -2px hsl(0 0% 0% / 0.2);
-    --shadow-lg: 0 10px 20px -3px hsl(0 0% 0% / 0.4), 0 4px 8px -4px hsl(0 0% 0% / 0.25);
-    --shadow-xl: 0 20px 40px -5px hsl(0 0% 0% / 0.5), 0 8px 16px -6px hsl(0 0% 0% / 0.3);
+    /* Shadows for dark mode - warm glow */
+    --shadow-2xs: 0 1px 2px 0 hsl(0 0% 0% / 0.25);
+    --shadow-xs: 0 1px 3px 0 hsl(0 0% 0% / 0.3);
+    --shadow-sm: 0 2px 4px 0 hsl(0 0% 0% / 0.35);
+    --shadow-md: 0 4px 8px -1px hsl(0 0% 0% / 0.4), 0 2px 4px -2px hsl(0 0% 0% / 0.25);
+    --shadow-lg: 0 10px 20px -3px hsl(0 0% 0% / 0.45), 0 4px 8px -4px hsl(0 0% 0% / 0.3);
+    --shadow-xl: 0 20px 40px -5px hsl(0 0% 0% / 0.5), 0 8px 16px -6px hsl(0 0% 0% / 0.35);
     --shadow-2xl: 0 25px 50px -12px hsl(0 0% 0% / 0.6);
 
     /* Sidebar */
-    --sidebar-background: 0 0% 7%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 0 0% 4%;
-    --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 0 0% 100%;
-    --sidebar: 0 0% 7%;
+    --sidebar-background: 222 41% 10%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 38 92% 50%;
+    --sidebar-primary-foreground: 222 47% 7%;
+    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent-foreground: 210 40% 96%;
+    --sidebar-border: 217 33% 17%;
+    --sidebar-ring: 38 92% 50%;
+    --sidebar: 222 41% 10%;
 
     /* Charts */
     --chart-1: 217 91% 60%;
     --chart-2: 142 71% 45%;
     --chart-3: 38 92% 50%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 0 84% 60%;
+    --chart-4: 270 60% 60%;
+    --chart-5: 0 72% 55%;
   }
 }
 

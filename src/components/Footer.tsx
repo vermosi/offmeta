@@ -2,7 +2,7 @@ import { ExternalLink } from 'lucide-react';
 
 export function Footer() {
   return (
-    <footer className="border-t border-border/50 bg-muted/30 mt-auto">
+    <footer className="border-t border-border/40 bg-card/50 mt-auto">
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
         <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
           <span>Powered by</span>
@@ -10,12 +10,12 @@ export function Footer() {
             href="https://scryfall.com" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-foreground hover:text-primary transition-colors font-medium"
+            className="inline-flex items-center gap-1 text-accent hover:text-accent/80 transition-colors font-medium"
           >
             Scryfall
             <ExternalLink className="h-3 w-3" />
           </a>
-          <span className="hidden sm:inline">•</span>
+          <span className="hidden sm:inline text-border">•</span>
           <a 
             href="https://scryfall.com/docs/api" 
             target="_blank" 
