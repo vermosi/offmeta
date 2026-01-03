@@ -1,7 +1,7 @@
 project_id = "nxmzyykkzwomkcentctt"
 
 [functions.semantic-search]
-verify_jwt = false
+verify_jwt = true
 
 [functions.scrape-decks]
 verify_jwt = false
