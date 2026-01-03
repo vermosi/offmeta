@@ -106,6 +106,18 @@ serve(async (req) => {
   }
 
   try {
+    // Require API key authentication to prevent unauthorized access
+    const apiKey = req.headers.get('apikey');
+    const expectedKey = Deno.env.get('SUPABASE_ANON_KEY');
+    
+    if (!apiKey || apiKey !== expectedKey) {
+      console.error('Unauthorized access attempt - invalid or missing API key');
+      return new Response(JSON.stringify({ error: 'Unauthorized', success: false }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { query, filters, context } = await req.json();
 
     // Input validation
