@@ -10,7 +10,6 @@ import { DeckPanel } from "@/components/DeckPanel";
 import { DeckMobileToggle } from "@/components/DeckMobileToggle";
 import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
 import { GoldfishSimulator } from "@/components/GoldfishSimulator";
-import { ArchetypeExplorer } from "@/components/ArchetypeExplorer";
 import { CollectionImport } from "@/components/CollectionImport";
 import { DeckCollectionCheck } from "@/components/DeckCollectionCheck";
 import { SavedDecksPanel } from "@/components/SavedDecksPanel";
@@ -21,7 +20,7 @@ import { createEmptyDeck, addCardToDeck, Deck } from "@/lib/deck";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ScryfallCard } from "@/types/card";
-import { ChevronLeft, ChevronRight, Loader2, Search, Beaker, Package, Shuffle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Search, Shuffle, Package } from "lucide-react";
 import { toast } from "sonner";
 
 const Index = () => {
@@ -178,10 +177,6 @@ const Index = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleLoadArchetype = (newDeck: Deck) => {
-    setDeck(newDeck);
-    setActiveTab("goldfish");
-  };
 
   const handleLoadDeck = (loadedDeck: Deck) => {
     setDeck(loadedDeck);
@@ -206,14 +201,10 @@ const Index = () => {
         {/* Main Content */}
         <main className="flex-1 px-4 sm:px-6 py-6 sm:py-8 max-w-6xl mx-auto w-full pb-24 md:pb-8">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="w-full max-w-md mx-auto">
+            <TabsList className="w-full max-w-xs mx-auto">
               <TabsTrigger value="search" className="flex-1 gap-2">
                 <Search className="h-4 w-4" />
                 <span className="hidden sm:inline">Search</span>
-              </TabsTrigger>
-              <TabsTrigger value="archetypes" className="flex-1 gap-2">
-                <Beaker className="h-4 w-4" />
-                <span className="hidden sm:inline">Brews</span>
               </TabsTrigger>
               <TabsTrigger value="goldfish" className="flex-1 gap-2">
                 <Shuffle className="h-4 w-4" />
@@ -221,7 +212,7 @@ const Index = () => {
               </TabsTrigger>
               <TabsTrigger value="collection" className="flex-1 gap-2">
                 <Package className="h-4 w-4" />
-                <span className="hidden sm:inline">Cards</span>
+                <span className="hidden sm:inline">Collection</span>
               </TabsTrigger>
             </TabsList>
 
@@ -309,11 +300,6 @@ const Index = () => {
               ) : (
                 <EmptyState hasSearched={hasSearched && !isSearching} />
               )}
-            </TabsContent>
-
-            {/* Archetypes Tab */}
-            <TabsContent value="archetypes" className="mt-6">
-              <ArchetypeExplorer onLoadArchetype={handleLoadArchetype} />
             </TabsContent>
 
             {/* Goldfish/Playtest Tab */}

@@ -351,6 +351,31 @@
     0%, 100% { opacity: 1; }
     50% { opacity: 0.7; }
   }
+
+  /* Voice input animations */
+  .animate-pulse-ring {
+    animation: pulseRing 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulseRing {
+    0%, 100% { 
+      box-shadow: 0 0 0 0 hsl(var(--destructive) / 0.4);
+    }
+    50% { 
+      box-shadow: 0 0 0 8px hsl(var(--destructive) / 0);
+    }
+  }
+
+  .animate-ping-slow {
+    animation: pingSlow 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
+  @keyframes pingSlow {
+    75%, 100% {
+      transform: scale(1.5);
+      opacity: 0;
+    }
+  }
 }
 
 /* Scrollbar styling */
