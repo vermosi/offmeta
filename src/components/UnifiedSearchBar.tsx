@@ -153,11 +153,14 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
   const showExamples = !query;
 
   return (
-    <div className="space-y-3 sm:space-y-4">
-      {/* Compact header */}
-      <div className="text-center">
-        <p className="text-muted-foreground text-xs sm:text-sm">
-          Just ask for what you need — describe cards in plain English
+    <div className="space-y-4 sm:space-y-5">
+      {/* Instructions */}
+      <div className="text-center space-y-1">
+        <h2 className="text-lg sm:text-xl font-semibold text-foreground">
+          Find Magic Cards with Natural Language
+        </h2>
+        <p className="text-muted-foreground text-sm sm:text-base max-w-lg mx-auto">
+          Describe what you're looking for in plain English — no complex syntax needed
         </p>
       </div>
 
