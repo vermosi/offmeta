@@ -5,7 +5,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Search, Loader2, X, Wand2, History } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { OnboardingTooltip } from '@/components/OnboardingTooltip';
 
 const SEARCH_CONTEXT_KEY = 'lastSearchContext';
 const SEARCH_HISTORY_KEY = 'offmeta_search_history';
@@ -153,9 +152,6 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
           Describe what you're looking for in plain English — no complex syntax needed
         </p>
       </div>
-
-      {/* Onboarding tooltip for first-time visitors */}
-      <OnboardingTooltip />
 
       {/* Main search bar */}
       <div className="flex items-center gap-2 sm:gap-3 max-w-2xl mx-auto">

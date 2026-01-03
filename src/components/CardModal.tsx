@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { ScryfallCard } from "@/types/card";
 import { getCardImage, getRarityColor } from "@/lib/scryfall";
 import { getCardPrintings, getTCGPlayerUrl, getCardmarketUrl, CardPrinting } from "@/lib/card-printings";
-import { CollectionButton } from "./CollectionButton";
 import { ManaCost } from "./ManaSymbol";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
@@ -135,16 +134,9 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                   </div>
                 )}
               </div>
-              <CollectionButton card={card} variant="full" />
             </div>
           )}
         </div>
-        
-        {!isMobile && (
-          <div className="mt-4 w-full max-w-[220px]">
-            <CollectionButton card={card} variant="full" />
-          </div>
-        )}
         
         <div className={cn(
           "w-full",
