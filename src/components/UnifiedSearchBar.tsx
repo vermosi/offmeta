@@ -5,7 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Sparkles, Loader2, SlidersHorizontal, X, Wand2, History, Mic } from 'lucide-react';
+import { Search, Loader2, SlidersHorizontal, X, Wand2, History, Mic } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
 import { VoiceSearchButton } from '@/components/VoiceSearchButton';
@@ -13,6 +13,12 @@ import { cn } from '@/lib/utils';
 
 const VOICE_HISTORY_KEY = 'recentVoiceSearches';
 const MAX_HISTORY_ITEMS = 5;
+const SEARCH_CONTEXT_KEY = 'lastSearchContext';
+
+interface SearchContext {
+  previousQuery: string;
+  previousScryfall: string;
+}
 
 function useVoiceSearchHistory() {
   const [history, setHistory] = useState<string[]>(() => {
@@ -43,8 +49,34 @@ function useVoiceSearchHistory() {
   return { history, addSearch, clearHistory };
 }
 
+function useSearchContext() {
+  const [context, setContext] = useState<SearchContext | null>(null);
+
+  const saveContext = useCallback((query: string, scryfall: string) => {
+    const newContext = { previousQuery: query, previousScryfall: scryfall };
+    setContext(newContext);
+    try {
+      sessionStorage.setItem(SEARCH_CONTEXT_KEY, JSON.stringify(newContext));
+    } catch {}
+  }, []);
+
+  const getContext = useCallback(() => context, [context]);
+
+  return { saveContext, getContext };
+}
+
+export interface SearchResult {
+  scryfallQuery: string;
+  explanation?: {
+    readable: string;
+    assumptions: string[];
+    confidence: number;
+  };
+  showAffiliate?: boolean;
+}
+
 interface UnifiedSearchBarProps {
-  onSearch: (query: string) => void;
+  onSearch: (query: string, result?: SearchResult) => void;
   isLoading: boolean;
 }
 
@@ -79,9 +111,9 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
   const [format, setFormat] = useState<string>('');
   const [colorIdentity, setColorIdentity] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
-  const [translatedQuery, setTranslatedQuery] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { history: voiceHistory, addSearch: addVoiceSearch, clearHistory: clearVoiceHistory } = useVoiceSearchHistory();
+  const { saveContext, getContext } = useSearchContext();
 
   // Voice input hook
   const {
@@ -116,33 +148,43 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
     if (!queryToSearch.trim()) return;
 
     setIsSearching(true);
-    setTranslatedQuery(null);
 
     try {
+      const context = getContext();
       const { data, error } = await supabase.functions.invoke('semantic-search', {
         body: {
           query: queryToSearch.trim(),
           filters: {
             format: format || undefined,
             colorIdentity: colorIdentity.length > 0 ? colorIdentity : undefined,
-          }
+          },
+          context: context || undefined
         }
       });
 
       if (error) throw error;
 
       if (data?.success && data?.scryfallQuery) {
-        setTranslatedQuery(data.scryfallQuery);
-        onSearch(data.scryfallQuery);
+        // Save context for follow-up searches
+        saveContext(queryToSearch.trim(), data.scryfallQuery);
+        
+        onSearch(data.scryfallQuery, {
+          scryfallQuery: data.scryfallQuery,
+          explanation: data.explanation,
+          showAffiliate: data.showAffiliate
+        });
+        
         toast.success('Search translated', {
-          description: data.scryfallQuery
+          description: `Found: ${data.scryfallQuery.substring(0, 50)}${data.scryfallQuery.length > 50 ? '...' : ''}`
         });
       } else {
         throw new Error(data?.error || 'Failed to translate');
       }
     } catch (error) {
-      console.error('Semantic search error:', error);
-      toast.error('Using fallback search');
+      console.error('Search error:', error);
+      toast.error('Search issue', {
+        description: 'Trying direct search instead'
+      });
       onSearch(queryToSearch);
     } finally {
       setIsSearching(false);
@@ -167,7 +209,6 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
       stopListening();
     } else {
       setQuery('');
-      setTranslatedQuery(null);
       startListening();
     }
   };
@@ -180,10 +221,10 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
       {/* Hero search area */}
       <div className="text-center space-y-1.5 sm:space-y-2">
         <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
-          Find the perfect cards
+          Type what you mean
         </h2>
         <p className="text-muted-foreground text-xs sm:text-sm">
-          Describe what you need in plain English, or tap the mic to speak
+          Describe the cards you need in plain language—we'll translate it to Scryfall
         </p>
       </div>
 
@@ -221,7 +262,6 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
               className="absolute right-10 sm:right-12 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground min-h-0 min-w-0"
               onClick={() => {
                 setQuery('');
-                setTranslatedQuery(null);
               }}
             >
               <X className="h-4 w-4" />
@@ -295,7 +335,7 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
           {isSearching ? (
             <Loader2 className="h-5 w-5 animate-spin" />
           ) : (
-            <Sparkles className="h-5 w-5" />
+            <Search className="h-5 w-5" />
           )}
           <span className="hidden sm:inline">Search</span>
         </Button>
@@ -311,15 +351,6 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
             </span>
             Listening... speak now
           </div>
-        </div>
-      )}
-
-      {/* Translated query display */}
-      {translatedQuery && !isListening && (
-        <div className="text-center animate-fade-in px-2">
-          <p className="text-xs text-muted-foreground">
-            Translated to: <code className="px-1.5 py-0.5 bg-muted rounded text-foreground text-[11px] break-all">{translatedQuery}</code>
-          </p>
         </div>
       )}
 
