@@ -1,3 +1,51 @@
+/**
+ * Semantic Search Edge Function
+ * 
+ * Translates natural language MTG card searches into Scryfall query syntax
+ * using Google Gemini AI via the Lovable AI gateway.
+ * 
+ * @module semantic-search
+ * 
+ * ## How It Works
+ * 
+ * 1. **Input**: Receives a natural language query (e.g., "cheap green ramp spells")
+ * 2. **AI Translation**: Sends the query to Gemini with a comprehensive prompt
+ *    containing MTG slang definitions, Scryfall syntax rules, and examples
+ * 3. **Validation**: Sanitizes the AI output to ensure valid Scryfall syntax
+ * 4. **Response**: Returns the translated query with explanation and confidence
+ * 
+ * ## Request Body
+ * ```json
+ * {
+ *   "query": "creatures that make treasure tokens",
+ *   "filters": { "format": "commander", "colorIdentity": ["R", "G"] },
+ *   "context": { "previousQuery": "...", "previousScryfall": "..." }
+ * }
+ * ```
+ * 
+ * ## Response
+ * ```json
+ * {
+ *   "success": true,
+ *   "scryfallQuery": "game:paper t:creature o:\"create\" o:\"treasure\"",
+ *   "explanation": {
+ *     "readable": "Searching for: creatures that make treasure tokens",
+ *     "assumptions": ["Added paper game filter"],
+ *     "confidence": 0.85
+ *   },
+ *   "showAffiliate": false
+ * }
+ * ```
+ * 
+ * ## Key Features
+ * - Extensive MTG slang dictionary (ramp, tutors, stax, etc.)
+ * - Tribal/creature type support
+ * - Commander-specific terminology
+ * - Budget/price-based queries
+ * - Follow-up query context for refinements
+ * - Purchase intent detection for affiliate links
+ */
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -5,7 +53,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Valid Scryfall operators for validation
+/**
+ * Valid Scryfall search operators for query validation.
+ * Used to verify AI-generated queries contain legitimate syntax.
+ */
 const VALID_OPERATORS = [
   'c:', 'c=', 'c<', 'c>', 'c<=', 'c>=',
   'id:', 'id=', 'id<', 'id>', 'id<=', 'id>=',
@@ -31,7 +82,17 @@ const VALID_OPERATORS = [
   'produces:', 'devotion:', 'name:'
 ];
 
-// Validate and sanitize Scryfall query
+/**
+ * Validates and sanitizes a Scryfall query string.
+ * Ensures the query is safe to execute and fixes common issues.
+ * 
+ * @param query - Raw query string from AI
+ * @returns Object with validity status, sanitized query, and any issues found
+ * 
+ * @example
+ * validateQuery('t:creature o:"draw') 
+ * // { valid: false, sanitized: 't:creature o:"draw"', issues: ['Added missing closing quote'] }
+ */
 function validateQuery(query: string): { valid: boolean; sanitized: string; issues: string[] } {
   const issues: string[] = [];
   let sanitized = query;
@@ -78,7 +139,13 @@ function validateQuery(query: string): { valid: boolean; sanitized: string; issu
   return { valid: issues.length === 0, sanitized, issues };
 }
 
-// Simplify query for fallback
+/**
+ * Creates a simplified fallback query by removing complex constraints.
+ * Used when the primary query returns no results.
+ * 
+ * @param query - Original query that may be too restrictive
+ * @returns Simplified query with price/complex constraints removed
+ */
 function simplifyQuery(query: string): string {
   // Remove price constraints
   let simplified = query.replace(/usd[<>=]+\S+/gi, '');
@@ -89,7 +156,17 @@ function simplifyQuery(query: string): string {
   return simplified;
 }
 
-// Detect purchase intent for affiliate links
+/**
+ * Detects if the user's query indicates purchase intent.
+ * Used to show affiliate links/notices when relevant.
+ * 
+ * @param query - User's natural language query
+ * @returns True if query contains price/purchase-related terms
+ * 
+ * @example
+ * hasPurchaseIntent("cheap green creatures") // true
+ * hasPurchaseIntent("best counterspells") // false
+ */
 function hasPurchaseIntent(query: string): boolean {
   const purchaseTerms = [
     'cheap', 'budget', 'affordable', 'inexpensive', 'low cost',
