@@ -299,8 +299,8 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
   // Use Drawer on mobile, Dialog on desktop
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={onClose}>
-        <DrawerContent className="max-h-[90vh] px-0">
+      <Drawer open={open} onOpenChange={onClose} modal={false}>
+        <DrawerContent className="max-h-[90vh] px-0 overflow-hidden">
           <VisuallyHidden>
             <DrawerTitle>{card.name}</DrawerTitle>
           </VisuallyHidden>
@@ -312,9 +312,9 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
           >
             <X className="h-4 w-4" />
           </Button>
-          <ScrollArea className="h-full max-h-[85vh]">
+          <div className="flex-1 overflow-y-auto overscroll-contain max-h-[calc(90vh-2rem)]">
             {content}
-          </ScrollArea>
+          </div>
         </DrawerContent>
       </Drawer>
     );
