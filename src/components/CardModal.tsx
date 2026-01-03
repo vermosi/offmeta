@@ -1,3 +1,10 @@
+/**
+ * Modal/drawer component for displaying detailed card information.
+ * Shows card image, oracle text, prices, printings, and format legality.
+ * Uses Dialog on desktop and Drawer on mobile for optimal UX.
+ * @module components/CardModal
+ */
+
 import { useState, useEffect } from "react";
 import { ScryfallCard } from "@/types/card";
 import { getCardImage, getRarityColor } from "@/lib/scryfall";
@@ -38,11 +45,19 @@ function formatFormatName(format: string): string {
 }
 
 interface CardModalProps {
+  /** The card to display, or null if closed */
   card: ScryfallCard | null;
+  /** Whether the modal is open */
   open: boolean;
+  /** Callback to close the modal */
   onClose: () => void;
 }
 
+/**
+ * Displays detailed card information in a modal (desktop) or drawer (mobile).
+ * Includes tabs for details, printings, and format legality.
+ * Fetches fresh pricing data when opened.
+ */
 export function CardModal({ card, open, onClose }: CardModalProps) {
   const isMobile = useIsMobile();
   const [printings, setPrintings] = useState<CardPrinting[]>([]);

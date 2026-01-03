@@ -1,12 +1,24 @@
+/**
+ * Card item component for displaying a single card in the search results grid.
+ * Shows card image with hover effects revealing name, set, and rarity.
+ * @module components/CardItem
+ */
+
 import { ScryfallCard } from "@/types/card";
 import { getCardImage, getRarityColor } from "@/lib/scryfall";
 import { cn } from "@/lib/utils";
 
 interface CardItemProps {
+  /** The Scryfall card data to display */
   card: ScryfallCard;
+  /** Callback when the card is clicked (opens modal) */
   onClick: () => void;
 }
 
+/**
+ * Renders a card preview tile with hover effects.
+ * Displays card image, name, set name, and rarity indicator.
+ */
 export function CardItem({ card, onClick }: CardItemProps) {
   const imageUrl = getCardImage(card, "normal");
   const rarityClass = getRarityColor(card.rarity);
