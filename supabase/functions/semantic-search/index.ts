@@ -208,6 +208,54 @@ MTG SLANG DEFINITIONS:
 - "haste enablers" = give creatures haste: o:"creatures" o:"haste"
 - "free spells" = o:"without paying" or o:"cast" o:"free"
 
+TRIBAL TYPES & SYNERGIES:
+- "elves" / "elf tribal" = t:elf or o:"elf" o:"you control" (mana production, go-wide, counters)
+- "elf lords" = t:elf o:"other" o:"elf" o:"+"
+- "goblins" / "goblin tribal" = t:goblin or o:"goblin" o:"you control" (aggro, tokens, sacrifice)
+- "goblin lords" = t:goblin o:"other" o:"goblin"
+- "zombies" / "zombie tribal" = t:zombie or o:"zombie" o:"you control" (recursion, sacrifice, tokens)
+- "zombie lords" = t:zombie o:"other" o:"zombie"
+- "vampires" / "vampire tribal" = t:vampire or o:"vampire" o:"you control" (lifegain, +1/+1 counters, aggro)
+- "vampire lords" = t:vampire o:"other" o:"vampire"
+- "dragons" / "dragon tribal" = t:dragon or o:"dragon" o:"you control" (flying finishers, treasures)
+- "dragon lords" = t:dragon o:"other" o:"dragon"
+- "angels" / "angel tribal" = t:angel or o:"angel" o:"you control" (flying, lifegain, protection)
+- "angel lords" = t:angel o:"other" o:"angel"
+- "merfolk" / "merfolk tribal" = t:merfolk or o:"merfolk" o:"you control" (islandwalk, counters, drawing)
+- "merfolk lords" = t:merfolk o:"other" o:"merfolk"
+- "humans" / "human tribal" = t:human or o:"human" o:"you control" (go-wide, counters, aggro)
+- "human lords" = t:human o:"other" o:"human"
+- "wizards" / "wizard tribal" = t:wizard or o:"wizard" o:"you control" (spellslinger, cost reduction)
+- "wizard lords" = t:wizard o:"other" o:"wizard"
+- "warriors" / "warrior tribal" = t:warrior or o:"warrior" o:"you control" (aggro, equipment)
+- "rogues" / "rogue tribal" = t:rogue or o:"rogue" o:"you control" (mill, theft, evasion)
+- "clerics" / "cleric tribal" = t:cleric or o:"cleric" o:"you control" (lifegain, recursion)
+- "shamans" / "shaman tribal" = t:shaman or o:"shaman" o:"you control" (mana, lands)
+- "soldiers" / "soldier tribal" = t:soldier or o:"soldier" o:"you control" (tokens, go-wide)
+- "knights" / "knight tribal" = t:knight or o:"knight" o:"you control" (equipment, first strike)
+- "beasts" / "beast tribal" = t:beast or o:"beast" o:"you control" (power matters, stompy)
+- "cats" / "cat tribal" = t:cat or o:"cat" o:"you control" (equipment, lifegain, aggro)
+- "dogs" / "dog tribal" = t:dog or o:"dog" o:"you control"
+- "dinosaurs" / "dinosaur tribal" = t:dinosaur or o:"dinosaur" o:"you control" (enrage, big creatures)
+- "pirates" / "pirate tribal" = t:pirate or o:"pirate" o:"you control" (treasure, evasion)
+- "spirits" / "spirit tribal" = t:spirit or o:"spirit" o:"you control" (flying, hexproof, arcane)
+- "elementals" / "elemental tribal" = t:elemental or o:"elemental" o:"you control" (evoke, landfall)
+- "demons" / "demon tribal" = t:demon or o:"demon" o:"you control" (sacrifice, power)
+- "horrors" / "horror tribal" = t:horror (mill, fear, eldrazi-adjacent)
+- "eldrazi" = t:eldrazi (annihilator, colorless, exile, big mana)
+- "slivers" / "sliver tribal" = t:sliver or o:"sliver" o:"you control" (shared abilities, all types)
+- "allies" / "ally tribal" = t:ally or o:"ally" o:"you control" (rally, ETB triggers)
+- "faeries" / "faerie tribal" = t:faerie or o:"faerie" o:"you control" (flash, flying, control)
+- "treefolk" / "treefolk tribal" = t:treefolk (big toughness, forests matter)
+- "rats" / "rat tribal" = t:rat or o:"rat" (discard, swarm)
+- "werewolves" / "werewolf tribal" = t:werewolf or o:"werewolf" or t:wolf (transform, night/day)
+- "wolves" / "wolf tribal" = t:wolf or o:"wolf"
+- "birds" / "bird tribal" = t:bird or o:"bird" (flying, tokens)
+- "snakes" / "snake tribal" = t:snake or o:"snake" (deathtouch, counters)
+- "spiders" / "spider tribal" = t:spider (reach, deathtouch)
+- "artifacts matter" / "artifact creatures" = t:artifact t:creature
+- "typal" = same as tribal, use appropriate creature type
+
 QUERY TRANSLATION EXAMPLES:
 - "creatures that make treasure" → game:paper t:creature o:"create" o:"treasure"
 - "cheap green ramp spells" → game:paper c:g mv<=3 (t:instant or t:sorcery) o:"search" o:"land"
@@ -224,6 +272,12 @@ QUERY TRANSLATION EXAMPLES:
 - "voltron equipment" → game:paper t:equipment o:"equipped creature gets"
 - "reanimation spells" → game:paper (t:instant or t:sorcery) o:"graveyard" o:"onto the battlefield"
 - "blue cantrips" → game:paper c:u mv<=2 (t:instant or t:sorcery) o:"draw a card"
+- "elf lords" → game:paper t:elf o:"other" o:"elf" o:"+"
+- "zombie tribal cards" → game:paper (t:zombie or o:"zombie" o:"you control")
+- "dragon finishers" → game:paper t:dragon mv>=5
+- "goblin sacrifice synergy" → game:paper t:goblin o:"sacrifice"
+- "vampire lifegain" → game:paper t:vampire o:"life"
+- "merfolk lords" → game:paper t:merfolk o:"other" o:"merfolk"
 
 SET & UNIVERSE CODES:
 - Avatar/ATLA: e:tla
