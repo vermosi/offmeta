@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { Search, Loader2, SlidersHorizontal, X, Wand2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { OnboardingTooltip } from '@/components/OnboardingTooltip';
 
 const SEARCH_CONTEXT_KEY = 'lastSearchContext';
 
@@ -163,6 +164,9 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
           Describe what you're looking for in plain English — no complex syntax needed
         </p>
       </div>
+
+      {/* Onboarding tooltip for first-time visitors */}
+      <OnboardingTooltip />
 
       {/* Main search bar */}
       <div className="flex items-center gap-2 sm:gap-3 max-w-2xl mx-auto">
