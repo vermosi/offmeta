@@ -137,9 +137,7 @@ const Index = () => {
               <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground animate-spin" />
               <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-muted-foreground">Searching Scryfall...</p>
             </div>
-          ) : (
-            <EmptyState hasSearched={hasSearched && !isSearching} />
-          )}
+          ) : null}
         </div>
       </main>
 
