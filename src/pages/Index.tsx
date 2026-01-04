@@ -70,7 +70,11 @@ const Index = () => {
       <main className="flex-1 px-3 sm:px-4 py-4 sm:py-8 max-w-4xl mx-auto w-full safe-bottom">
         <div className="space-y-4 sm:space-y-8">
           {/* Search section */}
-          <UnifiedSearchBar onSearch={handleSearch} isLoading={isSearching} />
+          <UnifiedSearchBar 
+            onSearch={handleSearch} 
+            isLoading={isSearching} 
+            lastTranslatedQuery={lastSearchResult?.scryfallQuery}
+          />
 
           {/* Search interpretation panel */}
           {lastSearchResult && hasSearched && !isSearching && (

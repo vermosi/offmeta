@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Search, Loader2, X, Wand2, History } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { SearchFeedback } from '@/components/SearchFeedback';
 
 const SEARCH_CONTEXT_KEY = 'lastSearchContext';
 const SEARCH_HISTORY_KEY = 'offmeta_search_history';
@@ -93,6 +94,7 @@ export interface SearchResult {
 interface UnifiedSearchBarProps {
   onSearch: (query: string, result?: SearchResult) => void;
   isLoading: boolean;
+  lastTranslatedQuery?: string;
 }
 
 const EXAMPLE_QUERIES = [
@@ -108,7 +110,7 @@ const EXAMPLE_QUERIES = [
  * @param props.onSearch - Callback when search is executed with query and result
  * @param props.isLoading - Whether parent is currently loading results
  */
-export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps) {
+export function UnifiedSearchBar({ onSearch, isLoading, lastTranslatedQuery }: UnifiedSearchBarProps) {
   const isMobile = useIsMobile();
   const [query, setQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -219,6 +221,12 @@ export function UnifiedSearchBar({ onSearch, isLoading }: UnifiedSearchBarProps)
           )}
           <span className="hidden sm:inline">Search</span>
         </Button>
+        
+        {/* Feedback button */}
+        <SearchFeedback 
+          originalQuery={query || history[0] || ''} 
+          translatedQuery={lastTranslatedQuery} 
+        />
       </div>
 
       {/* Recent searches */}
