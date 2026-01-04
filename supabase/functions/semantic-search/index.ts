@@ -470,15 +470,47 @@ CRITICAL - Color identity operators:
 - id>=X = MUST INCLUDE these colors (e.g., id>=rg means must have BOTH red AND green, but can have more)
 - id:X = same as id>=X for multicolor, same as id=X for mono
 
-When user says "gruul", "rakdos", "simic", etc. they want cards with BOTH/ALL those colors, use id>=:
+GUILD NAMES (2-color pairs) - use id>= for these:
+- "azorius" = id>=wu (white-blue)
+- "dimir" = id>=ub (blue-black)
+- "rakdos" = id>=br (black-red)
+- "gruul" = id>=rg (red-green)
+- "selesnya" = id>=gw (green-white)
+- "orzhov" = id>=wb (white-black)
+- "izzet" = id>=ur (blue-red)
+- "golgari" = id>=bg (black-green)
+- "boros" = id>=rw (red-white)
+- "simic" = id>=ug (blue-green)
+
+SHARD NAMES (3-color allied) - use id>= for these:
+- "bant" = id>=gwu (green-white-blue)
+- "esper" = id>=wub (white-blue-black)
+- "grixis" = id>=ubr (blue-black-red)
+- "jund" = id>=brg (black-red-green)
+- "naya" = id>=rgw (red-green-white)
+
+WEDGE NAMES (3-color enemy) - use id>= for these:
+- "abzan" / "junk" = id>=wbg (white-black-green)
+- "jeskai" / "america" = id>=urw (blue-red-white)
+- "sultai" / "bug" = id>=bgu (black-green-blue)
+- "mardu" = id>=rwb (red-white-black)
+- "temur" / "rug" = id>=gur (green-blue-red)
+
+4-COLOR NAMES - use id>= for these:
+- "glint-eye" / "chaos" / "sans-white" / "non-white" = id>=ubrg
+- "dune-brood" / "aggression" / "sans-blue" / "non-blue" = id>=wbrg
+- "ink-treader" / "altruism" / "sans-black" / "non-black" = id>=wurg
+- "witch-maw" / "growth" / "sans-red" / "non-red" = id>=wubg
+- "yore-tiller" / "artifice" / "sans-green" / "non-green" = id>=wubr
+
+When user says guild/shard/wedge name, they want cards with ALL those colors, use id>=:
 - "gruul creatures" = id>=rg (must be red AND green)
-- "rakdos cards" = id>=br (must be black AND red)  
-- "simic" = id>=ug (must be blue AND green)
-- "sultai" = id>=ugb (must be blue, green, AND black)
+- "esper control" = id>=wub (must be white, blue, AND black)
+- "jund midrange" = id>=brg (must be black, red, AND green)
 
 When user says "within X colors" or "commander identity X", use id<=:
 - "within gruul identity" = id<=rg (can be mono-R, mono-G, colorless, or RG)
-- "legal in gruul commander" = id<=rg
+- "legal in esper commander" = id<=wub
 
 Mono-color:
 - "mono white" = id=w or c=w
