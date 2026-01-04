@@ -239,6 +239,7 @@ CRITICAL RULES:
 4. "Spells" means ONLY instants and sorceries: (t:instant or t:sorcery)
 5. Never fabricate or guess card names, abilities, or mechanics
 6. If a term is ambiguous, translate it conservatively
+7. HASTE ORACLE TEXT: Cards that "give haste" use BOTH phrasings - ALWAYS search for BOTH: (o:"have haste" or o:"gain haste"). Example: "creatures that give haste" → (o:"creatures you control have haste" or o:"creatures you control gain haste" or o:"other creatures you control have haste" or o:"other creatures you control gain haste")
 
 LEGALITY & BAN STATUS (CRITICAL - use these exact syntaxes):
 - "banned in X" = banned:X (e.g., "banned in commander" → banned:commander)
