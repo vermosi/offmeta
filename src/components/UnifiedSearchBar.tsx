@@ -4,7 +4,7 @@
  * @module components/UnifiedSearchBar
  */
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
@@ -97,6 +97,10 @@ interface UnifiedSearchBarProps {
   lastTranslatedQuery?: string;
 }
 
+export interface UnifiedSearchBarHandle {
+  triggerSearch: (query: string) => void;
+}
+
 const EXAMPLE_QUERIES = [
   "creatures that make treasure tokens",
   "cheap green ramp spells",
@@ -110,13 +114,22 @@ const EXAMPLE_QUERIES = [
  * @param props.onSearch - Callback when search is executed with query and result
  * @param props.isLoading - Whether parent is currently loading results
  */
-export function UnifiedSearchBar({ onSearch, isLoading, lastTranslatedQuery }: UnifiedSearchBarProps) {
+export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearchBarProps>(
+  function UnifiedSearchBar({ onSearch, isLoading, lastTranslatedQuery }, ref) {
   const isMobile = useIsMobile();
   const [query, setQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const { saveContext, getContext } = useSearchContext();
   const { history, addToHistory, clearHistory } = useSearchHistory();
+
+  // Expose triggerSearch to parent via ref
+  useImperativeHandle(ref, () => ({
+    triggerSearch: (searchQuery: string) => {
+      setQuery(searchQuery);
+      handleSearch(searchQuery);
+    }
+  }), []);
 
   const handleSearch = async (searchQuery?: string) => {
     const queryToSearch = searchQuery || query;
@@ -281,4 +294,4 @@ export function UnifiedSearchBar({ onSearch, isLoading, lastTranslatedQuery }: U
       )}
     </div>
   );
-}
+});
