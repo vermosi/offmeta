@@ -290,7 +290,7 @@ MTG SLANG DEFINITIONS:
 - "indestructible" = o:"indestructible"
 - "hexproof" = o:"hexproof"
 - "evasion" = creatures hard to block: (o:"flying" or o:"unblockable" or o:"can't be blocked" or o:"menace" or o:"trample")
-- "haste enablers" / "gives haste" / "grants haste" = cards that give other creatures haste: o:"creatures you control have haste" or o:"other creatures you control have haste"
+- "haste enablers" / "gives haste" / "grants haste" = cards that give other creatures haste: (o:"creatures you control have haste" or o:"creatures you control gain haste" or o:"other creatures you control have haste" or o:"other creatures you control gain haste")
 - "free spells" = o:"without paying" or o:"cast" o:"free"
 
 TRIBAL TYPES & SYNERGIES:
@@ -529,8 +529,8 @@ QUERY TRANSLATION EXAMPLES:
 - "black tutors" → game:paper c:b o:"search your library"
 - "white pillowfort cards" → game:paper c:w (o:"can't attack you" or o:"prevent" o:"damage")
 - "simic blink effects" → game:paper id=ug o:"exile" o:"return" o:"battlefield"
-- "gruul haste enablers" → game:paper id=rg (o:"creatures you control have haste" or o:"other creatures you control have haste")
-- "gruul legendary creatures that give haste" → game:paper id=rg t:legendary t:creature (o:"creatures you control have haste" or o:"other creatures you control have haste")
+- "gruul haste enablers" → game:paper id=rg (o:"creatures you control have haste" or o:"creatures you control gain haste" or o:"other creatures you control have haste" or o:"other creatures you control gain haste")
+- "gruul legendary creatures that give haste" → game:paper id=rg t:legendary t:creature (o:"creatures you control have haste" or o:"creatures you control gain haste" or o:"other creatures you control have haste" or o:"other creatures you control gain haste")
 - "sultai graveyard" → game:paper id=ubg o:"graveyard"
 - "red finishers" → game:paper c:r t:creature mv>=6 pow>=6
 - "stax pieces" → game:paper (o:"can't" or o:"pay" o:"or" or o:"each" o:"sacrifice")
