@@ -290,7 +290,7 @@ MTG SLANG DEFINITIONS:
 - "indestructible" = o:"indestructible"
 - "hexproof" = o:"hexproof"
 - "evasion" = creatures hard to block: (o:"flying" or o:"unblockable" or o:"can't be blocked" or o:"menace" or o:"trample")
-- "haste enablers" = give creatures haste: o:"creatures" o:"haste"
+- "haste enablers" / "gives haste" / "grants haste" = cards that give other creatures haste: o:"creatures you control have haste" or o:"other creatures you control have haste"
 - "free spells" = o:"without paying" or o:"cast" o:"free"
 
 TRIBAL TYPES & SYNERGIES:
@@ -523,15 +523,16 @@ QUERY TRANSLATION EXAMPLES:
 - "creatures that make treasure" → game:paper t:creature o:"create" o:"treasure"
 - "cheap green ramp spells" → game:paper c:g mv<=3 (t:instant or t:sorcery) o:"search" o:"land"
 - "green ramp" → game:paper c:g (o:"search" o:"land" or (t:creature o:"add" o:"{"))
-- "Rakdos sacrifice outlets" → game:paper id>=br o:"sacrifice" o:":"
+- "Rakdos sacrifice outlets" → game:paper id<=br o:"sacrifice" o:":"
 - "blue counterspells that draw" → game:paper c:u t:instant o:"counter" o:"draw"
 - "white board wipes" → game:paper c:w o:"destroy all"
 - "lands that tap for any color" → game:paper t:land o:"add" o:"any color"
 - "black tutors" → game:paper c:b o:"search your library"
 - "white pillowfort cards" → game:paper c:w (o:"can't attack you" or o:"prevent" o:"damage")
-- "simic blink effects" → game:paper id>=ug o:"exile" o:"return" o:"battlefield"
-- "gruul haste enablers" → game:paper id>=rg o:"creatures" o:"haste"
-- "sultai graveyard" → game:paper id>=ugb o:"graveyard"
+- "simic blink effects" → game:paper id<=ug o:"exile" o:"return" o:"battlefield"
+- "gruul haste enablers" → game:paper id<=rg (o:"creatures you control have haste" or o:"other creatures you control have haste")
+- "gruul legendary creatures that give haste" → game:paper id<=rg t:legendary t:creature (o:"creatures you control have haste" or o:"other creatures you control have haste")
+- "sultai graveyard" → game:paper id<=ugb o:"graveyard"
 - "red finishers" → game:paper c:r t:creature mv>=6 pow>=6
 - "stax pieces" → game:paper (o:"can't" or o:"pay" o:"or" or o:"each" o:"sacrifice")
 - "voltron equipment" → game:paper t:equipment o:"equipped creature gets"
