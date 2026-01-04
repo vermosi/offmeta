@@ -106,8 +106,9 @@ function validateQuery(query: string): { valid: boolean; sanitized: string; issu
     issues.push('Query truncated to 400 characters');
   }
   
-  // Remove potentially unsafe characters (keep alphanumeric, spaces, colons, quotes, parentheses, operators)
-  sanitized = sanitized.replace(/[^\w\s:="'()<>!+-/*]/g, '');
+  // Remove potentially unsafe characters (keep common Scryfall syntax + regex for oracle/name searches)
+  // Allows: quotes, comparison ops, slashes, regex tokens ([]{}.^$|?\\), and punctuation commonly used in Oracle text.
+  sanitized = sanitized.replace(/[^\w\s:="'()<>!=+\-/*\\\[\]{}.,^$|?]/g, '');
   
   // Check for balanced parentheses
   let parenCount = 0;
@@ -239,7 +240,7 @@ CRITICAL RULES:
 4. "Spells" means ONLY instants and sorceries: (t:instant or t:sorcery)
 5. Never fabricate or guess card names, abilities, or mechanics
 6. If a term is ambiguous, translate it conservatively
-7. HASTE ORACLE TEXT: Cards that "give haste" use BOTH phrasings - ALWAYS search for BOTH: (o:"have haste" or o:"gain haste"). Example: "creatures that give haste" → (o:"creatures you control have haste" or o:"creatures you control gain haste" or o:"other creatures you control have haste" or o:"other creatures you control gain haste")
+7. HASTE ORACLE TEXT: If user asks to give/grant haste (ONLY haste), be strict and include BOTH have/gain phrasings while excluding extra granted keywords. Use regex like: o:/(creatures you control|other creatures you control) (have|gain) haste([.]| until| as| while|$)/
 
 LEGALITY & BAN STATUS (CRITICAL - use these exact syntaxes):
 - "banned in X" = banned:X (e.g., "banned in commander" → banned:commander)
@@ -291,7 +292,7 @@ MTG SLANG DEFINITIONS:
 - "indestructible" = o:"indestructible"
 - "hexproof" = o:"hexproof"
 - "evasion" = creatures hard to block: (o:"flying" or o:"unblockable" or o:"can't be blocked" or o:"menace" or o:"trample")
-- "haste enablers" / "gives haste" / "grants haste" = cards that give other creatures haste: (o:"creatures you control have haste" or o:"creatures you control gain haste" or o:"other creatures you control have haste" or o:"other creatures you control gain haste")
+- "haste enablers" / "gives haste" / "grants haste" = cards that give ONLY haste (not haste plus other keywords unless explicitly requested): o:/(creatures you control|other creatures you control) (have|gain) haste([.]| until| as| while|$)/
 - "free spells" = o:"without paying" or o:"cast" o:"free"
 
 TRIBAL TYPES & SYNERGIES:
@@ -530,8 +531,8 @@ QUERY TRANSLATION EXAMPLES:
 - "black tutors" → game:paper c:b o:"search your library"
 - "white pillowfort cards" → game:paper c:w (o:"can't attack you" or o:"prevent" o:"damage")
 - "simic blink effects" → game:paper id=ug o:"exile" o:"return" o:"battlefield"
-- "gruul haste enablers" → game:paper id=rg (o:"creatures you control have haste" or o:"creatures you control gain haste" or o:"other creatures you control have haste" or o:"other creatures you control gain haste")
-- "gruul legendary creatures that give haste" → game:paper id=rg t:legendary t:creature (o:"creatures you control have haste" or o:"creatures you control gain haste" or o:"other creatures you control have haste" or o:"other creatures you control gain haste")
+- "gruul haste enablers" → game:paper id=rg o:/(creatures you control|other creatures you control) (have|gain) haste([.]| until| as| while|$)/
+- "gruul legendary creatures that give haste" → game:paper id=rg t:legendary t:creature o:/(creatures you control|other creatures you control) (have|gain) haste([.]| until| as| while|$)/
 - "sultai graveyard" → game:paper id=ubg o:"graveyard"
 - "red finishers" → game:paper c:r t:creature mv>=6 pow>=6
 - "stax pieces" → game:paper (o:"can't" or o:"pay" o:"or" or o:"each" o:"sacrifice")
