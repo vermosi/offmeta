@@ -98,26 +98,84 @@ export type Database = {
       search_feedback: {
         Row: {
           created_at: string
+          generated_rule_id: string | null
           id: string
           issue_description: string
           original_query: string
+          processed_at: string | null
+          processing_status: string | null
           translated_query: string | null
         }
         Insert: {
           created_at?: string
+          generated_rule_id?: string | null
           id?: string
           issue_description: string
           original_query: string
+          processed_at?: string | null
+          processing_status?: string | null
           translated_query?: string | null
         }
         Update: {
           created_at?: string
+          generated_rule_id?: string | null
           id?: string
           issue_description?: string
           original_query?: string
+          processed_at?: string | null
+          processing_status?: string | null
           translated_query?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "search_feedback_generated_rule_id_fkey"
+            columns: ["generated_rule_id"]
+            isOneToOne: false
+            referencedRelation: "translation_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      translation_rules: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          pattern: string
+          scryfall_syntax: string
+          source_feedback_id: string | null
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          pattern: string
+          scryfall_syntax: string
+          source_feedback_id?: string | null
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          pattern?: string
+          scryfall_syntax?: string
+          source_feedback_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "translation_rules_source_feedback_id_fkey"
+            columns: ["source_feedback_id"]
+            isOneToOne: false
+            referencedRelation: "search_feedback"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
