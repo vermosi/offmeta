@@ -464,6 +464,23 @@ POWER/TOUGHNESS SEARCHES:
 - "0 power creatures" = t:creature pow=0
 
 COLOR IDENTITY (for Commander):
+CRITICAL - Color identity operators:
+- id=X = EXACTLY these colors only (e.g., id=rg means exactly red AND green, no other colors)
+- id<=X = WITHIN this identity (can be subset, e.g., id<=rg includes mono-red, mono-green, colorless, AND red-green)
+- id>=X = MUST INCLUDE these colors (e.g., id>=rg means must have BOTH red AND green, but can have more)
+- id:X = same as id>=X for multicolor, same as id=X for mono
+
+When user says "gruul", "rakdos", "simic", etc. they want cards with BOTH/ALL those colors, use id>=:
+- "gruul creatures" = id>=rg (must be red AND green)
+- "rakdos cards" = id>=br (must be black AND red)  
+- "simic" = id>=ug (must be blue AND green)
+- "sultai" = id>=ugb (must be blue, green, AND black)
+
+When user says "within X colors" or "commander identity X", use id<=:
+- "within gruul identity" = id<=rg (can be mono-R, mono-G, colorless, or RG)
+- "legal in gruul commander" = id<=rg
+
+Mono-color:
 - "mono white" = id=w or c=w
 - "mono blue" = id=u or c=u
 - "mono black" = id=b or c=b
@@ -478,13 +495,15 @@ QUERY TRANSLATION EXAMPLES:
 - "creatures that make treasure" → game:paper t:creature o:"create" o:"treasure"
 - "cheap green ramp spells" → game:paper c:g mv<=3 (t:instant or t:sorcery) o:"search" o:"land"
 - "green ramp" → game:paper c:g (o:"search" o:"land" or (t:creature o:"add" o:"{"))
-- "Rakdos sacrifice outlets" → game:paper c:br o:"sacrifice" o:":"
+- "Rakdos sacrifice outlets" → game:paper id>=br o:"sacrifice" o:":"
 - "blue counterspells that draw" → game:paper c:u t:instant o:"counter" o:"draw"
 - "white board wipes" → game:paper c:w o:"destroy all"
 - "lands that tap for any color" → game:paper t:land o:"add" o:"any color"
 - "black tutors" → game:paper c:b o:"search your library"
 - "white pillowfort cards" → game:paper c:w (o:"can't attack you" or o:"prevent" o:"damage")
-- "simic blink effects" → game:paper c:ug o:"exile" o:"return" o:"battlefield"
+- "simic blink effects" → game:paper id>=ug o:"exile" o:"return" o:"battlefield"
+- "gruul haste enablers" → game:paper id>=rg o:"creatures" o:"haste"
+- "sultai graveyard" → game:paper id>=ugb o:"graveyard"
 - "red finishers" → game:paper c:r t:creature mv>=6 pow>=6
 - "stax pieces" → game:paper (o:"can't" or o:"pay" o:"or" or o:"each" o:"sacrifice")
 - "voltron equipment" → game:paper t:equipment o:"equipped creature gets"
