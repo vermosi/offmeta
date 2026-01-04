@@ -95,6 +95,30 @@ export type Database = {
         }
         Relationships: []
       }
+      search_feedback: {
+        Row: {
+          created_at: string
+          id: string
+          issue_description: string
+          original_query: string
+          translated_query: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          issue_description: string
+          original_query: string
+          translated_query?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          issue_description?: string
+          original_query?: string
+          translated_query?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
