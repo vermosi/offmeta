@@ -47,11 +47,50 @@
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+/**
+ * Fetches active dynamic translation rules from the database.
+ * These rules are generated from user feedback to improve translations.
+ */
+async function fetchDynamicRules(): Promise<string> {
+  try {
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      return '';
+    }
+    
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    
+    const { data: rules, error } = await supabase
+      .from('translation_rules')
+      .select('pattern, scryfall_syntax, description')
+      .eq('is_active', true)
+      .gte('confidence', 0.6)
+      .order('created_at', { ascending: false })
+      .limit(20);
+    
+    if (error || !rules || rules.length === 0) {
+      return '';
+    }
+    
+    const rulesText = rules.map(r => 
+      `- "${r.pattern}" → ${r.scryfall_syntax}${r.description ? ` (${r.description})` : ''}`
+    ).join('\n');
+    
+    return `\n\nDYNAMIC RULES (learned from user feedback - PRIORITIZE these):\n${rulesText}`;
+  } catch (e) {
+    console.error('Failed to fetch dynamic rules:', e);
+    return '';
+  }
+}
 
 /**
  * Valid Scryfall search operators for query validation.
@@ -229,6 +268,9 @@ serve(async (req) => {
 
     // Build context from previous search if provided
     const contextHint = context ? `\nPrevious search context: The user previously searched for "${context.previousQuery}" which translated to "${context.previousScryfall}". If this new query seems like a follow-up, inherit relevant constraints like colors or format.` : '';
+
+    // Fetch dynamic rules learned from user feedback
+    const dynamicRules = await fetchDynamicRules();
 
     // Build the semantic search prompt
     const systemPrompt = `You are a Scryfall query translator. Your ONLY job is to convert natural language descriptions into valid Scryfall search syntax.
@@ -644,6 +686,7 @@ BUDGET TRANSLATIONS:
 - "very cheap": usd<1
 - "expensive": usd>20
 ${contextHint}
+${dynamicRules}
 
 Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`;
 

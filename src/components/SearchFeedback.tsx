@@ -23,6 +23,18 @@ export function SearchFeedback({ originalQuery, translatedQuery }: SearchFeedbac
   const [issue, setIssue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const triggerProcessing = async () => {
+    try {
+      // Trigger the process-feedback function in the background
+      await supabase.functions.invoke('process-feedback', {
+        body: {}
+      });
+    } catch (error) {
+      // Silently fail - processing is async and will be retried
+      console.log('Background processing triggered');
+    }
+  };
+
   const handleSubmit = async () => {
     if (!issue.trim()) {
       toast.error('Please describe the issue');
@@ -40,10 +52,13 @@ export function SearchFeedback({ originalQuery, translatedQuery }: SearchFeedbac
       if (error) throw error;
 
       toast.success('Feedback submitted', {
-        description: 'Thanks for helping improve the search!'
+        description: 'Thanks! We\'ll use this to improve searches.'
       });
       setOpen(false);
       setIssue('');
+
+      // Trigger background processing
+      triggerProcessing();
     } catch (error) {
       console.error('Feedback error:', error);
       toast.error('Failed to submit feedback');
