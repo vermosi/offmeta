@@ -240,7 +240,7 @@ CRITICAL RULES:
 4. "Spells" means ONLY instants and sorceries: (t:instant or t:sorcery)
 5. Never fabricate or guess card names, abilities, or mechanics
 6. If a term is ambiguous, translate it conservatively
-7. HASTE ORACLE TEXT: When user asks for cards that "give haste" / "grant haste" / "haste enablers", search BROADLY. Use: (o:"you control" (o:"have haste" or o:"gain haste" or o:"gains haste")) or (o:"target creature" o:"gains haste") or (o:"another creature" o:"gains haste"). Do NOT use strict regex that excludes cards granting haste alongside other keywords.
+7. HASTE ORACLE TEXT: When user asks for cards that "give haste" / "grant haste" / "haste enablers", search BROADLY but NEVER break earlier constraints with a top-level "or". If you use OR, wrap the entire OR block in parentheses. Use: ((o:"you control" (o:"have haste" or o:"gain haste" or o:"gains haste")) or ((o:"target creature" or o:"another creature") o:"gains haste")).
 
 LEGALITY & BAN STATUS (CRITICAL - use these exact syntaxes):
 - "banned in X" = banned:X (e.g., "banned in commander" → banned:commander)
@@ -360,7 +360,7 @@ MTG SLANG DEFINITIONS (fallback when no function tag exists):
 - "hatebears" = t:creature mv<=3 (o:"can't" or o:"opponent" o:"pay")
 - "treasure" = o:"create" o:"treasure"
 - "landfall" = o:"landfall" or (o:"whenever a land enters" o:"control")
-- "haste enablers" / "gives haste" / "grants haste" = (o:"you control" (o:"have haste" or o:"gain haste" or o:"gains haste")) or (o:"target creature" o:"gains haste") or (o:"another creature" o:"gains haste")
+- "haste enablers" / "gives haste" / "grants haste" = ((o:"you control" (o:"have haste" or o:"gain haste" or o:"gains haste")) or ((o:"target creature" or o:"another creature") o:"gains haste"))
 - "free spells" = o:"without paying"
 
 TRIBAL TYPES & SYNERGIES:
