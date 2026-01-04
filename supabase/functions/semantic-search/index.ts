@@ -250,50 +250,118 @@ LEGALITY & BAN STATUS (CRITICAL - use these exact syntaxes):
 - DO NOT use "is:banned" - it does not exist. Always use "banned:FORMAT"
 - DO NOT use "is:restricted" - it does not exist. Always use "restricted:FORMAT"
 
-MTG SLANG DEFINITIONS:
-- "ramp" = cards that accelerate mana, PRIMARILY land-fetching spells like Rampant Growth, Farseek, Kodama's Reach. Use: o:"search" o:"land" (o:"onto the battlefield" or o:"put it onto")
-- "ramp spells" = instants/sorceries that search for lands: (t:instant or t:sorcery) o:"search" o:"land"
-- "mana dorks" = small creatures that tap for mana: t:creature o:"add" o:"{" mv<=2
-- "mana rocks" = artifacts that tap for mana: t:artifact o:"add" o:"{"
-- "land ramp" vs "mana rocks" - land ramp searches libraries, rocks are artifacts that tap for mana
-- "tutors" = cards that search your library for other cards: o:"search your library"
-- "creature tutors" = o:"search your library" o:"creature"
-- "land tutors" = o:"search your library" o:"land"
-- "removal" = cards that destroy/exile permanents: (o:"destroy target" or o:"exile target")
-- "creature removal" = (o:"destroy target creature" or o:"exile target creature")
-- "spot removal" = targeted removal, same as removal
-- "board wipes" / "wraths" = o:"destroy all" or o:"exile all"
-- "finishers" = big game-ending threats: t:creature mv>=6 (pow>=6 or o:"win the game" or o:"extra turn")
-- "stax" = cards that tax or restrict opponents: (o:"can't" or o:"pay" o:"or" or o:"each" o:"sacrifice" or o:"skip")
-- "pillowfort" = defensive cards discouraging attacks: (o:"can't attack you" or o:"prevent" o:"damage" or o:"protection from")
-- "voltron" = cards that buff a single creature: (t:aura or t:equipment or o:"target creature gets" o:"+")
-- "blink" / "flicker" = exile and return effects: o:"exile" o:"return" (o:"battlefield" or o:"to the battlefield")
-- "reanimator" / "reanimate" = return creatures from graveyard: o:"graveyard" o:"onto the battlefield" t:creature
-- "mill" = put cards from library into graveyard: o:"mill" or (o:"library" o:"into" o:"graveyard")
-- "discard" = make opponents discard: o:"opponent" o:"discard"
-- "draw engines" = repeatable card draw: o:"draw" (o:"whenever" or o:"at the beginning")
-- "cantrips" = cheap spells that draw a card: mv<=2 (t:instant or t:sorcery) o:"draw a card"
-- "counterspells" = t:instant o:"counter target"
-- "sweepers" = same as board wipes
-- "anthems" = effects that buff all your creatures: o:"creatures you control get" o:"+"
-- "lords" = creatures that buff a tribe: t:creature o:"other" o:"get" o:"+"
-- "tokens" = cards that create creature tokens: o:"create" o:"token"
-- "sacrifice outlets" / "sac outlets" = free sacrifice effects: o:"sacrifice" (o:":" or o:"0:")
-- "aristocrats" = creatures that benefit from deaths: t:creature (o:"whenever" o:"dies" or o:"sacrifice")
-- "clone" effects = copy creatures: o:"copy" o:"creature"
+SCRYFALL TAGGER TAGS (PREFER THESE when they match the user's intent - more reliable than Oracle text):
+- "removal" = function:removal (much better than guessing Oracle text!)
+- "ramp" / "mana acceleration" = function:ramp
+- "card draw" / "draw cards" = function:card-draw
+- "tutors" / "search library" = function:tutor
+- "counterspells" / "counter magic" = function:counterspell
+- "board wipes" / "mass removal" = function:board-wipe
+- "graveyard hate" = function:graveyard-hate
+- "lifegain" = function:lifegain
+- "token generators" = function:token-generator
+- "sacrifice outlet" = function:sacrifice-outlet
+- "mana dork" = function:mana-dork
+- "mana rock" = function:mana-rock
+- "land destruction" = function:land-destruction
+- "discard" = function:discard
+- "mill" = function:mill
+- "blink" / "flicker" = function:flicker
+- "reanimation" = function:reanimator
+- "voltron" = function:voltron
+- "stax" / "tax" = function:stax
+- "pillowfort" = function:pillowfort
+- "anthem" = function:anthem
+- "lord" (tribal buff) = function:lord
+- "finisher" / "game-ender" = function:finisher
+
+LAND SHORTCUTS (use these instead of manual Oracle searches):
+- "dual lands" = is:dual
+- "fetch lands" = is:fetchland
+- "shock lands" = is:shockland
+- "check lands" = is:checkland
+- "pain lands" = is:painland
+- "fast lands" = is:fastland
+- "slow lands" = is:slowland
+- "triomes" / "tri-lands" = is:triome or is:triland
+- "bounce lands" / "karoos" = is:bounceland
+- "scry lands" = is:scryland
+- "filter lands" = is:filterland
+- "creature lands" / "man lands" = is:creatureland
+- "pathway lands" = is:pathway
+- "MDFCs" / "modal lands" = is:mdfc
+
+COMMANDER SHORTCUTS:
+- "can be commander" / "legal commanders" = is:commander
+- "partner commanders" = is:partner
+- "companion" = is:companion
+- "backgrounds" = t:background
+
+CARD TYPE SHORTCUTS:
+- "vanilla creatures" = is:vanilla
+- "french vanilla" = is:frenchvanilla
+- "modal spells" = is:modal
+- "spells" (cast from hand) = is:spell
+- "permanents" = is:permanent
+- "historic cards" = is:historic
+- "outlaws" = is:outlaw
+- "party members" = is:party
+- "bears" (2/2 for 2) = is:bear
+
+REGEX SHORTCUTS (Scryfall special syntax):
+- \sm = any mana symbol
+- \spp = +X/+X pattern (e.g., +2/+2)
+- \smm = -X/-X pattern (e.g., -1/-1)
+- \spt = X/X power/toughness pattern
+- ~ = card's own name (self-reference)
+
+DISPLAY & SORTING (append to queries when relevant):
+- "cheapest printing" = add cheapest:usd to query
+- "popular cards" / "by popularity" = add order:edhrec
+- "newest printings" = add order:released direction:desc
+- "by price" = add order:usd direction:desc
+- "unique cards only" = add unique:cards
+- "all printings" = add unique:prints
+
+PRICE PREFERENCES:
+- "cheapest version" = add prefer:usd-low
+- "oldest printing" = add prefer:oldest
+- "newest printing" = add prefer:newest
+
+MTG SLANG DEFINITIONS (fallback when no function tag exists):
+- "ramp" = function:ramp OR (o:"search" o:"land" (o:"onto the battlefield" or o:"put it onto"))
+- "ramp spells" = (t:instant or t:sorcery) function:ramp
+- "mana dorks" = function:mana-dork or (t:creature o:"add" o:"{" mv<=2)
+- "mana rocks" = function:mana-rock or (t:artifact o:"add" o:"{")
+- "tutors" = function:tutor or o:"search your library"
+- "removal" = function:removal or (o:"destroy target" or o:"exile target")
+- "creature removal" = function:removal t:creature or (o:"destroy target creature" or o:"exile target creature")
+- "board wipes" / "wraths" = function:board-wipe or (o:"destroy all" or o:"exile all")
+- "finishers" = function:finisher or (t:creature mv>=6 (pow>=6 or o:"win the game"))
+- "stax" = function:stax or (o:"can't" or o:"pay" o:"or")
+- "pillowfort" = function:pillowfort or (o:"can't attack you" or o:"prevent" o:"damage")
+- "voltron" = function:voltron or (t:aura or t:equipment)
+- "blink" / "flicker" = function:flicker or (o:"exile" o:"return" o:"battlefield")
+- "reanimator" = function:reanimator or (o:"graveyard" o:"onto the battlefield")
+- "mill" = function:mill or (o:"mill" or (o:"library" o:"graveyard"))
+- "discard" = function:discard or (o:"opponent" o:"discard")
+- "draw engines" = function:card-draw or (o:"draw" (o:"whenever" or o:"at the beginning"))
+- "cantrips" = mv<=2 (t:instant or t:sorcery) o:"draw a card"
+- "counterspells" = function:counterspell or (t:instant o:"counter target")
+- "anthems" = function:anthem or (o:"creatures you control get" o:"+")
+- "lords" = function:lord or (t:creature o:"other" o:"get" o:"+")
+- "tokens" = function:token-generator or (o:"create" o:"token")
+- "sacrifice outlets" = function:sacrifice-outlet or (o:"sacrifice" (o:":" or o:"0:"))
+- "aristocrats" = t:creature (o:"whenever" o:"dies")
+- "clone" effects = o:"copy" o:"creature"
 - "extra turns" = o:"extra turn"
-- "storm" = storm mechanic or storm-like: o:"storm" or o:"copy" o:"for each"
-- "wheels" = everyone discards and draws: o:"each player" (o:"discards" o:"draws" or o:"discard" o:"hand")
-- "hatebears" = small creatures with taxing effects: t:creature mv<=3 (o:"can't" or o:"opponent" o:"pay")
-- "treasure" = cards making treasure tokens: o:"create" o:"treasure"
-- "untappers" = cards that untap permanents: o:"untap target"
-- "landfall" = triggers when lands enter: o:"landfall" or (o:"whenever a land enters" o:"control")
-- "protection" = protection keyword: o:"protection from"
-- "indestructible" = o:"indestructible"
-- "hexproof" = o:"hexproof"
-- "evasion" = creatures hard to block: (o:"flying" or o:"unblockable" or o:"can't be blocked" or o:"menace" or o:"trample")
-- "haste enablers" / "gives haste" / "grants haste" = cards that give ONLY haste (not haste plus other keywords unless explicitly requested): o:/(creatures you control|other creatures you control) (have|gain) haste([.]| until| as| while|$)/
-- "free spells" = o:"without paying" or o:"cast" o:"free"
+- "storm" = o:"storm" or o:"copy" o:"for each"
+- "wheels" = o:"each player" (o:"discards" o:"draws" or o:"discard" o:"hand")
+- "hatebears" = t:creature mv<=3 (o:"can't" or o:"opponent" o:"pay")
+- "treasure" = o:"create" o:"treasure"
+- "landfall" = o:"landfall" or (o:"whenever a land enters" o:"control")
+- "haste enablers" / "gives haste" / "grants haste" = o:/(creatures you control|other creatures you control) (have|gain) haste([.]| until| as| while|$)/
+- "free spells" = o:"without paying"
 
 TRIBAL TYPES & SYNERGIES:
 - "elves" / "elf tribal" = t:elf or o:"elf" o:"you control" (mana production, go-wide, counters)
