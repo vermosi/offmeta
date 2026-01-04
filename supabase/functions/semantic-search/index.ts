@@ -464,49 +464,48 @@ POWER/TOUGHNESS SEARCHES:
 - "0 power creatures" = t:creature pow=0
 
 COLOR IDENTITY (for Commander):
-CRITICAL - Color identity operators:
-- id=X = EXACTLY these colors only (e.g., id=rg means exactly red AND green, no other colors)
-- id<=X = WITHIN this identity (can be subset, e.g., id<=rg includes mono-red, mono-green, colorless, AND red-green)
-- id>=X = MUST INCLUDE these colors (e.g., id>=rg means must have BOTH red AND green, but can have more)
-- id:X = same as id>=X for multicolor, same as id=X for mono
+CRITICAL - Always use explicit comparison operators. Avoid bare id:.
 
-GUILD NAMES (2-color pairs) - use id<= to show cards WITHIN that identity (playable in that commander deck):
-- "azorius" = id<=wu (white-blue identity - includes mono-W, mono-U, colorless, and WU cards)
-- "dimir" = id<=ub (blue-black)
-- "rakdos" = id<=br (black-red)
-- "gruul" = id<=rg (red-green)
-- "selesnya" = id<=gw (green-white)
-- "orzhov" = id<=wb (white-black)
-- "izzet" = id<=ur (blue-red)
-- "golgari" = id<=bg (black-green)
-- "boros" = id<=rw (red-white)
-- "simic" = id<=ug (blue-green)
+- id=XY... = EXACT identity (exactly these colors, no fewer, no more). Example: id=rg returns only red-green identity cards (NOT mono-red).
+- id<=XY... = WITHIN this identity (subsets allowed; playable with that commander). Example: id<=rg includes mono-red, mono-green, colorless, AND red-green.
+- id>=XY... = INCLUDES this identity (must include these colors; can include more). Example: id>=rg includes RG, WRG, URG, BRG, WURG, etc.
 
-SHARD NAMES (3-color allied) - use id<= for these:
-- "bant" = id<=gwu (green-white-blue)
-- "esper" = id<=wub (white-blue-black)
-- "grixis" = id<=ubr (blue-black-red)
-- "jund" = id<=brg (black-red-green)
-- "naya" = id<=rgw (red-green-white)
+Default interpretation:
+- If user names a color group ("gruul", "esper", "abzan", etc.), they mean EXACTLY those colors → use id=.
+- If user explicitly says "playable in X deck", "within X identity", or "X commander deck" → use id<=.
 
-WEDGE NAMES (3-color enemy) - use id<= for these:
-- "abzan" / "junk" = id<=wbg (white-black-green)
-- "jeskai" / "america" = id<=urw (blue-red-white)
-- "sultai" / "bug" = id<=bgu (black-green-blue)
-- "mardu" = id<=rwb (red-white-black)
-- "temur" / "rug" = id<=gur (green-blue-red)
+GUILD NAMES (2-color pairs) - default to id=:
+- "azorius" = id=wu (white-blue)
+- "dimir" = id=ub (blue-black)
+- "rakdos" = id=br (black-red)
+- "gruul" = id=rg (red-green)
+- "selesnya" = id=gw (green-white)
+- "orzhov" = id=wb (white-black)
+- "izzet" = id=ur (blue-red)
+- "golgari" = id=bg (black-green)
+- "boros" = id=rw (red-white)
+- "simic" = id=ug (blue-green)
 
-4-COLOR NAMES - use id<= for these:
-- "glint-eye" / "chaos" / "sans-white" / "non-white" = id<=ubrg
-- "dune-brood" / "aggression" / "sans-blue" / "non-blue" = id<=wbrg
-- "ink-treader" / "altruism" / "sans-black" / "non-black" = id<=wurg
-- "witch-maw" / "growth" / "sans-red" / "non-red" = id<=wubg
-- "yore-tiller" / "artifice" / "sans-green" / "non-green" = id<=wubr
+SHARD NAMES (3-color allied) - default to id=:
+- "bant" = id=wug (white-blue-green)
+- "esper" = id=wub (white-blue-black)
+- "grixis" = id=ubr (blue-black-red)
+- "jund" = id=brg (black-red-green)
+- "naya" = id=wrg (white-red-green)
 
-When user says a guild/shard/wedge name, they want cards WITHIN that color identity (playable in that deck):
-- "gruul creatures" = id<=rg (cards playable in a Gruul deck: mono-R, mono-G, colorless, or RG)
-- "esper control" = id<=wub (cards playable in Esper: any subset of WUB)
-- "jund cards" = id<=brg (cards playable in Jund)
+WEDGE NAMES (3-color enemy) - default to id=:
+- "abzan" / "junk" = id=wbg (white-black-green)
+- "jeskai" / "america" = id=wur (white-blue-red)
+- "sultai" / "bug" = id=ubg (blue-black-green)
+- "mardu" = id=wbr (white-black-red)
+- "temur" / "rug" = id=urg (blue-red-green)
+
+4-COLOR NAMES - default to id=:
+- "glint-eye" / "chaos" / "sans-white" / "non-white" = id=ubrg
+- "dune-brood" / "aggression" / "sans-blue" / "non-blue" = id=wbrg
+- "ink-treader" / "altruism" / "sans-black" / "non-black" = id=wurg
+- "witch-maw" / "growth" / "sans-red" / "non-red" = id=wubg
+- "yore-tiller" / "artifice" / "sans-green" / "non-green" = id=wubr
 
 Mono-color:
 - "mono white" = id=w or c=w
@@ -523,16 +522,16 @@ QUERY TRANSLATION EXAMPLES:
 - "creatures that make treasure" → game:paper t:creature o:"create" o:"treasure"
 - "cheap green ramp spells" → game:paper c:g mv<=3 (t:instant or t:sorcery) o:"search" o:"land"
 - "green ramp" → game:paper c:g (o:"search" o:"land" or (t:creature o:"add" o:"{"))
-- "Rakdos sacrifice outlets" → game:paper id<=br o:"sacrifice" o:":"
+- "Rakdos sacrifice outlets" → game:paper id=br o:"sacrifice" o:":"
 - "blue counterspells that draw" → game:paper c:u t:instant o:"counter" o:"draw"
 - "white board wipes" → game:paper c:w o:"destroy all"
 - "lands that tap for any color" → game:paper t:land o:"add" o:"any color"
 - "black tutors" → game:paper c:b o:"search your library"
 - "white pillowfort cards" → game:paper c:w (o:"can't attack you" or o:"prevent" o:"damage")
-- "simic blink effects" → game:paper id<=ug o:"exile" o:"return" o:"battlefield"
-- "gruul haste enablers" → game:paper id<=rg (o:"creatures you control have haste" or o:"other creatures you control have haste")
-- "gruul legendary creatures that give haste" → game:paper id<=rg t:legendary t:creature (o:"creatures you control have haste" or o:"other creatures you control have haste")
-- "sultai graveyard" → game:paper id<=ugb o:"graveyard"
+- "simic blink effects" → game:paper id=ug o:"exile" o:"return" o:"battlefield"
+- "gruul haste enablers" → game:paper id=rg (o:"creatures you control have haste" or o:"other creatures you control have haste")
+- "gruul legendary creatures that give haste" → game:paper id=rg t:legendary t:creature (o:"creatures you control have haste" or o:"other creatures you control have haste")
+- "sultai graveyard" → game:paper id=ubg o:"graveyard"
 - "red finishers" → game:paper c:r t:creature mv>=6 pow>=6
 - "stax pieces" → game:paper (o:"can't" or o:"pay" o:"or" or o:"each" o:"sacrifice")
 - "voltron equipment" → game:paper t:equipment o:"equipped creature gets"
