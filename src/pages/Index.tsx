@@ -12,6 +12,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { searchCards } from "@/lib/scryfall";
 import { ScryfallCard } from "@/types/card";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import offmetaLogo from "@/assets/offmeta-logo.png";
 
 // Lazy load heavy modal component
 const CardModal = lazy(() => import("@/components/CardModal"));
@@ -65,9 +66,11 @@ const Index = () => {
           <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
           <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center shadow-sm">
-                <span className="text-accent-foreground font-bold text-xs sm:text-sm">OM</span>
-              </div>
+              <img 
+                src={offmetaLogo} 
+                alt="OffMeta" 
+                className="h-8 w-8 sm:h-9 sm:w-9 dark:invert dark:brightness-200"
+              />
               <h1 className="text-base sm:text-lg font-semibold tracking-tight text-foreground">OffMeta</h1>
             </div>
             <ThemeToggle />
