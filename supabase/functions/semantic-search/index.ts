@@ -371,9 +371,9 @@ PRICE PREFERENCES:
 - "newest printing" = add prefer:newest
 
 FUNDAMENTAL MTG SHORTHAND (ALWAYS interpret these first):
-- "ETB" / "etb" = "enters the battlefield" (ALWAYS use o:"enters the battlefield" - never shorten to o:"enters")
-- "enters" / "on enter" / "when this enters" / "enter trigger" / "ETB trigger" = o:"enters the battlefield"
-- "LTB" / "ltb" = "leaves the battlefield" (ALWAYS use o:"leaves the battlefield" - never shorten)
+- "ETB" / "etb" = "enters the battlefield" (use o:"enters" - NOT the full phrase which limits results)
+- "enters" / "on enter" / "when this enters" / "enter trigger" / "ETB trigger" = o:"enters"
+- "LTB" / "ltb" = "leaves the battlefield" (use o:"leaves" - NOT the full phrase)
 - "leaves" / "when this leaves" = o:"leaves the battlefield"
 - "dies" / "death trigger" / "when this dies" = o:"dies"
 - "blink" / "flicker" / "exile and return" / "temporary exile" = function:flicker or (o:"exile" o:"return" o:"battlefield")
