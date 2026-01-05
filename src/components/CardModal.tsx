@@ -413,11 +413,12 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
               </p>
             ) : (
               <div className="space-y-1">
-                <div className="grid grid-cols-[1fr_50px_50px_50px] gap-1 px-2 py-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider border-b border-border/50">
+                <div className="grid grid-cols-[1fr_45px_45px_45px_45px] gap-1 px-2 py-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider border-b border-border/50">
                   <span>Set</span>
                   <span className="text-right">USD</span>
                   <span className="text-right">Foil</span>
                   <span className="text-right">EUR</span>
+                  <span className="text-right">Foil</span>
                 </div>
                 
                 {englishPrintings.slice(0, 15).map((printing) => (
@@ -433,7 +434,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                       });
                     }}
                     className={cn(
-                      "grid grid-cols-[1fr_50px_50px_50px] gap-1 px-2 py-2 rounded-lg hover:bg-muted/50 text-sm items-center w-full text-left transition-colors",
+                      "grid grid-cols-[1fr_45px_45px_45px_45px] gap-1 px-2 py-2 rounded-lg hover:bg-muted/50 text-sm items-center w-full text-left transition-colors",
                       (selectedPrinting?.id === printing.id || (!selectedPrinting && card.id === printing.id)) && "bg-primary/10 ring-1 ring-primary/30"
                     )}
                   >
@@ -458,6 +459,9 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                     </span>
                     <span className="text-right font-medium text-blue-500 text-xs">
                       {printing.prices.eur ? `€${printing.prices.eur}` : "—"}
+                    </span>
+                    <span className="text-right font-medium text-indigo-400 text-xs">
+                      {printing.prices.eur_foil ? `€${printing.prices.eur_foil}` : "—"}
                     </span>
                   </button>
                 ))}
