@@ -283,16 +283,14 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
         <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col min-h-0">
           <div className={cn("border-b border-border/50", isMobile ? "px-4 py-3" : "p-4")}>
             {!isMobile && (
-              <div className="flex items-start justify-between gap-4 mb-3">
-                <div className="space-y-1">
-                  <h2 className="text-lg font-semibold text-foreground tracking-tight">
-                    {faceDetails.name}
-                  </h2>
-                  <p className="text-sm text-muted-foreground">{faceDetails.type_line}</p>
-                </div>
+              <div className="mb-3 space-y-1.5">
+                <h2 className="text-lg font-semibold text-foreground tracking-tight pr-8">
+                  {faceDetails.name}
+                </h2>
                 {faceDetails.mana_cost && (
                   <ManaCost cost={faceDetails.mana_cost} size="md" />
                 )}
+                <p className="text-sm text-muted-foreground">{faceDetails.type_line}</p>
               </div>
             )}
             
