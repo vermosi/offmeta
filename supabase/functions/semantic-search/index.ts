@@ -607,31 +607,34 @@ PRECON & PRODUCT SLANG:
 - "iconic masters" = e:ima (Iconic Masters)
 - "ultimate masters" = e:uma (Ultimate Masters)
 
-SECRET LAIR SPECIFIC DROPS (CRITICAL - all use e:sld plus themed card names):
-When users ask for cards from a specific Secret Lair collaboration or theme, ALL Secret Lair drops share set code "sld" so you MUST filter by card names, artist, or characteristics.
+SECRET LAIR SPECIFIC DROPS (CRITICAL - use Scryfall art tags for themed drops):
+When users ask for cards from a specific Secret Lair collaboration or theme, use the art: tag which searches Scryfall's tagger database for themed art. This is MORE RELIABLE than card names.
 
-VIDEO GAME COLLABORATIONS (use exact card names to avoid false matches):
-- "sonic secret lair" / "sonic the hedgehog" = e:sld ("Sonic, Lord of Speed" OR "Tails, Sonic's Best Friend" OR "Knuckles, Echidna Guardian" OR "Shadow, Edgy Rival" OR "Dr. Eggman, Master of Machines" OR "Amy Rose, Sonic's Sweetheart" OR "Piko Piko Hammer" OR "Chaos Emeralds" OR "Gold Ring")
-- "god of war secret lair" = e:sld ("Kratos, Godslayer" OR "Atreus, Loki Revealed" OR "Blades of Chaos" OR "Leviathan Axe" OR "Mimir, Smartest Man Alive")
-- "last of us secret lair" = e:sld ("Joel, Survivor of the Outbreak" OR "Ellie, Survivor of the Outbreak" OR "Clicker")
-- "uncharted secret lair" = e:sld ("Nathan Drake" OR "Victor Sullivan" OR "Chloe Frazer")
-- "street fighter secret lair" = e:sld ("Ryu, World Warrior" OR "Ken, Burning Brawler" OR "Chun-Li, Countless Kicks" OR "Blanka, Ferocious Friend" OR "Dhalsim, Pliable Pacifist" OR "Guile, Sonic Soldier" OR "Zangief, the Red Cyclone" OR "E. Honda, Sumo Champion")
-- "fortnite secret lair" = e:sld ("Battle Bus" OR "Cuddle Team Leader" OR "Supply Llama" OR "Shrinking Storm" OR "Crack the Vault")
+VIDEO GAME COLLABORATIONS (use art tags - these return ALL cards from the drop):
+- "sonic secret lair" / "sonic the hedgehog" / "sonic cards" = e:sld art:sonic-the-hedgehog-universe
+- "god of war secret lair" / "kratos" = e:sld art:god-of-war-universe
+- "last of us secret lair" / "ellie and joel" = e:sld art:the-last-of-us-universe
+- "uncharted secret lair" / "nathan drake" = e:sld art:uncharted-universe
+- "street fighter secret lair" / "ryu chun-li" = e:sld art:street-fighter-universe
+- "fortnite secret lair" = e:sld art:fortnite-universe
+- "tomb raider secret lair" / "lara croft" = e:sld art:tomb-raider-universe
+- "hatsune miku secret lair" / "miku" = e:sld art:hatsune-miku-universe
 
-POP CULTURE COLLABORATIONS:
-- "stranger things secret lair" = e:sld (Eleven OR "Jim Hopper" OR Demogorgon OR "Mind Flayer")
-- "walking dead secret lair" = e:sld (Negan OR Michonne OR "Rick, Steadfast" OR Daryl OR Glenn)
-- "arcane secret lair" = e:sld (Jinx OR Vi OR Jayce OR Caitlyn)
-- "princess bride secret lair" = e:sld (Westley OR Buttercup OR "Inigo Montoya" OR Fezzik OR Vizzini)
-- "transformers secret lair" = e:sld (Optimus OR Megatron OR Bumblebee OR Starscream)
-- "jurassic world secret lair" / "jurassic park" = e:sld (t:dinosaur OR "Jurassic")
-- "monty python secret lair" / "killer rabbit" / "holy grail" = e:sld ("Killer Rabbit" OR "Black Knight" OR "Swallow")
+POP CULTURE COLLABORATIONS (use art tags):
+- "stranger things secret lair" / "eleven" / "upside down" = e:sld art:stranger-things-universe
+- "walking dead secret lair" / "negan" / "rick grimes" = e:sld art:the-walking-dead-universe
+- "arcane secret lair" / "jinx vi" = e:sld art:arcane-universe
+- "princess bride secret lair" / "westley buttercup" = e:sld art:the-princess-bride-universe
+- "transformers secret lair" / "optimus megatron" = e:sld art:transformers-universe
+- "jurassic world secret lair" / "jurassic park" = e:sld art:jurassic-world-universe
+- "monty python secret lair" / "killer rabbit" / "holy grail" = e:sld art:monty-python-universe
+- "post malone secret lair" = e:sld art:post-malone
 
-ANIME/MANGA COLLABORATIONS:
-- "attack on titan secret lair" = e:sld (Eren OR Mikasa OR "Colossal Titan")
-- "final fantasy secret lair" = e:sld ("Final Fantasy")
+ANIME/MANGA COLLABORATIONS (use art tags):
+- "attack on titan secret lair" / "eren mikasa" = e:sld art:attack-on-titan-universe
+- "final fantasy secret lair" = e:sld art:final-fantasy-universe
 
-ARTIST SECRET LAIRS (search by artist name):
+ARTIST SECRET LAIRS (search by artist name - these work reliably):
 - "bob ross secret lair" = e:sld a:"Bob Ross"
 - "fiona staples secret lair" = e:sld a:"Fiona Staples"
 - "seb mckinnon secret lair" = e:sld a:"Seb McKinnon"
@@ -645,11 +648,12 @@ THEMED SECRET LAIRS:
 - "cat secret lair" = e:sld t:cat
 - "dog secret lair" = e:sld t:dog
 - "goblin secret lair" = e:sld t:goblin
-- "pride secret lair" / "pride across the multiverse" = e:sld ("Pride" OR "Bearscape")
+- "pride secret lair" / "pride across the multiverse" = e:sld art:pride
 - "slime secret lair" = e:sld (t:ooze OR Slime)
 
 FALLBACK FOR UNKNOWN SECRET LAIRS:
-If the Secret Lair name isn't listed, search e:sld with character names or keywords from the collaboration.
+If the Secret Lair name isn't listed, try: e:sld art:[collaboration-name]-universe (replace spaces with hyphens).
+If that doesn't work, search e:sld with character names or keywords from the collaboration.
 
 RESERVED LIST & SPECIAL STATUS:
 - "reserved list" / "RL cards" = is:reserved (cards on the Reserved List)
