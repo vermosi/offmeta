@@ -277,7 +277,7 @@ serve(async (req) => {
 
 CRITICAL RULES:
 1. Output ONLY the Scryfall query string - no explanations, no card names, no formatting
-2. ALWAYS include "-game:mtgo -game:arena" to exclude digital-only cards (do NOT use game:paper as it excludes valid cards)
+2. Do NOT add game filters unless the user specifically asks for paper/digital cards
 3. Prefer BROADER queries when uncertain - it's better to return more results than miss relevant cards
 4. "Spells" means ONLY instants and sorceries: (t:instant or t:sorcery)
 5. Never fabricate or guess card names, abilities, or mechanics
