@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { searchCards } from "@/lib/scryfall";
 import { ScryfallCard } from "@/types/card";
+import { useAnalytics } from "@/hooks/useAnalytics";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
 const CardModal = lazy(() => import("@/components/CardModal"));
@@ -22,6 +23,7 @@ const Index = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const [lastSearchResult, setLastSearchResult] = useState<SearchResult | null>(null);
   const searchBarRef = useRef<UnifiedSearchBarHandle>(null);
+  const { trackSearch, trackCardClick, trackPagination, trackAffiliateClick } = useAnalytics();
 
   const {
     data: searchResult,
@@ -38,12 +40,41 @@ const Index = () => {
     setCurrentPage(1);
     setHasSearched(true);
     setLastSearchResult(result || null);
-  }, []);
+    
+    // Track search analytics
+    if (result) {
+      trackSearch({
+        query,
+        translated_query: result.scryfallQuery,
+        results_count: 0, // Will be updated when results come in
+      });
+    }
+  }, [trackSearch]);
 
   const handlePageChange = useCallback((newPage: number) => {
+    // Track pagination
+    trackPagination({
+      query: searchQuery,
+      from_page: currentPage,
+      to_page: newPage,
+    });
+    
     setCurrentPage(newPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
+  }, [currentPage, searchQuery, trackPagination]);
+
+  const handleCardClick = useCallback((card: ScryfallCard, index: number) => {
+    // Track card click
+    trackCardClick({
+      card_id: card.id,
+      card_name: card.name,
+      set_code: card.set,
+      rarity: card.rarity,
+      position_in_results: index,
+    });
+    
+    setSelectedCard(card);
+  }, [trackCardClick]);
 
   const handleTryExample = useCallback((query: string) => {
     searchBarRef.current?.triggerSearch(query);
@@ -165,7 +196,10 @@ const Index = () => {
 
             {/* Affiliate notice */}
             {lastSearchResult?.showAffiliate && cards.length > 0 && (
-              <AffiliateNotice searchQuery={searchQuery} />
+              <AffiliateNotice 
+                searchQuery={searchQuery} 
+                onAffiliateClick={() => trackAffiliateClick({ affiliate: "tcgplayer" })}
+              />
             )}
 
             {/* Cards Grid */}
@@ -183,7 +217,7 @@ const Index = () => {
                       role="listitem"
                       style={{ animationDelay: `${Math.min(index * 40, 400)}ms` }}
                     >
-                      <CardItem card={card} onClick={() => setSelectedCard(card)} />
+                      <CardItem card={card} onClick={() => handleCardClick(card, index)} />
                     </div>
                   ))}
                 </div>

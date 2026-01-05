@@ -19,6 +19,7 @@ import { ExternalLink, ShoppingCart, Loader2, Palette, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 // Format names that need special handling
 const FORMAT_DISPLAY_NAMES: Record<string, string> = {
@@ -64,11 +65,19 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
   const [isLoadingPrintings, setIsLoadingPrintings] = useState(false);
   const [activeTab, setActiveTab] = useState("details");
   const [refreshedPrices, setRefreshedPrices] = useState<{usd?: string; eur?: string} | null>(null);
+  const { trackCardModalView, trackAffiliateClick } = useAnalytics();
 
   useEffect(() => {
     if (card && open) {
       setIsLoadingPrintings(true);
       setRefreshedPrices(null);
+      
+      // Track modal view
+      trackCardModalView({
+        card_id: card.id,
+        card_name: card.name,
+        set_code: card.set,
+      });
       
       getCardPrintings(card.name)
         .then((data) => {
@@ -87,7 +96,30 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
       setPrintings([]);
       setRefreshedPrices(null);
     }
-  }, [card, open]);
+  }, [card, open, trackCardModalView]);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    if (card) {
+      trackCardModalView({
+        card_id: card.id,
+        card_name: card.name,
+        set_code: card.set,
+        tab_viewed: tab,
+      });
+    }
+  };
+
+  const handleAffiliateClick = (affiliate: "tcgplayer" | "cardmarket", url: string) => {
+    trackAffiliateClick({
+      card_id: card?.id,
+      card_name: card?.name,
+      affiliate,
+      price_usd: displayPrices.usd,
+      price_eur: displayPrices.eur,
+    });
+    window.open(url, "_blank");
+  };
 
   // Use refreshed prices if available, otherwise fall back to original card prices
   const displayPrices = {
@@ -160,7 +192,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
           <Button
             size="sm"
             className={cn("gap-2", isMobile ? "flex-1 h-9 text-xs" : "w-full")}
-            onClick={() => window.open(getTCGPlayerUrl(card), "_blank")}
+            onClick={() => handleAffiliateClick("tcgplayer", getTCGPlayerUrl(card))}
           >
             <ShoppingCart className="h-3.5 w-3.5" />
             TCGPlayer
@@ -174,7 +206,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
             variant="outline"
             size="sm"
             className={cn("gap-2", isMobile ? "flex-1 h-9 text-xs" : "w-full")}
-            onClick={() => window.open(getCardmarketUrl(card), "_blank")}
+            onClick={() => handleAffiliateClick("cardmarket", getCardmarketUrl(card))}
           >
             <ShoppingCart className="h-3.5 w-3.5" />
             Cardmarket
@@ -189,7 +221,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
 
       {/* Card Details Section */}
       <div className="flex flex-col min-h-0 flex-1">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col min-h-0">
           <div className={cn("border-b border-border/50", isMobile ? "px-4 py-3" : "p-4")}>
             {!isMobile && (
               <div className="flex items-start justify-between gap-4 mb-3">
