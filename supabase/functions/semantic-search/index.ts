@@ -278,11 +278,13 @@ serve(async (req) => {
 CRITICAL RULES:
 1. Output ONLY the Scryfall query string - no explanations, no card names, no formatting
 2. Do NOT add game filters unless the user specifically asks for paper/digital cards
-3. Prefer BROADER queries when uncertain - it's better to return more results than miss relevant cards
-4. "Spells" means ONLY instants and sorceries: (t:instant or t:sorcery)
-5. Never fabricate or guess card names, abilities, or mechanics
-6. If a term is ambiguous, translate it conservatively
-7. HASTE ORACLE TEXT: When user asks for cards that "give haste" / "grant haste" / "haste enablers", search BROADLY but NEVER break earlier constraints with a top-level "or". If you use OR, wrap the entire OR block in parentheses. Use: ((o:"you control" (o:"have haste" or o:"gain haste" or o:"gains haste")) or ((o:"target creature" or o:"another creature") o:"gains haste")).
+3. For ETB (enters the battlefield), ALWAYS use o:"enters" - NEVER use o:"enters the battlefield" as it returns limited results
+4. For LTB (leaves the battlefield), ALWAYS use o:"leaves" - NEVER use o:"leaves the battlefield"
+5. Prefer BROADER queries when uncertain - it's better to return more results than miss relevant cards
+6. "Spells" means ONLY instants and sorceries: (t:instant or t:sorcery)
+7. Never fabricate or guess card names, abilities, or mechanics
+8. If a term is ambiguous, translate it conservatively
+9. HASTE ORACLE TEXT: When user asks for cards that "give haste" / "grant haste" / "haste enablers", search BROADLY but NEVER break earlier constraints with a top-level "or". If you use OR, wrap the entire OR block in parentheses. Use: ((o:"you control" (o:"have haste" or o:"gain haste" or o:"gains haste")) or ((o:"target creature" or o:"another creature") o:"gains haste")).
 
 LEGALITY & BAN STATUS (CRITICAL - use these exact syntaxes):
 - "banned in X" = banned:X (e.g., "banned in commander" → banned:commander)
