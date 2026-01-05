@@ -610,13 +610,13 @@ PRECON & PRODUCT SLANG:
 SECRET LAIR SPECIFIC DROPS (CRITICAL - all use e:sld plus themed card names):
 When users ask for cards from a specific Secret Lair collaboration or theme, ALL Secret Lair drops share set code "sld" so you MUST filter by card names, artist, or characteristics.
 
-VIDEO GAME COLLABORATIONS:
-- "sonic secret lair" / "sonic the hedgehog" = e:sld (Sonic OR Shadow OR Knuckles OR Tails OR Eggman OR "Chaos Emeralds")
-- "god of war secret lair" = e:sld (Kratos OR Atreus OR "Blades of Chaos" OR Freya)
-- "last of us secret lair" = e:sld (Joel OR Ellie OR Clicker)
-- "uncharted secret lair" = e:sld (Drake OR Nathan OR Sully)
-- "street fighter secret lair" = e:sld (Ryu OR "Ken, Burning" OR Chun-Li OR Blanka OR Dhalsim OR Guile OR Zangief OR "E. Honda")
-- "fortnite secret lair" = e:sld ("Battle Bus" OR "Cuddle Team" OR "Supply Llama" OR "Shrinking Storm")
+VIDEO GAME COLLABORATIONS (use exact card names to avoid false matches):
+- "sonic secret lair" / "sonic the hedgehog" = e:sld ("Sonic, Lord of Speed" OR "Tails, Sonic's Best Friend" OR "Knuckles, Echidna Guardian" OR "Shadow, Edgy Rival" OR "Dr. Eggman, Master of Machines" OR "Amy Rose, Sonic's Sweetheart" OR "Piko Piko Hammer" OR "Chaos Emeralds" OR "Gold Ring")
+- "god of war secret lair" = e:sld ("Kratos, Godslayer" OR "Atreus, Loki Revealed" OR "Blades of Chaos" OR "Leviathan Axe" OR "Mimir, Smartest Man Alive")
+- "last of us secret lair" = e:sld ("Joel, Survivor of the Outbreak" OR "Ellie, Survivor of the Outbreak" OR "Clicker")
+- "uncharted secret lair" = e:sld ("Nathan Drake" OR "Victor Sullivan" OR "Chloe Frazer")
+- "street fighter secret lair" = e:sld ("Ryu, World Warrior" OR "Ken, Burning Brawler" OR "Chun-Li, Countless Kicks" OR "Blanka, Ferocious Friend" OR "Dhalsim, Pliable Pacifist" OR "Guile, Sonic Soldier" OR "Zangief, the Red Cyclone" OR "E. Honda, Sumo Champion")
+- "fortnite secret lair" = e:sld ("Battle Bus" OR "Cuddle Team Leader" OR "Supply Llama" OR "Shrinking Storm" OR "Crack the Vault")
 
 POP CULTURE COLLABORATIONS:
 - "stranger things secret lair" = e:sld (Eleven OR "Jim Hopper" OR Demogorgon OR "Mind Flayer")
