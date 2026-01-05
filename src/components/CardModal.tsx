@@ -279,7 +279,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
             {displayPrices.eur_foil && (
               <Button
                 size="sm"
-                variant="ghost"
+                variant="outline"
                 className="gap-2 w-full justify-between"
                 onClick={() => {
                   const baseUrl = selectedPrinting?.purchase_uris?.cardmarket || getCardmarketUrl(card);
