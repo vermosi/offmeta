@@ -165,10 +165,12 @@ const Index = () => {
         {/* Footer */}
         <Footer />
 
-        {/* Card Modal - lazy loaded */}
-        <Suspense fallback={null}>
-          <CardModal card={selectedCard} open={!!selectedCard} onClose={() => setSelectedCard(null)} />
-        </Suspense>
+        {/* Card Modal - lazy loaded only when needed */}
+        {selectedCard && (
+          <Suspense fallback={null}>
+            <CardModal card={selectedCard} open={true} onClose={() => setSelectedCard(null)} />
+          </Suspense>
+        )}
       </div>
     </ErrorBoundary>
   );
