@@ -2,12 +2,13 @@
  * Modal/drawer component for displaying detailed card information.
  * Shows card image, oracle text, prices, printings, and format legality.
  * Uses Dialog on desktop and Drawer on mobile for optimal UX.
+ * Supports double-faced cards with a Transform button.
  * @module components/CardModal
  */
 
 import { useState, useEffect } from "react";
 import { ScryfallCard } from "@/types/card";
-import { getCardImage, getRarityColor } from "@/lib/scryfall";
+import { getCardImage, getRarityColor, isDoubleFacedCard, getCardFaceDetails } from "@/lib/scryfall";
 import { getCardPrintings, getTCGPlayerUrl, getCardmarketUrl, CardPrinting } from "@/lib/card-printings";
 import { ManaCost } from "./ManaSymbol";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -15,7 +16,7 @@ import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ExternalLink, ShoppingCart, Loader2, Palette, X } from "lucide-react";
+import { ExternalLink, ShoppingCart, Loader2, Palette, X, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -65,7 +66,18 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
   const [isLoadingPrintings, setIsLoadingPrintings] = useState(false);
   const [activeTab, setActiveTab] = useState("details");
   const [refreshedPrices, setRefreshedPrices] = useState<{usd?: string; eur?: string} | null>(null);
+  const [currentFace, setCurrentFace] = useState(0);
+  const [isFlipping, setIsFlipping] = useState(false);
   const { trackCardModalView, trackAffiliateClick } = useAnalytics();
+
+  const isDoubleFaced = card ? isDoubleFacedCard(card) : false;
+
+  // Reset face when modal opens/closes or card changes
+  useEffect(() => {
+    if (open) {
+      setCurrentFace(0);
+    }
+  }, [card, open]);
 
   useEffect(() => {
     if (card && open) {
@@ -98,6 +110,14 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
     }
   }, [card, open, trackCardModalView]);
 
+  const handleTransform = () => {
+    setIsFlipping(true);
+    setTimeout(() => {
+      setCurrentFace(prev => prev === 0 ? 1 : 0);
+      setTimeout(() => setIsFlipping(false), 150);
+    }, 150);
+  };
+
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
     if (card) {
@@ -129,7 +149,8 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
 
   if (!card) return null;
 
-  const imageUrl = getCardImage(card, "large");
+  const imageUrl = getCardImage(card, "large", currentFace);
+  const faceDetails = getCardFaceDetails(card, currentFace);
 
   const englishPrintings = printings
     .filter((p) => p.lang === "en")
@@ -159,31 +180,52 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
           "flex gap-4 w-full",
           isMobile ? "items-start" : "flex-col items-center"
         )}>
-          <img
-            src={imageUrl}
-            alt={card.name}
-            className={cn(
-              "rounded-xl shadow-lg",
-              isMobile ? "w-24 flex-shrink-0" : "w-full max-w-[220px]"
-            )}
-          />
+          <div className={cn(
+            "relative",
+            isMobile ? "w-24 flex-shrink-0" : "w-full max-w-[220px]"
+          )}>
+            <img
+              src={imageUrl}
+              alt={faceDetails.name}
+              className={cn(
+                "rounded-xl shadow-lg w-full transition-transform duration-300",
+                isFlipping && "scale-x-0"
+              )}
+            />
+          </div>
           
           {isMobile && (
             <div className="flex-1 min-w-0 space-y-2">
               <div>
                 <h2 className="text-base font-semibold text-foreground tracking-tight line-clamp-2">
-                  {card.name}
+                  {faceDetails.name}
                 </h2>
-                <p className="text-xs text-muted-foreground line-clamp-1">{card.type_line}</p>
-                {card.mana_cost && (
+                <p className="text-xs text-muted-foreground line-clamp-1">{faceDetails.type_line}</p>
+                {faceDetails.mana_cost && (
                   <div className="mt-1.5">
-                    <ManaCost cost={card.mana_cost} size="sm" />
+                    <ManaCost cost={faceDetails.mana_cost} size="sm" />
                   </div>
                 )}
               </div>
             </div>
           )}
         </div>
+        
+        {/* Transform Button for double-faced cards */}
+        {isDoubleFaced && (
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "gap-2 mt-3",
+              isMobile ? "w-full" : "max-w-[220px] w-full"
+            )}
+            onClick={handleTransform}
+          >
+            <RefreshCw className={cn("h-3.5 w-3.5", isFlipping && "animate-spin")} />
+            Transform
+          </Button>
+        )}
         
         <div className={cn(
           "w-full",
@@ -227,12 +269,12 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div className="space-y-1">
                   <h2 className="text-lg font-semibold text-foreground tracking-tight">
-                    {card.name}
+                    {faceDetails.name}
                   </h2>
-                  <p className="text-sm text-muted-foreground">{card.type_line}</p>
+                  <p className="text-sm text-muted-foreground">{faceDetails.type_line}</p>
                 </div>
-                {card.mana_cost && (
-                  <ManaCost cost={card.mana_cost} size="md" />
+                {faceDetails.mana_cost && (
+                  <ManaCost cost={faceDetails.mana_cost} size="md" />
                 )}
               </div>
             )}
@@ -260,28 +302,28 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                 <Badge variant="secondary">{card.set_name}</Badge>
               </div>
 
-              {card.oracle_text && (
+              {faceDetails.oracle_text && (
                 <div className="space-y-1.5">
                   <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Card Text
                   </h3>
                   <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                    {card.oracle_text}
+                    {faceDetails.oracle_text}
                   </p>
                 </div>
               )}
 
-              {card.flavor_text && (
+              {faceDetails.flavor_text && (
                 <p className="text-sm text-muted-foreground italic border-l-2 border-border pl-3">
-                  {card.flavor_text}
+                  {faceDetails.flavor_text}
                 </p>
               )}
 
-              {(card.power || card.toughness) && (
+              {(faceDetails.power || faceDetails.toughness) && (
                 <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted/50 rounded-lg border border-border/50">
-                  <span className="font-semibold text-foreground">{card.power}</span>
+                  <span className="font-semibold text-foreground">{faceDetails.power}</span>
                   <span className="text-muted-foreground">/</span>
-                  <span className="font-semibold text-foreground">{card.toughness}</span>
+                  <span className="font-semibold text-foreground">{faceDetails.toughness}</span>
                 </div>
               )}
 

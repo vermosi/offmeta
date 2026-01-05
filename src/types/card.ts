@@ -84,6 +84,10 @@ export interface ScryfallCard {
     power?: string;
     /** Toughness if this face is a creature */
     toughness?: string;
+    /** Flavor text for this face */
+    flavor_text?: string;
+    /** Color indicator for faces without mana cost */
+    color_indicator?: string[];
     /** Image URLs for this specific face */
     image_uris?: {
       small: string;
