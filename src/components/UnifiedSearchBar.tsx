@@ -159,31 +159,28 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
   const showExamples = !query;
 
   return (
-    <search className="space-y-8 max-w-2xl mx-auto" role="search" aria-label="Card search">
-      {/* Search input */}
-      <div className="relative group">
-        {/* Multi-layer glow effect */}
+    <search className="space-y-6 max-w-xl mx-auto" role="search" aria-label="Card search">
+      {/* Search input - Clean, elevated surface */}
+      <div className="relative">
         <div 
-          className={`absolute -inset-1 rounded-3xl bg-gradient-to-r from-accent/30 via-accent/50 to-accent/30 blur-xl transition-all duration-700 ${isFocused ? 'opacity-100 scale-105' : 'opacity-0 scale-100'}`}
-          aria-hidden="true"
-        />
-        <div 
-          className={`absolute -inset-0.5 rounded-2xl bg-accent/20 blur-md transition-opacity duration-500 ${isFocused ? 'opacity-100' : 'opacity-0'}`}
-          aria-hidden="true"
-        />
-        
-        <div 
-          className={`relative flex items-center gap-3 p-2.5 rounded-2xl glass-strong transition-all duration-300 ${isFocused ? 'ring-2 ring-accent/50 ring-offset-2 ring-offset-background' : ''}`}
+          className={`
+            relative flex items-center gap-2 p-1.5 rounded-xl border bg-card
+            transition-all duration-200
+            ${isFocused 
+              ? 'border-foreground/20 shadow-lg ring-2 ring-ring ring-offset-2 ring-offset-background' 
+              : 'border-border shadow-sm hover:border-muted-foreground/30 hover:shadow-md'
+            }
+          `}
         >
           <label htmlFor="search-input" className="sr-only">
             Search for Magic cards using natural language
           </label>
           
           <div 
-            className="flex items-center justify-center w-12 h-12 rounded-xl bg-accent/15 text-accent"
+            className="flex items-center justify-center w-10 h-10 rounded-lg bg-secondary text-muted-foreground"
             aria-hidden="true"
           >
-            <Search className="h-5 w-5" />
+            <Search className="h-4 w-4" />
           </div>
           
           <input
@@ -196,7 +193,7 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            className="flex-1 bg-transparent text-lg sm:text-xl text-foreground placeholder:text-muted-foreground focus:outline-none py-3"
+            className="flex-1 bg-transparent text-base text-foreground placeholder:text-muted-foreground focus:outline-none py-2 px-1"
             autoComplete="off"
             autoCorrect="off"
             spellCheck="false"
@@ -206,26 +203,27 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
           {query && (
             <Button
               variant="ghost"
-              size="icon"
+              size="icon-sm"
               aria-label="Clear search"
-              className="h-11 w-11 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 min-h-0 min-w-0 focus-ring"
+              className="text-muted-foreground hover:text-foreground min-h-0 min-w-0"
               onClick={() => {
                 setQuery('');
                 inputRef.current?.focus();
               }}
             >
-              <X className="h-5 w-5" aria-hidden="true" />
+              <X className="h-4 w-4" aria-hidden="true" />
             </Button>
           )}
 
           <Button
             onClick={() => handleSearch()}
             disabled={isSearching || isLoading || !query.trim()}
-            className="h-12 px-6 rounded-xl magnetic bg-accent hover:bg-accent/90 text-accent-foreground gap-2 font-semibold focus-ring shadow-lg shadow-accent/25"
+            variant="accent"
+            className="h-10 px-4 rounded-lg gap-2 font-medium"
             aria-label={isSearching ? 'Searching...' : 'Search for cards'}
           >
             {isSearching ? (
-              <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             ) : (
               <>
                 <Search className="h-4 w-4" aria-hidden="true" />
@@ -252,9 +250,9 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
           role="group"
           aria-label="Recent searches"
         >
-          <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
-            <History className="h-4 w-4" aria-hidden="true" />
-            <span>Recent</span>
+          <span className="inline-flex items-center gap-1.5 text-small text-muted-foreground">
+            <History className="h-3.5 w-3.5" aria-hidden="true" />
+            Recent
           </span>
           {history.slice(0, isMobile ? 2 : 4).map((historyQuery, index) => (
             <button
@@ -263,12 +261,12 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
                 setQuery(historyQuery);
                 handleSearch(historyQuery);
               }}
-              className="group inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-sm text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-all duration-300 min-h-0 min-w-0 focus-ring"
+              className="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-card text-small text-muted-foreground hover:text-foreground hover:border-muted-foreground/30 hover:bg-secondary transition-all duration-200 min-h-0 min-w-0 focus-ring"
               aria-label={`Search for ${historyQuery}`}
             >
               <span>{historyQuery.length > (isMobile ? 18 : 28) ? `${historyQuery.slice(0, isMobile ? 18 : 28)}...` : historyQuery}</span>
               <ArrowRight 
-                className="h-3.5 w-3.5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" 
+                className="h-3 w-3 opacity-0 -translate-x-0.5 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" 
                 aria-hidden="true"
               />
             </button>
@@ -276,9 +274,9 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
           <button
             onClick={clearHistory}
             aria-label="Clear search history"
-            className="p-2 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors min-h-0 min-w-0 focus-ring"
+            className="p-1.5 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors min-h-0 min-w-0 focus-ring"
           >
-            <X className="h-4 w-4" aria-hidden="true" />
+            <X className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
         </div>
       )}
@@ -287,16 +285,16 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
       {showExamples && (
         <div 
           className="flex flex-wrap items-center justify-center gap-2 animate-reveal" 
-          style={{ animationDelay: '100ms' }}
+          style={{ animationDelay: '75ms' }}
           role="group"
           aria-label="Example searches"
         >
-          <span className="text-sm text-muted-foreground">Try:</span>
+          <span className="text-small text-muted-foreground">Try:</span>
           {EXAMPLE_QUERIES.slice(0, isMobile ? 2 : 4).map((example) => (
             <button
               key={example}
               onClick={() => setQuery(example)}
-              className="px-4 py-2 rounded-full text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-300 min-h-0 min-w-0 focus-ring"
+              className="px-3 py-1.5 rounded-full text-small text-muted-foreground hover:text-foreground hover:bg-secondary transition-all duration-200 min-h-0 min-w-0 focus-ring"
               aria-label={`Try searching for ${example}`}
             >
               "{isMobile && example.length > 20 ? `${example.slice(0, 20)}...` : example}"
