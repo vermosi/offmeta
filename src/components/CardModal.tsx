@@ -68,14 +68,16 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
   const [refreshedPrices, setRefreshedPrices] = useState<{usd?: string; eur?: string} | null>(null);
   const [currentFace, setCurrentFace] = useState(0);
   const [isFlipping, setIsFlipping] = useState(false);
+  const [selectedPrinting, setSelectedPrinting] = useState<CardPrinting | null>(null);
   const { trackCardModalView, trackAffiliateClick } = useAnalytics();
 
   const isDoubleFaced = card ? isDoubleFacedCard(card) : false;
 
-  // Reset face when modal opens/closes or card changes
+  // Reset face and selected printing when modal opens/closes or card changes
   useEffect(() => {
     if (open) {
       setCurrentFace(0);
+      setSelectedPrinting(null);
     }
   }, [card, open]);
 
@@ -149,8 +151,15 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
 
   if (!card) return null;
 
-  const imageUrl = getCardImage(card, "large", currentFace);
+  // Use selected printing's image if available, otherwise use the card's image
+  const displayImageUrl = selectedPrinting?.image_uris?.large 
+    ? selectedPrinting.image_uris.large 
+    : getCardImage(card, "large", currentFace);
   const faceDetails = getCardFaceDetails(card, currentFace);
+
+  // Display the selected printing's set info if selected
+  const displaySetName = selectedPrinting?.set_name || card.set_name;
+  const displayRarity = selectedPrinting?.rarity || card.rarity;
 
   const englishPrintings = printings
     .filter((p) => p.lang === "en")
@@ -185,7 +194,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
             isMobile ? "w-24 flex-shrink-0" : "w-full max-w-[220px]"
           )}>
             <img
-              src={imageUrl}
+              src={displayImageUrl}
               alt={faceDetails.name}
               className={cn(
                 "rounded-xl shadow-lg w-full transition-transform duration-300",
@@ -296,10 +305,10 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
           <TabsContent value="details" className="flex-1 m-0 min-h-0 overflow-auto">
             <div className={cn("space-y-4", isMobile ? "p-4" : "p-4")}>
               <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant={getRarityVariant(card.rarity) as any} className="capitalize">
-                  {card.rarity}
+                <Badge variant={getRarityVariant(displayRarity) as any} className="capitalize">
+                  {displayRarity}
                 </Badge>
-                <Badge variant="secondary">{card.set_name}</Badge>
+                <Badge variant="secondary">{displaySetName}</Badge>
               </div>
 
               {faceDetails.oracle_text && (
@@ -366,9 +375,19 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                   </div>
                   
                   {englishPrintings.slice(0, 20).map((printing) => (
-                    <div
+                    <button
                       key={printing.id}
-                      className="grid grid-cols-[1fr_60px_60px] gap-2 px-2 py-2 rounded-lg hover:bg-muted/50 text-sm items-center"
+                      onClick={() => {
+                        setSelectedPrinting(printing);
+                        setRefreshedPrices({
+                          usd: printing.prices.usd,
+                          eur: printing.prices.eur
+                        });
+                      }}
+                      className={cn(
+                        "grid grid-cols-[1fr_60px_60px] gap-2 px-2 py-2 rounded-lg hover:bg-muted/50 text-sm items-center w-full text-left transition-colors",
+                        (selectedPrinting?.id === printing.id || (!selectedPrinting && card.id === printing.id)) && "bg-primary/10 ring-1 ring-primary/30"
+                      )}
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         <span className={cn(
@@ -386,7 +405,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                       <span className="text-right font-medium text-blue-500 text-xs">
                         {printing.prices.eur ? `€${printing.prices.eur}` : "—"}
                       </span>
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}
