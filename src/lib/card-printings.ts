@@ -90,18 +90,26 @@ export async function getCardPrintings(cardName: string): Promise<CardPrinting[]
     
     const data: PrintingsResult = await response.json();
     
-    const printings = data.data.map((card) => ({
-      id: card.id,
-      set: card.set,
-      set_name: card.set_name,
-      collector_number: (card as any).collector_number || "",
-      rarity: card.rarity,
-      prices: card.prices,
-      image_uris: card.image_uris,
-      purchase_uris: (card as any).purchase_uris,
-      released_at: (card as any).released_at || "",
-      lang: (card as any).lang || "en",
-    }));
+    const printings = data.data.map((card) => {
+      // Some cards (like Secret Lair or double-faced) have images in card_faces instead of image_uris
+      let imageUris = card.image_uris;
+      if (!imageUris && card.card_faces && card.card_faces.length > 0) {
+        imageUris = card.card_faces[0].image_uris;
+      }
+      
+      return {
+        id: card.id,
+        set: card.set,
+        set_name: card.set_name,
+        collector_number: (card as any).collector_number || "",
+        rarity: card.rarity,
+        prices: card.prices,
+        image_uris: imageUris,
+        purchase_uris: (card as any).purchase_uris,
+        released_at: (card as any).released_at || "",
+        lang: (card as any).lang || "en",
+      };
+    });
 
     // Cache the result
     printingsCache.set(cacheKey, { data: printings, timestamp: Date.now() });
