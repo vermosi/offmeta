@@ -24,8 +24,13 @@ export default {
           'BlinkMacSystemFont',
           'Segoe UI',
           'Roboto',
-          'Helvetica Neue',
-          'Arial',
+          'sans-serif'
+        ],
+        display: [
+          'Space Grotesk',
+          'Inter',
+          '-apple-system',
+          'BlinkMacSystemFont',
           'sans-serif'
         ],
         mono: [
@@ -33,7 +38,6 @@ export default {
           'SF Mono',
           'ui-monospace',
           'Menlo',
-          'Monaco',
           'monospace'
         ]
       },
@@ -73,25 +77,18 @@ export default {
         },
         brand: {
           DEFAULT: 'hsl(var(--brand))',
-          foreground: 'hsl(var(--brand-foreground))'
+          foreground: 'hsl(var(--brand-foreground))',
+          glow: 'hsl(var(--brand-glow))'
         },
         success: 'hsl(var(--success))',
-        warning: 'hsl(var(--warning))',
-        sidebar: {
-          DEFAULT: 'hsl(var(--sidebar-background))',
-          foreground: 'hsl(var(--sidebar-foreground))',
-          primary: 'hsl(var(--sidebar-primary))',
-          'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-          accent: 'hsl(var(--sidebar-accent))',
-          'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-          border: 'hsl(var(--sidebar-border))',
-          ring: 'hsl(var(--sidebar-ring))'
-        }
+        warning: 'hsl(var(--warning))'
       },
       borderRadius: {
         lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)'
+        md: 'calc(var(--radius) - 4px)',
+        sm: 'calc(var(--radius) - 8px)',
+        '2xl': '1.25rem',
+        '3xl': '1.5rem'
       },
       keyframes: {
         'accordion-down': {
@@ -137,14 +134,8 @@ export default {
         'slide-in-right': 'slide-in-right 0.3s ease-out',
         'slide-out-right': 'slide-out-right 0.3s ease-out'
       },
-      boxShadow: {
-        '2xs': 'var(--shadow-2xs)',
-        xs: 'var(--shadow-xs)',
-        sm: 'var(--shadow-sm)',
-        md: 'var(--shadow-md)',
-        lg: 'var(--shadow-lg)',
-        xl: 'var(--shadow-xl)',
-        '2xl': 'var(--shadow-2xl)'
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))'
       },
       spacing: {
         '18': '4.5rem',
