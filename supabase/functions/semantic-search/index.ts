@@ -370,6 +370,52 @@ PRICE PREFERENCES:
 - "oldest printing" = add prefer:oldest
 - "newest printing" = add prefer:newest
 
+FUNDAMENTAL MTG SHORTHAND (ALWAYS interpret these first):
+- "ETB" / "etb" = "enters the battlefield" (use o:"enters the battlefield" or o:"enters")
+- "enters" / "on enter" / "when this enters" / "enter trigger" / "ETB trigger" = o:"enters the battlefield"
+- "LTB" / "ltb" = "leaves the battlefield" (use o:"leaves the battlefield" or o:"leaves")
+- "leaves" / "when this leaves" = o:"leaves the battlefield"
+- "dies" / "death trigger" / "when this dies" = o:"dies"
+- "blink" / "flicker" / "exile and return" / "temporary exile" = function:flicker or (o:"exile" o:"return" o:"battlefield")
+- "bounce" / "return to hand" = o:"return" o:"to" o:"hand"
+- "mill" / "deck mill" = function:mill or o:"mill" or (o:"library" o:"graveyard")
+- "self mill" = o:"mill" (refers to milling your own library)
+- "loot" / "draw then discard" = o:"draw" o:"discard" (in that order, like Merfolk Looter)
+- "rummage" / "discard then draw" = o:"discard" o:"draw" (in that order, like Faithless Looting)
+- "wheel" / "mass draw" = o:"each player" (o:"discards" o:"draws" or o:"discard" o:"hand")
+- "graveyard" / "GY" / "yard" = graveyard (use o:"graveyard" for effects)
+- "library" / "deck" = library (use o:"library" for effects)
+- "tutor" / "search library" = function:tutor or o:"search your library"
+- "counter" / "counterspell" = function:counterspell or (t:instant o:"counter target")
+- "mana value" / "MV" / "CMC" = mv: or cmc: (mana value operator)
+- "ramp" / "mana acceleration" = function:ramp
+- "fixing" / "color fixing" / "mana fixing" = produces: or (o:"add" o:"any color")
+- "tap out" = spend all mana (context-dependent)
+- "combat trick" / "pump spell" = t:instant (o:"target creature gets" or o:"+")
+- "swing" / "attack" = attack/attacking (use o:"attack" or o:"attacking")
+- "chump block" = blocking context (use o:"block" or o:"blocking")
+- "go wide" = tokens/many creatures (use function:token-generator or o:"create" o:"token")
+- "go tall" = one large creature (use pow>=4 or o:"+1/+1 counter")
+- "face" / "face damage" = o:"damage" o:"player" or o:"damage" o:"opponent"
+- "card advantage" / "CA" / "value engine" = function:card-draw or (o:"draw" o:"whenever")
+- "cantrip" = mv<=2 (t:instant or t:sorcery) o:"draw a card"
+- "aggro" = low mv aggressive creatures (mv<=3 pow>=2)
+- "stax" / "prison" = function:stax or (o:"can't" or o:"pay" o:"or")
+- "voltron" = function:voltron or (t:aura or t:equipment)
+- "aristocrats" = t:creature (o:"whenever" o:"dies")
+- "storm" = o:"storm" or o:"copy" o:"for each"
+- "burn" = o:"damage" o:"any target" or o:"damage" o:"player"
+- "double ETB effects" / "ETB doublers" = o:"triggers an additional time"
+- "commander" / "EDH" = f:commander (or the format)
+- "commander tax" = o:"commander" o:"additional" o:"cost" or o:"times" o:"cast"
+- "bomb" = strong limited card (context: high power, mv 4-7)
+- "removal" = function:removal or (o:"destroy" or o:"exile") o:"target"
+- "curve" = mana cost distribution (use mv: operator)
+- "topdeck" = o:"top of" o:"library" or o:"reveal the top"
+- "one of" / "two of" = quantity context (not searchable)
+- "meta" / "tech" = metagame context (not directly searchable)
+- "scoop" / "GG" = concede context (not searchable)
+
 MTG SLANG DEFINITIONS (fallback when no function tag exists):
 - "ramp" = function:ramp OR (o:"search" o:"land" (o:"onto the battlefield" or o:"put it onto"))
 - "ramp spells" = (t:instant or t:sorcery) function:ramp
