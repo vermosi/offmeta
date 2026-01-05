@@ -1,34 +1,4 @@
 @tailwind base;
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes staggerFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.animate-slide-up {
-  animation: slideUp 0.4s ease-out forwards;
-}
-
-.animate-stagger-fade-in {
-  animation: staggerFadeIn 0.3s ease-out forwards;
-}
 @tailwind components;
 @tailwind utilities;
 
@@ -92,24 +62,6 @@
     --shadow-xl: 0 20px 40px -5px hsl(222 47% 11% / 0.12), 0 8px 16px -6px hsl(222 47% 11% / 0.06);
     --shadow-2xl: 0 25px 50px -12px hsl(222 47% 11% / 0.18);
 
-    /* Sidebar */
-    --sidebar-background: 220 14% 96%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 222 47% 25%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 217 19% 88%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 220 13% 82%;
-    --sidebar-ring: 222 47% 31%;
-    --sidebar: 220 14% 96%;
-
-    /* Charts - MTG colors */
-    --chart-1: 217 80% 50%;
-    --chart-2: 142 71% 29%;
-    --chart-3: 32 95% 40%;
-    --chart-4: 270 60% 50%;
-    --chart-5: 0 72% 45%;
-
     /* Typography */
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
@@ -157,24 +109,6 @@
     --shadow-lg: 0 10px 20px -3px hsl(0 0% 0% / 0.45), 0 4px 8px -4px hsl(0 0% 0% / 0.3);
     --shadow-xl: 0 20px 40px -5px hsl(0 0% 0% / 0.5), 0 8px 16px -6px hsl(0 0% 0% / 0.35);
     --shadow-2xl: 0 25px 50px -12px hsl(0 0% 0% / 0.6);
-
-    /* Sidebar */
-    --sidebar-background: 222 41% 10%;
-    --sidebar-foreground: 210 40% 96%;
-    --sidebar-primary: 38 92% 50%;
-    --sidebar-primary-foreground: 222 47% 7%;
-    --sidebar-accent: 217 33% 17%;
-    --sidebar-accent-foreground: 210 40% 96%;
-    --sidebar-border: 217 33% 17%;
-    --sidebar-ring: 38 92% 50%;
-    --sidebar: 222 41% 10%;
-
-    /* Charts */
-    --chart-1: 217 91% 60%;
-    --chart-2: 142 71% 45%;
-    --chart-3: 38 92% 50%;
-    --chart-4: 270 60% 60%;
-    --chart-5: 0 72% 55%;
   }
 }
 
@@ -188,7 +122,6 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    /* Safe area for notched devices */
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
 
@@ -196,9 +129,7 @@
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans);
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-    /* Prevent pull-to-refresh */
     overscroll-behavior-y: contain;
-    /* Improve touch scrolling */
     -webkit-overflow-scrolling: touch;
   }
 
@@ -206,17 +137,9 @@
     @apply font-semibold tracking-tight;
   }
 
-  h1 {
-    @apply text-2xl sm:text-3xl md:text-4xl;
-  }
-
-  h2 {
-    @apply text-xl sm:text-2xl md:text-3xl;
-  }
-
-  h3 {
-    @apply text-lg sm:text-xl md:text-2xl;
-  }
+  h1 { @apply text-2xl sm:text-3xl md:text-4xl; }
+  h2 { @apply text-xl sm:text-2xl md:text-3xl; }
+  h3 { @apply text-lg sm:text-xl md:text-2xl; }
 
   /* Minimum touch target size (44x44px recommended by Apple) */
   button, a, [role="button"] {
@@ -224,7 +147,6 @@
     min-width: 44px;
   }
 
-  /* Exception for inline elements */
   .inline-touch {
     min-height: auto;
     min-width: auto;
@@ -232,79 +154,15 @@
 }
 
 @layer utilities {
-  /* Glassmorphism */
-  .glass {
-    @apply bg-card/80 backdrop-blur-xl border border-border/50;
-  }
-
-  .glass-subtle {
-    @apply bg-card/50 backdrop-blur-md;
-  }
-
-  /* Smooth transitions */
-  .transition-smooth {
+  /* Card hover effects - used by CardItem */
+  .card-hover {
     @apply transition-all duration-200 ease-out;
   }
-
-  .transition-spring {
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  /* Interactive states */
-  .interactive {
-    @apply transition-smooth cursor-pointer;
-  }
-
-  .interactive:hover {
-    @apply bg-accent;
-  }
-
-  .interactive:active {
-    transform: scale(0.98);
-  }
-
-  /* Card hover effects */
-  .card-hover {
-    @apply transition-smooth;
-  }
-
   .card-hover:hover {
     @apply shadow-lg -translate-y-0.5;
   }
 
-  /* Focus rings - Apple style */
-  .focus-ring {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
-  }
-
-  /* Text utilities */
-  .text-balance {
-    text-wrap: balance;
-  }
-
-  .text-pretty {
-    text-wrap: pretty;
-  }
-
-  /* Gradient text */
-  .text-gradient {
-    @apply bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent;
-  }
-
-  /* Subtle background pattern */
-  .bg-grid {
-    background-image: 
-      linear-gradient(to right, hsl(var(--border) / 0.3) 1px, transparent 1px),
-      linear-gradient(to bottom, hsl(var(--border) / 0.3) 1px, transparent 1px);
-    background-size: 24px 24px;
-  }
-
-  .bg-dots {
-    background-image: radial-gradient(circle, hsl(var(--border)) 1px, transparent 1px);
-    background-size: 16px 16px;
-  }
-
-  /* Shimmer loading */
+  /* Shimmer loading - used by skeleton */
   .shimmer {
     background: linear-gradient(
       90deg,
@@ -321,76 +179,14 @@
     100% { background-position: -200% 0; }
   }
 
-  /* Fade in animation */
-  .animate-in {
-    animation: fadeIn 0.3s ease-out forwards;
-  }
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  /* Scale in animation */
-  .animate-scale-in {
-    animation: scaleIn 0.2s ease-out forwards;
-  }
-
-  @keyframes scaleIn {
-    from {
-      opacity: 0;
-      transform: scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-
-  /* Slide in animation */
-  @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: var(--slide-from, translateY(16px));
-    }
-    to {
-      opacity: 1;
-      transform: translate(0);
-    }
-  }
-
-  .animate-slide-in {
-    animation: slideIn 0.4s ease-out forwards;
-  }
-
-  /* Subtle pulse */
-  .animate-pulse-subtle {
-    animation: pulseSoft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-
-  @keyframes pulseSoft {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
-  }
-
-  /* Voice input animations */
+  /* Voice input animations - used by VoiceSearchButton */
   .animate-pulse-ring {
     animation: pulseRing 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
   @keyframes pulseRing {
-    0%, 100% { 
-      box-shadow: 0 0 0 0 hsl(var(--destructive) / 0.4);
-    }
-    50% { 
-      box-shadow: 0 0 0 8px hsl(var(--destructive) / 0);
-    }
+    0%, 100% { box-shadow: 0 0 0 0 hsl(var(--destructive) / 0.4); }
+    50% { box-shadow: 0 0 0 8px hsl(var(--destructive) / 0); }
   }
 
   .animate-ping-slow {
@@ -405,22 +201,9 @@
   }
 }
 
-/* Safe area utilities */
-.safe-top {
-  padding-top: env(safe-area-inset-top);
-}
-
-.safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-.safe-left {
-  padding-left: env(safe-area-inset-left);
-}
-
-.safe-right {
-  padding-right: env(safe-area-inset-right);
-}
+/* Safe area utilities - used by Index */
+.safe-top { padding-top: env(safe-area-inset-top); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
@@ -440,7 +223,6 @@
   @apply bg-muted-foreground/30;
 }
 
-/* Hide scrollbar on mobile for cleaner look */
 @media (max-width: 640px) {
   ::-webkit-scrollbar {
     width: 0;
@@ -453,7 +235,6 @@
   @apply bg-primary/20 text-foreground;
 }
 
-/* Prevent text selection on interactive elements on mobile */
 @media (max-width: 640px) {
   button, a, [role="button"] {
     -webkit-user-select: none;
