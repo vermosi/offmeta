@@ -114,18 +114,64 @@ export async function getCardByName(name: string): Promise<ScryfallCard> {
  * Handles both single-faced and double-faced cards.
  * @param card - The card to get the image for
  * @param size - Image size: "small" (146px), "normal" (488px), or "large" (672px)
+ * @param faceIndex - For multi-faced cards, which face to show (0 = front, 1 = back)
  * @returns The image URL, or placeholder if no image available
  */
-export function getCardImage(card: ScryfallCard, size: "small" | "normal" | "large" = "normal"): string {
+export function getCardImage(card: ScryfallCard, size: "small" | "normal" | "large" = "normal", faceIndex: number = 0): string {
   if (card.image_uris) {
     return card.image_uris[size];
   }
   
+  if (card.card_faces && card.card_faces[faceIndex]?.image_uris) {
+    return card.card_faces[faceIndex].image_uris[size];
+  }
+  
+  // Fallback to first face if requested face doesn't exist
   if (card.card_faces && card.card_faces[0]?.image_uris) {
     return card.card_faces[0].image_uris[size];
   }
   
   return "/placeholder.svg";
+}
+
+/**
+ * Check if a card is double-faced (transform, modal, etc.)
+ * @param card - The card to check
+ * @returns True if the card has multiple faces with separate images
+ */
+export function isDoubleFacedCard(card: ScryfallCard): boolean {
+  return !!(card.card_faces && card.card_faces.length > 1 && card.card_faces[0]?.image_uris);
+}
+
+/**
+ * Get the details for a specific face of a card
+ * @param card - The card
+ * @param faceIndex - Which face (0 = front, 1 = back)
+ * @returns The face data or the card itself if single-faced
+ */
+export function getCardFaceDetails(card: ScryfallCard, faceIndex: number = 0) {
+  if (card.card_faces && card.card_faces[faceIndex]) {
+    const face = card.card_faces[faceIndex];
+    return {
+      name: face.name,
+      mana_cost: face.mana_cost,
+      type_line: face.type_line,
+      oracle_text: face.oracle_text,
+      power: face.power,
+      toughness: face.toughness,
+      flavor_text: face.flavor_text,
+    };
+  }
+  
+  return {
+    name: card.name,
+    mana_cost: card.mana_cost,
+    type_line: card.type_line,
+    oracle_text: card.oracle_text,
+    power: card.power,
+    toughness: card.toughness,
+    flavor_text: card.flavor_text,
+  };
 }
 
 /**
