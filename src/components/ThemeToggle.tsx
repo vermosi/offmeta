@@ -1,3 +1,7 @@
+/**
+ * Theme toggle component for switching between light and dark modes.
+ */
+
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
@@ -13,7 +17,7 @@ export function ThemeToggle() {
   if (!mounted) {
     return (
       <button 
-        className="relative h-10 w-10 rounded-xl glass flex items-center justify-center"
+        className="relative h-11 w-11 rounded-xl glass border border-border/50 flex items-center justify-center"
         aria-label="Toggle theme"
       >
         <Sun className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
@@ -26,7 +30,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="relative h-10 w-10 rounded-xl glass flex items-center justify-center text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 active:scale-95 focus-ring"
+      className="relative h-11 w-11 rounded-xl magnetic glass border border-border/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-all duration-300 focus-ring"
       aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
       aria-pressed={isDark}
     >

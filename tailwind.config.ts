@@ -78,10 +78,8 @@ export default {
         brand: {
           DEFAULT: 'hsl(var(--brand))',
           foreground: 'hsl(var(--brand-foreground))',
-          glow: 'hsl(var(--brand-glow))'
-        },
-        success: 'hsl(var(--success))',
-        warning: 'hsl(var(--warning))'
+          glow: 'hsl(var(--glow))'
+        }
       },
       borderRadius: {
         lg: 'var(--radius)',
