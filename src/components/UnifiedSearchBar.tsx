@@ -6,7 +6,7 @@ import { useState, useRef, useCallback, useImperativeHandle, forwardRef } from '
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Search, Loader2, X, ArrowRight, History, Sparkles } from 'lucide-react';
+import { Search, Loader2, X, ArrowRight, History } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { SearchFeedback } from '@/components/SearchFeedback';
 
@@ -159,27 +159,44 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
   const showExamples = !query;
 
   return (
-    <div className="space-y-6 max-w-3xl mx-auto">
+    <search className="space-y-6 max-w-2xl mx-auto" role="search" aria-label="Card search">
       {/* Search input */}
       <div className="relative group">
-        {/* Glow effect on focus */}
-        <div className={`absolute -inset-1 rounded-2xl bg-gradient-to-r from-primary/50 to-primary/30 blur-lg transition-opacity duration-500 ${isFocused ? 'opacity-100' : 'opacity-0'}`} />
+        {/* Focus ring glow */}
+        <div 
+          className={`absolute -inset-0.5 rounded-2xl bg-accent/20 blur-md transition-opacity duration-500 ${isFocused ? 'opacity-100' : 'opacity-0'}`}
+          aria-hidden="true"
+        />
         
-        <div className={`relative flex items-center gap-3 p-2 rounded-2xl glass-strong transition-all duration-300 ${isFocused ? 'border-primary/50' : 'border-border/50'}`}>
-          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10">
-            <Sparkles className="h-5 w-5 text-primary" />
+        <div 
+          className={`relative flex items-center gap-3 p-2 rounded-2xl glass-strong transition-all duration-300 ${isFocused ? 'ring-2 ring-ring ring-offset-2 ring-offset-background' : ''}`}
+        >
+          <label htmlFor="search-input" className="sr-only">
+            Search for Magic cards using natural language
+          </label>
+          
+          <div 
+            className="flex items-center justify-center w-11 h-11 rounded-xl bg-accent/10"
+            aria-hidden="true"
+          >
+            <Search className="h-5 w-5 text-accent" />
           </div>
           
           <input
             ref={inputRef}
-            type="text"
+            id="search-input"
+            type="search"
             placeholder="Describe what you're looking for..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            className="flex-1 bg-transparent text-base sm:text-lg text-foreground placeholder:text-muted-foreground/60 focus:outline-none py-3"
+            className="flex-1 bg-transparent text-base sm:text-lg text-foreground placeholder:text-muted-foreground focus:outline-none py-3"
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck="false"
+            aria-describedby="search-hint"
           />
           
           {query && (
@@ -187,26 +204,27 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
               variant="ghost"
               size="icon"
               aria-label="Clear search"
-              className="h-10 w-10 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 min-h-0 min-w-0"
+              className="h-10 w-10 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 min-h-0 min-w-0 focus-ring"
               onClick={() => {
                 setQuery('');
                 inputRef.current?.focus();
               }}
             >
-              <X className="h-5 w-5" />
+              <X className="h-5 w-5" aria-hidden="true" />
             </Button>
           )}
 
           <Button
             onClick={() => handleSearch()}
             disabled={isSearching || isLoading || !query.trim()}
-            className="h-12 px-6 rounded-xl magnetic bg-primary hover:bg-primary/90 text-primary-foreground gap-2 font-medium"
+            className="h-11 px-5 rounded-xl hover-lift bg-primary hover:bg-primary/90 text-primary-foreground gap-2 font-medium focus-ring"
+            aria-label={isSearching ? 'Searching...' : 'Search for cards'}
           >
             {isSearching ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
             ) : (
               <>
-                <Search className="h-5 w-5" />
+                <Search className="h-4 w-4" aria-hidden="true" />
                 <span className="hidden sm:inline">Search</span>
               </>
             )}
@@ -217,14 +235,22 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
             translatedQuery={lastTranslatedQuery} 
           />
         </div>
+        
+        <p id="search-hint" className="sr-only">
+          Type your search query and press Enter or click Search
+        </p>
       </div>
 
       {/* Recent searches */}
       {history.length > 0 && showExamples && (
-        <div className="flex flex-wrap items-center justify-center gap-2 animate-reveal">
+        <div 
+          className="flex flex-wrap items-center justify-center gap-2 animate-reveal"
+          role="group"
+          aria-label="Recent searches"
+        >
           <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-            <History className="h-3.5 w-3.5" />
-            Recent
+            <History className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>Recent</span>
           </span>
           {history.slice(0, isMobile ? 2 : 4).map((historyQuery, index) => (
             <button
@@ -233,37 +259,47 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
                 setQuery(historyQuery);
                 handleSearch(historyQuery);
               }}
-              className="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full glass text-sm text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all duration-300 min-h-0 min-w-0"
+              className="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full glass text-sm text-muted-foreground hover:text-foreground transition-all duration-300 min-h-0 min-w-0 focus-ring"
+              aria-label={`Search for ${historyQuery}`}
             >
-              {historyQuery.length > (isMobile ? 18 : 28) ? `${historyQuery.slice(0, isMobile ? 18 : 28)}...` : historyQuery}
-              <ArrowRight className="h-3 w-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+              <span>{historyQuery.length > (isMobile ? 18 : 28) ? `${historyQuery.slice(0, isMobile ? 18 : 28)}...` : historyQuery}</span>
+              <ArrowRight 
+                className="h-3 w-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" 
+                aria-hidden="true"
+              />
             </button>
           ))}
           <button
             onClick={clearHistory}
-            aria-label="Clear history"
-            className="p-1.5 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors min-h-0 min-w-0"
+            aria-label="Clear search history"
+            className="p-1.5 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors min-h-0 min-w-0 focus-ring"
           >
-            <X className="h-3.5 w-3.5" />
+            <X className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
         </div>
       )}
 
       {/* Example queries */}
       {showExamples && (
-        <div className="flex flex-wrap items-center justify-center gap-2 animate-reveal" style={{ animationDelay: '100ms' }}>
+        <div 
+          className="flex flex-wrap items-center justify-center gap-2 animate-reveal" 
+          style={{ animationDelay: '100ms' }}
+          role="group"
+          aria-label="Example searches"
+        >
           <span className="text-xs text-muted-foreground">Try:</span>
           {EXAMPLE_QUERIES.slice(0, isMobile ? 2 : 4).map((example) => (
             <button
               key={example}
               onClick={() => setQuery(example)}
-              className="px-3 py-1.5 rounded-full text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-300 min-h-0 min-w-0"
+              className="px-3 py-1.5 rounded-full text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-300 min-h-0 min-w-0 focus-ring"
+              aria-label={`Try searching for ${example}`}
             >
               "{isMobile && example.length > 20 ? `${example.slice(0, 20)}...` : example}"
             </button>
           ))}
         </div>
       )}
-    </div>
+    </search>
   );
 });
