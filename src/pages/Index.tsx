@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { searchCards } from "@/lib/scryfall";
 import { ScryfallCard } from "@/types/card";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Sparkles } from "lucide-react";
 
 const CardModal = lazy(() => import("@/components/CardModal"));
 
@@ -55,7 +55,7 @@ const Index = () => {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background">
+      <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background grain gradient-bg">
         {/* Skip link for keyboard accessibility */}
         <a href="#main-content" className="skip-link">
           Skip to main content
@@ -63,29 +63,36 @@ const Index = () => {
 
         {/* Header */}
         <header 
-          className="relative z-50 safe-top border-b border-border/50"
+          className="relative z-50 safe-top"
           role="banner"
         >
-          <div className="glass-strong">
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <div className="glass-strong border-b border-border/30">
+            <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-5 flex items-center justify-between">
               <a 
                 href="/" 
                 className="group flex items-center gap-3 min-h-0 focus-ring rounded-lg"
                 aria-label="OffMeta - Home"
               >
-                <svg 
-                  viewBox="0 0 32 32" 
-                  className="h-9 w-9 text-foreground transition-transform duration-300 group-hover:scale-105"
-                  aria-hidden="true"
-                  focusable="false"
-                >
-                  <path d="M16 2L30 16L16 30L2 16L16 2Z" fill="currentColor" opacity="0.08"/>
-                  <path d="M16 2L30 16L16 30L2 16L16 2Z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-                  <path d="M8 16C8 16 11 11 16 11C21 11 24 16 24 16C24 16 21 21 16 21C11 21 8 16 8 16Z" fill="currentColor" opacity="0.12"/>
-                  <path d="M8 16C8 16 11 11 16 11C21 11 24 16 24 16C24 16 21 21 16 21C11 21 8 16 8 16Z" stroke="currentColor" strokeWidth="1.25" fill="none"/>
-                  <circle cx="16" cy="16" r="2.5" fill="currentColor"/>
-                </svg>
-                <span className="text-lg font-semibold tracking-tight text-foreground">
+                <div className="relative">
+                  <svg 
+                    viewBox="0 0 32 32" 
+                    className="h-10 w-10 text-foreground transition-transform duration-500 group-hover:scale-110"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path d="M16 2L30 16L16 30L2 16L16 2Z" fill="currentColor" opacity="0.06"/>
+                    <path d="M16 2L30 16L16 30L2 16L16 2Z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+                    <path d="M8 16C8 16 11 11 16 11C21 11 24 16 24 16C24 16 21 21 16 21C11 21 8 16 8 16Z" fill="currentColor" opacity="0.1"/>
+                    <path d="M8 16C8 16 11 11 16 11C21 11 24 16 24 16C24 16 21 21 16 21C11 21 8 16 8 16Z" stroke="currentColor" strokeWidth="1.25" fill="none"/>
+                    <circle cx="16" cy="16" r="2.5" fill="currentColor"/>
+                  </svg>
+                  {/* Glow effect on hover */}
+                  <div 
+                    className="absolute inset-0 bg-accent/30 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                    aria-hidden="true"
+                  />
+                </div>
+                <span className="text-xl font-semibold tracking-tight text-foreground">
                   OffMeta
                 </span>
               </a>
@@ -97,27 +104,35 @@ const Index = () => {
         {/* Hero Section - only show before search */}
         {!hasSearched && (
           <section 
-            className="relative z-10 pt-20 sm:pt-28 lg:pt-36 pb-8 px-4 sm:px-6 lg:px-8"
+            className="relative z-10 pt-24 sm:pt-32 lg:pt-40 pb-12 px-6 sm:px-8 lg:px-12"
             aria-labelledby="hero-heading"
           >
-            <div className="max-w-3xl mx-auto text-center stagger-children">
+            <div className="max-w-4xl mx-auto text-center stagger-children">
+              {/* Eyebrow badge */}
+              <div className="mb-8">
+                <span className="pill-accent">
+                  <Sparkles className="h-4 w-4" aria-hidden="true" />
+                  Natural Language Search
+                </span>
+              </div>
+              
               <h1 
                 id="hero-heading"
-                className="leading-[1.1] mb-8 text-foreground"
+                className="leading-[0.95] mb-10 text-foreground font-bold"
               >
                 Find Magic Cards
                 <br />
-                <span className="text-accent">Like You Think</span>
+                <span className="text-accent glow-text">Like You Think</span>
               </h1>
               
-              <div className="space-y-2 mb-16">
-                <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed">
+              <div className="space-y-3 mb-20">
+                <p className="text-xl sm:text-2xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
                   Describe what you're looking for in plain English.
                 </p>
-                <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed">
+                <p className="text-xl sm:text-2xl text-muted-foreground leading-relaxed">
                   No complex syntax. No guessing.
                 </p>
-                <p className="text-lg sm:text-xl text-foreground font-medium leading-relaxed">
+                <p className="text-xl sm:text-2xl text-foreground font-medium leading-relaxed">
                   Just natural conversation.
                 </p>
               </div>
@@ -128,10 +143,10 @@ const Index = () => {
         {/* Main content */}
         <main 
           id="main-content"
-          className={`relative z-10 flex-1 px-4 sm:px-6 lg:px-8 ${hasSearched ? 'pt-8' : ''} pb-8 max-w-5xl mx-auto w-full safe-bottom`}
+          className={`relative z-10 flex-1 px-6 sm:px-8 lg:px-12 ${hasSearched ? 'pt-10' : ''} pb-12 max-w-6xl mx-auto w-full safe-bottom`}
           role="main"
         >
-          <div className="space-y-8 sm:space-y-12">
+          <div className="space-y-10 sm:space-y-14">
             {/* Search section */}
             <UnifiedSearchBar 
               ref={searchBarRef}
@@ -157,9 +172,9 @@ const Index = () => {
                 role="status"
                 aria-live="polite"
               >
-                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-sm text-muted-foreground tabular-nums">
+                <span className="pill">
                   <span 
-                    className="h-1.5 w-1.5 rounded-full bg-accent" 
+                    className="h-2 w-2 rounded-full bg-accent animate-pulse" 
                     aria-hidden="true"
                   />
                   {totalCards.toLocaleString()} cards found
@@ -176,7 +191,7 @@ const Index = () => {
             {cards.length > 0 ? (
               <>
                 <div 
-                  className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-5"
+                  className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5 sm:gap-6"
                   role="list"
                   aria-label="Search results"
                 >
@@ -185,7 +200,7 @@ const Index = () => {
                       key={card.id} 
                       className="animate-reveal"
                       role="listitem"
-                      style={{ animationDelay: `${index * 40}ms` }}
+                      style={{ animationDelay: `${Math.min(index * 50, 500)}ms` }}
                     >
                       <CardItem card={card} onClick={() => setSelectedCard(card)} />
                     </div>
@@ -195,7 +210,7 @@ const Index = () => {
                 {/* Pagination */}
                 {(hasMore || currentPage > 1) && (
                   <nav 
-                    className="flex items-center justify-center gap-4 pt-8"
+                    className="flex items-center justify-center gap-4 pt-10"
                     aria-label="Pagination"
                   >
                     <Button 
@@ -203,14 +218,14 @@ const Index = () => {
                       size="lg"
                       onClick={() => handlePageChange(currentPage - 1)} 
                       disabled={currentPage === 1 || isSearching} 
-                      className="gap-2 hover-lift glass border-border/50"
+                      className="gap-2 magnetic glass border-border/50"
                       aria-label="Go to previous page"
                     >
                       <ChevronLeft className="h-4 w-4" aria-hidden="true" />
                       <span className="hidden sm:inline">Previous</span>
                     </Button>
                     <div 
-                      className="px-5 py-2.5 rounded-full glass text-sm font-medium text-muted-foreground tabular-nums"
+                      className="pill tabular-nums"
                       aria-current="page"
                     >
                       Page {currentPage}
@@ -220,7 +235,7 @@ const Index = () => {
                       size="lg"
                       onClick={() => handlePageChange(currentPage + 1)} 
                       disabled={!hasMore || isSearching} 
-                      className="gap-2 hover-lift glass border-border/50"
+                      className="gap-2 magnetic glass border-border/50"
                       aria-label="Go to next page"
                     >
                       <span className="hidden sm:inline">Next</span>
@@ -231,16 +246,22 @@ const Index = () => {
               </>
             ) : isSearching ? (
               <div 
-                className="flex flex-col items-center justify-center py-24 animate-reveal"
+                className="flex flex-col items-center justify-center py-28 animate-reveal"
                 role="status"
                 aria-live="polite"
                 aria-busy="true"
               >
-                <Loader2 
-                  className="h-10 w-10 text-muted-foreground animate-spin" 
-                  aria-hidden="true"
-                />
-                <p className="mt-6 text-muted-foreground">Searching the multiverse...</p>
+                <div className="relative">
+                  <Loader2 
+                    className="h-12 w-12 text-accent animate-spin" 
+                    aria-hidden="true"
+                  />
+                  <div 
+                    className="absolute inset-0 bg-accent/30 rounded-full blur-2xl animate-pulse"
+                    aria-hidden="true"
+                  />
+                </div>
+                <p className="mt-8 text-lg text-muted-foreground">Searching the multiverse...</p>
                 <span className="sr-only">Loading search results</span>
               </div>
             ) : hasSearched && totalCards === 0 ? (
