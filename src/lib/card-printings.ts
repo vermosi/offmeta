@@ -14,6 +14,7 @@ export interface CardPrinting {
   set_name: string;
   collector_number: string;
   rarity: string;
+  artist?: string;
   prices: {
     usd?: string;
     usd_foil?: string;
@@ -103,6 +104,7 @@ export async function getCardPrintings(cardName: string): Promise<CardPrinting[]
         set_name: card.set_name,
         collector_number: (card as any).collector_number || "",
         rarity: card.rarity,
+        artist: card.artist,
         prices: card.prices,
         image_uris: imageUris,
         purchase_uris: (card as any).purchase_uris,
