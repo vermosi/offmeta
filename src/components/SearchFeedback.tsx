@@ -12,6 +12,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { MessageSquarePlus, Loader2 } from 'lucide-react';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface SearchFeedbackProps {
   originalQuery: string;
@@ -22,6 +23,7 @@ export function SearchFeedback({ originalQuery, translatedQuery }: SearchFeedbac
   const [open, setOpen] = useState(false);
   const [issue, setIssue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { trackFeedback } = useAnalytics();
 
   const triggerProcessing = async () => {
     try {
@@ -50,6 +52,12 @@ export function SearchFeedback({ originalQuery, translatedQuery }: SearchFeedbac
       });
 
       if (error) throw error;
+
+      // Track feedback submission
+      trackFeedback({
+        query: originalQuery,
+        issue_description: issue.trim(),
+      });
 
       toast.success('Feedback submitted', {
         description: 'Thanks! We\'ll use this to improve searches.'
