@@ -243,7 +243,11 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
           <Button
             size="sm"
             className={cn("gap-2", isMobile ? "flex-1 h-9 text-xs" : "w-full")}
-            onClick={() => handleAffiliateClick("tcgplayer", getTCGPlayerUrl(card))}
+            onClick={() => {
+              // Use the selected printing's purchase URL if available
+              const url = selectedPrinting?.purchase_uris?.tcgplayer || getTCGPlayerUrl(card);
+              handleAffiliateClick("tcgplayer", url);
+            }}
           >
             <ShoppingCart className="h-3.5 w-3.5" />
             TCGPlayer
@@ -257,7 +261,11 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
             variant="outline"
             size="sm"
             className={cn("gap-2", isMobile ? "flex-1 h-9 text-xs" : "w-full")}
-            onClick={() => handleAffiliateClick("cardmarket", getCardmarketUrl(card))}
+            onClick={() => {
+              // Use the selected printing's purchase URL if available
+              const url = selectedPrinting?.purchase_uris?.cardmarket || getCardmarketUrl(card);
+              handleAffiliateClick("cardmarket", url);
+            }}
           >
             <ShoppingCart className="h-3.5 w-3.5" />
             Cardmarket
