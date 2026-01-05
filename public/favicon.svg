@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Diamond card shape -->
+  <path d="M16 2L30 16L16 30L2 16L16 2Z" fill="#7c3aed" opacity="0.15"/>
+  <path d="M16 2L30 16L16 30L2 16L16 2Z" stroke="#7c3aed" stroke-width="2" fill="none"/>
+  <!-- Inner eye shape -->
+  <path d="M8 16C8 16 11 11 16 11C21 11 24 16 24 16C24 16 21 21 16 21C11 21 8 16 8 16Z" fill="#7c3aed" opacity="0.2"/>
+  <path d="M8 16C8 16 11 11 16 11C21 11 24 16 24 16C24 16 21 21 16 21C11 21 8 16 8 16Z" stroke="#7c3aed" stroke-width="1.5" fill="none"/>
+  <!-- Pupil -->
+  <circle cx="16" cy="16" r="3" fill="#7c3aed"/>
+</svg>

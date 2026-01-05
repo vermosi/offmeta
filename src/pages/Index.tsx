@@ -12,7 +12,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { searchCards } from "@/lib/scryfall";
 import { ScryfallCard } from "@/types/card";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import offmetaLogo from "@/assets/offmeta-logo.png";
+
 
 // Lazy load heavy modal component
 const CardModal = lazy(() => import("@/components/CardModal"));
@@ -65,12 +65,18 @@ const Index = () => {
         <header className="border-b border-border/60 bg-gradient-to-r from-background via-background to-background sticky top-0 z-50 safe-top">
           <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
           <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <img 
-                src={offmetaLogo} 
-                alt="OffMeta" 
-                className="h-8 w-8 sm:h-9 sm:w-9 dark:invert dark:brightness-200"
-              />
+            <div className="flex items-center gap-2.5">
+              <svg 
+                viewBox="0 0 32 32" 
+                className="h-8 w-8 sm:h-9 sm:w-9 text-primary"
+                aria-hidden="true"
+              >
+                <path d="M16 2L30 16L16 30L2 16L16 2Z" fill="currentColor" opacity="0.15"/>
+                <path d="M16 2L30 16L16 30L2 16L16 2Z" stroke="currentColor" strokeWidth="2" fill="none"/>
+                <path d="M8 16C8 16 11 11 16 11C21 11 24 16 24 16C24 16 21 21 16 21C11 21 8 16 8 16Z" fill="currentColor" opacity="0.2"/>
+                <path d="M8 16C8 16 11 11 16 11C21 11 24 16 24 16C24 16 21 21 16 21C11 21 8 16 8 16Z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+                <circle cx="16" cy="16" r="3" fill="currentColor"/>
+              </svg>
               <h1 className="text-base sm:text-lg font-semibold tracking-tight text-foreground">OffMeta</h1>
             </div>
             <ThemeToggle />
