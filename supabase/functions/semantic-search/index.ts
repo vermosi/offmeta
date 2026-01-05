@@ -559,7 +559,7 @@ COMMANDER-SPECIFIC SLANG:
 PRECON & PRODUCT SLANG:
 - "precon" / "precon commanders" = is:commander t:legendary t:creature
 - "starter deck" = st:starter (starter deck products)
-- "secret lair" = e:sld (Secret Lair drops)
+- "secret lair" = e:sld (Secret Lair drops - see SECRET LAIR SPECIFIC DROPS for themed searches)
 - "collector booster" = is:extendedart or is:borderless or is:showcase (collector booster exclusives)
 - "box toppers" = is:boxtopper (box topper promos)
 - "buy-a-box" = is:buyabox (buy-a-box promos)
@@ -606,6 +606,50 @@ PRECON & PRODUCT SLANG:
 - "eternal masters" = e:ema (Eternal Masters)
 - "iconic masters" = e:ima (Iconic Masters)
 - "ultimate masters" = e:uma (Ultimate Masters)
+
+SECRET LAIR SPECIFIC DROPS (CRITICAL - all use e:sld plus themed card names):
+When users ask for cards from a specific Secret Lair collaboration or theme, ALL Secret Lair drops share set code "sld" so you MUST filter by card names, artist, or characteristics.
+
+VIDEO GAME COLLABORATIONS:
+- "sonic secret lair" / "sonic the hedgehog" = e:sld (Sonic OR Shadow OR Knuckles OR Tails OR Eggman OR "Chaos Emeralds")
+- "god of war secret lair" = e:sld (Kratos OR Atreus OR "Blades of Chaos" OR Freya)
+- "last of us secret lair" = e:sld (Joel OR Ellie OR Clicker)
+- "uncharted secret lair" = e:sld (Drake OR Nathan OR Sully)
+- "street fighter secret lair" = e:sld (Ryu OR "Ken, Burning" OR Chun-Li OR Blanka OR Dhalsim OR Guile OR Zangief OR "E. Honda")
+- "fortnite secret lair" = e:sld ("Battle Bus" OR "Cuddle Team" OR "Supply Llama" OR "Shrinking Storm")
+
+POP CULTURE COLLABORATIONS:
+- "stranger things secret lair" = e:sld (Eleven OR "Jim Hopper" OR Demogorgon OR "Mind Flayer")
+- "walking dead secret lair" = e:sld (Negan OR Michonne OR "Rick, Steadfast" OR Daryl OR Glenn)
+- "arcane secret lair" = e:sld (Jinx OR Vi OR Jayce OR Caitlyn)
+- "princess bride secret lair" = e:sld (Westley OR Buttercup OR "Inigo Montoya" OR Fezzik OR Vizzini)
+- "transformers secret lair" = e:sld (Optimus OR Megatron OR Bumblebee OR Starscream)
+- "jurassic world secret lair" / "jurassic park" = e:sld (t:dinosaur OR "Jurassic")
+- "monty python secret lair" / "killer rabbit" / "holy grail" = e:sld ("Killer Rabbit" OR "Black Knight" OR "Swallow")
+
+ANIME/MANGA COLLABORATIONS:
+- "attack on titan secret lair" = e:sld (Eren OR Mikasa OR "Colossal Titan")
+- "final fantasy secret lair" = e:sld ("Final Fantasy")
+
+ARTIST SECRET LAIRS (search by artist name):
+- "bob ross secret lair" = e:sld a:"Bob Ross"
+- "fiona staples secret lair" = e:sld a:"Fiona Staples"
+- "seb mckinnon secret lair" = e:sld a:"Seb McKinnon"
+- "thomas kinkade secret lair" = e:sld a:"Thomas Kinkade"
+- "dan frazier secret lair" = e:sld a:"Dan Frazier"
+- "rebecca guay secret lair" = e:sld a:"Rebecca Guay"
+- "mark poole secret lair" = e:sld a:"Mark Poole"
+
+THEMED SECRET LAIRS:
+- "phyrexian secret lair" = e:sld (is:phyrexian OR o:phyrexian)
+- "cat secret lair" = e:sld t:cat
+- "dog secret lair" = e:sld t:dog
+- "goblin secret lair" = e:sld t:goblin
+- "pride secret lair" / "pride across the multiverse" = e:sld ("Pride" OR "Bearscape")
+- "slime secret lair" = e:sld (t:ooze OR Slime)
+
+FALLBACK FOR UNKNOWN SECRET LAIRS:
+If the Secret Lair name isn't listed, search e:sld with character names or keywords from the collaboration.
 
 RESERVED LIST & SPECIAL STATUS:
 - "reserved list" / "RL cards" = is:reserved (cards on the Reserved List)
