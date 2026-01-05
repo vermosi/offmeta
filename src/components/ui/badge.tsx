@@ -4,30 +4,23 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {
     variants: {
       variant: {
-        default: "border-transparent bg-primary text-primary-foreground hover:bg-primary/90",
-        secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "text-foreground border-border bg-transparent hover:bg-accent",
-        ghost: "border-transparent bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground",
+        default: "border-transparent bg-primary text-primary-foreground",
+        secondary: "border-transparent bg-secondary text-secondary-foreground",
+        destructive: "border-transparent bg-destructive text-destructive-foreground",
+        outline: "text-foreground border-border",
         // Card rarity variants
-        common: "border-transparent bg-muted text-muted-foreground",
-        uncommon: "border-transparent bg-zinc-400/20 text-zinc-600 dark:bg-zinc-500/20 dark:text-zinc-400",
-        rare: "border-transparent bg-amber-500/15 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400",
-        mythic: "border-transparent bg-orange-500/15 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400",
-        // MTG color identity badges
-        white: "border-transparent bg-amber-100 text-amber-900 dark:bg-amber-200/20 dark:text-amber-200",
-        blue: "border-transparent bg-blue-500/15 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400",
-        black: "border-transparent bg-zinc-800/90 text-zinc-100 dark:bg-zinc-700 dark:text-zinc-200",
-        red: "border-transparent bg-red-500/15 text-red-700 dark:bg-red-500/20 dark:text-red-400",
-        green: "border-transparent bg-green-500/15 text-green-700 dark:bg-green-500/20 dark:text-green-400",
+        common: "border-transparent bg-secondary text-muted-foreground",
+        uncommon: "border-transparent bg-zinc-200/50 text-zinc-700 dark:bg-zinc-700/50 dark:text-zinc-300",
+        rare: "border-transparent bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+        mythic: "border-transparent bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
         // Status badges
-        success: "border-transparent bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400",
-        warning: "border-transparent bg-amber-500/15 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400",
-        info: "border-transparent bg-blue-500/15 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400",
+        success: "border-transparent bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
+        warning: "border-transparent bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+        info: "border-transparent bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
       },
       size: {
         default: "px-2 py-0.5 text-xs",
