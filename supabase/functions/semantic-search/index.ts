@@ -27,10 +27,10 @@
  * ```json
  * {
  *   "success": true,
- *   "scryfallQuery": "game:paper t:creature o:\"create\" o:\"treasure\"",
+ *   "scryfallQuery": "t:creature o:\"create\" o:\"treasure\"",
  *   "explanation": {
  *     "readable": "Searching for: creatures that make treasure tokens",
- *     "assumptions": ["Added paper game filter"],
+ *     "assumptions": [],
  *     "confidence": 0.85
  *   },
  *   "showAffiliate": false
@@ -677,42 +677,42 @@ Mono-color:
 - "five color" / "WUBRG" = c=wubrg or id=wubrg
 
 QUERY TRANSLATION EXAMPLES:
-- "creatures that make treasure" → game:paper t:creature o:"create" o:"treasure"
-- "cheap green ramp spells" → game:paper c:g mv<=3 (t:instant or t:sorcery) o:"search" o:"land"
-- "green ramp" → game:paper c:g (o:"search" o:"land" or (t:creature o:"add" o:"{"))
-- "Rakdos sacrifice outlets" → game:paper id=br o:"sacrifice" o:":"
-- "blue counterspells that draw" → game:paper c:u t:instant o:"counter" o:"draw"
-- "white board wipes" → game:paper c:w o:"destroy all"
-- "lands that tap for any color" → game:paper t:land o:"add" o:"any color"
-- "black tutors" → game:paper c:b o:"search your library"
-- "white pillowfort cards" → game:paper c:w (o:"can't attack you" or o:"prevent" o:"damage")
-- "simic blink effects" → game:paper id=ug o:"exile" o:"return" o:"battlefield"
-- "gruul haste enablers" → game:paper id=rg o:/(creatures you control|other creatures you control) (have|gain) haste([.]| until| as| while|$)/
-- "gruul legendary creatures that give haste" → game:paper id=rg t:legendary t:creature o:/(creatures you control|other creatures you control) (have|gain) haste([.]| until| as| while|$)/
-- "sultai graveyard" → game:paper id=ubg o:"graveyard"
-- "red finishers" → game:paper c:r t:creature mv>=6 pow>=6
-- "stax pieces" → game:paper (o:"can't" or o:"pay" o:"or" or o:"each" o:"sacrifice")
-- "voltron equipment" → game:paper t:equipment o:"equipped creature gets"
-- "reanimation spells" → game:paper (t:instant or t:sorcery) o:"graveyard" o:"onto the battlefield"
-- "blue cantrips" → game:paper c:u mv<=2 (t:instant or t:sorcery) o:"draw a card"
-- "elf lords" → game:paper t:elf o:"other" o:"elf" o:"+"
-- "zombie tribal cards" → game:paper (t:zombie or o:"zombie" o:"you control")
-- "dragon finishers" → game:paper t:dragon mv>=5
-- "goblin sacrifice synergy" → game:paper t:goblin o:"sacrifice"
-- "vampire lifegain" → game:paper t:vampire o:"life"
-- "merfolk lords" → game:paper t:merfolk o:"other" o:"merfolk"
-- "partner commanders" → game:paper t:legendary t:creature o:"partner"
-- "backgrounds" → game:paper t:background
-- "experience counter commanders" → game:paper t:legendary t:creature o:"experience counter"
-- "CEDH fast mana" → game:paper f:commander t:artifact mv<=2 o:"add" o:"{"
-- "free counterspells" → game:paper t:instant o:"counter" o:"without paying"
-- "grave pact effects" → game:paper o:"whenever" o:"creature you control dies" o:"sacrifice"
-- "mana doublers" → game:paper o:"whenever" o:"tap" o:"for mana" o:"add"
-- "fetch lands" → game:paper t:land o:"search your library" o:"land"
-- "secret lair cards" → game:paper e:sld
-- "borderless planeswalkers" → game:paper is:borderless t:planeswalker
-- "commander precon staples" → game:paper is:commander f:commander
-- "showcase treatments" → game:paper is:showcase
+- "creatures that make treasure" → t:creature o:"create" o:"treasure"
+- "cheap green ramp spells" → c:g mv<=3 (t:instant or t:sorcery) o:"search" o:"land"
+- "green ramp" → c:g (o:"search" o:"land" or (t:creature o:"add" o:"{"))
+- "Rakdos sacrifice outlets" → id=br o:"sacrifice" o:":"
+- "blue counterspells that draw" → c:u t:instant o:"counter" o:"draw"
+- "white board wipes" → c:w o:"destroy all"
+- "lands that tap for any color" → t:land o:"add" o:"any color"
+- "black tutors" → c:b o:"search your library"
+- "white pillowfort cards" → c:w (o:"can't attack you" or o:"prevent" o:"damage")
+- "simic blink effects" → id=ug o:"exile" o:"return" o:"battlefield"
+- "gruul haste enablers" → id=rg o:/(creatures you control|other creatures you control) (have|gain) haste([.]| until| as| while|$)/
+- "gruul legendary creatures that give haste" → id=rg t:legendary t:creature o:/(creatures you control|other creatures you control) (have|gain) haste([.]| until| as| while|$)/
+- "sultai graveyard" → id=ubg o:"graveyard"
+- "red finishers" → c:r t:creature mv>=6 pow>=6
+- "stax pieces" → (o:"can't" or o:"pay" o:"or" or o:"each" o:"sacrifice")
+- "voltron equipment" → t:equipment o:"equipped creature gets"
+- "reanimation spells" → (t:instant or t:sorcery) o:"graveyard" o:"onto the battlefield"
+- "blue cantrips" → c:u mv<=2 (t:instant or t:sorcery) o:"draw a card"
+- "elf lords" → t:elf o:"other" o:"elf" o:"+"
+- "zombie tribal cards" → (t:zombie or o:"zombie" o:"you control")
+- "dragon finishers" → t:dragon mv>=5
+- "goblin sacrifice synergy" → t:goblin o:"sacrifice"
+- "vampire lifegain" → t:vampire o:"life"
+- "merfolk lords" → t:merfolk o:"other" o:"merfolk"
+- "partner commanders" → t:legendary t:creature o:"partner"
+- "backgrounds" → t:background
+- "experience counter commanders" → t:legendary t:creature o:"experience counter"
+- "CEDH fast mana" → f:commander t:artifact mv<=2 o:"add" o:"{"
+- "free counterspells" → t:instant o:"counter" o:"without paying"
+- "grave pact effects" → o:"whenever" o:"creature you control dies" o:"sacrifice"
+- "mana doublers" → o:"whenever" o:"tap" o:"for mana" o:"add"
+- "fetch lands" → t:land o:"search your library" o:"land"
+- "secret lair cards" → e:sld
+- "borderless planeswalkers" → is:borderless t:planeswalker
+- "commander precon staples" → is:commander f:commander
+- "showcase treatments" → is:showcase
 
 SET & UNIVERSE CODES:
 - Avatar/ATLA: e:tla
@@ -817,10 +817,6 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
       assumptions.push('"Ramp" interpreted as land-searching effects');
     }
     
-    if (!scryfallQuery.includes('game:paper')) {
-      scryfallQuery = 'game:paper ' + scryfallQuery;
-      assumptions.push('Added paper game filter');
-    }
 
     // Calculate confidence (simple heuristic)
     let confidence = 0.85;
