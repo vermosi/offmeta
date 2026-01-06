@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { UnifiedSearchBar, SearchResult, UnifiedSearchBarHandle } from "@/components/UnifiedSearchBar";
 import { SearchInterpretation } from "@/components/SearchInterpretation";
 import { SearchFilters } from "@/components/SearchFilters";
-import { AffiliateNotice } from "@/components/AffiliateNotice";
+
 import { CardItem } from "@/components/CardItem";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -25,7 +25,7 @@ const Index = () => {
   const [lastSearchResult, setLastSearchResult] = useState<SearchResult | null>(null);
   const [filteredCards, setFilteredCards] = useState<ScryfallCard[]>([]);
   const searchBarRef = useRef<UnifiedSearchBarHandle>(null);
-  const { trackSearch, trackCardClick, trackPagination, trackAffiliateClick } = useAnalytics();
+  const { trackSearch, trackCardClick, trackPagination } = useAnalytics();
 
   const {
     data: searchResult,
@@ -203,13 +203,6 @@ const Index = () => {
               </div>
             )}
 
-            {/* Affiliate notice */}
-            {lastSearchResult?.showAffiliate && cards.length > 0 && (
-              <AffiliateNotice 
-                searchQuery={searchQuery} 
-                onAffiliateClick={() => trackAffiliateClick({ affiliate: "tcgplayer" })}
-              />
-            )}
 
             {/* Filters and Sort - Show when we have results */}
             {cards.length > 0 && !isSearching && (
