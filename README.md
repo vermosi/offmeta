@@ -2,7 +2,7 @@
 
 [![Live Demo](https://img.shields.io/badge/Demo-offmeta.lovable.app-22c55e?style=for-the-badge)](https://offmeta.lovable.app)
 
-[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Proprietary License](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
@@ -206,3 +206,14 @@ npm run build
 2. **Mobile-first**: Always test on mobile. Use `useIsMobile()` hook for responsive behavior.
 3. **AI prompts**: The Gemini prompt in `semantic-search/index.ts` is critical for search quality. Test changes thoroughly.
 4. **Scryfall syntax**: Reference [Scryfall's syntax guide](https://scryfall.com/docs/syntax) when updating the AI prompt.
+
+---
+
+## Community & Legal
+
+| Document | Description |
+|----------|-------------|
+| [LICENSE](LICENSE) | Proprietary license - All Rights Reserved |
+| [CONTRIBUTING](CONTRIBUTING.md) | Contribution guidelines and terms |
+| [CODE OF CONDUCT](CODE_OF_CONDUCT.md) | Community behavior guidelines |
+| [SECURITY](SECURITY.md) | Security vulnerability reporting |
