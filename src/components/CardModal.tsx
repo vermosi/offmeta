@@ -189,42 +189,50 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
       {/* Card Image Section */}
       <div className={cn(
         "bg-muted/30 flex flex-col items-center",
-        isMobile ? "p-4 pb-3" : "p-5 border-r border-border/50"
+        isMobile ? "p-3" : "p-5 border-r border-border/50"
       )}>
-        <div className={cn(
-          "flex gap-4 w-full",
-          isMobile ? "items-start" : "flex-col items-center"
-        )}>
-          <div className={cn(
-            "relative",
-            isMobile ? "w-24 flex-shrink-0" : "w-full max-w-[220px]"
-          )}>
-            <img
-              src={displayImageUrl}
-              alt={faceDetails.name}
-              className={cn(
-                "rounded-xl shadow-lg w-full transition-transform duration-300",
-                isFlipping && "scale-x-0"
-              )}
-            />
-          </div>
-          
-          {isMobile && (
-            <div className="flex-1 min-w-0 space-y-2">
-              <div>
-                <h2 className="text-base font-semibold text-foreground tracking-tight line-clamp-2">
-                  {faceDetails.name}
-                </h2>
-                <p className="text-xs text-muted-foreground line-clamp-1">{faceDetails.type_line}</p>
-                {faceDetails.mana_cost && (
-                  <div className="mt-1.5">
-                    <ManaCost cost={faceDetails.mana_cost} size="sm" />
-                  </div>
+        {/* Mobile: Large centered artwork */}
+        {isMobile && (
+          <div className="w-full space-y-3">
+            <div className="relative w-full max-w-[200px] mx-auto">
+              <img
+                src={displayImageUrl}
+                alt={faceDetails.name}
+                className={cn(
+                  "rounded-xl shadow-lg w-full transition-transform duration-300",
+                  isFlipping && "scale-x-0"
                 )}
-              </div>
+              />
             </div>
-          )}
-        </div>
+            <div className="text-center space-y-1">
+              <h2 className="text-base font-semibold text-foreground tracking-tight">
+                {faceDetails.name}
+              </h2>
+              <p className="text-xs text-muted-foreground">{faceDetails.type_line}</p>
+              {faceDetails.mana_cost && (
+                <div className="flex justify-center mt-1">
+                  <ManaCost cost={faceDetails.mana_cost} size="sm" />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* Desktop: Side layout */}
+        {!isMobile && (
+          <div className="flex flex-col items-center w-full">
+            <div className="relative w-full max-w-[220px]">
+              <img
+                src={displayImageUrl}
+                alt={faceDetails.name}
+                className={cn(
+                  "rounded-xl shadow-lg w-full transition-transform duration-300",
+                  isFlipping && "scale-x-0"
+                )}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Transform button for double-faced cards */}
         {isDoubleFaced && (
