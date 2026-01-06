@@ -10,13 +10,13 @@ import { useState, useEffect } from "react";
 import { ScryfallCard } from "@/types/card";
 import { getCardImage, isDoubleFacedCard, getCardFaceDetails, getCardRulings, CardRuling } from "@/lib/scryfall";
 import { getCardPrintings, getTCGPlayerUrl, getCardmarketUrl, CardPrinting } from "@/lib/card-printings";
-import { getTCGPlayerMarketData, getTCGPlayerProductId, TCGPlayerMarketData, getLiveListings, LiveListingsData } from "@/lib/tcgplayer";
+
 import { ManaCost } from "./ManaSymbol";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, ShoppingCart, Loader2, Palette, X, RefreshCw, Sparkles, Monitor, Shield, ChevronDown, ChevronUp, Gavel, TrendingUp, Users, Package, Star } from "lucide-react";
+import { ExternalLink, ShoppingCart, Loader2, Palette, X, RefreshCw, Sparkles, Monitor, Shield, ChevronDown, ChevronUp, Gavel } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -62,10 +62,6 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
   const [rulings, setRulings] = useState<CardRuling[]>([]);
   const [isLoadingRulings, setIsLoadingRulings] = useState(false);
   const [showRulings, setShowRulings] = useState(false);
-  const [marketData, setMarketData] = useState<TCGPlayerMarketData | null>(null);
-  const [liveListings, setLiveListings] = useState<LiveListingsData | null>(null);
-  const [isLoadingMarket, setIsLoadingMarket] = useState(false);
-  const [showMarket, setShowMarket] = useState(false);
   const { trackCardModalView, trackAffiliateClick } = useAnalytics();
 
   const isDoubleFaced = card ? isDoubleFacedCard(card) : false;
@@ -76,9 +72,6 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
       setSelectedPrinting(null);
       setShowRulings(false);
       setRulings([]);
-      setMarketData(null);
-      setLiveListings(null);
-      setShowMarket(false);
     }
   }, [card, open]);
 
@@ -93,52 +86,6 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
     }
   }, [card, open]);
 
-  // Fetch market data when market section is expanded
-  useEffect(() => {
-    if (card && showMarket && !marketData && !liveListings && !isLoadingMarket) {
-      // Find a paper printing with TCGPlayer data (skip digital-only sets)
-      // Digital-only sets like Vintage Masters, MTGO sets don't exist on TCGPlayer
-      let tcgplayerId = getTCGPlayerProductId(card);
-      let setNameForListings = card.set_name;
-      const isDigitalOnly = (card as any).digital && !card.prices?.usd && !card.prices?.usd_foil;
-      
-      // If current card is digital-only or no tcgplayer_id, find a paper printing
-      if ((isDigitalOnly || !tcgplayerId) && printings.length > 0) {
-        // Find a paper printing with tcgplayer_id (non-digital)
-        const paperPrinting = printings.find((p: any) => 
-          p.tcgplayer_id && !p.digital
-        );
-        if (paperPrinting) {
-          tcgplayerId = (paperPrinting as any).tcgplayer_id;
-          setNameForListings = paperPrinting.set_name;
-        }
-      }
-      
-      if (tcgplayerId && setNameForListings) {
-        setIsLoadingMarket(true);
-        
-        // Fetch both APIs in parallel
-        const marketPromise = getTCGPlayerMarketData(tcgplayerId);
-        const listingsPromise = getLiveListings(setNameForListings, card.name);
-        
-        Promise.all([marketPromise, listingsPromise]).then(([market, listings]) => {
-          setMarketData(market);
-          setLiveListings(listings);
-          setIsLoadingMarket(false);
-        });
-      } else if (printings.length > 0) {
-        // Try with first paper printing that has a set name
-        const paperPrinting = printings.find((p: any) => !p.digital);
-        if (paperPrinting) {
-          setIsLoadingMarket(true);
-          getLiveListings(paperPrinting.set_name, card.name).then((listings) => {
-            setLiveListings(listings);
-            setIsLoadingMarket(false);
-          });
-        }
-      }
-    }
-  }, [card, showMarket, marketData, liveListings, isLoadingMarket, printings]);
 
   useEffect(() => {
     if (card && open) {
@@ -565,146 +512,6 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
               )}
             </div>
           )}
-
-          {/* Market Data Section - Always show for paper cards */}
-          <div className="space-y-2">
-            <button
-              onClick={() => setShowMarket(!showMarket)}
-              className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors w-full"
-            >
-              <TrendingUp className="h-3.5 w-3.5" />
-              <span>Market Data (TCGPlayer)</span>
-              {showMarket ? (
-                <ChevronUp className="h-3.5 w-3.5 ml-auto" />
-              ) : (
-                <ChevronDown className="h-3.5 w-3.5 ml-auto" />
-              )}
-            </button>
-            
-            {showMarket && (
-              <div className="space-y-3 pt-1">
-                {isLoadingMarket ? (
-                  <div className="flex items-center justify-center py-4">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                  </div>
-                ) : !marketData && !liveListings ? (
-                  <p className="text-sm text-muted-foreground">No market data available for this printing.</p>
-                ) : (
-                  <>
-                    {/* Price Grid - only show if marketData exists */}
-                    {marketData && (
-                      <>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="p-3 rounded-lg bg-muted/30 border border-border/30">
-                            <p className="text-xs text-muted-foreground">Market Price</p>
-                            <p className="text-lg font-semibold text-emerald-500">
-                              {marketData.marketPrice ? `$${marketData.marketPrice.toFixed(2)}` : '—'}
-                            </p>
-                          </div>
-                          <div className="p-3 rounded-lg bg-muted/30 border border-border/30">
-                            <p className="text-xs text-muted-foreground">Median Price</p>
-                            <p className="text-lg font-semibold text-blue-500">
-                              {marketData.medianPrice ? `$${marketData.medianPrice.toFixed(2)}` : '—'}
-                            </p>
-                          </div>
-                          <div className="p-3 rounded-lg bg-muted/30 border border-border/30">
-                            <p className="text-xs text-muted-foreground">Lowest Listed</p>
-                            <p className="text-lg font-semibold text-amber-500">
-                              {marketData.lowestPrice ? `$${marketData.lowestPrice.toFixed(2)}` : '—'}
-                            </p>
-                          </div>
-                          <div className="p-3 rounded-lg bg-muted/30 border border-border/30">
-                            <p className="text-xs text-muted-foreground">Lowest + Shipping</p>
-                            <p className="text-lg font-semibold text-purple-500">
-                              {marketData.lowestPriceWithShipping ? `$${marketData.lowestPriceWithShipping.toFixed(2)}` : '—'}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Availability Stats */}
-                        <div className="flex items-center gap-4 text-sm">
-                          <div className="flex items-center gap-1.5">
-                            <Users className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-foreground font-medium">{marketData.sellers}</span>
-                            <span className="text-muted-foreground">sellers</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <Package className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-foreground font-medium">{marketData.listings}</span>
-                            <span className="text-muted-foreground">listings</span>
-                          </div>
-                        </div>
-                      </>
-                    )}
-
-                    {/* Condition-Based Pricing from Live Listings */}
-                    {liveListings && liveListings.conditionPrices.length > 0 && (
-                      <div className="space-y-2">
-                        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                          Cheapest by Condition
-                        </h4>
-                        <div className="space-y-1.5">
-                          {liveListings.conditionPrices
-                            .filter(cp => cp.printing === 'Normal')
-                            .map((cp) => (
-                              <div
-                                key={`${cp.condition}-${cp.printing}`}
-                                className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 border border-border/30"
-                              >
-                                <div className="flex items-center gap-2">
-                                  <Badge 
-                                    variant="outline" 
-                                    className={cn(
-                                      "text-[10px] font-semibold",
-                                      cp.conditionAbbr === 'NM' && "bg-emerald-500/10 text-emerald-500 border-emerald-500/30",
-                                      cp.conditionAbbr === 'LP' && "bg-blue-500/10 text-blue-500 border-blue-500/30",
-                                      cp.conditionAbbr === 'MP' && "bg-amber-500/10 text-amber-500 border-amber-500/30",
-                                      cp.conditionAbbr === 'HP' && "bg-orange-500/10 text-orange-500 border-orange-500/30",
-                                      cp.conditionAbbr === 'DM' && "bg-red-500/10 text-red-500 border-red-500/30"
-                                    )}
-                                  >
-                                    {cp.conditionAbbr}
-                                  </Badge>
-                                  <div className="flex flex-col">
-                                    <span className="text-xs text-foreground">{cp.sellerName}</span>
-                                    <div className="flex items-center gap-1">
-                                      <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
-                                      <span className="text-[10px] text-muted-foreground">{cp.sellerRating}%</span>
-                                    </div>
-                                  </div>
-                                </div>
-                                <span className="text-sm font-semibold text-emerald-500">
-                                  ${cp.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </span>
-                              </div>
-                            ))}
-                        </div>
-                        
-                        {/* Price Range Stats */}
-                        {liveListings.priceStats && (
-                          <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
-                            <span>
-                              {liveListings.totalListings} listings • Range: ${liveListings.priceStats.min.toLocaleString()} – ${liveListings.priceStats.max.toLocaleString()}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* TCGPlayer Tip */}
-                    {marketData?.tcgplayerTip && (
-                      <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
-                        <p className="text-xs font-medium text-primary mb-1">TCGPlayer Tip</p>
-                        <p className="text-sm text-foreground leading-relaxed">
-                          {marketData.tcgplayerTip}
-                        </p>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-          </div>
 
           {/* Legality Section */}
           <div className="space-y-2">
