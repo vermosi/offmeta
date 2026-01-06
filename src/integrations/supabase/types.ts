@@ -38,42 +38,6 @@ export type Database = {
         }
         Relationships: []
       }
-      collection_cards: {
-        Row: {
-          card_id: string
-          card_name: string
-          created_at: string
-          foil_quantity: number
-          id: string
-          quantity: number
-          set_code: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          card_id: string
-          card_name: string
-          created_at?: string
-          foil_quantity?: number
-          id?: string
-          quantity?: number
-          set_code?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          card_id?: string
-          card_name?: string
-          created_at?: string
-          foil_quantity?: number
-          id?: string
-          quantity?: number
-          set_code?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       search_feedback: {
         Row: {
           created_at: string
