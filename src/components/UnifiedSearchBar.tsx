@@ -10,6 +10,7 @@ import { Search, Loader2, X, ArrowRight, History } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { SearchFeedback } from '@/components/SearchFeedback';
 import { VoiceSearchButton } from '@/components/VoiceSearchButton';
+import { SearchHelpModal } from '@/components/SearchHelpModal';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
 
 const SEARCH_CONTEXT_KEY = 'lastSearchContext';
@@ -276,6 +277,13 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
           <SearchFeedback 
             originalQuery={query || history[0] || ''} 
             translatedQuery={lastTranslatedQuery} 
+          />
+          
+          <SearchHelpModal 
+            onTryExample={(exampleQuery) => {
+              setQuery(exampleQuery);
+              handleSearch(exampleQuery);
+            }}
           />
         </div>
         
