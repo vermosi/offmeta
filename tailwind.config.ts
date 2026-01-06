@@ -82,6 +82,10 @@ export default {
         brand: {
           DEFAULT: 'hsl(var(--brand))',
           foreground: 'hsl(var(--brand-foreground))'
+        },
+        gradient: {
+          start: 'hsl(var(--gradient-start))',
+          end: 'hsl(var(--gradient-end))'
         }
       },
       borderRadius: {
