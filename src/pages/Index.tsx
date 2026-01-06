@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { UnifiedSearchBar, SearchResult, UnifiedSearchBarHandle } from "@/components/UnifiedSearchBar";
 import { SearchInterpretation } from "@/components/SearchInterpretation";
+import { SearchFilters } from "@/components/SearchFilters";
 import { AffiliateNotice } from "@/components/AffiliateNotice";
 import { CardItem } from "@/components/CardItem";
 import { EmptyState } from "@/components/EmptyState";
@@ -22,6 +23,7 @@ const Index = () => {
   const [selectedCard, setSelectedCard] = useState<ScryfallCard | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [lastSearchResult, setLastSearchResult] = useState<SearchResult | null>(null);
+  const [filteredCards, setFilteredCards] = useState<ScryfallCard[]>([]);
   const searchBarRef = useRef<UnifiedSearchBarHandle>(null);
   const { trackSearch, trackCardClick, trackPagination, trackAffiliateClick } = useAnalytics();
 
@@ -83,6 +85,13 @@ const Index = () => {
   const cards = searchResult?.data || [];
   const totalCards = searchResult?.total_cards || 0;
   const hasMore = searchResult?.has_more || false;
+  
+  // Use filtered cards for display, fall back to all cards if no filtering applied
+  const displayCards = filteredCards.length > 0 || cards.length === 0 ? filteredCards : cards;
+
+  const handleFilteredCards = useCallback((filtered: ScryfallCard[]) => {
+    setFilteredCards(filtered);
+  }, []);
 
   return (
     <ErrorBoundary>
@@ -202,25 +211,41 @@ const Index = () => {
               />
             )}
 
+            {/* Filters and Sort - Show when we have results */}
+            {cards.length > 0 && !isSearching && (
+              <SearchFilters 
+                cards={cards} 
+                onFilteredCards={handleFilteredCards}
+                totalCards={totalCards}
+              />
+            )}
+
             {/* Cards Grid */}
             {cards.length > 0 ? (
               <>
-                <div 
-                  className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-5"
-                  role="list"
-                  aria-label="Search results"
-                >
-                  {cards.map((card, index) => (
-                    <div 
-                      key={card.id} 
-                      className="animate-reveal"
-                      role="listitem"
-                      style={{ animationDelay: `${Math.min(index * 40, 400)}ms` }}
-                    >
-                      <CardItem card={card} onClick={() => handleCardClick(card, index)} />
-                    </div>
-                  ))}
-                </div>
+                {displayCards.length > 0 ? (
+                  <div 
+                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-5"
+                    role="list"
+                    aria-label="Search results"
+                  >
+                    {displayCards.map((card, index) => (
+                      <div 
+                        key={card.id} 
+                        className="animate-reveal"
+                        role="listitem"
+                        style={{ animationDelay: `${Math.min(index * 40, 400)}ms` }}
+                      >
+                        <CardItem card={card} onClick={() => handleCardClick(card, index)} />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">No cards match your filters.</p>
+                    <p className="text-sm text-muted-foreground mt-1">Try adjusting your filter criteria.</p>
+                  </div>
+                )}
 
                 {/* Pagination */}
                 {(hasMore || currentPage > 1) && (
