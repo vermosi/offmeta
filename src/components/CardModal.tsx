@@ -444,9 +444,9 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
 
           {/* Flavor Text */}
           {faceDetails.flavor_text && (
-            <p className="text-sm text-muted-foreground italic border-l-2 border-border pl-3">
-              {faceDetails.flavor_text}
-            </p>
+            <div className="text-sm text-muted-foreground italic border-l-2 border-border pl-3">
+              <OracleText text={faceDetails.flavor_text} size="sm" />
+            </div>
           )}
 
           {/* Power/Toughness */}
