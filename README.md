@@ -209,11 +209,9 @@ npm run build
 
 ---
 
-## Community & Legal
+## Legal
 
 | Document | Description |
 |----------|-------------|
 | [LICENSE](LICENSE) | Proprietary license - All Rights Reserved |
-| [CONTRIBUTING](CONTRIBUTING.md) | Contribution guidelines and terms |
-| [CODE OF CONDUCT](CODE_OF_CONDUCT.md) | Community behavior guidelines |
 | [SECURITY](SECURITY.md) | Security vulnerability reporting |
