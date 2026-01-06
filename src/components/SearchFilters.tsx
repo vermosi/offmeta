@@ -194,7 +194,7 @@ export function SearchFilters({ cards, onFilteredCards, totalCards }: SearchFilt
     (filters.cmcRange[0] > 0 || filters.cmcRange[1] < 16 ? 1 : 0);
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-3 animate-reveal">
+    <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 animate-reveal">
       {/* Filter Popover */}
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
@@ -202,14 +202,14 @@ export function SearchFilters({ cards, onFilteredCards, totalCards }: SearchFilt
             variant="outline"
             size="sm"
             className={cn(
-              "gap-2 h-9",
+              "gap-1.5 sm:gap-2 h-8 sm:h-9 px-2.5 sm:px-3 text-xs sm:text-sm",
               hasActiveFilters && "border-primary/50 bg-primary/5"
             )}
           >
-            <Filter className="h-4 w-4" />
-            Filters
+            <Filter className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Filters</span>
             {activeFilterCount > 0 && (
-              <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+              <Badge variant="secondary" className="h-4 sm:h-5 px-1 sm:px-1.5 text-[10px] sm:text-xs">
                 {activeFilterCount}
               </Badge>
             )}
@@ -314,29 +314,29 @@ export function SearchFilters({ cards, onFilteredCards, totalCards }: SearchFilt
         value={filters.sortBy}
         onValueChange={(value) => setFilters(prev => ({ ...prev, sortBy: value }))}
       >
-        <SelectTrigger className="w-[160px] h-9 text-sm">
-          <ArrowUpDown className="h-4 w-4 mr-2 opacity-50" />
-          <SelectValue placeholder="Sort by..." />
+        <SelectTrigger className="w-[130px] sm:w-[160px] h-8 sm:h-9 text-xs sm:text-sm">
+          <ArrowUpDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 opacity-50" />
+          <SelectValue placeholder="Sort..." />
         </SelectTrigger>
         <SelectContent className="z-50 bg-popover border border-border shadow-lg">
           {SORT_OPTIONS.map(option => (
-            <SelectItem key={option.value} value={option.value}>
+            <SelectItem key={option.value} value={option.value} className="text-xs sm:text-sm">
               {option.label}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
 
-      {/* Active filter badges */}
+      {/* Active filter badges - hide on mobile to save space */}
       {hasActiveFilters && (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="hidden sm:flex flex-wrap gap-1.5">
           {filters.colors.map(colorId => {
             const color = COLORS.find(c => c.id === colorId);
             return (
               <Badge
                 key={colorId}
                 variant="secondary"
-                className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20"
+                className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20 text-xs"
                 onClick={() => toggleColor(colorId)}
               >
                 {color?.name || colorId}
@@ -348,7 +348,7 @@ export function SearchFilters({ cards, onFilteredCards, totalCards }: SearchFilt
             <Badge
               key={type}
               variant="secondary"
-              className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20"
+              className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20 text-xs"
               onClick={() => toggleType(type)}
             >
               {type}
@@ -358,7 +358,7 @@ export function SearchFilters({ cards, onFilteredCards, totalCards }: SearchFilt
           {(filters.cmcRange[0] > 0 || filters.cmcRange[1] < 16) && (
             <Badge
               variant="secondary"
-              className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20"
+              className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20 text-xs"
               onClick={() => setFilters(prev => ({ ...prev, cmcRange: [0, 16] }))}
             >
               CMC {filters.cmcRange[0]}-{filters.cmcRange[1] >= 16 ? '16+' : filters.cmcRange[1]}
@@ -370,8 +370,8 @@ export function SearchFilters({ cards, onFilteredCards, totalCards }: SearchFilt
 
       {/* Filtered count indicator */}
       {hasActiveFilters && (
-        <span className="text-xs text-muted-foreground">
-          Showing {filteredCards.length} of {totalCards}
+        <span className="text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap">
+          {filteredCards.length}/{totalCards}
         </span>
       )}
     </div>

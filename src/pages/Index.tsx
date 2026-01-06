@@ -136,30 +136,30 @@ const Index = () => {
           </div>
         </header>
 
-        {/* Hero Section - Large, airy, centered */}
+        {/* Hero Section - Compact mobile, airy desktop */}
         {!hasSearched && (
           <section 
-            className="relative pt-20 sm:pt-28 lg:pt-36 pb-8 sm:pb-12"
+            className="relative pt-8 sm:pt-16 lg:pt-24 pb-4 sm:pb-8"
             aria-labelledby="hero-heading"
           >
             <div className="container-main text-center stagger-children">
               <h1 
                 id="hero-heading"
-                className="mb-6 text-foreground"
+                className="mb-4 sm:mb-6 text-foreground text-3xl sm:text-5xl lg:text-6xl"
               >
                 Find Magic Cards
                 <br />
                 <span className="text-accent-glow">Like You Think</span>
               </h1>
               
-              <div className="space-y-1 mb-16 sm:mb-20">
-                <p className="text-body-lg sm:text-xl text-muted-foreground">
+              <div className="space-y-0.5 sm:space-y-1 mb-8 sm:mb-12">
+                <p className="text-sm sm:text-lg text-muted-foreground">
                   Describe what you're looking for in plain English.
                 </p>
-                <p className="text-body-lg sm:text-xl text-muted-foreground">
+                <p className="text-sm sm:text-lg text-muted-foreground">
                   No complex syntax. No guessing.
                 </p>
-                <p className="text-body-lg sm:text-xl text-foreground font-medium mt-3">
+                <p className="text-sm sm:text-lg text-foreground font-medium mt-2">
                   Just natural conversation.
                 </p>
               </div>
@@ -170,10 +170,10 @@ const Index = () => {
         {/* Main content */}
         <main 
           id="main-content"
-          className={`relative flex-1 ${hasSearched ? 'pt-8' : ''} pb-16 sm:pb-24 container-main safe-bottom`}
+          className={`relative flex-1 ${hasSearched ? 'pt-4 sm:pt-6' : ''} pb-8 sm:pb-16 container-main safe-bottom`}
           role="main"
         >
-          <div className="space-y-10 sm:space-y-12">
+          <div className="space-y-6 sm:space-y-10">
             {/* Search */}
             <UnifiedSearchBar 
               ref={searchBarRef}
@@ -224,7 +224,7 @@ const Index = () => {
               <>
                 {displayCards.length > 0 ? (
                   <div 
-                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-5"
+                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-4"
                     role="list"
                     aria-label="Search results"
                   >
