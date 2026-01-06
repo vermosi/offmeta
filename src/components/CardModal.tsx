@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, ShoppingCart, Loader2, Palette, X, RefreshCw, Sparkles } from "lucide-react";
+import { ExternalLink, ShoppingCart, Loader2, Palette, X, RefreshCw, Sparkles, Monitor } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -140,13 +140,28 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
     }
   };
 
-  // Toolbox links
+  // Toolbox links - expanded with more resources
   const cardNameEncoded = encodeURIComponent(card.name);
   const toolboxLinks = [
     { name: "EDHREC", url: `https://edhrec.com/route/?cc=${cardNameEncoded}` },
     { name: "Moxfield", url: `https://www.moxfield.com/decks/public?filter=${cardNameEncoded}` },
     { name: "MTGTop8", url: `https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=${cardNameEncoded}` },
+    { name: "Archidekt", url: `https://archidekt.com/search/decks?q=${cardNameEncoded}` },
+    { name: "MTGGoldfish", url: `https://www.mtggoldfish.com/price/${card.name.replace(/ /g, '+')}` },
+    { name: "Gatherer", url: `https://gatherer.wizards.com/Pages/Search/Default.aspx?name=+[${cardNameEncoded}]` },
   ];
+
+  // Get Cardhoarder URL for MTGO
+  const getCardhoarderUrl = () => {
+    const purchaseUris = (card as any).purchase_uris;
+    if (purchaseUris?.cardhoarder) {
+      return purchaseUris.cardhoarder;
+    }
+    return `https://www.cardhoarder.com/cards?data%5Bsearch%5D=${cardNameEncoded}`;
+  };
+
+  // Check if card has MTGO pricing
+  const displayTix = selectedPrinting?.prices?.tix || (card.prices as any)?.tix;
 
   const content = (
     <div className={cn(
@@ -295,6 +310,24 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
               </Button>
             )}
             
+            {/* Cardhoarder - MTGO */}
+            {displayTix && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-2 w-full justify-between"
+                onClick={() => {
+                  handleAffiliateClick("cardhoarder", getCardhoarderUrl());
+                }}
+              >
+                <span className="flex items-center gap-2">
+                  <Monitor className="h-3.5 w-3.5" />
+                  Cardhoarder (MTGO)
+                </span>
+                <span className="font-semibold">{displayTix} tix</span>
+              </Button>
+            )}
+            
             {/* Loading state */}
             {isLoadingPrintings && !displayPrices.usd && !displayPrices.eur && (
               <div className="flex items-center justify-center py-2">
@@ -413,12 +446,13 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
               </p>
             ) : (
               <div className="space-y-1">
-                <div className="grid grid-cols-[1fr_45px_45px_45px_45px] gap-1 px-2 py-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider border-b border-border/50">
+                <div className="grid grid-cols-[1fr_40px_40px_40px_40px_35px] gap-1 px-2 py-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider border-b border-border/50">
                   <span>Set</span>
                   <span className="text-right">USD</span>
                   <span className="text-right">Foil</span>
                   <span className="text-right">EUR</span>
                   <span className="text-right">Foil</span>
+                  <span className="text-right">Tix</span>
                 </div>
                 
                 {englishPrintings.slice(0, 15).map((printing) => (
@@ -434,7 +468,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                       });
                     }}
                     className={cn(
-                      "grid grid-cols-[1fr_45px_45px_45px_45px] gap-1 px-2 py-2 rounded-lg hover:bg-muted/50 text-sm items-center w-full text-left transition-colors",
+                      "grid grid-cols-[1fr_40px_40px_40px_40px_35px] gap-1 px-2 py-2 rounded-lg hover:bg-muted/50 text-sm items-center w-full text-left transition-colors",
                       (selectedPrinting?.id === printing.id || (!selectedPrinting && card.id === printing.id)) && "bg-primary/10 ring-1 ring-primary/30"
                     )}
                   >
@@ -462,6 +496,9 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                     </span>
                     <span className="text-right font-medium text-indigo-400 text-xs">
                       {printing.prices.eur_foil ? `€${printing.prices.eur_foil}` : "—"}
+                    </span>
+                    <span className="text-right font-medium text-amber-500 text-xs">
+                      {printing.prices.tix ? printing.prices.tix : "—"}
                     </span>
                   </button>
                 ))}
