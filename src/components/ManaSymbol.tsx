@@ -3,52 +3,61 @@ import { cn } from "@/lib/utils";
 interface ManaSymbolProps {
   symbol: string;
   size?: "sm" | "md" | "lg";
+  className?: string;
 }
 
-const symbolColors: Record<string, string> = {
-  W: "bg-amber-100 text-amber-900",
-  U: "bg-blue-400 text-blue-950",
-  B: "bg-gray-800 text-gray-100",
-  R: "bg-red-500 text-red-100",
-  G: "bg-green-500 text-green-950",
-  C: "bg-gray-400 text-gray-800",
-};
-
 const sizeClasses = {
-  sm: "h-5 w-5 text-xs",
-  md: "h-6 w-6 text-sm",
-  lg: "h-8 w-8 text-base",
+  sm: "h-4 w-4",
+  md: "h-5 w-5",
+  lg: "h-6 w-6",
 };
 
-export function ManaSymbol({ symbol, size = "md" }: ManaSymbolProps) {
-  const isNumber = !isNaN(parseInt(symbol));
-  const colorClass = symbolColors[symbol] || "bg-gray-500 text-gray-100";
+/**
+ * Convert a mana symbol like "U/P" or "2/W" to the Scryfall SVG filename format.
+ * Scryfall uses: {U/P} -> UP.svg, {2/W} -> 2W.svg
+ */
+function getSymbolFilename(symbol: string): string {
+  // Remove curly braces if present
+  const cleanSymbol = symbol.replace(/[{}]/g, "");
+  // Replace slashes with nothing (U/P -> UP, 2/W -> 2W)
+  return cleanSymbol.replace(/\//g, "");
+}
+
+/**
+ * Renders a single mana symbol using Scryfall's official SVG icons.
+ * Supports all MTG symbols including hybrid, phyrexian, and special symbols.
+ */
+export function ManaSymbol({ symbol, size = "md", className }: ManaSymbolProps) {
+  const filename = getSymbolFilename(symbol);
+  const svgUrl = `https://svgs.scryfall.io/card-symbols/${filename}.svg`;
 
   return (
-    <span
-      className={cn(
-        "inline-flex items-center justify-center rounded-full font-bold shadow-md",
-        sizeClasses[size],
-        isNumber ? "bg-gray-400 text-gray-800" : colorClass
-      )}
-    >
-      {symbol}
-    </span>
+    <img
+      src={svgUrl}
+      alt={`{${symbol}}`}
+      className={cn(sizeClasses[size], "inline-block", className)}
+      loading="lazy"
+    />
   );
 }
 
 interface ManaCostProps {
   cost: string;
   size?: "sm" | "md" | "lg";
+  className?: string;
 }
 
-export function ManaCost({ cost, size = "md" }: ManaCostProps) {
+/**
+ * Renders a full mana cost string (e.g., "{2}{U}{U}" or "{2/W}{2/U}{2/B}{2/R}{2/G}")
+ * using Scryfall's official SVG icons.
+ */
+export function ManaCost({ cost, size = "md", className }: ManaCostProps) {
   if (!cost) return null;
   
   const symbols = cost.match(/\{([^}]+)\}/g) || [];
   
   return (
-    <div className="flex items-center gap-0.5">
+    <span className={cn("inline-flex items-center gap-0.5", className)}>
       {symbols.map((symbol, index) => (
         <ManaSymbol
           key={index}
@@ -56,6 +65,44 @@ export function ManaCost({ cost, size = "md" }: ManaCostProps) {
           size={size}
         />
       ))}
-    </div>
+    </span>
+  );
+}
+
+interface OracleTextProps {
+  text: string;
+  size?: "sm" | "md" | "lg";
+  className?: string;
+}
+
+/**
+ * Renders oracle text with mana symbols replaced by Scryfall SVG icons.
+ * Handles all symbol types including {T}, {Q}, {E}, hybrid mana, phyrexian mana, etc.
+ */
+export function OracleText({ text, size = "sm", className }: OracleTextProps) {
+  if (!text) return null;
+
+  // Split text by mana symbols, keeping the symbols as separate tokens
+  const parts = text.split(/(\{[^}]+\})/g);
+
+  return (
+    <span className={cn("whitespace-pre-wrap leading-relaxed", className)}>
+      {parts.map((part, index) => {
+        // Check if this part is a mana symbol
+        const symbolMatch = part.match(/^\{([^}]+)\}$/);
+        if (symbolMatch) {
+          return (
+            <ManaSymbol
+              key={index}
+              symbol={symbolMatch[1]}
+              size={size}
+              className="align-text-bottom mx-0.5"
+            />
+          );
+        }
+        // Regular text
+        return <span key={index}>{part}</span>;
+      })}
+    </span>
   );
 }
