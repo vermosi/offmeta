@@ -1,4 +1,10 @@
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ManaSymbolProps {
   symbol: string;
@@ -11,6 +17,121 @@ const sizeClasses = {
   md: "h-5 w-5",
   lg: "h-6 w-6",
 };
+
+/**
+ * English descriptions for common mana symbols.
+ * Based on Scryfall's symbology API.
+ */
+const SYMBOL_DESCRIPTIONS: Record<string, string> = {
+  // Basic mana
+  "W": "one white mana",
+  "U": "one blue mana",
+  "B": "one black mana",
+  "R": "one red mana",
+  "G": "one green mana",
+  "C": "one colorless mana",
+  
+  // Generic mana
+  "0": "zero mana",
+  "1": "one generic mana",
+  "2": "two generic mana",
+  "3": "three generic mana",
+  "4": "four generic mana",
+  "5": "five generic mana",
+  "6": "six generic mana",
+  "7": "seven generic mana",
+  "8": "eight generic mana",
+  "9": "nine generic mana",
+  "10": "ten generic mana",
+  "11": "eleven generic mana",
+  "12": "twelve generic mana",
+  "13": "thirteen generic mana",
+  "14": "fourteen generic mana",
+  "15": "fifteen generic mana",
+  "16": "sixteen generic mana",
+  "X": "X generic mana",
+  "Y": "Y generic mana",
+  "Z": "Z generic mana",
+  
+  // Phyrexian mana
+  "W/P": "one white mana or two life",
+  "U/P": "one blue mana or two life",
+  "B/P": "one black mana or two life",
+  "R/P": "one red mana or two life",
+  "G/P": "one green mana or two life",
+  "C/P": "one colorless mana or two life",
+  
+  // Hybrid mana
+  "W/U": "one white or blue mana",
+  "W/B": "one white or black mana",
+  "U/B": "one blue or black mana",
+  "U/R": "one blue or red mana",
+  "B/R": "one black or red mana",
+  "B/G": "one black or green mana",
+  "R/G": "one red or green mana",
+  "R/W": "one red or white mana",
+  "G/W": "one green or white mana",
+  "G/U": "one green or blue mana",
+  
+  // Hybrid Phyrexian mana
+  "W/U/P": "one white mana, one blue mana, or two life",
+  "W/B/P": "one white mana, one black mana, or two life",
+  "U/B/P": "one blue mana, one black mana, or two life",
+  "U/R/P": "one blue mana, one red mana, or two life",
+  "B/R/P": "one black mana, one red mana, or two life",
+  "B/G/P": "one black mana, one green mana, or two life",
+  "R/G/P": "one red mana, one green mana, or two life",
+  "R/W/P": "one red mana, one white mana, or two life",
+  "G/W/P": "one green mana, one white mana, or two life",
+  "G/U/P": "one green mana, one blue mana, or two life",
+  
+  // Two-brid mana (2 generic or 1 colored)
+  "2/W": "two generic mana or one white mana",
+  "2/U": "two generic mana or one blue mana",
+  "2/B": "two generic mana or one black mana",
+  "2/R": "two generic mana or one red mana",
+  "2/G": "two generic mana or one green mana",
+  
+  // Special symbols
+  "T": "tap this permanent",
+  "Q": "untap this permanent",
+  "S": "one snow mana",
+  "E": "one energy counter",
+  "P": "Phyrexian mana",
+  "CHAOS": "chaos",
+  "A": "one acorn counter",
+  "TK": "one ticket",
+  
+  // Half mana (Un-sets)
+  "HW": "one-half white mana",
+  "HU": "one-half blue mana",
+  "HB": "one-half black mana",
+  "HR": "one-half red mana",
+  "HG": "one-half green mana",
+  "½": "one-half generic mana",
+  
+  // Infinity (Un-sets)
+  "∞": "infinite generic mana",
+};
+
+/**
+ * Get the English description for a mana symbol.
+ */
+function getSymbolDescription(symbol: string): string {
+  // Check for exact match first
+  if (SYMBOL_DESCRIPTIONS[symbol]) {
+    return SYMBOL_DESCRIPTIONS[symbol];
+  }
+  
+  // Handle numeric values not in the list
+  const num = parseInt(symbol);
+  if (!isNaN(num)) {
+    return `${symbol} generic mana`;
+  }
+  
+  // Default fallback
+  return `{${symbol}}`;
+}
 
 /**
  * Convert a mana symbol like "U/P" or "2/W" to the Scryfall SVG filename format.
@@ -26,18 +147,29 @@ function getSymbolFilename(symbol: string): string {
 /**
  * Renders a single mana symbol using Scryfall's official SVG icons.
  * Supports all MTG symbols including hybrid, phyrexian, and special symbols.
+ * Includes a tooltip showing the English description.
  */
 export function ManaSymbol({ symbol, size = "md", className }: ManaSymbolProps) {
   const filename = getSymbolFilename(symbol);
   const svgUrl = `https://svgs.scryfall.io/card-symbols/${filename}.svg`;
+  const description = getSymbolDescription(symbol);
 
   return (
-    <img
-      src={svgUrl}
-      alt={`{${symbol}}`}
-      className={cn(sizeClasses[size], "inline-block", className)}
-      loading="lazy"
-    />
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <img
+            src={svgUrl}
+            alt={`{${symbol}}`}
+            className={cn(sizeClasses[size], "inline-block cursor-help", className)}
+            loading="lazy"
+          />
+        </TooltipTrigger>
+        <TooltipContent side="top" className="text-xs capitalize">
+          {description}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
