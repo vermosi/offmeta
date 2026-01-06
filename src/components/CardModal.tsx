@@ -96,22 +96,41 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
   // Fetch market data when market section is expanded
   useEffect(() => {
     if (card && showMarket && !marketData && !isLoadingMarket) {
-      const tcgplayerId = getTCGPlayerProductId(card);
+      // Try to get TCGPlayer ID from current card, or find one from printings
+      let tcgplayerId = getTCGPlayerProductId(card);
+      let setNameForListings = card.set_name;
+      
+      // If current card doesn't have tcgplayer_id (e.g., digital-only), find from printings
+      if (!tcgplayerId && printings.length > 0) {
+        const printingWithTcg = printings.find((p: any) => p.tcgplayer_id);
+        if (printingWithTcg) {
+          tcgplayerId = (printingWithTcg as any).tcgplayer_id;
+          setNameForListings = printingWithTcg.set_name;
+        }
+      }
+      
       if (tcgplayerId) {
         setIsLoadingMarket(true);
         
         // Fetch both APIs in parallel
         const marketPromise = getTCGPlayerMarketData(tcgplayerId);
-        const listingsPromise = getLiveListings(card.set_name, card.name);
+        const listingsPromise = getLiveListings(setNameForListings, card.name);
         
         Promise.all([marketPromise, listingsPromise]).then(([market, listings]) => {
           setMarketData(market);
           setLiveListings(listings);
           setIsLoadingMarket(false);
         });
+      } else {
+        // No TCGPlayer data available - just try live listings with card name
+        setIsLoadingMarket(true);
+        getLiveListings(card.set_name, card.name).then((listings) => {
+          setLiveListings(listings);
+          setIsLoadingMarket(false);
+        });
       }
     }
-  }, [card, showMarket, marketData, isLoadingMarket]);
+  }, [card, showMarket, marketData, isLoadingMarket, printings]);
 
   useEffect(() => {
     if (card && open) {
@@ -539,143 +558,145 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
             </div>
           )}
 
-          {/* Market Data Section */}
-          {getTCGPlayerProductId(card) && (
-            <div className="space-y-2">
-              <button
-                onClick={() => setShowMarket(!showMarket)}
-                className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors w-full"
-              >
-                <TrendingUp className="h-3.5 w-3.5" />
-                <span>Market Data (TCGPlayer)</span>
-                {showMarket ? (
-                  <ChevronUp className="h-3.5 w-3.5 ml-auto" />
+          {/* Market Data Section - Always show for paper cards */}
+          <div className="space-y-2">
+            <button
+              onClick={() => setShowMarket(!showMarket)}
+              className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors w-full"
+            >
+              <TrendingUp className="h-3.5 w-3.5" />
+              <span>Market Data (TCGPlayer)</span>
+              {showMarket ? (
+                <ChevronUp className="h-3.5 w-3.5 ml-auto" />
+              ) : (
+                <ChevronDown className="h-3.5 w-3.5 ml-auto" />
+              )}
+            </button>
+            
+            {showMarket && (
+              <div className="space-y-3 pt-1">
+                {isLoadingMarket ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : !marketData && !liveListings ? (
+                  <p className="text-sm text-muted-foreground">No market data available for this printing.</p>
                 ) : (
-                  <ChevronDown className="h-3.5 w-3.5 ml-auto" />
-                )}
-              </button>
-              
-              {showMarket && (
-                <div className="space-y-3 pt-1">
-                  {isLoadingMarket ? (
-                    <div className="flex items-center justify-center py-4">
-                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : !marketData ? (
-                    <p className="text-sm text-muted-foreground">Unable to load market data.</p>
-                  ) : (
-                    <>
-                      {/* Price Grid */}
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="p-3 rounded-lg bg-muted/30 border border-border/30">
-                          <p className="text-xs text-muted-foreground">Market Price</p>
-                          <p className="text-lg font-semibold text-emerald-500">
-                            {marketData.marketPrice ? `$${marketData.marketPrice.toFixed(2)}` : '—'}
-                          </p>
+                  <>
+                    {/* Price Grid - only show if marketData exists */}
+                    {marketData && (
+                      <>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="p-3 rounded-lg bg-muted/30 border border-border/30">
+                            <p className="text-xs text-muted-foreground">Market Price</p>
+                            <p className="text-lg font-semibold text-emerald-500">
+                              {marketData.marketPrice ? `$${marketData.marketPrice.toFixed(2)}` : '—'}
+                            </p>
+                          </div>
+                          <div className="p-3 rounded-lg bg-muted/30 border border-border/30">
+                            <p className="text-xs text-muted-foreground">Median Price</p>
+                            <p className="text-lg font-semibold text-blue-500">
+                              {marketData.medianPrice ? `$${marketData.medianPrice.toFixed(2)}` : '—'}
+                            </p>
+                          </div>
+                          <div className="p-3 rounded-lg bg-muted/30 border border-border/30">
+                            <p className="text-xs text-muted-foreground">Lowest Listed</p>
+                            <p className="text-lg font-semibold text-amber-500">
+                              {marketData.lowestPrice ? `$${marketData.lowestPrice.toFixed(2)}` : '—'}
+                            </p>
+                          </div>
+                          <div className="p-3 rounded-lg bg-muted/30 border border-border/30">
+                            <p className="text-xs text-muted-foreground">Lowest + Shipping</p>
+                            <p className="text-lg font-semibold text-purple-500">
+                              {marketData.lowestPriceWithShipping ? `$${marketData.lowestPriceWithShipping.toFixed(2)}` : '—'}
+                            </p>
+                          </div>
                         </div>
-                        <div className="p-3 rounded-lg bg-muted/30 border border-border/30">
-                          <p className="text-xs text-muted-foreground">Median Price</p>
-                          <p className="text-lg font-semibold text-blue-500">
-                            {marketData.medianPrice ? `$${marketData.medianPrice.toFixed(2)}` : '—'}
-                          </p>
-                        </div>
-                        <div className="p-3 rounded-lg bg-muted/30 border border-border/30">
-                          <p className="text-xs text-muted-foreground">Lowest Listed</p>
-                          <p className="text-lg font-semibold text-amber-500">
-                            {marketData.lowestPrice ? `$${marketData.lowestPrice.toFixed(2)}` : '—'}
-                          </p>
-                        </div>
-                        <div className="p-3 rounded-lg bg-muted/30 border border-border/30">
-                          <p className="text-xs text-muted-foreground">Lowest + Shipping</p>
-                          <p className="text-lg font-semibold text-purple-500">
-                            {marketData.lowestPriceWithShipping ? `$${marketData.lowestPriceWithShipping.toFixed(2)}` : '—'}
-                          </p>
-                        </div>
-                      </div>
 
-                      {/* Availability Stats */}
-                      <div className="flex items-center gap-4 text-sm">
-                        <div className="flex items-center gap-1.5">
-                          <Users className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-foreground font-medium">{marketData.sellers}</span>
-                          <span className="text-muted-foreground">sellers</span>
+                        {/* Availability Stats */}
+                        <div className="flex items-center gap-4 text-sm">
+                          <div className="flex items-center gap-1.5">
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-foreground font-medium">{marketData.sellers}</span>
+                            <span className="text-muted-foreground">sellers</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Package className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-foreground font-medium">{marketData.listings}</span>
+                            <span className="text-muted-foreground">listings</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                          <Package className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-foreground font-medium">{marketData.listings}</span>
-                          <span className="text-muted-foreground">listings</span>
-                        </div>
-                      </div>
+                      </>
+                    )}
 
-                      {/* Condition-Based Pricing from Live Listings */}
-                      {liveListings && liveListings.conditionPrices.length > 0 && (
-                        <div className="space-y-2">
-                          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Cheapest by Condition
-                          </h4>
-                          <div className="space-y-1.5">
-                            {liveListings.conditionPrices
-                              .filter(cp => cp.printing === 'Normal')
-                              .map((cp) => (
-                                <div
-                                  key={`${cp.condition}-${cp.printing}`}
-                                  className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 border border-border/30"
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <Badge 
-                                      variant="outline" 
-                                      className={cn(
-                                        "text-[10px] font-semibold",
-                                        cp.conditionAbbr === 'NM' && "bg-emerald-500/10 text-emerald-500 border-emerald-500/30",
-                                        cp.conditionAbbr === 'LP' && "bg-blue-500/10 text-blue-500 border-blue-500/30",
-                                        cp.conditionAbbr === 'MP' && "bg-amber-500/10 text-amber-500 border-amber-500/30",
-                                        cp.conditionAbbr === 'HP' && "bg-orange-500/10 text-orange-500 border-orange-500/30",
-                                        cp.conditionAbbr === 'DM' && "bg-red-500/10 text-red-500 border-red-500/30"
-                                      )}
-                                    >
-                                      {cp.conditionAbbr}
-                                    </Badge>
-                                    <div className="flex flex-col">
-                                      <span className="text-xs text-foreground">{cp.sellerName}</span>
-                                      <div className="flex items-center gap-1">
-                                        <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
-                                        <span className="text-[10px] text-muted-foreground">{cp.sellerRating}%</span>
-                                      </div>
+                    {/* Condition-Based Pricing from Live Listings */}
+                    {liveListings && liveListings.conditionPrices.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Cheapest by Condition
+                        </h4>
+                        <div className="space-y-1.5">
+                          {liveListings.conditionPrices
+                            .filter(cp => cp.printing === 'Normal')
+                            .map((cp) => (
+                              <div
+                                key={`${cp.condition}-${cp.printing}`}
+                                className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 border border-border/30"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Badge 
+                                    variant="outline" 
+                                    className={cn(
+                                      "text-[10px] font-semibold",
+                                      cp.conditionAbbr === 'NM' && "bg-emerald-500/10 text-emerald-500 border-emerald-500/30",
+                                      cp.conditionAbbr === 'LP' && "bg-blue-500/10 text-blue-500 border-blue-500/30",
+                                      cp.conditionAbbr === 'MP' && "bg-amber-500/10 text-amber-500 border-amber-500/30",
+                                      cp.conditionAbbr === 'HP' && "bg-orange-500/10 text-orange-500 border-orange-500/30",
+                                      cp.conditionAbbr === 'DM' && "bg-red-500/10 text-red-500 border-red-500/30"
+                                    )}
+                                  >
+                                    {cp.conditionAbbr}
+                                  </Badge>
+                                  <div className="flex flex-col">
+                                    <span className="text-xs text-foreground">{cp.sellerName}</span>
+                                    <div className="flex items-center gap-1">
+                                      <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
+                                      <span className="text-[10px] text-muted-foreground">{cp.sellerRating}%</span>
                                     </div>
                                   </div>
-                                  <span className="text-sm font-semibold text-emerald-500">
-                                    ${cp.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                  </span>
                                 </div>
-                              ))}
+                                <span className="text-sm font-semibold text-emerald-500">
+                                  ${cp.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                              </div>
+                            ))}
+                        </div>
+                        
+                        {/* Price Range Stats */}
+                        {liveListings.priceStats && (
+                          <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
+                            <span>
+                              {liveListings.totalListings} listings • Range: ${liveListings.priceStats.min.toLocaleString()} – ${liveListings.priceStats.max.toLocaleString()}
+                            </span>
                           </div>
-                          
-                          {/* Price Range Stats */}
-                          {liveListings.priceStats && (
-                            <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
-                              <span>
-                                {liveListings.totalListings} listings • Range: ${liveListings.priceStats.min.toLocaleString()} – ${liveListings.priceStats.max.toLocaleString()}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                        )}
+                      </div>
+                    )}
 
-                      {/* TCGPlayer Tip */}
-                      {marketData.tcgplayerTip && (
-                        <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
-                          <p className="text-xs font-medium text-primary mb-1">TCGPlayer Tip</p>
-                          <p className="text-sm text-foreground leading-relaxed">
-                            {marketData.tcgplayerTip}
-                          </p>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+                    {/* TCGPlayer Tip */}
+                    {marketData?.tcgplayerTip && (
+                      <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+                        <p className="text-xs font-medium text-primary mb-1">TCGPlayer Tip</p>
+                        <p className="text-sm text-foreground leading-relaxed">
+                          {marketData.tcgplayerTip}
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Legality Section */}
           <div className="space-y-2">
