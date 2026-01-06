@@ -54,10 +54,44 @@ serve(async (req) => {
       });
     }
 
+    // Scryfall function tags for AI guidance
+    const SCRYFALL_FUNCTION_TAGS = [
+      'function:ramp', 'function:removal', 'function:draw', 'function:tutor', 'function:wrath',
+      'function:counter', 'function:burn', 'function:lifegain', 'function:graveyard', 'function:recursion',
+      'function:sacrifice', 'function:blink', 'function:copy', 'function:steal', 'function:protection',
+      'function:evasion', 'function:haste', 'function:flash', 'function:cantrip', 'function:pump',
+      'function:equipment', 'function:aura', 'function:land-destruction', 'function:stax', 'function:combo',
+      'function:token', 'function:treasure', 'function:clue', 'function:food', 'function:blood',
+      'function:artifact-synergy', 'function:enchantment-synergy', 'function:creature-synergy',
+      'function:tribal', 'function:lord', 'function:anthem', 'function:cost-reducer', 'function:untapper',
+      'function:tapper', 'function:combat-trick', 'function:fog', 'function:ritual', 'function:discard',
+      'function:mill', 'function:voltron', 'function:aggro', 'function:control', 'function:midrange',
+      'function:reanimator', 'function:aristocrats', 'function:spellslinger', 'function:landfall',
+      'function:enchantress', 'function:storm', 'function:infect', 'function:energy', 'function:poison',
+      'function:proliferate', 'function:flicker', 'function:bounce', 'function:exile', 'function:impulse',
+      'function:wheels', 'function:extra-turn', 'function:extra-combat', 'function:monarch',
+      'function:initiative', 'function:dungeon', 'function:cascade', 'function:mutate', 'function:morph',
+      'function:ninjutsu', 'function:madness', 'function:flashback', 'function:retrace', 'function:buyback',
+      'function:overload', 'function:kicker', 'function:multikicker', 'function:entwine', 'function:splice'
+    ];
+
     const results: Array<{ feedbackId: string; status: string; rule?: string }> = [];
 
     for (const feedback of pendingFeedback) {
       try {
+        // Check how many times similar feedback has been submitted
+        const { data: similarFeedback } = await supabase
+          .from('search_feedback')
+          .select('id, processing_status')
+          .ilike('original_query', `%${feedback.original_query.split(' ').slice(0, 3).join('%')}%`)
+          .neq('id', feedback.id);
+        
+        const previousAttempts = similarFeedback?.filter(f => 
+          ['completed', 'duplicate', 'failed'].includes(f.processing_status || '')
+        ).length || 0;
+        
+        const isRetry = previousAttempts > 0;
+
         // Mark as processing
         await supabase
           .from('search_feedback')
@@ -67,27 +101,44 @@ serve(async (req) => {
         // Use AI to analyze the feedback and generate a rule
         const analysisPrompt = `You are a Scryfall query expert. Analyze this search feedback and generate a translation rule.
 
+${isRetry ? `⚠️ IMPORTANT: This is attempt #${previousAttempts + 1} for a similar query. Previous fixes DID NOT WORK. You must try a DIFFERENT approach this time!` : ''}
+
 FEEDBACK:
 - User searched for: "${feedback.original_query}"
 - AI translated it to: "${feedback.translated_query || 'unknown'}"
 - User's issue: "${feedback.issue_description}"
 
+CRITICAL - AVAILABLE SCRYFALL FUNCTION TAGS:
+Scryfall has built-in function: tags that are MORE RELIABLE than oracle text searches. ALWAYS prefer these when applicable:
+${SCRYFALL_FUNCTION_TAGS.join(', ')}
+
+Examples of GOOD translations using function tags:
+- "ramp spells" → "function:ramp (t:instant or t:sorcery)" 
+- "removal in black" → "function:removal c:b"
+- "card draw effects" → "function:draw"
+- "board wipes" → "function:wrath"
+- "cost reducers for artifacts" → "function:cost-reducer t:artifact"
+
 Your task:
 1. Understand what the user ACTUALLY wanted
-2. Identify what went wrong with the translation
-3. Create a pattern-to-syntax rule that would fix this
+2. Check if any function: tags match the concept
+3. Create a pattern-to-syntax rule using function: tags when possible
+4. Only fall back to oracle text (o:"...") if no function tag exists
 
 Respond in this EXACT JSON format only (no other text):
 {
-  "pattern": "natural language pattern to match (e.g., 'cards that give haste')",
-  "scryfall_syntax": "correct Scryfall syntax (e.g., 'o:\"gains haste\"')",
+  "pattern": "natural language pattern to match (e.g., 'ramp spells')",
+  "scryfall_syntax": "correct Scryfall syntax USING function: TAGS WHEN POSSIBLE (e.g., 'function:ramp (t:instant or t:sorcery)')",
   "description": "brief explanation of what this rule does",
-  "confidence": 0.8
+  "confidence": 0.8,
+  "uses_function_tag": true
 }
 
 Rules for your response:
 - pattern should be lowercase and match common phrasings
 - scryfall_syntax must be valid Scryfall search syntax
+- PREFER function: tags over o:"..." searches
+- uses_function_tag should be true if you used a function: tag
 - confidence should be 0.5-1.0 based on how certain you are
 - If you can't determine a useful rule, set confidence to 0
 
@@ -152,23 +203,59 @@ IMPORTANT: Only output the JSON object, nothing else.`;
           continue;
         }
 
-        // Check for duplicate patterns
+        // Check for duplicate patterns - but if this is a retry, update the existing rule
         const { data: existingRule } = await supabase
           .from('translation_rules')
-          .select('id')
+          .select('id, pattern, scryfall_syntax, confidence')
           .ilike('pattern', ruleData.pattern)
           .limit(1);
 
         if (existingRule && existingRule.length > 0) {
-          await supabase
-            .from('search_feedback')
-            .update({ 
-              processing_status: 'duplicate',
-              processed_at: new Date().toISOString()
-            })
-            .eq('id', feedback.id);
-          results.push({ feedbackId: feedback.id, status: 'skipped - duplicate pattern' });
-          continue;
+          if (isRetry) {
+            // User reported same issue again - the existing rule didn't work!
+            // Update the existing rule with the new (hopefully better) syntax
+            const { error: updateError } = await supabase
+              .from('translation_rules')
+              .update({
+                scryfall_syntax: ruleData.scryfall_syntax,
+                description: `${ruleData.description} (updated after retry)`,
+                confidence: Math.min(1, Math.max(0, ruleData.confidence))
+              })
+              .eq('id', existingRule[0].id);
+
+            if (updateError) {
+              throw new Error(`Failed to update rule: ${updateError.message}`);
+            }
+
+            await supabase
+              .from('search_feedback')
+              .update({ 
+                processing_status: 'updated_existing',
+                processed_at: new Date().toISOString(),
+                generated_rule_id: existingRule[0].id
+              })
+              .eq('id', feedback.id);
+
+            results.push({ 
+              feedbackId: feedback.id, 
+              status: 'updated existing rule',
+              rule: `${ruleData.pattern} → ${ruleData.scryfall_syntax} (was: ${existingRule[0].scryfall_syntax})`
+            });
+
+            console.log('Updated existing rule from retry feedback:', ruleData.pattern, '→', ruleData.scryfall_syntax);
+            continue;
+          } else {
+            // First time seeing this, but pattern exists - mark as duplicate
+            await supabase
+              .from('search_feedback')
+              .update({ 
+                processing_status: 'duplicate',
+                processed_at: new Date().toISOString()
+              })
+              .eq('id', feedback.id);
+            results.push({ feedbackId: feedback.id, status: 'skipped - duplicate pattern' });
+            continue;
+          }
         }
 
         // Insert the new rule
