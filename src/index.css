@@ -177,17 +177,6 @@
     line-height: 1.6;
   }
 
-  /* Accessible touch targets */
-  button, a, [role="button"] {
-    min-height: 44px;
-    min-width: 44px;
-  }
-
-  .inline-touch {
-    min-height: auto;
-    min-width: auto;
-  }
-
   /* Skip link */
   .skip-link {
     @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg;
@@ -199,9 +188,9 @@
    ======================================== */
 
 @layer utilities {
-  /* Container */
+  /* Container - mobile-first with tighter padding */
   .container-main {
-    @apply max-w-5xl mx-auto px-5 sm:px-8 lg:px-12;
+    @apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8;
   }
 
   /* Elevated surfaces */
