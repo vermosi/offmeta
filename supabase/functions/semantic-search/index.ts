@@ -911,15 +911,77 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Service temporarily unavailable. Please try again later.", success: false }), {
-          status: 402,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+      // Fallback: AI gateway unavailable (402, 500, etc.) - pass query directly to Scryfall
+      // Apply basic transformations for common patterns
+      console.warn("AI gateway unavailable, using fallback:", response.status);
+      
+      let fallbackQuery = query.trim();
+      
+      // Apply basic keyword transformations
+      const basicTransforms: [RegExp, string][] = [
+        [/\betb\b/gi, 'o:"enters"'],
+        [/\bltb\b/gi, 'o:"leaves"'],
+        [/\bramp\b/gi, '(o:"add" o:"{" or o:"search" o:"land")'],
+        [/\btutors?\b/gi, 'o:"search your library"'],
+        [/\bboard ?wipes?\b/gi, 'o:"destroy all"'],
+        [/\bwraths?\b/gi, 'o:"destroy all"'],
+        [/\bcounterspells?\b/gi, 't:instant o:"counter target"'],
+        [/\bcounter ?magic\b/gi, 't:instant o:"counter target"'],
+        [/\bcard draw\b/gi, 'o:"draw" o:"card"'],
+        [/\bdraw cards?\b/gi, 'o:"draw" o:"card"'],
+        [/\bremoval\b/gi, '(o:"destroy target" or o:"exile target")'],
+        [/\btreasure tokens?\b/gi, 'o:"create" o:"treasure"'],
+        [/\bmakes? treasure\b/gi, 'o:"create" o:"treasure"'],
+        [/\btoken generators?\b/gi, 'o:"create" o:"token"'],
+        [/\bmakes? tokens?\b/gi, 'o:"create" o:"token"'],
+        [/\blifegain\b/gi, 'o:"gain" o:"life"'],
+        [/\bgraveyard hate\b/gi, 'o:"exile" o:"graveyard"'],
+        [/\breanimation\b/gi, 'o:"graveyard" o:"onto the battlefield"'],
+        [/\breanimate\b/gi, 'o:"graveyard" o:"onto the battlefield"'],
+        [/\bblink\b/gi, 'o:"exile" o:"return" o:"battlefield"'],
+        [/\bflicker\b/gi, 'o:"exile" o:"return" o:"battlefield"'],
+        [/\bstax\b/gi, '(o:"can\'t" or o:"pay" o:"or")'],
+        [/\bmana rocks?\b/gi, 't:artifact o:"add" o:"{"'],
+        [/\bmana dorks?\b/gi, 't:creature o:"add" o:"{"'],
+        [/\bspells\b/gi, '(t:instant or t:sorcery)'],
+        [/\bcheap\b/gi, 'usd<5'],
+        [/\bbudget\b/gi, 'usd<5'],
+        [/\bexpensive\b/gi, 'usd>20'],
+      ];
+      
+      // Check if query already looks like Scryfall syntax
+      const looksLikeScryfall = /[a-z]+[:=<>]/.test(fallbackQuery);
+      
+      if (!looksLikeScryfall) {
+        for (const [pattern, replacement] of basicTransforms) {
+          fallbackQuery = fallbackQuery.replace(pattern, replacement);
+        }
       }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      throw new Error("Failed to process search");
+      
+      // Apply filters
+      if (filters?.format) {
+        fallbackQuery += ` f:${filters.format}`;
+      }
+      if (filters?.colorIdentity?.length) {
+        fallbackQuery += ` id=${filters.colorIdentity.join('').toLowerCase()}`;
+      }
+      
+      const fallbackValidation = validateQuery(fallbackQuery);
+      
+      return new Response(JSON.stringify({
+        originalQuery: query,
+        scryfallQuery: fallbackValidation.sanitized,
+        explanation: {
+          readable: `Searching for: ${query}`,
+          assumptions: ['Using simplified translation (AI temporarily unavailable)'],
+          confidence: 0.6
+        },
+        showAffiliate: hasPurchaseIntent(query),
+        success: true,
+        fallback: true
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const data = await response.json();
