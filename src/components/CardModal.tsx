@@ -181,68 +181,351 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
   // Check if card has MTGO pricing
   const displayTix = selectedPrinting?.prices?.tix || (card.prices as any)?.tix;
 
-  const content = (
-    <div className={cn(
-      "flex flex-col",
-      isMobile ? "h-full" : "grid md:grid-cols-[280px_1fr] max-h-[85vh]"
-    )}>
-      {/* Card Image Section */}
-      <div className={cn(
-        "bg-muted/30 flex flex-col items-center",
-        isMobile ? "p-3" : "p-5 border-r border-border/50"
-      )}>
-        {/* Mobile: Large centered artwork */}
-        {isMobile && (
-          <div className="w-full space-y-3">
-            <div className="relative w-full max-w-[200px] mx-auto">
-              <img
-                src={displayImageUrl}
-                alt={faceDetails.name}
-                className={cn(
-                  "rounded-xl shadow-lg w-full transition-transform duration-300",
-                  isFlipping && "scale-x-0"
-                )}
-              />
+  // Mobile-specific content - card-first ordering
+  const mobileContent = (
+    <div className="flex flex-col h-full">
+      {/* Card Image - prominent */}
+      <div className="bg-muted/30 p-4 flex flex-col items-center">
+        <div className="relative w-full max-w-[180px] mx-auto">
+          <img
+            src={displayImageUrl}
+            alt={faceDetails.name}
+            className={cn(
+              "rounded-xl shadow-lg w-full transition-transform duration-300",
+              isFlipping && "scale-x-0"
+            )}
+          />
+        </div>
+        
+        {/* Transform button for DFCs */}
+        {isDoubleFaced && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 mt-3 w-full max-w-[180px]"
+            onClick={handleTransform}
+          >
+            <RefreshCw className={cn("h-3.5 w-3.5", isFlipping && "animate-spin")} />
+            Transform
+          </Button>
+        )}
+      </div>
+
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Name, Type, Mana */}
+        <div className="text-center space-y-1">
+          <h2 className="text-lg font-semibold text-foreground tracking-tight">
+            {faceDetails.name}
+          </h2>
+          {faceDetails.mana_cost && (
+            <div className="flex justify-center">
+              <ManaCost cost={faceDetails.mana_cost} size="md" />
             </div>
-            <div className="text-center space-y-1">
-              <h2 className="text-base font-semibold text-foreground tracking-tight">
-                {faceDetails.name}
-              </h2>
-              <p className="text-xs text-muted-foreground">{faceDetails.type_line}</p>
-              {faceDetails.mana_cost && (
-                <div className="flex justify-center mt-1">
-                  <ManaCost cost={faceDetails.mana_cost} size="sm" />
-                </div>
+          )}
+          <p className="text-sm text-muted-foreground">{faceDetails.type_line}</p>
+        </div>
+
+        {/* Badges */}
+        <div className="flex items-center justify-center gap-2 flex-wrap">
+          <Badge variant={getRarityVariant(displayRarity) as any} className="capitalize">
+            {displayRarity}
+          </Badge>
+          <Badge variant="secondary">
+            {displaySetName}
+            {displayCollectorNumber && ` #${displayCollectorNumber}`}
+          </Badge>
+          {(card as any).reserved && (
+            <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30 gap-1">
+              <Shield className="h-3 w-3" />
+              Reserved
+            </Badge>
+          )}
+        </div>
+
+        {/* Oracle Text - prominent */}
+        {faceDetails.oracle_text && (
+          <div className="space-y-1.5 bg-muted/20 rounded-lg p-3 border border-border/30">
+            <div className="text-sm text-foreground leading-relaxed">
+              <OracleText text={faceDetails.oracle_text} size="sm" />
+            </div>
+          </div>
+        )}
+
+        {/* Flavor Text */}
+        {faceDetails.flavor_text && (
+          <div className="text-sm text-muted-foreground italic border-l-2 border-border pl-3">
+            <OracleText text={faceDetails.flavor_text} size="sm" />
+          </div>
+        )}
+
+        {/* Power/Toughness */}
+        {(faceDetails.power || faceDetails.toughness) && (
+          <div className="flex justify-center">
+            <div className="inline-flex items-center gap-1.5 px-4 py-2 bg-muted/50 rounded-lg border border-border/50">
+              <span className="font-bold text-lg text-foreground">{faceDetails.power}</span>
+              <span className="text-muted-foreground">/</span>
+              <span className="font-bold text-lg text-foreground">{faceDetails.toughness}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Artist */}
+        {displayArtist && (
+          <div className="flex items-center justify-center gap-2 text-sm">
+            <Palette className="h-4 w-4 text-muted-foreground" />
+            <span className="text-muted-foreground">Illustrated by</span>
+            <span className="text-foreground font-medium">{displayArtist}</span>
+          </div>
+        )}
+
+        {/* Rulings - collapsible */}
+        {(rulings.length > 0 || isLoadingRulings) && (
+          <div className="space-y-2">
+            <button
+              onClick={() => setShowRulings(!showRulings)}
+              className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors w-full"
+            >
+              <Gavel className="h-3.5 w-3.5" />
+              <span>Rulings ({rulings.length})</span>
+              {showRulings ? (
+                <ChevronUp className="h-3.5 w-3.5 ml-auto" />
+              ) : (
+                <ChevronDown className="h-3.5 w-3.5 ml-auto" />
+              )}
+            </button>
+            
+            {showRulings && (
+              <div className="space-y-2 pt-1">
+                {isLoadingRulings ? (
+                  <div className="flex items-center justify-center py-3">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  rulings.map((ruling, index) => (
+                    <div 
+                      key={`${ruling.published_at}-${index}`}
+                      className="text-sm p-3 rounded-lg bg-muted/30 border border-border/30 space-y-1"
+                    >
+                      <div className="text-foreground leading-relaxed">
+                        <OracleText text={ruling.comment} size="sm" />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {ruling.source} • {new Date(ruling.published_at).toLocaleDateString('en-US', { 
+                          year: 'numeric', month: 'short', day: 'numeric' 
+                        })}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Buy Section - compact */}
+        <div className="space-y-2">
+          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Buy This Card
+          </h3>
+          <div className="grid grid-cols-2 gap-2">
+            {displayPrices.usd && (
+              <Button
+                size="sm"
+                className="gap-1.5 justify-between text-xs"
+                onClick={() => {
+                  const url = selectedPrinting?.purchase_uris?.tcgplayer || getTCGPlayerUrl(card);
+                  handleAffiliateClick("tcgplayer", url);
+                }}
+              >
+                <span>TCGplayer</span>
+                <span className="font-semibold">${displayPrices.usd}</span>
+              </Button>
+            )}
+            {displayPrices.eur && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 justify-between text-xs"
+                onClick={() => {
+                  const url = selectedPrinting?.purchase_uris?.cardmarket || getCardmarketUrl(card);
+                  handleAffiliateClick("cardmarket", url);
+                }}
+              >
+                <span>Cardmarket</span>
+                <span className="font-semibold">€{displayPrices.eur}</span>
+              </Button>
+            )}
+          </div>
+          {(displayPrices.usd_foil || displayPrices.eur_foil) && (
+            <div className="grid grid-cols-2 gap-2">
+              {displayPrices.usd_foil && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 justify-between text-xs"
+                  onClick={() => {
+                    const baseUrl = selectedPrinting?.purchase_uris?.tcgplayer || getTCGPlayerUrl(card);
+                    const foilUrl = baseUrl.includes('?') ? `${baseUrl}&Printing=Foil` : `${baseUrl}?Printing=Foil`;
+                    handleAffiliateClick("tcgplayer-foil", foilUrl);
+                  }}
+                >
+                  <span className="flex items-center gap-1"><Sparkles className="h-3 w-3" />Foil</span>
+                  <span className="font-semibold">${displayPrices.usd_foil}</span>
+                </Button>
+              )}
+              {displayPrices.eur_foil && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 justify-between text-xs"
+                  onClick={() => {
+                    const baseUrl = selectedPrinting?.purchase_uris?.cardmarket || getCardmarketUrl(card);
+                    const foilUrl = baseUrl.includes('?') ? `${baseUrl}&isFoil=Y` : `${baseUrl}?isFoil=Y`;
+                    handleAffiliateClick("cardmarket-foil", foilUrl);
+                  }}
+                >
+                  <span className="flex items-center gap-1"><Sparkles className="h-3 w-3" />Foil</span>
+                  <span className="font-semibold">€{displayPrices.eur_foil}</span>
+                </Button>
               )}
             </div>
-          </div>
-        )}
-        
-        {/* Desktop: Side layout */}
-        {!isMobile && (
-          <div className="flex flex-col items-center w-full">
-            <div className="relative w-full max-w-[220px]">
-              <img
-                src={displayImageUrl}
-                alt={faceDetails.name}
-                className={cn(
-                  "rounded-xl shadow-lg w-full transition-transform duration-300",
-                  isFlipping && "scale-x-0"
-                )}
-              />
+          )}
+          {isLoadingPrintings && !displayPrices.usd && !displayPrices.eur && (
+            <div className="flex items-center justify-center py-2">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
+          )}
+        </div>
+
+        {/* Legalities - compact 2-col grid, only show legal formats */}
+        <div className="space-y-2">
+          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Legal In
+          </h3>
+          <div className="flex flex-wrap gap-1.5">
+            {Object.entries(card.legalities)
+              .filter(([, status]) => status === "legal")
+              .map(([format]) => (
+                <Badge key={format} variant="outline" className="text-xs bg-emerald-500/10 text-emerald-500 border-emerald-500/30">
+                  {formatFormatName(format)}
+                </Badge>
+              ))}
+            {Object.entries(card.legalities).filter(([, status]) => status === "legal").length === 0 && (
+              <span className="text-xs text-muted-foreground">Not legal in any format</span>
+            )}
           </div>
-        )}
+        </div>
+
+        {/* Printings - simplified for mobile */}
+        <div className="space-y-2">
+          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Printings ({englishPrintings.length})
+          </h3>
+          {isLoadingPrintings ? (
+            <div className="flex items-center justify-center py-3">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {englishPrintings.slice(0, 8).map((printing) => (
+                <button
+                  key={printing.id}
+                  onClick={() => {
+                    setSelectedPrinting(printing);
+                    setRefreshedPrices({
+                      usd: printing.prices.usd,
+                      usd_foil: printing.prices.usd_foil,
+                      eur: printing.prices.eur,
+                      eur_foil: printing.prices.eur_foil
+                    });
+                  }}
+                  className={cn(
+                    "flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-muted/50 text-sm transition-colors",
+                    (selectedPrinting?.id === printing.id || (!selectedPrinting && card.id === printing.id)) && "bg-primary/10 ring-1 ring-primary/30"
+                  )}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={cn(
+                      "h-2 w-2 rounded-full flex-shrink-0",
+                      printing.rarity === "mythic" && "bg-orange-500",
+                      printing.rarity === "rare" && "bg-amber-500",
+                      printing.rarity === "uncommon" && "bg-slate-400",
+                      printing.rarity === "common" && "bg-slate-600"
+                    )} />
+                    <span className="truncate text-foreground text-xs">{printing.set_name}</span>
+                  </div>
+                  <span className="text-xs font-medium text-emerald-500">
+                    {printing.prices.usd ? `$${printing.prices.usd}` : printing.prices.eur ? `€${printing.prices.eur}` : "—"}
+                  </span>
+                </button>
+              ))}
+              {englishPrintings.length > 8 && (
+                <p className="text-xs text-muted-foreground text-center py-1">
+                  +{englishPrintings.length - 8} more
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Toolbox Links */}
+        <div className="space-y-2">
+          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Toolbox
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {toolboxLinks.slice(0, 4).map((link) => (
+              <Button
+                key={link.name}
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs h-7"
+                onClick={() => window.open(link.url, "_blank")}
+              >
+                <ExternalLink className="h-3 w-3" />
+                {link.name}
+              </Button>
+            ))}
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs h-7"
+              onClick={() => window.open(card.scryfall_uri, "_blank")}
+            >
+              <ExternalLink className="h-3 w-3" />
+              Scryfall
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Desktop content - original two-column layout
+  const desktopContent = (
+    <div className="grid md:grid-cols-[280px_1fr] max-h-[85vh]">
+      {/* Card Image Section */}
+      <div className="bg-muted/30 flex flex-col items-center p-5 border-r border-border/50">
+        <div className="flex flex-col items-center w-full">
+          <div className="relative w-full max-w-[220px]">
+            <img
+              src={displayImageUrl}
+              alt={faceDetails.name}
+              className={cn(
+                "rounded-xl shadow-lg w-full transition-transform duration-300",
+                isFlipping && "scale-x-0"
+              )}
+            />
+          </div>
+        </div>
 
         {/* Transform button for double-faced cards */}
         {isDoubleFaced && (
           <Button
             variant="outline"
             size="sm"
-            className={cn(
-              "gap-2 mt-3",
-              isMobile ? "w-full" : "max-w-[220px] w-full"
-            )}
+            className="gap-2 mt-3 max-w-[220px] w-full"
             onClick={handleTransform}
           >
             <RefreshCw className={cn("h-3.5 w-3.5", isFlipping && "animate-spin")} />
@@ -251,15 +534,11 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
         )}
         
         {/* Buy Buttons */}
-        <div className={cn(
-          "w-full",
-          isMobile ? "mt-3" : "mt-3 max-w-[220px]"
-        )}>
+        <div className="w-full mt-3 max-w-[220px]">
           <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
             Buy This Card
           </h3>
           <div className="space-y-1.5">
-            {/* TCGPlayer Non-Foil */}
             {displayPrices.usd && (
               <Button
                 size="sm"
@@ -276,8 +555,6 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                 <span className="font-semibold">${displayPrices.usd}</span>
               </Button>
             )}
-            
-            {/* TCGPlayer Foil */}
             {displayPrices.usd_foil && (
               <Button
                 size="sm"
@@ -296,8 +573,6 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                 <span className="font-semibold">${displayPrices.usd_foil}</span>
               </Button>
             )}
-            
-            {/* Cardmarket Non-Foil */}
             {displayPrices.eur && (
               <Button
                 size="sm"
@@ -315,8 +590,6 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                 <span className="font-semibold">€{displayPrices.eur}</span>
               </Button>
             )}
-            
-            {/* Cardmarket Foil */}
             {displayPrices.eur_foil && (
               <Button
                 size="sm"
@@ -335,8 +608,6 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                 <span className="font-semibold">€{displayPrices.eur_foil}</span>
               </Button>
             )}
-            
-            {/* Cardhoarder - MTGO */}
             {displayTix && (
               <Button
                 size="sm"
@@ -353,8 +624,6 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                 <span className="font-semibold">{displayTix} tix</span>
               </Button>
             )}
-            
-            {/* Loading state */}
             {isLoadingPrintings && !displayPrices.usd && !displayPrices.eur && (
               <div className="flex items-center justify-center py-2">
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -364,23 +633,21 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
         </div>
       </div>
 
-      {/* Card Details Section - Single Scrollable Layout */}
+      {/* Card Details Section */}
       <div className="flex-1 overflow-y-auto">
-        <div className={cn("space-y-5", isMobile ? "p-4" : "p-5")}>
+        <div className="space-y-5 p-5">
           {/* Header with Name & Mana Cost */}
-          {!isMobile && (
-            <div className="space-y-1.5 pr-8">
-              <h2 className="text-lg font-semibold text-foreground tracking-tight">
-                {faceDetails.name}
-              </h2>
-              {faceDetails.mana_cost && (
-                <ManaCost cost={faceDetails.mana_cost} size="md" />
-              )}
-              <p className="text-sm text-muted-foreground">{faceDetails.type_line}</p>
-            </div>
-          )}
+          <div className="space-y-1.5 pr-8">
+            <h2 className="text-lg font-semibold text-foreground tracking-tight">
+              {faceDetails.name}
+            </h2>
+            {faceDetails.mana_cost && (
+              <ManaCost cost={faceDetails.mana_cost} size="md" />
+            )}
+            <p className="text-sm text-muted-foreground">{faceDetails.type_line}</p>
+          </div>
 
-          {/* Set Info with Collector Number and Special Badges */}
+          {/* Set Info with Badges */}
           <div className="flex items-center gap-2 flex-wrap">
             <Badge variant={getRarityVariant(displayRarity) as any} className="capitalize">
               {displayRarity}
@@ -389,16 +656,12 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
               {displaySetName}
               {displayCollectorNumber && ` #${displayCollectorNumber}`}
             </Badge>
-            
-            {/* Reserved List Badge */}
             {(card as any).reserved && (
               <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30 gap-1">
                 <Shield className="h-3 w-3" />
                 Reserved List
               </Badge>
             )}
-            
-            {/* First Printing Badge - show if this is the oldest printing */}
             {englishPrintings.length > 0 && (() => {
               const sortedByDate = [...englishPrintings].sort(
                 (a, b) => new Date(a.released_at).getTime() - new Date(b.released_at).getTime()
@@ -414,15 +677,11 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
               }
               return null;
             })()}
-            
-            {/* Only Printing Badge - show if there's only one printing */}
             {englishPrintings.length === 1 && (
               <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/30">
                 Only Printing
               </Badge>
             )}
-            
-            {/* Unique Art Badge - if selected printing has different art */}
             {englishPrintings.length > 1 && (() => {
               const uniqueArtists = new Set(englishPrintings.map(p => p.artist));
               const currentArtist = selectedPrinting?.artist || card.artist;
@@ -475,7 +734,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
             </div>
           )}
 
-          {/* Card Rulings Section */}
+          {/* Rulings */}
           {(rulings.length > 0 || isLoadingRulings) && (
             <div className="space-y-2">
               <button
@@ -510,9 +769,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                         </div>
                         <p className="text-xs text-muted-foreground">
                           {ruling.source} • {new Date(ruling.published_at).toLocaleDateString('en-US', { 
-                            year: 'numeric', 
-                            month: 'short', 
-                            day: 'numeric' 
+                            year: 'numeric', month: 'short', day: 'numeric' 
                           })}
                         </p>
                       </div>
@@ -683,7 +940,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
             <X className="h-4 w-4" />
           </Button>
           <div className="flex-1 overflow-y-auto overscroll-contain max-h-[calc(90vh-2rem)]">
-            {content}
+            {mobileContent}
           </div>
         </DrawerContent>
       </Drawer>
@@ -696,7 +953,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
         <VisuallyHidden>
           <DialogTitle>{card.name}</DialogTitle>
         </VisuallyHidden>
-        {content}
+        {desktopContent}
       </DialogContent>
     </Dialog>
   );
