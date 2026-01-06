@@ -95,21 +95,26 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
 
   // Fetch market data when market section is expanded
   useEffect(() => {
-    if (card && showMarket && !marketData && !isLoadingMarket) {
-      // Try to get TCGPlayer ID from current card, or find one from printings
+    if (card && showMarket && !marketData && !liveListings && !isLoadingMarket) {
+      // Find a paper printing with TCGPlayer data (skip digital-only sets)
+      // Digital-only sets like Vintage Masters, MTGO sets don't exist on TCGPlayer
       let tcgplayerId = getTCGPlayerProductId(card);
       let setNameForListings = card.set_name;
+      const isDigitalOnly = (card as any).digital && !card.prices?.usd && !card.prices?.usd_foil;
       
-      // If current card doesn't have tcgplayer_id (e.g., digital-only), find from printings
-      if (!tcgplayerId && printings.length > 0) {
-        const printingWithTcg = printings.find((p: any) => p.tcgplayer_id);
-        if (printingWithTcg) {
-          tcgplayerId = (printingWithTcg as any).tcgplayer_id;
-          setNameForListings = printingWithTcg.set_name;
+      // If current card is digital-only or no tcgplayer_id, find a paper printing
+      if ((isDigitalOnly || !tcgplayerId) && printings.length > 0) {
+        // Find a paper printing with tcgplayer_id (non-digital)
+        const paperPrinting = printings.find((p: any) => 
+          p.tcgplayer_id && !p.digital
+        );
+        if (paperPrinting) {
+          tcgplayerId = (paperPrinting as any).tcgplayer_id;
+          setNameForListings = paperPrinting.set_name;
         }
       }
       
-      if (tcgplayerId) {
+      if (tcgplayerId && setNameForListings) {
         setIsLoadingMarket(true);
         
         // Fetch both APIs in parallel
@@ -121,16 +126,19 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
           setLiveListings(listings);
           setIsLoadingMarket(false);
         });
-      } else {
-        // No TCGPlayer data available - just try live listings with card name
-        setIsLoadingMarket(true);
-        getLiveListings(card.set_name, card.name).then((listings) => {
-          setLiveListings(listings);
-          setIsLoadingMarket(false);
-        });
+      } else if (printings.length > 0) {
+        // Try with first paper printing that has a set name
+        const paperPrinting = printings.find((p: any) => !p.digital);
+        if (paperPrinting) {
+          setIsLoadingMarket(true);
+          getLiveListings(paperPrinting.set_name, card.name).then((listings) => {
+            setLiveListings(listings);
+            setIsLoadingMarket(false);
+          });
+        }
       }
     }
-  }, [card, showMarket, marketData, isLoadingMarket, printings]);
+  }, [card, showMarket, marketData, liveListings, isLoadingMarket, printings]);
 
   useEffect(() => {
     if (card && open) {
