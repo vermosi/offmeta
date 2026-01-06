@@ -85,6 +85,7 @@ export type Database = {
           is_public: boolean
           mainboard: Json
           name: string
+          public_id: string | null
           sideboard: Json
           updated_at: string
           user_id: string
@@ -99,6 +100,7 @@ export type Database = {
           is_public?: boolean
           mainboard?: Json
           name?: string
+          public_id?: string | null
           sideboard?: Json
           updated_at?: string
           user_id: string
@@ -113,6 +115,7 @@ export type Database = {
           is_public?: boolean
           mainboard?: Json
           name?: string
+          public_id?: string | null
           sideboard?: Json
           updated_at?: string
           user_id?: string
