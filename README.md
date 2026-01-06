@@ -79,7 +79,7 @@ supabase/
 
 | File | Description |
 |------|-------------|
-| `lib/scryfall.ts` | Scryfall API client. Contains `searchCards()` function that calls the semantic-search edge function for natural language queries, or falls back to direct Scryfall API for syntax queries. Handles pagination and card image URLs. |
+| `lib/scryfall.ts` | Scryfall API client. Handles card search, pagination, image URLs, and rulings. Enforces rate limiting per Scryfall guidelines. |
 | `lib/card-printings.ts` | Fetches all printings of a card from Scryfall. Generates TCGPlayer and Cardmarket purchase URLs. |
 | `lib/utils.ts` | General utilities including `cn()` for className merging (Tailwind). |
 
