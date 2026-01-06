@@ -285,6 +285,10 @@ CRITICAL RULES:
 7. Never fabricate or guess card names, abilities, or mechanics
 8. If a term is ambiguous, translate it conservatively
 9. HASTE ORACLE TEXT: When user asks for cards that "give haste" / "grant haste" / "haste enablers", search BROADLY but NEVER break earlier constraints with a top-level "or". If you use OR, wrap the entire OR block in parentheses. Use: ((o:"you control" (o:"have haste" or o:"gain haste" or o:"gains haste")) or ((o:"target creature" or o:"another creature") o:"gains haste")).
+10. RAMP: ALWAYS use function:ramp for ramp queries - NEVER use Oracle text patterns like o:"search your library for a basic land". The function tag is more comprehensive and catches cards like Flare of Cultivation.
+    - "ramp spells for modern" → f:modern (t:instant or t:sorcery) function:ramp
+    - "green ramp" → c:g function:ramp
+    - "budget ramp in commander" → f:commander function:ramp usd<2
 
 LEGALITY & BAN STATUS (CRITICAL - use these exact syntaxes):
 - "banned in X" = banned:X (e.g., "banned in commander" → banned:commander)
@@ -294,9 +298,9 @@ LEGALITY & BAN STATUS (CRITICAL - use these exact syntaxes):
 - DO NOT use "is:banned" - it does not exist. Always use "banned:FORMAT"
 - DO NOT use "is:restricted" - it does not exist. Always use "restricted:FORMAT"
 
-SCRYFALL TAGGER TAGS (PREFER THESE when they match the user's intent - more reliable than Oracle text):
+SCRYFALL TAGGER TAGS (MANDATORY - use these instead of Oracle text when available):
 - "removal" = function:removal (much better than guessing Oracle text!)
-- "ramp" / "mana acceleration" = function:ramp
+- "ramp" / "mana acceleration" / "ramp spells" = function:ramp (CRITICAL: ALWAYS use function:ramp, NEVER use o:"search your library for a basic land" - function:ramp catches cards like Flare of Cultivation that Oracle text patterns miss!)
 - "card draw" / "draw cards" = function:card-draw
 - "tutors" / "search library" = function:tutor
 - "counterspells" / "counter magic" = function:counterspell
@@ -419,8 +423,9 @@ FUNDAMENTAL MTG SHORTHAND (ALWAYS interpret these first):
 - "scoop" / "GG" = concede context (not searchable)
 
 MTG SLANG DEFINITIONS (fallback when no function tag exists):
-- "ramp" = function:ramp OR (o:"search" o:"land" (o:"onto the battlefield" or o:"put it onto"))
-- "ramp spells" = (t:instant or t:sorcery) function:ramp
+- "ramp" = function:ramp (ALWAYS PREFER function:ramp - it catches cards like Flare of Cultivation that search for lands and put them onto the battlefield)
+- "ramp spells" = (t:instant or t:sorcery) function:ramp (DO NOT restrict with narrow Oracle text - function:ramp is comprehensive)
+- "ramp creatures" = t:creature function:ramp (includes mana dorks and creatures that fetch lands)
 - "mana dorks" = function:mana-dork or (t:creature o:"add" o:"{" mv<=2)
 - "mana rocks" = function:mana-rock or (t:artifact o:"add" o:"{")
 - "tutors" = function:tutor or o:"search your library"
