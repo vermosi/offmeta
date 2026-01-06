@@ -11,7 +11,7 @@ import { ScryfallCard } from "@/types/card";
 import { getCardImage, isDoubleFacedCard, getCardFaceDetails, getCardRulings, CardRuling } from "@/lib/scryfall";
 import { getCardPrintings, getTCGPlayerUrl, getCardmarketUrl, CardPrinting } from "@/lib/card-printings";
 
-import { ManaCost } from "./ManaSymbol";
+import { ManaCost, OracleText } from "./ManaSymbol";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
@@ -436,9 +436,9 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
               <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Card Text
               </h3>
-              <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                {faceDetails.oracle_text}
-              </p>
+              <div className="text-sm text-foreground">
+                <OracleText text={faceDetails.oracle_text} size="sm" />
+              </div>
             </div>
           )}
 
@@ -497,7 +497,9 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                         key={`${ruling.published_at}-${index}`}
                         className="text-sm p-3 rounded-lg bg-muted/30 border border-border/30 space-y-1"
                       >
-                        <p className="text-foreground leading-relaxed">{ruling.comment}</p>
+                        <div className="text-foreground leading-relaxed">
+                          <OracleText text={ruling.comment} size="sm" />
+                        </div>
                         <p className="text-xs text-muted-foreground">
                           {ruling.source} • {new Date(ruling.published_at).toLocaleDateString('en-US', { 
                             year: 'numeric', 
