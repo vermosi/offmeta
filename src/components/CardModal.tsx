@@ -10,13 +10,13 @@ import { useState, useEffect } from "react";
 import { ScryfallCard } from "@/types/card";
 import { getCardImage, isDoubleFacedCard, getCardFaceDetails, getCardRulings, CardRuling } from "@/lib/scryfall";
 import { getCardPrintings, getTCGPlayerUrl, getCardmarketUrl, CardPrinting } from "@/lib/card-printings";
-import { getTCGPlayerMarketData, getTCGPlayerProductId, TCGPlayerMarketData } from "@/lib/tcgplayer";
+import { getTCGPlayerMarketData, getTCGPlayerProductId, TCGPlayerMarketData, getLiveListings, LiveListingsData } from "@/lib/tcgplayer";
 import { ManaCost } from "./ManaSymbol";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, ShoppingCart, Loader2, Palette, X, RefreshCw, Sparkles, Monitor, Shield, ChevronDown, ChevronUp, Gavel, TrendingUp, Users, Package } from "lucide-react";
+import { ExternalLink, ShoppingCart, Loader2, Palette, X, RefreshCw, Sparkles, Monitor, Shield, ChevronDown, ChevronUp, Gavel, TrendingUp, Users, Package, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -63,6 +63,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
   const [isLoadingRulings, setIsLoadingRulings] = useState(false);
   const [showRulings, setShowRulings] = useState(false);
   const [marketData, setMarketData] = useState<TCGPlayerMarketData | null>(null);
+  const [liveListings, setLiveListings] = useState<LiveListingsData | null>(null);
   const [isLoadingMarket, setIsLoadingMarket] = useState(false);
   const [showMarket, setShowMarket] = useState(false);
   const { trackCardModalView, trackAffiliateClick } = useAnalytics();
@@ -76,6 +77,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
       setShowRulings(false);
       setRulings([]);
       setMarketData(null);
+      setLiveListings(null);
       setShowMarket(false);
     }
   }, [card, open]);
@@ -97,8 +99,14 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
       const tcgplayerId = getTCGPlayerProductId(card);
       if (tcgplayerId) {
         setIsLoadingMarket(true);
-        getTCGPlayerMarketData(tcgplayerId).then((data) => {
-          setMarketData(data);
+        
+        // Fetch both APIs in parallel
+        const marketPromise = getTCGPlayerMarketData(tcgplayerId);
+        const listingsPromise = getLiveListings(card.set_name, card.name);
+        
+        Promise.all([marketPromise, listingsPromise]).then(([market, listings]) => {
+          setMarketData(market);
+          setLiveListings(listings);
           setIsLoadingMarket(false);
         });
       }
@@ -598,6 +606,60 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                           <span className="text-muted-foreground">listings</span>
                         </div>
                       </div>
+
+                      {/* Condition-Based Pricing from Live Listings */}
+                      {liveListings && liveListings.conditionPrices.length > 0 && (
+                        <div className="space-y-2">
+                          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            Cheapest by Condition
+                          </h4>
+                          <div className="space-y-1.5">
+                            {liveListings.conditionPrices
+                              .filter(cp => cp.printing === 'Normal')
+                              .map((cp) => (
+                                <div
+                                  key={`${cp.condition}-${cp.printing}`}
+                                  className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 border border-border/30"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <Badge 
+                                      variant="outline" 
+                                      className={cn(
+                                        "text-[10px] font-semibold",
+                                        cp.conditionAbbr === 'NM' && "bg-emerald-500/10 text-emerald-500 border-emerald-500/30",
+                                        cp.conditionAbbr === 'LP' && "bg-blue-500/10 text-blue-500 border-blue-500/30",
+                                        cp.conditionAbbr === 'MP' && "bg-amber-500/10 text-amber-500 border-amber-500/30",
+                                        cp.conditionAbbr === 'HP' && "bg-orange-500/10 text-orange-500 border-orange-500/30",
+                                        cp.conditionAbbr === 'DM' && "bg-red-500/10 text-red-500 border-red-500/30"
+                                      )}
+                                    >
+                                      {cp.conditionAbbr}
+                                    </Badge>
+                                    <div className="flex flex-col">
+                                      <span className="text-xs text-foreground">{cp.sellerName}</span>
+                                      <div className="flex items-center gap-1">
+                                        <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
+                                        <span className="text-[10px] text-muted-foreground">{cp.sellerRating}%</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <span className="text-sm font-semibold text-emerald-500">
+                                    ${cp.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </span>
+                                </div>
+                              ))}
+                          </div>
+                          
+                          {/* Price Range Stats */}
+                          {liveListings.priceStats && (
+                            <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
+                              <span>
+                                {liveListings.totalListings} listings • Range: ${liveListings.priceStats.min.toLocaleString()} – ${liveListings.priceStats.max.toLocaleString()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       {/* TCGPlayer Tip */}
                       {marketData.tcgplayerTip && (
