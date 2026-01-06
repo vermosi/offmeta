@@ -206,7 +206,48 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_decks: {
+        Row: {
+          commander_id: string | null
+          commander_name: string | null
+          created_at: string | null
+          description: string | null
+          format: string | null
+          id: string | null
+          mainboard: Json | null
+          name: string | null
+          public_id: string | null
+          sideboard: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          commander_id?: string | null
+          commander_name?: string | null
+          created_at?: string | null
+          description?: string | null
+          format?: string | null
+          id?: string | null
+          mainboard?: Json | null
+          name?: string | null
+          public_id?: string | null
+          sideboard?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          commander_id?: string | null
+          commander_name?: string | null
+          created_at?: string | null
+          description?: string | null
+          format?: string | null
+          id?: string | null
+          mainboard?: Json | null
+          name?: string | null
+          public_id?: string | null
+          sideboard?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
