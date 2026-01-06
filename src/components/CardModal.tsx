@@ -8,14 +8,14 @@
 
 import { useState, useEffect } from "react";
 import { ScryfallCard } from "@/types/card";
-import { getCardImage, isDoubleFacedCard, getCardFaceDetails } from "@/lib/scryfall";
+import { getCardImage, isDoubleFacedCard, getCardFaceDetails, getCardRulings, CardRuling } from "@/lib/scryfall";
 import { getCardPrintings, getTCGPlayerUrl, getCardmarketUrl, CardPrinting } from "@/lib/card-printings";
 import { ManaCost } from "./ManaSymbol";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, ShoppingCart, Loader2, Palette, X, RefreshCw, Sparkles, Monitor } from "lucide-react";
+import { ExternalLink, ShoppingCart, Loader2, Palette, X, RefreshCw, Sparkles, Monitor, Shield, ChevronDown, ChevronUp, Gavel } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -58,6 +58,9 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
   const [currentFace, setCurrentFace] = useState(0);
   const [isFlipping, setIsFlipping] = useState(false);
   const [selectedPrinting, setSelectedPrinting] = useState<CardPrinting | null>(null);
+  const [rulings, setRulings] = useState<CardRuling[]>([]);
+  const [isLoadingRulings, setIsLoadingRulings] = useState(false);
+  const [showRulings, setShowRulings] = useState(false);
   const { trackCardModalView, trackAffiliateClick } = useAnalytics();
 
   const isDoubleFaced = card ? isDoubleFacedCard(card) : false;
@@ -66,6 +69,19 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
     if (open) {
       setCurrentFace(0);
       setSelectedPrinting(null);
+      setShowRulings(false);
+      setRulings([]);
+    }
+  }, [card, open]);
+
+  // Fetch rulings when modal opens
+  useEffect(() => {
+    if (card && open) {
+      setIsLoadingRulings(true);
+      getCardRulings(card.id).then((data) => {
+        setRulings(data);
+        setIsLoadingRulings(false);
+      });
     }
   }, [card, open]);
 
@@ -354,7 +370,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
             </div>
           )}
 
-          {/* Set Info with Collector Number */}
+          {/* Set Info with Collector Number and Special Badges */}
           <div className="flex items-center gap-2 flex-wrap">
             <Badge variant={getRarityVariant(displayRarity) as any} className="capitalize">
               {displayRarity}
@@ -363,6 +379,53 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
               {displaySetName}
               {displayCollectorNumber && ` #${displayCollectorNumber}`}
             </Badge>
+            
+            {/* Reserved List Badge */}
+            {(card as any).reserved && (
+              <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30 gap-1">
+                <Shield className="h-3 w-3" />
+                Reserved List
+              </Badge>
+            )}
+            
+            {/* First Printing Badge - show if this is the oldest printing */}
+            {englishPrintings.length > 0 && (() => {
+              const sortedByDate = [...englishPrintings].sort(
+                (a, b) => new Date(a.released_at).getTime() - new Date(b.released_at).getTime()
+              );
+              const oldestId = sortedByDate[0]?.id;
+              const currentId = selectedPrinting?.id || card.id;
+              if (currentId === oldestId && englishPrintings.length > 1) {
+                return (
+                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+                    First Printing
+                  </Badge>
+                );
+              }
+              return null;
+            })()}
+            
+            {/* Only Printing Badge - show if there's only one printing */}
+            {englishPrintings.length === 1 && (
+              <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/30">
+                Only Printing
+              </Badge>
+            )}
+            
+            {/* Unique Art Badge - if selected printing has different art */}
+            {englishPrintings.length > 1 && (() => {
+              const uniqueArtists = new Set(englishPrintings.map(p => p.artist));
+              const currentArtist = selectedPrinting?.artist || card.artist;
+              const artistCount = englishPrintings.filter(p => p.artist === currentArtist).length;
+              if (uniqueArtists.size > 1 && artistCount === 1) {
+                return (
+                  <Badge variant="outline" className="bg-pink-500/10 text-pink-600 border-pink-500/30">
+                    Unique Art
+                  </Badge>
+                );
+              }
+              return null;
+            })()}
           </div>
 
           {/* Oracle Text */}
@@ -399,6 +462,52 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
               <Palette className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">Illustrated by</span>
               <span className="text-foreground font-medium">{displayArtist}</span>
+            </div>
+          )}
+
+          {/* Card Rulings Section */}
+          {(rulings.length > 0 || isLoadingRulings) && (
+            <div className="space-y-2">
+              <button
+                onClick={() => setShowRulings(!showRulings)}
+                className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors w-full"
+              >
+                <Gavel className="h-3.5 w-3.5" />
+                <span>Rulings ({rulings.length})</span>
+                {showRulings ? (
+                  <ChevronUp className="h-3.5 w-3.5 ml-auto" />
+                ) : (
+                  <ChevronDown className="h-3.5 w-3.5 ml-auto" />
+                )}
+              </button>
+              
+              {showRulings && (
+                <div className="space-y-2 pt-1">
+                  {isLoadingRulings ? (
+                    <div className="flex items-center justify-center py-3">
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : rulings.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No rulings available.</p>
+                  ) : (
+                    rulings.map((ruling, index) => (
+                      <div 
+                        key={`${ruling.published_at}-${index}`}
+                        className="text-sm p-3 rounded-lg bg-muted/30 border border-border/30 space-y-1"
+                      >
+                        <p className="text-foreground leading-relaxed">{ruling.comment}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {ruling.source} • {new Date(ruling.published_at).toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           )}
 

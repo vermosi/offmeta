@@ -198,3 +198,52 @@ export function formatManaSymbols(manaCost: string): string[] {
   const symbols = manaCost.match(/\{[^}]+\}/g) || [];
   return symbols.map(s => s.replace(/[{}]/g, ""));
 }
+
+/**
+ * Represents a ruling for a card from Scryfall.
+ */
+export interface CardRuling {
+  object: string;
+  oracle_id: string;
+  source: string;
+  published_at: string;
+  comment: string;
+}
+
+// Cache for rulings to avoid redundant API calls
+const rulingsCache = new Map<string, { data: CardRuling[]; timestamp: number }>();
+const RULINGS_CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
+
+/**
+ * Fetch rulings for a card from Scryfall.
+ * Results are cached for 10 minutes to reduce API calls.
+ * @param cardId - The Scryfall card ID
+ * @returns Array of CardRuling objects
+ */
+export async function getCardRulings(cardId: string): Promise<CardRuling[]> {
+  const cached = rulingsCache.get(cardId);
+  
+  if (cached && Date.now() - cached.timestamp < RULINGS_CACHE_DURATION) {
+    return cached.data;
+  }
+
+  try {
+    const response = await rateLimitedFetch(
+      `${BASE_URL}/cards/${cardId}/rulings`
+    );
+    
+    if (!response.ok) {
+      return [];
+    }
+    
+    const data = await response.json();
+    const rulings: CardRuling[] = data.data || [];
+    
+    rulingsCache.set(cardId, { data: rulings, timestamp: Date.now() });
+    
+    return rulings;
+  } catch (error) {
+    console.error("Failed to fetch rulings:", error);
+    return [];
+  }
+}
