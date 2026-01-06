@@ -2,16 +2,14 @@
  * Unified search bar component for natural language MTG card search.
  */
 
-import { useState, useRef, useCallback, useImperativeHandle, forwardRef, useEffect } from 'react';
+import { useState, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Search, Loader2, X, ArrowRight, History } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { SearchFeedback } from '@/components/SearchFeedback';
-import { VoiceSearchButton } from '@/components/VoiceSearchButton';
 import { SearchHelpModal } from '@/components/SearchHelpModal';
-import { useVoiceInput } from '@/hooks/useVoiceInput';
 
 const SEARCH_CONTEXT_KEY = 'lastSearchContext';
 const SEARCH_HISTORY_KEY = 'offmeta_search_history';
@@ -107,37 +105,6 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
   const inputRef = useRef<HTMLInputElement>(null);
   const { saveContext, getContext } = useSearchContext();
   const { history, addToHistory, clearHistory } = useSearchHistory();
-
-  // Voice input integration
-  const {
-    isListening,
-    isSupported: isVoiceSupported,
-    transcript,
-    startListening,
-    stopListening,
-  } = useVoiceInput({
-    onTranscript: (text) => setQuery(text),
-    onFinalTranscript: (text) => {
-      setQuery(text);
-      handleSearch(text);
-    },
-  });
-
-  // Update query as user speaks
-  useEffect(() => {
-    if (transcript && isListening) {
-      setQuery(transcript);
-    }
-  }, [transcript, isListening]);
-
-  const handleVoiceToggle = useCallback(() => {
-    if (isListening) {
-      stopListening();
-    } else {
-      setQuery('');
-      startListening();
-    }
-  }, [isListening, startListening, stopListening]);
 
   useImperativeHandle(ref, () => ({
     triggerSearch: (searchQuery: string) => {
@@ -265,22 +232,15 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
             )}
           </Button>
           
-          {/* Mobile: show only voice, hide feedback/help */}
-          <VoiceSearchButton
-            isListening={isListening}
-            isSupported={isVoiceSupported}
-            isProcessing={isSearching}
-            onToggle={handleVoiceToggle}
-            className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0"
-          />
-          
-          <div className="hidden sm:block flex-shrink-0">
+          {/* Feedback button - visible on all sizes */}
+          <div className="flex-shrink-0">
             <SearchFeedback 
               originalQuery={query || history[0] || ''} 
               translatedQuery={lastTranslatedQuery} 
             />
           </div>
           
+          {/* Help modal - desktop only */}
           <div className="hidden sm:block flex-shrink-0">
             <SearchHelpModal 
               onTryExample={(exampleQuery) => {
