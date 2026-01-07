@@ -14,9 +14,59 @@ import { SearchHelpModal } from '@/components/SearchHelpModal';
 
 const SEARCH_CONTEXT_KEY = 'lastSearchContext';
 const SEARCH_HISTORY_KEY = 'offmeta_search_history';
+const RESULT_CACHE_KEY = 'offmeta_result_cache';
 const MAX_HISTORY_ITEMS = 5;
 const SEARCH_TIMEOUT_MS = 15000; // 15 second timeout
-const DEBOUNCE_MS = 300; // Debounce rapid typing
+const RESULT_CACHE_TTL = 15 * 60 * 1000; // 15 minute cache for results
+const MAX_CACHE_SIZE = 50;
+
+// Client-side result caching to prevent duplicate edge function calls
+interface CachedResult {
+  scryfallQuery: string;
+  explanation?: {
+    readable: string;
+    assumptions: string[];
+    confidence: number;
+  };
+  showAffiliate?: boolean;
+  timestamp: number;
+}
+
+function normalizeQueryKey(query: string): string {
+  return query.toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
+function getCachedResult(query: string): CachedResult | null {
+  try {
+    const cache = JSON.parse(sessionStorage.getItem(RESULT_CACHE_KEY) || '{}');
+    const key = normalizeQueryKey(query);
+    const cached = cache[key];
+    if (cached && Date.now() - cached.timestamp < RESULT_CACHE_TTL) {
+      return cached;
+    }
+    // Clean up expired entry
+    if (cached) {
+      delete cache[key];
+      sessionStorage.setItem(RESULT_CACHE_KEY, JSON.stringify(cache));
+    }
+  } catch {}
+  return null;
+}
+
+function setCachedResult(query: string, result: Omit<CachedResult, 'timestamp'>): void {
+  try {
+    const cache = JSON.parse(sessionStorage.getItem(RESULT_CACHE_KEY) || '{}');
+    const key = normalizeQueryKey(query);
+    cache[key] = { ...result, timestamp: Date.now() };
+    // Limit cache size - remove oldest entries
+    const keys = Object.keys(cache);
+    if (keys.length > MAX_CACHE_SIZE) {
+      const sorted = keys.sort((a, b) => cache[a].timestamp - cache[b].timestamp);
+      sorted.slice(0, keys.length - MAX_CACHE_SIZE).forEach(k => delete cache[k]);
+    }
+    sessionStorage.setItem(RESULT_CACHE_KEY, JSON.stringify(cache));
+  } catch {}
+}
 
 interface SearchContext {
   previousQuery: string;
