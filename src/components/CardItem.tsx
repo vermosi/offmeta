@@ -1,7 +1,9 @@
 /**
  * Card item component for displaying a single card in the search results grid.
+ * Memoized to prevent unnecessary re-renders in large lists.
  */
 
+import { memo } from "react";
 import { ScryfallCard } from "@/types/card";
 import { getCardImage } from "@/lib/scryfall";
 import { cn } from "@/lib/utils";
@@ -11,7 +13,7 @@ interface CardItemProps {
   onClick: () => void;
 }
 
-export function CardItem({ card, onClick }: CardItemProps) {
+export const CardItem = memo(function CardItem({ card, onClick }: CardItemProps) {
   const imageUrl = getCardImage(card, "normal");
 
   return (
@@ -25,7 +27,8 @@ export function CardItem({ card, onClick }: CardItemProps) {
         src={imageUrl}
         alt=""
         loading="lazy"
-        className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+        decoding="async"
+        className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 will-change-transform"
         aria-hidden="true"
       />
       
@@ -37,7 +40,7 @@ export function CardItem({ card, onClick }: CardItemProps) {
       
       {/* Card info on hover */}
       <div 
-        className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"
+        className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out will-change-transform"
         aria-hidden="true"
       >
         <p className="text-sm font-medium text-white truncate">
@@ -78,4 +81,4 @@ export function CardItem({ card, onClick }: CardItemProps) {
       />
     </button>
   );
-}
+});

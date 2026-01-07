@@ -3,7 +3,7 @@
  * Provides color filters, type filters, CMC range, and sorting.
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
@@ -152,37 +152,37 @@ export function SearchFilters({ cards, onFilteredCards, totalCards }: SearchFilt
     return result;
   }, [cards, filters]);
 
-  // Notify parent of filtered results
-  useMemo(() => {
+  // Notify parent of filtered results - use useEffect instead of useMemo for side effects
+  useEffect(() => {
     onFilteredCards(filteredCards);
   }, [filteredCards, onFilteredCards]);
 
-  const toggleColor = (colorId: string) => {
+  const toggleColor = useCallback((colorId: string) => {
     setFilters(prev => ({
       ...prev,
       colors: prev.colors.includes(colorId)
         ? prev.colors.filter(c => c !== colorId)
         : [...prev.colors, colorId]
     }));
-  };
+  }, []);
 
-  const toggleType = (type: string) => {
+  const toggleType = useCallback((type: string) => {
     setFilters(prev => ({
       ...prev,
       types: prev.types.includes(type)
         ? prev.types.filter(t => t !== type)
         : [...prev.types, type]
     }));
-  };
+  }, []);
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setFilters({
       colors: [],
       types: [],
       cmcRange: [0, 16],
       sortBy: 'name-asc',
     });
-  };
+  }, []);
 
   const hasActiveFilters = filters.colors.length > 0 || 
     filters.types.length > 0 || 

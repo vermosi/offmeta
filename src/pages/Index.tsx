@@ -1,5 +1,6 @@
-import { useState, useCallback, useRef, lazy, Suspense } from "react";
+import { useState, useCallback, useRef, lazy, Suspense, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { UnifiedSearchBar, SearchResult, UnifiedSearchBarHandle } from "@/components/UnifiedSearchBar";
 import { SearchInterpretation } from "@/components/SearchInterpretation";
 import { SearchFilters } from "@/components/SearchFilters";
@@ -107,8 +108,8 @@ const Index = () => {
           role="banner"
         >
           <div className="container-main py-4 flex items-center justify-between">
-            <a 
-              href="/" 
+            <Link 
+              to="/" 
               className="group flex items-center gap-2.5 min-h-0 focus-ring rounded-lg -ml-2 px-2 py-1"
               aria-label="OffMeta - Home"
             >
@@ -131,7 +132,7 @@ const Index = () => {
               <span className="text-lg font-semibold tracking-tight">
                 OffMeta
               </span>
-            </a>
+            </Link>
             <ThemeToggle />
           </div>
         </header>
@@ -224,16 +225,20 @@ const Index = () => {
               <>
                 {displayCards.length > 0 ? (
                   <div 
-                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-4"
+                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-4 content-visibility-auto"
                     role="list"
                     aria-label="Search results"
                   >
                     {displayCards.map((card, index) => (
                       <div 
                         key={card.id} 
-                        className="animate-reveal"
+                        className="animate-reveal contain-layout"
                         role="listitem"
-                        style={{ animationDelay: `${Math.min(index * 40, 400)}ms` }}
+                        style={{ 
+                          animationDelay: `${Math.min(index * 25, 300)}ms`,
+                          contentVisibility: 'auto',
+                          containIntrinsicSize: '0 200px'
+                        }}
                       >
                         <CardItem card={card} onClick={() => handleCardClick(card, index)} />
                       </div>
