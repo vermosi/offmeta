@@ -59,6 +59,181 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+// ============= RATE LIMITING =============
+interface RateLimitEntry {
+  count: number;
+  resetTime: number;
+}
+
+const rateLimiter = new Map<string, RateLimitEntry>();
+const RATE_LIMIT_PER_IP = 30; // requests per minute per IP
+const RATE_LIMIT_WINDOW = 60000; // 1 minute
+const GLOBAL_LIMIT = 1000; // total requests per minute
+let globalRequestCount = 0;
+let globalResetTime = Date.now() + RATE_LIMIT_WINDOW;
+
+function checkRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
+  const now = Date.now();
+  
+  // Reset global counter if window expired
+  if (now > globalResetTime) {
+    globalRequestCount = 0;
+    globalResetTime = now + RATE_LIMIT_WINDOW;
+  }
+  
+  // Check global limit first
+  if (globalRequestCount >= GLOBAL_LIMIT) {
+    return { allowed: false, retryAfter: Math.ceil((globalResetTime - now) / 1000) };
+  }
+  
+  // Check per-IP limit
+  const entry = rateLimiter.get(ip);
+  if (!entry || now > entry.resetTime) {
+    rateLimiter.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    globalRequestCount++;
+    return { allowed: true };
+  }
+  
+  if (entry.count >= RATE_LIMIT_PER_IP) {
+    return { allowed: false, retryAfter: Math.ceil((entry.resetTime - now) / 1000) };
+  }
+  
+  entry.count++;
+  globalRequestCount++;
+  return { allowed: true };
+}
+
+// Clean up old rate limit entries periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of rateLimiter.entries()) {
+    if (now > entry.resetTime) {
+      rateLimiter.delete(ip);
+    }
+  }
+}, 60000);
+
+// ============= QUERY CACHE =============
+interface CacheEntry {
+  result: {
+    scryfallQuery: string;
+    explanation: { readable: string; assumptions: string[]; confidence: number };
+    showAffiliate: boolean;
+  };
+  timestamp: number;
+}
+
+const queryCache = new Map<string, CacheEntry>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+function getCacheKey(query: string, filters?: Record<string, unknown>): string {
+  return `${query.toLowerCase().trim()}|${JSON.stringify(filters || {})}`;
+}
+
+function getCachedResult(query: string, filters?: Record<string, unknown>): CacheEntry['result'] | null {
+  const key = getCacheKey(query, filters);
+  const cached = queryCache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.result;
+  }
+  return null;
+}
+
+function setCachedResult(query: string, filters: Record<string, unknown> | undefined, result: CacheEntry['result']): void {
+  const key = getCacheKey(query, filters);
+  queryCache.set(key, { result, timestamp: Date.now() });
+  
+  // Limit cache size to prevent memory issues
+  if (queryCache.size > 1000) {
+    const oldestKey = queryCache.keys().next().value;
+    if (oldestKey) queryCache.delete(oldestKey);
+  }
+}
+
+// Clean up expired cache entries periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of queryCache.entries()) {
+    if (now - entry.timestamp > CACHE_TTL) {
+      queryCache.delete(key);
+    }
+  }
+}, 60000);
+
+// ============= CIRCUIT BREAKER =============
+const circuitBreaker = {
+  failures: 0,
+  lastFailure: 0,
+  isOpen: false,
+  halfOpenAttempts: 0
+};
+
+const CIRCUIT_FAILURE_THRESHOLD = 5;
+const CIRCUIT_RESET_TIMEOUT = 60000; // 1 minute
+const HALF_OPEN_MAX_ATTEMPTS = 2;
+
+function isCircuitOpen(): boolean {
+  if (!circuitBreaker.isOpen) return false;
+  
+  // Check if we should try half-open
+  if (Date.now() - circuitBreaker.lastFailure > CIRCUIT_RESET_TIMEOUT) {
+    circuitBreaker.halfOpenAttempts++;
+    if (circuitBreaker.halfOpenAttempts <= HALF_OPEN_MAX_ATTEMPTS) {
+      return false; // Allow one request through
+    }
+  }
+  return true;
+}
+
+function recordCircuitSuccess(): void {
+  circuitBreaker.failures = 0;
+  circuitBreaker.isOpen = false;
+  circuitBreaker.halfOpenAttempts = 0;
+}
+
+function recordCircuitFailure(): void {
+  circuitBreaker.failures++;
+  circuitBreaker.lastFailure = Date.now();
+  if (circuitBreaker.failures >= CIRCUIT_FAILURE_THRESHOLD) {
+    circuitBreaker.isOpen = true;
+    console.warn('Circuit breaker OPEN - AI service experiencing issues');
+  }
+}
+
+// ============= LOG BATCHING =============
+interface LogEntry {
+  natural_language_query: string;
+  translated_query: string;
+  model_used: string;
+  confidence_score: number;
+  response_time_ms: number;
+  validation_issues: string[];
+  quality_flags: string[];
+  filters_applied: Record<string, unknown> | null;
+  fallback_used: boolean;
+}
+
+const logQueue: LogEntry[] = [];
+const LOG_BATCH_SIZE = 10;
+const LOG_BATCH_INTERVAL = 5000; // 5 seconds
+
+async function flushLogQueue(): Promise<void> {
+  if (logQueue.length === 0) return;
+  
+  const batch = logQueue.splice(0, LOG_BATCH_SIZE);
+  try {
+    const { error } = await supabase.from('translation_logs').insert(batch);
+    if (error) {
+      console.error('Failed to flush log batch:', error.message);
+    }
+  } catch (err) {
+    console.error('Log batch flush error:', err);
+  }
+}
+
+// Flush logs periodically
+setInterval(flushLogQueue, LOG_BATCH_INTERVAL);
+
 /**
  * Detect quality flags in translated queries (patterns where flash-lite struggles)
  */
@@ -166,9 +341,10 @@ function applyAutoCorrections(query: string, qualityFlags: string[]): { correcte
 }
 
 /**
- * Log translation to database for quality analysis
+ * Queue translation log for batched async insert (non-blocking).
+ * Uses batching to reduce DB pressure during high traffic.
  */
-async function logTranslation(
+function logTranslation(
   naturalQuery: string,
   translatedQuery: string,
   confidenceScore: number,
@@ -177,26 +353,22 @@ async function logTranslation(
   qualityFlags: string[],
   filters: Record<string, unknown> | null,
   fallbackUsed: boolean
-): Promise<void> {
-  try {
-    const { error } = await supabase.from('translation_logs').insert({
-      natural_language_query: naturalQuery.substring(0, 500),
-      translated_query: translatedQuery.substring(0, 1000),
-      model_used: 'google/gemini-2.5-flash-lite',
-      confidence_score: confidenceScore,
-      response_time_ms: responseTimeMs,
-      validation_issues: validationIssues,
-      quality_flags: qualityFlags,
-      filters_applied: filters,
-      fallback_used: fallbackUsed
-    });
-    
-    if (error) {
-      console.error('Failed to log translation:', error.message);
-    }
-  } catch (err) {
-    // Don't fail the request if logging fails
-    console.error('Failed to log translation:', err);
+): void {
+  logQueue.push({
+    natural_language_query: naturalQuery.substring(0, 500),
+    translated_query: translatedQuery.substring(0, 1000),
+    model_used: 'google/gemini-2.5-flash-lite',
+    confidence_score: confidenceScore,
+    response_time_ms: responseTimeMs,
+    validation_issues: validationIssues,
+    quality_flags: qualityFlags,
+    filters_applied: filters,
+    fallback_used: fallbackUsed
+  });
+  
+  // If queue is full, flush immediately
+  if (logQueue.length >= LOG_BATCH_SIZE) {
+    flushLogQueue();
   }
 }
 
@@ -362,6 +534,33 @@ serve(async (req) => {
   const requestStartTime = Date.now();
   let fallbackUsed = false;
 
+  // Rate limiting check
+  const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+                   req.headers.get('x-real-ip') || 
+                   'unknown';
+  const rateCheck = checkRateLimit(clientIP);
+  
+  if (!rateCheck.allowed) {
+    console.log(JSON.stringify({
+      event: 'rate_limit_exceeded',
+      ip: clientIP.substring(0, 20),
+      retryAfter: rateCheck.retryAfter
+    }));
+    
+    return new Response(JSON.stringify({
+      error: 'Too many requests. Please slow down.',
+      retryAfter: rateCheck.retryAfter,
+      success: false
+    }), {
+      status: 429,
+      headers: { 
+        ...corsHeaders, 
+        'Content-Type': 'application/json',
+        'Retry-After': String(rateCheck.retryAfter)
+      }
+    });
+  }
+
   try {
     const { query, filters, context } = await req.json();
 
@@ -396,6 +595,57 @@ serve(async (req) => {
     if (filters?.maxCmc !== undefined && (typeof filters.maxCmc !== 'number' || filters.maxCmc < 0 || filters.maxCmc > 20)) {
       return new Response(JSON.stringify({ error: 'Invalid max CMC (must be 0-20)', success: false }), {
         status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Check cache first for identical queries
+    const cachedResult = getCachedResult(query, filters);
+    if (cachedResult) {
+      const cacheHitTime = Date.now() - requestStartTime;
+      console.log(JSON.stringify({
+        event: 'cache_hit',
+        query: query.substring(0, 50),
+        responseTimeMs: cacheHitTime
+      }));
+      
+      return new Response(JSON.stringify({
+        originalQuery: query,
+        ...cachedResult,
+        responseTimeMs: cacheHitTime,
+        success: true,
+        cached: true
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Check circuit breaker - if open, use fallback immediately
+    if (isCircuitOpen()) {
+      console.log(JSON.stringify({ event: 'circuit_breaker_open', query: query.substring(0, 50) }));
+      fallbackUsed = true;
+      
+      // Use simplified fallback
+      const fallbackQuery = query.toLowerCase().replace(/[^\w\s]/g, ' ').trim();
+      const validation = validateQuery(fallbackQuery);
+      
+      const result = {
+        scryfallQuery: validation.sanitized || query,
+        explanation: {
+          readable: `Searching for: ${query}`,
+          assumptions: ['Service is busy - using simplified search'],
+          confidence: 0.5
+        },
+        showAffiliate: hasPurchaseIntent(query)
+      };
+      
+      return new Response(JSON.stringify({
+        originalQuery: query,
+        ...result,
+        responseTimeMs: Date.now() - requestStartTime,
+        success: true,
+        fallback: true
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -1045,6 +1295,11 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
     });
 
     if (!response.ok) {
+      // Record circuit breaker failure for non-rate-limit errors
+      if (response.status !== 429) {
+        recordCircuitFailure();
+      }
+      
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment.", success: false }), {
           status: 429,
@@ -1147,6 +1402,9 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
       });
     }
 
+    // AI call succeeded - record circuit breaker success
+    recordCircuitSuccess();
+
     const data = await response.json();
     let scryfallQuery = data.choices?.[0]?.message?.content?.trim() || '';
 
@@ -1244,6 +1502,18 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
       validationIssues: validation.issues,
       fallbackUsed
     }));
+
+    // Cache the successful result for future identical queries
+    const resultToCache = {
+      scryfallQuery,
+      explanation: {
+        readable: `Searching for: ${query}`,
+        assumptions,
+        confidence: Math.round(confidence * 100) / 100
+      },
+      showAffiliate
+    };
+    setCachedResult(query, filters, resultToCache);
 
     return new Response(JSON.stringify({ 
       originalQuery: query,

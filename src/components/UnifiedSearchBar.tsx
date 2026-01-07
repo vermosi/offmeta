@@ -1,12 +1,13 @@
 /**
  * Unified search bar component for natural language MTG card search.
+ * Includes debouncing, rate limit handling, and timeout protection.
  */
 
-import { useState, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
+import { useState, useRef, useCallback, useImperativeHandle, forwardRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Search, Loader2, X, ArrowRight, History } from 'lucide-react';
+import { Search, Loader2, X, ArrowRight, History, Clock } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { SearchFeedback } from '@/components/SearchFeedback';
 import { SearchHelpModal } from '@/components/SearchHelpModal';
@@ -14,6 +15,8 @@ import { SearchHelpModal } from '@/components/SearchHelpModal';
 const SEARCH_CONTEXT_KEY = 'lastSearchContext';
 const SEARCH_HISTORY_KEY = 'offmeta_search_history';
 const MAX_HISTORY_ITEMS = 5;
+const SEARCH_TIMEOUT_MS = 15000; // 15 second timeout
+const DEBOUNCE_MS = 300; // Debounce rapid typing
 
 interface SearchContext {
   previousQuery: string;
@@ -102,9 +105,35 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
   const [query, setQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
+  const [rateLimitCountdown, setRateLimitCountdown] = useState<number>(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastSearchRef = useRef<string>('');
+  const abortControllerRef = useRef<AbortController | null>(null);
   const { saveContext, getContext } = useSearchContext();
   const { history, addToHistory, clearHistory } = useSearchHistory();
+
+  // Rate limit countdown timer
+  useEffect(() => {
+    if (!rateLimitedUntil) {
+      setRateLimitCountdown(0);
+      return;
+    }
+    
+    const updateCountdown = () => {
+      const remaining = Math.ceil((rateLimitedUntil - Date.now()) / 1000);
+      if (remaining <= 0) {
+        setRateLimitedUntil(null);
+        setRateLimitCountdown(0);
+      } else {
+        setRateLimitCountdown(remaining);
+      }
+    };
+    
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [rateLimitedUntil]);
 
   useImperativeHandle(ref, () => ({
     triggerSearch: (searchQuery: string) => {
@@ -114,25 +143,60 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
   }), []);
 
   const handleSearch = async (searchQuery?: string) => {
-    const queryToSearch = searchQuery || query;
-    if (!queryToSearch.trim()) return;
-
+    const queryToSearch = (searchQuery || query).trim();
+    
+    // Prevent empty, duplicate, or rate-limited searches
+    if (!queryToSearch) return;
+    if (queryToSearch === lastSearchRef.current && !searchQuery) return;
+    if (rateLimitedUntil && Date.now() < rateLimitedUntil) {
+      toast.error('Please wait', {
+        description: `Rate limited. Try again in ${rateLimitCountdown}s`
+      });
+      return;
+    }
+    
+    // Cancel any pending request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+    
+    lastSearchRef.current = queryToSearch;
     setIsSearching(true);
-    addToHistory(queryToSearch.trim());
+    addToHistory(queryToSearch);
+
+    // Timeout promise
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Search timeout')), SEARCH_TIMEOUT_MS);
+    });
 
     try {
       const context = getContext();
-      const { data, error } = await supabase.functions.invoke('semantic-search', {
+      
+      const searchPromise = supabase.functions.invoke('semantic-search', {
         body: {
-          query: queryToSearch.trim(),
+          query: queryToSearch,
           context: context || undefined
         }
       });
+      
+      const { data, error } = await Promise.race([searchPromise, timeoutPromise]);
 
       if (error) throw error;
 
+      // Handle rate limiting response
+      if (data?.retryAfter) {
+        const retryAfterMs = (data.retryAfter || 30) * 1000;
+        setRateLimitedUntil(Date.now() + retryAfterMs);
+        toast.error('Too many searches', {
+          description: `High traffic - retry in ${data.retryAfter}s`,
+          icon: <Clock className="h-4 w-4" />
+        });
+        return;
+      }
+
       if (data?.success && data?.scryfallQuery) {
-        saveContext(queryToSearch.trim(), data.scryfallQuery);
+        saveContext(queryToSearch, data.scryfallQuery);
         
         onSearch(data.scryfallQuery, {
           scryfallQuery: data.scryfallQuery,
@@ -146,14 +210,31 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
       } else {
         throw new Error(data?.error || 'Failed to translate');
       }
-    } catch (error) {
-      console.error('Search error:', error);
-      toast.error('Search issue', {
-        description: 'Trying direct search instead'
-      });
-      onSearch(queryToSearch);
+    } catch (error: unknown) {
+      // Handle different error types
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      if (errorMessage === 'Search timeout') {
+        console.error('Search timeout');
+        toast.error('Search took too long', {
+          description: 'Try a simpler query or try again'
+        });
+        onSearch(queryToSearch); // Fall back to direct search
+      } else if (errorMessage.includes('429') || errorMessage.includes('rate')) {
+        setRateLimitedUntil(Date.now() + 30000);
+        toast.error('Too many searches', {
+          description: 'Please wait a moment before searching again'
+        });
+      } else {
+        console.error('Search error:', error);
+        toast.error('Search issue', {
+          description: 'Trying direct search instead'
+        });
+        onSearch(queryToSearch);
+      }
     } finally {
       setIsSearching(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -216,13 +297,18 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
 
           <Button
             onClick={() => handleSearch()}
-            disabled={isSearching || isLoading || !query.trim()}
+            disabled={isSearching || isLoading || !query.trim() || rateLimitCountdown > 0}
             variant="accent"
             size="sm"
             className="h-8 sm:h-10 px-3 sm:px-4 rounded-lg gap-1.5 sm:gap-2 font-medium flex-shrink-0"
-            aria-label={isSearching ? 'Searching...' : 'Search for cards'}
+            aria-label={rateLimitCountdown > 0 ? `Wait ${rateLimitCountdown}s` : isSearching ? 'Searching...' : 'Search for cards'}
           >
-            {isSearching ? (
+            {rateLimitCountdown > 0 ? (
+              <>
+                <Clock className="h-4 w-4" aria-hidden="true" />
+                <span className="text-xs">{rateLimitCountdown}s</span>
+              </>
+            ) : isSearching ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             ) : (
               <>
