@@ -124,7 +124,7 @@ interface CacheEntry {
 }
 
 const queryCache = new Map<string, CacheEntry>();
-const CACHE_TTL = 15 * 60 * 1000; // 15 minutes (extended for cost optimization)
+const CACHE_TTL = 30 * 60 * 1000; // 30 minutes (cost optimization - translations are stable)
 
 function getCacheKey(query: string, filters?: Record<string, unknown>): string {
   return `${query.toLowerCase().trim()}|${JSON.stringify(filters || {})}`;
@@ -412,6 +412,14 @@ function applyAutoCorrections(query: string, qualityFlags: string[]): { correcte
 /**
  * Queue translation log for batched async insert (non-blocking).
  * Uses batching to reduce DB pressure during high traffic.
+ * 
+ * COST OPTIMIZATION: Only logs when:
+ * - Confidence < 0.8 (needs improvement)
+ * - Has validation issues (potential bugs)
+ * - Has quality flags (model mistakes)
+ * - Fallback was used (service issues)
+ * 
+ * Set LOG_ALL_TRANSLATIONS=true env var for debugging.
  */
 function logTranslation(
   naturalQuery: string,
@@ -423,6 +431,18 @@ function logTranslation(
   filters: Record<string, unknown> | null,
   fallbackUsed: boolean
 ): void {
+  // Selective logging for cost optimization
+  const shouldLog = 
+    Deno.env.get('LOG_ALL_TRANSLATIONS') === 'true' ||
+    confidenceScore < 0.8 ||
+    validationIssues.length > 0 ||
+    qualityFlags.length > 0 ||
+    fallbackUsed;
+  
+  if (!shouldLog) {
+    return; // Skip logging high-confidence successful translations
+  }
+  
   logQueue.push({
     natural_language_query: naturalQuery.substring(0, 500),
     translated_query: translatedQuery.substring(0, 1000),
@@ -1107,138 +1127,16 @@ PRECON & PRODUCT SLANG:
 - "iconic masters" = e:ima (Iconic Masters)
 - "ultimate masters" = e:uma (Ultimate Masters)
 
-SECRET LAIR SPECIFIC DROPS (CRITICAL - use correct search patterns for themed drops):
-When users ask for cards from a specific Secret Lair, use the appropriate search method.
-Art tags (art:) search Scryfall's tagger database. Artist names (a:) are more reliable for artist series.
-IMPORTANT: Art tag naming is inconsistent - try BOTH with and without "-universe" suffix using OR.
-
-=== VIDEO GAME COLLABORATIONS (use art tags) ===
-- "sonic secret lair" / "sonic the hedgehog" = e:sld (art:sonic-the-hedgehog OR art:sonic-the-hedgehog-universe)
-- "god of war secret lair" / "kratos" = e:sld (art:god-of-war OR art:god-of-war-universe)
-- "last of us secret lair" / "ellie and joel" = e:sld (art:the-last-of-us OR art:last-of-us OR art:the-last-of-us-universe)
-- "uncharted secret lair" / "nathan drake" = e:sld (art:uncharted OR art:uncharted-universe)
-- "street fighter secret lair" / "ryu chun-li" = e:sld (art:street-fighter OR art:street-fighter-universe)
-- "fortnite secret lair" = e:sld (art:fortnite OR art:fortnite-universe)
-- "tomb raider secret lair" / "lara croft" = e:sld (art:tomb-raider OR art:tomb-raider-universe)
-- "hatsune miku secret lair" / "miku" = e:sld (art:hatsune-miku OR art:hatsune-miku-universe)
-- "final fantasy secret lair" = e:sld (art:final-fantasy OR art:final-fantasy-universe)
-
-=== TV/MOVIE COLLABORATIONS (use art tags) ===
-- "stranger things secret lair" / "eleven" = e:sld (art:stranger-things OR art:stranger-things-universe)
-- "walking dead secret lair" / "negan" = e:sld (art:walking-dead OR art:the-walking-dead OR art:the-walking-dead-universe)
-- "arcane secret lair" / "jinx vi" = e:sld (art:arcane OR art:arcane-universe)
-- "princess bride secret lair" / "westley buttercup" = e:sld (art:princess-bride OR art:the-princess-bride OR art:the-princess-bride-universe)
-- "transformers secret lair" / "optimus megatron" = e:sld (art:transformers OR art:transformers-universe)
-- "jurassic world secret lair" / "jurassic park" = e:sld (art:jurassic-world OR art:jurassic-park OR art:jurassic-world-universe)
-- "doctor who secret lair" / "tardis" = e:sld (art:doctor-who OR art:doctor-who-universe)
-- "the office secret lair" / "dwight" = e:sld (art:the-office OR art:the-office-universe)
-- "jaws secret lair" = e:sld (art:jaws OR art:jaws-universe)
-- "godzilla secret lair" = e:sld (art:godzilla OR is:godzilla)
-
-=== MUSIC/ARTIST COLLABORATIONS ===
-- "post malone secret lair" = e:sld art:post-malone
-- "iron maiden secret lair" = e:sld (art:iron-maiden OR art:iron-maiden-universe)
-
-=== ANIME/MANGA COLLABORATIONS ===
-- "attack on titan secret lair" / "eren mikasa" = e:sld (art:attack-on-titan OR art:attack-on-titan-universe)
-- "junji ito secret lair" = e:sld a:"Junji Ito"
-
-=== WARHAMMER COLLABORATIONS ===
-- "warhammer secret lair" / "warhammer 40k" = e:sld (art:warhammer OR art:warhammer-40000)
-- "warhammer age of sigmar" = e:sld art:age-of-sigmar
-- "blood bowl secret lair" = e:sld art:blood-bowl
-
-=== COMEDY/PARODY ===
-- "monty python secret lair" / "killer rabbit" / "holy grail" = e:sld (art:monty-python OR art:monty-python-universe)
-- "spongebob secret lair" / "spongebob squarepants" = e:sld (art:spongebob OR art:spongebob-squarepants OR art:spongebob-universe)
-
-=== ARTIST SECRET LAIRS (use a: for artist name - MOST RELIABLE) ===
-Classic MTG Artists:
-- "bob ross secret lair" / "happy little gathering" = e:sld a:"Bob Ross"
-- "seb mckinnon secret lair" = e:sld a:"Seb McKinnon"
-- "rebecca guay secret lair" = e:sld a:"Rebecca Guay"
-- "dan frazier secret lair" / "foil talismans" / "talismans secret lair" = e:sld a:"Dan Frazier"
-- "mark poole secret lair" = e:sld a:"Mark Poole"
-- "thomas baxa secret lair" = e:sld a:"Thomas Baxa"
-- "johannes voss secret lair" = e:sld a:"Johannes Voss"
-- "wayne reynolds secret lair" = e:sld a:"Wayne Reynolds"
-- "volkan baga secret lair" = e:sld a:"Volkan Baga"
-- "chris rahn secret lair" = e:sld a:"Chris Rahn"
-- "magali villeneuve secret lair" = e:sld a:"Magali Villeneuve"
-- "nils hamm secret lair" = e:sld a:"Nils Hamm"
-- "livia prima secret lair" = e:sld a:"Livia Prima"
-- "victor adame minguez secret lair" = e:sld a:"Victor Adame Minguez"
-- "aleksi briclot secret lair" = e:sld a:"Aleksi Briclot"
-- "sidharth chaturvedi secret lair" = e:sld a:"Sidharth Chaturvedi"
-- "ron spencer secret lair" = e:sld a:"Ron Spencer"
-- "phil foglio secret lair" = e:sld a:"Phil Foglio"
-- "pete venters secret lair" = e:sld a:"Pete Venters"
-- "adam paquette secret lair" = e:sld a:"Adam Paquette"
-- "igor kieryluk secret lair" = e:sld a:"Igor Kieryluk"
-- "jesper ejsing secret lair" = e:sld a:"Jesper Ejsing"
-- "chase stone secret lair" = e:sld a:"Chase Stone"
-- "jake murray secret lair" = e:sld a:"Jake Murray"
-- "scott m fischer secret lair" = e:sld a:"Scott M. Fischer"
-- "heather hudson secret lair" = e:sld a:"Heather Hudson"
-- "dave allsop secret lair" = e:sld a:"Dave Allsop"
-
-Guest/External Artists:
-- "fiona staples secret lair" = e:sld a:"Fiona Staples"
-- "jen bartel secret lair" = e:sld a:"Jen Bartel"
-- "yuko shimizu secret lair" = e:sld a:"Yuko Shimizu"
-- "yoji shinkawa secret lair" = e:sld a:"Yoji Shinkawa"
-- "frank frazetta secret lair" = e:sld a:"Frank Frazetta"
-- "kozyndan secret lair" = e:sld a:"Kozyndan"
-- "kelogsloops secret lair" = e:sld a:"Kelogsloops"
-- "matt jukes secret lair" = e:sld a:"Matt Jukes"
-- "omar rayyan secret lair" = e:sld a:"Omar Rayyan"
-- "bakshi productions secret lair" / "ralph bakshi" = e:sld a:"Bakshi Productions"
-- "erol otus secret lair" = e:sld a:"Erol Otus"
-- "craig drake secret lair" = e:sld a:"Craig Drake"
-
-=== THEMED/DROP NAME SECRET LAIRS ===
-Creature Type Themes:
-- "cat secret lair" / "omg kitties" / "purrfection" = e:sld t:cat
-- "dog secret lair" / "every dog has its day" = e:sld t:dog
-- "goblin secret lair" = e:sld t:goblin
-- "squirrel secret lair" = e:sld t:squirrel
-- "faerie secret lair" / "faerie rad" = e:sld t:faerie
-- "dragon secret lair" / "here be dragons" = e:sld t:dragon
-- "slime secret lair" / "prime slime" = e:sld (t:ooze OR o:ooze)
-- "snake secret lair" / "ssssnakes" = e:sld t:snake
-- "rat secret lair" / "year of the rat" = e:sld t:rat
-
-Named Drops (search by drop name keywords):
-- "bitterblossom dreams" = e:sld Bitterblossom
-- "phyrexian secret lair" / "phyrexian praetors" / "phyrexian faves" = e:sld (is:phyrexian OR o:phyrexian OR t:phyrexian)
-- "pride secret lair" / "pride across the multiverse" = e:sld art:pride
-- "theros stargazing" / "stargazing secret lair" = e:sld (art:stargazing OR art:theros-stargazing)
-- "kamigawa ink" = e:sld art:kamigawa-ink
-- "dracula secret lair" / "castle dracula" = e:sld (art:dracula OR art:castle-dracula)
-- "pixel lands" / "pixel snow lands" = e:sld art:pixel
-- "astrology lands" / "zodiac lands" = e:sld art:astrology
-- "tokyo lands" = e:sld art:tokyo-lands
-- "full text lands" = e:sld art:full-text
-- "showcase kaldheim" = e:sld art:showcase-kaldheim
-- "showcase strixhaven" = e:sld art:showcase-strixhaven
-- "showcase zendikar" = e:sld art:showcase-zendikar
-- "showcase midnight hunt" = e:sld art:showcase-midnight-hunt
-- "showcase neon dynasty" = e:sld art:showcase-neon-dynasty
-- "showcase dominaria united" = e:sld art:showcase-dominaria-united
-- "showcase streets of new capenna" = e:sld art:showcase-streets-of-new-capenna
-- "lil walkers" / "li'l walkers" / "chibi planeswalkers" = e:sld art:lil-walkers
-- "saturday morning dnd" / "saturday morning d&d" = e:sld art:saturday-morning
-- "extra life secret lair" = e:sld art:extra-life
-- "black is magic" = e:sld art:black-is-magic
-- "international womens day" = e:sld art:international-womens-day
-- "secretversary" = e:sld art:secretversary
-
-=== FALLBACK STRATEGIES ===
-For unknown Secret Lair drops:
-1. Try art tag: e:sld (art:[name-with-hyphens] OR art:[name-with-hyphens]-universe)
-2. Try artist name: e:sld a:"Artist Name"
-3. Try card name keywords: e:sld "keyword from drop"
-4. Generic SLD search: e:sld [theme/keyword]
+SECRET LAIR DROPS (use e:sld with appropriate filters):
+- Collabs: Use art tags e:sld (art:[name-hyphens] OR art:[name]-universe) for video games, TV, movies
+- Artists: Use e:sld a:"Artist Name" (most reliable for artist series)
+- Creature themes: Use e:sld t:[type] (cats, dogs, goblins, dragons, etc.)
+- Named drops: Use e:sld art:[drop-name-hyphens] or e:sld + keywords
+Examples:
+- "sonic secret lair" = e:sld (art:sonic-the-hedgehog OR art:sonic-the-hedgehog-universe)
+- "bob ross secret lair" = e:sld a:"Bob Ross"
+- "cat secret lair" = e:sld t:cat
+- "phyrexian secret lair" = e:sld (is:phyrexian OR o:phyrexian)
 
 RESERVED LIST & SPECIAL STATUS:
 - "reserved list" / "RL cards" = is:reserved (cards on the Reserved List)
