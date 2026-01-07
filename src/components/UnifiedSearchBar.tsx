@@ -205,15 +205,32 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
       return;
     }
     
+    lastSearchRef.current = queryToSearch;
+    addToHistory(queryToSearch);
+    
+    // Check client-side cache first (eliminates edge function call entirely)
+    const cached = getCachedResult(queryToSearch);
+    if (cached) {
+      console.log('[Cache] Client-side hit for:', queryToSearch);
+      saveContext(queryToSearch, cached.scryfallQuery);
+      onSearch(cached.scryfallQuery, {
+        scryfallQuery: cached.scryfallQuery,
+        explanation: cached.explanation,
+        showAffiliate: cached.showAffiliate
+      });
+      toast.success('Search (cached)', {
+        description: `Found: ${cached.scryfallQuery.substring(0, 50)}${cached.scryfallQuery.length > 50 ? '...' : ''}`
+      });
+      return;
+    }
+    
     // Cancel any pending request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
     abortControllerRef.current = new AbortController();
     
-    lastSearchRef.current = queryToSearch;
     setIsSearching(true);
-    addToHistory(queryToSearch);
 
     // Timeout promise
     const timeoutPromise = new Promise<never>((_, reject) => {
@@ -248,13 +265,21 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
       if (data?.success && data?.scryfallQuery) {
         saveContext(queryToSearch, data.scryfallQuery);
         
+        // Cache the result client-side for 15 minutes
+        setCachedResult(queryToSearch, {
+          scryfallQuery: data.scryfallQuery,
+          explanation: data.explanation,
+          showAffiliate: data.showAffiliate
+        });
+        
         onSearch(data.scryfallQuery, {
           scryfallQuery: data.scryfallQuery,
           explanation: data.explanation,
           showAffiliate: data.showAffiliate
         });
         
-        toast.success('Search translated', {
+        const source = data.source || 'ai';
+        toast.success(`Search translated${source !== 'ai' ? ` (${source})` : ''}`, {
           description: `Found: ${data.scryfallQuery.substring(0, 50)}${data.scryfallQuery.length > 50 ? '...' : ''}`
         });
       } else {
