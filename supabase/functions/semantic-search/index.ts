@@ -894,7 +894,7 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-2.5-flash-lite",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userMessage }
