@@ -38,6 +38,48 @@ export type Database = {
         }
         Relationships: []
       }
+      query_cache: {
+        Row: {
+          confidence: number
+          created_at: string
+          expires_at: string
+          explanation: Json
+          hit_count: number
+          id: string
+          last_hit_at: string | null
+          normalized_query: string
+          query_hash: string
+          scryfall_query: string
+          show_affiliate: boolean
+        }
+        Insert: {
+          confidence?: number
+          created_at?: string
+          expires_at?: string
+          explanation?: Json
+          hit_count?: number
+          id?: string
+          last_hit_at?: string | null
+          normalized_query: string
+          query_hash: string
+          scryfall_query: string
+          show_affiliate?: boolean
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          expires_at?: string
+          explanation?: Json
+          hit_count?: number
+          id?: string
+          last_hit_at?: string | null
+          normalized_query?: string
+          query_hash?: string
+          scryfall_query?: string
+          show_affiliate?: boolean
+        }
+        Relationships: []
+      }
       search_feedback: {
         Row: {
           created_at: string
@@ -167,7 +209,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_expired_cache: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
