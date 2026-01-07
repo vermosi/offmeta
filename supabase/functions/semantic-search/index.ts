@@ -124,7 +124,7 @@ interface CacheEntry {
 }
 
 const queryCache = new Map<string, CacheEntry>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 15 * 60 * 1000; // 15 minutes (extended for cost optimization)
 
 function getCacheKey(query: string, filters?: Record<string, unknown>): string {
   return `${query.toLowerCase().trim()}|${JSON.stringify(filters || {})}`;
@@ -159,6 +159,75 @@ setInterval(() => {
     }
   }
 }, 60000);
+
+// ============= PATTERN MATCHING (AI BYPASS) =============
+/**
+ * Normalizes a query for pattern matching (order-independent, lowercase, no punctuation)
+ */
+function normalizeQueryForMatching(query: string): string {
+  return query
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ' ')           // Collapse whitespace
+    .replace(/[^\w\s]/g, '')        // Remove punctuation
+    .split(' ')
+    .sort()                          // Sort words for order-independent matching
+    .join(' ');
+}
+
+/**
+ * Checks translation_rules for an exact pattern match to bypass AI entirely.
+ * Returns the cached result format if a match is found.
+ */
+async function checkPatternMatch(
+  query: string, 
+  filters?: Record<string, unknown>
+): Promise<CacheEntry['result'] | null> {
+  const normalizedQuery = normalizeQueryForMatching(query);
+  
+  try {
+    // Check for exact pattern matches in translation_rules
+    const { data: rules, error } = await supabase
+      .from('translation_rules')
+      .select('pattern, scryfall_syntax, confidence, description')
+      .eq('is_active', true)
+      .gte('confidence', 0.8);
+    
+    if (error || !rules || rules.length === 0) return null;
+    
+    for (const rule of rules) {
+      const normalizedPattern = normalizeQueryForMatching(rule.pattern);
+      if (normalizedPattern === normalizedQuery) {
+        console.log(`Pattern match found: "${query}" → "${rule.scryfall_syntax}"`);
+        
+        let finalQuery = rule.scryfall_syntax;
+        
+        // Apply filters to matched query
+        if (filters?.format && !finalQuery.includes('f:')) {
+          finalQuery += ` f:${filters.format}`;
+        }
+        if (filters?.colorIdentity && Array.isArray(filters.colorIdentity) && filters.colorIdentity.length > 0 && !finalQuery.includes('id')) {
+          finalQuery += ` id=${(filters.colorIdentity as string[]).join('').toLowerCase()}`;
+        }
+        
+        return {
+          scryfallQuery: finalQuery,
+          explanation: {
+            readable: `Searching for: ${query}`,
+            assumptions: ['Matched known query pattern'],
+            confidence: Number(rule.confidence) || 0.9
+          },
+          showAffiliate: hasPurchaseIntent(query)
+        };
+      }
+    }
+    
+    return null;
+  } catch (e) {
+    console.error('Pattern match check failed:', e);
+    return null;
+  }
+}
 
 // ============= CIRCUIT BREAKER =============
 const circuitBreaker = {
@@ -609,12 +678,39 @@ serve(async (req) => {
         responseTimeMs: cacheHitTime
       }));
       
+      // Skip logging for cache hits to reduce DB costs
       return new Response(JSON.stringify({
         originalQuery: query,
         ...cachedResult,
         responseTimeMs: cacheHitTime,
         success: true,
-        cached: true
+        cached: true,
+        source: 'cache'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Check pattern matching - bypasses AI entirely for known queries
+    const patternMatch = await checkPatternMatch(query, filters);
+    if (patternMatch) {
+      const patternMatchTime = Date.now() - requestStartTime;
+      console.log(JSON.stringify({
+        event: 'pattern_match_hit',
+        query: query.substring(0, 50),
+        responseTimeMs: patternMatchTime
+      }));
+      
+      // Cache the pattern match result for future hits
+      setCachedResult(query, filters, patternMatch);
+      
+      // Skip logging for pattern matches to reduce DB costs
+      return new Response(JSON.stringify({
+        originalQuery: query,
+        ...patternMatch,
+        responseTimeMs: patternMatchTime,
+        success: true,
+        source: 'pattern_match'
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
