@@ -1,5 +1,5 @@
-import { useState, useCallback, useRef, lazy, Suspense, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useCallback, useRef, lazy, Suspense, useMemo, useEffect } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { UnifiedSearchBar, SearchResult, UnifiedSearchBarHandle } from "@/components/UnifiedSearchBar";
 import { SearchInterpretation } from "@/components/SearchInterpretation";
@@ -14,35 +14,60 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { searchCards } from "@/lib/scryfall";
 import { ScryfallCard } from "@/types/card";
 import { useAnalytics } from "@/hooks/useAnalytics";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 const CardModal = lazy(() => import("@/components/CardModal"));
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
   const [selectedCard, setSelectedCard] = useState<ScryfallCard | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [lastSearchResult, setLastSearchResult] = useState<SearchResult | null>(null);
   const [filteredCards, setFilteredCards] = useState<ScryfallCard[]>([]);
   const searchBarRef = useRef<UnifiedSearchBarHandle>(null);
-  const { trackSearch, trackCardClick, trackPagination } = useAnalytics();
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const { trackSearch, trackCardClick } = useAnalytics();
 
   const {
-    data: searchResult,
-    isLoading: isSearching
-  } = useQuery({
-    queryKey: ["cards", searchQuery, currentPage],
-    queryFn: () => searchCards(searchQuery, currentPage),
+    data,
+    isLoading: isSearching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["cards", searchQuery],
+    queryFn: ({ pageParam = 1 }) => searchCards(searchQuery, pageParam),
+    getNextPageParam: (lastPage, allPages) => {
+      return lastPage.has_more ? allPages.length + 1 : undefined;
+    },
+    initialPageParam: 1,
     enabled: !!searchQuery,
-    staleTime: 5 * 60 * 1000
+    staleTime: 5 * 60 * 1000,
   });
+
+  // Intersection observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1, rootMargin: "200px" }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const handleSearch = useCallback((query: string, result?: SearchResult) => {
     setSearchQuery(query);
-    setCurrentPage(1);
     setHasSearched(true);
     setLastSearchResult(result || null);
+    setFilteredCards([]); // Reset filters on new search
     
     // Track search analytics
     if (result) {
@@ -53,18 +78,6 @@ const Index = () => {
       });
     }
   }, [trackSearch]);
-
-  const handlePageChange = useCallback((newPage: number) => {
-    // Track pagination
-    trackPagination({
-      query: searchQuery,
-      from_page: currentPage,
-      to_page: newPage,
-    });
-    
-    setCurrentPage(newPage);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [currentPage, searchQuery, trackPagination]);
 
   const handleCardClick = useCallback((card: ScryfallCard, index: number) => {
     // Track card click
@@ -83,9 +96,12 @@ const Index = () => {
     searchBarRef.current?.triggerSearch(query);
   }, []);
 
-  const cards = searchResult?.data || [];
-  const totalCards = searchResult?.total_cards || 0;
-  const hasMore = searchResult?.has_more || false;
+  // Flatten all pages into a single array
+  const cards = useMemo(() => {
+    return data?.pages.flatMap(page => page.data) || [];
+  }, [data]);
+  
+  const totalCards = data?.pages[0]?.total_cards || 0;
   
   // Use filtered cards for display, fall back to all cards if no filtering applied
   const displayCards = filteredCards.length > 0 || cards.length === 0 ? filteredCards : cards;
@@ -251,47 +267,24 @@ const Index = () => {
                   </div>
                 )}
 
-                {/* Pagination */}
-                {(hasMore || currentPage > 1) && (
-                  <nav 
-                    className="flex items-center justify-center gap-3 pt-8"
-                    aria-label="Pagination"
-                  >
-                    <Button 
-                      variant="outline" 
-                      size="lg"
-                      onClick={() => handlePageChange(currentPage - 1)} 
-                      disabled={currentPage === 1 || isSearching} 
-                      className="gap-2 magnetic"
-                      aria-label="Go to previous page"
-                    >
-                      <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-                      <span className="hidden sm:inline">Previous</span>
-                    </Button>
-                    <div 
-                      className="pill tabular-nums flex items-center gap-1.5"
-                      aria-current="page"
-                    >
-                      <span>Page {currentPage}</span>
-                      {hasMore && (
-                        <span className="text-muted-foreground text-xs">
-                          • more results
-                        </span>
-                      )}
+                {/* Infinite scroll trigger */}
+                <div 
+                  ref={loadMoreRef} 
+                  className="flex justify-center pt-8 pb-4"
+                  aria-hidden="true"
+                >
+                  {isFetchingNextPage && (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span>Loading more cards...</span>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="lg"
-                      onClick={() => handlePageChange(currentPage + 1)} 
-                      disabled={!hasMore || isSearching} 
-                      className="gap-2 magnetic"
-                      aria-label="Go to next page"
-                    >
-                      <span className="hidden sm:inline">Next</span>
-                      <ChevronRight className="h-4 w-4" aria-hidden="true" />
-                    </Button>
-                  </nav>
-                )}
+                  )}
+                  {!hasNextPage && cards.length > 0 && (
+                    <span className="text-sm text-muted-foreground">
+                      You've reached the end • {totalCards.toLocaleString()} cards total
+                    </span>
+                  )}
+                </div>
               </>
             ) : isSearching ? (
               <div 
