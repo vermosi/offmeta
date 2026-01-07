@@ -17,7 +17,7 @@ const SEARCH_HISTORY_KEY = 'offmeta_search_history';
 const RESULT_CACHE_KEY = 'offmeta_result_cache_v2'; // Bump version to invalidate old caches
 const MAX_HISTORY_ITEMS = 5;
 const SEARCH_TIMEOUT_MS = 15000; // 15 second timeout
-const RESULT_CACHE_TTL = 15 * 60 * 1000; // 15 minute cache for results
+const RESULT_CACHE_TTL = 30 * 60 * 1000; // 30 minute cache for results (cost optimization)
 const MAX_CACHE_SIZE = 50;
 
 // Client-side result caching to prevent duplicate edge function calls
