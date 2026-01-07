@@ -103,6 +103,69 @@ function detectQualityFlags(translatedQuery: string): string[] {
 }
 
 /**
+ * Apply automatic corrections for known flash-lite mistakes.
+ * Returns the corrected query and a list of corrections applied.
+ */
+function applyAutoCorrections(query: string, qualityFlags: string[]): { correctedQuery: string; corrections: string[] } {
+  let correctedQuery = query;
+  const corrections: string[] = [];
+  
+  // Fix 1: Remove invalid function: tags (not supported by Scryfall API)
+  if (qualityFlags.includes('uses_invalid_function_tag')) {
+    // Remove function:xxx patterns
+    const beforeFix = correctedQuery;
+    correctedQuery = correctedQuery.replace(/function:[^\s)]+/gi, '').trim();
+    if (correctedQuery !== beforeFix) {
+      corrections.push('Removed invalid "function:" tag (not supported by Scryfall API)');
+    }
+  }
+  
+  // Fix 2: Remove unnecessary game:paper filter (default behavior)
+  if (qualityFlags.includes('unnecessary_game_filter')) {
+    const beforeFix = correctedQuery;
+    correctedQuery = correctedQuery.replace(/game:paper\s*/gi, '').trim();
+    if (correctedQuery !== beforeFix) {
+      corrections.push('Removed unnecessary "game:paper" filter');
+    }
+  }
+  
+  // Fix 3: Simplify verbose ETB syntax
+  if (qualityFlags.includes('verbose_etb_syntax')) {
+    const beforeFix = correctedQuery;
+    correctedQuery = correctedQuery.replace(/o:"enters the battlefield"/gi, 'o:"enters"');
+    if (correctedQuery !== beforeFix) {
+      corrections.push('Simplified ETB syntax for broader results');
+    }
+  }
+  
+  // Fix 4: Simplify verbose LTB syntax
+  if (qualityFlags.includes('verbose_ltb_syntax')) {
+    const beforeFix = correctedQuery;
+    correctedQuery = correctedQuery.replace(/o:"leaves the battlefield"/gi, 'o:"leaves"');
+    if (correctedQuery !== beforeFix) {
+      corrections.push('Simplified LTB syntax for broader results');
+    }
+  }
+  
+  // Fix 5: Simplify verbose dies syntax
+  if (qualityFlags.includes('verbose_dies_syntax')) {
+    const beforeFix = correctedQuery;
+    correctedQuery = correctedQuery.replace(/o:"when this creature dies"/gi, 'o:"dies"');
+    if (correctedQuery !== beforeFix) {
+      corrections.push('Simplified "dies" syntax for broader results');
+    }
+  }
+  
+  // Clean up any double spaces left from removals
+  correctedQuery = correctedQuery.replace(/\s+/g, ' ').trim();
+  
+  // Clean up empty parentheses that might result from removals
+  correctedQuery = correctedQuery.replace(/\(\s*\)/g, '').trim();
+  
+  return { correctedQuery, corrections };
+}
+
+/**
  * Log translation to database for quality analysis
  */
 async function logTranslation(
@@ -1097,9 +1160,21 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
     // Validate and sanitize
     const validation = validateQuery(scryfallQuery);
     scryfallQuery = validation.sanitized;
+    
+    // Detect quality flags before corrections
+    const qualityFlags = detectQualityFlags(scryfallQuery);
+    
+    // Apply automatic corrections for known flash-lite mistakes
+    const { correctedQuery, corrections } = applyAutoCorrections(scryfallQuery, qualityFlags);
+    scryfallQuery = correctedQuery;
 
     // Build explanation based on what the query ACTUALLY contains
     const assumptions: string[] = [];
+    
+    // Add auto-corrections to assumptions so users know what was fixed
+    if (corrections.length > 0) {
+      assumptions.push(...corrections);
+    }
     
     // Detect what the AI actually did based on the generated query
     if (!filters?.format && scryfallQuery.includes('f:commander')) {
@@ -1134,6 +1209,8 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
     if (query.split(' ').length <= 3) confidence = 0.95;
     if (query.split(' ').length > 10) confidence = 0.7;
     if (validation.issues.length > 0) confidence -= 0.1;
+    // Boost confidence slightly if we auto-corrected issues
+    if (corrections.length > 0) confidence = Math.min(confidence + 0.05, 0.95);
     confidence = Math.max(0.5, Math.min(1, confidence));
 
     // Detect purchase intent
@@ -1141,9 +1218,6 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
 
     // Calculate response time
     const responseTimeMs = Date.now() - requestStartTime;
-    
-    // Detect quality flags
-    const qualityFlags = detectQualityFlags(scryfallQuery);
     
     // Log translation for quality analysis (async, non-blocking)
     logTranslation(
@@ -1166,6 +1240,7 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
       confidence,
       responseTimeMs,
       qualityFlags,
+      autoCorrections: corrections,
       validationIssues: validation.issues,
       fallbackUsed
     }));
