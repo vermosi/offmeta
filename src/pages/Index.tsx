@@ -269,10 +269,15 @@ const Index = () => {
                       <span className="hidden sm:inline">Previous</span>
                     </Button>
                     <div 
-                      className="pill tabular-nums"
+                      className="pill tabular-nums flex items-center gap-1.5"
                       aria-current="page"
                     >
-                      Page {currentPage}
+                      <span>Page {currentPage}</span>
+                      {hasMore && (
+                        <span className="text-muted-foreground text-xs">
+                          • more results
+                        </span>
+                      )}
                     </div>
                     <Button 
                       variant="outline" 
