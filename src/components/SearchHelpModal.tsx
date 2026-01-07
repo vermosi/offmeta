@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { HelpCircle, Lightbulb, Sparkles, BookOpen, ExternalLink, Zap, Target, AlertCircle } from 'lucide-react';
+import { HelpCircle, Lightbulb, Sparkles, BookOpen, ExternalLink, Zap, Target, AlertCircle, Mountain, Users, Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SearchHelpModalProps {
@@ -53,12 +53,32 @@ const EXAMPLE_QUERIES = [
     ]
   },
   {
+    category: "Land Searches",
+    icon: Mountain,
+    examples: [
+      { query: "fetch lands under $20", description: "Affordable fetchlands" },
+      { query: "shock lands for Gruul", description: "Red/green dual lands with shock" },
+      { query: "lands that produce any color", description: "Five-color mana fixing" },
+      { query: "utility lands for commander", description: "Non-basic lands with abilities" },
+    ]
+  },
+  {
+    category: "Tribal / Typal",
+    icon: Users,
+    examples: [
+      { query: "elf lords", description: "Elves that buff other elves" },
+      { query: "zombie tribal payoffs", description: "Cards that reward playing zombies" },
+      { query: "dragon commanders under $10", description: "Budget legendary dragons" },
+      { query: "goblin token generators", description: "Cards that create goblin tokens" },
+    ]
+  },
+  {
     category: "Complex Queries",
     icon: Sparkles,
     examples: [
       { query: "creatures that double ETB effects", description: "Panharmonicon-style effects" },
       { query: "Rakdos sacrifice payoffs under 3 mana", description: "Cheap BR sacrifice synergy" },
-      { query: "lands that tap for any color", description: "Five-color mana fixing lands" },
+      { query: "partner commanders in Simic", description: "Blue/green partner options" },
       { query: "enchantments that draw cards when creatures die", description: "Death trigger card advantage" },
     ]
   },
@@ -93,6 +113,52 @@ const TIPS = [
   "Describe effects: 'draws cards', 'destroys creatures', 'gains life'",
   "Use color combinations: 'Rakdos', 'Simic', 'Esper', 'Naya'",
   "Reference archetypes: 'aristocrats', 'tokens', 'control', 'aggro'",
+  "Search land types: 'fetch lands', 'shock lands', 'check lands', 'triomes'",
+  "Tribal searches work: 'goblin lords', 'elf tribal', 'zombie payoffs'",
+  "Sort results: 'sorted by price', 'cheapest first', 'by popularity'",
+];
+
+const ADVANCED_FEATURES = [
+  {
+    category: "Land Type Shortcuts",
+    items: [
+      "fetch lands, shock lands, check lands, pain lands",
+      "fast lands, slow lands, dual lands, triomes",
+      "bounce lands, filter lands, MDFCs",
+    ]
+  },
+  {
+    category: "Sorting & Display",
+    items: [
+      "sorted by price, cheapest first",
+      "sorted by popularity (EDHREC rank)",
+      "newest printings, oldest printing",
+    ]
+  },
+  {
+    category: "Format Legality",
+    items: [
+      "banned in commander, restricted in vintage",
+      "not legal in modern, legal in pioneer",
+      "pauper legal, historic legal",
+    ]
+  },
+  {
+    category: "Price Preferences",
+    items: [
+      "under $5, budget, cheap",
+      "under $1 for pauper, expensive staples",
+      "cheapest version, premium printing",
+    ]
+  },
+  {
+    category: "Commander-Specific",
+    items: [
+      "partner commanders, backgrounds",
+      "cEDH staples, casual commander",
+      "fast mana, staples for [color]",
+    ]
+  },
 ];
 
 export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
@@ -125,10 +191,14 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
 
         <Tabs defaultValue="examples" className="flex-1">
           <div className="px-6 pt-4">
-            <TabsList className="w-full grid grid-cols-3">
+            <TabsList className="w-full grid grid-cols-4">
               <TabsTrigger value="examples" className="gap-2">
                 <Lightbulb className="h-4 w-4" />
                 <span className="hidden sm:inline">Examples</span>
+              </TabsTrigger>
+              <TabsTrigger value="advanced" className="gap-2">
+                <Zap className="h-4 w-4" />
+                <span className="hidden sm:inline">Advanced</span>
               </TabsTrigger>
               <TabsTrigger value="confidence" className="gap-2">
                 <Target className="h-4 w-4" />
@@ -177,6 +247,63 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
                   </div>
                 </div>
               ))}
+            </TabsContent>
+
+            {/* Advanced Tab */}
+            <TabsContent value="advanced" className="mt-0 space-y-6">
+              <p className="text-sm text-muted-foreground">
+                Power-user features for more precise searches:
+              </p>
+
+              {ADVANCED_FEATURES.map((feature) => (
+                <div key={feature.category} className="space-y-2">
+                  <h3 className="text-sm font-medium text-foreground">
+                    {feature.category}
+                  </h3>
+                  <div className="space-y-1.5">
+                    {feature.items.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="text-sm text-muted-foreground pl-3 border-l-2 border-primary/30"
+                      >
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              <div className="pt-4 border-t border-border">
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                  <Share2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-foreground">
+                      Shareable Searches
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Every search creates a unique URL you can copy and share! Click the Share button after searching to copy the link.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-border space-y-3">
+                <h3 className="text-sm font-medium text-foreground">
+                  Scryfall Syntax
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  You can also use Scryfall search syntax directly—our engine will recognize and pass it through.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => window.open('https://scryfall.com/docs/syntax', '_blank')}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Scryfall Syntax Guide
+                </Button>
+              </div>
             </TabsContent>
 
             {/* Confidence Tab */}
