@@ -4,9 +4,10 @@
  */
 
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Copy, Check, Info } from 'lucide-react';
+import { ChevronDown, ChevronUp, Copy, Check, Info, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface SearchInterpretationProps {
   scryfallQuery: string;
@@ -25,6 +26,16 @@ export function SearchInterpretation({ scryfallQuery, explanation }: SearchInter
     await navigator.clipboard.writeText(scryfallQuery);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('Link copied to clipboard!');
+    } catch {
+      toast.error('Failed to copy link');
+    }
   };
 
   const confidenceLabel = explanation?.confidence 
@@ -64,24 +75,35 @@ export function SearchInterpretation({ scryfallQuery, explanation }: SearchInter
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 Scryfall Query
               </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleCopy}
-                className="h-7 px-2 text-xs gap-1.5"
-              >
-                {copied ? (
-                  <>
-                    <Check className="h-3 w-3" />
-                    Copied
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-3 w-3" />
-                    Copy
-                  </>
-                )}
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleShare}
+                  className="h-7 px-2 text-xs gap-1.5"
+                >
+                  <Share2 className="h-3 w-3" />
+                  Share
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCopy}
+                  className="h-7 px-2 text-xs gap-1.5"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-3 w-3" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3 w-3" />
+                      Copy
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
             <code className="block w-full p-3 bg-secondary rounded-lg text-xs text-foreground font-mono break-all border border-border">
               {scryfallQuery}

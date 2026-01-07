@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, lazy, Suspense, useMemo, useEffect } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { UnifiedSearchBar, SearchResult, UnifiedSearchBarHandle } from "@/components/UnifiedSearchBar";
 import { SearchInterpretation } from "@/components/SearchInterpretation";
 import { SearchFilters } from "@/components/SearchFilters";
@@ -20,14 +20,24 @@ import { Loader2 } from "lucide-react";
 const CardModal = lazy(() => import("@/components/CardModal"));
 
 const Index = () => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialQuery = searchParams.get("q") || "";
+  
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [selectedCard, setSelectedCard] = useState<ScryfallCard | null>(null);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [hasSearched, setHasSearched] = useState(!!initialQuery);
   const [lastSearchResult, setLastSearchResult] = useState<SearchResult | null>(null);
   const [filteredCards, setFilteredCards] = useState<ScryfallCard[]>([]);
   const searchBarRef = useRef<UnifiedSearchBarHandle>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const { trackSearch, trackCardClick } = useAnalytics();
+
+  // Trigger search from URL on initial load
+  useEffect(() => {
+    if (initialQuery && searchBarRef.current) {
+      searchBarRef.current.triggerSearch(initialQuery);
+    }
+  }, []); // Run once on mount
 
   const {
     data,
@@ -70,6 +80,13 @@ const Index = () => {
     setLastSearchResult(result || null);
     setFilteredCards([]); // Reset filters on new search
     
+    // Update URL with search query
+    if (query) {
+      setSearchParams({ q: query }, { replace: true });
+    } else {
+      setSearchParams({}, { replace: true });
+    }
+    
     // Track search analytics
     if (result) {
       trackSearch({
@@ -78,7 +95,7 @@ const Index = () => {
         results_count: 0, // Will be updated when results come in
       });
     }
-  }, [trackSearch]);
+  }, [trackSearch, setSearchParams]);
 
   const handleCardClick = useCallback((card: ScryfallCard, index: number) => {
     // Track card click
