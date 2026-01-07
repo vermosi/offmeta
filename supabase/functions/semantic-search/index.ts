@@ -113,7 +113,7 @@ setInterval(() => {
   }
 }, 60000);
 
-// ============= QUERY CACHE =============
+// ============= QUERY CACHE (IN-MEMORY + PERSISTENT) =============
 interface CacheEntry {
   result: {
     scryfallQuery: string;
@@ -123,13 +123,25 @@ interface CacheEntry {
   timestamp: number;
 }
 
+// In-memory cache for fast access within same instance
 const queryCache = new Map<string, CacheEntry>();
-const CACHE_TTL = 30 * 60 * 1000; // 30 minutes (cost optimization - translations are stable)
+const CACHE_TTL = 30 * 60 * 1000; // 30 minutes for in-memory
 
 function getCacheKey(query: string, filters?: Record<string, unknown>): string {
   // Apply synonym normalization for better cache hit rate
   const normalized = query.toLowerCase().trim().replace(/\s+/g, ' ');
   return `${normalized}|${JSON.stringify(filters || {})}`;
+}
+
+// Simple hash function for cache key
+function hashCacheKey(key: string): string {
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    const char = key.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash).toString(36);
 }
 
 function getCachedResult(query: string, filters?: Record<string, unknown>): CacheEntry['result'] | null {
@@ -141,6 +153,99 @@ function getCachedResult(query: string, filters?: Record<string, unknown>): Cach
   return null;
 }
 
+/**
+ * Check persistent database cache for a query.
+ * Returns cached result if found and not expired.
+ */
+async function getPersistentCache(query: string, filters?: Record<string, unknown>): Promise<CacheEntry['result'] | null> {
+  const key = getCacheKey(query, filters);
+  const hash = hashCacheKey(key);
+  
+  try {
+    const { data, error } = await supabase
+      .from('query_cache')
+      .select('scryfall_query, explanation, confidence, show_affiliate')
+      .eq('query_hash', hash)
+      .gt('expires_at', new Date().toISOString())
+      .single();
+    
+    if (error || !data) return null;
+    
+    // Update hit count in background (fire and forget)
+    (async () => {
+      try {
+        await supabase
+          .from('query_cache')
+          .update({ last_hit_at: new Date().toISOString() })
+          .eq('query_hash', hash);
+      } catch {
+        // Ignore errors
+      }
+    })();
+    
+    const result = {
+      scryfallQuery: data.scryfall_query,
+      explanation: data.explanation as { readable: string; assumptions: string[]; confidence: number },
+      showAffiliate: data.show_affiliate
+    };
+    
+    // Populate in-memory cache too
+    queryCache.set(key, { result, timestamp: Date.now() });
+    
+    console.log(JSON.stringify({
+      event: 'persistent_cache_hit',
+      hash: hash.substring(0, 8)
+    }));
+    
+    return result;
+  } catch (e) {
+    console.error('Persistent cache read error:', e);
+    return null;
+  }
+}
+
+/**
+ * Store result in persistent database cache.
+ * Only caches high-confidence translations (>= 0.8).
+ */
+async function setPersistentCache(
+  query: string, 
+  filters: Record<string, unknown> | undefined, 
+  result: CacheEntry['result']
+): Promise<void> {
+  // Only cache high-confidence results
+  if (result.explanation.confidence < 0.8) return;
+  
+  const key = getCacheKey(query, filters);
+  const hash = hashCacheKey(key);
+  const normalized = query.toLowerCase().trim().replace(/\s+/g, ' ');
+  
+  try {
+    await supabase
+      .from('query_cache')
+      .upsert({
+        query_hash: hash,
+        normalized_query: normalized.substring(0, 500),
+        scryfall_query: result.scryfallQuery.substring(0, 1000),
+        explanation: result.explanation,
+        confidence: result.explanation.confidence,
+        show_affiliate: result.showAffiliate,
+        hit_count: 1,
+        expires_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString() // 48 hours
+      }, {
+        onConflict: 'query_hash'
+      });
+    
+    console.log(JSON.stringify({
+      event: 'persistent_cache_set',
+      hash: hash.substring(0, 8),
+      confidence: result.explanation.confidence
+    }));
+  } catch (e) {
+    console.error('Persistent cache write error:', e);
+  }
+}
+
 function setCachedResult(query: string, filters: Record<string, unknown> | undefined, result: CacheEntry['result']): void {
   const key = getCacheKey(query, filters);
   queryCache.set(key, { result, timestamp: Date.now() });
@@ -150,9 +255,12 @@ function setCachedResult(query: string, filters: Record<string, unknown> | undef
     const oldestKey = queryCache.keys().next().value;
     if (oldestKey) queryCache.delete(oldestKey);
   }
+  
+  // Store in persistent cache (fire and forget)
+  setPersistentCache(query, filters, result).catch(() => {});
 }
 
-// Clean up expired cache entries periodically
+// Clean up expired in-memory cache entries periodically
 setInterval(() => {
   const now = Date.now();
   for (const [key, entry] of queryCache.entries()) {
@@ -773,24 +881,45 @@ serve(async (req) => {
       });
     }
 
-    // Check cache first for identical queries
+    // Check in-memory cache first for identical queries
     const cachedResult = getCachedResult(query, filters);
     if (cachedResult) {
       const cacheHitTime = Date.now() - requestStartTime;
       console.log(JSON.stringify({
-        event: 'cache_hit',
+        event: 'memory_cache_hit',
         query: query.substring(0, 50),
         responseTimeMs: cacheHitTime
       }));
       
-      // Skip logging for cache hits to reduce DB costs
       return new Response(JSON.stringify({
         originalQuery: query,
         ...cachedResult,
         responseTimeMs: cacheHitTime,
         success: true,
         cached: true,
-        source: 'cache'
+        source: 'memory_cache'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Check persistent database cache (survives function restarts)
+    const persistentCacheResult = await getPersistentCache(query, filters);
+    if (persistentCacheResult) {
+      const cacheHitTime = Date.now() - requestStartTime;
+      console.log(JSON.stringify({
+        event: 'persistent_cache_hit',
+        query: query.substring(0, 50),
+        responseTimeMs: cacheHitTime
+      }));
+      
+      return new Response(JSON.stringify({
+        originalQuery: query,
+        ...persistentCacheResult,
+        responseTimeMs: cacheHitTime,
+        success: true,
+        cached: true,
+        source: 'persistent_cache'
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
