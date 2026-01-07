@@ -6,10 +6,11 @@ import { SearchInterpretation } from "@/components/SearchInterpretation";
 import { SearchFilters } from "@/components/SearchFilters";
 
 import { CardItem } from "@/components/CardItem";
+import { CardSkeletonGrid } from "@/components/CardSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Footer } from "@/components/Footer";
-import { Button } from "@/components/ui/button";
+import { ScrollToTop } from "@/components/ScrollToTop";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { searchCards } from "@/lib/scryfall";
 import { ScryfallCard } from "@/types/card";
@@ -287,19 +288,7 @@ const Index = () => {
                 </div>
               </>
             ) : isSearching ? (
-              <div 
-                className="flex flex-col items-center justify-center py-24 animate-reveal"
-                role="status"
-                aria-live="polite"
-                aria-busy="true"
-              >
-                <Loader2 
-                  className="h-8 w-8 text-muted-foreground animate-spin" 
-                  aria-hidden="true"
-                />
-                <p className="mt-4 text-muted-foreground">Searching...</p>
-                <span className="sr-only">Loading search results</span>
-              </div>
+              <CardSkeletonGrid count={10} />
             ) : hasSearched && totalCards === 0 ? (
               <EmptyState query={searchQuery} onTryExample={handleTryExample} />
             ) : null}
@@ -308,6 +297,9 @@ const Index = () => {
 
         {/* Footer */}
         <Footer />
+
+        {/* Scroll to top button */}
+        <ScrollToTop threshold={800} />
 
         {/* Card Modal */}
         {selectedCard && (
