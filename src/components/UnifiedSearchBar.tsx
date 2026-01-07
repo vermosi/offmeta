@@ -14,7 +14,7 @@ import { SearchHelpModal } from '@/components/SearchHelpModal';
 
 const SEARCH_CONTEXT_KEY = 'lastSearchContext';
 const SEARCH_HISTORY_KEY = 'offmeta_search_history';
-const RESULT_CACHE_KEY = 'offmeta_result_cache';
+const RESULT_CACHE_KEY = 'offmeta_result_cache_v2'; // Bump version to invalidate old caches
 const MAX_HISTORY_ITEMS = 5;
 const SEARCH_TIMEOUT_MS = 15000; // 15 second timeout
 const RESULT_CACHE_TTL = 15 * 60 * 1000; // 15 minute cache for results
