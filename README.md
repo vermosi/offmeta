@@ -1,6 +1,6 @@
 # OffMeta - Natural Language MTG Card Search
 
-[![Live Demo](https://img.shields.io/badge/Demo-offmeta.lovable.app-22c55e?style=for-the-badge)](https://offmeta.lovable.app)
+[![Live Demo](https://img.shields.io/badge/Demo-offmeta.lovable.app-22c55e?style=for-the-badge)](https://offmeta.app)
 
 [![Proprietary License](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)](https://react.dev/)
