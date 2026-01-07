@@ -863,7 +863,113 @@ serve(async (req) => {
     // Fetch dynamic rules learned from user feedback
     const dynamicRules = await fetchDynamicRules();
 
-    // Build the semantic search prompt
+    // ============= PROMPT TIERING (COST OPTIMIZATION) =============
+    // Categorize query complexity to use smaller prompts for simple queries
+    const queryWords = query.trim().split(/\s+/).length;
+    const hasComplexTerms = /\b(and|or|but|not|under|over|between|except|excluding|including|with|without|that|which)\b/i.test(query);
+    const hasMultipleConcepts = (query.match(/\b(creature|instant|sorcery|artifact|enchantment|land|planeswalker|ramp|removal|draw|tutor|counterspell|token|sacrifice|graveyard|etb|ltb)\b/gi) || []).length > 2;
+    
+    type QueryTier = 'simple' | 'medium' | 'complex';
+    let queryTier: QueryTier = 'simple';
+    if (queryWords > 8 || hasComplexTerms || hasMultipleConcepts) {
+      queryTier = 'complex';
+    } else if (queryWords > 4) {
+      queryTier = 'medium';
+    }
+    
+    console.log(JSON.stringify({
+      event: 'query_tier_classification',
+      query: query.substring(0, 50),
+      tier: queryTier,
+      words: queryWords
+    }));
+
+    // Build tiered prompts - simpler queries use smaller, focused prompts
+    const buildSystemPrompt = (tier: QueryTier): string => {
+      const coreRules = `You are a Scryfall query translator. Output ONLY the Scryfall query string.
+
+CRITICAL:
+1. Output ONLY the query - no explanations
+2. For ETB use o:"enters" NOT o:"enters the battlefield"
+3. For LTB use o:"leaves" NOT o:"leaves the battlefield"
+4. "Spells" = (t:instant or t:sorcery)
+5. NEVER use function: tags - use Oracle text patterns
+6. banned:FORMAT not is:banned, restricted:FORMAT not is:restricted`;
+
+      if (tier === 'simple') {
+        // ~300 tokens - just core rules + common patterns
+        return `${coreRules}
+
+COMMON PATTERNS:
+- ramp = (o:"add" o:"{" or o:"search" o:"land")
+- tutors = o:"search your library"
+- counterspells = t:instant o:"counter target"
+- removal = (o:"destroy target" or o:"exile target")
+- board wipes = (o:"destroy all" or o:"exile all")
+- card draw = o:"draw" o:"card"
+- mana rocks = t:artifact o:"add" o:"{"
+- mana dorks = t:creature o:"add" o:"{"
+- treasure = o:"create" o:"treasure"
+- tokens = o:"create" o:"token"
+- lifegain = o:"gain" o:"life"
+- blink = o:"exile" o:"return" o:"battlefield"
+- sacrifice outlets = o:"sacrifice" o:":"
+
+PRICE: cheap/budget = usd<5, expensive = usd>20
+${dynamicRules}
+
+Return ONLY the Scryfall query.`;
+      }
+      
+      if (tier === 'medium') {
+        // ~600 tokens - core rules + common patterns + tribals + colors
+        return `${coreRules}
+
+COMMON PATTERNS:
+- ramp = (o:"add" o:"{" or o:"search" o:"land")
+- mana rocks = t:artifact o:"add" o:"{"
+- mana dorks = t:creature o:"add" o:"{"
+- tutors = o:"search your library"
+- counterspells = t:instant o:"counter target"
+- removal = (o:"destroy target" or o:"exile target")
+- board wipes = (o:"destroy all" or o:"exile all")
+- card draw = o:"draw" o:"card"
+- cantrips = mv<=2 (t:instant or t:sorcery) o:"draw a card"
+- treasure = o:"create" o:"treasure"
+- tokens = o:"create" o:"token"
+- lifegain = o:"gain" o:"life"
+- blink = o:"exile" o:"return" o:"battlefield"
+- reanimation = o:"graveyard" o:"onto the battlefield"
+- sacrifice outlets = o:"sacrifice" o:":"
+- aristocrats = t:creature o:"whenever" o:"dies"
+- stax = (o:"can't" or o:"pay" o:"or")
+
+TRIBALS: Use t:[type] for creature types (t:elf, t:goblin, t:zombie, etc.)
+LORDS: t:[type] o:"other" o:[type] o:"+"
+
+GUILDS: azorius=id=wu, dimir=id=ub, rakdos=id=br, gruul=id=rg, selesnya=id=gw, orzhov=id=wb, izzet=id=ur, golgari=id=bg, boros=id=rw, simic=id=ug
+
+SHARDS: esper=id=wub, grixis=id=ubr, jund=id=brg, naya=id=wrg, bant=id=wug
+
+WEDGES: abzan=id=wbg, jeskai=id=wur, sultai=id=ubg, mardu=id=wbr, temur=id=urg
+
+LANDS: is:fetchland, is:shockland, is:dual, is:fastland, is:checkland
+
+PRICE: cheap/budget = usd<5, expensive = usd>20
+${contextHint}
+${dynamicRules}
+
+Return ONLY the Scryfall query.`;
+      }
+      
+      // Complex tier uses full prompt (defined below)
+      return '';
+    };
+
+    // Use tiered prompt if not complex
+    const tieredPrompt = buildSystemPrompt(queryTier);
+    
+    // Build the semantic search prompt (full version for complex queries)
     const systemPrompt = `You are a Scryfall query translator. Your ONLY job is to convert natural language descriptions into valid Scryfall search syntax.
 
 CRITICAL RULES:
@@ -1365,11 +1471,11 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
       body: JSON.stringify({
         model: "google/gemini-2.5-flash-lite",
         messages: [
-          { role: "system", content: systemPrompt },
+          { role: "system", content: queryTier === 'complex' ? systemPrompt : tieredPrompt },
           { role: "user", content: userMessage }
         ],
         temperature: 0.2,
-        max_tokens: 200,
+        max_tokens: queryTier === 'simple' ? 100 : 200,
       }),
     });
 
@@ -1392,36 +1498,161 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
       
       let fallbackQuery = query.trim();
       
-      // Apply basic keyword transformations
+      // Apply comprehensive keyword transformations (expanded for cost savings)
       const basicTransforms: [RegExp, string][] = [
+        // Core MTG slang
         [/\betb\b/gi, 'o:"enters"'],
         [/\bltb\b/gi, 'o:"leaves"'],
+        [/\bdies\b/gi, 'o:"dies"'],
+        
+        // Ramp and mana
         [/\bramp\b/gi, '(o:"add" o:"{" or o:"search" o:"land")'],
-        [/\btutors?\b/gi, 'o:"search your library"'],
-        [/\bboard ?wipes?\b/gi, 'o:"destroy all"'],
-        [/\bwraths?\b/gi, 'o:"destroy all"'],
-        [/\bcounterspells?\b/gi, 't:instant o:"counter target"'],
-        [/\bcounter ?magic\b/gi, 't:instant o:"counter target"'],
+        [/\bmana rocks?\b/gi, 't:artifact o:"add" o:"{"'],
+        [/\bmana dorks?\b/gi, 't:creature o:"add" o:"{"'],
+        [/\bfast mana\b/gi, 't:artifact mv<=2 o:"add" o:"{"'],
+        [/\bmana doublers?\b/gi, 'o:"whenever" o:"tap" o:"for mana" o:"add"'],
+        
+        // Card advantage
         [/\bcard draw\b/gi, 'o:"draw" o:"card"'],
         [/\bdraw cards?\b/gi, 'o:"draw" o:"card"'],
+        [/\bcantrips?\b/gi, 'mv<=2 (t:instant or t:sorcery) o:"draw a card"'],
+        [/\blooting\b/gi, 'o:"draw" o:"discard"'],
+        [/\brummage\b/gi, 'o:"discard" o:"draw"'],
+        [/\bwheels?\b/gi, 'o:"each player" o:"discards" o:"draws"'],
+        
+        // Tutors and search
+        [/\btutors?\b/gi, 'o:"search your library"'],
+        
+        // Removal
+        [/\bboard ?wipes?\b/gi, '(o:"destroy all" or o:"exile all")'],
+        [/\bwraths?\b/gi, '(o:"destroy all" or o:"exile all")'],
+        [/\bcounterspells?\b/gi, 't:instant o:"counter target"'],
+        [/\bcounter ?magic\b/gi, 't:instant o:"counter target"'],
         [/\bremoval\b/gi, '(o:"destroy target" or o:"exile target")'],
+        [/\bcreature removal\b/gi, '(o:"destroy target creature" or o:"exile target creature")'],
+        [/\bgraveyard hate\b/gi, 'o:"exile" o:"graveyard"'],
+        
+        // Token generation
         [/\btreasure tokens?\b/gi, 'o:"create" o:"treasure"'],
         [/\bmakes? treasure\b/gi, 'o:"create" o:"treasure"'],
         [/\btoken generators?\b/gi, 'o:"create" o:"token"'],
         [/\bmakes? tokens?\b/gi, 'o:"create" o:"token"'],
+        [/\bfood tokens?\b/gi, 'o:"create" o:"food"'],
+        [/\bclue tokens?\b/gi, 'o:"create" o:"clue"'],
+        
+        // Life and combat
         [/\blifegain\b/gi, 'o:"gain" o:"life"'],
-        [/\bgraveyard hate\b/gi, 'o:"exile" o:"graveyard"'],
+        [/\bburn\b/gi, 'o:"deals" o:"damage"'],
+        [/\bfog effects?\b/gi, 'o:"prevent" o:"combat damage"'],
+        
+        // Recursion and graveyard
         [/\breanimation\b/gi, 'o:"graveyard" o:"onto the battlefield"'],
         [/\breanimate\b/gi, 'o:"graveyard" o:"onto the battlefield"'],
+        [/\brecursion\b/gi, 'o:"graveyard" o:"to your hand"'],
+        
+        // Blink and exile
         [/\bblink\b/gi, 'o:"exile" o:"return" o:"battlefield"'],
         [/\bflicker\b/gi, 'o:"exile" o:"return" o:"battlefield"'],
+        
+        // Control
         [/\bstax\b/gi, '(o:"can\'t" or o:"pay" o:"or")'],
-        [/\bmana rocks?\b/gi, 't:artifact o:"add" o:"{"'],
-        [/\bmana dorks?\b/gi, 't:creature o:"add" o:"{"'],
+        [/\bpillowfort\b/gi, '(o:"can\'t attack you" or o:"prevent" o:"damage")'],
+        [/\btheft\b/gi, 'o:"gain control"'],
+        
+        // Sacrifice
+        [/\bsacrifice outlets?\b/gi, 'o:"sacrifice" o:":"'],
+        [/\baristocrats\b/gi, 't:creature o:"whenever" o:"dies"'],
+        
+        // Card types
         [/\bspells\b/gi, '(t:instant or t:sorcery)'],
+        [/\bfinishers?\b/gi, 't:creature mv>=6 pow>=6'],
+        [/\blords?\b/gi, 't:creature o:"other" o:"get" o:"+"'],
+        [/\banthems?\b/gi, 'o:"creatures you control get" o:"+"'],
+        
+        // Common tribals (20+ types)
+        [/\belf(?:ves)?\b/gi, 't:elf'],
+        [/\bgoblins?\b/gi, 't:goblin'],
+        [/\bzombies?\b/gi, 't:zombie'],
+        [/\bvampires?\b/gi, 't:vampire'],
+        [/\bdragons?\b/gi, 't:dragon'],
+        [/\bangels?\b/gi, 't:angel'],
+        [/\bmerfolk\b/gi, 't:merfolk'],
+        [/\bhumans?\b/gi, 't:human'],
+        [/\bwizards?\b/gi, 't:wizard'],
+        [/\bwarriors?\b/gi, 't:warrior'],
+        [/\brogues?\b/gi, 't:rogue'],
+        [/\bclerics?\b/gi, 't:cleric'],
+        [/\bsoldiers?\b/gi, 't:soldier'],
+        [/\bknights?\b/gi, 't:knight'],
+        [/\bcats?\b/gi, 't:cat'],
+        [/\bdogs?\b/gi, 't:dog'],
+        [/\bdinosaurs?\b/gi, 't:dinosaur'],
+        [/\bpirates?\b/gi, 't:pirate'],
+        [/\bspirits?\b/gi, 't:spirit'],
+        [/\belementals?\b/gi, 't:elemental'],
+        [/\bslivers?\b/gi, 't:sliver'],
+        
+        // Lands
+        [/\bfetch ?lands?\b/gi, 'is:fetchland'],
+        [/\bshock ?lands?\b/gi, 'is:shockland'],
+        [/\bdual ?lands?\b/gi, 'is:dual'],
+        [/\bfast ?lands?\b/gi, 'is:fastland'],
+        [/\bslow ?lands?\b/gi, 'is:slowland'],
+        [/\bpain ?lands?\b/gi, 'is:painland'],
+        [/\bcheck ?lands?\b/gi, 'is:checkland'],
+        [/\bbounce ?lands?\b/gi, 'is:bounceland'],
+        [/\bman ?lands?\b/gi, 'is:creatureland'],
+        [/\btriomes?\b/gi, 'is:triome'],
+        
+        // Formats
+        [/\bcommander legal\b/gi, 'f:commander'],
+        [/\bedh legal\b/gi, 'f:commander'],
+        [/\bmodern legal\b/gi, 'f:modern'],
+        [/\bstandard legal\b/gi, 'f:standard'],
+        [/\bpioneer legal\b/gi, 'f:pioneer'],
+        [/\blegacy legal\b/gi, 'f:legacy'],
+        [/\bpauper legal\b/gi, 'f:pauper'],
+        
+        // Guilds/Shards/Wedges (color identity)
+        [/\braakdos\b/gi, 'id=br'],
+        [/\bsimic\b/gi, 'id=ug'],
+        [/\bgruul\b/gi, 'id=rg'],
+        [/\borzhov\b/gi, 'id=wb'],
+        [/\bazorius\b/gi, 'id=wu'],
+        [/\bdimir\b/gi, 'id=ub'],
+        [/\bgolgari\b/gi, 'id=bg'],
+        [/\bboros\b/gi, 'id=rw'],
+        [/\bselesnya\b/gi, 'id=gw'],
+        [/\bizzet\b/gi, 'id=ur'],
+        [/\besper\b/gi, 'id=wub'],
+        [/\bgrixis\b/gi, 'id=ubr'],
+        [/\bjund\b/gi, 'id=brg'],
+        [/\bnaya\b/gi, 'id=wrg'],
+        [/\bbant\b/gi, 'id=wug'],
+        [/\babzan\b/gi, 'id=wbg'],
+        [/\bjeskai\b/gi, 'id=wur'],
+        [/\bsultai\b/gi, 'id=ubg'],
+        [/\bmardu\b/gi, 'id=wbr'],
+        [/\btemur\b/gi, 'id=urg'],
+        
+        // Price
         [/\bcheap\b/gi, 'usd<5'],
         [/\bbudget\b/gi, 'usd<5'],
+        [/\baffordable\b/gi, 'usd<5'],
         [/\bexpensive\b/gi, 'usd>20'],
+        [/\bunder \$?(\d+)\b/gi, 'usd<$1'],
+        
+        // Rarities
+        [/\bmythics?\b/gi, 'r:mythic'],
+        [/\brares?\b/gi, 'r:rare'],
+        [/\buncommons?\b/gi, 'r:uncommon'],
+        [/\bcommons?\b/gi, 'r:common'],
+        
+        // Special card types
+        [/\breserved list\b/gi, 'is:reserved'],
+        [/\bpartner commanders?\b/gi, 't:legendary t:creature o:"partner"'],
+        [/\bbackgrounds?\b/gi, 't:background'],
+        [/\bsagas?\b/gi, 't:saga'],
       ];
       
       // Check if query already looks like Scryfall syntax
