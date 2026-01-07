@@ -14,22 +14,64 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 let lastRequestTime = 0;
 const MIN_REQUEST_INTERVAL = 100;
 
+// Request queue for high-traffic scenarios
+interface QueuedRequest {
+  url: string;
+  resolve: (response: Response) => void;
+  reject: (error: Error) => void;
+}
+
+const requestQueue: QueuedRequest[] = [];
+let isProcessingQueue = false;
+const MAX_QUEUE_SIZE = 50;
+
+/**
+ * Process the request queue sequentially with rate limiting.
+ */
+async function processQueue(): Promise<void> {
+  if (isProcessingQueue || requestQueue.length === 0) return;
+  
+  isProcessingQueue = true;
+  
+  while (requestQueue.length > 0) {
+    const request = requestQueue.shift();
+    if (!request) break;
+    
+    try {
+      const now = Date.now();
+      const timeSinceLastRequest = now - lastRequestTime;
+      
+      if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
+        await delay(MIN_REQUEST_INTERVAL - timeSinceLastRequest);
+      }
+      
+      lastRequestTime = Date.now();
+      const response = await fetch(request.url);
+      request.resolve(response);
+    } catch (error) {
+      request.reject(error instanceof Error ? error : new Error(String(error)));
+    }
+  }
+  
+  isProcessingQueue = false;
+}
+
 /**
  * Fetch wrapper that enforces Scryfall's rate limiting requirements.
- * Ensures at least 100ms between consecutive API requests.
+ * Uses a queue to handle concurrent requests during high traffic.
  * @param url - The URL to fetch
  * @returns The fetch Response
  */
 async function rateLimitedFetch(url: string): Promise<Response> {
-  const now = Date.now();
-  const timeSinceLastRequest = now - lastRequestTime;
-  
-  if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
-    await delay(MIN_REQUEST_INTERVAL - timeSinceLastRequest);
+  // If queue is getting too long, reject immediately
+  if (requestQueue.length >= MAX_QUEUE_SIZE) {
+    throw new Error('Too many pending requests. Please try again.');
   }
   
-  lastRequestTime = Date.now();
-  return fetch(url);
+  return new Promise((resolve, reject) => {
+    requestQueue.push({ url, resolve, reject });
+    processQueue();
+  });
 }
 
 /**

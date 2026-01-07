@@ -9,7 +9,18 @@ import { ThemeProvider } from "next-themes";
 const Index = lazy(() => import("./pages/Index"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes - reduce refetches
+      gcTime: 30 * 60 * 1000, // 30 minutes cache retention
+      retry: 2, // Limit retries to avoid hammering on errors
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+      refetchOnWindowFocus: false, // Prevent refetch storms
+      refetchOnReconnect: false,
+    },
+  },
+});
 
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
