@@ -1,0 +1,115 @@
+-- Add unique constraint on pattern column for upsert support
+ALTER TABLE translation_rules ADD CONSTRAINT translation_rules_pattern_unique UNIQUE (pattern);
+
+-- Pre-seed translation_rules with 50+ common MTG search patterns
+INSERT INTO translation_rules (pattern, scryfall_syntax, description, confidence, is_active) VALUES
+-- Tribal searches (most common)
+('elf tribal', 't:elf', 'All elf creatures', 0.95, true),
+('elves', 't:elf', 'All elf creatures', 0.95, true),
+('goblin tribal', 't:goblin', 'All goblin creatures', 0.95, true),
+('goblins', 't:goblin', 'All goblin creatures', 0.95, true),
+('zombie tribal', 't:zombie', 'All zombie creatures', 0.95, true),
+('zombies', 't:zombie', 'All zombie creatures', 0.95, true),
+('vampire tribal', 't:vampire', 'All vampire creatures', 0.95, true),
+('vampires', 't:vampire', 'All vampire creatures', 0.95, true),
+('dragon tribal', 't:dragon', 'All dragon creatures', 0.95, true),
+('dragons', 't:dragon', 'All dragon creatures', 0.95, true),
+('merfolk tribal', 't:merfolk', 'All merfolk creatures', 0.95, true),
+('merfolk', 't:merfolk', 'All merfolk creatures', 0.95, true),
+('human tribal', 't:human', 'All human creatures', 0.95, true),
+('humans', 't:human', 'All human creatures', 0.95, true),
+('angel tribal', 't:angel', 'All angel creatures', 0.95, true),
+('angels', 't:angel', 'All angel creatures', 0.95, true),
+('demon tribal', 't:demon', 'All demon creatures', 0.95, true),
+('demons', 't:demon', 'All demon creatures', 0.95, true),
+('wizard tribal', 't:wizard', 'All wizard creatures', 0.95, true),
+('wizards', 't:wizard', 'All wizard creatures', 0.95, true),
+('soldier tribal', 't:soldier', 'All soldier creatures', 0.95, true),
+('soldiers', 't:soldier', 'All soldier creatures', 0.95, true),
+('knight tribal', 't:knight', 'All knight creatures', 0.95, true),
+('knights', 't:knight', 'All knight creatures', 0.95, true),
+-- Mana/Ramp searches
+('mana rocks', 't:artifact o:/add \{/', 'Artifacts that tap for mana', 0.95, true),
+('mana dorks', 't:creature mv<=2 o:/add \{/', 'Small creatures that produce mana', 0.95, true),
+('ramp spells', 'o:"search your library" o:land t:sorcery', 'Sorceries that fetch lands', 0.90, true),
+('green ramp', 'c:g (o:"add {" or o:"search your library" o:land)', 'Green mana acceleration', 0.90, true),
+('cheap green ramp', 'c:g mv<=3 (o:"add {" or o:"search your library" o:land)', 'Budget green mana acceleration', 0.90, true),
+('land ramp', 'o:"search your library" o:"land" o:"onto the battlefield"', 'Cards that put lands into play', 0.90, true),
+-- Removal searches
+('board wipes', 'o:"destroy all" or o:"exile all"', 'Mass removal spells', 0.90, true),
+('boardwipes', 'o:"destroy all" or o:"exile all"', 'Mass removal spells', 0.90, true),
+('wrath effects', 'o:"destroy all creatures"', 'Creature board wipes', 0.90, true),
+('spot removal', 't:instant (o:"destroy target" or o:"exile target")', 'Targeted removal instants', 0.90, true),
+('creature removal', 'o:"destroy target creature" or o:"exile target creature"', 'Cards that remove creatures', 0.90, true),
+('artifact removal', 'o:"destroy target artifact" or o:"exile target artifact"', 'Cards that remove artifacts', 0.90, true),
+('enchantment removal', 'o:"destroy target enchantment" or o:"exile target enchantment"', 'Cards that remove enchantments', 0.90, true),
+-- Counter magic
+('counterspells', 't:instant o:"counter target spell"', 'Instant speed counter magic', 0.95, true),
+('counter spells', 't:instant o:"counter target spell"', 'Instant speed counter magic', 0.95, true),
+('counters', 't:instant o:"counter target"', 'Counter magic', 0.90, true),
+('cheap counterspells', 't:instant mv<=2 o:"counter target spell"', 'Low cost counter magic', 0.90, true),
+-- Card draw
+('card draw', 'o:"draw" o:"card"', 'Cards that draw cards', 0.85, true),
+('draw spells', 't:instant or t:sorcery o:"draw" o:"cards"', 'Spells that draw multiple cards', 0.85, true),
+('cantrips', 'mv<=1 o:"draw a card"', 'One mana card draw', 0.90, true),
+-- Tutors
+('tutors', 'o:"search your library"', 'Cards that search library', 0.90, true),
+('creature tutors', 'o:"search your library" o:"creature card"', 'Creature search effects', 0.90, true),
+('land tutors', 'o:"search your library" o:"land card"', 'Land search effects', 0.90, true),
+('artifact tutors', 'o:"search your library" o:"artifact card"', 'Artifact search effects', 0.90, true),
+('enchantment tutors', 'o:"search your library" o:"enchantment card"', 'Enchantment search effects', 0.90, true),
+-- Land cycles
+('fetch lands', 'is:fetchland', 'Fetchland cycle', 0.98, true),
+('fetchlands', 'is:fetchland', 'Fetchland cycle', 0.98, true),
+('shock lands', 'is:shockland', 'Shockland cycle', 0.98, true),
+('shocklands', 'is:shockland', 'Shockland cycle', 0.98, true),
+('dual lands', 'is:dual', 'Original dual lands', 0.98, true),
+('duals', 'is:dual', 'Original dual lands', 0.95, true),
+('pain lands', 'is:painland', 'Pain land cycle', 0.95, true),
+('check lands', 'is:checkland', 'Check land cycle', 0.95, true),
+('fast lands', 'is:fastland', 'Fast land cycle', 0.95, true),
+-- Format legality
+('commander staples', 'f:commander', 'Commander legal cards', 0.80, true),
+('edh staples', 'f:commander', 'EDH/Commander legal cards', 0.80, true),
+('modern staples', 'f:modern', 'Modern legal cards', 0.80, true),
+('pioneer staples', 'f:pioneer', 'Pioneer legal cards', 0.80, true),
+('standard legal', 'f:standard', 'Standard legal cards', 0.95, true),
+('legacy legal', 'f:legacy', 'Legacy legal cards', 0.95, true),
+('vintage legal', 'f:vintage', 'Vintage legal cards', 0.95, true),
+('pauper legal', 'f:pauper', 'Pauper legal cards', 0.95, true),
+-- Token generators
+('treasure tokens', 'o:"create" o:"treasure token"', 'Cards that make treasure tokens', 0.95, true),
+('treasure makers', 'o:"create" o:"treasure"', 'Cards that make treasure', 0.95, true),
+('token generators', 'o:"create" o:"token"', 'Cards that create tokens', 0.85, true),
+('creature tokens', 'o:"create" o:"creature token"', 'Cards that create creature tokens', 0.90, true),
+-- Sacrifice/Aristocrats
+('sacrifice outlets', 'o:"sacrifice a creature"', 'Cards with sacrifice abilities', 0.85, true),
+('sac outlets', 'o:"sacrifice a creature"', 'Cards with sacrifice abilities', 0.85, true),
+('aristocrats', 'o:"whenever" o:"dies"', 'Death trigger cards', 0.80, true),
+-- ETB/Blink
+('etb effects', 'o:"enters the battlefield"', 'Enter the battlefield triggers', 0.85, true),
+('etb creatures', 't:creature o:"when" o:"enters the battlefield"', 'Creatures with ETB effects', 0.90, true),
+('blink effects', 'o:"exile" o:"return" o:"battlefield"', 'Flicker/blink cards', 0.85, true),
+('flicker effects', 'o:"exile" o:"return" o:"battlefield"', 'Flicker/blink cards', 0.85, true),
+-- Color identity
+('mono red', 'c=r', 'Only red cards', 0.95, true),
+('mono blue', 'c=u', 'Only blue cards', 0.95, true),
+('mono green', 'c=g', 'Only green cards', 0.95, true),
+('mono black', 'c=b', 'Only black cards', 0.95, true),
+('mono white', 'c=w', 'Only white cards', 0.95, true),
+('colorless cards', 'c=c', 'Colorless cards', 0.95, true),
+-- Commander-specific
+('commanders', 'is:commander', 'Legal commanders', 0.95, true),
+('legendary creatures', 't:legendary t:creature', 'Legendary creatures', 0.95, true),
+('partner commanders', 'o:partner is:commander', 'Partner commanders', 0.90, true),
+-- Rarity
+('mythic rares', 'r:mythic', 'Mythic rare cards', 0.98, true),
+('mythics', 'r:mythic', 'Mythic rare cards', 0.95, true),
+('rares', 'r:rare', 'Rare cards', 0.98, true),
+('uncommons', 'r:uncommon', 'Uncommon cards', 0.98, true),
+('commons', 'r:common', 'Common cards', 0.98, true),
+-- Price
+('cheap cards', 'usd<1', 'Cards under $1', 0.90, true),
+('budget cards', 'usd<5', 'Cards under $5', 0.90, true),
+('expensive cards', 'usd>50', 'Cards over $50', 0.90, true)
+ON CONFLICT (pattern) DO NOTHING;
