@@ -79,6 +79,48 @@ export type Database = {
           },
         ]
       }
+      translation_logs: {
+        Row: {
+          confidence_score: number | null
+          created_at: string | null
+          fallback_used: boolean | null
+          filters_applied: Json | null
+          id: string
+          model_used: string
+          natural_language_query: string
+          quality_flags: string[] | null
+          response_time_ms: number | null
+          translated_query: string
+          validation_issues: string[] | null
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string | null
+          fallback_used?: boolean | null
+          filters_applied?: Json | null
+          id?: string
+          model_used?: string
+          natural_language_query: string
+          quality_flags?: string[] | null
+          response_time_ms?: number | null
+          translated_query: string
+          validation_issues?: string[] | null
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string | null
+          fallback_used?: boolean | null
+          filters_applied?: Json | null
+          id?: string
+          model_used?: string
+          natural_language_query?: string
+          quality_flags?: string[] | null
+          response_time_ms?: number | null
+          translated_query?: string
+          validation_issues?: string[] | null
+        }
+        Relationships: []
+      }
       translation_rules: {
         Row: {
           confidence: number | null

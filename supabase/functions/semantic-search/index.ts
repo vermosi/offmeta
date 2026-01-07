@@ -54,21 +54,95 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Create Supabase client with service role for logging and rules
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+/**
+ * Detect quality flags in translated queries (patterns where flash-lite struggles)
+ */
+function detectQualityFlags(translatedQuery: string): string[] {
+  const flags: string[] = [];
+  
+  // Invalid syntax that flash-lite produces
+  if (translatedQuery.includes('function:')) {
+    flags.push('uses_invalid_function_tag');
+  }
+  if (/game:(paper|arena|mtgo)/i.test(translatedQuery)) {
+    flags.push('unnecessary_game_filter');
+  }
+  
+  // Verbose oracle text patterns
+  if (translatedQuery.includes('o:"enters the battlefield"')) {
+    flags.push('verbose_etb_syntax');
+  }
+  if (translatedQuery.includes('o:"leaves the battlefield"')) {
+    flags.push('verbose_ltb_syntax');
+  }
+  if (translatedQuery.includes('o:"when this creature dies"')) {
+    flags.push('verbose_dies_syntax');
+  }
+  
+  // Overly specific patterns
+  if ((translatedQuery.match(/o:"[^"]{50,}"/g) || []).length > 0) {
+    flags.push('overly_long_oracle_text');
+  }
+  
+  // Multiple nested parentheses (complexity indicator)
+  if ((translatedQuery.match(/\([^()]*\([^()]*\)/g) || []).length > 1) {
+    flags.push('complex_nested_logic');
+  }
+  
+  // Using quotes around simple single words unnecessarily
+  if (/o:"[a-zA-Z]+"(?!\s)/.test(translatedQuery)) {
+    flags.push('unnecessary_quotes_single_word');
+  }
+  
+  return flags;
+}
+
+/**
+ * Log translation to database for quality analysis
+ */
+async function logTranslation(
+  naturalQuery: string,
+  translatedQuery: string,
+  confidenceScore: number,
+  responseTimeMs: number,
+  validationIssues: string[],
+  qualityFlags: string[],
+  filters: Record<string, unknown> | null,
+  fallbackUsed: boolean
+): Promise<void> {
+  try {
+    const { error } = await supabase.from('translation_logs').insert({
+      natural_language_query: naturalQuery.substring(0, 500),
+      translated_query: translatedQuery.substring(0, 1000),
+      model_used: 'google/gemini-2.5-flash-lite',
+      confidence_score: confidenceScore,
+      response_time_ms: responseTimeMs,
+      validation_issues: validationIssues,
+      quality_flags: qualityFlags,
+      filters_applied: filters,
+      fallback_used: fallbackUsed
+    });
+    
+    if (error) {
+      console.error('Failed to log translation:', error.message);
+    }
+  } catch (err) {
+    // Don't fail the request if logging fails
+    console.error('Failed to log translation:', err);
+  }
+}
+
 /**
  * Fetches active dynamic translation rules from the database.
  * These rules are generated from user feedback to improve translations.
  */
 async function fetchDynamicRules(): Promise<string> {
   try {
-    const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-      return '';
-    }
-    
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    
     const { data: rules, error } = await supabase
       .from('translation_rules')
       .select('pattern, scryfall_syntax, description')
@@ -221,6 +295,9 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const requestStartTime = Date.now();
+  let fallbackUsed = false;
 
   try {
     const { query, filters, context } = await req.json();
@@ -914,6 +991,7 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
       // Fallback: AI gateway unavailable (402, 500, etc.) - pass query directly to Scryfall
       // Apply basic transformations for common patterns
       console.warn("AI gateway unavailable, using fallback:", response.status);
+      fallbackUsed = true;
       
       let fallbackQuery = query.trim();
       
@@ -967,6 +1045,27 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
       }
       
       const fallbackValidation = validateQuery(fallbackQuery);
+      const fallbackResponseTime = Date.now() - requestStartTime;
+      
+      // Log fallback translation
+      logTranslation(
+        query,
+        fallbackValidation.sanitized,
+        0.6,
+        fallbackResponseTime,
+        fallbackValidation.issues,
+        ['ai_gateway_unavailable'],
+        filters || null,
+        true
+      );
+      
+      console.log(JSON.stringify({
+        event: 'translation_fallback',
+        naturalQuery: query.substring(0, 100),
+        scryfallQuery: fallbackValidation.sanitized.substring(0, 200),
+        responseTimeMs: fallbackResponseTime,
+        gatewayStatus: response.status
+      }));
       
       return new Response(JSON.stringify({
         originalQuery: query,
@@ -977,6 +1076,7 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
           confidence: 0.6
         },
         showAffiliate: hasPurchaseIntent(query),
+        responseTimeMs: fallbackResponseTime,
         success: true,
         fallback: true
       }), {
@@ -1039,7 +1139,36 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
     // Detect purchase intent
     const showAffiliate = hasPurchaseIntent(query);
 
-    console.log("Search translated:", query, "→", scryfallQuery);
+    // Calculate response time
+    const responseTimeMs = Date.now() - requestStartTime;
+    
+    // Detect quality flags
+    const qualityFlags = detectQualityFlags(scryfallQuery);
+    
+    // Log translation for quality analysis (async, non-blocking)
+    logTranslation(
+      query,
+      scryfallQuery,
+      confidence,
+      responseTimeMs,
+      validation.issues,
+      qualityFlags,
+      filters || null,
+      fallbackUsed
+    );
+
+    // Enhanced console logging for debugging
+    console.log(JSON.stringify({
+      event: 'translation_complete',
+      naturalQuery: query.substring(0, 100),
+      scryfallQuery: scryfallQuery.substring(0, 200),
+      model: 'google/gemini-2.5-flash-lite',
+      confidence,
+      responseTimeMs,
+      qualityFlags,
+      validationIssues: validation.issues,
+      fallbackUsed
+    }));
 
     return new Response(JSON.stringify({ 
       originalQuery: query,
@@ -1050,12 +1179,18 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         confidence: Math.round(confidence * 100) / 100
       },
       showAffiliate,
+      responseTimeMs,
       success: true 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error("Semantic search error:", error);
+    const responseTimeMs = Date.now() - requestStartTime;
+    console.error(JSON.stringify({
+      event: 'translation_error',
+      error: String(error),
+      responseTimeMs
+    }));
     return new Response(JSON.stringify({ 
       error: "Something went wrong. Please try rephrasing your search.",
       success: false 
