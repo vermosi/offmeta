@@ -35,6 +35,10 @@ src/
 
 supabase/
 └── functions/           # Edge functions for backend logic
+    ├── semantic-search/ # AI-powered query translation
+    ├── generate-patterns/ # Auto-generate translation rules from logs
+    ├── process-feedback/  # Process user feedback into rules
+    └── cleanup-logs/      # Clean up old translation logs
 ```
 
 ---
@@ -52,8 +56,9 @@ supabase/
 
 | File | Description |
 |------|-------------|
-| `components/UnifiedSearchBar.tsx` | Main search input with natural language support. Handles query submission, search history, loading states, and integrates voice input. |
+| `components/UnifiedSearchBar.tsx` | Main search input with natural language support. Handles query submission, search history, client-side caching, and integrates voice input. |
 | `components/SearchInterpretation.tsx` | Displays how the AI interpreted the natural language query and the resulting Scryfall syntax. |
+| `components/SearchFeedback.tsx` | Allows users to report incorrect translations, feeding into the learning system. |
 | `components/VoiceSearchButton.tsx` | Microphone button for voice-to-text search input. |
 
 ### Card Display Components
@@ -81,6 +86,7 @@ supabase/
 | `hooks/use-mobile.tsx` | Detects mobile viewport for responsive behavior. Returns `isMobile` boolean. |
 | `hooks/use-toast.ts` | Toast notification system hook. |
 | `hooks/useVoiceInput.ts` | Web Speech API integration for voice-to-text input. Handles recording state and transcription. |
+| `hooks/useAnalytics.ts` | Analytics event tracking for search and card interactions. |
 
 ---
 
@@ -98,22 +104,64 @@ supabase/
 
 ### `supabase/functions/semantic-search/index.ts`
 
-The AI-powered search translation service. This is the core of the natural language processing.
+The AI-powered search translation service with multi-layer cost optimization.
 
-**How it works:**
-1. Receives a natural language query from the frontend
-2. Sends the query to Gemini AI with a detailed prompt about Scryfall syntax
-3. AI returns a structured response with:
-   - `scryfallQuery`: The translated Scryfall search syntax
-   - `explanation`: Human-readable explanation of the interpretation
-   - `searchType`: Whether this is a card search, rules question, or purchase intent
-4. Frontend uses the Scryfall query to fetch matching cards
+**Translation Pipeline:**
+1. **In-Memory Cache**: Instant lookup for recently translated queries (30 min TTL)
+2. **Persistent DB Cache**: Survives function restarts (48 hour TTL, confidence ≥ 0.8)
+3. **Pattern Matching**: Exact match against `translation_rules` table (bypasses AI)
+4. **Prompt Tiering**: Simple/medium/complex queries use progressively larger prompts
+5. **AI Translation**: Gemini AI with comprehensive MTG terminology prompt
+6. **Auto-Correction**: Fixes common AI mistakes (invalid tags, verbose syntax)
+7. **Fallback Transformer**: 100+ regex patterns for when AI is unavailable
 
-**Key features:**
-- Maintains conversation context for follow-up queries
-- Handles MTG-specific terminology and slang
-- Detects purchase intent for affiliate notices
-- Returns structured JSON for reliable parsing
+**Key Features:**
+- Rate limiting (30 req/min per IP, 1000 req/min global)
+- Circuit breaker for AI service failures
+- Synonym normalization for better cache hit rates
+- Quality flag detection and logging
+- Selective logging (only logs issues, not successful translations)
+
+**Cost Optimization:**
+- ~60-70% of queries bypass AI via caching/patterns
+- Simple queries use ~300 token prompts vs ~1500 for complex
+- Estimated cost: ~$3-4/month at 100k searches
+
+### `supabase/functions/generate-patterns/index.ts`
+
+Automatically generates translation rules from frequently occurring queries in logs.
+
+- Runs weekly via cron (Sunday 3 AM UTC)
+- Identifies queries with 3+ occurrences and high confidence
+- Creates new `translation_rules` entries for AI bypass
+
+### `supabase/functions/process-feedback/index.ts`
+
+Processes user-submitted feedback about incorrect translations.
+
+- Uses AI to generate corrected Scryfall syntax
+- Creates new translation rules from validated feedback
+- Improves system accuracy over time
+
+### `supabase/functions/cleanup-logs/index.ts`
+
+Maintains database hygiene by cleaning up old logs.
+
+- Runs weekly via cron
+- Removes logs older than 30 days
+- Keeps database size manageable
+
+---
+
+## Database Tables
+
+| Table | Description |
+|-------|-------------|
+| `translation_rules` | Pattern → Scryfall mappings that bypass AI |
+| `translation_logs` | Logged translations for quality analysis (low confidence, errors only) |
+| `query_cache` | Persistent cache for high-confidence translations (48h TTL) |
+| `search_feedback` | User-submitted feedback about incorrect translations |
+| `analytics_events` | Search and interaction analytics |
 
 ---
 
@@ -129,23 +177,36 @@ The AI-powered search translation service. This is the core of the natural langu
 
 ```
 User Input (text/voice)
-        │
-        ▼
-UnifiedSearchBar.tsx
-        │
-        ▼
-searchCards() in lib/scryfall.ts
-        │
-        ▼
-semantic-search Edge Function (Gemini AI)
-        │
-        ▼
+         │
+         ▼
+UnifiedSearchBar.tsx (client-side cache check)
+         │
+         ▼
+semantic-search Edge Function
+         │
+         ├─► In-Memory Cache Hit? → Return cached
+         │
+         ├─► Persistent DB Cache Hit? → Return cached
+         │
+         ├─► Pattern Match Hit? → Return matched
+         │
+         ├─► Circuit Breaker Open? → Use fallback transformer
+         │
+         └─► AI Translation (tiered prompts)
+                    │
+                    ▼
+            Auto-correction + Validation
+                    │
+                    ▼
+            Cache result (memory + DB)
+                    │
+                    ▼
 Scryfall API
-        │
-        ▼
+         │
+         ▼
 Card Results → CardItem.tsx grid
-        │
-        ▼
+         │
+         ▼
 CardModal.tsx (on click)
 ```
 
@@ -179,9 +240,10 @@ CardModal.tsx (on click)
 - **Tailwind CSS** - Utility-first styling
 - **shadcn/ui** - Accessible UI components
 - **TanStack Query** - Data fetching and caching
-- **Gemini AI** - Natural language processing (via Lovable Cloud)
+- **Gemini AI** - Natural language processing (via Lovable AI gateway)
 - **Scryfall API** - MTG card database
 - **Supabase Edge Functions** - Serverless backend
+- **PostgreSQL** - Database for caching, rules, and analytics
 
 ---
 
@@ -206,6 +268,7 @@ npm run build
 2. **Mobile-first**: Always test on mobile. Use `useIsMobile()` hook for responsive behavior.
 3. **AI prompts**: The Gemini prompt in `semantic-search/index.ts` is critical for search quality. Test changes thoroughly.
 4. **Scryfall syntax**: Reference [Scryfall's syntax guide](https://scryfall.com/docs/syntax) when updating the AI prompt.
+5. **Cost optimization**: Prefer adding patterns to `translation_rules` over AI prompt changes for common queries.
 
 ---
 

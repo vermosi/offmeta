@@ -6,13 +6,26 @@
  * 
  * @module semantic-search
  * 
- * ## How It Works
+ * ## Translation Pipeline (Cost-Optimized)
  * 
- * 1. **Input**: Receives a natural language query (e.g., "cheap green ramp spells")
- * 2. **AI Translation**: Sends the query to Gemini with a comprehensive prompt
- *    containing MTG slang definitions, Scryfall syntax rules, and examples
- * 3. **Validation**: Sanitizes the AI output to ensure valid Scryfall syntax
- * 4. **Response**: Returns the translated query with explanation and confidence
+ * 1. **In-Memory Cache**: Instant lookup for recently translated queries (30 min TTL)
+ * 2. **Persistent DB Cache**: Survives function restarts (48 hour TTL, confidence ≥ 0.8)
+ * 3. **Pattern Matching**: Exact match against `translation_rules` table (bypasses AI)
+ * 4. **Prompt Tiering**: Simple/medium/complex queries use progressively smaller prompts
+ * 5. **AI Translation**: Gemini AI with comprehensive MTG terminology prompt
+ * 6. **Auto-Correction**: Fixes common AI mistakes (invalid tags, verbose syntax)
+ * 7. **Fallback Transformer**: 100+ regex patterns for when AI is unavailable
+ * 
+ * ## Cost Optimization Features
+ * 
+ * - **Multi-layer caching**: In-memory (30 min) + Persistent DB (48 hours)
+ * - **Pattern matching**: 50+ seeded patterns bypass AI entirely
+ * - **Prompt tiering**: Simple queries use ~300 tokens vs ~1500 for complex
+ * - **Expanded fallback**: 100+ regex transforms when AI unavailable
+ * - **Selective logging**: Only logs low-confidence or problematic translations
+ * - **Circuit breaker**: Prevents cascading failures when AI service is down
+ * 
+ * Estimated savings: ~60-70% of queries bypass AI, ~$3-4/month at 100k searches
  * 
  * ## Request Body
  * ```json
@@ -33,17 +46,20 @@
  *     "assumptions": [],
  *     "confidence": 0.85
  *   },
- *   "showAffiliate": false
+ *   "showAffiliate": false,
+ *   "source": "memory_cache" | "persistent_cache" | "pattern_match" | "ai"
  * }
  * ```
  * 
  * ## Key Features
+ * - Rate limiting (30 req/min per IP, 1000 req/min global)
  * - Extensive MTG slang dictionary (ramp, tutors, stax, etc.)
- * - Tribal/creature type support
- * - Commander-specific terminology
+ * - Tribal/creature type support (50+ types)
+ * - Commander-specific terminology (guilds, shards, wedges)
  * - Budget/price-based queries
  * - Follow-up query context for refinements
  * - Purchase intent detection for affiliate links
+ * - Quality flag detection and auto-correction
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
