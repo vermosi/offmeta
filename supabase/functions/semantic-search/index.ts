@@ -1071,13 +1071,16 @@ COMMANDER QUERIES (CRITICAL):
 - "multicolor commander with blue" = is:commander id:u -id=u
 - "mono-color commander" = is:commander (c=w or c=u or c=b or c=r or c=g)
 
-MANA PRODUCTION (LIMITATION WARNING):
-- Scryfall CANNOT filter by exact mana production amount (e.g., "produces 2 mana")
-- "produces mana" = o:"add" o:"{" (any mana production)
-- "produces 2 mana" = BEST EFFORT: o:"add" o:"{" o:"{" (has two mana symbols - imperfect)
+MANA PRODUCTION (USE produces>= SYNTAX):
+- "produces mana" / "mana producer" = otag:mana-producer OR produces>=1
+- "produces 2 mana" / "adds 2 mana" = produces>=2
+- "produces 3 or more mana" = produces>=3
+- "produces exactly 1 mana" = produces=1
+- "artifact that produces 2 mana" = t:artifact produces>=2
 - "mana rock" = otag:mana-rock (artifacts that produce mana)
 - "mana dork" = otag:mana-dork (creatures that produce mana)
-- For filtering mana production amount, results may include cards that don't match exactly
+- "land that produces 1 mana" = t:land produces=1
+- For mana COLOR production, use produces:g (produces green), produces:2g (produces 2 including green)
 
 ACTIVATED ABILITIES (CRITICAL):
 - Activated abilities = "COST: EFFECT" format
@@ -1286,12 +1289,16 @@ For Commander deck building:
 - "fits in red/black deck" / "for Rakdos commander" = id<=br (playable in that commander's deck)
 - "Rakdos identity" / "is Rakdos" = id=br (exactly that identity)
 
-=== MANA PRODUCTION (SCRYFALL LIMITATION) ===
-Scryfall CANNOT filter by exact mana production amount (e.g., "produces 2 mana" or "adds 3 mana").
-- "produces mana" / "taps for mana" = o:"add" o:"{"
-- "produces 2 mana" = BEST EFFORT: o:"add {" o:"{" (two mana symbols in text - imperfect approximation)
-- For reliable mana producers, use: otag:mana-rock, otag:mana-dork
-- Note in results: exact mana production filtering is not possible
+=== MANA PRODUCTION (USE produces>= SYNTAX) ===
+Scryfall CAN filter by mana production amount using the produces>= operator!
+- "produces mana" / "taps for mana" = otag:mana-producer OR produces>=1
+- "produces 2 mana" / "adds 2 mana" = produces>=2
+- "produces 3 or more mana" = produces>=3  
+- "produces exactly 1 mana" = produces=1
+- "artifact that produces 2 mana" = t:artifact produces>=2
+- "land that produces 1 mana" = t:land produces=1
+- "mana rock" = otag:mana-rock, "mana dork" = otag:mana-dork
+- For mana COLOR: produces:g (green), produces:2g (2 mana including green)
 
 === MONO-COLOR HANDLING (CRITICAL) ===
 - "mono [color]" means EXACTLY that color with NO other colors
