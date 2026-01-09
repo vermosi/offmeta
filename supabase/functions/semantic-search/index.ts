@@ -1042,6 +1042,25 @@ CRITICAL:
 6. banned:FORMAT not is:banned, restricted:FORMAT not is:restricted
 7. For dates/years use year>2020 NOT e:2021 (e: is for set codes only)
 8. When user specifies colors like "red creature" use c:r, for "red or black" use (c:r or c:b)
+9. MONO COLOR = EXACT match: "mono red" = c=r (NOT c:r), "mono green creature" = c=g t:creature
+
+MONO-COLOR HANDLING (CRITICAL):
+- "mono [color]" ALWAYS means EXACTLY that color, no other colors
+- "mono red" = c=r (exactly red, NOT c:r which includes multicolor)
+- "mono green creatures" = t:creature c=g
+- "mono blue spells" = (t:instant or t:sorcery) c=u
+- Use c= for exact color match, c: for "includes this color"
+
+MODAL/MDFC CARDS:
+- "modal spells" = is:modal (cards with modal choices)
+- "modal lands" / "MDFC lands" = is:mdfc t:land (modal double-faced card lands)
+- "pathway lands" = is:pathway
+
+UNTAP vs UNTAPPED (CRITICAL - different meanings):
+- "untap" (verb) = o:"untap" (cards that untap things) - use otag:untapper when available
+- "untapped" (state) = o:"untapped" (cards that reference being untapped)
+- "cards that untap artifacts" = t:artifact o:"untap" NOT o:"untapped"
+- "cards that untap creatures" = o:"untap target creature" or o:"untap all creatures"
 
 ORACLE TAGS (otag:) - USE THESE for effect-based searches:
 - otag:ramp (mana acceleration)
@@ -1052,10 +1071,15 @@ ORACLE TAGS (otag:) - USE THESE for effect-based searches:
 - otag:counterspell (counter spells)
 - otag:board-wipe (mass removal)
 - otag:lifegain (gain life)
-- otag:graveyard-recursion (return from graveyard)`;
+- otag:graveyard-recursion (return from graveyard)
+- otag:mana-rock (artifacts that produce mana)
+- otag:gives-flash (cards that give flash to other cards/spells)
+- otag:untapper (cards that untap permanents)
+- otag:soul-warden-ability (gain life when creatures enter - soul sisters)
+- otag:synergy-sacrifice (sacrifice synergy/payoffs)`;
 
       if (tier === 'simple') {
-        // ~400 tokens - core rules + otag patterns
+        // ~500 tokens - core rules + otag patterns
         return `${coreRules}
 
 MORE OTAGS:
@@ -1068,6 +1092,13 @@ MORE OTAGS:
 - otag:wheel (draw 7, discard hand)
 - otag:fog (prevent combat damage)
 - otag:cantrip (cheap spell that draws)
+- otag:gives-flash (gives flash to spells/creatures)
+- otag:synergy-sacrifice (sacrifice payoffs like Blood Artist)
+
+LAND SEARCHES:
+- is:mdfc t:land (modal double-faced lands)
+- is:modal (any modal card)
+- is:fetchland, is:shockland, is:dual
 
 PRICE: cheap/budget = usd<5, expensive = usd>20
 DATE: "after 2020" = year>2020, "released in 2023" = year=2023
@@ -1077,7 +1108,7 @@ Return ONLY the Scryfall query.`;
       }
       
       if (tier === 'medium') {
-        // ~700 tokens - core rules + common otags + tribals + colors
+        // ~800 tokens - core rules + common otags + tribals + colors
         return `${coreRules}
 
 COMPREHENSIVE OTAGS (prefer these for accuracy):
@@ -1090,9 +1121,13 @@ Graveyard: otag:self-mill, otag:mill, otag:graveyard-recursion, otag:reanimation
 Combat: otag:pump, otag:combat-trick, otag:fog, otag:menace-granter
 Tokens: otag:token-generator, otag:treasure-generator, otag:food-generator, otag:clue-generator
 Blink: otag:blink, otag:flicker, otag:bounce
-Sacrifice: otag:sacrifice-outlet, otag:aristocrats, otag:death-trigger
+Sacrifice: otag:sacrifice-outlet, otag:aristocrats, otag:death-trigger, otag:synergy-sacrifice
 Life: otag:lifegain, otag:soul-warden-ability (gain life when creatures enter), otag:lifelink-granter
-Special: otag:extra-turn, otag:stax, otag:hatebear, otag:voltron
+Special: otag:extra-turn, otag:stax, otag:hatebear, otag:voltron, otag:gives-flash, otag:untapper
+
+MODAL/MDFC:
+- "modal cards" = is:modal
+- "modal lands" / "MDFC lands" = is:mdfc t:land
 
 TRIBALS: Use t:[type] for creature types (t:elf, t:goblin, t:zombie, etc.)
 
@@ -1131,6 +1166,36 @@ CRITICAL RULES:
 10. NEVER use "function:" tags - they don't work via the API. Use otag: (Oracle Tags) instead.
 11. For dates/years: use year>2020 NOT e:2021 (e: is for set codes only like e:mom, e:lci)
 12. COLOR CONSTRAINTS: When user specifies colors like "red creatures" use c:r, for "red or black" use (c:r or c:b), for color identity use id:
+13. MONO-COLOR = EXACT color match: "mono red" = c=r (NOT c:r), "mono green creature" = c=g t:creature
+
+=== MONO-COLOR HANDLING (CRITICAL) ===
+- "mono [color]" means EXACTLY that color with NO other colors
+- Use c= for exact color match (excludes multicolor cards)
+- Use c: for "includes this color" (includes multicolor cards)
+- "mono red" / "mono-red" = c=r (exactly red only)
+- "mono red creature" = t:creature c=r
+- "5 mana mono red creature" = t:creature c=r mv=5
+- "mono green spells" = (t:instant or t:sorcery) c=g
+- "mono blue commander" = t:legendary t:creature c=u is:commander
+
+=== UNTAP vs UNTAPPED (CRITICAL - different meanings!) ===
+- "untap" (VERB - action of untapping) = otag:untapper or o:"untap target" or o:"untap all"
+- "untapped" (STATE - being untapped) = o:"untapped" (cards that reference untapped permanents)
+- "cards that untap artifacts" = otag:untapper t:artifact or o:"untap" o:"artifact" -o:"untapped"
+- "cards that untap creatures" = o:"untap target creature" or o:"untap all creatures"
+- "cards that untap lands" = o:"untap" o:"land" -o:"untapped"
+- DO NOT confuse "untap" (the action) with "untapped" (the state)
+
+=== FLASH-GRANTING CARDS ===
+- "cards that give flash" / "give spells flash" = otag:gives-flash
+- "flash enablers" = otag:gives-flash
+- "let me cast at instant speed" = otag:gives-flash
+
+=== MODAL/MDFC CARDS ===
+- "modal spells" = is:modal (cards with choose one/two/three options)
+- "modal lands" / "MDFC lands" / "modal double faced lands" = is:mdfc t:land
+- "pathway lands" = is:pathway
+- "modal cards that are lands" = is:mdfc t:land
 
 LEGALITY & BAN STATUS (CRITICAL - use these exact syntaxes):
 - "banned in X" = banned:X (e.g., "banned in commander" → banned:commander)
@@ -1252,13 +1317,15 @@ CONTROL:
 SPECIAL EFFECTS:
 - otag:extra-turn (take extra turns)
 - otag:proliferate (adds counters)
-- otag:untapper (untaps permanents)
+- otag:untapper (untaps permanents - use for "cards that untap X")
 - otag:copy-spell (copies spells)
 - otag:clone (copies creatures)
 - otag:polymorph (transforms creatures randomly)
 - otag:protection-granter (gives protection)
 - otag:hexproof-granter (gives hexproof)
 - otag:indestructible-granter (gives indestructible)
+- otag:gives-flash (gives flash to other cards - use for "cards that give flash")
+- otag:synergy-sacrifice (sacrifice synergy/payoffs - use alongside o: searches for completeness)
 
 EGGS & ENABLERS:
 - otag:egg (sacrifices itself for value, like Mishra's Bauble)
@@ -1272,6 +1339,7 @@ EGGS & ENABLERS:
 - USE otag: when searching for a CATEGORY of effect (e.g., "ramp cards" → otag:ramp)
 - USE o: when searching for SPECIFIC text (e.g., "cards that mention 'treasure'" → o:"treasure")
 - COMBINE them: "green self-mill creatures" → c:g t:creature otag:self-mill
+- For sacrifice payoffs, COMBINE: (otag:synergy-sacrifice or (o:"whenever" o:"sacrifice"))
 
 === EXAMPLES WITH otag: ===
 - "self-mill in black or white" → (c:b or c:w) otag:self-mill
@@ -1281,6 +1349,14 @@ EGGS & ENABLERS:
 - "mulch effects in green" → c:g otag:mulch
 - "egg artifacts" → t:artifact otag:egg
 - "reanimation spells" → (t:instant or t:sorcery) otag:reanimation
+- "cards that give flash" / "give spells flash" → otag:gives-flash
+- "cards that untap artifacts" → otag:untapper o:"artifact" -o:"untapped"
+- "sacrifice synergy" / "sacrifice payoffs" → (otag:synergy-sacrifice or otag:aristocrats or (o:"whenever" o:"you sacrifice"))
+- "mana rocks that cost 1 or less" → otag:mana-rock mv<=1
+- "mono red creatures" → t:creature c=r
+- "5 mana mono red creature" → t:creature c=r mv=5
+- "modal lands" / "modal cards that are lands" → is:mdfc t:land
+- "-1/-1 counter effects" → (o:"-1/-1 counter" or o:"put a -1/-1")
 
 LAND SHORTCUTS (use these instead of manual Oracle searches):
 - "dual lands" = is:dual
@@ -1777,9 +1853,34 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         [/\bin (\d{4})\b/gi, 'year=$1'],
         [/\bfrom (\d{4})\b/gi, 'year=$1'],
         
+        // MONO-COLOR handling (CRITICAL - use c= for exact match)
+        [/\bmono[ -]?red\b/gi, 'c=r'],
+        [/\bmono[ -]?blue\b/gi, 'c=u'],
+        [/\bmono[ -]?green\b/gi, 'c=g'],
+        [/\bmono[ -]?white\b/gi, 'c=w'],
+        [/\bmono[ -]?black\b/gi, 'c=b'],
+        [/\bcolorless\b/gi, 'c=c'],
+        
+        // Flash granting
+        [/\bgive(?:s)? (?:spells? )?flash\b/gi, 'otag:gives-flash'],
+        [/\bflash enablers?\b/gi, 'otag:gives-flash'],
+        [/\blet(?:s)? me cast.+instant speed\b/gi, 'otag:gives-flash'],
+        
+        // Untap vs untapped (CRITICAL distinction)
+        [/\bcards? that untap\b/gi, 'otag:untapper'],
+        [/\buntappers?\b/gi, 'otag:untapper'],
+        
+        // Modal/MDFC lands
+        [/\bmodal lands?\b/gi, 'is:mdfc t:land'],
+        [/\bmdfc lands?\b/gi, 'is:mdfc t:land'],
+        [/\bmodal cards? that are lands?\b/gi, 'is:mdfc t:land'],
+        [/\bmodal spells?\b/gi, 'is:modal'],
+        [/\bpathway lands?\b/gi, 'is:pathway'],
+        
         // Ramp and mana - use otag when available
         [/\bramp\b/gi, 'otag:ramp'],
-        [/\bmana rocks?\b/gi, 'otag:mana-rock'],
+        [/\bmana ?rocks?\b/gi, 'otag:mana-rock'],
+        [/\bmanarocks?\b/gi, 'otag:mana-rock'],
         [/\bmana dorks?\b/gi, 'otag:mana-dork'],
         [/\bfast mana\b/gi, 't:artifact mv<=2 otag:mana-rock'],
         [/\bmana doublers?\b/gi, 'otag:mana-doubler'],
@@ -1858,16 +1959,23 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         [/\bdeath triggers?\b/gi, 'otag:death-trigger'],
         [/\bgrave ?pact\b/gi, 'otag:grave-pact-effect'],
         [/\bblood ?artist\b/gi, 'otag:blood-artist-effect'],
+        [/\bsacrifice synergy\b/gi, 'otag:synergy-sacrifice'],
+        [/\bsacrifice payoffs?\b/gi, 'otag:synergy-sacrifice'],
+        [/\b(?:cards? that )?give(?:s)? me things? when.+sacrifice\b/gi, '(otag:synergy-sacrifice or (o:"whenever" o:"you sacrifice"))'],
         
         // Special effects - use otag
         [/\bextra turns?\b/gi, 'otag:extra-turn'],
         [/\bproliferate\b/gi, 'o:proliferate'],
         [/\bclones?\b/gi, 'otag:clone'],
-        [/\buntap\b/gi, 'otag:untapper'],
+        // Note: untap is handled earlier in the specific patterns section
         [/\bpolymorph\b/gi, 'otag:polymorph'],
         [/\beggs?\b/gi, 'otag:egg'],
         [/\bactivate from graveyard\b/gi, 'otag:activate-from-graveyard'],
         [/\buse from graveyard\b/gi, 'otag:activate-from-graveyard'],
+        
+        // -1/-1 counter effects
+        [/\b-1\/-1 counters?\b/gi, 'o:"-1/-1 counter"'],
+        [/\bput.+-1\/-1\b/gi, 'o:"put a -1/-1"'],
         
         // Card types
         [/\bspells\b/gi, '(t:instant or t:sorcery)'],
