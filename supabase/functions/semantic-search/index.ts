@@ -1070,6 +1070,15 @@ ACTIVATED ABILITIES (CRITICAL):
 - DO NOT use o:"activated ability" literally - it doesn't appear in card text
 - DO NOT use o:"mana cost" - that's not how cards are worded
 
+MANA SYMBOLS/PIPS IN COST (CRITICAL):
+- "at least X mana symbols" = find cards with X+ colored pips (no generic mana)
+- "3 mana symbols" / "3 pips" = mv=3 -m:1 -m:2 (mana value 3, no generic mana)
+- "4+ mana symbols" = mv>=4 -m:1 -m:2 -m:3 (high pip count)
+- "devotion deck" / "many colored pips" = mv>=3 -m:1 -m:2 (lots of colored symbols)
+- The pattern is: mv=X then exclude generic costs with -m:1 -m:2 etc.
+- For Omnath, Locus of All: mv>=3 -m:1 -m:2 (cards with 3+ colored pips)
+- "all colored mana cost" = -m:0 -m:1 -m:2 -m:3 -m:4 -m:5 (no generic at all)
+
 MODAL/MDFC CARDS:
 - "modal spells" = is:modal (cards with modal choices)
 - "modal lands" / "MDFC lands" = is:mdfc t:land (modal double-faced card lands)
@@ -1417,6 +1426,13 @@ ACTIVATED ABILITIES (CRITICAL - complex pattern handling):
 - "activated ability without mana" / "activation cost is not mana" = o:/\{T\}:/ -o:/\{[WUBRGC0-9]\}.*:/ 
 - For general activated abilities, use: o:":" (most cards with abilities have colons)
 - DO NOT use o:"activated ability" - cards don't have that text literally
+
+MANA SYMBOLS/PIPS IN COST (for devotion, Omnath, pip-heavy decks):
+- "at least 3 mana symbols" / "3+ pips" = mv=3 -m:1 -m:2 (mv 3, no generic)
+- "4+ mana symbols" = mv>=4 -m:1 -m:2 -m:3 (high pip density)
+- "pip-heavy" / "devotion cards" = mv>=3 -m:1 -m:2
+- The pattern: mv=X then -m:1 -m:2 etc. to exclude generic mana costs
+- "all colored cost" (no generic) = append -m:0 -m:1 -m:2 -m:3 -m:4 -m:5
 
 CARD TYPE SHORTCUTS:
 - "vanilla creatures" = is:vanilla
