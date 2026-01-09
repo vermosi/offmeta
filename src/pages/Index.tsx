@@ -26,6 +26,7 @@ const Index = () => {
   const initialQuery = searchParams.get("q") || "";
   
   const [searchQuery, setSearchQuery] = useState(initialQuery);
+  const [originalQuery, setOriginalQuery] = useState(initialQuery); // Natural language query
   const [selectedCard, setSelectedCard] = useState<ScryfallCard | null>(null);
   const [hasSearched, setHasSearched] = useState(!!initialQuery);
   const [lastSearchResult, setLastSearchResult] = useState<SearchResult | null>(null);
@@ -76,8 +77,9 @@ const Index = () => {
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-  const handleSearch = useCallback((query: string, result?: SearchResult) => {
+  const handleSearch = useCallback((query: string, result?: SearchResult, naturalQuery?: string) => {
     setSearchQuery(query);
+    setOriginalQuery(naturalQuery || query); // Store the natural language query
     setHasSearched(true);
     setLastSearchResult(result || null);
     setFilteredCards([]); // Reset filters on new search
@@ -92,12 +94,17 @@ const Index = () => {
     // Track search analytics
     if (result) {
       trackSearch({
-        query,
+        query: naturalQuery || query,
         translated_query: result.scryfallQuery,
         results_count: 0, // Will be updated when results come in
       });
     }
   }, [trackSearch, setSearchParams]);
+
+  // Handler for "Did you mean...?" suggestions
+  const handleTryAlternative = useCallback((alternativeQuery: string) => {
+    searchBarRef.current?.triggerSearch(alternativeQuery);
+  }, []);
 
   const handleCardClick = useCallback((card: ScryfallCard, index: number) => {
     // Track card click
@@ -224,7 +231,9 @@ const Index = () => {
               <div className="animate-reveal">
                 <SearchInterpretation 
                   scryfallQuery={lastSearchResult.scryfallQuery}
+                  originalQuery={originalQuery}
                   explanation={lastSearchResult.explanation}
+                  onTryAlternative={handleTryAlternative}
                 />
               </div>
             )}

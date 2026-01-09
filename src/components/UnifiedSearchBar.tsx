@@ -133,7 +133,7 @@ export interface SearchResult {
 }
 
 interface UnifiedSearchBarProps {
-  onSearch: (query: string, result?: SearchResult) => void;
+  onSearch: (query: string, result?: SearchResult, naturalQuery?: string) => void;
   isLoading: boolean;
   lastTranslatedQuery?: string;
 }
@@ -219,7 +219,7 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
         scryfallQuery: cached.scryfallQuery,
         explanation: cached.explanation,
         showAffiliate: cached.showAffiliate
-      });
+      }, queryToSearch); // Pass natural language query
       toast.success('Search (cached)', {
         description: `Found: ${cached.scryfallQuery.substring(0, 50)}${cached.scryfallQuery.length > 50 ? '...' : ''}`
       });
@@ -278,7 +278,7 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
           scryfallQuery: data.scryfallQuery,
           explanation: data.explanation,
           showAffiliate: data.showAffiliate
-        });
+        }, queryToSearch); // Pass natural language query
         
         const source = data.source || 'ai';
         toast.success(`Search translated${source !== 'ai' ? ` (${source})` : ''}`, {
@@ -296,7 +296,7 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
         toast.error('Search took too long', {
           description: 'Try a simpler query or try again'
         });
-        onSearch(queryToSearch); // Fall back to direct search
+        onSearch(queryToSearch, undefined, queryToSearch); // Fall back to direct search
       } else if (errorMessage.includes('429') || errorMessage.includes('rate')) {
         setRateLimitedUntil(Date.now() + 30000);
         toast.error('Too many searches', {
@@ -307,7 +307,7 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
         toast.error('Search issue', {
           description: 'Trying direct search instead'
         });
-        onSearch(queryToSearch);
+        onSearch(queryToSearch, undefined, queryToSearch);
       }
     } finally {
       setIsSearching(false);
