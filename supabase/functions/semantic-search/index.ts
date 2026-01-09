@@ -1041,8 +1041,17 @@ CRITICAL:
 5. NEVER use function: tags - use otag: (Oracle Tags) instead
 6. banned:FORMAT not is:banned, restricted:FORMAT not is:restricted
 7. For dates/years use year>2020 NOT e:2021 (e: is for set codes only)
-8. When user specifies colors like "red creature" use c:r, for "red or black" use (c:r or c:b)
-9. MONO COLOR = EXACT match: "mono red" = c=r (NOT c:r), "mono green creature" = c=g t:creature
+8. MONO COLOR = EXACT match: "mono red" = c=r (NOT c:r), "mono green creature" = c=g t:creature
+
+COLOR FILTERING (CRITICAL - most common mistake!):
+- "red creature" (single color) = c:r t:creature (includes multicolor)
+- "mono red creature" = c=r t:creature (exactly red only)
+- "red or black creature" = c<=rb t:creature (ONLY red, black, or Rakdos - excludes Gruul, Dimir, etc.)
+- "red and black creature" = c>=rb t:creature (must have BOTH red and black)
+- The key: "X or Y" means RESTRICT to those colors = c<=XY
+- The key: "X and Y" means REQUIRE both colors = c>=XY
+- NEVER use (c:r or c:b) for "red or black" - that includes Gruul, Temur, etc!
+- For commander decks: "fits in red/black deck" = id<=rb (playable in Rakdos commander)
 
 MONO-COLOR HANDLING (CRITICAL):
 - "mono [color]" ALWAYS means EXACTLY that color, no other colors
@@ -1061,6 +1070,14 @@ COMMANDER QUERIES (CRITICAL):
 - "commanders" / "can be commander" = is:commander (NOT t:legendary t:creature!)
 - "multicolor commander with blue" = is:commander id:u -id=u
 - "mono-color commander" = is:commander (c=w or c=u or c=b or c=r or c=g)
+
+MANA PRODUCTION (LIMITATION WARNING):
+- Scryfall CANNOT filter by exact mana production amount (e.g., "produces 2 mana")
+- "produces mana" = o:"add" o:"{" (any mana production)
+- "produces 2 mana" = BEST EFFORT: o:"add" o:"{" o:"{" (has two mana symbols - imperfect)
+- "mana rock" = otag:mana-rock (artifacts that produce mana)
+- "mana dork" = otag:mana-dork (creatures that produce mana)
+- For filtering mana production amount, results may include cards that don't match exactly
 
 ACTIVATED ABILITIES (CRITICAL):
 - Activated abilities = "COST: EFFECT" format
@@ -1248,8 +1265,33 @@ CRITICAL RULES:
 9. HASTE ORACLE TEXT: When user asks for cards that "give haste" / "grant haste" / "haste enablers", use: (o:"gains haste" or o:"have haste" or o:"gain haste")
 10. NEVER use "function:" tags - they don't work via the API. Use otag: (Oracle Tags) instead.
 11. For dates/years: use year>2020 NOT e:2021 (e: is for set codes only like e:mom, e:lci)
-12. COLOR CONSTRAINTS: When user specifies colors like "red creatures" use c:r, for "red or black" use (c:r or c:b), for color identity use id:
-13. MONO-COLOR = EXACT color match: "mono red" = c=r (NOT c:r), "mono green creature" = c=g t:creature
+12. MONO-COLOR = EXACT color match: "mono red" = c=r (NOT c:r), "mono green creature" = c=g t:creature
+
+=== COLOR FILTERING (CRITICAL - MOST COMMON MISTAKE!) ===
+This is the #1 source of user complaints. Get this right!
+
+- "red creature" (single color mentioned) = c:r t:creature (includes multicolor like Gruul)
+- "mono red creature" = c=r t:creature (EXACTLY red, no other colors)
+- "red or black creature" = c<=rb t:creature (ONLY red, black, or Rakdos - EXCLUDES Gruul, Grixis, Jund, etc!)
+- "red and black creature" = c>=rb t:creature (MUST have BOTH red AND black)
+
+KEY INSIGHT: When user says "[color] or [color]", they want cards RESTRICTED to those colors only.
+- "red or black" = c<=rb (can be mono-red, mono-black, or red-black, but NOT red-green or black-blue)
+- "white or blue" = c<=wu (can be mono-white, mono-blue, or Azorius, but NOT Bant or Esper)
+- "green, red, or white" = c<=wrg (Naya colors only)
+
+NEVER use (c:r or c:b) for "red or black" - that matches ANY card containing red OR black, including 5-color cards!
+
+For Commander deck building:
+- "fits in red/black deck" / "for Rakdos commander" = id<=br (playable in that commander's deck)
+- "Rakdos identity" / "is Rakdos" = id=br (exactly that identity)
+
+=== MANA PRODUCTION (SCRYFALL LIMITATION) ===
+Scryfall CANNOT filter by exact mana production amount (e.g., "produces 2 mana" or "adds 3 mana").
+- "produces mana" / "taps for mana" = o:"add" o:"{"
+- "produces 2 mana" = BEST EFFORT: o:"add {" o:"{" (two mana symbols in text - imperfect approximation)
+- For reliable mana producers, use: otag:mana-rock, otag:mana-dork
+- Note in results: exact mana production filtering is not possible
 
 === MONO-COLOR HANDLING (CRITICAL) ===
 - "mono [color]" means EXACTLY that color with NO other colors
