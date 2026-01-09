@@ -1051,6 +1051,25 @@ MONO-COLOR HANDLING (CRITICAL):
 - "mono blue spells" = (t:instant or t:sorcery) c=u
 - Use c= for exact color match, c: for "includes this color"
 
+MULTICOLOR IDENTITY (CRITICAL):
+- "multicolor including X" = id:X -id=X (has X but isn't exactly X, so has other colors)
+- "more than one color, one of which is blue" = id:u -id=u
+- "two or more colors" = c>=2
+- DO NOT list all combinations - use algorithmic approach
+
+COMMANDER QUERIES (CRITICAL):
+- "commanders" / "can be commander" = is:commander (NOT t:legendary t:creature!)
+- "multicolor commander with blue" = is:commander id:u -id=u
+- "mono-color commander" = is:commander (c=w or c=u or c=b or c=r or c=g)
+
+ACTIVATED ABILITIES (CRITICAL):
+- Activated abilities = "COST: EFFECT" format
+- "activated ability" = o:":" (has colon in text)
+- "free activated ability" / "no mana in cost" = o:"{T}:" (tap abilities)
+- "activated ability without mana cost" = o:/\{T\}:/ (abilities that cost {T} not mana)
+- DO NOT use o:"activated ability" literally - it doesn't appear in card text
+- DO NOT use o:"mana cost" - that's not how cards are worded
+
 MODAL/MDFC CARDS:
 - "modal spells" = is:modal (cards with modal choices)
 - "modal lands" / "MDFC lands" = is:mdfc t:land (modal double-faced card lands)
@@ -1377,11 +1396,27 @@ LAND SHORTCUTS (use these instead of manual Oracle searches):
 - "pathway lands" = is:pathway
 - "MDFCs" / "modal lands" = is:mdfc
 
-COMMANDER SHORTCUTS:
-- "can be commander" / "legal commanders" = is:commander
-- "partner commanders" = is:partner
+COMMANDER SHORTCUTS (CRITICAL - use these for commander queries):
+- "commanders" / "can be commander" / "legal commanders" = is:commander (NOT t:legendary t:creature)
+- "partner commanders" = is:commander is:partner
 - "companion" = is:companion
 - "backgrounds" = t:background
+- "commander with blue" = is:commander id:u
+- "multicolor commander including blue" = is:commander id:u -id=u (has blue but isn't mono-blue)
+- "multicolor commander" = is:commander c>=2 (at least 2 colors)
+- "mono-color commander" = is:commander (id=w or id=u or id=b or id=r or id=g)
+- "3+ color commander" = is:commander c>=3
+- "more than one color, one of which is X" = id:X -id=X (includes X but isn't exactly X)
+
+ACTIVATED ABILITIES (CRITICAL - complex pattern handling):
+- Activated abilities have format: "COST: EFFECT" (colon separates cost from effect)
+- "activated ability" = o:":" (has a colon in oracle text)
+- "free activated ability" / "no mana cost ability" = o:/\{T\}:/ or o:/sacrifice.*:/ (tap or sacrifice costs, no mana)
+- "tap ability" / "tap to do something" = o:"{T}:"
+- "sacrifice ability" = o:/sacrifice.*:/
+- "activated ability without mana" / "activation cost is not mana" = o:/\{T\}:/ -o:/\{[WUBRGC0-9]\}.*:/ 
+- For general activated abilities, use: o:":" (most cards with abilities have colons)
+- DO NOT use o:"activated ability" - cards don't have that text literally
 
 CARD TYPE SHORTCUTS:
 - "vanilla creatures" = is:vanilla
