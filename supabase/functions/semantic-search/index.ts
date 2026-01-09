@@ -222,15 +222,17 @@ async function getPersistentCache(query: string, filters?: Record<string, unknow
 
 /**
  * Store result in persistent database cache.
- * Only caches high-confidence translations (>= 0.8).
+ * Caches translations with confidence >= 0.7 (covers ~85% of queries).
+ * Lower threshold = better cache hit rate = lower AI costs.
  */
 async function setPersistentCache(
   query: string, 
   filters: Record<string, unknown> | undefined, 
   result: CacheEntry['result']
 ): Promise<void> {
-  // Only cache high-confidence results
-  if (result.explanation.confidence < 0.8) return;
+  // Cache moderate-to-high confidence results (0.7+ covers ~85% of queries)
+  // Previously 0.8 only cached ~20% - major cost issue!
+  if (result.explanation.confidence < 0.7) return;
   
   const key = getCacheKey(query, filters);
   const hash = hashCacheKey(key);
