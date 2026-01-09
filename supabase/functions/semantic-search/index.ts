@@ -162,11 +162,43 @@ function hashCacheKey(key: string): string {
 
 function getCachedResult(query: string, filters?: Record<string, unknown>): CacheEntry['result'] | null {
   const key = getCacheKey(query, filters);
+  const hash = hashCacheKey(key);
   const cached = queryCache.get(key);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    // Log memory cache hit
+    logCacheEvent('memory_cache_hit', query, hash, null);
+    console.log(JSON.stringify({ event: 'memory_cache_hit', hash: hash.substring(0, 8) }));
     return cached.result;
   }
   return null;
+}
+
+// ============= CACHE ANALYTICS =============
+/**
+ * Log cache events to analytics_events table for performance tracking.
+ */
+function logCacheEvent(
+  eventType: 'cache_hit' | 'cache_miss' | 'cache_set' | 'memory_cache_hit',
+  query: string,
+  hash: string,
+  hitCount: number | null
+): void {
+  // Fire and forget - don't block on analytics
+  (async () => {
+    try {
+      await supabase.from('analytics_events').insert({
+        event_type: eventType,
+        event_data: {
+          query: query.substring(0, 200),
+          hash: hash.substring(0, 8),
+          hit_count: hitCount,
+          timestamp: new Date().toISOString()
+        }
+      });
+    } catch {
+      // Ignore analytics errors
+    }
+  })();
 }
 
 /**
@@ -180,19 +212,28 @@ async function getPersistentCache(query: string, filters?: Record<string, unknow
   try {
     const { data, error } = await supabase
       .from('query_cache')
-      .select('scryfall_query, explanation, confidence, show_affiliate')
+      .select('scryfall_query, explanation, confidence, show_affiliate, hit_count')
       .eq('query_hash', hash)
       .gt('expires_at', new Date().toISOString())
       .single();
     
-    if (error || !data) return null;
+    if (error || !data) {
+      // Log cache miss for analytics
+      logCacheEvent('cache_miss', query, hash, null);
+      return null;
+    }
+    
+    const newHitCount = (data.hit_count || 0) + 1;
     
     // Update hit count in background (fire and forget)
     (async () => {
       try {
         await supabase
           .from('query_cache')
-          .update({ last_hit_at: new Date().toISOString() })
+          .update({ 
+            hit_count: newHitCount,
+            last_hit_at: new Date().toISOString() 
+          })
           .eq('query_hash', hash);
       } catch {
         // Ignore errors
@@ -208,9 +249,13 @@ async function getPersistentCache(query: string, filters?: Record<string, unknow
     // Populate in-memory cache too
     queryCache.set(key, { result, timestamp: Date.now() });
     
+    // Log cache hit for analytics
+    logCacheEvent('cache_hit', query, hash, newHitCount);
+    
     console.log(JSON.stringify({
       event: 'persistent_cache_hit',
-      hash: hash.substring(0, 8)
+      hash: hash.substring(0, 8),
+      hitCount: newHitCount
     }));
     
     return result;
@@ -253,6 +298,9 @@ async function setPersistentCache(
       }, {
         onConflict: 'query_hash'
       });
+    
+    // Log cache set for analytics
+    logCacheEvent('cache_set', query, hash, null);
     
     console.log(JSON.stringify({
       event: 'persistent_cache_set',
