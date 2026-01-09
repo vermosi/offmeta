@@ -44,7 +44,8 @@ export function HowItWorksSection() {
           {STEPS.map((step, index) => (
             <div
               key={index}
-              className="relative flex flex-col items-center text-center p-6 rounded-xl border border-border/50 bg-card/50"
+              className="relative flex flex-col items-center text-center p-6 rounded-xl border border-border/50 bg-card/50 opacity-0 animate-fade-in hover-scale"
+              style={{ animationDelay: `${index * 150}ms`, animationFillMode: 'forwards' }}
             >
               {/* Step number */}
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-accent text-accent-foreground text-xs font-semibold">
