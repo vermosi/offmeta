@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Footer } from "@/components/Footer";
 import { FAQSection } from "@/components/FAQSection";
+import { HowItWorksSection } from "@/components/HowItWorksSection";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { searchCards } from "@/lib/scryfall";
@@ -313,8 +314,13 @@ const Index = () => {
           </div>
         </main>
 
-        {/* FAQ Section - Show on landing page */}
-        {!hasSearched && <FAQSection />}
+        {/* How It Works & FAQ - Show on landing page */}
+        {!hasSearched && (
+          <>
+            <HowItWorksSection />
+            <FAQSection />
+          </>
+        )}
 
         {/* Footer */}
         <Footer />
