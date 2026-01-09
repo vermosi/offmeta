@@ -10,6 +10,7 @@ import { CardSkeletonGrid } from "@/components/CardSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Footer } from "@/components/Footer";
+import { FAQSection } from "@/components/FAQSection";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { searchCards } from "@/lib/scryfall";
@@ -311,6 +312,9 @@ const Index = () => {
             ) : null}
           </div>
         </main>
+
+        {/* FAQ Section - Show on landing page */}
+        {!hasSearched && <FAQSection />}
 
         {/* Footer */}
         <Footer />
