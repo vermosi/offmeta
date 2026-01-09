@@ -143,9 +143,11 @@ export interface UnifiedSearchBarHandle {
 }
 
 const EXAMPLE_QUERIES = [
+  "artifacts that produce 2 mana",
+  "red or black creatures under 3 mana",
   "creatures that make treasure tokens",
   "cheap green ramp spells",
-  "cards that double ETB effects",
+  "mana dorks that cost 1",
   "Rakdos sacrifice outlets",
 ];
 

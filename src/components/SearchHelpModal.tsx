@@ -53,13 +53,13 @@ const EXAMPLE_QUERIES = [
     ]
   },
   {
-    category: "Land Searches",
+    category: "Mana & Colors",
     icon: Mountain,
     examples: [
-      { query: "fetch lands under $20", description: "Affordable fetchlands" },
-      { query: "shock lands for Gruul", description: "Red/green dual lands with shock" },
+      { query: "artifacts that produce 2 mana", description: "Mana rocks with high output" },
+      { query: "red or black creatures under 3 mana", description: "Cheap Rakdos-only creatures" },
       { query: "lands that produce any color", description: "Five-color mana fixing" },
-      { query: "utility lands for commander", description: "Non-basic lands with abilities" },
+      { query: "mana dorks that cost 1", description: "One-mana creature ramp" },
     ]
   },
   {
@@ -77,8 +77,8 @@ const EXAMPLE_QUERIES = [
     icon: Sparkles,
     examples: [
       { query: "creatures that double ETB effects", description: "Panharmonicon-style effects" },
-      { query: "Rakdos sacrifice payoffs under 3 mana", description: "Cheap BR sacrifice synergy" },
-      { query: "partner commanders in Simic", description: "Blue/green partner options" },
+      { query: "artifacts that produce 2 mana and cost 4 or less", description: "Efficient mana rocks" },
+      { query: "red or black creature that draws cards", description: "Rakdos card advantage creatures" },
       { query: "enchantments that draw cards when creatures die", description: "Death trigger card advantage" },
     ]
   },
@@ -158,6 +158,58 @@ const ADVANCED_FEATURES = [
       "cEDH staples, casual commander",
       "fast mana, staples for [color]",
     ]
+  },
+];
+
+// Advanced Scryfall syntax tips for power users
+const SCRYFALL_SYNTAX_TIPS = [
+  {
+    syntax: "c<=rb",
+    meaning: "Color restricted to red/black only",
+    example: "\"red or black creature\" → c<=rb t:creature",
+    description: "Excludes Gruul, Grixis, etc. — only mono-red, mono-black, or Rakdos"
+  },
+  {
+    syntax: "c>=rb",
+    meaning: "Must have BOTH red AND black",
+    example: "\"red and black creature\" → c>=rb t:creature",
+    description: "Requires both colors — includes Rakdos, Grixis, Mardu, etc."
+  },
+  {
+    syntax: "c=r",
+    meaning: "Exactly this color only (mono)",
+    example: "\"mono red creature\" → c=r t:creature",
+    description: "Excludes all multicolor cards"
+  },
+  {
+    syntax: "id<=br",
+    meaning: "Playable in Rakdos commander",
+    example: "\"fits in Rakdos deck\" → id<=br",
+    description: "Color identity — includes colorless, mono-R, mono-B, and Rakdos"
+  },
+  {
+    syntax: "produces>=2",
+    meaning: "Produces 2+ mana",
+    example: "\"artifact that makes 2 mana\" → t:artifact produces>=2",
+    description: "Filter by mana production amount"
+  },
+  {
+    syntax: "produces:g",
+    meaning: "Produces green mana",
+    example: "\"lands that tap for green\" → t:land produces:g",
+    description: "Filter by mana color production"
+  },
+  {
+    syntax: "mv<=4",
+    meaning: "Mana value 4 or less",
+    example: "\"cheap dragons\" → t:dragon mv<=4",
+    description: "Also: mv=3 (exactly 3), mv>=5 (5+)"
+  },
+  {
+    syntax: "year>=2020",
+    meaning: "Printed in 2020 or later",
+    example: "\"recent commanders\" → is:commander year>=2020",
+    description: "Filter by release year"
   },
 ];
 
@@ -287,9 +339,43 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
                 </div>
               </div>
 
+              {/* Scryfall Syntax Quick Reference */}
+              <div className="pt-4 border-t border-border space-y-3">
+                <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-primary" />
+                  Scryfall Syntax Quick Reference
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  OffMeta translates your natural language to Scryfall syntax. Here are the key operators:
+                </p>
+                <div className="space-y-2">
+                  {SCRYFALL_SYNTAX_TIPS.map((tip) => (
+                    <div
+                      key={tip.syntax}
+                      className="p-3 rounded-lg border border-border bg-card space-y-1"
+                    >
+                      <div className="flex items-center gap-2">
+                        <code className="px-2 py-0.5 rounded bg-primary/10 text-primary text-xs font-mono font-medium">
+                          {tip.syntax}
+                        </code>
+                        <span className="text-sm font-medium text-foreground">
+                          {tip.meaning}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {tip.description}
+                      </p>
+                      <p className="text-xs text-muted-foreground italic">
+                        {tip.example}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="pt-4 border-t border-border space-y-3">
                 <h3 className="text-sm font-medium text-foreground">
-                  Scryfall Syntax
+                  Full Scryfall Documentation
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   You can also use Scryfall search syntax directly—our engine will recognize and pass it through.
