@@ -1401,7 +1401,33 @@ MTG SLANG DEFINITIONS:
 - "haste enablers" = (o:"gains haste" or o:"have haste" or o:"gain haste")
 - "free spells" = o:"without paying"
 
-TRIBAL TYPES & SYNERGIES:
+=== SYNERGY QUERIES (CRITICAL - understand user intent) ===
+When users ask for cards that "synergize with X", "work with X", "support X", or "care about X":
+- They want cards that REFERENCE that thing, NOT cards that ARE that thing
+- "synergize with giants" = cards with o:"giant" in text (Vanquisher's Banner, tribal support)
+- "synergize with creatures" = cards that care about creatures (anthems, lords, tribal)
+- DO NOT search for t:giant when user wants "cards for giant deck" - they have giants already!
+
+SYNERGY PATTERN TRANSLATIONS:
+- "cards that synergize with [type]" → -t:[type] o:"[type]" (exclude the type itself, find cards mentioning it)
+- "support for [type] deck" → o:"[type]" (o:"you control" or o:"get" or o:"enters")
+- "cards for my [type] deck" → o:"[type]" -t:[type] (tribal payoffs, not more of that type)
+- "lords for [type]" → t:creature o:"other" o:"[type]" o:"+"
+- "tribal support" → otag:lord or o:"choose a creature type"
+- "[type] tribal commander" → t:legendary t:creature (t:[type] or o:"[type]")
+
+EXAMPLES:
+- "cards that synergize with expensive giants in boros" → id<=rw o:"giant" (o:"creature" or o:"you control") -t:giant
+- "support for my elf deck" → o:"elf" (o:"you control" or o:"get +") -t:elf  
+- "cards that care about dragons" → o:"dragon" (o:"whenever" or o:"you control" or o:"get") -t:dragon
+- "equipment for warriors" → t:equipment (o:"warrior" or o:"equipped creature" o:"attacking")
+- "enchantments for zombie deck" → t:enchantment o:"zombie"
+
+When user mentions "expensive" or "high mana" with a type, they likely want cards that reward having big creatures:
+- "synergize with expensive creatures" → o:"power" (o:"greatest" or o:"highest" or o:"equal to")
+- "payoffs for big creatures" → (o:"power 4 or greater" or o:"mana value 4 or greater")
+
+TRIBAL TYPES & CREATURE SYNERGIES:
 - "elves" / "elf tribal" = t:elf or o:"elf" o:"you control" (mana production, go-wide, counters)
 - "elf lords" = t:elf o:"other" o:"elf" o:"+"
 - "goblins" / "goblin tribal" = t:goblin or o:"goblin" o:"you control" (aggro, tokens, sacrifice)
