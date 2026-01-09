@@ -1038,69 +1038,70 @@ CRITICAL:
 2. For ETB use o:"enters" NOT o:"enters the battlefield"
 3. For LTB use o:"leaves" NOT o:"leaves the battlefield"
 4. "Spells" = (t:instant or t:sorcery)
-5. NEVER use function: tags - use Oracle text patterns
-6. banned:FORMAT not is:banned, restricted:FORMAT not is:restricted`;
+5. NEVER use function: tags - use otag: (Oracle Tags) instead
+6. banned:FORMAT not is:banned, restricted:FORMAT not is:restricted
+7. For dates/years use year>2020 NOT e:2021 (e: is for set codes only)
+8. When user specifies colors like "red creature" use c:r, for "red or black" use (c:r or c:b)
+
+ORACLE TAGS (otag:) - USE THESE for effect-based searches:
+- otag:ramp (mana acceleration)
+- otag:self-mill (mill yourself)
+- otag:removal (destroy/exile effects)
+- otag:card-draw (draw cards)
+- otag:tutor (search library)
+- otag:counterspell (counter spells)
+- otag:board-wipe (mass removal)
+- otag:lifegain (gain life)
+- otag:graveyard-recursion (return from graveyard)`;
 
       if (tier === 'simple') {
-        // ~300 tokens - just core rules + common patterns
+        // ~400 tokens - core rules + otag patterns
         return `${coreRules}
 
-COMMON PATTERNS:
-- ramp = (o:"add" o:"{" or o:"search" o:"land")
-- tutors = o:"search your library"
-- counterspells = t:instant o:"counter target"
-- removal = (o:"destroy target" or o:"exile target")
-- board wipes = (o:"destroy all" or o:"exile all")
-- card draw = o:"draw" o:"card"
-- mana rocks = t:artifact o:"add" o:"{"
-- mana dorks = t:creature o:"add" o:"{"
-- treasure = o:"create" o:"treasure"
-- tokens = o:"create" o:"token"
-- lifegain = o:"gain" o:"life"
-- blink = o:"exile" o:"return" o:"battlefield"
-- sacrifice outlets = o:"sacrifice" o:":"
+MORE OTAGS:
+- otag:mana-dork, otag:mana-rock (mana producers)
+- otag:sacrifice-outlet, otag:aristocrats (sacrifice synergy)
+- otag:blink, otag:flicker (exile and return)
+- otag:token-generator (create tokens)
+- otag:treasure-generator (create treasure)
+- otag:discard-outlet (discard effects)
+- otag:wheel (draw 7, discard hand)
+- otag:fog (prevent combat damage)
+- otag:cantrip (cheap spell that draws)
 
 PRICE: cheap/budget = usd<5, expensive = usd>20
+DATE: "after 2020" = year>2020, "released in 2023" = year=2023
 ${dynamicRules}
 
 Return ONLY the Scryfall query.`;
       }
       
       if (tier === 'medium') {
-        // ~600 tokens - core rules + common patterns + tribals + colors
+        // ~700 tokens - core rules + common otags + tribals + colors
         return `${coreRules}
 
-COMMON PATTERNS:
-- ramp = (o:"add" o:"{" or o:"search" o:"land")
-- mana rocks = t:artifact o:"add" o:"{"
-- mana dorks = t:creature o:"add" o:"{"
-- tutors = o:"search your library"
-- counterspells = t:instant o:"counter target"
-- removal = (o:"destroy target" or o:"exile target")
-- board wipes = (o:"destroy all" or o:"exile all")
-- card draw = o:"draw" o:"card"
-- cantrips = mv<=2 (t:instant or t:sorcery) o:"draw a card"
-- treasure = o:"create" o:"treasure"
-- tokens = o:"create" o:"token"
-- lifegain = o:"gain" o:"life"
-- blink = o:"exile" o:"return" o:"battlefield"
-- reanimation = o:"graveyard" o:"onto the battlefield"
-- sacrifice outlets = o:"sacrifice" o:":"
-- aristocrats = t:creature o:"whenever" o:"dies"
-- stax = (o:"can't" or o:"pay" o:"or")
+COMPREHENSIVE OTAGS (prefer these for accuracy):
+Mana: otag:ramp, otag:mana-dork, otag:mana-rock, otag:land-ramp, otag:ritual
+Draw: otag:card-draw, otag:cantrip, otag:looting, otag:rummaging, otag:wheel
+Search: otag:tutor, otag:land-tutor, otag:creature-tutor
+Removal: otag:removal, otag:creature-removal, otag:artifact-removal, otag:enchantment-removal, otag:board-wipe
+Counter: otag:counterspell, otag:soft-counter, otag:hard-counter
+Graveyard: otag:self-mill, otag:mill, otag:graveyard-recursion, otag:reanimation, otag:graveyard-hate
+Combat: otag:pump, otag:combat-trick, otag:fog, otag:menace-granter
+Tokens: otag:token-generator, otag:treasure-generator, otag:food-generator, otag:clue-generator
+Blink: otag:blink, otag:flicker, otag:bounce
+Sacrifice: otag:sacrifice-outlet, otag:aristocrats, otag:death-trigger
+Life: otag:lifegain, otag:soul-warden-ability (gain life when creatures enter), otag:lifelink-granter
+Special: otag:extra-turn, otag:stax, otag:hatebear, otag:voltron
 
 TRIBALS: Use t:[type] for creature types (t:elf, t:goblin, t:zombie, etc.)
-LORDS: t:[type] o:"other" o:[type] o:"+"
 
 GUILDS: azorius=id=wu, dimir=id=ub, rakdos=id=br, gruul=id=rg, selesnya=id=gw, orzhov=id=wb, izzet=id=ur, golgari=id=bg, boros=id=rw, simic=id=ug
-
 SHARDS: esper=id=wub, grixis=id=ubr, jund=id=brg, naya=id=wrg, bant=id=wug
-
 WEDGES: abzan=id=wbg, jeskai=id=wur, sultai=id=ubg, mardu=id=wbr, temur=id=urg
 
-LANDS: is:fetchland, is:shockland, is:dual, is:fastland, is:checkland
-
 PRICE: cheap/budget = usd<5, expensive = usd>20
+DATE: "after 2020" = year>2020, "released in 2023" = year=2023
 ${contextHint}
 ${dynamicRules}
 
@@ -1127,7 +1128,9 @@ CRITICAL RULES:
 7. Never fabricate or guess card names, abilities, or mechanics
 8. If a term is ambiguous, translate it conservatively
 9. HASTE ORACLE TEXT: When user asks for cards that "give haste" / "grant haste" / "haste enablers", use: (o:"gains haste" or o:"have haste" or o:"gain haste")
-10. NEVER use "function:" tags - they don't work via the API. Use Oracle text (o:) patterns instead.
+10. NEVER use "function:" tags - they don't work via the API. Use otag: (Oracle Tags) instead.
+11. For dates/years: use year>2020 NOT e:2021 (e: is for set codes only like e:mom, e:lci)
+12. COLOR CONSTRAINTS: When user specifies colors like "red creatures" use c:r, for "red or black" use (c:r or c:b), for color identity use id:
 
 LEGALITY & BAN STATUS (CRITICAL - use these exact syntaxes):
 - "banned in X" = banned:X (e.g., "banned in commander" → banned:commander)
@@ -1137,52 +1140,147 @@ LEGALITY & BAN STATUS (CRITICAL - use these exact syntaxes):
 - DO NOT use "is:banned" - it does not exist. Always use "banned:FORMAT"
 - DO NOT use "is:restricted" - it does not exist. Always use "restricted:FORMAT"
 
-MTG CONCEPT TO ORACLE TEXT MAPPINGS (use these patterns):
-Core Functions - ALWAYS use Oracle text, never function: tags:
-- "removal" = (o:"destroy target" or o:"exile target" or o:"deals damage to")
-- "creature removal" = (o:"destroy target creature" or o:"exile target creature")
-- "ramp" / "mana acceleration" = (o:"add" o:"{" or o:"search your library for" o:"land" or o:"land" o:"onto the battlefield")
-- "ramp spells" = (t:instant or t:sorcery) (o:"search" o:"land" or o:"add" o:"mana")
-- "mana dorks" = t:creature mv<=2 o:"add" o:"{"
-- "mana rocks" = t:artifact o:"add" o:"{"
-- "card draw" / "draw cards" = o:"draw" o:"card"
-- "tutors" / "search library" = o:"search your library"
-- "counterspells" / "counter magic" = t:instant o:"counter target"
-- "board wipes" / "wraths" / "mass removal" = (o:"destroy all" or o:"exile all" or o:"deals" o:"damage to each")
-- "graveyard hate" / "grave hate" = (o:"exile" o:"graveyard" or o:"exile all cards from")
-- "lifegain" / "life gain" = (o:"gain" o:"life" or o:"gains" o:"life")
-- "token generators" / "makes tokens" = o:"create" o:"token"
-- "sacrifice outlet" / "sac outlet" = o:"sacrifice" o:":"
-- "land destruction" = o:"destroy target land"
-- "discard" / "hand disruption" = o:"discard" o:"card"
-- "mill" = (o:"mill" or o:"into" o:"graveyard" o:"library")
-- "blink" / "flicker" = o:"exile" o:"return" o:"battlefield"
-- "reanimation" / "reanimate" = o:"graveyard" o:"onto the battlefield"
-- "stax" / "tax effects" = (o:"pay" o:"or" or o:"can't" o:"unless")
-- "pillowfort" = (o:"can't attack you" or o:"prevent" o:"combat damage")
-- "anthem" / "team pump" = o:"creatures you control get" o:"+"
-- "lord" / "tribal buff" = t:creature o:"other" o:"get" o:"+"
-- "finisher" = t:creature mv>=6 pow>=6
+=== ORACLE TAGS (otag:) - PREFERRED for effect-based searches ===
+Oracle Tags from Scryfall Tagger are the MOST ACCURATE way to find cards by effect.
+ALWAYS prefer otag: over o: patterns when the effect matches a known tag.
 
-Additional Patterns:
-- "treasure" / "treasure tokens" = o:"create" o:"treasure"
-- "food" / "food tokens" = o:"create" o:"food"
-- "clue" / "clue tokens" = o:"create" o:"clue"
-- "copy" / "clone effects" = o:"copy" o:"creature"
-- "theft" / "steal effects" = o:"gain control"
-- "burn" / "direct damage" = (o:"deals" o:"damage" o:"target") (t:instant or t:sorcery)
-- "fog" / "prevent combat damage" = o:"prevent" o:"combat damage"
-- "cantrip" = mv<=2 (t:instant or t:sorcery) o:"draw a card"
-- "looting" / "loot" = o:"draw" o:"discard"
-- "rummage" = o:"discard" o:"draw"
-- "wheels" / "wheel effects" = o:"each player" o:"discards" o:"draws"
-- "aristocrats" / "death trigger" = t:creature o:"whenever" o:"dies"
-- "landfall" = (o:"landfall" or o:"whenever a land enters")
-- "proliferate" = o:"proliferate"
-- "+1/+1 counter" / "counter synergy" = o:"+1/+1 counter"
-- "equipment" = t:equipment
-- "aura" = t:aura
-- "flash" = o:"flash" or keyword:flash
+RAMP & MANA:
+- otag:ramp (all ramp effects)
+- otag:mana-dork (creatures that tap for mana)
+- otag:mana-rock (artifacts that produce mana)
+- otag:land-ramp (puts lands onto battlefield)
+- otag:ritual (one-shot mana burst like Dark Ritual)
+- otag:mana-doubler (doubles mana production)
+- otag:cost-reducer (reduces spell costs)
+
+CARD ADVANTAGE:
+- otag:card-draw (draws cards)
+- otag:cantrip (cheap spell that replaces itself)
+- otag:looting (draw then discard)
+- otag:rummaging (discard then draw)
+- otag:wheel (everyone discards and draws 7)
+- otag:impulse-draw (exile top, cast this turn)
+- otag:mulch (look at top X, pick some, rest to graveyard)
+
+TUTORING:
+- otag:tutor (search library for any card)
+- otag:land-tutor (search for lands)
+- otag:creature-tutor (search for creatures)
+- otag:artifact-tutor (search for artifacts)
+- otag:enchantment-tutor (search for enchantments)
+- otag:instant-or-sorcery-tutor (search for spells)
+
+REMOVAL:
+- otag:removal (any removal)
+- otag:creature-removal (removes creatures)
+- otag:artifact-removal (removes artifacts)
+- otag:enchantment-removal (removes enchantments)
+- otag:planeswalker-removal (removes planeswalkers)
+- otag:land-destruction (destroys lands)
+- otag:board-wipe (mass removal)
+- otag:creature-board-wipe (destroys all creatures)
+- otag:targeted-removal (single target removal)
+- otag:exile-removal (exiles instead of destroys)
+
+COUNTERSPELLS:
+- otag:counterspell (any counter)
+- otag:hard-counter (unconditional counter)
+- otag:soft-counter (conditional counter like Mana Leak)
+- otag:free-counterspell (can be cast for free)
+
+GRAVEYARD:
+- otag:self-mill (mills yourself)
+- otag:mill (mills opponents)
+- otag:graveyard-recursion (returns cards from graveyard)
+- otag:reanimation (puts creatures from graveyard to battlefield)
+- otag:graveyard-hate (exiles graveyards)
+- otag:delve-enabler (fills your graveyard)
+- otag:flashback-granter (gives flashback)
+- otag:escape-enabler (helps cast from graveyard)
+
+TOKENS:
+- otag:token-generator (creates any tokens)
+- otag:treasure-generator (creates Treasure tokens)
+- otag:food-generator (creates Food tokens)
+- otag:clue-generator (creates Clue tokens)
+- otag:blood-generator (creates Blood tokens)
+- otag:token-doubler (doubles token creation)
+- otag:populate (copies tokens)
+
+COMBAT & CREATURES:
+- otag:pump (gives +X/+X)
+- otag:combat-trick (instant-speed pump)
+- otag:anthem (permanent team pump)
+- otag:lord (buffs creature type)
+- otag:overrun (team pump + trample)
+- otag:fog (prevents combat damage)
+- otag:extra-combat (additional combat phases)
+- otag:haste-granter (gives creatures haste)
+- otag:evasion-granter (gives evasion abilities)
+
+BLINK & BOUNCE:
+- otag:blink (exile and return immediately)
+- otag:flicker (exile and return end of turn)
+- otag:bounce (return to hand)
+- otag:mass-bounce (returns multiple permanents)
+
+SACRIFICE:
+- otag:sacrifice-outlet (lets you sacrifice permanents)
+- otag:free-sacrifice-outlet (sacrifice for no mana cost)
+- otag:aristocrats (benefits from deaths)
+- otag:death-trigger (triggers when creatures die)
+- otag:blood-artist-effect (drain on death)
+- otag:grave-pact-effect (opponents sacrifice when yours die)
+
+LIFE & DAMAGE:
+- otag:lifegain (gains life)
+- otag:soul-warden-ability (gain life when creatures enter)
+- otag:lifelink-granter (gives lifelink)
+- otag:burn (deals damage to players)
+- otag:ping (deals 1 damage repeatedly)
+- otag:drain (life loss + life gain)
+
+CONTROL:
+- otag:stax (restricts opponents)
+- otag:hatebear (creature with stax effect)
+- otag:tax-effect (makes things cost more)
+- otag:pillowfort (discourages attacks)
+- otag:theft (gains control of permanents)
+- otag:mind-control (steals creatures)
+- otag:threaten (temporary theft with haste)
+
+SPECIAL EFFECTS:
+- otag:extra-turn (take extra turns)
+- otag:proliferate (adds counters)
+- otag:untapper (untaps permanents)
+- otag:copy-spell (copies spells)
+- otag:clone (copies creatures)
+- otag:polymorph (transforms creatures randomly)
+- otag:protection-granter (gives protection)
+- otag:hexproof-granter (gives hexproof)
+- otag:indestructible-granter (gives indestructible)
+
+EGGS & ENABLERS:
+- otag:egg (sacrifices itself for value, like Mishra's Bauble)
+- otag:activate-from-graveyard (can use from graveyard)
+- otag:cast-from-graveyard (can cast from graveyard)
+- otag:etb-trigger (enters the battlefield effect)
+- otag:ltb-trigger (leaves the battlefield effect)
+- otag:storm-enabler (helps storm count)
+
+=== WHEN TO USE otag: vs o: ===
+- USE otag: when searching for a CATEGORY of effect (e.g., "ramp cards" → otag:ramp)
+- USE o: when searching for SPECIFIC text (e.g., "cards that mention 'treasure'" → o:"treasure")
+- COMBINE them: "green self-mill creatures" → c:g t:creature otag:self-mill
+
+=== EXAMPLES WITH otag: ===
+- "self-mill in black or white" → (c:b or c:w) otag:self-mill
+- "green soul sisters after 2020" → c:g otag:soul-warden-ability year>2020
+- "artifacts I can use from graveyard in Golgari" → id<=bg t:artifact otag:activate-from-graveyard
+- "sacrifice outlets in Rakdos" → id<=br otag:sacrifice-outlet
+- "mulch effects in green" → c:g otag:mulch
+- "egg artifacts" → t:artifact otag:egg
+- "reanimation spells" → (t:instant or t:sorcery) otag:reanimation
 
 LAND SHORTCUTS (use these instead of manual Oracle searches):
 - "dual lands" = is:dual
@@ -1217,13 +1315,6 @@ CARD TYPE SHORTCUTS:
 - "party members" = is:party
 - "bears" (2/2 for 2) = is:bear
 
-REGEX SHORTCUTS (Scryfall special syntax):
-- \sm = any mana symbol
-- \spp = +X/+X pattern (e.g., +2/+2)
-- \smm = -X/-X pattern (e.g., -1/-1)
-- \spt = X/X power/toughness pattern
-- ~ = card's own name (self-reference)
-
 DISPLAY & SORTING (append to queries when relevant):
 - "cheapest printing" = add cheapest:usd to query
 - "popular cards" / "by popularity" = add order:edhrec
@@ -1232,10 +1323,11 @@ DISPLAY & SORTING (append to queries when relevant):
 - "unique cards only" = add unique:cards
 - "all printings" = add unique:prints
 
-PRICE PREFERENCES:
-- "cheapest version" = add prefer:usd-low
-- "oldest printing" = add prefer:oldest
-- "newest printing" = add prefer:newest
+DATE/YEAR SYNTAX (CRITICAL):
+- "after 2020" / "released after 2020" = year>2020
+- "in 2023" / "from 2023" = year=2023
+- "before 2019" = year<2019
+- DO NOT use e:2021 - e: is for SET CODES only (e:mom, e:lci, e:one)
 
 FUNDAMENTAL MTG SHORTHAND (ALWAYS interpret these first):
 - "ETB" / "etb" = "enters the battlefield" (use o:"enters" - NOT the full phrase which limits results)
@@ -1243,10 +1335,10 @@ FUNDAMENTAL MTG SHORTHAND (ALWAYS interpret these first):
 - "LTB" / "ltb" = "leaves the battlefield" (use o:"leaves" - NOT the full phrase)
 - "leaves" / "when this leaves" = o:"leaves the battlefield"
 - "dies" / "death trigger" / "when this dies" = o:"dies"
-- "blink" / "flicker" / "exile and return" = (o:"exile" o:"return" o:"battlefield")
+- "blink" / "flicker" / "exile and return" = otag:blink
 - "bounce" / "return to hand" = o:"return" o:"to" o:"hand"
-- "mill" / "deck mill" = (o:"mill" or (o:"into" o:"graveyard"))
-- "self mill" = o:"mill"
+- "mill" / "deck mill" = otag:mill
+- "self mill" = otag:self-mill
 - "loot" / "draw then discard" = o:"draw" o:"discard"
 - "rummage" / "discard then draw" = o:"discard" o:"draw"
 - "wheel" / "mass draw" = o:"each player" o:"discards" o:"draws"
@@ -1644,75 +1736,118 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
       let fallbackQuery = query.trim();
       
       // Apply comprehensive keyword transformations (expanded for cost savings)
+      // Now includes otag support for effect-based searches
       const basicTransforms: [RegExp, string][] = [
         // Core MTG slang
         [/\betb\b/gi, 'o:"enters"'],
         [/\bltb\b/gi, 'o:"leaves"'],
         [/\bdies\b/gi, 'o:"dies"'],
         
-        // Ramp and mana
-        [/\bramp\b/gi, '(o:"add" o:"{" or o:"search" o:"land")'],
-        [/\bmana rocks?\b/gi, 't:artifact o:"add" o:"{"'],
-        [/\bmana dorks?\b/gi, 't:creature o:"add" o:"{"'],
-        [/\bfast mana\b/gi, 't:artifact mv<=2 o:"add" o:"{"'],
-        [/\bmana doublers?\b/gi, 'o:"whenever" o:"tap" o:"for mana" o:"add"'],
+        // Year/date handling (CRITICAL FIX - use year: not e:)
+        [/\bafter (\d{4})\b/gi, 'year>$1'],
+        [/\breleased after (\d{4})\b/gi, 'year>$1'],
+        [/\bsince (\d{4})\b/gi, 'year>=$1'],
+        [/\bbefore (\d{4})\b/gi, 'year<$1'],
+        [/\bin (\d{4})\b/gi, 'year=$1'],
+        [/\bfrom (\d{4})\b/gi, 'year=$1'],
         
-        // Card advantage
-        [/\bcard draw\b/gi, 'o:"draw" o:"card"'],
-        [/\bdraw cards?\b/gi, 'o:"draw" o:"card"'],
-        [/\bcantrips?\b/gi, 'mv<=2 (t:instant or t:sorcery) o:"draw a card"'],
-        [/\blooting\b/gi, 'o:"draw" o:"discard"'],
-        [/\brummage\b/gi, 'o:"discard" o:"draw"'],
-        [/\bwheels?\b/gi, 'o:"each player" o:"discards" o:"draws"'],
+        // Ramp and mana - use otag when available
+        [/\bramp\b/gi, 'otag:ramp'],
+        [/\bmana rocks?\b/gi, 'otag:mana-rock'],
+        [/\bmana dorks?\b/gi, 'otag:mana-dork'],
+        [/\bfast mana\b/gi, 't:artifact mv<=2 otag:mana-rock'],
+        [/\bmana doublers?\b/gi, 'otag:mana-doubler'],
+        [/\bland ramp\b/gi, 'otag:land-ramp'],
+        [/\brituals?\b/gi, 'otag:ritual'],
         
-        // Tutors and search
-        [/\btutors?\b/gi, 'o:"search your library"'],
+        // Card advantage - use otag
+        [/\bcard draw\b/gi, 'otag:card-draw'],
+        [/\bdraw cards?\b/gi, 'otag:card-draw'],
+        [/\bcantrips?\b/gi, 'otag:cantrip'],
+        [/\blooting\b/gi, 'otag:looting'],
+        [/\brummag(e|ing)\b/gi, 'otag:rummaging'],
+        [/\bwheels?\b/gi, 'otag:wheel'],
+        [/\bimpulse draw\b/gi, 'otag:impulse-draw'],
+        [/\bmulch\b/gi, 'otag:mulch'],
         
-        // Removal
-        [/\bboard ?wipes?\b/gi, '(o:"destroy all" or o:"exile all")'],
-        [/\bwraths?\b/gi, '(o:"destroy all" or o:"exile all")'],
-        [/\bcounterspells?\b/gi, 't:instant o:"counter target"'],
-        [/\bcounter ?magic\b/gi, 't:instant o:"counter target"'],
-        [/\bremoval\b/gi, '(o:"destroy target" or o:"exile target")'],
-        [/\bcreature removal\b/gi, '(o:"destroy target creature" or o:"exile target creature")'],
-        [/\bgraveyard hate\b/gi, 'o:"exile" o:"graveyard"'],
+        // Tutors - use otag
+        [/\btutors?\b/gi, 'otag:tutor'],
+        [/\bland tutors?\b/gi, 'otag:land-tutor'],
+        [/\bcreature tutors?\b/gi, 'otag:creature-tutor'],
         
-        // Token generation
-        [/\btreasure tokens?\b/gi, 'o:"create" o:"treasure"'],
-        [/\bmakes? treasure\b/gi, 'o:"create" o:"treasure"'],
-        [/\btoken generators?\b/gi, 'o:"create" o:"token"'],
-        [/\bmakes? tokens?\b/gi, 'o:"create" o:"token"'],
-        [/\bfood tokens?\b/gi, 'o:"create" o:"food"'],
-        [/\bclue tokens?\b/gi, 'o:"create" o:"clue"'],
+        // Removal - use otag
+        [/\bboard ?wipes?\b/gi, 'otag:board-wipe'],
+        [/\bwraths?\b/gi, 'otag:board-wipe'],
+        [/\bcounterspells?\b/gi, 'otag:counterspell'],
+        [/\bcounter ?magic\b/gi, 'otag:counterspell'],
+        [/\bremoval\b/gi, 'otag:removal'],
+        [/\bcreature removal\b/gi, 'otag:creature-removal'],
+        [/\bgraveyard hate\b/gi, 'otag:graveyard-hate'],
         
-        // Life and combat
-        [/\blifegain\b/gi, 'o:"gain" o:"life"'],
-        [/\bburn\b/gi, 'o:"deals" o:"damage"'],
-        [/\bfog effects?\b/gi, 'o:"prevent" o:"combat damage"'],
+        // Token generation - use otag
+        [/\btreasure tokens?\b/gi, 'otag:treasure-generator'],
+        [/\bmakes? treasure\b/gi, 'otag:treasure-generator'],
+        [/\btoken generators?\b/gi, 'otag:token-generator'],
+        [/\bmakes? tokens?\b/gi, 'otag:token-generator'],
+        [/\bfood tokens?\b/gi, 'otag:food-generator'],
+        [/\bclue tokens?\b/gi, 'otag:clue-generator'],
+        [/\bblood tokens?\b/gi, 'otag:blood-generator'],
         
-        // Recursion and graveyard
-        [/\breanimation\b/gi, 'o:"graveyard" o:"onto the battlefield"'],
-        [/\breanimate\b/gi, 'o:"graveyard" o:"onto the battlefield"'],
-        [/\brecursion\b/gi, 'o:"graveyard" o:"to your hand"'],
+        // Life and combat - use otag
+        [/\blifegain\b/gi, 'otag:lifegain'],
+        [/\bsoul ?sisters?\b/gi, 'otag:soul-warden-ability'],
+        [/\bsoul ?warden\b/gi, 'otag:soul-warden-ability'],
+        [/\bburn\b/gi, 'otag:burn'],
+        [/\bfog effects?\b/gi, 'otag:fog'],
+        [/\bfogs?\b/gi, 'otag:fog'],
+        [/\bcombat tricks?\b/gi, 'otag:combat-trick'],
+        [/\bpump\b/gi, 'otag:pump'],
         
-        // Blink and exile
-        [/\bblink\b/gi, 'o:"exile" o:"return" o:"battlefield"'],
-        [/\bflicker\b/gi, 'o:"exile" o:"return" o:"battlefield"'],
+        // Recursion and graveyard - use otag
+        [/\breanimation\b/gi, 'otag:reanimation'],
+        [/\breanimate\b/gi, 'otag:reanimation'],
+        [/\bself[ -]?mill\b/gi, 'otag:self-mill'],
+        [/\bmill\b/gi, 'otag:mill'],
+        [/\bgraveyard recursion\b/gi, 'otag:graveyard-recursion'],
+        [/\brecursion\b/gi, 'otag:graveyard-recursion'],
+        [/\bflashback\b/gi, 'otag:flashback-granter'],
         
-        // Control
-        [/\bstax\b/gi, '(o:"can\'t" or o:"pay" o:"or")'],
-        [/\bpillowfort\b/gi, '(o:"can\'t attack you" or o:"prevent" o:"damage")'],
-        [/\btheft\b/gi, 'o:"gain control"'],
+        // Blink and exile - use otag
+        [/\bblink\b/gi, 'otag:blink'],
+        [/\bflicker\b/gi, 'otag:flicker'],
+        [/\bbounce\b/gi, 'otag:bounce'],
         
-        // Sacrifice
-        [/\bsacrifice outlets?\b/gi, 'o:"sacrifice" o:":"'],
-        [/\baristocrats\b/gi, 't:creature o:"whenever" o:"dies"'],
+        // Control - use otag
+        [/\bstax\b/gi, 'otag:stax'],
+        [/\bhatebears?\b/gi, 'otag:hatebear'],
+        [/\bpillowfort\b/gi, 'otag:pillowfort'],
+        [/\btheft\b/gi, 'otag:theft'],
+        [/\bmind control\b/gi, 'otag:mind-control'],
+        [/\bthreaten\b/gi, 'otag:threaten'],
+        
+        // Sacrifice - use otag
+        [/\bsacrifice outlets?\b/gi, 'otag:sacrifice-outlet'],
+        [/\bfree sac outlets?\b/gi, 'otag:free-sacrifice-outlet'],
+        [/\baristocrats\b/gi, 'otag:aristocrats'],
+        [/\bdeath triggers?\b/gi, 'otag:death-trigger'],
+        [/\bgrave ?pact\b/gi, 'otag:grave-pact-effect'],
+        [/\bblood ?artist\b/gi, 'otag:blood-artist-effect'],
+        
+        // Special effects - use otag
+        [/\bextra turns?\b/gi, 'otag:extra-turn'],
+        [/\bproliferate\b/gi, 'o:proliferate'],
+        [/\bclones?\b/gi, 'otag:clone'],
+        [/\buntap\b/gi, 'otag:untapper'],
+        [/\bpolymorph\b/gi, 'otag:polymorph'],
+        [/\beggs?\b/gi, 'otag:egg'],
+        [/\bactivate from graveyard\b/gi, 'otag:activate-from-graveyard'],
+        [/\buse from graveyard\b/gi, 'otag:activate-from-graveyard'],
         
         // Card types
         [/\bspells\b/gi, '(t:instant or t:sorcery)'],
         [/\bfinishers?\b/gi, 't:creature mv>=6 pow>=6'],
-        [/\blords?\b/gi, 't:creature o:"other" o:"get" o:"+"'],
-        [/\banthems?\b/gi, 'o:"creatures you control get" o:"+"'],
+        [/\blords?\b/gi, 'otag:lord'],
+        [/\banthems?\b/gi, 'otag:anthem'],
         
         // Common tribals (20+ types)
         [/\belf(?:ves)?\b/gi, 't:elf'],
@@ -1759,7 +1894,7 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         [/\bpauper legal\b/gi, 'f:pauper'],
         
         // Guilds/Shards/Wedges (color identity)
-        [/\braakdos\b/gi, 'id=br'],
+        [/\brakdos\b/gi, 'id=br'],
         [/\bsimic\b/gi, 'id=ug'],
         [/\bgruul\b/gi, 'id=rg'],
         [/\borzhov\b/gi, 'id=wb'],
