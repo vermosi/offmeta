@@ -1033,15 +1033,23 @@ serve(async (req) => {
     const buildSystemPrompt = (tier: QueryTier): string => {
       const coreRules = `You are a Scryfall query translator. Output ONLY the Scryfall query string.
 
-CRITICAL:
-1. Output ONLY the query - no explanations
-2. For ETB use o:"enters" NOT o:"enters the battlefield"
-3. For LTB use o:"leaves" NOT o:"leaves the battlefield"
-4. "Spells" = (t:instant or t:sorcery)
-5. NEVER use function: tags - use otag: (Oracle Tags) instead
-6. banned:FORMAT not is:banned, restricted:FORMAT not is:restricted
-7. For dates/years use year>2020 NOT e:2021 (e: is for set codes only)
-8. MONO COLOR = EXACT match: "mono red" = c=r (NOT c:r), "mono green creature" = c=g t:creature
+CRITICAL RULES (MUST FOLLOW):
+1. Output ONLY the query - no explanations, no markdown, no card names
+2. ALWAYS USE otag: (Oracle Tags) as FIRST CHOICE for effect-based searches - they are MORE ACCURATE than o: searches
+3. For ETB use o:"enters" NOT o:"enters the battlefield"
+4. For LTB use o:"leaves" NOT o:"leaves the battlefield"
+5. "Spells" = (t:instant or t:sorcery)
+6. NEVER use function: tags - use otag: instead
+7. banned:FORMAT not is:banned, restricted:FORMAT not is:restricted
+8. MONO COLOR = EXACT match: "mono red" = c=r (NOT c:r)
+
+DATE/YEAR SYNTAX (CRITICAL - COMMON MISTAKE):
+- "after 2020" / "since 2020" / "post 2020" = year>2020
+- "released in 2023" / "from 2023" = year=2023
+- "before 2010" = year<2010
+- "recent" / "new cards" = year>=2023
+- e: is ONLY for set codes like e:mom, e:lci, e:one
+- NEVER use e:2021 or e:2020 - these are NOT valid set codes!
 
 COLOR FILTERING (CRITICAL - most common mistake!):
 - "red creature" (single color) = c:r t:creature (includes multicolor)
@@ -1110,21 +1118,38 @@ UNTAP vs UNTAPPED (CRITICAL - different meanings):
 - "cards that untap artifacts" = t:artifact o:"untap" NOT o:"untapped"
 - "cards that untap creatures" = o:"untap target creature" or o:"untap all creatures"
 
-ORACLE TAGS (otag:) - USE THESE for effect-based searches:
-- otag:ramp (mana acceleration)
-- otag:self-mill (mill yourself)
-- otag:removal (destroy/exile effects)
-- otag:card-draw (draw cards)
-- otag:tutor (search library)
-- otag:counterspell (counter spells)
-- otag:board-wipe (mass removal)
-- otag:lifegain (gain life)
-- otag:graveyard-recursion (return from graveyard)
-- otag:mana-rock (artifacts that produce mana)
-- otag:gives-flash (cards that give flash to other cards/spells)
-- otag:untapper (cards that untap permanents)
-- otag:soul-warden-ability (gain life when creatures enter - soul sisters)
-- otag:synergy-sacrifice (sacrifice synergy/payoffs)`;
+=== ORACLE TAGS (otag:) - ALWAYS USE THESE FIRST! ===
+otag: is the PREFERRED method for effect-based searches. It is MORE ACCURATE than o: searches.
+NEVER use quotes with otag! Use otag:card-draw NOT otag:"card-draw"
+
+PLAYER SLANG → otag: MAPPINGS (USE THESE!):
+- "ramp" / "mana acceleration" = otag:ramp
+- "card draw" / "draw cards" = otag:card-draw
+- "removal" = otag:removal
+- "board wipe" / "wrath" = otag:board-wipe
+- "tutor" / "search library" = otag:tutor
+- "counterspell" / "counter" = otag:counterspell
+- "self-mill" / "mill myself" = otag:self-mill
+- "mill" / "mill opponent" = otag:mill
+- "soul sisters" / "soul warden effect" / "gain life when creatures enter" = otag:soul-warden-ability
+- "sacrifice outlet" / "sac outlet" = otag:sacrifice-outlet
+- "aristocrats" / "death triggers" = otag:aristocrats
+- "blink" / "flicker" = otag:blink
+- "reanimation" / "reanimate" = otag:reanimation
+- "graveyard recursion" = otag:graveyard-recursion
+- "mana rock" / "rocks" = otag:mana-rock
+- "mana dork" / "dorks" = otag:mana-dork
+- "treasure" / "treasure tokens" = otag:treasure-generator
+- "tokens" / "token generator" = otag:token-generator
+- "lifegain" / "gain life" = otag:lifegain
+- "stax" / "prison" = otag:stax
+- "hatebear" = otag:hatebear
+- "cantrip" = otag:cantrip
+- "wheel" / "wheel effect" = otag:wheel
+- "extra turn" = otag:extra-turn
+- "untap" / "untapper" / "untap permanents" = otag:untapper
+- "gives flash" / "flash enabler" = otag:gives-flash
+- "sacrifice synergy" / "sac payoffs" = otag:synergy-sacrifice`;
 
       if (tier === 'simple') {
         // ~500 tokens - core rules + otag patterns
