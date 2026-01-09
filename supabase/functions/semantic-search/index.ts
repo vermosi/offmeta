@@ -1123,13 +1123,68 @@ MORE OTAGS:
 - otag:gives-flash (gives flash to spells/creatures)
 - otag:synergy-sacrifice (sacrifice payoffs like Blood Artist)
 
-LAND SEARCHES:
+LAND CYCLES (use these exact syntaxes):
+- is:fetchland (fetch lands like Polluted Delta)
+- is:shockland (shock lands like Watery Grave)  
+- is:dual (original dual lands)
+- is:triome (Triomes like Zagoth Triome)
+- is:painland (pain lands like Underground River)
+- is:fastland (fast lands like Darkslick Shores)
+- is:slowland (slow lands like Shipwreck Marsh)
+- is:checkland (check lands like Drowned Catacomb)
+- is:bounceland (bounce lands like Dimir Aqueduct)
+- is:creatureland / is:manland (creature lands)
 - is:mdfc t:land (modal double-faced lands)
-- is:modal (any modal card)
-- is:fetchland, is:shockland, is:dual
+- is:pathway (pathway lands)
 
-PRICE: cheap/budget = usd<5, expensive = usd>20
-DATE: "after 2020" = year>2020, "released in 2023" = year=2023
+PRICE & BUDGET (CRITICAL):
+- "cheap" / "budget" / "affordable" = usd<5
+- "expensive" = usd>20
+- "under $X" = usd<X (e.g., "under $10" = usd<10)
+- "between $X and $Y" = usd>=X usd<=Y
+- "free" / "$0" = usd=0 or usd<1
+
+DATE/YEAR (use year: NOT e: for dates):
+- "after 2020" / "post 2020" = year>2020
+- "released in 2023" = year=2023
+- "before 2010" = year<2010
+- "recent" / "new" = year>=2023
+- "old" / "classic" = year<2003 (before Modern border)
+- e: is for SET CODES only (e:mom, e:lci, etc.)
+
+TRIGGER PATTERNS:
+- "ETB" / "enters the battlefield" = o:"enters" (NOT o:"enters the battlefield"!)
+- "dies trigger" / "death trigger" = o:"dies" or o:"when" o:"dies"
+- "attack trigger" = o:"whenever" o:"attacks"
+- "cast trigger" = o:"whenever you cast" or o:"when you cast"
+- "LTB" / "leaves" = o:"leaves"
+
+NEW CARD TYPES:
+- t:battle (Battle cards from March of the Machine)
+- t:case (Case cards)
+- t:room (Room cards from Duskmourn)
+- t:class (Class enchantments)
+
+COMMANDER MECHANICS:
+- o:"partner" t:legendary t:creature (partner commanders)
+- t:background (Background enchantments)
+- o:"choose a background" (commanders that use backgrounds)
+- is:companion (companion cards)
+
+POWER/TOUGHNESS COMPARISONS:
+- "power > toughness" = pow>tou
+- "toughness > power" = tou>pow  
+- "equal power and toughness" = pow=tou
+
+REPRINT STATUS:
+- "first printing" = is:firstprint
+- "reprints only" = is:reprint
+- "reserved list" = is:reserved
+
+FRAME/ART VARIANTS:
+- is:fullart, is:borderless, is:showcase, is:extendedart
+- frame:1997 or frame:2003 (old border)
+- frame:2015 (modern frame)
 ${dynamicRules}
 
 Return ONLY the Scryfall query.`;
@@ -2114,8 +2169,13 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         [/\bcheap\b/gi, 'usd<5'],
         [/\bbudget\b/gi, 'usd<5'],
         [/\baffordable\b/gi, 'usd<5'],
+        [/\binexpensive\b/gi, 'usd<5'],
         [/\bexpensive\b/gi, 'usd>20'],
+        [/\bcostly\b/gi, 'usd>20'],
         [/\bunder \$?(\d+)\b/gi, 'usd<$1'],
+        [/\bover \$?(\d+)\b/gi, 'usd>$1'],
+        [/\bless than \$?(\d+)\b/gi, 'usd<$1'],
+        [/\bmore than \$?(\d+)\b/gi, 'usd>$1'],
         
         // Rarities
         [/\bmythics?\b/gi, 'r:mythic'],
@@ -2123,11 +2183,65 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         [/\buncommons?\b/gi, 'r:uncommon'],
         [/\bcommons?\b/gi, 'r:common'],
         
-        // Special card types
+        // Trigger patterns
+        [/\betb\b/gi, 'o:"enters"'],
+        [/\benters the battlefield\b/gi, 'o:"enters"'],
+        [/\bltb\b/gi, 'o:"leaves"'],
+        [/\bleaves the battlefield\b/gi, 'o:"leaves"'],
+        [/\bdeath triggers?\b/gi, 'o:"dies"'],
+        [/\bdies triggers?\b/gi, 'o:"dies"'],
+        [/\battack triggers?\b/gi, 'o:"whenever" o:"attacks"'],
+        [/\bcast triggers?\b/gi, 'o:"whenever" o:"cast"'],
+        
+        // New card types
+        [/\bbattles?\b/gi, 't:battle'],
+        [/\bcases?\b/gi, 't:case'],
+        [/\brooms?\b/gi, 't:room'],
+        [/\bclasses?\b/gi, 't:class'],
+        
+        // Power/toughness comparisons  
+        [/\bpower greater than toughness\b/gi, 'pow>tou'],
+        [/\bpower > toughness\b/gi, 'pow>tou'],
+        [/\btoughness greater than power\b/gi, 'tou>pow'],
+        [/\btoughness > power\b/gi, 'tou>pow'],
+        [/\bbig butts?\b/gi, 'tou>pow'],
+        [/\bhigh toughness\b/gi, 'tou>=4'],
+        [/\bhigh power\b/gi, 'pow>=4'],
+        
+        // Date/year patterns
+        [/\brecent cards?\b/gi, 'year>=2023'],
+        [/\bnew cards?\b/gi, 'year>=2023'],
+        [/\bold cards?\b/gi, 'year<2003'],
+        [/\bclassic cards?\b/gi, 'year<2003'],
+        [/\bafter (\d{4})\b/gi, 'year>$1'],
+        [/\bbefore (\d{4})\b/gi, 'year<$1'],
+        [/\bfrom (\d{4})\b/gi, 'year=$1'],
+        [/\breleased in (\d{4})\b/gi, 'year=$1'],
+        
+        // Reprint status
         [/\breserved list\b/gi, 'is:reserved'],
+        [/\bRL cards?\b/gi, 'is:reserved'],
+        [/\bfirst print(?:ing)?\b/gi, 'is:firstprint'],
+        [/\boriginal print(?:ing)?\b/gi, 'is:firstprint'],
+        [/\breprints? only\b/gi, 'is:reprint'],
+        
+        // Commander mechanics
         [/\bpartner commanders?\b/gi, 't:legendary t:creature o:"partner"'],
         [/\bbackgrounds?\b/gi, 't:background'],
+        [/\bchoose a background\b/gi, 'o:"choose a background"'],
+        [/\bcompanions?\b/gi, 'is:companion'],
+        
+        // Special card types
         [/\bsagas?\b/gi, 't:saga'],
+        
+        // Frame/art variants
+        [/\bfull ?art\b/gi, 'is:fullart'],
+        [/\bborderless\b/gi, 'is:borderless'],
+        [/\bshowcase\b/gi, 'is:showcase'],
+        [/\bextended ?art\b/gi, 'is:extendedart'],
+        [/\bold border\b/gi, 'frame:2003'],
+        [/\bretro frame\b/gi, 'frame:2003'],
+        [/\bmodern frame\b/gi, 'frame:2015'],
       ];
       
       // Check if query already looks like Scryfall syntax
