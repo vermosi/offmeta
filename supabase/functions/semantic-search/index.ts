@@ -1209,6 +1209,8 @@ LEGALITY & BAN STATUS (CRITICAL - use these exact syntaxes):
 Oracle Tags from Scryfall Tagger are the MOST ACCURATE way to find cards by effect.
 ALWAYS prefer otag: over o: patterns when the effect matches a known tag.
 
+CRITICAL: Oracle tags NEVER use quotes! Use otag:mana-rock NOT otag:"mana-rock"
+
 RAMP & MANA:
 - otag:ramp (all ramp effects)
 - otag:mana-dork (creatures that tap for mana)
@@ -1356,7 +1358,8 @@ EGGS & ENABLERS:
 - "mono red creatures" → t:creature c=r
 - "5 mana mono red creature" → t:creature c=r mv=5
 - "modal lands" / "modal cards that are lands" → is:mdfc t:land
-- "-1/-1 counter effects" → (o:"-1/-1 counter" or o:"put a -1/-1")
+- "-1/-1 counter effects" → o:"-1/-1 counter"
+- "-1/-1 counters on opponents creatures" → o:"-1/-1 counter" (o:"opponent" or o:"each" or -o:"you control") (use oracle text NOT otag - there is no -1/-1 otag)
 
 LAND SHORTCUTS (use these instead of manual Oracle searches):
 - "dual lands" = is:dual
@@ -1867,7 +1870,11 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         [/\blet(?:s)? me cast.+instant speed\b/gi, 'otag:gives-flash'],
         
         // Untap vs untapped (CRITICAL distinction)
+        [/\bcards? that untap (\w+)\b/gi, 'otag:untapper o:"untap" o:"$1"'],
         [/\bcards? that untap\b/gi, 'otag:untapper'],
+        [/\buntap artifacts?\b/gi, 'otag:untapper t:artifact'],
+        [/\buntap creatures?\b/gi, 'otag:untapper o:"creature"'],
+        [/\buntap lands?\b/gi, 'o:"untap" o:"land" -o:"untapped"'],
         [/\buntappers?\b/gi, 'otag:untapper'],
         
         // Modal/MDFC lands
@@ -1973,9 +1980,12 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         [/\bactivate from graveyard\b/gi, 'otag:activate-from-graveyard'],
         [/\buse from graveyard\b/gi, 'otag:activate-from-graveyard'],
         
-        // -1/-1 counter effects
+        // -1/-1 counter effects (use oracle text, not otag)
+        [/\bput.+-1\/-1 counters? on.+(?:opponent|enemy|their)\b/gi, 'o:"put" o:"-1/-1 counter" -o:"you control"'],
         [/\b-1\/-1 counters?\b/gi, 'o:"-1/-1 counter"'],
         [/\bput.+-1\/-1\b/gi, 'o:"put a -1/-1"'],
+        [/\bwither\b/gi, 'o:wither'],
+        [/\binfect\b/gi, 'o:infect'],
         
         // Card types
         [/\bspells\b/gi, '(t:instant or t:sorcery)'],
