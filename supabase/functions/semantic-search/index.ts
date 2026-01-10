@@ -1446,21 +1446,19 @@ TUTORING:
 
 REMOVAL:
 - otag:removal (any removal)
+- otag:spot-removal (single target removal)
 - otag:creature-removal (removes creatures)
 - otag:artifact-removal (removes artifacts)
 - otag:enchantment-removal (removes enchantments)
 - otag:planeswalker-removal (removes planeswalkers)
-- otag:land-destruction (destroys lands)
 - otag:board-wipe (mass removal)
+- otag:mass-removal (destroys multiple permanents)
 - otag:creature-board-wipe (destroys all creatures)
-- otag:targeted-removal (single target removal)
-- otag:exile-removal (exiles instead of destroys)
 
 COUNTERSPELLS:
 - otag:counterspell (any counter)
 - otag:hard-counter (unconditional counter)
 - otag:soft-counter (conditional counter like Mana Leak)
-- otag:free-counterspell (can be cast for free)
 
 GRAVEYARD:
 - otag:self-mill (mills yourself)
@@ -1468,9 +1466,6 @@ GRAVEYARD:
 - otag:graveyard-recursion (returns cards from graveyard)
 - otag:reanimation (puts creatures from graveyard to battlefield)
 - otag:graveyard-hate (exiles graveyards)
-- otag:delve-enabler (fills your graveyard)
-- otag:grants-flashback (gives flashback to cards in graveyard)
-- otag:escape-enabler (helps cast from graveyard)
 
 TOKENS:
 - otag:token-generator (creates any tokens)
@@ -1498,7 +1493,7 @@ COMBAT & CREATURES:
 - otag:gives-double-strike (gives creatures double strike)
 - otag:gives-menace (gives creatures menace)
 - otag:gives-reach (gives creatures reach)
-- otag:gives-evasion (gives evasion abilities like flying, menace, etc.)
+- otag:gives-evasion (gives evasion abilities)
 
 COUNTERS:
 - otag:counters-matter (cards that care about counters)
@@ -1544,26 +1539,53 @@ CONTROL:
 - otag:mind-control (steals creatures)
 - otag:threaten (temporary theft with haste)
 
-SPECIAL EFFECTS:
-- otag:extra-turn (take extra turns)
-- otag:proliferate (adds counters)
-- otag:untapper (untaps permanents - use for "cards that untap X")
+CARD DRAW & SELECTION:
+- otag:draw (draws cards)
+- otag:card-draw (draws cards - alias)
+- otag:cantrip (draws 1 card as bonus)
+- otag:loot (draw then discard)
+- otag:wheel (discard hand draw new hand)
+- otag:impulse-draw (exile top and may cast)
+- otag:scry (scry ability)
+
+LANDS & MANA:
+- otag:ramp (mana acceleration)
+- otag:land-ramp (puts lands onto battlefield)
+- otag:mana-rock (artifact that produces mana)
+- otag:mana-dork (creature that produces mana)
+- otag:mana-doubler (doubles mana production)
+- otag:ritual (temporary mana boost)
+- otag:extra-land (play additional lands)
+- otag:landfall (triggers when lands enter)
+
+COPY EFFECTS:
+- otag:copy (copies something)
+- otag:copy-permanent (copies permanents)
 - otag:copy-spell (copies spells)
 - otag:clone (copies creatures)
+
+TAP/UNTAP:
+- otag:untapper (untaps permanents)
+- otag:tapper (taps permanents)
+
+SPECIAL EFFECTS:
+- otag:extra-turn (take extra turns)
 - otag:polymorph (transforms creatures randomly)
 - otag:gives-protection (gives protection to permanents)
 - otag:gives-hexproof (gives hexproof to permanents)
 - otag:gives-indestructible (gives indestructible to permanents)
-- otag:gives-flash (gives flash to other cards - use for "cards that give flash")
-- otag:synergy-sacrifice (sacrifice synergy/payoffs - use alongside o: searches for completeness)
+- otag:gives-flash (gives flash to other cards)
+
+ENCHANTRESS & TRIGGERS:
+- otag:enchantress (draw when enchantment cast)
+- otag:discard-outlet (lets you discard cards)
 
 EGGS & ENABLERS:
-- otag:egg (sacrifices itself for value, like Mishra's Bauble)
+- otag:egg (sacrifices itself for value)
 - otag:activate-from-graveyard (can use from graveyard)
 - otag:cast-from-graveyard (can cast from graveyard)
 - otag:etb-trigger (enters the battlefield effect)
 - otag:ltb-trigger (leaves the battlefield effect)
-- otag:storm-enabler (helps storm count)
 
 === WHEN TO USE otag: vs o: ===
 - USE otag: when searching for a CATEGORY of effect (e.g., "ramp cards" → otag:ramp)
@@ -2146,13 +2168,30 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         [/\brituals?\b/gi, 'otag:ritual'],
         
         // Card advantage - use otag
-        [/\bcard draw\b/gi, 'otag:card-draw'],
-        [/\bdraw cards?\b/gi, 'otag:card-draw'],
+        [/\bcard draw\b/gi, 'otag:draw'],
+        [/\bdraw cards?\b/gi, 'otag:draw'],
         [/\bcantrips?\b/gi, 'otag:cantrip'],
-        [/\blooting\b/gi, 'otag:looting'],
-        [/\brummag(e|ing)\b/gi, 'otag:rummaging'],
+        [/\blooting\b/gi, 'otag:loot'],
+        [/\bloot effects?\b/gi, 'otag:loot'],
         [/\bwheels?\b/gi, 'otag:wheel'],
+        [/\bwheel effects?\b/gi, 'otag:wheel'],
         [/\bimpulse draw\b/gi, 'otag:impulse-draw'],
+        [/\bexile and cast\b/gi, 'otag:impulse-draw'],
+        [/\bscry effects?\b/gi, 'otag:scry'],
+        [/\blandfall\b/gi, 'otag:landfall'],
+        [/\blandfall triggers?\b/gi, 'otag:landfall'],
+        [/\bextra land plays?\b/gi, 'otag:extra-land'],
+        [/\bplay additional lands?\b/gi, 'otag:extra-land'],
+        [/\bexplore\b/gi, 'o:explore'],
+        [/\benchantress\b/gi, 'otag:enchantress'],
+        [/\benchantress effects?\b/gi, 'otag:enchantress'],
+        [/\bdiscard outlets?\b/gi, 'otag:discard-outlet'],
+        [/\bcopy effects?\b/gi, 'otag:copy'],
+        [/\bcopy permanents?\b/gi, 'otag:copy-permanent'],
+        [/\btappers?\b/gi, 'otag:tapper'],
+        [/\btaps? down\b/gi, 'otag:tapper'],
+        [/\bspot removal\b/gi, 'otag:spot-removal'],
+        [/\bmass removal\b/gi, 'otag:mass-removal'],
         [/\bmulch\b/gi, 'otag:mulch'],
         
         // Tutors - use otag
