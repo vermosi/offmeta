@@ -1,9 +1,9 @@
 import { useState, useCallback, useRef, lazy, Suspense, useMemo, useEffect } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import { UnifiedSearchBar, SearchResult, UnifiedSearchBarHandle } from "@/components/UnifiedSearchBar";
 import { SearchInterpretation } from "@/components/SearchInterpretation";
-import { SearchFilters } from "@/components/SearchFilters";
+import { SearchFilters, FilterState } from "@/components/SearchFilters";
 
 import { CardItem } from "@/components/CardItem";
 import { CardSkeletonGrid } from "@/components/CardSkeleton";
@@ -15,6 +15,7 @@ import { HowItWorksSection } from "@/components/HowItWorksSection";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { searchCards } from "@/lib/scryfall";
+import { normalizeBooleanPrecedence, validateScryfallQuery } from "@/lib/scryfallQuery";
 import { ScryfallCard } from "@/types/card";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { Loader2 } from "lucide-react";
@@ -27,14 +28,55 @@ const Index = () => {
   
   const [searchQuery, setSearchQuery] = useState(urlQuery);
   const [originalQuery, setOriginalQuery] = useState(urlQuery); // Natural language query
+  const [compiledQuery, setCompiledQuery] = useState('');
+  const [editableQuery, setEditableQuery] = useState('');
+  const [lintIssues, setLintIssues] = useState<string[]>([]);
+  const [notes, setNotes] = useState<string[]>([]);
+  const [intentBreakdown, setIntentBreakdown] = useState<SearchResult['intentBreakdown']>([]);
+  const [requestId, setRequestId] = useState<string | null>(null);
+  const [requestTimestamp, setRequestTimestamp] = useState<string>('');
+  const [isTranslating, setIsTranslating] = useState(false);
   const [selectedCard, setSelectedCard] = useState<ScryfallCard | null>(null);
   const [hasSearched, setHasSearched] = useState(!!urlQuery);
   const [lastSearchResult, setLastSearchResult] = useState<SearchResult | null>(null);
   const [filteredCards, setFilteredCards] = useState<ScryfallCard[]>([]);
   const [hasActiveFilters, setHasActiveFilters] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<FilterState>({
+    colors: [],
+    types: [],
+    cmcRange: [0, 16],
+    sortBy: 'name-asc',
+  });
   const searchBarRef = useRef<UnifiedSearchBarHandle>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const { trackSearch, trackCardClick, trackEvent } = useAnalytics();
+  const queryClient = useQueryClient();
+  const activeRequestIdRef = useRef<string | null>(null);
+
+  const buildFilterQuery = useCallback((filters: FilterState) => {
+    const tokens: string[] = [];
+
+    if (filters.colors.length > 0) {
+      const colorTokens = filters.colors.map(color => color === 'C' ? 'c:c' : `c:${color.toLowerCase()}`);
+      const colorQuery = colorTokens.length > 1 ? `(${colorTokens.join(' OR ')})` : colorTokens[0];
+      tokens.push(colorQuery);
+    }
+
+    if (filters.types.length > 0) {
+      const typeTokens = filters.types.map(type => `t:${type.toLowerCase()}`);
+      const typeQuery = typeTokens.length > 1 ? `(${typeTokens.join(' OR ')})` : typeTokens[0];
+      tokens.push(typeQuery);
+    }
+
+    if (filters.cmcRange[0] > 0) {
+      tokens.push(`mv>=${filters.cmcRange[0]}`);
+    }
+    if (filters.cmcRange[1] < 16) {
+      tokens.push(`mv<=${filters.cmcRange[1]}`);
+    }
+
+    return tokens.join(' ');
+  }, []);
 
   // Sync state with URL changes (browser back/forward, manual URL edits)
   useEffect(() => {
@@ -47,6 +89,14 @@ const Index = () => {
       // URL cleared - reset to landing state
       setSearchQuery("");
       setOriginalQuery("");
+      setCompiledQuery("");
+      setEditableQuery("");
+      setLintIssues([]);
+      setNotes([]);
+      setIntentBreakdown([]);
+      setRequestId(null);
+      setRequestTimestamp("");
+      setIsTranslating(false);
       setHasSearched(false);
       setLastSearchResult(null);
       setFilteredCards([]);
@@ -69,6 +119,7 @@ const Index = () => {
     initialPageParam: 1,
     enabled: !!searchQuery,
     staleTime: 5 * 60 * 1000,
+    keepPreviousData: false,
   });
 
   // Intersection observer for infinite scroll
@@ -89,23 +140,62 @@ const Index = () => {
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-  const handleSearch = useCallback((query: string, result?: SearchResult, naturalQuery?: string) => {
-    setSearchQuery(query);
+  const handleSearchStart = useCallback((query: string, nextRequestId: string) => {
+    activeRequestIdRef.current = nextRequestId;
+    setIsTranslating(true);
+    setHasSearched(true);
+    setSearchQuery('');
+    setOriginalQuery(query);
+    setCompiledQuery('');
+    setEditableQuery('');
+    setLintIssues([]);
+    setNotes([]);
+    setIntentBreakdown([]);
+    setLastSearchResult(null);
+    setFilteredCards([]);
+    setHasActiveFilters(false);
+    setActiveFilters({
+      colors: [],
+      types: [],
+      cmcRange: [0, 16],
+      sortBy: 'name-asc',
+    });
+    setRequestId(nextRequestId);
+    setRequestTimestamp(new Date().toISOString());
+    queryClient.cancelQueries({ queryKey: ["cards"] });
+    queryClient.removeQueries({ queryKey: ["cards"] });
+  }, [queryClient]);
+
+  const handleSearch = useCallback((query: string, result: SearchResult | undefined, naturalQuery: string, nextRequestId: string) => {
+    if (activeRequestIdRef.current !== nextRequestId) {
+      return;
+    }
+    setIsTranslating(false);
+    const incomingLintIssues = result?.lintIssues || [];
+    const hasLintIssues = incomingLintIssues.length > 0;
+    setSearchQuery(hasLintIssues ? '' : query);
     setOriginalQuery(naturalQuery || query); // Store the natural language query
     setHasSearched(true);
     setLastSearchResult(result || null);
+    const finalQuery = result?.scryfallQuery || query;
+    setCompiledQuery(finalQuery);
+    setEditableQuery(finalQuery);
+    setLintIssues(incomingLintIssues);
+    setNotes(result?.notes || []);
+    setIntentBreakdown(result?.intentBreakdown || []);
     setFilteredCards([]); // Reset filters on new search
     setHasActiveFilters(false);
+    setRequestId(nextRequestId);
     
     // Update URL with search query
-    if (query) {
+    if (query && !hasLintIssues) {
       setSearchParams({ q: query }, { replace: true });
-    } else {
+    } else if (!hasLintIssues) {
       setSearchParams({}, { replace: true });
     }
     
     // Track search analytics (results_count will be updated in effect below)
-    if (result) {
+    if (result && !hasLintIssues) {
       trackSearch({
         query: naturalQuery || query,
         translated_query: result.scryfallQuery,
@@ -158,6 +248,36 @@ const Index = () => {
     setFilteredCards(filtered);
     setHasActiveFilters(filtersActive);
   }, []);
+
+  const handleFiltersChange = useCallback((filters: FilterState) => {
+    setActiveFilters(filters);
+  }, []);
+
+  const handleRerunQuery = useCallback(() => {
+    if (!editableQuery.trim()) return;
+    const filterQuery = buildFilterQuery(activeFilters);
+    const combinedQuery = [editableQuery.trim(), filterQuery].filter(Boolean).join(' ');
+    const normalized = normalizeBooleanPrecedence(combinedQuery);
+    const validation = validateScryfallQuery(normalized);
+    if (validation.issues.length > 0) {
+      setLintIssues(validation.issues);
+      return;
+    }
+    const nextRequestId = `manual-${Date.now()}`;
+    activeRequestIdRef.current = nextRequestId;
+    setIsTranslating(false);
+    setHasSearched(true);
+    setSearchQuery(normalized);
+    setCompiledQuery(normalized);
+    setEditableQuery(normalized);
+    setIntentBreakdown([]);
+    setLastSearchResult(prev => (prev ? { ...prev, scryfallQuery: normalized } : null));
+    setRequestId(nextRequestId);
+    setRequestTimestamp(new Date().toISOString());
+    setLintIssues([]);
+    setNotes([]);
+    setSearchParams({ q: normalized }, { replace: true });
+  }, [activeFilters, buildFilterQuery, editableQuery, setSearchParams]);
   
   // Use filtered cards for display when filters are active, otherwise show all cards
   // This properly shows "no matches" when filters yield empty results
@@ -247,18 +367,28 @@ const Index = () => {
             {/* Search */}
             <UnifiedSearchBar 
               ref={searchBarRef}
+              onSearchStart={handleSearchStart}
               onSearch={handleSearch} 
-              isLoading={isSearching} 
-              lastTranslatedQuery={lastSearchResult?.scryfallQuery}
+              isLoading={isSearching || isTranslating}
             />
 
             {/* Search interpretation */}
-            {lastSearchResult && hasSearched && !isSearching && (
+            {hasSearched && (
               <div className="animate-reveal">
                 <SearchInterpretation 
-                  scryfallQuery={lastSearchResult.scryfallQuery}
+                  scryfallQuery={compiledQuery || searchQuery}
+                  editableQuery={editableQuery || compiledQuery || searchQuery}
                   originalQuery={originalQuery}
-                  explanation={lastSearchResult.explanation}
+                  explanation={lastSearchResult?.explanation}
+                  lintIssues={lintIssues}
+                  notes={notes}
+                  intentBreakdown={intentBreakdown}
+                  requestId={requestId}
+                  timestamp={requestTimestamp}
+                  activeFilters={activeFilters}
+                  isRunning={isSearching || isTranslating}
+                  onQueryChange={setEditableQuery}
+                  onRerun={handleRerunQuery}
                   onTryAlternative={handleTryAlternative}
                 />
               </div>
@@ -288,6 +418,7 @@ const Index = () => {
                 cards={cards} 
                 onFilteredCards={handleFilteredCards}
                 totalCards={totalCards}
+                onFiltersChange={handleFiltersChange}
               />
             )}
 
@@ -341,9 +472,9 @@ const Index = () => {
                   )}
                 </div>
               </>
-            ) : isSearching ? (
+            ) : (isSearching || isTranslating) ? (
               <CardSkeletonGrid count={10} />
-            ) : hasSearched && totalCards === 0 ? (
+            ) : hasSearched && totalCards === 0 && lintIssues.length === 0 ? (
               <EmptyState query={searchQuery} onTryExample={handleTryExample} />
             ) : null}
           </div>

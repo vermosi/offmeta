@@ -57,7 +57,7 @@ const EXAMPLE_QUERIES = [
     icon: Mountain,
     examples: [
       { query: "artifacts that produce 2 mana", description: "Mana rocks with high output" },
-      { query: "red or black creatures under 3 mana", description: "Cheap Rakdos-only creatures" },
+      { query: "red or black creatures under 3 mana", description: "Red or black creatures under 3 mana" },
       { query: "lands that produce any color", description: "Five-color mana fixing" },
       { query: "mana dorks that cost 1", description: "One-mana creature ramp" },
     ]

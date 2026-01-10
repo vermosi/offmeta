@@ -5,19 +5,50 @@
  */
 
 import { useState, useMemo } from 'react';
-import { ChevronDown, ChevronUp, Copy, Check, Info, Share2, Lightbulb, ArrowRight } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  Check,
+  Info,
+  Share2,
+  Lightbulb,
+  ArrowRight,
+  ExternalLink,
+  RotateCcw,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { SearchFeedback } from '@/components/SearchFeedback';
 
 interface SearchInterpretationProps {
   scryfallQuery: string;
+  editableQuery: string;
   originalQuery?: string;
   explanation?: {
     readable: string;
     assumptions: string[];
     confidence: number;
   };
+  lintIssues?: string[];
+  notes?: string[];
+  intentBreakdown?: {
+    label: string;
+    tokens: string[];
+    detail?: string;
+  }[];
+  requestId?: string | null;
+  timestamp?: string;
+  activeFilters?: {
+    colors: string[];
+    types: string[];
+    cmcRange: [number, number];
+    sortBy: string;
+  };
+  isRunning?: boolean;
+  onQueryChange: (value: string) => void;
+  onRerun: () => void;
   onTryAlternative?: (query: string) => void;
 }
 
@@ -132,15 +163,25 @@ function extractColors(query: string): string | null {
 
 export function SearchInterpretation({ 
   scryfallQuery, 
+  editableQuery,
   originalQuery,
   explanation,
-  onTryAlternative 
+  lintIssues,
+  notes,
+  intentBreakdown,
+  requestId,
+  timestamp,
+  activeFilters,
+  isRunning,
+  onQueryChange,
+  onRerun,
+  onTryAlternative
 }: SearchInterpretationProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(scryfallQuery);
+    await navigator.clipboard.writeText(editableQuery || scryfallQuery);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -153,6 +194,12 @@ export function SearchInterpretation({
     } catch {
       toast.error('Failed to copy link');
     }
+  };
+
+  const handleOpenScryfall = () => {
+    const query = editableQuery || scryfallQuery;
+    const url = `https://scryfall.com/search?q=${encodeURIComponent(query)}`;
+    window.open(url, '_blank');
   };
 
   const confidenceLabel = explanation?.confidence 
@@ -181,10 +228,10 @@ export function SearchInterpretation({
   const usesOracleTag = scryfallQuery.includes('otag:');
 
   return (
-    <div className="w-full max-w-xl mx-auto">
+    <div className="w-full max-w-xl mx-auto space-y-3">
       {/* Did you mean section - shows above toggle when confidence is low */}
       {showSuggestions && alternativeSuggestions.length > 0 && (
-        <div className="mb-3 p-3 rounded-lg border border-amber-500/30 bg-amber-500/5 animate-fade-in">
+        <div className="p-3 rounded-lg border border-amber-500/30 bg-amber-500/5 animate-fade-in">
           <div className="flex items-start gap-2">
             <Lightbulb className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
             <div className="space-y-2 flex-1">
@@ -208,18 +255,127 @@ export function SearchInterpretation({
         </div>
       )}
 
+      <div className="p-4 surface-elevated space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Compiled Scryfall Query
+            </span>
+            {usesOracleTag && (
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                otag
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleShare}
+              className="h-7 px-2 text-xs gap-1.5"
+            >
+              <Share2 className="h-3 w-3" />
+              Share
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCopy}
+              className="h-7 px-2 text-xs gap-1.5"
+            >
+              {copied ? (
+                <>
+                  <Check className="h-3 w-3" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3 w-3" />
+                  Copy query
+                </>
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleOpenScryfall}
+              className="h-7 px-2 text-xs gap-1.5"
+            >
+              <ExternalLink className="h-3 w-3" />
+              Open in Scryfall
+            </Button>
+          </div>
+        </div>
+        <textarea
+          value={editableQuery}
+          onChange={(event) => onQueryChange(event.target.value)}
+          rows={3}
+          className={cn(
+            "w-full rounded-lg border bg-background px-3 py-2 text-xs font-mono text-foreground",
+            lintIssues?.length ? "border-destructive/60" : "border-border"
+          )}
+        />
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            {explanation?.confidence && (
+              <>
+                <span>Confidence:</span>
+                <span className={cn("font-medium", confidenceColor)}>
+                  {confidenceLabel} ({Math.round(explanation.confidence * 100)}%)
+                </span>
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={onRerun}
+              disabled={isRunning || !editableQuery.trim()}
+              variant="accent"
+              size="sm"
+              className="h-8 px-3 text-xs gap-1.5"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              Re-run
+            </Button>
+            <SearchFeedback
+              originalQuery={originalQuery || ''}
+              translatedQuery={scryfallQuery}
+              compiledQuery={editableQuery}
+              activeFilters={activeFilters}
+              requestId={requestId}
+              timestamp={timestamp}
+            />
+          </div>
+        </div>
+        {lintIssues && lintIssues.length > 0 && (
+          <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+            <p className="font-medium">Query validation issues</p>
+            <ul className="mt-1 space-y-1">
+              {lintIssues.map((issue, index) => (
+                <li key={index}>• {issue}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {notes && notes.length > 0 && (
+          <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
+            <p className="font-medium">Notes</p>
+            <ul className="mt-1 space-y-1">
+              {notes.map((note, index) => (
+                <li key={index}>• {note}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
       {/* Toggle button */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-center gap-2 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors duration-200"
+        className="w-full flex items-center justify-center gap-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors duration-200"
       >
         <Info className="h-3 w-3" />
-        <span>How this was interpreted</span>
-        {usesOracleTag && (
-          <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-            otag
-          </span>
-        )}
+        <span>Explain compilation</span>
         {isExpanded ? (
           <ChevronUp className="h-3 w-3" />
         ) : (
@@ -229,60 +385,31 @@ export function SearchInterpretation({
 
       {/* Expanded panel */}
       {isExpanded && (
-        <div className="mt-2 p-4 surface-elevated space-y-4 animate-reveal">
-          {/* Scryfall Query */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
+        <div className="p-4 surface-elevated space-y-4 animate-reveal">
+          {intentBreakdown && intentBreakdown.length > 0 && (
+            <div className="space-y-2">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Scryfall Query
+                Prompt → Tokens
               </span>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleShare}
-                  className="h-7 px-2 text-xs gap-1.5"
-                >
-                  <Share2 className="h-3 w-3" />
-                  Share
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleCopy}
-                  className="h-7 px-2 text-xs gap-1.5"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="h-3 w-3" />
-                      Copied
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-3 w-3" />
-                      Copy
-                    </>
-                  )}
-                </Button>
+              <div className="space-y-2">
+                {intentBreakdown.map((item, index) => (
+                  <div key={`${item.label}-${index}`} className="rounded-md border border-border/60 bg-background/60 p-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-medium text-foreground">{item.label}</span>
+                      {item.detail && (
+                        <span className="text-[10px] text-muted-foreground">{item.detail}</span>
+                      )}
+                    </div>
+                    {item.tokens.length > 0 ? (
+                      <code className="mt-1 block text-[11px] text-foreground break-all">
+                        {item.tokens.join(' ')}
+                      </code>
+                    ) : (
+                      <p className="mt-1 text-[11px] text-muted-foreground">No tokens applied.</p>
+                    )}
+                  </div>
+                ))}
               </div>
-            </div>
-            <code className="block w-full p-3 bg-secondary rounded-lg text-xs text-foreground font-mono break-all border border-border">
-              {scryfallQuery}
-            </code>
-          </div>
-
-          {/* Confidence */}
-          {explanation?.confidence && (
-            <div className="flex items-center gap-2 text-xs">
-              <span className="text-muted-foreground">Confidence:</span>
-              <span className={cn("font-medium", confidenceColor)}>
-                {confidenceLabel} ({Math.round(explanation.confidence * 100)}%)
-              </span>
-              {usesOracleTag && (
-                <span className="px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                  Using Oracle Tags
-                </span>
-              )}
             </div>
           )}
 

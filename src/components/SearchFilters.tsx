@@ -70,9 +70,10 @@ interface SearchFiltersProps {
   cards: ScryfallCard[];
   onFilteredCards: (cards: ScryfallCard[], hasActiveFilters: boolean) => void;
   totalCards: number;
+  onFiltersChange?: (filters: FilterState) => void;
 }
 
-export function SearchFilters({ cards, onFilteredCards, totalCards }: SearchFiltersProps) {
+export function SearchFilters({ cards, onFilteredCards, totalCards, onFiltersChange }: SearchFiltersProps) {
   const [filters, setFilters] = useState<FilterState>({
     colors: [],
     types: [],
@@ -162,6 +163,10 @@ export function SearchFilters({ cards, onFilteredCards, totalCards }: SearchFilt
   useEffect(() => {
     onFilteredCards(filteredCards, hasActiveFilters);
   }, [filteredCards, hasActiveFilters, onFilteredCards]);
+
+  useEffect(() => {
+    onFiltersChange?.(filters);
+  }, [filters, onFiltersChange]);
 
   const toggleColor = useCallback((colorId: string) => {
     setFilters(prev => ({

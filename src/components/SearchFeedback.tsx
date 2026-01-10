@@ -18,6 +18,15 @@ import { z } from 'zod';
 interface SearchFeedbackProps {
   originalQuery: string;
   translatedQuery?: string;
+  compiledQuery?: string;
+  activeFilters?: {
+    colors: string[];
+    types: string[];
+    cmcRange: [number, number];
+    sortBy: string;
+  };
+  requestId?: string | null;
+  timestamp?: string;
 }
 
 // Rate limiting configuration
@@ -84,7 +93,14 @@ function recordSubmission(): void {
   setRateLimitData({ submissions: validSubmissions });
 }
 
-export function SearchFeedback({ originalQuery, translatedQuery }: SearchFeedbackProps) {
+export function SearchFeedback({
+  originalQuery,
+  translatedQuery,
+  compiledQuery,
+  activeFilters,
+  requestId,
+  timestamp,
+}: SearchFeedbackProps) {
   const [open, setOpen] = useState(false);
   const [issue, setIssue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -108,6 +124,27 @@ export function SearchFeedback({ originalQuery, translatedQuery }: SearchFeedbac
     setValidationError(null);
   };
 
+  const formattedFilters = activeFilters
+    ? {
+        colors: activeFilters.colors.join(', ') || 'none',
+        types: activeFilters.types.join(', ') || 'none',
+        cmcRange: `${activeFilters.cmcRange[0]}-${activeFilters.cmcRange[1]}`,
+        sortBy: activeFilters.sortBy,
+      }
+    : null;
+
+  const autoIncludedDetails = [
+    originalQuery ? `Prompt: ${originalQuery}` : null,
+    compiledQuery ? `Compiled query: ${compiledQuery}` : null,
+    formattedFilters
+      ? `Filters: colors=${formattedFilters.colors}; types=${formattedFilters.types}; mv=${formattedFilters.cmcRange}; sort=${formattedFilters.sortBy}`
+      : null,
+    requestId ? `Request ID: ${requestId}` : null,
+    timestamp ? `Timestamp: ${timestamp}` : null,
+  ]
+    .filter(Boolean)
+    .join('\n');
+
   const handleSubmit = async () => {
     // Check rate limit first
     const rateLimitStatus = checkRateLimit();
@@ -119,10 +156,17 @@ export function SearchFeedback({ originalQuery, translatedQuery }: SearchFeedbac
     }
 
     // Validate input
+    const issueWithMetadata = autoIncludedDetails
+      ? `${issue}\n\n---\n${autoIncludedDetails}`
+      : issue;
+    const issueForValidation = issueWithMetadata.length > 1000
+      ? `${issueWithMetadata.slice(0, 997)}...`
+      : issueWithMetadata;
+
     const validationResult = feedbackSchema.safeParse({
       originalQuery,
       translatedQuery: translatedQuery || null,
-      issueDescription: issue
+      issueDescription: issueForValidation
     });
 
     if (!validationResult.success) {
@@ -175,12 +219,13 @@ export function SearchFeedback({ originalQuery, translatedQuery }: SearchFeedbac
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-full"
-          title="Report search issue"
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1 text-xs"
+          title="Report issue"
         >
           <MessageSquarePlus className="h-4 w-4" />
+          Report issue
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
@@ -200,6 +245,14 @@ export function SearchFeedback({ originalQuery, translatedQuery }: SearchFeedbac
               <p className="text-muted-foreground">Translated to:</p>
               <code className="text-xs bg-muted px-2 py-1 rounded block break-all">
                 {translatedQuery}
+              </code>
+            </div>
+          )}
+          {autoIncludedDetails && (
+            <div className="text-sm space-y-1">
+              <p className="text-muted-foreground">Auto-included details:</p>
+              <code className="text-xs bg-muted px-2 py-1 rounded block whitespace-pre-wrap break-words">
+                {autoIncludedDetails}
               </code>
             </div>
           )}

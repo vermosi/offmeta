@@ -628,6 +628,13 @@ function applyAutoCorrections(query: string, qualityFlags: string[]): { correcte
       corrections.push('Simplified "dies" syntax for broader results');
     }
   }
+
+  // Fix 6: Replace invalid year set codes like e:2021 with year filters
+  const yearSetMatch = correctedQuery.match(/\be:(20\d{2})\b/i);
+  if (yearSetMatch) {
+    correctedQuery = correctedQuery.replace(/\be:(20\d{2})\b/gi, 'year=$1');
+    corrections.push('Replaced invalid year set code with year= filter');
+  }
   
   // Clean up any double spaces left from removals
   correctedQuery = correctedQuery.replace(/\s+/g, ' ').trim();
@@ -798,6 +805,462 @@ const VALID_SEARCH_KEYS = new Set([
   'atag', 'arttag'
 ]);
 
+interface IntentBreakdownItem {
+  label: string;
+  tokens: string[];
+  detail?: string;
+}
+
+interface DeterministicParseResult {
+  constraints: string[];
+  effects: string[];
+  notes: string[];
+  breakdown: IntentBreakdownItem[];
+  fuzzyQuery: string;
+}
+
+const COLOR_WORDS = ['white', 'blue', 'black', 'red', 'green'] as const;
+const COLOR_MAP: Record<string, string> = {
+  white: 'w',
+  blue: 'u',
+  black: 'b',
+  red: 'r',
+  green: 'g',
+};
+
+const GUILD_MAP: Record<string, string> = {
+  azorius: 'wu',
+  dimir: 'ub',
+  rakdos: 'br',
+  gruul: 'rg',
+  selesnya: 'gw',
+  orzhov: 'wb',
+  izzet: 'ur',
+  golgari: 'bg',
+  boros: 'rw',
+  simic: 'ug',
+};
+
+const KNOWN_OTAGS = new Set([
+  'mana-sink',
+  'manarock',
+  'mana-rock',
+  'gives-flash',
+  'gives-hexproof',
+  'self-mill',
+  'graveyard-order-matters',
+  'soul-warden-ability',
+  'synergy-sacrifice',
+  'sacrifice-outlet',
+  'mana-dork',
+  'ramp',
+  'card-draw',
+  'removal',
+  'board-wipe',
+  'tutor',
+  'counterspell',
+  'aristocrats',
+  'blink',
+  'reanimation',
+  'graveyard-recursion',
+  'treasure-generator',
+  'token-generator',
+  'lifegain',
+  'stax',
+  'hatebear',
+  'cantrip',
+  'wheel',
+  'untapper',
+  'land-ramp',
+  'ritual',
+  'mana-doubler',
+  'cost-reducer',
+  'looting',
+  'rummaging',
+  'creature-tutor',
+  'land-tutor',
+  'artifact-removal',
+  'creature-removal',
+  'enchantment-removal',
+  'graveyard-hate',
+  'combat-trick',
+  'gives-menace',
+  'clue-generator',
+  'food-generator',
+  'gives-lifelink',
+  'extra-turn',
+  'voltron',
+  'gives-haste',
+  'gives-flying',
+  'gives-trample',
+  'gives-vigilance',
+  'gives-deathtouch',
+  'gives-first-strike',
+  'gives-double-strike',
+  'gives-reach',
+  'gives-evasion',
+  'counters-matter',
+  'counter-doubler',
+  'counter-movement',
+  'synergy-proliferate',
+  'bounce',
+  'mass-bounce',
+  'death-trigger',
+  'synergy-lifegain',
+  'synergy-discard',
+  'synergy-equipment',
+  'burn',
+  'ping',
+  'drain',
+  'tax-effect',
+  'pillowfort',
+  'theft',
+  'mind-control',
+  'threaten',
+  'draw',
+  'loot',
+  'impulse-draw',
+  'scry',
+  'extra-land',
+  'landfall',
+  'copy',
+  'copy-permanent',
+  'copy-spell',
+  'clone',
+  'tapper',
+  'polymorph',
+  'gives-protection',
+  'gives-indestructible',
+  'enchantress',
+  'discard-outlet',
+  'egg',
+  'activate-from-graveyard',
+  'cast-from-graveyard',
+  'etb-trigger',
+  'ltb-trigger',
+  'mulch',
+  'fog',
+  'lord',
+  'anthem',
+]);
+
+const TAG_INTENTS: Array<{ pattern: RegExp; tag: string; fallback?: string }> = [
+  { pattern: /\bmana sink\b/i, tag: 'mana-sink', fallback: 'o:":" o:"{X}"' },
+  { pattern: /\bmana rock\b/i, tag: 'manarock', fallback: 't:artifact o:"add"' },
+  { pattern: /\bgives? flash\b/i, tag: 'gives-flash', fallback: 'o:/gain(s)? flash/' },
+  { pattern: /\bgives? hexproof\b/i, tag: 'gives-hexproof', fallback: 'o:/gain(s)? hexproof/' },
+  { pattern: /\bself[- ]?mill\b/i, tag: 'self-mill', fallback: 'o:mill o:you' },
+  { pattern: /\bgraveyard order matters\b/i, tag: 'graveyard-order-matters', fallback: 'o:"graveyard" o:"order"' },
+  { pattern: /\bsoul sisters\b/i, tag: 'soul-warden-ability', fallback: 'o:"gain" o:"life" o:"creature" o:"enters"' },
+  { pattern: /\bsacrifice synergy\b/i, tag: 'synergy-sacrifice', fallback: 'o:"sacrifice"' },
+];
+
+function stripMatches(text: string, patterns: RegExp[]): string {
+  let updated = text;
+  for (const pattern of patterns) {
+    updated = updated.replace(pattern, ' ');
+  }
+  return updated.replace(/\s+/g, ' ').trim();
+}
+
+function normalizeBooleanPrecedence(query: string): string {
+  return query.replace(/(\S+\s+OR\s+\S+(?:\s+OR\s+\S+)*)/gi, '($1)');
+}
+
+function buildManaProductionPattern(): string {
+  return '(o:/add \\{[WUBRGC]\\}\\{[WUBRGC]\\}/ OR o:/add \\{\\d+\\}/)';
+}
+
+function parseDeterministicIntent(query: string): DeterministicParseResult {
+  const constraints: string[] = [];
+  const effects: string[] = [];
+  const notes: string[] = [];
+  const breakdown: IntentBreakdownItem[] = [];
+  const removalPatterns: RegExp[] = [];
+  const lower = query.toLowerCase();
+
+  const hasIdentityIntent = /\b(color identity|identity|commander deck|edh deck|fits in my commander deck|fits into my commander deck)\b/i.test(lower);
+  const isCommanderIntent = /\b(commander|edh)\b/i.test(lower);
+  const isExactIdentity = /\b(exactly|only|just)\b/i.test(lower) && hasIdentityIntent;
+
+  if (isCommanderIntent) {
+    constraints.push('is:commander');
+    breakdown.push({ label: 'Commander intent', tokens: ['is:commander'] });
+    removalPatterns.push(/\b(commander|edh)\b/gi);
+  }
+
+  const yearMatch = lower.match(/\b(after|since|before|from|in|year(?:\s*[<>]=?|=))\s*(\d{4})\b/);
+  if (yearMatch) {
+    const [, comparator, year] = yearMatch;
+    const normalizedComparator =
+      comparator === 'after' ? '>' :
+      comparator === 'since' ? '>=' :
+      comparator === 'before' ? '<' :
+      comparator === 'from' || comparator === 'in' ? '=' :
+      comparator.replace('year', '').trim() || '=';
+    const token = `year${normalizedComparator}${year}`;
+    constraints.push(token);
+    breakdown.push({ label: 'Release year', tokens: [token] });
+    removalPatterns.push(new RegExp(yearMatch[0], 'gi'));
+  }
+
+  const colorlessMatch = /\bcolorless\b/i.test(lower);
+  if (colorlessMatch) {
+    const token = hasIdentityIntent ? 'id=c' : 'c=c';
+    constraints.push(token);
+    breakdown.push({ label: 'Colors', tokens: [token], detail: hasIdentityIntent ? 'identity' : 'color' });
+    removalPatterns.push(/\bcolorless\b/gi);
+  }
+
+  const exactGuildMatch = lower.match(/\bexactly\s+(azorius|dimir|rakdos|gruul|selesnya|orzhov|izzet|golgari|boros|simic)\b/);
+  if (exactGuildMatch) {
+    const guild = exactGuildMatch[1];
+    const token = `id=${GUILD_MAP[guild]}`;
+    constraints.push(token);
+    breakdown.push({ label: 'Exact color identity', tokens: [token] });
+    removalPatterns.push(new RegExp(exactGuildMatch[0], 'gi'));
+  }
+
+  const exactPairMatch = lower.match(/\bexactly\s+([wubrg]{2,5})\b/);
+  if (exactPairMatch) {
+    const token = `id=${exactPairMatch[1].toLowerCase()}`;
+    constraints.push(token);
+    breakdown.push({ label: 'Exact color identity', tokens: [token] });
+    removalPatterns.push(new RegExp(exactPairMatch[0], 'gi'));
+  }
+
+  const orMatch = lower.match(/\b(white|blue|black|red|green)\s+or\s+(white|blue|black|red|green)\b/);
+  if (orMatch && !hasIdentityIntent) {
+    const left = COLOR_MAP[orMatch[1]];
+    const right = COLOR_MAP[orMatch[2]];
+    const token = `(c:${left} OR c:${right})`;
+    constraints.push(token);
+    breakdown.push({ label: 'Colors (OR)', tokens: [token] });
+    removalPatterns.push(new RegExp(orMatch[0], 'gi'));
+  }
+
+  const andMatch = lower.match(/\b(white|blue|black|red|green)\s+and\s+(white|blue|black|red|green)\b/);
+  if (andMatch && !hasIdentityIntent) {
+    const token = `c=${COLOR_MAP[andMatch[1]]}${COLOR_MAP[andMatch[2]]}`;
+    constraints.push(token);
+    breakdown.push({ label: 'Colors (gold)', tokens: [token] });
+    removalPatterns.push(new RegExp(andMatch[0], 'gi'));
+  }
+
+  const monoMatch = lower.match(/\bmono[ -]?(white|blue|black|red|green)\b/);
+  if (monoMatch) {
+    const color = COLOR_MAP[monoMatch[1]];
+    const token = hasIdentityIntent ? `id=${color}` : `c=${color}`;
+    constraints.push(token);
+    breakdown.push({ label: 'Exact mono color', tokens: [token] });
+    removalPatterns.push(new RegExp(monoMatch[0], 'gi'));
+  }
+
+  if (!orMatch && !andMatch && !monoMatch && !colorlessMatch) {
+    const singleColor = COLOR_WORDS.find(color => lower.includes(color));
+    if (singleColor) {
+      const colorCode = COLOR_MAP[singleColor];
+      const token = hasIdentityIntent ? `id<=${colorCode}` : `c:${colorCode}`;
+      constraints.push(token);
+      breakdown.push({ label: 'Color', tokens: [token], detail: hasIdentityIntent ? 'identity' : 'color' });
+      removalPatterns.push(new RegExp(`\\b${singleColor}\\b`, 'gi'));
+    }
+  }
+
+  if (hasIdentityIntent && orMatch) {
+    const token = isExactIdentity
+      ? `id=${COLOR_MAP[orMatch[1]]}${COLOR_MAP[orMatch[2]]}`
+      : `id<=${COLOR_MAP[orMatch[1]]}${COLOR_MAP[orMatch[2]]}`;
+    constraints.push(token);
+    breakdown.push({ label: 'Color identity', tokens: [token] });
+  }
+
+  if (hasIdentityIntent && andMatch) {
+    const token = isExactIdentity
+      ? `id=${COLOR_MAP[andMatch[1]]}${COLOR_MAP[andMatch[2]]}`
+      : `id<=${COLOR_MAP[andMatch[1]]}${COLOR_MAP[andMatch[2]]}`;
+    constraints.push(token);
+    breakdown.push({ label: 'Color identity', tokens: [token] });
+  }
+
+  const typeTokens: Array<{ pattern: RegExp; token: string }> = [
+    { pattern: /\bcreatures?\b/i, token: 't:creature' },
+    { pattern: /\bartifacts?\b/i, token: 't:artifact' },
+    { pattern: /\binstants?\b/i, token: 't:instant' },
+    { pattern: /\bsorceries?\b/i, token: 't:sorcery' },
+    { pattern: /\benchantments?\b/i, token: 't:enchantment' },
+    { pattern: /\blands?\b/i, token: 't:land' },
+    { pattern: /\bplaneswalkers?\b/i, token: 't:planeswalker' },
+  ];
+  const matchedTypes: string[] = [];
+  for (const type of typeTokens) {
+    if (type.pattern.test(lower)) {
+      constraints.push(type.token);
+      matchedTypes.push(type.token);
+      removalPatterns.push(type.pattern);
+    }
+  }
+  if (matchedTypes.length) {
+    breakdown.push({ label: 'Types', tokens: matchedTypes });
+  }
+
+  const cheapMatch = /\b(cheap|budget|affordable|inexpensive|low cost)\b/i.test(lower);
+  const hasPriceIntent = /\$\\s*\\d+|usd\\s*\\d+|under\\s*\\$\\s*\\d+/i.test(lower);
+  if (cheapMatch && !hasPriceIntent) {
+    constraints.push('mv<=3');
+    breakdown.push({ label: 'Mana value (cheap)', tokens: ['mv<=3'] });
+    removalPatterns.push(/\b(cheap|budget|affordable|inexpensive|low cost)\b/gi);
+  }
+
+  const priceMatch = lower.match(/\b(?:under|less than|at most)\\s*\\$\\s*(\\d+)/);
+  if (priceMatch) {
+    const token = `usd<=${priceMatch[1]}`;
+    constraints.push(token);
+    breakdown.push({ label: 'Price', tokens: [token] });
+    removalPatterns.push(new RegExp(priceMatch[0], 'gi'));
+  }
+
+  const manaValueMatch = lower.match(/\b(?:mv|cmc|mana value|mana cost)\\s*(<=|>=|=|<|>)?\\s*(\\d+)\\b/);
+  if (manaValueMatch) {
+    const comparator = manaValueMatch[1] || '=';
+    const token = `mv${comparator}${manaValueMatch[2]}`;
+    constraints.push(token);
+    breakdown.push({ label: 'Mana value', tokens: [token] });
+    removalPatterns.push(new RegExp(manaValueMatch[0], 'gi'));
+  }
+
+  const underManaMatch = lower.match(/\b(under|less than|at most|no more than)\\s*(\\d+)\\s+mana\\b/);
+  if (underManaMatch) {
+    const token = `mv<=${underManaMatch[2]}`;
+    constraints.push(token);
+    breakdown.push({ label: 'Mana value', tokens: [token] });
+    removalPatterns.push(new RegExp(underManaMatch[0], 'gi'));
+  }
+
+  const atLeastManaMatch = lower.match(/\b(at least|no less than|more than)\\s*(\\d+)\\s+mana\\b/);
+  if (atLeastManaMatch) {
+    const comparator = atLeastManaMatch[1].toLowerCase().includes('more than') ? '>' : '>=';
+    const token = `mv${comparator}${atLeastManaMatch[2]}`;
+    constraints.push(token);
+    breakdown.push({ label: 'Mana value', tokens: [token] });
+    removalPatterns.push(new RegExp(atLeastManaMatch[0], 'gi'));
+  }
+
+  const powerMatch = lower.match(/\bpower\\s*(<=|>=|=|<|>)\\s*(\\d+)\\b/);
+  if (powerMatch) {
+    const token = `pow${powerMatch[1]}${powerMatch[2]}`;
+    constraints.push(token);
+    breakdown.push({ label: 'Power', tokens: [token] });
+    removalPatterns.push(new RegExp(powerMatch[0], 'gi'));
+  }
+
+  const toughnessMatch = lower.match(/\btoughness\\s*(<=|>=|=|<|>)\\s*(\\d+)\\b/);
+  if (toughnessMatch) {
+    const token = `tou${toughnessMatch[1]}${toughnessMatch[2]}`;
+    constraints.push(token);
+    breakdown.push({ label: 'Toughness', tokens: [token] });
+    removalPatterns.push(new RegExp(toughnessMatch[0], 'gi'));
+  }
+
+  const powerToughnessSumMatch = lower.match(/\b(power\\s*\\+\\s*toughness|power and toughness|total power and toughness)\\s*(<=|>=|=|<|>)\\s*(\\d+)\\b/);
+  if (powerToughnessSumMatch) {
+    const comparator = powerToughnessSumMatch[2];
+    const value = powerToughnessSumMatch[3];
+    constraints.push(`pow${comparator}${value}`, `tou${comparator}${value}`);
+    notes.push(`Scryfall can't do pow+tou math; using pow${comparator}${value} and tou${comparator}${value} as the closest filter.`);
+    breakdown.push({ label: 'Power + Toughness (approx)', tokens: [`pow${comparator}${value}`, `tou${comparator}${value}`] });
+    removalPatterns.push(new RegExp(powerToughnessSumMatch[0], 'gi'));
+  }
+
+  const equipCostMatch = lower.match(/\bequip(?:s|ped)?\\s*(?:for|costs?)\\s*(\\d+)\\b/);
+  if (equipCostMatch) {
+    const token = `o:\"equip {${equipCostMatch[1]}}\"`;
+    effects.push(token);
+    breakdown.push({ label: 'Equip cost', tokens: [token] });
+    removalPatterns.push(new RegExp(equipCostMatch[0], 'gi'));
+  }
+
+  const equipmentCostMatch = lower.match(/\bequipment\\s+(?:costs?|mv)\\s*(\\d+)\\b/);
+  if (equipmentCostMatch) {
+    const token = `mv=${equipmentCostMatch[1]}`;
+    constraints.push(token);
+    breakdown.push({ label: 'Equipment mana value', tokens: [token] });
+    removalPatterns.push(new RegExp(equipmentCostMatch[0], 'gi'));
+  }
+
+  const producesManaMatch = lower.match(/\b(produces?|adds?)\\s*(\\d+)\\s+mana\\b/);
+  if (producesManaMatch) {
+    const amount = Number(producesManaMatch[2]);
+    if (amount >= 2) {
+      const token = buildManaProductionPattern();
+      effects.push(token);
+      breakdown.push({ label: 'Mana production', tokens: [token] });
+      removalPatterns.push(new RegExp(producesManaMatch[0], 'gi'));
+    }
+  }
+
+  const graveyardLandMatch = lower.match(/\b(more than one|two|2|any number of)\\s+lands?\\s+from (?:your )?graveyard\\b/);
+  if (graveyardLandMatch) {
+    const token = 'o:graveyard o:land (o:\"two\" OR o:\"up to two\" OR o:\"any number\")';
+    effects.push(token);
+    breakdown.push({ label: 'Graveyard lands', tokens: [token] });
+    removalPatterns.push(new RegExp(graveyardLandMatch[0], 'gi'));
+  }
+
+  for (const intent of TAG_INTENTS) {
+    if (intent.pattern.test(lower)) {
+      if (KNOWN_OTAGS.has(intent.tag)) {
+        const tagToken = `otag:${intent.tag}`;
+        const token = intent.fallback ? `(${tagToken} OR ${intent.fallback})` : tagToken;
+        effects.push(token);
+        breakdown.push({ label: 'Oracle tag', tokens: [token] });
+      } else if (intent.fallback) {
+        effects.push(intent.fallback);
+        breakdown.push({ label: 'Oracle text (fallback)', tokens: [intent.fallback] });
+        console.log(JSON.stringify({ event: 'otag_missing', tag: intent.tag, query: query.substring(0, 100) }));
+      }
+      removalPatterns.push(intent.pattern);
+    }
+  }
+
+  const fuzzyQuery = stripMatches(query, removalPatterns);
+
+  return {
+    constraints,
+    effects,
+    notes,
+    breakdown,
+    fuzzyQuery,
+  };
+}
+
+function uniqueTokens(tokens: string[]): string[] {
+  const seen = new Set<string>();
+  return tokens.filter(token => {
+    if (seen.has(token)) return false;
+    seen.add(token);
+    return true;
+  });
+}
+
+function buildQueryFromDeterministic(deterministic: DeterministicParseResult, fuzzyFragment?: string): string {
+  const constraints = uniqueTokens(deterministic.constraints);
+  const effects = uniqueTokens(deterministic.effects);
+  const parts: string[] = [];
+  if (constraints.length) parts.push(constraints.join(' '));
+  if (effects.length) parts.push(effects.join(' '));
+  if (fuzzyFragment) parts.push(fuzzyFragment);
+  return parts.join(' ').trim();
+}
+
+function stripColorTokens(query: string, hasColorConstraints: boolean): string {
+  if (!hasColorConstraints) return query;
+  return query
+    .replace(/\b(?:c|color|id|identity)[:=<>]+[^\s)]+/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 /**
  * Validates and sanitizes a Scryfall query string.
  * Ensures the query is safe to execute and fixes common issues.
@@ -879,6 +1342,12 @@ function validateQuery(query: string): { valid: boolean; sanitized: string; issu
   return { valid: issues.length === 0, sanitized, issues };
 }
 
+function lintQuery(query: string): { sanitized: string; issues: string[] } {
+  const normalized = normalizeBooleanPrecedence(query);
+  const validation = validateQuery(normalized);
+  return { sanitized: validation.sanitized, issues: validation.issues };
+}
+
 /**
  * Creates a simplified fallback query by removing complex constraints.
  * Used when the primary query returns no results.
@@ -953,7 +1422,7 @@ serve(async (req) => {
   }
 
   try {
-    const { query, filters, context } = await req.json();
+    const { query, filters, context, allowCache, requestId } = await req.json();
 
     // Input validation
     if (!query || typeof query !== 'string' || query.trim().length === 0) {
@@ -990,10 +1459,16 @@ serve(async (req) => {
       });
     }
 
+    const deterministic = parseDeterministicIntent(query);
+    const deterministicBase = buildQueryFromDeterministic(deterministic);
+    const intentBreakdown = deterministic.breakdown;
+    const notes = deterministic.notes;
+
     // Check in-memory cache first for identical queries
-    const cachedResult = getCachedResult(query, filters);
-    if (cachedResult) {
+    const cachedResult = allowCache ? getCachedResult(query, filters) : null;
+    if (cachedResult && allowCache) {
       const cacheHitTime = Date.now() - requestStartTime;
+      const cacheLint = lintQuery(cachedResult.scryfallQuery);
       console.log(JSON.stringify({
         event: 'memory_cache_hit',
         query: query.substring(0, 50),
@@ -1003,6 +1478,11 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         originalQuery: query,
         ...cachedResult,
+        scryfallQuery: cacheLint.sanitized,
+        lintIssues: cacheLint.issues,
+        intentBreakdown,
+        notes,
+        requestId,
         responseTimeMs: cacheHitTime,
         success: true,
         cached: true,
@@ -1013,9 +1493,10 @@ serve(async (req) => {
     }
 
     // Check persistent database cache (survives function restarts)
-    const persistentCacheResult = await getPersistentCache(query, filters);
-    if (persistentCacheResult) {
+    const persistentCacheResult = allowCache ? await getPersistentCache(query, filters) : null;
+    if (persistentCacheResult && allowCache) {
       const cacheHitTime = Date.now() - requestStartTime;
+      const cacheLint = lintQuery(persistentCacheResult.scryfallQuery);
       console.log(JSON.stringify({
         event: 'persistent_cache_hit',
         query: query.substring(0, 50),
@@ -1025,6 +1506,11 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         originalQuery: query,
         ...persistentCacheResult,
+        scryfallQuery: cacheLint.sanitized,
+        lintIssues: cacheLint.issues,
+        intentBreakdown,
+        notes,
+        requestId,
         responseTimeMs: cacheHitTime,
         success: true,
         cached: true,
@@ -1035,9 +1521,10 @@ serve(async (req) => {
     }
 
     // Check pattern matching - bypasses AI entirely for known queries
-    const patternMatch = await checkPatternMatch(query, filters);
-    if (patternMatch) {
+    const patternMatch = allowCache ? await checkPatternMatch(query, filters) : null;
+    if (patternMatch && allowCache) {
       const patternMatchTime = Date.now() - requestStartTime;
+      const patternLint = lintQuery(patternMatch.scryfallQuery);
       console.log(JSON.stringify({
         event: 'pattern_match_hit',
         query: query.substring(0, 50),
@@ -1051,9 +1538,49 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         originalQuery: query,
         ...patternMatch,
+        scryfallQuery: patternLint.sanitized,
+        lintIssues: patternLint.issues,
+        intentBreakdown,
+        notes,
+        requestId,
         responseTimeMs: patternMatchTime,
         success: true,
         source: 'pattern_match'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (deterministicBase && deterministic.fuzzyQuery.length === 0) {
+      const normalized = normalizeBooleanPrecedence(deterministicBase);
+      const validation = validateQuery(normalized);
+      const deterministicQuery = validation.sanitized;
+      const responseTimeMs = Date.now() - requestStartTime;
+      logTranslation(
+        query,
+        deterministicQuery,
+        0.88,
+        responseTimeMs,
+        validation.issues,
+        [],
+        filters || null,
+        false
+      );
+      return new Response(JSON.stringify({
+        originalQuery: query,
+        scryfallQuery: deterministicQuery,
+        explanation: {
+          readable: `Searching for: ${query}`,
+          assumptions: [],
+          confidence: 0.88,
+        },
+        lintIssues: validation.issues,
+        intentBreakdown,
+        notes,
+        requestId,
+        responseTimeMs,
+        success: true,
+        source: 'deterministic'
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -1065,8 +1592,10 @@ serve(async (req) => {
       fallbackUsed = true;
       
       // Use simplified fallback
-      const fallbackQuery = query.toLowerCase().replace(/[^\w\s]/g, ' ').trim();
-      const validation = validateQuery(fallbackQuery);
+      const fallbackSeed = deterministic.fuzzyQuery || query;
+      const fallbackQuery = fallbackSeed.toLowerCase().replace(/[^\w\s]/g, ' ').trim();
+      const combinedFallback = buildQueryFromDeterministic(deterministic, fallbackQuery);
+      const validation = validateQuery(normalizeBooleanPrecedence(combinedFallback));
       
       const result = {
         scryfallQuery: validation.sanitized || query,
@@ -1081,6 +1610,10 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         originalQuery: query,
         ...result,
+        lintIssues: validation.issues,
+        intentBreakdown,
+        notes,
+        requestId,
         responseTimeMs: Date.now() - requestStartTime,
         success: true,
         fallback: true
@@ -1147,12 +1680,10 @@ DATE/YEAR SYNTAX (CRITICAL - COMMON MISTAKE):
 COLOR FILTERING (CRITICAL - most common mistake!):
 - "red creature" (single color) = c:r t:creature (includes multicolor)
 - "mono red creature" = c=r t:creature (exactly red only)
-- "red or black creature" = c<=rb t:creature (ONLY red, black, or Rakdos - excludes Gruul, Dimir, etc.)
-- "red and black creature" = c>=rb t:creature (must have BOTH red and black)
-- The key: "X or Y" means RESTRICT to those colors = c<=XY
-- The key: "X and Y" means REQUIRE both colors = c>=XY
-- NEVER use (c:r or c:b) for "red or black" - that includes Gruul, Temur, etc!
-- For commander decks: "fits in red/black deck" = id<=rb (playable in Rakdos commander)
+- "red or black creature" = (c:r OR c:b) t:creature (not gold-only)
+- "red and black creature" = c=rb t:creature (default to gold/exact two colors)
+- If the user says "color identity" or "commander deck", use id<=XY (playable colors)
+- If the user says "exactly BR" or "exactly Rakdos", use id=br
 
 MONO-COLOR HANDLING (CRITICAL):
 - "mono [color]" ALWAYS means EXACTLY that color, no other colors
@@ -1200,7 +1731,7 @@ For permanents only (exclude rituals):
 EXAMPLES:
 - "green mana dorks" = t:creature produces:g
 - "artifacts that produce blue mana" = t:artifact produces:u
-- "mana rocks" = otag:mana-rock (preferred) OR t:artifact produces:c -t:instant -t:sorcery
+- "mana rocks" = otag:manarock (preferred) OR t:artifact produces:c -t:instant -t:sorcery
 - "Sol Ring alternatives" / "artifacts that add {C}{C}" = t:artifact o:"{C}{C}" o:"add"
 - "cards that add 2 mana" = o:/add \{.\}\{.\}/
 
@@ -1251,7 +1782,7 @@ PLAYER SLANG → otag: MAPPINGS (USE THESE!):
 - "blink" / "flicker" = otag:blink
 - "reanimation" / "reanimate" = otag:reanimation
 - "graveyard recursion" = otag:graveyard-recursion
-- "mana rock" / "rocks" = otag:mana-rock
+- "mana rock" / "rocks" = otag:manarock
 - "mana dork" / "dorks" = otag:mana-dork
 - "treasure" / "treasure tokens" = otag:treasure-generator
 - "tokens" / "token generator" = otag:token-generator
@@ -1270,7 +1801,7 @@ PLAYER SLANG → otag: MAPPINGS (USE THESE!):
         return `${coreRules}
 
 MORE OTAGS:
-- otag:mana-dork, otag:mana-rock (mana producers)
+- otag:mana-dork, otag:manarock (mana producers)
 - otag:sacrifice-outlet, otag:aristocrats (sacrifice synergy)
 - otag:blink, otag:flicker (exile and return)
 - otag:token-generator (create tokens)
@@ -1297,7 +1828,7 @@ LAND CYCLES (use these exact syntaxes):
 - is:pathway (pathway lands)
 
 PRICE & BUDGET (CRITICAL):
-- "cheap" / "budget" / "affordable" = usd<5
+- "cheap" / "budget" / "affordable" = mv<=3 (mana value)
 - "expensive" = usd>20
 - "under $X" = usd<X (e.g., "under $10" = usd<10)
 - "between $X and $Y" = usd>=X usd<=Y
@@ -1354,7 +1885,7 @@ Return ONLY the Scryfall query.`;
         return `${coreRules}
 
 COMPREHENSIVE OTAGS (prefer these for accuracy):
-Mana: otag:ramp, otag:mana-dork, otag:mana-rock, otag:land-ramp, otag:ritual
+Mana: otag:ramp, otag:mana-dork, otag:manarock, otag:land-ramp, otag:ritual
 Draw: otag:card-draw, otag:cantrip, otag:looting, otag:rummaging, otag:wheel
 Search: otag:tutor, otag:land-tutor, otag:creature-tutor
 Removal: otag:removal, otag:creature-removal, otag:artifact-removal, otag:enchantment-removal, otag:board-wipe
@@ -1377,7 +1908,7 @@ GUILDS: azorius=id=wu, dimir=id=ub, rakdos=id=br, gruul=id=rg, selesnya=id=gw, o
 SHARDS: esper=id=wub, grixis=id=ubr, jund=id=brg, naya=id=wrg, bant=id=wug
 WEDGES: abzan=id=wbg, jeskai=id=wur, sultai=id=ubg, mardu=id=wbr, temur=id=urg
 
-PRICE: cheap/budget = usd<5, expensive = usd>20
+PRICE: only use usd< or usd> when user mentions dollars; "cheap" defaults to mv<=3
 DATE: "after 2020" = year>2020, "released in 2023" = year=2023
 ${contextHint}
 ${dynamicRules}
@@ -1414,15 +1945,12 @@ This is the #1 source of user complaints. Get this right!
 
 - "red creature" (single color mentioned) = c:r t:creature (includes multicolor like Gruul)
 - "mono red creature" = c=r t:creature (EXACTLY red, no other colors)
-- "red or black creature" = c<=rb t:creature (ONLY red, black, or Rakdos - EXCLUDES Gruul, Grixis, Jund, etc!)
-- "red and black creature" = c>=rb t:creature (MUST have BOTH red AND black)
+- "red or black creature" = (c:r OR c:b) t:creature (not gold-only)
+- "red and black creature" = c=rb t:creature (default to gold/exact two colors)
 
-KEY INSIGHT: When user says "[color] or [color]", they want cards RESTRICTED to those colors only.
-- "red or black" = c<=rb (can be mono-red, mono-black, or red-black, but NOT red-green or black-blue)
-- "white or blue" = c<=wu (can be mono-white, mono-blue, or Azorius, but NOT Bant or Esper)
-- "green, red, or white" = c<=wrg (Naya colors only)
-
-NEVER use (c:r or c:b) for "red or black" - that matches ANY card containing red OR black, including 5-color cards!
+KEY INSIGHT: When user says "[color] or [color]" (not identity), use OR between single-color searches.
+- "red or black" = (c:r OR c:b)
+- "white or blue" = (c:w OR c:u)
 
 For Commander deck building:
 - "fits in red/black deck" / "for Rakdos commander" = id<=br (playable in that commander's deck)
@@ -1443,12 +1971,12 @@ IMPORTANT - produces: does NOT encode quantity!
 Card type filters:
 - lands = t:land produces:g (or other color)
 - mana dorks = t:creature produces:g
-- mana rocks = otag:mana-rock (preferred)
+- mana rocks = otag:manarock (preferred)
 
 EXAMPLES:
 - "green mana dorks" = t:creature produces:g
 - "Sol Ring alternatives" = t:artifact o:"{C}{C}" o:"add"
-- "mana rocks" = otag:mana-rock
+- "mana rocks" = otag:manarock
 
 === MONO-COLOR HANDLING (CRITICAL) ===
 - "mono [color]" means EXACTLY that color with NO other colors
@@ -1491,12 +2019,12 @@ LEGALITY & BAN STATUS (CRITICAL - use these exact syntaxes):
 Oracle Tags from Scryfall Tagger are the MOST ACCURATE way to find cards by effect.
 ALWAYS prefer otag: over o: patterns when the effect matches a known tag.
 
-CRITICAL: Oracle tags NEVER use quotes! Use otag:mana-rock NOT otag:"mana-rock"
+CRITICAL: Oracle tags NEVER use quotes! Use otag:manarock NOT otag:"mana-rock"
 
 RAMP & MANA:
 - otag:ramp (all ramp effects)
 - otag:mana-dork (creatures that tap for mana)
-- otag:mana-rock (artifacts that produce mana)
+- otag:manarock (artifacts that produce mana)
 - otag:land-ramp (puts lands onto battlefield)
 - otag:ritual (one-shot mana burst like Dark Ritual)
 - otag:mana-doubler (doubles mana production)
@@ -1626,7 +2154,7 @@ CARD DRAW & SELECTION:
 LANDS & MANA:
 - otag:ramp (mana acceleration)
 - otag:land-ramp (puts lands onto battlefield)
-- otag:mana-rock (artifact that produces mana)
+- otag:manarock (artifact that produces mana)
 - otag:mana-dork (creature that produces mana)
 - otag:mana-doubler (doubles mana production)
 - otag:ritual (temporary mana boost)
@@ -1679,7 +2207,7 @@ EGGS & ENABLERS:
 - "cards that give flash" / "give spells flash" → otag:gives-flash
 - "cards that untap artifacts" → otag:untapper o:"artifact" -o:"untapped"
 - "sacrifice synergy" / "sacrifice payoffs" → (otag:synergy-sacrifice or otag:aristocrats or (o:"whenever" o:"you sacrifice"))
-- "mana rocks that cost 1 or less" → otag:mana-rock mv<=1
+- "mana rocks that cost 1 or less" → otag:manarock mv<=1
 - "mono red creatures" → t:creature c=r
 - "5 mana mono red creature" → t:creature c=r mv=5
 - "modal lands" / "modal cards that are lands" → is:mdfc t:land
@@ -2142,15 +2670,17 @@ FORMAT LEGALITY:
 - Standard: f:standard
 
 BUDGET TRANSLATIONS:
-- "cheap" or "budget": usd<5
-- "very cheap": usd<1
+- "cheap" or "budget": mv<=3
+- "very cheap": mv<=2
 - "expensive": usd>20
 ${contextHint}
 ${dynamicRules}
 
 Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`;
 
-    const userMessage = `Translate to Scryfall syntax: "${query}"${filters?.format ? ` (format: ${filters.format})` : ''}${filters?.colorIdentity?.length ? ` (colors: ${filters.colorIdentity.join('')})` : ''}`;
+    const fuzzyQuery = deterministic.fuzzyQuery || query;
+    const baseConstraintsHint = deterministicBase ? ` Base constraints already applied: ${deterministicBase}.` : '';
+    const userMessage = `Translate to Scryfall syntax for ONLY the remaining concept: "${fuzzyQuery}".${baseConstraintsHint}${filters?.format ? ` (format: ${filters.format})` : ''}${filters?.colorIdentity?.length ? ` (colors: ${filters.colorIdentity.join('')})` : ''}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -2186,7 +2716,7 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
       console.warn("AI gateway unavailable, using fallback:", response.status);
       fallbackUsed = true;
       
-      let fallbackQuery = query.trim();
+      let fallbackQuery = (deterministic.fuzzyQuery || query).trim();
       
       // Apply comprehensive keyword transformations (expanded for cost savings)
       // Now includes otag support for effect-based searches
@@ -2242,10 +2772,10 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         
         // Ramp and mana - use otag when available
         [/\bramp\b/gi, 'otag:ramp'],
-        [/\bmana ?rocks?\b/gi, 'otag:mana-rock'],
-        [/\bmanarocks?\b/gi, 'otag:mana-rock'],
+        [/\bmana ?rocks?\b/gi, 'otag:manarock'],
+        [/\bmanarocks?\b/gi, 'otag:manarock'],
         [/\bmana dorks?\b/gi, 'otag:mana-dork'],
-        [/\bfast mana\b/gi, 't:artifact mv<=2 otag:mana-rock'],
+        [/\bfast mana\b/gi, 't:artifact mv<=2 otag:manarock'],
         [/\bmana doublers?\b/gi, 'otag:mana-doubler'],
         [/\bland ramp\b/gi, 'otag:land-ramp'],
         [/\brituals?\b/gi, 'otag:ritual'],
@@ -2488,8 +3018,8 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         [/\btemur\b/gi, 'id=urg'],
         
         // Price
-        [/\bcheap\b/gi, 'usd<5'],
-        [/\bbudget\b/gi, 'usd<5'],
+        [/\bcheap\b/gi, 'mv<=3'],
+        [/\bbudget\b/gi, 'mv<=3'],
         [/\baffordable\b/gi, 'usd<5'],
         [/\binexpensive\b/gi, 'usd<5'],
         [/\bexpensive\b/gi, 'usd>20'],
@@ -2579,7 +3109,8 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         fallbackQuery += ` id=${filters.colorIdentity.join('').toLowerCase()}`;
       }
       
-      const fallbackValidation = validateQuery(fallbackQuery);
+      const combinedFallback = buildQueryFromDeterministic(deterministic, fallbackQuery);
+      const fallbackValidation = validateQuery(normalizeBooleanPrecedence(combinedFallback));
       const fallbackResponseTime = Date.now() - requestStartTime;
       
       // Log fallback translation
@@ -2611,6 +3142,10 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
           confidence: 0.6
         },
         showAffiliate: hasPurchaseIntent(query),
+        lintIssues: fallbackValidation.issues,
+        intentBreakdown,
+        notes,
+        requestId,
         responseTimeMs: fallbackResponseTime,
         success: true,
         fallback: true
@@ -2632,8 +3167,13 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
       .replace(/^["']|["']$/g, '')
       .trim();
 
+    const hasColorConstraints = deterministic.constraints.some(token => token.startsWith('c') || token.startsWith('id'));
+    const cleanedFragment = stripColorTokens(scryfallQuery, hasColorConstraints);
+    const combinedQuery = buildQueryFromDeterministic(deterministic, cleanedFragment);
+    const normalizedQuery = normalizeBooleanPrecedence(combinedQuery);
+
     // Validate and sanitize
-    const validation = validateQuery(scryfallQuery);
+    const validation = validateQuery(normalizedQuery);
     scryfallQuery = validation.sanitized;
     
     // Detect quality flags before corrections
@@ -2657,15 +3197,16 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
     }
     
     // Check how "cheap/budget" was interpreted by looking at the actual query
+    const explicitPriceIntent = /\$\\s*\\d+|usd\\s*\\d+|under\\s*\\$\\s*\\d+/i.test(query);
     if (query.toLowerCase().includes('cheap') || query.toLowerCase().includes('budget')) {
-      if (scryfallQuery.includes('usd<') || scryfallQuery.includes('usd<=')) {
+      if (explicitPriceIntent && (scryfallQuery.includes('usd<') || scryfallQuery.includes('usd<='))) {
         const priceMatch = scryfallQuery.match(/usd[<>=]+(\d+)/);
-        assumptions.push(`Interpreted "cheap/budget" as under $${priceMatch?.[1] || '5'}`);
-      } else if (scryfallQuery.match(/mv[<>=]+\d/)) {
-        const mvMatch = scryfallQuery.match(/mv[<>=]+(\d+)/);
+        assumptions.push(`Interpreted price as under $${priceMatch?.[1] || '5'}`);
+      } else if (scryfallQuery.match(/mv[<>=]+\\d/)) {
+        const mvMatch = scryfallQuery.match(/mv[<>=]+(\\d+)/);
         assumptions.push(`Interpreted "cheap" as low mana value (≤${mvMatch?.[1] || '3'})`);
-      } else if (scryfallQuery.match(/cmc[<>=]+\d/)) {
-        const cmcMatch = scryfallQuery.match(/cmc[<>=]+(\d+)/);
+      } else if (scryfallQuery.match(/cmc[<>=]+\\d/)) {
+        const cmcMatch = scryfallQuery.match(/cmc[<>=]+(\\d+)/);
         assumptions.push(`Interpreted "cheap" as low mana cost (≤${cmcMatch?.[1] || '3'})`);
       }
     }
@@ -2676,6 +3217,10 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
     
     if (query.toLowerCase().includes('ramp') && scryfallQuery.includes('o:"search"') && scryfallQuery.includes('o:"land"')) {
       assumptions.push('"Ramp" interpreted as land-searching effects');
+    }
+
+    if (notes.length > 0) {
+      assumptions.push(...notes);
     }
     
 
@@ -2740,6 +3285,10 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         assumptions,
         confidence: Math.round(confidence * 100) / 100
       },
+      lintIssues: validation.issues,
+      intentBreakdown,
+      notes,
+      requestId,
       showAffiliate,
       responseTimeMs,
       success: true 
