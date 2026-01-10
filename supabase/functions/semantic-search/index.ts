@@ -1520,6 +1520,13 @@ SACRIFICE:
 - otag:blood-artist-effect (drain on death)
 - otag:grave-pact-effect (opponents sacrifice when yours die)
 
+SYNERGY PAYOFFS:
+- otag:synergy-lifegain (payoffs for gaining life)
+- otag:synergy-sacrifice (payoffs for sacrificing)
+- otag:synergy-discard (payoffs for discarding)
+- otag:synergy-equipment (payoffs for equipment)
+- otag:synergy-proliferate (payoffs for proliferate)
+
 LIFE & DAMAGE:
 - otag:lifegain (gains life)
 - otag:soul-warden-ability (gain life when creatures enter)
@@ -2231,6 +2238,19 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         [/\bmoves? counters?\b/gi, 'otag:counter-movement'],
         [/\bcounter movement\b/gi, 'otag:counter-movement'],
         [/\btransfers? counters?\b/gi, 'otag:counter-movement'],
+        
+        // Synergy payoff otags
+        [/\blifegain synergy\b/gi, 'otag:synergy-lifegain'],
+        [/\blifegain payoffs?\b/gi, 'otag:synergy-lifegain'],
+        [/\blife ?gain payoffs?\b/gi, 'otag:synergy-lifegain'],
+        [/\bgaining life payoffs?\b/gi, 'otag:synergy-lifegain'],
+        [/\bdiscard synergy\b/gi, 'otag:synergy-discard'],
+        [/\bdiscard payoffs?\b/gi, 'otag:synergy-discard'],
+        [/\bdiscarding payoffs?\b/gi, 'otag:synergy-discard'],
+        [/\bequipment synergy\b/gi, 'otag:synergy-equipment'],
+        [/\bequipment payoffs?\b/gi, 'otag:synergy-equipment'],
+        [/\bequipment matters?\b/gi, 'otag:synergy-equipment'],
+        
         // Note: untap is handled earlier in the specific patterns section
         [/\bpolymorph\b/gi, 'otag:polymorph'],
         [/\beggs?\b/gi, 'otag:egg'],
