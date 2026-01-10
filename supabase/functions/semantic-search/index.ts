@@ -1490,6 +1490,14 @@ COMBAT & CREATURES:
 - otag:fog (prevents combat damage)
 - otag:extra-combat (additional combat phases)
 - otag:gives-haste (gives creatures haste)
+- otag:gives-flying (gives creatures flying)
+- otag:gives-trample (gives creatures trample)
+- otag:gives-vigilance (gives creatures vigilance)
+- otag:gives-deathtouch (gives creatures deathtouch)
+- otag:gives-first-strike (gives creatures first strike)
+- otag:gives-double-strike (gives creatures double strike)
+- otag:gives-menace (gives creatures menace)
+- otag:gives-reach (gives creatures reach)
 - otag:gives-evasion (gives evasion abilities like flying, menace, etc.)
 
 BLINK & BOUNCE:
@@ -2209,6 +2217,34 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         [/\beggs?\b/gi, 'otag:egg'],
         [/\bactivate from graveyard\b/gi, 'otag:activate-from-graveyard'],
         [/\buse from graveyard\b/gi, 'otag:activate-from-graveyard'],
+        
+        // Ability-granting patterns - use gives- otags
+        [/\bgive(?:s)? flying\b/gi, 'otag:gives-flying'],
+        [/\bgrant(?:s)? flying\b/gi, 'otag:gives-flying'],
+        [/\bgive(?:s)? trample\b/gi, 'otag:gives-trample'],
+        [/\bgrant(?:s)? trample\b/gi, 'otag:gives-trample'],
+        [/\bgive(?:s)? haste\b/gi, 'otag:gives-haste'],
+        [/\bgrant(?:s)? haste\b/gi, 'otag:gives-haste'],
+        [/\bgive(?:s)? vigilance\b/gi, 'otag:gives-vigilance'],
+        [/\bgrant(?:s)? vigilance\b/gi, 'otag:gives-vigilance'],
+        [/\bgive(?:s)? deathtouch\b/gi, 'otag:gives-deathtouch'],
+        [/\bgrant(?:s)? deathtouch\b/gi, 'otag:gives-deathtouch'],
+        [/\bgive(?:s)? lifelink\b/gi, 'otag:gives-lifelink'],
+        [/\bgrant(?:s)? lifelink\b/gi, 'otag:gives-lifelink'],
+        [/\bgive(?:s)? first strike\b/gi, 'otag:gives-first-strike'],
+        [/\bgrant(?:s)? first strike\b/gi, 'otag:gives-first-strike'],
+        [/\bgive(?:s)? double strike\b/gi, 'otag:gives-double-strike'],
+        [/\bgrant(?:s)? double strike\b/gi, 'otag:gives-double-strike'],
+        [/\bgive(?:s)? menace\b/gi, 'otag:gives-menace'],
+        [/\bgrant(?:s)? menace\b/gi, 'otag:gives-menace'],
+        [/\bgive(?:s)? reach\b/gi, 'otag:gives-reach'],
+        [/\bgrant(?:s)? reach\b/gi, 'otag:gives-reach'],
+        [/\bgive(?:s)? hexproof\b/gi, 'otag:gives-hexproof'],
+        [/\bgrant(?:s)? hexproof\b/gi, 'otag:gives-hexproof'],
+        [/\bgive(?:s)? indestructible\b/gi, 'otag:gives-indestructible'],
+        [/\bgrant(?:s)? indestructible\b/gi, 'otag:gives-indestructible'],
+        [/\bgive(?:s)? protection\b/gi, 'otag:gives-protection'],
+        [/\bgrant(?:s)? protection\b/gi, 'otag:gives-protection'],
         
         // -1/-1 counter effects (use oracle text, not otag)
         [/\bput.+-1\/-1 counters? on.+(?:opponent|enemy|their)\b/gi, 'o:"put" o:"-1/-1 counter" -o:"you control"'],
