@@ -879,6 +879,455 @@ function validateQuery(query: string): { valid: boolean; sanitized: string; issu
   return { valid: issues.length === 0, sanitized, issues };
 }
 
+// ============= DETERMINISTIC PRE-PARSER =============
+/**
+ * Structured intent object extracted from natural language query.
+ * This is built deterministically before LLM is called.
+ */
+interface ParsedIntent {
+  // Color handling
+  colors: {
+    values: string[];           // e.g., ['r', 'b']
+    isIdentity: boolean;        // true = use id:, false = use c:
+    isExact: boolean;           // true = use =, false = use <=
+    isOr: boolean;              // true = (c:r OR c:b), false = c:rb
+  } | null;
+  
+  // Types
+  types: string[];              // e.g., ['creature', 'artifact']
+  subtypes: string[];           // e.g., ['zombie', 'elf']
+  
+  // Numeric constraints
+  cmc: { op: string; value: number } | null;  // e.g., { op: '<=', value: 3 }
+  power: { op: string; value: number } | null;
+  toughness: { op: string; value: number } | null;
+  
+  // Special intents
+  isCommander: boolean;
+  format: string | null;
+  yearConstraint: { op: string; year: number } | null;
+  
+  // Price (only if explicitly mentioned with $)
+  priceConstraint: { op: string; value: number } | null;
+  
+  // What's left for LLM
+  remainingQuery: string;
+  
+  // Warnings for user
+  warnings: string[];
+}
+
+/**
+ * Color name to Scryfall code mapping
+ */
+const COLOR_MAP: Record<string, string> = {
+  'white': 'w', 'w': 'w',
+  'blue': 'u', 'u': 'u',
+  'black': 'b', 'b': 'b',
+  'red': 'r', 'r': 'r',
+  'green': 'g', 'g': 'g',
+  'colorless': 'c', 'c': 'c',
+};
+
+/**
+ * Guild/shard/wedge to color codes
+ */
+const MULTICOLOR_MAP: Record<string, string> = {
+  // Guilds
+  'azorius': 'wu', 'dimir': 'ub', 'rakdos': 'br', 'gruul': 'rg', 'selesnya': 'gw',
+  'orzhov': 'wb', 'izzet': 'ur', 'golgari': 'bg', 'boros': 'rw', 'simic': 'gu',
+  // Shards
+  'bant': 'gwu', 'esper': 'wub', 'grixis': 'ubr', 'jund': 'brg', 'naya': 'rgw',
+  // Wedges
+  'abzan': 'wbg', 'jeskai': 'urw', 'sultai': 'bgu', 'mardu': 'rwb', 'temur': 'gur',
+  // Four color
+  'yore-tiller': 'wubr', 'glint-eye': 'ubrg', 'dune-brood': 'brgw', 'ink-treader': 'rgwu', 'witch-maw': 'gwub',
+  'sans-white': 'ubrg', 'sans-blue': 'brgw', 'sans-black': 'rgwu', 'sans-red': 'gwub', 'sans-green': 'wubr',
+};
+
+/**
+ * MTG card types
+ */
+const CARD_TYPES = ['creature', 'artifact', 'enchantment', 'instant', 'sorcery', 'land', 'planeswalker', 'battle', 'kindred'];
+
+/**
+ * Parse structured intent from natural language query.
+ * This runs BEFORE calling the LLM to extract deterministic constraints.
+ */
+function parseIntent(query: string): ParsedIntent {
+  const lowerQuery = query.toLowerCase();
+  let remaining = query;
+  const warnings: string[] = [];
+  
+  const intent: ParsedIntent = {
+    colors: null,
+    types: [],
+    subtypes: [],
+    cmc: null,
+    power: null,
+    toughness: null,
+    isCommander: false,
+    format: null,
+    yearConstraint: null,
+    priceConstraint: null,
+    remainingQuery: '',
+    warnings: [],
+  };
+  
+  // ===== COLOR PARSING =====
+  
+  // Check for color identity keywords
+  const hasIdentityKeyword = /\b(color identity|identity|commander deck|fits into|can go in)\b/i.test(lowerQuery);
+  const hasExactKeyword = /\b(exactly|only|pure|just|strictly)\b/i.test(lowerQuery);
+  const hasOrKeyword = /\b(or)\b/i.test(lowerQuery);
+  
+  // Check for mono-color
+  const monoMatch = lowerQuery.match(/\bmono[ -]?(white|blue|black|red|green|w|u|b|r|g)\b/);
+  if (monoMatch) {
+    const colorCode = COLOR_MAP[monoMatch[1]] || monoMatch[1].toLowerCase();
+    intent.colors = {
+      values: [colorCode],
+      isIdentity: false,
+      isExact: true,  // mono always means exactly that color
+      isOr: false,
+    };
+    remaining = remaining.replace(monoMatch[0], '').trim();
+  }
+  
+  // Check for colorless
+  if (!intent.colors && /\bcolorless\b/i.test(lowerQuery)) {
+    intent.colors = {
+      values: ['c'],
+      isIdentity: false,
+      isExact: true,
+      isOr: false,
+    };
+    remaining = remaining.replace(/\bcolorless\b/gi, '').trim();
+  }
+  
+  // Check for guild/shard/wedge names
+  if (!intent.colors) {
+    for (const [name, codes] of Object.entries(MULTICOLOR_MAP)) {
+      const regex = new RegExp(`\\b${name}\\b`, 'i');
+      if (regex.test(lowerQuery)) {
+        intent.colors = {
+          values: codes.split(''),
+          isIdentity: hasIdentityKeyword,
+          isExact: hasExactKeyword,
+          isOr: false,  // Guild names imply AND (multicolor)
+        };
+        remaining = remaining.replace(regex, '').trim();
+        break;
+      }
+    }
+  }
+  
+  // Check for "X or Y" color pattern (e.g., "blue or black")
+  if (!intent.colors) {
+    const orColorPattern = /\b(white|blue|black|red|green)\s+or\s+(white|blue|black|red|green)\b/i;
+    const orMatch = lowerQuery.match(orColorPattern);
+    if (orMatch) {
+      const color1 = COLOR_MAP[orMatch[1].toLowerCase()];
+      const color2 = COLOR_MAP[orMatch[2].toLowerCase()];
+      intent.colors = {
+        values: [color1, color2],
+        isIdentity: hasIdentityKeyword,
+        isExact: false,
+        isOr: true,  // "or" means either color, not both
+      };
+      remaining = remaining.replace(orMatch[0], '').trim();
+    }
+  }
+  
+  // Check for "X and Y" color pattern (e.g., "red and black")
+  if (!intent.colors) {
+    const andColorPattern = /\b(white|blue|black|red|green)\s+and\s+(white|blue|black|red|green)\b/i;
+    const andMatch = lowerQuery.match(andColorPattern);
+    if (andMatch) {
+      const color1 = COLOR_MAP[andMatch[1].toLowerCase()];
+      const color2 = COLOR_MAP[andMatch[2].toLowerCase()];
+      intent.colors = {
+        values: [color1, color2],
+        isIdentity: hasIdentityKeyword,
+        isExact: hasExactKeyword,
+        isOr: false,  // "and" means both colors (gold)
+      };
+      remaining = remaining.replace(andMatch[0], '').trim();
+    }
+  }
+  
+  // Check for single color mentions (last resort)
+  if (!intent.colors) {
+    const singleColorPattern = /\b(white|blue|black|red|green)\b/gi;
+    const colorMatches = lowerQuery.match(singleColorPattern);
+    if (colorMatches && colorMatches.length > 0) {
+      const uniqueColors = [...new Set(colorMatches.map(c => COLOR_MAP[c.toLowerCase()]))];
+      intent.colors = {
+        values: uniqueColors,
+        isIdentity: hasIdentityKeyword,
+        isExact: hasExactKeyword,
+        isOr: hasOrKeyword && uniqueColors.length > 1,
+      };
+      for (const match of colorMatches) {
+        remaining = remaining.replace(new RegExp(`\\b${match}\\b`, 'i'), '').trim();
+      }
+    }
+  }
+  
+  // ===== TYPE PARSING =====
+  for (const type of CARD_TYPES) {
+    const typePattern = new RegExp(`\\b${type}s?\\b`, 'i');
+    if (typePattern.test(lowerQuery)) {
+      intent.types.push(type);
+      remaining = remaining.replace(typePattern, '').trim();
+    }
+  }
+  
+  // ===== CMC / MANA VALUE PARSING =====
+  // "under X mana", "X or less mana", "costs X", "cmc X"
+  const cmcPatterns = [
+    /\b(?:under|less than|below)\s+(\d+)\s*(?:mana|cmc|mv)?\b/i,
+    /\b(\d+)\s*(?:mana|cmc|mv)?\s+or\s+less\b/i,
+    /\b(?:at most|max|maximum)\s+(\d+)\s*(?:mana|cmc|mv)?\b/i,
+    /\b(?:cmc|mv|mana value)\s*[<≤]\s*=?\s*(\d+)\b/i,
+    /\bcosts?\s+(\d+)\s*(?:mana)?\b/i,
+  ];
+  
+  for (const pattern of cmcPatterns) {
+    const match = lowerQuery.match(pattern);
+    if (match && !intent.cmc) {
+      intent.cmc = { op: '<=', value: parseInt(match[1]) };
+      remaining = remaining.replace(match[0], '').trim();
+      break;
+    }
+  }
+  
+  // "over X mana", "X or more mana"
+  const cmcOverPatterns = [
+    /\b(?:over|more than|above)\s+(\d+)\s*(?:mana|cmc|mv)?\b/i,
+    /\b(\d+)\s*(?:mana|cmc|mv)?\s+or\s+more\b/i,
+    /\b(?:at least|min|minimum)\s+(\d+)\s*(?:mana|cmc|mv)?\b/i,
+  ];
+  
+  for (const pattern of cmcOverPatterns) {
+    const match = lowerQuery.match(pattern);
+    if (match && !intent.cmc) {
+      intent.cmc = { op: '>=', value: parseInt(match[1]) };
+      remaining = remaining.replace(match[0], '').trim();
+      break;
+    }
+  }
+  
+  // "cheap" = mana value, NOT price
+  if (/\bcheap\b/i.test(lowerQuery) && !intent.cmc && !intent.priceConstraint) {
+    intent.cmc = { op: '<=', value: 2 };
+    remaining = remaining.replace(/\bcheap\b/gi, '').trim();
+  }
+  
+  // ===== POWER/TOUGHNESS PARSING =====
+  const powerPatterns = [
+    /\bpower\s*([<>]=?|=)\s*(\d+)\b/i,
+    /\b(\d+)\s*power\b/i,
+  ];
+  const toughnessPatterns = [
+    /\btoughness\s*([<>]=?|=)\s*(\d+)\b/i,
+    /\b(\d+)\s*toughness\b/i,
+  ];
+  
+  for (const pattern of powerPatterns) {
+    const match = lowerQuery.match(pattern);
+    if (match && !intent.power) {
+      if (match[2]) {
+        intent.power = { op: match[1], value: parseInt(match[2]) };
+      } else {
+        intent.power = { op: '=', value: parseInt(match[1]) };
+      }
+      remaining = remaining.replace(match[0], '').trim();
+      break;
+    }
+  }
+  
+  for (const pattern of toughnessPatterns) {
+    const match = lowerQuery.match(pattern);
+    if (match && !intent.toughness) {
+      if (match[2]) {
+        intent.toughness = { op: match[1], value: parseInt(match[2]) };
+      } else {
+        intent.toughness = { op: '=', value: parseInt(match[1]) };
+      }
+      remaining = remaining.replace(match[0], '').trim();
+      break;
+    }
+  }
+  
+  // Check for unsupported pow+tou math
+  if (/\b(?:power\s*\+\s*toughness|pow\s*\+\s*tou|total stats?)\s*([<>]=?|=)\s*(\d+)\b/i.test(lowerQuery)) {
+    warnings.push("Scryfall can't do power+toughness math. Showing cards with individual power and toughness constraints instead.");
+  }
+  
+  // ===== COMMANDER INTENT =====
+  if (/\b(?:commander|is:commander|legendary creature|as commander)\b/i.test(lowerQuery)) {
+    intent.isCommander = true;
+    remaining = remaining.replace(/\b(?:as )?commander\b/gi, '').trim();
+  }
+  
+  // ===== FORMAT PARSING =====
+  const formatPatterns = [
+    /\b(?:in|for|legal in)\s+(standard|pioneer|modern|legacy|vintage|commander|edh|pauper|historic|alchemy)\b/i,
+    /\b(standard|pioneer|modern|legacy|vintage|commander|edh|pauper|historic|alchemy)\s+(?:legal|playable|format)\b/i,
+  ];
+  
+  for (const pattern of formatPatterns) {
+    const match = lowerQuery.match(pattern);
+    if (match && !intent.format) {
+      intent.format = match[1].toLowerCase() === 'edh' ? 'commander' : match[1].toLowerCase();
+      remaining = remaining.replace(match[0], '').trim();
+      break;
+    }
+  }
+  
+  // ===== YEAR CONSTRAINT PARSING =====
+  // CRITICAL: Use year: not e: for years
+  const yearPatterns = [
+    { pattern: /\b(?:after|since|from)\s+(\d{4})\b/i, op: '>=' },
+    { pattern: /\b(?:before)\s+(\d{4})\b/i, op: '<' },
+    { pattern: /\b(?:in|from)\s+(\d{4})\b/i, op: '=' },
+    { pattern: /\b(?:released|printed)\s+(?:after|since)\s+(\d{4})\b/i, op: '>=' },
+    { pattern: /\b(?:released|printed)\s+(?:before)\s+(\d{4})\b/i, op: '<' },
+    { pattern: /\b(?:released|printed)\s+(?:in)\s+(\d{4})\b/i, op: '=' },
+    { pattern: /\b(?:new|recent)\s+cards?\b/i, op: '>=', defaultYear: new Date().getFullYear() - 2 },
+    { pattern: /\b(?:old|classic)\s+cards?\b/i, op: '<', defaultYear: 2003 },
+  ];
+  
+  for (const { pattern, op, defaultYear } of yearPatterns) {
+    const match = lowerQuery.match(pattern);
+    if (match && !intent.yearConstraint) {
+      const year = match[1] ? parseInt(match[1]) : defaultYear!;
+      intent.yearConstraint = { op, year };
+      remaining = remaining.replace(match[0], '').trim();
+      break;
+    }
+  }
+  
+  // ===== PRICE PARSING (explicit $ only) =====
+  const pricePatterns = [
+    /\bunder\s*\$\s*(\d+(?:\.\d{2})?)\b/i,
+    /\b(?:less than|below)\s*\$\s*(\d+(?:\.\d{2})?)\b/i,
+    /\bmax(?:imum)?\s*\$\s*(\d+(?:\.\d{2})?)\b/i,
+    /\b\$\s*(\d+(?:\.\d{2})?)\s+or\s+less\b/i,
+  ];
+  
+  for (const pattern of pricePatterns) {
+    const match = lowerQuery.match(pattern);
+    if (match && !intent.priceConstraint) {
+      intent.priceConstraint = { op: '<', value: parseFloat(match[1]) };
+      remaining = remaining.replace(match[0], '').trim();
+      break;
+    }
+  }
+  
+  const priceOverPatterns = [
+    /\bover\s*\$\s*(\d+(?:\.\d{2})?)\b/i,
+    /\b(?:more than|above)\s*\$\s*(\d+(?:\.\d{2})?)\b/i,
+  ];
+  
+  for (const pattern of priceOverPatterns) {
+    const match = lowerQuery.match(pattern);
+    if (match && !intent.priceConstraint) {
+      intent.priceConstraint = { op: '>', value: parseFloat(match[1]) };
+      remaining = remaining.replace(match[0], '').trim();
+      break;
+    }
+  }
+  
+  // Clean up remaining query
+  remaining = remaining
+    .replace(/\s+/g, ' ')
+    .replace(/^[\s,]+|[\s,]+$/g, '')
+    .replace(/\b(that|which|with|the|a|an)\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  intent.remainingQuery = remaining;
+  intent.warnings = warnings;
+  
+  return intent;
+}
+
+/**
+ * Build Scryfall query from parsed intent.
+ * Returns the deterministic part of the query.
+ */
+function buildQueryFromIntent(intent: ParsedIntent): string {
+  const parts: string[] = [];
+  
+  // Colors
+  if (intent.colors) {
+    const { values, isIdentity, isExact, isOr } = intent.colors;
+    if (isOr && values.length > 1) {
+      // "blue or black" -> (c:u OR c:b)
+      const colorParts = values.map(c => `c:${c}`);
+      parts.push(`(${colorParts.join(' OR ')})`);
+    } else if (isIdentity) {
+      // Color identity for commander
+      if (isExact) {
+        parts.push(`id=${values.join('')}`);
+      } else {
+        parts.push(`id<=${values.join('')}`);
+      }
+    } else {
+      // Regular color
+      if (isExact || values.length === 1) {
+        parts.push(`c=${values.join('')}`);
+      } else {
+        parts.push(`c:${values.join('')}`);
+      }
+    }
+  }
+  
+  // Types
+  for (const type of intent.types) {
+    parts.push(`t:${type}`);
+  }
+  
+  // CMC
+  if (intent.cmc) {
+    parts.push(`mv${intent.cmc.op}${intent.cmc.value}`);
+  }
+  
+  // Power
+  if (intent.power) {
+    parts.push(`pow${intent.power.op}${intent.power.value}`);
+  }
+  
+  // Toughness
+  if (intent.toughness) {
+    parts.push(`tou${intent.toughness.op}${intent.toughness.value}`);
+  }
+  
+  // Commander
+  if (intent.isCommander) {
+    parts.push('is:commander');
+  }
+  
+  // Format
+  if (intent.format) {
+    parts.push(`f:${intent.format}`);
+  }
+  
+  // Year (CRITICAL: use year: not e:)
+  if (intent.yearConstraint) {
+    parts.push(`year${intent.yearConstraint.op}${intent.yearConstraint.year}`);
+  }
+  
+  // Price
+  if (intent.priceConstraint) {
+    parts.push(`usd${intent.priceConstraint.op}${intent.priceConstraint.value}`);
+  }
+  
+  return parts.join(' ');
+}
+
 /**
  * Creates a simplified fallback query by removing complex constraints.
  * Used when the primary query returns no results.

@@ -110,6 +110,7 @@ function sanitizeEventData(data: Record<string, unknown>): Record<string, string
 const ALLOWED_EVENT_TYPES = [
   'search',
   'search_results',
+  'rerun_edited_query',
   'card_click', 
   'card_modal_view',
   'affiliate_click',
@@ -128,6 +129,7 @@ interface SearchEventData {
   translated_query?: string;
   results_count: number;
   search_duration_ms?: number;
+  request_id?: string;
 }
 
 interface CardClickEventData {
@@ -164,13 +166,20 @@ interface FeedbackEventData {
   issue_description: string;
 }
 
+interface RerunEditedQueryEventData {
+  original_query: string;
+  edited_query: string;
+  request_id?: string;
+}
+
 type EventData = 
   | SearchEventData 
   | CardClickEventData 
   | CardModalViewEventData 
   | AffiliateClickEventData 
   | PaginationEventData
-  | FeedbackEventData;
+  | FeedbackEventData
+  | RerunEditedQueryEventData;
 
 /**
  * Hook for tracking analytics events.

@@ -62,12 +62,12 @@ export const CardItem = memo(function CardItem({ card, onClick }: CardItemProps)
         </div>
       </div>
       
-      {/* Rarity indicator */}
+      {/* Rarity indicator - positioned bottom-left to avoid covering mana cost */}
       <div 
         className={cn(
-          "absolute top-2.5 right-2.5 h-2 w-2 rounded-full transition-all duration-300",
-          card.rarity === "mythic" && "bg-orange-400 shadow-[0_0_8px_2px] shadow-orange-400/50",
-          card.rarity === "rare" && "bg-amber-400 shadow-[0_0_8px_2px] shadow-amber-400/40",
+          "absolute bottom-2.5 left-2.5 h-2 w-2 rounded-full transition-all duration-300 opacity-90 group-hover:opacity-0",
+          card.rarity === "mythic" && "bg-orange-400 shadow-[0_0_6px_1px] shadow-orange-400/40",
+          card.rarity === "rare" && "bg-amber-400 shadow-[0_0_6px_1px] shadow-amber-400/30",
           card.rarity === "uncommon" && "bg-slate-300",
           card.rarity === "common" && "bg-slate-500"
         )}

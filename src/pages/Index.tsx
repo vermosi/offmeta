@@ -1,8 +1,9 @@
 import { useState, useCallback, useRef, lazy, Suspense, useMemo, useEffect } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import { UnifiedSearchBar, SearchResult, UnifiedSearchBarHandle } from "@/components/UnifiedSearchBar";
-import { SearchInterpretation } from "@/components/SearchInterpretation";
+import { EditableQueryBar } from "@/components/EditableQueryBar";
+import { ReportIssueDialog } from "@/components/ReportIssueDialog";
 import { SearchFilters } from "@/components/SearchFilters";
 
 import { CardItem } from "@/components/CardItem";
@@ -21,9 +22,15 @@ import { Loader2 } from "lucide-react";
 
 const CardModal = lazy(() => import("@/components/CardModal"));
 
+// Generate unique request ID
+function generateRequestId(): string {
+  return `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+}
+
 const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const urlQuery = searchParams.get("q") || "";
+  const queryClient = useQueryClient();
   
   const [searchQuery, setSearchQuery] = useState(urlQuery);
   const [originalQuery, setOriginalQuery] = useState(urlQuery); // Natural language query
@@ -32,6 +39,10 @@ const Index = () => {
   const [lastSearchResult, setLastSearchResult] = useState<SearchResult | null>(null);
   const [filteredCards, setFilteredCards] = useState<ScryfallCard[]>([]);
   const [hasActiveFilters, setHasActiveFilters] = useState(false);
+  const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<Record<string, unknown>>({});
+  
   const searchBarRef = useRef<UnifiedSearchBarHandle>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const { trackSearch, trackCardClick, trackEvent } = useAnalytics();
@@ -51,6 +62,7 @@ const Index = () => {
       setLastSearchResult(null);
       setFilteredCards([]);
       setHasActiveFilters(false);
+      setCurrentRequestId(null);
     }
   }, [urlQuery]); // Re-run when URL query changes
 
@@ -90,12 +102,21 @@ const Index = () => {
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const handleSearch = useCallback((query: string, result?: SearchResult, naturalQuery?: string) => {
+    // Generate new request ID for every search
+    const requestId = generateRequestId();
+    setCurrentRequestId(requestId);
+    
+    // Clear prior state before setting new values
+    setFilteredCards([]);
+    setHasActiveFilters(false);
+    
     setSearchQuery(query);
-    setOriginalQuery(naturalQuery || query); // Store the natural language query
+    setOriginalQuery(naturalQuery || query);
     setHasSearched(true);
     setLastSearchResult(result || null);
-    setFilteredCards([]); // Reset filters on new search
-    setHasActiveFilters(false);
+    
+    // Invalidate previous query cache to force fresh fetch
+    queryClient.invalidateQueries({ queryKey: ["cards", searchQuery] });
     
     // Update URL with search query
     if (query) {
@@ -104,7 +125,7 @@ const Index = () => {
       setSearchParams({}, { replace: true });
     }
     
-    // Track search analytics (results_count will be updated in effect below)
+    // Track search analytics
     if (result) {
       trackSearch({
         query: naturalQuery || query,
@@ -112,7 +133,43 @@ const Index = () => {
         results_count: 0,
       });
     }
-  }, [trackSearch, setSearchParams]);
+  }, [trackSearch, setSearchParams, queryClient, searchQuery]);
+
+  // Handle re-running with an edited Scryfall query (bypasses AI translation)
+  const handleRerunEditedQuery = useCallback((editedQuery: string) => {
+    const requestId = generateRequestId();
+    setCurrentRequestId(requestId);
+    
+    // Clear prior state
+    setFilteredCards([]);
+    setHasActiveFilters(false);
+    
+    // Set the edited query as both search and displayed query
+    setSearchQuery(editedQuery);
+    setHasSearched(true);
+    
+    // Update last search result with edited query
+    setLastSearchResult(prev => prev ? {
+      ...prev,
+      scryfallQuery: editedQuery
+    } : {
+      scryfallQuery: editedQuery,
+      explanation: undefined,
+      showAffiliate: false
+    });
+    
+    // Invalidate cache and force new fetch
+    queryClient.invalidateQueries({ queryKey: ["cards"] });
+    
+    // Update URL
+    setSearchParams({ q: editedQuery }, { replace: true });
+    
+    trackEvent('rerun_edited_query', {
+      original_query: originalQuery,
+      edited_query: editedQuery,
+      request_id: requestId,
+    });
+  }, [queryClient, setSearchParams, originalQuery, trackEvent]);
 
   // Handler for "Did you mean...?" suggestions
   const handleTryAlternative = useCallback((alternativeQuery: string) => {
@@ -120,7 +177,6 @@ const Index = () => {
   }, []);
 
   const handleCardClick = useCallback((card: ScryfallCard, index: number) => {
-    // Track card click
     trackCardClick({
       card_id: card.id,
       card_name: card.name,
@@ -150,17 +206,20 @@ const Index = () => {
         query: originalQuery,
         translated_query: lastSearchResult.scryfallQuery,
         results_count: totalCards,
+        request_id: currentRequestId,
       });
     }
-  }, [totalCards, lastSearchResult?.scryfallQuery, originalQuery, trackEvent]);
+  }, [totalCards, lastSearchResult?.scryfallQuery, originalQuery, trackEvent, currentRequestId]);
 
-  const handleFilteredCards = useCallback((filtered: ScryfallCard[], filtersActive: boolean) => {
+  const handleFilteredCards = useCallback((filtered: ScryfallCard[], filtersActive: boolean, filters?: Record<string, unknown>) => {
     setFilteredCards(filtered);
     setHasActiveFilters(filtersActive);
+    if (filters) {
+      setActiveFilters(filters);
+    }
   }, []);
   
   // Use filtered cards for display when filters are active, otherwise show all cards
-  // This properly shows "no matches" when filters yield empty results
   const displayCards = hasActiveFilters ? filteredCards : cards;
 
   return (
@@ -243,7 +302,7 @@ const Index = () => {
           className={`relative flex-1 ${hasSearched ? 'pt-4 sm:pt-6' : ''} pb-8 sm:pb-16 container-main safe-bottom`}
           role="main"
         >
-          <div className="space-y-6 sm:space-y-10">
+          <div className="space-y-6 sm:space-y-8">
             {/* Search */}
             <UnifiedSearchBar 
               ref={searchBarRef}
@@ -252,20 +311,24 @@ const Index = () => {
               lastTranslatedQuery={lastSearchResult?.scryfallQuery}
             />
 
-            {/* Search interpretation */}
-            {lastSearchResult && hasSearched && !isSearching && (
+            {/* Always-visible Editable Query Bar */}
+            {lastSearchResult && hasSearched && (
               <div className="animate-reveal">
-                <SearchInterpretation 
+                <EditableQueryBar
                   scryfallQuery={lastSearchResult.scryfallQuery}
                   originalQuery={originalQuery}
-                  explanation={lastSearchResult.explanation}
-                  onTryAlternative={handleTryAlternative}
+                  confidence={lastSearchResult.explanation?.confidence}
+                  isLoading={isSearching}
+                  onRerun={handleRerunEditedQuery}
+                  onReportIssue={() => setReportDialogOpen(true)}
+                  requestId={currentRequestId || undefined}
+                  filters={activeFilters}
                 />
               </div>
             )}
 
             {/* Results count */}
-            {hasSearched && totalCards > 0 && (
+            {hasSearched && totalCards > 0 && !isSearching && (
               <div 
                 className="text-center animate-reveal"
                 role="status"
@@ -280,7 +343,6 @@ const Index = () => {
                 </span>
               </div>
             )}
-
 
             {/* Filters and Sort - Show when we have results */}
             {cards.length > 0 && !isSearching && (
@@ -369,6 +431,16 @@ const Index = () => {
             <CardModal card={selectedCard} open={true} onClose={() => setSelectedCard(null)} />
           </Suspense>
         )}
+
+        {/* Report Issue Dialog */}
+        <ReportIssueDialog
+          open={reportDialogOpen}
+          onOpenChange={setReportDialogOpen}
+          originalQuery={originalQuery}
+          compiledQuery={lastSearchResult?.scryfallQuery || searchQuery}
+          filters={activeFilters}
+          requestId={currentRequestId || undefined}
+        />
       </div>
     </ErrorBoundary>
   );
