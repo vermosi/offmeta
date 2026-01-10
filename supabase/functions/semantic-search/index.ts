@@ -1129,23 +1129,32 @@ COMMANDER QUERIES (CRITICAL):
 - "multicolor commander with blue" = is:commander id:u -id=u
 - "mono-color commander" = is:commander (c=w or c=u or c=b or c=r or c=g)
 
-MANA PRODUCTION (CRITICAL - produces: is for COLORS not AMOUNT!):
-The produces: operator filters by NUMBER OF MANA COLORS/TYPES produced, NOT mana amount!
-- produces>=2 means "produces 2+ different colors of mana" NOT "produces 2 mana"
-- produces:g means "produces green mana"
-- produces=wu means "produces exactly white and blue mana"
+MANA PRODUCTION / RAMP (CRITICAL):
+If the query implies producing mana, ramp, or tapping for mana, add: produces:m
 
-For MANA AMOUNT (how much mana a card adds):
-- "adds 2 mana" / "produces 2 mana" = o:"add" o:"{" o:"{" (two mana symbols in add text) - IMPRECISE
-- "mana rock" = otag:mana-rock (artifacts that produce mana - any amount)
-- "mana dork" = otag:mana-dork (creatures that produce mana)
-- Scryfall CANNOT filter by exact mana amount produced - use otag: for general mana producers
-- For "artifacts that add 2+ mana": t:artifact o:/add \{.\}\{.\}/ (regex for 2 mana symbols)
+Specific color mana production:
+- white mana = produces:w
+- blue mana = produces:u
+- black mana = produces:b
+- red mana = produces:r
+- green mana = produces:g
+- colorless mana = produces:c
+- any mana / mana producer = produces:m
 
-For MANA COLOR production:
-- produces:g = produces green mana
-- produces>=2 = produces 2+ different colors (multi-color lands, etc)
-- produces=wubrg = produces all 5 colors
+Card type filters for mana producers:
+- lands that produce mana = t:land produces:m
+- mana dorks / creatures that produce mana = t:creature produces:m
+- mana rocks / artifacts that produce mana = t:artifact produces:m
+
+For permanents only (exclude rituals):
+- "ramp permanents" / "permanent mana sources" = produces:m -t:instant -t:sorcery
+
+EXAMPLES:
+- "green mana dorks" = t:creature produces:g
+- "artifacts that produce blue mana" = t:artifact produces:u
+- "lands that tap for any color" = t:land produces:m
+- "mana rocks" = t:artifact produces:m -t:instant -t:sorcery (or otag:mana-rock)
+- "ramp that isn't a creature" = produces:m -t:creature -t:instant -t:sorcery
 
 ACTIVATED ABILITIES (CRITICAL):
 - Activated abilities = "COST: EFFECT" format
@@ -1371,20 +1380,24 @@ For Commander deck building:
 - "fits in red/black deck" / "for Rakdos commander" = id<=br (playable in that commander's deck)
 - "Rakdos identity" / "is Rakdos" = id=br (exactly that identity)
 
-=== MANA PRODUCTION (CRITICAL - produces: is for COLORS not AMOUNT!) ===
-The produces: operator filters by NUMBER OF MANA COLORS/TYPES, NOT total mana amount!
-- produces>=2 = produces 2+ COLORS of mana (like Command Tower, Triomes)
-- produces:g = produces green mana (any amount)
-- produces=wu = produces exactly white and blue (like Azorius Signet)
+=== MANA PRODUCTION / RAMP (CRITICAL) ===
+If the query implies producing mana, ramp, or tapping for mana → add: produces:m
 
-Scryfall CANNOT directly filter by mana AMOUNT (how much mana a card adds).
-For mana amount queries, use these workarounds:
-- "produces mana" / "mana producer" = otag:mana-producer
-- "mana rock" = otag:mana-rock, "mana dork" = otag:mana-dork
-- "adds 2+ mana" = o:/add \{.\}\{.\}/ (regex for 2 mana symbols) - APPROXIMATE
-- "land that taps for multiple colors" = t:land produces>=2
+Specific color mana production:
+- white → produces:w, blue → produces:u, black → produces:b, red → produces:r, green → produces:g, colorless → produces:c
 
-IMPORTANT: Be honest with users - tell them Scryfall can't filter by exact mana amount.
+Card type filters:
+- lands = t:land produces:m
+- mana dorks = t:creature produces:m  
+- mana rocks = t:artifact produces:m
+
+For permanents only (not rituals): produces:m -t:instant -t:sorcery
+
+EXAMPLES:
+- "green mana dorks" = t:creature produces:g
+- "artifacts that produce blue" = t:artifact produces:u
+- "mana rocks" = t:artifact produces:m -t:instant -t:sorcery
+- "lands that tap for any color" = t:land produces:m
 
 === MONO-COLOR HANDLING (CRITICAL) ===
 - "mono [color]" means EXACTLY that color with NO other colors
