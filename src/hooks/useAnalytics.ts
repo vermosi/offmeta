@@ -109,6 +109,7 @@ function sanitizeEventData(data: Record<string, unknown>): Record<string, string
 // Validate event type against allowed list
 const ALLOWED_EVENT_TYPES = [
   'search',
+  'search_results',
   'card_click', 
   'card_modal_view',
   'affiliate_click',
@@ -249,5 +250,6 @@ export function useAnalytics() {
     trackAffiliateClick,
     trackPagination,
     trackFeedback,
+    trackEvent,
   };
 }
