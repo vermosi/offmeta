@@ -542,10 +542,8 @@ setInterval(flushLogQueue, LOG_BATCH_INTERVAL);
 function detectQualityFlags(translatedQuery: string): string[] {
   const flags: string[] = [];
   
-  // Invalid syntax that flash-lite produces
-  if (translatedQuery.includes('function:')) {
-    flags.push('uses_invalid_function_tag');
-  }
+  // function: and oracletag: are valid aliases for otag: - we normalize them later
+  // No longer treat as invalid, just normalize to otag: for consistency
   if (/game:(paper|arena|mtgo)/i.test(translatedQuery)) {
     flags.push('unnecessary_game_filter');
   }
@@ -587,14 +585,12 @@ function applyAutoCorrections(query: string, qualityFlags: string[]): { correcte
   let correctedQuery = query;
   const corrections: string[] = [];
   
-  // Fix 1: Remove invalid function: tags (not supported by Scryfall API)
-  if (qualityFlags.includes('uses_invalid_function_tag')) {
-    // Remove function:xxx patterns
-    const beforeFix = correctedQuery;
-    correctedQuery = correctedQuery.replace(/function:[^\s)]+/gi, '').trim();
-    if (correctedQuery !== beforeFix) {
-      corrections.push('Removed invalid "function:" tag (not supported by Scryfall API)');
-    }
+  // Fix 1: Normalize tag aliases to otag: (function: and oracletag: are valid aliases)
+  const beforeTagNorm = correctedQuery;
+  correctedQuery = correctedQuery.replace(/\bfunction:/gi, 'otag:');
+  correctedQuery = correctedQuery.replace(/\boracletag:/gi, 'otag:');
+  if (correctedQuery !== beforeTagNorm) {
+    corrections.push('Normalized tag syntax to otag: for consistency');
   }
   
   // Fix 2: Remove unnecessary game:paper filter (default behavior)
@@ -1130,7 +1126,8 @@ COMMANDER QUERIES (CRITICAL):
 - "mono-color commander" = is:commander (c=w or c=u or c=b or c=r or c=g)
 
 MANA PRODUCTION / RAMP (CRITICAL):
-If the query implies producing mana, ramp, or tapping for mana, add: produces:m
+For "any mana producer" / "produces mana" / "taps for mana":
+→ Use: (produces:w or produces:u or produces:b or produces:r or produces:g or produces:c)
 
 Specific color mana production:
 - white mana = produces:w
@@ -1139,31 +1136,26 @@ Specific color mana production:
 - red mana = produces:r
 - green mana = produces:g
 - colorless mana = produces:c
-- any mana / mana producer = produces:m
 
-Generic/multiple colorless mana (Sol Ring-like):
-If query implies "two colorless", "2 colorless", "add 2", "double mana", "Sol Ring-like":
-- add: produces:2 produces:c
-- "adds 2 colorless" = produces:2 produces:c
-- "Sol Ring effect" = t:artifact produces:2 produces:c
-- "like Sol Ring" = t:artifact produces:2
+IMPORTANT - produces: does NOT encode quantity!
+- produces:c means "can produce colorless mana" NOT "produces 2 colorless"
+- For Sol Ring-like cards (adds {C}{C}), use oracle text: t:artifact o:"{C}{C}" o:"add"
+- For "adds 2 mana" / "adds multiple mana", use: o:/add \{.\}\{.\}/ or o:"{C}{C}"
 
 Card type filters for mana producers:
-- lands that produce mana = t:land produces:m
-- mana dorks / creatures that produce mana = t:creature produces:m
-- mana rocks / artifacts that produce mana = t:artifact produces:m
+- lands = t:land (produces:w or produces:u or produces:b or produces:r or produces:g or produces:c)
+- mana dorks = t:creature (produces:w or produces:u or produces:b or produces:r or produces:g or produces:c)
+- mana rocks = t:artifact (produces:w or produces:u or produces:b or produces:r or produces:g or produces:c)
 
 For permanents only (exclude rituals):
-- "ramp permanents" / "permanent mana sources" = produces:m -t:instant -t:sorcery
+- add: -t:instant -t:sorcery
 
 EXAMPLES:
 - "green mana dorks" = t:creature produces:g
 - "artifacts that produce blue mana" = t:artifact produces:u
-- "lands that tap for any color" = t:land produces:m
-- "mana rocks" = t:artifact produces:m -t:instant -t:sorcery (or otag:mana-rock)
-- "ramp that isn't a creature" = produces:m -t:creature -t:instant -t:sorcery
-- "artifacts that add 2 mana" = t:artifact produces:2
-- "Sol Ring alternatives" = t:artifact produces:2 produces:c
+- "mana rocks" = otag:mana-rock (preferred) OR t:artifact produces:c -t:instant -t:sorcery
+- "Sol Ring alternatives" / "artifacts that add {C}{C}" = t:artifact o:"{C}{C}" o:"add"
+- "cards that add 2 mana" = o:/add \{.\}\{.\}/
 
 ACTIVATED ABILITIES (CRITICAL):
 - Activated abilities = "COST: EFFECT" format
@@ -1390,29 +1382,26 @@ For Commander deck building:
 - "Rakdos identity" / "is Rakdos" = id=br (exactly that identity)
 
 === MANA PRODUCTION / RAMP (CRITICAL) ===
-If the query implies producing mana, ramp, or tapping for mana → add: produces:m
+For "any mana producer" / "produces mana" / "taps for mana":
+→ Use: (produces:w or produces:u or produces:b or produces:r or produces:g or produces:c)
 
 Specific color mana production:
 - white → produces:w, blue → produces:u, black → produces:b, red → produces:r, green → produces:g, colorless → produces:c
 
-Generic/multiple colorless mana (Sol Ring-like):
-If query implies "two colorless", "2 colorless", "add 2", "double mana", "Sol Ring-like":
-- add: produces:2 produces:c
-- "Sol Ring effect" = t:artifact produces:2 produces:c
+IMPORTANT - produces: does NOT encode quantity!
+- produces:c means "can produce colorless" NOT "adds 2 colorless"
+- For Sol Ring-like (adds {C}{C}): t:artifact o:"{C}{C}" o:"add"
+- For "adds 2+ mana": o:/add \{.\}\{.\}/
 
 Card type filters:
-- lands = t:land produces:m
-- mana dorks = t:creature produces:m  
-- mana rocks = t:artifact produces:m
-
-For permanents only (not rituals): produces:m -t:instant -t:sorcery
+- lands = t:land produces:g (or other color)
+- mana dorks = t:creature produces:g
+- mana rocks = otag:mana-rock (preferred)
 
 EXAMPLES:
 - "green mana dorks" = t:creature produces:g
-- "artifacts that produce blue" = t:artifact produces:u
-- "mana rocks" = t:artifact produces:m -t:instant -t:sorcery
-- "artifacts that add 2 mana" = t:artifact produces:2
-- "Sol Ring alternatives" = t:artifact produces:2 produces:c
+- "Sol Ring alternatives" = t:artifact o:"{C}{C}" o:"add"
+- "mana rocks" = otag:mana-rock
 
 === MONO-COLOR HANDLING (CRITICAL) ===
 - "mono [color]" means EXACTLY that color with NO other colors
