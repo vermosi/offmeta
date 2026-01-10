@@ -904,7 +904,14 @@ const VALID_OPERATORS = [
   'new:', 'prints:', 'lang:', 'in:',
   'st:', 'cube:', 'order:', 'direction:',
   'unique:', 'prefer:', 'include:',
-  'produces:', 'devotion:', 'name:'
+  'produces:', 'devotion:', 'name:',
+  // Art/oracle tags
+  'otag:', 'oracletag:', 'function:',
+  'atag:', 'arttag:', 'art:',
+  // Specialized Scryfall keys
+  'wildpair:', 'wildpair=', 'wildpair<', 'wildpair>', 'wildpair<=', 'wildpair>=',
+  'cn:', 'cn=', 'cn<', 'cn>', 'cn<=', 'cn>=',
+  'keyword:', 'cheapest:'
 ];
 
 /**
@@ -928,7 +935,9 @@ const VALID_SEARCH_KEYS = new Set([
   // Oracle tags (otag/oracletag/function are aliases)
   'otag', 'oracletag', 'function',
   // Art/frame tags
-  'atag', 'arttag'
+  'atag', 'arttag', 'art',
+  // Specialized Scryfall keys
+  'wildpair', 'cn', 'keyword', 'cheapest'
 ]);
 
 const KNOWN_OTAGS = new Set([
@@ -948,7 +957,12 @@ const KNOWN_OTAGS = new Set([
   'gives-vigilance', 'gives-deathtouch', 'gives-lifelink', 'gives-first-strike', 'gives-double-strike',
   'gives-menace', 'gives-reach', 'gives-protection', 'gives-indestructible',
   'landfall', 'extra-land', 'enchantress', 'discard-outlet', 'mulch', 'lord', 'anthem',
-  'self-mill', 'mill', 'graveyard-order-matters'
+  'self-mill', 'mill', 'graveyard-order-matters',
+  // Special/meta tags
+  'win-condition', 'shares-name-with-set', 'counters-matter', 'counter-doubler', 'counter-movement',
+  'etb-trigger', 'ltb-trigger', 'cost-reducer', 'token-doubler', 'populate', 'overrun',
+  'hard-counter', 'soft-counter', 'creature-board-wipe', 'ping', 'drain', 'tax-effect',
+  'gives-evasion', 'rummaging'
 ]);
 
 function normalizeOrGroups(query: string): string {
@@ -3217,9 +3231,64 @@ EGGS & ENABLERS:
 - otag:etb-trigger (enters the battlefield effect)
 - otag:ltb-trigger (leaves the battlefield effect)
 
+WIN CONDITIONS & SPECIAL:
+- otag:win-condition (cards that can win the game outright)
+- otag:shares-name-with-set (cards that share their name with a set, like "Mirage" or "Exodus")
+
+=== ART TAGS (atag:) - Find art elements ===
+Use atag: (or art:, arttag:) to search for specific elements in card ARTWORK.
+Art tags describe what is VISIBLE in the illustration, not card mechanics.
+
+EXAMPLES:
+- "cards with cows in the art" → atag:cow
+- "cards showing dragons in art" → atag:dragon (visual, not type!)
+- "cards with skulls in art" → atag:skull
+- "cards featuring fire" → atag:fire
+- "cards with forests in art" → atag:forest (art, not t:forest)
+- "cards showing battle scenes" → atag:battle
+- "cards with angels in artwork" → atag:angel (the visual, not necessarily t:angel)
+
+COMMON ART TAGS: atag:skull, atag:fire, atag:blood, atag:moon, atag:sun, atag:water, atag:forest, atag:mountain, atag:ocean, atag:dragon, atag:angel, atag:demon, atag:cat, atag:dog, atag:wolf, atag:bird, atag:snake, atag:spider, atag:horse, atag:cow, atag:sheep, atag:goat, atag:pig, atag:rabbit, atag:squirrel, atag:insect, atag:butterfly, atag:zombie, atag:skeleton, atag:ghost, atag:sword, atag:shield, atag:armor, atag:crown, atag:throne, atag:castle, atag:tower, atag:ruin, atag:city, atag:village, atag:bridge, atag:boat, atag:ship, atag:lightning, atag:storm, atag:rain, atag:snow, atag:ice, atag:crystal, atag:gem, atag:gold, atag:treasure
+
+=== SPECIALIZED SCRYFALL SYNTAXES (CRITICAL) ===
+
+WILDPAIR (Total Power + Toughness):
+- wildpair:X finds creatures where power+toughness = X
+- "total power and toughness 5" → wildpair:5
+- "creatures for Wild Pair at 6" → t:creature wildpair:6
+- This is EXACT total, not "at least" or "at most"
+
+IN: (Cards with printings in special products):
+- in:X finds cards with at least one printing in product X
+- "cards with Ugin's Fate printing" → in:ugin (shows default printing but card exists in Ugin's Fate)
+- "cards in The List" → in:plist
+- "cards in Mystery Booster" → in:mb1
+- "cards in Secret Lair" → in:sld
+- "cards from a Commander deck" → in:cmd
+- Note: in: shows the card exists in that product but displays the default printing
+
+COLLECTOR NUMBER COMPARISONS (cn:):
+- cn<X, cn>X, cn=X, cn<=X, cn>=X for collector number filters
+- "low collector numbers" → cn<50
+- "high collector number cards" → cn>300
+- cn<usd compares collector number to USD price (niche use)
+
+TYPE REGEX (for multiple types):
+- Use regex for complex type line searches
+- "cards with 3+ card types" → t:/—.*—.*—/ (type line with multiple dashes)
+- "creature artifact enchantment" → t:creature t:artifact t:enchantment
+- For counting types: Scryfall doesn't have a direct "count types" filter, use type combinations
+
+REGEX PATTERNS IN QUERIES:
+- Use /pattern/ for regex matching in oracle text, type line, etc.
+- o:/pattern/ for oracle text regex
+- t:/pattern/ for type line regex
+- "exactly 3 types in type line" → t:/[^—]*—[^—]*—[^—]*—[^—]*$/ (3 dashes = 4 type segments)
+
 === WHEN TO USE otag: vs o: ===
 - USE otag: when searching for a CATEGORY of effect (e.g., "ramp cards" → otag:ramp)
 - USE o: when searching for SPECIFIC text (e.g., "cards that mention 'treasure'" → o:"treasure")
+- USE atag: when searching for ART ELEMENTS (e.g., "cards with cows in art" → atag:cow)
 - COMBINE them: "green self-mill creatures" → c:g t:creature otag:self-mill
 - For sacrifice payoffs, COMBINE: (otag:synergy-sacrifice or (o:"whenever" o:"sacrifice"))
 
@@ -3240,6 +3309,11 @@ EGGS & ENABLERS:
 - "modal lands" / "modal cards that are lands" → is:mdfc t:land
 - "-1/-1 counter effects" → o:"-1/-1 counter"
 - "-1/-1 counters on opponents creatures" → o:"-1/-1 counter" (o:"opponent" or o:"each" or -o:"you control") (use oracle text NOT otag - there is no -1/-1 otag)
+- "cards that share name with a set" → otag:shares-name-with-set
+- "best win conditions in white" → c:w otag:win-condition
+- "cards with cows in art" → atag:cow
+- "creatures with total stats 5" → t:creature wildpair:5
+- "cards from Ugin's Fate" → in:ugin
 
 LAND SHORTCUTS (use these instead of manual Oracle searches):
 - "dual lands" = is:dual
