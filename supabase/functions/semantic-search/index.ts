@@ -1296,11 +1296,11 @@ Search: otag:tutor, otag:land-tutor, otag:creature-tutor
 Removal: otag:removal, otag:creature-removal, otag:artifact-removal, otag:enchantment-removal, otag:board-wipe
 Counter: otag:counterspell, otag:soft-counter, otag:hard-counter
 Graveyard: otag:self-mill, otag:mill, otag:graveyard-recursion, otag:reanimation, otag:graveyard-hate
-Combat: otag:pump, otag:combat-trick, otag:fog, otag:menace-granter
+Combat: otag:pump, otag:combat-trick, otag:fog, otag:gives-menace
 Tokens: otag:token-generator, otag:treasure-generator, otag:food-generator, otag:clue-generator
 Blink: otag:blink, otag:flicker, otag:bounce
 Sacrifice: otag:sacrifice-outlet, otag:aristocrats, otag:death-trigger, otag:synergy-sacrifice
-Life: otag:lifegain, otag:soul-warden-ability (gain life when creatures enter), otag:lifelink-granter
+Life: otag:lifegain, otag:soul-warden-ability (gain life when creatures enter), otag:gives-lifelink
 Special: otag:extra-turn, otag:stax, otag:hatebear, otag:voltron, otag:gives-flash, otag:untapper
 
 MODAL/MDFC:
@@ -1469,7 +1469,7 @@ GRAVEYARD:
 - otag:reanimation (puts creatures from graveyard to battlefield)
 - otag:graveyard-hate (exiles graveyards)
 - otag:delve-enabler (fills your graveyard)
-- otag:flashback-granter (gives flashback)
+- otag:grants-flashback (gives flashback to cards in graveyard)
 - otag:escape-enabler (helps cast from graveyard)
 
 TOKENS:
@@ -1489,8 +1489,8 @@ COMBAT & CREATURES:
 - otag:overrun (team pump + trample)
 - otag:fog (prevents combat damage)
 - otag:extra-combat (additional combat phases)
-- otag:haste-granter (gives creatures haste)
-- otag:evasion-granter (gives evasion abilities)
+- otag:gives-haste (gives creatures haste)
+- otag:gives-evasion (gives evasion abilities like flying, menace, etc.)
 
 BLINK & BOUNCE:
 - otag:blink (exile and return immediately)
@@ -1509,7 +1509,7 @@ SACRIFICE:
 LIFE & DAMAGE:
 - otag:lifegain (gains life)
 - otag:soul-warden-ability (gain life when creatures enter)
-- otag:lifelink-granter (gives lifelink)
+- otag:gives-lifelink (gives lifelink)
 - otag:burn (deals damage to players)
 - otag:ping (deals 1 damage repeatedly)
 - otag:drain (life loss + life gain)
@@ -2174,7 +2174,7 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         [/\bmill\b/gi, 'otag:mill'],
         [/\bgraveyard recursion\b/gi, 'otag:graveyard-recursion'],
         [/\brecursion\b/gi, 'otag:graveyard-recursion'],
-        [/\bflashback\b/gi, 'otag:flashback-granter'],
+        [/\bflashback\b/gi, 'keyword:flashback'],
         
         // Blink and exile - use otag
         [/\bblink\b/gi, 'otag:blink'],
