@@ -434,6 +434,11 @@ async function checkPatternMatch(
         console.log(`Pattern match found: "${query}" → "${rule.scryfall_syntax}"`);
         
         let finalQuery = rule.scryfall_syntax;
+
+        const qualityFlags = detectQualityFlags(finalQuery);
+        const { correctedQuery, corrections } = applyAutoCorrections(finalQuery, qualityFlags);
+        const validation = validateQuery(correctedQuery);
+        finalQuery = validation.sanitized;
         
         // Apply filters to matched query
         if (filters?.format && !finalQuery.includes('f:')) {
@@ -447,7 +452,7 @@ async function checkPatternMatch(
           scryfallQuery: finalQuery,
           explanation: {
             readable: `Searching for: ${query}`,
-            assumptions: ['Matched known query pattern'],
+            assumptions: ['Matched known query pattern', ...corrections, ...validation.issues],
             confidence: Number(rule.confidence) || 0.9
           },
           showAffiliate: hasPurchaseIntent(query)

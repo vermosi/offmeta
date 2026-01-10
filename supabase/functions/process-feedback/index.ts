@@ -77,6 +77,8 @@ serve(async (req) => {
     ];
 
     const results: Array<{ feedbackId: string; status: string; rule?: string }> = [];
+    const normalizeTagAliases = (syntax: string): string =>
+      syntax.replace(/\bfunction:/gi, 'otag:').replace(/\boracletag:/gi, 'otag:');
 
     for (const feedback of pendingFeedback) {
       try {
@@ -204,6 +206,9 @@ IMPORTANT: Only output the JSON object, nothing else.`;
           results.push({ feedbackId: feedback.id, status: 'skipped - low confidence' });
           continue;
         }
+
+        // Normalize tag aliases for consistency before writing to translation_rules
+        ruleData.scryfall_syntax = normalizeTagAliases(ruleData.scryfall_syntax);
 
         // Check for duplicate patterns - but if this is a retry, update the existing rule
         const { data: existingRule } = await supabase
