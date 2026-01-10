@@ -54,25 +54,26 @@ serve(async (req) => {
       });
     }
 
-    // Scryfall function tags for AI guidance
-    const SCRYFALL_FUNCTION_TAGS = [
-      'function:ramp', 'function:removal', 'function:draw', 'function:tutor', 'function:wrath',
-      'function:counter', 'function:burn', 'function:lifegain', 'function:graveyard', 'function:recursion',
-      'function:sacrifice', 'function:blink', 'function:copy', 'function:steal', 'function:protection',
-      'function:evasion', 'function:haste', 'function:flash', 'function:cantrip', 'function:pump',
-      'function:equipment', 'function:aura', 'function:land-destruction', 'function:stax', 'function:combo',
-      'function:token', 'function:treasure', 'function:clue', 'function:food', 'function:blood',
-      'function:artifact-synergy', 'function:enchantment-synergy', 'function:creature-synergy',
-      'function:tribal', 'function:lord', 'function:anthem', 'function:cost-reducer', 'function:untapper',
-      'function:tapper', 'function:combat-trick', 'function:fog', 'function:ritual', 'function:discard',
-      'function:mill', 'function:voltron', 'function:aggro', 'function:control', 'function:midrange',
-      'function:reanimator', 'function:aristocrats', 'function:spellslinger', 'function:landfall',
-      'function:enchantress', 'function:storm', 'function:infect', 'function:energy', 'function:poison',
-      'function:proliferate', 'function:flicker', 'function:bounce', 'function:exile', 'function:impulse',
-      'function:wheels', 'function:extra-turn', 'function:extra-combat', 'function:monarch',
-      'function:initiative', 'function:dungeon', 'function:cascade', 'function:mutate', 'function:morph',
-      'function:ninjutsu', 'function:madness', 'function:flashback', 'function:retrace', 'function:buyback',
-      'function:overload', 'function:kicker', 'function:multikicker', 'function:entwine', 'function:splice'
+    // Scryfall oracle tags (otag:) for AI guidance - standardized to match main translation system
+    const SCRYFALL_OTAGS = [
+      'otag:ramp', 'otag:removal', 'otag:draw', 'otag:tutor', 'otag:wrath',
+      'otag:counter', 'otag:burn', 'otag:lifegain', 'otag:graveyard', 'otag:recursion',
+      'otag:sacrifice', 'otag:blink', 'otag:copy', 'otag:steal', 'otag:protection',
+      'otag:evasion', 'otag:haste', 'otag:flash', 'otag:cantrip', 'otag:pump',
+      'otag:equipment', 'otag:aura', 'otag:land-destruction', 'otag:stax', 'otag:combo',
+      'otag:token', 'otag:treasure', 'otag:clue', 'otag:food', 'otag:blood',
+      'otag:artifact-synergy', 'otag:enchantment-synergy', 'otag:creature-synergy',
+      'otag:tribal', 'otag:lord', 'otag:anthem', 'otag:cost-reducer', 'otag:untapper',
+      'otag:tapper', 'otag:combat-trick', 'otag:fog', 'otag:ritual', 'otag:discard',
+      'otag:mill', 'otag:voltron', 'otag:aggro', 'otag:control', 'otag:midrange',
+      'otag:reanimator', 'otag:aristocrats', 'otag:spellslinger', 'otag:landfall',
+      'otag:enchantress', 'otag:storm', 'otag:infect', 'otag:energy', 'otag:poison',
+      'otag:proliferate', 'otag:flicker', 'otag:bounce', 'otag:exile', 'otag:impulse',
+      'otag:wheels', 'otag:extra-turn', 'otag:extra-combat', 'otag:monarch',
+      'otag:initiative', 'otag:dungeon', 'otag:cascade', 'otag:mutate', 'otag:morph',
+      'otag:ninjutsu', 'otag:madness', 'otag:flashback', 'otag:retrace', 'otag:buyback',
+      'otag:overload', 'otag:kicker', 'otag:multikicker', 'otag:entwine', 'otag:splice',
+      'otag:mana-rock', 'otag:mana-dork', 'otag:gives-flash'
     ];
 
     const results: Array<{ feedbackId: string; status: string; rule?: string }> = [];
@@ -108,37 +109,38 @@ FEEDBACK:
 - AI translated it to: "${feedback.translated_query || 'unknown'}"
 - User's issue: "${feedback.issue_description}"
 
-CRITICAL - AVAILABLE SCRYFALL FUNCTION TAGS:
-Scryfall has built-in function: tags that are MORE RELIABLE than oracle text searches. ALWAYS prefer these when applicable:
-${SCRYFALL_FUNCTION_TAGS.join(', ')}
+CRITICAL - AVAILABLE SCRYFALL ORACLE TAGS (otag:):
+Scryfall has built-in otag: tags that are MORE RELIABLE than oracle text searches. ALWAYS prefer these when applicable:
+${SCRYFALL_OTAGS.join(', ')}
 
-Examples of GOOD translations using function tags:
-- "ramp spells" → "function:ramp (t:instant or t:sorcery)" 
-- "removal in black" → "function:removal c:b"
-- "card draw effects" → "function:draw"
-- "board wipes" → "function:wrath"
-- "cost reducers for artifacts" → "function:cost-reducer t:artifact"
+Examples of GOOD translations using otag: tags:
+- "ramp spells" → "otag:ramp (t:instant or t:sorcery)" 
+- "removal in black" → "otag:removal c:b"
+- "card draw effects" → "otag:draw"
+- "board wipes" → "otag:wrath"
+- "cost reducers for artifacts" → "otag:cost-reducer t:artifact"
+- "mana rocks" → "otag:mana-rock"
 
 Your task:
 1. Understand what the user ACTUALLY wanted
-2. Check if any function: tags match the concept
-3. Create a pattern-to-syntax rule using function: tags when possible
-4. Only fall back to oracle text (o:"...") if no function tag exists
+2. Check if any otag: tags match the concept
+3. Create a pattern-to-syntax rule using otag: tags when possible
+4. Only fall back to oracle text (o:"...") if no otag exists
 
 Respond in this EXACT JSON format only (no other text):
 {
   "pattern": "natural language pattern to match (e.g., 'ramp spells')",
-  "scryfall_syntax": "correct Scryfall syntax USING function: TAGS WHEN POSSIBLE (e.g., 'function:ramp (t:instant or t:sorcery)')",
+  "scryfall_syntax": "correct Scryfall syntax USING otag: TAGS WHEN POSSIBLE (e.g., 'otag:ramp (t:instant or t:sorcery)')",
   "description": "brief explanation of what this rule does",
   "confidence": 0.8,
-  "uses_function_tag": true
+  "uses_otag": true
 }
 
 Rules for your response:
 - pattern should be lowercase and match common phrasings
 - scryfall_syntax must be valid Scryfall search syntax
-- PREFER function: tags over o:"..." searches
-- uses_function_tag should be true if you used a function: tag
+- PREFER otag: tags over o:"..." searches
+- uses_otag should be true if you used an otag: tag
 - confidence should be 0.5-1.0 based on how certain you are
 - If you can't determine a useful rule, set confidence to 0
 
