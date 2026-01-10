@@ -1129,16 +1129,23 @@ COMMANDER QUERIES (CRITICAL):
 - "multicolor commander with blue" = is:commander id:u -id=u
 - "mono-color commander" = is:commander (c=w or c=u or c=b or c=r or c=g)
 
-MANA PRODUCTION (USE produces>= SYNTAX):
-- "produces mana" / "mana producer" = otag:mana-producer OR produces>=1
-- "produces 2 mana" / "adds 2 mana" = produces>=2
-- "produces 3 or more mana" = produces>=3
-- "produces exactly 1 mana" = produces=1
-- "artifact that produces 2 mana" = t:artifact produces>=2
-- "mana rock" = otag:mana-rock (artifacts that produce mana)
+MANA PRODUCTION (CRITICAL - produces: is for COLORS not AMOUNT!):
+The produces: operator filters by NUMBER OF MANA COLORS/TYPES produced, NOT mana amount!
+- produces>=2 means "produces 2+ different colors of mana" NOT "produces 2 mana"
+- produces:g means "produces green mana"
+- produces=wu means "produces exactly white and blue mana"
+
+For MANA AMOUNT (how much mana a card adds):
+- "adds 2 mana" / "produces 2 mana" = o:"add" o:"{" o:"{" (two mana symbols in add text) - IMPRECISE
+- "mana rock" = otag:mana-rock (artifacts that produce mana - any amount)
 - "mana dork" = otag:mana-dork (creatures that produce mana)
-- "land that produces 1 mana" = t:land produces=1
-- For mana COLOR production, use produces:g (produces green), produces:2g (produces 2 including green)
+- Scryfall CANNOT filter by exact mana amount produced - use otag: for general mana producers
+- For "artifacts that add 2+ mana": t:artifact o:/add \{.\}\{.\}/ (regex for 2 mana symbols)
+
+For MANA COLOR production:
+- produces:g = produces green mana
+- produces>=2 = produces 2+ different colors (multi-color lands, etc)
+- produces=wubrg = produces all 5 colors
 
 ACTIVATED ABILITIES (CRITICAL):
 - Activated abilities = "COST: EFFECT" format
@@ -1364,16 +1371,20 @@ For Commander deck building:
 - "fits in red/black deck" / "for Rakdos commander" = id<=br (playable in that commander's deck)
 - "Rakdos identity" / "is Rakdos" = id=br (exactly that identity)
 
-=== MANA PRODUCTION (USE produces>= SYNTAX) ===
-Scryfall CAN filter by mana production amount using the produces>= operator!
-- "produces mana" / "taps for mana" = otag:mana-producer OR produces>=1
-- "produces 2 mana" / "adds 2 mana" = produces>=2
-- "produces 3 or more mana" = produces>=3  
-- "produces exactly 1 mana" = produces=1
-- "artifact that produces 2 mana" = t:artifact produces>=2
-- "land that produces 1 mana" = t:land produces=1
+=== MANA PRODUCTION (CRITICAL - produces: is for COLORS not AMOUNT!) ===
+The produces: operator filters by NUMBER OF MANA COLORS/TYPES, NOT total mana amount!
+- produces>=2 = produces 2+ COLORS of mana (like Command Tower, Triomes)
+- produces:g = produces green mana (any amount)
+- produces=wu = produces exactly white and blue (like Azorius Signet)
+
+Scryfall CANNOT directly filter by mana AMOUNT (how much mana a card adds).
+For mana amount queries, use these workarounds:
+- "produces mana" / "mana producer" = otag:mana-producer
 - "mana rock" = otag:mana-rock, "mana dork" = otag:mana-dork
-- For mana COLOR: produces:g (green), produces:2g (2 mana including green)
+- "adds 2+ mana" = o:/add \{.\}\{.\}/ (regex for 2 mana symbols) - APPROXIMATE
+- "land that taps for multiple colors" = t:land produces>=2
+
+IMPORTANT: Be honest with users - tell them Scryfall can't filter by exact mana amount.
 
 === MONO-COLOR HANDLING (CRITICAL) ===
 - "mono [color]" means EXACTLY that color with NO other colors
