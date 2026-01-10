@@ -1141,6 +1141,13 @@ Specific color mana production:
 - colorless mana = produces:c
 - any mana / mana producer = produces:m
 
+Generic/multiple colorless mana (Sol Ring-like):
+If query implies "two colorless", "2 colorless", "add 2", "double mana", "Sol Ring-like":
+- add: produces:2 produces:c
+- "adds 2 colorless" = produces:2 produces:c
+- "Sol Ring effect" = t:artifact produces:2 produces:c
+- "like Sol Ring" = t:artifact produces:2
+
 Card type filters for mana producers:
 - lands that produce mana = t:land produces:m
 - mana dorks / creatures that produce mana = t:creature produces:m
@@ -1155,6 +1162,8 @@ EXAMPLES:
 - "lands that tap for any color" = t:land produces:m
 - "mana rocks" = t:artifact produces:m -t:instant -t:sorcery (or otag:mana-rock)
 - "ramp that isn't a creature" = produces:m -t:creature -t:instant -t:sorcery
+- "artifacts that add 2 mana" = t:artifact produces:2
+- "Sol Ring alternatives" = t:artifact produces:2 produces:c
 
 ACTIVATED ABILITIES (CRITICAL):
 - Activated abilities = "COST: EFFECT" format
@@ -1386,6 +1395,11 @@ If the query implies producing mana, ramp, or tapping for mana → add: produces
 Specific color mana production:
 - white → produces:w, blue → produces:u, black → produces:b, red → produces:r, green → produces:g, colorless → produces:c
 
+Generic/multiple colorless mana (Sol Ring-like):
+If query implies "two colorless", "2 colorless", "add 2", "double mana", "Sol Ring-like":
+- add: produces:2 produces:c
+- "Sol Ring effect" = t:artifact produces:2 produces:c
+
 Card type filters:
 - lands = t:land produces:m
 - mana dorks = t:creature produces:m  
@@ -1397,7 +1411,8 @@ EXAMPLES:
 - "green mana dorks" = t:creature produces:g
 - "artifacts that produce blue" = t:artifact produces:u
 - "mana rocks" = t:artifact produces:m -t:instant -t:sorcery
-- "lands that tap for any color" = t:land produces:m
+- "artifacts that add 2 mana" = t:artifact produces:2
+- "Sol Ring alternatives" = t:artifact produces:2 produces:c
 
 === MONO-COLOR HANDLING (CRITICAL) ===
 - "mono [color]" means EXACTLY that color with NO other colors
