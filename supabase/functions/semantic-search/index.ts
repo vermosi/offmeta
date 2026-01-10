@@ -1530,9 +1530,9 @@ SPECIAL EFFECTS:
 - otag:copy-spell (copies spells)
 - otag:clone (copies creatures)
 - otag:polymorph (transforms creatures randomly)
-- otag:protection-granter (gives protection)
-- otag:hexproof-granter (gives hexproof)
-- otag:indestructible-granter (gives indestructible)
+- otag:gives-protection (gives protection to permanents)
+- otag:gives-hexproof (gives hexproof to permanents)
+- otag:gives-indestructible (gives indestructible to permanents)
 - otag:gives-flash (gives flash to other cards - use for "cards that give flash")
 - otag:synergy-sacrifice (sacrifice synergy/payoffs - use alongside o: searches for completeness)
 
