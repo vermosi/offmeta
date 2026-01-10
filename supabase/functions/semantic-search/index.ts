@@ -775,6 +775,30 @@ const VALID_OPERATORS = [
 ];
 
 /**
+ * Valid Scryfall search keys (without operators) for validation.
+ * This allowlist is used to detect potentially invalid/unknown search keys.
+ */
+const VALID_SEARCH_KEYS = new Set([
+  // Core operators
+  'c', 'color', 'id', 'identity', 'o', 'oracle', 't', 'type',
+  'm', 'mana', 'cmc', 'mv', 'manavalue',
+  'power', 'pow', 'toughness', 'tou', 'loyalty', 'loy',
+  'e', 'set', 's', 'b', 'block', 'r', 'rarity',
+  'f', 'format', 'legal', 'banned', 'restricted',
+  'is', 'not', 'has',
+  'usd', 'eur', 'tix',
+  'a', 'artist', 'ft', 'flavor',
+  'wm', 'watermark', 'border', 'frame', 'game',
+  'year', 'date', 'new', 'prints', 'lang', 'in',
+  'st', 'cube', 'order', 'direction', 'unique', 'prefer', 'include',
+  'produces', 'devotion', 'name',
+  // Oracle tags (otag/oracletag/function are aliases)
+  'otag', 'oracletag', 'function',
+  // Art/frame tags
+  'atag', 'arttag'
+]);
+
+/**
  * Validates and sanitizes a Scryfall query string.
  * Ensures the query is safe to execute and fixes common issues.
  * 
@@ -802,6 +826,26 @@ function validateQuery(query: string): { valid: boolean; sanitized: string; issu
   // Allows: quotes, comparison ops, slashes, regex tokens ([]{}.^$|?\\), and punctuation commonly used in Oracle text.
   sanitized = sanitized.replace(/[^\w\s:="'()<>!=+\-/*\\\[\]{}.,^$|?]/g, '');
   
+  // Validate search keys against allowlist (detect unknown keys like foo: or bar<)
+  // Matches patterns like "word:" or "word=" or "word<" etc. at word boundaries
+  const keyPattern = /\b([a-zA-Z]+)[:=<>]/g;
+  let keyMatch;
+  const unknownKeys: string[] = [];
+  while ((keyMatch = keyPattern.exec(sanitized)) !== null) {
+    const key = keyMatch[1].toLowerCase();
+    if (!VALID_SEARCH_KEYS.has(key)) {
+      unknownKeys.push(key);
+    }
+  }
+  if (unknownKeys.length > 0) {
+    issues.push(`Unknown search key(s): ${unknownKeys.join(', ')}`);
+    // Remove unknown key:value pairs to prevent Scryfall errors
+    for (const key of unknownKeys) {
+      // Remove the key and its value (handles quoted values too)
+      sanitized = sanitized.replace(new RegExp(`\\b${key}[:=<>][^\\s]*`, 'gi'), '').trim();
+    }
+  }
+  
   // Check for balanced parentheses
   let parenCount = 0;
   for (const char of sanitized) {
@@ -828,6 +872,9 @@ function validateQuery(query: string): { valid: boolean; sanitized: string; issu
     sanitized = sanitized + "'";
     issues.push('Added missing closing quote');
   }
+  
+  // Clean up any double spaces from removals
+  sanitized = sanitized.replace(/\s+/g, ' ').trim();
   
   return { valid: issues.length === 0, sanitized, issues };
 }
@@ -2296,9 +2343,10 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         [/\bsacrifice payoffs?\b/gi, 'otag:synergy-sacrifice'],
         [/\b(?:cards? that )?give(?:s)? me things? when.+sacrifice\b/gi, '(otag:synergy-sacrifice or (o:"whenever" o:"you sacrifice"))'],
         
-        // Special effects - use otag
+        // Special effects - use otag for synergies, o: for keywords
         [/\bextra turns?\b/gi, 'otag:extra-turn'],
-        [/\bproliferate\b/gi, 'o:proliferate'],
+        [/\bproliferate cards?\b/gi, 'o:proliferate'], // keyword - no otag exists for the keyword itself
+        [/\bproliferate\b/gi, 'o:proliferate'], // keyword on oracle text
         [/\bproliferate synergy\b/gi, 'otag:synergy-proliferate'],
         [/\bproliferate payoffs?\b/gi, 'otag:synergy-proliferate'],
         [/\bclones?\b/gi, 'otag:clone'],
