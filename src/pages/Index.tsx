@@ -23,24 +23,36 @@ const CardModal = lazy(() => import("@/components/CardModal"));
 
 const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialQuery = searchParams.get("q") || "";
+  const urlQuery = searchParams.get("q") || "";
   
-  const [searchQuery, setSearchQuery] = useState(initialQuery);
-  const [originalQuery, setOriginalQuery] = useState(initialQuery); // Natural language query
+  const [searchQuery, setSearchQuery] = useState(urlQuery);
+  const [originalQuery, setOriginalQuery] = useState(urlQuery); // Natural language query
   const [selectedCard, setSelectedCard] = useState<ScryfallCard | null>(null);
-  const [hasSearched, setHasSearched] = useState(!!initialQuery);
+  const [hasSearched, setHasSearched] = useState(!!urlQuery);
   const [lastSearchResult, setLastSearchResult] = useState<SearchResult | null>(null);
   const [filteredCards, setFilteredCards] = useState<ScryfallCard[]>([]);
+  const [hasActiveFilters, setHasActiveFilters] = useState(false);
   const searchBarRef = useRef<UnifiedSearchBarHandle>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  const { trackSearch, trackCardClick } = useAnalytics();
+  const { trackSearch, trackCardClick, trackEvent } = useAnalytics();
 
-  // Trigger search from URL on initial load
+  // Sync state with URL changes (browser back/forward, manual URL edits)
   useEffect(() => {
-    if (initialQuery && searchBarRef.current) {
-      searchBarRef.current.triggerSearch(initialQuery);
+    if (urlQuery && searchBarRef.current) {
+      // Only trigger search if URL query differs from current search
+      if (urlQuery !== searchQuery) {
+        searchBarRef.current.triggerSearch(urlQuery);
+      }
+    } else if (!urlQuery && hasSearched) {
+      // URL cleared - reset to landing state
+      setSearchQuery("");
+      setOriginalQuery("");
+      setHasSearched(false);
+      setLastSearchResult(null);
+      setFilteredCards([]);
+      setHasActiveFilters(false);
     }
-  }, []); // Run once on mount
+  }, [urlQuery]); // Re-run when URL query changes
 
   const {
     data,
@@ -83,6 +95,7 @@ const Index = () => {
     setHasSearched(true);
     setLastSearchResult(result || null);
     setFilteredCards([]); // Reset filters on new search
+    setHasActiveFilters(false);
     
     // Update URL with search query
     if (query) {
@@ -91,12 +104,12 @@ const Index = () => {
       setSearchParams({}, { replace: true });
     }
     
-    // Track search analytics
+    // Track search analytics (results_count will be updated in effect below)
     if (result) {
       trackSearch({
         query: naturalQuery || query,
         translated_query: result.scryfallQuery,
-        results_count: 0, // Will be updated when results come in
+        results_count: 0,
       });
     }
   }, [trackSearch, setSearchParams]);
@@ -129,13 +142,26 @@ const Index = () => {
   }, [data]);
   
   const totalCards = data?.pages[0]?.total_cards || 0;
-  
-  // Use filtered cards for display, fall back to all cards if no filtering applied
-  const displayCards = filteredCards.length > 0 || cards.length === 0 ? filteredCards : cards;
 
-  const handleFilteredCards = useCallback((filtered: ScryfallCard[]) => {
+  // Track actual results count when data arrives
+  useEffect(() => {
+    if (totalCards > 0 && lastSearchResult) {
+      trackEvent('search_results', {
+        query: originalQuery,
+        translated_query: lastSearchResult.scryfallQuery,
+        results_count: totalCards,
+      });
+    }
+  }, [totalCards, lastSearchResult?.scryfallQuery, originalQuery, trackEvent]);
+
+  const handleFilteredCards = useCallback((filtered: ScryfallCard[], filtersActive: boolean) => {
     setFilteredCards(filtered);
+    setHasActiveFilters(filtersActive);
   }, []);
+  
+  // Use filtered cards for display when filters are active, otherwise show all cards
+  // This properly shows "no matches" when filters yield empty results
+  const displayCards = hasActiveFilters ? filteredCards : cards;
 
   return (
     <ErrorBoundary>

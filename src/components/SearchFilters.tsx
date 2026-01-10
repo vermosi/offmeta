@@ -68,7 +68,7 @@ export interface FilterState {
 
 interface SearchFiltersProps {
   cards: ScryfallCard[];
-  onFilteredCards: (cards: ScryfallCard[]) => void;
+  onFilteredCards: (cards: ScryfallCard[], hasActiveFilters: boolean) => void;
   totalCards: number;
 }
 
@@ -152,10 +152,16 @@ export function SearchFilters({ cards, onFilteredCards, totalCards }: SearchFilt
     return result;
   }, [cards, filters]);
 
+  // Calculate if filters are active (before the effect that uses it)
+  const hasActiveFilters = filters.colors.length > 0 || 
+    filters.types.length > 0 || 
+    filters.cmcRange[0] > 0 || 
+    filters.cmcRange[1] < 16;
+
   // Notify parent of filtered results - use useEffect instead of useMemo for side effects
   useEffect(() => {
-    onFilteredCards(filteredCards);
-  }, [filteredCards, onFilteredCards]);
+    onFilteredCards(filteredCards, hasActiveFilters);
+  }, [filteredCards, hasActiveFilters, onFilteredCards]);
 
   const toggleColor = useCallback((colorId: string) => {
     setFilters(prev => ({
@@ -183,11 +189,6 @@ export function SearchFilters({ cards, onFilteredCards, totalCards }: SearchFilt
       sortBy: 'name-asc',
     });
   }, []);
-
-  const hasActiveFilters = filters.colors.length > 0 || 
-    filters.types.length > 0 || 
-    filters.cmcRange[0] > 0 || 
-    filters.cmcRange[1] < 16;
 
   const activeFilterCount = filters.colors.length + 
     filters.types.length + 
