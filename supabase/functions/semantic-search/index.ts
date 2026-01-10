@@ -956,8 +956,24 @@ function validateQuery(query: string): { valid: boolean; sanitized: string; issu
   }
   
   // Remove potentially unsafe characters (keep common Scryfall syntax + regex for oracle/name searches)
-  // Allows: quotes, comparison ops, slashes, regex tokens ([]{}.^$|?\\), and punctuation commonly used in Oracle text.
+  // Allows: quotes, comparison ops, slashes, regex tokens ([]{}.^$|?\\), curly braces for mana symbols, and punctuation commonly used in Oracle text.
   sanitized = sanitized.replace(/[^\w\s:="'()<>!=+\-/*\\\[\]{}.,^$|?]/g, '');
+  
+  // Handle unbalanced curly braces (common with mana symbols like {C}{C})
+  const openCurly = (sanitized.match(/{/g) || []).length;
+  const closeCurly = (sanitized.match(/}/g) || []).length;
+  if (openCurly !== closeCurly) {
+    // Add missing closing braces
+    if (openCurly > closeCurly) {
+      const missing = openCurly - closeCurly;
+      sanitized = sanitized + '}'.repeat(missing);
+      issues.push('Added missing closing brace(s)');
+    } else {
+      // More close than open - unusual, try to fix by removing orphan closes
+      sanitized = sanitized.replace(/^[^{]*}/, '');
+      issues.push('Removed orphan closing brace(s)');
+    }
+  }
   
   // Validate search keys against allowlist (detect unknown keys like foo: or bar<)
   // Matches patterns like "word:" or "word=" or "word<" etc. at word boundaries
