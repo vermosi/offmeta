@@ -638,6 +638,134 @@ function applyAutoCorrections(query: string, qualityFlags: string[]): { correcte
   return { correctedQuery, corrections };
 }
 
+interface ValidationCase {
+  name: string;
+  query: string;
+  expectedValid: boolean;
+  expectedIssues: string[];
+  expectedSanitized?: string;
+  expectedSanitizedPrefix?: string;
+  expectedSanitizedLength?: number;
+  expectedSanitizedMaxLength?: number;
+  expectSanitizedValid?: boolean;
+}
+
+interface AutoCorrectionCase {
+  name: string;
+  query: string;
+  expectedCorrectedQuery: string;
+  expectedCorrections: string[];
+}
+
+const VALIDATION_CASES: ValidationCase[] = [
+  {
+    name: 'missing_closing_quote',
+    query: 't:creature o:"draw',
+    expectedValid: false,
+    expectedIssues: ['Added missing closing quote'],
+    expectedSanitized: 't:creature o:"draw"',
+    expectSanitizedValid: true
+  },
+  {
+    name: 'unknown_search_key',
+    query: 'foo:bar t:creature',
+    expectedValid: false,
+    expectedIssues: ['Unknown search key(s): foo'],
+    expectedSanitized: 't:creature',
+    expectSanitizedValid: true
+  },
+  {
+    name: 'oversized_query',
+    query: `t:creature ${'o:"draw" '.repeat(60)}`.trim(),
+    expectedValid: false,
+    expectedIssues: ['Query truncated to 400 characters'],
+    expectedSanitizedPrefix: 't:creature o:"draw"',
+    expectedSanitizedMaxLength: 400,
+    expectSanitizedValid: true
+  },
+  {
+    name: 'unbalanced_parentheses',
+    query: 't:creature (o:"draw" OR o:"cards"',
+    expectedValid: false,
+    expectedIssues: ['Removed unbalanced parentheses'],
+    expectedSanitized: 't:creature o:"draw" OR o:"cards"',
+    expectSanitizedValid: true
+  }
+];
+
+const AUTO_CORRECTION_CASES: AutoCorrectionCase[] = [
+  {
+    name: 'verbose_etb_syntax',
+    query: 't:creature o:"enters the battlefield"',
+    expectedCorrectedQuery: 't:creature o:"enters"',
+    expectedCorrections: ['Simplified ETB syntax for broader results']
+  }
+];
+
+function runValidationTables(): void {
+  const failures: string[] = [];
+
+  for (const testCase of VALIDATION_CASES) {
+    const result = validateQuery(testCase.query);
+
+    if (result.valid !== testCase.expectedValid) {
+      failures.push(`${testCase.name}: expected valid=${testCase.expectedValid} got ${result.valid}`);
+    }
+
+    for (const expectedIssue of testCase.expectedIssues) {
+      if (!result.issues.includes(expectedIssue)) {
+        failures.push(`${testCase.name}: missing issue "${expectedIssue}"`);
+      }
+    }
+
+    if (testCase.expectedSanitized !== undefined && result.sanitized !== testCase.expectedSanitized) {
+      failures.push(`${testCase.name}: sanitized mismatch "${result.sanitized}"`);
+    }
+
+    if (testCase.expectedSanitizedPrefix && !result.sanitized.startsWith(testCase.expectedSanitizedPrefix)) {
+      failures.push(`${testCase.name}: sanitized prefix mismatch "${result.sanitized}"`);
+    }
+
+    if (testCase.expectedSanitizedLength && result.sanitized.length !== testCase.expectedSanitizedLength) {
+      failures.push(`${testCase.name}: sanitized length ${result.sanitized.length}`);
+    }
+
+    if (testCase.expectedSanitizedMaxLength && result.sanitized.length > testCase.expectedSanitizedMaxLength) {
+      failures.push(`${testCase.name}: sanitized length exceeds ${testCase.expectedSanitizedMaxLength}`);
+    }
+
+    if (testCase.expectSanitizedValid) {
+      const revalidation = validateQuery(result.sanitized);
+      if (!revalidation.valid || revalidation.sanitized !== result.sanitized) {
+        failures.push(`${testCase.name}: sanitized output fails revalidation`);
+      }
+    }
+  }
+
+  for (const testCase of AUTO_CORRECTION_CASES) {
+    const flags = detectQualityFlags(testCase.query);
+    const { correctedQuery, corrections } = applyAutoCorrections(testCase.query, flags);
+    if (correctedQuery !== testCase.expectedCorrectedQuery) {
+      failures.push(`${testCase.name}: corrected query mismatch "${correctedQuery}"`);
+    }
+    for (const expectedCorrection of testCase.expectedCorrections) {
+      if (!corrections.includes(expectedCorrection)) {
+        failures.push(`${testCase.name}: missing correction "${expectedCorrection}"`);
+      }
+    }
+  }
+
+  if (failures.length > 0) {
+    console.warn(JSON.stringify({ event: 'validation_table_failed', failures }));
+  } else {
+    console.log(JSON.stringify({ event: 'validation_table_passed' }));
+  }
+}
+
+if (Deno.env.get('RUN_QUERY_VALIDATION_CHECKS') === 'true') {
+  runValidationTables();
+}
+
 /**
  * Queue translation log for batched async insert (non-blocking).
  * Uses batching to reduce DB pressure during high traffic.
