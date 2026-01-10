@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { Play, Copy, Check, ExternalLink, Edit2, AlertTriangle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { FilterState } from '@/types/filters';
 
 interface EditableQueryBarProps {
   scryfallQuery: string;
@@ -19,7 +20,7 @@ interface EditableQueryBarProps {
   onRerun: (editedQuery: string) => void;
   onReportIssue?: () => void;
   requestId?: string;
-  filters?: Record<string, unknown>;
+  filters?: FilterState | null;
 }
 
 export const EditableQueryBar = memo(function EditableQueryBar({
@@ -182,7 +183,7 @@ export const EditableQueryBar = memo(function EditableQueryBar({
             title="Re-run query (Enter)"
           >
             <Play className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Run</span>
+            <span className="hidden sm:inline">Re-run</span>
           </Button>
 
           <Button

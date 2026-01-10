@@ -22,13 +22,14 @@ import { toast } from 'sonner';
 import { Loader2, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { z } from 'zod';
+import { FilterState } from '@/types/filters';
 
 interface ReportIssueDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   originalQuery: string;
   compiledQuery: string;
-  filters?: Record<string, unknown>;
+  filters?: FilterState | null;
   requestId?: string;
 }
 

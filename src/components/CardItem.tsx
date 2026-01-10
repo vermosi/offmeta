@@ -3,10 +3,12 @@
  * Memoized to prevent unnecessary re-renders in large lists.
  */
 
-import { memo } from "react";
+import { memo, KeyboardEvent, MouseEvent } from "react";
 import { ScryfallCard } from "@/types/card";
 import { getCardImage } from "@/lib/scryfall";
 import { cn } from "@/lib/utils";
+import { Copy, Link2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface CardItemProps {
   card: ScryfallCard;
@@ -15,10 +17,39 @@ interface CardItemProps {
 
 export const CardItem = memo(function CardItem({ card, onClick }: CardItemProps) {
   const imageUrl = getCardImage(card, "normal");
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onClick();
+    }
+  };
+
+  const handleCopyName = async (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(card.name);
+      toast.success('Card name copied');
+    } catch {
+      toast.error('Failed to copy card name');
+    }
+  };
+
+  const handleCopyLink = async (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(card.scryfall_uri);
+      toast.success('Scryfall link copied');
+    } catch {
+      toast.error('Failed to copy Scryfall link');
+    }
+  };
 
   return (
-    <button
+    <div
       onClick={onClick}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
       className="group relative w-full aspect-[2.5/3.5] rounded-xl overflow-hidden bg-secondary card-hover focus-ring"
       aria-label={`View details for ${card.name} from ${card.set_name}, ${card.rarity} rarity`}
     >
@@ -41,7 +72,6 @@ export const CardItem = memo(function CardItem({ card, onClick }: CardItemProps)
       {/* Card info on hover */}
       <div 
         className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out will-change-transform"
-        aria-hidden="true"
       >
         <p className="text-sm font-medium text-white truncate">
           {card.name}
@@ -60,25 +90,31 @@ export const CardItem = memo(function CardItem({ card, onClick }: CardItemProps)
             {card.rarity}
           </span>
         </div>
+        <div className="mt-2 flex gap-2">
+          <button
+            onClick={handleCopyName}
+            className="flex items-center gap-1 rounded-full bg-black/60 px-2 py-1 text-[10px] text-white hover:bg-black/80"
+            aria-label={`Copy ${card.name}`}
+          >
+            <Copy className="h-3 w-3" />
+            Copy name
+          </button>
+          <button
+            onClick={handleCopyLink}
+            className="flex items-center gap-1 rounded-full bg-black/60 px-2 py-1 text-[10px] text-white hover:bg-black/80"
+            aria-label={`Copy Scryfall link for ${card.name}`}
+          >
+            <Link2 className="h-3 w-3" />
+            Copy link
+          </button>
+        </div>
       </div>
-      
-      {/* Rarity indicator - positioned bottom-left to avoid covering mana cost */}
-      <div 
-        className={cn(
-          "absolute bottom-2.5 left-2.5 h-2 w-2 rounded-full transition-all duration-300 opacity-90 group-hover:opacity-0",
-          card.rarity === "mythic" && "bg-orange-400 shadow-[0_0_6px_1px] shadow-orange-400/40",
-          card.rarity === "rare" && "bg-amber-400 shadow-[0_0_6px_1px] shadow-amber-400/30",
-          card.rarity === "uncommon" && "bg-slate-300",
-          card.rarity === "common" && "bg-slate-500"
-        )}
-        aria-hidden="true"
-      />
 
       {/* Hover border */}
       <div 
         className="absolute inset-0 rounded-xl border border-white/0 group-hover:border-white/15 transition-colors duration-300" 
         aria-hidden="true"
       />
-    </button>
+    </div>
   );
 });

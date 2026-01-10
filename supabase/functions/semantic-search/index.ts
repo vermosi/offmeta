@@ -931,6 +931,97 @@ const VALID_SEARCH_KEYS = new Set([
   'atag', 'arttag'
 ]);
 
+const KNOWN_OTAGS = new Set([
+  'ramp', 'mana-rock', 'mana-dork', 'mana-doubler', 'mana-sink', 'land-ramp', 'ritual',
+  'draw', 'card-draw', 'cantrip', 'loot', 'looting', 'wheel', 'impulse-draw', 'scry',
+  'tutor', 'land-tutor', 'creature-tutor', 'artifact-tutor', 'enchantment-tutor', 'instant-or-sorcery-tutor',
+  'removal', 'spot-removal', 'creature-removal', 'artifact-removal', 'enchantment-removal', 'planeswalker-removal',
+  'board-wipe', 'mass-removal', 'graveyard-hate', 'graveyard-recursion', 'reanimation',
+  'token-generator', 'treasure-generator', 'food-generator', 'clue-generator', 'blood-generator',
+  'lifegain', 'soul-warden-ability', 'burn', 'fog', 'combat-trick', 'pump',
+  'blink', 'flicker', 'bounce', 'mass-bounce', 'copy', 'copy-permanent', 'copy-spell', 'clone',
+  'stax', 'hatebear', 'pillowfort', 'theft', 'mind-control', 'threaten',
+  'sacrifice-outlet', 'free-sacrifice-outlet', 'aristocrats', 'death-trigger', 'grave-pact-effect', 'blood-artist-effect',
+  'synergy-sacrifice', 'synergy-lifegain', 'synergy-discard', 'synergy-equipment', 'synergy-proliferate',
+  'extra-turn', 'extra-combat', 'polymorph', 'egg', 'activate-from-graveyard', 'cast-from-graveyard',
+  'untapper', 'tapper', 'gives-flash', 'gives-hexproof', 'gives-haste', 'gives-flying', 'gives-trample',
+  'gives-vigilance', 'gives-deathtouch', 'gives-lifelink', 'gives-first-strike', 'gives-double-strike',
+  'gives-menace', 'gives-reach', 'gives-protection', 'gives-indestructible',
+  'landfall', 'extra-land', 'enchantress', 'discard-outlet', 'mulch', 'lord', 'anthem',
+  'self-mill', 'mill', 'graveyard-order-matters'
+]);
+
+function normalizeOrGroups(query: string): string {
+  const tokens: string[] = [];
+  let current = '';
+  let depth = 0;
+  let inQuote = false;
+
+  for (const char of query) {
+    if (char === '"') {
+      inQuote = !inQuote;
+    }
+    if (!inQuote && char === ' ') {
+      if (current) {
+        tokens.push(current);
+        current = '';
+      }
+      continue;
+    }
+    current += char;
+  }
+  if (current) tokens.push(current);
+
+  const output: string[] = [];
+  let orGroup: string[] = [];
+  let inOrGroup = false;
+
+  const flushGroup = () => {
+    if (inOrGroup && orGroup.length > 0) {
+      output.push(`(${orGroup.join(' ')})`);
+    }
+    orGroup = [];
+    inOrGroup = false;
+  };
+
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    const openCount = (token.match(/\(/g) || []).length;
+    const closeCount = (token.match(/\)/g) || []).length;
+    const depthBefore = depth;
+    depth += openCount - closeCount;
+
+    if (depthBefore === 0 && token === 'OR') {
+      if (!inOrGroup) {
+        const previous = output.pop();
+        if (previous) {
+          orGroup.push(previous);
+        }
+        inOrGroup = true;
+      }
+      orGroup.push(token);
+      continue;
+    }
+
+    if (inOrGroup && depthBefore === 0) {
+      orGroup.push(token);
+      const nextToken = tokens[i + 1];
+      if (!nextToken || nextToken !== 'OR') {
+        flushGroup();
+      }
+      continue;
+    }
+
+    output.push(token);
+  }
+
+  if (inOrGroup) {
+    flushGroup();
+  }
+
+  return output.join(' ');
+}
+
 /**
  * Validates and sanitizes a Scryfall query string.
  * Ensures the query is safe to execute and fixes common issues.
@@ -948,6 +1039,13 @@ function validateQuery(query: string): { valid: boolean; sanitized: string; issu
   
   // Remove newlines and extra whitespace
   sanitized = sanitized.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+
+  // Normalize boolean precedence (wrap OR groups)
+  const normalizedOr = normalizeOrGroups(sanitized);
+  if (normalizedOr !== sanitized) {
+    sanitized = normalizedOr;
+    issues.push('Normalized OR groups with parentheses');
+  }
   
   // Enforce max length
   if (sanitized.length > 400) {
@@ -958,6 +1056,19 @@ function validateQuery(query: string): { valid: boolean; sanitized: string; issu
   // Remove potentially unsafe characters (keep common Scryfall syntax + regex for oracle/name searches)
   // Allows: quotes, comparison ops, slashes, regex tokens ([]{}.^$|?\\), curly braces for mana symbols, and punctuation commonly used in Oracle text.
   sanitized = sanitized.replace(/[^\w\s:="'()<>!=+\-/*\\\[\]{}.,^$|?]/g, '');
+
+  // Fix invalid year set usage (e:2021 -> year=2021)
+  const yearSetPattern = /\be:(\d{4})\b/gi;
+  if (yearSetPattern.test(sanitized)) {
+    sanitized = sanitized.replace(yearSetPattern, 'year=$1');
+    issues.push('Replaced invalid year set syntax with year=YYYY');
+  }
+
+  // Remove unsupported power+toughness math
+  if (/\b(pow|power)\s*\+\s*(tou|toughness)\b/i.test(sanitized)) {
+    sanitized = sanitized.replace(/\b(pow|power)\s*\+\s*(tou|toughness)\s*[<>=]+?\s*\d+\b/gi, '').trim();
+    issues.push('Removed unsupported power+toughness math');
+  }
   
   // Handle unbalanced curly braces (common with mana symbols like {C}{C})
   const openCurly = (sanitized.match(/{/g) || []).length;
@@ -992,6 +1103,23 @@ function validateQuery(query: string): { valid: boolean; sanitized: string; issu
     for (const key of unknownKeys) {
       // Remove the key and its value (handles quoted values too)
       sanitized = sanitized.replace(new RegExp(`\\b${key}[:=<>][^\\s]*`, 'gi'), '').trim();
+    }
+  }
+
+  // Validate oracle tags against known list
+  const otagPattern = /\botag:([a-z0-9-]+)\b/gi;
+  const unknownTags: string[] = [];
+  let tagMatch;
+  while ((tagMatch = otagPattern.exec(sanitized)) !== null) {
+    const tag = tagMatch[1].toLowerCase();
+    if (!KNOWN_OTAGS.has(tag)) {
+      unknownTags.push(tag);
+    }
+  }
+  if (unknownTags.length > 0) {
+    issues.push(`Unknown oracle tag(s): ${unknownTags.join(', ')}`);
+    for (const tag of unknownTags) {
+      sanitized = sanitized.replace(new RegExp(`\\botag:${tag}\\b`, 'gi'), '').trim();
     }
   }
   
@@ -1064,6 +1192,11 @@ interface ParsedIntent {
   
   // Warnings for user
   warnings: string[];
+
+  // Deterministic additions
+  oraclePatterns: string[];
+  tagTokens: string[];
+  statTotalApprox: number | null;
 }
 
 /**
@@ -1097,7 +1230,7 @@ const MULTICOLOR_MAP: Record<string, string> = {
 /**
  * MTG card types
  */
-const CARD_TYPES = ['creature', 'artifact', 'enchantment', 'instant', 'sorcery', 'land', 'planeswalker', 'battle', 'kindred'];
+const CARD_TYPES = ['creature', 'artifact', 'enchantment', 'instant', 'sorcery', 'land', 'planeswalker', 'battle', 'kindred', 'equipment'];
 
 /**
  * Parse structured intent from natural language query.
@@ -1121,6 +1254,9 @@ function parseIntent(query: string): ParsedIntent {
     priceConstraint: null,
     remainingQuery: '',
     warnings: [],
+    oraclePatterns: [],
+    tagTokens: [],
+    statTotalApprox: null,
   };
   
   // ===== COLOR PARSING =====
@@ -1161,7 +1297,7 @@ function parseIntent(query: string): ParsedIntent {
       if (regex.test(lowerQuery)) {
         intent.colors = {
           values: codes.split(''),
-          isIdentity: hasIdentityKeyword,
+          isIdentity: hasIdentityKeyword || hasExactKeyword,
           isExact: hasExactKeyword,
           isOr: false,  // Guild names imply AND (multicolor)
         };
@@ -1235,17 +1371,17 @@ function parseIntent(query: string): ParsedIntent {
   // ===== CMC / MANA VALUE PARSING =====
   // "under X mana", "X or less mana", "costs X", "cmc X"
   const cmcPatterns = [
-    /\b(?:under|less than|below)\s+(\d+)\s*(?:mana|cmc|mv)?\b/i,
-    /\b(\d+)\s*(?:mana|cmc|mv)?\s+or\s+less\b/i,
-    /\b(?:at most|max|maximum)\s+(\d+)\s*(?:mana|cmc|mv)?\b/i,
-    /\b(?:cmc|mv|mana value)\s*[<≤]\s*=?\s*(\d+)\b/i,
-    /\bcosts?\s+(\d+)\s*(?:mana)?\b/i,
+    { pattern: /\b(?:under|less than|below)\s+(\d+)\s*(?:mana|cmc|mv)?\b/i, op: '<=' },
+    { pattern: /\b(\d+)\s*(?:mana|cmc|mv)?\s+or\s+less\b/i, op: '<=' },
+    { pattern: /\b(?:at most|max|maximum)\s+(\d+)\s*(?:mana|cmc|mv)?\b/i, op: '<=' },
+    { pattern: /\b(?:cmc|mv|mana value)\s*[<≤]\s*=?\s*(\d+)\b/i, op: '<=' },
+    { pattern: /\bcosts?\s+(\d+)\s*(?:mana)?\b/i, op: '=' },
   ];
   
-  for (const pattern of cmcPatterns) {
+  for (const { pattern, op } of cmcPatterns) {
     const match = lowerQuery.match(pattern);
     if (match && !intent.cmc) {
-      intent.cmc = { op: '<=', value: parseInt(match[1]) };
+      intent.cmc = { op, value: parseInt(match[1]) };
       remaining = remaining.replace(match[0], '').trim();
       break;
     }
@@ -1269,8 +1405,29 @@ function parseIntent(query: string): ParsedIntent {
   
   // "cheap" = mana value, NOT price
   if (/\bcheap\b/i.test(lowerQuery) && !intent.cmc && !intent.priceConstraint) {
-    intent.cmc = { op: '<=', value: 2 };
+    intent.cmc = { op: '<=', value: 3 };
     remaining = remaining.replace(/\bcheap\b/gi, '').trim();
+  }
+
+  // "produces 2 mana" / "adds two mana" patterns
+  const producesMultipleMatch = lowerQuery.match(/\b(produce|produces|add|adds)\s+(?:two|2|\d+)\s+mana\b/i);
+  if (producesMultipleMatch) {
+    intent.oraclePatterns.push('(o:/add \\{[WUBRGC]\\}\\{[WUBRGC]\\}/ OR o:/add \\{\\d+\\}/)');
+    remaining = remaining.replace(producesMultipleMatch[0], '').trim();
+  }
+
+  // Equip cost intent (e.g., "equip for 2")
+  const equipCostMatch = lowerQuery.match(/\bequip(?:s)?\s+(?:for\s+)?(\d+)\b/i);
+  if (equipCostMatch) {
+    intent.oraclePatterns.push(`o:"equip {${equipCostMatch[1]}}"`);
+    remaining = remaining.replace(equipCostMatch[0], '').trim();
+  }
+
+  // "more than one land from graveyard" patterns
+  if (/\b(land|lands)\b/i.test(lowerQuery) && /\bgraveyard\b/i.test(lowerQuery) &&
+      /\b(two|2|more than one|any number|up to two)\b/i.test(lowerQuery)) {
+    intent.oraclePatterns.push('o:graveyard o:land (o:"two" OR o:"up to two" OR o:"any number")');
+    remaining = remaining.replace(/\b(two|2|more than one|any number|up to two)\b/gi, '').trim();
   }
   
   // ===== POWER/TOUGHNESS PARSING =====
@@ -1310,8 +1467,10 @@ function parseIntent(query: string): ParsedIntent {
   }
   
   // Check for unsupported pow+tou math
-  if (/\b(?:power\s*\+\s*toughness|pow\s*\+\s*tou|total stats?)\s*([<>]=?|=)\s*(\d+)\b/i.test(lowerQuery)) {
-    warnings.push("Scryfall can't do power+toughness math. Showing cards with individual power and toughness constraints instead.");
+  const statTotalMatch = lowerQuery.match(/\b(?:power\s*\+\s*toughness|pow\s*\+\s*tou|total stats?)\s*([<>]=?|=)\s*(\d+)\b/i);
+  if (statTotalMatch) {
+    intent.statTotalApprox = parseInt(statTotalMatch[2]);
+    warnings.push("Scryfall can't do power+toughness math; showing the closest approximation instead.");
   }
   
   // ===== COMMANDER INTENT =====
@@ -1413,17 +1572,17 @@ function buildQueryFromIntent(intent: ParsedIntent): string {
   // Colors
   if (intent.colors) {
     const { values, isIdentity, isExact, isOr } = intent.colors;
-    if (isOr && values.length > 1) {
-      // "blue or black" -> (c:u OR c:b)
-      const colorParts = values.map(c => `c:${c}`);
-      parts.push(`(${colorParts.join(' OR ')})`);
-    } else if (isIdentity) {
+    if (isIdentity) {
       // Color identity for commander
       if (isExact) {
         parts.push(`id=${values.join('')}`);
       } else {
         parts.push(`id<=${values.join('')}`);
       }
+    } else if (isOr && values.length > 1) {
+      // "blue or black" -> (c:u OR c:b)
+      const colorParts = values.map(c => `c:${c}`);
+      parts.push(`(${colorParts.join(' OR ')})`);
     } else {
       // Regular color
       if (isExact || values.length === 1) {
@@ -1453,6 +1612,12 @@ function buildQueryFromIntent(intent: ParsedIntent): string {
   if (intent.toughness) {
     parts.push(`tou${intent.toughness.op}${intent.toughness.value}`);
   }
+
+  // Approximate power+toughness total with individual constraints
+  if (intent.statTotalApprox && !intent.power && !intent.toughness) {
+    parts.push(`pow<=${intent.statTotalApprox}`);
+    parts.push(`tou<=${intent.statTotalApprox}`);
+  }
   
   // Commander
   if (intent.isCommander) {
@@ -1473,8 +1638,70 @@ function buildQueryFromIntent(intent: ParsedIntent): string {
   if (intent.priceConstraint) {
     parts.push(`usd${intent.priceConstraint.op}${intent.priceConstraint.value}`);
   }
+
+  // Tag-first tokens
+  for (const tagToken of intent.tagTokens) {
+    parts.push(tagToken);
+  }
+
+  // Oracle fallback patterns
+  for (const pattern of intent.oraclePatterns) {
+    parts.push(pattern);
+  }
   
   return parts.join(' ');
+}
+
+const TAG_FIRST_MAP: Array<{ pattern: RegExp; tag: string; fallback?: string }> = [
+  { pattern: /\bmana sinks?\b/gi, tag: 'mana-sink', fallback: 'o:"{X}"' },
+  { pattern: /\bmana rocks?\b/gi, tag: 'mana-rock', fallback: 't:artifact o:"add"' },
+  { pattern: /\bgives? flash\b/gi, tag: 'gives-flash', fallback: 'o:"flash"' },
+  { pattern: /\bgives? hexproof\b/gi, tag: 'gives-hexproof', fallback: 'o:"hexproof"' },
+  { pattern: /\bself[ -]?mill\b/gi, tag: 'self-mill', fallback: 'o:"mill" o:"you"' },
+  { pattern: /\bgraveyard order matters\b/gi, tag: 'graveyard-order-matters', fallback: 'o:"graveyard" o:"order"' },
+  { pattern: /\bsoul sisters?\b/gi, tag: 'soul-warden-ability', fallback: 'o:"gain 1 life" o:"creature enters"' },
+  { pattern: /\bsacrifice synergy\b/gi, tag: 'synergy-sacrifice', fallback: '(o:"whenever" o:"you sacrifice")' },
+];
+
+function applyTagFirstMappings(query: string): { remaining: string; tagTokens: string[]; fallbackPatterns: string[]; missingTags: string[] } {
+  let remaining = query;
+  const tagTokens: string[] = [];
+  const fallbackPatterns: string[] = [];
+  const missingTags: string[] = [];
+
+  for (const { pattern, tag, fallback } of TAG_FIRST_MAP) {
+    if (pattern.test(remaining)) {
+      remaining = remaining.replace(pattern, '').trim();
+      if (KNOWN_OTAGS.has(tag)) {
+        tagTokens.push(`otag:${tag}`);
+      } else if (fallback) {
+        fallbackPatterns.push(fallback);
+        missingTags.push(tag);
+      }
+    }
+  }
+
+  return { remaining, tagTokens, fallbackPatterns, missingTags };
+}
+
+function buildDeterministicIntent(query: string): { intent: ParsedIntent; deterministicQuery: string } {
+  const intent = parseIntent(query);
+  const tagResult = applyTagFirstMappings(intent.remainingQuery);
+
+  intent.tagTokens.push(...tagResult.tagTokens);
+  intent.oraclePatterns.push(...tagResult.fallbackPatterns);
+  intent.remainingQuery = tagResult.remaining.trim();
+
+  if (tagResult.missingTags.length > 0) {
+    intent.warnings.push(`Some oracle tags were unavailable; falling back to oracle text for: ${tagResult.missingTags.join(', ')}`);
+    console.warn(JSON.stringify({
+      event: 'otag_missing_fallback',
+      missing: tagResult.missingTags
+    }));
+  }
+
+  const deterministicQuery = buildQueryFromIntent(intent).trim();
+  return { intent, deterministicQuery };
 }
 
 /**
@@ -1596,7 +1823,9 @@ function buildFallbackQuery(
   query: string,
   filters?: { format?: string; colorIdentity?: string[] }
 ): { sanitized: string; issues: string[] } {
-  let fallbackQuery = query.trim();
+  const { intent, deterministicQuery } = buildDeterministicIntent(query);
+  let fallbackQuery = deterministicQuery;
+  let remainingQuery = intent.remainingQuery || '';
 
   // Apply comprehensive keyword transformations (expanded for cost savings)
   // Now includes otag support for effect-based searches
@@ -1897,11 +2126,11 @@ function buildFallbackQuery(
     [/\bmardu\b/gi, 'id=wbr'],
     [/\btemur\b/gi, 'id=urg'],
     
-    // Price
-    [/\bcheap\b/gi, 'usd<5'],
-    [/\bbudget\b/gi, 'usd<5'],
-    [/\baffordable\b/gi, 'usd<5'],
-    [/\binexpensive\b/gi, 'usd<5'],
+    // Price (explicit $ only)
+    [/\bcheap\b/gi, 'mv<=3'],
+    [/\bbudget\b/gi, 'mv<=3'],
+    [/\baffordable\b/gi, 'mv<=3'],
+    [/\binexpensive\b/gi, 'mv<=3'],
     [/\bexpensive\b/gi, 'usd>20'],
     [/\bcostly\b/gi, 'usd>20'],
     [/\bunder \$?(\d+)\b/gi, 'usd<$1'],
@@ -1972,14 +2201,16 @@ function buildFallbackQuery(
     [/\bmodern frame\b/gi, 'frame:2015'],
   ];
   
-  // Check if query already looks like Scryfall syntax
-  const looksLikeScryfall = /[a-z]+[:=<>]/.test(fallbackQuery);
-  
-  if (!looksLikeScryfall) {
-    for (const [pattern, replacement] of basicTransforms) {
-      fallbackQuery = fallbackQuery.replace(pattern, replacement);
+  if (remainingQuery) {
+    const looksLikeScryfall = /[a-z]+[:=<>]/.test(remainingQuery);
+    if (!looksLikeScryfall) {
+      for (const [pattern, replacement] of basicTransforms) {
+        remainingQuery = remainingQuery.replace(pattern, replacement);
+      }
     }
   }
+
+  fallbackQuery = [fallbackQuery, remainingQuery].filter(Boolean).join(' ').trim();
   
   // Apply filters
   if (filters?.format) {
@@ -1995,6 +2226,22 @@ function buildFallbackQuery(
     sanitized: validation.sanitized,
     issues: validation.issues
   };
+}
+
+function applyFiltersToQuery(
+  query: string,
+  filters?: { format?: string; colorIdentity?: string[] }
+): string {
+  let filteredQuery = query.trim();
+
+  if (filters?.format) {
+    filteredQuery += ` f:${filters.format}`;
+  }
+  if (filters?.colorIdentity?.length) {
+    filteredQuery += ` id=${filters.colorIdentity.join('').toLowerCase()}`;
+  }
+
+  return filteredQuery.trim();
 }
 
 serve(async (req) => {
@@ -2033,7 +2280,7 @@ serve(async (req) => {
   }
 
   try {
-    const { query, filters, context, debug } = await req.json();
+    const { query, filters, context, debug, useCache } = await req.json();
     const debugOptions: DebugOptions | undefined = debug && typeof debug === 'object' ? debug : undefined;
     const shouldForceFallback = Boolean(debugOptions?.forceFallback || debugOptions?.simulateAiFailure);
     const shouldRunCoreTests = Boolean(debugOptions?.runCoreTests);
@@ -2164,6 +2411,8 @@ serve(async (req) => {
             };
           }))
         : undefined;
+      const fallbackIntent = buildDeterministicIntent(query);
+      const fallbackValidation = validateQuery(fallbackResult.sanitized || query);
 
       return new Response(JSON.stringify({
         originalQuery: query,
@@ -2173,6 +2422,18 @@ serve(async (req) => {
           assumptions: ['Using forced fallback translation'],
           confidence: 0.6
         },
+        intent: {
+          colors: fallbackIntent.intent.colors,
+          types: fallbackIntent.intent.types,
+          cmc: fallbackIntent.intent.cmc,
+          power: fallbackIntent.intent.power,
+          toughness: fallbackIntent.intent.toughness,
+          tags: fallbackIntent.intent.tagTokens,
+          oraclePatterns: fallbackIntent.intent.oraclePatterns,
+          warnings: fallbackIntent.intent.warnings,
+          deterministicQuery: applyFiltersToQuery(fallbackIntent.deterministicQuery, filters)
+        },
+        validationIssues: fallbackValidation.issues,
         showAffiliate: hasPurchaseIntent(query),
         responseTimeMs,
         success: true,
@@ -2188,54 +2449,88 @@ serve(async (req) => {
       });
     }
 
-    // Check in-memory cache first for identical queries
-    const cachedResult = getCachedResult(query, filters);
-    if (cachedResult) {
-      const cacheHitTime = Date.now() - requestStartTime;
-      console.log(JSON.stringify({
-        event: 'memory_cache_hit',
-        query: query.substring(0, 50),
-        responseTimeMs: cacheHitTime
-      }));
-      
-      return new Response(JSON.stringify({
-        originalQuery: query,
-        ...cachedResult,
-        responseTimeMs: cacheHitTime,
-        success: true,
-        cached: true,
-        source: 'memory_cache'
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    const deterministicResult = buildDeterministicIntent(query);
+    const deterministicQuery = applyFiltersToQuery(deterministicResult.deterministicQuery, filters);
+
+    // Check in-memory cache first for identical queries (only when user requests reuse)
+    if (useCache) {
+      const cachedResult = getCachedResult(query, filters);
+      if (cachedResult) {
+        const cacheHitTime = Date.now() - requestStartTime;
+        const cachedValidation = validateQuery(cachedResult.scryfallQuery);
+        console.log(JSON.stringify({
+          event: 'memory_cache_hit',
+          query: query.substring(0, 50),
+          responseTimeMs: cacheHitTime
+        }));
+        
+        return new Response(JSON.stringify({
+          originalQuery: query,
+          ...cachedResult,
+          intent: {
+            colors: deterministicResult.intent.colors,
+            types: deterministicResult.intent.types,
+            cmc: deterministicResult.intent.cmc,
+            power: deterministicResult.intent.power,
+            toughness: deterministicResult.intent.toughness,
+            tags: deterministicResult.intent.tagTokens,
+            oraclePatterns: deterministicResult.intent.oraclePatterns,
+            warnings: deterministicResult.intent.warnings,
+            deterministicQuery
+          },
+          validationIssues: cachedValidation.issues,
+          responseTimeMs: cacheHitTime,
+          success: true,
+          cached: true,
+          source: 'memory_cache'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
-    // Check persistent database cache (survives function restarts)
-    const persistentCacheResult = await getPersistentCache(query, filters);
-    if (persistentCacheResult) {
-      const cacheHitTime = Date.now() - requestStartTime;
-      console.log(JSON.stringify({
-        event: 'persistent_cache_hit',
-        query: query.substring(0, 50),
-        responseTimeMs: cacheHitTime
-      }));
-      
-      return new Response(JSON.stringify({
-        originalQuery: query,
-        ...persistentCacheResult,
-        responseTimeMs: cacheHitTime,
-        success: true,
-        cached: true,
-        source: 'persistent_cache'
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    // Check persistent database cache (survives function restarts) only when reuse is requested
+    if (useCache) {
+      const persistentCacheResult = await getPersistentCache(query, filters);
+      if (persistentCacheResult) {
+        const cacheHitTime = Date.now() - requestStartTime;
+        const cachedValidation = validateQuery(persistentCacheResult.scryfallQuery);
+        console.log(JSON.stringify({
+          event: 'persistent_cache_hit',
+          query: query.substring(0, 50),
+          responseTimeMs: cacheHitTime
+        }));
+        
+        return new Response(JSON.stringify({
+          originalQuery: query,
+          ...persistentCacheResult,
+          intent: {
+            colors: deterministicResult.intent.colors,
+            types: deterministicResult.intent.types,
+            cmc: deterministicResult.intent.cmc,
+            power: deterministicResult.intent.power,
+            toughness: deterministicResult.intent.toughness,
+            tags: deterministicResult.intent.tagTokens,
+            oraclePatterns: deterministicResult.intent.oraclePatterns,
+            warnings: deterministicResult.intent.warnings,
+            deterministicQuery
+          },
+          validationIssues: cachedValidation.issues,
+          responseTimeMs: cacheHitTime,
+          success: true,
+          cached: true,
+          source: 'persistent_cache'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     // Check pattern matching - bypasses AI entirely for known queries
     const patternMatch = await checkPatternMatch(query, filters);
     if (patternMatch) {
       const patternMatchTime = Date.now() - requestStartTime;
+      const patternValidation = validateQuery(patternMatch.scryfallQuery);
       console.log(JSON.stringify({
         event: 'pattern_match_hit',
         query: query.substring(0, 50),
@@ -2249,6 +2544,18 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         originalQuery: query,
         ...patternMatch,
+        intent: {
+          colors: deterministicResult.intent.colors,
+          types: deterministicResult.intent.types,
+          cmc: deterministicResult.intent.cmc,
+          power: deterministicResult.intent.power,
+          toughness: deterministicResult.intent.toughness,
+          tags: deterministicResult.intent.tagTokens,
+          oraclePatterns: deterministicResult.intent.oraclePatterns,
+          warnings: deterministicResult.intent.warnings,
+          deterministicQuery
+        },
+        validationIssues: patternValidation.issues,
         responseTimeMs: patternMatchTime,
         success: true,
         source: 'pattern_match'
@@ -2276,12 +2583,60 @@ serve(async (req) => {
         showAffiliate: hasPurchaseIntent(query)
       };
       
+      const fallbackIntent = buildDeterministicIntent(query);
       return new Response(JSON.stringify({
         originalQuery: query,
         ...result,
+        intent: {
+          colors: fallbackIntent.intent.colors,
+          types: fallbackIntent.intent.types,
+          cmc: fallbackIntent.intent.cmc,
+          power: fallbackIntent.intent.power,
+          toughness: fallbackIntent.intent.toughness,
+          tags: fallbackIntent.intent.tagTokens,
+          oraclePatterns: fallbackIntent.intent.oraclePatterns,
+          warnings: fallbackIntent.intent.warnings,
+          deterministicQuery: applyFiltersToQuery(fallbackIntent.deterministicQuery, filters)
+        },
+        validationIssues: validation.issues,
         responseTimeMs: Date.now() - requestStartTime,
         success: true,
         fallback: true
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const remainingQuery = deterministicResult.intent.remainingQuery;
+    if (!remainingQuery) {
+      const validation = validateQuery(deterministicQuery || query);
+      const scryfallQuery = validation.sanitized || query;
+      const responseTimeMs = Date.now() - requestStartTime;
+
+      return new Response(JSON.stringify({
+        originalQuery: query,
+        scryfallQuery,
+        explanation: {
+          readable: `Searching for: ${query}`,
+          assumptions: deterministicResult.intent.warnings,
+          confidence: 0.9
+        },
+        intent: {
+          colors: deterministicResult.intent.colors,
+          types: deterministicResult.intent.types,
+          cmc: deterministicResult.intent.cmc,
+          power: deterministicResult.intent.power,
+          toughness: deterministicResult.intent.toughness,
+          tags: deterministicResult.intent.tagTokens,
+          oraclePatterns: deterministicResult.intent.oraclePatterns,
+          warnings: deterministicResult.intent.warnings,
+          deterministicQuery
+        },
+        validationIssues: validation.issues,
+        showAffiliate: hasPurchaseIntent(query),
+        responseTimeMs,
+        success: true,
+        source: 'deterministic'
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -2294,7 +2649,9 @@ serve(async (req) => {
     }
 
     // Build context from previous search if provided
-    const contextHint = context ? `\nPrevious search context: The user previously searched for "${context.previousQuery}" which translated to "${context.previousScryfall}". If this new query seems like a follow-up, inherit relevant constraints like colors or format.` : '';
+    const contextHint = useCache && context
+      ? `\nPrevious search context: The user previously searched for "${context.previousQuery}" which translated to "${context.previousScryfall}". If this new query seems like a follow-up, inherit relevant constraints like colors or format.`
+      : '';
 
     // Fetch dynamic rules learned from user feedback
     const dynamicRules = await fetchDynamicRules();
@@ -2345,11 +2702,11 @@ DATE/YEAR SYNTAX (CRITICAL - COMMON MISTAKE):
 COLOR FILTERING (CRITICAL - most common mistake!):
 - "red creature" (single color) = c:r t:creature (includes multicolor)
 - "mono red creature" = c=r t:creature (exactly red only)
-- "red or black creature" = c<=rb t:creature (ONLY red, black, or Rakdos - excludes Gruul, Dimir, etc.)
-- "red and black creature" = c>=rb t:creature (must have BOTH red and black)
-- The key: "X or Y" means RESTRICT to those colors = c<=XY
-- The key: "X and Y" means REQUIRE both colors = c>=XY
-- NEVER use (c:r or c:b) for "red or black" - that includes Gruul, Temur, etc!
+- "red or black creature" = (c:r OR c:b) t:creature (either color, not gold-only)
+- "red and black creature" = c:rb t:creature (gold by default)
+- The key: "X or Y" means EITHER color = (c:x OR c:y)
+- The key: "X and Y" means BOTH colors = c:xy (gold)
+- Do NOT interpret "blue or black" as only gold cards
 - For commander decks: "fits in red/black deck" = id<=rb (playable in Rakdos commander)
 
 MONO-COLOR HANDLING (CRITICAL):
@@ -2575,7 +2932,7 @@ GUILDS: azorius=id=wu, dimir=id=ub, rakdos=id=br, gruul=id=rg, selesnya=id=gw, o
 SHARDS: esper=id=wub, grixis=id=ubr, jund=id=brg, naya=id=wrg, bant=id=wug
 WEDGES: abzan=id=wbg, jeskai=id=wur, sultai=id=ubg, mardu=id=wbr, temur=id=urg
 
-PRICE: cheap/budget = usd<5, expensive = usd>20
+PRICE: cheap/budget = mv<=3, expensive = usd>20
 DATE: "after 2020" = year>2020, "released in 2023" = year=2023
 ${contextHint}
 ${dynamicRules}
@@ -2612,15 +2969,15 @@ This is the #1 source of user complaints. Get this right!
 
 - "red creature" (single color mentioned) = c:r t:creature (includes multicolor like Gruul)
 - "mono red creature" = c=r t:creature (EXACTLY red, no other colors)
-- "red or black creature" = c<=rb t:creature (ONLY red, black, or Rakdos - EXCLUDES Gruul, Grixis, Jund, etc!)
-- "red and black creature" = c>=rb t:creature (MUST have BOTH red AND black)
+- "red or black creature" = (c:r OR c:b) t:creature (either color, not gold-only)
+- "red and black creature" = c:rb t:creature (gold by default)
 
 KEY INSIGHT: When user says "[color] or [color]", they want cards RESTRICTED to those colors only.
-- "red or black" = c<=rb (can be mono-red, mono-black, or red-black, but NOT red-green or black-blue)
-- "white or blue" = c<=wu (can be mono-white, mono-blue, or Azorius, but NOT Bant or Esper)
-- "green, red, or white" = c<=wrg (Naya colors only)
+- "red or black" = (c:r OR c:b)
+- "white or blue" = (c:w OR c:u)
+- "green, red, or white" = (c:g OR c:r OR c:w)
 
-NEVER use (c:r or c:b) for "red or black" - that matches ANY card containing red OR black, including 5-color cards!
+Do NOT interpret "blue or black" as only gold cards
 
 For Commander deck building:
 - "fits in red/black deck" / "for Rakdos commander" = id<=br (playable in that commander's deck)
@@ -3340,15 +3697,18 @@ FORMAT LEGALITY:
 - Standard: f:standard
 
 BUDGET TRANSLATIONS:
-- "cheap" or "budget": usd<5
-- "very cheap": usd<1
+- "cheap" or "budget": mv<=3
+- "very cheap": mv<=2
 - "expensive": usd>20
 ${contextHint}
 ${dynamicRules}
 
 Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`;
 
-    const userMessage = `Translate to Scryfall syntax: "${query}"${filters?.format ? ` (format: ${filters.format})` : ''}${filters?.colorIdentity?.length ? ` (colors: ${filters.colorIdentity.join('')})` : ''}`;
+    const deterministicContext = deterministicQuery
+      ? `Deterministic constraints: ${deterministicQuery}. Always include these terms unchanged.`
+      : '';
+    const userMessage = `Translate to Scryfall syntax: "${remainingQuery}" ${deterministicContext}${filters?.format ? ` (format: ${filters.format})` : ''}${filters?.colorIdentity?.length ? ` (colors: ${filters.colorIdentity.join('')})` : ''}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -3415,6 +3775,18 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
           assumptions: ['Using simplified translation (AI temporarily unavailable)'],
           confidence: 0.6
         },
+        intent: {
+          colors: deterministicResult.intent.colors,
+          types: deterministicResult.intent.types,
+          cmc: deterministicResult.intent.cmc,
+          power: deterministicResult.intent.power,
+          toughness: deterministicResult.intent.toughness,
+          tags: deterministicResult.intent.tagTokens,
+          oraclePatterns: deterministicResult.intent.oraclePatterns,
+          warnings: deterministicResult.intent.warnings,
+          deterministicQuery
+        },
+        validationIssues: fallbackValidation.issues,
         showAffiliate: hasPurchaseIntent(query),
         responseTimeMs: fallbackResponseTime,
         success: true,
@@ -3437,6 +3809,15 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
       .replace(/^["']|["']$/g, '')
       .trim();
 
+    if (!deterministicResult.intent.priceConstraint && !/\$\s*\d+/.test(query)) {
+      scryfallQuery = scryfallQuery.replace(/\busd[<>=]+\S+/gi, '').trim();
+    }
+
+    // Merge deterministic constraints
+    if (deterministicQuery) {
+      scryfallQuery = `${deterministicQuery} ${scryfallQuery}`.trim();
+    }
+
     // Validate and sanitize
     const validation = validateQuery(scryfallQuery);
     scryfallQuery = validation.sanitized;
@@ -3449,7 +3830,7 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
     scryfallQuery = correctedQuery;
 
     // Build explanation based on what the query ACTUALLY contains
-    const assumptions: string[] = [];
+    const assumptions: string[] = [...deterministicResult.intent.warnings];
     
     // Add auto-corrections to assumptions so users know what was fixed
     if (corrections.length > 0) {
@@ -3463,9 +3844,10 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
     
     // Check how "cheap/budget" was interpreted by looking at the actual query
     if (query.toLowerCase().includes('cheap') || query.toLowerCase().includes('budget')) {
-      if (scryfallQuery.includes('usd<') || scryfallQuery.includes('usd<=')) {
+      const hasExplicitPrice = /\$\s*\d+/.test(query);
+      if ((scryfallQuery.includes('usd<') || scryfallQuery.includes('usd<=')) && hasExplicitPrice) {
         const priceMatch = scryfallQuery.match(/usd[<>=]+(\d+)/);
-        assumptions.push(`Interpreted "cheap/budget" as under $${priceMatch?.[1] || '5'}`);
+        assumptions.push(`Interpreted price constraint as under $${priceMatch?.[1] || '5'}`);
       } else if (scryfallQuery.match(/mv[<>=]+\d/)) {
         const mvMatch = scryfallQuery.match(/mv[<>=]+(\d+)/);
         assumptions.push(`Interpreted "cheap" as low mana value (≤${mvMatch?.[1] || '3'})`);
@@ -3545,6 +3927,18 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         assumptions,
         confidence: Math.round(confidence * 100) / 100
       },
+      intent: {
+        colors: deterministicResult.intent.colors,
+        types: deterministicResult.intent.types,
+        cmc: deterministicResult.intent.cmc,
+        power: deterministicResult.intent.power,
+        toughness: deterministicResult.intent.toughness,
+        tags: deterministicResult.intent.tagTokens,
+        oraclePatterns: deterministicResult.intent.oraclePatterns,
+        warnings: deterministicResult.intent.warnings,
+        deterministicQuery
+      },
+      validationIssues: validation.issues,
       showAffiliate,
       responseTimeMs,
       success: true 
