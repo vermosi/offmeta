@@ -1500,6 +1500,12 @@ COMBAT & CREATURES:
 - otag:gives-reach (gives creatures reach)
 - otag:gives-evasion (gives evasion abilities like flying, menace, etc.)
 
+COUNTERS:
+- otag:counters-matter (cards that care about counters)
+- otag:counter-doubler (doubles counters placed)
+- otag:counter-movement (moves counters between permanents)
+- otag:synergy-proliferate (works well with proliferate)
+
 BLINK & BOUNCE:
 - otag:blink (exile and return immediately)
 - otag:flicker (exile and return end of turn)
@@ -2211,7 +2217,20 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         // Special effects - use otag
         [/\bextra turns?\b/gi, 'otag:extra-turn'],
         [/\bproliferate\b/gi, 'o:proliferate'],
+        [/\bproliferate synergy\b/gi, 'otag:synergy-proliferate'],
+        [/\bproliferate payoffs?\b/gi, 'otag:synergy-proliferate'],
         [/\bclones?\b/gi, 'otag:clone'],
+        
+        // Counter-related otags
+        [/\bcounters? matter\b/gi, 'otag:counters-matter'],
+        [/\b\+1\/\+1 counters? matter\b/gi, 'otag:counters-matter'],
+        [/\bcounter synergy\b/gi, 'otag:counters-matter'],
+        [/\bcounter payoffs?\b/gi, 'otag:counters-matter'],
+        [/\bdoubles? counters?\b/gi, 'otag:counter-doubler'],
+        [/\bcounter doubl(?:er|ing)\b/gi, 'otag:counter-doubler'],
+        [/\bmoves? counters?\b/gi, 'otag:counter-movement'],
+        [/\bcounter movement\b/gi, 'otag:counter-movement'],
+        [/\btransfers? counters?\b/gi, 'otag:counter-movement'],
         // Note: untap is handled earlier in the specific patterns section
         [/\bpolymorph\b/gi, 'otag:polymorph'],
         [/\beggs?\b/gi, 'otag:egg'],
