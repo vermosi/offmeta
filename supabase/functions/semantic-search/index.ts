@@ -2251,11 +2251,11 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         [/\brituals?\b/gi, 'otag:ritual'],
         
         // Card advantage - use otag
-        [/\bcard draw\b/gi, 'otag:draw'],
-        [/\bdraw cards?\b/gi, 'otag:draw'],
+        [/\bcard draw\b/gi, 'otag:card-draw'],
+        [/\bdraw cards?\b/gi, 'otag:card-draw'],
         [/\bcantrips?\b/gi, 'otag:cantrip'],
-        [/\blooting\b/gi, 'otag:loot'],
-        [/\bloot effects?\b/gi, 'otag:loot'],
+        [/\blooting\b/gi, 'otag:looting'],
+        [/\bloot effects?\b/gi, 'otag:looting'],
         [/\bwheels?\b/gi, 'otag:wheel'],
         [/\bwheel effects?\b/gi, 'otag:wheel'],
         [/\bimpulse draw\b/gi, 'otag:impulse-draw'],
@@ -2544,7 +2544,7 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         [/\breprints? only\b/gi, 'is:reprint'],
         
         // Commander mechanics
-        [/\bpartner commanders?\b/gi, 't:legendary t:creature o:"partner"'],
+        [/\bpartner commanders?\b/gi, 'is:commander is:partner'],
         [/\bbackgrounds?\b/gi, 't:background'],
         [/\bchoose a background\b/gi, 'o:"choose a background"'],
         [/\bcompanions?\b/gi, 'is:companion'],
