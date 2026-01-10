@@ -1085,7 +1085,7 @@ CRITICAL RULES (MUST FOLLOW):
 3. For ETB use o:"enters" NOT o:"enters the battlefield"
 4. For LTB use o:"leaves" NOT o:"leaves the battlefield"
 5. "Spells" = (t:instant or t:sorcery)
-6. NEVER use function: tags - use otag: instead
+6. Prefer otag: for tags; function:/oracletag: are valid aliases but will be normalized
 7. banned:FORMAT not is:banned, restricted:FORMAT not is:restricted
 8. MONO COLOR = EXACT match: "mono red" = c=r (NOT c:r)
 
@@ -1358,7 +1358,7 @@ CRITICAL RULES:
 7. Never fabricate or guess card names, abilities, or mechanics
 8. If a term is ambiguous, translate it conservatively
 9. HASTE ORACLE TEXT: When user asks for cards that "give haste" / "grant haste" / "haste enablers", use: (o:"gains haste" or o:"have haste" or o:"gain haste")
-10. NEVER use "function:" tags - they don't work via the API. Use otag: (Oracle Tags) instead.
+10. Prefer otag: for tags; function:/oracletag: are valid aliases but will be normalized to otag:
 11. For dates/years: use year>2020 NOT e:2021 (e: is for set codes only like e:mom, e:lci)
 12. MONO-COLOR = EXACT color match: "mono red" = c=r (NOT c:r), "mono green creature" = c=g t:creature
 
@@ -2170,6 +2170,14 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         [/\bflash enablers?\b/gi, 'otag:gives-flash'],
         [/\blet(?:s)? me cast.+instant speed\b/gi, 'otag:gives-flash'],
         
+        // Sol Ring alternatives / adds multiple mana (CRITICAL - use oracle text)
+        [/\bsol ring alternatives?\b/gi, 't:artifact o:"{C}{C}" o:"add"'],
+        [/\bartifacts? that add(?:s)? \{?c\}?\{?c\}?\b/gi, 't:artifact o:"{C}{C}" o:"add"'],
+        [/\badds? (?:2|two) colorless\b/gi, 'o:"{C}{C}" o:"add"'],
+        [/\badds? \{c\}\{c\}\b/gi, 'o:"{C}{C}" o:"add"'],
+        [/\bartifacts? that add(?:s)? (?:2|two) mana\b/gi, 't:artifact o:/add \\{.\\}\\{.\\}/'],
+        [/\bcards? that add(?:s)? (?:2|two|multiple) mana\b/gi, 'o:/add \\{.\\}\\{.\\}/'],
+        
         // Untap vs untapped (CRITICAL distinction)
         [/\bcards? that untap (\w+)\b/gi, 'otag:untapper o:"untap" o:"$1"'],
         [/\bcards? that untap\b/gi, 'otag:untapper'],
@@ -2449,11 +2457,7 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         [/\buncommons?\b/gi, 'r:uncommon'],
         [/\bcommons?\b/gi, 'r:common'],
         
-        // Trigger patterns
-        [/\betb\b/gi, 'o:"enters"'],
-        [/\benters the battlefield\b/gi, 'o:"enters"'],
-        [/\bltb\b/gi, 'o:"leaves"'],
-        [/\bleaves the battlefield\b/gi, 'o:"leaves"'],
+        // Trigger patterns (NOTE: ETB/LTB already handled above at line 2148)
         [/\bdeath triggers?\b/gi, 'o:"dies"'],
         [/\bdies triggers?\b/gi, 'o:"dies"'],
         [/\battack triggers?\b/gi, 'o:"whenever" o:"attacks"'],
