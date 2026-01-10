@@ -20,6 +20,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { ScryfallCard } from '@/types/card';
+import { FilterState } from '@/types/filters';
 import { cn } from '@/lib/utils';
 import { Filter, ArrowUpDown, X, ChevronDown } from 'lucide-react';
 
@@ -59,16 +60,9 @@ const SORT_OPTIONS = [
 
 const RARITY_ORDER = { common: 0, uncommon: 1, rare: 2, mythic: 3, special: 4, bonus: 5 };
 
-export interface FilterState {
-  colors: string[];
-  types: string[];
-  cmcRange: [number, number];
-  sortBy: string;
-}
-
 interface SearchFiltersProps {
   cards: ScryfallCard[];
-  onFilteredCards: (cards: ScryfallCard[], hasActiveFilters: boolean) => void;
+  onFilteredCards: (cards: ScryfallCard[], hasActiveFilters: boolean, filters: FilterState) => void;
   totalCards: number;
 }
 
@@ -160,7 +154,7 @@ export function SearchFilters({ cards, onFilteredCards, totalCards }: SearchFilt
 
   // Notify parent of filtered results - use useEffect instead of useMemo for side effects
   useEffect(() => {
-    onFilteredCards(filteredCards, hasActiveFilters);
+    onFilteredCards(filteredCards, hasActiveFilters, filters);
   }, [filteredCards, hasActiveFilters, onFilteredCards]);
 
   const toggleColor = useCallback((colorId: string) => {

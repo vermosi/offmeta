@@ -3,6 +3,7 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import { UnifiedSearchBar, SearchResult, UnifiedSearchBarHandle } from "@/components/UnifiedSearchBar";
 import { EditableQueryBar } from "@/components/EditableQueryBar";
+import { ExplainCompilationPanel } from "@/components/ExplainCompilationPanel";
 import { ReportIssueDialog } from "@/components/ReportIssueDialog";
 import { SearchFilters } from "@/components/SearchFilters";
 
@@ -17,6 +18,9 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { searchCards } from "@/lib/scryfall";
 import { ScryfallCard } from "@/types/card";
+import { FilterState } from "@/types/filters";
+import { SearchIntent } from "@/types/search";
+import { buildFilterQuery, validateScryfallQuery } from "@/lib/scryfallQuery";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { Loader2 } from "lucide-react";
 
@@ -41,7 +45,8 @@ const Index = () => {
   const [hasActiveFilters, setHasActiveFilters] = useState(false);
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
-  const [activeFilters, setActiveFilters] = useState<Record<string, unknown>>({});
+  const [activeFilters, setActiveFilters] = useState<FilterState | null>(null);
+  const [lastIntent, setLastIntent] = useState<SearchIntent | null>(null);
   
   const searchBarRef = useRef<UnifiedSearchBarHandle>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -110,10 +115,26 @@ const Index = () => {
     setFilteredCards([]);
     setHasActiveFilters(false);
     
-    setSearchQuery(query);
+    const filterQuery = buildFilterQuery(activeFilters);
+    const executedQuery = [query, filterQuery].filter(Boolean).join(' ').trim();
+
+    setSearchQuery(executedQuery);
     setOriginalQuery(naturalQuery || query);
     setHasSearched(true);
-    setLastSearchResult(result || null);
+    if (result) {
+      setLastSearchResult({
+        ...result,
+        scryfallQuery: executedQuery
+      });
+      setLastIntent(result.intent || null);
+    } else {
+      setLastSearchResult({
+        scryfallQuery: executedQuery,
+        explanation: undefined,
+        showAffiliate: false
+      });
+      setLastIntent(null);
+    }
     
     // Invalidate previous query cache to force fresh fetch
     queryClient.invalidateQueries({ queryKey: ["cards", searchQuery] });
@@ -133,7 +154,7 @@ const Index = () => {
         results_count: 0,
       });
     }
-  }, [trackSearch, setSearchParams, queryClient, searchQuery]);
+  }, [trackSearch, setSearchParams, queryClient, searchQuery, activeFilters]);
 
   // Handle re-running with an edited Scryfall query (bypasses AI translation)
   const handleRerunEditedQuery = useCallback((editedQuery: string) => {
@@ -144,32 +165,51 @@ const Index = () => {
     setFilteredCards([]);
     setHasActiveFilters(false);
     
+    const filterQuery = buildFilterQuery(activeFilters);
+    const combinedQuery = [editedQuery, filterQuery].filter(Boolean).join(' ').trim();
+    const validation = validateScryfallQuery(combinedQuery);
+    if (!validation.valid) {
+      setLastSearchResult(prev => prev ? {
+        ...prev,
+        scryfallQuery: validation.sanitized,
+        validationIssues: validation.issues
+      } : {
+        scryfallQuery: validation.sanitized,
+        validationIssues: validation.issues,
+        explanation: undefined,
+        showAffiliate: false
+      });
+      return;
+    }
+
     // Set the edited query as both search and displayed query
-    setSearchQuery(editedQuery);
+    setSearchQuery(validation.sanitized);
     setHasSearched(true);
     
     // Update last search result with edited query
     setLastSearchResult(prev => prev ? {
       ...prev,
-      scryfallQuery: editedQuery
+      scryfallQuery: validation.sanitized,
+      validationIssues: []
     } : {
-      scryfallQuery: editedQuery,
+      scryfallQuery: validation.sanitized,
       explanation: undefined,
-      showAffiliate: false
+      showAffiliate: false,
+      validationIssues: []
     });
     
     // Invalidate cache and force new fetch
     queryClient.invalidateQueries({ queryKey: ["cards"] });
     
     // Update URL
-    setSearchParams({ q: editedQuery }, { replace: true });
+    setSearchParams({ q: validation.sanitized }, { replace: true });
     
     trackEvent('rerun_edited_query', {
       original_query: originalQuery,
       edited_query: editedQuery,
       request_id: requestId,
     });
-  }, [queryClient, setSearchParams, originalQuery, trackEvent]);
+  }, [queryClient, setSearchParams, originalQuery, trackEvent, activeFilters]);
 
   // Handler for "Did you mean...?" suggestions
   const handleTryAlternative = useCallback((alternativeQuery: string) => {
@@ -211,12 +251,10 @@ const Index = () => {
     }
   }, [totalCards, lastSearchResult?.scryfallQuery, originalQuery, trackEvent, currentRequestId]);
 
-  const handleFilteredCards = useCallback((filtered: ScryfallCard[], filtersActive: boolean, filters?: Record<string, unknown>) => {
+  const handleFilteredCards = useCallback((filtered: ScryfallCard[], filtersActive: boolean, filters: FilterState) => {
     setFilteredCards(filtered);
     setHasActiveFilters(filtersActive);
-    if (filters) {
-      setActiveFilters(filters);
-    }
+    setActiveFilters(filters);
   }, []);
   
   // Use filtered cards for display when filters are active, otherwise show all cards
@@ -309,21 +347,29 @@ const Index = () => {
               onSearch={handleSearch} 
               isLoading={isSearching} 
               lastTranslatedQuery={lastSearchResult?.scryfallQuery}
+              filters={activeFilters}
             />
 
             {/* Always-visible Editable Query Bar */}
-            {lastSearchResult && hasSearched && (
+            {hasSearched && (
               <div className="animate-reveal">
                 <EditableQueryBar
-                  scryfallQuery={lastSearchResult.scryfallQuery}
+                  scryfallQuery={(lastSearchResult?.scryfallQuery || searchQuery).trim()}
                   originalQuery={originalQuery}
-                  confidence={lastSearchResult.explanation?.confidence}
+                  confidence={lastSearchResult?.explanation?.confidence}
                   isLoading={isSearching}
                   onRerun={handleRerunEditedQuery}
                   onReportIssue={() => setReportDialogOpen(true)}
                   requestId={currentRequestId || undefined}
                   filters={activeFilters}
+                  validationError={lastSearchResult?.validationIssues?.length ? lastSearchResult.validationIssues.join(' • ') : null}
                 />
+              </div>
+            )}
+
+            {hasSearched && (
+              <div className="animate-reveal">
+                <ExplainCompilationPanel intent={lastSearchResult?.intent || lastIntent} />
               </div>
             )}
 

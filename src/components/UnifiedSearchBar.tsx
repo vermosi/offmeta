@@ -11,6 +11,8 @@ import { Search, Loader2, X, ArrowRight, History, Clock } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { SearchFeedback } from '@/components/SearchFeedback';
 import { SearchHelpModal } from '@/components/SearchHelpModal';
+import { FilterState } from '@/types/filters';
+import { SearchIntent } from '@/types/search';
 
 const SEARCH_CONTEXT_KEY = 'lastSearchContext';
 const SEARCH_HISTORY_KEY = 'offmeta_search_history';
@@ -29,17 +31,20 @@ interface CachedResult {
     confidence: number;
   };
   showAffiliate?: boolean;
+  validationIssues?: string[];
+  intent?: SearchIntent;
   timestamp: number;
 }
 
-function normalizeQueryKey(query: string): string {
-  return query.toLowerCase().trim().replace(/\s+/g, ' ');
+function normalizeQueryKey(query: string, filters?: FilterState | null): string {
+  const normalized = query.toLowerCase().trim().replace(/\s+/g, ' ');
+  return `${normalized}|${JSON.stringify(filters || {})}`;
 }
 
-function getCachedResult(query: string): CachedResult | null {
+function getCachedResult(query: string, filters?: FilterState | null): CachedResult | null {
   try {
     const cache = JSON.parse(sessionStorage.getItem(RESULT_CACHE_KEY) || '{}');
-    const key = normalizeQueryKey(query);
+    const key = normalizeQueryKey(query, filters);
     const cached = cache[key];
     if (cached && Date.now() - cached.timestamp < RESULT_CACHE_TTL) {
       return cached;
@@ -53,10 +58,10 @@ function getCachedResult(query: string): CachedResult | null {
   return null;
 }
 
-function setCachedResult(query: string, result: Omit<CachedResult, 'timestamp'>): void {
+function setCachedResult(query: string, result: Omit<CachedResult, 'timestamp'>, filters?: FilterState | null): void {
   try {
     const cache = JSON.parse(sessionStorage.getItem(RESULT_CACHE_KEY) || '{}');
-    const key = normalizeQueryKey(query);
+    const key = normalizeQueryKey(query, filters);
     cache[key] = { ...result, timestamp: Date.now() };
     // Limit cache size - remove oldest entries
     const keys = Object.keys(cache);
@@ -130,12 +135,16 @@ export interface SearchResult {
     confidence: number;
   };
   showAffiliate?: boolean;
+  validationIssues?: string[];
+  intent?: SearchIntent;
+  source?: string;
 }
 
 interface UnifiedSearchBarProps {
   onSearch: (query: string, result?: SearchResult, naturalQuery?: string) => void;
   isLoading: boolean;
   lastTranslatedQuery?: string;
+  filters?: FilterState | null;
 }
 
 export interface UnifiedSearchBarHandle {
@@ -152,18 +161,21 @@ const EXAMPLE_QUERIES = [
 ];
 
 export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearchBarProps>(
-  function UnifiedSearchBar({ onSearch, isLoading, lastTranslatedQuery }, ref) {
+  function UnifiedSearchBar({ onSearch, isLoading, lastTranslatedQuery, filters }, ref) {
   const isMobile = useIsMobile();
   const [query, setQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
   const [rateLimitCountdown, setRateLimitCountdown] = useState<number>(0);
+  const [useLast, setUseLast] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const lastSearchRef = useRef<string>('');
   const abortControllerRef = useRef<AbortController | null>(null);
+  const requestTokenRef = useRef(0);
   const { saveContext, getContext } = useSearchContext();
   const { history, addToHistory, clearHistory } = useSearchHistory();
+  const canUseLast = Boolean(getContext());
 
   // Rate limit countdown timer
   useEffect(() => {
@@ -199,7 +211,6 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
     
     // Prevent empty, duplicate, or rate-limited searches
     if (!queryToSearch) return;
-    if (queryToSearch === lastSearchRef.current && !searchQuery) return;
     if (rateLimitedUntil && Date.now() < rateLimitedUntil) {
       toast.error('Please wait', {
         description: `Rate limited. Try again in ${rateLimitCountdown}s`
@@ -209,16 +220,23 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
     
     lastSearchRef.current = queryToSearch;
     addToHistory(queryToSearch);
+
+    const currentToken = ++requestTokenRef.current;
+    const allowReuse = useLast;
+    setUseLast(false);
     
     // Check client-side cache first (eliminates edge function call entirely)
-    const cached = getCachedResult(queryToSearch);
+    const cached = allowReuse ? getCachedResult(queryToSearch, filters) : null;
     if (cached) {
       console.log('[Cache] Client-side hit for:', queryToSearch);
       saveContext(queryToSearch, cached.scryfallQuery);
       onSearch(cached.scryfallQuery, {
         scryfallQuery: cached.scryfallQuery,
         explanation: cached.explanation,
-        showAffiliate: cached.showAffiliate
+        showAffiliate: cached.showAffiliate,
+        validationIssues: cached.validationIssues,
+        intent: cached.intent,
+        source: 'client_cache'
       }, queryToSearch); // Pass natural language query
       toast.success('Search (cached)', {
         description: `Found: ${cached.scryfallQuery.substring(0, 50)}${cached.scryfallQuery.length > 50 ? '...' : ''}`
@@ -240,18 +258,23 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
     });
 
     try {
-      const context = getContext();
+      const context = allowReuse ? getContext() : null;
       
       const searchPromise = supabase.functions.invoke('semantic-search', {
         body: {
           query: queryToSearch,
-          context: context || undefined
+          context: context || undefined,
+          useCache: allowReuse,
+          filters: filters || undefined
         }
       });
       
       const { data, error } = await Promise.race([searchPromise, timeoutPromise]);
 
       if (error) throw error;
+      if (requestTokenRef.current !== currentToken) {
+        return;
+      }
 
       // Handle rate limiting response
       if (data?.retryAfter) {
@@ -271,13 +294,18 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
         setCachedResult(queryToSearch, {
           scryfallQuery: data.scryfallQuery,
           explanation: data.explanation,
-          showAffiliate: data.showAffiliate
-        });
+          showAffiliate: data.showAffiliate,
+          validationIssues: data.validationIssues,
+          intent: data.intent,
+        }, filters);
         
         onSearch(data.scryfallQuery, {
           scryfallQuery: data.scryfallQuery,
           explanation: data.explanation,
-          showAffiliate: data.showAffiliate
+          showAffiliate: data.showAffiliate,
+          validationIssues: data.validationIssues,
+          intent: data.intent,
+          source: data.source || 'ai'
         }, queryToSearch); // Pass natural language query
         
         const source = data.source || 'ai';
@@ -291,6 +319,9 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
       // Handle different error types
       const errorMessage = error instanceof Error ? error.message : String(error);
       
+      if (requestTokenRef.current !== currentToken) {
+        return;
+      }
       if (errorMessage === 'Search timeout') {
         console.error('Search timeout');
         toast.error('Search took too long', {
@@ -402,6 +433,18 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
               translatedQuery={lastTranslatedQuery} 
             />
           </div>
+
+          {/* Reuse last interpretation toggle */}
+          <Button
+            variant={useLast ? "accent" : "ghost"}
+            size="sm"
+            onClick={() => setUseLast(prev => !prev)}
+            className="h-8 px-2 text-xs"
+            title="Reuse the last interpretation and cache (optional)"
+            disabled={!canUseLast}
+          >
+            {useLast ? 'Using last' : 'Use last'}
+          </Button>
           
           {/* Help modal - desktop only */}
           <div className="hidden sm:block flex-shrink-0">
