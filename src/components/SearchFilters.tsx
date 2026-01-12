@@ -3,7 +3,7 @@
  * Provides color filters, type filters, CMC range, and sorting.
  */
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
@@ -64,21 +64,23 @@ interface SearchFiltersProps {
   cards: ScryfallCard[];
   onFilteredCards: (cards: ScryfallCard[], hasActiveFilters: boolean, filters: FilterState) => void;
   totalCards: number;
+  resetKey: number;
 }
 
-export function SearchFilters({ cards, onFilteredCards, totalCards }: SearchFiltersProps) {
-  const [filters, setFilters] = useState<FilterState>({
-    colors: [],
-    types: [],
-    cmcRange: [0, 16],
-    sortBy: 'name-asc',
-  });
-  const [isOpen, setIsOpen] = useState(false);
-
-  // Calculate max CMC from current cards
-  const maxCmc = useMemo(() => {
+export function SearchFilters({ cards, onFilteredCards, totalCards, resetKey }: SearchFiltersProps) {
+  const defaultMaxCmc = useMemo(() => {
     return Math.max(16, ...cards.map(c => c.cmc || 0));
   }, [cards]);
+  const lastDefaultMaxCmc = useRef(defaultMaxCmc);
+  const buildDefaultFilters = useCallback((maxCmc: number): FilterState => ({
+    colors: [],
+    types: [],
+    cmcRange: [0, maxCmc],
+    sortBy: 'name-asc',
+  }), []);
+  const [filters, setFilters] = useState<FilterState>(() => buildDefaultFilters(defaultMaxCmc));
+  const [isOpen, setIsOpen] = useState(false);
+  const defaultFilters = useMemo(() => buildDefaultFilters(defaultMaxCmc), [buildDefaultFilters, defaultMaxCmc]);
 
   // Apply filters and sorting
   const filteredCards = useMemo(() => {
@@ -152,12 +154,41 @@ export function SearchFilters({ cards, onFilteredCards, totalCards }: SearchFilt
   const hasActiveFilters = filters.colors.length > 0 || 
     filters.types.length > 0 || 
     filters.cmcRange[0] > 0 || 
-    filters.cmcRange[1] < 16;
+    filters.cmcRange[1] < defaultMaxCmc;
 
   // Notify parent of filtered results - use useEffect instead of useMemo for side effects
   useEffect(() => {
     onFilteredCards(filteredCards, hasActiveFilters, filters);
   }, [filteredCards, hasActiveFilters, onFilteredCards, filters]);
+
+  useEffect(() => {
+    setFilters(defaultFilters);
+    setIsOpen(false);
+  }, [defaultFilters, resetKey]);
+
+  useEffect(() => {
+    if (lastDefaultMaxCmc.current === defaultMaxCmc) {
+      return;
+    }
+    setFilters(prev => {
+      const isDefaultRange = prev.colors.length === 0 &&
+        prev.types.length === 0 &&
+        prev.sortBy === 'name-asc' &&
+        prev.cmcRange[0] === 0 &&
+        prev.cmcRange[1] === lastDefaultMaxCmc.current;
+
+      lastDefaultMaxCmc.current = defaultMaxCmc;
+
+      if (!isDefaultRange) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        cmcRange: [0, defaultMaxCmc],
+      };
+    });
+  }, [defaultMaxCmc]);
 
   const toggleColor = useCallback((colorId: string) => {
     setFilters(prev => ({
@@ -178,17 +209,12 @@ export function SearchFilters({ cards, onFilteredCards, totalCards }: SearchFilt
   }, []);
 
   const clearFilters = useCallback(() => {
-    setFilters({
-      colors: [],
-      types: [],
-      cmcRange: [0, 16],
-      sortBy: 'name-asc',
-    });
-  }, []);
+    setFilters(defaultFilters);
+  }, [defaultFilters]);
 
   const activeFilterCount = filters.colors.length + 
     filters.types.length + 
-    (filters.cmcRange[0] > 0 || filters.cmcRange[1] < 16 ? 1 : 0);
+    (filters.cmcRange[0] > 0 || filters.cmcRange[1] < defaultMaxCmc ? 1 : 0);
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 animate-reveal">
@@ -277,14 +303,14 @@ export function SearchFilters({ cards, onFilteredCards, totalCards }: SearchFilt
                   Mana Value
                 </h4>
                 <span className="text-xs text-muted-foreground">
-                  {filters.cmcRange[0]} – {filters.cmcRange[1] >= 16 ? '16+' : filters.cmcRange[1]}
+                  {filters.cmcRange[0]} – {filters.cmcRange[1] >= defaultMaxCmc ? `${defaultMaxCmc}+` : filters.cmcRange[1]}
                 </span>
               </div>
               <Slider
                 value={filters.cmcRange}
                 onValueChange={(value) => setFilters(prev => ({ ...prev, cmcRange: value as [number, number] }))}
                 min={0}
-                max={Math.max(16, maxCmc)}
+                max={defaultMaxCmc}
                 step={1}
                 className="w-full"
               />

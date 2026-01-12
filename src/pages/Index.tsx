@@ -48,6 +48,7 @@ const Index = () => {
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<FilterState | null>(null);
   const [lastIntent, setLastIntent] = useState<SearchIntent | null>(null);
+  const [filtersResetKey, setFiltersResetKey] = useState(0);
   
   const searchBarRef = useRef<UnifiedSearchBarHandle>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -115,9 +116,10 @@ const Index = () => {
     // Clear prior state before setting new values
     setFilteredCards([]);
     setHasActiveFilters(false);
+    setActiveFilters(null);
+    setFiltersResetKey(prev => prev + 1);
     
-    const filterQuery = buildFilterQuery(activeFilters);
-    const executedQuery = [query, filterQuery].filter(Boolean).join(' ').trim();
+    const executedQuery = query.trim();
 
     setSearchQuery(executedQuery);
     setOriginalQuery(naturalQuery || query);
@@ -138,7 +140,7 @@ const Index = () => {
     }
     
     // Invalidate previous query cache to force fresh fetch
-    queryClient.invalidateQueries({ queryKey: ["cards", searchQuery] });
+    queryClient.invalidateQueries({ queryKey: ["cards", executedQuery] });
     
     // Update URL with search query
     if (query) {
@@ -155,7 +157,7 @@ const Index = () => {
         results_count: 0,
       });
     }
-  }, [trackSearch, setSearchParams, queryClient, searchQuery, activeFilters]);
+  }, [trackSearch, setSearchParams, queryClient]);
 
   // Handle re-running with an edited Scryfall query (bypasses AI translation)
   const handleRerunEditedQuery = useCallback((editedQuery: string) => {
@@ -200,7 +202,7 @@ const Index = () => {
     });
     
     // Invalidate cache and force new fetch
-    queryClient.invalidateQueries({ queryKey: ["cards"] });
+    queryClient.invalidateQueries({ queryKey: ["cards", validation.sanitized] });
     
     // Update URL
     setSearchParams({ q: validation.sanitized }, { replace: true });
@@ -399,6 +401,7 @@ const Index = () => {
                 cards={cards} 
                 onFilteredCards={handleFilteredCards}
                 totalCards={totalCards}
+                resetKey={filtersResetKey}
               />
             )}
 
