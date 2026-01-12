@@ -69,7 +69,7 @@ const Index = () => {
       setHasActiveFilters(false);
       setCurrentRequestId(null);
     }
-  }, [urlQuery]); // Re-run when URL query changes
+  }, [urlQuery, hasSearched, searchQuery]); // Re-run when URL query changes
 
   const {
     data,
@@ -363,14 +363,12 @@ const Index = () => {
               <div className="animate-reveal">
                 <EditableQueryBar
                   scryfallQuery={(lastSearchResult?.scryfallQuery || searchQuery).trim()}
-                  originalQuery={originalQuery}
                   confidence={lastSearchResult?.explanation?.confidence}
                   isLoading={isSearching}
                   onRerun={handleRerunEditedQuery}
                   onRegenerate={handleRegenerateTranslation}
                   onReportIssue={() => setReportDialogOpen(true)}
                   requestId={currentRequestId || undefined}
-                  filters={activeFilters}
                   validationError={lastSearchResult?.validationIssues?.length ? lastSearchResult.validationIssues.join(' • ') : null}
                 />
               </div>

@@ -7,13 +7,11 @@ import { useState, useEffect, useCallback, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Play, Copy, Check, ExternalLink, Edit2, AlertTriangle, X, RotateCcw } from 'lucide-react';
+import { Play, Copy, Check, ExternalLink, AlertTriangle, X, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { FilterState } from '@/types/filters';
 
 interface EditableQueryBarProps {
   scryfallQuery: string;
-  originalQuery: string;
   confidence?: number;
   isLoading?: boolean;
   validationError?: string | null;
@@ -21,12 +19,10 @@ interface EditableQueryBarProps {
   onRegenerate?: () => void;
   onReportIssue?: () => void;
   requestId?: string;
-  filters?: FilterState | null;
 }
 
 export const EditableQueryBar = memo(function EditableQueryBar({
   scryfallQuery,
-  originalQuery,
   confidence,
   isLoading,
   validationError,
@@ -34,7 +30,6 @@ export const EditableQueryBar = memo(function EditableQueryBar({
   onRegenerate,
   onReportIssue,
   requestId,
-  filters,
 }: EditableQueryBarProps) {
   const [editedQuery, setEditedQuery] = useState(scryfallQuery);
   const [isEditing, setIsEditing] = useState(false);
