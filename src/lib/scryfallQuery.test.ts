@@ -21,6 +21,11 @@ describe('normalizeOrGroups', () => {
     const query = 'o:"draw OR discard" c:red OR c:blue';
     expect(normalizeOrGroups(query)).toBe('o:"draw OR discard" (c:red OR c:blue)');
   });
+
+  it('ignores OR inside regex patterns', () => {
+    const query = 'o:/draw OR discard/ c:red OR c:blue';
+    expect(normalizeOrGroups(query)).toBe('o:/draw OR discard/ (c:red OR c:blue)');
+  });
 });
 
 describe('validateScryfallQuery', () => {

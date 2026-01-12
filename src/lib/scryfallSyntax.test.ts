@@ -35,6 +35,7 @@ describe('Scryfall syntax reference coverage', () => {
       'name:/^goblin/',
       't:/dragon/',
       'o:/destroy target (creature|artifact)/',
+      'o:/draw OR discard/',
     ];
 
     for (const query of regexQueries) {

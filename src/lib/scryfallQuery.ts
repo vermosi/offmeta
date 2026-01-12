@@ -14,7 +14,7 @@ export const VALID_SEARCH_KEYS = new Set([
   'st', 'cube', 'order', 'direction', 'unique', 'prefer', 'include',
   'produces', 'devotion', 'name',
   'otag', 'oracletag', 'function',
-  'atag', 'arttag'
+  'art', 'atag', 'arttag'
 ]);
 
 export const KNOWN_OTAGS = new Set([
@@ -42,12 +42,16 @@ export function normalizeOrGroups(query: string): string {
   let current = '';
   let depth = 0;
   let inQuote = false;
+  let inRegex = false;
 
   for (const char of query) {
     if (char === '"') {
       inQuote = !inQuote;
     }
-    if (!inQuote && char === ' ') {
+    if (!inQuote && char === '/' && current.at(-1) !== '\\') {
+      inRegex = !inRegex;
+    }
+    if (!inQuote && !inRegex && char === ' ') {
       if (current) {
         tokens.push(current);
         current = '';
