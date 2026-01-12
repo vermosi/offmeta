@@ -13,7 +13,7 @@ export function ExplainCompilationPanel({ intent }: ExplainCompilationPanelProps
   if (!intent) return null;
 
   const colorSummary = intent.colors
-    ? `${intent.colors.isIdentity ? 'id' : 'c'}${intent.colors.isExact ? '=' : ':'}${intent.colors.values.join('')}`
+    ? `${intent.colors.isIdentity ? 'ci' : 'c'}${intent.colors.isExact ? '=' : ':'}${intent.colors.values.join('')}`
     : null;
 
   return (

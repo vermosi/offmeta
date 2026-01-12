@@ -232,6 +232,14 @@ const Index = () => {
     searchBarRef.current?.triggerSearch(query);
   }, []);
 
+  const handleRegenerateTranslation = useCallback(() => {
+    if (!originalQuery) return;
+    searchBarRef.current?.triggerSearch(originalQuery, {
+      bypassCache: true,
+      cacheSalt: `${Date.now()}`
+    });
+  }, [originalQuery]);
+
   // Flatten all pages into a single array
   const cards = useMemo(() => {
     return data?.pages.flatMap(page => page.data) || [];
@@ -359,6 +367,7 @@ const Index = () => {
                   confidence={lastSearchResult?.explanation?.confidence}
                   isLoading={isSearching}
                   onRerun={handleRerunEditedQuery}
+                  onRegenerate={handleRegenerateTranslation}
                   onReportIssue={() => setReportDialogOpen(true)}
                   requestId={currentRequestId || undefined}
                   filters={activeFilters}

@@ -127,6 +127,25 @@ The AI-powered search translation service with multi-layer cost optimization.
 - Simple queries use ~300 token prompts vs ~1500 for complex
 - Estimated cost: ~$3-4/month at 100k searches
 
+### How parsing works
+
+The semantic search function applies a deterministic rules layer before any AI translation:
+
+1. **Normalize input**: lowercases, trims whitespace, standardizes quotes, and normalizes MTG synonyms (`cmc` → `mv`, `color identity` → `ci`).
+2. **Extract a Search IR**: captures colors, types, numeric constraints, oracle patterns, tags, and special fields in a structured object.
+3. **Render Scryfall syntax**: the final deterministic query string is always generated from the IR (not directly from LLM output).
+4. **LLM fallback (validated)**: remaining free-text concepts are translated and then validated/relaxed if necessary before execution.
+
+### Color/identity rules
+
+OffMeta follows deterministic color semantics to avoid overly-broad queries:
+
+- **“red or black”** → `(c=r or c=b)` (color OR, not gold-only)
+- **“red and black” / “rakdos”** → `c=br` (both colors)
+- **“fits into a BR commander deck”** → `ci<=br`
+- **“exactly rakdos color identity” / “only BR”** → `ci=br`
+- **“mono red”** → `c=r ci=r`
+
 ### `supabase/functions/generate-patterns/index.ts`
 
 Automatically generates translation rules from frequently occurring queries in logs.

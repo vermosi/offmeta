@@ -36,15 +36,15 @@ interface CachedResult {
   timestamp: number;
 }
 
-function normalizeQueryKey(query: string, filters?: FilterState | null): string {
+function normalizeQueryKey(query: string, filters?: FilterState | null, cacheSalt?: string): string {
   const normalized = query.toLowerCase().trim().replace(/\s+/g, ' ');
-  return `${normalized}|${JSON.stringify(filters || {})}`;
+  return `${normalized}|${JSON.stringify(filters || {})}|${cacheSalt || ''}`;
 }
 
-function getCachedResult(query: string, filters?: FilterState | null): CachedResult | null {
+function getCachedResult(query: string, filters?: FilterState | null, cacheSalt?: string): CachedResult | null {
   try {
     const cache = JSON.parse(sessionStorage.getItem(RESULT_CACHE_KEY) || '{}');
-    const key = normalizeQueryKey(query, filters);
+    const key = normalizeQueryKey(query, filters, cacheSalt);
     const cached = cache[key];
     if (cached && Date.now() - cached.timestamp < RESULT_CACHE_TTL) {
       return cached;
@@ -58,10 +58,10 @@ function getCachedResult(query: string, filters?: FilterState | null): CachedRes
   return null;
 }
 
-function setCachedResult(query: string, result: Omit<CachedResult, 'timestamp'>, filters?: FilterState | null): void {
+function setCachedResult(query: string, result: Omit<CachedResult, 'timestamp'>, filters?: FilterState | null, cacheSalt?: string): void {
   try {
     const cache = JSON.parse(sessionStorage.getItem(RESULT_CACHE_KEY) || '{}');
-    const key = normalizeQueryKey(query, filters);
+    const key = normalizeQueryKey(query, filters, cacheSalt);
     cache[key] = { ...result, timestamp: Date.now() };
     // Limit cache size - remove oldest entries
     const keys = Object.keys(cache);
@@ -148,7 +148,7 @@ interface UnifiedSearchBarProps {
 }
 
 export interface UnifiedSearchBarHandle {
-  triggerSearch: (query: string) => void;
+  triggerSearch: (query: string, options?: { bypassCache?: boolean; cacheSalt?: string }) => void;
 }
 
 const EXAMPLE_QUERIES = [
@@ -200,13 +200,13 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
   }, [rateLimitedUntil]);
 
   useImperativeHandle(ref, () => ({
-    triggerSearch: (searchQuery: string) => {
+    triggerSearch: (searchQuery: string, options?: { bypassCache?: boolean; cacheSalt?: string }) => {
       setQuery(searchQuery);
-      handleSearch(searchQuery);
+      handleSearch(searchQuery, options);
     }
   }), []);
 
-  const handleSearch = async (searchQuery?: string) => {
+  const handleSearch = async (searchQuery?: string, options?: { bypassCache?: boolean; cacheSalt?: string }) => {
     const queryToSearch = (searchQuery || query).trim();
     
     // Prevent empty, duplicate, or rate-limited searches
@@ -222,11 +222,12 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
     addToHistory(queryToSearch);
 
     const currentToken = ++requestTokenRef.current;
-    const allowReuse = useLast;
+    const allowReuse = useLast && !options?.bypassCache;
     setUseLast(false);
+    const cacheSalt = options?.cacheSalt;
     
     // Check client-side cache first (eliminates edge function call entirely)
-    const cached = allowReuse ? getCachedResult(queryToSearch, filters) : null;
+    const cached = allowReuse ? getCachedResult(queryToSearch, filters, cacheSalt) : null;
     if (cached) {
       console.log('[Cache] Client-side hit for:', queryToSearch);
       saveContext(queryToSearch, cached.scryfallQuery);
@@ -265,7 +266,8 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
           query: queryToSearch,
           context: context || undefined,
           useCache: allowReuse,
-          filters: filters || undefined
+          filters: filters || undefined,
+          cacheSalt: cacheSalt || undefined
         }
       });
       
@@ -297,7 +299,7 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
           showAffiliate: data.showAffiliate,
           validationIssues: data.validationIssues,
           intent: data.intent,
-        }, filters);
+        }, filters, cacheSalt);
         
         onSearch(data.scryfallQuery, {
           scryfallQuery: data.scryfallQuery,
