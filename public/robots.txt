@@ -1,0 +1,9 @@
+# OffMeta - Natural Language Magic Card Search
+# https://offmeta.lovable.app
+
+User-agent: *
+Allow: /
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://offmeta.lovable.app/sitemap.xml

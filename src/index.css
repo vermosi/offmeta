@@ -1,0 +1,399 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ========================================
+   DESIGN SYSTEM TOKENS
+   Inspired by: osmo.supply, freshman.tv, streamlinehq.com
+   ======================================== */
+
+@layer base {
+  :root {
+    /* 
+     * LIGHT MODE - Mystic oracle theme
+     * Deep purples with vibrant gradients
+     */
+    
+    /* Surfaces */
+    --background: 270 30% 98%;
+    --foreground: 270 50% 15%;
+    
+    --card: 270 30% 100%;
+    --card-foreground: 270 50% 15%;
+    
+    --popover: 270 30% 100%;
+    --popover-foreground: 270 50% 15%;
+    
+    /* Primary - Deep purple */
+    --primary: 270 50% 25%;
+    --primary-foreground: 270 30% 98%;
+    
+    /* Secondary - Soft purple */
+    --secondary: 270 25% 94%;
+    --secondary-foreground: 270 50% 20%;
+    
+    /* Muted - Light purple gray */
+    --muted: 270 20% 94%;
+    --muted-foreground: 270 15% 45%;
+    
+    /* Accent - Magenta */
+    --accent: 300 85% 55%;
+    --accent-foreground: 0 0% 100%;
+    
+    /* Gradient colors */
+    --gradient-start: 300 85% 55%;
+    --gradient-end: 195 90% 55%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Borders */
+    --border: 270 20% 88%;
+    --input: 270 20% 88%;
+    --ring: 300 85% 55%;
+    
+    /* Radius */
+    --radius: 0.625rem;
+    
+    /* Brand gradient */
+    --brand: 300 85% 55%;
+    --brand-foreground: 0 0% 100%;
+    
+    /* Shadows - Purple tinted */
+    --shadow-sm: 0 1px 2px 0 hsl(270 50% 20% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(270 50% 20% / 0.08), 0 2px 4px -2px hsl(270 50% 20% / 0.05);
+    --shadow-lg: 0 10px 15px -3px hsl(270 50% 20% / 0.1), 0 4px 6px -4px hsl(270 50% 20% / 0.05);
+    --shadow-xl: 0 20px 25px -5px hsl(270 50% 20% / 0.12), 0 8px 10px -6px hsl(270 50% 20% / 0.05);
+    --shadow-hover: 0 20px 40px -12px hsl(300 85% 55% / 0.25);
+  }
+
+  .dark {
+    /* 
+     * DARK MODE - Deep void with oracle glow
+     * Rich purple-black, vibrant gradient accents
+     */
+    
+    /* Surfaces - Deep purple-black like the logo */
+    --background: 270 45% 6%;
+    --foreground: 270 20% 95%;
+    
+    --card: 270 40% 9%;
+    --card-foreground: 270 20% 95%;
+    
+    --popover: 270 40% 10%;
+    --popover-foreground: 270 20% 95%;
+    
+    /* Primary - Light purple-white */
+    --primary: 270 20% 95%;
+    --primary-foreground: 270 45% 8%;
+    
+    /* Secondary - Darker purple */
+    --secondary: 270 35% 14%;
+    --secondary-foreground: 270 20% 90%;
+    
+    /* Muted - Dark purple */
+    --muted: 270 35% 14%;
+    --muted-foreground: 270 20% 55%;
+    
+    /* Accent - Vibrant magenta */
+    --accent: 300 90% 60%;
+    --accent-foreground: 0 0% 100%;
+    
+    /* Gradient colors */
+    --gradient-start: 300 90% 60%;
+    --gradient-end: 195 95% 55%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Borders - Subtle purple */
+    --border: 270 30% 18%;
+    --input: 270 30% 18%;
+    --ring: 300 90% 60%;
+    
+    /* Brand */
+    --brand: 300 90% 60%;
+    --brand-foreground: 0 0% 100%;
+    
+    /* Shadows - Deep purple glow */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+    --shadow-hover: 0 25px 50px -12px hsl(300 90% 60% / 0.3);
+  }
+}
+
+/* ========================================
+   BASE STYLES
+   ======================================== */
+
+@layer base {
+  * {
+    @apply border-border;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    overscroll-behavior-y: contain;
+  }
+
+  /* Typography Scale - Tight headings, comfortable body */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', system-ui, sans-serif;
+    @apply font-semibold tracking-tight;
+    letter-spacing: -0.02em;
+  }
+
+  h1 { 
+    @apply text-4xl sm:text-5xl md:text-6xl lg:text-7xl;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+  
+  h2 { 
+    @apply text-2xl sm:text-3xl md:text-4xl;
+    line-height: 1.1;
+  }
+  
+  h3 { 
+    @apply text-xl sm:text-2xl;
+    line-height: 1.2;
+  }
+
+  p {
+    line-height: 1.6;
+  }
+
+  /* Skip link */
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg;
+  }
+}
+
+/* ========================================
+   UTILITY CLASSES
+   ======================================== */
+
+@layer utilities {
+  /* Container - mobile-first with tighter padding */
+  .container-main {
+    @apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Elevated surfaces */
+  .surface-elevated {
+    @apply bg-card border border-border rounded-xl;
+    box-shadow: var(--shadow-md);
+  }
+
+  .surface-elevated-lg {
+    @apply bg-card border border-border rounded-2xl;
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Card hover effect - subtle lift */
+  .card-hover {
+    @apply transition-all duration-300 ease-out;
+  }
+  
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+  }
+
+  /* Button magnetic effect */
+  .magnetic {
+    @apply transition-transform duration-150 ease-out;
+  }
+  
+  .magnetic:hover {
+    transform: translateY(-1px);
+  }
+  
+  .magnetic:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  /* Text gradient - Oracle magenta to cyan */
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(var(--gradient-start)) 0%, hsl(var(--gradient-end)) 100%);
+  }
+
+  /* Accent text with gradient */
+  .text-accent-glow {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(var(--gradient-start)) 0%, hsl(var(--gradient-end)) 100%);
+  }
+
+  /* Border gradient effect */
+  .border-gradient {
+    position: relative;
+  }
+  .border-gradient::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, hsl(var(--gradient-start)), hsl(var(--gradient-end)));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Glow effect */
+  .glow-accent {
+    box-shadow: 0 0 20px hsl(var(--gradient-start) / 0.3), 0 0 40px hsl(var(--gradient-end) / 0.2);
+  }
+
+  /* Pill badges */
+  .pill {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium;
+    @apply bg-secondary text-secondary-foreground border border-border;
+  }
+  
+  .pill-accent {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium;
+    background: hsl(var(--accent) / 0.12);
+    color: hsl(var(--accent));
+    border: 1px solid hsl(var(--accent) / 0.25);
+  }
+
+  /* Reveal animation */
+  .animate-reveal {
+    animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes reveal {
+    from { 
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to { 
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Staggered reveal */
+  .stagger-children > * {
+    opacity: 0;
+    animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger-children > *:nth-child(2) { animation-delay: 75ms; }
+  .stagger-children > *:nth-child(3) { animation-delay: 150ms; }
+  .stagger-children > *:nth-child(4) { animation-delay: 225ms; }
+  .stagger-children > *:nth-child(5) { animation-delay: 300ms; }
+
+  /* Focus ring */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  /* Subtle shimmer for loading */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 0%,
+      hsl(var(--secondary)) 50%,
+      hsl(var(--muted)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Pulse ring for voice */
+  .animate-pulse-ring {
+    animation: pulseRing 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulseRing {
+    0%, 100% { box-shadow: 0 0 0 0 hsl(var(--destructive) / 0.4); }
+    50% { box-shadow: 0 0 0 12px hsl(var(--destructive) / 0); }
+  }
+}
+
+/* ========================================
+   SCROLLBAR
+   ======================================== */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-border rounded-full;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/30;
+}
+
+@media (max-width: 640px) {
+  ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+}
+
+/* ========================================
+   SELECTION & FOCUS
+   ======================================== */
+
+::selection {
+  background: hsl(var(--gradient-start) / 0.25);
+  @apply text-foreground;
+}
+
+:focus-visible {
+  @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+}
+
+/* ========================================
+   SAFE AREAS
+   ======================================== */
+
+.safe-top { padding-top: env(safe-area-inset-top); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
+/* ========================================
+   REDUCED MOTION
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="impact-site-verification" value="e16a5db3-241c-490f-a97b-cc87331a15fa" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    
+    <title>OffMeta — Natural Language MTG Card Search</title>
+    <meta name="description" content="OffMeta is a natural language Magic: The Gathering card search. Type what you mean and find cards without Scryfall syntax." />
+    <meta name="author" content="OffMeta" />
+    <meta name="keywords" content="MTG, Magic The Gathering, Scryfall, card search, deck builder, natural language search, MTG cards, Commander, EDH" />
+    <link rel="canonical" href="https://offmeta.lovable.app/" />
+
+    <!-- Preconnect to Google Fonts (highest priority - used in CSS) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Preconnect to external APIs for faster first requests -->
+    <link rel="preconnect" href="https://api.scryfall.com" crossorigin />
+    <link rel="dns-prefetch" href="https://api.scryfall.com" />
+    <link rel="preconnect" href="https://cards.scryfall.io" crossorigin />
+    <link rel="dns-prefetch" href="https://cards.scryfall.io" />
+    <link rel="preconnect" href="https://nxmzyykkzwomkcentctt.supabase.co" crossorigin />
+    <link rel="dns-prefetch" href="https://nxmzyykkzwomkcentctt.supabase.co" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://offmeta.lovable.app/" />
+    <meta property="og:title" content="OffMeta — Natural Language MTG Card Search" />
+    <meta property="og:description" content="Type what you mean and find Magic cards instantly. No syntax required." />
+    <meta property="og:image" content="https://offmeta.lovable.app/og-image.png" />
+    <meta property="og:site_name" content="OffMeta" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter/X Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://offmeta.lovable.app/" />
+    <meta name="twitter:title" content="OffMeta — Natural Language MTG Card Search" />
+    <meta name="twitter:description" content="Magic card search without syntax." />
+    <meta name="twitter:image" content="https://offmeta.lovable.app/og-image.png" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "OffMeta",
+      "url": "https://offmeta.lovable.app/",
+      "description": "Natural language search translator for Magic: The Gathering cards. Describe what you need in plain English and get real card results from Scryfall.",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "browserRequirements": "Requires JavaScript",
+      "author": {
+        "@type": "Organization",
+        "name": "OffMeta"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "OffMeta",
+      "url": "https://offmeta.lovable.app/",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://offmeta.lovable.app/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is OffMeta?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "OffMeta is a natural language search tool for Magic: The Gathering cards. Instead of learning complex Scryfall syntax, you can describe what you're looking for in plain English and OffMeta translates it into a valid search query."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does natural language MTG card search work?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "OffMeta uses AI to understand your search intent and converts it into Scryfall search syntax. For example, typing 'cheap green ramp spells' becomes a proper query filtering by color, card type, mana cost, and oracle text for mana-producing effects."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is OffMeta free to use?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, OffMeta is completely free to use. There are no accounts required, no subscriptions, and no limits on searches."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Where does OffMeta get its card data?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "OffMeta uses the Scryfall API as its data source. Scryfall maintains a comprehensive, up-to-date database of all Magic: The Gathering cards including oracle text, prices, legalities, and card images."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I use OffMeta to search for Commander/EDH cards?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes! You can search for cards legal in any format including Commander, Standard, Modern, Legacy, and more. Simply mention the format in your search like 'commander legal board wipes under $5' or use the format filter chips."
+          }
+        }
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": "How to Search for MTG Cards with Natural Language",
+      "description": "Learn how to use OffMeta to find Magic: The Gathering cards by describing what you need in plain English, without learning Scryfall syntax.",
+      "totalTime": "PT1M",
+      "step": [
+        {
+          "@type": "HowToStep",
+          "position": 1,
+          "name": "Describe what you're looking for",
+          "text": "Type a natural language description of the cards you want to find. For example: 'green creatures that ramp' or 'board wipes under $5 for commander'."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 2,
+          "name": "Review the translation",
+          "text": "OffMeta shows you the Scryfall query it generated from your description. You can see exactly what syntax was used and edit it if needed."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 3,
+          "name": "Browse your results",
+          "text": "Scroll through the matching cards. Click any card to see full details including oracle text, prices, legalities, and all printings."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 4,
+          "name": "Refine with filters",
+          "text": "Use the filter chips to narrow results by color, format, card type, mana cost, price, or rarity without rewriting your search."
+        }
+      ]
+    }
+    </script>
+
+    <!-- Prevent pull-to-refresh on mobile -->
+    <style>
+      html, body {
+        overscroll-behavior-y: contain;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Static indexable content for SEO crawlers (visible but subtle) -->
+    <div id="seo-content" style="position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;">
+      <h1>OffMeta — Natural Language Magic Card Search</h1>
+      <p>OffMeta is a natural language Magic: The Gathering card search tool. It lets players describe cards the way they talk and translates that into real Scryfall searches. No syntax knowledge required.</p>
+    </div>
+
+    <!-- Fallback for JavaScript-disabled browsers -->
+    <noscript>
+      <div style="padding: 2rem; font-family: system-ui, sans-serif;">
+        <h1>OffMeta — Natural Language Magic Card Search</h1>
+        <p>OffMeta is a natural language Magic: The Gathering card search tool. It lets players describe cards the way they talk and translates that into real Scryfall searches. No syntax knowledge required.</p>
+        <h2>How it works</h2>
+        <ul>
+          <li>Type what you're looking for: "cheap green ramp spells" or "creatures that make treasure tokens"</li>
+          <li>OffMeta translates your description into Scryfall syntax</li>
+          <li>See real card results instantly from Scryfall's database</li>
+        </ul>
+        <p>Please enable JavaScript to use OffMeta.</p>
+      </div>
+    </noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

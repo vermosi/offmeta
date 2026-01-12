@@ -1,0 +1,16 @@
+project_id = "nxmzyykkzwomkcentctt"
+
+[functions.semantic-search]
+verify_jwt = false
+
+[functions.process-feedback]
+verify_jwt = false
+
+[functions.cleanup-logs]
+verify_jwt = false
+
+[functions.generate-patterns]
+verify_jwt = false
+
+[functions.warmup-cache]
+verify_jwt = false

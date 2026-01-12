@@ -1,0 +1,25 @@
+/* Performance optimizations */
+.content-visibility-auto {
+  content-visibility: auto;
+}
+
+.contain-layout {
+  contain: layout style;
+}
+
+/* GPU acceleration for animations */
+.card-hover {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
