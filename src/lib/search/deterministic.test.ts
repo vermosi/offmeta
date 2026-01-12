@@ -91,7 +91,8 @@ describe('Deterministic MTG query translation', () => {
   it('T12: fits into a BR commander deck', () => {
     const query = getQuery('fits into a BR commander deck');
     expect(query).toContain('ci<=br');
-    expect(query).toContain('is:commander');
+    expect(query).toContain('f:commander');
+    expect(query).not.toContain('is:commander');
   });
 
   it('T13: rakdos creature uses color (not identity)', () => {

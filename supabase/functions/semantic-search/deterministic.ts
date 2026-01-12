@@ -325,6 +325,12 @@ function parseCompanions(query: string, ir: SearchIR): string {
 function parseSpecialPatterns(query: string, ir: SearchIR): string {
   let remaining = query;
 
+  const commanderFormatPattern = /\bcommander(?:-|\s)?(deck|format|legal)\b|\blegal in commander\b/gi;
+  if (commanderFormatPattern.test(remaining)) {
+    ir.specials.push('f:commander');
+    remaining = remaining.replace(commanderFormatPattern, '').trim();
+  }
+
   if (/\bcommander\b|\bis:commander\b|\bas commander\b|\bcommanders\b/i.test(remaining)) {
     ir.specials.push('is:commander');
     remaining = remaining.replace(/\b(?:as )?commander\b/gi, '').trim();
