@@ -4,7 +4,7 @@
  * @module lib/card-printings
  */
 
-import { ScryfallCard } from "@/types/card";
+import type { ScryfallCard } from "@/types/card";
 import { logger } from "@/lib/logger";
 
 const BASE_URL = "https://api.scryfall.com";
@@ -174,7 +174,7 @@ export async function getCardPrintings(cardName: string): Promise<CardPrinting[]
  */
 export function getTCGPlayerUrl(card: ScryfallCard): string {
   const affiliateBase = import.meta.env.NEXT_PUBLIC_TCGPLAYER_IMPACT_BASE;
-  const purchaseUris = (card as any).purchase_uris;
+  const purchaseUris = card.purchase_uris;
   
   // Get the base TCGPlayer URL
   let tcgplayerUrl = purchaseUris?.tcgplayer;

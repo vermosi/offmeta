@@ -1,4 +1,4 @@
-import { SearchIntent } from '@/types/search';
+import type { SearchIntent } from '@/types/search';
 import { cn } from '@/lib/utils';
 
 interface ExplainCompilationPanelProps {

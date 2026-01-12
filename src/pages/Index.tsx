@@ -1,7 +1,8 @@
 import { useState, useCallback, useRef, lazy, Suspense, useMemo, useEffect } from "react";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
-import { UnifiedSearchBar, SearchResult, UnifiedSearchBarHandle } from "@/components/UnifiedSearchBar";
+import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
+import type { SearchResult, UnifiedSearchBarHandle } from "@/components/UnifiedSearchBar";
 import { EditableQueryBar } from "@/components/EditableQueryBar";
 import { ExplainCompilationPanel } from "@/components/ExplainCompilationPanel";
 import { ReportIssueDialog } from "@/components/ReportIssueDialog";
@@ -17,9 +18,9 @@ import { HowItWorksSection } from "@/components/HowItWorksSection";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { searchCards } from "@/lib/scryfall";
-import { ScryfallCard } from "@/types/card";
-import { FilterState } from "@/types/filters";
-import { SearchIntent } from "@/types/search";
+import type { ScryfallCard } from "@/types/card";
+import type { FilterState } from "@/types/filters";
+import type { SearchIntent } from "@/types/search";
 import { buildFilterQuery, validateScryfallQuery } from "@/lib/scryfallQuery";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { Loader2 } from "lucide-react";
@@ -211,11 +212,6 @@ const Index = () => {
     });
   }, [queryClient, setSearchParams, originalQuery, trackEvent, activeFilters]);
 
-  // Handler for "Did you mean...?" suggestions
-  const handleTryAlternative = useCallback((alternativeQuery: string) => {
-    searchBarRef.current?.triggerSearch(alternativeQuery);
-  }, []);
-
   const handleCardClick = useCallback((card: ScryfallCard, index: number) => {
     trackCardClick({
       card_id: card.id,
@@ -257,7 +253,7 @@ const Index = () => {
         request_id: currentRequestId,
       });
     }
-  }, [totalCards, lastSearchResult?.scryfallQuery, originalQuery, trackEvent, currentRequestId]);
+  }, [totalCards, lastSearchResult, originalQuery, trackEvent, currentRequestId]);
 
   const handleFilteredCards = useCallback((filtered: ScryfallCard[], filtersActive: boolean, filters: FilterState) => {
     setFilteredCards(filtered);

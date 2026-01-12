@@ -100,7 +100,7 @@ export function SearchFeedback({ originalQuery, translatedQuery }: SearchFeedbac
       });
     } catch (error) {
       // Silently fail - processing is async and will be retried
-      logger.info('Background processing triggered');
+      logger.info('Background processing triggered', error);
     }
   }, []);
 
@@ -163,7 +163,7 @@ export function SearchFeedback({ originalQuery, translatedQuery }: SearchFeedbac
       // Trigger background processing
       triggerProcessing();
     } catch (error) {
-      logger.error('Feedback submission failed');
+      logger.error('Feedback submission failed', error);
       toast.error('Failed to submit feedback');
     } finally {
       setIsSubmitting(false);

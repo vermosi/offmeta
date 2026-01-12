@@ -11,8 +11,8 @@ import { Search, Loader2, X, ArrowRight, History, Clock } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { SearchFeedback } from '@/components/SearchFeedback';
 import { SearchHelpModal } from '@/components/SearchHelpModal';
-import { FilterState } from '@/types/filters';
-import { SearchIntent } from '@/types/search';
+import type { FilterState } from '@/types/filters';
+import type { SearchIntent } from '@/types/search';
 import { logger } from '@/lib/logger';
 
 const SEARCH_CONTEXT_KEY = 'lastSearchContext';
@@ -55,7 +55,9 @@ function getCachedResult(query: string, filters?: FilterState | null, cacheSalt?
       delete cache[key];
       sessionStorage.setItem(RESULT_CACHE_KEY, JSON.stringify(cache));
     }
-  } catch {}
+  } catch {
+    // Ignore storage/cache failures.
+  }
   return null;
 }
 
@@ -71,7 +73,9 @@ function setCachedResult(query: string, result: Omit<CachedResult, 'timestamp'>,
       sorted.slice(0, keys.length - MAX_CACHE_SIZE).forEach(k => delete cache[k]);
     }
     sessionStorage.setItem(RESULT_CACHE_KEY, JSON.stringify(cache));
-  } catch {}
+  } catch {
+    // Ignore storage/cache failures.
+  }
 }
 
 interface SearchContext {
@@ -87,7 +91,9 @@ function useSearchContext() {
     setContext(newContext);
     try {
       sessionStorage.setItem(SEARCH_CONTEXT_KEY, JSON.stringify(newContext));
-    } catch {}
+    } catch {
+      // Ignore storage failures.
+    }
   }, []);
 
   const getContext = useCallback(() => context, [context]);
@@ -113,7 +119,9 @@ function useSearchHistory() {
       const updated = [query, ...filtered].slice(0, MAX_HISTORY_ITEMS);
       try {
         localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(updated));
-      } catch {}
+      } catch {
+        // Ignore storage failures.
+      }
       return updated;
     });
   }, []);
@@ -122,7 +130,9 @@ function useSearchHistory() {
     setHistory([]);
     try {
       localStorage.removeItem(SEARCH_HISTORY_KEY);
-    } catch {}
+    } catch {
+      // Ignore storage failures.
+    }
   }, []);
 
   return { history, addToHistory, clearHistory };
