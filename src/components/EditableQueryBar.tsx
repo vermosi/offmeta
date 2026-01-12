@@ -7,7 +7,7 @@ import { useState, useEffect, useCallback, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Play, Copy, Check, ExternalLink, Edit2, AlertTriangle, X } from 'lucide-react';
+import { Play, Copy, Check, ExternalLink, Edit2, AlertTriangle, X, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FilterState } from '@/types/filters';
 
@@ -18,6 +18,7 @@ interface EditableQueryBarProps {
   isLoading?: boolean;
   validationError?: string | null;
   onRerun: (editedQuery: string) => void;
+  onRegenerate?: () => void;
   onReportIssue?: () => void;
   requestId?: string;
   filters?: FilterState | null;
@@ -30,6 +31,7 @@ export const EditableQueryBar = memo(function EditableQueryBar({
   isLoading,
   validationError,
   onRerun,
+  onRegenerate,
   onReportIssue,
   requestId,
   filters,
@@ -116,6 +118,17 @@ export const EditableQueryBar = memo(function EditableQueryBar({
           )}
         </div>
         <div className="flex items-center gap-1">
+          {onRegenerate && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onRegenerate}
+              className="h-6 px-2 text-xs gap-1 text-muted-foreground hover:text-foreground"
+            >
+              <RotateCcw className="h-3 w-3" />
+              Regenerate
+            </Button>
+          )}
           {onReportIssue && (
             <Button
               variant="ghost"

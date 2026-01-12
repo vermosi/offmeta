@@ -64,6 +64,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buildDeterministicIntent } from "./deterministic.ts";
+import { KNOWN_OTAGS } from "./tags.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -143,10 +145,10 @@ interface CacheEntry {
 const queryCache = new Map<string, CacheEntry>();
 const CACHE_TTL = 30 * 60 * 1000; // 30 minutes for in-memory
 
-function getCacheKey(query: string, filters?: Record<string, unknown>): string {
+function getCacheKey(query: string, filters?: Record<string, unknown>, cacheSalt?: string): string {
   // Apply synonym normalization for better cache hit rate
   const normalized = query.toLowerCase().trim().replace(/\s+/g, ' ');
-  return `${normalized}|${JSON.stringify(filters || {})}`;
+  return `${normalized}|${JSON.stringify(filters || {})}|${cacheSalt || ''}`;
 }
 
 // Simple hash function for cache key
@@ -160,8 +162,8 @@ function hashCacheKey(key: string): string {
   return Math.abs(hash).toString(36);
 }
 
-function getCachedResult(query: string, filters?: Record<string, unknown>): CacheEntry['result'] | null {
-  const key = getCacheKey(query, filters);
+function getCachedResult(query: string, filters?: Record<string, unknown>, cacheSalt?: string): CacheEntry['result'] | null {
+  const key = getCacheKey(query, filters, cacheSalt);
   const hash = hashCacheKey(key);
   const cached = queryCache.get(key);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
@@ -205,8 +207,8 @@ function logCacheEvent(
  * Check persistent database cache for a query.
  * Returns cached result if found and not expired.
  */
-async function getPersistentCache(query: string, filters?: Record<string, unknown>): Promise<CacheEntry['result'] | null> {
-  const key = getCacheKey(query, filters);
+async function getPersistentCache(query: string, filters?: Record<string, unknown>, cacheSalt?: string): Promise<CacheEntry['result'] | null> {
+  const key = getCacheKey(query, filters, cacheSalt);
   const hash = hashCacheKey(key);
   
   try {
@@ -271,15 +273,16 @@ async function getPersistentCache(query: string, filters?: Record<string, unknow
  * Lower threshold = better cache hit rate = lower AI costs.
  */
 async function setPersistentCache(
-  query: string, 
-  filters: Record<string, unknown> | undefined, 
-  result: CacheEntry['result']
+  query: string,
+  filters: Record<string, unknown> | undefined,
+  result: CacheEntry['result'],
+  cacheSalt?: string
 ): Promise<void> {
   // Cache moderate-to-high confidence results (0.7+ covers ~85% of queries)
   // Previously 0.8 only cached ~20% - major cost issue!
   if (result.explanation.confidence < 0.7) return;
   
-  const key = getCacheKey(query, filters);
+  const key = getCacheKey(query, filters, cacheSalt);
   const hash = hashCacheKey(key);
   const normalized = query.toLowerCase().trim().replace(/\s+/g, ' ');
   
@@ -312,8 +315,8 @@ async function setPersistentCache(
   }
 }
 
-function setCachedResult(query: string, filters: Record<string, unknown> | undefined, result: CacheEntry['result']): void {
-  const key = getCacheKey(query, filters);
+function setCachedResult(query: string, filters: Record<string, unknown> | undefined, result: CacheEntry['result'], cacheSalt?: string): void {
+  const key = getCacheKey(query, filters, cacheSalt);
   queryCache.set(key, { result, timestamp: Date.now() });
   
   // Limit cache size to prevent memory issues
@@ -323,7 +326,7 @@ function setCachedResult(query: string, filters: Record<string, unknown> | undef
   }
   
   // Store in persistent cache (fire and forget)
-  setPersistentCache(query, filters, result).catch(() => {});
+  setPersistentCache(query, filters, result, cacheSalt).catch(() => {});
 }
 
 // Clean up expired in-memory cache entries periodically
@@ -444,8 +447,8 @@ async function checkPatternMatch(
         if (filters?.format && !finalQuery.includes('f:')) {
           finalQuery += ` f:${filters.format}`;
         }
-        if (filters?.colorIdentity && Array.isArray(filters.colorIdentity) && filters.colorIdentity.length > 0 && !finalQuery.includes('id')) {
-          finalQuery += ` id=${(filters.colorIdentity as string[]).join('').toLowerCase()}`;
+        if (filters?.colorIdentity && Array.isArray(filters.colorIdentity) && filters.colorIdentity.length > 0 && !finalQuery.includes('id') && !finalQuery.includes('ci')) {
+          finalQuery += ` ci=${(filters.colorIdentity as string[]).join('').toLowerCase()}`;
         }
         
         return {
@@ -920,7 +923,7 @@ const VALID_OPERATORS = [
  */
 const VALID_SEARCH_KEYS = new Set([
   // Core operators
-  'c', 'color', 'id', 'identity', 'o', 'oracle', 't', 'type',
+  'c', 'color', 'id', 'identity', 'ci', 'o', 'oracle', 't', 'type',
   'm', 'mana', 'cmc', 'mv', 'manavalue',
   'power', 'pow', 'toughness', 'tou', 'loyalty', 'loy',
   'e', 'set', 's', 'b', 'block', 'r', 'rarity',
@@ -938,31 +941,6 @@ const VALID_SEARCH_KEYS = new Set([
   'atag', 'arttag', 'art',
   // Specialized Scryfall keys
   'wildpair', 'cn', 'keyword', 'cheapest'
-]);
-
-const KNOWN_OTAGS = new Set([
-  'ramp', 'mana-rock', 'mana-dork', 'mana-doubler', 'mana-sink', 'land-ramp', 'ritual',
-  'draw', 'card-draw', 'cantrip', 'loot', 'looting', 'wheel', 'impulse-draw', 'scry',
-  'tutor', 'land-tutor', 'creature-tutor', 'artifact-tutor', 'enchantment-tutor', 'instant-or-sorcery-tutor',
-  'removal', 'spot-removal', 'creature-removal', 'artifact-removal', 'enchantment-removal', 'planeswalker-removal',
-  'board-wipe', 'mass-removal', 'graveyard-hate', 'graveyard-recursion', 'reanimation',
-  'token-generator', 'treasure-generator', 'food-generator', 'clue-generator', 'blood-generator',
-  'lifegain', 'soul-warden-ability', 'burn', 'fog', 'combat-trick', 'pump',
-  'blink', 'flicker', 'bounce', 'mass-bounce', 'copy', 'copy-permanent', 'copy-spell', 'clone',
-  'stax', 'hatebear', 'pillowfort', 'theft', 'mind-control', 'threaten',
-  'sacrifice-outlet', 'free-sacrifice-outlet', 'aristocrats', 'death-trigger', 'grave-pact-effect', 'blood-artist-effect',
-  'synergy-sacrifice', 'synergy-lifegain', 'synergy-discard', 'synergy-equipment', 'synergy-proliferate',
-  'extra-turn', 'extra-combat', 'polymorph', 'egg', 'activate-from-graveyard', 'cast-from-graveyard',
-  'untapper', 'tapper', 'gives-flash', 'gives-hexproof', 'gives-haste', 'gives-flying', 'gives-trample',
-  'gives-vigilance', 'gives-deathtouch', 'gives-lifelink', 'gives-first-strike', 'gives-double-strike',
-  'gives-menace', 'gives-reach', 'gives-protection', 'gives-indestructible',
-  'landfall', 'extra-land', 'enchantress', 'discard-outlet', 'mulch', 'lord', 'anthem',
-  'self-mill', 'mill', 'graveyard-order-matters',
-  // Special/meta tags
-  'win-condition', 'shares-name-with-set', 'counters-matter', 'counter-doubler', 'counter-movement',
-  'etb-trigger', 'ltb-trigger', 'cost-reducer', 'token-doubler', 'populate', 'overrun',
-  'hard-counter', 'soft-counter', 'creature-board-wipe', 'ping', 'drain', 'tax-effect',
-  'gives-evasion', 'rummaging'
 ]);
 
 function normalizeOrGroups(query: string): string {
@@ -1170,554 +1148,6 @@ function validateQuery(query: string): { valid: boolean; sanitized: string; issu
   return { valid: issues.length === 0, sanitized, issues };
 }
 
-// ============= DETERMINISTIC PRE-PARSER =============
-/**
- * Structured intent object extracted from natural language query.
- * This is built deterministically before LLM is called.
- */
-interface ParsedIntent {
-  // Color handling
-  colors: {
-    values: string[];           // e.g., ['r', 'b']
-    isIdentity: boolean;        // true = use id:, false = use c:
-    isExact: boolean;           // true = use =, false = use <=
-    isOr: boolean;              // true = (c:r OR c:b), false = c:rb
-  } | null;
-  
-  // Types
-  types: string[];              // e.g., ['creature', 'artifact']
-  subtypes: string[];           // e.g., ['zombie', 'elf']
-  
-  // Numeric constraints
-  cmc: { op: string; value: number } | null;  // e.g., { op: '<=', value: 3 }
-  power: { op: string; value: number } | null;
-  toughness: { op: string; value: number } | null;
-  
-  // Special intents
-  isCommander: boolean;
-  format: string | null;
-  yearConstraint: { op: string; year: number } | null;
-  
-  // Price (only if explicitly mentioned with $)
-  priceConstraint: { op: string; value: number } | null;
-  
-  // What's left for LLM
-  remainingQuery: string;
-  
-  // Warnings for user
-  warnings: string[];
-
-  // Deterministic additions
-  oraclePatterns: string[];
-  tagTokens: string[];
-  statTotalApprox: number | null;
-}
-
-/**
- * Color name to Scryfall code mapping
- */
-const COLOR_MAP: Record<string, string> = {
-  'white': 'w', 'w': 'w',
-  'blue': 'u', 'u': 'u',
-  'black': 'b', 'b': 'b',
-  'red': 'r', 'r': 'r',
-  'green': 'g', 'g': 'g',
-  'colorless': 'c', 'c': 'c',
-};
-
-/**
- * Guild/shard/wedge to color codes
- */
-const MULTICOLOR_MAP: Record<string, string> = {
-  // Guilds
-  'azorius': 'wu', 'dimir': 'ub', 'rakdos': 'br', 'gruul': 'rg', 'selesnya': 'gw',
-  'orzhov': 'wb', 'izzet': 'ur', 'golgari': 'bg', 'boros': 'rw', 'simic': 'gu',
-  // Shards
-  'bant': 'gwu', 'esper': 'wub', 'grixis': 'ubr', 'jund': 'brg', 'naya': 'rgw',
-  // Wedges
-  'abzan': 'wbg', 'jeskai': 'urw', 'sultai': 'bgu', 'mardu': 'rwb', 'temur': 'gur',
-  // Four color
-  'yore-tiller': 'wubr', 'glint-eye': 'ubrg', 'dune-brood': 'brgw', 'ink-treader': 'rgwu', 'witch-maw': 'gwub',
-  'sans-white': 'ubrg', 'sans-blue': 'brgw', 'sans-black': 'rgwu', 'sans-red': 'gwub', 'sans-green': 'wubr',
-};
-
-/**
- * MTG card types
- */
-const CARD_TYPES = ['creature', 'artifact', 'enchantment', 'instant', 'sorcery', 'land', 'planeswalker', 'battle', 'kindred', 'equipment'];
-
-/**
- * Parse structured intent from natural language query.
- * This runs BEFORE calling the LLM to extract deterministic constraints.
- */
-function parseIntent(query: string): ParsedIntent {
-  const lowerQuery = query.toLowerCase();
-  let remaining = query;
-  const warnings: string[] = [];
-  
-  const intent: ParsedIntent = {
-    colors: null,
-    types: [],
-    subtypes: [],
-    cmc: null,
-    power: null,
-    toughness: null,
-    isCommander: false,
-    format: null,
-    yearConstraint: null,
-    priceConstraint: null,
-    remainingQuery: '',
-    warnings: [],
-    oraclePatterns: [],
-    tagTokens: [],
-    statTotalApprox: null,
-  };
-  
-  // ===== COLOR PARSING =====
-  
-  // Check for color identity keywords
-  const hasIdentityKeyword = /\b(color identity|identity|commander deck|fits into|can go in)\b/i.test(lowerQuery);
-  const hasExactKeyword = /\b(exactly|only|pure|just|strictly)\b/i.test(lowerQuery);
-  const hasOrKeyword = /\b(or)\b/i.test(lowerQuery);
-  
-  // Check for mono-color
-  const monoMatch = lowerQuery.match(/\bmono[ -]?(white|blue|black|red|green|w|u|b|r|g)\b/);
-  if (monoMatch) {
-    const colorCode = COLOR_MAP[monoMatch[1]] || monoMatch[1].toLowerCase();
-    intent.colors = {
-      values: [colorCode],
-      isIdentity: false,
-      isExact: true,  // mono always means exactly that color
-      isOr: false,
-    };
-    remaining = remaining.replace(monoMatch[0], '').trim();
-  }
-  
-  // Check for colorless
-  if (!intent.colors && /\bcolorless\b/i.test(lowerQuery)) {
-    intent.colors = {
-      values: ['c'],
-      isIdentity: false,
-      isExact: true,
-      isOr: false,
-    };
-    remaining = remaining.replace(/\bcolorless\b/gi, '').trim();
-  }
-  
-  // Check for guild/shard/wedge names
-  if (!intent.colors) {
-    for (const [name, codes] of Object.entries(MULTICOLOR_MAP)) {
-      const regex = new RegExp(`\\b${name}\\b`, 'i');
-      if (regex.test(lowerQuery)) {
-        intent.colors = {
-          values: codes.split(''),
-          isIdentity: hasIdentityKeyword || hasExactKeyword,
-          isExact: hasExactKeyword,
-          isOr: false,  // Guild names imply AND (multicolor)
-        };
-        remaining = remaining.replace(regex, '').trim();
-        break;
-      }
-    }
-  }
-  
-  // Check for "X or Y" color pattern (e.g., "blue or black")
-  if (!intent.colors) {
-    const orColorPattern = /\b(white|blue|black|red|green)\s+or\s+(white|blue|black|red|green)\b/i;
-    const orMatch = lowerQuery.match(orColorPattern);
-    if (orMatch) {
-      const color1 = COLOR_MAP[orMatch[1].toLowerCase()];
-      const color2 = COLOR_MAP[orMatch[2].toLowerCase()];
-      intent.colors = {
-        values: [color1, color2],
-        isIdentity: hasIdentityKeyword,
-        isExact: false,
-        isOr: true,  // "or" means either color, not both
-      };
-      remaining = remaining.replace(orMatch[0], '').trim();
-    }
-  }
-  
-  // Check for "X and Y" color pattern (e.g., "red and black")
-  if (!intent.colors) {
-    const andColorPattern = /\b(white|blue|black|red|green)\s+and\s+(white|blue|black|red|green)\b/i;
-    const andMatch = lowerQuery.match(andColorPattern);
-    if (andMatch) {
-      const color1 = COLOR_MAP[andMatch[1].toLowerCase()];
-      const color2 = COLOR_MAP[andMatch[2].toLowerCase()];
-      intent.colors = {
-        values: [color1, color2],
-        isIdentity: hasIdentityKeyword,
-        isExact: hasExactKeyword,
-        isOr: false,  // "and" means both colors (gold)
-      };
-      remaining = remaining.replace(andMatch[0], '').trim();
-    }
-  }
-  
-  // Check for single color mentions (last resort)
-  if (!intent.colors) {
-    const singleColorPattern = /\b(white|blue|black|red|green)\b/gi;
-    const colorMatches = lowerQuery.match(singleColorPattern);
-    if (colorMatches && colorMatches.length > 0) {
-      const uniqueColors = [...new Set(colorMatches.map(c => COLOR_MAP[c.toLowerCase()]))];
-      intent.colors = {
-        values: uniqueColors,
-        isIdentity: hasIdentityKeyword,
-        isExact: hasExactKeyword,
-        isOr: hasOrKeyword && uniqueColors.length > 1,
-      };
-      for (const match of colorMatches) {
-        remaining = remaining.replace(new RegExp(`\\b${match}\\b`, 'i'), '').trim();
-      }
-    }
-  }
-  
-  // ===== TYPE PARSING =====
-  for (const type of CARD_TYPES) {
-    const typePattern = new RegExp(`\\b${type}s?\\b`, 'i');
-    if (typePattern.test(lowerQuery)) {
-      intent.types.push(type);
-      remaining = remaining.replace(typePattern, '').trim();
-    }
-  }
-  
-  // ===== CMC / MANA VALUE PARSING =====
-  // "under X mana", "X or less mana", "costs X", "cmc X"
-  const cmcPatterns = [
-    { pattern: /\b(?:under|less than|below)\s+(\d+)\s*(?:mana|cmc|mv)?\b/i, op: '<=' },
-    { pattern: /\b(\d+)\s*(?:mana|cmc|mv)?\s+or\s+less\b/i, op: '<=' },
-    { pattern: /\b(?:at most|max|maximum)\s+(\d+)\s*(?:mana|cmc|mv)?\b/i, op: '<=' },
-    { pattern: /\b(?:cmc|mv|mana value)\s*[<≤]\s*=?\s*(\d+)\b/i, op: '<=' },
-    { pattern: /\bcosts?\s+(\d+)\s*(?:mana)?\b/i, op: '=' },
-  ];
-  
-  for (const { pattern, op } of cmcPatterns) {
-    const match = lowerQuery.match(pattern);
-    if (match && !intent.cmc) {
-      intent.cmc = { op, value: parseInt(match[1]) };
-      remaining = remaining.replace(match[0], '').trim();
-      break;
-    }
-  }
-  
-  // "over X mana", "X or more mana"
-  const cmcOverPatterns = [
-    /\b(?:over|more than|above)\s+(\d+)\s*(?:mana|cmc|mv)?\b/i,
-    /\b(\d+)\s*(?:mana|cmc|mv)?\s+or\s+more\b/i,
-    /\b(?:at least|min|minimum)\s+(\d+)\s*(?:mana|cmc|mv)?\b/i,
-  ];
-  
-  for (const pattern of cmcOverPatterns) {
-    const match = lowerQuery.match(pattern);
-    if (match && !intent.cmc) {
-      intent.cmc = { op: '>=', value: parseInt(match[1]) };
-      remaining = remaining.replace(match[0], '').trim();
-      break;
-    }
-  }
-  
-  // "cheap" = mana value, NOT price
-  if (/\bcheap\b/i.test(lowerQuery) && !intent.cmc && !intent.priceConstraint) {
-    intent.cmc = { op: '<=', value: 3 };
-    remaining = remaining.replace(/\bcheap\b/gi, '').trim();
-  }
-
-  // "produces 2 mana" / "adds two mana" patterns
-  const producesMultipleMatch = lowerQuery.match(/\b(produce|produces|add|adds)\s+(?:two|2|\d+)\s+mana\b/i);
-  if (producesMultipleMatch) {
-    intent.oraclePatterns.push('(o:/add \\{[WUBRGC]\\}\\{[WUBRGC]\\}/ OR o:/add \\{\\d+\\}/)');
-    remaining = remaining.replace(producesMultipleMatch[0], '').trim();
-  }
-
-  // Equip cost intent (e.g., "equip for 2")
-  const equipCostMatch = lowerQuery.match(/\bequip(?:s)?\s+(?:for\s+)?(\d+)\b/i);
-  if (equipCostMatch) {
-    intent.oraclePatterns.push(`o:"equip {${equipCostMatch[1]}}"`);
-    remaining = remaining.replace(equipCostMatch[0], '').trim();
-  }
-
-  // "more than one land from graveyard" patterns
-  if (/\b(land|lands)\b/i.test(lowerQuery) && /\bgraveyard\b/i.test(lowerQuery) &&
-      /\b(two|2|more than one|any number|up to two)\b/i.test(lowerQuery)) {
-    intent.oraclePatterns.push('o:graveyard o:land (o:"two" OR o:"up to two" OR o:"any number")');
-    remaining = remaining.replace(/\b(two|2|more than one|any number|up to two)\b/gi, '').trim();
-  }
-  
-  // ===== POWER/TOUGHNESS PARSING =====
-  const powerPatterns = [
-    /\bpower\s*([<>]=?|=)\s*(\d+)\b/i,
-    /\b(\d+)\s*power\b/i,
-  ];
-  const toughnessPatterns = [
-    /\btoughness\s*([<>]=?|=)\s*(\d+)\b/i,
-    /\b(\d+)\s*toughness\b/i,
-  ];
-  
-  for (const pattern of powerPatterns) {
-    const match = lowerQuery.match(pattern);
-    if (match && !intent.power) {
-      if (match[2]) {
-        intent.power = { op: match[1], value: parseInt(match[2]) };
-      } else {
-        intent.power = { op: '=', value: parseInt(match[1]) };
-      }
-      remaining = remaining.replace(match[0], '').trim();
-      break;
-    }
-  }
-  
-  for (const pattern of toughnessPatterns) {
-    const match = lowerQuery.match(pattern);
-    if (match && !intent.toughness) {
-      if (match[2]) {
-        intent.toughness = { op: match[1], value: parseInt(match[2]) };
-      } else {
-        intent.toughness = { op: '=', value: parseInt(match[1]) };
-      }
-      remaining = remaining.replace(match[0], '').trim();
-      break;
-    }
-  }
-  
-  // Check for unsupported pow+tou math
-  const statTotalMatch = lowerQuery.match(/\b(?:power\s*\+\s*toughness|pow\s*\+\s*tou|total stats?)\s*([<>]=?|=)\s*(\d+)\b/i);
-  if (statTotalMatch) {
-    intent.statTotalApprox = parseInt(statTotalMatch[2]);
-    warnings.push("Scryfall can't do power+toughness math; showing the closest approximation instead.");
-  }
-  
-  // ===== COMMANDER INTENT =====
-  if (/\b(?:commander|is:commander|legendary creature|as commander)\b/i.test(lowerQuery)) {
-    intent.isCommander = true;
-    remaining = remaining.replace(/\b(?:as )?commander\b/gi, '').trim();
-  }
-  
-  // ===== FORMAT PARSING =====
-  const formatPatterns = [
-    /\b(?:in|for|legal in)\s+(standard|pioneer|modern|legacy|vintage|commander|edh|pauper|historic|alchemy)\b/i,
-    /\b(standard|pioneer|modern|legacy|vintage|commander|edh|pauper|historic|alchemy)\s+(?:legal|playable|format)\b/i,
-  ];
-  
-  for (const pattern of formatPatterns) {
-    const match = lowerQuery.match(pattern);
-    if (match && !intent.format) {
-      intent.format = match[1].toLowerCase() === 'edh' ? 'commander' : match[1].toLowerCase();
-      remaining = remaining.replace(match[0], '').trim();
-      break;
-    }
-  }
-  
-  // ===== YEAR CONSTRAINT PARSING =====
-  // CRITICAL: Use year: not e: for years
-  const yearPatterns = [
-    { pattern: /\b(?:after|since|from)\s+(\d{4})\b/i, op: '>=' },
-    { pattern: /\b(?:before)\s+(\d{4})\b/i, op: '<' },
-    { pattern: /\b(?:in|from)\s+(\d{4})\b/i, op: '=' },
-    { pattern: /\b(?:released|printed)\s+(?:after|since)\s+(\d{4})\b/i, op: '>=' },
-    { pattern: /\b(?:released|printed)\s+(?:before)\s+(\d{4})\b/i, op: '<' },
-    { pattern: /\b(?:released|printed)\s+(?:in)\s+(\d{4})\b/i, op: '=' },
-    { pattern: /\b(?:new|recent)\s+cards?\b/i, op: '>=', defaultYear: new Date().getFullYear() - 2 },
-    { pattern: /\b(?:old|classic)\s+cards?\b/i, op: '<', defaultYear: 2003 },
-  ];
-  
-  for (const { pattern, op, defaultYear } of yearPatterns) {
-    const match = lowerQuery.match(pattern);
-    if (match && !intent.yearConstraint) {
-      const year = match[1] ? parseInt(match[1]) : defaultYear!;
-      intent.yearConstraint = { op, year };
-      remaining = remaining.replace(match[0], '').trim();
-      break;
-    }
-  }
-  
-  // ===== PRICE PARSING (explicit $ only) =====
-  const pricePatterns = [
-    /\bunder\s*\$\s*(\d+(?:\.\d{2})?)\b/i,
-    /\b(?:less than|below)\s*\$\s*(\d+(?:\.\d{2})?)\b/i,
-    /\bmax(?:imum)?\s*\$\s*(\d+(?:\.\d{2})?)\b/i,
-    /\b\$\s*(\d+(?:\.\d{2})?)\s+or\s+less\b/i,
-  ];
-  
-  for (const pattern of pricePatterns) {
-    const match = lowerQuery.match(pattern);
-    if (match && !intent.priceConstraint) {
-      intent.priceConstraint = { op: '<', value: parseFloat(match[1]) };
-      remaining = remaining.replace(match[0], '').trim();
-      break;
-    }
-  }
-  
-  const priceOverPatterns = [
-    /\bover\s*\$\s*(\d+(?:\.\d{2})?)\b/i,
-    /\b(?:more than|above)\s*\$\s*(\d+(?:\.\d{2})?)\b/i,
-  ];
-  
-  for (const pattern of priceOverPatterns) {
-    const match = lowerQuery.match(pattern);
-    if (match && !intent.priceConstraint) {
-      intent.priceConstraint = { op: '>', value: parseFloat(match[1]) };
-      remaining = remaining.replace(match[0], '').trim();
-      break;
-    }
-  }
-  
-  // Clean up remaining query
-  remaining = remaining
-    .replace(/\s+/g, ' ')
-    .replace(/^[\s,]+|[\s,]+$/g, '')
-    .replace(/\b(that|which|with|the|a|an)\b/gi, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  
-  intent.remainingQuery = remaining;
-  intent.warnings = warnings;
-  
-  return intent;
-}
-
-/**
- * Build Scryfall query from parsed intent.
- * Returns the deterministic part of the query.
- */
-function buildQueryFromIntent(intent: ParsedIntent): string {
-  const parts: string[] = [];
-  
-  // Colors
-  if (intent.colors) {
-    const { values, isIdentity, isExact, isOr } = intent.colors;
-    if (isIdentity) {
-      // Color identity for commander
-      if (isExact) {
-        parts.push(`id=${values.join('')}`);
-      } else {
-        parts.push(`id<=${values.join('')}`);
-      }
-    } else if (isOr && values.length > 1) {
-      // "blue or black" -> (c:u OR c:b)
-      const colorParts = values.map(c => `c:${c}`);
-      parts.push(`(${colorParts.join(' OR ')})`);
-    } else {
-      // Regular color
-      if (isExact || values.length === 1) {
-        parts.push(`c=${values.join('')}`);
-      } else {
-        parts.push(`c:${values.join('')}`);
-      }
-    }
-  }
-  
-  // Types
-  for (const type of intent.types) {
-    parts.push(`t:${type}`);
-  }
-  
-  // CMC
-  if (intent.cmc) {
-    parts.push(`mv${intent.cmc.op}${intent.cmc.value}`);
-  }
-  
-  // Power
-  if (intent.power) {
-    parts.push(`pow${intent.power.op}${intent.power.value}`);
-  }
-  
-  // Toughness
-  if (intent.toughness) {
-    parts.push(`tou${intent.toughness.op}${intent.toughness.value}`);
-  }
-
-  // Approximate power+toughness total with individual constraints
-  if (intent.statTotalApprox && !intent.power && !intent.toughness) {
-    parts.push(`pow<=${intent.statTotalApprox}`);
-    parts.push(`tou<=${intent.statTotalApprox}`);
-  }
-  
-  // Commander
-  if (intent.isCommander) {
-    parts.push('is:commander');
-  }
-  
-  // Format
-  if (intent.format) {
-    parts.push(`f:${intent.format}`);
-  }
-  
-  // Year (CRITICAL: use year: not e:)
-  if (intent.yearConstraint) {
-    parts.push(`year${intent.yearConstraint.op}${intent.yearConstraint.year}`);
-  }
-  
-  // Price
-  if (intent.priceConstraint) {
-    parts.push(`usd${intent.priceConstraint.op}${intent.priceConstraint.value}`);
-  }
-
-  // Tag-first tokens
-  for (const tagToken of intent.tagTokens) {
-    parts.push(tagToken);
-  }
-
-  // Oracle fallback patterns
-  for (const pattern of intent.oraclePatterns) {
-    parts.push(pattern);
-  }
-  
-  return parts.join(' ');
-}
-
-const TAG_FIRST_MAP: Array<{ pattern: RegExp; tag: string; fallback?: string }> = [
-  { pattern: /\bmana sinks?\b/gi, tag: 'mana-sink', fallback: 'o:"{X}"' },
-  { pattern: /\bmana rocks?\b/gi, tag: 'mana-rock', fallback: 't:artifact o:"add"' },
-  { pattern: /\bgives? flash\b/gi, tag: 'gives-flash', fallback: 'o:"flash"' },
-  { pattern: /\bgives? hexproof\b/gi, tag: 'gives-hexproof', fallback: 'o:"hexproof"' },
-  { pattern: /\bself[ -]?mill\b/gi, tag: 'self-mill', fallback: 'o:"mill" o:"you"' },
-  { pattern: /\bgraveyard order matters\b/gi, tag: 'graveyard-order-matters', fallback: 'o:"graveyard" o:"order"' },
-  { pattern: /\bsoul sisters?\b/gi, tag: 'soul-warden-ability', fallback: 'o:"gain 1 life" o:"creature enters"' },
-  { pattern: /\bsacrifice synergy\b/gi, tag: 'synergy-sacrifice', fallback: '(o:"whenever" o:"you sacrifice")' },
-];
-
-function applyTagFirstMappings(query: string): { remaining: string; tagTokens: string[]; fallbackPatterns: string[]; missingTags: string[] } {
-  let remaining = query;
-  const tagTokens: string[] = [];
-  const fallbackPatterns: string[] = [];
-  const missingTags: string[] = [];
-
-  for (const { pattern, tag, fallback } of TAG_FIRST_MAP) {
-    if (pattern.test(remaining)) {
-      remaining = remaining.replace(pattern, '').trim();
-      if (KNOWN_OTAGS.has(tag)) {
-        tagTokens.push(`otag:${tag}`);
-      } else if (fallback) {
-        fallbackPatterns.push(fallback);
-        missingTags.push(tag);
-      }
-    }
-  }
-
-  return { remaining, tagTokens, fallbackPatterns, missingTags };
-}
-
-function buildDeterministicIntent(query: string): { intent: ParsedIntent; deterministicQuery: string } {
-  const intent = parseIntent(query);
-  const tagResult = applyTagFirstMappings(intent.remainingQuery);
-
-  intent.tagTokens.push(...tagResult.tagTokens);
-  intent.oraclePatterns.push(...tagResult.fallbackPatterns);
-  intent.remainingQuery = tagResult.remaining.trim();
-
-  if (tagResult.missingTags.length > 0) {
-    intent.warnings.push(`Some oracle tags were unavailable; falling back to oracle text for: ${tagResult.missingTags.join(', ')}`);
-    console.warn(JSON.stringify({
-      event: 'otag_missing_fallback',
-      missing: tagResult.missingTags
-    }));
-  }
-
-  const deterministicQuery = buildQueryFromIntent(intent).trim();
-  return { intent, deterministicQuery };
-}
-
 /**
  * Creates a simplified fallback query by removing complex constraints.
  * Used when the primary query returns no results.
@@ -1831,6 +1261,54 @@ async function validateAgainstScryfall(
       error: String(error)
     };
   }
+}
+
+function relaxSpeculativeClauses(query: string): { relaxedQuery: string; removed: string[] } {
+  const tokens = query.split(/\s+/);
+  const removed: string[] = [];
+  const kept = tokens.filter(token => {
+    const isSpeculative = /^-?o:|^otag:|^atag:/.test(token);
+    if (isSpeculative) {
+      removed.push(token);
+      return false;
+    }
+    return true;
+  });
+
+  return { relaxedQuery: kept.join(' ').trim(), removed };
+}
+
+async function validateAndRelaxQuery(
+  query: string,
+  deterministicQuery: string | null,
+  overlyBroadThreshold: number
+): Promise<{ query: string; relaxedClauses: string[]; validation: ScryfallValidationResult | null }> {
+  const validation = await validateAgainstScryfall(query, overlyBroadThreshold);
+  if (validation.ok || validation.status !== 400) {
+    return { query, relaxedClauses: [], validation };
+  }
+
+  const relaxedClauses: string[] = [];
+  if (deterministicQuery && query.startsWith(deterministicQuery)) {
+    const speculative = query.slice(deterministicQuery.length).trim();
+    if (speculative) {
+      const retry = await validateAgainstScryfall(deterministicQuery, overlyBroadThreshold);
+      if (retry.ok) {
+        relaxedClauses.push(speculative);
+        return { query: deterministicQuery, relaxedClauses, validation: retry };
+      }
+    }
+  }
+
+  const fallback = relaxSpeculativeClauses(query);
+  if (fallback.relaxedQuery && fallback.relaxedQuery !== query) {
+    const retry = await validateAgainstScryfall(fallback.relaxedQuery, overlyBroadThreshold);
+    if (retry.ok) {
+      return { query: fallback.relaxedQuery, relaxedClauses: fallback.removed, validation: retry };
+    }
+  }
+
+  return { query, relaxedClauses, validation };
 }
 
 function buildFallbackQuery(
@@ -2231,7 +1709,7 @@ function buildFallbackQuery(
     fallbackQuery += ` f:${filters.format}`;
   }
   if (filters?.colorIdentity?.length) {
-    fallbackQuery += ` id=${filters.colorIdentity.join('').toLowerCase()}`;
+    fallbackQuery += ` ci=${filters.colorIdentity.join('').toLowerCase()}`;
   }
 
   const validation = validateQuery(fallbackQuery);
@@ -2252,7 +1730,7 @@ function applyFiltersToQuery(
     filteredQuery += ` f:${filters.format}`;
   }
   if (filters?.colorIdentity?.length) {
-    filteredQuery += ` id=${filters.colorIdentity.join('').toLowerCase()}`;
+    filteredQuery += ` ci=${filters.colorIdentity.join('').toLowerCase()}`;
   }
 
   return filteredQuery.trim();
@@ -2294,7 +1772,7 @@ serve(async (req) => {
   }
 
   try {
-    const { query, filters, context, debug, useCache } = await req.json();
+    const { query, filters, context, debug, useCache, cacheSalt } = await req.json();
     const debugOptions: DebugOptions | undefined = debug && typeof debug === 'object' ? debug : undefined;
     const shouldForceFallback = Boolean(debugOptions?.forceFallback || debugOptions?.simulateAiFailure);
     const shouldRunCoreTests = Boolean(debugOptions?.runCoreTests);
@@ -2468,7 +1946,7 @@ serve(async (req) => {
 
     // Check in-memory cache first for identical queries (only when user requests reuse)
     if (useCache) {
-      const cachedResult = getCachedResult(query, filters);
+      const cachedResult = getCachedResult(query, filters, cacheSalt);
       if (cachedResult) {
         const cacheHitTime = Date.now() - requestStartTime;
         const cachedValidation = validateQuery(cachedResult.scryfallQuery);
@@ -2505,7 +1983,7 @@ serve(async (req) => {
 
     // Check persistent database cache (survives function restarts) only when reuse is requested
     if (useCache) {
-      const persistentCacheResult = await getPersistentCache(query, filters);
+      const persistentCacheResult = await getPersistentCache(query, filters, cacheSalt);
       if (persistentCacheResult) {
         const cacheHitTime = Date.now() - requestStartTime;
         const cachedValidation = validateQuery(persistentCacheResult.scryfallQuery);
@@ -2552,7 +2030,7 @@ serve(async (req) => {
       }));
       
       // Cache the pattern match result for future hits
-      setCachedResult(query, filters, patternMatch);
+      setCachedResult(query, filters, patternMatch, cacheSalt);
       
       // Skip logging for pattern matches to reduce DB costs
       return new Response(JSON.stringify({
@@ -2625,14 +2103,23 @@ serve(async (req) => {
     if (!remainingQuery) {
       const validation = validateQuery(deterministicQuery || query);
       const scryfallQuery = validation.sanitized || query;
+      const scryfallValidation = await validateAndRelaxQuery(
+        scryfallQuery,
+        deterministicQuery || null,
+        overlyBroadThreshold
+      );
       const responseTimeMs = Date.now() - requestStartTime;
+      const assumptions = [...deterministicResult.intent.warnings];
+      if (scryfallValidation.relaxedClauses.length > 0) {
+        assumptions.push(`Relaxed query by removing: ${scryfallValidation.relaxedClauses.join(' ')}`);
+      }
 
       return new Response(JSON.stringify({
         originalQuery: query,
-        scryfallQuery,
+        scryfallQuery: scryfallValidation.query,
         explanation: {
           readable: `Searching for: ${query}`,
-          assumptions: deterministicResult.intent.warnings,
+          assumptions,
           confidence: 0.9
         },
         intent: {
@@ -3911,6 +3398,16 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
       assumptions.push(...corrections);
     }
     
+    const relaxedResult = await validateAndRelaxQuery(
+      scryfallQuery,
+      deterministicQuery || null,
+      overlyBroadThreshold
+    );
+    if (relaxedResult.relaxedClauses.length > 0) {
+      assumptions.push(`Relaxed query by removing: ${relaxedResult.relaxedClauses.join(' ')}`);
+      scryfallQuery = relaxedResult.query;
+    }
+
     // Detect what the AI actually did based on the generated query
     if (!filters?.format && scryfallQuery.includes('f:commander')) {
       assumptions.push('Assumed Commander format based on context');
@@ -3991,7 +3488,7 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
       },
       showAffiliate
     };
-    setCachedResult(query, filters, resultToCache);
+    setCachedResult(query, filters, resultToCache, cacheSalt);
 
     return new Response(JSON.stringify({ 
       originalQuery: query,
