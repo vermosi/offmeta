@@ -19,6 +19,7 @@ export default defineConfig(({ mode }) => ({
     environment: "node",
     include: ["src/**/*.test.ts"],
     coverage: {
+      provider: "v8",
       reporter: ["text", "lcov"],
       lines: 60,
       functions: 60,
