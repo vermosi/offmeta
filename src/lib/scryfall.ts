@@ -13,6 +13,8 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 let lastRequestTime = 0;
 const MIN_REQUEST_INTERVAL = 100;
+const REQUEST_TIMEOUT_MS = 10000;
+const MAX_RETRIES = 2;
 
 // Request queue for high-traffic scenarios
 interface QueuedRequest {
@@ -46,7 +48,7 @@ async function processQueue(): Promise<void> {
       }
       
       lastRequestTime = Date.now();
-      const response = await fetch(request.url);
+      const response = await fetchWithRetry(request.url);
       request.resolve(response);
     } catch (error) {
       request.reject(error instanceof Error ? error : new Error(String(error)));
@@ -54,6 +56,34 @@ async function processQueue(): Promise<void> {
   }
   
   isProcessingQueue = false;
+}
+
+async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function fetchWithRetry(url: string): Promise<Response> {
+  let attempt = 0;
+  let lastError: Error | null = null;
+
+  while (attempt <= MAX_RETRIES) {
+    try {
+      return await fetchWithTimeout(url, REQUEST_TIMEOUT_MS);
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      attempt += 1;
+      if (attempt > MAX_RETRIES) break;
+      await delay(500 * attempt);
+    }
+  }
+
+  throw lastError ?? new Error("Request failed");
 }
 
 /**

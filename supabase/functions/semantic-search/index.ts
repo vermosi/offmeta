@@ -1742,6 +1742,12 @@ serve(async (req) => {
   }
 
   const requestStartTime = Date.now();
+  const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
+  const jsonHeaders = {
+    ...corsHeaders,
+    'Content-Type': 'application/json',
+    'X-Request-Id': requestId,
+  };
   let fallbackUsed = false;
 
   // Rate limiting check
@@ -1754,18 +1760,19 @@ serve(async (req) => {
     console.log(JSON.stringify({
       event: 'rate_limit_exceeded',
       ip: clientIP.substring(0, 20),
-      retryAfter: rateCheck.retryAfter
+      retryAfter: rateCheck.retryAfter,
+      requestId
     }));
     
     return new Response(JSON.stringify({
       error: 'Too many requests. Please slow down.',
       retryAfter: rateCheck.retryAfter,
-      success: false
+      success: false,
+      requestId
     }), {
       status: 429,
       headers: { 
-        ...corsHeaders, 
-        'Content-Type': 'application/json',
+        ...jsonHeaders,
         'Retry-After': String(rateCheck.retryAfter)
       }
     });
@@ -1781,36 +1788,36 @@ serve(async (req) => {
 
     // Input validation
     if (!query || typeof query !== 'string' || query.trim().length === 0) {
-      return new Response(JSON.stringify({ error: 'Query is required', success: false }), {
+      return new Response(JSON.stringify({ error: 'Query is required', success: false, requestId }), {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: jsonHeaders,
       });
     }
     if (query.length > 500) {
-      return new Response(JSON.stringify({ error: 'Query too long (max 500 characters)', success: false }), {
+      return new Response(JSON.stringify({ error: 'Query too long (max 500 characters)', success: false, requestId }), {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: jsonHeaders,
       });
     }
 
     // Validate filters if provided
     const allowedFormats = ['standard', 'pioneer', 'modern', 'legacy', 'vintage', 'commander', 'pauper', 'historic', 'alchemy'];
     if (filters?.format && !allowedFormats.includes(filters.format.toLowerCase())) {
-      return new Response(JSON.stringify({ error: 'Invalid format specified', success: false }), {
+      return new Response(JSON.stringify({ error: 'Invalid format specified', success: false, requestId }), {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: jsonHeaders,
       });
     }
     if (filters?.colorIdentity && (!Array.isArray(filters.colorIdentity) || filters.colorIdentity.length > 5)) {
-      return new Response(JSON.stringify({ error: 'Invalid color identity', success: false }), {
+      return new Response(JSON.stringify({ error: 'Invalid color identity', success: false, requestId }), {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: jsonHeaders,
       });
     }
     if (filters?.maxCmc !== undefined && (typeof filters.maxCmc !== 'number' || filters.maxCmc < 0 || filters.maxCmc > 20)) {
-      return new Response(JSON.stringify({ error: 'Invalid max CMC (must be 0-20)', success: false }), {
+      return new Response(JSON.stringify({ error: 'Invalid max CMC (must be 0-20)', success: false, requestId }), {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: jsonHeaders,
       });
     }
 
@@ -1908,6 +1915,7 @@ serve(async (req) => {
 
       return new Response(JSON.stringify({
         originalQuery: query,
+        requestId,
         scryfallQuery: fallbackResult.sanitized || query,
         explanation: {
           readable: `Searching for: ${query}`,
@@ -1937,7 +1945,7 @@ serve(async (req) => {
           coreTests
         }
       }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: jsonHeaders,
       });
     }
 
@@ -1958,6 +1966,7 @@ serve(async (req) => {
         
         return new Response(JSON.stringify({
           originalQuery: query,
+          requestId,
           ...cachedResult,
           intent: {
             colors: deterministicResult.intent.colors,
@@ -1976,7 +1985,7 @@ serve(async (req) => {
           cached: true,
           source: 'memory_cache'
         }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: jsonHeaders,
         });
       }
     }
@@ -1995,6 +2004,7 @@ serve(async (req) => {
         
         return new Response(JSON.stringify({
           originalQuery: query,
+          requestId,
           ...persistentCacheResult,
           intent: {
             colors: deterministicResult.intent.colors,
@@ -2013,7 +2023,7 @@ serve(async (req) => {
           cached: true,
           source: 'persistent_cache'
         }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: jsonHeaders,
         });
       }
     }
@@ -2035,6 +2045,7 @@ serve(async (req) => {
       // Skip logging for pattern matches to reduce DB costs
       return new Response(JSON.stringify({
         originalQuery: query,
+        requestId,
         ...patternMatch,
         intent: {
           colors: deterministicResult.intent.colors,
@@ -2052,7 +2063,7 @@ serve(async (req) => {
         success: true,
         source: 'pattern_match'
       }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: jsonHeaders,
       });
     }
 
@@ -2078,6 +2089,7 @@ serve(async (req) => {
       const fallbackIntent = buildDeterministicIntent(query);
       return new Response(JSON.stringify({
         originalQuery: query,
+        requestId,
         ...result,
         intent: {
           colors: fallbackIntent.intent.colors,
@@ -2095,7 +2107,7 @@ serve(async (req) => {
         success: true,
         fallback: true
       }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: jsonHeaders,
       });
     }
 
@@ -2116,6 +2128,7 @@ serve(async (req) => {
 
       return new Response(JSON.stringify({
         originalQuery: query,
+        requestId,
         scryfallQuery: scryfallValidation.query,
         explanation: {
           readable: `Searching for: ${query}`,
@@ -2139,7 +2152,7 @@ serve(async (req) => {
         success: true,
         source: 'deterministic'
       }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: jsonHeaders,
       });
     }
 
@@ -3295,9 +3308,9 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
       }
       
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment.", success: false }), {
+        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment.", success: false, requestId }), {
           status: 429,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: jsonHeaders,
         });
       }
       // Fallback: AI gateway unavailable (402, 500, etc.) - pass query directly to Scryfall
@@ -3330,6 +3343,7 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
       
       return new Response(JSON.stringify({
         originalQuery: query,
+        requestId,
         scryfallQuery: fallbackValidation.sanitized,
         explanation: {
           readable: `Searching for: ${query}`,
@@ -3353,7 +3367,7 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
         success: true,
         fallback: true
       }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: jsonHeaders,
       });
     }
 
@@ -3467,6 +3481,7 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
     // Enhanced console logging for debugging
     console.log(JSON.stringify({
       event: 'translation_complete',
+      requestId,
       naturalQuery: query.substring(0, 100),
       scryfallQuery: scryfallQuery.substring(0, 200),
       model: 'google/gemini-2.5-flash-lite',
@@ -3492,6 +3507,7 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
 
     return new Response(JSON.stringify({ 
       originalQuery: query,
+      requestId,
       scryfallQuery,
       explanation: {
         readable: `Searching for: ${query}`,
@@ -3514,21 +3530,23 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
       responseTimeMs,
       success: true 
     }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: jsonHeaders,
     });
   } catch (error) {
     const responseTimeMs = Date.now() - requestStartTime;
     console.error(JSON.stringify({
       event: 'translation_error',
+      requestId,
       error: String(error),
       responseTimeMs
     }));
     return new Response(JSON.stringify({ 
       error: "Something went wrong. Please try rephrasing your search.",
-      success: false 
+      success: false,
+      requestId
     }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: jsonHeaders,
     });
   }
 });

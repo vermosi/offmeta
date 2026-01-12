@@ -196,6 +196,7 @@ function parseColors(query: string, ir: SearchIR): string {
 
   const identityIntent = /\b(ci|color identity|commander deck|fits into|goes into|can go in|usable in)\b/i.test(remaining);
   const exactIntent = /\b(exactly|only|just|strictly)\b/i.test(remaining);
+  const withinIntent = identityIntent && /\b(commander deck|fits into|goes into|can go in|usable in)\b/i.test(remaining);
 
   const monoMatch = remaining.match(/\bmono[-\s]?(white|blue|black|red|green|w|u|b|r|g)\b/i);
   if (monoMatch) {
@@ -211,11 +212,35 @@ function parseColors(query: string, ir: SearchIR): string {
       ir.colorConstraint = {
         values: codes.split(''),
         mode: identityIntent ? 'identity' : 'color',
-        operator: identityIntent && /\b(commander deck|fits into|goes into|can go in|usable in)\b/i.test(remaining) ? 'within' : 'exact',
+        operator: withinIntent ? 'within' : 'exact',
       };
       remaining = remaining.replace(regex, '').trim();
       return remaining;
     }
+  }
+
+  const shorthandMatch = remaining.match(/\b([wubrg])\s*[/\-]?\s*([wubrg])\b/i);
+  if (shorthandMatch) {
+    const values = [shorthandMatch[1].toLowerCase(), shorthandMatch[2].toLowerCase()];
+    ir.colorConstraint = {
+      values,
+      mode: identityIntent ? 'identity' : 'color',
+      operator: withinIntent ? 'within' : 'exact',
+    };
+    remaining = remaining.replace(shorthandMatch[0], '').trim();
+    return remaining;
+  }
+
+  const shorthandCluster = remaining.match(/\b([wubrg]{2,5})\b/i);
+  if (shorthandCluster) {
+    const values = shorthandCluster[1].toLowerCase().split('');
+    ir.colorConstraint = {
+      values,
+      mode: identityIntent ? 'identity' : 'color',
+      operator: withinIntent ? 'within' : 'exact',
+    };
+    remaining = remaining.replace(shorthandCluster[0], '').trim();
+    return remaining;
   }
 
   const orMatch = remaining.match(/\b(white|blue|black|red|green)\s+or\s+(white|blue|black|red|green)\b/i);
@@ -387,8 +412,8 @@ function parseManaProduction(query: string, ir: SearchIR): string {
     remaining = remaining.replace(/\b(produce|produces|produced|add|adds)\s*(?:2|two)\s+mana\b/gi, '').trim();
   }
 
-  const isArtifactIntent = ir.types.includes('artifact') || /\bmana rock\b/i.test(query) || /\bartifact\b/i.test(query) || /\bmanarock\b/i.test(query);
-  if (isArtifactIntent && producesTwoMana) {
+  const mentionsLand = ir.types.includes('land') || /\blands?\b/i.test(query);
+  if (producesTwoMana && !mentionsLand) {
     ir.excludedTypes.push('land');
   }
 

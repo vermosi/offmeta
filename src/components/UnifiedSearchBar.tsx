@@ -229,7 +229,7 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
     // Check client-side cache first (eliminates edge function call entirely)
     const cached = allowReuse ? getCachedResult(queryToSearch, filters, cacheSalt) : null;
     if (cached) {
-      console.log('[Cache] Client-side hit for:', queryToSearch);
+      // Client-side cache hit.
       saveContext(queryToSearch, cached.scryfallQuery);
       onSearch(cached.scryfallQuery, {
         scryfallQuery: cached.scryfallQuery,

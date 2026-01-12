@@ -52,24 +52,30 @@ describe('Deterministic MTG query translation', () => {
     expect(query).not.toMatch(/e:202/);
   });
 
-  it('T7: cards with cows in the art', () => {
+  it('T7: produce 2 mana without lands', () => {
+    const query = getQuery('cards that produce 2 mana');
+    expect(query).toContain('(o:"add {c}{c}" or o:/add');
+    expect(query).toContain('-t:land');
+  });
+
+  it('T8: cards with cows in the art', () => {
     const query = getQuery('cards with cows in the art');
     expect(query).toContain('atag:cow');
   });
 
-  it('T8: cards that share a name with a set', () => {
+  it('T9: cards that share a name with a set', () => {
     const query = getQuery('cards that share a name with a set');
     expect(query).toContain('otag:shares-name-with-set');
     expect(query).not.toContain('o:"set"');
   });
 
-  it('T9: creatures that care about graveyard order', () => {
+  it('T10: creatures that care about graveyard order', () => {
     const query = getQuery('creatures that care about graveyard order');
     expect(query).toContain('t:creature');
     expect(query).toContain('otag:graveyard-order-matters');
   });
 
-  it('T10: multicolor commanders with blue activated ability without mana cost', () => {
+  it('T11: multicolor commanders with blue activated ability without mana cost', () => {
     const query = getQuery('commanders with more than one color, one of which is blue, with an activated ability that does not cost mana');
     expect(query).toContain('is:commander');
     expect(query).toMatch(/id>1/);
@@ -78,7 +84,7 @@ describe('Deterministic MTG query translation', () => {
     expect(query).toContain('-o:/\\{[WUBRG0-9XSC]\\}:/');
   });
 
-  it('T11: creatures usable with Jegantha companion', () => {
+  it('T12: creatures usable with Jegantha companion', () => {
     const query = getQuery('Creature cards usable with a Jegantha companion');
     expect(query).toContain('t:creature');
     expect(query).toContain('-mana:{W}{W}');
@@ -86,5 +92,35 @@ describe('Deterministic MTG query translation', () => {
     expect(query).toContain('-mana:{B}{B}');
     expect(query).toContain('-mana:{R}{R}');
     expect(query).toContain('-mana:{G}{G}');
+  });
+
+  it('T13: color identity for commander deck fits', () => {
+    const query = getQuery('fits into a BR commander deck');
+    expect(query).toContain('ci<=br');
+    expect(query).not.toContain('c=br');
+  });
+
+  it('T14: rakdos creature uses color, not identity', () => {
+    const query = getQuery('rakdos creature');
+    expect(query).toContain('t:creature');
+    expect(query).toContain('c=br');
+  });
+
+  it('T15: at least 4 power creatures', () => {
+    const query = getQuery('creatures with at least 4 power');
+    expect(query).toContain('t:creature');
+    expect(query).toContain('pow>=4');
+  });
+
+  it('T16: toughness 2 or less', () => {
+    const query = getQuery('creatures with 2 toughness or less');
+    expect(query).toContain('t:creature');
+    expect(query).toContain('tou<=2');
+  });
+
+  it('T17: equipment with equip cost 1 or less', () => {
+    const query = getQuery('equipment with equip cost 1 or less');
+    expect(query).toContain('t:equipment');
+    expect(query).toContain('o:/equip \\{[0-1]\\}/');
   });
 });

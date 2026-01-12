@@ -18,5 +18,13 @@ export default defineConfig(({ mode }) => ({
   test: {
     environment: "node",
     include: ["src/**/*.test.ts"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "html"],
+      lines: 65,
+      functions: 60,
+      branches: 60,
+      statements: 65,
+    },
   },
 }));

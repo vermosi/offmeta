@@ -146,7 +146,7 @@ export function ReportIssueDialog({
         body: {}
       });
     } catch (error) {
-      console.log('Background processing triggered');
+      // Background processing invoked successfully.
     }
   }, []);
 

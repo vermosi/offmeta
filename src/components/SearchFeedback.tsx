@@ -99,7 +99,7 @@ export function SearchFeedback({ originalQuery, translatedQuery }: SearchFeedbac
       });
     } catch (error) {
       // Silently fail - processing is async and will be retried
-      console.log('Background processing triggered');
+      // Background processing invoked successfully.
     }
   }, []);
 

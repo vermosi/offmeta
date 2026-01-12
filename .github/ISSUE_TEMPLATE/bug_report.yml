@@ -1,0 +1,43 @@
+name: Bug report
+description: Report a bug to help us improve
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: "Thanks for taking the time to report a bug!"
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: "Provide a minimal set of steps to reproduce the issue."
+      placeholder: "1. Go to...\n2. Click...\n3. See error..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: "Attach screenshots or screen recordings if relevant."
+  - type: input
+    id: node
+    attributes:
+      label: Node.js version
+      placeholder: "v20.11.1"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: "Paste any relevant logs or console output."
+      render: shell
