@@ -2,7 +2,7 @@
  * Footer component with branding and links.
  */
 
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Github } from "lucide-react";
 
 export function Footer() {
   return (
@@ -28,16 +28,28 @@ export function Footer() {
           </div>
 
           {/* Links */}
-          <a
-            href="https://scryfall.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Powered by Scryfall (opens in new tab)"
-          >
-            Powered by Scryfall
-            <ExternalLink className="h-3 w-3 opacity-50" aria-hidden="true" />
-          </a>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <a
+              href="https://github.com/vermosi/offmeta"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="View source on GitHub (opens in new tab)"
+            >
+              <Github className="h-3.5 w-3.5" aria-hidden="true" />
+              <span className="hidden sm:inline">Source</span>
+            </a>
+            <a
+              href="https://scryfall.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Powered by Scryfall (opens in new tab)"
+            >
+              Powered by Scryfall
+              <ExternalLink className="h-3 w-3 opacity-50" aria-hidden="true" />
+            </a>
+          </div>
 
           {/* Copyright */}
           <p className="text-xs text-muted-foreground">
