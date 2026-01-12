@@ -116,11 +116,19 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
     }, 150);
   };
 
-  const handleAffiliateClick = (marketplace: string, url: string) => {
+  const handleAffiliateClick = (marketplace: "tcgplayer" | "cardmarket" | "tcgplayer-foil" | "cardmarket-foil" | "cardhoarder", url: string, price?: string) => {
+    const affiliateBase = import.meta.env.NEXT_PUBLIC_TCGPLAYER_IMPACT_BASE;
+    const isAffiliateLink = marketplace.includes("tcgplayer") && !!affiliateBase;
+    
     trackAffiliateClick({ 
-      affiliate: marketplace as "tcgplayer" | "cardmarket", 
+      affiliate: marketplace, 
       card_name: card?.name, 
-      card_id: card?.id 
+      card_id: card?.id,
+      set_code: card?.set,
+      is_affiliate_link: isAffiliateLink,
+      price_usd: marketplace.includes("tcgplayer") ? price : undefined,
+      price_eur: marketplace.includes("cardmarket") ? price : undefined,
+      price_tix: marketplace === "cardhoarder" ? price : undefined,
     });
     window.open(url, "_blank");
   };
@@ -335,7 +343,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                 className="gap-1.5 justify-between text-xs"
                 onClick={() => {
                   const url = selectedPrinting?.purchase_uris?.tcgplayer || getTCGPlayerUrl(card);
-                  handleAffiliateClick("tcgplayer", url);
+                  handleAffiliateClick("tcgplayer", url, displayPrices.usd);
                 }}
               >
                 <span>TCGplayer</span>
@@ -349,7 +357,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                 className="gap-1.5 justify-between text-xs"
                 onClick={() => {
                   const url = selectedPrinting?.purchase_uris?.cardmarket || getCardmarketUrl(card);
-                  handleAffiliateClick("cardmarket", url);
+                  handleAffiliateClick("cardmarket", url, displayPrices.eur);
                 }}
               >
                 <span>Cardmarket</span>
@@ -367,7 +375,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                   onClick={() => {
                     const baseUrl = selectedPrinting?.purchase_uris?.tcgplayer || getTCGPlayerUrl(card);
                     const foilUrl = baseUrl.includes('?') ? `${baseUrl}&Printing=Foil` : `${baseUrl}?Printing=Foil`;
-                    handleAffiliateClick("tcgplayer-foil", foilUrl);
+                    handleAffiliateClick("tcgplayer-foil", foilUrl, displayPrices.usd_foil);
                   }}
                 >
                   <span className="flex items-center gap-1"><Sparkles className="h-3 w-3" />Foil</span>
@@ -382,7 +390,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                   onClick={() => {
                     const baseUrl = selectedPrinting?.purchase_uris?.cardmarket || getCardmarketUrl(card);
                     const foilUrl = baseUrl.includes('?') ? `${baseUrl}&isFoil=Y` : `${baseUrl}?isFoil=Y`;
-                    handleAffiliateClick("cardmarket-foil", foilUrl);
+                    handleAffiliateClick("cardmarket-foil", foilUrl, displayPrices.eur_foil);
                   }}
                 >
                   <span className="flex items-center gap-1"><Sparkles className="h-3 w-3" />Foil</span>
@@ -545,7 +553,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                 className="gap-2 w-full justify-between"
                 onClick={() => {
                   const url = selectedPrinting?.purchase_uris?.tcgplayer || getTCGPlayerUrl(card);
-                  handleAffiliateClick("tcgplayer", url);
+                  handleAffiliateClick("tcgplayer", url, displayPrices.usd);
                 }}
               >
                 <span className="flex items-center gap-2">
@@ -563,7 +571,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                 onClick={() => {
                   const baseUrl = selectedPrinting?.purchase_uris?.tcgplayer || getTCGPlayerUrl(card);
                   const foilUrl = baseUrl.includes('?') ? `${baseUrl}&Printing=Foil` : `${baseUrl}?Printing=Foil`;
-                  handleAffiliateClick("tcgplayer-foil", foilUrl);
+                  handleAffiliateClick("tcgplayer-foil", foilUrl, displayPrices.usd_foil);
                 }}
               >
                 <span className="flex items-center gap-2">
@@ -580,7 +588,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                 className="gap-2 w-full justify-between"
                 onClick={() => {
                   const url = selectedPrinting?.purchase_uris?.cardmarket || getCardmarketUrl(card);
-                  handleAffiliateClick("cardmarket", url);
+                  handleAffiliateClick("cardmarket", url, displayPrices.eur);
                 }}
               >
                 <span className="flex items-center gap-2">
@@ -598,7 +606,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                 onClick={() => {
                   const baseUrl = selectedPrinting?.purchase_uris?.cardmarket || getCardmarketUrl(card);
                   const foilUrl = baseUrl.includes('?') ? `${baseUrl}&isFoil=Y` : `${baseUrl}?isFoil=Y`;
-                  handleAffiliateClick("cardmarket-foil", foilUrl);
+                  handleAffiliateClick("cardmarket-foil", foilUrl, displayPrices.eur_foil);
                 }}
               >
                 <span className="flex items-center gap-2">
@@ -614,7 +622,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
                 variant="outline"
                 className="gap-2 w-full justify-between"
                 onClick={() => {
-                  handleAffiliateClick("cardhoarder", getCardhoarderUrl());
+                  handleAffiliateClick("cardhoarder", getCardhoarderUrl(), displayTix);
                 }}
               >
                 <span className="flex items-center gap-2">

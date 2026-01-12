@@ -1,10 +1,14 @@
 # OffMeta
 
-[![CI](https://github.com/offmeta/offmeta/actions/workflows/ci.yml/badge.svg)](https://github.com/offmeta/offmeta/actions/workflows/ci.yml)
-[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Live Demo](https://img.shields.io/badge/Demo-offmeta.app-22c55e?style=for-the-badge)](https://offmeta.app)
+[![GitHub](https://img.shields.io/badge/GitHub-Source-181717?style=for-the-badge&logo=github)](https://github.com/vermosi/offmeta)
 
-OffMeta is a natural-language Magic: The Gathering search experience. It translates plain-English queries into precise Scryfall syntax so players can find cards without memorizing query operators.
+[![AGPL License](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Built with Lovable](https://img.shields.io/badge/Built%20with-Lovable-ff69b4)](https://lovable.dev)
 
 **Live demo:** https://offmeta.app (official instance operated by OffMeta via Lovable)
 
@@ -67,8 +71,21 @@ Lovable deployment details are intentionally excluded to avoid leaking operation
 ## Contributing
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for setup, workflow, and checks.
 
-## License
-GNU AGPL v3. See [`LICENSE`](LICENSE).
+## Contributing
 
-## Security
-Report vulnerabilities privately. See [`SECURITY.md`](SECURITY.md).
+This project is open source under the AGPL-3.0 license. Contributions are welcome!
+
+1. Fork the repository
+2. Create a feature branch
+3. Submit a pull request
+
+See [GitHub Issues](https://github.com/vermosi/offmeta/issues) for current tasks.
+
+---
+
+## Legal
+
+| Document | Description |
+|----------|-------------|
+| [LICENSE](LICENSE) | AGPL-3.0 License |
+| [SECURITY](SECURITY.md) | Security vulnerability reporting |

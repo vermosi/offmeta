@@ -151,9 +151,12 @@ interface CardModalViewEventData {
 interface AffiliateClickEventData {
   card_id?: string;
   card_name?: string;
-  affiliate: "tcgplayer" | "cardmarket";
+  affiliate: "tcgplayer" | "cardmarket" | "tcgplayer-foil" | "cardmarket-foil" | "cardhoarder";
   price_usd?: string;
   price_eur?: string;
+  price_tix?: string;
+  is_affiliate_link?: boolean;
+  set_code?: string;
 }
 
 interface PaginationEventData {

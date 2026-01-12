@@ -168,17 +168,26 @@ export async function getCardPrintings(cardName: string): Promise<CardPrinting[]
 
 /**
  * Generate a TCGPlayer purchase URL for a card.
- * Uses the card's embedded purchase URI if available, otherwise falls back to search.
+ * Uses affiliate link if configured, otherwise falls back to direct TCGPlayer URLs.
  * @param card - The card to generate a URL for
- * @returns TCGPlayer URL for purchasing the card
+ * @returns TCGPlayer URL for purchasing the card (with affiliate tracking if configured)
  */
 export function getTCGPlayerUrl(card: ScryfallCard): string {
-  const purchaseUris = card.purchase_uris;
-  if (purchaseUris?.tcgplayer) {
-    return purchaseUris.tcgplayer;
+  const affiliateBase = import.meta.env.NEXT_PUBLIC_TCGPLAYER_IMPACT_BASE;
+  const purchaseUris = (card as any).purchase_uris;
+  
+  // Get the base TCGPlayer URL
+  let tcgplayerUrl = purchaseUris?.tcgplayer;
+  if (!tcgplayerUrl) {
+    tcgplayerUrl = `https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=${encodeURIComponent(card.name)}`;
   }
-  // Fallback to search
-  return `https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=${encodeURIComponent(card.name)}`;
+  
+  // If affiliate base is configured, wrap the URL
+  if (affiliateBase) {
+    return `${affiliateBase}${encodeURIComponent(tcgplayerUrl)}`;
+  }
+  
+  return tcgplayerUrl;
 }
 
 /**
