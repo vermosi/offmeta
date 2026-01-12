@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { MessageSquarePlus, Loader2 } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { logger } from '@/lib/logger';
 import { z } from 'zod';
 
 interface SearchFeedbackProps {
@@ -99,7 +100,7 @@ export function SearchFeedback({ originalQuery, translatedQuery }: SearchFeedbac
       });
     } catch (error) {
       // Silently fail - processing is async and will be retried
-      console.log('Background processing triggered');
+      logger.info('Background processing triggered');
     }
   }, []);
 
@@ -162,7 +163,7 @@ export function SearchFeedback({ originalQuery, translatedQuery }: SearchFeedbac
       // Trigger background processing
       triggerProcessing();
     } catch (error) {
-      console.error('Feedback submission failed');
+      logger.error('Feedback submission failed');
       toast.error('Failed to submit feedback');
     } finally {
       setIsSubmitting(false);

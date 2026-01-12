@@ -169,12 +169,15 @@ function parseNumericConstraint(query: string, field: string, aliases: string[])
     { regex: new RegExp(`\\b(?:at least|min(?:imum)?|>=?)\\s*(\\d+)\\s*(?:${aliasGroup})\\b`, 'i'), op: '>=' },
     { regex: new RegExp(`\\b(\\d+)\\s*(?:${aliasGroup})?\\s*\\+\\b`, 'i'), op: '>=' },
     { regex: new RegExp(`\\b(\\d+)\\s*(?:${aliasGroup})\\s+or\\s+more\\b`, 'i'), op: '>=' },
+    { regex: new RegExp(`\\b(?:${aliasGroup})\\s*(\\d+)\\s+or\\s+more\\b`, 'i'), op: '>=' },
     { regex: new RegExp(`\\b(?:at most|max(?:imum)?|<=?)\\s*(\\d+)\\s*(?:${aliasGroup})\\b`, 'i'), op: '<=' },
     { regex: new RegExp(`\\b(\\d+)\\s*(?:${aliasGroup})\\s+or\\s+less\\b`, 'i'), op: '<=' },
+    { regex: new RegExp(`\\b(?:${aliasGroup})\\s*(\\d+)\\s+or\\s+less\\b`, 'i'), op: '<=' },
     { regex: new RegExp(`\\b(?:under|less than|below)\\s*(\\d+)\\s*(?:${aliasGroup})\\b`, 'i'), op: '<' },
     { regex: new RegExp(`\\b(?:over|more than|above)\\s*(\\d+)\\s*(?:${aliasGroup})\\b`, 'i'), op: '>' },
     { regex: new RegExp(`\\b(?:exactly|equals?)\\s*(\\d+)\\s*(?:${aliasGroup})\\b`, 'i'), op: '=' },
     { regex: new RegExp(`\\b(\\d+)\\s*(?:${aliasGroup})\\b`, 'i'), op: '=' },
+    { regex: new RegExp(`\\b(?:${aliasGroup})\\s*(\\d+)\\b`, 'i'), op: '=' },
   ];
 
   for (const { regex, op } of patterns) {
@@ -203,6 +206,20 @@ function parseColors(query: string, ir: SearchIR): string {
     ir.monoColor = colorCode;
     remaining = remaining.replace(monoMatch[0], '').trim();
     return remaining;
+  }
+
+  if (identityIntent) {
+    const shorthandMatch = remaining.match(/\b([wubrg]{2,5})\b/i);
+    if (shorthandMatch) {
+      const values = shorthandMatch[1].toLowerCase().split('');
+      ir.colorConstraint = {
+        values,
+        mode: 'identity',
+        operator: exactIntent ? 'exact' : 'within',
+      };
+      remaining = remaining.replace(shorthandMatch[0], '').trim();
+      return remaining;
+    }
   }
 
   for (const [name, codes] of Object.entries(MULTICOLOR_MAP)) {
@@ -388,7 +405,10 @@ function parseManaProduction(query: string, ir: SearchIR): string {
   }
 
   const isArtifactIntent = ir.types.includes('artifact') || /\bmana rock\b/i.test(query) || /\bartifact\b/i.test(query) || /\bmanarock\b/i.test(query);
-  if (isArtifactIntent && producesTwoMana) {
+  const hasLandIntent = ir.types.includes('land') || /\blands?\b/i.test(query);
+  if (producesTwoMana && !hasLandIntent && !ir.excludedTypes.includes('land')) {
+    ir.excludedTypes.push('land');
+  } else if (isArtifactIntent && producesTwoMana && !ir.excludedTypes.includes('land')) {
     ir.excludedTypes.push('land');
   }
 

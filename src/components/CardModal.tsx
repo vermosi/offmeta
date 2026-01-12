@@ -15,7 +15,7 @@ import { ManaCost, OracleText } from "./ManaSymbol";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { ExternalLink, ShoppingCart, Loader2, Palette, X, RefreshCw, Sparkles, Monitor, Shield, ChevronDown, ChevronUp, Gavel } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
@@ -134,21 +134,21 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
 
   const displaySetName = selectedPrinting?.set_name || card.set_name;
   const displayRarity = selectedPrinting?.rarity || card.rarity;
-  const displayCollectorNumber = selectedPrinting?.collector_number || (card as any).collector_number || "";
+  const displayCollectorNumber = selectedPrinting?.collector_number || card.collector_number || "";
   const displayArtist = selectedPrinting?.artist || card.artist;
 
   const displayPrices = refreshedPrices || {
     usd: card.prices.usd,
     usd_foil: card.prices.usd_foil,
     eur: card.prices.eur,
-    eur_foil: (card.prices as any).eur_foil
+    eur_foil: card.prices.eur_foil
   };
 
   const englishPrintings = printings
     .filter((p) => p.lang === "en")
     .sort((a, b) => new Date(b.released_at).getTime() - new Date(a.released_at).getTime());
 
-  const getRarityVariant = (rarity: string) => {
+  const getRarityVariant = (rarity: string): BadgeProps["variant"] => {
     switch (rarity) {
       case "mythic": return "mythic";
       case "rare": return "rare";
@@ -171,7 +171,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
 
   // Get Cardhoarder URL for MTGO
   const getCardhoarderUrl = () => {
-    const purchaseUris = (card as any).purchase_uris;
+    const purchaseUris = card.purchase_uris;
     if (purchaseUris?.cardhoarder) {
       return purchaseUris.cardhoarder;
     }
@@ -179,7 +179,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
   };
 
   // Check if card has MTGO pricing
-  const displayTix = selectedPrinting?.prices?.tix || (card.prices as any)?.tix;
+  const displayTix = selectedPrinting?.prices?.tix || card.prices.tix;
 
   // Mobile-specific content - card-first ordering
   const mobileContent = (
@@ -228,14 +228,14 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
 
         {/* Badges */}
         <div className="flex items-center justify-center gap-2 flex-wrap">
-          <Badge variant={getRarityVariant(displayRarity) as any} className="capitalize">
+          <Badge variant={getRarityVariant(displayRarity)} className="capitalize">
             {displayRarity}
           </Badge>
           <Badge variant="secondary">
             {displaySetName}
             {displayCollectorNumber && ` #${displayCollectorNumber}`}
           </Badge>
-          {(card as any).reserved && (
+          {card.reserved && (
             <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30 gap-1">
               <Shield className="h-3 w-3" />
               Reserved
@@ -649,14 +649,14 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
 
           {/* Set Info with Badges */}
           <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant={getRarityVariant(displayRarity) as any} className="capitalize">
+            <Badge variant={getRarityVariant(displayRarity)} className="capitalize">
               {displayRarity}
             </Badge>
             <Badge variant="secondary">
               {displaySetName}
               {displayCollectorNumber && ` #${displayCollectorNumber}`}
             </Badge>
-            {(card as any).reserved && (
+            {card.reserved && (
               <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30 gap-1">
                 <Shield className="h-3 w-3" />
                 Reserved List

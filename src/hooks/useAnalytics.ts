@@ -6,6 +6,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/logger";
 
 // Rate limiting configuration
 const RATE_LIMIT_KEY = 'analytics_events_rate';
@@ -99,7 +100,7 @@ function sanitizeEventData(data: Record<string, unknown>): Record<string, string
   // Check total size
   const jsonSize = JSON.stringify(sanitized).length;
   if (jsonSize > MAX_EVENT_DATA_SIZE) {
-    console.warn('Event data too large, truncating');
+    logger.warn('Event data too large, truncating');
     return {};
   }
   
@@ -197,13 +198,13 @@ export function useAnalytics() {
     try {
       // Validate event type
       if (!isValidEventType(eventType)) {
-        console.warn('Invalid event type:', eventType);
+        logger.warn('Invalid event type:', eventType);
         return;
       }
 
       // Check rate limit
       if (!checkAndUpdateRateLimit()) {
-        console.warn('Analytics rate limit exceeded');
+        logger.warn('Analytics rate limit exceeded');
         return;
       }
 
@@ -220,7 +221,7 @@ export function useAnalytics() {
         }])
         .then(({ error }) => {
           if (error) {
-            console.warn("Analytics tracking failed");
+            logger.warn("Analytics tracking failed");
           }
         });
     } catch {
