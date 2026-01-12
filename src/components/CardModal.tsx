@@ -7,9 +7,11 @@
  */
 
 import { useState, useEffect } from "react";
-import { ScryfallCard } from "@/types/card";
-import { getCardImage, isDoubleFacedCard, getCardFaceDetails, getCardRulings, CardRuling } from "@/lib/scryfall";
-import { getCardPrintings, getTCGPlayerUrl, getCardmarketUrl, CardPrinting } from "@/lib/card-printings";
+import type { ScryfallCard } from "@/types/card";
+import { getCardImage, isDoubleFacedCard, getCardFaceDetails, getCardRulings } from "@/lib/scryfall";
+import type { CardRuling } from "@/lib/scryfall";
+import { getCardPrintings, getTCGPlayerUrl, getCardmarketUrl } from "@/lib/card-printings";
+import type { CardPrinting } from "@/lib/card-printings";
 
 import { ManaCost, OracleText } from "./ManaSymbol";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";

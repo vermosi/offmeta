@@ -200,14 +200,7 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
     return () => clearInterval(interval);
   }, [rateLimitedUntil]);
 
-  useImperativeHandle(ref, () => ({
-    triggerSearch: (searchQuery: string, options?: { bypassCache?: boolean; cacheSalt?: string }) => {
-      setQuery(searchQuery);
-      handleSearch(searchQuery, options);
-    }
-  }), []);
-
-  const handleSearch = async (searchQuery?: string, options?: { bypassCache?: boolean; cacheSalt?: string }) => {
+  const handleSearch = useCallback(async (searchQuery?: string, options?: { bypassCache?: boolean; cacheSalt?: string }) => {
     const queryToSearch = (searchQuery || query).trim();
     
     // Prevent empty, duplicate, or rate-limited searches
@@ -347,7 +340,24 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
       setIsSearching(false);
       abortControllerRef.current = null;
     }
-  };
+  }, [
+    addToHistory,
+    filters,
+    getContext,
+    onSearch,
+    query,
+    rateLimitCountdown,
+    rateLimitedUntil,
+    saveContext,
+    useLast,
+  ]);
+
+  useImperativeHandle(ref, () => ({
+    triggerSearch: (searchQuery: string, options?: { bypassCache?: boolean; cacheSalt?: string }) => {
+      setQuery(searchQuery);
+      handleSearch(searchQuery, options);
+    }
+  }), [handleSearch]);
 
   const showExamples = !query;
 
