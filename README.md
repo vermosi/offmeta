@@ -35,6 +35,27 @@ npm run dev
 
 For Edge Function environment variables, see [`docs/configuration.md`](docs/configuration.md).
 
+## How it works
+- You enter a natural-language query in the UI (text or voice).
+- The frontend sends the request to a Supabase Edge Function for interpretation.
+- The Edge Function deterministically translates the prompt to Scryfall syntax and uses AI only as a fallback.
+- The Edge Function queries the Scryfall API with the generated search string.
+- Results are returned to the UI, cached client-side, and rendered as cards with details and printings.
+
+```mermaid
+flowchart LR
+  UI["UI (text/voice)"] --> Edge["Supabase Edge Function"]
+  Edge --> Translate["Deterministic translation"]
+  Translate -->|fallback| AI["AI interpretation"]
+  Translate --> Scryfall["Scryfall API"]
+  AI --> Scryfall
+  Scryfall --> Results["Results + metadata"]
+  Results --> UI
+  UI --> Cache["Client cache"]
+```
+
+For a deeper architecture overview, see [`docs/architecture.md`](docs/architecture.md).
+
 ## Usage examples
 Try these sample queries:
 1. "artifact that produced 2 mana and costs four or less mana"
