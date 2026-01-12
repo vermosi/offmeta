@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 const isDev = import.meta.env.DEV;
 
 export const logger = {

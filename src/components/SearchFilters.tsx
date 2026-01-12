@@ -19,8 +19,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { ScryfallCard } from '@/types/card';
-import { FilterState } from '@/types/filters';
+import type { ScryfallCard } from '@/types/card';
+import type { FilterState } from '@/types/filters';
 import { cn } from '@/lib/utils';
 import { Filter, ArrowUpDown, X, ChevronDown } from 'lucide-react';
 
@@ -128,16 +128,18 @@ export function SearchFilters({ cards, onFilteredCards, totalCards }: SearchFilt
         case 'cmc':
           comparison = (a.cmc || 0) - (b.cmc || 0);
           break;
-        case 'price':
+        case 'price': {
           const priceA = parseFloat(a.prices?.usd || '0');
           const priceB = parseFloat(b.prices?.usd || '0');
           comparison = priceA - priceB;
           break;
-        case 'rarity':
+        }
+        case 'rarity': {
           const rarityA = RARITY_ORDER[a.rarity as keyof typeof RARITY_ORDER] || 0;
           const rarityB = RARITY_ORDER[b.rarity as keyof typeof RARITY_ORDER] || 0;
           comparison = rarityA - rarityB;
           break;
+        }
       }
       
       return sortDir === 'desc' ? -comparison : comparison;

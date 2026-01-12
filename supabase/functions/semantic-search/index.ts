@@ -925,42 +925,6 @@ async function fetchDynamicRules(): Promise<string> {
 }
 
 /**
- * Valid Scryfall search operators for query validation.
- * Used to verify AI-generated queries contain legitimate syntax.
- */
-const VALID_OPERATORS = [
-  'c:', 'c=', 'c<', 'c>', 'c<=', 'c>=',
-  'id:', 'id=', 'id<', 'id>', 'id<=', 'id>=',
-  'o:', 'oracle:', 't:', 'type:', 
-  'm:', 'mana:', 'cmc:', 'cmc=', 'cmc<', 'cmc>', 'cmc<=', 'cmc>=',
-  'mv:', 'mv=', 'mv<', 'mv>', 'mv<=', 'mv>=',
-  'power:', 'pow:', 'toughness:', 'tou:',
-  'loyalty:', 'loy:',
-  'e:', 'set:', 's:', 'b:', 'block:',
-  'r:', 'rarity:',
-  'f:', 'format:', 'legal:',
-  'banned:', 'restricted:',
-  'is:', 'not:', 'has:',
-  'usd:', 'usd<', 'usd>', 'usd<=', 'usd>=',
-  'eur:', 'eur<', 'eur>', 'eur<=', 'eur>=',
-  'tix:', 'tix<', 'tix>', 'tix<=', 'tix>=',
-  'a:', 'artist:', 'ft:', 'flavor:',
-  'wm:', 'watermark:', 'border:',
-  'frame:', 'game:', 'year:', 'date:',
-  'new:', 'prints:', 'lang:', 'in:',
-  'st:', 'cube:', 'order:', 'direction:',
-  'unique:', 'prefer:', 'include:',
-  'produces:', 'devotion:', 'name:',
-  // Art/oracle tags
-  'otag:', 'oracletag:', 'function:',
-  'atag:', 'arttag:', 'art:',
-  // Specialized Scryfall keys
-  'wildpair:', 'wildpair=', 'wildpair<', 'wildpair>', 'wildpair<=', 'wildpair>=',
-  'cn:', 'cn=', 'cn<', 'cn>', 'cn<=', 'cn>=',
-  'keyword:', 'cheapest:'
-];
-
-/**
  * Valid Scryfall search keys (without operators) for validation.
  * This allowlist is used to detect potentially invalid/unknown search keys.
  */
@@ -1090,7 +1054,7 @@ function validateQuery(query: string): { valid: boolean; sanitized: string; issu
   
   // Remove potentially unsafe characters (keep common Scryfall syntax + regex for oracle/name searches)
   // Allows: quotes, comparison ops, slashes, regex tokens ([]{}.^$|?\\), curly braces for mana symbols, and punctuation commonly used in Oracle text.
-  sanitized = sanitized.replace(/[^\w\s:="'()<>!=+\-/*\\\[\]{}.,^$|?]/g, '');
+  sanitized = sanitized.replace(/[^\w\s:="'()<>!=+\-/*\\]{}.,^$|?[]/g, '');
 
   // Fix invalid year set usage (e:2021 -> year=2021)
   const yearSetPattern = /\be:(\d{4})\b/gi;
@@ -1189,23 +1153,6 @@ function validateQuery(query: string): { valid: boolean; sanitized: string; issu
   sanitized = sanitized.replace(/\s+/g, ' ').trim();
   
   return { valid: issues.length === 0, sanitized, issues };
-}
-
-/**
- * Creates a simplified fallback query by removing complex constraints.
- * Used when the primary query returns no results.
- * 
- * @param query - Original query that may be too restrictive
- * @returns Simplified query with price/complex constraints removed
- */
-function simplifyQuery(query: string): string {
-  // Remove price constraints
-  let simplified = query.replace(/usd[<>=]+\S+/gi, '');
-  // Remove complex nested groups
-  simplified = simplified.replace(/\([^)]*\([^)]*\)[^)]*\)/g, '');
-  // Keep only core terms
-  simplified = simplified.replace(/\s+/g, ' ').trim();
-  return simplified;
 }
 
 /**
@@ -2281,7 +2228,7 @@ Specific color mana production:
 IMPORTANT - produces: does NOT encode quantity!
 - produces:c means "can produce colorless mana" NOT "produces 2 colorless"
 - For Sol Ring-like cards (adds {C}{C}), use oracle text: t:artifact o:"{C}{C}" o:"add"
-- For "adds 2 mana" / "adds multiple mana", use: o:/add \{.\}\{.\}/ or o:"{C}{C}"
+- For "adds 2 mana" / "adds multiple mana", use: o:/add {..}{..}/ or o:"{C}{C}"
 
 Card type filters for mana producers:
 - lands = t:land (produces:w or produces:u or produces:b or produces:r or produces:g or produces:c)
@@ -2296,13 +2243,13 @@ EXAMPLES:
 - "artifacts that produce blue mana" = t:artifact produces:u
 - "mana rocks" = otag:mana-rock (preferred) OR t:artifact produces:c -t:instant -t:sorcery
 - "Sol Ring alternatives" / "artifacts that add {C}{C}" = t:artifact o:"{C}{C}" o:"add"
-- "cards that add 2 mana" = o:/add \{.\}\{.\}/
+- "cards that add 2 mana" = o:/add {..}{..}/
 
 ACTIVATED ABILITIES (CRITICAL):
 - Activated abilities = "COST: EFFECT" format
 - "activated ability" = o:":" (has colon in text)
 - "free activated ability" / "no mana in cost" = o:"{T}:" (tap abilities)
-- "activated ability without mana cost" = o:/\{T\}:/ (abilities that cost {T} not mana)
+- "activated ability without mana cost" = o:/{T}:/ (abilities that cost {T} not mana)
 - DO NOT use o:"activated ability" literally - it doesn't appear in card text
 - DO NOT use o:"mana cost" - that's not how cards are worded
 
@@ -2532,7 +2479,7 @@ Specific color mana production:
 IMPORTANT - produces: does NOT encode quantity!
 - produces:c means "can produce colorless" NOT "adds 2 colorless"
 - For Sol Ring-like (adds {C}{C}): t:artifact o:"{C}{C}" o:"add"
-- For "adds 2+ mana": o:/add \{.\}\{.\}/
+- For "adds 2+ mana": o:/add {..}{..}/
 
 Card type filters:
 - lands = t:land produces:g (or other color)
@@ -2871,10 +2818,10 @@ COMMANDER SHORTCUTS (CRITICAL - use these for commander queries):
 ACTIVATED ABILITIES (CRITICAL - complex pattern handling):
 - Activated abilities have format: "COST: EFFECT" (colon separates cost from effect)
 - "activated ability" = o:":" (has a colon in oracle text)
-- "free activated ability" / "no mana cost ability" = o:/\{T\}:/ or o:/sacrifice.*:/ (tap or sacrifice costs, no mana)
+- "free activated ability" / "no mana cost ability" = o:/{T}:/ or o:/sacrifice.*:/ (tap or sacrifice costs, no mana)
 - "tap ability" / "tap to do something" = o:"{T}:"
 - "sacrifice ability" = o:/sacrifice.*:/
-- "activated ability without mana" / "activation cost is not mana" = o:/\{T\}:/ -o:/\{[WUBRGC0-9]\}.*:/ 
+- "activated ability without mana" / "activation cost is not mana" = o:/{T}:/ -o:/{[WUBRGC0-9]}.*:/ 
 - For general activated abilities, use: o:":" (most cards with abilities have colons)
 - DO NOT use o:"activated ability" - cards don't have that text literally
 

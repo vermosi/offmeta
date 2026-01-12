@@ -4,7 +4,7 @@
  * @module lib/scryfall
  */
 
-import { ScryfallCard, SearchResult, AutocompleteResult } from "@/types/card";
+import type { ScryfallCard, SearchResult, AutocompleteResult } from "@/types/card";
 import { logger } from "@/lib/logger";
 
 const BASE_URL = "https://api.scryfall.com";

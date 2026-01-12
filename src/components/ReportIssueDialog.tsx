@@ -23,7 +23,7 @@ import { Loader2, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
-import { FilterState } from '@/types/filters';
+import type { FilterState } from '@/types/filters';
 
 interface ReportIssueDialogProps {
   open: boolean;
@@ -147,7 +147,7 @@ export function ReportIssueDialog({
         body: {}
       });
     } catch (error) {
-      logger.info('Background processing triggered');
+      logger.info('Background processing triggered', error);
     }
   }, []);
 
@@ -198,7 +198,7 @@ export function ReportIssueDialog({
       onOpenChange(false);
       triggerProcessing();
     } catch (error) {
-      logger.error('Feedback submission failed');
+      logger.error('Feedback submission failed', error);
       toast.error('Failed to submit feedback');
     } finally {
       setIsSubmitting(false);

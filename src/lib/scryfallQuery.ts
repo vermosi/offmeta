@@ -1,4 +1,4 @@
-import { FilterState } from '@/types/filters';
+import type { FilterState } from '@/types/filters';
 
 export const VALID_SEARCH_KEYS = new Set([
   'c', 'color', 'id', 'identity', 'ci', 'o', 'oracle', 't', 'type',
