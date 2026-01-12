@@ -3,8 +3,9 @@
  * Memoized to prevent unnecessary re-renders in large lists.
  */
 
-import { memo, KeyboardEvent, MouseEvent } from "react";
-import { ScryfallCard } from "@/types/card";
+import { memo } from "react";
+import type { KeyboardEvent, MouseEvent } from "react";
+import type { ScryfallCard } from "@/types/card";
 import { getCardImage } from "@/lib/scryfall";
 import { cn } from "@/lib/utils";
 import { Copy, Link2 } from "lucide-react";

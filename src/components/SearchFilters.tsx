@@ -155,7 +155,7 @@ export function SearchFilters({ cards, onFilteredCards, totalCards }: SearchFilt
   // Notify parent of filtered results - use useEffect instead of useMemo for side effects
   useEffect(() => {
     onFilteredCards(filteredCards, hasActiveFilters, filters);
-  }, [filteredCards, hasActiveFilters, onFilteredCards]);
+  }, [filteredCards, hasActiveFilters, onFilteredCards, filters]);
 
   const toggleColor = useCallback((colorId: string) => {
     setFilters(prev => ({
