@@ -5,6 +5,7 @@
  */
 
 import { ScryfallCard } from "@/types/card";
+import { logger } from "@/lib/logger";
 
 const BASE_URL = "https://api.scryfall.com";
 
@@ -51,6 +52,48 @@ const MIN_REQUEST_INTERVAL = 100;
 const printingsCache = new Map<string, { data: CardPrinting[]; timestamp: number }>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
+const FETCH_TIMEOUT_MS = 8000;
+const MAX_RETRIES = 2;
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function fetchWithRetry(url: string, retries = MAX_RETRIES): Promise<Response> {
+  let attempt = 0;
+  let lastError: Error | undefined;
+
+  while (attempt <= retries) {
+    try {
+      const response = await fetchWithTimeout(url, FETCH_TIMEOUT_MS);
+      if (!response.ok && (response.status === 429 || response.status >= 500) && attempt < retries) {
+        await sleep(300 * (attempt + 1));
+        attempt += 1;
+        continue;
+      }
+      return response;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      if (attempt >= retries) {
+        throw lastError;
+      }
+      await sleep(300 * (attempt + 1));
+      attempt += 1;
+    }
+  }
+
+  throw lastError ?? new Error("Request failed");
+}
+
 async function rateLimitedFetch(url: string): Promise<Response> {
   const now = Date.now();
   const timeSinceLastRequest = now - lastRequestTime;
@@ -60,7 +103,7 @@ async function rateLimitedFetch(url: string): Promise<Response> {
   }
   
   lastRequestTime = Date.now();
-  return fetch(url);
+  return fetchWithRetry(url);
 }
 
 /**
@@ -102,14 +145,14 @@ export async function getCardPrintings(cardName: string): Promise<CardPrinting[]
         id: card.id,
         set: card.set,
         set_name: card.set_name,
-        collector_number: (card as any).collector_number || "",
+        collector_number: card.collector_number ?? "",
         rarity: card.rarity,
         artist: card.artist,
         prices: card.prices,
         image_uris: imageUris,
-        purchase_uris: (card as any).purchase_uris,
-        released_at: (card as any).released_at || "",
-        lang: (card as any).lang || "en",
+        purchase_uris: card.purchase_uris,
+        released_at: card.released_at ?? "",
+        lang: card.lang ?? "en",
       };
     });
 
@@ -118,7 +161,7 @@ export async function getCardPrintings(cardName: string): Promise<CardPrinting[]
     
     return printings;
   } catch (error) {
-    console.error("Failed to fetch printings:", error);
+    logger.error("Failed to fetch printings:", error);
     return [];
   }
 }
@@ -154,7 +197,7 @@ export function getTCGPlayerUrl(card: ScryfallCard): string {
  * @returns Cardmarket URL for purchasing the card
  */
 export function getCardmarketUrl(card: ScryfallCard): string {
-  const purchaseUris = (card as any).purchase_uris;
+  const purchaseUris = card.purchase_uris;
   if (purchaseUris?.cardmarket) {
     return purchaseUris.cardmarket;
   }

@@ -21,6 +21,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { logger } from '@/lib/logger';
 import { z } from 'zod';
 import { FilterState } from '@/types/filters';
 
@@ -146,7 +147,7 @@ export function ReportIssueDialog({
         body: {}
       });
     } catch (error) {
-      console.log('Background processing triggered');
+      logger.info('Background processing triggered');
     }
   }, []);
 
@@ -197,7 +198,7 @@ export function ReportIssueDialog({
       onOpenChange(false);
       triggerProcessing();
     } catch (error) {
-      console.error('Feedback submission failed');
+      logger.error('Feedback submission failed');
       toast.error('Failed to submit feedback');
     } finally {
       setIsSubmitting(false);

@@ -5,8 +5,11 @@
  */
 
 import { ScryfallCard, SearchResult, AutocompleteResult } from "@/types/card";
+import { logger } from "@/lib/logger";
 
 const BASE_URL = "https://api.scryfall.com";
+const FETCH_TIMEOUT_MS = 8000;
+const MAX_RETRIES = 2;
 
 // Rate limiting: Scryfall asks for 50-100ms between requests
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -46,7 +49,7 @@ async function processQueue(): Promise<void> {
       }
       
       lastRequestTime = Date.now();
-      const response = await fetch(request.url);
+      const response = await fetchWithRetry(request.url);
       request.resolve(response);
     } catch (error) {
       request.reject(error instanceof Error ? error : new Error(String(error)));
@@ -72,6 +75,43 @@ async function rateLimitedFetch(url: string): Promise<Response> {
     requestQueue.push({ url, resolve, reject });
     processQueue();
   });
+}
+
+async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function fetchWithRetry(url: string, retries = MAX_RETRIES): Promise<Response> {
+  let attempt = 0;
+  let lastError: Error | undefined;
+
+  while (attempt <= retries) {
+    try {
+      const response = await fetchWithTimeout(url, FETCH_TIMEOUT_MS);
+      if (!response.ok && (response.status === 429 || response.status >= 500) && attempt < retries) {
+        await delay(300 * (attempt + 1));
+        attempt += 1;
+        continue;
+      }
+      return response;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      if (attempt >= retries) {
+        throw lastError;
+      }
+      await delay(300 * (attempt + 1));
+      attempt += 1;
+    }
+  }
+
+  throw lastError ?? new Error("Request failed");
 }
 
 /**
@@ -285,7 +325,7 @@ export async function getCardRulings(cardId: string): Promise<CardRuling[]> {
     
     return rulings;
   } catch (error) {
-    console.error("Failed to fetch rulings:", error);
+    logger.error("Failed to fetch rulings:", error);
     return [];
   }
 }

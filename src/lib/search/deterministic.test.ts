@@ -87,4 +87,36 @@ describe('Deterministic MTG query translation', () => {
     expect(query).toContain('-mana:{R}{R}');
     expect(query).toContain('-mana:{G}{G}');
   });
+
+  it('T12: fits into a BR commander deck', () => {
+    const query = getQuery('fits into a BR commander deck');
+    expect(query).toContain('ci<=br');
+    expect(query).toContain('is:commander');
+  });
+
+  it('T13: rakdos creature uses color (not identity)', () => {
+    const query = getQuery('rakdos creature');
+    expect(query).toContain('t:creature');
+    expect(query).toContain('c=br');
+    expect(query).not.toContain('ci=');
+  });
+
+  it('T14: released after 2020 uses year constraint', () => {
+    const query = getQuery('released after 2020');
+    expect(query).toContain('year>2020');
+    expect(query).not.toMatch(/e:2020/);
+  });
+
+  it('T15: land that produces 2 mana keeps lands', () => {
+    const query = getQuery('land that produces 2 mana');
+    expect(query).toContain('t:land');
+    expect(query.includes('o:"add {c}{c}"') || query.includes('o:/add')).toBe(true);
+    expect(query).not.toContain('-t:land');
+  });
+
+  it('T16: creatures with power 4 or more', () => {
+    const query = getQuery('creatures with power 4 or more');
+    expect(query).toContain('t:creature');
+    expect(query).toContain('pow>=4');
+  });
 });

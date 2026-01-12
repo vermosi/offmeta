@@ -1,0 +1,30 @@
+- name: bug
+  color: d73a4a
+  description: Something isn't working
+- name: enhancement
+  color: a2eeef
+  description: New feature or request
+- name: docs
+  color: 0075ca
+  description: Documentation updates
+- name: good first issue
+  color: 7057ff
+  description: Good for newcomers
+- name: help wanted
+  color: 008672
+  description: Extra attention is needed
+- name: security
+  color: b60205
+  description: Security related
+- name: question
+  color: d876e3
+  description: Further information is requested
+- name: area:ui
+  color: c2e0c6
+  description: UI/UX related
+- name: area:api
+  color: c5def5
+  description: API/edge functions
+- name: area:infra
+  color: fef2c0
+  description: CI/CD or tooling

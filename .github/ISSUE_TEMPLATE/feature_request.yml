@@ -1,0 +1,29 @@
+name: Feature request
+description: Suggest an improvement to OffMeta
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What problem are you trying to solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the solution you'd like.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Any alternative approaches or workarounds?
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Add any other context or screenshots.

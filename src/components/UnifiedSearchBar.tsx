@@ -13,6 +13,7 @@ import { SearchFeedback } from '@/components/SearchFeedback';
 import { SearchHelpModal } from '@/components/SearchHelpModal';
 import { FilterState } from '@/types/filters';
 import { SearchIntent } from '@/types/search';
+import { logger } from '@/lib/logger';
 
 const SEARCH_CONTEXT_KEY = 'lastSearchContext';
 const SEARCH_HISTORY_KEY = 'offmeta_search_history';
@@ -229,7 +230,7 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
     // Check client-side cache first (eliminates edge function call entirely)
     const cached = allowReuse ? getCachedResult(queryToSearch, filters, cacheSalt) : null;
     if (cached) {
-      console.log('[Cache] Client-side hit for:', queryToSearch);
+      logger.info('[Cache] Client-side hit for:', queryToSearch);
       saveContext(queryToSearch, cached.scryfallQuery);
       onSearch(cached.scryfallQuery, {
         scryfallQuery: cached.scryfallQuery,
@@ -325,7 +326,7 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
         return;
       }
       if (errorMessage === 'Search timeout') {
-        console.error('Search timeout');
+        logger.error('Search timeout');
         toast.error('Search took too long', {
           description: 'Try a simpler query or try again'
         });
@@ -336,7 +337,7 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
           description: 'Please wait a moment before searching again'
         });
       } else {
-        console.error('Search error:', error);
+        logger.error('Search error:', error);
         toast.error('Search issue', {
           description: 'Trying direct search instead'
         });

@@ -1,7 +1,7 @@
 import { FilterState } from '@/types/filters';
 
-const VALID_SEARCH_KEYS = new Set([
-  'c', 'color', 'id', 'identity', 'o', 'oracle', 't', 'type',
+export const VALID_SEARCH_KEYS = new Set([
+  'c', 'color', 'id', 'identity', 'ci', 'o', 'oracle', 't', 'type',
   'm', 'mana', 'cmc', 'mv', 'manavalue',
   'power', 'pow', 'toughness', 'tou', 'loyalty', 'loy',
   'e', 'set', 's', 'b', 'block', 'r', 'rarity',
@@ -17,7 +17,7 @@ const VALID_SEARCH_KEYS = new Set([
   'atag', 'arttag'
 ]);
 
-const KNOWN_OTAGS = new Set([
+export const KNOWN_OTAGS = new Set([
   'ramp', 'mana-rock', 'mana-dork', 'mana-doubler', 'mana-sink', 'land-ramp', 'ritual',
   'draw', 'card-draw', 'cantrip', 'loot', 'looting', 'wheel', 'impulse-draw', 'scry',
   'tutor', 'land-tutor', 'creature-tutor', 'artifact-tutor', 'enchantment-tutor', 'instant-or-sorcery-tutor',

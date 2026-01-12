@@ -26,6 +26,9 @@ export interface ScryfallCard {
   
   /** The card's rules text / oracle text */
   oracle_text?: string;
+
+  /** Collector number within the set */
+  collector_number?: string;
   
   /** Power value for creatures (can be "*" or number as string) */
   power?: string;
@@ -110,6 +113,10 @@ export interface ScryfallCard {
     usd_foil?: string;
     /** EUR price for non-foil */
     eur?: string;
+    /** EUR price for foil */
+    eur_foil?: string;
+    /** MTGO tix price */
+    tix?: string;
   };
   
   /**
@@ -127,6 +134,22 @@ export interface ScryfallCard {
   
   /** URL to this card's page on Scryfall */
   scryfall_uri: string;
+
+  /** Purchase links from Scryfall */
+  purchase_uris?: {
+    tcgplayer?: string;
+    cardmarket?: string;
+    cardhoarder?: string;
+  };
+
+  /** Release date for this printing */
+  released_at?: string;
+
+  /** Language code for this printing */
+  lang?: string;
+
+  /** Reserved list indicator */
+  reserved?: boolean;
 }
 
 /**
