@@ -136,7 +136,7 @@ export async function searchCards(query: string, page: number = 1): Promise<Sear
     throw new Error(`Search failed: ${response.statusText}`);
   }
   
-  return response.json();
+  return response.clone().json();
 }
 
 /**
@@ -154,7 +154,7 @@ export async function autocomplete(query: string): Promise<string[]> {
   
   if (!response.ok) return [];
   
-  const data: AutocompleteResult = await response.json();
+  const data: AutocompleteResult = await response.clone().json();
   return data.data;
 }
 
@@ -169,7 +169,7 @@ export async function getRandomCard(): Promise<ScryfallCard> {
     throw new Error(`Failed to get random card: ${response.statusText}`);
   }
   
-  return response.json();
+  return response.clone().json();
 }
 
 /**
@@ -188,7 +188,7 @@ export async function getCardByName(name: string): Promise<ScryfallCard> {
     throw new Error(`Card not found: ${name}`);
   }
   
-  return response.json();
+  return response.clone().json();
 }
 
 /**
@@ -318,7 +318,7 @@ export async function getCardRulings(cardId: string): Promise<CardRuling[]> {
       return [];
     }
     
-    const data = await response.json();
+    const data = await response.clone().json();
     const rulings: CardRuling[] = data.data || [];
     
     rulingsCache.set(cardId, { data: rulings, timestamp: Date.now() });

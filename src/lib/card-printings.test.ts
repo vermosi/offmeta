@@ -160,11 +160,8 @@ describe("purchase URL helpers", () => {
   });
 
   it("builds a TCGPlayer URL with affiliate wrapping when configured", async () => {
-    const originalEnv = import.meta.env;
-    Object.defineProperty(import.meta, "env", {
-      value: { ...originalEnv, NEXT_PUBLIC_TCGPLAYER_IMPACT_BASE: "https://aff.example/?u=" },
-      configurable: true,
-    });
+    const originalEnv = process.env.NEXT_PUBLIC_TCGPLAYER_IMPACT_BASE;
+    process.env.NEXT_PUBLIC_TCGPLAYER_IMPACT_BASE = "https://aff.example/?u=";
 
     const { getTCGPlayerUrl } = await import("@/lib/card-printings");
     const url = getTCGPlayerUrl(
@@ -176,7 +173,11 @@ describe("purchase URL helpers", () => {
 
     expect(url).toBe("https://aff.example/?u=https%3A%2F%2Ftcgplayer.com%2Fcard%2F1");
 
-    Object.defineProperty(import.meta, "env", { value: originalEnv, configurable: true });
+    if (originalEnv === undefined) {
+      delete process.env.NEXT_PUBLIC_TCGPLAYER_IMPACT_BASE;
+    } else {
+      process.env.NEXT_PUBLIC_TCGPLAYER_IMPACT_BASE = originalEnv;
+    }
   });
 
   it("falls back to search URLs when purchase URIs are missing", async () => {
