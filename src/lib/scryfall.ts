@@ -315,6 +315,7 @@ export async function getCardRulings(cardId: string): Promise<CardRuling[]> {
     );
     
     if (!response.ok) {
+      logger.error("Failed to fetch rulings:", response.status, response.statusText);
       return [];
     }
     
