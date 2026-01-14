@@ -173,7 +173,13 @@ export async function getCardPrintings(cardName: string): Promise<CardPrinting[]
  * @returns TCGPlayer URL for purchasing the card (with affiliate tracking if configured)
  */
 export function getTCGPlayerUrl(card: ScryfallCard): string {
-  const metaEnv = typeof import.meta !== "undefined" ? import.meta.env : undefined;
+  const metaEnv = (() => {
+    try {
+      return import.meta.env;
+    } catch {
+      return undefined;
+    }
+  })();
   const processEnv = typeof process !== "undefined" ? process.env : undefined;
   const affiliateBase =
     metaEnv?.NEXT_PUBLIC_TCGPLAYER_IMPACT_BASE ??
