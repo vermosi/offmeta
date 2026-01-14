@@ -190,4 +190,33 @@ describe("purchase URL helpers", () => {
       "https://www.cardmarket.com/en/Magic/Products/Search",
     );
   });
+
+  it("uses the cardmarket purchase URI when provided", async () => {
+    const { getCardmarketUrl } = await import("@/lib/card-printings");
+
+    const card = buildCard({
+      name: "Tundra",
+      purchase_uris: { cardmarket: "https://cardmarket.example/tundra" },
+    });
+
+    expect(getCardmarketUrl(card)).toBe("https://cardmarket.example/tundra");
+  });
+
+  it("skips process env fallback when process is unavailable", async () => {
+    const originalProcess = globalThis.process;
+    // @ts-expect-error - simulate a non-Node environment
+    globalThis.process = undefined;
+
+    const { getTCGPlayerUrl } = await import("@/lib/card-printings");
+    const url = getTCGPlayerUrl(
+      buildCard({
+        name: "Mana Vault",
+        purchase_uris: { tcgplayer: "https://tcgplayer.com/card/2" },
+      }),
+    );
+
+    expect(url).toBe("https://tcgplayer.com/card/2");
+
+    globalThis.process = originalProcess;
+  });
 });
