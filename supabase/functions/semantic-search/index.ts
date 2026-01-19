@@ -2129,10 +2129,65 @@ serve(async (req) => {
       });
     }
 
+    const buildAiFallbackResponse = (reason: string, metadata: Record<string, unknown> = {}) => {
+      fallbackUsed = true;
+      const fallbackValidation = buildFallbackQuery(query, filters);
+      const fallbackResponseTime = Date.now() - requestStartTime;
+
+      logTranslation(
+        query,
+        fallbackValidation.sanitized,
+        0.6,
+        fallbackResponseTime,
+        fallbackValidation.issues,
+        ['ai_gateway_unavailable'],
+        filters || null,
+        true
+      );
+
+      logInfo('translation_fallback', {
+        naturalQuery: query.substring(0, 100),
+        scryfallQuery: fallbackValidation.sanitized.substring(0, 200),
+        responseTimeMs: fallbackResponseTime,
+        reason,
+        ...metadata
+      });
+
+      return new Response(JSON.stringify({
+        originalQuery: query,
+        scryfallQuery: fallbackValidation.sanitized,
+        explanation: {
+          readable: `Searching for: ${query}`,
+          assumptions: ['Using simplified translation (AI temporarily unavailable)'],
+          confidence: 0.6
+        },
+        intent: {
+          colors: deterministicResult.intent.colors,
+          types: deterministicResult.intent.types,
+          cmc: deterministicResult.intent.cmc,
+          power: deterministicResult.intent.power,
+          toughness: deterministicResult.intent.toughness,
+          tags: deterministicResult.intent.tagTokens,
+          oraclePatterns: deterministicResult.intent.oraclePatterns,
+          warnings: deterministicResult.intent.warnings,
+          deterministicQuery
+        },
+        validationIssues: fallbackValidation.issues,
+        showAffiliate: hasPurchaseIntent(query),
+        responseTimeMs: fallbackResponseTime,
+        success: true,
+        fallback: true
+      }), {
+        headers: jsonHeaders,
+      });
+    };
+
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
     if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+      recordCircuitFailure();
+      logWarn('ai_gateway_unavailable', { reason: 'missing_api_key' });
+      return buildAiFallbackResponse('missing_api_key');
     }
 
     // Build context from previous search if provided
@@ -3256,22 +3311,29 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
       : '';
     const userMessage = `Translate to Scryfall syntax: "${remainingQuery}" ${deterministicContext}${filters?.format ? ` (format: ${filters.format})` : ''}${filters?.colorIdentity?.length ? ` (colors: ${filters.colorIdentity.join('')})` : ''}`;
 
-    const response = await fetchWithRetry("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
-        messages: [
-          { role: "system", content: queryTier === 'complex' ? systemPrompt : tieredPrompt },
-          { role: "user", content: userMessage }
-        ],
-        temperature: 0.2,
-        max_tokens: queryTier === 'simple' ? 100 : 200,
-      }),
-    });
+    let response: Response;
+    try {
+      response = await fetchWithRetry("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash-lite",
+          messages: [
+            { role: "system", content: queryTier === 'complex' ? systemPrompt : tieredPrompt },
+            { role: "user", content: userMessage }
+          ],
+          temperature: 0.2,
+          max_tokens: queryTier === 'simple' ? 100 : 200,
+        }),
+      });
+    } catch (error) {
+      recordCircuitFailure();
+      logWarn('ai_gateway_unavailable', { reason: 'fetch_error', error: String(error) });
+      return buildAiFallbackResponse('fetch_error', { error: String(error) });
+    }
 
     if (!response.ok) {
       // Record circuit breaker failure for non-rate-limit errors
@@ -3288,57 +3350,7 @@ Remember: Return ONLY the Scryfall query. No explanations. No card suggestions.`
       // Fallback: AI gateway unavailable (402, 500, etc.) - pass query directly to Scryfall
       // Apply basic transformations for common patterns
       logWarn("ai_gateway_unavailable", { status: response.status });
-      fallbackUsed = true;
-      
-      const fallbackValidation = buildFallbackQuery(query, filters);
-      const fallbackResponseTime = Date.now() - requestStartTime;
-      
-      // Log fallback translation
-      logTranslation(
-        query,
-        fallbackValidation.sanitized,
-        0.6,
-        fallbackResponseTime,
-        fallbackValidation.issues,
-        ['ai_gateway_unavailable'],
-        filters || null,
-        true
-      );
-      
-      logInfo('translation_fallback', {
-        naturalQuery: query.substring(0, 100),
-        scryfallQuery: fallbackValidation.sanitized.substring(0, 200),
-        responseTimeMs: fallbackResponseTime,
-        gatewayStatus: response.status
-      });
-      
-      return new Response(JSON.stringify({
-        originalQuery: query,
-        scryfallQuery: fallbackValidation.sanitized,
-        explanation: {
-          readable: `Searching for: ${query}`,
-          assumptions: ['Using simplified translation (AI temporarily unavailable)'],
-          confidence: 0.6
-        },
-        intent: {
-          colors: deterministicResult.intent.colors,
-          types: deterministicResult.intent.types,
-          cmc: deterministicResult.intent.cmc,
-          power: deterministicResult.intent.power,
-          toughness: deterministicResult.intent.toughness,
-          tags: deterministicResult.intent.tagTokens,
-          oraclePatterns: deterministicResult.intent.oraclePatterns,
-          warnings: deterministicResult.intent.warnings,
-          deterministicQuery
-        },
-        validationIssues: fallbackValidation.issues,
-        showAffiliate: hasPurchaseIntent(query),
-        responseTimeMs: fallbackResponseTime,
-        success: true,
-        fallback: true
-      }), {
-        headers: jsonHeaders,
-      });
+      return buildAiFallbackResponse('gateway_unavailable', { gatewayStatus: response.status });
     }
 
     // AI call succeeded - record circuit breaker success
