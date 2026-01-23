@@ -7,7 +7,15 @@ import { useState, useEffect, useCallback, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Play, Copy, Check, ExternalLink, AlertTriangle, X, RotateCcw } from 'lucide-react';
+import {
+  Play,
+  Copy,
+  Check,
+  ExternalLink,
+  AlertTriangle,
+  X,
+  RotateCcw,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface EditableQueryBarProps {
@@ -66,33 +74,42 @@ export const EditableQueryBar = memo(function EditableQueryBar({
     onRerun(editedQuery);
   }, [editedQuery, onRerun]);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleRerun();
-    }
-    if (e.key === 'Escape') {
-      setEditedQuery(scryfallQuery);
-      setIsEditing(false);
-    }
-  }, [handleRerun, scryfallQuery]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleRerun();
+      }
+      if (e.key === 'Escape') {
+        setEditedQuery(scryfallQuery);
+        setIsEditing(false);
+      }
+    },
+    [handleRerun, scryfallQuery],
+  );
 
   const handleReportClick = useCallback(() => {
     onReportIssue?.();
   }, [onReportIssue]);
 
   const confidenceColor = confidence
-    ? confidence >= 0.9 ? 'text-emerald-600 dark:text-emerald-400'
-    : confidence >= 0.75 ? 'text-amber-600 dark:text-amber-400'
-    : confidence >= 0.6 ? 'text-orange-600 dark:text-orange-400'
-    : 'text-red-500 dark:text-red-400'
+    ? confidence >= 0.9
+      ? 'text-emerald-600 dark:text-emerald-400'
+      : confidence >= 0.75
+        ? 'text-amber-600 dark:text-amber-400'
+        : confidence >= 0.6
+          ? 'text-orange-600 dark:text-orange-400'
+          : 'text-red-500 dark:text-red-400'
     : '';
 
   const confidenceLabel = confidence
-    ? confidence >= 0.9 ? 'High'
-    : confidence >= 0.75 ? 'Good'
-    : confidence >= 0.6 ? 'Moderate'
-    : 'Low'
+    ? confidence >= 0.9
+      ? 'High'
+      : confidence >= 0.75
+        ? 'Good'
+        : confidence >= 0.6
+          ? 'Moderate'
+          : 'Low'
     : null;
 
   return (
@@ -102,7 +119,7 @@ export const EditableQueryBar = memo(function EditableQueryBar({
         <div className="flex items-center gap-3 text-xs">
           <span className="text-muted-foreground">Scryfall Query</span>
           {confidenceLabel && (
-            <span className={cn("font-medium", confidenceColor)}>
+            <span className={cn('font-medium', confidenceColor)}>
               {confidenceLabel} ({Math.round((confidence || 0) * 100)}%)
             </span>
           )}
@@ -158,9 +175,10 @@ export const EditableQueryBar = memo(function EditableQueryBar({
             onKeyDown={handleKeyDown}
             onFocus={() => setIsEditing(true)}
             className={cn(
-              "font-mono text-sm pr-8 h-10",
-              validationError && "border-red-500/50 focus-visible:ring-red-500/20",
-              hasChanges && !validationError && "border-blue-500/50"
+              'font-mono text-sm pr-8 h-10',
+              validationError &&
+                'border-red-500/50 focus-visible:ring-red-500/20',
+              hasChanges && !validationError && 'border-blue-500/50',
             )}
             placeholder="Enter Scryfall query..."
             disabled={isLoading}
@@ -183,7 +201,7 @@ export const EditableQueryBar = memo(function EditableQueryBar({
         {/* Action buttons */}
         <div className="flex items-center gap-1">
           <Button
-            variant={hasChanges ? "accent" : "secondary"}
+            variant={hasChanges ? 'accent' : 'secondary'}
             size="sm"
             onClick={handleRerun}
             disabled={isLoading || !editedQuery.trim()}

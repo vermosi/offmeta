@@ -1,10 +1,12 @@
 # Development
 
 ## Prerequisites
+
 - Node.js (see `.nvmrc` for the supported version)
 - npm (bundled with Node.js)
 
 ## Local setup
+
 ```bash
 npm install
 cp .env.example .env
@@ -12,6 +14,7 @@ npm run dev
 ```
 
 ## Project scripts
+
 - `npm run dev`: Start the Vite dev server
 - `npm run build`: Production build
 - `npm run start`: Preview the production build
@@ -23,4 +26,5 @@ npm run dev
 - `npm run check`: Lint + typecheck + test
 
 ## Supabase Edge Functions
+
 Edge functions live in `supabase/functions`. Use the Supabase CLI to serve them locally when needed.

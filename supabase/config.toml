@@ -7,10 +7,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.cleanup-logs]
-verify_jwt = false
+verify_jwt = true
 
 [functions.generate-patterns]
-verify_jwt = false
+verify_jwt = true
 
 [functions.warmup-cache]
-verify_jwt = false
+verify_jwt = true

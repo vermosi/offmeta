@@ -11,46 +11,46 @@
 export interface ScryfallCard {
   /** Unique Scryfall identifier for this card */
   id: string;
-  
+
   /** The card's English name */
   name: string;
-  
+
   /** The mana cost in Scryfall notation (e.g., "{2}{W}{U}") */
   mana_cost?: string;
-  
+
   /** Converted mana cost / mana value as a number */
   cmc: number;
-  
+
   /** The full type line (e.g., "Legendary Creature — Human Wizard") */
   type_line: string;
-  
+
   /** The card's rules text / oracle text */
   oracle_text?: string;
 
   /** Collector number within the set */
   collector_number?: string;
-  
+
   /** Power value for creatures (can be "*" or number as string) */
   power?: string;
-  
+
   /** Toughness value for creatures (can be "*" or number as string) */
   toughness?: string;
-  
+
   /** Array of colors in the card's mana cost: ["W", "U", "B", "R", "G"] */
   colors?: string[];
-  
+
   /** Color identity for Commander format (includes text box colors) */
   color_identity: string[];
-  
+
   /** Three-letter set code (e.g., "MID", "VOW", "NEO") */
   set: string;
-  
+
   /** Full set name (e.g., "Innistrad: Midnight Hunt") */
   set_name: string;
-  
+
   /** Card rarity: "common", "uncommon", "rare", "mythic", "special", "bonus" */
   rarity: string;
-  
+
   /**
    * Image URLs at various sizes.
    * Not present on double-faced cards - check card_faces instead.
@@ -69,7 +69,7 @@ export interface ScryfallCard {
     /** Full card with minimal border */
     border_crop: string;
   };
-  
+
   /**
    * Array of card faces for double-faced / split cards.
    * Each face has its own name, mana cost, type line, etc.
@@ -101,7 +101,7 @@ export interface ScryfallCard {
       border_crop: string;
     };
   }[];
-  
+
   /**
    * Current market prices in various currencies.
    * Values are strings (e.g., "12.50") or undefined if unavailable.
@@ -118,20 +118,20 @@ export interface ScryfallCard {
     /** MTGO tix price */
     tix?: string;
   };
-  
+
   /**
    * Format legality map.
    * Keys are format names, values are "legal", "not_legal", "banned", or "restricted".
    * @example { standard: "legal", modern: "legal", commander: "banned" }
    */
   legalities: Record<string, string>;
-  
+
   /** Artist name for this printing */
   artist?: string;
-  
+
   /** Italic flavor text on the card */
   flavor_text?: string;
-  
+
   /** URL to this card's page on Scryfall */
   scryfall_uri: string;
 
@@ -159,16 +159,16 @@ export interface ScryfallCard {
 export interface SearchResult {
   /** Always "list" for search results */
   object: string;
-  
+
   /** Total number of cards matching the query across all pages */
   total_cards: number;
-  
+
   /** Whether there are more pages of results */
   has_more: boolean;
-  
+
   /** URL to fetch the next page (if has_more is true) */
   next_page?: string;
-  
+
   /** Array of cards on this page (up to 175 per page) */
   data: ScryfallCard[];
 }
@@ -180,10 +180,10 @@ export interface SearchResult {
 export interface AutocompleteResult {
   /** Always "catalog" for autocomplete results */
   object: string;
-  
+
   /** Number of matching names */
   total_values: number;
-  
+
   /** Array of card names matching the query (up to 20) */
   data: string[];
 }

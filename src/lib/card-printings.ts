@@ -4,10 +4,10 @@
  * @module lib/card-printings
  */
 
-import type { ScryfallCard } from "@/types/card";
-import { logger } from "@/lib/logger";
+import type { ScryfallCard } from '@/types/card';
+import { logger } from '@/lib/logger';
 
-const BASE_URL = "https://api.scryfall.com";
+const BASE_URL = 'https://api.scryfall.com';
 
 export interface CardPrinting {
   id: string;
@@ -49,15 +49,21 @@ let lastRequestTime = 0;
 const MIN_REQUEST_INTERVAL = 100;
 
 // Cache for printings to avoid redundant API calls
-const printingsCache = new Map<string, { data: CardPrinting[]; timestamp: number }>();
+const printingsCache = new Map<
+  string,
+  { data: CardPrinting[]; timestamp: number }
+>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 const FETCH_TIMEOUT_MS = 8000;
 const MAX_RETRIES = 2;
 
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Response> {
+async function fetchWithTimeout(
+  url: string,
+  timeoutMs: number,
+): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -68,14 +74,21 @@ async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Respons
   }
 }
 
-async function fetchWithRetry(url: string, retries = MAX_RETRIES): Promise<Response> {
+async function fetchWithRetry(
+  url: string,
+  retries = MAX_RETRIES,
+): Promise<Response> {
   let attempt = 0;
   let lastError: Error | undefined;
 
   while (attempt <= retries) {
     try {
       const response = await fetchWithTimeout(url, FETCH_TIMEOUT_MS);
-      if (!response.ok && (response.status === 429 || response.status >= 500) && attempt < retries) {
+      if (
+        !response.ok &&
+        (response.status === 429 || response.status >= 500) &&
+        attempt < retries
+      ) {
         await sleep(300 * (attempt + 1));
         attempt += 1;
         continue;
@@ -91,17 +104,19 @@ async function fetchWithRetry(url: string, retries = MAX_RETRIES): Promise<Respo
     }
   }
 
-  throw lastError ?? new Error("Request failed");
+  throw lastError ?? new Error('Request failed');
 }
 
 async function rateLimitedFetch(url: string): Promise<Response> {
   const now = Date.now();
   const timeSinceLastRequest = now - lastRequestTime;
-  
+
   if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
-    await new Promise(resolve => setTimeout(resolve, MIN_REQUEST_INTERVAL - timeSinceLastRequest));
+    await new Promise((resolve) =>
+      setTimeout(resolve, MIN_REQUEST_INTERVAL - timeSinceLastRequest),
+    );
   }
-  
+
   lastRequestTime = Date.now();
   return fetchWithRetry(url);
 }
@@ -112,10 +127,12 @@ async function rateLimitedFetch(url: string): Promise<Response> {
  * @param cardName - The exact card name to look up
  * @returns Array of CardPrinting objects with set/price info
  */
-export async function getCardPrintings(cardName: string): Promise<CardPrinting[]> {
+export async function getCardPrintings(
+  cardName: string,
+): Promise<CardPrinting[]> {
   const cacheKey = cardName.toLowerCase();
   const cached = printingsCache.get(cacheKey);
-  
+
   // Return cached data if still valid
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
     return cached.data;
@@ -125,43 +142,43 @@ export async function getCardPrintings(cardName: string): Promise<CardPrinting[]
     // Search for all printings of this card
     const encodedName = encodeURIComponent(`!"${cardName}" unique:prints`);
     const response = await rateLimitedFetch(
-      `${BASE_URL}/cards/search?q=${encodedName}&order=released`
+      `${BASE_URL}/cards/search?q=${encodedName}&order=released`,
     );
-    
+
     if (!response.ok) {
       return [];
     }
-    
+
     const data: PrintingsResult = await response.json();
-    
+
     const printings = data.data.map((card) => {
       // Some cards (like Secret Lair or double-faced) have images in card_faces instead of image_uris
       let imageUris = card.image_uris;
       if (!imageUris && card.card_faces && card.card_faces.length > 0) {
         imageUris = card.card_faces[0].image_uris;
       }
-      
+
       return {
         id: card.id,
         set: card.set,
         set_name: card.set_name,
-        collector_number: card.collector_number ?? "",
+        collector_number: card.collector_number ?? '',
         rarity: card.rarity,
         artist: card.artist,
         prices: card.prices,
         image_uris: imageUris,
         purchase_uris: card.purchase_uris,
-        released_at: card.released_at ?? "",
-        lang: card.lang ?? "en",
+        released_at: card.released_at ?? '',
+        lang: card.lang ?? 'en',
       };
     });
 
     // Cache the result
     printingsCache.set(cacheKey, { data: printings, timestamp: Date.now() });
-    
+
     return printings;
   } catch (error) {
-    logger.error("Failed to fetch printings:", error);
+    logger.error('Failed to fetch printings:', error);
     return [];
   }
 }
@@ -180,23 +197,23 @@ export function getTCGPlayerUrl(card: ScryfallCard): string {
       return undefined;
     }
   })();
-  const processEnv = typeof process !== "undefined" ? process.env : undefined;
+  const processEnv = typeof process !== 'undefined' ? process.env : undefined;
   const affiliateBase =
     metaEnv?.NEXT_PUBLIC_TCGPLAYER_IMPACT_BASE ??
     processEnv?.NEXT_PUBLIC_TCGPLAYER_IMPACT_BASE;
   const purchaseUris = card.purchase_uris;
-  
+
   // Get the base TCGPlayer URL
   let tcgplayerUrl = purchaseUris?.tcgplayer;
   if (!tcgplayerUrl) {
     tcgplayerUrl = `https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=${encodeURIComponent(card.name)}`;
   }
-  
+
   // If affiliate base is configured, wrap the URL
   if (affiliateBase) {
     return `${affiliateBase}${encodeURIComponent(tcgplayerUrl)}`;
   }
-  
+
   return tcgplayerUrl;
 }
 

@@ -1,8 +1,8 @@
-import { Component } from "react";
-import type { ErrorInfo, ReactNode } from "react";
-import { AlertTriangle, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { logger } from "@/lib/logger";
+import { Component } from 'react';
+import type { ErrorInfo, ReactNode } from 'react';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { logger } from '@/lib/logger';
 
 interface Props {
   children: ReactNode;
@@ -25,7 +25,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    logger.error("ErrorBoundary caught an error:", error, errorInfo);
+    logger.error('ErrorBoundary caught an error:', error, errorInfo);
   }
 
   handleRetry = () => {
@@ -43,13 +43,14 @@ export class ErrorBoundary extends Component<Props, State> {
           <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-destructive/10 flex items-center justify-center mb-4 sm:mb-6">
             <AlertTriangle className="h-8 w-8 sm:h-10 sm:w-10 text-destructive" />
           </div>
-          
+
           <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">
             Something went wrong
           </h3>
-          
+
           <p className="text-sm text-muted-foreground mb-6 max-w-md">
-            We encountered an unexpected error. Please try again or refresh the page.
+            We encountered an unexpected error. Please try again or refresh the
+            page.
           </p>
 
           {this.state.error && (

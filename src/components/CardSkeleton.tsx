@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function CardSkeleton() {
   return (
@@ -12,7 +12,7 @@ export function CardSkeleton() {
 
 export function CardSkeletonGrid({ count = 10 }: { count?: number }) {
   return (
-    <div 
+    <div
       className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-4"
       role="status"
       aria-label="Loading cards"

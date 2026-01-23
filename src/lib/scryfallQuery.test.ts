@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { buildFilterQuery, normalizeOrGroups, validateScryfallQuery } from '@/lib/scryfallQuery';
+import {
+  buildFilterQuery,
+  normalizeOrGroups,
+  validateScryfallQuery,
+} from '@/lib/scryfallQuery';
 import type { FilterState } from '@/types/filters';
 
 describe('normalizeOrGroups', () => {
@@ -9,7 +13,9 @@ describe('normalizeOrGroups', () => {
 
   it('handles multiple OR groups in the same query', () => {
     const query = 'c:red OR c:blue t:dragon OR t:angel';
-    expect(normalizeOrGroups(query)).toBe('(c:red OR c:blue) (t:dragon OR t:angel)');
+    expect(normalizeOrGroups(query)).toBe(
+      '(c:red OR c:blue) (t:dragon OR t:angel)',
+    );
   });
 
   it('ignores OR inside parentheses', () => {
@@ -19,12 +25,16 @@ describe('normalizeOrGroups', () => {
 
   it('does not split on quoted text', () => {
     const query = 'o:"draw OR discard" c:red OR c:blue';
-    expect(normalizeOrGroups(query)).toBe('o:"draw OR discard" (c:red OR c:blue)');
+    expect(normalizeOrGroups(query)).toBe(
+      'o:"draw OR discard" (c:red OR c:blue)',
+    );
   });
 
   it('ignores OR inside regex patterns', () => {
     const query = 'o:/draw OR discard/ c:red OR c:blue';
-    expect(normalizeOrGroups(query)).toBe('o:/draw OR discard/ (c:red OR c:blue)');
+    expect(normalizeOrGroups(query)).toBe(
+      'o:/draw OR discard/ (c:red OR c:blue)',
+    );
   });
 });
 
@@ -33,7 +43,9 @@ describe('validateScryfallQuery', () => {
     const result = validateScryfallQuery('e:2020 t:dragon');
     expect(result.valid).toBe(false);
     expect(result.sanitized).toBe('year=2020 t:dragon');
-    expect(result.issues).toContain('Replaced invalid year set syntax with year=YYYY');
+    expect(result.issues).toContain(
+      'Replaced invalid year set syntax with year=YYYY',
+    );
   });
 
   it('removes unsupported power+toughness math expressions', () => {
@@ -121,6 +133,8 @@ describe('buildFilterQuery', () => {
       cmcRange: [1, 3],
       sortBy: 'name',
     };
-    expect(buildFilterQuery(filters)).toBe('(c:u OR c:b) (t:wizard) mv>=1 mv<=3');
+    expect(buildFilterQuery(filters)).toBe(
+      '(c:u OR c:b) (t:wizard) mv>=1 mv<=3',
+    );
   });
 });

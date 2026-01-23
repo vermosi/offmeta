@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { KNOWN_OTAGS, validateScryfallQuery, VALID_SEARCH_KEYS } from '@/lib/scryfallQuery';
+import {
+  KNOWN_OTAGS,
+  validateScryfallQuery,
+  VALID_SEARCH_KEYS,
+} from '@/lib/scryfallQuery';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -54,10 +58,14 @@ describe('Scryfall syntax reference coverage', () => {
 });
 
 describe('Scryfall tagger tags', () => {
-  const taggerPath = path.resolve(process.cwd(), 'src/data/scryfall-tagger-tags.txt');
+  const taggerPath = path.resolve(
+    process.cwd(),
+    'src/data/scryfall-tagger-tags.txt',
+  );
   const rawTags = fs.readFileSync(taggerPath, 'utf8');
-  const tags = Array.from(new Set(rawTags.match(/[a-z0-9-]+/g) || []))
-    .filter((tag) => tag.length >= 2);
+  const tags = Array.from(new Set(rawTags.match(/[a-z0-9-]+/g) || [])).filter(
+    (tag) => tag.length >= 2,
+  );
 
   it('loads tagger tags reference list', () => {
     expect(tags.length).toBeGreaterThan(0);

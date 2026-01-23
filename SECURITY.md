@@ -48,4 +48,4 @@ This security policy applies to:
 
 ---
 
-*Thank you for helping keep OffMeta secure.*
+_Thank you for helping keep OffMeta secure._

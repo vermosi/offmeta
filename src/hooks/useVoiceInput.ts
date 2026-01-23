@@ -23,8 +23,12 @@ interface SpeechRecognition extends EventTarget {
   interimResults: boolean;
   lang: string;
   onstart: ((this: SpeechRecognition, ev: Event) => void) | null;
-  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => void) | null;
-  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => void) | null;
+  onresult:
+    | ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => void)
+    | null;
+  onerror:
+    | ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => void)
+    | null;
   onend: ((this: SpeechRecognition, ev: Event) => void) | null;
   start(): void;
   stop(): void;
@@ -72,7 +76,7 @@ interface UseVoiceInputReturn {
 export function useVoiceInput({
   onTranscript,
   onFinalTranscript,
-  language = 'en-US'
+  language = 'en-US',
 }: UseVoiceInputOptions = {}): UseVoiceInputReturn {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -81,7 +85,8 @@ export function useVoiceInput({
   const onTranscriptRef = useRef(onTranscript);
   const onFinalTranscriptRef = useRef(onFinalTranscript);
 
-  const isSupported = typeof window !== 'undefined' && 
+  const isSupported =
+    typeof window !== 'undefined' &&
     ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
   // Keep callback refs up to date
@@ -94,9 +99,10 @@ export function useVoiceInput({
   useEffect(() => {
     if (!isSupported) return;
 
-    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognitionAPI =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognitionAPI();
-    
+
     recognition.continuous = false;
     recognition.interimResults = true;
     recognition.lang = language;
@@ -148,7 +154,7 @@ export function useVoiceInput({
 
   const startListening = useCallback(() => {
     if (!recognitionRef.current || isListening) return;
-    
+
     try {
       recognitionRef.current.start();
     } catch (e) {
@@ -167,6 +173,6 @@ export function useVoiceInput({
     transcript,
     startListening,
     stopListening,
-    error
+    error,
   };
 }

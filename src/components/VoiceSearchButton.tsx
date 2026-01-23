@@ -1,6 +1,11 @@
 import { Mic, MicOff, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
 interface VoiceSearchButtonProps {
@@ -16,7 +21,7 @@ export function VoiceSearchButton({
   isSupported,
   isProcessing = false,
   onToggle,
-  className
+  className,
 }: VoiceSearchButtonProps) {
   if (!isSupported) {
     return (
@@ -28,7 +33,7 @@ export function VoiceSearchButton({
               size="icon"
               disabled
               aria-label="Voice input not supported"
-              className={cn("h-12 w-12 rounded-full opacity-50", className)}
+              className={cn('h-12 w-12 rounded-full opacity-50', className)}
             >
               <MicOff className="h-5 w-5 text-muted-foreground" />
             </Button>
@@ -46,15 +51,16 @@ export function VoiceSearchButton({
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
-            variant={isListening ? "default" : "outline"}
+            variant={isListening ? 'default' : 'outline'}
             size="icon"
             onClick={onToggle}
             disabled={isProcessing}
-            aria-label={isListening ? "Stop listening" : "Start voice search"}
+            aria-label={isListening ? 'Stop listening' : 'Start voice search'}
             className={cn(
-              "h-12 w-12 rounded-full relative transition-all duration-300",
-              isListening && "bg-destructive hover:bg-destructive/90 animate-pulse-ring",
-              className
+              'h-12 w-12 rounded-full relative transition-all duration-300',
+              isListening &&
+                'bg-destructive hover:bg-destructive/90 animate-pulse-ring',
+              className,
             )}
           >
             {isProcessing ? (
@@ -64,7 +70,7 @@ export function VoiceSearchButton({
             ) : (
               <Mic className="h-5 w-5" />
             )}
-            
+
             {/* Animated rings when listening */}
             {isListening && (
               <>

@@ -1,9 +1,11 @@
 # API
 
 ## Semantic search (Supabase Edge Function)
+
 **Endpoint**: `supabase/functions/semantic-search`
 
 ### Request body
+
 ```json
 {
   "query": "red or black creature that draws cards",
@@ -21,6 +23,7 @@
 ```
 
 ### Response body (success)
+
 ```json
 {
   "success": true,
@@ -41,7 +44,9 @@
 ```
 
 ### Cache bypass
+
 Set `useCache: false` in the request body to bypass memory and persistent caches.
 
 ### Headers
+
 Responses include `x-request-id` for correlation in logs.

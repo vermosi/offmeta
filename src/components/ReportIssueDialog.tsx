@@ -41,10 +41,11 @@ const MAX_SUBMISSIONS_PER_WINDOW = 5;
 
 // Input validation schema
 const feedbackSchema = z.object({
-  issueDescription: z.string()
+  issueDescription: z
+    .string()
     .trim()
     .min(10, 'Please provide more details (at least 10 characters)')
-    .max(1000, 'Description too long (max 1000 characters)')
+    .max(1000, 'Description too long (max 1000 characters)'),
 });
 
 interface RateLimitData {
@@ -67,23 +68,31 @@ function setRateLimitData(data: RateLimitData): void {
 
 function cleanExpiredSubmissions(submissions: number[]): number[] {
   const cutoff = Date.now() - RATE_LIMIT_WINDOW_MS;
-  return submissions.filter(timestamp => timestamp > cutoff);
+  return submissions.filter((timestamp) => timestamp > cutoff);
 }
 
-function checkRateLimit(): { allowed: boolean; remainingSubmissions: number; resetInMinutes: number } {
+function checkRateLimit(): {
+  allowed: boolean;
+  remainingSubmissions: number;
+  resetInMinutes: number;
+} {
   const data = getRateLimitData();
   const validSubmissions = cleanExpiredSubmissions(data.submissions);
   setRateLimitData({ submissions: validSubmissions });
-  
-  const remainingSubmissions = MAX_SUBMISSIONS_PER_WINDOW - validSubmissions.length;
+
+  const remainingSubmissions =
+    MAX_SUBMISSIONS_PER_WINDOW - validSubmissions.length;
   const oldestSubmission = validSubmissions[0] || Date.now();
-  const resetInMs = Math.max(0, (oldestSubmission + RATE_LIMIT_WINDOW_MS) - Date.now());
+  const resetInMs = Math.max(
+    0,
+    oldestSubmission + RATE_LIMIT_WINDOW_MS - Date.now(),
+  );
   const resetInMinutes = Math.ceil(resetInMs / 60000);
-  
+
   return {
     allowed: validSubmissions.length < MAX_SUBMISSIONS_PER_WINDOW,
     remainingSubmissions: Math.max(0, remainingSubmissions),
-    resetInMinutes
+    resetInMinutes,
   };
 }
 
@@ -144,7 +153,7 @@ export function ReportIssueDialog({
   const triggerProcessing = useCallback(async () => {
     try {
       await supabase.functions.invoke('process-feedback', {
-        body: {}
+        body: {},
       });
     } catch (error) {
       logger.info('Background processing triggered', error);
@@ -155,17 +164,18 @@ export function ReportIssueDialog({
     const rateLimitStatus = checkRateLimit();
     if (!rateLimitStatus.allowed) {
       toast.error('Too many submissions', {
-        description: `Please wait ${rateLimitStatus.resetInMinutes} minute(s) before submitting more feedback.`
+        description: `Please wait ${rateLimitStatus.resetInMinutes} minute(s) before submitting more feedback.`,
       });
       return;
     }
 
     const validationResult = feedbackSchema.safeParse({
-      issueDescription: issue
+      issueDescription: issue,
     });
 
     if (!validationResult.success) {
-      const errorMessage = validationResult.error.errors[0]?.message || 'Invalid input';
+      const errorMessage =
+        validationResult.error.errors[0]?.message || 'Invalid input';
       setValidationError(errorMessage);
       toast.error(errorMessage);
       return;
@@ -193,7 +203,7 @@ export function ReportIssueDialog({
 
       const remaining = checkRateLimit().remainingSubmissions;
       toast.success('Issue reported', {
-        description: `Thanks! We'll use this to improve searches.${remaining <= 2 ? ` (${remaining} submissions remaining)` : ''}`
+        description: `Thanks! We'll use this to improve searches.${remaining <= 2 ? ` (${remaining} submissions remaining)` : ''}`,
       });
       onOpenChange(false);
       triggerProcessing();
@@ -213,7 +223,8 @@ export function ReportIssueDialog({
         <DialogHeader>
           <DialogTitle>Report Search Issue</DialogTitle>
           <DialogDescription>
-            Help us improve by describing what went wrong. Context is auto-included.
+            Help us improve by describing what went wrong. Context is
+            auto-included.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 pt-2">
@@ -230,7 +241,11 @@ export function ReportIssueDialog({
                   onClick={handleCopyContext}
                   className="h-6 px-2 text-xs gap-1"
                 >
-                  {copiedContext ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                  {copiedContext ? (
+                    <Check className="h-3 w-3" />
+                  ) : (
+                    <Copy className="h-3 w-3" />
+                  )}
                   Copy
                 </Button>
                 <Button
@@ -239,16 +254,30 @@ export function ReportIssueDialog({
                   onClick={() => setShowContext(!showContext)}
                   className="h-6 px-2 text-xs gap-1"
                 >
-                  {showContext ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                  {showContext ? (
+                    <ChevronUp className="h-3 w-3" />
+                  ) : (
+                    <ChevronDown className="h-3 w-3" />
+                  )}
                   {showContext ? 'Hide' : 'Show'}
                 </Button>
               </div>
             </div>
-            
+
             {!showContext && (
               <div className="text-xs text-muted-foreground space-y-1">
-                <p><span className="font-medium">Prompt:</span> "{originalQuery.substring(0, 50)}{originalQuery.length > 50 ? '...' : ''}"</p>
-                <p><span className="font-medium">Query:</span> <code className="bg-muted px-1 rounded">{compiledQuery.substring(0, 40)}{compiledQuery.length > 40 ? '...' : ''}</code></p>
+                <p>
+                  <span className="font-medium">Prompt:</span> "
+                  {originalQuery.substring(0, 50)}
+                  {originalQuery.length > 50 ? '...' : ''}"
+                </p>
+                <p>
+                  <span className="font-medium">Query:</span>{' '}
+                  <code className="bg-muted px-1 rounded">
+                    {compiledQuery.substring(0, 40)}
+                    {compiledQuery.length > 40 ? '...' : ''}
+                  </code>
+                </p>
               </div>
             )}
 
@@ -286,7 +315,8 @@ export function ReportIssueDialog({
 
           {!rateLimitStatus.allowed && (
             <p className="text-xs text-destructive">
-              Rate limit reached. Please wait {rateLimitStatus.resetInMinutes} minute(s).
+              Rate limit reached. Please wait {rateLimitStatus.resetInMinutes}{' '}
+              minute(s).
             </p>
           )}
 
@@ -294,11 +324,15 @@ export function ReportIssueDialog({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button 
-              onClick={handleSubmit} 
-              disabled={isSubmitting || !issue.trim() || !rateLimitStatus.allowed}
+            <Button
+              onClick={handleSubmit}
+              disabled={
+                isSubmitting || !issue.trim() || !rateLimitStatus.allowed
+              }
             >
-              {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {isSubmitting && (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              )}
               Submit Report
             </Button>
           </div>

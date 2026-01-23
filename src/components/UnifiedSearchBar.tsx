@@ -3,7 +3,14 @@
  * Includes debouncing, rate limit handling, and timeout protection.
  */
 
-import { useState, useRef, useCallback, useImperativeHandle, forwardRef, useEffect } from 'react';
+import {
+  useState,
+  useRef,
+  useCallback,
+  useImperativeHandle,
+  forwardRef,
+  useEffect,
+} from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -37,12 +44,20 @@ interface CachedResult {
   timestamp: number;
 }
 
-function normalizeQueryKey(query: string, filters?: FilterState | null, cacheSalt?: string): string {
+function normalizeQueryKey(
+  query: string,
+  filters?: FilterState | null,
+  cacheSalt?: string,
+): string {
   const normalized = query.toLowerCase().trim().replace(/\s+/g, ' ');
   return `${normalized}|${JSON.stringify(filters || {})}|${cacheSalt || ''}`;
 }
 
-function getCachedResult(query: string, filters?: FilterState | null, cacheSalt?: string): CachedResult | null {
+function getCachedResult(
+  query: string,
+  filters?: FilterState | null,
+  cacheSalt?: string,
+): CachedResult | null {
   try {
     const cache = JSON.parse(sessionStorage.getItem(RESULT_CACHE_KEY) || '{}');
     const key = normalizeQueryKey(query, filters, cacheSalt);
@@ -61,7 +76,12 @@ function getCachedResult(query: string, filters?: FilterState | null, cacheSalt?
   return null;
 }
 
-function setCachedResult(query: string, result: Omit<CachedResult, 'timestamp'>, filters?: FilterState | null, cacheSalt?: string): void {
+function setCachedResult(
+  query: string,
+  result: Omit<CachedResult, 'timestamp'>,
+  filters?: FilterState | null,
+  cacheSalt?: string,
+): void {
   try {
     const cache = JSON.parse(sessionStorage.getItem(RESULT_CACHE_KEY) || '{}');
     const key = normalizeQueryKey(query, filters, cacheSalt);
@@ -69,8 +89,12 @@ function setCachedResult(query: string, result: Omit<CachedResult, 'timestamp'>,
     // Limit cache size - remove oldest entries
     const keys = Object.keys(cache);
     if (keys.length > MAX_CACHE_SIZE) {
-      const sorted = keys.sort((a, b) => cache[a].timestamp - cache[b].timestamp);
-      sorted.slice(0, keys.length - MAX_CACHE_SIZE).forEach(k => delete cache[k]);
+      const sorted = keys.sort(
+        (a, b) => cache[a].timestamp - cache[b].timestamp,
+      );
+      sorted
+        .slice(0, keys.length - MAX_CACHE_SIZE)
+        .forEach((k) => delete cache[k]);
     }
     sessionStorage.setItem(RESULT_CACHE_KEY, JSON.stringify(cache));
   } catch {
@@ -114,8 +138,10 @@ function useSearchHistory() {
 
   const addToHistory = useCallback((query: string) => {
     if (!query.trim()) return;
-    setHistory(prev => {
-      const filtered = prev.filter(q => q.toLowerCase() !== query.toLowerCase());
+    setHistory((prev) => {
+      const filtered = prev.filter(
+        (q) => q.toLowerCase() !== query.toLowerCase(),
+      );
       const updated = [query, ...filtered].slice(0, MAX_HISTORY_ITEMS);
       try {
         localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(updated));
@@ -152,27 +178,39 @@ export interface SearchResult {
 }
 
 interface UnifiedSearchBarProps {
-  onSearch: (query: string, result?: SearchResult, naturalQuery?: string) => void;
+  onSearch: (
+    query: string,
+    result?: SearchResult,
+    naturalQuery?: string,
+  ) => void;
   isLoading: boolean;
   lastTranslatedQuery?: string;
   filters?: FilterState | null;
 }
 
 export interface UnifiedSearchBarHandle {
-  triggerSearch: (query: string, options?: { bypassCache?: boolean; cacheSalt?: string }) => void;
+  triggerSearch: (
+    query: string,
+    options?: { bypassCache?: boolean; cacheSalt?: string },
+  ) => void;
 }
 
 const EXAMPLE_QUERIES = [
-  "artifacts that produce 2 mana",
-  "red or black creatures under 3 mana",
-  "creatures that make treasure tokens",
-  "cheap green ramp spells",
-  "mana dorks that cost 1",
-  "Rakdos sacrifice outlets",
+  'artifacts that produce 2 mana',
+  'red or black creatures under 3 mana',
+  'creatures that make treasure tokens',
+  'cheap green ramp spells',
+  'mana dorks that cost 1',
+  'Rakdos sacrifice outlets',
 ];
 
-export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearchBarProps>(
-  function UnifiedSearchBar({ onSearch, isLoading, lastTranslatedQuery, filters }, ref) {
+export const UnifiedSearchBar = forwardRef<
+  UnifiedSearchBarHandle,
+  UnifiedSearchBarProps
+>(function UnifiedSearchBar(
+  { onSearch, isLoading, lastTranslatedQuery, filters },
+  ref,
+) {
   const isMobile = useIsMobile();
   const [query, setQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -194,7 +232,7 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
       setRateLimitCountdown(0);
       return;
     }
-    
+
     const updateCountdown = () => {
       const remaining = Math.ceil((rateLimitedUntil - Date.now()) / 1000);
       if (remaining <= 0) {
@@ -204,203 +242,253 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
         setRateLimitCountdown(remaining);
       }
     };
-    
+
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
   }, [rateLimitedUntil]);
 
-  const handleSearch = useCallback(async (searchQuery?: string, options?: { bypassCache?: boolean; cacheSalt?: string }) => {
-    const queryToSearch = (searchQuery || query).trim();
-    
-    // Prevent empty, duplicate, or rate-limited searches
-    if (!queryToSearch) return;
-    if (rateLimitedUntil && Date.now() < rateLimitedUntil) {
-      toast.error('Please wait', {
-        description: `Rate limited. Try again in ${rateLimitCountdown}s`
+  const handleSearch = useCallback(
+    async (
+      searchQuery?: string,
+      options?: { bypassCache?: boolean; cacheSalt?: string },
+    ) => {
+      const queryToSearch = (searchQuery || query).trim();
+
+      // Prevent empty, duplicate, or rate-limited searches
+      if (!queryToSearch) return;
+      if (rateLimitedUntil && Date.now() < rateLimitedUntil) {
+        toast.error('Please wait', {
+          description: `Rate limited. Try again in ${rateLimitCountdown}s`,
+        });
+        return;
+      }
+
+      lastSearchRef.current = queryToSearch;
+      addToHistory(queryToSearch);
+
+      const currentToken = ++requestTokenRef.current;
+      const allowReuse = useLast && !options?.bypassCache;
+      setUseLast(false);
+      const cacheSalt = options?.cacheSalt;
+
+      // Check client-side cache first (eliminates edge function call entirely)
+      const cached = allowReuse
+        ? getCachedResult(queryToSearch, filters, cacheSalt)
+        : null;
+      if (cached) {
+        logger.info('[Cache] Client-side hit for:', queryToSearch);
+        saveContext(queryToSearch, cached.scryfallQuery);
+        onSearch(
+          cached.scryfallQuery,
+          {
+            scryfallQuery: cached.scryfallQuery,
+            explanation: cached.explanation,
+            showAffiliate: cached.showAffiliate,
+            validationIssues: cached.validationIssues,
+            intent: cached.intent,
+            source: 'client_cache',
+          },
+          queryToSearch,
+        ); // Pass natural language query
+        toast.success('Search (cached)', {
+          description: `Found: ${cached.scryfallQuery.substring(0, 50)}${cached.scryfallQuery.length > 50 ? '...' : ''}`,
+        });
+        return;
+      }
+
+      // Cancel any pending request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+
+      setIsSearching(true);
+
+      // Timeout promise
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(
+          () => reject(new Error('Search timeout')),
+          SEARCH_TIMEOUT_MS,
+        );
       });
-      return;
-    }
-    
-    lastSearchRef.current = queryToSearch;
-    addToHistory(queryToSearch);
 
-    const currentToken = ++requestTokenRef.current;
-    const allowReuse = useLast && !options?.bypassCache;
-    setUseLast(false);
-    const cacheSalt = options?.cacheSalt;
-    
-    // Check client-side cache first (eliminates edge function call entirely)
-    const cached = allowReuse ? getCachedResult(queryToSearch, filters, cacheSalt) : null;
-    if (cached) {
-      logger.info('[Cache] Client-side hit for:', queryToSearch);
-      saveContext(queryToSearch, cached.scryfallQuery);
-      onSearch(cached.scryfallQuery, {
-        scryfallQuery: cached.scryfallQuery,
-        explanation: cached.explanation,
-        showAffiliate: cached.showAffiliate,
-        validationIssues: cached.validationIssues,
-        intent: cached.intent,
-        source: 'client_cache'
-      }, queryToSearch); // Pass natural language query
-      toast.success('Search (cached)', {
-        description: `Found: ${cached.scryfallQuery.substring(0, 50)}${cached.scryfallQuery.length > 50 ? '...' : ''}`
-      });
-      return;
-    }
-    
-    // Cancel any pending request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    abortControllerRef.current = new AbortController();
-    
-    setIsSearching(true);
+      try {
+        const context = allowReuse ? getContext() : null;
 
-    // Timeout promise
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Search timeout')), SEARCH_TIMEOUT_MS);
-    });
+        const searchPromise = supabase.functions.invoke('semantic-search', {
+          body: {
+            query: queryToSearch,
+            context: context || undefined,
+            useCache: allowReuse,
+            filters: filters || undefined,
+            cacheSalt: cacheSalt || undefined,
+          },
+        });
 
-    try {
-      const context = allowReuse ? getContext() : null;
-      
-      const searchPromise = supabase.functions.invoke('semantic-search', {
-        body: {
-          query: queryToSearch,
-          context: context || undefined,
-          useCache: allowReuse,
-          filters: filters || undefined,
-          cacheSalt: cacheSalt || undefined
+        const { data, error } = await Promise.race([
+          searchPromise,
+          timeoutPromise,
+        ]);
+
+        if (error) throw error;
+        if (requestTokenRef.current !== currentToken) {
+          return;
         }
-      });
-      
-      const { data, error } = await Promise.race([searchPromise, timeoutPromise]);
 
-      if (error) throw error;
-      if (requestTokenRef.current !== currentToken) {
-        return;
-      }
+        // Handle rate limiting response
+        if (data?.retryAfter) {
+          const retryAfterMs = (data.retryAfter || 30) * 1000;
+          setRateLimitedUntil(Date.now() + retryAfterMs);
+          toast.error('Too many searches', {
+            description: `High traffic - retry in ${data.retryAfter}s`,
+            icon: <Clock className="h-4 w-4" />,
+          });
+          return;
+        }
 
-      // Handle rate limiting response
-      if (data?.retryAfter) {
-        const retryAfterMs = (data.retryAfter || 30) * 1000;
-        setRateLimitedUntil(Date.now() + retryAfterMs);
-        toast.error('Too many searches', {
-          description: `High traffic - retry in ${data.retryAfter}s`,
-          icon: <Clock className="h-4 w-4" />
-        });
-        return;
-      }
+        if (data?.success && data?.scryfallQuery) {
+          saveContext(queryToSearch, data.scryfallQuery);
 
-      if (data?.success && data?.scryfallQuery) {
-        saveContext(queryToSearch, data.scryfallQuery);
-        
-        // Cache the result client-side for 15 minutes
-        setCachedResult(queryToSearch, {
-          scryfallQuery: data.scryfallQuery,
-          explanation: data.explanation,
-          showAffiliate: data.showAffiliate,
-          validationIssues: data.validationIssues,
-          intent: data.intent,
-        }, filters, cacheSalt);
-        
-        onSearch(data.scryfallQuery, {
-          scryfallQuery: data.scryfallQuery,
-          explanation: data.explanation,
-          showAffiliate: data.showAffiliate,
-          validationIssues: data.validationIssues,
-          intent: data.intent,
-          source: data.source || 'ai'
-        }, queryToSearch); // Pass natural language query
-        
-        const source = data.source || 'ai';
-        toast.success(`Search translated${source !== 'ai' ? ` (${source})` : ''}`, {
-          description: `Found: ${data.scryfallQuery.substring(0, 50)}${data.scryfallQuery.length > 50 ? '...' : ''}`
-        });
-      } else {
-        throw new Error(data?.error || 'Failed to translate');
-      }
-    } catch (error: unknown) {
-      // Handle different error types
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      
-      if (requestTokenRef.current !== currentToken) {
-        return;
-      }
-      if (errorMessage === 'Search timeout') {
-        logger.error('Search timeout');
-        toast.error('Search took too long', {
-          description: 'Try a simpler query or try again'
-        });
-        onSearch(queryToSearch, undefined, queryToSearch); // Fall back to direct search
-      } else if (errorMessage.includes('429') || errorMessage.includes('rate')) {
-        setRateLimitedUntil(Date.now() + 30000);
-        toast.error('Too many searches', {
-          description: 'Please wait a moment before searching again'
-        });
-      } else {
-        logger.error('Search error:', error);
-        toast.error('Search issue', {
-          description: 'Trying direct search instead'
-        });
-        onSearch(queryToSearch, undefined, queryToSearch);
-      }
-    } finally {
-      setIsSearching(false);
-      abortControllerRef.current = null;
-    }
-  }, [
-    addToHistory,
-    filters,
-    getContext,
-    onSearch,
-    query,
-    rateLimitCountdown,
-    rateLimitedUntil,
-    saveContext,
-    useLast,
-  ]);
+          // Cache the result client-side for 15 minutes
+          setCachedResult(
+            queryToSearch,
+            {
+              scryfallQuery: data.scryfallQuery,
+              explanation: data.explanation,
+              showAffiliate: data.showAffiliate,
+              validationIssues: data.validationIssues,
+              intent: data.intent,
+            },
+            filters,
+            cacheSalt,
+          );
 
-  useImperativeHandle(ref, () => ({
-    triggerSearch: (searchQuery: string, options?: { bypassCache?: boolean; cacheSalt?: string }) => {
-      setQuery(searchQuery);
-      handleSearch(searchQuery, options);
-    }
-  }), [handleSearch]);
+          onSearch(
+            data.scryfallQuery,
+            {
+              scryfallQuery: data.scryfallQuery,
+              explanation: data.explanation,
+              showAffiliate: data.showAffiliate,
+              validationIssues: data.validationIssues,
+              intent: data.intent,
+              source: data.source || 'ai',
+            },
+            queryToSearch,
+          ); // Pass natural language query
+
+          const source = data.source || 'ai';
+          toast.success(
+            `Search translated${source !== 'ai' ? ` (${source})` : ''}`,
+            {
+              description: `Found: ${data.scryfallQuery.substring(0, 50)}${data.scryfallQuery.length > 50 ? '...' : ''}`,
+            },
+          );
+        } else {
+          throw new Error(data?.error || 'Failed to translate');
+        }
+      } catch (error: unknown) {
+        // Handle different error types
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+
+        if (requestTokenRef.current !== currentToken) {
+          return;
+        }
+        if (errorMessage === 'Search timeout') {
+          logger.error('Search timeout');
+          toast.error('Search took too long', {
+            description: 'Try a simpler query or try again',
+          });
+          onSearch(queryToSearch, undefined, queryToSearch); // Fall back to direct search
+        } else if (
+          errorMessage.includes('429') ||
+          errorMessage.includes('rate')
+        ) {
+          setRateLimitedUntil(Date.now() + 30000);
+          toast.error('Too many searches', {
+            description: 'Please wait a moment before searching again',
+          });
+        } else {
+          logger.error('Search error:', error);
+          toast.error('Search issue', {
+            description: 'Trying direct search instead',
+          });
+          onSearch(queryToSearch, undefined, queryToSearch);
+        }
+      } finally {
+        setIsSearching(false);
+        abortControllerRef.current = null;
+      }
+    },
+    [
+      addToHistory,
+      filters,
+      getContext,
+      onSearch,
+      query,
+      rateLimitCountdown,
+      rateLimitedUntil,
+      saveContext,
+      useLast,
+    ],
+  );
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      triggerSearch: (
+        searchQuery: string,
+        options?: { bypassCache?: boolean; cacheSalt?: string },
+      ) => {
+        setQuery(searchQuery);
+        handleSearch(searchQuery, options);
+      },
+    }),
+    [handleSearch],
+  );
 
   const showExamples = !query;
 
   return (
-    <search className="space-y-4 sm:space-y-6 w-full max-w-xl mx-auto px-0" role="search" aria-label="Card search">
+    <search
+      className="space-y-4 sm:space-y-6 w-full max-w-xl mx-auto px-0"
+      role="search"
+      aria-label="Card search"
+    >
       {/* Search input - Mobile-first, compact */}
       <div className="relative">
-        <div 
+        <div
           className={`
             relative flex items-center gap-1.5 sm:gap-2 p-1 sm:p-1.5 rounded-xl border bg-card
             transition-all duration-200
-            ${isFocused 
-              ? 'border-foreground/20 shadow-lg ring-2 ring-ring ring-offset-2 ring-offset-background' 
-              : 'border-border shadow-sm hover:border-muted-foreground/30 hover:shadow-md'
+            ${
+              isFocused
+                ? 'border-foreground/20 shadow-lg ring-2 ring-ring ring-offset-2 ring-offset-background'
+                : 'border-border shadow-sm hover:border-muted-foreground/30 hover:shadow-md'
             }
           `}
         >
           <label htmlFor="search-input" className="sr-only">
             Search for Magic cards using natural language
           </label>
-          
-          <div 
+
+          <div
             className="hidden sm:flex items-center justify-center w-10 h-10 rounded-lg bg-secondary text-muted-foreground flex-shrink-0"
             aria-hidden="true"
           >
             <Search className="h-4 w-4" />
           </div>
-          
+
           <input
             ref={inputRef}
             id="search-input"
             type="search"
-            placeholder={isMobile ? "Search cards..." : "Describe what you're looking for..."}
+            placeholder={
+              isMobile
+                ? 'Search cards...'
+                : "Describe what you're looking for..."
+            }
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -412,7 +500,7 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
             spellCheck="false"
             aria-describedby="search-hint"
           />
-          
+
           {query && (
             <button
               aria-label="Clear search"
@@ -428,11 +516,22 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
 
           <Button
             onClick={() => handleSearch()}
-            disabled={isSearching || isLoading || !query.trim() || rateLimitCountdown > 0}
+            disabled={
+              isSearching ||
+              isLoading ||
+              !query.trim() ||
+              rateLimitCountdown > 0
+            }
             variant="accent"
             size="sm"
             className="h-8 sm:h-10 px-3 sm:px-4 rounded-lg gap-1.5 sm:gap-2 font-medium flex-shrink-0"
-            aria-label={rateLimitCountdown > 0 ? `Wait ${rateLimitCountdown}s` : isSearching ? 'Searching...' : 'Search for cards'}
+            aria-label={
+              rateLimitCountdown > 0
+                ? `Wait ${rateLimitCountdown}s`
+                : isSearching
+                  ? 'Searching...'
+                  : 'Search for cards'
+            }
           >
             {rateLimitCountdown > 0 ? (
               <>
@@ -448,30 +547,30 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
               </>
             )}
           </Button>
-          
+
           {/* Feedback button - visible on all sizes */}
           <div className="flex-shrink-0">
-            <SearchFeedback 
-              originalQuery={query || history[0] || ''} 
-              translatedQuery={lastTranslatedQuery} 
+            <SearchFeedback
+              originalQuery={query || history[0] || ''}
+              translatedQuery={lastTranslatedQuery}
             />
           </div>
 
           {/* Reuse last interpretation toggle */}
           <Button
-            variant={useLast ? "accent" : "ghost"}
+            variant={useLast ? 'accent' : 'ghost'}
             size="sm"
-            onClick={() => setUseLast(prev => !prev)}
+            onClick={() => setUseLast((prev) => !prev)}
             className="h-8 px-2 text-xs"
             title="Reuse the last interpretation and cache (optional)"
             disabled={!canUseLast}
           >
             {useLast ? 'Using last' : 'Use last'}
           </Button>
-          
+
           {/* Help modal - desktop only */}
           <div className="hidden sm:block flex-shrink-0">
-            <SearchHelpModal 
+            <SearchHelpModal
               onTryExample={(exampleQuery) => {
                 setQuery(exampleQuery);
                 handleSearch(exampleQuery);
@@ -479,7 +578,7 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
             />
           </div>
         </div>
-        
+
         <p id="search-hint" className="sr-only">
           Type your search query and press Enter or click Search
         </p>
@@ -487,7 +586,7 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
 
       {/* Recent searches */}
       {history.length > 0 && showExamples && (
-        <div 
+        <div
           className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 animate-reveal"
           role="group"
           aria-label="Recent searches"
@@ -506,9 +605,11 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
               className="group inline-flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border border-border bg-card text-xs sm:text-sm text-muted-foreground hover:text-foreground hover:border-muted-foreground/30 hover:bg-secondary transition-all duration-200 focus-ring"
               aria-label={`Search for ${historyQuery}`}
             >
-              <span className="truncate max-w-[100px] sm:max-w-[180px]">{historyQuery}</span>
-              <ArrowRight 
-                className="h-3 w-3 opacity-0 -translate-x-0.5 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 flex-shrink-0" 
+              <span className="truncate max-w-[100px] sm:max-w-[180px]">
+                {historyQuery}
+              </span>
+              <ArrowRight
+                className="h-3 w-3 opacity-0 -translate-x-0.5 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 flex-shrink-0"
                 aria-hidden="true"
               />
             </button>
@@ -525,8 +626,8 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
 
       {/* Example queries */}
       {showExamples && (
-        <div 
-          className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 animate-reveal" 
+        <div
+          className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 animate-reveal"
           style={{ animationDelay: '75ms' }}
           role="group"
           aria-label="Example searches"
@@ -540,7 +641,11 @@ export const UnifiedSearchBar = forwardRef<UnifiedSearchBarHandle, UnifiedSearch
               aria-label={`Try searching for ${example}`}
             >
               <span className="truncate max-w-[120px] sm:max-w-none inline-block align-middle">
-                "{isMobile && example.length > 18 ? `${example.slice(0, 18)}...` : example}"
+                "
+                {isMobile && example.length > 18
+                  ? `${example.slice(0, 18)}...`
+                  : example}
+                "
               </span>
             </button>
           ))}

@@ -1,19 +1,26 @@
 import { describe, it, expect } from 'vitest';
 import { buildDeterministicIntent } from '../../../supabase/functions/semantic-search/deterministic';
 
-const getQuery = (input: string) => buildDeterministicIntent(input).deterministicQuery;
+const getQuery = (input: string) =>
+  buildDeterministicIntent(input).deterministicQuery;
 
 describe('Deterministic MTG query translation', () => {
   it('T1: artifacts that produce 2 mana and cost four or less', () => {
-    const query = getQuery('artifact that produced 2 mana and costs four or less mana');
+    const query = getQuery(
+      'artifact that produced 2 mana and costs four or less mana',
+    );
     expect(query).toContain('t:artifact');
     expect(query).toContain('mv<=4');
     expect(query).toContain('-t:land');
-    expect(query.includes('o:"add {c}{c}"') || query.includes('o:/add')).toBe(true);
+    expect(query.includes('o:"add {c}{c}"') || query.includes('o:/add')).toBe(
+      true,
+    );
   });
 
   it('T2: red or black creature that costs at least 5 mana and will draw cards', () => {
-    const query = getQuery('red or black creature that costs at least 5 mana and will draw cards');
+    const query = getQuery(
+      'red or black creature that costs at least 5 mana and will draw cards',
+    );
     expect(query).toContain('t:creature');
     expect(query).toContain('mv>=5');
     expect(query).toContain('(c=r or c=b)');
@@ -45,7 +52,9 @@ describe('Deterministic MTG query translation', () => {
   });
 
   it('T6: green soul sisters released after 2020', () => {
-    const query = getQuery('show me all the green soul sisters released after 2020');
+    const query = getQuery(
+      'show me all the green soul sisters released after 2020',
+    );
     expect(query).toContain('c=g');
     expect(query).toContain('otag:soul-warden-ability');
     expect(query).toContain('year>2020');
@@ -70,7 +79,9 @@ describe('Deterministic MTG query translation', () => {
   });
 
   it('T10: multicolor commanders with blue activated ability without mana cost', () => {
-    const query = getQuery('commanders with more than one color, one of which is blue, with an activated ability that does not cost mana');
+    const query = getQuery(
+      'commanders with more than one color, one of which is blue, with an activated ability that does not cost mana',
+    );
     expect(query).toContain('is:commander');
     expect(query).toMatch(/id>1/);
     expect(query).toMatch(/ci>=u/);
@@ -111,7 +122,9 @@ describe('Deterministic MTG query translation', () => {
   it('T15: land that produces 2 mana keeps lands', () => {
     const query = getQuery('land that produces 2 mana');
     expect(query).toContain('t:land');
-    expect(query.includes('o:"add {c}{c}"') || query.includes('o:/add')).toBe(true);
+    expect(query.includes('o:"add {c}{c}"') || query.includes('o:/add')).toBe(
+      true,
+    );
     expect(query).not.toContain('-t:land');
   });
 

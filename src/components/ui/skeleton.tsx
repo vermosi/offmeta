@@ -1,26 +1,26 @@
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 
 interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: "default" | "card" | "text" | "avatar" | "button";
+  variant?: 'default' | 'card' | 'text' | 'avatar' | 'button';
 }
 
-function Skeleton({ className, variant = "default", ...props }: SkeletonProps) {
+function Skeleton({ className, variant = 'default', ...props }: SkeletonProps) {
   const variantClasses = {
-    default: "bg-muted",
-    card: "bg-muted rounded-xl",
-    text: "bg-muted h-4 rounded",
-    avatar: "bg-muted rounded-full",
-    button: "bg-muted h-9 rounded-lg",
+    default: 'bg-muted',
+    card: 'bg-muted rounded-xl',
+    text: 'bg-muted h-4 rounded',
+    avatar: 'bg-muted rounded-full',
+    button: 'bg-muted h-9 rounded-lg',
   };
 
   return (
-    <div 
+    <div
       className={cn(
-        "shimmer animate-pulse", 
+        'shimmer animate-pulse',
         variantClasses[variant],
-        className
-      )} 
-      {...props} 
+        className,
+      )}
+      {...props}
     />
   );
 }
@@ -49,8 +49,8 @@ function ListSkeleton({ count = 5 }: { count?: number }) {
   return (
     <div className="space-y-2">
       {Array.from({ length: count }).map((_, i) => (
-        <div 
-          key={i} 
+        <div
+          key={i}
           className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30 animate-in"
           style={{ animationDelay: `${i * 50}ms` }}
         >
@@ -66,12 +66,21 @@ function ListSkeleton({ count = 5 }: { count?: number }) {
   );
 }
 
-function GridSkeleton({ count = 8, cols = 4 }: { count?: number; cols?: number }) {
+function GridSkeleton({
+  count = 8,
+  cols = 4,
+}: {
+  count?: number;
+  cols?: number;
+}) {
   return (
-    <div className={`grid gap-3`} style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
+    <div
+      className={`grid gap-3`}
+      style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
+    >
       {Array.from({ length: count }).map((_, i) => (
-        <div 
-          key={i} 
+        <div
+          key={i}
           className="animate-in"
           style={{ animationDelay: `${i * 30}ms` }}
         >
@@ -86,10 +95,10 @@ function TextBlockSkeleton({ lines = 3 }: { lines?: number }) {
   return (
     <div className="space-y-2">
       {Array.from({ length: lines }).map((_, i) => (
-        <Skeleton 
-          key={i} 
-          variant="text" 
-          className={i === lines - 1 ? "w-2/3" : "w-full"}
+        <Skeleton
+          key={i}
+          variant="text"
+          className={i === lines - 1 ? 'w-2/3' : 'w-full'}
           style={{ animationDelay: `${i * 50}ms` }}
         />
       ))}
@@ -97,4 +106,10 @@ function TextBlockSkeleton({ lines = 3 }: { lines?: number }) {
   );
 }
 
-export { Skeleton, CardSkeleton, ListSkeleton, GridSkeleton, TextBlockSkeleton };
+export {
+  Skeleton,
+  CardSkeleton,
+  ListSkeleton,
+  GridSkeleton,
+  TextBlockSkeleton,
+};

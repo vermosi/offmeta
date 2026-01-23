@@ -1,5 +1,5 @@
-import { SearchX, Lightbulb, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { SearchX, Lightbulb, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface EmptyStateProps {
   query?: string;
@@ -8,16 +8,16 @@ interface EmptyStateProps {
 
 const suggestions = [
   "Try broader terms like 'red creatures' instead of specific card names",
-  "Check spelling or use simpler keywords",
+  'Check spelling or use simpler keywords',
   "Search by card type: 'legendary dragons'",
   "Search by mechanic: 'cards with flying'",
 ];
 
 const exampleQueries = [
-  "blue counterspells under $5",
-  "legendary creatures that draw cards",
-  "green ramp spells from modern",
-  "artifact creatures with deathtouch",
+  'blue counterspells under $5',
+  'legendary creatures that draw cards',
+  'green ramp spells from modern',
+  'artifact creatures with deathtouch',
 ];
 
 export const EmptyState = ({ query, onTryExample }: EmptyStateProps) => {
@@ -26,14 +26,15 @@ export const EmptyState = ({ query, onTryExample }: EmptyStateProps) => {
       <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-secondary flex items-center justify-center mb-5">
         <SearchX className="h-6 w-6 sm:h-7 sm:w-7 text-muted-foreground" />
       </div>
-      
+
       <h3 className="text-lg font-semibold text-foreground mb-2">
         No cards found
       </h3>
-      
+
       {query && (
         <p className="text-small text-muted-foreground mb-8 max-w-sm">
-          We couldn't find any cards matching "<span className="font-medium text-foreground">{query}</span>"
+          We couldn't find any cards matching "
+          <span className="font-medium text-foreground">{query}</span>"
         </p>
       )}
 
@@ -41,7 +42,9 @@ export const EmptyState = ({ query, onTryExample }: EmptyStateProps) => {
       <div className="surface-elevated p-5 max-w-md w-full mb-8">
         <div className="flex items-center gap-2 mb-3">
           <Lightbulb className="h-4 w-4 text-accent" />
-          <span className="text-small font-medium text-foreground">Search tips</span>
+          <span className="text-small font-medium text-foreground">
+            Search tips
+          </span>
         </div>
         <ul className="text-small text-muted-foreground space-y-2 text-left">
           {suggestions.map((tip, i) => (

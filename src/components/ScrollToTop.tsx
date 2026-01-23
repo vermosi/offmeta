@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { ArrowUp } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { ArrowUp } from 'lucide-react';
 
 interface ScrollToTopProps {
   threshold?: number;
@@ -14,12 +14,12 @@ export function ScrollToTop({ threshold = 800 }: ScrollToTopProps) {
       setIsVisible(window.scrollY > threshold);
     };
 
-    window.addEventListener("scroll", toggleVisibility, { passive: true });
-    return () => window.removeEventListener("scroll", toggleVisibility);
+    window.addEventListener('scroll', toggleVisibility, { passive: true });
+    return () => window.removeEventListener('scroll', toggleVisibility);
   }, [threshold]);
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (!isVisible) return null;

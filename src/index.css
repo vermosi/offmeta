@@ -15,57 +15,63 @@
      * LIGHT MODE - Mystic oracle theme
      * Deep purples with vibrant gradients
      */
-    
+
     /* Surfaces */
     --background: 270 30% 98%;
     --foreground: 270 50% 15%;
-    
+
     --card: 270 30% 100%;
     --card-foreground: 270 50% 15%;
-    
+
     --popover: 270 30% 100%;
     --popover-foreground: 270 50% 15%;
-    
+
     /* Primary - Deep purple */
     --primary: 270 50% 25%;
     --primary-foreground: 270 30% 98%;
-    
+
     /* Secondary - Soft purple */
     --secondary: 270 25% 94%;
     --secondary-foreground: 270 50% 20%;
-    
+
     /* Muted - Light purple gray */
     --muted: 270 20% 94%;
     --muted-foreground: 270 15% 45%;
-    
+
     /* Accent - Magenta */
     --accent: 300 85% 55%;
     --accent-foreground: 0 0% 100%;
-    
+
     /* Gradient colors */
     --gradient-start: 300 85% 55%;
     --gradient-end: 195 90% 55%;
-    
+
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    
+
     /* Borders */
     --border: 270 20% 88%;
     --input: 270 20% 88%;
     --ring: 300 85% 55%;
-    
+
     /* Radius */
     --radius: 0.625rem;
-    
+
     /* Brand gradient */
     --brand: 300 85% 55%;
     --brand-foreground: 0 0% 100%;
-    
+
     /* Shadows - Purple tinted */
     --shadow-sm: 0 1px 2px 0 hsl(270 50% 20% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(270 50% 20% / 0.08), 0 2px 4px -2px hsl(270 50% 20% / 0.05);
-    --shadow-lg: 0 10px 15px -3px hsl(270 50% 20% / 0.1), 0 4px 6px -4px hsl(270 50% 20% / 0.05);
-    --shadow-xl: 0 20px 25px -5px hsl(270 50% 20% / 0.12), 0 8px 10px -6px hsl(270 50% 20% / 0.05);
+    --shadow-md:
+      0 4px 6px -1px hsl(270 50% 20% / 0.08),
+      0 2px 4px -2px hsl(270 50% 20% / 0.05);
+    --shadow-lg:
+      0 10px 15px -3px hsl(270 50% 20% / 0.1),
+      0 4px 6px -4px hsl(270 50% 20% / 0.05);
+    --shadow-xl:
+      0 20px 25px -5px hsl(270 50% 20% / 0.12),
+      0 8px 10px -6px hsl(270 50% 20% / 0.05);
     --shadow-hover: 0 20px 40px -12px hsl(300 85% 55% / 0.25);
   }
 
@@ -74,54 +80,57 @@
      * DARK MODE - Deep void with oracle glow
      * Rich purple-black, vibrant gradient accents
      */
-    
+
     /* Surfaces - Deep purple-black like the logo */
     --background: 270 45% 6%;
     --foreground: 270 20% 95%;
-    
+
     --card: 270 40% 9%;
     --card-foreground: 270 20% 95%;
-    
+
     --popover: 270 40% 10%;
     --popover-foreground: 270 20% 95%;
-    
+
     /* Primary - Light purple-white */
     --primary: 270 20% 95%;
     --primary-foreground: 270 45% 8%;
-    
+
     /* Secondary - Darker purple */
     --secondary: 270 35% 14%;
     --secondary-foreground: 270 20% 90%;
-    
+
     /* Muted - Dark purple */
     --muted: 270 35% 14%;
     --muted-foreground: 270 20% 55%;
-    
+
     /* Accent - Vibrant magenta */
     --accent: 300 90% 60%;
     --accent-foreground: 0 0% 100%;
-    
+
     /* Gradient colors */
     --gradient-start: 300 90% 60%;
     --gradient-end: 195 95% 55%;
-    
+
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    
+
     /* Borders - Subtle purple */
     --border: 270 30% 18%;
     --input: 270 30% 18%;
     --ring: 300 90% 60%;
-    
+
     /* Brand */
     --brand: 300 90% 60%;
     --brand-foreground: 0 0% 100%;
-    
+
     /* Shadows - Deep purple glow */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+    --shadow-md:
+      0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-lg:
+      0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+    --shadow-xl:
+      0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.3);
     --shadow-hover: 0 25px 50px -12px hsl(300 90% 60% / 0.3);
   }
 }
@@ -145,30 +154,40 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family:
+      'Inter',
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      sans-serif;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     overscroll-behavior-y: contain;
   }
 
   /* Typography Scale - Tight headings, comfortable body */
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: 'Inter', system-ui, sans-serif;
     @apply font-semibold tracking-tight;
     letter-spacing: -0.02em;
   }
 
-  h1 { 
+  h1 {
     @apply text-4xl sm:text-5xl md:text-6xl lg:text-7xl;
     line-height: 1.05;
     letter-spacing: -0.03em;
   }
-  
-  h2 { 
+
+  h2 {
     @apply text-2xl sm:text-3xl md:text-4xl;
     line-height: 1.1;
   }
-  
-  h3 { 
+
+  h3 {
     @apply text-xl sm:text-2xl;
     line-height: 1.2;
   }
@@ -208,7 +227,7 @@
   .card-hover {
     @apply transition-all duration-300 ease-out;
   }
-  
+
   .card-hover:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow-hover);
@@ -218,11 +237,11 @@
   .magnetic {
     @apply transition-transform duration-150 ease-out;
   }
-  
+
   .magnetic:hover {
     transform: translateY(-1px);
   }
-  
+
   .magnetic:active {
     transform: translateY(0) scale(0.98);
   }
@@ -230,13 +249,21 @@
   /* Text gradient - Oracle magenta to cyan */
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(var(--gradient-start)) 0%, hsl(var(--gradient-end)) 100%);
+    background-image: linear-gradient(
+      135deg,
+      hsl(var(--gradient-start)) 0%,
+      hsl(var(--gradient-end)) 100%
+    );
   }
 
   /* Accent text with gradient */
   .text-accent-glow {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(var(--gradient-start)) 0%, hsl(var(--gradient-end)) 100%);
+    background-image: linear-gradient(
+      135deg,
+      hsl(var(--gradient-start)) 0%,
+      hsl(var(--gradient-end)) 100%
+    );
   }
 
   /* Border gradient effect */
@@ -249,9 +276,17 @@
     inset: 0;
     padding: 1px;
     border-radius: inherit;
-    background: linear-gradient(135deg, hsl(var(--gradient-start)), hsl(var(--gradient-end)));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    background: linear-gradient(
+      135deg,
+      hsl(var(--gradient-start)),
+      hsl(var(--gradient-end))
+    );
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
@@ -259,7 +294,9 @@
 
   /* Glow effect */
   .glow-accent {
-    box-shadow: 0 0 20px hsl(var(--gradient-start) / 0.3), 0 0 40px hsl(var(--gradient-end) / 0.2);
+    box-shadow:
+      0 0 20px hsl(var(--gradient-start) / 0.3),
+      0 0 40px hsl(var(--gradient-end) / 0.2);
   }
 
   /* Pill badges */
@@ -267,7 +304,7 @@
     @apply inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium;
     @apply bg-secondary text-secondary-foreground border border-border;
   }
-  
+
   .pill-accent {
     @apply inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium;
     background: hsl(var(--accent) / 0.12);
@@ -281,11 +318,11 @@
   }
 
   @keyframes reveal {
-    from { 
+    from {
       opacity: 0;
       transform: translateY(20px);
     }
-    to { 
+    to {
       opacity: 1;
       transform: translateY(0);
     }
@@ -296,11 +333,21 @@
     opacity: 0;
     animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
-  .stagger-children > *:nth-child(1) { animation-delay: 0ms; }
-  .stagger-children > *:nth-child(2) { animation-delay: 75ms; }
-  .stagger-children > *:nth-child(3) { animation-delay: 150ms; }
-  .stagger-children > *:nth-child(4) { animation-delay: 225ms; }
-  .stagger-children > *:nth-child(5) { animation-delay: 300ms; }
+  .stagger-children > *:nth-child(1) {
+    animation-delay: 0ms;
+  }
+  .stagger-children > *:nth-child(2) {
+    animation-delay: 75ms;
+  }
+  .stagger-children > *:nth-child(3) {
+    animation-delay: 150ms;
+  }
+  .stagger-children > *:nth-child(4) {
+    animation-delay: 225ms;
+  }
+  .stagger-children > *:nth-child(5) {
+    animation-delay: 300ms;
+  }
 
   /* Focus ring */
   .focus-ring {
@@ -320,8 +367,12 @@
   }
 
   @keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
   }
 
   /* Pulse ring for voice */
@@ -330,8 +381,13 @@
   }
 
   @keyframes pulseRing {
-    0%, 100% { box-shadow: 0 0 0 0 hsl(var(--destructive) / 0.4); }
-    50% { box-shadow: 0 0 0 12px hsl(var(--destructive) / 0); }
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 hsl(var(--destructive) / 0.4);
+    }
+    50% {
+      box-shadow: 0 0 0 12px hsl(var(--destructive) / 0);
+    }
   }
 }
 
@@ -382,15 +438,21 @@
    SAFE AREAS
    ======================================== */
 
-.safe-top { padding-top: env(safe-area-inset-top); }
-.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
 
 /* ========================================
    REDUCED MOTION
    ======================================== */
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

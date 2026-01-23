@@ -1,40 +1,178 @@
 import type { FilterState } from '@/types/filters';
 
 export const VALID_SEARCH_KEYS = new Set([
-  'c', 'color', 'id', 'identity', 'ci', 'o', 'oracle', 't', 'type',
-  'm', 'mana', 'cmc', 'mv', 'manavalue',
-  'power', 'pow', 'toughness', 'tou', 'loyalty', 'loy',
-  'e', 'set', 's', 'b', 'block', 'r', 'rarity',
-  'f', 'format', 'legal', 'banned', 'restricted',
-  'is', 'not', 'has',
-  'usd', 'eur', 'tix',
-  'a', 'artist', 'ft', 'flavor',
-  'wm', 'watermark', 'border', 'frame', 'game',
-  'year', 'date', 'new', 'prints', 'lang', 'in',
-  'st', 'cube', 'order', 'direction', 'unique', 'prefer', 'include',
-  'produces', 'devotion', 'name',
-  'otag', 'oracletag', 'function',
-  'art', 'atag', 'arttag'
+  'c',
+  'color',
+  'id',
+  'identity',
+  'ci',
+  'o',
+  'oracle',
+  't',
+  'type',
+  'm',
+  'mana',
+  'cmc',
+  'mv',
+  'manavalue',
+  'power',
+  'pow',
+  'toughness',
+  'tou',
+  'loyalty',
+  'loy',
+  'e',
+  'set',
+  's',
+  'b',
+  'block',
+  'r',
+  'rarity',
+  'f',
+  'format',
+  'legal',
+  'banned',
+  'restricted',
+  'is',
+  'not',
+  'has',
+  'usd',
+  'eur',
+  'tix',
+  'a',
+  'artist',
+  'ft',
+  'flavor',
+  'wm',
+  'watermark',
+  'border',
+  'frame',
+  'game',
+  'year',
+  'date',
+  'new',
+  'prints',
+  'lang',
+  'in',
+  'st',
+  'cube',
+  'order',
+  'direction',
+  'unique',
+  'prefer',
+  'include',
+  'produces',
+  'devotion',
+  'name',
+  'otag',
+  'oracletag',
+  'function',
+  'art',
+  'atag',
+  'arttag',
 ]);
 
 export const KNOWN_OTAGS = new Set([
-  'ramp', 'mana-rock', 'mana-dork', 'mana-doubler', 'mana-sink', 'land-ramp', 'ritual',
-  'draw', 'card-draw', 'cantrip', 'loot', 'looting', 'wheel', 'impulse-draw', 'scry',
-  'tutor', 'land-tutor', 'creature-tutor', 'artifact-tutor', 'enchantment-tutor', 'instant-or-sorcery-tutor',
-  'removal', 'spot-removal', 'creature-removal', 'artifact-removal', 'enchantment-removal', 'planeswalker-removal',
-  'board-wipe', 'mass-removal', 'graveyard-hate', 'graveyard-recursion', 'reanimation',
-  'token-generator', 'treasure-generator', 'food-generator', 'clue-generator', 'blood-generator',
-  'lifegain', 'soul-warden-ability', 'burn', 'fog', 'combat-trick', 'pump',
-  'blink', 'flicker', 'bounce', 'mass-bounce', 'copy', 'copy-permanent', 'copy-spell', 'clone',
-  'stax', 'hatebear', 'pillowfort', 'theft', 'mind-control', 'threaten',
-  'sacrifice-outlet', 'free-sacrifice-outlet', 'aristocrats', 'death-trigger', 'grave-pact-effect', 'blood-artist-effect',
-  'synergy-sacrifice', 'synergy-lifegain', 'synergy-discard', 'synergy-equipment', 'synergy-proliferate',
-  'extra-turn', 'extra-combat', 'polymorph', 'egg', 'activate-from-graveyard', 'cast-from-graveyard',
-  'untapper', 'tapper', 'gives-flash', 'gives-hexproof', 'gives-haste', 'gives-flying', 'gives-trample',
-  'gives-vigilance', 'gives-deathtouch', 'gives-lifelink', 'gives-first-strike', 'gives-double-strike',
-  'gives-menace', 'gives-reach', 'gives-protection', 'gives-indestructible',
-  'landfall', 'extra-land', 'enchantress', 'discard-outlet', 'mulch', 'lord', 'anthem',
-  'self-mill', 'mill', 'graveyard-order-matters'
+  'ramp',
+  'mana-rock',
+  'mana-dork',
+  'mana-doubler',
+  'mana-sink',
+  'land-ramp',
+  'ritual',
+  'draw',
+  'card-draw',
+  'cantrip',
+  'loot',
+  'looting',
+  'wheel',
+  'impulse-draw',
+  'scry',
+  'tutor',
+  'land-tutor',
+  'creature-tutor',
+  'artifact-tutor',
+  'enchantment-tutor',
+  'instant-or-sorcery-tutor',
+  'removal',
+  'spot-removal',
+  'creature-removal',
+  'artifact-removal',
+  'enchantment-removal',
+  'planeswalker-removal',
+  'board-wipe',
+  'mass-removal',
+  'graveyard-hate',
+  'graveyard-recursion',
+  'reanimation',
+  'token-generator',
+  'treasure-generator',
+  'food-generator',
+  'clue-generator',
+  'blood-generator',
+  'lifegain',
+  'soul-warden-ability',
+  'burn',
+  'fog',
+  'combat-trick',
+  'pump',
+  'blink',
+  'flicker',
+  'bounce',
+  'mass-bounce',
+  'copy',
+  'copy-permanent',
+  'copy-spell',
+  'clone',
+  'stax',
+  'hatebear',
+  'pillowfort',
+  'theft',
+  'mind-control',
+  'threaten',
+  'sacrifice-outlet',
+  'free-sacrifice-outlet',
+  'aristocrats',
+  'death-trigger',
+  'grave-pact-effect',
+  'blood-artist-effect',
+  'synergy-sacrifice',
+  'synergy-lifegain',
+  'synergy-discard',
+  'synergy-equipment',
+  'synergy-proliferate',
+  'extra-turn',
+  'extra-combat',
+  'polymorph',
+  'egg',
+  'activate-from-graveyard',
+  'cast-from-graveyard',
+  'untapper',
+  'tapper',
+  'gives-flash',
+  'gives-hexproof',
+  'gives-haste',
+  'gives-flying',
+  'gives-trample',
+  'gives-vigilance',
+  'gives-deathtouch',
+  'gives-lifelink',
+  'gives-first-strike',
+  'gives-double-strike',
+  'gives-menace',
+  'gives-reach',
+  'gives-protection',
+  'gives-indestructible',
+  'landfall',
+  'extra-land',
+  'enchantress',
+  'discard-outlet',
+  'mulch',
+  'lord',
+  'anthem',
+  'self-mill',
+  'mill',
+  'graveyard-order-matters',
 ]);
 
 export function normalizeOrGroups(query: string): string {
@@ -112,9 +250,16 @@ export function normalizeOrGroups(query: string): string {
   return output.join(' ');
 }
 
-export function validateScryfallQuery(query: string): { valid: boolean; sanitized: string; issues: string[] } {
+export function validateScryfallQuery(query: string): {
+  valid: boolean;
+  sanitized: string;
+  issues: string[];
+} {
   const issues: string[] = [];
-  let sanitized = query.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+  let sanitized = query
+    .replace(/[\r\n]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 
   const normalizedOr = normalizeOrGroups(sanitized);
   if (normalizedOr !== sanitized) {
@@ -128,7 +273,9 @@ export function validateScryfallQuery(query: string): { valid: boolean; sanitize
   }
 
   if (/\b(pow|power)\s*\+\s*(tou|toughness)\b/i.test(sanitized)) {
-    sanitized = sanitized.replace(/\b(pow|power)\s*\+\s*(tou|toughness)\s*[<>=]+?\s*\d+\b/gi, '').trim();
+    sanitized = sanitized
+      .replace(/\b(pow|power)\s*\+\s*(tou|toughness)\s*[<>=]+?\s*\d+\b/gi, '')
+      .trim();
     issues.push('Removed unsupported power+toughness math');
   }
 
@@ -144,7 +291,9 @@ export function validateScryfallQuery(query: string): { valid: boolean; sanitize
   if (unknownKeys.length > 0) {
     issues.push(`Unknown search key(s): ${unknownKeys.join(', ')}`);
     for (const key of unknownKeys) {
-      sanitized = sanitized.replace(new RegExp(`\\b${key}[:=<>][^\\s]*`, 'gi'), '').trim();
+      sanitized = sanitized
+        .replace(new RegExp(`\\b${key}[:=<>][^\\s]*`, 'gi'), '')
+        .trim();
     }
   }
 
@@ -160,7 +309,9 @@ export function validateScryfallQuery(query: string): { valid: boolean; sanitize
   if (unknownTags.length > 0) {
     issues.push(`Unknown oracle tag(s): ${unknownTags.join(', ')}`);
     for (const tag of unknownTags) {
-      sanitized = sanitized.replace(new RegExp(`\\botag:${tag}\\b`, 'gi'), '').trim();
+      sanitized = sanitized
+        .replace(new RegExp(`\\botag:${tag}\\b`, 'gi'), '')
+        .trim();
     }
   }
 
@@ -174,12 +325,14 @@ export function buildFilterQuery(filters?: FilterState | null): string {
   const parts: string[] = [];
 
   if (filters.colors.length > 0) {
-    const colorTokens = filters.colors.map(color => color === 'C' ? 'c=c' : `c:${color.toLowerCase()}`);
+    const colorTokens = filters.colors.map((color) =>
+      color === 'C' ? 'c=c' : `c:${color.toLowerCase()}`,
+    );
     parts.push(`(${colorTokens.join(' OR ')})`);
   }
 
   if (filters.types.length > 0) {
-    const typeTokens = filters.types.map(type => `t:${type.toLowerCase()}`);
+    const typeTokens = filters.types.map((type) => `t:${type.toLowerCase()}`);
     parts.push(`(${typeTokens.join(' OR ')})`);
   }
 

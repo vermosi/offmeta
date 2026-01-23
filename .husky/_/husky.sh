@@ -1,17 +1,9 @@
-#!/bin/sh
-if [ -z "$HUSKY" ]; then
-  export HUSKY=0
-fi
+echo "husky - DEPRECATED
 
-command_exists () {
-  command -v "$1" >/dev/null 2>&1
-}
+Please remove the following two lines from $0:
 
-if ! command_exists node; then
-  echo "husky - node not found in PATH" >&2
-  exit 1
-fi
+#!/usr/bin/env sh
+. \"\$(dirname -- \"\$0\")/_/husky.sh\"
 
-if [ "$HUSKY" = "0" ]; then
-  exit 0
-fi
+They WILL FAIL in v10.0.0
+"

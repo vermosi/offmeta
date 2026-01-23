@@ -1,4 +1,9 @@
-import { MessageSquareText, Eye, Grid3X3, SlidersHorizontal } from "lucide-react";
+import {
+  MessageSquareText,
+  Eye,
+  Grid3X3,
+  SlidersHorizontal,
+} from 'lucide-react';
 
 const STEPS = [
   {
@@ -9,21 +14,21 @@ const STEPS = [
   },
   {
     icon: Eye,
-    title: "Review the translation",
+    title: 'Review the translation',
     description:
-      "OffMeta shows you the Scryfall query it generated from your description. You can see exactly what syntax was used and edit it if needed.",
+      'OffMeta shows you the Scryfall query it generated from your description. You can see exactly what syntax was used and edit it if needed.',
   },
   {
     icon: Grid3X3,
-    title: "Browse your results",
+    title: 'Browse your results',
     description:
-      "Scroll through the matching cards. Click any card to see full details including oracle text, prices, legalities, and all printings.",
+      'Scroll through the matching cards. Click any card to see full details including oracle text, prices, legalities, and all printings.',
   },
   {
     icon: SlidersHorizontal,
-    title: "Refine with filters",
+    title: 'Refine with filters',
     description:
-      "Use the filter chips to narrow results by color, format, card type, mana cost, price, or rarity without rewriting your search.",
+      'Use the filter chips to narrow results by color, format, card type, mana cost, price, or rarity without rewriting your search.',
   },
 ];
 
@@ -45,18 +50,21 @@ export function HowItWorksSection() {
             <div
               key={index}
               className="relative flex flex-col items-center text-center p-6 rounded-xl border border-border/50 bg-card/50 opacity-0 animate-fade-in hover-scale"
-              style={{ animationDelay: `${index * 150}ms`, animationFillMode: 'forwards' }}
+              style={{
+                animationDelay: `${index * 150}ms`,
+                animationFillMode: 'forwards',
+              }}
             >
               {/* Step number */}
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-accent text-accent-foreground text-xs font-semibold">
                 Step {index + 1}
               </div>
-              
+
               {/* Icon */}
               <div className="mt-2 mb-4 p-3 rounded-full bg-accent/10">
                 <step.icon className="h-6 w-6 text-accent" aria-hidden="true" />
               </div>
-              
+
               {/* Content */}
               <h3 className="text-base sm:text-lg font-medium mb-2">
                 {step.title}

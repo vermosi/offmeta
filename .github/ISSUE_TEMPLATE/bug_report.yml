@@ -1,14 +1,14 @@
 name: Bug report
 description: Report a problem with OffMeta
-title: "[Bug]: "
-labels: ["bug"]
+title: '[Bug]: '
+labels: ['bug']
 body:
   - type: textarea
     id: summary
     attributes:
       label: Summary
       description: A clear and concise description of the bug.
-      placeholder: "Search results show no cards for valid query..."
+      placeholder: 'Search results show no cards for valid query...'
     validations:
       required: true
   - type: textarea
