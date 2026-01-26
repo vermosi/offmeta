@@ -89,7 +89,10 @@ async function fetchWithTimeout(
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    return await fetch(url, { signal: controller.signal });
+    return await fetch(url, {
+      signal: controller.signal,
+      credentials: 'omit',
+    });
   } finally {
     clearTimeout(timeoutId);
   }
