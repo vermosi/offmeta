@@ -42,7 +42,7 @@ OffMeta is a well-architected Magic: The Gathering card search application that 
 
 | Item | Priority | Effort | Status |
 |------|----------|--------|--------|
-| Split deterministic.ts | Low | Medium | Pending |
+| Split deterministic.ts | Low | Medium | ✅ Done |
 | Remove deprecated re-export files | Low | Low | Pending |
 | Production monitoring integration | Low | Low | Pending |
 | Consolidate cache key logic | Medium | Low | Future |
