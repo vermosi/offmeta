@@ -283,7 +283,7 @@ describe('Security: Distributed Attack Prevention', () => {
     let allowed = 0;
     let blocked = 0;
 
-    for (const _ip of ips) {
+    for (let i = 0; i < ips.length; i++) {
       if (checkGlobalLimit()) {
         allowed++;
       } else {
