@@ -124,10 +124,30 @@ MAX_CARD_WIDTH = 280
 
 These files contain deprecation notices pointing to newer locations. Consider removing them after ensuring all imports have been migrated.
 
-#### 8. Test Coverage Gaps
+#### 8. Test Coverage Gaps ✅ COMPLETED
 The test files exist for core functionality, but integration tests for the complete search flow are missing. Consider adding:
 - E2E tests for the search-to-results flow
 - Tests for edge function error handling paths
+
+**UPDATE**: Created `src/lib/translation-golden.test.ts` with **138 golden tests** derived from user feedback and translation rules:
+- Tribal types (15 tests)
+- Ramp and mana (6 tests)
+- Removal and board control (7 tests)
+- Counter magic (4 tests)
+- Card draw (6 tests)
+- Tutors (7 tests)
+- Token generators (5 tests)
+- Sacrifice and aristocrats (5 tests)
+- ETB and flicker (5 tests)
+- Land types (10 tests)
+- Format legality (6 tests)
+- Rarity (5 tests)
+- Price filters (3 tests)
+- Color identity (16 tests)
+- Special mechanics (9 tests)
+- Feedback-derived cases (10 tests)
+- Complex queries (7 tests)
+- Syntax validation (12 tests)
 
 ---
 
