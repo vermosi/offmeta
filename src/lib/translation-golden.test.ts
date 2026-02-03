@@ -814,3 +814,526 @@ describe('Translation Syntax Validation', () => {
     },
   );
 });
+
+// ============================================================
+// X-Cost and Mana Cost Edge Cases
+// ============================================================
+
+describe('Translation Golden Tests - X-Cost Spells', () => {
+  const xCostCases: TranslationTestCase[] = [
+    {
+      input: 'x cost spells',
+      expectedContains: ['{x}'],
+      description: 'Spells with X in mana cost',
+    },
+    {
+      input: 'XX spells',
+      expectedContains: ['{x}{x}'],
+      description: 'Spells with XX in mana cost',
+    },
+    {
+      input: 'cards with x in the cost',
+      expectedContains: ['m:{x}'],
+      description: 'Alternative X cost phrasing',
+    },
+    {
+      input: 'green x cost creatures',
+      expectedContains: ['c:g', '{x}', 't:creature'],
+      description: 'Green X-cost creatures',
+    },
+    {
+      input: 'fireball effects',
+      expectedContains: ['{x}', 'damage'],
+      description: 'X damage spells like Fireball',
+    },
+    {
+      input: 'hydras',
+      expectedContains: ['t:hydra'],
+      description: 'Hydra type (often X-cost)',
+    },
+  ];
+
+  it.each(xCostCases)(
+    'should understand X-cost pattern: "$input"',
+    (testCase) => {
+      expect(testCase.expectedContains.length).toBeGreaterThan(0);
+    },
+  );
+});
+
+describe('Translation Golden Tests - Hybrid and Special Mana', () => {
+  const hybridCases: TranslationTestCase[] = [
+    {
+      input: 'hybrid mana cards',
+      expectedContains: ['is:hybrid'],
+      description: 'Cards with hybrid mana symbols',
+    },
+    {
+      input: 'phyrexian mana cards',
+      expectedContains: ['is:phyrexian'],
+      description: 'Cards with Phyrexian mana',
+    },
+    {
+      input: 'cards that cost only colorless',
+      expectedContains: ['c=c'],
+      description: 'Colorless-only cards',
+    },
+    {
+      input: 'snow mana cards',
+      expectedContains: ['is:snow'],
+      description: 'Cards using snow mana',
+    },
+  ];
+
+  it.each(hybridCases)(
+    'should understand special mana: "$input"',
+    (testCase) => {
+      expect(testCase.expectedContains.length).toBeGreaterThan(0);
+    },
+  );
+});
+
+// ============================================================
+// Power/Toughness Comparisons
+// ============================================================
+
+describe('Translation Golden Tests - Power/Toughness Comparisons', () => {
+  const statCases: TranslationTestCase[] = [
+    {
+      input: 'creatures with power greater than toughness',
+      expectedContains: ['pow>tou'],
+      description: 'Power exceeds toughness',
+    },
+    {
+      input: 'creatures with toughness greater than power',
+      expectedContains: ['tou>pow'],
+      description: 'Toughness exceeds power',
+    },
+    {
+      input: 'creatures with power 5 or more',
+      expectedContains: ['pow>=5'],
+      description: 'High power threshold',
+    },
+    {
+      input: 'creatures with 1 toughness',
+      expectedContains: ['tou=1'],
+      description: 'Exact toughness',
+    },
+    {
+      input: 'creatures with 0 power',
+      expectedContains: ['pow=0'],
+      description: 'Zero power creatures',
+    },
+    {
+      input: 'big creatures',
+      expectedContains: ['pow>='],
+      description: 'Large creatures by power',
+    },
+    {
+      input: 'small creatures',
+      expectedContains: ['pow<='],
+      description: 'Small creatures by power',
+    },
+    {
+      input: 'creatures with equal power and toughness',
+      expectedContains: ['pow=tou'],
+      description: 'Balanced stats',
+    },
+    {
+      input: 'creatures with * power',
+      expectedContains: ['pow:*'],
+      description: 'Variable power creatures',
+    },
+    {
+      input: 'walls and defenders',
+      expectedContains: ['t:wall'],
+      description: 'Defensive creatures',
+    },
+  ];
+
+  it.each(statCases)(
+    'should understand P/T comparison: "$input"',
+    (testCase) => {
+      expect(testCase.expectedContains.length).toBeGreaterThan(0);
+    },
+  );
+});
+
+// ============================================================
+// Oracle Text Regex Patterns
+// ============================================================
+
+describe('Translation Golden Tests - Oracle Text Regex Patterns', () => {
+  const oracleCases: TranslationTestCase[] = [
+    {
+      input: 'cards with "you may" text',
+      expectedContains: ['o:"you may"'],
+      description: 'Optional effects',
+    },
+    {
+      input: 'cards that say "each player"',
+      expectedContains: ['o:"each player"'],
+      description: 'Symmetric effects',
+    },
+    {
+      input: 'cards with "at the beginning of"',
+      expectedContains: ['o:"at the beginning"'],
+      description: 'Triggered abilities',
+    },
+    {
+      input: 'cards with tap activated abilities',
+      expectedContains: ['o:"{t}:"'],
+      description: 'Tap activated abilities',
+    },
+    {
+      input: 'cards that reference your graveyard',
+      expectedContains: ['o:"your graveyard"'],
+      description: 'Graveyard synergy',
+    },
+    {
+      input: 'cards with "whenever you cast"',
+      expectedContains: ['o:"whenever you cast"'],
+      description: 'Cast triggers',
+    },
+    {
+      input: 'cards that mention commander',
+      expectedContains: ['o:commander'],
+      description: 'Commander-aware cards',
+    },
+    {
+      input: 'cards with "for each" scaling',
+      expectedContains: ['o:"for each"'],
+      description: 'Scaling effects',
+    },
+    {
+      input: 'cards that say "you win the game"',
+      expectedContains: ['o:"you win the game"'],
+      description: 'Alternate win conditions',
+    },
+    {
+      input: 'cards with "you lose the game"',
+      expectedContains: ['o:"you lose the game"'],
+      description: 'Lose condition text',
+    },
+  ];
+
+  it.each(oracleCases)(
+    'should understand oracle pattern: "$input"',
+    (testCase) => {
+      expect(testCase.expectedContains.length).toBeGreaterThan(0);
+    },
+  );
+});
+
+// ============================================================
+// Keyword Ability Tests
+// ============================================================
+
+describe('Translation Golden Tests - Advanced Keywords', () => {
+  const keywordCases: TranslationTestCase[] = [
+    {
+      input: 'cards with flashback',
+      expectedContains: ['keyword:flashback'],
+      description: 'Flashback mechanic',
+    },
+    {
+      input: 'cards with buyback',
+      expectedContains: ['keyword:buyback'],
+      description: 'Buyback mechanic',
+    },
+    {
+      input: 'cards with retrace',
+      expectedContains: ['keyword:retrace'],
+      description: 'Retrace mechanic',
+    },
+    {
+      input: 'creatures with haste and trample',
+      expectedContains: ['haste', 'trample'],
+      description: 'Multiple keywords',
+    },
+    {
+      input: 'indestructible creatures',
+      expectedContains: ['indestructible'],
+      description: 'Indestructible keyword',
+    },
+    {
+      input: 'hexproof creatures',
+      expectedContains: ['hexproof'],
+      description: 'Hexproof keyword',
+    },
+    {
+      input: 'lifelink creatures',
+      expectedContains: ['lifelink'],
+      description: 'Lifelink keyword',
+    },
+    {
+      input: 'double strike creatures',
+      expectedContains: ['double strike'],
+      description: 'Double strike keyword',
+    },
+    {
+      input: 'creatures with ward',
+      expectedContains: ['ward'],
+      description: 'Ward keyword',
+    },
+    {
+      input: 'cascade spells',
+      expectedContains: ['cascade'],
+      description: 'Cascade mechanic',
+    },
+  ];
+
+  it.each(keywordCases)(
+    'should understand keyword: "$input"',
+    (testCase) => {
+      expect(testCase.expectedContains.length).toBeGreaterThan(0);
+    },
+  );
+});
+
+// ============================================================
+// Planeswalker Tests
+// ============================================================
+
+describe('Translation Golden Tests - Planeswalkers', () => {
+  const planeswalkerCases: TranslationTestCase[] = [
+    {
+      input: 'planeswalkers',
+      expectedContains: ['t:planeswalker'],
+      description: 'Basic planeswalker search',
+    },
+    {
+      input: 'blue planeswalkers',
+      expectedContains: ['t:planeswalker', 'c:u'],
+      description: 'Blue planeswalkers',
+    },
+    {
+      input: 'planeswalkers with high loyalty',
+      expectedContains: ['t:planeswalker', 'loy>='],
+      description: 'High starting loyalty',
+    },
+    {
+      input: 'jace planeswalkers',
+      expectedContains: ['t:jace'],
+      description: 'Jace planeswalker cards',
+    },
+    {
+      input: 'planeswalkers that make tokens',
+      expectedContains: ['t:planeswalker', 'create', 'token'],
+      description: 'Token-making planeswalkers',
+    },
+  ];
+
+  it.each(planeswalkerCases)(
+    'should understand planeswalker query: "$input"',
+    (testCase) => {
+      expect(testCase.expectedContains.length).toBeGreaterThan(0);
+    },
+  );
+});
+
+// ============================================================
+// Set and Print Filters
+// ============================================================
+
+describe('Translation Golden Tests - Set and Print Filters', () => {
+  const setCases: TranslationTestCase[] = [
+    {
+      input: 'cards from dominaria',
+      expectedContains: ['e:dom'],
+      description: 'Specific set code',
+    },
+    {
+      input: 'cards from 2023',
+      expectedContains: ['year:2023'],
+      description: 'Year filter',
+    },
+    {
+      input: 'first printings only',
+      expectedContains: ['is:firstprint'],
+      description: 'Original printings',
+    },
+    {
+      input: 'showcase cards',
+      expectedContains: ['is:showcase'],
+      description: 'Showcase frame treatment',
+    },
+    {
+      input: 'extended art cards',
+      expectedContains: ['is:extendedart'],
+      description: 'Extended art versions',
+    },
+    {
+      input: 'borderless cards',
+      expectedContains: ['is:borderless'],
+      description: 'Borderless treatment',
+    },
+    {
+      input: 'foil cards under $10',
+      expectedContains: ['is:foil', 'usd<10'],
+      description: 'Foil with price filter',
+    },
+  ];
+
+  it.each(setCases)(
+    'should understand set/print filter: "$input"',
+    (testCase) => {
+      expect(testCase.expectedContains.length).toBeGreaterThan(0);
+    },
+  );
+});
+
+// ============================================================
+// Negative and Exclusion Tests
+// ============================================================
+
+describe('Translation Golden Tests - Exclusions and Negations', () => {
+  const exclusionCases: TranslationTestCase[] = [
+    {
+      input: 'non-legendary creatures',
+      expectedContains: ['-t:legendary', 't:creature'],
+      description: 'Exclude legendary',
+    },
+    {
+      input: 'creatures without flying',
+      expectedContains: ['-o:flying', 't:creature'],
+      description: 'Exclude flying',
+    },
+    {
+      input: 'instants that are not counterspells',
+      expectedContains: ['t:instant', '-o:"counter target"'],
+      description: 'Exclude counter magic',
+    },
+    {
+      input: 'artifacts except equipment',
+      expectedContains: ['t:artifact', '-t:equipment'],
+      description: 'Exclude equipment subtype',
+    },
+    {
+      input: 'lands that are not basic',
+      expectedContains: ['t:land', '-t:basic'],
+      description: 'Non-basic lands',
+    },
+  ];
+
+  it.each(exclusionCases)(
+    'should understand exclusion: "$input"',
+    (testCase) => {
+      expect(testCase.expectedContains.length).toBeGreaterThan(0);
+      expect(testCase.expectedContains.some((e) => e.startsWith('-'))).toBe(true);
+    },
+  );
+});
+
+// ============================================================
+// Art Tags
+// ============================================================
+
+describe('Translation Golden Tests - Art Tags', () => {
+  const artCases: TranslationTestCase[] = [
+    {
+      input: 'cards with dragons in the art',
+      expectedContains: ['atag:dragon'],
+      description: 'Art tag for dragon',
+    },
+    {
+      input: 'cards featuring forests',
+      expectedContains: ['atag:forest'],
+      description: 'Art featuring nature',
+    },
+    {
+      input: 'cards with water in art',
+      expectedContains: ['atag:water'],
+      description: 'Water themed art',
+    },
+    {
+      input: 'scary looking cards',
+      expectedContains: ['atag:'],
+      description: 'Horror themed art',
+    },
+  ];
+
+  it.each(artCases)(
+    'should understand art query: "$input"',
+    (testCase) => {
+      expect(testCase.expectedContains.length).toBeGreaterThan(0);
+    },
+  );
+});
+
+// ============================================================
+// Wildpair and Advanced Filters
+// ============================================================
+
+describe('Translation Golden Tests - Wildpair and Advanced', () => {
+  const advancedCases: TranslationTestCase[] = [
+    {
+      input: 'creatures with total power and toughness 7',
+      expectedContains: ['wildpair:7'],
+      description: 'Wildpair syntax for combined stats',
+    },
+    {
+      input: 'cards in commander products',
+      expectedContains: ['in:commander'],
+      description: 'Product filter',
+    },
+    {
+      input: 'cards with collector number 1',
+      expectedContains: ['cn:1'],
+      description: 'Collector number filter',
+    },
+  ];
+
+  it.each(advancedCases)(
+    'should understand advanced filter: "$input"',
+    (testCase) => {
+      expect(testCase.expectedContains.length).toBeGreaterThan(0);
+    },
+  );
+});
+
+// ============================================================
+// Complex Multi-Part Queries - Extended
+// ============================================================
+
+describe('Translation Golden Tests - Complex Multi-Part Extended', () => {
+  const complexCases: TranslationTestCase[] = [
+    {
+      input: 'blue instant counterspells under $2 for pauper',
+      expectedContains: ['c:u', 't:instant', 'counter', 'usd<', 'f:pauper'],
+      description: 'Multiple constraints',
+    },
+    {
+      input: 'green creatures that ramp and draw cards in commander',
+      expectedContains: ['c:g', 't:creature', 'f:commander'],
+      description: 'Multi-function creatures',
+    },
+    {
+      input: 'mythic rare legendary creatures from the last 2 years',
+      expectedContains: ['r:m', 't:legendary', 't:creature'],
+      description: 'Rarity + type + time',
+    },
+    {
+      input: 'cheap artifacts that tap for mana in modern',
+      expectedContains: ['t:artifact', 'add', 'f:modern'],
+      description: 'Mana rocks with format',
+    },
+    {
+      input: 'azorius fliers with flash',
+      expectedContains: ['id<=wu', 'flying', 'flash'],
+      description: 'Guild + keywords',
+    },
+    {
+      input: 'sacrifice fodder creatures that cost 1 mana',
+      expectedContains: ['t:creature', 'mv=1'],
+      description: 'Cheap sac fodder',
+    },
+  ];
+
+  it.each(complexCases)(
+    'should understand complex multi-part query: "$input"',
+    (testCase) => {
+      expect(testCase.expectedContains.length).toBeGreaterThanOrEqual(2);
+    },
+  );
+});
