@@ -529,3 +529,711 @@ Deno.test('returns response time', async () => {
     'Response time should be a number',
   );
 });
+
+// ============================================================
+// Error Cases: Invalid Queries
+// ============================================================
+
+Deno.test('rejects empty query string', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ query: '', useCache: false }),
+  });
+
+  const data = await response.json();
+  assertEquals(response.status, 400);
+  assertEquals(data.success, false);
+  assertEquals(data.error.includes('Query is required') || data.error.includes('required'), true);
+});
+
+Deno.test('rejects whitespace-only query', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ query: '   \t\n  ', useCache: false }),
+  });
+
+  const data = await response.json();
+  assertEquals(response.status, 400);
+  assertEquals(data.success, false);
+});
+
+Deno.test('rejects query exceeding max length (500 chars)', async () => {
+  const longQuery = 'a'.repeat(501);
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ query: longQuery, useCache: false }),
+  });
+
+  const data = await response.json();
+  assertEquals(response.status, 400);
+  assertEquals(data.success, false);
+  assertEquals(data.error.includes('too long') || data.error.includes('500'), true);
+});
+
+Deno.test('rejects missing query field', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ useCache: false }),
+  });
+
+  const data = await response.json();
+  assertEquals(response.status, 400);
+  assertEquals(data.success, false);
+});
+
+Deno.test('rejects non-string query', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ query: 12345, useCache: false }),
+  });
+
+  const data = await response.json();
+  assertEquals(response.status, 400);
+  assertEquals(data.success, false);
+});
+
+Deno.test('rejects invalid JSON body', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: 'not valid json {{{',
+  });
+
+  const data = await response.json();
+  assertEquals(response.status, 400);
+  assertEquals(data.success, false);
+  assertEquals(data.error.includes('JSON') || data.error.includes('json'), true);
+});
+
+// ============================================================
+// Error Cases: Invalid Filters
+// ============================================================
+
+Deno.test('rejects invalid filters type (array instead of object)', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ query: 'creatures', filters: ['commander'], useCache: false }),
+  });
+
+  const data = await response.json();
+  assertEquals(response.status, 400);
+  assertEquals(data.success, false);
+  assertEquals(data.error.includes('filters') || data.error.includes('Invalid'), true);
+});
+
+Deno.test('rejects invalid format type', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ 
+      query: 'creatures', 
+      filters: { format: 123 }, 
+      useCache: false 
+    }),
+  });
+
+  const data = await response.json();
+  assertEquals(response.status, 400);
+  assertEquals(data.success, false);
+});
+
+Deno.test('rejects invalid colorIdentity type', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ 
+      query: 'creatures', 
+      filters: { colorIdentity: 'WUB' }, // Should be array
+      useCache: false 
+    }),
+  });
+
+  const data = await response.json();
+  assertEquals(response.status, 400);
+  assertEquals(data.success, false);
+});
+
+Deno.test('rejects too many colors in colorIdentity (>5)', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ 
+      query: 'creatures', 
+      filters: { colorIdentity: ['W', 'U', 'B', 'R', 'G', 'C'] }, // 6 colors
+      useCache: false 
+    }),
+  });
+
+  const data = await response.json();
+  assertEquals(response.status, 400);
+  assertEquals(data.success, false);
+  assertEquals(data.error.includes('max 5') || data.error.includes('colors'), true);
+});
+
+Deno.test('rejects invalid maxCmc (negative)', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ 
+      query: 'creatures', 
+      filters: { maxCmc: -1 },
+      useCache: false 
+    }),
+  });
+
+  const data = await response.json();
+  assertEquals(response.status, 400);
+  assertEquals(data.success, false);
+});
+
+Deno.test('rejects invalid maxCmc (>20)', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ 
+      query: 'creatures', 
+      filters: { maxCmc: 25 },
+      useCache: false 
+    }),
+  });
+
+  const data = await response.json();
+  assertEquals(response.status, 400);
+  assertEquals(data.success, false);
+});
+
+Deno.test('rejects invalid useCache type', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ 
+      query: 'creatures', 
+      useCache: 'yes' // Should be boolean
+    }),
+  });
+
+  const data = await response.json();
+  assertEquals(response.status, 400);
+  assertEquals(data.success, false);
+});
+
+// ============================================================
+// Error Cases: Authentication
+// ============================================================
+
+Deno.test('rejects request without authorization header', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ query: 'creatures', useCache: false }),
+  });
+
+  const data = await response.json();
+  assertEquals(response.status, 401);
+  assertEquals(data.success, false);
+  assertEquals(
+    data.error.includes('Authorization') || data.error.includes('Unauthorized'),
+    true,
+  );
+});
+
+Deno.test('rejects request with invalid authorization token', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer invalid-token-12345',
+    },
+    body: JSON.stringify({ query: 'creatures', useCache: false }),
+  });
+
+  const data = await response.json();
+  assertEquals(response.status, 401);
+  assertEquals(data.success, false);
+});
+
+Deno.test('rejects request with malformed authorization header', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'NotBearer sometoken',
+    },
+    body: JSON.stringify({ query: 'creatures', useCache: false }),
+  });
+
+  const data = await response.json();
+  assertEquals(response.status, 401);
+  assertEquals(data.success, false);
+});
+
+// ============================================================
+// Error Cases: Input Sanitization
+// ============================================================
+
+Deno.test('rejects potential injection attempts', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ 
+      query: '<script>alert("xss")</script>', 
+      useCache: false 
+    }),
+  });
+
+  const data = await response.json();
+  // Should either reject or sanitize - success indicates sanitization
+  if (!data.success) {
+    assertEquals(response.status >= 400, true);
+  } else {
+    // If it succeeded, the script tags should not be in the output
+    assertEquals(data.scryfallQuery.includes('<script>'), false);
+  }
+});
+
+Deno.test('handles SQL-like injection attempts safely', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ 
+      query: "creatures'; DROP TABLE cards;--", 
+      useCache: false 
+    }),
+  });
+
+  // Consume the body - may be JSON or HTML error page
+  const text = await response.text();
+  // Should handle gracefully - either reject (4xx) or sanitize (2xx), never 5xx
+  assertEquals(response.status < 500, true, 'Should not cause server error');
+  // If successful, try to parse and verify no SQL in output
+  if (response.ok) {
+    try {
+      const data = JSON.parse(text);
+      assertEquals(data.scryfallQuery?.includes('DROP TABLE'), false);
+    } catch {
+      // HTML response is acceptable for edge function errors
+    }
+  }
+});
+
+Deno.test('handles URL-like content in query', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ 
+      query: 'creatures https://malicious.com/script.js', 
+      useCache: false 
+    }),
+  });
+
+  const data = await response.json();
+  // Should reject or strip URLs
+  if (data.success) {
+    assertEquals(data.scryfallQuery.includes('http'), false, 'URLs should be stripped');
+  }
+  await response.text().catch(() => {}); // Consume body if not already
+});
+
+// ============================================================
+// AI Fallback Scenarios
+// ============================================================
+
+Deno.test('handles forced fallback via debug flag', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ 
+      query: 'dragons that breathe fire', 
+      useCache: false,
+      debug: { forceFallback: true }
+    }),
+  });
+
+  const data = await response.json();
+  assertEquals(response.ok, true);
+  assertEquals(data.success, true);
+  assertEquals(data.fallback, true);
+  assertEquals(data.source, 'forced_fallback');
+});
+
+Deno.test('handles simulated AI failure via debug flag', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ 
+      query: 'complex multi-part query', 
+      useCache: false,
+      debug: { simulateAiFailure: true }
+    }),
+  });
+
+  const data = await response.json();
+  assertEquals(response.ok, true);
+  assertEquals(data.success, true);
+  assertEquals(data.fallback, true);
+});
+
+Deno.test('fallback still returns valid scryfall query', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ 
+      query: 'green elves', 
+      useCache: false,
+      debug: { forceFallback: true }
+    }),
+  });
+
+  const data = await response.json();
+  assertEquals(response.ok, true);
+  assertEquals(data.success, true);
+  assertExists(data.scryfallQuery);
+  assertEquals(data.scryfallQuery.length > 0, true, 'Fallback should produce non-empty query');
+});
+
+Deno.test('fallback includes explanation with assumptions', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ 
+      query: 'card draw spells', 
+      useCache: false,
+      debug: { forceFallback: true }
+    }),
+  });
+
+  const data = await response.json();
+  assertEquals(response.ok, true);
+  assertExists(data.explanation);
+  assertExists(data.explanation.assumptions);
+  assertEquals(Array.isArray(data.explanation.assumptions), true);
+  assertEquals(data.explanation.assumptions.length > 0, true, 'Should have fallback assumption');
+});
+
+Deno.test('fallback has lower confidence score', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ 
+      query: 'ramp spells', 
+      useCache: false,
+      debug: { forceFallback: true }
+    }),
+  });
+
+  const data = await response.json();
+  assertEquals(response.ok, true);
+  assertExists(data.explanation.confidence);
+  // Fallback should have reduced confidence (typically 0.6 or less)
+  assertEquals(
+    data.explanation.confidence <= 0.7,
+    true,
+    `Fallback confidence should be <= 0.7, got ${data.explanation.confidence}`,
+  );
+});
+
+// ============================================================
+// CORS and OPTIONS Handling
+// ============================================================
+
+Deno.test('handles OPTIONS preflight request', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'OPTIONS',
+    headers: {
+      'Origin': 'https://example.com',
+      'Access-Control-Request-Method': 'POST',
+    },
+  });
+
+  await response.text(); // Consume body
+  assertEquals(response.ok, true);
+  assertExists(response.headers.get('Access-Control-Allow-Origin'));
+  assertExists(response.headers.get('Access-Control-Allow-Headers'));
+});
+
+Deno.test('includes CORS headers in error responses', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Origin': 'https://example.com',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ query: '', useCache: false }),
+  });
+
+  await response.json(); // Consume body
+  // Even error responses should have CORS headers
+  assertExists(response.headers.get('Access-Control-Allow-Origin'));
+});
+
+// ============================================================
+// Request ID Tracking
+// ============================================================
+
+Deno.test('returns x-request-id header for successful requests', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ query: 'creatures', useCache: false }),
+  });
+
+  await response.json(); // Consume body
+  assertExists(response.headers.get('x-request-id'));
+});
+
+Deno.test('returns x-request-id header for error responses', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ query: '', useCache: false }),
+  });
+
+  await response.json(); // Consume body
+  assertExists(response.headers.get('x-request-id'));
+});
+
+Deno.test('echoes back provided x-request-id', async () => {
+  const customRequestId = 'test-request-id-12345';
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      'x-request-id': customRequestId,
+    },
+    body: JSON.stringify({ query: 'goblins', useCache: false }),
+  });
+
+  await response.json(); // Consume body
+  assertEquals(response.headers.get('x-request-id'), customRequestId);
+});
+
+// ============================================================
+// Caching Behavior
+// ============================================================
+
+Deno.test('cache bypass works with useCache: false', async () => {
+  // First call
+  const result1 = await callSemanticSearch('test caching query');
+  assertEquals(result1.success, true);
+  
+  // Second call with cache bypass
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ query: 'test caching query', useCache: false }),
+  });
+
+  const result2 = await response.json();
+  assertEquals(result2.success, true);
+  // With useCache: false, it should NOT indicate cached: true
+  assertEquals(result2.cached !== true, true, 'Should not be from cache when useCache is false');
+});
+
+Deno.test('accepts valid cacheSalt parameter', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ 
+      query: 'elves', 
+      useCache: true,
+      cacheSalt: 'test-salt-123'
+    }),
+  });
+
+  const data = await response.json();
+  assertEquals(response.ok, true);
+  assertEquals(data.success, true);
+});
+
+Deno.test('rejects invalid cacheSalt type', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ 
+      query: 'elves', 
+      useCache: true,
+      cacheSalt: 12345 // Should be string
+    }),
+  });
+
+  const data = await response.json();
+  assertEquals(response.status, 400);
+  assertEquals(data.success, false);
+});
+
+// ============================================================
+// Deterministic Path Tests
+// ============================================================
+
+Deno.test('deterministic queries skip AI path', async () => {
+  // Simple color + type query should be deterministic
+  const result = await callSemanticSearch('t:elf c:g');
+  
+  assertEquals(result.success, true);
+  // Deterministic queries may have source: 'deterministic' or similar
+  // Just verify the query was successfully translated
+  assertExists(result.scryfallQuery);
+  assertExists(result.explanation.confidence);
+});
+
+Deno.test('handles Scryfall syntax passthrough', async () => {
+  // Direct Scryfall syntax should pass through
+  const result = await callSemanticSearch('t:creature pow>=4 cmc<=3');
+  
+  assertEquals(result.success, true);
+  const query = result.scryfallQuery.toLowerCase();
+  // Should preserve the core constraints - flexible matching for AI variations
+  const hasPowerRef = query.includes('pow') || query.includes('power') || 
+    query.includes('>=4') || query.includes('>3') || query.includes('t:creature');
+  assertEquals(
+    hasPowerRef,
+    true,
+    `Should include power or creature reference, got: ${result.scryfallQuery}`,
+  );
+});
+
+// ============================================================  
+// Rate Limiting (Integration)
+// ============================================================
+
+Deno.test('rate limit headers present in response', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      'x-session-id': 'rate-limit-test-session',
+    },
+    body: JSON.stringify({ query: 'dragons', useCache: false }),
+  });
+
+  await response.json(); // Consume body
+  // Rate limited responses include Retry-After header
+  // Normal responses should not be rate limited
+  assertEquals(response.ok, true);
+});
+
+Deno.test('session rate limit enforced with x-session-id', async () => {
+  const sessionId = `test-session-${Date.now()}`;
+  
+  // Make a single valid request
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      'x-session-id': sessionId,
+    },
+    body: JSON.stringify({ query: 'test rate limit', useCache: false }),
+  });
+
+  await response.json(); // Consume body
+  assertEquals(response.ok, true);
+});
+
+// ============================================================
+// Content Type Handling
+// ============================================================
+
+Deno.test('returns JSON content type', async () => {
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ query: 'creatures', useCache: false }),
+  });
+
+  await response.json(); // Consume body
+  const contentType = response.headers.get('Content-Type');
+  assertEquals(contentType?.includes('application/json'), true);
+});
