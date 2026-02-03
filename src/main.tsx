@@ -1,7 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
-import { initPWA } from './lib/pwa';
+import { initPWA } from './lib/pwa/register';
 
 // Initialize PWA service worker
 initPWA();

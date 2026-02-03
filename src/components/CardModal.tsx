@@ -13,10 +13,9 @@ import {
   isDoubleFacedCard,
   getCardFaceDetails,
   getCardRulings,
-} from '@/lib/scryfall';
-import type { CardRuling } from '@/lib/scryfall';
-import { getCardPrintings } from '@/lib/card-printings';
-import type { CardPrinting } from '@/lib/card-printings';
+  type CardRuling,
+} from '@/lib/scryfall/client';
+import { getCardPrintings, type CardPrinting } from '@/lib/scryfall/printings';
 
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer';

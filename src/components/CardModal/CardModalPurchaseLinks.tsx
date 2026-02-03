@@ -6,7 +6,7 @@
 
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, Loader2, Sparkles, Monitor } from 'lucide-react';
-import { getTCGPlayerUrl, getCardmarketUrl } from '@/lib/card-printings';
+import { getTCGPlayerUrl, getCardmarketUrl } from '@/lib/scryfall/printings';
 import type { CardModalPurchaseLinksProps } from './types';
 
 export function CardModalPurchaseLinks({

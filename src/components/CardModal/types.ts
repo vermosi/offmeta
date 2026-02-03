@@ -4,8 +4,8 @@
  */
 
 import type { ScryfallCard } from '@/types/card';
-import type { CardPrinting } from '@/lib/card-printings';
-import type { CardRuling } from '@/lib/scryfall';
+import type { CardPrinting } from '@/lib/scryfall/printings';
+import type { CardRuling } from '@/lib/scryfall/client';
 
 export interface CardFaceDetails {
   name: string;

@@ -11,7 +11,7 @@ import {
   type QueryClient,
 } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { searchCards } from '@/lib/scryfall';
+import { searchCards } from '@/lib/scryfall/client';
 import type { ScryfallCard } from '@/types/card';
 import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';

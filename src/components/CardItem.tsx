@@ -7,7 +7,7 @@
 import { memo } from 'react';
 import type { KeyboardEvent } from 'react';
 import type { ScryfallCard } from '@/types/card';
-import { getCardImage } from '@/lib/scryfall';
+import { getCardImage } from '@/lib/scryfall/client';
 
 interface CardItemProps {
   card: ScryfallCard;
