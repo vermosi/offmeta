@@ -1,5 +1,7 @@
 # Testing
 
+OffMeta uses [Vitest](https://vitest.dev/) as the primary testing framework with 600+ tests across multiple categories.
+
 ## Run tests
 
 ```bash
@@ -19,3 +21,80 @@ Coverage thresholds are enforced in `vite.config.ts`. Generate coverage locally 
 ```bash
 npm run test -- --coverage
 ```
+
+## Test Categories
+
+### Golden Translation Tests (~200 tests)
+
+Located in `src/lib/translation-golden.test.ts` and related files. These verify natural language → Scryfall syntax translation accuracy.
+
+```bash
+npm run test -- translation-golden
+```
+
+### Security Tests (300+ tests)
+
+Located in `src/lib/security/`. Comprehensive security coverage including:
+
+| Category | File | Description |
+|----------|------|-------------|
+| Input Sanitization | `input-sanitization.test.ts` | SQL/XSS/command injection prevention |
+| Injection Attacks | `injection.test.ts` | NoSQL and header injection |
+| Rate Limiting | `rate-limiting.test.ts` | Request throttling and abuse prevention |
+| Authentication | `authentication.test.ts` | Auth bypass and token validation |
+| CORS Protection | `cors-bypass.test.ts` | Origin allowlist and security headers |
+| Prototype Pollution | `prototype-pollution.test.ts` | `__proto__` and constructor attacks |
+| ReDoS Prevention | `redos.test.ts` | Regex denial-of-service mitigation |
+| Timing Attacks | `timing-attacks.test.ts` | Constant-time comparison validation |
+| Error Leakage | `error-leakage.test.ts` | Path/stack/credential sanitization |
+| Config Sync | `config-sync.test.ts` | Security constant synchronization |
+
+Run security tests only:
+
+```bash
+npm run test -- src/lib/security
+```
+
+### Edge Function Tests (~70 tests)
+
+Located in `supabase/functions/semantic-search/`. Tests for the backend translation pipeline.
+
+```bash
+npm run test -- supabase/functions
+```
+
+### Component Tests
+
+Snapshot and unit tests for UI components in `src/components/*/__tests__/`.
+
+```bash
+npm run test -- src/components
+```
+
+### Regression Tests
+
+Located in `src/lib/regression/`. Integration tests for caching, virtualization, and analytics.
+
+```bash
+npm run test -- src/lib/regression
+```
+
+## Security Testing Utilities
+
+The security module exports reusable utilities for custom tests:
+
+```typescript
+import {
+  containsPrototypePollution,
+  sanitizeObjectKeys,
+  safeJsonParse,
+  sanitizeErrorForClient,
+  safeTimingCompare,
+  isRegexSafe,
+  SECURITY_LIMITS,
+} from '@/lib/security';
+```
+
+## CI Integration
+
+All tests run automatically on pull requests via GitHub Actions (`.github/workflows/ci.yml`). Security tests are included in the regression suite exported from `src/lib/regression/index.ts`.
