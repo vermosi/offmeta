@@ -209,7 +209,7 @@
 @layer utilities {
   /* Container - mobile-first with tighter padding */
   .container-main {
-    @apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8;
+    @apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8;
   }
 
   /* Elevated surfaces */
@@ -388,6 +388,54 @@
     50% {
       box-shadow: 0 0 0 12px hsl(var(--destructive) / 0);
     }
+  }
+
+  /* Premium glow orb for hero section */
+  .glow-orb {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      hsl(var(--gradient-start) / 0.12) 0%,
+      transparent 70%
+    );
+    filter: blur(80px);
+    pointer-events: none;
+    animation: orbFloat 8s ease-in-out infinite;
+  }
+
+  .glow-orb-secondary {
+    background: radial-gradient(
+      circle,
+      hsl(var(--gradient-end) / 0.1) 0%,
+      transparent 70%
+    );
+    animation-delay: -4s;
+  }
+
+  @keyframes orbFloat {
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1);
+    }
+    50% {
+      transform: translate(20px, -20px) scale(1.05);
+    }
+  }
+
+  /* Premium button shadows */
+  .btn-premium {
+    box-shadow:
+      0 1px 2px hsl(var(--gradient-start) / 0.1),
+      0 4px 12px hsl(var(--gradient-start) / 0.15);
+  }
+
+  .btn-premium:hover {
+    box-shadow:
+      0 2px 4px hsl(var(--gradient-start) / 0.15),
+      0 8px 20px hsl(var(--gradient-start) / 0.2);
   }
 }
 

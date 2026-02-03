@@ -4,8 +4,8 @@ Thanks for helping improve OffMeta!
 
 ## Prerequisites
 
-- Node.js (see `.nvmrc`)
-- npm
+- Node.js (see `.nvmrc` for the supported version)
+- npm (bundled with Node.js)
 - Supabase project credentials (for Edge Function changes)
 
 ## Local setup
@@ -15,6 +15,24 @@ npm install
 cp .env.example .env
 npm run dev
 ```
+
+## Project scripts
+
+| Script               | Description                  |
+| -------------------- | ---------------------------- |
+| `npm run dev`        | Start the Vite dev server    |
+| `npm run build`      | Production build             |
+| `npm run start`      | Preview the production build |
+| `npm run lint`       | Run ESLint                   |
+| `npm run format`     | Run Prettier                 |
+| `npm run typecheck`  | TypeScript type check        |
+| `npm run test`       | Vitest run                   |
+| `npm run test:watch` | Vitest watch mode            |
+| `npm run check`      | Lint + typecheck + test      |
+
+## Supabase Edge Functions
+
+Edge functions live in `supabase/functions`. Use the Supabase CLI to serve them locally when needed.
 
 ## Branching & PRs
 
@@ -35,16 +53,30 @@ npm run build
 
 This repo uses Husky + lint-staged. After `npm install`, hooks will run automatically on commit.
 
-## Style rules
+## Code style
 
-- Use Prettier formatting (`npm run format`).
-- Avoid `any` unless necessary.
-- Keep query translation changes covered by tests.
+- Prefer small, focused components.
+- Keep hooks in `src/hooks` and pure utilities in `src/lib`.
+- Use named exports for shared utilities.
+- Avoid `any` unless absolutely necessary.
+- Prettier is the source of truth — run `npm run format` before opening a PR.
 
-## Adding tests
+## Testing guidelines
 
 - Add unit tests in `src/**/*.test.ts`.
+- Favor table-driven tests for query translation.
+- Add regression tests for any bug fix.
 - Extend the deterministic golden tests in `src/lib/search/deterministic.test.ts` when changing translation logic.
+
+## Commit convention
+
+Conventional Commits are recommended:
+
+```bash
+feat: add deterministic rule for equip costs
+fix: handle edge case in color parsing
+docs: update API reference
+```
 
 ## License and DCO
 
@@ -55,7 +87,3 @@ Optionally, you can add a DCO sign-off to your commits:
 ```bash
 git commit -s -m "feat: describe change"
 ```
-
-## Commit convention
-
-Conventional Commits are recommended (e.g., `feat: add deterministic rule for equip costs`).

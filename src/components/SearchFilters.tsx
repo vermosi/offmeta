@@ -146,19 +146,28 @@ export function SearchFilters({
   const filteredCards = useMemo(() => {
     let result = [...cards];
 
-    // Color filter
+    // Color filter - AND logic: card must have ALL selected colors
     if (filters.colors.length > 0) {
       result = result.filter((card) => {
         const cardColors = card.colors || [];
         const isColorless = cardColors.length === 0;
 
-        if (filters.colors.includes('C') && isColorless) {
-          return true;
+        // Handle colorless separately
+        const wantsColorless = filters.colors.includes('C');
+        const colorFilters = filters.colors.filter((c) => c !== 'C');
+
+        // If only colorless is selected, match colorless cards
+        if (colorFilters.length === 0 && wantsColorless) {
+          return isColorless;
         }
 
-        return filters.colors.some(
-          (color) => color !== 'C' && cardColors.includes(color),
-        );
+        // If colorless + colors selected, that's contradictory - show nothing
+        if (colorFilters.length > 0 && wantsColorless && isColorless) {
+          return false;
+        }
+
+        // Card must have ALL selected colors (AND logic)
+        return colorFilters.every((color) => cardColors.includes(color));
       });
     }
 
@@ -316,11 +325,17 @@ export function SearchFilters({
           sideOffset={8}
         >
           <div className="space-y-4">
-            {/* Colors */}
             <div className="space-y-2">
-              <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Colors
-              </h4>
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Colors
+                </h4>
+                {filters.colors.length > 1 && (
+                  <span className="text-[10px] text-muted-foreground">
+                    Must have all
+                  </span>
+                )}
+              </div>
               <div className="flex flex-wrap gap-1.5">
                 {COLORS.map((color) => (
                   <button

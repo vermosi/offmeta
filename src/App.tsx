@@ -5,6 +5,8 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from 'next-themes';
+import { usePrefetchPopularQueries } from '@/hooks/useSearchQuery';
+import { useRealtimeCache } from '@/hooks/useRealtimeCache';
 
 const Index = lazy(() => import('./pages/Index'));
 const NotFound = lazy(() => import('./pages/NotFound'));
@@ -22,12 +24,20 @@ const queryClient = new QueryClient({
   },
 });
 
+// Component to trigger prefetching and realtime sync after initial render
+function AppInitializer() {
+  usePrefetchPopularQueries();
+  useRealtimeCache();
+  return null;
+}
+
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <AppInitializer />
         <BrowserRouter>
           <Suspense fallback={<div className="min-h-screen bg-background" />}>
             <Routes>

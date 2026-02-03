@@ -245,7 +245,7 @@ describe('scryfall client', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2024-01-01T00:00:00Z'));
 
-    let resolveFetch: ((value: Response) => void) | null = null;
+    let resolveFetch: (value: Response) => void = () => {};
     const fetchPromise = new Promise<Response>((resolve) => {
       resolveFetch = resolve;
     });
@@ -263,7 +263,7 @@ describe('scryfall client', () => {
       /Too many pending requests/i,
     );
 
-    resolveFetch?.(
+    resolveFetch(
       mockResponse({
         object: 'list',
         total_cards: 0,

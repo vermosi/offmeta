@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Search, Loader2, X, ArrowRight, History, Clock } from 'lucide-react';
+import { Search, Loader2, X, Clock, History } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { SearchFeedback } from '@/components/SearchFeedback';
 import { SearchHelpModal } from '@/components/SearchHelpModal';
@@ -196,12 +196,9 @@ export interface UnifiedSearchBarHandle {
 }
 
 const EXAMPLE_QUERIES = [
-  'artifacts that produce 2 mana',
-  'red or black creatures under 3 mana',
   'creatures that make treasure tokens',
   'cheap green ramp spells',
-  'mana dorks that cost 1',
-  'Rakdos sacrifice outlets',
+  'artifacts that produce 2 mana',
 ];
 
 export const UnifiedSearchBar = forwardRef<
@@ -452,12 +449,14 @@ export const UnifiedSearchBar = forwardRef<
 
   return (
     <search
-      className="space-y-4 sm:space-y-6 w-full max-w-xl mx-auto px-0"
+      className="space-y-4 sm:space-y-6 w-full mx-auto px-0"
+      style={{ maxWidth: 'clamp(320px, 90vw, 672px)' }}
       role="search"
       aria-label="Card search"
     >
-      {/* Search input - Mobile-first, compact */}
-      <div className="relative">
+      {/* Search input - Mobile-first, two-row layout on mobile */}
+      <div className="relative space-y-2">
+        {/* Primary row: Input + Search button */}
         <div
           className={`
             relative flex items-center gap-1.5 sm:gap-2 p-1 sm:p-1.5 rounded-xl border bg-card
@@ -504,7 +503,7 @@ export const UnifiedSearchBar = forwardRef<
           {query && (
             <button
               aria-label="Clear search"
-              className="p-1.5 text-muted-foreground hover:text-foreground flex-shrink-0"
+              className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center text-muted-foreground hover:text-foreground flex-shrink-0 rounded-lg hover:bg-secondary transition-colors"
               onClick={() => {
                 setQuery('');
                 inputRef.current?.focus();
@@ -524,7 +523,7 @@ export const UnifiedSearchBar = forwardRef<
             }
             variant="accent"
             size="sm"
-            className="h-8 sm:h-10 px-3 sm:px-4 rounded-lg gap-1.5 sm:gap-2 font-medium flex-shrink-0"
+            className="h-9 sm:h-10 px-3 sm:px-4 rounded-lg gap-1.5 sm:gap-2 font-medium flex-shrink-0"
             aria-label={
               rateLimitCountdown > 0
                 ? `Wait ${rateLimitCountdown}s`
@@ -548,28 +547,22 @@ export const UnifiedSearchBar = forwardRef<
             )}
           </Button>
 
-          {/* Feedback button - visible on all sizes */}
-          <div className="flex-shrink-0">
+          {/* Desktop-only inline buttons */}
+          <div className="hidden sm:flex items-center gap-1 flex-shrink-0">
             <SearchFeedback
               originalQuery={query || history[0] || ''}
               translatedQuery={lastTranslatedQuery}
             />
-          </div>
-
-          {/* Reuse last interpretation toggle */}
-          <Button
-            variant={useLast ? 'accent' : 'ghost'}
-            size="sm"
-            onClick={() => setUseLast((prev) => !prev)}
-            className="h-8 px-2 text-xs"
-            title="Reuse the last interpretation and cache (optional)"
-            disabled={!canUseLast}
-          >
-            {useLast ? 'Using last' : 'Use last'}
-          </Button>
-
-          {/* Help modal - desktop only */}
-          <div className="hidden sm:block flex-shrink-0">
+            <Button
+              variant={useLast ? 'accent' : 'ghost'}
+              size="sm"
+              onClick={() => setUseLast((prev) => !prev)}
+              className="h-8 px-2 text-xs"
+              title="Reuse the last interpretation and cache (optional)"
+              disabled={!canUseLast}
+            >
+              {useLast ? 'Using last' : 'Use last'}
+            </Button>
             <SearchHelpModal
               onTryExample={(exampleQuery) => {
                 setQuery(exampleQuery);
@@ -579,74 +572,88 @@ export const UnifiedSearchBar = forwardRef<
           </div>
         </div>
 
+        {/* Secondary row: Mobile-only auxiliary actions */}
+        <div className="flex sm:hidden items-center justify-center gap-2 flex-wrap">
+          <SearchFeedback
+            originalQuery={query || history[0] || ''}
+            translatedQuery={lastTranslatedQuery}
+          />
+          <Button
+            variant={useLast ? 'accent' : 'ghost'}
+            size="sm"
+            onClick={() => setUseLast((prev) => !prev)}
+            className="h-9 min-w-[44px] px-3 text-xs gap-1.5"
+            title="Reuse the last interpretation"
+            disabled={!canUseLast}
+          >
+            <History className="h-3.5 w-3.5" aria-hidden="true" />
+            {useLast ? 'Using last' : 'Reuse'}
+          </Button>
+          <SearchHelpModal
+            onTryExample={(exampleQuery) => {
+              setQuery(exampleQuery);
+              handleSearch(exampleQuery);
+            }}
+          />
+        </div>
+
         <p id="search-hint" className="sr-only">
           Type your search query and press Enter or click Search
         </p>
       </div>
 
-      {/* Recent searches */}
-      {history.length > 0 && showExamples && (
-        <div
-          className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 animate-reveal"
-          role="group"
-          aria-label="Recent searches"
-        >
-          <span className="inline-flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
-            <History className="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
-            Recent
-          </span>
-          {history.slice(0, isMobile ? 2 : 4).map((historyQuery, index) => (
-            <button
-              key={`${historyQuery}-${index}`}
-              onClick={() => {
-                setQuery(historyQuery);
-                handleSearch(historyQuery);
-              }}
-              className="group inline-flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border border-border bg-card text-xs sm:text-sm text-muted-foreground hover:text-foreground hover:border-muted-foreground/30 hover:bg-secondary transition-all duration-200 focus-ring"
-              aria-label={`Search for ${historyQuery}`}
-            >
-              <span className="truncate max-w-[100px] sm:max-w-[180px]">
-                {historyQuery}
-              </span>
-              <ArrowRight
-                className="h-3 w-3 opacity-0 -translate-x-0.5 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 flex-shrink-0"
-                aria-hidden="true"
-              />
-            </button>
-          ))}
-          <button
-            onClick={clearHistory}
-            aria-label="Clear search history"
-            className="p-1 sm:p-1.5 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors focus-ring"
-          >
-            <X className="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
-          </button>
-        </div>
-      )}
-
-      {/* Example queries */}
+      {/* Suggestions: recent searches + examples in a single row */}
       {showExamples && (
         <div
           className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 animate-reveal"
-          style={{ animationDelay: '75ms' }}
           role="group"
-          aria-label="Example searches"
+          aria-label="Search suggestions"
         >
-          <span className="text-xs sm:text-sm text-muted-foreground">Try:</span>
-          {EXAMPLE_QUERIES.slice(0, isMobile ? 2 : 4).map((example) => (
+          {/* Recent searches first */}
+          {history.length > 0 && (
+            <>
+              {history.slice(0, isMobile ? 1 : 2).map((historyQuery, index) => (
+                <button
+                  key={`history-${historyQuery}-${index}`}
+                  onClick={() => {
+                    setQuery(historyQuery);
+                    handleSearch(historyQuery);
+                  }}
+                  className="group inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-border/60 bg-card/50 text-xs text-muted-foreground hover:text-foreground hover:border-foreground/20 hover:bg-secondary/50 transition-all duration-200 focus-ring"
+                  aria-label={`Search for ${historyQuery}`}
+                >
+                  <Clock
+                    className="h-3 w-3 opacity-50 flex-shrink-0"
+                    aria-hidden="true"
+                  />
+                  <span className="truncate max-w-[100px] sm:max-w-[140px]">
+                    {historyQuery}
+                  </span>
+                </button>
+              ))}
+              <button
+                onClick={clearHistory}
+                aria-label="Clear search history"
+                className="p-1.5 rounded-full text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors focus-ring"
+              >
+                <X className="h-3 w-3" aria-hidden="true" />
+              </button>
+            </>
+          )}
+          {/* Example queries - trigger search on click */}
+          {EXAMPLE_QUERIES.slice(0, isMobile ? 1 : 2).map((example) => (
             <button
               key={example}
-              onClick={() => setQuery(example)}
-              className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-all duration-200 focus-ring"
-              aria-label={`Try searching for ${example}`}
+              onClick={() => {
+                setQuery(example);
+                handleSearch(example);
+              }}
+              className="px-2.5 py-1.5 rounded-full text-xs text-muted-foreground/70 hover:text-foreground hover:bg-secondary/50 transition-all duration-200 focus-ring"
+              aria-label={`Search for ${example}`}
             >
-              <span className="truncate max-w-[120px] sm:max-w-none inline-block align-middle">
-                "
-                {isMobile && example.length > 18
-                  ? `${example.slice(0, 18)}...`
-                  : example}
-                "
-              </span>
+              {isMobile && example.length > 20
+                ? `${example.slice(0, 20)}…`
+                : example}
             </button>
           ))}
         </div>

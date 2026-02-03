@@ -37,7 +37,7 @@ npm run dev
 | `VITE_SUPABASE_URL`             | Yes      | Supabase project URL used by the frontend client. |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Yes      | Supabase anon/publishable key.                    |
 
-For Edge Function environment variables, see [`docs/configuration.md`](docs/configuration.md).
+For Edge Function environment variables, see [`docs/CONFIGURATION.md`](docs/CONFIGURATION.md).
 
 ## How it works
 
@@ -59,7 +59,7 @@ flowchart LR
   UI --> Cache["Client cache"]
 ```
 
-For a deeper architecture overview, see [`docs/architecture.md`](docs/architecture.md).
+For a deeper architecture overview, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Usage examples
 
@@ -86,7 +86,7 @@ The official hosted version is run by OffMeta via Lovable. Forks must rename the
 
 ### Why AGPL?
 
-We want the project to stay open even when it’s hosted as a service. AGPL ensures that improvements made to public deployments are shared back with the community, instead of being locked away in closed hosted clones.
+We want the project to stay open even when it's hosted as a service. AGPL ensures that improvements made to public deployments are shared back with the community, instead of being locked away in closed hosted clones.
 
 ## Deployment and secrets
 
@@ -100,9 +100,17 @@ Lovable deployment details are intentionally excluded to avoid leaking operation
 - **No search results**: Check the `Search Interpretation` panel to confirm the generated Scryfall syntax.
 - **AI gateway unavailable**: The app will fall back to deterministic rules; results may be less precise.
 
-## Contributing
+## Support
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) for setup, workflow, and checks.
+- **Bugs & feature requests**: [GitHub Issues](https://github.com/vermosi/offmeta/issues)
+- **Questions & help**: [GitHub Discussions](https://github.com/vermosi/offmeta/discussions) (if enabled)
+
+When reporting issues, please include:
+
+- Steps to reproduce
+- Expected vs. actual behavior
+- Environment details (OS, browser, Node.js version)
+- Logs or screenshots when applicable
 
 ## Contributing
 
@@ -112,7 +120,7 @@ This project is open source under the AGPL-3.0 license. Contributions are welcom
 2. Create a feature branch
 3. Submit a pull request
 
-See [GitHub Issues](https://github.com/vermosi/offmeta/issues) for current tasks.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for setup, workflow, and checks, or browse [GitHub Issues](https://github.com/vermosi/offmeta/issues) for current tasks.
 
 ---
 

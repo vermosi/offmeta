@@ -8,7 +8,7 @@ OffMeta takes security seriously. If you discover a security vulnerability, plea
 
 **Do NOT report security vulnerabilities through public GitHub issues.**
 
-Instead, please contact OffMeta directly with:
+Instead, please email **security@offmeta.app** with:
 
 1. A description of the vulnerability
 2. Steps to reproduce the issue

@@ -66,6 +66,108 @@ export const AUTO_CORRECTION_CASES: AutoCorrectionCase[] = [
 ];
 
 /**
+ * Remove duplicate parameters from a query string.
+ * e.g., "t:creature t:creature c:r c:r" → "t:creature c:r"
+ */
+export function removeDuplicateParameters(query: string): string {
+  const parts = query.split(/\s+/);
+  const seen = new Set<string>();
+  const deduped: string[] = [];
+
+  for (const part of parts) {
+    const normalized = part.toLowerCase();
+    if (!seen.has(normalized)) {
+      seen.add(normalized);
+      deduped.push(part);
+    }
+  }
+
+  return deduped.join(' ');
+}
+
+/**
+ * Input sanitization - reject malformed/spam queries before processing
+ * This prevents wasting API resources on junk input.
+ */
+export function sanitizeInputQuery(query: string): {
+  valid: boolean;
+  reason?: string;
+  sanitized?: string;
+} {
+  const trimmed = query.trim();
+
+  // Reject queries under 3 characters
+  if (trimmed.length < 3) {
+    return { valid: false, reason: 'Query too short (minimum 3 characters)' };
+  }
+
+  // Detect repeated empty operators (spam pattern: "t: t: t: t:")
+  const repeatedEmptyOps = /(?:[toc]:[\s]*){3,}/gi;
+  if (repeatedEmptyOps.test(trimmed)) {
+    return {
+      valid: false,
+      reason: 'Invalid query format - repeated empty operators detected',
+    };
+  }
+
+  // Detect malformed operator spam (like "t:t:t:t:")
+  const operatorSpam = /(?:[toc]:){3,}/gi;
+  if (operatorSpam.test(trimmed)) {
+    return {
+      valid: false,
+      reason: 'Invalid query format - malformed operator syntax',
+    };
+  }
+
+  // Count total search parameters - reject if excessive (prevents spam)
+  const parameterMatches = trimmed.match(/\b[a-zA-Z]+[:=<>]/g) || [];
+  if (parameterMatches.length > 15) {
+    return {
+      valid: false,
+      reason: 'Too many search parameters (maximum 15)',
+    };
+  }
+
+  // Strip trailing empty operators (e.g., "t:creature t: t: t:")
+  let sanitized = trimmed.replace(/\s+[toc]:\s*(?=[toc]:|$)/gi, ' ').trim();
+
+  // Also strip inline empty operators anywhere in query (e.g., "t:artifact t: t: o:draw")
+  sanitized = sanitized.replace(/\s+[toc]:\s+/gi, ' ').trim();
+
+  // Remove duplicate parameters
+  sanitized = removeDuplicateParameters(sanitized);
+
+  // NEW: Count remaining empty operators (pattern: " t: " or " o: " with spaces)
+  const emptyOpCount = (sanitized.match(/\b[toc]:\s*(?=\s|$)/gi) || []).length;
+  if (emptyOpCount > 2) {
+    return {
+      valid: false,
+      reason: 'Too many empty search operators',
+    };
+  }
+
+  // Check for excessive non-alphanumeric characters (>50%)
+  const alphanumericCount = (sanitized.match(/[a-zA-Z0-9]/g) || []).length;
+  if (alphanumericCount < sanitized.length * 0.5 && sanitized.length > 10) {
+    return {
+      valid: false,
+      reason: 'Query contains too many special characters',
+    };
+  }
+
+  // Detect repetitive single character spam (like "aaaaaaa" or "tttttt")
+  const repetitiveChars = /(.)\1{5,}/g;
+  if (repetitiveChars.test(sanitized)) {
+    return {
+      valid: false,
+      reason: 'Invalid query format - repetitive character spam detected',
+    };
+  }
+
+  return { valid: true, sanitized };
+}
+
+/**
  * Validates and sanitizes a Scryfall query string.
  * Ensures the query is safe to execute and fixes common issues.
  */

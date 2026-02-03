@@ -8,21 +8,67 @@ OffMeta is a React + Vite frontend that sends natural-language search queries to
 
 1. **User input** (text or voice) is collected in `src/components/UnifiedSearchBar.tsx`.
 2. **Supabase Edge Function** (`supabase/functions/semantic-search`) transforms the query into deterministic Scryfall syntax, optionally using AI.
-3. **Scryfall API** is queried via the frontend client in `src/lib/scryfall.ts`.
+3. **Scryfall API** is queried via the frontend client in `src/lib/scryfall/client.ts`.
 4. **Results** render in the card grid and modal components.
+
+```mermaid
+flowchart LR
+  UI["UI (text/voice)"] --> Edge["Supabase Edge Function"]
+  Edge --> Translate["Deterministic translation"]
+  Translate -->|fallback| AI["AI interpretation"]
+  Translate --> Scryfall["Scryfall API"]
+  AI --> Scryfall
+  Scryfall --> Results["Results + metadata"]
+  Results --> UI
+  UI --> Cache["Client cache"]
+```
+
+## Directory structure
+
+```
+src/
+├── components/          # React components
+├── hooks/               # Custom React hooks
+├── lib/
+│   ├── core/            # Environment, logging, utils, monitoring
+│   ├── scryfall/        # Scryfall API client and query validation
+│   ├── search/          # Server-side filter construction
+│   ├── pwa/             # Service worker registration
+│   └── regression/      # Test suites
+├── pages/               # Route pages
+└── integrations/        # Supabase client (auto-generated)
+
+supabase/
+└── functions/
+    └── semantic-search/ # Query translation pipeline
+        ├── pipeline/    # Normalize → Classify → Slots → Concepts → Assemble
+        ├── deterministic.ts
+        ├── validation.ts
+        └── ...
+```
 
 ## Key modules
 
-- **UI**: `src/components`, `src/pages`
-- **Search pipeline**: `supabase/functions/semantic-search`
-- **Scryfall client**: `src/lib/scryfall.ts`
-- **Supabase client**: `src/integrations/supabase/client.ts`
+| Module          | Location                              | Purpose                                |
+| --------------- | ------------------------------------- | -------------------------------------- |
+| UI Components   | `src/components/`                     | Search bar, card grid, modals          |
+| Scryfall Client | `src/lib/scryfall/`                   | API calls, query validation, printings |
+| Core Utilities  | `src/lib/core/`                       | Environment, logging, monitoring       |
+| Search Pipeline | `supabase/functions/semantic-search/` | NL → Scryfall translation              |
+| Supabase Client | `src/integrations/supabase/client.ts` | Auto-generated DB client               |
 
 ## Data stores
 
-- Supabase tables: `translation_rules`, `translation_logs`, `query_cache`, `search_feedback`, `analytics_events`.
+Supabase tables:
+
+- `translation_rules` - Concept patterns and Scryfall mappings
+- `translation_logs` - Query translation history
+- `query_cache` - Persistent query cache
+- `search_feedback` - User-reported translation issues
+- `analytics_events` - Usage analytics
 
 ## Error handling
 
 - `src/components/ErrorBoundary.tsx` provides a user-friendly fallback for React runtime errors.
 - Edge functions return JSON error payloads with appropriate HTTP status codes.
+- `src/lib/core/monitoring.ts` provides hooks for error tracking integration.

@@ -28,6 +28,7 @@ import { FAQSection } from '@/components/FAQSection';
 import { HowItWorksSection } from '@/components/HowItWorksSection';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { VirtualizedCardGrid } from '@/components/VirtualizedCardGrid';
 import { searchCards } from '@/lib/scryfall';
 import type { ScryfallCard } from '@/types/card';
 import type { FilterState } from '@/types/filters';
@@ -37,6 +38,9 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 import { Loader2 } from 'lucide-react';
 
 const CardModal = lazy(() => import('@/components/CardModal'));
+
+// Threshold for enabling virtualization (for large result sets)
+const VIRTUALIZATION_THRESHOLD = 50;
 
 // Generate unique request ID
 function generateRequestId(): string {
@@ -65,15 +69,20 @@ const Index = () => {
 
   const searchBarRef = useRef<UnifiedSearchBarHandle>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const lastUrlQueryRef = useRef(urlQuery); // Track last processed URL query
   const { trackSearch, trackCardClick, trackEvent } = useAnalytics();
 
   // Sync state with URL changes (browser back/forward, manual URL edits)
+  // Only reacts to external URL changes, not internal state updates
   useEffect(() => {
+    // Skip if this is the same URL we already processed
+    if (urlQuery === lastUrlQueryRef.current) {
+      return;
+    }
+    lastUrlQueryRef.current = urlQuery;
+
     if (urlQuery && searchBarRef.current) {
-      // Only trigger search if URL query differs from current search
-      if (urlQuery !== searchQuery) {
-        searchBarRef.current.triggerSearch(urlQuery);
-      }
+      searchBarRef.current.triggerSearch(urlQuery);
     } else if (!urlQuery && hasSearched) {
       // URL cleared - reset to landing state
       setSearchQuery('');
@@ -84,7 +93,7 @@ const Index = () => {
       setHasActiveFilters(false);
       setCurrentRequestId(null);
     }
-  }, [urlQuery, hasSearched, searchQuery]); // Re-run when URL query changes
+  }, [urlQuery, hasSearched]); // Removed searchQuery to prevent loop
 
   const {
     data,
@@ -156,10 +165,12 @@ const Index = () => {
       // Invalidate previous query cache to force fresh fetch
       queryClient.invalidateQueries({ queryKey: ['cards', executedQuery] });
 
-      // Update URL with search query
+      // Update URL with search query (mark as processed first to prevent duplicate search)
       if (query) {
+        lastUrlQueryRef.current = query;
         setSearchParams({ q: query }, { replace: true });
       } else {
+        lastUrlQueryRef.current = '';
         setSearchParams({}, { replace: true });
       }
 
@@ -234,7 +245,8 @@ const Index = () => {
         queryKey: ['cards', validation.sanitized],
       });
 
-      // Update URL
+      // Update URL (mark as processed first to prevent URL sync triggering duplicate search)
+      lastUrlQueryRef.current = validation.sanitized;
       setSearchParams({ q: validation.sanitized }, { replace: true });
 
       trackEvent('rerun_edited_query', {
@@ -287,7 +299,7 @@ const Index = () => {
         query: originalQuery,
         translated_query: lastSearchResult.scryfallQuery,
         results_count: totalCards,
-        request_id: currentRequestId,
+        request_id: currentRequestId ?? undefined,
       });
     }
   }, [
@@ -377,30 +389,40 @@ const Index = () => {
           </div>
         </header>
 
-        {/* Hero Section - Compact mobile, airy desktop */}
+        {/* Hero Section - Premium, airy with glow orbs */}
         {!hasSearched && (
           <section
-            className="relative pt-8 sm:pt-16 lg:pt-24 pb-4 sm:pb-8"
+            className="relative pt-12 sm:pt-20 lg:pt-28 pb-6 sm:pb-12 overflow-hidden"
             aria-labelledby="hero-heading"
           >
-            <div className="container-main text-center stagger-children">
+            {/* Animated glow orbs for premium feel */}
+            <div
+              className="glow-orb absolute -top-32 -left-32 sm:-top-48 sm:-left-48"
+              aria-hidden="true"
+            />
+            <div
+              className="glow-orb glow-orb-secondary absolute -bottom-32 -right-32 sm:-bottom-48 sm:-right-48"
+              aria-hidden="true"
+            />
+
+            <div className="container-main text-center stagger-children relative z-10">
               <h1
                 id="hero-heading"
-                className="mb-4 sm:mb-6 text-foreground text-3xl sm:text-5xl lg:text-6xl"
+                className="mb-5 sm:mb-8 text-foreground text-4xl sm:text-5xl lg:text-7xl font-semibold"
               >
                 Find Magic Cards
                 <br />
-                <span className="text-accent-glow">Like You Think</span>
+                <span className="text-gradient">Like You Think</span>
               </h1>
 
-              <div className="space-y-0.5 sm:space-y-1 mb-8 sm:mb-12">
-                <p className="text-sm sm:text-lg text-muted-foreground">
+              <div className="space-y-1 sm:space-y-2 mb-10 sm:mb-14">
+                <p className="text-base sm:text-lg lg:text-xl text-muted-foreground">
                   Describe what you're looking for in plain English.
                 </p>
-                <p className="text-sm sm:text-lg text-muted-foreground">
+                <p className="text-base sm:text-lg lg:text-xl text-muted-foreground">
                   No complex syntax. No guessing.
                 </p>
-                <p className="text-sm sm:text-lg text-foreground font-medium mt-2">
+                <p className="text-base sm:text-lg lg:text-xl text-foreground font-medium mt-3">
                   Just natural conversation.
                 </p>
               </div>
@@ -411,10 +433,11 @@ const Index = () => {
         {/* Main content */}
         <main
           id="main-content"
-          className={`relative flex-1 ${hasSearched ? 'pt-4 sm:pt-6' : ''} pb-8 sm:pb-16 container-main safe-bottom`}
+          className={`relative flex-1 ${hasSearched ? 'pt-4 sm:pt-6' : ''} pb-8 sm:pb-16 safe-bottom`}
           role="main"
         >
-          <div className="space-y-6 sm:space-y-8">
+          {/* Centered elements: search, query bar, filters */}
+          <div className="container-main space-y-6 sm:space-y-8">
             {/* Search */}
             <UnifiedSearchBar
               ref={searchBarRef}
@@ -454,60 +477,73 @@ const Index = () => {
               </div>
             )}
 
-            {/* Results count */}
-            {hasSearched && totalCards > 0 && !isSearching && (
-              <div
-                className="text-center animate-reveal"
-                role="status"
-                aria-live="polite"
-              >
-                <span className="pill">
+            {/* Filters, Sort, and Results count - all in one row */}
+            {cards.length > 0 && !isSearching && (
+              <div className="flex flex-wrap items-center justify-center gap-3 animate-reveal">
+                <SearchFilters
+                  cards={cards}
+                  onFilteredCards={handleFilteredCards}
+                  totalCards={totalCards}
+                  resetKey={filtersResetKey}
+                />
+                {totalCards > 0 && (
                   <span
-                    className="h-1.5 w-1.5 rounded-full bg-accent"
-                    aria-hidden="true"
-                  />
-                  {totalCards.toLocaleString()} cards found
-                </span>
+                    className="text-xs text-muted-foreground"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    {totalCards.toLocaleString()} cards
+                  </span>
+                )}
               </div>
             )}
+          </div>
 
-            {/* Filters and Sort - Show when we have results */}
-            {cards.length > 0 && !isSearching && (
-              <SearchFilters
-                cards={cards}
-                onFilteredCards={handleFilteredCards}
-                totalCards={totalCards}
-                resetKey={filtersResetKey}
-              />
-            )}
-
-            {/* Cards Grid */}
+          {/* Card grid - full width with padding */}
+          <div className="mt-6 sm:mt-8 px-4 sm:px-6 lg:px-8">
             {cards.length > 0 ? (
               <>
                 {displayCards.length > 0 ? (
-                  <div
-                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-4 content-visibility-auto"
-                    role="list"
-                    aria-label="Search results"
-                  >
-                    {displayCards.map((card, index) => (
-                      <div
-                        key={card.id}
-                        className="animate-reveal contain-layout"
-                        role="listitem"
-                        style={{
-                          animationDelay: `${Math.min(index * 25, 300)}ms`,
-                          contentVisibility: 'auto',
-                          containIntrinsicSize: '0 200px',
-                        }}
-                      >
-                        <CardItem
-                          card={card}
-                          onClick={() => handleCardClick(card, index)}
-                        />
-                      </div>
-                    ))}
-                  </div>
+                  displayCards.length > VIRTUALIZATION_THRESHOLD ? (
+                    // Virtualized grid for large results (50+ cards)
+                    <VirtualizedCardGrid
+                      cards={displayCards}
+                      onCardClick={handleCardClick}
+                      onLoadMore={
+                        hasNextPage && !isFetchingNextPage
+                          ? fetchNextPage
+                          : undefined
+                      }
+                      hasNextPage={hasNextPage}
+                      isFetchingNextPage={isFetchingNextPage}
+                    />
+                  ) : (
+                    // Standard grid for smaller results
+                    <div
+                      className="grid grid-cols-1 min-[480px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 content-visibility-auto justify-items-center"
+                      role="list"
+                      aria-label="Search results"
+                      data-testid="standard-grid"
+                    >
+                      {displayCards.map((card, index) => (
+                        <div
+                          key={card.id}
+                          className="animate-reveal contain-layout"
+                          role="listitem"
+                          style={{
+                            animationDelay: `${Math.min(index * 25, 300)}ms`,
+                            contentVisibility: 'auto',
+                            containIntrinsicSize: '0 200px',
+                          }}
+                        >
+                          <CardItem
+                            card={card}
+                            onClick={() => handleCardClick(card, index)}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )
                 ) : (
                   <div className="text-center py-12">
                     <p className="text-muted-foreground">
@@ -519,25 +555,44 @@ const Index = () => {
                   </div>
                 )}
 
-                {/* Infinite scroll trigger */}
-                <div
-                  ref={loadMoreRef}
-                  className="flex justify-center pt-8 pb-4"
-                  aria-hidden="true"
-                >
-                  {isFetchingNextPage && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      <span>Loading more cards...</span>
-                    </div>
-                  )}
-                  {!hasNextPage && cards.length > 0 && (
-                    <span className="text-sm text-muted-foreground">
-                      You've reached the end • {totalCards.toLocaleString()}{' '}
-                      cards total
-                    </span>
-                  )}
-                </div>
+                {/* Infinite scroll trigger (only for non-virtualized grid) */}
+                {displayCards.length <= VIRTUALIZATION_THRESHOLD && (
+                  <div
+                    ref={loadMoreRef}
+                    className="flex justify-center pt-8 pb-4"
+                    aria-hidden="true"
+                  >
+                    {isFetchingNextPage && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <span>Loading more cards...</span>
+                      </div>
+                    )}
+                    {!hasNextPage && cards.length > 0 && (
+                      <span className="text-sm text-muted-foreground">
+                        You've reached the end • {totalCards.toLocaleString()}{' '}
+                        cards total
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Status for virtualized grid */}
+                {displayCards.length > VIRTUALIZATION_THRESHOLD && (
+                  <div className="flex justify-center pt-4 pb-4">
+                    {isFetchingNextPage && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <span>Loading more cards...</span>
+                      </div>
+                    )}
+                    {!hasNextPage && cards.length > 0 && (
+                      <span className="text-sm text-muted-foreground">
+                        {totalCards.toLocaleString()} cards total
+                      </span>
+                    )}
+                  </div>
+                )}
               </>
             ) : isSearching ? (
               <CardSkeletonGrid count={10} />

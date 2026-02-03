@@ -65,7 +65,7 @@ export function logTranslation(
   logQueue.push({
     natural_language_query: naturalQuery.substring(0, 500),
     translated_query: translatedQuery.substring(0, 1000),
-    model_used: 'google/gemini-2.5-flash-lite',
+    model_used: 'google/gemini-3-flash-preview',
     confidence_score: confidenceScore,
     response_time_ms: responseTimeMs,
     validation_issues: validationIssues,

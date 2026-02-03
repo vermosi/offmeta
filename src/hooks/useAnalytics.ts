@@ -121,6 +121,7 @@ function sanitizeEventData(
 const ALLOWED_EVENT_TYPES = [
   'search',
   'search_results',
+  'search_failure', // NEW: Track 0-result and error searches
   'rerun_edited_query',
   'card_click',
   'card_modal_view',
@@ -135,12 +136,46 @@ function isValidEventType(type: string): type is EventType {
   return ALLOWED_EVENT_TYPES.includes(type as EventType);
 }
 
+// Deduplication for cache events (only log once per query per session per minute)
+const recentCacheEvents = new Map<string, number>();
+const CACHE_EVENT_DEDUP_WINDOW_MS = 60000; // 1 minute
+
+function shouldLogCacheEvent(queryHash: string): boolean {
+  const now = Date.now();
+  const lastLogged = recentCacheEvents.get(queryHash);
+
+  if (lastLogged && now - lastLogged < CACHE_EVENT_DEDUP_WINDOW_MS) {
+    return false;
+  }
+
+  recentCacheEvents.set(queryHash, now);
+
+  // Cleanup old entries
+  if (recentCacheEvents.size > 100) {
+    const cutoff = now - CACHE_EVENT_DEDUP_WINDOW_MS;
+    for (const [key, time] of recentCacheEvents.entries()) {
+      if (time < cutoff) recentCacheEvents.delete(key);
+    }
+  }
+
+  return true;
+}
+
 interface SearchEventData {
   query: string;
   translated_query?: string;
   results_count: number;
   search_duration_ms?: number;
   request_id?: string;
+  source?: string; // 'deterministic' | 'ai' | 'cache'
+}
+
+interface SearchFailureEventData {
+  query: string;
+  translated_query?: string;
+  error_type: 'zero_results' | 'api_error' | 'timeout' | 'rate_limited';
+  error_message?: string;
+  search_duration_ms?: number;
 }
 
 interface CardClickEventData {
@@ -193,6 +228,7 @@ interface RerunEditedQueryEventData {
 
 type EventData =
   | SearchEventData
+  | SearchFailureEventData
   | CardClickEventData
   | CardModalViewEventData
   | AffiliateClickEventData
@@ -296,13 +332,22 @@ export function useAnalytics() {
     [trackEvent],
   );
 
+  const trackSearchFailure = useCallback(
+    (data: SearchFailureEventData) => {
+      trackEvent('search_failure', data);
+    },
+    [trackEvent],
+  );
+
   return {
     trackSearch,
+    trackSearchFailure,
     trackCardClick,
     trackCardModalView,
     trackAffiliateClick,
     trackPagination,
     trackFeedback,
     trackEvent,
+    shouldLogCacheEvent,
   };
 }

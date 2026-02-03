@@ -1,11 +1,18 @@
 /**
  * Editable query bar that shows the compiled Scryfall query above results.
  * Always visible, editable, with Re-run, Copy query, and Open in Scryfall buttons.
+ * Mobile-optimized with icon-only buttons and dropdown menu.
  */
 
 import { useState, useEffect, useCallback, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import {
   Play,
@@ -15,6 +22,7 @@ import {
   AlertTriangle,
   X,
   RotateCcw,
+  MoreHorizontal,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -92,44 +100,32 @@ export const EditableQueryBar = memo(function EditableQueryBar({
     onReportIssue?.();
   }, [onReportIssue]);
 
-  const confidenceColor = confidence
-    ? confidence >= 0.9
-      ? 'text-emerald-600 dark:text-emerald-400'
-      : confidence >= 0.75
-        ? 'text-amber-600 dark:text-amber-400'
-        : confidence >= 0.6
-          ? 'text-orange-600 dark:text-orange-400'
-          : 'text-red-500 dark:text-red-400'
-    : '';
-
-  const confidenceLabel = confidence
-    ? confidence >= 0.9
-      ? 'High'
-      : confidence >= 0.75
-        ? 'Good'
-        : confidence >= 0.6
-          ? 'Moderate'
-          : 'Low'
-    : null;
+  // Simplified confidence - only show warning for low confidence
+  const showConfidenceWarning = confidence !== undefined && confidence < 0.6;
 
   return (
-    <div className="w-full max-w-3xl mx-auto space-y-2">
-      {/* Header with confidence and report */}
+    <div
+      className="w-full mx-auto space-y-2"
+      style={{ maxWidth: 'clamp(320px, 90vw, 672px)' }}
+    >
+      {/* Header - simplified */}
       <div className="flex items-center justify-between px-1">
-        <div className="flex items-center gap-3 text-xs">
-          <span className="text-muted-foreground">Scryfall Query</span>
-          {confidenceLabel && (
-            <span className={cn('font-medium', confidenceColor)}>
-              {confidenceLabel} ({Math.round((confidence || 0) * 100)}%)
+        <div className="flex items-center gap-2 text-xs">
+          <span className="text-muted-foreground">Translated query</span>
+          {showConfidenceWarning && (
+            <span className="text-amber-600 dark:text-amber-400 font-medium">
+              Low confidence
             </span>
           )}
           {hasChanges && (
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20">
               edited
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1">
+
+        {/* Desktop: inline buttons; Mobile: dropdown menu */}
+        <div className="hidden sm:flex items-center gap-1">
           {onRegenerate && (
             <Button
               variant="ghost"
@@ -153,6 +149,38 @@ export const EditableQueryBar = memo(function EditableQueryBar({
             </Button>
           )}
         </div>
+
+        {/* Mobile: dropdown menu for secondary actions */}
+        {(onRegenerate || onReportIssue) && (
+          <div className="sm:hidden">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  aria-label="More options"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                {onRegenerate && (
+                  <DropdownMenuItem onClick={onRegenerate}>
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Regenerate
+                  </DropdownMenuItem>
+                )}
+                {onReportIssue && (
+                  <DropdownMenuItem onClick={handleReportClick}>
+                    <AlertTriangle className="h-4 w-4 mr-2" />
+                    Report Issue
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </div>
 
       {/* Validation error */}
@@ -163,8 +191,8 @@ export const EditableQueryBar = memo(function EditableQueryBar({
         </div>
       )}
 
-      {/* Editable query input */}
-      <div className="flex items-center gap-2">
+      {/* Editable query input - stacked layout on mobile */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <div className="relative flex-1">
           <Input
             value={editedQuery}
@@ -198,25 +226,25 @@ export const EditableQueryBar = memo(function EditableQueryBar({
           )}
         </div>
 
-        {/* Action buttons */}
-        <div className="flex items-center gap-1">
+        {/* Action buttons - full width row on mobile */}
+        <div className="flex items-center gap-1.5 sm:gap-1">
           <Button
             variant={hasChanges ? 'accent' : 'secondary'}
             size="sm"
             onClick={handleRerun}
             disabled={isLoading || !editedQuery.trim()}
-            className="h-10 px-3 gap-1.5"
+            className="flex-1 sm:flex-none h-10 px-3 gap-1.5"
             title="Re-run query (Enter)"
           >
             <Play className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Re-run</span>
+            <span>Re-run</span>
           </Button>
 
           <Button
             variant="outline"
             size="sm"
             onClick={handleCopy}
-            className="h-10 px-2.5"
+            className="h-10 w-10 sm:w-auto sm:px-2.5 p-0 sm:p-2"
             title="Copy query"
           >
             {copied ? (

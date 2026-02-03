@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '13.0.5';
+    PostgrestVersion: '14.1';
   };
   public: {
     Tables: {
@@ -80,6 +80,36 @@ export type Database = {
         };
         Relationships: [];
       };
+      query_repairs: {
+        Row: {
+          created_at: string | null;
+          id: string;
+          original_query: string;
+          repair_steps: string[];
+          repaired_query: string;
+          scryfall_error: string | null;
+          success: boolean;
+        };
+        Insert: {
+          created_at?: string | null;
+          id?: string;
+          original_query: string;
+          repair_steps?: string[];
+          repaired_query: string;
+          scryfall_error?: string | null;
+          success?: boolean;
+        };
+        Update: {
+          created_at?: string | null;
+          id?: string;
+          original_query?: string;
+          repair_steps?: string[];
+          repaired_query?: string;
+          scryfall_error?: string | null;
+          success?: boolean;
+        };
+        Relationships: [];
+      };
       search_feedback: {
         Row: {
           created_at: string;
@@ -120,6 +150,36 @@ export type Database = {
             referencedColumns: ['id'];
           },
         ];
+      };
+      slot_patterns: {
+        Row: {
+          created_at: string | null;
+          extraction_key: string;
+          id: string;
+          is_active: boolean | null;
+          pattern: string;
+          priority: number | null;
+          slot_type: string;
+        };
+        Insert: {
+          created_at?: string | null;
+          extraction_key: string;
+          id?: string;
+          is_active?: boolean | null;
+          pattern: string;
+          priority?: number | null;
+          slot_type: string;
+        };
+        Update: {
+          created_at?: string | null;
+          extraction_key?: string;
+          id?: string;
+          is_active?: boolean | null;
+          pattern?: string;
+          priority?: number | null;
+          slot_type?: string;
+        };
+        Relationships: [];
       };
       translation_logs: {
         Row: {
@@ -165,33 +225,57 @@ export type Database = {
       };
       translation_rules: {
         Row: {
+          aliases: string[] | null;
+          category: string | null;
+          concept_id: string | null;
           confidence: number | null;
           created_at: string;
           description: string | null;
+          embedding: string | null;
+          examples: string[] | null;
           id: string;
           is_active: boolean;
+          negative_templates: string[] | null;
           pattern: string;
+          priority: number | null;
           scryfall_syntax: string;
+          scryfall_templates: string[] | null;
           source_feedback_id: string | null;
         };
         Insert: {
+          aliases?: string[] | null;
+          category?: string | null;
+          concept_id?: string | null;
           confidence?: number | null;
           created_at?: string;
           description?: string | null;
+          embedding?: string | null;
+          examples?: string[] | null;
           id?: string;
           is_active?: boolean;
+          negative_templates?: string[] | null;
           pattern: string;
+          priority?: number | null;
           scryfall_syntax: string;
+          scryfall_templates?: string[] | null;
           source_feedback_id?: string | null;
         };
         Update: {
+          aliases?: string[] | null;
+          category?: string | null;
+          concept_id?: string | null;
           confidence?: number | null;
           created_at?: string;
           description?: string | null;
+          embedding?: string | null;
+          examples?: string[] | null;
           id?: string;
           is_active?: boolean;
+          negative_templates?: string[] | null;
           pattern?: string;
+          priority?: number | null;
           scryfall_syntax?: string;
+          scryfall_templates?: string[] | null;
           source_feedback_id?: string | null;
         };
         Relationships: [
@@ -210,6 +294,41 @@ export type Database = {
     };
     Functions: {
       cleanup_expired_cache: { Args: never; Returns: undefined };
+      match_concepts: {
+        Args: {
+          match_count?: number;
+          match_threshold?: number;
+          query_embedding: string;
+        };
+        Returns: {
+          category: string;
+          concept_id: string;
+          confidence: number;
+          description: string;
+          id: string;
+          negative_templates: string[];
+          pattern: string;
+          priority: number;
+          scryfall_syntax: string;
+          scryfall_templates: string[];
+          similarity: number;
+        }[];
+      };
+      match_concepts_by_alias: {
+        Args: { match_count?: number; search_term: string };
+        Returns: {
+          category: string;
+          concept_id: string;
+          confidence: number;
+          description: string;
+          id: string;
+          negative_templates: string[];
+          pattern: string;
+          priority: number;
+          scryfall_syntax: string;
+          scryfall_templates: string[];
+        }[];
+      };
     };
     Enums: {
       [_ in never]: never;

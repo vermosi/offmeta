@@ -42,7 +42,7 @@ describe('Edge Functions Shared Utils', () => {
       const req = new Request('http://localhost', {
         headers: { Authorization: 'Bearer secret-key' },
       });
-      expect(validateAuth(req)).toEqual({ authorized: true });
+      expect(validateAuth(req)).toEqual({ authorized: true, role: 'service' });
     });
 
     it('validates api secret', () => {
@@ -52,7 +52,7 @@ describe('Edge Functions Shared Utils', () => {
       const req = new Request('http://localhost', {
         headers: { Authorization: 'Bearer api-key' },
       });
-      expect(validateAuth(req)).toEqual({ authorized: true });
+      expect(validateAuth(req)).toEqual({ authorized: true, role: 'api' });
     });
 
     it('rejects invalid key', () => {

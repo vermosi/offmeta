@@ -1,7 +1,3 @@
-/**
- * Shared rate limiting utility for Supabase Edge Functions
- */
-
 import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 interface RateLimitEntry {
@@ -10,8 +6,42 @@ interface RateLimitEntry {
 }
 
 const rateLimiter = new Map<string, RateLimitEntry>();
+const sessionLimiter = new Map<string, RateLimitEntry>();
 let globalRequestCount = 0;
 let globalResetTime = Date.now() + 60000;
+
+// Session rate limiting: stricter limits per session to prevent abuse loops
+const SESSION_LIMIT = 20; // 20 requests per minute per session
+const SESSION_WINDOW_MS = 60000;
+
+/**
+ * Check session-level rate limit
+ */
+export function checkSessionRateLimit(
+  sessionId: string | null,
+  windowMs: number = SESSION_WINDOW_MS,
+  limit: number = SESSION_LIMIT,
+): { allowed: boolean; retryAfter?: number } {
+  if (!sessionId) return { allowed: true };
+
+  const now = Date.now();
+  const entry = sessionLimiter.get(sessionId);
+
+  if (!entry || now > entry.resetTime) {
+    sessionLimiter.set(sessionId, { count: 1, resetTime: now + windowMs });
+    return { allowed: true };
+  }
+
+  if (entry.count >= limit) {
+    return {
+      allowed: false,
+      retryAfter: Math.ceil((entry.resetTime - now) / 1000),
+    };
+  }
+
+  entry.count++;
+  return { allowed: true };
+}
 
 /**
  * Checks rate limits. Defaults to in-memory, upgrades to distributed if Supabase client is provided.
@@ -139,8 +169,16 @@ const cleanupInterval = setInterval(() => {
       rateLimiter.delete(ip);
     }
   }
+  // Also clean up session limiter
+  for (const [sessionId, entry] of sessionLimiter.entries()) {
+    if (now > entry.resetTime) {
+      sessionLimiter.delete(sessionId);
+    }
+  }
 }, 60000);
 
 export function cleanupRateLimiter() {
   clearInterval(cleanupInterval);
+  rateLimiter.clear();
+  sessionLimiter.clear();
 }

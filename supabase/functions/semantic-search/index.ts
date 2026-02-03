@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { buildDeterministicIntent } from './deterministic.ts';
 import { buildSystemPrompt, type QueryTier } from './prompts.ts';
-import { checkRateLimit } from '../_shared/rateLimit.ts';
+import { checkRateLimit, checkSessionRateLimit } from '../_shared/rateLimit.ts';
 import { getCorsHeaders, validateAuth } from '../_shared/auth.ts';
 import { LOVABLE_API_KEY, supabase } from './client.ts';
 import {
@@ -25,9 +25,16 @@ import {
   detectQualityFlags,
   applyAutoCorrections,
   runValidationTables,
+  sanitizeInputQuery,
 } from './validation.ts';
 import { buildFallbackQuery, applyFiltersToQuery } from './fallback.ts';
 import { logTranslation, createLogger } from './logging.ts';
+import { runPipeline, type PipelineContext } from './pipeline/index.ts';
+import {
+  validateAIResponse,
+  extractAIContent,
+  parseAIContent,
+} from './schemas.ts';
 
 // Run self-checks on startup if enabled
 if (Deno.env.get('RUN_QUERY_VALIDATION_CHECKS') === 'true') {
@@ -39,6 +46,8 @@ interface DebugOptions {
   forceFallback?: boolean;
   simulateAiFailure?: boolean;
   overlyBroadThreshold?: number;
+  usePipeline?: boolean; // Enable new pipeline
+  validateScryfall?: boolean;
 }
 
 interface RequestFilters {
@@ -99,13 +108,15 @@ serve(async (req) => {
     return errorResponse(authResult.error || 'Unauthorized', 401, jsonHeaders);
   }
 
-  // Rate limiting check
+  // Rate limiting check - both IP and session-based
   const clientIP =
     req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     req.headers.get('x-real-ip') ||
     'unknown';
-  const rateCheck = await checkRateLimit(clientIP, supabase);
+  const sessionId = req.headers.get('x-session-id');
 
+  // Check IP-based rate limit
+  const rateCheck = await checkRateLimit(clientIP, supabase);
   if (!rateCheck.allowed) {
     logWarn('rate_limit_exceeded', {
       ip: clientIP.substring(0, 20),
@@ -123,6 +134,31 @@ serve(async (req) => {
         headers: {
           ...jsonHeaders,
           'Retry-After': String(rateCheck.retryAfter),
+        },
+      },
+    );
+  }
+
+  // Check session-based rate limit (stricter - 20/min per session)
+  const sessionCheck = checkSessionRateLimit(sessionId);
+  if (!sessionCheck.allowed) {
+    logWarn('session_rate_limit_exceeded', {
+      sessionId: sessionId?.substring(0, 20),
+      retryAfter: sessionCheck.retryAfter,
+    });
+
+    return new Response(
+      JSON.stringify({
+        error:
+          'Session rate limit exceeded. Please wait before searching again.',
+        retryAfter: sessionCheck.retryAfter,
+        success: false,
+      }),
+      {
+        status: 429,
+        headers: {
+          ...jsonHeaders,
+          'Retry-After': String(sessionCheck.retryAfter),
         },
       },
     );
@@ -157,6 +193,20 @@ serve(async (req) => {
     if (query.length > 500) {
       return errorResponse(
         'Query too long (max 500 characters)',
+        400,
+        jsonHeaders,
+      );
+    }
+
+    // 1.5 Input Sanitization - Reject malformed/spam queries early
+    const sanitizationResult = sanitizeInputQuery(query);
+    if (!sanitizationResult.valid) {
+      logWarn('input_sanitization_rejected', {
+        query: query.substring(0, 50),
+        reason: sanitizationResult.reason,
+      });
+      return errorResponse(
+        sanitizationResult.reason || 'Invalid query format',
         400,
         jsonHeaders,
       );
@@ -231,6 +281,56 @@ serve(async (req) => {
           success: true,
           fallback: true,
           source: 'forced_fallback',
+        }),
+        { headers: jsonHeaders },
+      );
+    }
+
+    // 2.5. New Pipeline Mode (opt-in via debug flag)
+    const usePipeline = Boolean(debugOptions.usePipeline);
+    if (usePipeline) {
+      const pipelineContext: PipelineContext = {
+        requestId,
+        startTime: requestStartTime,
+        options: {
+          useCache,
+          cacheSalt,
+          validateWithScryfall: Boolean(debugOptions.validateScryfall),
+          overlyBroadThreshold,
+          debug: true,
+        },
+        filters: filters as RequestFilters,
+      };
+
+      const pipelineResult = await runPipeline(query, pipelineContext);
+
+      // Cache successful results
+      if (useCache && pipelineResult.explanation.confidence >= 0.8) {
+        const cachePayload = {
+          scryfallQuery: pipelineResult.finalQuery,
+          explanation: pipelineResult.explanation,
+          showAffiliate: true,
+        };
+        setCachedResult(query, filters, cachePayload, cacheSalt);
+        setPersistentCache(query, filters, cachePayload, cacheSalt);
+      }
+
+      return new Response(
+        JSON.stringify({
+          originalQuery: query,
+          scryfallQuery: pipelineResult.finalQuery,
+          explanation: pipelineResult.explanation,
+          intent: pipelineResult.intent,
+          slots: pipelineResult.slots,
+          concepts: pipelineResult.concepts.map((c) => ({
+            id: c.conceptId,
+            confidence: c.confidence,
+            category: c.category,
+          })),
+          responseTimeMs: pipelineResult.responseTimeMs,
+          success: true,
+          source: pipelineResult.source,
+          debug: pipelineResult.debug,
         }),
         { headers: jsonHeaders },
       );
@@ -361,7 +461,7 @@ serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'google/gemini-2.0-flash-exp', // Use latest Gemini
+            model: 'google/gemini-3-flash-preview', // Next-gen Gemini for improved accuracy
             messages: [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: userMessage },
@@ -375,27 +475,17 @@ serve(async (req) => {
         throw new Error(`AI Gateway error: ${aiResponse.status}`);
 
       const aiData = await aiResponse.json();
-      const rawContent = aiData.choices[0].message.content;
+
+      // Validate AI response structure
+      const validatedResponse = validateAIResponse(aiData);
+      const rawContent = extractAIContent(validatedResponse);
 
       // Parse AI response (expecting JSON-like block or raw scryfall)
-      let scryfallQuery = rawContent.trim();
-      let explanationText = `Translated: ${query}`;
-      let confidence = 0.7;
-
-      // Extract from markdown if needed
-      if (scryfallQuery.includes('```')) {
-        const match = scryfallQuery.match(/```(?:json)?\s*([\s\S]*?)```/);
-        if (match) {
-          try {
-            const parsed = JSON.parse(match[1]);
-            scryfallQuery = parsed.scryfallQuery || scryfallQuery;
-            explanationText = parsed.explanation || explanationText;
-            confidence = parsed.confidence || confidence;
-          } catch {
-            scryfallQuery = match[1].trim();
-          }
-        }
-      }
+      const parsedContent = parseAIContent(rawContent);
+      const scryfallQuery = parsedContent.scryfallQuery;
+      const explanationText =
+        parsedContent.explanation || `Translated: ${query}`;
+      const confidence = parsedContent.confidence || 0.7;
 
       // 8. Post-Processing & Validation
       const qualityFlags = detectQualityFlags(scryfallQuery);
@@ -466,8 +556,8 @@ serve(async (req) => {
         { headers: jsonHeaders },
       );
     }
-  } catch (e) {
-    console.error('Unhandled Search Error:', e);
+  } catch {
+    // Errors are logged via structured logging in individual handlers
     return new Response(
       JSON.stringify({ error: 'Internal search error', success: false }),
       { status: 500, headers: jsonHeaders },

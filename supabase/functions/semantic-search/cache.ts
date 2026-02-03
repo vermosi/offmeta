@@ -49,18 +49,44 @@ export async function getCachedResult(
   const hash = await hashCacheKey(key);
   const cached = queryCache.get(key);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    // Log memory cache hit
     logCacheEvent('memory_cache_hit', query, hash, null);
-    console.log(
-      JSON.stringify({ event: 'memory_cache_hit', hash: hash.substring(0, 8) }),
-    );
     return cached.result;
   }
   return null;
 }
 
+// Deduplication for cache events (only log once per query per minute)
+const recentCacheLogEvents = new Map<string, number>();
+const CACHE_LOG_DEDUP_WINDOW_MS = 60000;
+
+/**
+ * Check if we should log a cache event (deduplication)
+ */
+function shouldLogCacheEvent(hash: string, eventType: string): boolean {
+  const key = `${eventType}:${hash}`;
+  const now = Date.now();
+  const lastLogged = recentCacheLogEvents.get(key);
+
+  if (lastLogged && now - lastLogged < CACHE_LOG_DEDUP_WINDOW_MS) {
+    return false;
+  }
+
+  recentCacheLogEvents.set(key, now);
+
+  // Cleanup old entries periodically
+  if (recentCacheLogEvents.size > 200) {
+    const cutoff = now - CACHE_LOG_DEDUP_WINDOW_MS;
+    for (const [k, time] of recentCacheLogEvents.entries()) {
+      if (time < cutoff) recentCacheLogEvents.delete(k);
+    }
+  }
+
+  return true;
+}
+
 /**
  * Log cache events to analytics_events table for performance tracking.
+ * Includes deduplication to prevent event spam.
  */
 export function logCacheEvent(
   eventType: 'cache_hit' | 'cache_miss' | 'cache_set' | 'memory_cache_hit',
@@ -68,6 +94,11 @@ export function logCacheEvent(
   hash: string,
   hitCount: number | null,
 ): void {
+  // Skip duplicate cache events within the dedup window
+  if (!shouldLogCacheEvent(hash, eventType)) {
+    return;
+  }
+
   // Fire and forget - don't block on analytics
   (async () => {
     try {
@@ -144,20 +175,10 @@ export async function getPersistentCache(
     // Populate in-memory cache too
     queryCache.set(key, { result, timestamp: Date.now() });
 
-    // Log cache hit for analytics
     logCacheEvent('cache_hit', query, hash, newHitCount);
-
-    console.log(
-      JSON.stringify({
-        event: 'persistent_cache_hit',
-        hash: hash.substring(0, 8),
-        hitCount: newHitCount,
-      }),
-    );
-
     return result;
-  } catch (e) {
-    console.error('Persistent cache read error:', e);
+  } catch {
+    // Cache read errors should not affect the main flow
     return null;
   }
 }
@@ -194,18 +215,9 @@ export async function setPersistentCache(
       },
     );
 
-    // Log cache set for analytics
     logCacheEvent('cache_set', query, hash, null);
-
-    console.log(
-      JSON.stringify({
-        event: 'persistent_cache_set',
-        hash: hash.substring(0, 8),
-        confidence: result.explanation.confidence,
-      }),
-    );
-  } catch (e) {
-    console.error('Persistent cache write error:', e);
+  } catch {
+    // Silently fail - cache write errors should not affect the main flow
   }
 }
 
