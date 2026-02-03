@@ -1,6 +1,6 @@
 import { useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/core/logger';
 
 const NotFound = () => {
   const location = useLocation();

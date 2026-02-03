@@ -23,7 +23,7 @@ import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/useMobile';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
 import {
@@ -128,7 +128,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
       url: string,
       price?: string,
     ) => {
-      const affiliateBase = import.meta.env.NEXT_PUBLIC_TCGPLAYER_IMPACT_BASE;
+      const affiliateBase = import.meta.env.VITE_TCGPLAYER_IMPACT_BASE;
       const isAffiliateLink =
         marketplace.includes('tcgplayer') && !!affiliateBase;
 

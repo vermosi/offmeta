@@ -166,24 +166,42 @@ export async function checkRateLimit(
   }
 }
 
-// Clean up old in-memory rate limit entries periodically
-const cleanupInterval = setInterval(() => {
+/**
+ * Cleanup expired entries on access (serverless-safe alternative to setInterval).
+ * Call this periodically or before rate limit checks.
+ */
+function cleanupExpiredEntries(): void {
   const now = Date.now();
   for (const [ip, entry] of rateLimiter.entries()) {
     if (now > entry.resetTime) {
       rateLimiter.delete(ip);
     }
   }
-  // Also clean up session limiter
   for (const [sessionId, entry] of sessionLimiter.entries()) {
     if (now > entry.resetTime) {
       sessionLimiter.delete(sessionId);
     }
   }
-}, 60000);
+}
 
-export function cleanupRateLimiter() {
-  clearInterval(cleanupInterval);
+// Cleanup counter - run cleanup every N accesses to avoid overhead on every call
+let cleanupCounter = 0;
+const CLEANUP_INTERVAL = 100; // Run cleanup every 100 accesses
+
+/**
+ * Trigger cleanup if enough accesses have occurred.
+ * This is serverless-safe as it doesn't rely on setInterval.
+ */
+export function maybeCleanup(): void {
+  cleanupCounter++;
+  if (cleanupCounter >= CLEANUP_INTERVAL) {
+    cleanupCounter = 0;
+    cleanupExpiredEntries();
+  }
+}
+
+export function cleanupRateLimiter(): void {
   rateLimiter.clear();
   sessionLimiter.clear();
+  cleanupCounter = 0;
 }

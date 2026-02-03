@@ -26,14 +26,17 @@ interface QueuedRequest {
   url: string;
   resolve: (response: Response) => void;
   reject: (error: Error) => void;
+  timestamp: number; // Added for timeout tracking
 }
 
 const requestQueue: QueuedRequest[] = [];
 let isProcessingQueue = false;
 const MAX_QUEUE_SIZE = 50;
+const QUEUE_ITEM_TIMEOUT_MS = 30000; // 30 second timeout for queued items
 
 /**
  * Process the request queue sequentially with rate limiting.
+ * Automatically cleans up timed-out requests.
  */
 async function processQueue(): Promise<void> {
   if (isProcessingQueue || requestQueue.length === 0) return;
@@ -43,6 +46,12 @@ async function processQueue(): Promise<void> {
   while (requestQueue.length > 0) {
     const request = requestQueue.shift();
     if (!request) break;
+
+    // Check if request has timed out while waiting in queue
+    if (Date.now() - request.timestamp > QUEUE_ITEM_TIMEOUT_MS) {
+      request.reject(new Error('Request timed out while waiting in queue'));
+      continue;
+    }
 
     try {
       const now = Date.now();
@@ -70,13 +79,20 @@ async function processQueue(): Promise<void> {
  * @returns The fetch Response
  */
 async function rateLimitedFetch(url: string): Promise<Response> {
-  // If queue is getting too long, reject immediately
+  // Clean up any stale timed-out requests before checking size
+  const now = Date.now();
+  while (requestQueue.length > 0 && now - requestQueue[0].timestamp > QUEUE_ITEM_TIMEOUT_MS) {
+    const stale = requestQueue.shift();
+    stale?.reject(new Error('Request timed out while waiting in queue'));
+  }
+
+  // If queue is still too long, reject immediately
   if (requestQueue.length >= MAX_QUEUE_SIZE) {
     throw new Error('Too many pending requests. Please try again.');
   }
 
   return new Promise((resolve, reject) => {
-    requestQueue.push({ url, resolve, reject });
+    requestQueue.push({ url, resolve, reject, timestamp: Date.now() });
     processQueue();
   });
 }

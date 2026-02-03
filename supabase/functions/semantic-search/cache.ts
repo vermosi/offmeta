@@ -240,17 +240,35 @@ export function setCachedResult(
   setPersistentCache(query, filters, result, cacheSalt).catch(() => {});
 }
 
-// Clean up expired in-memory cache entries periodically
-const cleanupInterval = setInterval(() => {
+/**
+ * Cleanup expired entries on access (serverless-safe alternative to setInterval).
+ */
+function cleanupExpiredCacheEntries(): void {
   const now = Date.now();
   for (const [key, entry] of queryCache.entries()) {
     if (now - entry.timestamp > CACHE_TTL) {
       queryCache.delete(key);
     }
   }
-}, 60000);
+}
 
-export function cleanupCache() {
-  clearInterval(cleanupInterval);
+// Cleanup counter - run cleanup every N accesses to avoid overhead on every call
+let cacheCleanupCounter = 0;
+const CACHE_CLEANUP_INTERVAL = 50; // Run cleanup every 50 accesses
+
+/**
+ * Trigger cleanup if enough accesses have occurred.
+ * This is serverless-safe as it doesn't rely on setInterval.
+ */
+export function maybeCacheCleanup(): void {
+  cacheCleanupCounter++;
+  if (cacheCleanupCounter >= CACHE_CLEANUP_INTERVAL) {
+    cacheCleanupCounter = 0;
+    cleanupExpiredCacheEntries();
+  }
+}
+
+export function cleanupCache(): void {
   queryCache.clear();
+  cacheCleanupCounter = 0;
 }

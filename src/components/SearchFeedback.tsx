@@ -13,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { MessageSquarePlus, Loader2 } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/core/logger';
 import { z } from 'zod';
 
 interface SearchFeedbackProps {
