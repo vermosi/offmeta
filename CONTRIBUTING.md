@@ -66,7 +66,8 @@ This repo uses Husky + lint-staged. After `npm install`, hooks will run automati
 - Add unit tests in `src/**/*.test.ts`.
 - Favor table-driven tests for query translation.
 - Add regression tests for any bug fix.
-- Extend the deterministic golden tests in `src/lib/search/deterministic.test.ts` when changing translation logic.
+- Extend the golden tests in `src/lib/translation-golden.test.ts` when changing translation logic.
+- Security-related changes should include tests in `src/lib/security/`.
 
 ## Commit convention
 

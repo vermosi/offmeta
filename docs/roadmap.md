@@ -3,12 +3,13 @@
 ## Completed
 
 - Expanded deterministic translation with 30+ keyword patterns (ETB, LTB, myriad, blitz, connive, offspring, backup, goad)
-- Added regression test suite with 68+ tests across 6 categories
+- Added comprehensive security testing suite (300+ tests) covering injection, CORS, ReDoS, prototype pollution, timing attacks
+- Added regression test suite with 70+ tests across caching, virtualization, and analytics
 - Implemented virtualization for large result sets (50+ cards)
 - Added session-level rate limiting and spam prevention
 - Built query deduplication and duplicate parameter sanitization
 - Created comprehensive Scryfall syntax validation
-- Reorganized codebase into domain folders (`core/`, `scryfall/`, `search/`, `pwa/`)
+- Reorganized codebase into domain folders (`core/`, `scryfall/`, `search/`, `security/`, `pwa/`)
 - Removed 16 unused UI components (~75KB bundle reduction)
 - Added error monitoring placeholders (Sentry-ready)
 

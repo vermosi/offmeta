@@ -33,15 +33,18 @@ src/
 │   ├── core/            # Environment, logging, utils, monitoring
 │   ├── scryfall/        # Scryfall API client and query validation
 │   ├── search/          # Server-side filter construction
-│   ├── pwa/             # Service worker registration
-│   └── regression/      # Test suites
+│   ├── security/        # Security utilities and test infrastructure
+│   ├── regression/      # Regression test suites
+│   └── pwa/             # Service worker registration
 ├── pages/               # Route pages
 └── integrations/        # Supabase client (auto-generated)
 
 supabase/
 └── functions/
+    ├── _shared/         # Shared utilities (auth, rate limiting)
     └── semantic-search/ # Query translation pipeline
         ├── pipeline/    # Normalize → Classify → Slots → Concepts → Assemble
+        ├── mappings/    # Keyword and archetype mappings
         ├── deterministic.ts
         ├── validation.ts
         └── ...
@@ -49,13 +52,14 @@ supabase/
 
 ## Key modules
 
-| Module          | Location                              | Purpose                                |
-| --------------- | ------------------------------------- | -------------------------------------- |
-| UI Components   | `src/components/`                     | Search bar, card grid, modals          |
-| Scryfall Client | `src/lib/scryfall/`                   | API calls, query validation, printings |
-| Core Utilities  | `src/lib/core/`                       | Environment, logging, monitoring       |
-| Search Pipeline | `supabase/functions/semantic-search/` | NL → Scryfall translation              |
-| Supabase Client | `src/integrations/supabase/client.ts` | Auto-generated DB client               |
+| Module           | Location                              | Purpose                                |
+| ---------------- | ------------------------------------- | -------------------------------------- |
+| UI Components    | `src/components/`                     | Search bar, card grid, modals          |
+| Scryfall Client  | `src/lib/scryfall/`                   | API calls, query validation, printings |
+| Core Utilities   | `src/lib/core/`                       | Environment, logging, monitoring       |
+| Security Suite   | `src/lib/security/`                   | Security utilities, test helpers       |
+| Search Pipeline  | `supabase/functions/semantic-search/` | NL → Scryfall translation              |
+| Supabase Client  | `src/integrations/supabase/client.ts` | Auto-generated DB client               |
 
 ## Data stores
 
