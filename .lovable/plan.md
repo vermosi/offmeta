@@ -1,86 +1,212 @@
-# OffMeta Code Review - Implementation Complete
 
-## Executive Summary
+# Security Testing Suite Plan
 
-OffMeta is a well-architected Magic: The Gathering card search application that translates natural language queries into Scryfall syntax. The codebase demonstrates solid engineering practices with clear separation of concerns, comprehensive error handling, and thoughtful performance optimizations.
+## Overview
 
-**Overall Grade: A-** (Previous: B+)
-
----
-
-## Implemented Fixes (2026-02-03)
-
-### High Priority ✅
-
-1. **Fixed serverless interval cleanup** (`rateLimit.ts`, `cache.ts`)
-   - Replaced `setInterval` with access-time based cleanup
-   - Added `maybeCleanup()` and `maybeCacheCleanup()` functions that run periodically based on access count
-   - Serverless-safe: no background intervals to leak
-
-2. **Updated deprecated imports** (9 files)
-   - `@/hooks/use-mobile` → `@/hooks/useMobile`
-   - `@/lib/logger` → `@/lib/core/logger`
-   - `@/lib/utils` → `@/lib/core/utils`
-   - Files updated: UnifiedSearchBar, CardModal, sidebar.tsx, NotFound, useVoiceInput, ErrorBoundary, useAnalytics, SearchFeedback, ReportIssueDialog
-
-3. **Fixed request queue memory growth** (`scryfall/client.ts`)
-   - Added `timestamp` tracking to queued requests
-   - Implemented 30-second timeout for queued items
-   - Auto-cleanup of stale requests before processing
-
-### Medium Priority ✅
-
-4. **Added request abort cleanup** (`UnifiedSearchBar.tsx`)
-   - Added `useEffect` cleanup to abort pending requests on unmount
-
-5. **Fixed affiliate env var prefix** (`CardModal.tsx`)
-   - Changed `NEXT_PUBLIC_TCGPLAYER_IMPACT_BASE` → `VITE_TCGPLAYER_IMPACT_BASE`
+This plan creates a comprehensive security testing suite to protect OffMeta from abuse. The suite will test rate limiting, input validation, authentication, injection prevention, and denial-of-service protections across both frontend and backend.
 
 ---
 
-## Remaining Technical Debt (Low Priority)
+## Current State Analysis
 
-| Item | Priority | Effort | Status |
-|------|----------|--------|--------|
-| Split deterministic.ts | Low | Medium | ✅ Done |
-| Remove deprecated re-export files | Low | Low | Pending |
-| Production monitoring integration | Low | Low | Pending |
-| Consolidate cache key logic | Medium | Low | Future |
+### Existing Security Measures
+- **Rate limiting**: IP-based (30/min), session-based (20/min), global (1000/min)
+- **Input sanitization**: Query length limits (500 chars), spam detection, parameter limits
+- **Authentication**: JWT validation, API key verification
+- **Circuit breaker**: AI gateway protection with 5-failure threshold
+- **CORS**: Origin-restricted headers
+- **Error sanitization**: Path stripping from error messages
+
+### Existing Test Coverage
+- `abuse-prevention.test.ts` - Basic retry loop prevention (12 tests)
+- `rate-limiting.test.ts` - Session rate limiting logic (7 tests)
+- `edge-validation.test.ts` - Spam prevention, syntax validation (15 tests)
+
+### Gaps Identified
+1. No comprehensive injection testing (SQL, XSS, command)
+2. No authentication bypass testing
+3. No edge function endpoint abuse testing
+4. No concurrent request handling tests
+5. No payload size attack testing
 
 ---
 
-## Architecture Overview
+## New Test Files Structure
 
 ```text
-┌─────────────────────────────────────────────────────────────────┐
-│                         Frontend (React)                        │
-├─────────────────────────────────────────────────────────────────┤
-│  Index.tsx ─> UnifiedSearchBar ─> semantic-search Edge Function │
-│       │              │                      │                   │
-│       ▼              ▼                      ▼                   │
-│  VirtualizedGrid  Client Cache      Translation Pipeline        │
-│  (50+ cards)     (30min TTL)     ┌─────────────────────┐        │
-│       │                          │ 1. Normalize        │        │
-│       ▼                          │ 2. Classify         │        │
-│  CardModal                       │ 3. Extract Slots    │        │
-│  (7 sub-components)              │ 4. Match Concepts   │        │
-│                                  │ 5. Assemble Query   │        │
-│                                  │ 6. Validate/Repair  │        │
-│                                  └─────────────────────┘        │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      Scryfall API                               │
-│  Rate-limited client with queue, retry, timeout, and cleanup   │
-└─────────────────────────────────────────────────────────────────┘
+src/lib/security/
+├── index.ts                     # Exports all security utilities
+├── injection.test.ts            # Injection attack prevention tests
+├── authentication.test.ts       # Auth bypass and token tests
+├── rate-limiting.test.ts        # Enhanced rate limit tests
+├── payload-attacks.test.ts      # Oversized/malformed payload tests
+├── concurrent-abuse.test.ts     # Concurrent request abuse tests
+└── input-sanitization.test.ts   # Comprehensive input validation tests
 ```
 
 ---
 
-## Test Coverage
+## Test Categories & Coverage
 
-- 601+ frontend tests including 41 snapshot tests
-- 138 golden tests for query translation validation
-- Benchmark suite with warmup, retry logic, and realistic thresholds
-- Table-driven validation tests for edge cases
+### 1. Injection Attack Prevention (`injection.test.ts`)
+Tests for SQL, NoSQL, XSS, and command injection attempts:
+
+| Test Case | Attack Vector | Expected Result |
+|-----------|--------------|-----------------|
+| SQL injection in query | `'; DROP TABLE users; --` | Rejected/sanitized |
+| NoSQL injection | `{$gt: ""}` | Rejected |
+| XSS in query | `<script>alert(1)</script>` | HTML stripped |
+| XSS in feedback | `<img onerror=alert(1)>` | Sanitized |
+| Unicode bypass | `%00%27` | Normalized |
+| Template injection | `{{constructor.constructor}}` | Safe |
+
+### 2. Authentication Testing (`authentication.test.ts`)
+Tests for auth bypass and token manipulation:
+
+| Test Case | Attack Vector | Expected Result |
+|-----------|--------------|-----------------|
+| Missing auth header | No header | 401 response |
+| Invalid JWT format | `Bearer abc.def` | 401 response |
+| Expired token | Past exp claim | 401 response |
+| Modified payload | Altered role claim | 401 response |
+| Replay old token | Reused valid token | Depends on exp |
+
+### 3. Rate Limiting (`rate-limiting.test.ts`)
+Enhanced tests for rate limit bypasses:
+
+| Test Case | Attack Vector | Expected Result |
+|-----------|--------------|-----------------|
+| IP header spoofing | X-Forwarded-For manipulation | First IP used |
+| Session rotation | New session per request | IP limit applies |
+| Burst attacks | 100 requests in 1 second | Limited after threshold |
+| Distributed IPs | Round-robin IPs | Global limit applies |
+| Reset timing | Wait and retry | Resets correctly |
+
+### 4. Payload Attacks (`payload-attacks.test.ts`)
+Tests for malformed and oversized payloads:
+
+| Test Case | Attack Vector | Expected Result |
+|-----------|--------------|-----------------|
+| Oversized query | 10KB query string | Rejected (>500 chars) |
+| Nested JSON bomb | Deeply nested object | Rejected |
+| Circular references | Recursive structure | Error handled |
+| Invalid UTF-8 | Malformed bytes | Rejected |
+| Empty body | No JSON | 400 response |
+| Array instead of object | `[]` as body | 400 response |
+
+### 5. Concurrent Abuse (`concurrent-abuse.test.ts`)
+Tests for race conditions and parallel abuse:
+
+| Test Case | Attack Vector | Expected Result |
+|-----------|--------------|-----------------|
+| Parallel rate limit bypass | 50 simultaneous requests | All counted |
+| Cache stampede | Same query 100x | Cache works |
+| Session exhaustion | Create 1000 sessions | Memory bounded |
+| Request queue overflow | Exceed queue size | Rejected (50+) |
+
+### 6. Input Sanitization (`input-sanitization.test.ts`)
+Comprehensive validation tests:
+
+| Test Case | Attack Vector | Expected Result |
+|-----------|--------------|-----------------|
+| Repetitive chars | `aaaaaaaaaa...` | Rejected as spam |
+| Operator spam | `t:t:t:t:t:` | Malformed error |
+| Special char flood | `$%^&*()@#!!` | Rejected |
+| Zero-width chars | `t:\u200B:creature` | Stripped |
+| Control characters | `t:creature\x00` | Stripped |
+| Unicode normalization | `ｔ：ｃｒｅａｔｕｒｅ` | Normalized |
+
+---
+
+## Implementation Details
+
+### File 1: `src/lib/security/index.ts`
+Central exports for security testing utilities and constants.
+
+### File 2: `src/lib/security/injection.test.ts`
+~25 tests covering injection prevention patterns.
+
+### File 3: `src/lib/security/authentication.test.ts`
+~15 tests for authentication boundary conditions.
+
+### File 4: `src/lib/security/rate-limiting.test.ts`
+~20 tests for rate limit edge cases.
+
+### File 5: `src/lib/security/payload-attacks.test.ts`
+~15 tests for malformed payload handling.
+
+### File 6: `src/lib/security/concurrent-abuse.test.ts`
+~10 tests for parallel request abuse.
+
+### File 7: `src/lib/security/input-sanitization.test.ts`
+~30 tests for comprehensive input validation.
+
+### Update: `src/lib/regression/index.ts`
+Re-export security tests for CI integration.
+
+---
+
+## Security Test Utilities
+
+Shared helpers to be created:
+
+```typescript
+// Security test builders
+buildMaliciousQuery(type: 'sql' | 'xss' | 'nosql'): string
+buildInvalidToken(type: 'expired' | 'malformed' | 'modified'): string
+buildOversizedPayload(sizeKb: number): object
+simulateConcurrentRequests(count: number, fn: () => Promise): Promise
+
+// Validation assertion helpers
+expectSanitized(input: string, output: string): void
+expectRejected(result: ValidationResult): void
+expectRateLimited(response: MockResponse): void
+```
+
+---
+
+## CI Integration
+
+Tests will run as part of the existing CI pipeline:
+
+```yaml
+# Already configured in .github/workflows/ci.yml
+- name: Test
+  run: npm run test -- --coverage
+```
+
+Coverage thresholds will be enforced for security tests.
+
+---
+
+## Test Count Summary
+
+| Category | New Tests |
+|----------|-----------|
+| Injection Prevention | 25 |
+| Authentication | 15 |
+| Rate Limiting | 20 |
+| Payload Attacks | 15 |
+| Concurrent Abuse | 10 |
+| Input Sanitization | 30 |
+| **Total** | **~115 new tests** |
+
+---
+
+## Success Criteria
+
+1. All 115+ security tests pass
+2. No regressions in existing 600+ tests
+3. Coverage maintained above thresholds
+4. Tests run in under 30 seconds
+5. Clear failure messages for debugging
+
+---
+
+## Technical Notes
+
+- Tests use Vitest (existing framework)
+- Mock functions where edge function calls needed
+- Use existing validation functions from `@/lib/scryfall/query`
+- Tests are unit-level (no network calls)
+- Security utilities extracted for reuse in production code
