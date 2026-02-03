@@ -307,6 +307,7 @@ describe('Security: UTF-8 and Encoding Validation', () => {
   it('rejects control characters', () => {
     function hasControlChars(input: string): boolean {
       // Control characters except tab, newline, carriage return
+      // eslint-disable-next-line no-control-regex
       return /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(input);
     }
 

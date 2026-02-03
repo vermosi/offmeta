@@ -4,7 +4,7 @@
  * @module lib/security/authentication.test
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   buildInvalidToken,
   createMockJWT,
@@ -173,11 +173,12 @@ describe('Security: Token Replay Prevention', () => {
       return false;
     }
 
-    const token = createMockJWT({
+    // Create a token with JWT ID for replay tracking
+    createMockJWT({
       iss: 'supabase',
       role: 'anon',
       exp: now + 3600,
-      jti: 'unique-token-id-123', // JWT ID for replay tracking
+      jti: 'unique-token-id-123',
     });
 
     // First use - not a replay

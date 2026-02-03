@@ -1,7 +1,11 @@
-// deno-lint-ignore-file no-explicit-any
-// Use generic type to avoid version conflicts between different Supabase client imports
+// Minimal type for Supabase client to avoid deep type instantiation
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SupabaseClientLike = {
-  rpc: (fn: string, params: Record<string, unknown>) => PromiseLike<{ data: any; error: any }>;
+  rpc: (fn: string, params: Record<string, unknown>) => PromiseLike<{
+    data: { blocked?: boolean; retry_after?: number } | null;
+    error: unknown;
+  }>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   from: (table: string) => any;
 };
 
