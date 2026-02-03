@@ -8,10 +8,14 @@ Consistent file naming is enforced across the codebase:
 |----------|------------|---------|
 | React components | PascalCase | `CardModal.tsx`, `SearchFilters.tsx` |
 | Hooks | camelCase with `use` prefix | `useSearchQuery.ts`, `useMobile.tsx` |
-| Utilities/lib | kebab-case | `card-printings.ts`, `query-filters.ts` |
+| Utilities/lib | kebab-case (preferred) | `card-printings.ts`, `query-filters.ts` |
 | Types | kebab-case | `card.ts`, `filters.ts` |
 | Tests | `*.test.ts` suffix | `utils.test.ts`, `CardModal.test.tsx` |
 | Snapshot tests | `*.snapshot.test.ts` | `CardModal.snapshot.test.tsx` |
+| UI components (shadcn) | kebab-case | `button.tsx`, `dialog.tsx` |
+| Constants | SCREAMING_SNAKE_CASE (exports) | `SECURITY_LIMITS`, `API_ENDPOINTS` |
+
+**Note:** The `src/lib/` folder uses kebab-case as the preferred convention, but ESLint enforcement is only applied to specific folders to avoid churn in existing files.
 | UI components (shadcn) | kebab-case | `button.tsx`, `dialog.tsx` |
 | Constants | SCREAMING_SNAKE_CASE (exports) | `SECURITY_LIMITS`, `API_ENDPOINTS` |
 
