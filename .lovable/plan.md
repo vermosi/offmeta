@@ -1,212 +1,235 @@
 
-# Security Testing Suite Plan
+
+# Enhanced Security Testing Suite - Phase 2
 
 ## Overview
 
-This plan creates a comprehensive security testing suite to protect OffMeta from abuse. The suite will test rate limiting, input validation, authentication, injection prevention, and denial-of-service protections across both frontend and backend.
+This plan adds the missing security tests and improvements identified in the review. It addresses 6 key gaps: CORS bypass prevention, error information leakage, prototype pollution, ReDoS attacks, config synchronization, and regression integration.
 
 ---
 
-## Current State Analysis
+## Gap Analysis Summary
 
-### Existing Security Measures
-- **Rate limiting**: IP-based (30/min), session-based (20/min), global (1000/min)
-- **Input sanitization**: Query length limits (500 chars), spam detection, parameter limits
-- **Authentication**: JWT validation, API key verification
-- **Circuit breaker**: AI gateway protection with 5-failure threshold
-- **CORS**: Origin-restricted headers
-- **Error sanitization**: Path stripping from error messages
-
-### Existing Test Coverage
-- `abuse-prevention.test.ts` - Basic retry loop prevention (12 tests)
-- `rate-limiting.test.ts` - Session rate limiting logic (7 tests)
-- `edge-validation.test.ts` - Spam prevention, syntax validation (15 tests)
-
-### Gaps Identified
-1. No comprehensive injection testing (SQL, XSS, command)
-2. No authentication bypass testing
-3. No edge function endpoint abuse testing
-4. No concurrent request handling tests
-5. No payload size attack testing
+| Gap | Current State | Risk Level |
+|-----|---------------|------------|
+| CORS Bypass Testing | Basic tests exist in `edge-functions-shared.test.ts` but incomplete | Medium |
+| Error Information Leakage | `sanitizeError` exists but untested | Medium |
+| Prototype Pollution | Not tested | Low (JS engine protections) |
+| ReDoS Attacks | Not tested | Medium |
+| Security Headers Verification | Not tested | Medium |
+| Config Synchronization | Duplicate values in two files | Low (maintenance) |
+| Regression Integration | Security tests not exported | Low (CI coverage) |
 
 ---
 
-## New Test Files Structure
+## Implementation Plan
 
-```text
-src/lib/security/
-├── index.ts                     # Exports all security utilities
-├── injection.test.ts            # Injection attack prevention tests
-├── authentication.test.ts       # Auth bypass and token tests
-├── rate-limiting.test.ts        # Enhanced rate limit tests
-├── payload-attacks.test.ts      # Oversized/malformed payload tests
-├── concurrent-abuse.test.ts     # Concurrent request abuse tests
-└── input-sanitization.test.ts   # Comprehensive input validation tests
-```
+### 1. Create `src/lib/security/cors-bypass.test.ts` (~15 tests)
 
----
+Tests for CORS policy enforcement:
 
-## Test Categories & Coverage
+| Test Case | Description |
+|-----------|-------------|
+| Blocks requests from unknown origins | Origin not in allowlist returns fallback |
+| Echoes allowed origin correctly | Whitelisted origins reflected |
+| Handles null/missing Origin header | Graceful fallback |
+| Handles multiple allowed origins | Comma-separated list works |
+| Security headers present | HSTS, X-Frame-Options, etc. verified |
+| Preflight OPTIONS handled | Correct headers returned |
+| Case-sensitivity in origins | Origins compared correctly |
 
-### 1. Injection Attack Prevention (`injection.test.ts`)
-Tests for SQL, NoSQL, XSS, and command injection attempts:
+### 2. Create `src/lib/security/error-leakage.test.ts` (~12 tests)
 
-| Test Case | Attack Vector | Expected Result |
-|-----------|--------------|-----------------|
-| SQL injection in query | `'; DROP TABLE users; --` | Rejected/sanitized |
-| NoSQL injection | `{$gt: ""}` | Rejected |
-| XSS in query | `<script>alert(1)</script>` | HTML stripped |
-| XSS in feedback | `<img onerror=alert(1)>` | Sanitized |
-| Unicode bypass | `%00%27` | Normalized |
-| Template injection | `{{constructor.constructor}}` | Safe |
+Tests for `sanitizeError` and error response safety:
 
-### 2. Authentication Testing (`authentication.test.ts`)
-Tests for auth bypass and token manipulation:
+| Test Case | Description |
+|-----------|-------------|
+| Removes file paths from errors | `/home/user/app/...` becomes `[PATH]` |
+| Removes stack traces | No line numbers exposed |
+| Handles non-Error objects | Strings, nulls, objects handled |
+| Preserves safe error messages | User-friendly messages retained |
+| Database errors sanitized | Connection strings removed |
+| API key patterns scrubbed | Bearer tokens, keys masked |
+| Nested error causes handled | Error.cause chain cleaned |
 
-| Test Case | Attack Vector | Expected Result |
-|-----------|--------------|-----------------|
-| Missing auth header | No header | 401 response |
-| Invalid JWT format | `Bearer abc.def` | 401 response |
-| Expired token | Past exp claim | 401 response |
-| Modified payload | Altered role claim | 401 response |
-| Replay old token | Reused valid token | Depends on exp |
+### 3. Create `src/lib/security/prototype-pollution.test.ts` (~10 tests)
 
-### 3. Rate Limiting (`rate-limiting.test.ts`)
-Enhanced tests for rate limit bypasses:
+Tests for object pollution prevention:
 
-| Test Case | Attack Vector | Expected Result |
-|-----------|--------------|-----------------|
-| IP header spoofing | X-Forwarded-For manipulation | First IP used |
-| Session rotation | New session per request | IP limit applies |
-| Burst attacks | 100 requests in 1 second | Limited after threshold |
-| Distributed IPs | Round-robin IPs | Global limit applies |
-| Reset timing | Wait and retry | Resets correctly |
+| Test Case | Description |
+|-----------|-------------|
+| Rejects `__proto__` in query params | Filters blocked |
+| Rejects `constructor` manipulation | Pattern detected |
+| Rejects `prototype` access | Pattern detected |
+| Safe object merge operations | JSON.parse doesn't pollute |
+| Handles nested pollution attempts | Deep object safety |
 
-### 4. Payload Attacks (`payload-attacks.test.ts`)
-Tests for malformed and oversized payloads:
+### 4. Create `src/lib/security/redos.test.ts` (~10 tests)
 
-| Test Case | Attack Vector | Expected Result |
-|-----------|--------------|-----------------|
-| Oversized query | 10KB query string | Rejected (>500 chars) |
-| Nested JSON bomb | Deeply nested object | Rejected |
-| Circular references | Recursive structure | Error handled |
-| Invalid UTF-8 | Malformed bytes | Rejected |
-| Empty body | No JSON | 400 response |
-| Array instead of object | `[]` as body | 400 response |
+Tests for Regular Expression Denial of Service:
 
-### 5. Concurrent Abuse (`concurrent-abuse.test.ts`)
-Tests for race conditions and parallel abuse:
+| Test Case | Description |
+|-----------|-------------|
+| Handles catastrophic backtracking patterns | `a{1,100}b{1,100}` variants |
+| Query validation regex performance | Large inputs complete quickly |
+| Timeout protection for regex operations | Long patterns don't hang |
+| Known ReDoS payloads handled | `(a+)+$` style attacks |
 
-| Test Case | Attack Vector | Expected Result |
-|-----------|--------------|-----------------|
-| Parallel rate limit bypass | 50 simultaneous requests | All counted |
-| Cache stampede | Same query 100x | Cache works |
-| Session exhaustion | Create 1000 sessions | Memory bounded |
-| Request queue overflow | Exceed queue size | Rejected (50+) |
+### 5. Create `src/lib/security/timing-attacks.test.ts` (~8 tests)
 
-### 6. Input Sanitization (`input-sanitization.test.ts`)
-Comprehensive validation tests:
+Tests for timing-based vulnerabilities:
 
-| Test Case | Attack Vector | Expected Result |
-|-----------|--------------|-----------------|
-| Repetitive chars | `aaaaaaaaaa...` | Rejected as spam |
-| Operator spam | `t:t:t:t:t:` | Malformed error |
-| Special char flood | `$%^&*()@#!!` | Rejected |
-| Zero-width chars | `t:\u200B:creature` | Stripped |
-| Control characters | `t:creature\x00` | Stripped |
-| Unicode normalization | `ｔ：ｃｒｅａｔｕｒｅ` | Normalized |
+| Test Case | Description |
+|-----------|-------------|
+| API key comparison timing | Constant-time comparison needed |
+| Auth token validation timing | No early exit on partial match |
+| Rate limit bypass via timing | Window edge cases |
 
----
+### 6. Update `src/lib/security/index.ts`
 
-## Implementation Details
+Add new utility functions and sync constants:
 
-### File 1: `src/lib/security/index.ts`
-Central exports for security testing utilities and constants.
+- Import CONFIG from semantic-search edge function path (via alias or direct reference)
+- Add `sanitizeErrorForClient()` helper
+- Add `safeTimingCompare()` for constant-time comparison
+- Add `testRegexPerformance()` helper for ReDoS testing
 
-### File 2: `src/lib/security/injection.test.ts`
-~25 tests covering injection prevention patterns.
+### 7. Update `src/lib/regression/index.ts`
 
-### File 3: `src/lib/security/authentication.test.ts`
-~15 tests for authentication boundary conditions.
-
-### File 4: `src/lib/security/rate-limiting.test.ts`
-~20 tests for rate limit edge cases.
-
-### File 5: `src/lib/security/payload-attacks.test.ts`
-~15 tests for malformed payload handling.
-
-### File 6: `src/lib/security/concurrent-abuse.test.ts`
-~10 tests for parallel request abuse.
-
-### File 7: `src/lib/security/input-sanitization.test.ts`
-~30 tests for comprehensive input validation.
-
-### Update: `src/lib/regression/index.ts`
-Re-export security tests for CI integration.
-
----
-
-## Security Test Utilities
-
-Shared helpers to be created:
+Re-export security test utilities for CI integration:
 
 ```typescript
-// Security test builders
-buildMaliciousQuery(type: 'sql' | 'xss' | 'nosql'): string
-buildInvalidToken(type: 'expired' | 'malformed' | 'modified'): string
-buildOversizedPayload(sizeKb: number): object
-simulateConcurrentRequests(count: number, fn: () => Promise): Promise
+// Add at the end of file
+export * from '@/lib/security';
+```
 
-// Validation assertion helpers
-expectSanitized(input: string, output: string): void
-expectRejected(result: ValidationResult): void
-expectRateLimited(response: MockResponse): void
+### 8. Add Security Constants Sync Check
+
+Create `src/lib/security/config-sync.test.ts` (~5 tests):
+
+- Verify `SECURITY_LIMITS.MAX_QUERY_LENGTH` matches `CONFIG.MAX_INPUT_QUERY_LENGTH`
+- Verify rate limit values match between files
+- Fail if values drift
+
+---
+
+## New Test Count Summary
+
+| File | Tests |
+|------|-------|
+| cors-bypass.test.ts | 15 |
+| error-leakage.test.ts | 12 |
+| prototype-pollution.test.ts | 10 |
+| redos.test.ts | 10 |
+| timing-attacks.test.ts | 8 |
+| config-sync.test.ts | 5 |
+| **Total New** | **~60 tests** |
+
+Combined with existing 183 tests: **~243 total security tests**
+
+---
+
+## Technical Details
+
+### CORS Bypass Testing Strategy
+
+```typescript
+// Test pattern for CORS validation
+describe('CORS Bypass Prevention', () => {
+  it('rejects requests from unknown origins', () => {
+    mockGet.mockReturnValue('https://offmeta.lovable.app');
+    const req = new Request('http://localhost', {
+      headers: { Origin: 'https://evil-site.com' },
+    });
+    const headers = getCorsHeaders(req);
+    
+    // Should NOT reflect evil origin
+    expect(headers['Access-Control-Allow-Origin']).not.toBe('https://evil-site.com');
+  });
+});
+```
+
+### Error Sanitization Testing Strategy
+
+```typescript
+// Import the actual sanitizeError function for testing
+// Since it's private in semantic-search, we'll create a shared version
+
+function sanitizeErrorForClient(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message
+      .replace(/\/[^\s:]+/g, '[PATH]')        // Remove file paths
+      .replace(/Bearer [^\s]+/g, '[TOKEN]')   // Remove auth tokens
+      .replace(/:[0-9]+:[0-9]+/g, '')         // Remove line:col numbers
+      .replace(/at .+\(.+\)/g, '[STACK]');    // Remove stack frames
+  }
+  return 'An error occurred';
+}
+```
+
+### ReDoS Testing Strategy
+
+```typescript
+// Test that regex operations complete within timeout
+it('handles catastrophic backtracking safely', () => {
+  const maliciousInput = 'a'.repeat(100) + 'X';
+  const startTime = performance.now();
+  
+  // Run the validation
+  const result = validateScryfallQuery(maliciousInput);
+  
+  const duration = performance.now() - startTime;
+  // Should complete in under 100ms, not hang
+  expect(duration).toBeLessThan(100);
+});
+```
+
+### Prototype Pollution Testing Strategy
+
+```typescript
+it('rejects __proto__ in query parameters', () => {
+  const maliciousQuery = 't:creature __proto__:polluted';
+  const result = validateScryfallQuery(maliciousQuery);
+  
+  // Should be flagged as unknown key or sanitized
+  expect(result.sanitized).not.toContain('__proto__');
+});
 ```
 
 ---
 
-## CI Integration
+## Files to Create
 
-Tests will run as part of the existing CI pipeline:
+1. `src/lib/security/cors-bypass.test.ts`
+2. `src/lib/security/error-leakage.test.ts`
+3. `src/lib/security/prototype-pollution.test.ts`
+4. `src/lib/security/redos.test.ts`
+5. `src/lib/security/timing-attacks.test.ts`
+6. `src/lib/security/config-sync.test.ts`
 
-```yaml
-# Already configured in .github/workflows/ci.yml
-- name: Test
-  run: npm run test -- --coverage
-```
+## Files to Update
 
-Coverage thresholds will be enforced for security tests.
-
----
-
-## Test Count Summary
-
-| Category | New Tests |
-|----------|-----------|
-| Injection Prevention | 25 |
-| Authentication | 15 |
-| Rate Limiting | 20 |
-| Payload Attacks | 15 |
-| Concurrent Abuse | 10 |
-| Input Sanitization | 30 |
-| **Total** | **~115 new tests** |
+1. `src/lib/security/index.ts` - Add new utilities
+2. `src/lib/regression/index.ts` - Export security utilities
 
 ---
 
 ## Success Criteria
 
-1. All 115+ security tests pass
+1. All ~60 new security tests pass
 2. No regressions in existing 600+ tests
-3. Coverage maintained above thresholds
-4. Tests run in under 30 seconds
-5. Clear failure messages for debugging
+3. Total security test count: ~243
+4. ReDoS tests complete in under 5 seconds total
+5. Config sync test fails if values drift between files
+6. CI pipeline continues to pass
 
 ---
 
-## Technical Notes
+## Testing Approach
 
-- Tests use Vitest (existing framework)
-- Mock functions where edge function calls needed
-- Use existing validation functions from `@/lib/scryfall/query`
-- Tests are unit-level (no network calls)
-- Security utilities extracted for reuse in production code
+All tests are unit-level and mock external dependencies:
+- No actual HTTP calls to edge functions
+- Use Vitest's mocking for Deno globals
+- Performance tests use `performance.now()` for timing
+- Regex tests include timeout protection
+
