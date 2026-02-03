@@ -6,6 +6,9 @@
 import { vi } from 'vitest';
 import type { ScryfallCard } from '@/types/card';
 
+// Re-export security test utilities for CI integration
+export * from '@/lib/security';
+
 /**
  * Build a minimal mock Scryfall card for testing
  */
