@@ -556,14 +556,16 @@ export function containsSQLInjection(input: string): boolean {
  * Sanitize input by removing potentially dangerous characters.
  */
 export function sanitizeInput(input: string): string {
+  // eslint-disable-next-line no-control-regex
+  const nullByteRegex = /\x00/g;
+  // eslint-disable-next-line no-control-regex
+  const controlCharRegex = /[\x01-\x08\x0B\x0C\x0E-\x1F\x7F]/g;
+  const zeroWidthRegex = /[\u200B-\u200D\uFEFF]/g;
+
   return input
-    // Remove null bytes
-    .replace(/\x00/g, '')
-    // Remove control characters except newlines/tabs
-    .replace(/[\x01-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
-    // Remove zero-width characters
-    .replace(/[\u200B-\u200D\uFEFF]/g, '')
-    // Normalize whitespace
+    .replace(nullByteRegex, '')
+    .replace(controlCharRegex, '')
+    .replace(zeroWidthRegex, '')
     .replace(/\s+/g, ' ')
     .trim();
 }

@@ -4,12 +4,8 @@
  * @module lib/security/concurrent-abuse.test
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import {
-  simulateConcurrentRequests,
-  createMockRateLimiter,
-  SECURITY_LIMITS,
-} from './index';
+import { describe, it, expect } from 'vitest';
+import { simulateConcurrentRequests, createMockRateLimiter } from './index';
 
 // ============================================================================
 // Parallel Rate Limit Bypass Prevention Tests
