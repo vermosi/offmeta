@@ -77,7 +77,7 @@ describe('card printings helpers', () => {
       }),
     );
 
-    const { getCardPrintings } = await import('@/lib/card-printings');
+    const { getCardPrintings } = await import('@/lib/scryfall/printings');
     const result = await getCardPrintings('Test Card');
 
     expect(result).toHaveLength(2);
@@ -118,7 +118,7 @@ describe('card printings helpers', () => {
         }),
       );
 
-    const { getCardPrintings } = await import('@/lib/card-printings');
+    const { getCardPrintings } = await import('@/lib/scryfall/printings');
 
     const first = getCardPrintings('Alpha');
     await vi.runAllTimersAsync();
@@ -136,7 +136,7 @@ describe('card printings helpers', () => {
       mockResponse({ object: 'error' }, 404),
     );
 
-    const { getCardPrintings } = await import('@/lib/card-printings');
+    const { getCardPrintings } = await import('@/lib/scryfall/printings');
     const result = await getCardPrintings('Missing Card');
 
     expect(result).toEqual([]);
@@ -146,7 +146,7 @@ describe('card printings helpers', () => {
     vi.useFakeTimers();
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Network error'));
 
-    const { getCardPrintings } = await import('@/lib/card-printings');
+    const { getCardPrintings } = await import('@/lib/scryfall/printings');
     const resultPromise = getCardPrintings('Broken Card');
 
     await vi.runAllTimersAsync();
@@ -165,7 +165,7 @@ describe('purchase URL helpers', () => {
     const originalEnv = process.env.NEXT_PUBLIC_TCGPLAYER_IMPACT_BASE;
     process.env.NEXT_PUBLIC_TCGPLAYER_IMPACT_BASE = 'https://aff.example/?u=';
 
-    const { getTCGPlayerUrl } = await import('@/lib/card-printings');
+    const { getTCGPlayerUrl } = await import('@/lib/scryfall/printings');
     const url = getTCGPlayerUrl(
       buildCard({
         name: 'Sol Ring',
@@ -186,7 +186,7 @@ describe('purchase URL helpers', () => {
 
   it('falls back to search URLs when purchase URIs are missing', async () => {
     const { getCardmarketUrl, getTCGPlayerUrl } =
-      await import('@/lib/card-printings');
+      await import('@/lib/scryfall/printings');
 
     const card = buildCard({ name: 'Black Lotus', purchase_uris: undefined });
 
@@ -199,7 +199,7 @@ describe('purchase URL helpers', () => {
   });
 
   it('uses the cardmarket purchase URI when provided', async () => {
-    const { getCardmarketUrl } = await import('@/lib/card-printings');
+    const { getCardmarketUrl } = await import('@/lib/scryfall/printings');
 
     const card = buildCard({
       name: 'Tundra',

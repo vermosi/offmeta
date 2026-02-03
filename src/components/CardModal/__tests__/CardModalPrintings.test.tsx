@@ -6,7 +6,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/react';
 import { CardModalPrintings } from '../CardModalPrintings';
-import type { CardPrinting } from '@/lib/card-printings';
+import type { CardPrinting } from '@/lib/scryfall/printings';
 
 describe('CardModalPrintings', () => {
   const mockPrintings: CardPrinting[] = [

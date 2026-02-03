@@ -29,7 +29,7 @@ import { HowItWorksSection } from '@/components/HowItWorksSection';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { VirtualizedCardGrid } from '@/components/VirtualizedCardGrid';
-import { searchCards } from '@/lib/scryfall';
+import { searchCards } from '@/lib/scryfall/client';
 import type { ScryfallCard } from '@/types/card';
 import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';

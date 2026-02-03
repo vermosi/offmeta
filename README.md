@@ -1,26 +1,40 @@
 # OffMeta
 
-[![Live Demo](https://img.shields.io/badge/Demo-offmeta.app-22c55e?style=for-the-badge)](https://offmeta.app)
-[![GitHub](https://img.shields.io/badge/GitHub-Source-181717?style=for-the-badge&logo=github)](https://github.com/vermosi/offmeta)
+[![CI](https://github.com/vermosi/offmeta/actions/workflows/ci.yml/badge.svg)](https://github.com/vermosi/offmeta/actions/workflows/ci.yml)
+[![Live Demo](https://img.shields.io/badge/Demo-offmeta.lovable.app-22c55e?style=flat-square)](https://offmeta.lovable.app)
+[![License](https://img.shields.io/github/license/vermosi/offmeta?style=flat-square)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/vermosi/offmeta?style=social)](https://github.com/vermosi/offmeta)
 
-[![AGPL License](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
-[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Built with Lovable](https://img.shields.io/badge/Built%20with-Lovable-ff69b4)](https://lovable.dev)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white&style=flat-square)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white&style=flat-square)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3-06B6D4?logo=tailwindcss&logoColor=white&style=flat-square)](https://tailwindcss.com/)
+[![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white&style=flat-square)](https://vitejs.dev/)
+[![Tests](https://img.shields.io/badge/tests-600%2B-brightgreen?style=flat-square)](docs/testing.md)
+[![Built with Lovable](https://img.shields.io/badge/Built%20with-Lovable-ff69b4?style=flat-square)](https://lovable.dev)
 
-**Live demo:** https://offmeta.app (official instance operated by OffMeta via Lovable)
+**Natural language search for Magic: The Gathering cards, powered by Scryfall.**
 
-## Features
+> _Describe what you're looking for in plain English. No complex syntax. No guessing. Just natural conversation._
 
-- Natural-language search with deterministic translation and AI fallback.
-- Voice input for hands-free searching.
-- Card detail modal with rulings, prices, and printings.
-- Client-side caching and Scryfall rate limiting.
-- Dark/light theme support.
-- Comprehensive security testing suite (300+ tests).
-## Quickstart
+**Live demo:** [offmeta.lovable.app](https://offmeta.lovable.app)
+
+---
+
+## ✨ Features
+
+| Feature | Description |
+|---------|-------------|
+| **Natural Language Search** | Describe cards in plain English — AI translates to Scryfall syntax |
+| **200+ Deterministic Patterns** | Fast, cached translations for common queries without AI calls |
+| **Voice Input** | Hands-free searching with speech recognition |
+| **Card Details** | Rulings, prices, printings, and legality in a clean modal |
+| **Client-Side Caching** | Sub-100ms response for repeated queries |
+| **PWA Support** | Installable with offline-first architecture |
+| **Dark/Light Theme** | Automatic system preference detection |
+
+---
+
+## 🚀 Quickstart
 
 **Requires:** Node.js 20.11+ (see `.nvmrc`)
 
@@ -30,22 +44,37 @@ cp .env.example .env
 npm run dev
 ```
 
-## Configuration
+---
 
-| Variable                        | Required | Description                                       |
-| ------------------------------- | -------- | ------------------------------------------------- |
-| `VITE_SUPABASE_URL`             | Yes      | Supabase project URL used by the frontend client. |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Yes      | Supabase anon/publishable key.                    |
+## 📊 Built for Production
 
-For Edge Function environment variables, see [`docs/CONFIGURATION.md`](docs/CONFIGURATION.md).
+OffMeta includes enterprise-grade features:
 
-## How it works
+- **Security**: 300+ security tests covering input sanitization, injection prevention, and rate limiting
+- **Rate Limiting**: Server and client-side throttling with abuse prevention
+- **CORS Protection**: Origin allowlist enforcement with proper security headers
+- **Error Sanitization**: Prevents leaking file paths, stack traces, and credentials
+- **Offline-First PWA**: Service worker with intelligent caching strategies
 
-- You enter a natural-language query in the UI (text or voice).
-- The frontend sends the request to a Supabase Edge Function for interpretation.
-- The Edge Function deterministically translates the prompt to Scryfall syntax and uses AI only as a fallback.
-- The Edge Function queries the Scryfall API with the generated search string.
-- Results are returned to the UI, cached client-side, and rendered as cards with details and printings.
+Run security tests:
+```bash
+npm run test -- src/lib/security
+```
+
+---
+
+## ⚙️ Configuration
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `VITE_SUPABASE_URL` | Yes | Supabase project URL |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Yes | Supabase anon/publishable key |
+
+For Edge Function environment variables, see [`docs/configuration.md`](docs/configuration.md).
+
+---
+
+## 🏗️ How It Works
 
 ```mermaid
 flowchart LR
@@ -59,94 +88,75 @@ flowchart LR
   UI --> Cache["Client cache"]
 ```
 
-For a deeper architecture overview, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+1. You enter a natural-language query (text or voice)
+2. The frontend sends the request to a Supabase Edge Function
+3. The Edge Function deterministically translates the prompt to Scryfall syntax (AI is fallback only)
+4. Results are fetched from Scryfall API, cached, and rendered
 
-## Usage examples
+For architecture details, see [`docs/architecture.md`](docs/architecture.md).
 
-Try these sample queries:
+---
 
-1. "artifact that produced 2 mana and costs four or less mana"
-2. "red or black creature that costs at least 5 mana and will draw cards"
-3. "equipment which costs 3 and equip for 2"
-4. "released after 2020"
-5. "fits into a BR commander deck"
-6. "rakdos creature"
-7. "green cards that let you sacrifice lands"
-8. "cards with cows in the art"
-9. "creatures that care about graveyard order"
-10. "commanders with more than one color, one of which is blue"
+## 🎯 Example Queries
 
-## Open source license (AGPL-3.0)
+Try these searches:
 
-OffMeta is open source under the GNU AGPL v3. You are free to fork, modify, and self-host the project.
+- `"artifact that produces 2 mana and costs four or less"`
+- `"red or black creature that costs at least 5 mana and draws cards"`
+- `"equipment which costs 3 and equips for 2"`
+- `"green cards that let you sacrifice lands"`
+- `"cards with cows in the art"`
+- `"commanders with more than one color, one of which is blue"`
+
+---
+
+## 📜 License (AGPL-3.0)
+
+OffMeta is open source under the GNU AGPL v3. You are free to fork, modify, and self-host.
 
 If you deploy a public instance (including hosted forks), you must make the corresponding source code available to users of that service, as required by the AGPL.
 
-The official hosted version is run by OffMeta via Lovable. Forks must rename the project and remove OffMeta branding when deployed publicly. See [TRADEMARK.md](TRADEMARK.md) for branding rules.
+**Why AGPL?** We want improvements made to public deployments shared back with the community, instead of locked away in closed hosted clones.
 
-### Why AGPL?
+Forks must rename the project and remove OffMeta branding when deployed publicly. See [TRADEMARK.md](TRADEMARK.md) for branding rules.
 
-We want the project to stay open even when it's hosted as a service. AGPL ensures that improvements made to public deployments are shared back with the community, instead of being locked away in closed hosted clones.
+---
 
-## Deployment and secrets
+## 🤝 Contributing
 
-This repository does **not** include production credentials. Real environment files are ignored by Git and must be provided by operators.
-
-Lovable deployment details are intentionally excluded to avoid leaking operational configuration. Use the `.env.example` template to configure your own instance.
-
-## Security
-
-OffMeta includes a comprehensive security testing suite with 300+ tests covering:
-
-- **Input sanitization**: SQL injection, XSS, and command injection prevention
-- **Rate limiting**: Request throttling and abuse prevention
-- **CORS protection**: Origin allowlist enforcement and security headers
-- **Prototype pollution**: Object manipulation attack prevention
-- **ReDoS protection**: Regular expression denial-of-service mitigation
-- **Timing attack prevention**: Constant-time comparisons for sensitive operations
-- **Error sanitization**: Prevents leaking file paths, stack traces, and credentials
-
-Run security tests with:
-
-```bash
-npm run test -- src/lib/security
-```
-
-For security vulnerability reporting, see [SECURITY.md](SECURITY.md).
-
-## Troubleshooting
-
-- **Missing environment variables**: Ensure `.env` is populated and matches `.env.example`.
-- **No search results**: Check the `Search Interpretation` panel to confirm the generated Scryfall syntax.
-- **AI gateway unavailable**: The app will fall back to deterministic rules; results may be less precise.
-
-## Support
-
-- **Bugs & feature requests**: [GitHub Issues](https://github.com/vermosi/offmeta/issues)
-- **Questions & help**: [GitHub Discussions](https://github.com/vermosi/offmeta/discussions) (if enabled)
-
-When reporting issues, please include:
-
-- Steps to reproduce
-- Expected vs. actual behavior
-- Environment details (OS, browser, Node.js version)
-- Logs or screenshots when applicable
-
-## Contributing
-
-This project is open source under the AGPL-3.0 license. Contributions are welcome!
+Contributions are welcome! See [`CONTRIBUTING.md`](CONTRIBUTING.md) for setup, workflow, and checks.
 
 1. Fork the repository
 2. Create a feature branch
 3. Submit a pull request
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) for setup, workflow, and checks, or browse [GitHub Issues](https://github.com/vermosi/offmeta/issues) for current tasks.
+Browse [GitHub Issues](https://github.com/vermosi/offmeta/issues) for current tasks.
 
 ---
 
-## Legal
+## 🔒 Security
 
-| Document                | Description                      |
-| ----------------------- | -------------------------------- |
-| [LICENSE](LICENSE)      | AGPL-3.0 License                 |
-| [SECURITY](SECURITY.md) | Security vulnerability reporting |
+For security vulnerability reporting, see [SECURITY.md](SECURITY.md).
+
+---
+
+## 📚 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [Architecture](docs/architecture.md) | System design and data flow |
+| [Configuration](docs/configuration.md) | Environment variables and setup |
+| [Development](docs/development.md) | Local development guide |
+| [Testing](docs/testing.md) | Test suite documentation |
+| [Roadmap](docs/roadmap.md) | Planned features |
+| [FAQ](docs/FAQ.md) | Common questions |
+
+---
+
+## 📄 Legal
+
+| Document | Description |
+|----------|-------------|
+| [LICENSE](LICENSE) | AGPL-3.0 License |
+| [SECURITY](SECURITY.md) | Vulnerability reporting |
+| [TRADEMARK](TRADEMARK.md) | Branding guidelines |

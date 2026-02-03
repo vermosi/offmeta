@@ -6,7 +6,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/react';
 import { CardModalRulings } from '../CardModalRulings';
-import type { CardRuling } from '@/lib/scryfall';
+import type { CardRuling } from '@/lib/scryfall/client';
 
 // Mock OracleText component
 vi.mock('@/components/ManaSymbol', () => ({
