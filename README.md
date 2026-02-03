@@ -19,7 +19,7 @@
 - Card detail modal with rulings, prices, and printings.
 - Client-side caching and Scryfall rate limiting.
 - Dark/light theme support.
-
+- Comprehensive security testing suite (300+ tests).
 ## Quickstart
 
 **Requires:** Node.js 20.11+ (see `.nvmrc`)
@@ -93,6 +93,26 @@ We want the project to stay open even when it's hosted as a service. AGPL ensure
 This repository does **not** include production credentials. Real environment files are ignored by Git and must be provided by operators.
 
 Lovable deployment details are intentionally excluded to avoid leaking operational configuration. Use the `.env.example` template to configure your own instance.
+
+## Security
+
+OffMeta includes a comprehensive security testing suite with 300+ tests covering:
+
+- **Input sanitization**: SQL injection, XSS, and command injection prevention
+- **Rate limiting**: Request throttling and abuse prevention
+- **CORS protection**: Origin allowlist enforcement and security headers
+- **Prototype pollution**: Object manipulation attack prevention
+- **ReDoS protection**: Regular expression denial-of-service mitigation
+- **Timing attack prevention**: Constant-time comparisons for sensitive operations
+- **Error sanitization**: Prevents leaking file paths, stack traces, and credentials
+
+Run security tests with:
+
+```bash
+npm run test -- src/lib/security
+```
+
+For security vulnerability reporting, see [SECURITY.md](SECURITY.md).
 
 ## Troubleshooting
 
