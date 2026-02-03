@@ -108,11 +108,12 @@ export function SearchFeedback({
   const [validationError, setValidationError] = useState<string | null>(null);
   const { trackFeedback } = useAnalytics();
 
-  const triggerProcessing = useCallback(async () => {
+  const triggerProcessing = useCallback(async (feedbackId: string) => {
     try {
-      // Trigger the process-feedback function in the background
+      // Trigger the process-feedback function for this specific feedback item
+      // SECURITY: Pass feedbackId to ensure 1 submission = 1 AI call
       await supabase.functions.invoke('process-feedback', {
-        body: {},
+        body: { feedbackId },
       });
     } catch (error) {
       // Silently fail - processing is async and will be retried
@@ -152,11 +153,15 @@ export function SearchFeedback({
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from('search_feedback').insert({
-        original_query: validationResult.data.originalQuery,
-        translated_query: validationResult.data.translatedQuery,
-        issue_description: validationResult.data.issueDescription,
-      });
+      const { data: insertedFeedback, error } = await supabase
+        .from('search_feedback')
+        .insert({
+          original_query: validationResult.data.originalQuery,
+          translated_query: validationResult.data.translatedQuery,
+          issue_description: validationResult.data.issueDescription,
+        })
+        .select('id')
+        .single();
 
       if (error) throw error;
 
@@ -177,8 +182,10 @@ export function SearchFeedback({
       setIssue('');
       setValidationError(null);
 
-      // Trigger background processing
-      triggerProcessing();
+      // Trigger background processing for this specific feedback item
+      if (insertedFeedback?.id) {
+        triggerProcessing(insertedFeedback.id);
+      }
     } catch (error) {
       logger.error('Feedback submission failed', error);
       toast.error('Failed to submit feedback');
