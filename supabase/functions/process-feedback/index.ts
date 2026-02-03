@@ -31,9 +31,9 @@ serve(async (req) => {
   const { allowed, retryAfter } = await checkRateLimit(
     clientIp,
     supabase,
-    10,
-    500,
-  ); // Tighter limits for AI processing
+    5, // Stricter limit: 5 requests per 60 seconds
+    60000,
+  );
   if (!allowed) {
     return new Response(
       JSON.stringify({
@@ -48,23 +48,57 @@ serve(async (req) => {
   }
 
   try {
-    // Get pending feedback to process
-    const { data: pendingFeedback, error: fetchError } = await supabase
-      .from('search_feedback')
-      .select('*')
-      .eq('processing_status', 'pending')
-      .order('created_at', { ascending: true })
-      .limit(5);
-
-    if (fetchError) {
-      throw new Error(`Failed to fetch feedback: ${fetchError.message}`);
+    // SECURITY: Require feedbackId to process only a single specific item
+    // This ensures 1 client submission = 1 AI call = predictable costs
+    let feedbackId: string | null = null;
+    try {
+      const body = await req.json();
+      feedbackId = body?.feedbackId;
+    } catch {
+      // Empty body or invalid JSON
     }
 
-    if (!pendingFeedback || pendingFeedback.length === 0) {
+    if (!feedbackId || typeof feedbackId !== 'string') {
+      return new Response(
+        JSON.stringify({
+          error: 'feedbackId required - must specify which feedback to process',
+          success: false,
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      );
+    }
+
+    // Validate UUID format to prevent injection
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(feedbackId)) {
+      return new Response(
+        JSON.stringify({
+          error: 'Invalid feedbackId format',
+          success: false,
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      );
+    }
+
+    // Get the specific pending feedback item
+    const { data: feedback, error: fetchError } = await supabase
+      .from('search_feedback')
+      .select('*')
+      .eq('id', feedbackId)
+      .eq('processing_status', 'pending')
+      .single();
+
+    if (fetchError || !feedback) {
       return new Response(
         JSON.stringify({
           success: true,
-          message: 'No pending feedback to process',
+          message: 'Feedback not found or already processed',
           processed: 0,
         }),
         {
@@ -72,6 +106,9 @@ serve(async (req) => {
         },
       );
     }
+
+    // Wrap single feedback in array for existing processing logic
+    const pendingFeedback = [feedback];
 
     // Scryfall oracle tags (otag:) for AI guidance - standardized to match main translation system
     const SCRYFALL_OTAGS = [
