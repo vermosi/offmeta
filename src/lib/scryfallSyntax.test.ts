@@ -3,7 +3,7 @@ import {
   KNOWN_OTAGS,
   validateScryfallQuery,
   VALID_SEARCH_KEYS,
-} from '@/lib/scryfallQuery';
+} from '@/lib/scryfall/query';
 import fs from 'node:fs';
 import path from 'node:path';
 

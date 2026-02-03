@@ -34,7 +34,6 @@ interface EditableQueryBarProps {
   onRerun: (editedQuery: string) => void;
   onRegenerate?: () => void;
   onReportIssue?: () => void;
-  requestId?: string;
 }
 
 export const EditableQueryBar = memo(function EditableQueryBar({
@@ -45,7 +44,6 @@ export const EditableQueryBar = memo(function EditableQueryBar({
   onRerun,
   onRegenerate,
   onReportIssue,
-  requestId,
 }: EditableQueryBarProps) {
   const [editedQuery, setEditedQuery] = useState(scryfallQuery);
   const [isEditing, setIsEditing] = useState(false);
@@ -267,12 +265,6 @@ export const EditableQueryBar = memo(function EditableQueryBar({
         </div>
       </div>
 
-      {/* Debug info (hidden by default, shown in dev mode or when needed) */}
-      {requestId && (
-        <p className="text-[10px] text-muted-foreground/50 px-1">
-          Request: {requestId}
-        </p>
-      )}
     </div>
   );
 });

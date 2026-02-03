@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { validateEnv } from '@/lib/env';
+import { validateEnv } from '@/lib/core/env';
 
 describe('validateEnv', () => {
   it('returns env when required values are present', () => {
