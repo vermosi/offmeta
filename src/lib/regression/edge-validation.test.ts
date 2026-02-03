@@ -6,9 +6,8 @@
 import { describe, it, expect } from 'vitest';
 import type { NLTranslationTestCase, ValidationTestCase } from './index';
 
-// Import validation functions from shared-mappings compatible location
-// These functions are also exported in scryfallQuery.ts for client-side use
-import { validateScryfallQuery } from '@/lib/scryfallQuery';
+// Import validation functions from canonical location
+import { validateScryfallQuery } from '@/lib/scryfall/query';
 
 // ============================================================================
 // EDGE_SPAM Tests: Spam Prevention & Input Sanitization

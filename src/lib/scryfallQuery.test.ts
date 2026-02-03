@@ -3,7 +3,7 @@ import {
   buildFilterQuery,
   normalizeOrGroups,
   validateScryfallQuery,
-} from '@/lib/scryfallQuery';
+} from '@/lib/scryfall/query';
 import type { FilterState } from '@/types/filters';
 
 describe('normalizeOrGroups', () => {

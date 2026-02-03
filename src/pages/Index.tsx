@@ -33,14 +33,12 @@ import { searchCards } from '@/lib/scryfall';
 import type { ScryfallCard } from '@/types/card';
 import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';
-import { buildFilterQuery, validateScryfallQuery } from '@/lib/scryfallQuery';
+import { buildFilterQuery, validateScryfallQuery } from '@/lib/scryfall/query';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { Loader2 } from 'lucide-react';
+import { CLIENT_CONFIG } from '@/lib/config';
 
 const CardModal = lazy(() => import('@/components/CardModal'));
-
-// Threshold for enabling virtualization (for large result sets)
-const VIRTUALIZATION_THRESHOLD = 50;
 
 // Generate unique request ID
 function generateRequestId(): string {
@@ -112,15 +110,32 @@ const Index = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Intersection observer for infinite scroll
+  // Refs to track latest values and prevent stale closures in IntersectionObserver
+  const hasNextPageRef = useRef(hasNextPage);
+  const isFetchingNextPageRef = useRef(isFetchingNextPage);
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    hasNextPageRef.current = hasNextPage;
+    isFetchingNextPageRef.current = isFetchingNextPage;
+  }, [hasNextPage, isFetchingNextPage]);
+
+  // Intersection observer for infinite scroll (uses refs to avoid stale closures)
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+        if (
+          entries[0].isIntersecting &&
+          hasNextPageRef.current &&
+          !isFetchingNextPageRef.current
+        ) {
           fetchNextPage();
         }
       },
-      { threshold: 0.1, rootMargin: '200px' },
+      {
+        threshold: CLIENT_CONFIG.INFINITE_SCROLL_THRESHOLD,
+        rootMargin: CLIENT_CONFIG.INFINITE_SCROLL_ROOT_MARGIN,
+      },
     );
 
     if (loadMoreRef.current) {
@@ -128,7 +143,7 @@ const Index = () => {
     }
 
     return () => observer.disconnect();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  }, [fetchNextPage]);
 
   const handleSearch = useCallback(
     (query: string, result?: SearchResult, naturalQuery?: string) => {
@@ -459,7 +474,6 @@ const Index = () => {
                   onRerun={handleRerunEditedQuery}
                   onRegenerate={handleRegenerateTranslation}
                   onReportIssue={() => setReportDialogOpen(true)}
-                  requestId={currentRequestId || undefined}
                   validationError={
                     lastSearchResult?.validationIssues?.length
                       ? lastSearchResult.validationIssues.join(' • ')
@@ -504,7 +518,7 @@ const Index = () => {
             {cards.length > 0 ? (
               <>
                 {displayCards.length > 0 ? (
-                  displayCards.length > VIRTUALIZATION_THRESHOLD ? (
+                  displayCards.length > CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD ? (
                     // Virtualized grid for large results (50+ cards)
                     <VirtualizedCardGrid
                       cards={displayCards}
@@ -556,7 +570,7 @@ const Index = () => {
                 )}
 
                 {/* Infinite scroll trigger (only for non-virtualized grid) */}
-                {displayCards.length <= VIRTUALIZATION_THRESHOLD && (
+                {displayCards.length <= CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD && (
                   <div
                     ref={loadMoreRef}
                     className="flex justify-center pt-8 pb-4"
@@ -578,7 +592,7 @@ const Index = () => {
                 )}
 
                 {/* Status for virtualized grid */}
-                {displayCards.length > VIRTUALIZATION_THRESHOLD && (
+                {displayCards.length > CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD && (
                   <div className="flex justify-center pt-4 pb-4">
                     {isFetchingNextPage && (
                       <div className="flex items-center gap-2 text-muted-foreground">
