@@ -1,4 +1,9 @@
-import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+// deno-lint-ignore-file no-explicit-any
+// Use generic type to avoid version conflicts between different Supabase client imports
+type SupabaseClientLike = {
+  rpc: (fn: string, params: Record<string, unknown>) => PromiseLike<{ data: any; error: any }>;
+  from: (table: string) => any;
+};
 
 interface RateLimitEntry {
   count: number;
@@ -48,7 +53,7 @@ export function checkSessionRateLimit(
  */
 export async function checkRateLimit(
   ip: string,
-  supabase?: SupabaseClient,
+  supabase?: SupabaseClientLike,
   ipLimit: number = 30,
   globalLimit: number = 1000,
   windowMs: number = 60000,
