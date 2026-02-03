@@ -6,7 +6,7 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/core/logger';
 
 // Rate limiting configuration
 const RATE_LIMIT_KEY = 'analytics_events_rate';

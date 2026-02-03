@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/core/logger';
 
 // Type declarations for Web Speech API
 interface SpeechRecognitionEvent extends Event {

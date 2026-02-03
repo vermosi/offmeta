@@ -15,12 +15,12 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Search, Loader2, X, Clock, History } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/useMobile';
 import { SearchFeedback } from '@/components/SearchFeedback';
 import { SearchHelpModal } from '@/components/SearchHelpModal';
 import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/core/logger';
 
 const SEARCH_CONTEXT_KEY = 'lastSearchContext';
 const SEARCH_HISTORY_KEY = 'offmeta_search_history';
@@ -222,6 +222,13 @@ export const UnifiedSearchBar = forwardRef<
   const { saveContext, getContext } = useSearchContext();
   const { history, addToHistory, clearHistory } = useSearchHistory();
   const canUseLast = Boolean(getContext());
+
+  // Abort pending requests on unmount
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
 
   // Rate limit countdown timer
   useEffect(() => {
