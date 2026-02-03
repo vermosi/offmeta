@@ -1,5 +1,4 @@
 // Minimal type for Supabase client to avoid deep type instantiation
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SupabaseClientLike = {
   rpc: (fn: string, params: Record<string, unknown>) => PromiseLike<{
     data: { blocked?: boolean; retry_after?: number } | null;
