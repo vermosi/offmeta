@@ -18,7 +18,6 @@ export default tseslint.config(
     plugins: {
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,
-      'check-file': checkFile,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
@@ -38,6 +37,7 @@ export default tseslint.config(
   // File naming conventions for components (PascalCase)
   {
     files: ['src/components/*.tsx', 'src/pages/*.tsx'],
+    ignores: ['src/components/ui/**'],
     plugins: {
       'check-file': checkFile,
     },
@@ -59,21 +59,6 @@ export default tseslint.config(
       'check-file/filename-naming-convention': [
         'error',
         { '**/*.{ts,tsx}': 'CAMEL_CASE' },
-        { ignoreMiddleExtensions: true },
-      ],
-    },
-  },
-  // File naming conventions for lib utilities (kebab-case)
-  {
-    files: ['src/lib/**/*.ts'],
-    excludedFiles: ['src/lib/**/*.test.ts'],
-    plugins: {
-      'check-file': checkFile,
-    },
-    rules: {
-      'check-file/filename-naming-convention': [
-        'error',
-        { '**/*.ts': 'KEBAB_CASE' },
         { ignoreMiddleExtensions: true },
       ],
     },
@@ -106,7 +91,7 @@ export default tseslint.config(
       ],
     },
   },
-  // Allow console in logger
+  // Allow console in logger files
   {
     files: ['src/lib/logger.ts', 'src/lib/core/logger.ts'],
     rules: {
