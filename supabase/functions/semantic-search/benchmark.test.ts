@@ -73,6 +73,31 @@ async function makeRequest(
   };
 }
 
+/**
+ * Perform a warmup request to reduce cold start impact on timing measurements.
+ * Uses a simple query and discards the result.
+ */
+async function warmup(): Promise<void> {
+  try {
+    const response = await fetch(FUNCTION_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({
+        query: "warmup",
+        cacheSalt: `warmup-${Date.now()}`,
+      }),
+    });
+    await response.text(); // Consume response body
+  } catch {
+    // Ignore warmup failures
+  }
+  // Small delay after warmup
+  await new Promise((r) => setTimeout(r, 200));
+}
+
 function calculateStats(results: BenchmarkResult[]): BenchmarkStats {
   if (results.length === 0) {
     return {
@@ -149,6 +174,9 @@ Deno.test({
   sanitizeResources: false,
   sanitizeOps: false,
   async fn() {
+    // Warmup to reduce cold start impact
+    await warmup();
+    
     const results: BenchmarkResult[] = [];
 
     for (const query of BENCHMARK_QUERIES.simple) {
@@ -176,6 +204,9 @@ Deno.test({
   sanitizeResources: false,
   sanitizeOps: false,
   async fn() {
+    // Warmup to reduce cold start impact
+    await warmup();
+    
     const results: BenchmarkResult[] = [];
 
     for (const query of BENCHMARK_QUERIES.medium) {
@@ -202,6 +233,9 @@ Deno.test({
   sanitizeResources: false,
   sanitizeOps: false,
   async fn() {
+    // Warmup to reduce cold start impact
+    await warmup();
+    
     const results: BenchmarkResult[] = [];
 
     for (const query of BENCHMARK_QUERIES.complex) {
@@ -228,6 +262,9 @@ Deno.test({
   sanitizeResources: false,
   sanitizeOps: false,
   async fn() {
+    // Warmup to reduce cold start impact
+    await warmup();
+    
     const results: BenchmarkResult[] = [];
 
     for (const query of BENCHMARK_QUERIES.deterministic) {
@@ -254,6 +291,9 @@ Deno.test({
   sanitizeResources: false,
   sanitizeOps: false,
   async fn() {
+    // Warmup to reduce cold start impact
+    await warmup();
+    
     const results: BenchmarkResult[] = [];
 
     for (const query of BENCHMARK_QUERIES.slang) {
@@ -278,6 +318,9 @@ Deno.test({
   sanitizeResources: false,
   sanitizeOps: false,
   async fn() {
+    // Warmup to reduce cold start impact
+    await warmup();
+    
     const testQuery = "creatures with flying";
     const results: BenchmarkResult[] = [];
 
@@ -316,6 +359,9 @@ Deno.test({
   sanitizeResources: false,
   sanitizeOps: false,
   async fn() {
+    // Warmup to reduce cold start impact
+    await warmup();
+    
     const queries = [
       "red creatures",
       "blue spells",
@@ -358,6 +404,9 @@ Deno.test({
   sanitizeResources: false,
   sanitizeOps: false,
   async fn() {
+    // Warmup to reduce cold start impact
+    await warmup();
+    
     // Run a quick sample across all categories
     const allResults: BenchmarkResult[] = [];
     const categories = Object.entries(BENCHMARK_QUERIES);
