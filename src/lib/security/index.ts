@@ -10,7 +10,11 @@ import { vi } from 'vitest';
 // Security Test Constants
 // ============================================================================
 
-export const SECURITY_LIMITS = {
+/**
+ * Security limits - kept in sync with supabase/functions/semantic-search/config.ts
+ * See config-sync.test.ts for synchronization verification
+ */
+export const SECURITY_LIMITS = Object.freeze({
   /** Maximum query length in characters */
   MAX_QUERY_LENGTH: 500,
   /** Maximum number of search parameters */
@@ -29,7 +33,243 @@ export const SECURITY_LIMITS = {
   MIN_ALPHANUMERIC_RATIO: 0.5,
   /** Maximum consecutive repeated characters */
   MAX_REPEATED_CHARS: 5,
-} as const;
+});
+
+// ============================================================================
+// Error Sanitization Utilities
+// ============================================================================
+
+/**
+ * Sanitize error messages for client consumption.
+ * Removes file paths, tokens, and other sensitive information.
+ */
+export function sanitizeErrorForClient(error: unknown): string {
+  if (!(error instanceof Error)) {
+    return 'An error occurred';
+  }
+
+  let message = error.message;
+
+  // Remove database connection strings (must come before path removal)
+  message = message.replace(
+    /(?:postgres|mysql|mongodb|redis):\/\/[^\s]+/gi,
+    '[CONNECTION]',
+  );
+
+  // Remove Unix file paths
+  message = message.replace(/\/[^\s:]+/g, '[PATH]');
+
+  // Remove Windows file paths
+  message = message.replace(/[A-Z]:\\[^\s:]+/gi, '[PATH]');
+
+  // Remove Bearer tokens
+  message = message.replace(/Bearer\s+[^\s]+/gi, '[TOKEN]');
+
+  // Remove API keys (common patterns)
+  message = message.replace(/(?:sk_live_|sk_test_|api_key[=:]?\s*)[^\s]+/gi, '[REDACTED]');
+
+  // Remove line:column numbers
+  message = message.replace(/:\d+:\d+/g, '');
+
+  // Remove environment variable assignments
+  message = message.replace(/[A-Z_]+=[^\s]+/g, '[ENV]');
+
+  // Truncate very long messages
+  if (message.length > 500) {
+    message = message.substring(0, 497) + '...';
+  }
+
+  return message;
+}
+
+/**
+ * Sanitize stack traces for logging/display.
+ * Removes file paths and line numbers while preserving error message.
+ */
+export function sanitizeStackTrace(stack: string): string {
+  if (!stack) return '';
+
+  const lines = stack.split('\n');
+  const sanitizedLines: string[] = [];
+
+  for (const line of lines) {
+    // Keep the first line (error message) but sanitize it
+    if (!line.trim().startsWith('at ')) {
+      sanitizedLines.push(sanitizeErrorForClient(new Error(line)));
+    } else {
+      // Replace stack frame with placeholder
+      sanitizedLines.push('    [STACK]');
+      break; // Only keep one stack placeholder
+    }
+  }
+
+  return sanitizedLines.join('\n');
+}
+
+// ============================================================================
+// Prototype Pollution Prevention
+// ============================================================================
+
+/** Dangerous property names that could cause prototype pollution */
+export const PROTOTYPE_POLLUTION_PATTERNS = Object.freeze([
+  '__proto__',
+  'constructor',
+  'prototype',
+]);
+
+/**
+ * Check if a string contains prototype pollution patterns.
+ */
+export function containsPrototypePollution(input: string): boolean {
+  const lowerInput = input.toLowerCase();
+  return PROTOTYPE_POLLUTION_PATTERNS.some((pattern) =>
+    lowerInput.includes(pattern.toLowerCase()),
+  );
+}
+
+/**
+ * Recursively sanitize object keys to remove prototype pollution vectors.
+ */
+export function sanitizeObjectKeys<T>(obj: T): T {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+
+  if (typeof obj !== 'object') {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map((item) => sanitizeObjectKeys(item)) as T;
+  }
+
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (!PROTOTYPE_POLLUTION_PATTERNS.includes(key)) {
+      result[key] = sanitizeObjectKeys(value);
+    }
+  }
+  return result as T;
+}
+
+/**
+ * Safely parse JSON with prototype pollution protection.
+ */
+export function safeJsonParse<T = unknown>(json: string): T | null {
+  try {
+    const parsed = JSON.parse(json);
+    return sanitizeObjectKeys(parsed);
+  } catch {
+    return null;
+  }
+}
+
+// ============================================================================
+// ReDoS Prevention Utilities
+// ============================================================================
+
+/** Known ReDoS attack payloads for testing */
+export const REDOS_PAYLOADS = Object.freeze([
+  'a'.repeat(100) + '!',
+  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!',
+  'x'.repeat(50) + '@' + 'x'.repeat(50),
+  '(' + 'a'.repeat(30) + ')',
+  'a+'.repeat(20),
+  '.*'.repeat(30),
+  '[a-z]+'.repeat(20) + '!',
+]);
+
+/**
+ * Test regex performance and return timing information.
+ */
+export function testRegexPerformance(
+  fn: () => void,
+  iterations: number = 1,
+): { duration: number; averageMs: number } {
+  const start = performance.now();
+  for (let i = 0; i < iterations; i++) {
+    fn();
+  }
+  const duration = performance.now() - start;
+  return {
+    duration,
+    averageMs: duration / iterations,
+  };
+}
+
+/**
+ * Check if a regex pattern is potentially vulnerable to ReDoS.
+ * This is a heuristic check, not exhaustive.
+ */
+export function isRegexSafe(pattern: RegExp): boolean {
+  const source = pattern.source;
+
+  // Check for nested quantifiers like (a+)+
+  if (/\([^)]*[+*][^)]*\)[+*]/.test(source)) {
+    return false;
+  }
+
+  // Check for overlapping alternatives like (a|a)+
+  if (/\(([^|)]+)\|\1\)[+*]/.test(source)) {
+    return false;
+  }
+
+  // Check for .* followed by another pattern that could match same chars
+  if (/\.\*[a-z]/.test(source)) {
+    return false;
+  }
+
+  return true;
+}
+
+// ============================================================================
+// Timing Attack Prevention
+// ============================================================================
+
+/**
+ * Constant-time string comparison to prevent timing attacks.
+ */
+export function safeTimingCompare(a: string, b: string): boolean {
+  // Use the same amount of time regardless of where strings differ
+  let result = a.length === b.length ? 0 : 1;
+
+  // Always compare the full length of the longer string
+  const maxLength = Math.max(a.length, b.length);
+
+  for (let i = 0; i < maxLength; i++) {
+    const charA = i < a.length ? a.charCodeAt(i) : 0;
+    const charB = i < b.length ? b.charCodeAt(i) : 0;
+    result |= charA ^ charB;
+  }
+
+  return result === 0;
+}
+
+/**
+ * Measure timing variance for a function over multiple iterations.
+ */
+export function measureTimingVariance(
+  fn: () => void,
+  iterations: number,
+): { mean: number; stdDev: number; min: number; max: number } {
+  const times: number[] = [];
+
+  for (let i = 0; i < iterations; i++) {
+    const start = performance.now();
+    fn();
+    times.push(performance.now() - start);
+  }
+
+  const mean = times.reduce((a, b) => a + b, 0) / times.length;
+  const variance = times.reduce((sum, t) => sum + Math.pow(t - mean, 2), 0) / times.length;
+
+  return {
+    mean,
+    stdDev: Math.sqrt(variance),
+    min: Math.min(...times),
+    max: Math.max(...times),
+  };
+}
 
 // ============================================================================
 // Malicious Query Builders
