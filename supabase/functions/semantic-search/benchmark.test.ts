@@ -40,36 +40,77 @@ interface BenchmarkStats {
   cacheHitRate: number;
 }
 
+const MAX_RETRIES = 3;
+const RETRY_DELAYS = [500, 1000, 2000]; // Exponential backoff delays in ms
+
 async function makeRequest(
   query: string,
-  options: { useCache?: boolean; cacheSalt?: string } = {},
+  options: { useCache?: boolean; cacheSalt?: string; retries?: number } = {},
 ): Promise<BenchmarkResult & { scryfallQuery: string }> {
-  const start = performance.now();
-  
-  const response = await fetch(FUNCTION_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-    },
-    body: JSON.stringify({
-      query,
-      useCache: options.useCache ?? false,
-      cacheSalt: options.cacheSalt,
-    }),
-  });
+  const maxRetries = options.retries ?? MAX_RETRIES;
+  let lastError: Error | null = null;
 
-  const elapsed = performance.now() - start;
-  const data = await response.json();
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const start = performance.now();
+      
+      const response = await fetch(FUNCTION_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          query,
+          useCache: options.useCache ?? false,
+          cacheSalt: options.cacheSalt,
+        }),
+      });
 
+      const elapsed = performance.now() - start;
+      const data = await response.json();
+
+      // Check for transient errors that should trigger retry
+      if (!response.ok && attempt < maxRetries) {
+        const isTransient = response.status >= 500 || response.status === 429;
+        if (isTransient) {
+          const delay = RETRY_DELAYS[attempt] ?? 2000;
+          console.log(`  ⚠️ Transient error (${response.status}), retrying in ${delay}ms...`);
+          await new Promise((r) => setTimeout(r, delay));
+          continue;
+        }
+      }
+
+      return {
+        queryType: "",
+        query,
+        responseTimeMs: elapsed,
+        confidence: data.confidence ?? 0,
+        success: response.ok && !!data.scryfallQuery,
+        cached: data.cached ?? false,
+        scryfallQuery: data.scryfallQuery ?? "",
+      };
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      
+      if (attempt < maxRetries) {
+        const delay = RETRY_DELAYS[attempt] ?? 2000;
+        console.log(`  ⚠️ Network error, retrying in ${delay}ms: ${lastError.message}`);
+        await new Promise((r) => setTimeout(r, delay));
+      }
+    }
+  }
+
+  // All retries exhausted, return failure result
+  console.log(`  ❌ All ${maxRetries + 1} attempts failed for query: "${query}"`);
   return {
     queryType: "",
     query,
-    responseTimeMs: elapsed,
-    confidence: data.confidence ?? 0,
-    success: response.ok && !!data.scryfallQuery,
-    cached: data.cached ?? false,
-    scryfallQuery: data.scryfallQuery ?? "",
+    responseTimeMs: 0,
+    confidence: 0,
+    success: false,
+    cached: false,
+    scryfallQuery: "",
   };
 }
 
