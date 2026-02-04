@@ -1,7 +1,7 @@
 # OffMeta
 
 [![CI](https://github.com/vermosi/offmeta/actions/workflows/ci.yml/badge.svg)](https://github.com/vermosi/offmeta/actions/workflows/ci.yml)
-[![Live Site](https://img.shields.io/badge/Live-Site-offmeta.app-22c55e?style=flat-square)](https://offmeta.app)
+[![Live Site](https://img.shields.io/badge/Live-offmeta.app-22c55e?style=flat-square)](https://offmeta.app)
 [![License](https://img.shields.io/github/license/vermosi/offmeta?style=flat-square)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/vermosi/offmeta?style=social)](https://github.com/vermosi/offmeta)
 
