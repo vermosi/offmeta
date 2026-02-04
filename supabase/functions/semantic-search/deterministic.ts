@@ -15,6 +15,7 @@ import {
   CARDS_LIKE_MAP,
   TAG_FIRST_MAP,
   ART_TAG_MAP,
+  SLANG_TO_SYNTAX_MAP,
 } from './mappings/index.ts';
 
 export interface ParsedIntent {
@@ -101,6 +102,26 @@ function normalizeQuery(query: string): string {
   }
 
   return normalized.replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Parse common MTG slang terms that the AI often incorrectly generates as invalid oracle tags.
+ * This intercepts slang like "counterspell", "aggro", "sacrifice" and converts to valid Scryfall syntax.
+ * MUST run early in the pipeline before other parsing.
+ */
+function parseSlangTerms(query: string, ir: SearchIR): string {
+  let remaining = query;
+
+  for (const { pattern, syntax } of SLANG_TO_SYNTAX_MAP) {
+    if (pattern.test(remaining)) {
+      ir.specials.push(syntax);
+      remaining = remaining.replace(pattern, '').trim();
+    }
+    // Reset regex state for global patterns
+    pattern.lastIndex = 0;
+  }
+
+  return remaining;
 }
 
 function applyTagMappings(query: string, ir: SearchIR): string {
@@ -1113,6 +1134,7 @@ function buildIR(query: string): SearchIR {
 
   // Apply all parsing functions in order
   remaining = parseCardsLike(remaining, ir); // Parse "cards like X" FIRST
+  remaining = parseSlangTerms(remaining, ir); // Parse slang terms EARLY (before AI generates invalid otags)
   remaining = applyTagMappings(remaining, ir);
   remaining = parseTokenCreation(remaining, ir); // Parse token creation BEFORE type parsing
   remaining = parseEnablers(remaining, ir); // Parse enablers early
