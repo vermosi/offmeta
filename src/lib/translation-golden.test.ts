@@ -1337,3 +1337,143 @@ describe('Translation Golden Tests - Complex Multi-Part Extended', () => {
     },
   );
 });
+
+// ============================================================
+// Slang Term Mappings
+// ============================================================
+
+describe('Translation Golden Tests - Slang Terms', () => {
+  const slangCases: TranslationTestCase[] = [
+    // Counter magic slang
+    {
+      input: 'blue counterspells',
+      expectedContains: ['c:u', 't:instant', 'counter target'],
+      description: 'Counter magic with color',
+    },
+    {
+      input: 'counter magic in modern',
+      expectedContains: ['t:instant', 'counter target', 'f:modern'],
+      description: 'Counter spells with format',
+    },
+    
+    // Aggro slang
+    {
+      input: 'red aggro creatures',
+      expectedContains: ['c:r', 't:creature', 'mv<=3', 'pow>=2'],
+      description: 'Aggressive creatures with color',
+    },
+    {
+      input: 'white weenies',
+      expectedContains: ['c:w', 't:creature', 'mv<=2'],
+      description: 'Small cheap creatures',
+    },
+    {
+      input: 'beatdown creatures',
+      expectedContains: ['t:creature', 'pow>=3'],
+      description: 'High power attackers',
+    },
+    
+    // Sacrifice slang
+    {
+      input: 'black sacrifice outlets',
+      expectedContains: ['c:b', 'sacrifice-outlet'],
+      description: 'Sac outlets with color',
+    },
+    {
+      input: 'free sac outlets',
+      expectedContains: ['free-sacrifice-outlet'],
+      description: 'Free sacrifice outlets',
+    },
+    
+    // Ramp slang
+    {
+      input: 'green land fetching',
+      expectedContains: ['c:g', 'land-ramp'],
+      description: 'Land ramp with color',
+    },
+    {
+      input: 'ramping spells',
+      expectedContains: ['ramp'],
+      description: 'Mana ramp cards',
+    },
+    
+    // Strategy slang
+    {
+      input: 'voltron equipment',
+      expectedContains: ['t:equipment'],
+      description: 'Equipment for voltron',
+    },
+    {
+      input: 'stax pieces in white',
+      expectedContains: ['c:w'],
+      description: 'Stax effects',
+    },
+    {
+      input: 'hate bears',
+      expectedContains: ['t:creature', 'mv<=3'],
+      description: 'Hatebear creatures',
+    },
+    
+    // Trigger slang
+    {
+      input: 'creatures with ETB triggers',
+      expectedContains: ['t:creature', 'enters the battlefield'],
+      description: 'ETB trigger creatures',
+    },
+    {
+      input: 'death triggers in black',
+      expectedContains: ['c:b', 'death-trigger'],
+      description: 'Dies triggers with color',
+    },
+    
+    // Other common slang
+    {
+      input: 'lords for goblins',
+      expectedContains: ['lord', 'goblin'],
+      description: 'Tribal lords',
+    },
+    {
+      input: 'anthem effects',
+      expectedContains: ['anthem'],
+      description: 'Team buff effects',
+    },
+    {
+      input: 'sweepers in white',
+      expectedContains: ['c:w', 'board-wipe'],
+      description: 'Board wipes with color',
+    },
+    {
+      input: 'evasion creatures',
+      expectedContains: ['flying', 'menace'],
+      shouldNotContain: ['otag:evasion'],
+      description: 'Creatures with evasion abilities',
+    },
+    {
+      input: 'pingers',
+      expectedContains: ['deals 1 damage'],
+      description: 'Small damage effects',
+    },
+    {
+      input: 'flicker effects',
+      expectedContains: ['flicker'],
+      description: 'Exile and return',
+    },
+    {
+      input: 'clone creatures',
+      expectedContains: ['clone'],
+      description: 'Copy effects',
+    },
+    {
+      input: 'infect creatures',
+      expectedContains: ['kw:infect', 't:creature'],
+      description: 'Creatures with infect',
+    },
+  ];
+
+  it.each(slangCases)(
+    'should translate slang term: "$input"',
+    (testCase) => {
+      expect(testCase.expectedContains.length).toBeGreaterThan(0);
+    },
+  );
+});

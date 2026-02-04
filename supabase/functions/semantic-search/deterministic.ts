@@ -15,6 +15,7 @@ import {
   CARDS_LIKE_MAP,
   TAG_FIRST_MAP,
   ART_TAG_MAP,
+  SLANG_TO_SYNTAX_MAP,
 } from './mappings/index.ts';
 
 export interface ParsedIntent {
@@ -101,6 +102,26 @@ function normalizeQuery(query: string): string {
   }
 
   return normalized.replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Parse common MTG slang terms that the AI often incorrectly generates as invalid oracle tags.
+ * This intercepts slang like "counterspell", "aggro", "sacrifice" and converts to valid Scryfall syntax.
+ * MUST run early in the pipeline before other parsing.
+ */
+function parseSlangTerms(query: string, ir: SearchIR): string {
+  let remaining = query;
+
+  for (const { pattern, syntax } of SLANG_TO_SYNTAX_MAP) {
+    if (pattern.test(remaining)) {
+      ir.specials.push(syntax);
+      remaining = remaining.replace(pattern, '').trim();
+    }
+    // Reset regex state for global patterns
+    pattern.lastIndex = 0;
+  }
+
+  return remaining;
 }
 
 function applyTagMappings(query: string, ir: SearchIR): string {
@@ -365,6 +386,122 @@ function parseArchetypes(query: string, ir: SearchIR): string {
       ir.specials.push(scryfallSyntax);
       remaining = remaining.replace(standalonPattern, '').trim();
     }
+  }
+
+  return remaining;
+}
+
+/**
+ * Parse "targeting" patterns - cards that affect/destroy/exile/counter a type
+ * CRITICAL: These patterns must be parsed BEFORE parseTypes() to prevent
+ * the type word from being incorrectly added as t:[type]
+ *
+ * "white spells that destroy artifacts" → (t:instant or t:sorcery) c:w otag:artifact-removal
+ * NOT → t:artifact c:w (which returns artifacts, not artifact removal!)
+ */
+function parseTargetingPatterns(query: string, ir: SearchIR): string {
+  let remaining = query;
+
+  // Map of target types to their removal tags
+  const removalTags: Record<string, string> = {
+    artifact: 'otag:artifact-removal',
+    enchantment: 'otag:enchantment-removal',
+    creature: 'otag:creature-removal',
+    planeswalker: 'otag:planeswalker-removal',
+    land: 'o:"destroy" o:"land"', // No otag for land destruction
+    permanent: 'otag:removal',
+  };
+
+  // Patterns that indicate targeting/affecting a type, not being that type
+  // Order matters: more specific patterns first
+  const targetingPatterns = [
+    // "spells/cards that destroy X" or "X destruction"
+    {
+      pattern:
+        /\b(?:spells?|cards?|things?)?\s*(?:that|which|to)?\s*destroy\s+(artifact|enchantment|creature|planeswalker|land|permanent)s?\b/gi,
+      extract: 1,
+      effect: 'destroy',
+    },
+    {
+      pattern:
+        /\b(artifact|enchantment|creature|planeswalker|land|permanent)\s*destruction\b/gi,
+      extract: 1,
+      effect: 'destroy',
+    },
+    // "spells/cards that exile X"
+    {
+      pattern:
+        /\b(?:spells?|cards?|things?)?\s*(?:that|which|to)?\s*exile\s+(artifact|enchantment|creature|planeswalker|land|permanent)s?\b/gi,
+      extract: 1,
+      effect: 'exile',
+    },
+    // "spells/cards that remove X" or "X removal"
+    {
+      pattern:
+        /\b(?:spells?|cards?|things?)?\s*(?:that|which|to)?\s*remove\s+(artifact|enchantment|creature|planeswalker|land|permanent)s?\b/gi,
+      extract: 1,
+      effect: 'remove',
+    },
+    {
+      pattern:
+        /\b(artifact|enchantment|creature|planeswalker|land|permanent)\s*removal\b/gi,
+      extract: 1,
+      effect: 'remove',
+    },
+    // "spells/cards that counter X" (mostly creature spells)
+    {
+      pattern:
+        /\b(?:spells?|cards?|things?)?\s*(?:that|which|to)?\s*counter\s+(artifact|enchantment|creature|planeswalker|land|permanent)(?:\s*spell)?s?\b/gi,
+      extract: 1,
+      effect: 'counter',
+    },
+    // "spells/cards that kill X" (creatures)
+    {
+      pattern:
+        /\b(?:spells?|cards?|things?)?\s*(?:that|which|to)?\s*kill\s+(creature)s?\b/gi,
+      extract: 1,
+      effect: 'kill',
+    },
+    // "spells/cards that deal damage to X"
+    {
+      pattern:
+        /\b(?:spells?|cards?|things?)?\s*(?:that|which|to)?\s*deal\s+damage\s+to\s+(artifact|enchantment|creature|planeswalker|permanent)s?\b/gi,
+      extract: 1,
+      effect: 'damage',
+    },
+  ];
+
+  for (const { pattern, extract, effect } of targetingPatterns) {
+    let match;
+    while ((match = pattern.exec(remaining)) !== null) {
+      const targetType = match[extract].toLowerCase().replace(/s$/, '');
+      
+      // Add the appropriate effect tag/oracle pattern
+      if (
+        effect === 'destroy' ||
+        effect === 'remove' ||
+        effect === 'kill' ||
+        effect === 'damage'
+      ) {
+        const tag = removalTags[targetType];
+        if (tag) {
+          ir.specials.push(tag);
+        }
+      } else if (effect === 'exile') {
+        // Exile-specific pattern
+        ir.oracle.push(`o:"exile" o:"${targetType}"`);
+      } else if (effect === 'counter') {
+        // Counter spell pattern
+        if (targetType === 'creature') {
+          ir.oracle.push(`o:"counter" o:"creature spell"`);
+        } else {
+          ir.oracle.push(`o:"counter" o:"${targetType}"`);
+        }
+      }
+
+      remaining = remaining.replace(match[0], '').trim();
+    }
+    pattern.lastIndex = 0;
   }
 
   return remaining;
@@ -997,6 +1134,7 @@ function buildIR(query: string): SearchIR {
 
   // Apply all parsing functions in order
   remaining = parseCardsLike(remaining, ir); // Parse "cards like X" FIRST
+  remaining = parseSlangTerms(remaining, ir); // Parse slang terms EARLY (before AI generates invalid otags)
   remaining = applyTagMappings(remaining, ir);
   remaining = parseTokenCreation(remaining, ir); // Parse token creation BEFORE type parsing
   remaining = parseEnablers(remaining, ir); // Parse enablers early
@@ -1006,6 +1144,7 @@ function buildIR(query: string): SearchIR {
   remaining = parseCompanions(remaining, ir);
   remaining = parseSpecialPatterns(remaining, ir);
   remaining = parseOraclePatterns(remaining, ir);
+  remaining = parseTargetingPatterns(remaining, ir); // CRITICAL: Parse targeting BEFORE types!
   remaining = parseColors(remaining, ir);
   remaining = parseTypes(remaining, ir);
 
