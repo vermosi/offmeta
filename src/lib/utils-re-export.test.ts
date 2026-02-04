@@ -14,7 +14,8 @@ describe('lib/utils re-export', () => {
 
   it('cn works correctly', () => {
     expect(cn('a', 'b')).toBe('a b');
-    expect(cn('a', false && 'b', 'c')).toBe('a c');
+    const condition = false;
+    expect(cn('a', condition && 'b', 'c')).toBe('a c');
     expect(cn('px-4', 'px-2')).toBe('px-2');
   });
 });
