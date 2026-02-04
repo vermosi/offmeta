@@ -20,20 +20,20 @@ export interface SlangMapping {
  * This layer intercepts them and converts to valid Scryfall syntax.
  */
 export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
-  // Counter magic (NOT otag:counterspell - that doesn't exist)
+  // Counter magic (use oracle text search for reliability)
   {
     pattern: /\bcounterspells?\b/gi,
-    syntax: 'otag:hard-counter',
+    syntax: 't:instant o:"counter target"',
     description: 'Counter target spell effects',
   },
   {
     pattern: /\bcounter ?magics?\b/gi,
-    syntax: 'otag:hard-counter',
+    syntax: 't:instant o:"counter target"',
     description: 'Counter target spell effects',
   },
   {
     pattern: /\bspell counters?\b/gi,
-    syntax: 'otag:hard-counter',
+    syntax: 't:instant o:"counter target"',
     description: 'Counter target spell effects',
   },
 
