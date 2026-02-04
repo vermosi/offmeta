@@ -285,10 +285,6 @@ describe('Scryfall Tagger Tags Validation', () => {
 
         expect(result.valid).toBe(true);
         expect(result.count).toBeGreaterThan(0);
-        
-        if (result.valid) {
-          console.log(`  ✓ otag:${tagInfo.tag} returns ${result.count} cards`);
-        }
       }, 10000);
     });
   });
@@ -302,10 +298,6 @@ describe('Scryfall Tagger Tags Validation', () => {
 
         expect(result.valid).toBe(true);
         expect(result.count).toBeGreaterThan(0);
-        
-        if (result.valid) {
-          console.log(`  ✓ atag:${tagInfo.tag} returns ${result.count} cards`);
-        }
       }, 10000);
     });
   });
