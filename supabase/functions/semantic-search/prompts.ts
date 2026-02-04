@@ -23,6 +23,24 @@ CRITICAL RULES (MUST FOLLOW):
 7. banned:FORMAT not is:banned, restricted:FORMAT not is:restricted
 8. MONO COLOR = EXACT match: "mono red" = c=r (NOT c:r)
 
+=== TARGETING vs TYPE (MOST CRITICAL - #1 MISTAKE!) ===
+When users say "cards that destroy/exile/counter X", they want cards that AFFECT X, NOT cards OF TYPE X!
+DO NOT add t:[target] when the user wants cards that TARGET that type!
+
+WRONG (NEVER DO THIS):
+- "white spells that destroy artifacts" → t:artifact c:w  ❌ WRONG! Returns artifacts!
+- "green cards that destroy enchantments" → t:enchantment c:g  ❌ WRONG! Returns enchantments!
+- "blue cards that counter creatures" → t:creature c:u  ❌ WRONG! Returns creatures!
+
+CORRECT:
+- "white spells that destroy artifacts" → (t:instant or t:sorcery) c:w otag:artifact-removal
+- "green cards that destroy enchantments" → c:g otag:enchantment-removal  
+- "blue cards that counter creatures" → c:u (o:"counter target creature" or o:"counter" o:"creature spell")
+- "red cards that deal damage to creatures" → c:r otag:creature-removal
+- "black spells that kill creatures" → (t:instant or t:sorcery) c:b otag:creature-removal
+
+KEY RULE: t:[type] = what the card IS. o:/otag: = what the card DOES to other things.
+
 DATE/YEAR SYNTAX (CRITICAL - COMMON MISTAKE):
 - "after 2020" / "since 2020" / "post 2020" = year>2020
 - "released in 2023" / "from 2023" = year=2023
@@ -257,6 +275,12 @@ MODAL/MDFC:
 - "modal lands" / "MDFC lands" = is:mdfc t:land
 
 TRIBALS: Use t:[type] for creature types (t:elf, t:goblin, t:zombie, etc.)
+
+TARGETING vs TYPE (CRITICAL - DON'T CONFUSE!):
+- "spells that destroy artifacts" ≠ t:artifact! Use: (t:instant or t:sorcery) otag:artifact-removal
+- "cards that counter spells" ≠ t:instant! Use: otag:counterspell
+- "green cards that destroy enchantments" ≠ t:enchantment! Use: c:g otag:enchantment-removal
+- The type (t:) is WHAT the card IS. Oracle text/tags are WHAT the card DOES.
 
 GUILDS: azorius=id=wu, dimir=id=ub, rakdos=id=br, gruul=id=rg, selesnya=id=gw, orzhov=id=wb, izzet=id=ur, golgari=id=bg, boros=id=rw, simic=id=ug
 SHARDS: esper=id=wub, grixis=id=ubr, jund=id=brg, naya=id=wrg, bant=id=wug
@@ -593,6 +617,38 @@ REGEX PATTERNS IN QUERIES:
 - o:/pattern/ for oracle text regex
 - t:/pattern/ for type line regex
 - "exactly 3 types in type line" → t:/[^—]*—[^—]*—[^—]*—[^—]*$/ (3 dashes = 4 type segments)
+
+=== TARGETING vs TYPE (CRITICAL - COMMON MISTAKE!) ===
+When users ask for "spells that destroy/exile/target X", they want cards that AFFECT X, NOT cards of type X!
+
+WRONG PATTERNS (DO NOT DO THIS):
+- "white spells that destroy artifacts" → t:artifact c:w  ❌ (returns artifacts, not artifact removal!)
+- "blue cards that counter spells" → t:instant t:sorcery c:u  ❌ (returns spells, not counterspells!)
+- "green cards that destroy enchantments" → t:enchantment c:g  ❌ (returns enchantments!)
+
+CORRECT PATTERNS:
+- "white spells that destroy artifacts" → (t:instant or t:sorcery) c:w otag:artifact-removal
+- "blue cards that counter spells" → c:u otag:counterspell
+- "green cards that destroy enchantments" → c:g otag:enchantment-removal
+- "red cards that deal damage to creatures" → c:r otag:creature-removal
+- "black spells that destroy creatures" → (t:instant or t:sorcery) c:b otag:creature-removal
+
+TARGETING PATTERNS use o: or otag: to find WHAT THE CARD DOES:
+- "destroy [target]" → otag:[target]-removal OR o:"destroy" o:"[target]"
+- "exile [target]" → o:"exile" o:"[target]"
+- "deal damage to [target]" → o:"damage" o:"[target]" or otag:removal
+- "counter [target]" → otag:counterspell (for spells) or o:"counter" o:"[target]"
+- "sacrifice [target]" → o:"sacrifice" o:"[target]" (forces opponent sacrifice)
+
+EXAMPLES:
+- "white cards that exile creatures" → c:w o:"exile" o:"creature"
+- "spells that destroy lands" → (t:instant or t:sorcery) o:"destroy" o:"land"
+- "cards that sacrifice artifacts" → o:"sacrifice" o:"artifact"
+- "red spells that deal damage to any target" → (t:instant or t:sorcery) c:r o:"any target"
+
+KEY INSIGHT: The CARD TYPE (t:) describes WHAT the card IS.
+             The ORACLE TEXT (o:) or ORACLE TAG (otag:) describes WHAT the card DOES.
+             When users ask "spells that do X to Y", they want t:spell + o/otag:effect, NOT t:Y!
 
 === WHEN TO USE otag: vs o: ===
 - USE otag: when searching for a CATEGORY of effect (e.g., "ramp cards" → otag:ramp)
