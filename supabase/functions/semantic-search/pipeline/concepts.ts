@@ -342,7 +342,8 @@ const CONCEPT_LIBRARY: Record<
       'makes treasure',
       'treasure generator',
     ],
-    templates: ['otag:treasure-generator'],
+    // NOTE: otag:treasure-generator is NOT a real Scryfall tag
+    templates: ['o:"create" o:"Treasure"'],
     negativeTemplates: [],
     description: 'Cards that create treasure tokens',
     category: 'tokens',

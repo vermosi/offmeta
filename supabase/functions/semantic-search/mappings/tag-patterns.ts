@@ -134,8 +134,9 @@ export const TAG_FIRST_MAP: TagPattern[] = [
   },
   {
     pattern: /\btreasure generators?\b/gi,
-    tag: 'treasure-generator',
-    fallback: 'o:"treasure token"',
+    // NOTE: otag:treasure-generator is NOT a valid Scryfall tag
+    tag: '',
+    fallback: 'o:"create" o:"Treasure"',
   },
   {
     pattern: /\bclone(?:s)?\b/gi,

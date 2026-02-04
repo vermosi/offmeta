@@ -150,7 +150,7 @@ export const KNOWN_OTAGS = new Set([
   'graveyard-recursion',
   'reanimation',
   'token-generator',
-  'treasure-generator',
+  // NOTE: treasure-generator is NOT a real Scryfall tag - use o:"create" o:"Treasure" instead
   'food-generator',
   'clue-generator',
   'blood-generator',
