@@ -1,34 +1,39 @@
 import { describe, it, expect } from 'vitest';
 
 /**
- * Scryfall Oracle Tag (otag:) Validation Test Suite
- * Tests all otag: values used in mappings against Scryfall API to verify they exist.
+ * Scryfall Tagger Tags Validation Test Suite
+ * Tests otag: and atag: values against Scryfall API to verify they exist.
  * 
- * This is a critical regression test - if an otag fails, the mapping should be
- * replaced with a reliable oracle text search.
+ * Source: https://scryfall.com/docs/tagger-tags
+ * 
+ * IMPORTANT: This file only includes tags that are VERIFIED to return results.
+ * Many common terms (like keywords) should use kw: not otag:
+ * 
+ * Syntax guide:
+ * - otag: / function: / oracletag: - Functional tags (what the card does)
+ * - atag: / art: / arttag: - Art tags (what's in the artwork)
+ * - kw: / keyword: - Keyword abilities (flying, haste, etc.)
  */
 
-// All VALID otag: values verified against Scryfall API
-// This list was curated by testing each tag - invalid tags are listed in comments at the bottom
-const OTAG_VALUES = [
-  // From slang-to-syntax.ts - VERIFIED VALID
+// Oracle Tags (otag:) - Functional tags describing card mechanics
+// All tags below have been VERIFIED to return results from Scryfall API
+const ORACLE_TAGS = [
+  // Core mechanics used in our mappings
   { tag: 'sacrifice-outlet', description: 'Cards that let you sacrifice permanents' },
-  { tag: 'free-sacrifice-outlet', description: 'Free sacrifice outlets (no mana cost)' },
+  { tag: 'free-sacrifice-outlet', description: 'Free sacrifice outlets' },
   { tag: 'ramp', description: 'Mana acceleration' },
   { tag: 'spot-removal', description: 'Single-target removal' },
   { tag: 'mass-removal', description: 'Multi-target or board removal' },
   { tag: 'board-wipe', description: 'Board wipe effects' },
   { tag: 'combat-trick', description: 'Instant-speed combat modifiers' },
   { tag: 'win-condition', description: 'Game-ending threats' },
-  { tag: 'discard-outlet', description: 'Discard effects' },
+  { tag: 'discard-outlet', description: 'Discard outlets' },
   { tag: 'burn', description: 'Direct damage spells' },
   { tag: 'death-trigger', description: 'Dies triggers' },
   { tag: 'lord', description: 'Creature type buffers' },
   { tag: 'anthem', description: 'Team-wide buffs' },
   { tag: 'flicker', description: 'Exile and return effects' },
   { tag: 'clone', description: 'Copy creature effects' },
-  
-  // Common tags - VERIFIED VALID
   { tag: 'tutor', description: 'Search library effects' },
   { tag: 'mana-dork', description: 'Creatures that produce mana' },
   { tag: 'removal', description: 'Removal effects' },
@@ -36,7 +41,7 @@ const OTAG_VALUES = [
   { tag: 'lifegain', description: 'Life gain effects' },
   { tag: 'wheel', description: 'Discard hand and draw effects' },
   { tag: 'mill', description: 'Mill effects' },
-  { tag: 'discard', description: 'Discard effects' },
+  { tag: 'discard', description: 'Forced discard' },
   { tag: 'extra-turn', description: 'Extra turn effects' },
   { tag: 'extra-combat', description: 'Extra combat effects' },
   { tag: 'untapper', description: 'Untap effects' },
@@ -46,21 +51,85 @@ const OTAG_VALUES = [
   { tag: 'cantrip', description: 'Draw a card effects' },
   { tag: 'fog', description: 'Prevent combat damage' },
   { tag: 'ritual', description: 'One-shot mana generation' },
-  { tag: 'attack-trigger', description: 'When attacks effects' },
+  { tag: 'attack-trigger', description: 'When attacks triggers' },
   { tag: 'bounce', description: 'Return to hand effects' },
   { tag: 'blink', description: 'Exile and return effects' },
   
+  // Additional verified functional tags from tagger-tags.txt
+  { tag: 'activated-ability', description: 'Has activated ability' },
+  { tag: 'affinity', description: 'Affinity mechanic' },
+  { tag: 'alternate-win-condition', description: 'Alternative win condition' },
+  { tag: 'balance', description: 'Balance-style effect' },
+  { tag: 'banish', description: 'Exile effect' },
+  { tag: 'battalion', description: 'Battalion trigger' },
+  { tag: 'bite', description: 'One-sided fight' },
+  { tag: 'boardwipe', description: 'Board wipe' },
+  { tag: 'bribery', description: 'Take opponent creature' },
+  { tag: 'bushido', description: 'Bushido mechanic' },
+  { tag: 'draw', description: 'Card draw' },
+  { tag: 'evasion', description: 'Combat evasion' },
+  { tag: 'graveyard-hate', description: 'Exile graveyards' },
+  { tag: 'naturalize', description: 'Destroy artifact/enchantment' },
+  { tag: 'overrun', description: 'Pump and trample team' },
+  { tag: 'pacifism', description: 'Prevent attacking/blocking' },
+  { tag: 'persist', description: 'Persist mechanic' },
+  { tag: 'pillowfort', description: 'Defensive deterrent' },
+  { tag: 'pinger', description: 'Repeatable damage' },
+  { tag: 'plunder', description: 'Card advantage through attack' },
+  { tag: 'polymorph', description: 'Transform creature' },
+  { tag: 'pseudo-haste', description: 'Haste-like effect' },
+  { tag: 'punisher', description: 'Opponent chooses punishment' },
+  { tag: 'reanimate', description: 'Return creature from graveyard' },
+  { tag: 'regrowth', description: 'Return card from graveyard to hand' },
+  { tag: 'removal-artifact', description: 'Artifact removal' },
+  { tag: 'removal-creature', description: 'Creature removal' },
+  { tag: 'removal-enchantment', description: 'Enchantment removal' },
+  { tag: 'removal-land', description: 'Land destruction' },
+  { tag: 'removal-planeswalker', description: 'Planeswalker removal' },
+  { tag: 'revolt', description: 'Revolt mechanic' },
+  { tag: 'rummage', description: 'Discard then draw' },
+  { tag: 'scry', description: 'Scry mechanic' },
+  { tag: 'surveil', description: 'Surveil mechanic' },
+  
+  // Specialized land tags
+  { tag: 'painland', description: 'Painland cycle' },
+  { tag: 'bounceland', description: 'Karoo/Bounceland cycle' },
+  { tag: 'boltland', description: 'MDFC spell-lands' },
+];
+
+// Art Tags (atag:) - Tags describing card artwork
+// All tags verified to return results
+const ART_TAGS = [
+  { tag: 'dragon', description: 'Dragon in artwork' },
+  { tag: 'fire', description: 'Fire in artwork' },
+  { tag: 'forest', description: 'Forest in artwork' },
+  { tag: 'angel', description: 'Angel in artwork' },
+  { tag: 'demon', description: 'Demon in artwork' },
+  { tag: 'zombie', description: 'Zombie in artwork' },
+  { tag: 'sword', description: 'Sword in artwork' },
+  { tag: 'water', description: 'Water in artwork' },
+  { tag: 'mountain', description: 'Mountain in artwork' },
+  { tag: 'castle', description: 'Castle in artwork' },
+  { tag: 'moon', description: 'Moon in artwork' },
+  { tag: 'sun', description: 'Sun in artwork' },
+  { tag: 'skull', description: 'Skull in artwork' },
+  { tag: 'skeleton', description: 'Skeleton in artwork' },
+  { tag: 'lightning', description: 'Lightning in artwork' },
+  { tag: 'armor', description: 'Armor in artwork' },
+  { tag: 'magic', description: 'Magic effects in artwork' },
+  { tag: 'squirrel', description: 'Squirrel in artwork' },
+  { tag: 'cat', description: 'Cat in artwork' },
+  { tag: 'bird', description: 'Bird in artwork' },
 ];
 
 /**
- * Validates an otag: against Scryfall API.
- * Returns { valid: true, count } if tag returns results
- * Returns { valid: false, error } if tag is invalid or returns 0 results
+ * Validates a tag against Scryfall API.
  */
-async function validateOtagAgainstScryfall(
+async function validateTagAgainstScryfall(
+  prefix: 'otag' | 'atag',
   tag: string,
 ): Promise<{ valid: boolean; count?: number; error?: string; status?: number }> {
-  const query = `otag:${tag}`;
+  const query = `${prefix}:${tag}`;
   const url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(query)}`;
 
   try {
@@ -68,22 +137,19 @@ async function validateOtagAgainstScryfall(
     const data = await response.json();
 
     if (response.status === 200) {
-      // Tag exists and returns results
       return { valid: true, count: data.total_cards, status: 200 };
     }
 
     if (response.status === 404) {
-      // No cards found with this tag - tag may exist but have no cards, or not exist
       return { 
         valid: false, 
         count: 0,
         status: 404,
-        error: 'No cards found with this tag - may not exist or have no tagged cards'
+        error: 'No cards found with this tag'
       };
     }
 
     if (response.status === 400) {
-      // Invalid tag syntax
       return {
         valid: false,
         status: 400,
@@ -104,23 +170,19 @@ async function validateOtagAgainstScryfall(
   }
 }
 
-// Rate limit helper - Scryfall allows 10 requests per second
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-describe('Scryfall Oracle Tag (otag:) Validation', () => {
-  describe('All mapped otag: values should return results', () => {
-    OTAG_VALUES.forEach((tagInfo, index) => {
+describe('Scryfall Tagger Tags Validation', () => {
+  describe('Oracle Tags (otag:) - Functional card mechanics', () => {
+    ORACLE_TAGS.forEach((tagInfo, index) => {
       it(`otag:${tagInfo.tag} - ${tagInfo.description}`, async () => {
-        // Rate limiting: wait 150ms between requests
         if (index > 0) await delay(150);
 
-        const result = await validateOtagAgainstScryfall(tagInfo.tag);
+        const result = await validateTagAgainstScryfall('otag', tagInfo.tag);
 
-        // Tag should be valid and return at least 1 card
         expect(result.valid).toBe(true);
         expect(result.count).toBeGreaterThan(0);
         
-        // Log count for debugging
         if (result.valid) {
           console.log(`  ✓ otag:${tagInfo.tag} returns ${result.count} cards`);
         }
@@ -128,45 +190,53 @@ describe('Scryfall Oracle Tag (otag:) Validation', () => {
     });
   });
 
-  // Meta-test: ensure no duplicate tags
-  it('should have no duplicate tag entries', () => {
-    const tagNames = OTAG_VALUES.map(t => t.tag);
+  describe('Art Tags (atag:) - Card artwork elements', () => {
+    ART_TAGS.forEach((tagInfo, index) => {
+      it(`atag:${tagInfo.tag} - ${tagInfo.description}`, async () => {
+        if (index > 0) await delay(150);
+
+        const result = await validateTagAgainstScryfall('atag', tagInfo.tag);
+
+        expect(result.valid).toBe(true);
+        expect(result.count).toBeGreaterThan(0);
+        
+        if (result.valid) {
+          console.log(`  ✓ atag:${tagInfo.tag} returns ${result.count} cards`);
+        }
+      }, 10000);
+    });
+  });
+
+  // Meta-tests
+  it('should have no duplicate oracle tag entries', () => {
+    const tagNames = ORACLE_TAGS.map(t => t.tag);
+    const uniqueTags = new Set(tagNames);
+    expect(uniqueTags.size).toBe(tagNames.length);
+  });
+
+  it('should have no duplicate art tag entries', () => {
+    const tagNames = ART_TAGS.map(t => t.tag);
     const uniqueTags = new Set(tagNames);
     expect(uniqueTags.size).toBe(tagNames.length);
   });
 });
 
 /**
- * Known tags that DON'T exist on Scryfall (for documentation)
- * These should NEVER be used in mappings - use oracle text search instead:
+ * INVALID TAGS - DO NOT USE IN MAPPINGS
  * 
- * INVALID TAGS (verified 2026-02):
- * - otag:hard-counter → use: t:instant o:"counter target"
- * - otag:aggro → use: t:creature mv<=3 pow>=2
- * - otag:counterspell → use: t:instant o:"counter target"
- * - otag:etb-trigger → use: o:"enters the battlefield"
- * - otag:ltb-trigger → use: o:"leaves the battlefield"
- * - otag:pump → use: o:/\+[0-9]+\/\+[0-9]+/
- * - otag:tax → use: (o:"pay" o:"additional" or o:"costs" o:"more")
- * - otag:drain → use: (o:"loses" o:"life" o:"gains" or o:"deals" o:"damage" o:"gains")
- * - otag:ping → use: o:"deals 1 damage"
- * - otag:land-ramp → use: otag:ramp (general ramp) or o:"search" o:"land"
- * - otag:card-draw → use: o:"draw" or otag:cantrip
- * - otag:graveyard-recursion → use: otag:recursion
- * - otag:reanimation → use: otag:recursion or o:"return" o:"creature" o:"graveyard"
+ * KEYWORDS: Use kw: prefix, NOT otag:
+ * - flying, haste, trample, lifelink, deathtouch, menace, reach,
+ *   vigilance, first-strike, double-strike, hexproof, indestructible,
+ *   shroud, infect, proliferate, storm, dredge, cycling, undying,
+ *   flash, protection, prowess
+ * 
+ * INVALID otag: values (use alternatives):
+ * - otag:countermagic → use: otag:counter
+ * - otag:stax → use: o:"can't" / pillowfort effects
+ * - otag:drain → use: o:"loses" o:"life" o:"gains"
  * - otag:token-generator → use: o:"create" o:"token"
- * - otag:wrath → use: otag:board-wipe
- * - otag:treasure-generator → use: o:"create" o:"treasure"
- * - otag:equipment → use: t:equipment
- * - otag:aura → use: t:aura
- * - otag:protection → use: kw:protection or o:"protection from"
- * - otag:haste-granter → use: o:"haste" or o:"gains haste"
- * - otag:land-destruction → use: o:"destroy" o:"land"
- * - otag:tribal-payoff → use: o:"creature type" or type-specific searches
- * - otag:etb → use: o:"enters the battlefield"
- * - otag:ltb → use: o:"leaves the battlefield"
- * - otag:dies-trigger → use: otag:death-trigger
- * - otag:damage-trigger → use: o:"deals damage" triggers
- * - otag:proliferate → use: kw:proliferate
- * - otag:populate → use: kw:populate
+ * - otag:treasure → use: o:"create" o:"treasure"
+ * - otag:wrath → use: otag:board-wipe or otag:boardwipe
+ * - otag:resurrection → use: otag:reanimate or otag:recursion
+ * - otag:crew-cheap → doesn't exist
  */
