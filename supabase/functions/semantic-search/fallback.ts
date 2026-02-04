@@ -124,9 +124,9 @@ export function buildFallbackQuery(
     [/\bcreature removal\b/gi, 'otag:creature-removal'],
     [/\bgraveyard hate\b/gi, 'otag:graveyard-hate'],
 
-    // Token generation
-    [/\btreasure tokens?\b/gi, 'otag:treasure-generator'],
-    [/\bmakes? treasure\b/gi, 'otag:treasure-generator'],
+    // Token generation - NOTE: otag:treasure-generator is NOT a real Scryfall tag
+    [/\btreasure tokens?\b/gi, 'o:"create" o:"Treasure"'],
+    [/\bmakes? treasure\b/gi, 'o:"create" o:"Treasure"'],
     [/\btoken generators?\b/gi, 'otag:token-generator'],
     [/\bmakes? tokens?\b/gi, 'otag:token-generator'],
     [/\bfood tokens?\b/gi, 'otag:food-generator'],
