@@ -1,137 +1,122 @@
 
-# Remove Snapshot Tests and Pivot to Data-Driven Component Testing
+# Search History Dropdown
 
-## Overview
-This plan removes all snapshot tests from the codebase and updates documentation to reflect a pure data testing strategy. Snapshot tests have proven unreliable due to CI cache inconsistencies, causing 41 failures that require manual intervention rather than catching real bugs.
+Add a dropdown panel that appears when the user focuses on the search input, displaying all recent searches (up to 5) with the ability to quickly select, delete individual items, or clear all history.
 
-## Why Remove Snapshots?
+## Current State
+- Search history already exists via the `useSearchHistory` hook storing up to 5 items in `localStorage`
+- History is currently shown as inline chips below the search bar (only when input is empty)
+- Limited to showing 1-2 items due to space constraints
 
-**Problems identified:**
-- CI cache mismatches cause false failures unrelated to actual code changes
-- Snapshots test implementation details (HTML structure) rather than behavior
-- Updating snapshots becomes a routine chore rather than a meaningful validation step
-- Hard to review snapshot diffs in PRs (thousands of lines of HTML)
+## Implementation Approach
 
-**Better alternative:**
-The existing unit tests (e.g., `CardModalDetails.test.tsx`, `CardModalToolbox.test.tsx`) already provide strong coverage using behavioral assertions:
-- `expect(getByText('Lightning Bolt')).toBeInTheDocument()`
-- `expect(windowOpenSpy).toHaveBeenCalledWith(...)`
-- `expect(getByTestId('mana-cost')).toHaveTextContent('{R}')`
+### Use Popover for the Dropdown
+We'll use the existing `Popover` component from Radix UI to create a dropdown that:
+- Appears when the input is focused AND there is search history
+- Stays open while interacting with history items
+- Closes when clicking outside or after selecting a search
+- Has proper z-index to appear above other content
 
-These tests are stable, readable, and test what users actually care about.
+### UI Design
 
----
-
-## Files to Delete
-
-### Snapshot Test Files (7 files)
 ```text
-src/components/CardModal/__tests__/CardModalDetails.snapshot.test.tsx
-src/components/CardModal/__tests__/CardModalImage.snapshot.test.tsx
-src/components/CardModal/__tests__/CardModalLegalities.snapshot.test.tsx
-src/components/CardModal/__tests__/CardModalPrintings.snapshot.test.tsx
-src/components/CardModal/__tests__/CardModalPurchaseLinks.snapshot.test.tsx
-src/components/CardModal/__tests__/CardModalRulings.snapshot.test.tsx
-src/components/CardModal/__tests__/CardModalToolbox.snapshot.test.tsx
+┌─────────────────────────────────────────────────────┐
+│ 🔍  [Search input field...                   ] [Go] │
+└─────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────┐
+│  Recent Searches                        [Clear all] │
+├─────────────────────────────────────────────────────┤
+│  🕐 creatures that make treasure tokens        [×]  │
+│  🕐 cheap green ramp spells                    [×]  │
+│  🕐 artifacts that produce 2 mana              [×]  │
+│  🕐 mono red stax pieces                       [×]  │
+│  🕐 commander-legal tutors under $10           [×]  │
+└─────────────────────────────────────────────────────┘
 ```
 
-### Snapshot Files Directory (7 .snap files)
-```text
-src/components/CardModal/__tests__/__snapshots__/CardModalDetails.snapshot.test.tsx.snap
-src/components/CardModal/__tests__/__snapshots__/CardModalImage.snapshot.test.tsx.snap
-src/components/CardModal/__tests__/__snapshots__/CardModalLegalities.snapshot.test.tsx.snap
-src/components/CardModal/__tests__/__snapshots__/CardModalPrintings.snapshot.test.tsx.snap
-src/components/CardModal/__tests__/__snapshots__/CardModalPurchaseLinks.snapshot.test.tsx.snap
-src/components/CardModal/__tests__/__snapshots__/CardModalRulings.snapshot.test.tsx.snap
-src/components/CardModal/__tests__/__snapshots__/CardModalToolbox.snapshot.test.tsx.snap
-```
+### Changes Required
 
-**Total: 14 files removed**
+**1. Add `removeFromHistory` function to `useSearchHistory` hook**
+- New function to remove a single item by query string
+- Updates both state and localStorage
 
----
+**2. Add dropdown state management**
+- Track `showHistoryDropdown` state (boolean)
+- Open on input focus when history exists
+- Close on blur (with delay for click handling), on search execution, or on Escape key
 
-## Documentation Update
+**3. Add Popover-based dropdown UI**
+- Position below the search input container
+- Show all 5 history items (not truncated to 1-2)
+- Each item shows: Clock icon, query text, delete button (X)
+- Header with "Recent Searches" label and "Clear all" button
+- Proper accessibility: keyboard navigation, focus trapping
 
-### Update `docs/testing.md`
-
-Replace lines 66-72:
-
-**Before:**
-```markdown
-### Component Tests
-
-Snapshot and unit tests for UI components in `src/components/*/__tests__/`.
-
-```bash
-npm run test -- src/components
-```
-```
-
-**After:**
-```markdown
-### Component Tests
-
-Behavioral unit tests for UI components in `src/components/*/__tests__/`. Tests verify rendered content, user interactions, and data flow without relying on snapshot comparisons.
-
-```bash
-npm run test -- src/components
-```
-```
-
----
-
-## Test Count Impact
-
-| Category | Before | After |
-|----------|--------|-------|
-| Snapshot tests | 41 | 0 |
-| Component unit tests | ~82 | ~82 (unchanged) |
-| Total test count | ~850 | ~809 |
-
-The remaining unit tests provide equivalent or better coverage:
-- `CardModalDetails.test.tsx` - 14 tests covering name, mana, type, oracle text, rarity, artist, reserved badge, printing badges, power/toughness, flavor text, mobile styling
-- `CardModalToolbox.test.tsx` - 14 tests covering links, URL generation, click handlers, mobile/desktop views
-- Similar coverage exists for other modal components
-
----
+**4. Handle interaction edge cases**
+- Clicking a history item: set query, trigger search, close dropdown
+- Clicking delete (X) on an item: remove that item, keep dropdown open
+- Clicking "Clear all": remove all history, close dropdown
+- Blur with timeout to allow clicking items before closing
 
 ## Technical Details
 
-### Implementation Steps
-1. Delete all 7 `*.snapshot.test.tsx` files
-2. Delete the `__snapshots__/` directory with all 7 `.snap` files
-3. Update `docs/testing.md` to remove snapshot references
-4. Run `npm run test` to verify remaining tests pass
-5. Run `npm run lint` to verify no linting errors
-
-### No Configuration Changes Needed
-- `vite.config.ts` has no snapshot-specific settings
-- Test setup in `src/test/setup.ts` doesn't reference snapshots
-- CI workflow (`.github/workflows/ci.yml`) runs all tests without snapshot-specific flags
-
-### Resulting Test Structure
-```text
-src/components/CardModal/__tests__/
-  ├── CardModalDetails.test.tsx       (14 behavioral tests)
-  ├── CardModalImage.test.tsx         (8 behavioral tests)
-  ├── CardModalLegalities.test.tsx    (behavioral tests)
-  ├── CardModalPrintings.test.tsx     (behavioral tests)
-  ├── CardModalPurchaseLinks.test.tsx (behavioral tests)
-  ├── CardModalRulings.test.tsx       (behavioral tests)
-  └── CardModalToolbox.test.tsx       (14 behavioral tests)
+### New State
+```typescript
+const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
+const dropdownRef = useRef<HTMLDivElement>(null);
 ```
 
----
+### Updated `useSearchHistory` hook
+```typescript
+const removeFromHistory = useCallback((queryToRemove: string) => {
+  setHistory((prev) => {
+    const updated = prev.filter(
+      (q) => q.toLowerCase() !== queryToRemove.toLowerCase()
+    );
+    try {
+      localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(updated));
+    } catch {
+      // Ignore storage failures.
+    }
+    return updated;
+  });
+}, []);
 
-## Future Testing Strategy
+return { history, addToHistory, removeFromHistory, clearHistory };
+```
 
-**Focus on data-driven testing:**
-- Golden tests for translation accuracy (200+ tests)
-- Security tests for input validation (300+ tests)
-- API validation tests against live Scryfall (170+ tests)
-- Component behavior tests (DOM queries, interactions)
-- Edge function integration tests (70+ tests)
+### Dropdown visibility logic
+```typescript
+// Show dropdown when focused AND has history AND no current query being typed
+const shouldShowDropdown = isFocused && history.length > 0;
+```
 
-**Avoid:**
-- Snapshot tests (brittle, hard to review, cache-sensitive)
-- Implementation-detail tests (CSS class names, exact HTML structure)
+### Input handlers update
+```typescript
+onFocus={() => {
+  setIsFocused(true);
+  if (history.length > 0) {
+    setShowHistoryDropdown(true);
+  }
+}}
+onBlur={() => {
+  setIsFocused(false);
+  // Delay closing to allow clicking dropdown items
+  setTimeout(() => {
+    setShowHistoryDropdown(false);
+  }, 150);
+}}
+```
+
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/components/UnifiedSearchBar.tsx` | Add `removeFromHistory` to hook, add dropdown state, add Popover-based dropdown UI, update input handlers |
+
+## Accessibility Considerations
+- Dropdown items are keyboard navigable (arrow keys)
+- Escape key closes dropdown
+- Screen reader announces "Recent Searches" section
+- Each item has proper aria-label for delete action
+- Focus management when dropdown opens/closes
