@@ -65,7 +65,7 @@ npm run test -- supabase/functions
 
 ### Component Tests
 
-Snapshot and unit tests for UI components in `src/components/*/__tests__/`.
+Behavioral unit tests for UI components in `src/components/*/__tests__/`. Tests verify rendered content, user interactions, and data flow without relying on snapshot comparisons.
 
 ```bash
 npm run test -- src/components
