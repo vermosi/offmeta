@@ -118,11 +118,6 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     syntax: 'otag:combat-trick',
     description: 'Instant-speed combat modifiers',
   },
-  {
-    pattern: /\bpump\s+spells?\b/gi,
-    syntax: 'otag:pump',
-    description: 'Power/toughness boosting spells',
-  },
 
   // Finishers/Win conditions (NOT otag:finisher)
   {
@@ -212,15 +207,15 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     description: 'Damage to players',
   },
 
-  // ETB/LTB triggers
+  // ETB/LTB triggers (NOT otag:etb-trigger/ltb-trigger - those don't exist)
   {
     pattern: /\betb\s+(?:trigger|effect)s?\b/gi,
-    syntax: 'otag:etb-trigger',
+    syntax: 'o:"enters the battlefield"',
     description: 'Enter the battlefield triggers',
   },
   {
     pattern: /\bltb\s+(?:trigger|effect)s?\b/gi,
-    syntax: 'otag:ltb-trigger',
+    syntax: 'o:"leaves the battlefield"',
     description: 'Leave the battlefield triggers',
   },
   {
@@ -232,17 +227,17 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
   // Miscellaneous common slang
   {
     pattern: /\bping(?:ers?)?\b/gi,
-    syntax: 'otag:ping',
+    syntax: 'o:"deals 1 damage"',
     description: 'Small damage effects',
   },
   {
     pattern: /\bdrain(?:ers?)?\b/gi,
-    syntax: 'otag:drain',
+    syntax: '(o:"loses" o:"life" o:"gains" or o:"deals" o:"damage" o:"gains")',
     description: 'Life drain effects',
   },
   {
     pattern: /\btax\s+effects?\b/gi,
-    syntax: 'otag:tax-effect',
+    syntax: '(o:"pay" o:"additional" or o:"costs" o:"more")',
     description: 'Tax/pay more effects',
   },
   {
@@ -254,5 +249,77 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     pattern: /\banthems?\b/gi,
     syntax: 'otag:anthem',
     description: 'Team-wide buffs',
+  },
+  {
+    pattern: /\bpump\s+spells?\b/gi,
+    syntax: 'o:/\\+[0-9]+\\/\\+[0-9]+/',
+    description: 'Power/toughness boosting spells',
+  },
+
+  // Strategy archetypes
+  {
+    pattern: /\bvoltron\b/gi,
+    syntax: '(t:equipment or t:aura or o:"equipped creature" or o:"enchanted creature")',
+    description: 'Equipment/aura strategy',
+  },
+  {
+    pattern: /\bstorm\s+count\b/gi,
+    syntax: 'kw:storm',
+    description: 'Storm mechanic cards',
+  },
+  {
+    pattern: /\bmana\s+base\b/gi,
+    syntax: 't:land (o:"add {" or t:basic)',
+    description: 'Lands for mana production',
+  },
+  {
+    pattern: /\bmana\s+curve\b/gi,
+    syntax: 't:creature mv<=3',
+    description: 'Cheap creatures for curve',
+  },
+  {
+    pattern: /\bstax\s+(?:piece|card)?s?\b/gi,
+    syntax: '(o:"can\'t" o:"unless" or o:"additional" o:"cost" or o:"must" o:"attack")',
+    description: 'Stax/tax prison effects',
+  },
+  {
+    pattern: /\bprison\s+(?:piece|card)?s?\b/gi,
+    syntax: '(o:"can\'t" or o:"must" o:"sacrifice" or o:"skip")',
+    description: 'Prison/lock effects',
+  },
+  {
+    pattern: /\bhate\s+bears?\b/gi,
+    syntax: 't:creature mv<=3 (o:"can\'t" or o:"costs" o:"more")',
+    description: 'Hatebear creatures',
+  },
+  {
+    pattern: /\bvalue\s+engines?\b/gi,
+    syntax: '(otag:card-draw or o:"whenever" o:"draw")',
+    description: 'Card advantage engines',
+  },
+  {
+    pattern: /\bflicker(?:ing)?\s+(?:effect|spell)?s?\b/gi,
+    syntax: 'otag:flicker',
+    description: 'Exile and return effects',
+  },
+  {
+    pattern: /\bblink\s+(?:effect|spell)?s?\b/gi,
+    syntax: 'otag:flicker',
+    description: 'Exile and return effects',
+  },
+  {
+    pattern: /\bclones?\b/gi,
+    syntax: 'otag:clone',
+    description: 'Copy creature effects',
+  },
+  {
+    pattern: /\binfect\s+creatures?\b/gi,
+    syntax: 'kw:infect t:creature',
+    description: 'Creatures with infect',
+  },
+  {
+    pattern: /\bpoisonous?\s+creatures?\b/gi,
+    syntax: '(kw:infect or kw:toxic) t:creature',
+    description: 'Poison-dealing creatures',
   },
 ];
