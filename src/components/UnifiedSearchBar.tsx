@@ -538,14 +538,19 @@ export const UnifiedSearchBar = forwardRef<
               }}
               onFocus={() => {
                 setIsFocused(true);
-                if (history.length > 0 && !query) {
+                if (history.length > 0) {
                   setShowHistoryDropdown(true);
                 }
               }}
-              onBlur={() => {
+              onBlur={(e) => {
                 setIsFocused(false);
-                // Delay closing to allow clicking dropdown items
-                setTimeout(() => setShowHistoryDropdown(false), 150);
+                // Check if focus moved to a dropdown item - don't close if so
+                const relatedTarget = e.relatedTarget as HTMLElement | null;
+                const isDropdownClick = relatedTarget?.closest('[role="listbox"]');
+                if (!isDropdownClick) {
+                  // Delay closing to allow clicking dropdown items
+                  setTimeout(() => setShowHistoryDropdown(false), 200);
+                }
               }}
               className="flex-1 min-w-0 bg-transparent text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none py-2 px-2 sm:px-1"
               autoComplete="off"
