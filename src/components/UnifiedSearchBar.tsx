@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Search, Loader2, X, Clock, History } from 'lucide-react';
+import { SearchHistoryDropdown } from '@/components/SearchHistoryDropdown';
 import { useIsMobile } from '@/hooks/useMobile';
 import { SearchFeedback } from '@/components/SearchFeedback';
 import { SearchHelpModal } from '@/components/SearchHelpModal';
@@ -152,6 +153,20 @@ function useSearchHistory() {
     });
   }, []);
 
+  const removeFromHistory = useCallback((queryToRemove: string) => {
+    setHistory((prev) => {
+      const updated = prev.filter(
+        (q) => q.toLowerCase() !== queryToRemove.toLowerCase(),
+      );
+      try {
+        localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(updated));
+      } catch {
+        // Ignore storage failures.
+      }
+      return updated;
+    });
+  }, []);
+
   const clearHistory = useCallback(() => {
     setHistory([]);
     try {
@@ -161,7 +176,7 @@ function useSearchHistory() {
     }
   }, []);
 
-  return { history, addToHistory, clearHistory };
+  return { history, addToHistory, removeFromHistory, clearHistory };
 }
 
 export interface SearchResult {
@@ -212,6 +227,7 @@ export const UnifiedSearchBar = forwardRef<
   const [query, setQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
   const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
   const [rateLimitCountdown, setRateLimitCountdown] = useState<number>(0);
   const [useLast, setUseLast] = useState(false);
@@ -220,7 +236,7 @@ export const UnifiedSearchBar = forwardRef<
   const abortControllerRef = useRef<AbortController | null>(null);
   const requestTokenRef = useRef(0);
   const { saveContext, getContext } = useSearchContext();
-  const { history, addToHistory, clearHistory } = useSearchHistory();
+  const { history, addToHistory, removeFromHistory, clearHistory } = useSearchHistory();
   const canUseLast = Boolean(getContext());
 
   // Abort pending requests on unmount
@@ -463,49 +479,80 @@ export const UnifiedSearchBar = forwardRef<
     >
       {/* Search input - Mobile-first, two-row layout on mobile */}
       <div className="relative space-y-2">
-        {/* Primary row: Input + Search button */}
-        <div
-          className={`
-            relative flex items-center gap-1.5 sm:gap-2 p-1 sm:p-1.5 rounded-xl border bg-card
-            transition-all duration-200
-            ${
-              isFocused
-                ? 'border-foreground/20 shadow-lg ring-2 ring-ring ring-offset-2 ring-offset-background'
-                : 'border-border shadow-sm hover:border-muted-foreground/30 hover:shadow-md'
-            }
-          `}
+        {/* Primary row: Input + Search button - wrapped in history dropdown */}
+        <SearchHistoryDropdown
+          history={history}
+          open={showHistoryDropdown}
+          onOpenChange={setShowHistoryDropdown}
+          onSelectQuery={(selectedQuery) => {
+            setQuery(selectedQuery);
+            setShowHistoryDropdown(false);
+            handleSearch(selectedQuery);
+          }}
+          onRemoveQuery={removeFromHistory}
+          onClearAll={() => {
+            clearHistory();
+            setShowHistoryDropdown(false);
+          }}
         >
-          <label htmlFor="search-input" className="sr-only">
-            Search for Magic cards using natural language
-          </label>
-
           <div
-            className="hidden sm:flex items-center justify-center w-10 h-10 rounded-lg bg-secondary text-muted-foreground flex-shrink-0"
-            aria-hidden="true"
+            className={`
+              relative flex items-center gap-1.5 sm:gap-2 p-1 sm:p-1.5 rounded-xl border bg-card
+              transition-all duration-200
+              ${
+                isFocused
+                  ? 'border-foreground/20 shadow-lg ring-2 ring-ring ring-offset-2 ring-offset-background'
+                  : 'border-border shadow-sm hover:border-muted-foreground/30 hover:shadow-md'
+              }
+            `}
           >
-            <Search className="h-4 w-4" />
-          </div>
+            <label htmlFor="search-input" className="sr-only">
+              Search for Magic cards using natural language
+            </label>
 
-          <input
-            ref={inputRef}
-            id="search-input"
-            type="search"
-            placeholder={
-              isMobile
-                ? 'Search cards...'
-                : "Describe what you're looking for..."
-            }
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            className="flex-1 min-w-0 bg-transparent text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none py-2 px-2 sm:px-1"
-            autoComplete="off"
-            autoCorrect="off"
-            spellCheck="false"
-            aria-describedby="search-hint"
-          />
+            <div
+              className="hidden sm:flex items-center justify-center w-10 h-10 rounded-lg bg-secondary text-muted-foreground flex-shrink-0"
+              aria-hidden="true"
+            >
+              <Search className="h-4 w-4" />
+            </div>
+
+            <input
+              ref={inputRef}
+              id="search-input"
+              type="search"
+              placeholder={
+                isMobile
+                  ? 'Search cards...'
+                  : "Describe what you're looking for..."
+              }
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  setShowHistoryDropdown(false);
+                  handleSearch();
+                } else if (e.key === 'Escape') {
+                  setShowHistoryDropdown(false);
+                }
+              }}
+              onFocus={() => {
+                setIsFocused(true);
+                if (history.length > 0 && !query) {
+                  setShowHistoryDropdown(true);
+                }
+              }}
+              onBlur={() => {
+                setIsFocused(false);
+                // Delay closing to allow clicking dropdown items
+                setTimeout(() => setShowHistoryDropdown(false), 150);
+              }}
+              className="flex-1 min-w-0 bg-transparent text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none py-2 px-2 sm:px-1"
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck="false"
+              aria-describedby="search-hint"
+            />
 
           {query && (
             <button
@@ -577,7 +624,8 @@ export const UnifiedSearchBar = forwardRef<
               }}
             />
           </div>
-        </div>
+          </div>
+        </SearchHistoryDropdown>
 
         {/* Secondary row: Mobile-only auxiliary actions */}
         <div className="flex sm:hidden items-center justify-center gap-2 flex-wrap">
@@ -609,46 +657,14 @@ export const UnifiedSearchBar = forwardRef<
         </p>
       </div>
 
-      {/* Suggestions: recent searches + examples in a single row */}
+      {/* Example queries - shown when no query typed */}
       {showExamples && (
         <div
           className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 animate-reveal"
           role="group"
-          aria-label="Search suggestions"
+          aria-label="Example searches"
         >
-          {/* Recent searches first */}
-          {history.length > 0 && (
-            <>
-              {history.slice(0, isMobile ? 1 : 2).map((historyQuery, index) => (
-                <button
-                  key={`history-${historyQuery}-${index}`}
-                  onClick={() => {
-                    setQuery(historyQuery);
-                    handleSearch(historyQuery);
-                  }}
-                  className="group inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-border/60 bg-card/50 text-xs text-muted-foreground hover:text-foreground hover:border-foreground/20 hover:bg-secondary/50 transition-all duration-200 focus-ring"
-                  aria-label={`Search for ${historyQuery}`}
-                >
-                  <Clock
-                    className="h-3 w-3 opacity-50 flex-shrink-0"
-                    aria-hidden="true"
-                  />
-                  <span className="truncate max-w-[100px] sm:max-w-[140px]">
-                    {historyQuery}
-                  </span>
-                </button>
-              ))}
-              <button
-                onClick={clearHistory}
-                aria-label="Clear search history"
-                className="p-1.5 rounded-full text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors focus-ring"
-              >
-                <X className="h-3 w-3" aria-hidden="true" />
-              </button>
-            </>
-          )}
-          {/* Example queries - trigger search on click */}
-          {EXAMPLE_QUERIES.slice(0, isMobile ? 1 : 2).map((example) => (
+          {EXAMPLE_QUERIES.slice(0, isMobile ? 2 : 3).map((example) => (
             <button
               key={example}
               onClick={() => {
@@ -658,8 +674,8 @@ export const UnifiedSearchBar = forwardRef<
               className="px-2.5 py-1.5 rounded-full text-xs text-muted-foreground/70 hover:text-foreground hover:bg-secondary/50 transition-all duration-200 focus-ring"
               aria-label={`Search for ${example}`}
             >
-              {isMobile && example.length > 20
-                ? `${example.slice(0, 20)}…`
+              {isMobile && example.length > 25
+                ? `${example.slice(0, 25)}…`
                 : example}
             </button>
           ))}
