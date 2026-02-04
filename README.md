@@ -1,7 +1,7 @@
 # OffMeta
 
 [![CI](https://github.com/vermosi/offmeta/actions/workflows/ci.yml/badge.svg)](https://github.com/vermosi/offmeta/actions/workflows/ci.yml)
-[![Live Demo](https://img.shields.io/badge/Demo-offmeta.lovable.app-22c55e?style=flat-square)](https://offmeta.lovable.app)
+[![Live Site](https://img.shields.io/badge/Live-Site-offmeta.app-22c55e?style=flat-square)](https://offmeta.app)
 [![License](https://img.shields.io/github/license/vermosi/offmeta?style=flat-square)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/vermosi/offmeta?style=social)](https://github.com/vermosi/offmeta)
 
@@ -16,7 +16,7 @@
 
 > _Describe what you're looking for in plain English. No complex syntax. No guessing. Just natural conversation._
 
-**Live demo:** [offmeta.lovable.app](https://offmeta.lovable.app)
+**Live demo:** [offmeta.app](https://offmeta.app)
 
 ---
 
