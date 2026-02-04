@@ -1,6 +1,6 @@
 # Testing
 
-OffMeta uses [Vitest](https://vitest.dev/) as the primary testing framework with 1,100+ tests across multiple categories.
+OffMeta uses [Vitest](https://vitest.dev/) as the primary testing framework with 1,150+ tests across multiple categories.
 
 ## Run tests
 
