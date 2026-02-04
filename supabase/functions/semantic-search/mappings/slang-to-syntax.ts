@@ -66,10 +66,10 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     description: 'Free sacrifice outlets (no mana cost)',
   },
 
-  // Ramp variations (NOT otag:land-fetch - use land-ramp or ramp)
+  // Ramp variations (otag:land-ramp doesn't exist - use ramp or oracle text)
   {
     pattern: /\bland\s+fetching\b/gi,
-    syntax: 'otag:land-ramp',
+    syntax: 'o:"search" o:"library" o:"land"',
     description: 'Cards that fetch lands',
   },
   {
@@ -83,15 +83,15 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     description: 'Mana ramp cards',
   },
 
-  // Card advantage terms (NOT otag:card-advantage)
+  // Card advantage terms (otag:card-draw doesn't exist - use oracle text)
   {
     pattern: /\bcard\s+advantage\b/gi,
-    syntax: 'otag:card-draw',
+    syntax: 'o:"draw" (o:"card" or o:"cards")',
     description: 'Card draw effects',
   },
   {
     pattern: /\bdraw\s+engines?\b/gi,
-    syntax: 'otag:card-draw',
+    syntax: 'o:"whenever" o:"draw"',
     description: 'Repeatable card draw',
   },
 
@@ -148,37 +148,37 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     description: 'Forced discard effects',
   },
 
-  // Recursion terms (NOT otag:recursion - use graveyard-recursion)
+  // Recursion terms (otag:graveyard-recursion doesn't exist - use recursion)
   {
     pattern: /\brecursion\b/gi,
-    syntax: 'otag:graveyard-recursion',
+    syntax: 'otag:recursion',
     description: 'Return cards from graveyard',
   },
   {
     pattern: /\bgraveyard\s+recursion\b/gi,
-    syntax: 'otag:graveyard-recursion',
+    syntax: 'otag:recursion',
     description: 'Return cards from graveyard',
   },
   {
     pattern: /\breanimate\b/gi,
-    syntax: 'otag:reanimation',
+    syntax: 'o:"return" o:"creature" o:"graveyard" o:"battlefield"',
     description: 'Return creatures from graveyard to battlefield',
   },
 
-  // Token-related (NOT otag:tokens - use token-generator)
+  // Token-related (otag:token-generator doesn't exist - use oracle text)
   {
     pattern: /\btoken\s+makers?\b/gi,
-    syntax: 'otag:token-generator',
+    syntax: 'o:"create" o:"token"',
     description: 'Cards that create tokens',
   },
   {
     pattern: /\btoken\s+production\b/gi,
-    syntax: 'otag:token-generator',
+    syntax: 'o:"create" o:"token"',
     description: 'Cards that create tokens',
   },
   {
     pattern: /\bgo\s+wide\b/gi,
-    syntax: 'otag:token-generator',
+    syntax: 'o:"create" (o:"tokens" or o:"creature tokens")',
     description: 'Token/swarm strategy',
   },
 
@@ -321,5 +321,187 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     pattern: /\bpoisonous?\s+creatures?\b/gi,
     syntax: '(kw:infect or kw:toxic) t:creature',
     description: 'Poison-dealing creatures',
+  },
+
+  // NEW: Common MTG slang terms
+  {
+    pattern: /\bcantrips?\b/gi,
+    syntax: 'otag:cantrip',
+    description: 'Spells that draw a card',
+  },
+  {
+    pattern: /\bfinishers?\b/gi,
+    syntax: 'otag:win-condition',
+    description: 'Game-ending threats',
+  },
+  {
+    pattern: /\bgame\s+enders?\b/gi,
+    syntax: 'otag:win-condition',
+    description: 'Game-ending cards',
+  },
+  {
+    pattern: /\balt(?:ernate)?\s+win(?:\s+con(?:dition)?s?)?\b/gi,
+    syntax: 'o:"you win the game"',
+    description: 'Alternate win conditions',
+  },
+  {
+    pattern: /\btech\s+cards?\b/gi,
+    syntax: '(o:"can\'t" or o:"protection from" or o:"exile" o:"graveyard")',
+    description: 'Sideboard/tech cards',
+  },
+  {
+    pattern: /\bsilver\s+bullets?\b/gi,
+    syntax: '(o:"can\'t" or o:"protection from" or o:"whenever" o:"opponent")',
+    description: 'Narrow hate cards',
+  },
+  {
+    pattern: /\bcombo\s+(?:piece|enabler|card)?s?\b/gi,
+    syntax: '(o:"untap" o:"creature" or o:"infinite" or o:"mana" o:"add" or kw:storm)',
+    description: 'Combo enabling cards',
+  },
+  {
+    pattern: /\bsac(?:rifice)?\s+fodder\b/gi,
+    syntax: '(o:"dies" o:"create" or o:"when" o:"dies" or t:creature mv<=2)',
+    description: 'Cheap creatures to sacrifice',
+  },
+  {
+    pattern: /\brecurring\s+threats?\b/gi,
+    syntax: '(o:"return" o:"from" o:"graveyard" o:"battlefield" or o:"escape")',
+    description: 'Self-recurring creatures',
+  },
+  {
+    pattern: /\bsac\s+payoffs?\b/gi,
+    syntax: 'o:"whenever" (o:"sacrificed" or o:"dies")',
+    description: 'Benefits from sacrificing',
+  },
+  {
+    pattern: /\bdeath\s+payoffs?\b/gi,
+    syntax: 'o:"whenever" (o:"creature" o:"dies" or o:"dies")',
+    description: 'Benefits from creatures dying',
+  },
+  {
+    pattern: /\bgrave(?:yard)?\s+hate\b/gi,
+    syntax: '(o:"exile" o:"graveyard" or o:"exile" o:"graveyards")',
+    description: 'Graveyard hate cards',
+  },
+  {
+    pattern: /\bartifact\s+hate\b/gi,
+    syntax: 'o:"destroy" (o:"artifact" or o:"artifacts")',
+    description: 'Artifact destruction',
+  },
+  {
+    pattern: /\benchantment\s+hate\b/gi,
+    syntax: 'o:"destroy" (o:"enchantment" or o:"enchantments")',
+    description: 'Enchantment destruction',
+  },
+  {
+    pattern: /\bcreature\s+hate\b/gi,
+    syntax: 'o:"destroy" o:"creature"',
+    description: 'Creature destruction',
+  },
+  {
+    pattern: /\bplaneswalker\s+hate\b/gi,
+    syntax: '(o:"destroy" o:"planeswalker" or o:"damage" o:"planeswalker")',
+    description: 'Planeswalker removal',
+  },
+  {
+    pattern: /\bblood\s+artists?\b/gi,
+    syntax: 'o:"whenever" (o:"dies" or o:"creature" o:"dies") o:"loses" o:"life"',
+    description: 'Drain on death effects (like Blood Artist)',
+  },
+  {
+    pattern: /\baristocrats?\b/gi,
+    syntax: 'o:"whenever" (o:"dies" or o:"sacrificed")',
+    description: 'Sacrifice synergy cards',
+  },
+  {
+    pattern: /\bspellslinger\b/gi,
+    syntax: 'o:"whenever" o:"cast" (o:"instant" or o:"sorcery")',
+    description: 'Instant/sorcery synergy',
+  },
+  {
+    pattern: /\bmagecraft\b/gi,
+    syntax: 'o:"whenever" o:"cast" (o:"instant" or o:"sorcery")',
+    description: 'Spell cast triggers',
+  },
+  {
+    pattern: /\bselfmill\b/gi,
+    syntax: 'o:"mill" o:"cards"',
+    description: 'Self-mill effects',
+  },
+  {
+    pattern: /\bself\s+mill\b/gi,
+    syntax: 'o:"mill" o:"cards"',
+    description: 'Self-mill effects',
+  },
+  {
+    pattern: /\blooters?\b/gi,
+    syntax: 'o:"draw" o:"discard"',
+    description: 'Draw then discard effects',
+  },
+  {
+    pattern: /\brummage(?:rs?)?\b/gi,
+    syntax: 'o:"discard" o:"draw"',
+    description: 'Discard then draw effects',
+  },
+  {
+    pattern: /\btimmy\s+cards?\b/gi,
+    syntax: 't:creature mv>=6 pow>=6',
+    description: 'Big splashy creatures',
+  },
+  {
+    pattern: /\bbig\s+dumb\s+creatures?\b/gi,
+    syntax: 't:creature mv>=5 pow>=5',
+    description: 'Large vanilla-ish creatures',
+  },
+  {
+    pattern: /\bbeaters?\b/gi,
+    syntax: 't:creature pow>=4',
+    description: 'High power creatures',
+  },
+  {
+    pattern: /\bbig\s+mana\b/gi,
+    syntax: '(otag:ramp or o:"add" o:"{C}{C}" or o:"add" o:"any" o:"color")',
+    description: 'Big mana generation',
+  },
+  {
+    pattern: /\bfast\s+mana\b/gi,
+    syntax: '(otag:ritual or o:"add" mv<=1)',
+    description: 'Quick mana acceleration',
+  },
+  {
+    pattern: /\bslot\s+machine\b/gi,
+    syntax: 'o:"flip" o:"coin"',
+    description: 'Coin flip effects',
+  },
+  {
+    pattern: /\bchaos\s+cards?\b/gi,
+    syntax: '(o:"random" or o:"flip" o:"coin" or o:"each player")',
+    description: 'Random/chaotic effects',
+  },
+  {
+    pattern: /\bgroup\s+hug\b/gi,
+    syntax: 'o:"each player" (o:"draws" or o:"gains" or o:"may")',
+    description: 'Symmetric benefit effects',
+  },
+  {
+    pattern: /\bpillowfort\b/gi,
+    syntax: '(o:"can\'t attack you" or o:"can\'t be attacked" or o:"protection" or o:"prevent" o:"damage")',
+    description: 'Defensive/deterrent effects',
+  },
+  {
+    pattern: /\binfinity\s+combo\b/gi,
+    syntax: '(o:"untap" o:"add" or o:"whenever" o:"add" o:"mana")',
+    description: 'Infinite combo pieces',
+  },
+  {
+    pattern: /\bmana\s+sink\b/gi,
+    syntax: 'o:"{X}" (o:"draw" or o:"damage" or o:"tokens" or o:"+1/+1")',
+    description: 'X-cost mana sinks',
+  },
+  {
+    pattern: /\bx\s+spells?\b/gi,
+    syntax: 'mana:X',
+    description: 'Spells with X in cost',
   },
 ];
