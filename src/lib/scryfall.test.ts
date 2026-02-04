@@ -242,37 +242,30 @@ describe('scryfall client', () => {
   });
 
   it('rejects when the request queue is full', async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2024-01-01T00:00:00Z'));
-
-    let resolveFetch: (value: Response) => void = () => {};
-    const fetchPromise = new Promise<Response>((resolve) => {
-      resolveFetch = resolve;
-    });
-
-    vi.spyOn(globalThis, 'fetch').mockImplementation(() => fetchPromise);
+    // This test verifies that overflow requests are rejected immediately.
+    // We use a never-resolving fetch to simulate a blocked queue.
+    // The pending requests will be abandoned when the test ends.
+    vi.spyOn(globalThis, 'fetch').mockImplementation(
+      () => new Promise<Response>(() => {}), // Never resolves
+    );
 
     const { searchCards } = await loadModule();
 
+    // Start one request that will block in fetch
     const inFlight = searchCards('t:dragon');
+
+    // Fill the queue with 50 more pending requests
     const queued = Array.from({ length: 50 }, (_, index) =>
       searchCards(`t:card-${index}`),
     );
 
+    // The 52nd request should be rejected immediately (queue full)
     await expect(searchCards('t:overflow')).rejects.toThrow(
       /Too many pending requests/i,
     );
 
-    resolveFetch(
-      mockResponse({
-        object: 'list',
-        total_cards: 0,
-        has_more: false,
-        data: [],
-      }),
-    );
-
-    await vi.runAllTimersAsync();
-    await Promise.allSettled([inFlight, ...queued]);
+    // Clean up: abandon the pending requests (they'll never resolve)
+    // This is intentional - we're only testing the overflow behavior
+    void Promise.allSettled([inFlight, ...queued]);
   });
 });
