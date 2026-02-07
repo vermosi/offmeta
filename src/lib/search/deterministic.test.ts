@@ -68,7 +68,8 @@ describe('Deterministic MTG query translation', () => {
 
   it('T8: cards that share a name with a set', () => {
     const query = getQuery('cards that share a name with a set');
-    expect(query).toContain('otag:shares-name-with-set');
+    // otag:shares-name-with-set is NOT a valid Scryfall tag — uses fallback
+    expect(query).toContain('is:namesakecard');
     expect(query).not.toContain('o:"set"');
   });
 
