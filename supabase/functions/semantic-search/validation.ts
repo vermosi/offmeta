@@ -299,6 +299,11 @@ export function validateQuery(query: string): {
   return { valid: issues.length === 0, sanitized, issues };
 }
 
+/**
+ * Normalize OR groups by wrapping them in parentheses for Scryfall.
+ * NOTE: A similar implementation exists in src/lib/scryfall/query.ts (client-side)
+ * which additionally handles regex `/` delimiters. Keep both in sync.
+ */
 export function normalizeOrGroups(query: string): string {
   const tokens: string[] = [];
   let current = '';

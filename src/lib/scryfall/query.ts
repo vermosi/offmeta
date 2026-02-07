@@ -276,6 +276,11 @@ export const KNOWN_OTAGS = new Set([
   'attack-trigger',
 ]);
 
+/**
+ * Normalize OR groups by wrapping them in parentheses for Scryfall.
+ * NOTE: A similar implementation exists in supabase/functions/semantic-search/validation.ts
+ * (server-side) without regex delimiter handling. Keep both in sync.
+ */
 export function normalizeOrGroups(query: string): string {
   const tokens: string[] = [];
   let current = '';

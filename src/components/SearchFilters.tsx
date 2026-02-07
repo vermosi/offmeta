@@ -478,16 +478,16 @@ export function SearchFilters({
               <X className="h-3 w-3" />
             </Badge>
           ))}
-          {(filters.cmcRange[0] > 0 || filters.cmcRange[1] < 16) && (
+          {(filters.cmcRange[0] > 0 || filters.cmcRange[1] < defaultMaxCmc) && (
             <Badge
               variant="secondary"
               className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20 text-xs"
               onClick={() =>
-                setFilters((prev) => ({ ...prev, cmcRange: [0, 16] }))
+                setFilters((prev) => ({ ...prev, cmcRange: [0, defaultMaxCmc] }))
               }
             >
               CMC {filters.cmcRange[0]}-
-              {filters.cmcRange[1] >= 16 ? '16+' : filters.cmcRange[1]}
+              {filters.cmcRange[1] >= defaultMaxCmc ? `${defaultMaxCmc}+` : filters.cmcRange[1]}
               <X className="h-3 w-3" />
             </Badge>
           )}
