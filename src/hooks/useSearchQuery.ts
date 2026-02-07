@@ -8,7 +8,6 @@ import {
   useQuery,
   useMutation,
   useQueryClient,
-  type QueryClient,
 } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { searchCards } from '@/lib/scryfall/client';
@@ -123,7 +122,7 @@ function checkSearchRateLimit(query: string): {
 /**
  * Core translation function with deduplication and rate limiting
  */
-async function translateQueryWithDedup(
+export async function translateQueryWithDedup(
   params: TranslationParams,
 ): Promise<TranslationResult> {
   const { query, filters, cacheSalt, bypassCache } = params;
@@ -304,27 +303,5 @@ export function useCardSearch(scryfallQuery: string | null) {
   });
 }
 
-/**
- * Utility to invalidate translation cache for a specific query.
- */
-export function invalidateTranslationCache(
-  queryClient: QueryClient,
-  query: string,
-) {
-  queryClient.invalidateQueries({
-    queryKey: ['translation', query],
-  });
-}
-
-/**
- * Utility to set translation result in cache manually.
- * Useful when we receive translation from other sources.
- */
-export function setTranslationCache(
-  queryClient: QueryClient,
-  query: string,
-  result: TranslationResult,
-  filters?: FilterState | null,
-) {
-  queryClient.setQueryData(['translation', query, filters, undefined], result);
-}
+// NOTE: invalidateTranslationCache and setTranslationCache removed — they were unused.
+// If needed in the future, use queryClient.invalidateQueries/setQueryData directly.

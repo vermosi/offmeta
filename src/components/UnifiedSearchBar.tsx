@@ -12,7 +12,6 @@ import {
   useEffect,
 } from 'react';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Search, Loader2, X, Clock, History } from 'lucide-react';
 import { SearchHistoryDropdown } from '@/components/SearchHistoryDropdown';
@@ -22,86 +21,12 @@ import { SearchHelpModal } from '@/components/SearchHelpModal';
 import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';
 import { logger } from '@/lib/core/logger';
+import { translateQueryWithDedup, type TranslationResult } from '@/hooks/useSearchQuery';
 
 const SEARCH_CONTEXT_KEY = 'lastSearchContext';
 const SEARCH_HISTORY_KEY = 'offmeta_search_history';
-const RESULT_CACHE_KEY = 'offmeta_result_cache_v2'; // Bump version to invalidate old caches
 const MAX_HISTORY_ITEMS = 5;
 const SEARCH_TIMEOUT_MS = 15000; // 15 second timeout
-const RESULT_CACHE_TTL = 30 * 60 * 1000; // 30 minute cache for results (cost optimization)
-const MAX_CACHE_SIZE = 50;
-
-// Client-side result caching to prevent duplicate edge function calls
-interface CachedResult {
-  scryfallQuery: string;
-  explanation?: {
-    readable: string;
-    assumptions: string[];
-    confidence: number;
-  };
-  showAffiliate?: boolean;
-  validationIssues?: string[];
-  intent?: SearchIntent;
-  timestamp: number;
-}
-
-function normalizeQueryKey(
-  query: string,
-  filters?: FilterState | null,
-  cacheSalt?: string,
-): string {
-  const normalized = query.toLowerCase().trim().replace(/\s+/g, ' ');
-  return `${normalized}|${JSON.stringify(filters || {})}|${cacheSalt || ''}`;
-}
-
-function getCachedResult(
-  query: string,
-  filters?: FilterState | null,
-  cacheSalt?: string,
-): CachedResult | null {
-  try {
-    const cache = JSON.parse(sessionStorage.getItem(RESULT_CACHE_KEY) || '{}');
-    const key = normalizeQueryKey(query, filters, cacheSalt);
-    const cached = cache[key];
-    if (cached && Date.now() - cached.timestamp < RESULT_CACHE_TTL) {
-      return cached;
-    }
-    // Clean up expired entry
-    if (cached) {
-      delete cache[key];
-      sessionStorage.setItem(RESULT_CACHE_KEY, JSON.stringify(cache));
-    }
-  } catch {
-    // Ignore storage/cache failures.
-  }
-  return null;
-}
-
-function setCachedResult(
-  query: string,
-  result: Omit<CachedResult, 'timestamp'>,
-  filters?: FilterState | null,
-  cacheSalt?: string,
-): void {
-  try {
-    const cache = JSON.parse(sessionStorage.getItem(RESULT_CACHE_KEY) || '{}');
-    const key = normalizeQueryKey(query, filters, cacheSalt);
-    cache[key] = { ...result, timestamp: Date.now() };
-    // Limit cache size - remove oldest entries
-    const keys = Object.keys(cache);
-    if (keys.length > MAX_CACHE_SIZE) {
-      const sorted = keys.sort(
-        (a, b) => cache[a].timestamp - cache[b].timestamp,
-      );
-      sorted
-        .slice(0, keys.length - MAX_CACHE_SIZE)
-        .forEach((k) => delete cache[k]);
-    }
-    sessionStorage.setItem(RESULT_CACHE_KEY, JSON.stringify(cache));
-  } catch {
-    // Ignore storage/cache failures.
-  }
-}
 
 interface SearchContext {
   previousQuery: string;
@@ -275,7 +200,7 @@ export const UnifiedSearchBar = forwardRef<
     ) => {
       const queryToSearch = (searchQuery || query).trim();
 
-      // Prevent empty, duplicate, or rate-limited searches
+      // Prevent empty or rate-limited searches
       if (!queryToSearch) return;
       if (rateLimitedUntil && Date.now() < rateLimitedUntil) {
         toast.error('Please wait', {
@@ -288,34 +213,8 @@ export const UnifiedSearchBar = forwardRef<
       addToHistory(queryToSearch);
 
       const currentToken = ++requestTokenRef.current;
-      const allowReuse = useLast && !options?.bypassCache;
       setUseLast(false);
       const cacheSalt = options?.cacheSalt;
-
-      // Check client-side cache first (eliminates edge function call entirely)
-      const cached = allowReuse
-        ? getCachedResult(queryToSearch, filters, cacheSalt)
-        : null;
-      if (cached) {
-        logger.info('[Cache] Client-side hit for:', queryToSearch);
-        saveContext(queryToSearch, cached.scryfallQuery);
-        onSearch(
-          cached.scryfallQuery,
-          {
-            scryfallQuery: cached.scryfallQuery,
-            explanation: cached.explanation,
-            showAffiliate: cached.showAffiliate,
-            validationIssues: cached.validationIssues,
-            intent: cached.intent,
-            source: 'client_cache',
-          },
-          queryToSearch,
-        ); // Pass natural language query
-        toast.success('Search (cached)', {
-          description: `Found: ${cached.scryfallQuery.substring(0, 50)}${cached.scryfallQuery.length > 50 ? '...' : ''}`,
-        });
-        return;
-      }
 
       // Cancel any pending request
       if (abortControllerRef.current) {
@@ -334,81 +233,46 @@ export const UnifiedSearchBar = forwardRef<
       });
 
       try {
-        const context = allowReuse ? getContext() : null;
-
-        const searchPromise = supabase.functions.invoke('semantic-search', {
-          body: {
-            query: queryToSearch,
-            context: context || undefined,
-            useCache: allowReuse,
-            filters: filters || undefined,
-            cacheSalt: cacheSalt || undefined,
-          },
+        // Route through the shared translation function (with dedup + rate limiting)
+        const translationPromise = translateQueryWithDedup({
+          query: queryToSearch,
+          filters: filters || undefined,
+          cacheSalt: cacheSalt || undefined,
+          bypassCache: options?.bypassCache,
         });
 
-        const { data, error } = await Promise.race([
-          searchPromise,
+        const result: TranslationResult = await Promise.race([
+          translationPromise,
           timeoutPromise,
         ]);
 
-        if (error) throw error;
         if (requestTokenRef.current !== currentToken) {
           return;
         }
 
-        // Handle rate limiting response
-        if (data?.retryAfter) {
-          const retryAfterMs = (data.retryAfter || 30) * 1000;
-          setRateLimitedUntil(Date.now() + retryAfterMs);
-          toast.error('Too many searches', {
-            description: `High traffic - retry in ${data.retryAfter}s`,
-            icon: <Clock className="h-4 w-4" />,
-          });
-          return;
-        }
+        saveContext(queryToSearch, result.scryfallQuery);
 
-        if (data?.success && data?.scryfallQuery) {
-          saveContext(queryToSearch, data.scryfallQuery);
+        onSearch(
+          result.scryfallQuery,
+          {
+            scryfallQuery: result.scryfallQuery,
+            explanation: result.explanation,
+            showAffiliate: result.showAffiliate,
+            validationIssues: result.validationIssues,
+            intent: result.intent,
+            source: result.source || 'ai',
+          },
+          queryToSearch,
+        );
 
-          // Cache the result client-side for 15 minutes
-          setCachedResult(
-            queryToSearch,
-            {
-              scryfallQuery: data.scryfallQuery,
-              explanation: data.explanation,
-              showAffiliate: data.showAffiliate,
-              validationIssues: data.validationIssues,
-              intent: data.intent,
-            },
-            filters,
-            cacheSalt,
-          );
-
-          onSearch(
-            data.scryfallQuery,
-            {
-              scryfallQuery: data.scryfallQuery,
-              explanation: data.explanation,
-              showAffiliate: data.showAffiliate,
-              validationIssues: data.validationIssues,
-              intent: data.intent,
-              source: data.source || 'ai',
-            },
-            queryToSearch,
-          ); // Pass natural language query
-
-          const source = data.source || 'ai';
-          toast.success(
-            `Search translated${source !== 'ai' ? ` (${source})` : ''}`,
-            {
-              description: `Found: ${data.scryfallQuery.substring(0, 50)}${data.scryfallQuery.length > 50 ? '...' : ''}`,
-            },
-          );
-        } else {
-          throw new Error(data?.error || 'Failed to translate');
-        }
+        const source = result.source || 'ai';
+        toast.success(
+          `Search translated${source !== 'ai' ? ` (${source})` : ''}`,
+          {
+            description: `Found: ${result.scryfallQuery.substring(0, 50)}${result.scryfallQuery.length > 50 ? '...' : ''}`,
+          },
+        );
       } catch (error: unknown) {
-        // Handle different error types
         const errorMessage =
           error instanceof Error ? error.message : String(error);
 
@@ -420,7 +284,7 @@ export const UnifiedSearchBar = forwardRef<
           toast.error('Search took too long', {
             description: 'Try a simpler query or try again',
           });
-          onSearch(queryToSearch, undefined, queryToSearch); // Fall back to direct search
+          onSearch(queryToSearch, undefined, queryToSearch);
         } else if (
           errorMessage.includes('429') ||
           errorMessage.includes('rate')
@@ -444,13 +308,11 @@ export const UnifiedSearchBar = forwardRef<
     [
       addToHistory,
       filters,
-      getContext,
       onSearch,
       query,
       rateLimitCountdown,
       rateLimitedUntil,
       saveContext,
-      useLast,
     ],
   );
 

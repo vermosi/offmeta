@@ -9,6 +9,7 @@ import {
   setCachedResult,
   getPersistentCache,
   setPersistentCache,
+  maybeCacheCleanup,
 } from './cache.ts';
 import { fetchWithRetry } from './utils.ts';
 import {
@@ -81,6 +82,9 @@ function sanitizeError(error: unknown): string {
  * Main Edge Function Handler
  */
 serve(async (req) => {
+  // Trigger periodic in-memory cache cleanup (serverless-safe)
+  maybeCacheCleanup();
+
   const corsHeaders = getCorsHeaders(req);
 
   // Handle CORS preflight
