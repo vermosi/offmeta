@@ -1,122 +1,129 @@
 
-# Search History Dropdown
+# Code Review: OffMeta
 
-Add a dropdown panel that appears when the user focuses on the search input, displaying all recent searches (up to 5) with the ability to quickly select, delete individual items, or clear all history.
+## Overall Assessment
 
-## Current State
-- Search history already exists via the `useSearchHistory` hook storing up to 5 items in `localStorage`
-- History is currently shown as inline chips below the search bar (only when input is empty)
-- Limited to showing 1-2 items due to space constraints
+The codebase is well-structured, follows consistent conventions, and demonstrates solid engineering practices. The separation of concerns between translation logic (edge functions) and UI (React components) is clean. Below are findings organized by severity.
 
-## Implementation Approach
+---
 
-### Use Popover for the Dropdown
-We'll use the existing `Popover` component from Radix UI to create a dropdown that:
-- Appears when the input is focused AND there is search history
-- Stays open while interacting with history items
-- Closes when clicking outside or after selecting a search
-- Has proper z-index to appear above other content
+## Critical Issues
 
-### UI Design
+### 1. Duplicate Caching Logic (DRY Violation)
 
-```text
-┌─────────────────────────────────────────────────────┐
-│ 🔍  [Search input field...                   ] [Go] │
-└─────────────────────────────────────────────────────┘
-┌─────────────────────────────────────────────────────┐
-│  Recent Searches                        [Clear all] │
-├─────────────────────────────────────────────────────┤
-│  🕐 creatures that make treasure tokens        [×]  │
-│  🕐 cheap green ramp spells                    [×]  │
-│  🕐 artifacts that produce 2 mana              [×]  │
-│  🕐 mono red stax pieces                       [×]  │
-│  🕐 commander-legal tutors under $10           [×]  │
-└─────────────────────────────────────────────────────┘
-```
+There are **three independent caching layers** with duplicated normalization logic:
 
-### Changes Required
+- `src/components/UnifiedSearchBar.tsx` (lines 48-104) -- client-side sessionStorage cache
+- `src/hooks/useSearchQuery.ts` (lines 63-76) -- in-memory dedup via `pendingTranslations` Map
+- `supabase/functions/semantic-search/cache.ts` -- edge function in-memory + persistent DB cache
 
-**1. Add `removeFromHistory` function to `useSearchHistory` hook**
-- New function to remove a single item by query string
-- Updates both state and localStorage
+Each re-implements `normalizeQueryKey()` with the same logic. If one changes, the others won't match, causing phantom cache misses. The client-side cache in `UnifiedSearchBar` also bypasses the TanStack Query cache in `useSearchQuery`, meaning the two client layers can serve stale/conflicting results.
 
-**2. Add dropdown state management**
-- Track `showHistoryDropdown` state (boolean)
-- Open on input focus when history exists
-- Close on blur (with delay for click handling), on search execution, or on Escape key
+**Recommendation**: Remove the manual sessionStorage cache from `UnifiedSearchBar` and rely solely on TanStack Query's built-in caching (already configured with 24h stale time for translations). This eliminates ~60 lines and one entire cache layer.
 
-**3. Add Popover-based dropdown UI**
-- Position below the search input container
-- Show all 5 history items (not truncated to 1-2)
-- Each item shows: Clock icon, query text, delete button (X)
-- Header with "Recent Searches" label and "Clear all" button
-- Proper accessibility: keyboard navigation, focus trapping
+---
 
-**4. Handle interaction edge cases**
-- Clicking a history item: set query, trigger search, close dropdown
-- Clicking delete (X) on an item: remove that item, keep dropdown open
-- Clicking "Clear all": remove all history, close dropdown
-- Blur with timeout to allow clicking items before closing
+### 2. `handleSearch` in UnifiedSearchBar Calls `supabase.functions.invoke` Directly
 
-## Technical Details
+`UnifiedSearchBar.handleSearch` (line 339) calls `supabase.functions.invoke('semantic-search', ...)` directly, completely bypassing the `useSearchQuery` / `useTranslateQuery` hook. This means:
 
-### New State
+- The TanStack Query deduplication in `useSearchQuery.ts` is never used for the main search flow
+- The `usePrefetchPopularQueries` hook prefetches into TanStack cache, but `UnifiedSearchBar` reads from sessionStorage -- they never share cache entries
+- Rate limiting in `useSearchQuery.ts` (`checkSearchRateLimit`) is also bypassed
+
+**Recommendation**: Refactor `UnifiedSearchBar` to use the `useTranslateQuery` hook or `translateQueryWithDedup` function instead of direct `supabase.functions.invoke`.
+
+---
+
+## Moderate Issues
+
+### 3. `useEffect` for Filter Notification is a Side-Effect Smell
+
+In `SearchFilters.tsx` (line 235-237):
 ```typescript
-const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
-const dropdownRef = useRef<HTMLDivElement>(null);
+useEffect(() => {
+  onFilteredCards(filteredCards, hasActiveFilters, filters);
+}, [filteredCards, hasActiveFilters, onFilteredCards, filters]);
 ```
 
-### Updated `useSearchHistory` hook
+This calls a parent callback inside `useEffect`, which triggers a parent re-render during the child's commit phase. This is a known React anti-pattern that can cause render cascades. The parent (`Index.tsx`) then calls `setFilteredCards`, `setHasActiveFilters`, and `setActiveFilters` -- three separate state updates causing additional re-renders.
+
+**Recommendation**: Lift filter state up to `Index.tsx` or use a reducer. The parent should own the filter state and pass it down; `SearchFilters` should just call `setFilters` on change.
+
+### 4. Hardcoded CMC Reset Value Mismatch
+
+In `SearchFilters.tsx` line 486, the CMC badge reset uses hardcoded `[0, 16]`:
 ```typescript
-const removeFromHistory = useCallback((queryToRemove: string) => {
-  setHistory((prev) => {
-    const updated = prev.filter(
-      (q) => q.toLowerCase() !== queryToRemove.toLowerCase()
-    );
-    try {
-      localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(updated));
-    } catch {
-      // Ignore storage failures.
-    }
-    return updated;
-  });
-}, []);
-
-return { history, addToHistory, removeFromHistory, clearHistory };
+onClick={() => setFilters((prev) => ({ ...prev, cmcRange: [0, 16] }))}
 ```
+But `defaultMaxCmc` is computed dynamically from the card data (line 123-125) and can exceed 16. This means clicking the CMC badge to "clear" it sets a different value than the actual default, leaving a phantom filter active.
 
-### Dropdown visibility logic
+**Recommendation**: Use `defaultMaxCmc` instead of the hardcoded `16`.
+
+### 5. Duplicate `normalizeOrGroups` Function
+
+`normalizeOrGroups` is defined in both:
+- `src/lib/scryfall/query.ts` (line 279)
+- `supabase/functions/semantic-search/validation.ts` (line 302)
+
+The implementations differ slightly (the `query.ts` version handles regex `/` delimiters, the edge function version does not). This divergence means client-side and server-side query normalization can produce different results.
+
+**Recommendation**: Extract to a shared utility or ensure they stay in sync. At minimum, add a comment cross-referencing the duplicate.
+
+### 6. Unused Imports and Exports
+
+- `useSearchQuery.ts` exports `useTranslateQuery`, `useCardDetails`, `useCardSearch`, `invalidateTranslationCache`, and `setTranslationCache` -- none of which appear to be imported anywhere in the codebase based on the main search flow going through `UnifiedSearchBar` directly.
+- `History` icon imported in `UnifiedSearchBar.tsx` (line 17) is only used on mobile but still bundled.
+
+**Recommendation**: Audit and remove dead exports. Consider whether `useSearchQuery.ts` hooks should replace the direct invocation pattern.
+
+---
+
+## Minor Issues
+
+### 7. `queryClient` Instantiated Outside Component Tree
+
+In `App.tsx` (line 14), `queryClient` is created at module scope. This is actually fine for SPAs but would be problematic if SSR were ever added. Given the project is Vite/CSR-only, this is a non-issue but worth a comment.
+
+### 8. Error Message Exposed in ErrorBoundary
+
+`ErrorBoundary.tsx` (line 59) displays `this.state.error.message` directly to users. While the edge function sanitizes errors server-side, client-side errors (e.g., from React rendering) could leak internal details like component names or stack traces.
+
+**Recommendation**: Show a generic message in production; only show details in development.
+
+### 9. `maybeCacheCleanup` is Exported but Never Called
+
+In `cache.ts` (line 263), `maybeCacheCleanup()` is defined and exported but never invoked anywhere in the edge function handler (`index.ts`). The in-memory cache grows unbounded until the serverless instance is recycled.
+
+**Recommendation**: Call `maybeCacheCleanup()` at the start of each request handler.
+
+### 10. Comment Accuracy: Cache TTL Mismatch
+
+`UnifiedSearchBar.tsx` line 31 says "30 minute cache" but line 373 comment says "15 minutes":
 ```typescript
-// Show dropdown when focused AND has history AND no current query being typed
-const shouldShowDropdown = isFocused && history.length > 0;
+const RESULT_CACHE_TTL = 30 * 60 * 1000; // 30 minute cache
+// ...
+// Cache the result client-side for 15 minutes  <-- wrong comment
 ```
 
-### Input handlers update
-```typescript
-onFocus={() => {
-  setIsFocused(true);
-  if (history.length > 0) {
-    setShowHistoryDropdown(true);
-  }
-}}
-onBlur={() => {
-  setIsFocused(false);
-  // Delay closing to allow clicking dropdown items
-  setTimeout(() => {
-    setShowHistoryDropdown(false);
-  }, 150);
-}}
-```
+---
 
-## Files to Modify
+## Positive Observations
 
-| File | Changes |
-|------|---------|
-| `src/components/UnifiedSearchBar.tsx` | Add `removeFromHistory` to hook, add dropdown state, add Popover-based dropdown UI, update input handlers |
+- **Strong type safety**: Comprehensive TypeScript interfaces for Scryfall data, filter state, and search results
+- **Excellent accessibility**: Skip links, ARIA labels, `role` attributes, and screen-reader-only hints throughout
+- **Robust error handling**: Circuit breaker pattern, fallback queries, graceful degradation at every layer
+- **Rate limiting at multiple levels**: Client-side, session-based, and IP-based on the edge function
+- **Well-documented code**: JSDoc comments on all public functions with `@param`, `@returns`, and `@example`
+- **Comprehensive test suite**: 1,150+ tests covering security, regression, golden translations, and live API validation
 
-## Accessibility Considerations
-- Dropdown items are keyboard navigable (arrow keys)
-- Escape key closes dropdown
-- Screen reader announces "Recent Searches" section
-- Each item has proper aria-label for delete action
-- Focus management when dropdown opens/closes
+---
+
+## Summary of Recommended Actions (Priority Order)
+
+1. Consolidate the three caching layers -- remove `UnifiedSearchBar` sessionStorage cache and use TanStack Query
+2. Route `UnifiedSearchBar` search through `useTranslateQuery` instead of direct `supabase.functions.invoke`
+3. Fix the hardcoded CMC `[0, 16]` reset to use `defaultMaxCmc`
+4. Call `maybeCacheCleanup()` in the edge function request handler
+5. Fix the stale "15 minutes" comment
+6. Audit and remove unused hook exports from `useSearchQuery.ts`
