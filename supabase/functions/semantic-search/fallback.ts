@@ -118,8 +118,9 @@ export function buildFallbackQuery(
     // Removal
     [/\bboard ?wipes?\b/gi, 'otag:board-wipe'],
     [/\bwraths?\b/gi, 'otag:board-wipe'],
-    [/\bcounterspells?\b/gi, 'otag:counterspell'],
-    [/\bcounter ?magic\b/gi, 'otag:counterspell'],
+    // NOTE: otag:counterspell is NOT valid — use otag:counter instead
+    [/\bcounterspells?\b/gi, 'otag:counter'],
+    [/\bcounter ?magic\b/gi, 'otag:counter'],
     [/\bremoval\b/gi, 'otag:removal'],
     [/\bcreature removal\b/gi, 'otag:creature-removal'],
     [/\bgraveyard hate\b/gi, 'otag:graveyard-hate'],
@@ -127,11 +128,12 @@ export function buildFallbackQuery(
     // Token generation - NOTE: otag:treasure-generator is NOT a real Scryfall tag
     [/\btreasure tokens?\b/gi, 'o:"create" o:"Treasure"'],
     [/\bmakes? treasure\b/gi, 'o:"create" o:"Treasure"'],
-    [/\btoken generators?\b/gi, 'otag:token-generator'],
-    [/\bmakes? tokens?\b/gi, 'otag:token-generator'],
-    [/\bfood tokens?\b/gi, 'otag:food-generator'],
-    [/\bclue tokens?\b/gi, 'otag:clue-generator'],
-    [/\bblood tokens?\b/gi, 'otag:blood-generator'],
+    // NOTE: otag:token-generator, food-generator, clue-generator, blood-generator are NOT valid
+    [/\btoken generators?\b/gi, 'o:"create" o:"token"'],
+    [/\bmakes? tokens?\b/gi, 'o:"create" o:"token"'],
+    [/\bfood tokens?\b/gi, 'o:"create" o:"Food"'],
+    [/\bclue tokens?\b/gi, 'o:"create" o:"Clue"'],
+    [/\bblood tokens?\b/gi, 'o:"create" o:"Blood"'],
 
     // Life and combat
     [/\blifegain\b/gi, 'otag:lifegain'],
@@ -141,15 +143,18 @@ export function buildFallbackQuery(
     [/\bfog effects?\b/gi, 'otag:fog'],
     [/\bfogs?\b/gi, 'otag:fog'],
     [/\bcombat tricks?\b/gi, 'otag:combat-trick'],
-    [/\bpump\b/gi, 'otag:pump'],
+    // NOTE: otag:pump is NOT a valid Scryfall tag
+    [/\bpump\b/gi, 'o:"gets" o:"+1/+1"'],
 
     // Recursion and graveyard
-    [/\breanimation\b/gi, 'otag:reanimation'],
-    [/\breanimate\b/gi, 'otag:reanimation'],
+    // NOTE: otag:reanimation is NOT valid — use otag:reanimate
+    [/\breanimation\b/gi, 'otag:reanimate'],
+    [/\breanimate\b/gi, 'otag:reanimate'],
     [/\bself[ -]?mill\b/gi, 'otag:self-mill'],
     [/\bmill\b/gi, 'otag:mill'],
-    [/\bgraveyard recursion\b/gi, 'otag:graveyard-recursion'],
-    [/\brecursion\b/gi, 'otag:graveyard-recursion'],
+    // NOTE: otag:graveyard-recursion is NOT valid — use otag:recursion
+    [/\bgraveyard recursion\b/gi, 'otag:recursion'],
+    [/\brecursion\b/gi, 'otag:recursion'],
     [/\bflashback\b/gi, 'keyword:flashback'],
 
     // Blink and exile
@@ -158,20 +163,24 @@ export function buildFallbackQuery(
     [/\bbounce\b/gi, 'otag:bounce'],
 
     // Control
-    [/\bstax\b/gi, 'otag:stax'],
+    // NOTE: otag:stax is NOT valid — use oracle text fallback
+    [/\bstax\b/gi, '(o:"can\'t" or o:"doesn\'t untap")'],
     [/\bhatebears?\b/gi, 'otag:hatebear'],
     [/\bpillowfort\b/gi, 'otag:pillowfort'],
     [/\btheft\b/gi, 'otag:theft'],
-    [/\bmind control\b/gi, 'otag:mind-control'],
+    // NOTE: otag:mind-control is NOT valid — use otag:theft
+    [/\bmind control\b/gi, 'otag:theft'],
     [/\bthreaten\b/gi, 'otag:threaten'],
 
     // Sacrifice
     [/\bsacrifice outlets?\b/gi, 'otag:sacrifice-outlet'],
     [/\bfree sac outlets?\b/gi, 'otag:free-sacrifice-outlet'],
-    [/\baristocrats\b/gi, 'otag:aristocrats'],
+    // NOTE: otag:aristocrats is NOT valid — use oracle text
+    [/\baristocrats\b/gi, '(o:"whenever" (o:"dies" or o:"sacrifice"))'],
     [/\bdeath triggers?\b/gi, 'otag:death-trigger'],
-    [/\bgrave ?pact\b/gi, 'otag:grave-pact-effect'],
-    [/\bblood ?artist\b/gi, 'otag:blood-artist-effect'],
+    // NOTE: otag:grave-pact-effect, otag:blood-artist-effect are NOT valid
+    [/\bgrave ?pact\b/gi, 'o:"whenever" o:"dies" o:"sacrifice"'],
+    [/\bblood ?artist\b/gi, 'o:"whenever" o:"dies" (o:"loses" or o:"gains")'],
     [/\bsacrifice synergy\b/gi, 'otag:synergy-sacrifice'],
     [/\bsacrifice payoffs?\b/gi, 'otag:synergy-sacrifice'],
     [

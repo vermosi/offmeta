@@ -87,7 +87,8 @@ export const TAG_FIRST_MAP: TagPattern[] = [
     tag: 'soul-warden-ability',
     fallback: 'o:"gain 1 life" o:"creature enters"',
   },
-  { pattern: /\bshares? a name with a set\b/gi, tag: 'shares-name-with-set' },
+  // NOTE: otag:shares-name-with-set is NOT a valid Scryfall tag
+  { pattern: /\bshares? a name with a set\b/gi, tag: '', fallback: 'is:namesakecard' },
   { pattern: /\buntap(?:per)?s?\b/gi, tag: 'untapper', fallback: 'o:"untap"' },
   {
     pattern: /\bedict(?:s)?\b/gi,
@@ -108,7 +109,8 @@ export const TAG_FIRST_MAP: TagPattern[] = [
   },
   {
     pattern: /\bstax\b/gi,
-    tag: 'stax',
+    // NOTE: otag:stax is NOT a valid Scryfall tag
+    tag: '',
     fallback: 'o:"opponent" (o:"can\'t" or o:"doesn\'t")',
   },
   {
@@ -123,7 +125,8 @@ export const TAG_FIRST_MAP: TagPattern[] = [
   },
   {
     pattern: /\baristocrats?\b/gi,
-    tag: 'aristocrats',
+    // NOTE: otag:aristocrats is NOT a valid Scryfall tag
+    tag: '',
     fallback: 'o:"whenever" (o:"dies" or o:"sacrifice")',
   },
   { pattern: /\bwheels?\b/gi, tag: 'wheel', fallback: 'o:"discard" o:"draw"' },
@@ -173,61 +176,61 @@ export const TAG_FIRST_MAP: TagPattern[] = [
     tag: 'counters-matter',
     fallback: 'o:"counter" o:"on"',
   },
-  // Counterspell patterns - must use hard-counter tag
+  // Counterspell patterns — NOTE: otag:hard-counter is NOT valid, use otag:counter
   {
     pattern: /\bcounterspells?\b/gi,
-    tag: 'hard-counter',
+    tag: 'counter',
     fallback: 'o:"counter target spell"',
   },
   {
     pattern: /\bcounter ?magics?\b/gi,
-    tag: 'hard-counter',
+    tag: 'counter',
     fallback: 'o:"counter target spell"',
   },
-  // ETB doubler patterns (Issue #4: Zero results on "double ETB effects")
+  // ETB doubler patterns — NOTE: otag:etb-doubler is NOT a valid Scryfall tag
   {
     pattern: /\betb doubl(?:ers?|ing)\b/gi,
-    tag: 'etb-doubler',
+    tag: '',
     fallback:
       '(o:"triggers an additional time" or o:"one or more triggered abilities" o:"trigger")',
   },
   {
     pattern: /\bdoubles? etb(?:s)?\b/gi,
-    tag: 'etb-doubler',
+    tag: '',
     fallback:
       '(o:"triggers an additional time" or o:"one or more triggered abilities" o:"trigger")',
   },
   {
     pattern: /\bpanharmonicon(?:-?like)?\s*(?:effect|card)?s?\b/gi,
-    tag: 'etb-doubler',
+    tag: '',
     fallback:
       '(o:"triggers an additional time" or o:"one or more triggered abilities" o:"trigger")',
   },
   {
     pattern: /\btrigger(?:s)? (?:twice|2x|double|additional)\b/gi,
-    tag: 'etb-doubler',
+    tag: '',
     fallback:
       '(o:"triggers an additional time" or o:"one or more triggered abilities")',
   },
   {
     pattern: /\bdeath trigger doubl(?:ers?|ing)\b/gi,
-    tag: 'death-trigger-doubler',
+    tag: '',
     fallback: '(o:"triggers an additional time" o:"die")',
   },
   {
     pattern: /\bltb doubl(?:ers?|ing)\b/gi,
-    tag: 'ltb-doubler',
+    tag: '',
     fallback: '(o:"triggers an additional time" o:"leaves")',
   },
-  // Goad-related patterns
+  // Goad-related patterns — NOTE: otag:goad is NOT a valid Scryfall tag
   {
     pattern: /\bgoad(?:ing|ed)?\s+(?:creatures?|all|effects?)?\b/gi,
-    tag: 'goad',
+    tag: '',
     fallback: 'o:goad',
   },
   {
     pattern: /\bforce(?:s|d)?\s+(?:to\s+)?attack\b/gi,
-    tag: 'goad',
+    tag: '',
     fallback: '(o:goad or o:"must attack")',
   },
 ];

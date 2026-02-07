@@ -116,28 +116,33 @@ export const VALID_SEARCH_KEYS = new Set([
   'function',
 ]);
 
+/**
+ * Known valid Scryfall oracle tags (otag:).
+ * All tags verified against live Scryfall API.
+ * Invalid tags have been removed — see comments for alternatives.
+ */
 export const KNOWN_OTAGS = new Set([
+  // ── Ramp & Mana ──
   'ramp',
   'mana-rock',
+  'manarock',
   'mana-dork',
   'mana-doubler',
   'mana-sink',
-  'land-ramp',
   'ritual',
+
+  // ── Card Advantage ──
   'draw',
-  'card-draw',
   'cantrip',
   'loot',
-  'looting',
   'wheel',
   'impulse-draw',
   'scry',
+
+  // ── Tutors ──
   'tutor',
-  'land-tutor',
-  'creature-tutor',
-  'artifact-tutor',
-  'enchantment-tutor',
-  'instant-or-sorcery-tutor',
+
+  // ── Removal ──
   'removal',
   'spot-removal',
   'creature-removal',
@@ -147,52 +152,60 @@ export const KNOWN_OTAGS = new Set([
   'board-wipe',
   'mass-removal',
   'graveyard-hate',
-  'graveyard-recursion',
-  'reanimation',
-  'token-generator',
-  // NOTE: treasure-generator is NOT a real Scryfall tag - use o:"create" o:"Treasure" instead
-  'food-generator',
-  'clue-generator',
-  'blood-generator',
+
+  // ── Graveyard ──
+  'recursion',
+  'reanimate',
+
+  // ── Life & Combat ──
   'lifegain',
   'soul-warden-ability',
   'burn',
   'fog',
   'combat-trick',
-  'pump',
+
+  // ── Blink & Bounce ──
   'blink',
   'flicker',
   'bounce',
-  'mass-bounce',
+
+  // ── Copy & Clone ──
   'copy',
   'copy-permanent',
   'copy-spell',
   'clone',
-  'stax',
+
+  // ── Control ──
   'hatebear',
   'pillowfort',
+
+  // ── Theft ──
   'theft',
-  'mind-control',
   'threaten',
+
+  // ── Sacrifice ──
   'sacrifice-outlet',
   'free-sacrifice-outlet',
-  'aristocrats',
   'death-trigger',
-  'grave-pact-effect',
-  'blood-artist-effect',
   'synergy-sacrifice',
   'synergy-lifegain',
   'synergy-discard',
   'synergy-equipment',
   'synergy-proliferate',
+
+  // ── Special Effects ──
   'extra-turn',
   'extra-combat',
   'polymorph',
   'egg',
   'activate-from-graveyard',
   'cast-from-graveyard',
+
+  // ── Tap/Untap ──
   'untapper',
   'tapper',
+
+  // ── Ability Granting ──
   'gives-flash',
   'gives-hexproof',
   'gives-haste',
@@ -207,9 +220,13 @@ export const KNOWN_OTAGS = new Set([
   'gives-reach',
   'gives-protection',
   'gives-indestructible',
+
+  // ── Lands & Enchantress ──
   'landfall',
   'extra-land',
   'enchantress',
+
+  // ── Misc ──
   'discard-outlet',
   'mulch',
   'lord',
@@ -217,6 +234,46 @@ export const KNOWN_OTAGS = new Set([
   'self-mill',
   'mill',
   'graveyard-order-matters',
+  'win-condition',
+  'counters-matter',
+  'counter-doubler',
+  'counter-movement',
+  'cost-reducer',
+  'overrun',
+  'counter',
+  'pinger',
+  'evasion',
+  'rummage',
+
+  // ── Verified from live API ──
+  'activated-ability',
+  'affinity',
+  'alternate-win-condition',
+  'balance',
+  'banish',
+  'battalion',
+  'bite',
+  'boardwipe',
+  'bribery',
+  'bushido',
+  'naturalize',
+  'pacifism',
+  'persist',
+  'plunder',
+  'pseudo-haste',
+  'punisher',
+  'regrowth',
+  'removal-artifact',
+  'removal-creature',
+  'removal-enchantment',
+  'removal-land',
+  'removal-planeswalker',
+  'revolt',
+  'surveil',
+  'painland',
+  'bounceland',
+  'boltland',
+  'attack-trigger',
 ]);
 
 export function normalizeOrGroups(query: string): string {

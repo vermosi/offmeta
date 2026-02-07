@@ -110,92 +110,97 @@ serve(async (req) => {
     // Wrap single feedback in array for existing processing logic
     const pendingFeedback = [feedback];
 
-    // Scryfall oracle tags (otag:) for AI guidance - standardized to match main translation system
+    // Scryfall oracle tags (otag:) for AI guidance — ONLY verified valid tags
     const SCRYFALL_OTAGS = [
+      // Ramp & Mana
       'otag:ramp',
-      'otag:removal',
+      'otag:mana-rock',
+      'otag:manarock',
+      'otag:mana-dork',
+      'otag:mana-doubler',
+      'otag:mana-sink',
+      'otag:ritual',
+      // Card Advantage
       'otag:draw',
-      'otag:tutor',
-      'otag:wrath',
-      'otag:counter',
-      'otag:burn',
-      'otag:lifegain',
-      'otag:graveyard',
-      'otag:recursion',
-      'otag:sacrifice',
-      'otag:blink',
-      'otag:copy',
-      'otag:steal',
-      'otag:protection',
-      'otag:evasion',
-      'otag:haste',
-      'otag:flash',
       'otag:cantrip',
-      'otag:pump',
-      'otag:equipment',
-      'otag:aura',
-      'otag:land-destruction',
-      'otag:stax',
-      'otag:combo',
-      'otag:token',
-      'otag:treasure',
-      'otag:clue',
-      'otag:food',
-      'otag:blood',
-      'otag:artifact-synergy',
-      'otag:enchantment-synergy',
-      'otag:creature-synergy',
-      'otag:tribal',
+      'otag:loot',
+      'otag:wheel',
+      'otag:impulse-draw',
+      'otag:scry',
+      // Tutors
+      'otag:tutor',
+      // Removal
+      'otag:removal',
+      'otag:spot-removal',
+      'otag:creature-removal',
+      'otag:artifact-removal',
+      'otag:enchantment-removal',
+      'otag:planeswalker-removal',
+      'otag:board-wipe',
+      'otag:mass-removal',
+      'otag:graveyard-hate',
+      // Graveyard
+      'otag:recursion',
+      'otag:reanimate',
+      // Counter
+      'otag:counter',
+      // Life & Combat
+      'otag:lifegain',
+      'otag:burn',
+      'otag:fog',
+      'otag:combat-trick',
+      'otag:evasion',
+      // Blink & Bounce
+      'otag:blink',
+      'otag:flicker',
+      'otag:bounce',
+      // Copy & Clone
+      'otag:copy',
+      'otag:copy-permanent',
+      'otag:copy-spell',
+      'otag:clone',
+      // Control
+      'otag:hatebear',
+      'otag:pillowfort',
+      // Theft
+      'otag:theft',
+      'otag:threaten',
+      // Sacrifice
+      'otag:sacrifice-outlet',
+      'otag:free-sacrifice-outlet',
+      'otag:death-trigger',
+      'otag:synergy-sacrifice',
+      // Special Effects
+      'otag:extra-turn',
+      'otag:extra-combat',
+      'otag:polymorph',
+      'otag:egg',
+      // Ability Granting
+      'otag:gives-flash',
+      'otag:gives-haste',
+      'otag:gives-hexproof',
+      'otag:gives-flying',
+      'otag:gives-trample',
+      'otag:gives-indestructible',
+      // Lands & Enchantress
+      'otag:landfall',
+      'otag:extra-land',
+      'otag:enchantress',
+      // Misc
       'otag:lord',
       'otag:anthem',
       'otag:cost-reducer',
       'otag:untapper',
       'otag:tapper',
-      'otag:combat-trick',
-      'otag:fog',
-      'otag:ritual',
       'otag:discard',
       'otag:mill',
-      'otag:voltron',
-      'otag:aggro',
-      'otag:control',
-      'otag:midrange',
-      'otag:reanimator',
-      'otag:aristocrats',
-      'otag:spellslinger',
-      'otag:landfall',
-      'otag:enchantress',
-      'otag:storm',
-      'otag:infect',
-      'otag:energy',
-      'otag:poison',
-      'otag:proliferate',
-      'otag:flicker',
-      'otag:bounce',
-      'otag:exile',
-      'otag:impulse',
-      'otag:wheels',
-      'otag:extra-turn',
-      'otag:extra-combat',
-      'otag:monarch',
-      'otag:initiative',
-      'otag:dungeon',
-      'otag:cascade',
-      'otag:mutate',
-      'otag:morph',
-      'otag:ninjutsu',
-      'otag:madness',
-      'otag:flashback',
-      'otag:retrace',
-      'otag:buyback',
-      'otag:overload',
-      'otag:kicker',
-      'otag:multikicker',
-      'otag:entwine',
-      'otag:splice',
-      'otag:mana-rock',
-      'otag:mana-dork',
-      'otag:gives-flash',
+      'otag:self-mill',
+      'otag:counters-matter',
+      'otag:counter-doubler',
+      'otag:pinger',
+      'otag:overrun',
+      'otag:rummage',
+      'otag:mulch',
     ];
 
     const results: Array<{
@@ -253,9 +258,10 @@ Examples of GOOD translations using otag: tags:
 - "ramp spells" → "otag:ramp (t:instant or t:sorcery)" 
 - "removal in black" → "otag:removal c:b"
 - "card draw effects" → "otag:draw"
-- "board wipes" → "otag:wrath"
+- "board wipes" → "otag:board-wipe"
 - "cost reducers for artifacts" → "otag:cost-reducer t:artifact"
 - "mana rocks" → "otag:mana-rock"
+- "treasure makers" → "o:\\"create\\" o:\\"Treasure\\"" (no otag exists for treasure)
 
 Your task:
 1. Understand what the user ACTUALLY wanted

@@ -1,26 +1,30 @@
 export const KNOWN_OTAGS = new Set([
+  // ── Ramp & Mana ──
   'ramp',
   'mana-rock',
   'manarock',
   'mana-dork',
   'mana-doubler',
   'mana-sink',
-  'land-ramp',
+  // NOTE: land-ramp is NOT a valid Scryfall otag
   'ritual',
+
+  // ── Card Advantage ──
   'draw',
-  'card-draw',
+  // NOTE: card-draw is NOT a valid Scryfall otag — use 'draw' instead
   'cantrip',
   'loot',
-  'looting',
+  // NOTE: looting is NOT a valid Scryfall otag — use 'loot' instead
   'wheel',
   'impulse-draw',
   'scry',
+
+  // ── Tutors ──
   'tutor',
-  'land-tutor',
-  'creature-tutor',
-  'artifact-tutor',
-  'enchantment-tutor',
-  'instant-or-sorcery-tutor',
+  // NOTE: land-tutor, creature-tutor, artifact-tutor, enchantment-tutor,
+  // instant-or-sorcery-tutor are NOT valid Scryfall otags
+
+  // ── Removal ──
   'removal',
   'spot-removal',
   'creature-removal',
@@ -30,52 +34,73 @@ export const KNOWN_OTAGS = new Set([
   'board-wipe',
   'mass-removal',
   'graveyard-hate',
-  'graveyard-recursion',
-  'reanimation',
-  'token-generator',
-  // NOTE: treasure-generator is NOT a real Scryfall otag - use o:"create" o:"Treasure" instead
-  'food-generator',
-  'clue-generator',
-  'blood-generator',
+
+  // ── Graveyard ──
+  // NOTE: graveyard-recursion is NOT a valid Scryfall otag — use otag:recursion or otag:reanimate
+  // NOTE: reanimation is NOT a valid Scryfall otag — use otag:reanimate
+  'recursion',
+  'reanimate',
+
+  // ── Tokens ──
+  // NOTE: token-generator, food-generator, clue-generator, blood-generator
+  // are NOT valid Scryfall otags — use o:"create" o:"[Token]" instead
+
+  // ── Life & Combat ──
   'lifegain',
   'soul-warden-ability',
   'burn',
   'fog',
   'combat-trick',
-  'pump',
+  // NOTE: pump is NOT a valid Scryfall otag
+
+  // ── Blink & Bounce ──
   'blink',
   'flicker',
   'bounce',
-  'mass-bounce',
+  // NOTE: mass-bounce is NOT a valid Scryfall otag
+
+  // ── Copy & Clone ──
   'copy',
   'copy-permanent',
   'copy-spell',
   'clone',
-  'stax',
+
+  // ── Control & Stax ──
+  // NOTE: stax is NOT a valid Scryfall otag — use o:"can't" / pillowfort
   'hatebear',
   'pillowfort',
+
+  // ── Theft ──
   'theft',
-  'mind-control',
+  // NOTE: mind-control is NOT a valid Scryfall otag — use otag:theft
   'threaten',
+
+  // ── Sacrifice ──
   'sacrifice-outlet',
   'free-sacrifice-outlet',
-  'aristocrats',
+  // NOTE: aristocrats is NOT a valid Scryfall otag
   'death-trigger',
-  'grave-pact-effect',
-  'blood-artist-effect',
+  // NOTE: grave-pact-effect is NOT a valid Scryfall otag
+  // NOTE: blood-artist-effect is NOT a valid Scryfall otag
   'synergy-sacrifice',
   'synergy-lifegain',
   'synergy-discard',
   'synergy-equipment',
   'synergy-proliferate',
+
+  // ── Special Effects ──
   'extra-turn',
   'extra-combat',
   'polymorph',
   'egg',
   'activate-from-graveyard',
   'cast-from-graveyard',
+
+  // ── Tap/Untap ──
   'untapper',
   'tapper',
+
+  // ── Ability Granting ──
   'gives-flash',
   'gives-hexproof',
   'gives-haste',
@@ -90,9 +115,14 @@ export const KNOWN_OTAGS = new Set([
   'gives-reach',
   'gives-protection',
   'gives-indestructible',
+  // NOTE: gives-evasion is NOT a valid Scryfall otag — use otag:evasion
+
+  // ── Lands & Enchantress ──
   'landfall',
   'extra-land',
   'enchantress',
+
+  // ── Graveyard Misc ──
   'discard-outlet',
   'mulch',
   'lord',
@@ -100,24 +130,57 @@ export const KNOWN_OTAGS = new Set([
   'self-mill',
   'mill',
   'graveyard-order-matters',
-  'shares-name-with-set',
-  // Special/meta tags
+  // NOTE: shares-name-with-set is NOT a valid Scryfall otag
+
+  // ── Special/Meta Tags ──
   'win-condition',
   'counters-matter',
   'counter-doubler',
   'counter-movement',
-  'etb-trigger',
-  'ltb-trigger',
+  // NOTE: etb-trigger, ltb-trigger are NOT valid Scryfall otags
   'cost-reducer',
-  'token-doubler',
-  'populate',
+  // NOTE: token-doubler is NOT a valid Scryfall otag
+  // NOTE: populate is NOT a valid Scryfall otag — use kw:populate
   'overrun',
-  'hard-counter',
-  'soft-counter',
-  'creature-board-wipe',
-  'ping',
-  'drain',
-  'tax-effect',
-  'gives-evasion',
-  'rummaging',
+  // NOTE: hard-counter, soft-counter are NOT valid Scryfall otags — use otag:counter
+  'counter',
+  // NOTE: creature-board-wipe is NOT a valid Scryfall otag — use otag:board-wipe
+  'pinger',
+  // NOTE: ping is NOT a valid Scryfall otag — use otag:pinger
+  // NOTE: drain is NOT a valid Scryfall otag
+  // NOTE: tax-effect is NOT a valid Scryfall otag
+  'evasion',
+  'rummage',
+  // NOTE: rummaging is NOT a valid Scryfall otag — use otag:rummage
+
+  // ── Verified from scryfall-otag-validation.test.ts ──
+  'activated-ability',
+  'affinity',
+  'alternate-win-condition',
+  'balance',
+  'banish',
+  'battalion',
+  'bite',
+  'boardwipe',
+  'bribery',
+  'bushido',
+  'naturalize',
+  'pacifism',
+  'persist',
+  'plunder',
+  'pseudo-haste',
+  'punisher',
+  'regrowth',
+  'removal-artifact',
+  'removal-creature',
+  'removal-enchantment',
+  'removal-land',
+  'removal-planeswalker',
+  'revolt',
+  'scry',
+  'surveil',
+  'painland',
+  'bounceland',
+  'boltland',
+  'attack-trigger',
 ]);
