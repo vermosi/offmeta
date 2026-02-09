@@ -187,10 +187,12 @@ const Index = () => {
       // Invalidate previous query cache to force fresh fetch
       queryClient.invalidateQueries({ queryKey: ['cards', executedQuery] });
 
-      // Update URL with search query (mark as processed first to prevent duplicate search)
-      if (query) {
-        lastUrlQueryRef.current = query;
-        setSearchParams({ q: query }, { replace: true });
+      // Update URL with the NATURAL LANGUAGE query (not the Scryfall query)
+      // This prevents re-translation loops when the URL is synced back
+      const urlValue = naturalQuery || query;
+      if (urlValue) {
+        lastUrlQueryRef.current = urlValue;
+        setSearchParams({ q: urlValue }, { replace: true });
       } else {
         lastUrlQueryRef.current = '';
         setSearchParams({}, { replace: true });
@@ -267,9 +269,9 @@ const Index = () => {
         queryKey: ['cards', validation.sanitized],
       });
 
-      // Update URL (mark as processed first to prevent URL sync triggering duplicate search)
-      lastUrlQueryRef.current = validation.sanitized;
-      setSearchParams({ q: validation.sanitized }, { replace: true });
+      // Update URL with original natural language query to prevent re-translation loops
+      // Don't update URL for edited queries — keep the original NL query in URL
+      // The edited scryfall query is only used for the current session's search
 
       trackEvent('rerun_edited_query', {
         original_query: originalQuery,
