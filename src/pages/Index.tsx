@@ -93,6 +93,13 @@ const Index = () => {
     }
   }, [urlQuery, hasSearched]); // Removed searchQuery to prevent loop
 
+  // Validate searchQuery before sending to Scryfall
+  const validatedSearchQuery = useMemo(() => {
+    if (!searchQuery) return '';
+    const result = validateScryfallQuery(searchQuery);
+    return result.sanitized;
+  }, [searchQuery]);
+
   const {
     data,
     isLoading: isSearching,
@@ -100,13 +107,13 @@ const Index = () => {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ['cards', searchQuery],
-    queryFn: ({ pageParam = 1 }) => searchCards(searchQuery, pageParam),
+    queryKey: ['cards', validatedSearchQuery],
+    queryFn: ({ pageParam = 1 }) => searchCards(validatedSearchQuery, pageParam),
     getNextPageParam: (lastPage, allPages) => {
       return lastPage.has_more ? allPages.length + 1 : undefined;
     },
     initialPageParam: 1,
-    enabled: !!searchQuery,
+    enabled: !!validatedSearchQuery,
     staleTime: 5 * 60 * 1000,
   });
 
