@@ -109,7 +109,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: String(error),
+        error: 'Cleanup operation failed',
         responseTimeMs,
       }),
       {

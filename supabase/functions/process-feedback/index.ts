@@ -12,7 +12,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 import { checkRateLimit } from '../_shared/rateLimit.ts';
-import { getCorsHeaders } from '../_shared/auth.ts';
+import { getCorsHeaders, validateAuth } from '../_shared/auth.ts';
 import { validateEnv } from '../_shared/env.ts';
 
 const { LOVABLE_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } =
@@ -24,6 +24,18 @@ serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Authentication check - require valid token (anon key, service role, or JWT)
+  const { authorized, error: authError } = validateAuth(req);
+  if (!authorized) {
+    return new Response(
+      JSON.stringify({ error: authError || 'Unauthorized', success: false }),
+      {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
+    );
   }
 
   // Rate limiting to prevent AI cost abuse
@@ -502,7 +514,7 @@ IMPORTANT: Only output the JSON object, nothing else.`;
     console.error('Process feedback error:', error);
     return new Response(
       JSON.stringify({
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: 'Failed to process feedback',
         success: false,
       }),
       {

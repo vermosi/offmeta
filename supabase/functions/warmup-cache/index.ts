@@ -312,7 +312,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: String(error),
+        error: 'Cache warmup failed',
         durationMs: Date.now() - startTime,
       }),
       {

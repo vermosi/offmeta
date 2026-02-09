@@ -210,7 +210,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: String(error),
+        error: 'Pattern generation failed',
         timeMs: Date.now() - startTime,
       }),
       {
