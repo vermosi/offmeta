@@ -15,13 +15,10 @@ import type { ScryfallCard } from '@/types/card';
 import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';
 
-// Popular queries to prefetch for faster UX
+// Popular queries to prefetch for faster UX (kept small to avoid cold-start flooding)
 const POPULAR_QUERIES_TO_PREFETCH = [
   'mana rocks',
   'board wipes',
-  'mana dorks',
-  'counterspells',
-  'card draw',
 ];
 
 // Cache durations
@@ -224,9 +221,10 @@ export function usePrefetchPopularQueries() {
     if (hasPrefetched.current) return;
     hasPrefetched.current = true;
 
-    // Prefetch after a short delay to not block initial render
-    const timeoutId = setTimeout(() => {
-      POPULAR_QUERIES_TO_PREFETCH.forEach((query) => {
+    // Stagger prefetch requests to avoid cold-start flooding
+    const timeoutIds: ReturnType<typeof setTimeout>[] = [];
+    POPULAR_QUERIES_TO_PREFETCH.forEach((query, index) => {
+      const id = setTimeout(() => {
         queryClient.prefetchQuery({
           queryKey: ['translation', query, null, undefined],
           queryFn: () =>
@@ -237,10 +235,11 @@ export function usePrefetchPopularQueries() {
             }),
           staleTime: TRANSLATION_STALE_TIME,
         });
-      });
-    }, 2000);
+      }, 3000 + index * 2000); // Start after 3s, space 2s apart
+      timeoutIds.push(id);
+    });
 
-    return () => clearTimeout(timeoutId);
+    return () => timeoutIds.forEach(clearTimeout);
   }, [queryClient]);
 }
 

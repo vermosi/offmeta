@@ -22,6 +22,7 @@ import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';
 import { logger } from '@/lib/core/logger';
 import { translateQueryWithDedup, type TranslationResult } from '@/hooks/useSearchQuery';
+import { buildClientFallbackQuery } from '@/lib/search/fallback';
 
 const SEARCH_CONTEXT_KEY = 'lastSearchContext';
 const SEARCH_HISTORY_KEY = 'offmeta_search_history';
@@ -281,10 +282,20 @@ export const UnifiedSearchBar = forwardRef<
         }
         if (errorMessage === 'Search timeout') {
           logger.error('Search timeout');
+          const fallbackQuery = buildClientFallbackQuery(queryToSearch);
           toast.error('Search took too long', {
-            description: 'Try a simpler query or try again',
+            description: 'Using simplified search instead',
           });
-          onSearch(queryToSearch, undefined, queryToSearch);
+          onSearch(fallbackQuery, {
+            scryfallQuery: fallbackQuery,
+            explanation: {
+              readable: `Searching for: ${queryToSearch}`,
+              assumptions: ['Search timed out — using simplified translation'],
+              confidence: 0.5,
+            },
+            showAffiliate: false,
+            source: 'client_fallback',
+          }, queryToSearch);
         } else if (
           errorMessage.includes('429') ||
           errorMessage.includes('rate')
@@ -295,10 +306,20 @@ export const UnifiedSearchBar = forwardRef<
           });
         } else {
           logger.error('Search error:', error);
+          const fallbackQuery = buildClientFallbackQuery(queryToSearch);
           toast.error('Search issue', {
-            description: 'Trying direct search instead',
+            description: 'Using simplified search instead',
           });
-          onSearch(queryToSearch, undefined, queryToSearch);
+          onSearch(fallbackQuery, {
+            scryfallQuery: fallbackQuery,
+            explanation: {
+              readable: `Searching for: ${queryToSearch}`,
+              assumptions: ['AI unavailable — using simplified translation'],
+              confidence: 0.5,
+            },
+            showAffiliate: false,
+            source: 'client_fallback',
+          }, queryToSearch);
         }
       } finally {
         setIsSearching(false);
