@@ -421,6 +421,18 @@ export function validateScryfallQuery(query: string): {
     }
   }
 
+  // Detect malformed nested quotes (e.g. o:"t: o:"2 mana"")
+  // These are clearly broken queries from legacy fallback — strip the broken o: clause
+  const nestedQuotePattern = /\bo:"[^"]*(?:t:|o:)[^"]*"[^"]*"/g;
+  if (nestedQuotePattern.test(sanitized)) {
+    // Remove the broken nested-quote oracle clauses entirely
+    sanitized = sanitized
+      .replace(/\bo:"[^"]*(?:t:|o:)[^"]*"[^"]*"/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    issues.push('Removed malformed nested-quote oracle clause');
+  }
+
   sanitized = sanitized.replace(/\s+/g, ' ').trim();
 
   return { valid: issues.length === 0, sanitized, issues };
