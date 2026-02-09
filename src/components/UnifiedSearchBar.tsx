@@ -298,7 +298,9 @@ export const UnifiedSearchBar = forwardRef<
           }, queryToSearch);
         } else if (
           errorMessage.includes('429') ||
-          errorMessage.includes('rate')
+          errorMessage.includes('rate') ||
+          errorMessage.includes('Rate limit') ||
+          errorMessage.includes('Please wait')
         ) {
           setRateLimitedUntil(Date.now() + 30000);
           toast.error('Too many searches', {

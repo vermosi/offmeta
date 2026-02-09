@@ -98,7 +98,7 @@ function checkSearchRateLimit(query: string): {
   // Check cooldown for identical searches
   const lastSearchTime = recentSearches.get(normalizedQuery);
   if (lastSearchTime && now - lastSearchTime < SEARCH_RATE_LIMIT.cooldownMs) {
-    return { allowed: false, reason: 'Please wait before searching again.' };
+    return { allowed: false, reason: 'Rate limited: please wait before searching again.' };
   }
 
   return { allowed: true };
