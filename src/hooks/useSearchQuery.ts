@@ -101,9 +101,16 @@ function checkSearchRateLimit(query: string): {
     return { allowed: false, reason: 'Please wait before searching again.' };
   }
 
-  // Update tracking
+  return { allowed: true };
+}
+
+/**
+ * Record a successful search for rate limiting tracking
+ */
+function recordSearch(query: string): void {
+  const normalizedQuery = query.toLowerCase().trim();
   searchCountThisMinute++;
-  recentSearches.set(normalizedQuery, now);
+  recentSearches.set(normalizedQuery, Date.now());
 
   // Cleanup old entries (keep last 50)
   if (recentSearches.size > 50) {
@@ -112,8 +119,6 @@ function checkSearchRateLimit(query: string): {
       .slice(0, 25);
     oldest.forEach(([key]) => recentSearches.delete(key));
   }
-
-  return { allowed: true };
 }
 
 /**
@@ -168,6 +173,8 @@ export async function translateQueryWithDedup(
       if (error) throw error;
 
       if (data?.success && data?.scryfallQuery) {
+        // Only count as a search on success (so failures don't eat rate limit)
+        recordSearch(query);
         return {
           scryfallQuery: data.scryfallQuery,
           explanation: data.explanation,
