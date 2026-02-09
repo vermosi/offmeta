@@ -81,7 +81,7 @@ const Index = () => {
 
     if (urlQuery && searchBarRef.current) {
       searchBarRef.current.triggerSearch(urlQuery);
-    } else if (!urlQuery && hasSearched) {
+    } else if (!urlQuery) {
       // URL cleared - reset to landing state
       setSearchQuery('');
       setOriginalQuery('');
@@ -91,7 +91,7 @@ const Index = () => {
       setHasActiveFilters(false);
       setCurrentRequestId(null);
     }
-  }, [urlQuery, hasSearched]); // Removed searchQuery to prevent loop
+  }, [urlQuery]); // Only react to URL changes, not internal state
 
   // Validate searchQuery before sending to Scryfall
   const validatedSearchQuery = useMemo(() => {
