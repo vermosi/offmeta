@@ -153,15 +153,18 @@ export function SearchFeedback({
 
     setIsSubmitting(true);
     try {
-      const { data: insertedFeedback, error } = await supabase
+      // Generate ID client-side so we can pass it to process-feedback
+      // without needing SELECT permission on search_feedback
+      const feedbackId = crypto.randomUUID();
+
+      const { error } = await supabase
         .from('search_feedback')
         .insert({
+          id: feedbackId,
           original_query: validationResult.data.originalQuery,
           translated_query: validationResult.data.translatedQuery,
           issue_description: validationResult.data.issueDescription,
-        })
-        .select('id')
-        .single();
+        });
 
       if (error) throw error;
 
@@ -183,9 +186,7 @@ export function SearchFeedback({
       setValidationError(null);
 
       // Trigger background processing for this specific feedback item
-      if (insertedFeedback?.id) {
-        triggerProcessing(insertedFeedback.id);
-      }
+      triggerProcessing(feedbackId);
     } catch (error) {
       logger.error('Feedback submission failed', error);
       toast.error('Failed to submit feedback');
