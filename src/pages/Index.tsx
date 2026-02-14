@@ -127,19 +127,9 @@ const Index = () => {
         {!hasSearched && (
           <section
             ref={heroRef}
-            className="relative pt-8 sm:pt-14 lg:pt-20 pb-6 sm:pb-10 overflow-hidden"
+            className="relative pt-8 sm:pt-14 lg:pt-20 pb-6 sm:pb-10"
             aria-labelledby="hero-heading"
           >
-            <div
-              ref={orb1Ref}
-              className="glow-orb absolute -top-32 -left-32 sm:-top-48 sm:-left-48 transition-transform duration-100 ease-out"
-              aria-hidden="true"
-            />
-            <div
-              ref={orb2Ref}
-              className="glow-orb glow-orb-secondary absolute -bottom-32 -right-32 sm:-bottom-48 sm:-right-48 transition-transform duration-100 ease-out"
-              aria-hidden="true"
-            />
 
             <div className="container-main text-center stagger-children relative z-10">
               <h1
