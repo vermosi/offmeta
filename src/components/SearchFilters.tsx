@@ -307,7 +307,7 @@ export function SearchFilters({
     (filters.cmcRange[0] > 0 || filters.cmcRange[1] < defaultMaxCmc ? 1 : 0);
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 animate-reveal">
+    <div className="contents">
       {/* Filter Popover */}
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
@@ -446,8 +446,8 @@ export function SearchFilters({
           setFilters((prev) => ({ ...prev, sortBy: value }))
         }
       >
-        <SelectTrigger className="w-[130px] sm:w-[160px] h-8 sm:h-9 text-xs sm:text-sm">
-          <ArrowUpDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 opacity-50" />
+        <SelectTrigger className="w-[110px] sm:w-[160px] h-8 sm:h-9 text-xs sm:text-sm">
+          <ArrowUpDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2 opacity-50" />
           <SelectValue placeholder="Sort..." />
         </SelectTrigger>
         <SelectContent className="z-50 bg-popover border border-border shadow-lg">
