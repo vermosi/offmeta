@@ -10,26 +10,15 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { searchCards } from '@/lib/scryfall/client';
-import type { ScryfallCard } from '@/types/card';
 import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';
+import { CLIENT_CONFIG } from '@/lib/config';
 
 // Popular queries to prefetch for faster UX (kept small to avoid cold-start flooding)
 const POPULAR_QUERIES_TO_PREFETCH = [
   'mana rocks',
   'board wipes',
 ];
-
-// Cache durations
-const TRANSLATION_STALE_TIME = 24 * 60 * 60 * 1000; // 24 hours
-const CARD_SEARCH_STALE_TIME = 5 * 60 * 1000; // 5 minutes
-
-// Session-level rate limiting to prevent spam loops
-const SEARCH_RATE_LIMIT = {
-  maxPerMinute: 20,
-  cooldownMs: 2000, // 2 second cooldown between identical searches
-};
 
 // Track recent searches for rate limiting
 const recentSearches = new Map<string, number>(); // query -> timestamp
@@ -88,7 +77,7 @@ function checkSearchRateLimit(query: string): {
   }
 
   // Check max searches per minute
-  if (searchCountThisMinute >= SEARCH_RATE_LIMIT.maxPerMinute) {
+  if (searchCountThisMinute >= CLIENT_CONFIG.SEARCH_RATE_LIMIT.maxPerMinute) {
     return {
       allowed: false,
       reason: 'Too many searches. Please wait a moment.',
@@ -97,7 +86,7 @@ function checkSearchRateLimit(query: string): {
 
   // Check cooldown for identical searches
   const lastSearchTime = recentSearches.get(normalizedQuery);
-  if (lastSearchTime && now - lastSearchTime < SEARCH_RATE_LIMIT.cooldownMs) {
+  if (lastSearchTime && now - lastSearchTime < CLIENT_CONFIG.SEARCH_RATE_LIMIT.cooldownMs) {
     return { allowed: false, reason: 'Rate limited: please wait before searching again.' };
   }
 
@@ -209,7 +198,7 @@ export function useTranslateQuery(params: TranslationParams | null) {
     queryKey,
     queryFn: () => translateQueryWithDedup(params!),
     enabled: !!params?.query?.trim(),
-    staleTime: TRANSLATION_STALE_TIME,
+    staleTime: CLIENT_CONFIG.TRANSLATION_STALE_TIME_MS,
     gcTime: 60 * 60 * 1000, // Keep in cache for 1 hour
     retry: 2,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
@@ -240,7 +229,7 @@ export function usePrefetchPopularQueries() {
               filters: null,
               bypassCache: false,
             }),
-          staleTime: TRANSLATION_STALE_TIME,
+          staleTime: CLIENT_CONFIG.TRANSLATION_STALE_TIME_MS,
         });
       }, 3000 + index * 2000); // Start after 3s, space 2s apart
       timeoutIds.push(id);
@@ -276,38 +265,3 @@ export function useSubmitFeedback() {
     retry: 2,
   });
 }
-
-/**
- * Hook to get card details by ID.
- * Useful for card modal when we need fresh/complete data.
- */
-export function useCardDetails(cardId: string | null) {
-  return useQuery({
-    queryKey: ['card', cardId],
-    queryFn: async () => {
-      if (!cardId) return null;
-      const response = await fetch(`https://api.scryfall.com/cards/${cardId}`);
-      if (!response.ok) throw new Error('Failed to fetch card');
-      return response.json() as Promise<ScryfallCard>;
-    },
-    enabled: !!cardId,
-    staleTime: 30 * 60 * 1000, // 30 minutes
-  });
-}
-
-/**
- * Hook for searching cards with optimized caching.
- * Wraps the existing searchCards function with TanStack Query.
- */
-export function useCardSearch(scryfallQuery: string | null) {
-  return useQuery({
-    queryKey: ['cards-search', scryfallQuery],
-    queryFn: () => searchCards(scryfallQuery!, 1),
-    enabled: !!scryfallQuery,
-    staleTime: CARD_SEARCH_STALE_TIME,
-    placeholderData: (previousData) => previousData, // Show stale data while fetching
-  });
-}
-
-// NOTE: invalidateTranslationCache and setTranslationCache removed — they were unused.
-// If needed in the future, use queryClient.invalidateQueries/setQueryData directly.
