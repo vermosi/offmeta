@@ -13,7 +13,7 @@ interface StaplesSectionProps {
 
 const STAPLES = [
   { label: 'Mono-Red Aggro', query: 'budget red aggro creatures cmc<=3', colors: ['R'] },
-  { label: 'Simic Ramp', query: 'green blue ramp spells for commander', colors: ['G', 'U'] },
+  { label: 'Simic Ramp', query: 'simic ramp spells', colors: ['G', 'U'] },
   { label: 'Orzhov Aristocrats', query: 'white black sacrifice payoffs', colors: ['W', 'B'] },
   { label: 'Izzet Spellslinger', query: 'blue red instant sorcery payoffs', colors: ['U', 'R'] },
   { label: 'Golgari Graveyard', query: 'black green graveyard recursion', colors: ['B', 'G'] },
