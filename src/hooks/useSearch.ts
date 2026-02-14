@@ -103,7 +103,6 @@ export function useSearch() {
     if (initialUrlQuery.current && searchBarRef.current) {
       searchBarRef.current.triggerSearch(initialUrlQuery.current);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // --- URL sync (browser back/forward, manual edits) ---
