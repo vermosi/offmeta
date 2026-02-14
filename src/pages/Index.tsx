@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef } from 'react';
+import { lazy, Suspense, useEffect, useRef, useCallback } from 'react';
 import { DailyPick } from '@/components/DailyPick';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 import { EditableQueryBar } from '@/components/EditableQueryBar';
@@ -16,9 +16,12 @@ import { Header } from '@/components/Header';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { SimilarSearches } from '@/components/SimilarSearches';
 import { VirtualizedCardGrid } from '@/components/VirtualizedCardGrid';
+import { RandomCardButton } from '@/components/RandomCardButton';
+import { ExportResults } from '@/components/ExportResults';
 import { Loader2 } from 'lucide-react';
 import { CLIENT_CONFIG } from '@/lib/config';
 import { useSearch } from '@/hooks/useSearch';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 const CardModal = lazy(() => import('@/components/CardModal'));
 
@@ -52,6 +55,13 @@ const Index = () => {
     handleRegenerateTranslation,
     handleFilteredCards,
   } = useSearch();
+
+  // Keyboard shortcuts
+  const focusSearch = useCallback(() => {
+    const input = document.getElementById('search-input');
+    input?.focus();
+  }, []);
+  useKeyboardShortcuts({ onFocusSearch: focusSearch });
 
   // Parallax scroll effect for glow orbs
   const heroRef = useRef<HTMLElement>(null);
@@ -152,6 +162,10 @@ const Index = () => {
                   Just natural conversation.
                 </p>
               </div>
+
+              <div className="flex justify-center">
+                <RandomCardButton />
+              </div>
             </div>
           </section>
         )}
@@ -206,6 +220,7 @@ const Index = () => {
                   totalCards={totalCards}
                   resetKey={filtersResetKey}
                 />
+                <ExportResults cards={displayCards} />
                 {totalCards > 0 && (
                   <span
                     className="text-xs text-muted-foreground"
