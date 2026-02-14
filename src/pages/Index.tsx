@@ -184,7 +184,7 @@ const Index = () => {
           className={`relative flex-1 ${hasSearched ? 'pt-4 sm:pt-6' : ''} pb-8 sm:pb-16 safe-bottom`}
           role="main"
         >
-          <div className="container-main space-y-6 sm:space-y-8">
+          <div className="container-main space-y-3 sm:space-y-6">
             <UnifiedSearchBar
               ref={searchBarRef}
               onSearch={handleSearch}
@@ -212,8 +212,9 @@ const Index = () => {
               </div>
             )}
 
+            {/* Explain panel — hidden on mobile to reduce clutter */}
             {hasSearched && (
-              <div className="animate-reveal">
+              <div className="hidden sm:block animate-reveal">
                 <ExplainCompilationPanel
                   intent={lastSearchResult?.intent || lastIntent}
                 />
@@ -221,7 +222,7 @@ const Index = () => {
             )}
 
             {cards.length > 0 && !isSearching && (
-              <div className="flex flex-wrap items-center justify-center gap-3 animate-reveal">
+              <div className="flex items-center gap-1.5 sm:gap-2 animate-reveal overflow-x-auto scrollbar-thin pb-0.5">
                 <SearchFilters
                   cards={cards}
                   onFilteredCards={handleFilteredCards}
@@ -230,29 +231,32 @@ const Index = () => {
                   initialFilters={initialUrlFilters}
                 />
                 <ViewToggle value={viewMode} onChange={setViewMode} />
-                <ExportResults cards={displayCards} />
                 {totalCards > 0 && (
                   <span
-                    className="text-xs text-muted-foreground"
+                    className="text-[11px] sm:text-xs text-muted-foreground tabular-nums flex-shrink-0"
                     role="status"
                     aria-live="polite"
                   >
-                    {totalCards.toLocaleString()} cards
+                    {totalCards.toLocaleString()}
                   </span>
                 )}
+                <ExportResults cards={displayCards} />
               </div>
             )}
 
+            {/* Similar searches — hidden on mobile */}
             {hasSearched && !isSearching && (
-              <SimilarSearches
-                originalQuery={originalQuery}
-                onSuggestionClick={handleTryExample}
-              />
+              <div className="hidden sm:block">
+                <SimilarSearches
+                  originalQuery={originalQuery}
+                  onSuggestionClick={handleTryExample}
+                />
+              </div>
             )}
           </div>
 
           {/* Card grid */}
-          <div className="mt-6 sm:mt-8 container-main">
+          <div className="mt-3 sm:mt-6 container-main">
             {cards.length > 0 ? (
               <>
                 {displayCards.length > 0 ? (
