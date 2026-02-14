@@ -9,7 +9,7 @@ import { getGuideBySlug, GUIDES } from '@/data/guides';
 import { Footer } from '@/components/Footer';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ScrollToTop } from '@/components/ScrollToTop';
-import { Search, ArrowRight, Lightbulb, HelpCircle, BookOpen } from 'lucide-react';
+import { Search, ArrowRight, Lightbulb, HelpCircle, BookOpen, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function GuidePage() {
@@ -142,7 +142,7 @@ export default function GuidePage() {
         <ol className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <li><Link to="/" className="hover:text-foreground transition-colors">Home</Link></li>
           <li aria-hidden="true">/</li>
-          <li><Link to="/" className="hover:text-foreground transition-colors">Guides</Link></li>
+          <li><Link to="/guides" className="hover:text-foreground transition-colors">Guides</Link></li>
           <li aria-hidden="true">/</li>
           <li className="text-foreground font-medium truncate">{guide.title}</li>
         </ol>
@@ -177,6 +177,35 @@ export default function GuidePage() {
           <section className="prose-section">
             <p className="text-base leading-relaxed text-foreground/90">{guide.intro}</p>
           </section>
+
+          {/* How OffMeta Helps */}
+          {'howOffmetaHelps' in guide && guide.howOffmetaHelps && (
+            <section className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                <h2 className="text-xl font-semibold text-foreground">How OffMeta Helps</h2>
+              </div>
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+                <div className="flex items-center gap-2 mb-2 text-xs text-muted-foreground">
+                  <span>You type:</span>
+                  <code className="px-2 py-0.5 rounded bg-muted text-foreground font-mono text-xs">
+                    {guide.searchQuery}
+                  </code>
+                </div>
+                {'translatedQuery' in guide && (
+                  <div className="flex items-center gap-2 mb-3 text-xs text-muted-foreground">
+                    <span>OffMeta generates:</span>
+                    <code className="px-2 py-0.5 rounded bg-muted text-foreground font-mono text-xs">
+                      {(guide as { translatedQuery: string }).translatedQuery}
+                    </code>
+                  </div>
+                )}
+                <p className="text-sm text-foreground/85 leading-relaxed">
+                  {guide.howOffmetaHelps}
+                </p>
+              </div>
+            </section>
+          )}
 
           {/* Tips */}
           <section className="space-y-4">
