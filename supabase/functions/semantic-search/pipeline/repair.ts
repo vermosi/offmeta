@@ -9,6 +9,26 @@ import { fetchWithRetry } from '../utils.ts';
 const SCRYFALL_SEARCH_URL = 'https://api.scryfall.com/cards/search';
 
 /**
+ * Fast, synchronous pre-pass that fixes common syntax defects
+ * (e.g. "or or", leading/trailing "or" in groups, empty parens)
+ * without hitting Scryfall.
+ */
+export function sanitizeQuerySyntax(query: string): string {
+  let q = query;
+  // Collapse "or or" → "or"
+  q = q.replace(/\bor(\s+or)+\b/gi, 'or');
+  // Remove leading "or" inside parens: "( or …" → "( …"
+  q = q.replace(/\(\s*or\b/g, '(');
+  // Remove trailing "or" before parens: "… or )" → "… )"
+  q = q.replace(/\bor\s*\)/g, ')');
+  // Remove empty parens
+  q = q.replace(/\(\s*\)/g, '');
+  // Collapse whitespace
+  q = q.replace(/\s+/g, ' ').trim();
+  return q;
+}
+
+/**
  * Validates a query against Scryfall API
  */
 export async function validateWithScryfall(
@@ -64,6 +84,37 @@ const REPAIR_STRATEGIES: Array<{
   action: 'remove' | 'replace';
   replacement?: string;
 }> = [
+  // 0. Fix double-or syntax ("or or" → "or")
+  {
+    name: 'fix_double_or',
+    pattern: /\bor\s+or\b/gi,
+    action: 'replace',
+    replacement: 'or',
+  },
+
+  // 0b. Fix leading or inside parens ("( or" → "(")
+  {
+    name: 'fix_leading_or',
+    pattern: /\(\s+or\b/g,
+    action: 'replace',
+    replacement: '(',
+  },
+
+  // 0c. Fix trailing or before parens ("or )" → ")")
+  {
+    name: 'fix_trailing_or',
+    pattern: /\bor\s+\)/g,
+    action: 'replace',
+    replacement: ')',
+  },
+
+  // 0d. Remove empty parens left after cleanup
+  {
+    name: 'remove_empty_parens',
+    pattern: /\(\s*\)/g,
+    action: 'remove',
+  },
+
   // 1. Remove regex tokens (often problematic)
   { name: 'remove_regex', pattern: /\bo:\/[^/]+\//g, action: 'remove' },
 
@@ -319,9 +370,12 @@ export async function validateAndFixQuery(
     overlyBroadThreshold = 1500,
   } = options;
 
+  // Pre-pass: fix common syntax defects without hitting Scryfall
+  const sanitized = sanitizeQuerySyntax(query);
+
   // Initial validation
-  let validation = await validateWithScryfall(query, overlyBroadThreshold);
-  let finalQuery = query;
+  let validation = await validateWithScryfall(sanitized, overlyBroadThreshold);
+  let finalQuery = sanitized;
   let repairs: RepairResult | null = null;
   let broadening: BroadenResult | null = null;
 
