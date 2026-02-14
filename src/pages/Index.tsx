@@ -120,7 +120,7 @@ const Index = () => {
         {/* Hero Section */}
         {!hasSearched && (
           <section
-            className="relative pt-12 sm:pt-20 lg:pt-28 pb-6 sm:pb-12 overflow-hidden"
+            className="relative pt-8 sm:pt-14 lg:pt-20 pb-6 sm:pb-10 overflow-hidden"
             aria-labelledby="hero-heading"
           >
             <div
@@ -142,7 +142,7 @@ const Index = () => {
                 <span className="text-gradient">Like You Think</span>
               </h1>
 
-              <div className="space-y-1 sm:space-y-2 mb-10 sm:mb-14">
+              <div className="space-y-1 sm:space-y-2 mb-6 sm:mb-8">
                 <p className="text-base sm:text-lg lg:text-xl text-muted-foreground">
                   Describe what you're looking for in plain English.
                 </p>
@@ -199,15 +199,6 @@ const Index = () => {
               </div>
             )}
 
-            {hasSearched && !isSearching && (
-              <div className="animate-reveal">
-                <SimilarSearches
-                  originalQuery={originalQuery}
-                  onSuggestionClick={handleTryExample}
-                />
-              </div>
-            )}
-
             {cards.length > 0 && !isSearching && (
               <div className="flex flex-wrap items-center justify-center gap-3 animate-reveal">
                 <SearchFilters
@@ -227,10 +218,17 @@ const Index = () => {
                 )}
               </div>
             )}
+
+            {hasSearched && !isSearching && (
+              <SimilarSearches
+                originalQuery={originalQuery}
+                onSuggestionClick={handleTryExample}
+              />
+            )}
           </div>
 
           {/* Card grid */}
-          <div className="mt-6 sm:mt-8 px-4 sm:px-6 lg:px-8">
+          <div className="mt-6 sm:mt-8 container-main">
             {cards.length > 0 ? (
               <>
                 {displayCards.length > 0 ? (

@@ -398,7 +398,7 @@
     border-radius: 50%;
     background: radial-gradient(
       circle,
-      hsl(var(--gradient-start) / 0.12) 0%,
+      hsl(var(--gradient-start) / 0.25) 0%,
       transparent 70%
     );
     filter: blur(80px);
@@ -409,7 +409,7 @@
   .glow-orb-secondary {
     background: radial-gradient(
       circle,
-      hsl(var(--gradient-end) / 0.1) 0%,
+      hsl(var(--gradient-end) / 0.2) 0%,
       transparent 70%
     );
     animation-delay: -4s;

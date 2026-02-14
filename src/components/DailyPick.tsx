@@ -5,7 +5,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getTodayPick } from '@/data/daily-gems';
-import { Sparkles, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sparkles, ExternalLink, ChevronDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import type { ScryfallCard } from '@/types/card';
 
@@ -85,11 +86,12 @@ export function DailyPick() {
               </p>
             </div>
           </div>
-          {expanded ? (
-            <ChevronUp className="h-4 w-4 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          )}
+          <ChevronDown
+            className={cn(
+              'h-4 w-4 text-muted-foreground transition-transform duration-200',
+              expanded && 'rotate-180',
+            )}
+          />
         </button>
 
         {/* Expandable content */}

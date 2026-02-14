@@ -42,13 +42,13 @@ export function ExplainCompilationPanel({
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <CollapsibleTrigger asChild>
         <button
-          className="w-full flex items-center justify-center gap-2 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors focus-ring rounded-lg"
+          className="w-full flex items-center justify-center gap-2 py-2 px-4 text-xs text-muted-foreground hover:text-foreground transition-colors focus-ring rounded-lg bg-secondary/50 hover:bg-secondary border border-border/50 max-w-xs mx-auto"
           aria-expanded={isOpen}
         >
           <span>
             {isOpen ? 'Hide' : 'Show'} details
             {!isOpen && activeFields > 0 && (
-              <span className="ml-1 text-muted-foreground/50">
+              <span className="ml-1 text-accent font-medium">
                 ({activeFields} detected)
               </span>
             )}
