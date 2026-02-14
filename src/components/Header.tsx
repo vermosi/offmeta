@@ -132,7 +132,7 @@ export function Header() {
       {/* Mobile menu overlay */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 top-[57px] z-40 bg-background/95 backdrop-blur-lg md:hidden animate-fade-in"
+          className="fixed inset-0 top-[57px] z-40 bg-background backdrop-blur-lg md:hidden animate-fade-in"
           id="mobile-nav-menu"
           role="dialog"
           aria-modal="true"
