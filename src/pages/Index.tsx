@@ -1,24 +1,10 @@
-import {
-  useState,
-  useCallback,
-  useRef,
-  lazy,
-  Suspense,
-  useMemo,
-  useEffect,
-} from 'react';
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, useSearchParams } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
+import { Link } from 'react-router-dom';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
-import type {
-  SearchResult,
-  UnifiedSearchBarHandle,
-} from '@/components/UnifiedSearchBar';
 import { EditableQueryBar } from '@/components/EditableQueryBar';
 import { ExplainCompilationPanel } from '@/components/ExplainCompilationPanel';
 import { ReportIssueDialog } from '@/components/ReportIssueDialog';
 import { SearchFilters } from '@/components/SearchFilters';
-
 import { CardItem } from '@/components/CardItem';
 import { CardSkeletonGrid } from '@/components/CardSkeleton';
 import { EmptyState } from '@/components/EmptyState';
@@ -29,326 +15,42 @@ import { HowItWorksSection } from '@/components/HowItWorksSection';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { VirtualizedCardGrid } from '@/components/VirtualizedCardGrid';
-import { searchCards } from '@/lib/scryfall/client';
-import type { ScryfallCard } from '@/types/card';
-import type { FilterState } from '@/types/filters';
-import type { SearchIntent } from '@/types/search';
-import { buildFilterQuery, validateScryfallQuery } from '@/lib/scryfall/query';
-import { useAnalytics } from '@/hooks/useAnalytics';
 import { Loader2 } from 'lucide-react';
 import { CLIENT_CONFIG } from '@/lib/config';
+import { useSearch } from '@/hooks/useSearch';
 
 const CardModal = lazy(() => import('@/components/CardModal'));
 
-// Generate unique request ID
-function generateRequestId(): string {
-  return `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-}
-
 const Index = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const urlQuery = searchParams.get('q') || '';
-  const queryClient = useQueryClient();
-
-  const [searchQuery, setSearchQuery] = useState(urlQuery);
-  const [originalQuery, setOriginalQuery] = useState(urlQuery); // Natural language query
-  const [selectedCard, setSelectedCard] = useState<ScryfallCard | null>(null);
-  const [hasSearched, setHasSearched] = useState(!!urlQuery);
-  const [lastSearchResult, setLastSearchResult] = useState<SearchResult | null>(
-    null,
-  );
-  const [filteredCards, setFilteredCards] = useState<ScryfallCard[]>([]);
-  const [hasActiveFilters, setHasActiveFilters] = useState(false);
-  const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
-  const [reportDialogOpen, setReportDialogOpen] = useState(false);
-  const [activeFilters, setActiveFilters] = useState<FilterState | null>(null);
-  const [lastIntent, setLastIntent] = useState<SearchIntent | null>(null);
-  const [filtersResetKey, setFiltersResetKey] = useState(0);
-
-  const searchBarRef = useRef<UnifiedSearchBarHandle>(null);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
-  const lastUrlQueryRef = useRef(urlQuery); // Track last processed URL query
-  const { trackSearch, trackCardClick, trackEvent } = useAnalytics();
-
-  // Sync state with URL changes (browser back/forward, manual URL edits)
-  // Only reacts to external URL changes, not internal state updates
-  useEffect(() => {
-    // Skip if this is the same URL we already processed
-    if (urlQuery === lastUrlQueryRef.current) {
-      return;
-    }
-    lastUrlQueryRef.current = urlQuery;
-
-    if (urlQuery && searchBarRef.current) {
-      searchBarRef.current.triggerSearch(urlQuery);
-    } else if (!urlQuery) {
-      // URL cleared - reset to landing state
-      setSearchQuery('');
-      setOriginalQuery('');
-      setHasSearched(false);
-      setLastSearchResult(null);
-      setFilteredCards([]);
-      setHasActiveFilters(false);
-      setCurrentRequestId(null);
-    }
-  }, [urlQuery]); // Only react to URL changes, not internal state
-
-  // Validate searchQuery before sending to Scryfall
-  const validatedSearchQuery = useMemo(() => {
-    if (!searchQuery) return '';
-    const result = validateScryfallQuery(searchQuery);
-    return result.sanitized;
-  }, [searchQuery]);
-
   const {
-    data,
-    isLoading: isSearching,
-    fetchNextPage,
+    searchQuery,
+    originalQuery,
+    selectedCard,
+    setSelectedCard,
+    hasSearched,
+    lastSearchResult,
+    lastIntent,
+    activeFilters,
+    filtersResetKey,
+    reportDialogOpen,
+    setReportDialogOpen,
+    currentRequestId,
+    cards,
+    displayCards,
+    totalCards,
+    isSearching,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey: ['cards', validatedSearchQuery],
-    queryFn: ({ pageParam = 1 }) => searchCards(validatedSearchQuery, pageParam),
-    getNextPageParam: (lastPage, allPages) => {
-      return lastPage.has_more ? allPages.length + 1 : undefined;
-    },
-    initialPageParam: 1,
-    enabled: !!validatedSearchQuery,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  // Refs to track latest values and prevent stale closures in IntersectionObserver
-  const hasNextPageRef = useRef(hasNextPage);
-  const isFetchingNextPageRef = useRef(isFetchingNextPage);
-
-  // Keep refs in sync with state
-  useEffect(() => {
-    hasNextPageRef.current = hasNextPage;
-    isFetchingNextPageRef.current = isFetchingNextPage;
-  }, [hasNextPage, isFetchingNextPage]);
-
-  // Intersection observer for infinite scroll (uses refs to avoid stale closures)
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (
-          entries[0].isIntersecting &&
-          hasNextPageRef.current &&
-          !isFetchingNextPageRef.current
-        ) {
-          fetchNextPage();
-        }
-      },
-      {
-        threshold: CLIENT_CONFIG.INFINITE_SCROLL_THRESHOLD,
-        rootMargin: CLIENT_CONFIG.INFINITE_SCROLL_ROOT_MARGIN,
-      },
-    );
-
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, [fetchNextPage]);
-
-  const handleSearch = useCallback(
-    (query: string, result?: SearchResult, naturalQuery?: string) => {
-      // Generate new request ID for every search
-      const requestId = generateRequestId();
-      setCurrentRequestId(requestId);
-
-      // Clear prior state before setting new values
-      setFilteredCards([]);
-      setHasActiveFilters(false);
-      setActiveFilters(null);
-      setFiltersResetKey((prev) => prev + 1);
-
-      const executedQuery = query.trim();
-
-      setSearchQuery(executedQuery);
-      setOriginalQuery(naturalQuery || query);
-      setHasSearched(true);
-      if (result) {
-        setLastSearchResult({
-          ...result,
-          scryfallQuery: executedQuery,
-        });
-        setLastIntent(result.intent || null);
-      } else {
-        setLastSearchResult({
-          scryfallQuery: executedQuery,
-          explanation: undefined,
-          showAffiliate: false,
-        });
-        setLastIntent(null);
-      }
-
-      // Invalidate previous query cache to force fresh fetch
-      queryClient.invalidateQueries({ queryKey: ['cards', executedQuery] });
-
-      // Update URL with the NATURAL LANGUAGE query (not the Scryfall query)
-      // This prevents re-translation loops when the URL is synced back
-      const urlValue = naturalQuery || query;
-      if (urlValue) {
-        lastUrlQueryRef.current = urlValue;
-        setSearchParams({ q: urlValue }, { replace: true });
-      } else {
-        lastUrlQueryRef.current = '';
-        setSearchParams({}, { replace: true });
-      }
-
-      // Track search analytics
-      if (result) {
-        trackSearch({
-          query: naturalQuery || query,
-          translated_query: result.scryfallQuery,
-          results_count: 0,
-        });
-      }
-    },
-    [trackSearch, setSearchParams, queryClient],
-  );
-
-  // Handle re-running with an edited Scryfall query (bypasses AI translation)
-  const handleRerunEditedQuery = useCallback(
-    (editedQuery: string) => {
-      const requestId = generateRequestId();
-      setCurrentRequestId(requestId);
-
-      // Clear prior state
-      setFilteredCards([]);
-      setHasActiveFilters(false);
-
-      const filterQuery = buildFilterQuery(activeFilters);
-      const combinedQuery = [editedQuery, filterQuery]
-        .filter(Boolean)
-        .join(' ')
-        .trim();
-      const validation = validateScryfallQuery(combinedQuery);
-      if (!validation.valid) {
-        setLastSearchResult((prev) =>
-          prev
-            ? {
-                ...prev,
-                scryfallQuery: validation.sanitized,
-                validationIssues: validation.issues,
-              }
-            : {
-                scryfallQuery: validation.sanitized,
-                validationIssues: validation.issues,
-                explanation: undefined,
-                showAffiliate: false,
-              },
-        );
-        return;
-      }
-
-      // Set the edited query as both search and displayed query
-      setSearchQuery(validation.sanitized);
-      setHasSearched(true);
-
-      // Update last search result with edited query
-      setLastSearchResult((prev) =>
-        prev
-          ? {
-              ...prev,
-              scryfallQuery: validation.sanitized,
-              validationIssues: [],
-            }
-          : {
-              scryfallQuery: validation.sanitized,
-              explanation: undefined,
-              showAffiliate: false,
-              validationIssues: [],
-            },
-      );
-
-      // Invalidate cache and force new fetch
-      queryClient.invalidateQueries({
-        queryKey: ['cards', validation.sanitized],
-      });
-
-      // Update URL with original natural language query to prevent re-translation loops
-      // Don't update URL for edited queries — keep the original NL query in URL
-      // The edited scryfall query is only used for the current session's search
-
-      trackEvent('rerun_edited_query', {
-        original_query: originalQuery,
-        edited_query: editedQuery,
-        request_id: requestId,
-      });
-    },
-    [queryClient, setSearchParams, originalQuery, trackEvent, activeFilters],
-  );
-
-  const handleCardClick = useCallback(
-    (card: ScryfallCard, index: number) => {
-      trackCardClick({
-        card_id: card.id,
-        card_name: card.name,
-        set_code: card.set,
-        rarity: card.rarity,
-        position_in_results: index,
-      });
-
-      setSelectedCard(card);
-    },
-    [trackCardClick],
-  );
-
-  const handleTryExample = useCallback((query: string) => {
-    searchBarRef.current?.triggerSearch(query);
-  }, []);
-
-  const handleRegenerateTranslation = useCallback(() => {
-    if (!originalQuery) return;
-    searchBarRef.current?.triggerSearch(originalQuery, {
-      bypassCache: true,
-      cacheSalt: `${Date.now()}`,
-    });
-  }, [originalQuery]);
-
-  // Flatten all pages into a single array
-  const cards = useMemo(() => {
-    return data?.pages.flatMap((page) => page.data) || [];
-  }, [data]);
-
-  const totalCards = data?.pages[0]?.total_cards || 0;
-
-  // Track actual results count when data arrives
-  useEffect(() => {
-    if (totalCards > 0 && lastSearchResult) {
-      trackEvent('search_results', {
-        query: originalQuery,
-        translated_query: lastSearchResult.scryfallQuery,
-        results_count: totalCards,
-        request_id: currentRequestId ?? undefined,
-      });
-    }
-  }, [
-    totalCards,
-    lastSearchResult,
-    originalQuery,
-    trackEvent,
-    currentRequestId,
-  ]);
-
-  const handleFilteredCards = useCallback(
-    (
-      filtered: ScryfallCard[],
-      filtersActive: boolean,
-      filters: FilterState,
-    ) => {
-      setFilteredCards(filtered);
-      setHasActiveFilters(filtersActive);
-      setActiveFilters(filters);
-    },
-    [],
-  );
-
-  // Use filtered cards for display when filters are active, otherwise show all cards
-  const displayCards = hasActiveFilters ? filteredCards : cards;
+    fetchNextPage,
+    searchBarRef,
+    loadMoreRef,
+    handleSearch,
+    handleRerunEditedQuery,
+    handleCardClick,
+    handleTryExample,
+    handleRegenerateTranslation,
+    handleFilteredCards,
+  } = useSearch();
 
   return (
     <ErrorBoundary>
@@ -358,7 +60,7 @@ const Index = () => {
           Skip to main content
         </a>
 
-        {/* Header - Clean, minimal, sticky with blur */}
+        {/* Header */}
         <header
           className="sticky top-0 z-50 safe-top border-b border-border/50 bg-background/80 backdrop-blur-xl"
           role="banner"
@@ -413,13 +115,12 @@ const Index = () => {
           </div>
         </header>
 
-        {/* Hero Section - Premium, airy with glow orbs */}
+        {/* Hero Section */}
         {!hasSearched && (
           <section
             className="relative pt-12 sm:pt-20 lg:pt-28 pb-6 sm:pb-12 overflow-hidden"
             aria-labelledby="hero-heading"
           >
-            {/* Animated glow orbs for premium feel */}
             <div
               className="glow-orb absolute -top-32 -left-32 sm:-top-48 sm:-left-48"
               aria-hidden="true"
@@ -460,9 +161,7 @@ const Index = () => {
           className={`relative flex-1 ${hasSearched ? 'pt-4 sm:pt-6' : ''} pb-8 sm:pb-16 safe-bottom`}
           role="main"
         >
-          {/* Centered elements: search, query bar, filters */}
           <div className="container-main space-y-6 sm:space-y-8">
-            {/* Search */}
             <UnifiedSearchBar
               ref={searchBarRef}
               onSearch={handleSearch}
@@ -471,13 +170,10 @@ const Index = () => {
               filters={activeFilters}
             />
 
-            {/* Always-visible Editable Query Bar */}
             {hasSearched && (
               <div className="animate-reveal">
                 <EditableQueryBar
-                  scryfallQuery={(
-                    lastSearchResult?.scryfallQuery || searchQuery
-                  ).trim()}
+                  scryfallQuery={(lastSearchResult?.scryfallQuery || searchQuery).trim()}
                   confidence={lastSearchResult?.explanation?.confidence}
                   isLoading={isSearching}
                   onRerun={handleRerunEditedQuery}
@@ -500,7 +196,6 @@ const Index = () => {
               </div>
             )}
 
-            {/* Filters, Sort, and Results count - all in one row */}
             {cards.length > 0 && !isSearching && (
               <div className="flex flex-wrap items-center justify-center gap-3 animate-reveal">
                 <SearchFilters
@@ -522,26 +217,22 @@ const Index = () => {
             )}
           </div>
 
-          {/* Card grid - full width with padding */}
+          {/* Card grid */}
           <div className="mt-6 sm:mt-8 px-4 sm:px-6 lg:px-8">
             {cards.length > 0 ? (
               <>
                 {displayCards.length > 0 ? (
                   displayCards.length > CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD ? (
-                    // Virtualized grid for large results (50+ cards)
                     <VirtualizedCardGrid
                       cards={displayCards}
                       onCardClick={handleCardClick}
                       onLoadMore={
-                        hasNextPage && !isFetchingNextPage
-                          ? fetchNextPage
-                          : undefined
+                        hasNextPage && !isFetchingNextPage ? fetchNextPage : undefined
                       }
                       hasNextPage={hasNextPage}
                       isFetchingNextPage={isFetchingNextPage}
                     />
                   ) : (
-                    // Standard grid for smaller results
                     <div
                       className="grid grid-cols-1 min-[480px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 content-visibility-auto justify-items-center"
                       role="list"
@@ -578,7 +269,6 @@ const Index = () => {
                   </div>
                 )}
 
-                {/* Infinite scroll trigger (only for non-virtualized grid) */}
                 {displayCards.length <= CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD && (
                   <div
                     ref={loadMoreRef}
@@ -593,14 +283,12 @@ const Index = () => {
                     )}
                     {!hasNextPage && cards.length > 0 && (
                       <span className="text-sm text-muted-foreground">
-                        You've reached the end • {totalCards.toLocaleString()}{' '}
-                        cards total
+                        You've reached the end • {totalCards.toLocaleString()} cards total
                       </span>
                     )}
                   </div>
                 )}
 
-                {/* Status for virtualized grid */}
                 {displayCards.length > CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD && (
                   <div className="flex justify-center pt-4 pb-4">
                     {isFetchingNextPage && (
@@ -625,7 +313,6 @@ const Index = () => {
           </div>
         </main>
 
-        {/* How It Works & FAQ - Show on landing page */}
         {!hasSearched && (
           <>
             <HowItWorksSection />
@@ -633,13 +320,9 @@ const Index = () => {
           </>
         )}
 
-        {/* Footer */}
         <Footer />
-
-        {/* Scroll to top button */}
         <ScrollToTop threshold={800} />
 
-        {/* Card Modal */}
         {selectedCard && (
           <Suspense fallback={null}>
             <CardModal
@@ -650,7 +333,6 @@ const Index = () => {
           </Suspense>
         )}
 
-        {/* Report Issue Dialog */}
         <ReportIssueDialog
           open={reportDialogOpen}
           onOpenChange={setReportDialogOpen}
