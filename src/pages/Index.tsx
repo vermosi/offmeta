@@ -383,12 +383,11 @@ const Index = () => {
                       {displayCards.map((card, index) => (
                         <div
                           key={card.id}
-                          className="animate-reveal contain-layout relative"
+                          className={`animate-reveal relative ${compareMode ? '' : 'contain-layout'}`}
                           role="listitem"
                           style={{
                             animationDelay: `${Math.min(index * 25, 300)}ms`,
-                            contentVisibility: 'auto',
-                            containIntrinsicSize: '0 200px',
+                            ...(compareMode ? {} : { contentVisibility: 'auto', containIntrinsicSize: '0 200px' }),
                           }}
                         >
                           {compareMode && (
