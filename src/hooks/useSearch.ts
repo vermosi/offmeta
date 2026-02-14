@@ -133,6 +133,18 @@ export function useSearch() {
 
   const totalCards = data?.pages[0]?.total_cards || 0;
 
+  // --- Dynamic document title ---
+  useEffect(() => {
+    if (hasSearched && originalQuery) {
+      document.title = `${originalQuery} — OffMeta MTG Search`;
+    } else {
+      document.title = 'OffMeta — Natural Language MTG Card Search';
+    }
+    return () => {
+      document.title = 'OffMeta — Natural Language MTG Card Search';
+    };
+  }, [hasSearched, originalQuery]);
+
   // --- Track results count ---
   useEffect(() => {
     if (totalCards > 0 && lastSearchResult) {

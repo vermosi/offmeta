@@ -23,6 +23,7 @@ import {
   X,
   RotateCcw,
   MoreHorizontal,
+  Share2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -31,6 +32,7 @@ interface EditableQueryBarProps {
   confidence?: number;
   isLoading?: boolean;
   validationError?: string | null;
+  originalQuery?: string;
   onRerun: (editedQuery: string) => void;
   onRegenerate?: () => void;
   onReportIssue?: () => void;
@@ -41,6 +43,7 @@ export const EditableQueryBar = memo(function EditableQueryBar({
   confidence,
   isLoading,
   validationError,
+  originalQuery,
   onRerun,
   onRegenerate,
   onReportIssue,
@@ -48,6 +51,7 @@ export const EditableQueryBar = memo(function EditableQueryBar({
   const [editedQuery, setEditedQuery] = useState(scryfallQuery);
   const [isEditing, setIsEditing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [shared, setShared] = useState(false);
   const hasChanges = editedQuery !== scryfallQuery;
 
   // Sync with incoming query changes (new search)
@@ -71,6 +75,34 @@ export const EditableQueryBar = memo(function EditableQueryBar({
     const url = `https://scryfall.com/search?q=${encodeURIComponent(editedQuery)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   }, [editedQuery]);
+
+  const handleShare = useCallback(async () => {
+    const shareQuery = originalQuery || editedQuery;
+    const shareUrl = `${window.location.origin}/?q=${encodeURIComponent(shareQuery)}`;
+    const shareData = {
+      title: `${shareQuery} — OffMeta MTG Search`,
+      text: `Check out these Magic cards: "${shareQuery}"`,
+      url: shareUrl,
+    };
+
+    try {
+      if (navigator.share && navigator.canShare?.(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        setShared(true);
+        toast.success('Link copied!');
+        setTimeout(() => setShared(false), 2000);
+      }
+    } catch (err) {
+      if ((err as Error)?.name !== 'AbortError') {
+        await navigator.clipboard.writeText(shareUrl);
+        setShared(true);
+        toast.success('Link copied!');
+        setTimeout(() => setShared(false), 2000);
+      }
+    }
+  }, [originalQuery, editedQuery]);
 
   const handleRerun = useCallback(() => {
     if (!editedQuery.trim()) {
@@ -250,6 +282,21 @@ export const EditableQueryBar = memo(function EditableQueryBar({
             ) : (
               <Copy className="h-3.5 w-3.5" />
             )}
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleShare}
+            className="h-10 px-2.5 gap-1.5"
+            title="Share this search"
+          >
+            {shared ? (
+              <Check className="h-3.5 w-3.5" />
+            ) : (
+              <Share2 className="h-3.5 w-3.5" />
+            )}
+            <span className="hidden sm:inline">Share</span>
           </Button>
 
           <Button
