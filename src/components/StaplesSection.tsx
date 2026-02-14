@@ -12,18 +12,18 @@ interface StaplesSectionProps {
 }
 
 const STAPLES = [
-  { label: 'Mono-Red Aggro', query: 'budget red aggro creatures cmc<=3', colors: ['R'] },
+  { label: 'Mono-Red Aggro', query: 'cheap red creatures with power 2 or more', colors: ['R'] },
   { label: 'Simic Ramp', query: 'simic ramp spells', colors: ['G', 'U'] },
   { label: 'Orzhov Aristocrats', query: 'white black sacrifice payoffs', colors: ['W', 'B'] },
   { label: 'Izzet Spellslinger', query: 'blue red instant sorcery payoffs', colors: ['U', 'R'] },
   { label: 'Golgari Graveyard', query: 'black green graveyard recursion', colors: ['B', 'G'] },
   { label: 'Selesnya Tokens', query: 'green white token generators', colors: ['G', 'W'] },
   { label: 'Dimir Control', query: 'blue black control removal counterspells', colors: ['U', 'B'] },
-  { label: 'Boros Equipment', query: 'red white equipment and auras for voltron', colors: ['R', 'W'] },
+  { label: 'Boros Equipment', query: 'red white equipment synergies', colors: ['R', 'W'] },
   { label: 'Gruul Stompy', query: 'red green big creatures with trample', colors: ['R', 'G'] },
   { label: 'Azorius Flickers', query: 'white blue blink ETB creatures', colors: ['W', 'U'] },
   { label: 'Mono-Black Devotion', query: 'black devotion permanents', colors: ['B'] },
-  { label: 'Mono-Green Elves', query: 'green elf tribal creatures', colors: ['G'] },
+  { label: 'Mono-Green Elves', query: 'green elf creatures', colors: ['G'] },
 ] as const;
 
 export const StaplesSection = memo(function StaplesSection({
