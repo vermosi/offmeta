@@ -84,7 +84,38 @@ const Index = () => {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen min-h-[100dvh] flex flex-col page-gradient texture-noise texture-grid">
+      <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background relative">
+        {/* Full-page gradient background */}
+        <div
+          className="fixed inset-0 pointer-events-none"
+          aria-hidden="true"
+          style={{
+            background: 'radial-gradient(ellipse 80% 50% at 50% -20%, hsl(var(--gradient-start) / 0.12) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 80% 60%, hsl(var(--gradient-end) / 0.08) 0%, transparent 50%), radial-gradient(ellipse 50% 30% at 20% 80%, hsl(var(--gradient-start) / 0.06) 0%, transparent 50%)',
+            zIndex: 0,
+          }}
+        />
+        {/* Noise texture overlay */}
+        <div
+          className="fixed inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.04]"
+          aria-hidden="true"
+          style={{
+            backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")",
+            backgroundRepeat: 'repeat',
+            backgroundSize: '256px 256px',
+            zIndex: 0,
+          }}
+        />
+        {/* Mesh grid texture */}
+        <div
+          className="fixed inset-0 pointer-events-none"
+          aria-hidden="true"
+          style={{
+            backgroundImage: 'linear-gradient(hsl(var(--border) / 0.04) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border) / 0.04) 1px, transparent 1px)',
+            backgroundSize: '60px 60px',
+            zIndex: 0,
+          }}
+        />
+
         {/* Skip link */}
         <a href="#main-content" className="skip-link">
           Skip to main content
