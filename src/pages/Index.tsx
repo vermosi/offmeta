@@ -75,7 +75,6 @@ const Index = () => {
   const {
     compareCards,
     compareOpen,
-    isComparing,
     toggleCompareCard,
     removeCompareCard,
     clearCompare,
