@@ -1,6 +1,6 @@
 # Testing
 
-OffMeta uses [Vitest](https://vitest.dev/) as the primary testing framework with 1,150+ tests across multiple categories.
+OffMeta uses [Vitest](https://vitest.dev/) as the primary testing framework with 1,200+ tests across multiple categories.
 
 ## Run tests
 
@@ -69,6 +69,22 @@ Behavioral unit tests for UI components in `src/components/*/__tests__/`. Tests 
 
 ```bash
 npm run test -- src/components
+```
+
+### Page Tests
+
+Tests for page-level components (GuidesIndex, GuidePage) in `src/pages/__tests__/`. Cover rendering, navigation, SEO metadata, structured data, and error states.
+
+```bash
+npm run test -- src/pages
+```
+
+### Guides Data Tests
+
+Structural and content quality tests for the guides data in `src/data/__tests__/guides.test.ts`. Verify data integrity, SEO metadata quality, cross-references, and difficulty progression.
+
+```bash
+npm run test -- src/data/__tests__/guides
 ```
 
 ### Regression Tests

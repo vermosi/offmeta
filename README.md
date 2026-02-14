@@ -9,7 +9,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white&style=flat-square)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3-06B6D4?logo=tailwindcss&logoColor=white&style=flat-square)](https://tailwindcss.com/)
 [![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white&style=flat-square)](https://vitejs.dev/)
-[![Tests](https://img.shields.io/badge/tests-600%2B-brightgreen?style=flat-square)](docs/testing.md)
+[![Tests](https://img.shields.io/badge/tests-1200%2B-brightgreen?style=flat-square)](docs/testing.md)
 [![Built with Lovable](https://img.shields.io/badge/Built%20with-Lovable-ff69b4?style=flat-square)](https://lovable.dev)
 
 **Natural language search for Magic: The Gathering cards, powered by Scryfall.**
@@ -26,8 +26,12 @@
 |---------|-------------|
 | **Natural Language Search** | Describe cards in plain English — AI translates to Scryfall syntax |
 | **200+ Deterministic Patterns** | Fast, cached translations for common queries without AI calls |
+| **10 Progressive Search Guides** | Learn from basic type searches to expert multi-constraint queries |
 | **Voice Input** | Hands-free searching with speech recognition |
 | **Card Details** | Rulings, prices, printings, and legality in a clean modal |
+| **Card Comparison** | Compare 2–4 cards side-by-side on stats, price, and legality |
+| **Multiple View Modes** | Grid, list, and image-only views with persistent preference |
+| **Export Results** | Copy card names or download CSV for deck builders |
 | **Client-Side Caching** | Sub-100ms response for repeated queries |
 | **PWA Support** | Installable with offline-first architecture |
 | **Dark/Light Theme** | Automatic system preference detection |
@@ -110,6 +114,27 @@ Try these searches:
 
 ---
 
+## 📖 Search Guides
+
+OffMeta includes 10 progressive guides that teach natural language card search from beginner to expert:
+
+| Level | Guide | Example Query |
+|-------|-------|---------------|
+| 1 | Search by Creature Type | `"dragons"` |
+| 2 | Filter by Color | `"mono red creatures"` |
+| 3 | Budget & Price Filters | `"budget board wipes under $5"` |
+| 4 | Format Legality Search | `"commander staples under $3"` |
+| 5 | Keyword Ability Search | `"creatures with flying and deathtouch"` |
+| 6 | Ramp & Card Draw | `"green ramp spells that search for lands"` |
+| 7 | Tribal Synergies | `"elf tribal payoffs for commander"` |
+| 8 | Token & Sacrifice | `"creatures that make tokens when opponents act"` |
+| 9 | ETB & Flicker Combos | `"cards that double ETB effects"` |
+| 10 | Multi-Constraint | `"utility lands for commander in Esper under $5"` |
+
+Browse all guides at [`/guides`](https://offmeta.app/guides).
+
+---
+
 ## 📜 License (AGPL-3.0)
 
 OffMeta is open source under the GNU AGPL v3. You are free to fork, modify, and self-host.
@@ -148,6 +173,7 @@ For security vulnerability reporting, see [SECURITY.md](SECURITY.md).
 | [Configuration](docs/configuration.md) | Environment variables and setup |
 | [Development](docs/development.md) | Local development guide |
 | [Testing](docs/testing.md) | Test suite documentation |
+| [Guides](docs/guides.md) | Search guides system documentation |
 | [Roadmap](docs/roadmap.md) | Planned features |
 | [FAQ](docs/FAQ.md) | Common questions |
 

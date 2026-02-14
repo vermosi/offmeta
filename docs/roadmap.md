@@ -2,6 +2,12 @@
 
 ## Completed
 
+- 10 progressive search guides (beginner → expert) with SEO optimization and JSON-LD
+- Card comparison view (compare 2–4 cards side-by-side)
+- Multiple view modes (grid, list, image-only) with persistent preference
+- Export results (copy names, download CSV)
+- Staples section with archetype-based quick searches
+- Cross-page header navigation with hash-based scrolling
 - Expanded deterministic translation with 30+ keyword patterns (ETB, LTB, myriad, blitz, connive, offspring, backup, goad)
 - Added comprehensive security testing suite (300+ tests) covering injection, CORS, ReDoS, prototype pollution, timing attacks
 - Added regression test suite with 70+ tests across caching, virtualization, and analytics
