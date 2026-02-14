@@ -58,7 +58,7 @@ export function ArtLightbox({ cards, initialIndex, onClose }: ArtLightboxProps) 
     if (touchStart.current === null) return;
     const diff = e.changedTouches[0].clientX - touchStart.current;
     if (Math.abs(diff) > 50) {
-      if (diff < 0) { goNext(); } else { goPrev(); }
+      if (diff < 0) goNext(); else goPrev();
     }
     touchStart.current = null;
   };
