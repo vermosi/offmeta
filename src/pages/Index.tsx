@@ -84,7 +84,7 @@ const Index = () => {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background page-gradient texture-noise texture-grid">
+      <div className="min-h-screen min-h-[100dvh] flex flex-col page-gradient texture-noise texture-grid">
         {/* Skip link */}
         <a href="#main-content" className="skip-link">
           Skip to main content
