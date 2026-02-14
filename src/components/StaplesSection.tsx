@@ -25,11 +25,11 @@ const STAPLES = [
   { label: 'Mono-Black Devotion', query: 'black permanents with three or more black pips in mana cost', colors: ['B'] },
   { label: 'Mono-Green Elves', query: 'green elf creatures', colors: ['G'] },
   { label: 'Temur Landfall', query: 'temur creatures with landfall abilities', colors: ['G', 'U', 'R'] },
-  { label: 'Rakdos Madness', query: 'rakdos cards with madness or discard synergy', colors: ['B', 'R'] },
-  { label: 'Esper Artifacts', query: 'esper artifact synergy cards', colors: ['W', 'U', 'B'] },
-  { label: 'Naya Enchantress', query: 'naya enchantment synergy cards', colors: ['R', 'G', 'W'] },
-  { label: 'Sultai Counters', query: 'sultai creatures with +1/+1 counter synergy', colors: ['B', 'G', 'U'] },
-  { label: 'Mardu Reanimator', query: 'mardu reanimation spells and creatures', colors: ['R', 'W', 'B'] },
+  { label: 'Rakdos Sacrifice', query: 'rakdos sacrifice payoffs', colors: ['B', 'R'] },
+  { label: 'Dimir Mill', query: 'dimir mill spells', colors: ['U', 'B'] },
+  { label: 'Mono-White Lifegain', query: 'white cards that gain life', colors: ['W'] },
+  { label: 'Golgari Counters', query: 'golgari creatures with +1/+1 counters', colors: ['B', 'G'] },
+  { label: 'Boros Burn', query: 'boros instant and sorcery burn spells', colors: ['R', 'W'] },
 ] as const;
 
 export const StaplesSection = memo(function StaplesSection({
