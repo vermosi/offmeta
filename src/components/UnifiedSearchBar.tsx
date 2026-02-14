@@ -405,7 +405,7 @@ export const UnifiedSearchBar = forwardRef<
               type="search"
               placeholder={
                 isMobile
-                  ? 'Search cards...'
+                  ? 'Describe a card...'
                   : "Describe what you're looking for..."
               }
               value={query}
@@ -537,7 +537,7 @@ export const UnifiedSearchBar = forwardRef<
                 setQuery(example);
                 handleSearch(example);
               }}
-              className="px-2.5 py-1.5 rounded-full text-xs text-muted-foreground/70 hover:text-foreground hover:bg-secondary/50 transition-all duration-200 focus-ring"
+              className="px-3 py-1.5 rounded-full text-xs text-muted-foreground hover:text-foreground border border-border/60 hover:border-border hover:bg-secondary/50 transition-all duration-200 focus-ring"
               aria-label={`Search for ${example}`}
             >
               {isMobile && example.length > 25

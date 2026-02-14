@@ -49,7 +49,7 @@ export function HowItWorksSection() {
           {STEPS.map((step, index) => (
             <div
               key={index}
-              className="relative flex flex-col items-center text-center p-6 rounded-xl border border-border/50 bg-card/50 opacity-0 animate-fade-in hover-scale"
+              className="relative flex flex-col items-center text-center p-6 rounded-xl border border-border/50 bg-card/50 animate-reveal"
               style={{
                 animationDelay: `${index * 150}ms`,
                 animationFillMode: 'forwards',

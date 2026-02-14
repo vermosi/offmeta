@@ -10,8 +10,8 @@ export function Footer() {
   return (
     <footer className="border-t border-border mt-auto" role="contentinfo">
       <div className="container-main py-4 sm:py-6">
+        {/* Top row: Logo + Copyright + Links */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 text-center sm:text-left">
-          {/* Logo */}
           <div className="flex items-center gap-2">
             <svg
               viewBox="0 0 32 32"
@@ -40,9 +40,11 @@ export function Footer() {
             <span className="text-xs sm:text-sm font-medium text-foreground">
               OffMeta
             </span>
+            <span className="text-xs text-muted-foreground hidden sm:inline">
+              · © {new Date().getFullYear()}
+            </span>
           </div>
 
-          {/* Links */}
           <div className="flex items-center gap-3 sm:gap-4">
             <a
               href="https://github.com/vermosi/offmeta"
@@ -64,32 +66,35 @@ export function Footer() {
               Powered by Scryfall
               <ExternalLink className="h-3 w-3 opacity-50" aria-hidden="true" />
             </a>
+            <span className="text-xs text-muted-foreground sm:hidden">
+              © {new Date().getFullYear()}
+            </span>
           </div>
-
-          {/* Copyright */}
-          <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} OffMeta
-          </p>
         </div>
 
-        {/* Guide links for SEO */}
-        <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-border">
-          <p className="text-[10px] sm:text-xs font-medium text-muted-foreground text-center mb-2">Guides</p>
-          <div className="flex flex-wrap justify-center gap-x-3 gap-y-1">
-            {GUIDES.map((guide) => (
-              <Link
-                key={guide.slug}
-                to={`/guides/${guide.slug}`}
-                className="text-[10px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {guide.title}
-              </Link>
+        {/* Guide links */}
+        <div className="mt-3 pt-3 border-t border-border">
+          <div className="flex flex-wrap justify-center gap-x-2 gap-y-1">
+            <span className="text-[10px] sm:text-xs font-medium text-muted-foreground mr-1">Guides:</span>
+            {GUIDES.map((guide, i) => (
+              <span key={guide.slug} className="inline-flex items-center">
+                <Link
+                  to={`/guides/${guide.slug}`}
+                  className="text-[10px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {guide.title}
+                </Link>
+                {i < GUIDES.length - 1 && (
+                  <span className="text-border ml-2">·</span>
+                )}
+              </span>
             ))}
           </div>
         </div>
 
-        <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-border">
-          <p className="text-[10px] sm:text-xs text-muted-foreground text-center leading-relaxed max-w-md sm:max-w-xl mx-auto">
+        {/* Legal */}
+        <div className="mt-2 pt-2 border-t border-border/50">
+          <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
             Unofficial Fan Content per{' '}
             <a
               href="https://company.wizards.com/en/legal/fancontentpolicy"
