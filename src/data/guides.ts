@@ -109,8 +109,8 @@ export const GUIDES: Guide[] = [
     subheading: 'Find affordable cards at any price point',
     intro: `Building on a budget? OffMeta understands price-related language like "cheap," "budget," "under $5," and "affordable." You can combine price filters with any other search to find what you need without overspending. Commander players especially use this one a lot.`,
     searchQuery: 'budget board wipes under $5',
-    translatedQuery: 'otag:board-wipe usd<5',
-    howOffmetaHelps: `OffMeta understands "budget" and "under $5" both refer to price and picks the more specific one ($5). It translates "board wipes" into Scryfall's tag system (otag:board-wipe), which is more accurate than searching oracle text. Then it applies the price filter (usd<5).`,
+    translatedQuery: 'otag:boardwipe usd<5',
+    howOffmetaHelps: `OffMeta understands "budget" and "under $5" both refer to price and picks the more specific one ($5). It translates "board wipes" into Scryfall's tag system (otag:boardwipe), which is more accurate than searching oracle text. Then it applies the price filter (usd<5).`,
     tips: [
       '"Cheap" defaults to under $1, "budget" to under $5, but you can say "under $3" for any custom threshold.',
       'Price filters use current TCGplayer market prices via Scryfall.',
@@ -214,8 +214,8 @@ export const GUIDES: Guide[] = [
     subheading: 'Search by what cards DO, not what they say',
     intro: `Instead of guessing what oracle text to search, you can describe card functions: "ramp spells," "mana dorks," "card draw," "cantrips." OffMeta understands these gameplay concepts and translates them into the right combination of type, tag, and oracle text filters.`,
     searchQuery: 'green ramp spells that search for lands',
-    translatedQuery: 'c:g otag:land-ramp o:"search your library" o:"basic land"',
-    howOffmetaHelps: `OffMeta breaks down your intent: "green" becomes a color filter, "ramp spells" maps to Scryfall's curated land-ramp tag, and "search for lands" becomes oracle text for library searching. It uses Scryfall's otag: system (community-curated functional tags) when available, which tends to be more accurate than raw text search. "Mana dork" maps to otag:mana-dork, "board wipe" to otag:board-wipe.`,
+    translatedQuery: 'c:g otag:mana-ramp o:"search your library" o:"basic land"',
+    howOffmetaHelps: `OffMeta breaks down your intent: "green" becomes a color filter, "ramp spells" maps to Scryfall's curated mana-ramp tag, and "search for lands" becomes oracle text for library searching. It uses Scryfall's otag: system (community-curated functional tags) when available, which tends to be more accurate than raw text search. "Mana dork" maps to otag:mana-dork, "board wipe" to otag:boardwipe.`,
     tips: [
       'MTG slang works: "rocks" = mana artifacts, "dorks" = mana creatures, "cantrips" = cheap draw spells.',
       'Try functional searches: "sacrifice outlets," "tutor effects," "reanimation spells."',
