@@ -3,10 +3,10 @@
  * Pre-built archetype chips that run curated searches.
  */
 
-import { memo, useState } from 'react';
-import { Zap, ChevronDown, ChevronUp } from 'lucide-react';
+import { memo } from 'react';
+import { Zap } from 'lucide-react';
 import { ManaSymbol } from '@/components/ManaSymbol';
-import { useIsMobile } from '@/hooks/useMobile';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 interface StaplesSectionProps {
   onSearch: (query: string) => void;
@@ -33,65 +33,46 @@ const STAPLES = [
   { label: 'Boros Burn', query: 'boros instant and sorcery burn spells', colors: ['R', 'W'] },
 ] as const;
 
-const VISIBLE_COUNT = 10;
-
 export const StaplesSection = memo(function StaplesSection({
   onSearch,
 }: StaplesSectionProps) {
-  const [expanded, setExpanded] = useState(false);
-  const isMobile = useIsMobile();
-  const visibleStaples = expanded ? STAPLES : STAPLES.slice(0, VISIBLE_COUNT);
-
   return (
     <section className="w-full max-w-3xl mx-auto" aria-labelledby="staples-heading">
       <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden p-5 sm:p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary/10">
-              <Zap className="h-4 w-4 text-primary" aria-hidden="true" />
-            </div>
-            <div>
-              <h2 id="staples-heading" className="text-sm font-semibold text-foreground">
-                Staples For...
-              </h2>
-              <p className="text-xs text-muted-foreground">
-                Quick searches by archetype
-              </p>
-            </div>
+        <div className="flex items-center gap-2.5 mb-4">
+          <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary/10">
+            <Zap className="h-4 w-4 text-primary" aria-hidden="true" />
           </div>
-          {STAPLES.length > VISIBLE_COUNT && (
-            <button
-              onClick={() => setExpanded((v) => !v)}
-              className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-              aria-expanded={expanded}
-            >
-              {expanded ? 'Show less' : `+${STAPLES.length - VISIBLE_COUNT} more`}
-              {expanded ? (
-                <ChevronUp className="h-3.5 w-3.5" />
-              ) : (
-                <ChevronDown className="h-3.5 w-3.5" />
-              )}
-            </button>
-          )}
+          <div>
+            <h2 id="staples-heading" className="text-sm font-semibold text-foreground">
+              Staples For...
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Quick searches by archetype
+            </p>
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {visibleStaples.map((s) => (
-            <button
-              key={s.label}
-              onClick={() => onSearch(s.query)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/60 bg-muted/30 text-xs font-medium text-foreground hover:bg-muted/60 hover:border-border transition-colors"
-              title={`Search: ${s.query}`}
-            >
-              <span className="inline-flex items-center gap-0.5">
-                {s.colors.map((c) => (
-                  <ManaSymbol key={c} symbol={c} size="sm" className="h-3.5 w-3.5" />
-                ))}
-              </span>
-              {s.label}
-            </button>
-          ))}
-        </div>
+        <ScrollArea className="w-full">
+          <div className="flex gap-2 pb-3">
+            {STAPLES.map((s) => (
+              <button
+                key={s.label}
+                onClick={() => onSearch(s.query)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/60 bg-muted/30 text-xs font-medium text-foreground hover:bg-muted/60 hover:border-border transition-colors whitespace-nowrap shrink-0"
+                title={`Search: ${s.query}`}
+              >
+                <span className="inline-flex items-center gap-0.5">
+                  {s.colors.map((c) => (
+                    <ManaSymbol key={c} symbol={c} size="sm" className="h-3.5 w-3.5" />
+                  ))}
+                </span>
+                {s.label}
+              </button>
+            ))}
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
       </div>
     </section>
   );
