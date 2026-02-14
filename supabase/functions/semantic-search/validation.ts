@@ -267,6 +267,14 @@ export function validateQuery(query: string): {
         .replace(new RegExp(`\\botag:${tag}\\b`, 'gi'), '')
         .trim();
     }
+    // Clean up orphaned boolean operators left after stripping tags
+    sanitized = sanitized
+      .replace(/\bor(\s+or)+\b/gi, 'or')   // "or or" → "or"
+      .replace(/\(\s*or\b/g, '(')           // "( or …" → "( …"
+      .replace(/\bor\s*\)/g, ')')           // "… or )" → "… )"
+      .replace(/\(\s*\)/g, '')              // "()" → ""
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   // Check for balanced parentheses
