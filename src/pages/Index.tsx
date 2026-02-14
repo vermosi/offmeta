@@ -126,6 +126,17 @@ const Index = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Handle hash-based scroll when navigating from another page (e.g. #daily-pick)
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash) return;
+    const timeout = setTimeout(() => {
+      const el = document.getElementById(hash.slice(1));
+      el?.scrollIntoView({ behavior: 'smooth' });
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, []);
+
   return (
     <ErrorBoundary>
       <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background relative">

@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getGuideBySlug, GUIDES } from '@/data/guides';
 import { Footer } from '@/components/Footer';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import { Header } from '@/components/Header';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { Search, ArrowRight, Lightbulb, HelpCircle, BookOpen, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -111,31 +111,7 @@ export default function GuidePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
 
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl" role="banner">
-        <div className="container-main py-4 flex items-center justify-between">
-          <Link
-            to="/"
-            className="group flex items-center gap-2.5 focus-ring rounded-lg -ml-2 px-2 py-1"
-            aria-label="OffMeta - Home"
-          >
-            <svg viewBox="0 0 32 32" className="h-8 w-8 transition-transform duration-200 group-hover:scale-105" aria-hidden="true">
-              <defs>
-                <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="hsl(300, 90%, 60%)" />
-                  <stop offset="100%" stopColor="hsl(195, 95%, 55%)" />
-                </linearGradient>
-              </defs>
-              <path d="M16 2L30 16L16 30L2 16L16 2Z" fill="url(#logoGradient)" opacity="0.15" />
-              <path d="M16 2L30 16L16 30L2 16L16 2Z" stroke="url(#logoGradient)" strokeWidth="1.5" fill="none" />
-              <path d="M8 16C8 16 11 11 16 11C21 11 24 16 24 16C24 16 21 21 16 21C11 21 8 16 8 16Z" stroke="url(#logoGradient)" strokeWidth="1.25" fill="none" />
-              <circle cx="16" cy="16" r="2" fill="url(#logoGradient)" />
-            </svg>
-            <span className="text-lg font-semibold tracking-tight">OffMeta</span>
-          </Link>
-          <ThemeToggle />
-        </div>
-      </header>
+      <Header />
 
       {/* Breadcrumb */}
       <nav className="container-main pt-4 pb-2" aria-label="Breadcrumb">
