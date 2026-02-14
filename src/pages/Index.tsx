@@ -21,6 +21,8 @@ import { VirtualizedCardGrid } from '@/components/VirtualizedCardGrid';
 import { RandomCardButton } from '@/components/RandomCardButton';
 import { ExportResults } from '@/components/ExportResults';
 import { ViewToggle, getStoredViewMode } from '@/components/ViewToggle';
+import { ResultsStats } from '@/components/ResultsStats';
+import { ArtLightbox } from '@/components/ArtLightbox';
 import type { ViewMode } from '@/components/ViewToggle';
 import { Loader2 } from 'lucide-react';
 import { CLIENT_CONFIG } from '@/lib/config';
@@ -70,6 +72,11 @@ const Index = () => {
     input?.focus();
   }, []);
   useKeyboardShortcuts({ onFocusSearch: focusSearch });
+
+  // Art lightbox
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const openLightbox = useCallback((index: number) => setLightboxIndex(index), []);
+  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
 
   // Parallax scroll effect for glow orbs
   const heroRef = useRef<HTMLElement>(null);
@@ -241,6 +248,7 @@ const Index = () => {
                   </span>
                 )}
                 <ExportResults cards={displayCards} />
+                <ResultsStats cards={displayCards} />
               </div>
             )}
 
@@ -307,7 +315,7 @@ const Index = () => {
                         >
                           <CardImageItem
                             card={card}
-                            onClick={() => handleCardClick(card, index)}
+                            onClick={() => openLightbox(index)}
                           />
                         </div>
                       ))}
@@ -418,6 +426,14 @@ const Index = () => {
               onClose={() => setSelectedCard(null)}
             />
           </Suspense>
+        )}
+
+        {lightboxIndex !== null && displayCards.length > 0 && (
+          <ArtLightbox
+            cards={displayCards}
+            initialIndex={lightboxIndex}
+            onClose={closeLightbox}
+          />
         )}
 
         <ReportIssueDialog
