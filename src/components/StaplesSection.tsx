@@ -3,10 +3,9 @@
  * Pre-built archetype chips that run curated searches.
  */
 
-import { memo } from 'react';
+import { memo, useRef, useState, useEffect, useCallback } from 'react';
 import { Zap } from 'lucide-react';
 import { ManaSymbol } from '@/components/ManaSymbol';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 interface StaplesSectionProps {
   onSearch: (query: string) => void;
@@ -36,6 +35,30 @@ const STAPLES = [
 export const StaplesSection = memo(function StaplesSection({
   onSearch,
 }: StaplesSectionProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 2);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 2);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    checkScroll();
+    el.addEventListener('scroll', checkScroll, { passive: true });
+    const ro = new ResizeObserver(checkScroll);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener('scroll', checkScroll);
+      ro.disconnect();
+    };
+  }, [checkScroll]);
+
   return (
     <section className="w-full max-w-3xl mx-auto" aria-labelledby="staples-heading">
       <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden p-5 sm:p-6">
@@ -53,8 +76,29 @@ export const StaplesSection = memo(function StaplesSection({
           </div>
         </div>
 
-        <ScrollArea className="w-full">
-          <div className="flex gap-2 pb-3">
+        <div className="relative">
+          {/* Left fade */}
+          <div
+            className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 z-10 transition-opacity duration-200"
+            style={{
+              background: 'linear-gradient(to right, hsl(var(--card) / 0.9), transparent)',
+              opacity: canScrollLeft ? 1 : 0,
+            }}
+          />
+          {/* Right fade */}
+          <div
+            className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 z-10 transition-opacity duration-200"
+            style={{
+              background: 'linear-gradient(to left, hsl(var(--card) / 0.9), transparent)',
+              opacity: canScrollRight ? 1 : 0,
+            }}
+          />
+
+          <div
+            ref={scrollRef}
+            className="flex gap-2 pb-3 overflow-x-auto scrollbar-none"
+            style={{ scrollbarWidth: 'none' }}
+          >
             {STAPLES.map((s) => (
               <button
                 key={s.label}
@@ -71,8 +115,7 @@ export const StaplesSection = memo(function StaplesSection({
               </button>
             ))}
           </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
+        </div>
       </div>
     </section>
   );
