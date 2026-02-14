@@ -229,26 +229,32 @@ const Index = () => {
             )}
 
             {cards.length > 0 && !isSearching && (
-              <div className="flex items-center gap-1.5 sm:gap-2 animate-reveal overflow-x-auto scrollbar-thin pb-0.5">
-                <SearchFilters
-                  cards={cards}
-                  onFilteredCards={handleFilteredCards}
-                  totalCards={totalCards}
-                  resetKey={filtersResetKey}
-                  initialFilters={initialUrlFilters}
-                />
-                <ViewToggle value={viewMode} onChange={setViewMode} />
-                {totalCards > 0 && (
-                  <span
-                    className="text-[11px] sm:text-xs text-muted-foreground tabular-nums flex-shrink-0"
-                    role="status"
-                    aria-live="polite"
-                  >
-                    {totalCards.toLocaleString()}
-                  </span>
-                )}
-                <ExportResults cards={displayCards} />
-                <ResultsStats cards={displayCards} />
+              <div className="animate-reveal space-y-2">
+                {/* Toolbar row */}
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                  <SearchFilters
+                    cards={cards}
+                    onFilteredCards={handleFilteredCards}
+                    totalCards={totalCards}
+                    resetKey={filtersResetKey}
+                    initialFilters={initialUrlFilters}
+                  />
+                  <ViewToggle value={viewMode} onChange={setViewMode} />
+
+                  <div className="flex-1" />
+
+                  {totalCards > 0 && (
+                    <span
+                      className="text-[11px] sm:text-xs text-muted-foreground tabular-nums flex-shrink-0"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      {totalCards.toLocaleString()} cards
+                    </span>
+                  )}
+                  <ExportResults cards={displayCards} />
+                  <ResultsStats cards={displayCards} />
+                </div>
               </div>
             )}
 

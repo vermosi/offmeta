@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { getTodayPick } from '@/data/daily-gems';
 import { Sparkles, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ManaCost, OracleText } from '@/components/ManaSymbol';
 import type { ScryfallCard } from '@/types/card';
 
 export function DailyPick() {
@@ -103,11 +104,9 @@ export function DailyPick() {
                 <h3 className="text-lg font-semibold text-foreground">
                   {card.name}
                 </h3>
-                <div className="flex items-center gap-2 mt-0.5">
+                <div className="flex items-center gap-2 mt-1">
                   {manaCost && (
-                    <span className="text-xs text-muted-foreground font-mono">
-                      {manaCost}
-                    </span>
+                    <ManaCost cost={manaCost} size="sm" />
                   )}
                   <span className="text-xs text-muted-foreground">
                     {typeLine}
@@ -127,9 +126,9 @@ export function DailyPick() {
 
               {/* Oracle text preview */}
               {oracleText && (
-                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-4 italic">
-                  {oracleText}
-                </p>
+                <div className="text-xs text-muted-foreground leading-relaxed line-clamp-4 italic">
+                  <OracleText text={oracleText} size="sm" />
+                </div>
               )}
 
               {/* Price + link */}
