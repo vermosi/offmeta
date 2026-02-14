@@ -52,10 +52,10 @@
 
 ## Recommended Execution Order (next 5 sprints)
 
-### Sprint 1 — Quick wins for shareability
-- [1.1] Shareable search URLs with meta tags
-- [3.1] Share button on results
-- [2.3] Persistent search history
+### Sprint 1 — Quick wins for shareability ✅ DONE
+- [1.1] ✅ Dynamic document title for search queries (SEO + bookmarks)
+- [3.1] ✅ Share button on results (Web Share API + clipboard fallback)
+- [2.3] ✅ Persistent search history (already existed in localStorage)
 
 ### Sprint 2 — Content for SEO
 - [1.2] 5–10 pre-built guide pages targeting high-volume MTG keywords

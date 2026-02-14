@@ -176,6 +176,7 @@ const Index = () => {
                   scryfallQuery={(lastSearchResult?.scryfallQuery || searchQuery).trim()}
                   confidence={lastSearchResult?.explanation?.confidence}
                   isLoading={isSearching}
+                  originalQuery={originalQuery}
                   onRerun={handleRerunEditedQuery}
                   onRegenerate={handleRegenerateTranslation}
                   onReportIssue={() => setReportDialogOpen(true)}
