@@ -35,7 +35,7 @@ const STEPS = [
 export function HowItWorksSection() {
   return (
     <section
-      className="py-12 sm:py-16 border-t border-border/50"
+      className="py-12 sm:py-16"
       aria-labelledby="how-it-works-heading"
     >
       <div className="container-main">
