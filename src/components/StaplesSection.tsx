@@ -66,7 +66,7 @@ export const StaplesSection = memo(function StaplesSection({
   }, [checkScroll]);
 
   return (
-    <section className="w-full max-w-3xl mx-auto" aria-labelledby="staples-heading">
+    <section className="w-full max-w-3xl mx-auto overflow-hidden" aria-labelledby="staples-heading">
       <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden p-5 sm:p-6">
         <div className="flex items-center gap-2.5 mb-4">
           <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary/10">
