@@ -13,7 +13,7 @@ import {
 } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Search, Loader2, X, Clock, History } from 'lucide-react';
+import { Search, Loader2, X, Clock } from 'lucide-react';
 import { SearchHistoryDropdown } from '@/components/SearchHistoryDropdown';
 import { useIsMobile } from '@/hooks/useMobile';
 import { SearchFeedback } from '@/components/SearchFeedback';
@@ -23,11 +23,10 @@ import type { SearchIntent } from '@/types/search';
 import { logger } from '@/lib/core/logger';
 import { translateQueryWithDedup, type TranslationResult } from '@/hooks/useSearchQuery';
 import { buildClientFallbackQuery } from '@/lib/search/fallback';
+import { CLIENT_CONFIG } from '@/lib/config';
 
 const SEARCH_CONTEXT_KEY = 'lastSearchContext';
 const SEARCH_HISTORY_KEY = 'offmeta_search_history';
-const MAX_HISTORY_ITEMS = 5;
-const SEARCH_TIMEOUT_MS = 15000; // 15 second timeout
 
 interface SearchContext {
   previousQuery: string;
@@ -69,7 +68,7 @@ function useSearchHistory() {
       const filtered = prev.filter(
         (q) => q.toLowerCase() !== query.toLowerCase(),
       );
-      const updated = [query, ...filtered].slice(0, MAX_HISTORY_ITEMS);
+      const updated = [query, ...filtered].slice(0, CLIENT_CONFIG.MAX_HISTORY_ITEMS);
       try {
         localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(updated));
       } catch {
@@ -156,14 +155,13 @@ export const UnifiedSearchBar = forwardRef<
   const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
   const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
   const [rateLimitCountdown, setRateLimitCountdown] = useState<number>(0);
-  const [useLast, setUseLast] = useState(false);
+  const rateLimitCountdownRef = useRef<number>(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const lastSearchRef = useRef<string>('');
   const abortControllerRef = useRef<AbortController | null>(null);
   const requestTokenRef = useRef(0);
   const { saveContext, getContext } = useSearchContext();
   const { history, addToHistory, removeFromHistory, clearHistory } = useSearchHistory();
-  const canUseLast = Boolean(getContext());
 
   // Abort pending requests on unmount
   useEffect(() => {
@@ -185,7 +183,8 @@ export const UnifiedSearchBar = forwardRef<
         setRateLimitedUntil(null);
         setRateLimitCountdown(0);
       } else {
-        setRateLimitCountdown(remaining);
+      setRateLimitCountdown(remaining);
+        rateLimitCountdownRef.current = remaining;
       }
     };
 
@@ -205,7 +204,7 @@ export const UnifiedSearchBar = forwardRef<
       if (!queryToSearch) return;
       if (rateLimitedUntil && Date.now() < rateLimitedUntil) {
         toast.error('Please wait', {
-          description: `Rate limited. Try again in ${rateLimitCountdown}s`,
+          description: `Rate limited. Try again in ${rateLimitCountdownRef.current}s`,
         });
         return;
       }
@@ -214,7 +213,6 @@ export const UnifiedSearchBar = forwardRef<
       addToHistory(queryToSearch);
 
       const currentToken = ++requestTokenRef.current;
-      setUseLast(false);
       const cacheSalt = options?.cacheSalt;
 
       // Cancel any pending request
@@ -229,7 +227,7 @@ export const UnifiedSearchBar = forwardRef<
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(
           () => reject(new Error('Search timeout')),
-          SEARCH_TIMEOUT_MS,
+          CLIENT_CONFIG.SEARCH_TIMEOUT_MS,
         );
       });
 
@@ -333,7 +331,6 @@ export const UnifiedSearchBar = forwardRef<
       filters,
       onSearch,
       query,
-      rateLimitCountdown,
       rateLimitedUntil,
       saveContext,
     ],
@@ -497,16 +494,6 @@ export const UnifiedSearchBar = forwardRef<
               originalQuery={query || history[0] || ''}
               translatedQuery={lastTranslatedQuery}
             />
-            <Button
-              variant={useLast ? 'accent' : 'ghost'}
-              size="sm"
-              onClick={() => setUseLast((prev) => !prev)}
-              className="h-8 px-2 text-xs"
-              title="Reuse the last interpretation and cache (optional)"
-              disabled={!canUseLast}
-            >
-              {useLast ? 'Using last' : 'Use last'}
-            </Button>
             <SearchHelpModal
               onTryExample={(exampleQuery) => {
                 setQuery(exampleQuery);
@@ -523,17 +510,6 @@ export const UnifiedSearchBar = forwardRef<
             originalQuery={query || history[0] || ''}
             translatedQuery={lastTranslatedQuery}
           />
-          <Button
-            variant={useLast ? 'accent' : 'ghost'}
-            size="sm"
-            onClick={() => setUseLast((prev) => !prev)}
-            className="h-9 min-w-[44px] px-3 text-xs gap-1.5"
-            title="Reuse the last interpretation"
-            disabled={!canUseLast}
-          >
-            <History className="h-3.5 w-3.5" aria-hidden="true" />
-            {useLast ? 'Using last' : 'Reuse'}
-          </Button>
           <SearchHelpModal
             onTryExample={(exampleQuery) => {
               setQuery(exampleQuery);
