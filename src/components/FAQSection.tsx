@@ -36,7 +36,7 @@ const FAQ_ITEMS = [
 export function FAQSection() {
   return (
     <section
-      className="py-12 sm:py-16 border-t border-border/50"
+      className="py-12 sm:py-16"
       aria-labelledby="faq-heading"
     >
       <div className="container-main">
