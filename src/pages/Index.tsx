@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useCallback } from 'react';
+import { lazy, Suspense, useEffect, useRef, useCallback, useState } from 'react';
 import { DailyPick } from '@/components/DailyPick';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 import { EditableQueryBar } from '@/components/EditableQueryBar';
@@ -6,6 +6,8 @@ import { ExplainCompilationPanel } from '@/components/ExplainCompilationPanel';
 import { ReportIssueDialog } from '@/components/ReportIssueDialog';
 import { SearchFilters } from '@/components/SearchFilters';
 import { CardItem } from '@/components/CardItem';
+import { CardListItem } from '@/components/CardListItem';
+import { CardImageItem } from '@/components/CardImageItem';
 import { CardSkeletonGrid } from '@/components/CardSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -18,6 +20,8 @@ import { SimilarSearches } from '@/components/SimilarSearches';
 import { VirtualizedCardGrid } from '@/components/VirtualizedCardGrid';
 import { RandomCardButton } from '@/components/RandomCardButton';
 import { ExportResults } from '@/components/ExportResults';
+import { ViewToggle, getStoredViewMode } from '@/components/ViewToggle';
+import type { ViewMode } from '@/components/ViewToggle';
 import { Loader2 } from 'lucide-react';
 import { CLIENT_CONFIG } from '@/lib/config';
 import { useSearch } from '@/hooks/useSearch';
@@ -54,7 +58,11 @@ const Index = () => {
     handleTryExample,
     handleRegenerateTranslation,
     handleFilteredCards,
+    initialUrlFilters,
   } = useSearch();
+
+  // View mode toggle
+  const [viewMode, setViewMode] = useState<ViewMode>(getStoredViewMode);
 
   // Keyboard shortcuts
   const focusSearch = useCallback(() => {
@@ -219,7 +227,9 @@ const Index = () => {
                   onFilteredCards={handleFilteredCards}
                   totalCards={totalCards}
                   resetKey={filtersResetKey}
+                  initialFilters={initialUrlFilters}
                 />
+                <ViewToggle value={viewMode} onChange={setViewMode} />
                 <ExportResults cards={displayCards} />
                 {totalCards > 0 && (
                   <span
@@ -246,7 +256,7 @@ const Index = () => {
             {cards.length > 0 ? (
               <>
                 {displayCards.length > 0 ? (
-                  displayCards.length > CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD ? (
+                  viewMode === 'grid' && displayCards.length > CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD ? (
                     <VirtualizedCardGrid
                       cards={displayCards}
                       onCardClick={handleCardClick}
@@ -256,6 +266,48 @@ const Index = () => {
                       hasNextPage={hasNextPage}
                       isFetchingNextPage={isFetchingNextPage}
                     />
+                  ) : viewMode === 'list' ? (
+                    <div
+                      className="flex flex-col gap-1.5"
+                      role="list"
+                      aria-label="Search results"
+                      data-testid="list-view"
+                    >
+                      {displayCards.map((card, index) => (
+                        <div
+                          key={card.id}
+                          className="animate-reveal"
+                          role="listitem"
+                          style={{ animationDelay: `${Math.min(index * 15, 200)}ms` }}
+                        >
+                          <CardListItem
+                            card={card}
+                            onClick={() => handleCardClick(card, index)}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : viewMode === 'images' ? (
+                    <div
+                      className="grid grid-cols-2 min-[480px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3"
+                      role="list"
+                      aria-label="Search results"
+                      data-testid="images-view"
+                    >
+                      {displayCards.map((card, index) => (
+                        <div
+                          key={card.id}
+                          className="animate-reveal"
+                          role="listitem"
+                          style={{ animationDelay: `${Math.min(index * 15, 200)}ms` }}
+                        >
+                          <CardImageItem
+                            card={card}
+                            onClick={() => handleCardClick(card, index)}
+                          />
+                        </div>
+                      ))}
+                    </div>
                   ) : (
                     <div
                       className="grid grid-cols-1 min-[480px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 content-visibility-auto justify-items-center"

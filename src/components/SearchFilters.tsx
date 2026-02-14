@@ -112,6 +112,8 @@ interface SearchFiltersProps {
   ) => void;
   totalCards: number;
   resetKey: number;
+  /** Initial filter state from URL params (applied once on mount) */
+  initialFilters?: Partial<FilterState> | null;
 }
 
 export function SearchFilters({
@@ -119,6 +121,7 @@ export function SearchFilters({
   onFilteredCards,
   totalCards,
   resetKey,
+  initialFilters,
 }: SearchFiltersProps) {
   const defaultMaxCmc = useMemo(() => {
     return Math.max(16, ...cards.map((c) => c.cmc || 0));
@@ -133,9 +136,19 @@ export function SearchFilters({
     }),
     [],
   );
-  const [filters, setFilters] = useState<FilterState>(() =>
-    buildDefaultFilters(defaultMaxCmc),
-  );
+  const initialFiltersApplied = useRef(false);
+  const [filters, setFilters] = useState<FilterState>(() => {
+    const defaults = buildDefaultFilters(defaultMaxCmc);
+    if (initialFilters && !initialFiltersApplied.current) {
+      initialFiltersApplied.current = true;
+      return {
+        ...defaults,
+        ...initialFilters,
+        cmcRange: initialFilters.cmcRange || defaults.cmcRange,
+      };
+    }
+    return defaults;
+  });
   const [isOpen, setIsOpen] = useState(false);
   const defaultFilters = useMemo(
     () => buildDefaultFilters(defaultMaxCmc),
