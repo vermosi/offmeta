@@ -540,9 +540,7 @@ export const UnifiedSearchBar = forwardRef<
               className="px-3 py-1.5 rounded-full text-xs text-muted-foreground hover:text-foreground border border-border/60 hover:border-border hover:bg-secondary/50 transition-all duration-200 focus-ring"
               aria-label={`Search for ${example}`}
             >
-              {isMobile && example.length > 25
-                ? `${example.slice(0, 25)}…`
-                : example}
+              {example}
             </button>
           ))}
         </div>

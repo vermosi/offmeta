@@ -141,7 +141,7 @@ export const EditableQueryBar = memo(function EditableQueryBar({
       {/* Header - simplified */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2 text-xs">
-          <span className="text-muted-foreground">Translated query</span>
+          <span className="text-muted-foreground">Scryfall query · click to edit</span>
           {showConfidenceWarning && (
             <span className="text-amber-600 dark:text-amber-400 font-medium">
               Low confidence
@@ -263,7 +263,7 @@ export const EditableQueryBar = memo(function EditableQueryBar({
             size="sm"
             onClick={handleRerun}
             disabled={isLoading || !editedQuery.trim()}
-            className="flex-1 sm:flex-none h-10 px-3 gap-1.5"
+            className="h-10 px-3 gap-1.5"
             title="Re-run query (Enter)"
           >
             <Play className="h-3.5 w-3.5" />

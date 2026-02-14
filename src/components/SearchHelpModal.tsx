@@ -309,11 +309,12 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
       <DialogTrigger asChild>
         <Button
           variant="ghost"
-          size="icon"
-          className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
+          size="sm"
+          className="h-8 px-2 gap-1.5 text-xs rounded-full text-muted-foreground hover:text-foreground"
           aria-label="Search help"
         >
           <HelpCircle className="h-4 w-4" />
+          <span className="hidden sm:inline">Help</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[85vh] p-0 gap-0">

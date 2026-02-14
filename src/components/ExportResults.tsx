@@ -67,9 +67,10 @@ export function ExportResults({ cards }: ExportResultsProps) {
           variant="outline"
           size="sm"
           className="gap-1.5 h-8 sm:h-9 px-2.5 sm:px-3 text-xs sm:text-sm"
+          aria-label="Export results"
         >
           <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          <span className="hidden sm:inline">Export</span>
+          <span>Export</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="z-50">

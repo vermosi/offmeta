@@ -202,11 +202,12 @@ export function SearchFeedback({
       <DialogTrigger asChild>
         <Button
           variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-full"
+          size="sm"
+          className="h-8 px-2 gap-1.5 text-xs text-muted-foreground hover:text-foreground rounded-full"
           title="Report search issue"
         >
           <MessageSquarePlus className="h-4 w-4" />
+          <span className="hidden sm:inline">Feedback</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
