@@ -1,8 +1,10 @@
 /**
- * Footer component with branding and links.
+ * Footer component with branding, guide links, and external links.
  */
 
+import { Link } from 'react-router-dom';
 import { ExternalLink, Github } from 'lucide-react';
+import { GUIDES } from '@/data/guides';
 
 export function Footer() {
   return (
@@ -68,6 +70,22 @@ export function Footer() {
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} OffMeta
           </p>
+        </div>
+
+        {/* Guide links for SEO */}
+        <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-border">
+          <p className="text-[10px] sm:text-xs font-medium text-muted-foreground text-center mb-2">Guides</p>
+          <div className="flex flex-wrap justify-center gap-x-3 gap-y-1">
+            {GUIDES.map((guide) => (
+              <Link
+                key={guide.slug}
+                to={`/guides/${guide.slug}`}
+                className="text-[10px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {guide.title}
+              </Link>
+            ))}
+          </div>
         </div>
 
         <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-border">
