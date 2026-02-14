@@ -19,10 +19,10 @@ const STAPLES = [
   { label: 'Golgari Graveyard', query: 'black green graveyard recursion', colors: ['B', 'G'] },
   { label: 'Selesnya Tokens', query: 'selesnya cards that create tokens', colors: ['G', 'W'] },
   { label: 'Dimir Control', query: 'blue black removal spells', colors: ['U', 'B'] },
-  { label: 'Boros Equipment', query: 'red white equipment synergies', colors: ['R', 'W'] },
+  { label: 'Boros Equipment', query: 'equipment that cares about equipped creature', colors: ['R', 'W'] },
   { label: 'Gruul Stompy', query: 'red green big creatures with trample', colors: ['R', 'G'] },
-  { label: 'Azorius Flickers', query: 'white blue creatures with enter the battlefield abilities', colors: ['W', 'U'] },
-  { label: 'Mono-Black Devotion', query: 'black devotion permanents', colors: ['B'] },
+  { label: 'Azorius Flickers', query: 'azorius creatures with enters the battlefield abilities', colors: ['W', 'U'] },
+  { label: 'Mono-Black Devotion', query: 'black permanents with three or more black pips in mana cost', colors: ['B'] },
   { label: 'Mono-Green Elves', query: 'green elf creatures', colors: ['G'] },
 ] as const;
 
