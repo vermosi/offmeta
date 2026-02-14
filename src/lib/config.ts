@@ -24,7 +24,7 @@ export const CLIENT_CONFIG = {
   },
 
   // History
-  MAX_HISTORY_ITEMS: 5,
+  MAX_HISTORY_ITEMS: 20,
 
   // UI
   MAX_CARD_WIDTH: 280,

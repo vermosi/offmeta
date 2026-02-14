@@ -29,7 +29,7 @@ describe('CLIENT_CONFIG', () => {
   });
 
   it('exports history settings', () => {
-    expect(CLIENT_CONFIG.MAX_HISTORY_ITEMS).toBe(5);
+    expect(CLIENT_CONFIG.MAX_HISTORY_ITEMS).toBe(20);
   });
 
   it('exports UI settings', () => {
