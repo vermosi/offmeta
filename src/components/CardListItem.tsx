@@ -6,6 +6,7 @@
 import { memo } from 'react';
 import type { KeyboardEvent } from 'react';
 import type { ScryfallCard } from '@/types/card';
+import { ManaCost } from '@/components/ManaSymbol';
 
 interface CardListItemProps {
   card: ScryfallCard;
@@ -42,8 +43,8 @@ export const CardListItem = memo(function CardListItem({
 
       {/* Mana cost */}
       {manaCost && (
-        <span className="hidden sm:block text-xs text-muted-foreground font-mono flex-shrink-0">
-          {manaCost}
+        <span className="hidden sm:flex flex-shrink-0">
+          <ManaCost cost={manaCost} size="sm" />
         </span>
       )}
 
