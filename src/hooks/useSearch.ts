@@ -1,0 +1,316 @@
+/**
+ * Search orchestration hook.
+ * Manages search state, URL sync, infinite pagination, filtering, and analytics.
+ * Extracted from Index.tsx to keep the page component focused on rendering.
+ */
+
+import {
+  useState,
+  useCallback,
+  useRef,
+  useMemo,
+  useEffect,
+} from 'react';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
+import type { SearchResult, UnifiedSearchBarHandle } from '@/components/UnifiedSearchBar';
+import { searchCards } from '@/lib/scryfall/client';
+import type { ScryfallCard } from '@/types/card';
+import type { FilterState } from '@/types/filters';
+import type { SearchIntent } from '@/types/search';
+import { buildFilterQuery, validateScryfallQuery } from '@/lib/scryfall/query';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { CLIENT_CONFIG } from '@/lib/config';
+
+/** Generate unique request ID */
+function generateRequestId(): string {
+  return `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+}
+
+export function useSearch() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlQuery = searchParams.get('q') || '';
+  const queryClient = useQueryClient();
+
+  // --- Core search state ---
+  const [searchQuery, setSearchQuery] = useState(urlQuery);
+  const [originalQuery, setOriginalQuery] = useState(urlQuery);
+  const [selectedCard, setSelectedCard] = useState<ScryfallCard | null>(null);
+  const [hasSearched, setHasSearched] = useState(!!urlQuery);
+  const [lastSearchResult, setLastSearchResult] = useState<SearchResult | null>(null);
+  const [filteredCards, setFilteredCards] = useState<ScryfallCard[]>([]);
+  const [hasActiveFilters, setHasActiveFilters] = useState(false);
+  const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<FilterState | null>(null);
+  const [lastIntent, setLastIntent] = useState<SearchIntent | null>(null);
+  const [filtersResetKey, setFiltersResetKey] = useState(0);
+
+  const searchBarRef = useRef<UnifiedSearchBarHandle>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const lastUrlQueryRef = useRef(urlQuery);
+  const { trackSearch, trackCardClick, trackEvent } = useAnalytics();
+
+  // --- URL sync (browser back/forward, manual edits) ---
+  useEffect(() => {
+    if (urlQuery === lastUrlQueryRef.current) return;
+    lastUrlQueryRef.current = urlQuery;
+
+    if (urlQuery && searchBarRef.current) {
+      searchBarRef.current.triggerSearch(urlQuery);
+    } else if (!urlQuery) {
+      setSearchQuery('');
+      setOriginalQuery('');
+      setHasSearched(false);
+      setLastSearchResult(null);
+      setFilteredCards([]);
+      setHasActiveFilters(false);
+      setCurrentRequestId(null);
+    }
+  }, [urlQuery]);
+
+  // --- Validated query ---
+  const validatedSearchQuery = useMemo(() => {
+    if (!searchQuery) return '';
+    return validateScryfallQuery(searchQuery).sanitized;
+  }, [searchQuery]);
+
+  // --- Infinite query ---
+  const {
+    data,
+    isLoading: isSearching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['cards', validatedSearchQuery],
+    queryFn: ({ pageParam = 1 }) => searchCards(validatedSearchQuery, pageParam),
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.has_more ? allPages.length + 1 : undefined,
+    initialPageParam: 1,
+    enabled: !!validatedSearchQuery,
+    staleTime: CLIENT_CONFIG.CARD_SEARCH_STALE_TIME_MS,
+  });
+
+  // Refs for IntersectionObserver (avoid stale closures)
+  const hasNextPageRef = useRef(hasNextPage);
+  const isFetchingNextPageRef = useRef(isFetchingNextPage);
+
+  useEffect(() => {
+    hasNextPageRef.current = hasNextPage;
+    isFetchingNextPageRef.current = isFetchingNextPage;
+  }, [hasNextPage, isFetchingNextPage]);
+
+  // --- Infinite scroll observer ---
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (
+          entries[0].isIntersecting &&
+          hasNextPageRef.current &&
+          !isFetchingNextPageRef.current
+        ) {
+          fetchNextPage();
+        }
+      },
+      {
+        threshold: CLIENT_CONFIG.INFINITE_SCROLL_THRESHOLD,
+        rootMargin: CLIENT_CONFIG.INFINITE_SCROLL_ROOT_MARGIN,
+      },
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [fetchNextPage]);
+
+  // --- Flatten pages ---
+  const cards = useMemo(() => {
+    return data?.pages.flatMap((page) => page.data) || [];
+  }, [data]);
+
+  const totalCards = data?.pages[0]?.total_cards || 0;
+
+  // --- Track results count ---
+  useEffect(() => {
+    if (totalCards > 0 && lastSearchResult) {
+      trackEvent('search_results', {
+        query: originalQuery,
+        translated_query: lastSearchResult.scryfallQuery,
+        results_count: totalCards,
+        request_id: currentRequestId ?? undefined,
+      });
+    }
+  }, [totalCards, lastSearchResult, originalQuery, trackEvent, currentRequestId]);
+
+  const displayCards = hasActiveFilters ? filteredCards : cards;
+
+  // --- Callbacks ---
+
+  const handleSearch = useCallback(
+    (query: string, result?: SearchResult, naturalQuery?: string) => {
+      const requestId = generateRequestId();
+      setCurrentRequestId(requestId);
+
+      setFilteredCards([]);
+      setHasActiveFilters(false);
+      setActiveFilters(null);
+      setFiltersResetKey((prev) => prev + 1);
+
+      const executedQuery = query.trim();
+      setSearchQuery(executedQuery);
+      setOriginalQuery(naturalQuery || query);
+      setHasSearched(true);
+
+      if (result) {
+        setLastSearchResult({ ...result, scryfallQuery: executedQuery });
+        setLastIntent(result.intent || null);
+      } else {
+        setLastSearchResult({
+          scryfallQuery: executedQuery,
+          explanation: undefined,
+          showAffiliate: false,
+        });
+        setLastIntent(null);
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['cards', executedQuery] });
+
+      const urlValue = naturalQuery || query;
+      if (urlValue) {
+        lastUrlQueryRef.current = urlValue;
+        setSearchParams({ q: urlValue }, { replace: true });
+      } else {
+        lastUrlQueryRef.current = '';
+        setSearchParams({}, { replace: true });
+      }
+
+      if (result) {
+        trackSearch({
+          query: naturalQuery || query,
+          translated_query: result.scryfallQuery,
+          results_count: 0,
+        });
+      }
+    },
+    [trackSearch, setSearchParams, queryClient],
+  );
+
+  const handleRerunEditedQuery = useCallback(
+    (editedQuery: string) => {
+      const requestId = generateRequestId();
+      setCurrentRequestId(requestId);
+
+      setFilteredCards([]);
+      setHasActiveFilters(false);
+
+      const filterQuery = buildFilterQuery(activeFilters);
+      const combinedQuery = [editedQuery, filterQuery]
+        .filter(Boolean)
+        .join(' ')
+        .trim();
+      const validation = validateScryfallQuery(combinedQuery);
+
+      if (!validation.valid) {
+        setLastSearchResult((prev) =>
+          prev
+            ? { ...prev, scryfallQuery: validation.sanitized, validationIssues: validation.issues }
+            : { scryfallQuery: validation.sanitized, validationIssues: validation.issues, explanation: undefined, showAffiliate: false },
+        );
+        return;
+      }
+
+      setSearchQuery(validation.sanitized);
+      setHasSearched(true);
+
+      setLastSearchResult((prev) =>
+        prev
+          ? { ...prev, scryfallQuery: validation.sanitized, validationIssues: [] }
+          : { scryfallQuery: validation.sanitized, explanation: undefined, showAffiliate: false, validationIssues: [] },
+      );
+
+      queryClient.invalidateQueries({ queryKey: ['cards', validation.sanitized] });
+
+      trackEvent('rerun_edited_query', {
+        original_query: originalQuery,
+        edited_query: editedQuery,
+        request_id: requestId,
+      });
+    },
+    [queryClient, originalQuery, trackEvent, activeFilters],
+  );
+
+  const handleCardClick = useCallback(
+    (card: ScryfallCard, index: number) => {
+      trackCardClick({
+        card_id: card.id,
+        card_name: card.name,
+        set_code: card.set,
+        rarity: card.rarity,
+        position_in_results: index,
+      });
+      setSelectedCard(card);
+    },
+    [trackCardClick],
+  );
+
+  const handleTryExample = useCallback((query: string) => {
+    searchBarRef.current?.triggerSearch(query);
+  }, []);
+
+  const handleRegenerateTranslation = useCallback(() => {
+    if (!originalQuery) return;
+    searchBarRef.current?.triggerSearch(originalQuery, {
+      bypassCache: true,
+      cacheSalt: `${Date.now()}`,
+    });
+  }, [originalQuery]);
+
+  const handleFilteredCards = useCallback(
+    (filtered: ScryfallCard[], filtersActive: boolean, filters: FilterState) => {
+      setFilteredCards(filtered);
+      setHasActiveFilters(filtersActive);
+      setActiveFilters(filters);
+    },
+    [],
+  );
+
+  return {
+    // State
+    searchQuery,
+    originalQuery,
+    selectedCard,
+    setSelectedCard,
+    hasSearched,
+    lastSearchResult,
+    lastIntent,
+    activeFilters,
+    filtersResetKey,
+    reportDialogOpen,
+    setReportDialogOpen,
+    currentRequestId,
+
+    // Data
+    cards,
+    displayCards,
+    totalCards,
+    isSearching,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+
+    // Refs
+    searchBarRef,
+    loadMoreRef,
+
+    // Callbacks
+    handleSearch,
+    handleRerunEditedQuery,
+    handleCardClick,
+    handleTryExample,
+    handleRegenerateTranslation,
+    handleFilteredCards,
+  };
+}
