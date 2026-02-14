@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { cn } from '@/lib/utils';
@@ -12,11 +12,13 @@ const NAV_LINKS = [
   { label: 'How It Works', href: '#how-it-works' },
   { label: 'Daily Pick', href: '#daily-pick' },
   { label: 'FAQ', href: '#faq' },
-  { label: 'Guides', href: '/guides/best-green-ramp-cards' },
+  { label: 'Guides', href: '/guides' },
 ] as const;
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // Close mobile menu on escape key
   useEffect(() => {
@@ -41,8 +43,15 @@ export function Header() {
   const handleNavClick = (href: string) => {
     setMobileMenuOpen(false);
     if (href.startsWith('#')) {
-      const el = document.getElementById(href.slice(1));
-      el?.scrollIntoView({ behavior: 'smooth' });
+      const id = href.slice(1);
+      if (location.pathname === '/') {
+        // Already on home — just scroll
+        const el = document.getElementById(id);
+        el?.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        // Navigate home with hash, then scroll after render
+        navigate('/' + href);
+      }
     }
   };
 
