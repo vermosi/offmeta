@@ -33,10 +33,11 @@ export function useSearch() {
   const queryClient = useQueryClient();
 
   // --- Core search state ---
-  const [searchQuery, setSearchQuery] = useState(urlQuery);
+  // Don't initialize searchQuery from URL — wait for translation
+  const [searchQuery, setSearchQuery] = useState('');
   const [originalQuery, setOriginalQuery] = useState(urlQuery);
   const [selectedCard, setSelectedCard] = useState<ScryfallCard | null>(null);
-  const [hasSearched, setHasSearched] = useState(!!urlQuery);
+  const [hasSearched, setHasSearched] = useState(false);
   const [lastSearchResult, setLastSearchResult] = useState<SearchResult | null>(null);
   const [filteredCards, setFilteredCards] = useState<ScryfallCard[]>([]);
   const [hasActiveFilters, setHasActiveFilters] = useState(false);
@@ -48,8 +49,17 @@ export function useSearch() {
 
   const searchBarRef = useRef<UnifiedSearchBarHandle>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  const lastUrlQueryRef = useRef(urlQuery);
+  const lastUrlQueryRef = useRef('');
+  const initialUrlQuery = useRef(urlQuery);
   const { trackSearch, trackCardClick, trackEvent } = useAnalytics();
+
+  // --- Initial mount: trigger translation for ?q= parameter ---
+  useEffect(() => {
+    if (initialUrlQuery.current && searchBarRef.current) {
+      searchBarRef.current.triggerSearch(initialUrlQuery.current);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // --- URL sync (browser back/forward, manual edits) ---
   useEffect(() => {
