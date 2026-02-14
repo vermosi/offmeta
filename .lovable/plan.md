@@ -1,98 +1,188 @@
 
-# UX/UI Review -- Issues Found
 
-After thorough inspection across desktop (1920px), mobile (390px), dark mode, and light mode, here are the issues identified and recommended fixes.
+# Everything We Can Add Without Authentication
 
----
-
-## Critical Issues
-
-### 1. Hero section has excessive whitespace
-The gap between the subtitle text ("Just natural conversation.") and the search bar is too large -- about 120px of dead space on mobile, even more on desktop. This pushes the search bar below the fold unnecessarily and makes the page feel sparse rather than premium.
-
-**Fix:** Reduce the bottom margin on the hero subtitle block from `mb-10 sm:mb-14` to `mb-6 sm:mb-8`, and reduce hero top padding from `pt-12 sm:pt-20 lg:pt-28` to `pt-8 sm:pt-14 lg:pt-20`.
-
-### 2. Card grid not centered / inconsistent widths
-On desktop, the card grid uses `px-4 sm:px-6 lg:px-8` outside the `container-main`, meaning it spans the full viewport while the search bar/filters above are capped at `max-w-6xl`. This creates a jarring width mismatch -- the controls feel narrow while cards stretch edge-to-edge.
-
-**Fix:** Wrap the card grid area inside `container-main` or match it to a consistent max-width so everything aligns.
-
-### 3. "Similar searches" appears before filters -- confusing hierarchy
-Currently the layout after search is: EditableQueryBar, ExplainPanel, **SimilarSearches**, then Filters + Cards. The Similar Searches row sitting between the interpretation panel and the actual results/filters disrupts scanning flow. Users expect to see their results immediately after the query bar.
-
-**Fix:** Move SimilarSearches to appear *after* the filters row, or integrate it alongside the filters area.
+A comprehensive plan of features that enhance OffMeta using only anonymous/session-based storage (localStorage, sessionStorage, URL state) and public database tables -- no sign-in required.
 
 ---
 
-## Moderate Issues
+## 1. Search History Persistence (localStorage)
 
-### 4. Light mode hero section looks washed out
-The glow orbs are barely visible in light mode, and the hero background blends into the content below with no clear visual separation. The gradient text is fine but the overall section feels flat compared to dark mode.
+**What**: Persist recent searches across browser sessions (currently session-only via `SearchHistoryDropdown`).
 
-**Fix:** Add a subtle gradient background to the hero section in light mode (e.g., a soft purple-to-white gradient), and increase glow orb opacity for light mode.
+**How**: Store the last 20 searches in `localStorage` instead of (or in addition to) `sessionStorage`. Add import/export as JSON for portability.
 
-### 5. Mobile search bar placeholder text is too generic
-The mobile placeholder says "Search cards..." which is vague. It should still convey the natural-language capability even in a short form.
-
-**Fix:** Change from "Search cards..." to "Describe a card..." or "What cards do you need?"
-
-### 6. Footer has too many visual layers on mobile
-On mobile, the footer stacks: logo row, links row, copyright, guide links section, and WotC legal text -- that's 5 distinct visual layers with border separators, making it feel cluttered for a footer.
-
-**Fix:** Consolidate the footer into 2-3 rows max on mobile. Merge copyright with the logo row. Make guide links a single inline comma-separated line.
-
-### 7. "How It Works" cards use opacity-0 with animate-fade-in but lack animation definition
-The HowItWorksSection sets `opacity-0 animate-fade-in` but `animate-fade-in` is not defined in the CSS (only `animate-reveal` exists). This means the cards may remain invisible or rely on tailwindcss-animate defaults, which could be inconsistent.
-
-**Fix:** Either switch to `animate-reveal` (which is defined) or add an `animate-fade-in` keyframe definition.
-
-### 8. ExplainCompilationPanel toggle button is too subtle
-The "Show details (X detected)" button is plain text-only, centered, very small, and easy to miss. Most users won't discover this collapsible section.
-
-**Fix:** Give it a subtle background pill or card treatment to make it scannable.
+**Effort**: Small
 
 ---
 
-## Minor Polish
+## 2. Card Comparison View
 
-### 9. Daily Pick accordion chevron direction inconsistency
-DailyPick uses `ChevronUp`/`ChevronDown` based on state, but the rest of the app (FAQ, ExplainPanel) uses a single `ChevronDown` with CSS rotation. This is a minor inconsistency in the icon pattern.
+**What**: Let users select 2-4 cards from search results and view them side-by-side, comparing stats (CMC, power/toughness, price, legalities, oracle text).
 
-**Fix:** Use a single `ChevronDown` with `rotate-180` transform like the other collapsibles.
+**How**: Add a "Compare" toggle that enables multi-select checkboxes on `CardItem`. A floating bar shows selected count and opens a comparison modal/page.
 
-### 10. Card images have no error/fallback state
-If a card image fails to load, there's no placeholder -- just a broken image. This can happen with Scryfall CDN hiccups.
-
-**Fix:** Add an `onError` handler that shows a styled fallback with the card name.
-
-### 11. Search example chips below the search bar lack visual hierarchy
-The example queries ("creatures that make treasure tokens", "cheap green ramp spells", "artifacts that produce 2 mana") blend into the background with muted text. They don't look interactive.
-
-**Fix:** Add a subtle border or pill styling to make them look clickable.
+**Effort**: Medium
 
 ---
 
-## Recommended Implementation Order
-1. Fix hero whitespace (quick, high-impact)
-2. Fix "How It Works" animation (may be invisible to users)
-3. Reorder SimilarSearches placement
-4. Align card grid with container-main
-5. Polish ExplainPanel toggle visibility
-6. Light mode hero improvements
-7. Mobile search placeholder
-8. Footer consolidation
-9. Card image fallback
-10. Example chip styling
-11. Chevron consistency
+## 3. Shareable Search Links with Filters
 
-## Technical Details
+**What**: Encode active filters (colors, types, CMC range, sort) into the URL so users can share filtered results.
 
-**Files to modify:**
-- `src/pages/Index.tsx` -- hero padding, SimilarSearches placement, card grid container
-- `src/components/HowItWorksSection.tsx` -- fix animation class
-- `src/index.css` -- add light mode hero gradient, add `animate-fade-in` if needed
-- `src/components/ExplainCompilationPanel.tsx` -- toggle button styling
-- `src/components/UnifiedSearchBar.tsx` -- mobile placeholder, example chip styling
-- `src/components/Footer.tsx` -- mobile layout consolidation
-- `src/components/DailyPick.tsx` -- chevron consistency
-- `src/components/CardItem.tsx` -- image error fallback
+**How**: Extend the existing `?q=` URL param to include filter state (e.g., `?q=draw+spells&colors=U,B&sort=price-asc`). Parse on load in `useSearch`.
+
+**Effort**: Small
+
+---
+
+## 4. View Toggle: Grid vs List vs Image-Only
+
+**What**: Let users switch between card display modes -- the current grid, a compact list (name + type + price per row), and an image-only gallery.
+
+**How**: Add a `ToggleGroup` next to the sort/filter bar. Persist preference in `localStorage`. Create a `CardListItem` component for the list view.
+
+**Effort**: Medium
+
+---
+
+## 5. Random Card Discovery
+
+**What**: A "Surprise Me" button on the home page that fetches a random card from Scryfall (`/cards/random`) and opens it in the modal. Optionally filter by color/type.
+
+**How**: Call `https://api.scryfall.com/cards/random?q=...` with optional filters. Add button near Daily Pick or search bar.
+
+**Effort**: Small
+
+---
+
+## 6. Export Search Results
+
+**What**: Let users export current search results as CSV or copy a card name list to clipboard (useful for deck building on other platforms).
+
+**How**: Add "Export" dropdown next to filters with options: "Copy names", "Download CSV" (name, set, price, type, CMC).
+
+**Effort**: Small
+
+---
+
+## 7. Advanced Search Builder (Visual)
+
+**What**: A form-based query builder that lets users construct Scryfall queries visually -- pick colors, types, CMC range, keywords, format, price range -- without knowing syntax.
+
+**How**: New page/modal at `/advanced`. Each field maps to a Scryfall syntax fragment. Assemble and redirect to `/?q=...`.
+
+**Effort**: Medium-Large
+
+---
+
+## 8. Price Alerts via Browser Notifications (PWA)
+
+**What**: Users can "watch" a card price. The PWA service worker periodically checks and sends a browser notification if price drops below target.
+
+**How**: Store watchlist in `localStorage`. Use the existing PWA setup (`vite-plugin-pwa`) to add a periodic sync or check on app open.
+
+**Effort**: Medium
+
+---
+
+## 9. Deck Paste-and-Analyze
+
+**What**: Users paste a decklist (one card name per line, MTGO/Arena format), and the app fetches all cards from Scryfall, showing mana curve, color distribution, price total, and category breakdown.
+
+**How**: New `/analyze` route. Parse input, batch-fetch via Scryfall collection endpoint (`/cards/collection`), render charts using simple CSS/SVG (no charting lib needed).
+
+**Effort**: Medium-Large
+
+---
+
+## 10. Keyboard Shortcuts
+
+**What**: Power-user shortcuts: `/` to focus search, `Esc` to close modals, arrow keys to navigate results, `Enter` to open card, `c` to copy card name.
+
+**How**: Global `useEffect` with `keydown` listener. Show shortcut hints in a `?` help modal.
+
+**Effort**: Small
+
+---
+
+## 11. "Staples For" Quick Lookup
+
+**What**: Pre-built buttons/chips like "Staples for: Mono-Red Aggro", "Staples for: Simic Ramp" that run curated Scryfall queries.
+
+**How**: Extend the existing `similar-searches.ts` data with archetype-specific query sets. Show as a section on the home page or as filter presets.
+
+**Effort**: Small
+
+---
+
+## 12. Card Art Zoom / Full-Screen Gallery
+
+**What**: Click card art to view full-resolution art crop in a lightbox. Swipe/arrow between cards in current results.
+
+**How**: Use the `art_crop` image URI from Scryfall. Add a lightbox overlay with keyboard and swipe navigation.
+
+**Effort**: Small-Medium
+
+---
+
+## 13. Color Pie / Mana Curve Visualization for Results
+
+**What**: Show a small stats bar above results: color distribution pie, mana curve histogram, rarity breakdown, average price.
+
+**How**: Compute from `displayCards` array. Render with simple CSS bars (no external chart lib). Collapsible panel.
+
+**Effort**: Medium
+
+---
+
+## 14. Offline Recent Cards (PWA Cache)
+
+**What**: Cache the last 50 viewed card details for offline access via the service worker.
+
+**How**: Extend the existing PWA config to cache Scryfall API responses for recently viewed cards. Show "offline" badge when serving from cache.
+
+**Effort**: Medium
+
+---
+
+## 15. Installable PWA Prompt
+
+**What**: Show a dismissible "Install OffMeta" banner for supported browsers, improving the app-like experience.
+
+**How**: Listen for `beforeinstallprompt` event. Show a tasteful banner near the footer or header. Dismiss state saved in `localStorage`.
+
+**Effort**: Small
+
+---
+
+## Priority Ranking
+
+| Priority | Feature | Effort | Impact |
+|----------|---------|--------|--------|
+| 1 | Keyboard Shortcuts | Small | High (power users) |
+| 2 | View Toggle (Grid/List/Gallery) | Medium | High (usability) |
+| 3 | Shareable Filter URLs | Small | High (sharing) |
+| 4 | Export Search Results | Small | High (utility) |
+| 5 | Search History Persistence | Small | Medium (convenience) |
+| 6 | Random Card Discovery | Small | Medium (engagement) |
+| 7 | Color Pie / Mana Curve Stats | Medium | Medium (insight) |
+| 8 | Card Art Zoom / Gallery | Small-Med | Medium (visual) |
+| 9 | Card Comparison View | Medium | Medium (decision) |
+| 10 | Installable PWA Prompt | Small | Medium (retention) |
+| 11 | "Staples For" Quick Lookup | Small | Medium (discovery) |
+| 12 | Advanced Search Builder | Med-Large | High (accessibility) |
+| 13 | Deck Paste-and-Analyze | Med-Large | High (utility) |
+| 14 | Offline Recent Cards | Medium | Low-Med (niche) |
+| 15 | Price Alerts (Browser) | Medium | Low-Med (niche) |
+
+---
+
+## Technical Notes
+
+- All features use **localStorage/sessionStorage** for persistence -- no auth needed.
+- Scryfall API is the sole data source; respect their rate limits (100ms between requests).
+- Existing patterns to follow: `useSearch` hook for state, `CLIENT_CONFIG` for constants, `useAnalytics` for tracking, shadcn/ui components for UI.
+- New routes (if any) register in `src/App.tsx` under the existing `Routes`.
+- Analytics events for new features insert into the public `analytics_events` table (already has permissive insert policy).
+
