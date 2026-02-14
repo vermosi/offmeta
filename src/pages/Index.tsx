@@ -20,14 +20,15 @@ import { SimilarSearches } from '@/components/SimilarSearches';
 import { VirtualizedCardGrid } from '@/components/VirtualizedCardGrid';
 import { RandomCardButton } from '@/components/RandomCardButton';
 import { ExportResults } from '@/components/ExportResults';
-import { ViewToggle, getStoredViewMode } from '@/components/ViewToggle';
+import { ViewToggle } from '@/components/ViewToggle';
+import { type ViewMode, getStoredViewMode } from '@/lib/view-mode-storage';
 import { ResultsStats } from '@/components/ResultsStats';
 import { ArtLightbox } from '@/components/ArtLightbox';
 import { CompareBar } from '@/components/CompareBar';
 import { CompareModal } from '@/components/CompareModal';
 import { PwaInstallBanner } from '@/components/PwaInstallBanner';
 import { StaplesSection } from '@/components/StaplesSection';
-import type { ViewMode } from '@/components/ViewToggle';
+
 import { Loader2, GitCompareArrows } from 'lucide-react';
 import { CLIENT_CONFIG } from '@/lib/config';
 import { useSearch } from '@/hooks/useSearch';

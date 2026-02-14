@@ -11,9 +11,7 @@ import {
 } from '@/components/ui/tooltip';
 import { type ViewMode, storeViewMode } from '@/lib/view-mode-storage';
 
-// Re-exported from view-mode-storage for convenience
-// eslint-disable-next-line react-refresh/only-export-components
-export { type ViewMode, getStoredViewMode } from '@/lib/view-mode-storage';
+
 
 interface ViewToggleProps {
   value: ViewMode;
