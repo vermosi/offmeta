@@ -23,10 +23,15 @@ import { ExportResults } from '@/components/ExportResults';
 import { ViewToggle, getStoredViewMode } from '@/components/ViewToggle';
 import { ResultsStats } from '@/components/ResultsStats';
 import { ArtLightbox } from '@/components/ArtLightbox';
+import { CompareBar } from '@/components/CompareBar';
+import { CompareModal } from '@/components/CompareModal';
+import { PwaInstallBanner } from '@/components/PwaInstallBanner';
+import { StaplesSection } from '@/components/StaplesSection';
 import type { ViewMode } from '@/components/ViewToggle';
-import { Loader2 } from 'lucide-react';
+import { Loader2, GitCompareArrows } from 'lucide-react';
 import { CLIENT_CONFIG } from '@/lib/config';
 import { useSearch } from '@/hooks/useSearch';
+import { useCompare } from '@/hooks/useCompare';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 const CardModal = lazy(() => import('@/components/CardModal'));
@@ -65,6 +70,20 @@ const Index = () => {
 
   // View mode toggle
   const [viewMode, setViewMode] = useState<ViewMode>(getStoredViewMode);
+
+  // Card comparison
+  const {
+    compareCards,
+    compareOpen,
+    isComparing,
+    toggleCompareCard,
+    removeCompareCard,
+    clearCompare,
+    openCompare,
+    closeCompare,
+    isCardSelected,
+  } = useCompare();
+  const [compareMode, setCompareMode] = useState(false);
 
   // Keyboard shortcuts
   const focusSearch = useCallback(() => {
@@ -241,6 +260,23 @@ const Index = () => {
                   />
                   <ViewToggle value={viewMode} onChange={setViewMode} />
 
+                  {/* Compare mode toggle */}
+                  <button
+                    onClick={() => {
+                      setCompareMode((m) => !m);
+                      if (compareMode) clearCompare();
+                    }}
+                    className={`hidden sm:flex items-center gap-1 py-1 px-2.5 text-xs rounded-md transition-colors ${
+                      compareMode
+                        ? 'bg-primary/10 text-primary border border-primary/30'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                    }`}
+                    aria-pressed={compareMode}
+                  >
+                    <GitCompareArrows className="h-3.5 w-3.5" />
+                    <span>Compare</span>
+                  </button>
+
                   <div className="flex-1" />
 
                   {totalCards > 0 && (
@@ -336,7 +372,7 @@ const Index = () => {
                       {displayCards.map((card, index) => (
                         <div
                           key={card.id}
-                          className="animate-reveal contain-layout"
+                          className="animate-reveal contain-layout relative"
                           role="listitem"
                           style={{
                             animationDelay: `${Math.min(index * 25, 300)}ms`,
@@ -344,9 +380,25 @@ const Index = () => {
                             containIntrinsicSize: '0 200px',
                           }}
                         >
+                          {compareMode && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleCompareCard(card);
+                              }}
+                              className={`absolute top-2 left-2 z-10 h-6 w-6 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all ${
+                                isCardSelected(card.id)
+                                  ? 'bg-primary border-primary text-primary-foreground'
+                                  : 'bg-card/80 border-border/60 text-muted-foreground hover:border-primary/50'
+                              }`}
+                              aria-label={`${isCardSelected(card.id) ? 'Remove from' : 'Add to'} comparison`}
+                            >
+                              {isCardSelected(card.id) ? '✓' : '+'}
+                            </button>
+                          )}
                           <CardItem
                             card={card}
-                            onClick={() => handleCardClick(card, index)}
+                            onClick={() => compareMode ? toggleCompareCard(card) : handleCardClick(card, index)}
                           />
                         </div>
                       ))}
@@ -412,6 +464,9 @@ const Index = () => {
             <div id="daily-pick" className="container-main mt-6 sm:mt-10">
               <DailyPick />
             </div>
+            <div className="container-main mt-6 sm:mt-10">
+              <StaplesSection onSearch={handleTryExample} />
+            </div>
             <div id="how-it-works">
               <HowItWorksSection />
             </div>
@@ -450,6 +505,22 @@ const Index = () => {
           filters={activeFilters}
           requestId={currentRequestId || undefined}
         />
+
+        {/* Compare bar + modal */}
+        <CompareBar
+          cards={compareCards}
+          onRemove={removeCompareCard}
+          onClear={clearCompare}
+          onCompare={openCompare}
+        />
+        <CompareModal
+          cards={compareCards}
+          open={compareOpen}
+          onClose={closeCompare}
+        />
+
+        {/* PWA install prompt */}
+        <PwaInstallBanner />
       </div>
     </ErrorBoundary>
   );
