@@ -1,0 +1,68 @@
+/**
+ * Compact list row for a single card.
+ * Used in "list" view mode as an alternative to the card grid.
+ */
+
+import { memo } from 'react';
+import type { KeyboardEvent } from 'react';
+import type { ScryfallCard } from '@/types/card';
+
+interface CardListItemProps {
+  card: ScryfallCard;
+  onClick: () => void;
+}
+
+export const CardListItem = memo(function CardListItem({
+  card,
+  onClick,
+}: CardListItemProps) {
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onClick();
+    }
+  };
+
+  const price = card.prices?.usd ? `$${card.prices.usd}` : '';
+  const manaCost = card.mana_cost || card.card_faces?.[0]?.mana_cost || '';
+
+  return (
+    <div
+      onClick={onClick}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
+      className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/50 bg-card/50 hover:bg-muted/50 hover:border-border cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      aria-label={`View details for ${card.name}`}
+    >
+      {/* Name */}
+      <span className="flex-1 min-w-0 text-sm font-medium text-foreground truncate">
+        {card.name}
+      </span>
+
+      {/* Mana cost */}
+      {manaCost && (
+        <span className="hidden sm:block text-xs text-muted-foreground font-mono flex-shrink-0">
+          {manaCost}
+        </span>
+      )}
+
+      {/* Type */}
+      <span className="hidden md:block text-xs text-muted-foreground truncate max-w-[180px] flex-shrink-0">
+        {card.type_line}
+      </span>
+
+      {/* Rarity */}
+      <span className="hidden lg:block text-xs text-muted-foreground capitalize flex-shrink-0 w-16 text-center">
+        {card.rarity}
+      </span>
+
+      {/* Price */}
+      {price && (
+        <span className="text-xs font-medium text-foreground flex-shrink-0 w-14 text-right">
+          {price}
+        </span>
+      )}
+    </div>
+  );
+});

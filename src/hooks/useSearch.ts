@@ -27,10 +27,55 @@ function generateRequestId(): string {
   return `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }
 
+/** Parse filter state from URL search params */
+function parseFiltersFromUrl(params: URLSearchParams): Partial<FilterState> | null {
+  const colors = params.get('colors');
+  const types = params.get('types');
+  const sort = params.get('sort');
+  const cmcMin = params.get('cmc_min');
+  const cmcMax = params.get('cmc_max');
+
+  if (!colors && !types && !sort && !cmcMin && !cmcMax) return null;
+
+  const result: Partial<FilterState> = {};
+  if (colors) result.colors = colors.split(',').filter(Boolean);
+  if (types) result.types = types.split(',').filter(Boolean);
+  if (sort) result.sortBy = sort;
+  if (cmcMin || cmcMax) {
+    result.cmcRange = [
+      cmcMin ? parseInt(cmcMin, 10) : 0,
+      cmcMax ? parseInt(cmcMax, 10) : 16,
+    ];
+  }
+  return result;
+}
+
+/** Encode filter state into URL search params (mutates params) */
+function encodeFiltersToUrl(params: URLSearchParams, filters: FilterState | null) {
+  // Remove all filter keys first
+  params.delete('colors');
+  params.delete('types');
+  params.delete('sort');
+  params.delete('cmc_min');
+  params.delete('cmc_max');
+
+  if (!filters) return;
+
+  if (filters.colors.length > 0) params.set('colors', filters.colors.join(','));
+  if (filters.types.length > 0) params.set('types', filters.types.join(','));
+  if (filters.sortBy && filters.sortBy !== 'name-asc') params.set('sort', filters.sortBy);
+  if (filters.cmcRange[0] > 0) params.set('cmc_min', String(filters.cmcRange[0]));
+  // Only encode cmcMax if it's not the default high value
+  if (filters.cmcRange[1] < 16) params.set('cmc_max', String(filters.cmcRange[1]));
+}
+
 export function useSearch() {
   const [searchParams, setSearchParams] = useSearchParams();
   const urlQuery = searchParams.get('q') || '';
   const queryClient = useQueryClient();
+
+  // Parse initial filter state from URL
+  const initialUrlFilters = useRef(parseFiltersFromUrl(searchParams));
 
   // --- Core search state ---
   // Don't initialize searchQuery from URL — wait for translation
@@ -295,8 +340,19 @@ export function useSearch() {
       setFilteredCards(filtered);
       setHasActiveFilters(filtersActive);
       setActiveFilters(filters);
+
+      // Sync filters to URL
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        if (filtersActive) {
+          encodeFiltersToUrl(next, filters);
+        } else {
+          encodeFiltersToUrl(next, null);
+        }
+        return next;
+      }, { replace: true });
     },
-    [],
+    [setSearchParams],
   );
 
   return {
@@ -334,5 +390,8 @@ export function useSearch() {
     handleTryExample,
     handleRegenerateTranslation,
     handleFilteredCards,
+
+    // Initial URL filters (for hydrating SearchFilters on load)
+    initialUrlFilters: initialUrlFilters.current,
   };
 }
