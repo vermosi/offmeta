@@ -14,6 +14,7 @@ import { Footer } from '@/components/Footer';
 import { FAQSection } from '@/components/FAQSection';
 import { HowItWorksSection } from '@/components/HowItWorksSection';
 import { ScrollToTop } from '@/components/ScrollToTop';
+import { SimilarSearches } from '@/components/SimilarSearches';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { VirtualizedCardGrid } from '@/components/VirtualizedCardGrid';
 import { Loader2 } from 'lucide-react';
@@ -194,6 +195,15 @@ const Index = () => {
               <div className="animate-reveal">
                 <ExplainCompilationPanel
                   intent={lastSearchResult?.intent || lastIntent}
+                />
+              </div>
+            )}
+
+            {hasSearched && !isSearching && (
+              <div className="animate-reveal">
+                <SimilarSearches
+                  originalQuery={originalQuery}
+                  onSuggestionClick={handleTryExample}
                 />
               </div>
             )}
