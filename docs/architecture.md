@@ -28,6 +28,10 @@ flowchart LR
 ```
 src/
 ├── components/          # React components
+│   ├── CardModal/       # Card detail modal (image, prices, rulings, legalities)
+│   ├── ui/              # shadcn/ui primitives
+│   └── __tests__/       # Component behavioral tests
+├── data/                # Static data (guides, daily gems, similar searches)
 ├── hooks/               # Custom React hooks
 ├── lib/
 │   ├── core/            # Environment, logging, utils, monitoring
@@ -36,7 +40,8 @@ src/
 │   ├── security/        # Security utilities and test infrastructure
 │   ├── regression/      # Regression test suites
 │   └── pwa/             # Service worker registration
-├── pages/               # Route pages
+├── pages/               # Route pages (Index, GuidesIndex, GuidePage, NotFound)
+│   └── __tests__/       # Page-level behavioral tests
 └── integrations/        # Supabase client (auto-generated)
 
 supabase/
@@ -54,7 +59,8 @@ supabase/
 
 | Module           | Location                              | Purpose                                |
 | ---------------- | ------------------------------------- | -------------------------------------- |
-| UI Components    | `src/components/`                     | Search bar, card grid, modals          |
+| UI Components    | `src/components/`                     | Search bar, card grid, modals, compare |
+| Guides           | `src/pages/Guides*.tsx` + `src/data/guides.ts` | 10 progressive search tutorials |
 | Scryfall Client  | `src/lib/scryfall/`                   | API calls, query validation, printings |
 | Core Utilities   | `src/lib/core/`                       | Environment, logging, monitoring       |
 | Security Suite   | `src/lib/security/`                   | Security utilities, test helpers       |

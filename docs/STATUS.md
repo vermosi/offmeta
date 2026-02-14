@@ -24,6 +24,16 @@ OffMeta is a natural-language search frontend for Magic: The Gathering cards. It
 - Add contract tests for Supabase Edge Functions when running locally.
 - Document deployment steps for Supabase + hosting provider once finalized.
 - Expand accessibility audits and keyboard navigation.
+- Fix mobile hamburger menu overlay opacity (nav items overlap content).
+
+## Recent additions
+
+- **Search Guides**: 10 progressive guides (`/guides`) teaching natural language search from basic to expert.
+- **Card Comparison**: Side-by-side comparison of 2–4 cards.
+- **View Modes**: Grid, list, and image-only views with persistent preference.
+- **Export Results**: Copy card names or download CSV.
+- **Staples Section**: Archetype quick-search chips on home page.
+- **Cross-page Navigation**: Hash links work from any page (navigate home + scroll).
 
 ## What I changed in this hardening pass
 
@@ -34,3 +44,4 @@ OffMeta is a natural-language search frontend for Magic: The Gathering cards. It
 - Added OSS docs, templates, CI, and contributor workflows.
 - Clarified AGPL licensing and trademark/branding guardrails.
 - Added comprehensive security testing suite (300+ tests) covering injection, CORS, ReDoS, prototype pollution, and timing attacks.
+- Added 78 new tests for guides system (data integrity, page rendering, navigation, SEO).
