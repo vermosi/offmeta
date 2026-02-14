@@ -4,7 +4,7 @@
  */
 
 import { memo, useRef, useState, useEffect, useCallback } from 'react';
-import { Zap } from 'lucide-react';
+import { Zap, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ManaSymbol } from '@/components/ManaSymbol';
 
 interface StaplesSectionProps {
@@ -46,6 +46,12 @@ export const StaplesSection = memo(function StaplesSection({
     setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 2);
   }, []);
 
+  const scroll = useCallback((dir: 'left' | 'right') => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir === 'left' ? -200 : 200, behavior: 'smooth' });
+  }, []);
+
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -76,7 +82,28 @@ export const StaplesSection = memo(function StaplesSection({
           </div>
         </div>
 
-        <div className="relative">
+        <div className="relative group">
+          {/* Left arrow */}
+          {canScrollLeft && (
+            <button
+              onClick={() => scroll('left')}
+              className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 z-20 h-7 w-7 items-center justify-center rounded-full border border-border/60 bg-card/90 text-muted-foreground hover:text-foreground hover:bg-muted/60 shadow-sm transition-all"
+              aria-label="Scroll left"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+          )}
+          {/* Right arrow */}
+          {canScrollRight && (
+            <button
+              onClick={() => scroll('right')}
+              className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 z-20 h-7 w-7 items-center justify-center rounded-full border border-border/60 bg-card/90 text-muted-foreground hover:text-foreground hover:bg-muted/60 shadow-sm transition-all"
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          )}
+
           {/* Left fade */}
           <div
             className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 z-10 transition-opacity duration-200"
