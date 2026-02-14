@@ -1,6 +1,5 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect, useRef } from 'react';
 import { DailyPick } from '@/components/DailyPick';
-import { Link } from 'react-router-dom';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 import { EditableQueryBar } from '@/components/EditableQueryBar';
 import { ExplainCompilationPanel } from '@/components/ExplainCompilationPanel';
@@ -13,9 +12,9 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Footer } from '@/components/Footer';
 import { FAQSection } from '@/components/FAQSection';
 import { HowItWorksSection } from '@/components/HowItWorksSection';
+import { Header } from '@/components/Header';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { SimilarSearches } from '@/components/SimilarSearches';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { VirtualizedCardGrid } from '@/components/VirtualizedCardGrid';
 import { Loader2 } from 'lucide-react';
 import { CLIENT_CONFIG } from '@/lib/config';
@@ -54,81 +53,60 @@ const Index = () => {
     handleFilteredCards,
   } = useSearch();
 
+  // Parallax scroll effect for glow orbs
+  const heroRef = useRef<HTMLElement>(null);
+  const orb1Ref = useRef<HTMLDivElement>(null);
+  const orb2Ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    let ticking = false;
+    const handleScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const scrollY = window.scrollY;
+        if (orb1Ref.current) {
+          orb1Ref.current.style.transform = `translate(${scrollY * 0.02}px, ${scrollY * 0.05}px)`;
+        }
+        if (orb2Ref.current) {
+          orb2Ref.current.style.transform = `translate(${-scrollY * 0.03}px, ${scrollY * 0.04}px)`;
+        }
+        ticking = false;
+      });
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <ErrorBoundary>
-      <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background">
+      <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background page-gradient texture-noise texture-grid">
         {/* Skip link */}
         <a href="#main-content" className="skip-link">
           Skip to main content
         </a>
 
-        {/* Header */}
-        <header
-          className="sticky top-0 z-50 safe-top border-b border-border/50 bg-background/80 backdrop-blur-xl"
-          role="banner"
-        >
-          <div className="container-main py-4 flex items-center justify-between">
-            <Link
-              to="/"
-              className="group flex items-center gap-2.5 min-h-0 focus-ring rounded-lg -ml-2 px-2 py-1"
-              aria-label="OffMeta - Home"
-            >
-              <svg
-                viewBox="0 0 32 32"
-                className="h-8 w-8 transition-transform duration-200 group-hover:scale-105"
-                aria-hidden="true"
-              >
-                <defs>
-                  <linearGradient
-                    id="logoGradient"
-                    x1="0%"
-                    y1="0%"
-                    x2="100%"
-                    y2="100%"
-                  >
-                    <stop offset="0%" stopColor="hsl(300, 90%, 60%)" />
-                    <stop offset="100%" stopColor="hsl(195, 95%, 55%)" />
-                  </linearGradient>
-                </defs>
-                <path
-                  d="M16 2L30 16L16 30L2 16L16 2Z"
-                  fill="url(#logoGradient)"
-                  opacity="0.15"
-                />
-                <path
-                  d="M16 2L30 16L16 30L2 16L16 2Z"
-                  stroke="url(#logoGradient)"
-                  strokeWidth="1.5"
-                  fill="none"
-                />
-                <path
-                  d="M8 16C8 16 11 11 16 11C21 11 24 16 24 16C24 16 21 21 16 21C11 21 8 16 8 16Z"
-                  stroke="url(#logoGradient)"
-                  strokeWidth="1.25"
-                  fill="none"
-                />
-                <circle cx="16" cy="16" r="2" fill="url(#logoGradient)" />
-              </svg>
-              <span className="text-lg font-semibold tracking-tight">
-                OffMeta
-              </span>
-            </Link>
-            <ThemeToggle />
-          </div>
-        </header>
+        <Header />
 
         {/* Hero Section */}
         {!hasSearched && (
           <section
+            ref={heroRef}
             className="relative pt-8 sm:pt-14 lg:pt-20 pb-6 sm:pb-10 overflow-hidden"
             aria-labelledby="hero-heading"
           >
             <div
-              className="glow-orb absolute -top-32 -left-32 sm:-top-48 sm:-left-48"
+              ref={orb1Ref}
+              className="glow-orb absolute -top-32 -left-32 sm:-top-48 sm:-left-48 transition-transform duration-100 ease-out"
               aria-hidden="true"
             />
             <div
-              className="glow-orb glow-orb-secondary absolute -bottom-32 -right-32 sm:-bottom-48 sm:-right-48"
+              ref={orb2Ref}
+              className="glow-orb glow-orb-secondary absolute -bottom-32 -right-32 sm:-bottom-48 sm:-right-48 transition-transform duration-100 ease-out"
               aria-hidden="true"
             />
 
@@ -325,11 +303,15 @@ const Index = () => {
 
         {!hasSearched && (
           <>
-            <div className="container-main mt-6 sm:mt-10">
+            <div id="daily-pick" className="container-main mt-6 sm:mt-10">
               <DailyPick />
             </div>
-            <HowItWorksSection />
-            <FAQSection />
+            <div id="how-it-works">
+              <HowItWorksSection />
+            </div>
+            <div id="faq">
+              <FAQSection />
+            </div>
           </>
         )}
 
