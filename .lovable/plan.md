@@ -1,77 +1,98 @@
 
-# Sprint 3 Completion + Sprint 4 Start
+# UX/UI Review -- Issues Found
 
-## What's done so far
-- Sprint 1: Shareable URLs, share button, persistent history
-- Sprint 2: 5 guide pages with JSON-LD, sitemap
-- Sprint 3 partial: Daily Off-Meta Pick
-
-## What we'll build next
-
-### 1. Similar Search Suggestions (Sprint 3 — Task 2.4)
-**Goal:** After a search, show 3-5 clickable related query suggestions to increase pages/visit.
-
-**Approach:**
-- Create a new `SimilarSearches` component that appears below search results
-- Build a mapping of query keywords to related searches (e.g., "ramp" suggests "mana dorks", "land fetch", "cost reduction")
-- Use a combination of:
-  - Keyword-based suggestions from a curated mapping (e.g., searches containing "treasure" suggest "token doublers", "artifact sacrifice")
-  - Guide page cross-links when relevant (e.g., search for "ramp" links to the green ramp guide)
-- Render as horizontal scrollable chips below the ExplainCompilationPanel
-- Clicking a chip triggers `searchBarRef.current.triggerSearch(suggestion)`
-
-**Files to create/modify:**
-- New: `src/data/similar-searches.ts` — curated keyword-to-suggestions mapping
-- New: `src/components/SimilarSearches.tsx` — chip-based suggestion row
-- Modify: `src/pages/Index.tsx` — add SimilarSearches below results
-- Modify: `src/hooks/useSearch.ts` — expose originalQuery for matching
-
-### 2. Save Searches with Authentication (Sprint 3 — Task 2.1)
-**Goal:** Let users bookmark searches and revisit them later.
-
-**Approach:**
-- Add email/password authentication using Lovable Cloud
-- Create a `saved_searches` table with RLS policies
-- Add a "Save this search" button next to the share button in EditableQueryBar
-- Create a "Saved Searches" section accessible from the header (small bookmark icon)
-- Auth UI: simple login/signup dialog (not a separate page — keeps the single-page feel)
-
-**Database:**
-- Table: `saved_searches` with columns: `id`, `user_id`, `natural_query`, `scryfall_query`, `created_at`
-- RLS: users can only read/write their own saved searches
-
-**Files to create/modify:**
-- New: `src/components/AuthDialog.tsx` — login/signup modal
-- New: `src/components/SavedSearches.tsx` — saved searches dropdown
-- New: `src/hooks/useAuth.ts` — auth state management
-- Modify: `src/components/EditableQueryBar.tsx` — add save button
-- Modify: `src/pages/Index.tsx` — add auth button to header + saved searches
-- Database migration: create `saved_searches` table with RLS
-
-### 3. Dynamic OG Images (Sprint 4 — Task 3.2)
-**Goal:** When a search URL is shared on social media, show a rich preview with the query and top card art.
-
-**Approach:**
-- Create a backend function that generates OG images on-the-fly
-- Use an HTML-to-image approach via the edge function
-- The OG image shows: OffMeta logo, the search query text, and a grid of top card thumbnails
-- Update the document `<head>` with dynamic `og:image` meta tags pointing to the edge function URL
-- Fallback to the static `og-image.png` for non-search pages
-
-**Files to create/modify:**
-- New: `supabase/functions/og-image/index.ts` — edge function that returns a PNG
-- Modify: `src/hooks/useSearch.ts` — inject OG meta tags dynamically
-- Modify: `index.html` — add default OG tags as fallback
+After thorough inspection across desktop (1920px), mobile (390px), dark mode, and light mode, here are the issues identified and recommended fixes.
 
 ---
 
-## Recommended execution order
-1. Similar Search Suggestions (standalone, no backend needed, quick win)
-2. Authentication + Save Searches (backend + frontend, medium effort)
-3. Dynamic OG Images (edge function, can be done independently)
+## Critical Issues
 
-## Technical considerations
-- Auth will require email confirmation by default (no auto-confirm)
-- Saved searches are capped at ~50 per user to prevent abuse
-- OG image generation needs careful caching to avoid excessive edge function calls
-- Similar searches use a static mapping first; can be enhanced with AI-generated suggestions later
+### 1. Hero section has excessive whitespace
+The gap between the subtitle text ("Just natural conversation.") and the search bar is too large -- about 120px of dead space on mobile, even more on desktop. This pushes the search bar below the fold unnecessarily and makes the page feel sparse rather than premium.
+
+**Fix:** Reduce the bottom margin on the hero subtitle block from `mb-10 sm:mb-14` to `mb-6 sm:mb-8`, and reduce hero top padding from `pt-12 sm:pt-20 lg:pt-28` to `pt-8 sm:pt-14 lg:pt-20`.
+
+### 2. Card grid not centered / inconsistent widths
+On desktop, the card grid uses `px-4 sm:px-6 lg:px-8` outside the `container-main`, meaning it spans the full viewport while the search bar/filters above are capped at `max-w-6xl`. This creates a jarring width mismatch -- the controls feel narrow while cards stretch edge-to-edge.
+
+**Fix:** Wrap the card grid area inside `container-main` or match it to a consistent max-width so everything aligns.
+
+### 3. "Similar searches" appears before filters -- confusing hierarchy
+Currently the layout after search is: EditableQueryBar, ExplainPanel, **SimilarSearches**, then Filters + Cards. The Similar Searches row sitting between the interpretation panel and the actual results/filters disrupts scanning flow. Users expect to see their results immediately after the query bar.
+
+**Fix:** Move SimilarSearches to appear *after* the filters row, or integrate it alongside the filters area.
+
+---
+
+## Moderate Issues
+
+### 4. Light mode hero section looks washed out
+The glow orbs are barely visible in light mode, and the hero background blends into the content below with no clear visual separation. The gradient text is fine but the overall section feels flat compared to dark mode.
+
+**Fix:** Add a subtle gradient background to the hero section in light mode (e.g., a soft purple-to-white gradient), and increase glow orb opacity for light mode.
+
+### 5. Mobile search bar placeholder text is too generic
+The mobile placeholder says "Search cards..." which is vague. It should still convey the natural-language capability even in a short form.
+
+**Fix:** Change from "Search cards..." to "Describe a card..." or "What cards do you need?"
+
+### 6. Footer has too many visual layers on mobile
+On mobile, the footer stacks: logo row, links row, copyright, guide links section, and WotC legal text -- that's 5 distinct visual layers with border separators, making it feel cluttered for a footer.
+
+**Fix:** Consolidate the footer into 2-3 rows max on mobile. Merge copyright with the logo row. Make guide links a single inline comma-separated line.
+
+### 7. "How It Works" cards use opacity-0 with animate-fade-in but lack animation definition
+The HowItWorksSection sets `opacity-0 animate-fade-in` but `animate-fade-in` is not defined in the CSS (only `animate-reveal` exists). This means the cards may remain invisible or rely on tailwindcss-animate defaults, which could be inconsistent.
+
+**Fix:** Either switch to `animate-reveal` (which is defined) or add an `animate-fade-in` keyframe definition.
+
+### 8. ExplainCompilationPanel toggle button is too subtle
+The "Show details (X detected)" button is plain text-only, centered, very small, and easy to miss. Most users won't discover this collapsible section.
+
+**Fix:** Give it a subtle background pill or card treatment to make it scannable.
+
+---
+
+## Minor Polish
+
+### 9. Daily Pick accordion chevron direction inconsistency
+DailyPick uses `ChevronUp`/`ChevronDown` based on state, but the rest of the app (FAQ, ExplainPanel) uses a single `ChevronDown` with CSS rotation. This is a minor inconsistency in the icon pattern.
+
+**Fix:** Use a single `ChevronDown` with `rotate-180` transform like the other collapsibles.
+
+### 10. Card images have no error/fallback state
+If a card image fails to load, there's no placeholder -- just a broken image. This can happen with Scryfall CDN hiccups.
+
+**Fix:** Add an `onError` handler that shows a styled fallback with the card name.
+
+### 11. Search example chips below the search bar lack visual hierarchy
+The example queries ("creatures that make treasure tokens", "cheap green ramp spells", "artifacts that produce 2 mana") blend into the background with muted text. They don't look interactive.
+
+**Fix:** Add a subtle border or pill styling to make them look clickable.
+
+---
+
+## Recommended Implementation Order
+1. Fix hero whitespace (quick, high-impact)
+2. Fix "How It Works" animation (may be invisible to users)
+3. Reorder SimilarSearches placement
+4. Align card grid with container-main
+5. Polish ExplainPanel toggle visibility
+6. Light mode hero improvements
+7. Mobile search placeholder
+8. Footer consolidation
+9. Card image fallback
+10. Example chip styling
+11. Chevron consistency
+
+## Technical Details
+
+**Files to modify:**
+- `src/pages/Index.tsx` -- hero padding, SimilarSearches placement, card grid container
+- `src/components/HowItWorksSection.tsx` -- fix animation class
+- `src/index.css` -- add light mode hero gradient, add `animate-fade-in` if needed
+- `src/components/ExplainCompilationPanel.tsx` -- toggle button styling
+- `src/components/UnifiedSearchBar.tsx` -- mobile placeholder, example chip styling
+- `src/components/Footer.tsx` -- mobile layout consolidation
+- `src/components/DailyPick.tsx` -- chevron consistency
+- `src/components/CardItem.tsx` -- image error fallback
