@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react';
+import { DailyPick } from '@/components/DailyPick';
 import { Link } from 'react-router-dom';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 import { EditableQueryBar } from '@/components/EditableQueryBar';
@@ -316,6 +317,9 @@ const Index = () => {
 
         {!hasSearched && (
           <>
+            <div className="container-main mt-6 sm:mt-10">
+              <DailyPick />
+            </div>
             <HowItWorksSection />
             <FAQSection />
           </>
