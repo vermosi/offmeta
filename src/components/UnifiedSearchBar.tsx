@@ -160,7 +160,7 @@ export const UnifiedSearchBar = forwardRef<
   const lastSearchRef = useRef<string>('');
   const abortControllerRef = useRef<AbortController | null>(null);
   const requestTokenRef = useRef(0);
-  const { saveContext, getContext } = useSearchContext();
+  const { saveContext } = useSearchContext();
   const { history, addToHistory, removeFromHistory, clearHistory } = useSearchHistory();
 
   // Abort pending requests on unmount

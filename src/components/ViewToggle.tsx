@@ -1,6 +1,5 @@
 /**
  * View mode toggle for search results: Grid, List, or Image-only.
- * Persists preference in localStorage.
  */
 
 import { LayoutGrid, List, Image } from 'lucide-react';
@@ -10,29 +9,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { type ViewMode, storeViewMode } from '@/components/view-mode-storage';
 
-export type ViewMode = 'grid' | 'list' | 'images';
-
-const VIEW_MODE_KEY = 'offmeta_view_mode';
-
-export function getStoredViewMode(): ViewMode {
-  if (typeof window === 'undefined') return 'grid';
-  try {
-    const stored = localStorage.getItem(VIEW_MODE_KEY);
-    if (stored === 'grid' || stored === 'list' || stored === 'images') return stored;
-  } catch {
-    // Ignore
-  }
-  return 'grid';
-}
-
-function storeViewMode(mode: ViewMode) {
-  try {
-    localStorage.setItem(VIEW_MODE_KEY, mode);
-  } catch {
-    // Ignore
-  }
-}
+export { type ViewMode, getStoredViewMode } from '@/components/view-mode-storage';
 
 interface ViewToggleProps {
   value: ViewMode;
