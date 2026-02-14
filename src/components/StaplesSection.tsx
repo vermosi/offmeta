@@ -24,6 +24,12 @@ const STAPLES = [
   { label: 'Azorius Flickers', query: 'azorius creatures with enters the battlefield abilities', colors: ['W', 'U'] },
   { label: 'Mono-Black Devotion', query: 'black permanents with three or more black pips in mana cost', colors: ['B'] },
   { label: 'Mono-Green Elves', query: 'green elf creatures', colors: ['G'] },
+  { label: 'Temur Landfall', query: 'temur creatures with landfall abilities', colors: ['G', 'U', 'R'] },
+  { label: 'Rakdos Madness', query: 'rakdos cards with madness or discard synergy', colors: ['B', 'R'] },
+  { label: 'Esper Artifacts', query: 'esper artifact synergy cards', colors: ['W', 'U', 'B'] },
+  { label: 'Naya Enchantress', query: 'naya enchantment synergy cards', colors: ['R', 'G', 'W'] },
+  { label: 'Sultai Counters', query: 'sultai creatures with +1/+1 counter synergy', colors: ['B', 'G', 'U'] },
+  { label: 'Mardu Reanimator', query: 'mardu reanimation spells and creatures', colors: ['R', 'W', 'B'] },
 ] as const;
 
 export const StaplesSection = memo(function StaplesSection({
