@@ -87,7 +87,7 @@ export function ResultsStats({ cards }: ResultsStatsProps) {
         aria-label="Toggle results statistics"
       >
         <BarChart3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-        <span className="hidden sm:inline">Stats</span>
+        <span>Stats</span>
         <ChevronDown
           className={cn(
             'h-3 w-3 transition-transform duration-200',
