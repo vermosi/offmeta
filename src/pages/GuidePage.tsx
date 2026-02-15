@@ -125,7 +125,7 @@ export default function GuidePage() {
       </nav>
 
       {/* Main content */}
-        <main className="flex-1 container-main py-8 sm:py-12">
+      <main className="flex-1 container-main py-8 sm:py-12">
         <article className="max-w-2xl mx-auto space-y-10 min-w-0">
           {/* Hero */}
           <header className="space-y-4">
