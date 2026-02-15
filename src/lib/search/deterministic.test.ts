@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildDeterministicIntent } from '../../../supabase/functions/semantic-search/deterministic';
+import { buildDeterministicIntent } from '../../../supabase/functions/semantic-search/deterministic/index';
 
 const getQuery = (input: string) =>
   buildDeterministicIntent(input).deterministicQuery;
