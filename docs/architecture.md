@@ -2,7 +2,7 @@
 
 ## Overview
 
-OffMeta is a React + Vite frontend that sends natural-language search queries to Supabase Edge Functions. The Edge Function translates user input into Scryfall syntax and returns results for display in the UI.
+OffMeta is a React 19 + Vite frontend that sends natural-language search queries to backend edge functions. The edge function translates user input into Scryfall syntax and returns results for display in the UI. The app follows a mobile-first responsive design with standardized spacing across all breakpoints.
 
 ## High-level flow
 
@@ -82,3 +82,14 @@ Supabase tables:
 - `src/components/ErrorBoundary.tsx` provides a user-friendly fallback for React runtime errors.
 - Edge functions return JSON error payloads with appropriate HTTP status codes.
 - `src/lib/core/monitoring.ts` provides hooks for error tracking integration.
+
+## Responsive design
+
+The app follows a mobile-first approach with a standardized spacing system:
+
+- **Sections** (How It Works, FAQ): `py-10 sm:py-14 lg:py-16`
+- **Main content areas**: `py-8 sm:py-10 lg:py-12`
+- **Discovery spacing**: `space-y-10 sm:space-y-12 lg:space-y-14`
+- **Footer**: `py-6 sm:py-8`
+
+Overflow protection is applied at the HTML root level (`overflow-x: hidden`) with `min-w-0` on content wrappers to prevent horizontal scroll on all viewports.

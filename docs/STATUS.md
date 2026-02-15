@@ -2,7 +2,7 @@
 
 ## What this is
 
-OffMeta is a natural-language search frontend for Magic: The Gathering cards. It translates plain-English queries into Scryfall search syntax using Supabase Edge Functions and returns card results in a React + Vite UI.
+OffMeta is a natural-language search frontend for Magic: The Gathering cards. It translates plain-English queries into Scryfall search syntax using backend edge functions and returns card results in a React 19 + Vite UI.
 
 ## How to run
 
@@ -21,27 +21,20 @@ OffMeta is a natural-language search frontend for Magic: The Gathering cards. It
 
 ## Known gaps / TODO
 
-- Add contract tests for Supabase Edge Functions when running locally.
-- Document deployment steps for Supabase + hosting provider once finalized.
+- Add contract tests for Edge Functions when running locally.
+- Document deployment steps once finalized.
 - Expand accessibility audits and keyboard navigation.
-- Fix mobile hamburger menu overlay opacity (nav items overlap content).
+- Add localization support for UI and queries.
 
 ## Recent additions
 
+- **Mobile-First Responsive Design**: Standardized spacing system with progressive scaling across mobile (390px), tablet (768px), and desktop (1280px+). Overflow protection on all pages.
+- **Home Discovery Section**: Dedicated section with Recent Searches, Daily Pick, Staples, How It Works, and FAQ.
 - **Search Guides**: 10 progressive guides (`/guides`) teaching natural language search from basic to expert.
 - **Card Comparison**: Side-by-side comparison of 2–4 cards.
 - **View Modes**: Grid, list, and image-only views with persistent preference.
 - **Export Results**: Copy card names or download CSV.
 - **Staples Section**: Archetype quick-search chips on home page.
 - **Cross-page Navigation**: Hash links work from any page (navigate home + scroll).
-
-## What I changed in this hardening pass
-
-- Added runtime environment validation, examples, and documentation.
-- Standardized scripts, linting, formatting, and Node version hygiene.
-- Expanded unit tests, added coverage thresholds, and mocked API tests.
-- Hardened external fetches with timeouts/retries and improved logging.
-- Added OSS docs, templates, CI, and contributor workflows.
-- Clarified AGPL licensing and trademark/branding guardrails.
-- Added comprehensive security testing suite (300+ tests) covering injection, CORS, ReDoS, prototype pollution, and timing attacks.
-- Added 78 new tests for guides system (data integrity, page rendering, navigation, SEO).
+- **Security Suite**: 300+ security tests covering injection, CORS, ReDoS, prototype pollution, and timing attacks.
+- **Regression Suite**: 70+ regression tests across caching, virtualization, and analytics.

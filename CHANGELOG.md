@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Mobile-first responsive design with standardized spacing system across all pages and sections.
+- Home discovery section component (`HomeDiscoverySection`) grouping pre-search content.
+- How It Works section with 4-step visual guide on the home page.
+- Overflow protection (`overflow-x: hidden`) on HTML root and all page wrappers.
 - 10 progressive search guides (`/guides`) from beginner to expert difficulty.
 - Guides index page with visual cards, difficulty badges, and example queries.
 - Individual guide pages with SEO metadata, JSON-LD structured data, and breadcrumbs.
@@ -27,6 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Standardized section padding to `py-10 sm:py-14 lg:py-16` across How It Works, FAQ, and similar sections.
+- Standardized main content padding to `py-8 sm:py-10 lg:py-12` across guide pages.
+- Footer padding increased to `py-6 sm:py-8`.
+- Hero section uses progressive spacing (`pt-10 sm:pt-14 lg:pt-20`).
 - Header component now uses `useNavigate` and `useLocation` for cross-page hash scrolling.
 - Guide pages use shared Header component instead of inline headers.
 - Guides link in nav updated from single guide to `/guides` index.
@@ -36,5 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Horizontal overflow on mobile viewports across all pages.
+- Guide page button text wrapping causing layout break on narrow screens.
 - Hash navigation (Daily Pick, FAQ, How It Works) now works from non-home pages.
 - Deterministic translation edge cases for mana production and color identity.
