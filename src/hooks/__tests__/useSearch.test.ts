@@ -8,6 +8,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+import type { ScryfallCard } from '@/types/card';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import React from 'react';
@@ -143,7 +144,7 @@ describe('useSearch', () => {
       name: 'Sol Ring',
       set: 'c21',
       rarity: 'uncommon',
-    } as any;
+    } as unknown as ScryfallCard;
 
     act(() => {
       result.current.handleCardClick(mockCard, 0);
@@ -157,7 +158,7 @@ describe('useSearch', () => {
       wrapper: createWrapper(),
     });
 
-    const mockCards = [{ id: '1', name: 'Test' }] as any[];
+    const mockCards = [{ id: '1', name: 'Test' }] as unknown as ScryfallCard[];
     const filters = {
       colors: ['G'],
       types: [],
@@ -185,7 +186,7 @@ describe('useSearch', () => {
   });
 
   it('resets document title when no search', () => {
-    const { result } = renderHook(() => useSearch(), {
+    renderHook(() => useSearch(), {
       wrapper: createWrapper(),
     });
 
