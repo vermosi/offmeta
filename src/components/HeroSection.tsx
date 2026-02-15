@@ -37,7 +37,7 @@ export function HeroSection() {
   return (
     <section
       ref={heroRef}
-      className="relative pt-8 sm:pt-14 lg:pt-20 pb-6 sm:pb-10"
+      className="relative pt-10 sm:pt-14 lg:pt-20 pb-6 sm:pb-8 lg:pb-10"
       aria-labelledby="hero-heading"
     >
       <div className="container-main text-center stagger-children relative z-10">

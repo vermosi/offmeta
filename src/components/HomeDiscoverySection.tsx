@@ -15,7 +15,7 @@ interface HomeDiscoverySectionProps {
 
 export function HomeDiscoverySection({ onSearch }: HomeDiscoverySectionProps) {
   return (
-    <div className="space-y-10 sm:space-y-14">
+    <div className="space-y-10 sm:space-y-12 lg:space-y-14">
       <div className="container-main">
         <RecentSearches onSearch={onSearch} />
       </div>

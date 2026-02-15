@@ -36,13 +36,13 @@ const FAQ_ITEMS = [
 export function FAQSection() {
   return (
     <section
-      className="py-12 sm:py-16"
+      className="py-10 sm:py-14 lg:py-16"
       aria-labelledby="faq-heading"
     >
       <div className="container-main">
         <h2
           id="faq-heading"
-          className="text-2xl sm:text-3xl font-semibold text-center mb-8 sm:mb-12"
+          className="text-2xl sm:text-3xl font-semibold text-center mb-8 sm:mb-10"
         >
           Frequently Asked Questions
         </h2>

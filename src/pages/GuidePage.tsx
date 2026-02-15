@@ -114,7 +114,7 @@ export default function GuidePage() {
       <Header />
 
       {/* Breadcrumb */}
-      <nav className="container-main pt-4 pb-2" aria-label="Breadcrumb">
+      <nav className="container-main pt-4 sm:pt-6 pb-2" aria-label="Breadcrumb">
         <ol className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <li><Link to="/" className="hover:text-foreground transition-colors">Home</Link></li>
           <li aria-hidden="true">/</li>
@@ -125,8 +125,8 @@ export default function GuidePage() {
       </nav>
 
       {/* Main content */}
-      <main className="flex-1 container-main py-8 sm:py-12">
-        <article className="max-w-2xl mx-auto space-y-10 min-w-0">
+      <main className="flex-1 container-main py-8 sm:py-10 lg:py-12">
+        <article className="max-w-2xl mx-auto space-y-8 sm:space-y-10 min-w-0">
           {/* Hero */}
           <header className="space-y-4">
             <h1 className="text-2xl sm:text-3xl lg:text-5xl font-semibold text-foreground leading-tight">
