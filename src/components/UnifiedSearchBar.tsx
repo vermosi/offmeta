@@ -19,6 +19,7 @@ import { useIsMobile } from '@/hooks/useMobile';
 import { SearchFeedback } from '@/components/SearchFeedback';
 import { SearchHelpModal } from '@/components/SearchHelpModal';
 import type { FilterState } from '@/types/filters';
+import { useTypingPlaceholder } from '@/hooks/useTypingPlaceholder';
 import type { SearchIntent } from '@/types/search';
 import { logger } from '@/lib/core/logger';
 import { translateQueryWithDedup, type TranslationResult } from '@/hooks/useSearchQuery';
@@ -152,6 +153,12 @@ export const UnifiedSearchBar = forwardRef<
   const [query, setQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+
+  // Typing animation for placeholder on first visit
+  const { placeholder: animatedPlaceholder, isAnimating: isTyping, stop: stopTyping } = useTypingPlaceholder(
+    isMobile ? 'Describe a card...' : "Describe what you're looking for...",
+    !query && !isFocused,
+  );
   const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
   const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
   const [rateLimitCountdown, setRateLimitCountdown] = useState<number>(0);
@@ -403,11 +410,7 @@ export const UnifiedSearchBar = forwardRef<
               ref={inputRef}
               id="search-input"
               type="search"
-              placeholder={
-                isMobile
-                  ? 'Describe a card...'
-                  : "Describe what you're looking for..."
-              }
+              placeholder={animatedPlaceholder}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => {
@@ -419,6 +422,7 @@ export const UnifiedSearchBar = forwardRef<
                 }
               }}
               onFocus={() => {
+                stopTyping();
                 setIsFocused(true);
                 if (history.length > 0) {
                   setShowHistoryDropdown(true);
@@ -434,7 +438,7 @@ export const UnifiedSearchBar = forwardRef<
                   setTimeout(() => setShowHistoryDropdown(false), 200);
                 }
               }}
-              className="flex-1 min-w-0 bg-transparent text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none py-2 px-2 sm:px-1"
+              className={`flex-1 min-w-0 bg-transparent text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none py-2 px-2 sm:px-1 ${isTyping ? 'placeholder:text-foreground/70' : ''}`}
               autoComplete="off"
               autoCorrect="off"
               spellCheck="false"
