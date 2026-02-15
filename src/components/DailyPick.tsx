@@ -81,8 +81,17 @@ export function DailyPick() {
 
         {/* Content */}
         {loading ? (
-          <div className="h-32 flex items-center justify-center">
-            <div className="shimmer h-6 w-48 rounded-lg" />
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+            <div className="flex-shrink-0 mx-auto sm:mx-0">
+              <div className="shimmer w-40 sm:w-56 aspect-[2.5/3.5] rounded-lg" />
+            </div>
+            <div className="flex-1 space-y-3 min-w-0">
+              <div className="shimmer h-6 w-40 rounded" />
+              <div className="shimmer h-4 w-24 rounded" />
+              <div className="shimmer h-20 w-full rounded-lg" />
+              <div className="shimmer h-4 w-full rounded" />
+              <div className="shimmer h-4 w-3/4 rounded" />
+            </div>
           </div>
         ) : card ? (
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">

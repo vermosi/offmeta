@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { Logo } from '@/components/Logo';
 import { cn } from '@/lib/utils';
 
 const NAV_LINKS = [
@@ -114,22 +115,7 @@ export function Header() {
             className="group flex items-center gap-2.5 min-h-0 focus-ring rounded-lg -ml-2 px-2 py-1"
             aria-label="OffMeta - Home"
           >
-            <svg
-              viewBox="0 0 32 32"
-              className="h-7 w-7 sm:h-8 sm:w-8 transition-transform duration-200 group-hover:scale-105"
-              aria-hidden="true"
-            >
-              <defs>
-                <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="hsl(300, 90%, 60%)" />
-                  <stop offset="100%" stopColor="hsl(195, 95%, 55%)" />
-                </linearGradient>
-              </defs>
-              <path d="M16 2L30 16L16 30L2 16L16 2Z" fill="url(#logoGradient)" opacity="0.15" />
-              <path d="M16 2L30 16L16 30L2 16L16 2Z" stroke="url(#logoGradient)" strokeWidth="1.5" fill="none" />
-              <path d="M8 16C8 16 11 11 16 11C21 11 24 16 24 16C24 16 21 21 16 21C11 21 8 16 8 16Z" stroke="url(#logoGradient)" strokeWidth="1.25" fill="none" />
-              <circle cx="16" cy="16" r="2" fill="url(#logoGradient)" />
-            </svg>
+            <Logo variant="gradient" className="h-7 w-7 sm:h-8 sm:w-8 transition-transform duration-200 group-hover:scale-105" />
             <span className="text-lg font-semibold tracking-tight">OffMeta</span>
           </Link>
 

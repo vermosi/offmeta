@@ -26,8 +26,7 @@ const MAX_CARD_WIDTH = 280;
 const BREAKPOINTS = [
   { minWidth: 1024, columns: 4 }, // lg+
   { minWidth: 768, columns: 3 }, // md
-  { minWidth: 480, columns: 2 }, // sm
-  { minWidth: 0, columns: 1 }, // xs/mobile
+  { minWidth: 0, columns: 2 },   // mobile
 ];
 
 export function VirtualizedCardGrid({

@@ -66,7 +66,7 @@ export const StaplesSection = memo(function StaplesSection({
   }, [checkScroll]);
 
   return (
-    <section className="w-full max-w-3xl mx-auto overflow-hidden" aria-labelledby="staples-heading">
+    <section className="w-full max-w-2xl mx-auto overflow-hidden" aria-labelledby="staples-heading">
       <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden p-5 sm:p-6">
         <div className="flex items-center gap-2.5 mb-4">
           <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary/10">
@@ -82,8 +82,8 @@ export const StaplesSection = memo(function StaplesSection({
           </div>
         </div>
 
-        {/* Mobile: wrapping grid */}
-        <div className="flex flex-col gap-1.5 sm:hidden">
+        {/* Mobile: 2-column grid */}
+        <div className="grid grid-cols-2 gap-1.5 sm:hidden">
           {STAPLES.map((s) => (
             <button
               key={s.label}
