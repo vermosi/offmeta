@@ -128,11 +128,11 @@ export default function GuidePage() {
       <main className="flex-1 container-main py-8 sm:py-10 lg:py-12">
         <article className="max-w-2xl mx-auto space-y-8 sm:space-y-10 min-w-0">
           {/* Hero */}
-          <header className="space-y-4">
-            <h1 className="text-2xl sm:text-3xl lg:text-5xl font-semibold text-foreground leading-tight">
+          <header className="space-y-4 min-w-0">
+            <h1 className="text-2xl sm:text-3xl lg:text-5xl font-semibold text-foreground leading-tight break-words">
               {guide.heading}
             </h1>
-            <p className="text-lg text-muted-foreground">{guide.subheading}</p>
+            <p className="text-lg text-muted-foreground break-words">{guide.subheading}</p>
           </header>
 
           {/* CTA - Search this */}
@@ -150,8 +150,8 @@ export default function GuidePage() {
           </div>
 
           {/* Intro */}
-          <section className="prose-section">
-            <p className="text-base leading-relaxed text-foreground/90">{guide.intro}</p>
+          <section className="prose-section min-w-0">
+            <p className="text-base leading-relaxed text-foreground/90 break-words">{guide.intro}</p>
           </section>
 
           {/* How OffMeta Helps */}
@@ -162,9 +162,9 @@ export default function GuidePage() {
                 <h2 className="text-xl font-semibold text-foreground">How OffMeta Helps</h2>
               </div>
               <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 overflow-hidden">
-                <div className="flex flex-wrap items-center gap-2 mb-2 text-xs text-muted-foreground">
+               <div className="flex flex-wrap items-center gap-2 mb-2 text-xs text-muted-foreground min-w-0">
                   <span>You type:</span>
-                  <code className="px-2 py-0.5 rounded bg-muted text-foreground font-mono text-xs truncate max-w-full">
+                  <code className="px-2 py-0.5 rounded bg-muted text-foreground font-mono text-xs break-all max-w-full">
                     {guide.searchQuery}
                   </code>
                 </div>
@@ -176,7 +176,7 @@ export default function GuidePage() {
                     </code>
                   </div>
                 )}
-                <p className="text-sm text-foreground/85 leading-relaxed">
+                <p className="text-sm text-foreground/85 leading-relaxed break-words">
                   {guide.howOffmetaHelps}
                 </p>
               </div>
