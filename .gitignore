@@ -17,6 +17,7 @@ coverage
 .eslintcache
 
 # Editor directories and files
+.lovable/*
 .vscode/*
 !.vscode/extensions.json
 .idea
