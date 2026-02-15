@@ -32,7 +32,7 @@ export const EmptyState = ({ query, onTryExample }: EmptyStateProps) => {
       </h3>
 
       {query && (
-        <p className="text-small text-muted-foreground mb-8 max-w-sm">
+        <p className="text-sm text-muted-foreground mb-8 max-w-sm">
           We couldn't find any cards matching "
           <span className="font-medium text-foreground">{query}</span>"
         </p>
@@ -42,11 +42,11 @@ export const EmptyState = ({ query, onTryExample }: EmptyStateProps) => {
       <div className="surface-elevated p-5 max-w-md w-full mb-8">
         <div className="flex items-center gap-2 mb-3">
           <Lightbulb className="h-4 w-4 text-accent" />
-          <span className="text-small font-medium text-foreground">
+          <span className="text-sm font-medium text-foreground">
             Search tips
           </span>
         </div>
-        <ul className="text-small text-muted-foreground space-y-2 text-left">
+        <ul className="text-sm text-muted-foreground space-y-2 text-left">
           {suggestions.map((tip, i) => (
             <li key={i} className="flex items-start gap-2">
               <span className="text-accent mt-0.5">•</span>

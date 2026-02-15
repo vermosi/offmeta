@@ -1,5 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useCallback, useState } from 'react';
-import { DailyPick } from '@/components/DailyPick';
+import { lazy, Suspense, useEffect, useCallback, useState } from 'react';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 import { EditableQueryBar } from '@/components/EditableQueryBar';
 import { ExplainCompilationPanel } from '@/components/ExplainCompilationPanel';
@@ -12,13 +11,13 @@ import { CardSkeletonGrid } from '@/components/CardSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Footer } from '@/components/Footer';
-import { FAQSection } from '@/components/FAQSection';
-import { HowItWorksSection } from '@/components/HowItWorksSection';
 import { Header } from '@/components/Header';
+import { HeroSection } from '@/components/HeroSection';
+import { HomeDiscoverySection } from '@/components/HomeDiscoverySection';
+import { LoadMoreIndicator } from '@/components/LoadMoreIndicator';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { SimilarSearches } from '@/components/SimilarSearches';
 import { VirtualizedCardGrid } from '@/components/VirtualizedCardGrid';
-import { RandomCardButton } from '@/components/RandomCardButton';
 import { ExportResults } from '@/components/ExportResults';
 import { ViewToggle } from '@/components/ViewToggle';
 import { type ViewMode, getStoredViewMode } from '@/lib/view-mode-storage';
@@ -27,9 +26,8 @@ import { ArtLightbox } from '@/components/ArtLightbox';
 import { CompareBar } from '@/components/CompareBar';
 import { CompareModal } from '@/components/CompareModal';
 import { PwaInstallBanner } from '@/components/PwaInstallBanner';
-import { StaplesSection } from '@/components/StaplesSection';
 
-import { Loader2, GitCompareArrows } from 'lucide-react';
+import { GitCompareArrows } from 'lucide-react';
 import { CLIENT_CONFIG } from '@/lib/config';
 import { useSearch } from '@/hooks/useSearch';
 import { useCompare } from '@/hooks/useCompare';
@@ -97,36 +95,7 @@ const Index = () => {
   const openLightbox = useCallback((index: number) => setLightboxIndex(index), []);
   const closeLightbox = useCallback(() => setLightboxIndex(null), []);
 
-  // Parallax scroll effect for glow orbs
-  const heroRef = useRef<HTMLElement>(null);
-  const orb1Ref = useRef<HTMLDivElement>(null);
-  const orb2Ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) return;
-
-    let ticking = false;
-    const handleScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        const scrollY = window.scrollY;
-        if (orb1Ref.current) {
-          orb1Ref.current.style.transform = `translate(${scrollY * 0.02}px, ${scrollY * 0.05}px)`;
-        }
-        if (orb2Ref.current) {
-          orb2Ref.current.style.transform = `translate(${-scrollY * 0.03}px, ${scrollY * 0.04}px)`;
-        }
-        ticking = false;
-      });
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Handle hash-based scroll when navigating from another page (e.g. #daily-pick)
+  // Handle hash-based scroll when navigating from another page
   useEffect(() => {
     const hash = window.location.hash;
     if (!hash) return;
@@ -140,36 +109,10 @@ const Index = () => {
   return (
     <ErrorBoundary>
       <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background relative">
-        {/* Full-page gradient background */}
-        <div
-          className="fixed inset-0 pointer-events-none"
-          aria-hidden="true"
-          style={{
-            background: 'radial-gradient(ellipse 80% 50% at 50% -20%, hsl(var(--gradient-start) / 0.12) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 80% 60%, hsl(var(--gradient-end) / 0.08) 0%, transparent 50%), radial-gradient(ellipse 50% 30% at 20% 80%, hsl(var(--gradient-start) / 0.06) 0%, transparent 50%)',
-            zIndex: 0,
-          }}
-        />
-        {/* Noise texture overlay */}
-        <div
-          className="fixed inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.04]"
-          aria-hidden="true"
-          style={{
-            backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")",
-            backgroundRepeat: 'repeat',
-            backgroundSize: '256px 256px',
-            zIndex: 0,
-          }}
-        />
-        {/* Mesh grid texture */}
-        <div
-          className="fixed inset-0 pointer-events-none"
-          aria-hidden="true"
-          style={{
-            backgroundImage: 'linear-gradient(hsl(var(--border) / 0.04) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border) / 0.04) 1px, transparent 1px)',
-            backgroundSize: '60px 60px',
-            zIndex: 0,
-          }}
-        />
+        {/* Background layers */}
+        <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
+        <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
+        <div className="fixed inset-0 pointer-events-none bg-page-mesh" aria-hidden="true" />
 
         {/* Skip link */}
         <a href="#main-content" className="skip-link">
@@ -178,42 +121,7 @@ const Index = () => {
 
         <Header />
 
-        {/* Hero Section */}
-        {!hasSearched && (
-          <section
-            ref={heroRef}
-            className="relative pt-8 sm:pt-14 lg:pt-20 pb-6 sm:pb-10"
-            aria-labelledby="hero-heading"
-          >
-
-            <div className="container-main text-center stagger-children relative z-10">
-              <h1
-                id="hero-heading"
-                className="mb-5 sm:mb-8 text-foreground text-4xl sm:text-5xl lg:text-7xl font-semibold"
-              >
-                Find Magic Cards
-                <br />
-                <span className="text-gradient">Like You Think</span>
-              </h1>
-
-              <div className="space-y-1 sm:space-y-2 mb-6 sm:mb-8">
-                <p className="text-base sm:text-lg lg:text-xl text-muted-foreground">
-                  Describe what you're looking for in plain English.
-                </p>
-                <p className="text-base sm:text-lg lg:text-xl text-muted-foreground">
-                  No complex syntax. No guessing.
-                </p>
-                <p className="text-base sm:text-lg lg:text-xl text-foreground font-medium mt-3">
-                  Just natural conversation.
-                </p>
-              </div>
-
-              <div className="flex justify-center">
-                <RandomCardButton />
-              </div>
-            </div>
-          </section>
-        )}
+        {!hasSearched && <HeroSection />}
 
         {/* Main content */}
         <main
@@ -249,7 +157,7 @@ const Index = () => {
               </div>
             )}
 
-            {/* Explain panel — hidden on mobile to reduce clutter */}
+            {/* Explain panel — hidden on mobile */}
             {hasSearched && (
               <div className="hidden sm:block animate-reveal">
                 <ExplainCompilationPanel
@@ -375,7 +283,7 @@ const Index = () => {
                     </div>
                   ) : (
                     <div
-                      className="grid grid-cols-1 min-[480px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 content-visibility-auto justify-items-center"
+                      className="grid grid-cols-2 min-[480px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 content-visibility-auto"
                       role="list"
                       aria-label="Search results"
                       data-testid="standard-grid"
@@ -425,41 +333,13 @@ const Index = () => {
                   </div>
                 )}
 
-                {displayCards.length <= CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD && (
-                  <div
-                    ref={loadMoreRef}
-                    className="flex justify-center pt-8 pb-4"
-                    aria-hidden="true"
-                  >
-                    {isFetchingNextPage && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                        <span>Loading more cards...</span>
-                      </div>
-                    )}
-                    {!hasNextPage && cards.length > 0 && (
-                      <span className="text-sm text-muted-foreground">
-                        You've reached the end • {totalCards.toLocaleString()} cards total
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                {displayCards.length > CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD && (
-                  <div className="flex justify-center pt-4 pb-4">
-                    {isFetchingNextPage && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                        <span>Loading more cards...</span>
-                      </div>
-                    )}
-                    {!hasNextPage && cards.length > 0 && (
-                      <span className="text-sm text-muted-foreground">
-                        {totalCards.toLocaleString()} cards total
-                      </span>
-                    )}
-                  </div>
-                )}
+                <LoadMoreIndicator
+                  ref={displayCards.length <= CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD ? loadMoreRef : undefined}
+                  isFetchingNextPage={isFetchingNextPage}
+                  hasNextPage={hasNextPage}
+                  totalCards={totalCards}
+                  showEndMessage={cards.length > 0}
+                />
               </>
             ) : isSearching ? (
               <CardSkeletonGrid count={10} />
@@ -469,22 +349,7 @@ const Index = () => {
           </div>
         </main>
 
-        {!hasSearched && (
-          <>
-            <div id="daily-pick" className="container-main mt-6 sm:mt-10">
-              <DailyPick />
-            </div>
-            <div className="container-main mt-6 sm:mt-10">
-              <StaplesSection onSearch={handleTryExample} />
-            </div>
-            <div id="how-it-works">
-              <HowItWorksSection />
-            </div>
-            <div id="faq">
-              <FAQSection />
-            </div>
-          </>
-        )}
+        {!hasSearched && <HomeDiscoverySection onSearch={handleTryExample} />}
 
         <Footer />
         <ScrollToTop threshold={800} />
@@ -516,7 +381,6 @@ const Index = () => {
           requestId={currentRequestId || undefined}
         />
 
-        {/* Compare bar + modal */}
         <CompareBar
           cards={compareCards}
           onRemove={removeCompareCard}
@@ -529,7 +393,6 @@ const Index = () => {
           onClose={closeCompare}
         />
 
-        {/* PWA install prompt */}
         <PwaInstallBanner />
       </div>
     </ErrorBoundary>

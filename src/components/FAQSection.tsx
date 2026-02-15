@@ -46,7 +46,7 @@ export function FAQSection() {
         >
           Frequently Asked Questions
         </h2>
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-2xl mx-auto">
           <Accordion type="single" collapsible className="w-full space-y-2">
             {FAQ_ITEMS.map((item, index) => (
               <AccordionItem

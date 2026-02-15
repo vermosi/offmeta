@@ -34,7 +34,7 @@ export const CardItem = memo(function CardItem({
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
-      className="relative w-full max-w-[280px] mx-auto aspect-[2.5/3.5] rounded-xl overflow-hidden bg-secondary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-transform duration-200 hover:scale-[1.02]"
+      className="relative w-full aspect-[2.5/3.5] rounded-xl overflow-hidden bg-secondary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-transform duration-200 hover:scale-[1.02]"
       aria-label={`View details for ${card.name}`}
     >
       {imgError ? (
