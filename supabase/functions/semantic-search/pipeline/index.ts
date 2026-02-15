@@ -31,7 +31,7 @@ import {
   detectQueryConflicts,
   hasImpossibleTypeCombination,
 } from './conflicts.ts';
-import { buildDeterministicIntent } from '../deterministic.ts';
+import { buildDeterministicIntent } from '../deterministic/index.ts';
 import { validateQuery as sanitizeQuery } from '../validation.ts';
 
 /**

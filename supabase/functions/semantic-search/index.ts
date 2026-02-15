@@ -1,5 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { buildDeterministicIntent } from './deterministic.ts';
+import { buildDeterministicIntent } from './deterministic/index.ts';
 import { buildSystemPrompt, type QueryTier } from './prompts.ts';
 import { checkRateLimit, checkSessionRateLimit } from '../_shared/rateLimit.ts';
 import { getCorsHeaders, validateAuth } from '../_shared/auth.ts';

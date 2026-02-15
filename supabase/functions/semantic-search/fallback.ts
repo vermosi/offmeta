@@ -1,4 +1,4 @@
-import { buildDeterministicIntent } from './deterministic.ts';
+import { buildDeterministicIntent } from './deterministic/index.ts';
 import { validateQuery } from './validation.ts';
 
 /**
