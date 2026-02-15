@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
 
+const LIVE_TESTS_ENABLED = process.env.RUN_SCRYFALL_LIVE_TESTS === '1';
+const describeIfLive = LIVE_TESTS_ENABLED ? describe : describe.skip;
+
 /**
  * Scryfall Tagger Tags Validation Test Suite
  * Tests otag: and atag: values against Scryfall API to verify they exist.
@@ -296,7 +299,7 @@ async function validateTagAgainstScryfall(
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-describe('Scryfall Tagger Tags Validation', () => {
+describeIfLive('Scryfall Tagger Tags Validation', () => {
   describe('Oracle Tags (otag:) - Functional card mechanics', () => {
     ORACLE_TAGS.forEach((tagInfo, index) => {
       it(`otag:${tagInfo.tag} - ${tagInfo.description}`, async () => {

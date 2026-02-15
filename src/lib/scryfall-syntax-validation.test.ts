@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
+const LIVE_TESTS_ENABLED = process.env.RUN_SCRYFALL_LIVE_TESTS === '1';
+const describeIfLive = LIVE_TESTS_ENABLED ? describe : describe.skip;
 /**
  * Scryfall Syntax Validation Test Suite
  * Tests queries directly against Scryfall API to verify syntax validity.
@@ -321,7 +323,7 @@ async function validateQueryAgainstScryfall(
 // Rate limit helper - Scryfall allows 10 requests per second
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-describe('Scryfall Syntax Validation', () => {
+describeIfLive('Scryfall Syntax Validation', () => {
   // Group tests by expected result
   const passCases = TEST_CASES.filter((tc) => tc.expected === 'PASS');
   const failCases = TEST_CASES.filter((tc) => tc.expected === 'FAIL');

@@ -31,3 +31,22 @@ jobs:
         with:
           name: coverage
           path: coverage
+
+  live-scryfall-validation:
+    runs-on: ubuntu-latest
+    # Run weekly and on-demand only — not on every push/PR
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm install
+      - name: Run live Scryfall validation
+        env:
+          RUN_SCRYFALL_LIVE_TESTS: '1'
+        run: npm run test -- src/lib/scryfall-syntax-validation.test.ts src/lib/scryfall-otag-validation.test.ts

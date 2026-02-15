@@ -1,6 +1,6 @@
 # Testing
 
-OffMeta uses [Vitest](https://vitest.dev/) as the primary testing framework with 1,200+ tests across multiple categories.
+OffMeta uses [Vitest](https://vitest.dev/) as the primary testing framework with 1,300+ tests across multiple categories.
 
 ## Run tests
 
@@ -95,6 +95,21 @@ Located in `src/lib/regression/`. Integration tests for caching, virtualization,
 npm run test -- src/lib/regression
 ```
 
+### Live Scryfall Validation (opt-in)
+
+Two suites validate queries and tags against the live Scryfall API:
+
+- `src/lib/scryfall-syntax-validation.test.ts` — 100+ syntax queries
+- `src/lib/scryfall-otag-validation.test.ts` — 170+ oracle/art tags
+
+These are **skipped by default** to keep CI deterministic. Enable with:
+
+```bash
+RUN_SCRYFALL_LIVE_TESTS=1 npm run test -- src/lib/scryfall-syntax-validation.test.ts src/lib/scryfall-otag-validation.test.ts
+```
+
+A dedicated CI job runs these weekly (see `.github/workflows/ci.yml`).
+
 ## Security Testing Utilities
 
 The security module exports reusable utilities for custom tests:
@@ -113,4 +128,4 @@ import {
 
 ## CI Integration
 
-All tests run automatically on pull requests via GitHub Actions (`.github/workflows/ci.yml`). Security tests are included in the regression suite exported from `src/lib/regression/index.ts`.
+All tests run automatically on pull requests via GitHub Actions (`.github/workflows/ci.yml`). Security tests are included in the regression suite exported from `src/lib/regression/index.ts`. Live Scryfall validation runs in a separate job on a weekly schedule to avoid flaky builds from external API dependencies.
