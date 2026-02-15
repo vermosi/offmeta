@@ -56,7 +56,7 @@ export const DAILY_GEMS: DailyGem[] = [
   { name: 'Species Specialist', reason: 'Draw a card whenever a creature of the chosen type dies. Tribal card advantage engine.' },
   { name: 'Reins of Power', reason: 'Swap creatures with an opponent at instant speed. Blocks with their board, attacks with yours.' },
   { name: 'Virtus the Veiled', reason: 'Halves an opponent\'s life on hit. With evasion support, ends games fast.' },
-  { name: 'Lunar Force', reason: 'Counters the next spell automatically. Flicker it to reset. Repeatable free counterspell.' },
+  { name: 'Lunar Force', reason: 'Auto-counters the next opponent spell on cast. Cheap enchantment-based protection that forces opponents to waste a spell before landing their real threat.' },
   { name: 'Goblin Welder', reason: 'Swap artifacts between graveyard and battlefield at instant speed. Broken with big artifacts.' },
   { name: 'Helm of the Host', reason: 'Creates nonlegendary token copies of equipped creature every combat. Infinite combo enabler.' },
   { name: 'Skullwinder', reason: 'Eternal Witness with deathtouch that also lets an opponent recur a card. Political recursion.' },
