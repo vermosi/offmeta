@@ -7,7 +7,7 @@
 import { ManaCost, OracleText } from '@/components/ManaSymbol';
 import { Badge, type BadgeProps } from '@/components/ui/badge';
 import { Palette, Shield } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/core/utils';
 import type { CardModalDetailsProps } from './types';
 
 function getRarityVariant(rarity: string): BadgeProps['variant'] {

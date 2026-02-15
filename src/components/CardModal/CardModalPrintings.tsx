@@ -5,7 +5,7 @@
  */
 
 import { Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/core/utils';
 import type { CardModalPrintingsProps } from './types';
 
 export function CardModalPrintings({

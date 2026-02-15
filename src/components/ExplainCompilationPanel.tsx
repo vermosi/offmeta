@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { SearchIntent } from '@/types/search';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/core/utils';
 import {
   Collapsible,
   CollapsibleContent,

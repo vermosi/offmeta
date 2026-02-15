@@ -16,7 +16,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/core/utils';
 import { toast } from 'sonner';
 
 interface SearchInterpretationProps {

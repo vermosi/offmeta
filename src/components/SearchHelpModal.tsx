@@ -27,7 +27,7 @@ import {
   Users,
   Share2,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/core/utils';
 
 interface SearchHelpModalProps {
   onTryExample?: (query: string) => void;

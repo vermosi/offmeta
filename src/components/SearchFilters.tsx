@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/popover';
 import type { ScryfallCard } from '@/types/card';
 import type { FilterState } from '@/types/filters';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/core/utils';
 import { Filter, ArrowUpDown, X, ChevronDown } from 'lucide-react';
 
 // Color definitions with mana symbols

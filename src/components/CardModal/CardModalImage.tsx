@@ -6,7 +6,7 @@
 
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/core/utils';
 import type { CardModalImageProps } from './types';
 
 export function CardModalImage({

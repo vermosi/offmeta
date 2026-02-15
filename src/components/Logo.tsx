@@ -2,7 +2,7 @@
  * Shared Logo SVG component used in Header and Footer.
  */
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/core/utils';
 
 interface LogoProps {
   className?: string;

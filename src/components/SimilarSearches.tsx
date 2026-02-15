@@ -7,7 +7,7 @@ import { memo, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { getSimilarSearches } from '@/data/similar-searches';
 import { Search, BookOpen } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/core/utils';
 
 interface SimilarSearchesProps {
   originalQuery: string;

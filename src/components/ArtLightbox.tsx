@@ -5,7 +5,7 @@
 
 import { useEffect, useCallback, useState, useRef } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/core/utils';
 import type { ScryfallCard } from '@/types/card';
 import { getCardImage } from '@/lib/scryfall/client';
 

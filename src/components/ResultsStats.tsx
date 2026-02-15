@@ -6,7 +6,7 @@
 
 import { useMemo, useState, useCallback } from 'react';
 import { ChevronDown, BarChart3 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/core/utils';
 import { ManaSymbol } from '@/components/ManaSymbol';
 import type { ScryfallCard } from '@/types/card';
 

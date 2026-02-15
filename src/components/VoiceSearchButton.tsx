@@ -6,7 +6,7 @@ import {
   TooltipTrigger,
   TooltipProvider,
 } from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/core/utils';
 
 interface VoiceSearchButtonProps {
   isListening: boolean;

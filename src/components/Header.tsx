@@ -8,7 +8,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Logo } from '@/components/Logo';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/core/utils';
 
 const NAV_LINKS = [
   { label: 'How It Works', href: '#how-it-works' },

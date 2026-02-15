@@ -5,7 +5,7 @@
  */
 
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/core/utils';
 import { formatFormatName, type CardModalLegalitiesProps } from './types';
 
 export function CardModalLegalities({
