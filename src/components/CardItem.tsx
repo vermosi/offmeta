@@ -70,17 +70,17 @@ export const CardItem = memo(function CardItem({
         />
       )}
 
-      {/* Info overlay — visible on hover/focus */}
+      {/* Info overlay — always visible on mobile, hover on desktop */}
       <div
-        className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent pt-8 pb-2 px-2.5 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-200 pointer-events-none"
+        className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent pt-6 sm:pt-8 pb-1.5 sm:pb-2 px-2 sm:px-2.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100 transition-opacity duration-200 pointer-events-none"
         aria-hidden="true"
       >
         <div className="flex items-end justify-between gap-1">
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] leading-tight font-semibold text-white truncate">
+            <p className="text-[10px] sm:text-[11px] leading-tight font-semibold text-white truncate">
               {card.name}
             </p>
-            <p className="text-[10px] leading-tight text-white/70 truncate mt-0.5">
+            <p className="text-[9px] sm:text-[10px] leading-tight text-white/70 truncate mt-0.5 hidden min-[480px]:block">
               {card.type_line}
             </p>
           </div>
@@ -89,7 +89,7 @@ export const CardItem = memo(function CardItem({
               <ManaCost cost={manaCost} size="sm" className="drop-shadow" />
             )}
             {price && (
-              <span className="text-[10px] font-medium text-emerald-300 tabular-nums">
+              <span className="text-[9px] sm:text-[10px] font-medium text-emerald-300 tabular-nums">
                 {price}
               </span>
             )}
