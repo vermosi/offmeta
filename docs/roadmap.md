@@ -2,6 +2,8 @@
 
 ## Completed
 
+- Mobile-first responsive design with standardized spacing system (progressive padding/margins across breakpoints)
+- Home discovery section (Recent Searches, Daily Pick, Staples, How It Works, FAQ)
 - 10 progressive search guides (beginner → expert) with SEO optimization and JSON-LD
 - Card comparison view (compare 2–4 cards side-by-side)
 - Multiple view modes (grid, list, image-only) with persistent preference
@@ -9,15 +11,15 @@
 - Staples section with archetype-based quick searches
 - Cross-page header navigation with hash-based scrolling
 - Expanded deterministic translation with 30+ keyword patterns (ETB, LTB, myriad, blitz, connive, offspring, backup, goad)
-- Added comprehensive security testing suite (300+ tests) covering injection, CORS, ReDoS, prototype pollution, timing attacks
-- Added regression test suite with 70+ tests across caching, virtualization, and analytics
-- Implemented virtualization for large result sets (50+ cards)
-- Added session-level rate limiting and spam prevention
-- Built query deduplication and duplicate parameter sanitization
-- Created comprehensive Scryfall syntax validation
+- Comprehensive security testing suite (300+ tests) covering injection, CORS, ReDoS, prototype pollution, timing attacks
+- Regression test suite with 70+ tests across caching, virtualization, and analytics
+- Virtualization for large result sets (50+ cards)
+- Session-level rate limiting and spam prevention
+- Query deduplication and duplicate parameter sanitization
+- Comprehensive Scryfall syntax validation
 - Reorganized codebase into domain folders (`core/`, `scryfall/`, `search/`, `security/`, `pwa/`)
 - Removed 16 unused UI components (~75KB bundle reduction)
-- Added error monitoring placeholders (Sentry-ready)
+- Error monitoring placeholders (Sentry-ready)
 
 ## Near term
 
