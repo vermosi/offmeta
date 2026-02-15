@@ -16,8 +16,6 @@ Consistent file naming is enforced across the codebase:
 | Constants | SCREAMING_SNAKE_CASE (exports) | `SECURITY_LIMITS`, `API_ENDPOINTS` |
 
 **Note:** The `src/lib/` folder uses kebab-case as the preferred convention, but ESLint enforcement is only applied to specific folders to avoid churn in existing files.
-| UI components (shadcn) | kebab-case | `button.tsx`, `dialog.tsx` |
-| Constants | SCREAMING_SNAKE_CASE (exports) | `SECURITY_LIMITS`, `API_ENDPOINTS` |
 
 ### Directory Structure
 
