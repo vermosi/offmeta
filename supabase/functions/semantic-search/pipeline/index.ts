@@ -23,7 +23,7 @@ import type {
 } from './types.ts';
 import { normalizeQuery, isRawScryfallSyntax } from './normalize.ts';
 import { classifyIntent } from './classify.ts';
-import { extractSlots } from './slots.ts';
+import { extractSlots } from './slots/index.ts';
 import { findConceptMatches } from './concepts.ts';
 import { assembleQuery, applyExternalFilters } from './assemble.ts';
 import { validateAndFixQuery } from './repair.ts';
