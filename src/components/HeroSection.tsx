@@ -50,20 +50,14 @@ export function HeroSection() {
           <span className="text-gradient">Like You Think</span>
         </h1>
 
-        <div className="space-y-1 sm:space-y-2 mb-6 sm:mb-8">
-          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground">
-            Describe what you're looking for in plain English.
-          </p>
-          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground">
-            No complex syntax. No guessing.
-          </p>
-          <p className="text-base sm:text-lg lg:text-xl text-foreground font-medium mt-3">
-            Just natural conversation.
-          </p>
-        </div>
+        <p className="text-base sm:text-lg lg:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-lg mx-auto">
+          Skip Scryfall syntax. Just describe what you need —
+          <span className="text-foreground font-medium"> OffMeta translates it instantly.</span>
+        </p>
 
-        <div className="flex justify-center">
+        <div className="flex items-center justify-center gap-3 sm:gap-4 mb-2">
           <RandomCardButton />
+          <span className="text-xs text-muted-foreground/60">or start typing below ↓</span>
         </div>
       </div>
     </section>
