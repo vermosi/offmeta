@@ -1,18 +1,15 @@
 /**
  * Unified search bar component for natural language MTG card search.
- * Includes debouncing, rate limit handling, and timeout protection.
+ * Presentational component — behavior extracted into dedicated hooks.
  */
 
 import {
   useState,
   useRef,
-  useCallback,
   useImperativeHandle,
   forwardRef,
-  useEffect,
 } from 'react';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
 import { Search, Loader2, X, Clock } from 'lucide-react';
 import { SearchHistoryDropdown } from '@/components/SearchHistoryDropdown';
 import { useIsMobile } from '@/hooks/useMobile';
@@ -21,89 +18,9 @@ import { SearchHelpModal } from '@/components/SearchHelpModal';
 import type { FilterState } from '@/types/filters';
 import { useTypingPlaceholder } from '@/hooks/useTypingPlaceholder';
 import type { SearchIntent } from '@/types/search';
-import { logger } from '@/lib/core/logger';
-import { translateQueryWithDedup, type TranslationResult } from '@/hooks/useSearchQuery';
-import { buildClientFallbackQuery } from '@/lib/search/fallback';
-import { CLIENT_CONFIG } from '@/lib/config';
-
-const SEARCH_CONTEXT_KEY = 'lastSearchContext';
-const SEARCH_HISTORY_KEY = 'offmeta_search_history';
-
-interface SearchContext {
-  previousQuery: string;
-  previousScryfall: string;
-}
-
-function useSearchContext() {
-  const [context, setContext] = useState<SearchContext | null>(null);
-
-  const saveContext = useCallback((query: string, scryfall: string) => {
-    const newContext = { previousQuery: query, previousScryfall: scryfall };
-    setContext(newContext);
-    try {
-      sessionStorage.setItem(SEARCH_CONTEXT_KEY, JSON.stringify(newContext));
-    } catch {
-      // Ignore storage failures.
-    }
-  }, []);
-
-  const getContext = useCallback(() => context, [context]);
-
-  return { saveContext, getContext };
-}
-
-function useSearchHistory() {
-  const [history, setHistory] = useState<string[]>(() => {
-    if (typeof window === 'undefined') return [];
-    try {
-      const stored = localStorage.getItem(SEARCH_HISTORY_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const addToHistory = useCallback((query: string) => {
-    if (!query.trim()) return;
-    setHistory((prev) => {
-      const filtered = prev.filter(
-        (q) => q.toLowerCase() !== query.toLowerCase(),
-      );
-      const updated = [query, ...filtered].slice(0, CLIENT_CONFIG.MAX_HISTORY_ITEMS);
-      try {
-        localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(updated));
-      } catch {
-        // Ignore storage failures.
-      }
-      return updated;
-    });
-  }, []);
-
-  const removeFromHistory = useCallback((queryToRemove: string) => {
-    setHistory((prev) => {
-      const updated = prev.filter(
-        (q) => q.toLowerCase() !== queryToRemove.toLowerCase(),
-      );
-      try {
-        localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(updated));
-      } catch {
-        // Ignore storage failures.
-      }
-      return updated;
-    });
-  }, []);
-
-  const clearHistory = useCallback(() => {
-    setHistory([]);
-    try {
-      localStorage.removeItem(SEARCH_HISTORY_KEY);
-    } catch {
-      // Ignore storage failures.
-    }
-  }, []);
-
-  return { history, addToHistory, removeFromHistory, clearHistory };
-}
+import { useSearchContext } from '@/hooks/useSearchContext';
+import { useSearchHistory } from '@/hooks/useSearchHistory';
+import { useSearchHandler } from '@/hooks/useSearchHandler';
 
 export interface SearchResult {
   scryfallQuery: string;
@@ -151,197 +68,24 @@ export const UnifiedSearchBar = forwardRef<
 ) {
   const isMobile = useIsMobile();
   const [query, setQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
 
-  // Typing animation for placeholder on first visit
   const { placeholder: animatedPlaceholder, isAnimating: isTyping, stop: stopTyping } = useTypingPlaceholder(
     isMobile ? 'Describe a card...' : "Describe what you're looking for...",
     !query && !isFocused,
   );
   const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
-  const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
-  const [rateLimitCountdown, setRateLimitCountdown] = useState<number>(0);
-  const rateLimitCountdownRef = useRef<number>(0);
   const inputRef = useRef<HTMLInputElement>(null);
-  const lastSearchRef = useRef<string>('');
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const requestTokenRef = useRef(0);
+
   const { saveContext } = useSearchContext();
   const { history, addToHistory, removeFromHistory, clearHistory } = useSearchHistory();
-
-  // Abort pending requests on unmount
-  useEffect(() => {
-    return () => {
-      abortControllerRef.current?.abort();
-    };
-  }, []);
-
-  // Rate limit countdown timer
-  useEffect(() => {
-    if (!rateLimitedUntil) {
-      setRateLimitCountdown(0);
-      return;
-    }
-
-    const updateCountdown = () => {
-      const remaining = Math.ceil((rateLimitedUntil - Date.now()) / 1000);
-      if (remaining <= 0) {
-        setRateLimitedUntil(null);
-        setRateLimitCountdown(0);
-      } else {
-      setRateLimitCountdown(remaining);
-        rateLimitCountdownRef.current = remaining;
-      }
-    };
-
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
-    return () => clearInterval(interval);
-  }, [rateLimitedUntil]);
-
-  const handleSearch = useCallback(
-    async (
-      searchQuery?: string,
-      options?: { bypassCache?: boolean; cacheSalt?: string },
-    ) => {
-      const queryToSearch = (searchQuery || query).trim();
-
-      // Prevent empty or rate-limited searches
-      if (!queryToSearch) return;
-      if (rateLimitedUntil && Date.now() < rateLimitedUntil) {
-        toast.error('Please wait', {
-          description: `Rate limited. Try again in ${rateLimitCountdownRef.current}s`,
-        });
-        return;
-      }
-
-      lastSearchRef.current = queryToSearch;
-      addToHistory(queryToSearch);
-
-      const currentToken = ++requestTokenRef.current;
-      const cacheSalt = options?.cacheSalt;
-
-      // Cancel any pending request
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-      abortControllerRef.current = new AbortController();
-
-      setIsSearching(true);
-
-      // Timeout promise
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(
-          () => reject(new Error('Search timeout')),
-          CLIENT_CONFIG.SEARCH_TIMEOUT_MS,
-        );
-      });
-
-      try {
-        // Route through the shared translation function (with dedup + rate limiting)
-        const translationPromise = translateQueryWithDedup({
-          query: queryToSearch,
-          filters: filters || undefined,
-          cacheSalt: cacheSalt || undefined,
-          bypassCache: options?.bypassCache,
-        });
-
-        const result: TranslationResult = await Promise.race([
-          translationPromise,
-          timeoutPromise,
-        ]);
-
-        if (requestTokenRef.current !== currentToken) {
-          return;
-        }
-
-        saveContext(queryToSearch, result.scryfallQuery);
-
-        onSearch(
-          result.scryfallQuery,
-          {
-            scryfallQuery: result.scryfallQuery,
-            explanation: result.explanation,
-            showAffiliate: result.showAffiliate,
-            validationIssues: result.validationIssues,
-            intent: result.intent,
-            source: result.source || 'ai',
-          },
-          queryToSearch,
-        );
-
-        const source = result.source || 'ai';
-        toast.success(
-          `Search translated${source !== 'ai' ? ` (${source})` : ''}`,
-          {
-            description: `Found: ${result.scryfallQuery.substring(0, 50)}${result.scryfallQuery.length > 50 ? '...' : ''}`,
-          },
-        );
-      } catch (error: unknown) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-
-        if (requestTokenRef.current !== currentToken) {
-          return;
-        }
-        if (errorMessage === 'Search timeout') {
-          logger.error('Search timeout');
-          const fallbackQuery = buildClientFallbackQuery(queryToSearch);
-          toast.error('Search took too long', {
-            description: 'Using simplified search instead',
-          });
-          onSearch(fallbackQuery, {
-            scryfallQuery: fallbackQuery,
-            explanation: {
-              readable: `Searching for: ${queryToSearch}`,
-              assumptions: ['Search timed out — using simplified translation'],
-              confidence: 0.5,
-            },
-            showAffiliate: false,
-            source: 'client_fallback',
-          }, queryToSearch);
-        } else if (
-          errorMessage.includes('429') ||
-          errorMessage.includes('rate') ||
-          errorMessage.includes('Rate limit') ||
-          errorMessage.includes('Please wait')
-        ) {
-          setRateLimitedUntil(Date.now() + 30000);
-          toast.error('Too many searches', {
-            description: 'Please wait a moment before searching again',
-          });
-        } else {
-          logger.error('Search error:', error);
-          const fallbackQuery = buildClientFallbackQuery(queryToSearch);
-          toast.error('Search issue', {
-            description: 'Using simplified search instead',
-          });
-          onSearch(fallbackQuery, {
-            scryfallQuery: fallbackQuery,
-            explanation: {
-              readable: `Searching for: ${queryToSearch}`,
-              assumptions: ['AI unavailable — using simplified translation'],
-              confidence: 0.5,
-            },
-            showAffiliate: false,
-            source: 'client_fallback',
-          }, queryToSearch);
-        }
-      } finally {
-        setIsSearching(false);
-        abortControllerRef.current = null;
-      }
-    },
-    [
-      addToHistory,
-      filters,
-      onSearch,
-      query,
-      rateLimitedUntil,
-      saveContext,
-    ],
-  );
+  const { isSearching, rateLimitCountdown, handleSearch } = useSearchHandler({
+    query,
+    filters,
+    onSearch,
+    addToHistory,
+    saveContext,
+  });
 
   useImperativeHandle(
     ref,
@@ -366,9 +110,8 @@ export const UnifiedSearchBar = forwardRef<
       role="search"
       aria-label="Card search"
     >
-      {/* Search input - Mobile-first, two-row layout on mobile */}
+      {/* Search input */}
       <div className="relative space-y-2">
-        {/* Primary row: Input + Search button - wrapped in history dropdown */}
         <SearchHistoryDropdown
           history={history}
           open={showHistoryDropdown}
@@ -430,11 +173,9 @@ export const UnifiedSearchBar = forwardRef<
               }}
               onBlur={(e) => {
                 setIsFocused(false);
-                // Check if focus moved to a dropdown item - don't close if so
                 const relatedTarget = e.relatedTarget as HTMLElement | null;
                 const isDropdownClick = relatedTarget?.closest('[role="listbox"]');
                 if (!isDropdownClick) {
-                  // Delay closing to allow clicking dropdown items
                   setTimeout(() => setShowHistoryDropdown(false), 200);
                 }
               }}
