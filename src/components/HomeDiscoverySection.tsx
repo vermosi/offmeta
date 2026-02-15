@@ -1,12 +1,13 @@
 /**
  * Discovery content shown on the home page before search:
- * Daily Pick, Staples, How It Works, FAQ.
+ * Recent Searches, Daily Pick, Staples, How It Works, FAQ.
  */
 
 import { DailyPick } from '@/components/DailyPick';
 import { StaplesSection } from '@/components/StaplesSection';
 import { HowItWorksSection } from '@/components/HowItWorksSection';
 import { FAQSection } from '@/components/FAQSection';
+import { RecentSearches } from '@/components/RecentSearches';
 
 interface HomeDiscoverySectionProps {
   onSearch: (query: string) => void;
@@ -15,6 +16,9 @@ interface HomeDiscoverySectionProps {
 export function HomeDiscoverySection({ onSearch }: HomeDiscoverySectionProps) {
   return (
     <div className="space-y-10 sm:space-y-14">
+      <div className="container-main">
+        <RecentSearches onSearch={onSearch} />
+      </div>
       <div id="daily-pick" className="container-main">
         <DailyPick />
       </div>
