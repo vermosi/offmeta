@@ -108,7 +108,7 @@ const Index = () => {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background relative">
+      <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background relative overflow-x-hidden">
         {/* Background layers */}
         <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
         <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
