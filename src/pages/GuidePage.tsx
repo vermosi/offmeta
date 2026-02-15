@@ -100,7 +100,7 @@ export default function GuidePage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
       {/* Structured Data */}
       <script
         type="application/ld+json"
@@ -125,27 +125,27 @@ export default function GuidePage() {
       </nav>
 
       {/* Main content */}
-      <main className="flex-1 container-main py-8 sm:py-12">
-        <article className="max-w-2xl mx-auto space-y-10">
+        <main className="flex-1 container-main py-8 sm:py-12">
+        <article className="max-w-2xl mx-auto space-y-10 min-w-0">
           {/* Hero */}
           <header className="space-y-4">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-foreground leading-tight">
+            <h1 className="text-2xl sm:text-3xl lg:text-5xl font-semibold text-foreground leading-tight">
               {guide.heading}
             </h1>
             <p className="text-lg text-muted-foreground">{guide.subheading}</p>
           </header>
 
           {/* CTA - Search this */}
-          <div className="rounded-xl border border-border bg-card p-5 sm:p-6 space-y-3">
+          <div className="rounded-xl border border-border bg-card p-5 sm:p-6 space-y-3 overflow-hidden">
             <p className="text-sm text-muted-foreground">Search these cards instantly on OffMeta:</p>
             <Button
               onClick={handleSearchClick}
-              className="w-full sm:w-auto gap-2"
+              className="w-full sm:w-auto gap-2 max-w-full !whitespace-normal text-left"
               size="lg"
             >
-              <Search className="h-4 w-4" />
-              Search "{guide.searchQuery}"
-              <ArrowRight className="h-4 w-4" />
+              <Search className="h-4 w-4 flex-shrink-0" />
+              <span className="line-clamp-1">Search "{guide.searchQuery}"</span>
+              <ArrowRight className="h-4 w-4 flex-shrink-0" />
             </Button>
           </div>
 
@@ -161,17 +161,17 @@ export default function GuidePage() {
                 <Sparkles className="h-5 w-5 text-primary" />
                 <h2 className="text-xl font-semibold text-foreground">How OffMeta Helps</h2>
               </div>
-              <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
-                <div className="flex items-center gap-2 mb-2 text-xs text-muted-foreground">
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 overflow-hidden">
+                <div className="flex flex-wrap items-center gap-2 mb-2 text-xs text-muted-foreground">
                   <span>You type:</span>
-                  <code className="px-2 py-0.5 rounded bg-muted text-foreground font-mono text-xs">
+                  <code className="px-2 py-0.5 rounded bg-muted text-foreground font-mono text-xs truncate max-w-full">
                     {guide.searchQuery}
                   </code>
                 </div>
                 {'translatedQuery' in guide && (
-                  <div className="flex items-center gap-2 mb-3 text-xs text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-2 mb-3 text-xs text-muted-foreground">
                     <span>OffMeta generates:</span>
-                    <code className="px-2 py-0.5 rounded bg-muted text-foreground font-mono text-xs">
+                    <code className="px-2 py-0.5 rounded bg-muted text-foreground font-mono text-xs break-all">
                       {(guide as { translatedQuery: string }).translatedQuery}
                     </code>
                   </div>
