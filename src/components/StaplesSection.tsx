@@ -83,7 +83,7 @@ export const StaplesSection = memo(function StaplesSection({
         </div>
 
         {/* Mobile: wrapping grid */}
-        <div className="flex flex-wrap gap-2 sm:hidden">
+        <div className="flex flex-col gap-1.5 sm:hidden">
           {STAPLES.map((s) => (
             <button
               key={s.label}
