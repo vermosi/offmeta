@@ -1,17 +1,32 @@
 /**
  * Card item component for displaying a single card in the search results grid.
  * Memoized to prevent unnecessary re-renders in large lists.
- * Simple, clean display - click for details like Scryfall.
+ * Shows card image with an info overlay on hover/focus for quick details.
  */
 
 import { memo, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import type { ScryfallCard } from '@/types/card';
 import { getCardImage } from '@/lib/scryfall/client';
+import { ManaCost } from '@/components/ManaSymbol';
 
 interface CardItemProps {
   card: ScryfallCard;
   onClick: () => void;
+}
+
+/** Format a price string to a compact display. */
+function formatPrice(card: ScryfallCard): string | null {
+  const usd = card.prices?.usd ?? card.prices?.usd_foil;
+  if (usd) return `$${usd}`;
+  const eur = card.prices?.eur ?? card.prices?.eur_foil;
+  if (eur) return `€${eur}`;
+  return null;
+}
+
+/** Get the mana cost, handling double-faced cards. */
+function getManaCost(card: ScryfallCard): string | undefined {
+  return card.mana_cost || card.card_faces?.[0]?.mana_cost;
 }
 
 export const CardItem = memo(function CardItem({
@@ -28,13 +43,16 @@ export const CardItem = memo(function CardItem({
     }
   };
 
+  const manaCost = getManaCost(card);
+  const price = formatPrice(card);
+
   return (
     <div
       onClick={onClick}
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
-      className="relative w-full aspect-[2.5/3.5] rounded-xl overflow-hidden bg-secondary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-transform duration-200 hover:scale-[1.02]"
+      className="group relative w-full aspect-[2.5/3.5] rounded-xl overflow-hidden bg-secondary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-transform duration-200 hover:scale-[1.02]"
       aria-label={`View details for ${card.name}`}
     >
       {imgError ? (
@@ -51,6 +69,33 @@ export const CardItem = memo(function CardItem({
           onError={() => setImgError(true)}
         />
       )}
+
+      {/* Info overlay — visible on hover/focus */}
+      <div
+        className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent pt-8 pb-2 px-2.5 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-200 pointer-events-none"
+        aria-hidden="true"
+      >
+        <div className="flex items-end justify-between gap-1">
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] leading-tight font-semibold text-white truncate">
+              {card.name}
+            </p>
+            <p className="text-[10px] leading-tight text-white/70 truncate mt-0.5">
+              {card.type_line}
+            </p>
+          </div>
+          <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+            {manaCost && (
+              <ManaCost cost={manaCost} size="sm" className="drop-shadow" />
+            )}
+            {price && (
+              <span className="text-[10px] font-medium text-emerald-300 tabular-nums">
+                {price}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 });
