@@ -113,8 +113,8 @@ export const UnifiedSearchBar = forwardRef<
 
   return (
     <search
-      className="space-y-4 sm:space-y-6 w-full mx-auto px-0"
-      style={{ maxWidth: 'clamp(320px, 90vw, 672px)' }}
+      className="space-y-4 sm:space-y-6 w-full mx-auto px-0 animate-fade-in"
+      style={{ maxWidth: 'clamp(320px, 90vw, 672px)', animationDuration: '0.5s', animationDelay: '0.15s', animationFillMode: 'backwards' }}
       role="search"
       aria-label="Card search"
     >
