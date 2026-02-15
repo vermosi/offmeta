@@ -56,7 +56,7 @@ export default function GuidesIndex() {
   const sorted = [...GUIDES].sort((a, b) => a.level - b.level);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
       <Header />
 
       {/* Breadcrumb */}
@@ -70,17 +70,17 @@ export default function GuidesIndex() {
 
       {/* Main */}
       <main className="flex-1 container-main py-8 sm:py-12">
-        <div className="max-w-4xl mx-auto space-y-10">
+        <div className="max-w-4xl mx-auto space-y-10 min-w-0">
           {/* Hero */}
           <header className="text-center space-y-4">
             <div className="flex items-center justify-center gap-2.5 text-primary">
               <BookOpen className="h-6 w-6" />
               <Sparkles className="h-5 w-5" />
             </div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-foreground leading-tight">
+            <h1 className="text-2xl sm:text-3xl lg:text-5xl font-semibold text-foreground leading-tight">
               Search Guides
             </h1>
-            <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+            <p className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto">
               Learn how to search for Magic cards with OffMeta — from simple type searches to complex multi-constraint queries.
             </p>
             <p className="text-sm text-muted-foreground">
@@ -98,7 +98,7 @@ export default function GuidesIndex() {
                 <Link
                   key={guide.slug}
                   to={`/guides/${guide.slug}`}
-                  className="group relative rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-lg transition-all duration-200 p-5 sm:p-6 flex flex-col"
+                  className="group relative rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-lg transition-all duration-200 p-5 sm:p-6 flex flex-col min-w-0 overflow-hidden"
                 >
                   {/* Level badge */}
                   <div className="flex items-center justify-between mb-3">
@@ -116,7 +116,7 @@ export default function GuidesIndex() {
                   </p>
 
                   {/* Example query */}
-                  <div className="rounded-lg bg-muted/40 border border-border/50 px-3 py-2 mb-4">
+                  <div className="rounded-lg bg-muted/40 border border-border/50 px-3 py-2 mb-4 min-w-0 overflow-hidden">
                     <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Example search</p>
                     <p className="text-sm font-mono text-foreground/80 truncate">
                       "{guide.searchQuery}"
@@ -133,7 +133,7 @@ export default function GuidesIndex() {
           </div>
 
           {/* Bottom CTA */}
-          <div className="rounded-xl border border-primary/20 bg-primary/5 p-6 text-center space-y-3">
+          <div className="rounded-xl border border-primary/20 bg-primary/5 p-6 text-center space-y-3 overflow-hidden">
             <h2 className="text-lg font-semibold text-foreground">Ready to search?</h2>
             <p className="text-sm text-muted-foreground">
               Try any of these searches — or make up your own. OffMeta translates natural language into Scryfall syntax.
