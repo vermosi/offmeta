@@ -21,18 +21,19 @@
 - Removed 16 unused UI components (~75KB bundle reduction)
 - Error monitoring placeholders (Sentry-ready)
 - Full i18n support: 11 languages (EN, ES, FR, DE, IT, PT, JA, KO, RU, ZHS, ZHT) covering UI and guide content
+- Documentation portal (`/docs`) with unified index, syntax cheat sheet (`/docs/syntax`), and guides hub
+- SEO domain standardization: canonical tags, hreflang for 11 locales, expanded sitemap covering all routes
 
 ## Near term
 
 - Improve accessibility audits and keyboard navigation
-- Deploy docs site with usage guides and prompt examples
 - Add Edge Function contract tests
 
 ## Mid term
 
 - Add search analytics dashboards for maintainers
 - Implement user accounts for saved searches
-- Add deck builder integration
+- Add archetype discovery and meta-game insights
 
 ## Long term
 
