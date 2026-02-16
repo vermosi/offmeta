@@ -110,13 +110,12 @@ export function useSearch() {
   }, []);
 
   // --- URL sync (browser back/forward, manual edits) ---
-  useEffect(() => {
-    if (urlQuery === lastUrlQueryRef.current) return;
+  const [prevUrlQuery, setPrevUrlQuery] = useState(urlQuery);
+  if (urlQuery !== prevUrlQuery) {
+    setPrevUrlQuery(urlQuery);
     lastUrlQueryRef.current = urlQuery;
 
-    if (urlQuery && searchBarRef.current) {
-      searchBarRef.current.triggerSearch(urlQuery);
-    } else if (!urlQuery) {
+    if (!urlQuery) {
       setSearchQuery('');
       setOriginalQuery('');
       setHasSearched(false);
@@ -124,6 +123,16 @@ export function useSearch() {
       setFilteredCards([]);
       setHasActiveFilters(false);
       setCurrentRequestId(null);
+    }
+  }
+
+  // Trigger search bar for URL query changes (needs ref, so use effect)
+  useEffect(() => {
+    if (urlQuery && urlQuery !== lastUrlQueryRef.current) {
+      lastUrlQueryRef.current = urlQuery;
+      if (searchBarRef.current) {
+        searchBarRef.current.triggerSearch(urlQuery);
+      }
     }
   }, [urlQuery]);
 

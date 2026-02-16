@@ -249,10 +249,13 @@ export function SearchFilters({
     onFilteredCards(filteredCards, hasActiveFilters, filters);
   }, [filteredCards, hasActiveFilters, onFilteredCards, filters]);
 
-  useEffect(() => {
+  // Reset filters when resetKey changes (render-phase adjustment)
+  const [prevResetKey, setPrevResetKey] = useState(resetKey);
+  if (prevResetKey !== resetKey) {
+    setPrevResetKey(resetKey);
     setFilters(defaultFilters);
     setIsOpen(false);
-  }, [defaultFilters, resetKey]);
+  }
 
   useEffect(() => {
     if (lastDefaultMaxCmc.current === defaultMaxCmc) {
