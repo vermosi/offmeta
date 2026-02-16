@@ -159,8 +159,11 @@ async function fetchWithRetry(
 export async function searchCards(
   query: string,
   page: number = 1,
+  lang?: string,
 ): Promise<SearchResult> {
-  const encodedQuery = encodeURIComponent(query);
+  // When a non-English lang is requested, prepend lang filter
+  const langQuery = lang && lang !== 'en' ? `lang:${lang} ${query}` : query;
+  const encodedQuery = encodeURIComponent(langQuery);
   const response = await rateLimitedFetch(
     `${BASE_URL}/cards/search?q=${encodedQuery}&page=${page}`,
   );
@@ -275,14 +278,17 @@ export function isDoubleFacedCard(card: ScryfallCard): boolean {
  * @param faceIndex - Which face (0 = front, 1 = back)
  * @returns The face data or the card itself if single-faced
  */
-export function getCardFaceDetails(card: ScryfallCard, faceIndex: number = 0) {
+export function getCardFaceDetails(card: ScryfallCard, faceIndex: number = 0, locale: string = 'en') {
+  // Import-free localization: prefer printed_* fields for non-English
+  const useLocalized = locale !== 'en';
+
   if (card.card_faces && card.card_faces[faceIndex]) {
     const face = card.card_faces[faceIndex];
     return {
-      name: face.name,
+      name: (useLocalized && card.printed_name) ? card.printed_name.split(' // ')[faceIndex] || face.name : face.name,
       mana_cost: face.mana_cost,
-      type_line: face.type_line,
-      oracle_text: face.oracle_text,
+      type_line: (useLocalized && card.printed_type_line) ? card.printed_type_line.split(' // ')[faceIndex] || face.type_line : face.type_line,
+      oracle_text: (useLocalized && card.printed_text) ? card.printed_text : face.oracle_text,
       power: face.power,
       toughness: face.toughness,
       flavor_text: face.flavor_text,
@@ -290,10 +296,10 @@ export function getCardFaceDetails(card: ScryfallCard, faceIndex: number = 0) {
   }
 
   return {
-    name: card.name,
+    name: (useLocalized && card.printed_name) || card.name,
     mana_cost: card.mana_cost,
-    type_line: card.type_line,
-    oracle_text: card.oracle_text,
+    type_line: (useLocalized && card.printed_type_line) || card.type_line,
+    oracle_text: (useLocalized && card.printed_text) || card.oracle_text,
     power: card.power,
     toughness: card.toughness,
     flavor_text: card.flavor_text,

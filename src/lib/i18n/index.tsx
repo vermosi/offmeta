@@ -26,6 +26,12 @@ export const SUPPORTED_LOCALES: { code: SupportedLocale; label: string; flag: st
 
 const DICTIONARIES: Record<string, TranslationDictionary> = { en, es };
 
+/** Map app locales to Scryfall language codes. */
+export const LOCALE_TO_SCRYFALL_LANG: Record<SupportedLocale, string> = {
+  en: 'en',
+  es: 'es',
+};
+
 const STORAGE_KEY = 'offmeta-locale';
 
 function getInitialLocale(): SupportedLocale {

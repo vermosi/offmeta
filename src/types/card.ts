@@ -148,6 +148,15 @@ export interface ScryfallCard {
   /** Language code for this printing */
   lang?: string;
 
+  /** Localized card name (non-English printings only) */
+  printed_name?: string;
+
+  /** Localized type line (non-English printings only) */
+  printed_type_line?: string;
+
+  /** Localized oracle/rules text (non-English printings only) */
+  printed_text?: string;
+
   /** Reserved list indicator */
   reserved?: boolean;
 }

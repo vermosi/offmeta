@@ -24,6 +24,7 @@ import { X } from 'lucide-react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { useIsMobile } from '@/hooks/useMobile';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useTranslation } from '@/lib/i18n';
 
 import {
   CardModalImage,
@@ -162,7 +163,8 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
   const displayImageUrl = selectedPrinting?.image_uris?.large
     ? selectedPrinting.image_uris.large
     : getCardImage(card, 'large', currentFace);
-  const faceDetails = getCardFaceDetails(card, currentFace);
+  const { locale } = useTranslation();
+  const faceDetails = getCardFaceDetails(card, currentFace, locale);
 
   const displaySetName = selectedPrinting?.set_name || card.set_name;
   const displayRarity = selectedPrinting?.rarity || card.rarity;
