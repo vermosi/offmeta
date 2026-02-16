@@ -1,12 +1,12 @@
 /**
- * Lightweight i18n infrastructure.
- * Provides a `useTranslation` hook backed by a JSON dictionary.
- * Supports locale switching via I18nProvider context.
+ * I18n provider component.
+ * useTranslation is re-exported here for convenience.
  */
 
+// eslint-disable-next-line react-refresh/only-export-components
+export { useTranslation } from './useTranslation';
+
 import {
-  createContext,
-  useContext,
   useMemo,
   useState,
   useCallback,
@@ -25,6 +25,7 @@ import zhs from './zhs.json';
 import zht from './zht.json';
 
 import type { SupportedLocale } from './constants';
+import { I18nContext, type I18nContextValue } from './context';
 
 type TranslationDictionary = Record<string, string>;
 
@@ -43,18 +44,6 @@ function getInitialLocale(): SupportedLocale {
   }
   return 'en';
 }
-
-interface I18nContextValue {
-  dictionary: TranslationDictionary;
-  locale: SupportedLocale;
-  setLocale: (locale: SupportedLocale) => void;
-}
-
-const I18nContext = createContext<I18nContextValue>({
-  dictionary: en,
-  locale: 'en',
-  setLocale: () => {},
-});
 
 interface I18nProviderProps {
   children: ReactNode;
@@ -88,19 +77,4 @@ export function I18nProvider({ children }: I18nProviderProps) {
   return (
     <I18nContext.Provider value={value}>{children}</I18nContext.Provider>
   );
-}
-
-/**
- * Returns a `t(key)` function that resolves translation strings,
- * plus `locale` and `setLocale` for switching languages.
- */
-export function useTranslation() {
-  const { dictionary, locale, setLocale } = useContext(I18nContext);
-
-  const t = useMemo(() => {
-    return (key: string, fallback?: string): string =>
-      dictionary[key] ?? (en as Record<string, string>)[key] ?? fallback ?? key;
-  }, [dictionary]);
-
-  return { t, locale, setLocale };
 }
