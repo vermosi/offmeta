@@ -446,14 +446,61 @@ serve(async (req) => {
       );
     }
 
-    // 7. AI Translation
+    // 7. Pre-translate non-English queries to English for better AI accuracy
+    const remainingQuery = deterministicResult.intent.remainingQuery || '';
+    let queryForAI = remainingQuery;
+
+    // Detect non-Latin scripts or common non-English patterns
+    const hasNonLatin = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Cyrillic}\p{Script=Arabic}\p{Script=Devanagari}]/u.test(remainingQuery);
+    const hasAccentedLatin = /[àáâãäåæçèéêëìíîïðñòóôõöùúûüýþÿ]/i.test(remainingQuery);
+    const looksNonEnglish = hasNonLatin || (hasAccentedLatin && !/^[a-zA-Z0-9\s\-:=<>!'"()+/*.,;$]+$/.test(remainingQuery));
+
+    if (looksNonEnglish && remainingQuery.trim().length > 0) {
+      try {
+        const preTranslateResponse = await fetchWithRetry(
+          'https://ai.gateway.lovable.dev/v1/chat/completions',
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'google/gemini-2.5-flash-lite',
+              messages: [
+                {
+                  role: 'system',
+                  content: 'You are a translator. Translate the following Magic: The Gathering card search query into English. Preserve all MTG-specific intent (counter, destroy, exile, ramp, etc.). Output ONLY the English translation, nothing else.',
+                },
+                { role: 'user', content: remainingQuery },
+              ],
+              temperature: 0.0,
+            }),
+          },
+        );
+
+        if (preTranslateResponse.ok) {
+          const preTranslateData = await preTranslateResponse.json();
+          const translated = preTranslateData?.choices?.[0]?.message?.content?.trim();
+          if (translated && translated.length > 0) {
+            logInfo(`Pre-translated: "${remainingQuery}" → "${translated}"`);
+            queryForAI = translated;
+          }
+        }
+      } catch (e) {
+        // Pre-translation failed, proceed with original query
+        logWarn(`Pre-translation failed, using original: ${e}`);
+      }
+    }
+
+    // 8. AI Translation
     const dynamicRules = await fetchDynamicRules();
     const queryWords = query.trim().split(/\s+/).length;
     const tier: QueryTier =
       queryWords > 8 ? 'complex' : queryWords > 4 ? 'medium' : 'simple';
 
-    const systemPrompt = buildSystemPrompt(tier, dynamicRules, ''); // Simplified context for now
-    const userMessage = `Translate this natural language query (which may be in any language) to Scryfall search syntax: "${deterministicResult.intent.remainingQuery}" ${deterministicQuery ? `(must include: ${deterministicQuery})` : ''}`;
+    const systemPrompt = buildSystemPrompt(tier, dynamicRules, '');
+    const userMessage = `Translate to Scryfall search syntax: "${queryForAI}" ${deterministicQuery ? `(must include: ${deterministicQuery})` : ''}`;
 
     try {
       const aiResponse = await fetchWithRetry(
