@@ -16,7 +16,7 @@
 
 > _Describe what you're looking for in plain English. No complex syntax. No guessing. Just natural conversation._
 
-**Live demo:** [offmeta.lovable.app](https://offmeta.lovable.app)
+**Live site:** [offmeta.app](https://offmeta.app)
 
 ---
 
