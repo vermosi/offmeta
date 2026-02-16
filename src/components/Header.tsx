@@ -23,7 +23,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 export function Header() {
   const { t } = useTranslation();
-  const { user, displayName, signOut } = useAuth();
+  const { user, displayName, avatarUrl, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const navigate = useNavigate();
@@ -208,10 +208,14 @@ export function Header() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className="h-8 w-8 rounded-full bg-primary/10 border border-border flex items-center justify-center text-xs font-semibold text-primary hover:bg-primary/20 transition-colors focus-ring"
+                    className="h-8 w-8 rounded-full bg-primary/10 border border-border flex items-center justify-center text-xs font-semibold text-primary hover:bg-primary/20 transition-colors focus-ring overflow-hidden"
                     aria-label="User menu"
                   >
-                    {displayName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || <User className="h-4 w-4" />}
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      displayName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || <User className="h-4 w-4" />
+                    )}
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
