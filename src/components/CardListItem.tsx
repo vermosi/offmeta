@@ -13,11 +13,13 @@ import { useTranslation } from '@/lib/i18n';
 interface CardListItemProps {
   card: ScryfallCard;
   onClick: () => void;
+  tabIndex?: number;
 }
 
 export const CardListItem = memo(function CardListItem({
   card,
   onClick,
+  tabIndex = 0,
 }: CardListItemProps) {
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -37,7 +39,7 @@ export const CardListItem = memo(function CardListItem({
       onClick={onClick}
       onKeyDown={handleKeyDown}
       role="button"
-      tabIndex={0}
+      tabIndex={tabIndex}
       className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/50 bg-card/50 hover:bg-muted/50 hover:border-border cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       aria-label={`View details for ${displayName}`}
     >

@@ -5,7 +5,7 @@
  * All search state is managed via the `useSearch` hook.
  * @module pages/Index
  */
-import { lazy, Suspense, useEffect, useCallback, useState } from 'react';
+import { lazy, Suspense, useEffect, useCallback, useState, useMemo } from 'react';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 import { EditableQueryBar } from '@/components/EditableQueryBar';
 import { SaveSearchButton } from '@/components/SaveSearchButton';
@@ -40,7 +40,7 @@ import { CLIENT_CONFIG } from '@/lib/config';
 import { useSearch } from '@/hooks/useSearch';
 import { useCompare } from '@/hooks/useCompare';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
-
+import { useRovingTabIndex } from '@/hooks/useRovingTabIndex';
 const CardModal = lazy(() => import('@/components/CardModal'));
 
 const Index = () => {
@@ -102,6 +102,30 @@ const Index = () => {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const openLightbox = useCallback((index: number) => setLightboxIndex(index), []);
   const closeLightbox = useCallback(() => setLightboxIndex(null), []);
+
+  // Roving tabindex column count based on view mode (approximate; CSS breakpoints vary)
+  const rovingColumns = useMemo(() => {
+    if (viewMode === 'list') return 1;
+    if (viewMode === 'images') return 6; // xl:grid-cols-6
+    return 4; // lg:grid-cols-4 for standard grid
+  }, [viewMode]);
+
+  const rovingActivate = useCallback(
+    (index: number) => {
+      if (viewMode === 'images') {
+        openLightbox(index);
+      } else if (displayCards[index]) {
+        handleCardClick(displayCards[index], index);
+      }
+    },
+    [viewMode, displayCards, handleCardClick, openLightbox],
+  );
+
+  const { getRovingProps } = useRovingTabIndex({
+    itemCount: displayCards.length,
+    columns: rovingColumns,
+    onActivate: rovingActivate,
+  });
 
   // Handle hash-based scroll when navigating from another page
   useEffect(() => {
@@ -273,19 +297,26 @@ const Index = () => {
                       aria-label="Search results"
                       data-testid="list-view"
                     >
-                      {displayCards.map((card, index) => (
-                        <div
-                          key={card.id}
-                          className="animate-reveal"
-                          role="listitem"
-                          style={{ animationDelay: `${Math.min(index * 15, 200)}ms` }}
-                        >
-                          <CardListItem
-                            card={card}
-                            onClick={() => handleCardClick(card, index)}
-                          />
-                        </div>
-                      ))}
+                      {displayCards.map((card, index) => {
+                        const rovingProps = getRovingProps(index);
+                        return (
+                          <div
+                            key={card.id}
+                            className="animate-reveal"
+                            role="listitem"
+                            style={{ animationDelay: `${Math.min(index * 15, 200)}ms` }}
+                            ref={rovingProps.ref}
+                            onKeyDown={rovingProps.onKeyDown}
+                            onFocus={rovingProps.onFocus}
+                          >
+                            <CardListItem
+                              card={card}
+                              onClick={() => handleCardClick(card, index)}
+                              tabIndex={rovingProps.tabIndex}
+                            />
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : viewMode === 'images' ? (
                     <div
@@ -294,19 +325,26 @@ const Index = () => {
                       aria-label="Search results"
                       data-testid="images-view"
                     >
-                      {displayCards.map((card, index) => (
-                        <div
-                          key={card.id}
-                          className="animate-reveal"
-                          role="listitem"
-                          style={{ animationDelay: `${Math.min(index * 15, 200)}ms` }}
-                        >
-                          <CardImageItem
-                            card={card}
-                            onClick={() => openLightbox(index)}
-                          />
-                        </div>
-                      ))}
+                      {displayCards.map((card, index) => {
+                        const rovingProps = getRovingProps(index);
+                        return (
+                          <div
+                            key={card.id}
+                            className="animate-reveal"
+                            role="listitem"
+                            style={{ animationDelay: `${Math.min(index * 15, 200)}ms` }}
+                            ref={rovingProps.ref}
+                            onKeyDown={rovingProps.onKeyDown}
+                            onFocus={rovingProps.onFocus}
+                          >
+                            <CardImageItem
+                              card={card}
+                              onClick={() => openLightbox(index)}
+                              tabIndex={rovingProps.tabIndex}
+                            />
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : (
                     <div
@@ -315,38 +353,46 @@ const Index = () => {
                       aria-label="Search results"
                       data-testid="standard-grid"
                     >
-                      {displayCards.map((card, index) => (
-                        <div
-                          key={card.id}
-                          className={`animate-reveal relative ${compareMode ? '' : 'contain-layout'}`}
-                          role="listitem"
-                          style={{
-                            animationDelay: `${Math.min(index * 25, 300)}ms`,
-                            ...(compareMode ? {} : { contentVisibility: 'auto', containIntrinsicSize: '0 200px' }),
-                          }}
-                        >
-                          {compareMode && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleCompareCard(card);
-                              }}
-                              className={`absolute top-2 left-2 z-10 h-6 w-6 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all ${
-                                isCardSelected(card.id)
-                                  ? 'bg-primary border-primary text-primary-foreground'
-                                  : 'bg-card/80 border-border/60 text-muted-foreground hover:border-primary/50'
-                              }`}
-                              aria-label={`${isCardSelected(card.id) ? 'Remove from' : 'Add to'} comparison`}
-                            >
-                              {isCardSelected(card.id) ? '✓' : '+'}
-                            </button>
-                          )}
-                          <CardItem
-                            card={card}
-                            onClick={() => compareMode ? toggleCompareCard(card) : handleCardClick(card, index)}
-                          />
-                        </div>
-                      ))}
+                      {displayCards.map((card, index) => {
+                        const rovingProps = getRovingProps(index);
+                        return (
+                          <div
+                            key={card.id}
+                            className={`animate-reveal relative ${compareMode ? '' : 'contain-layout'}`}
+                            role="listitem"
+                            style={{
+                              animationDelay: `${Math.min(index * 25, 300)}ms`,
+                              ...(compareMode ? {} : { contentVisibility: 'auto', containIntrinsicSize: '0 200px' }),
+                            }}
+                            ref={rovingProps.ref}
+                            onKeyDown={rovingProps.onKeyDown}
+                            onFocus={rovingProps.onFocus}
+                          >
+                            {compareMode && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleCompareCard(card);
+                                }}
+                                className={`absolute top-2 left-2 z-10 h-6 w-6 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all ${
+                                  isCardSelected(card.id)
+                                    ? 'bg-primary border-primary text-primary-foreground'
+                                    : 'bg-card/80 border-border/60 text-muted-foreground hover:border-primary/50'
+                                }`}
+                                aria-label={`${isCardSelected(card.id) ? 'Remove from' : 'Add to'} comparison`}
+                                tabIndex={-1}
+                              >
+                                {isCardSelected(card.id) ? '✓' : '+'}
+                              </button>
+                            )}
+                            <CardItem
+                              card={card}
+                              onClick={() => compareMode ? toggleCompareCard(card) : handleCardClick(card, index)}
+                              tabIndex={rovingProps.tabIndex}
+                            />
+                          </div>
+                        );
+                      })}
                     </div>
                   )
                 ) : (
