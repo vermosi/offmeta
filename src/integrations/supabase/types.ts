@@ -38,6 +38,27 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       query_cache: {
         Row: {
           confidence: number
@@ -79,6 +100,41 @@ export type Database = {
           show_affiliate?: boolean
         }
         Relationships: []
+      }
+      saved_searches: {
+        Row: {
+          created_at: string
+          id: string
+          label: string | null
+          natural_query: string
+          scryfall_query: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          natural_query: string
+          scryfall_query?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          natural_query?: string
+          scryfall_query?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_searches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       search_feedback: {
         Row: {
