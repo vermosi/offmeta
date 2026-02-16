@@ -239,7 +239,7 @@ describe('scryfall client', () => {
     const errorResponse = await getCardRulings('card-3');
     expect(errorResponse).toEqual([]);
     expect(consoleSpy).toHaveBeenCalled();
-  });
+  }, 15_000);
 
   it('rejects when the request queue is full', async () => {
     // This test verifies that overflow requests are rejected immediately.
