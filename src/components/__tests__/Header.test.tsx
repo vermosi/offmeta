@@ -40,15 +40,6 @@ async function renderHeader(initialRoute = '/') {
   return result;
 }
 
-function renderHeaderSync(initialRoute = '/') {
-  return render(
-    <MemoryRouter initialEntries={[initialRoute]}>
-      <AuthProvider>
-        <Header />
-      </AuthProvider>
-    </MemoryRouter>,
-  );
-}
 
 describe('Header', () => {
   beforeEach(() => {
