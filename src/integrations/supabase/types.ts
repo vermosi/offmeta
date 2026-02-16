@@ -293,6 +293,10 @@ export type Database = {
     }
     Functions: {
       cleanup_expired_cache: { Args: never; Returns: undefined }
+      get_search_analytics: {
+        Args: { max_low_confidence?: number; since_date: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

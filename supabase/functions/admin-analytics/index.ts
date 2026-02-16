@@ -51,90 +51,20 @@ serve(async (req) => {
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
   try {
-    // Fetch translation logs
-    const { data: logs, error: logsError } = await supabaseAdmin
-      .from('translation_logs')
-      .select('*')
-      .gte('created_at', since)
-      .order('created_at', { ascending: false })
-      .limit(1000);
+    // Call RPC for server-side aggregation (no row limit issues)
+    const { data: analytics, error: rpcError } = await supabaseAdmin.rpc(
+      'get_search_analytics',
+      { since_date: since, max_low_confidence: 20 },
+    );
 
-    if (logsError) throw logsError;
+    if (rpcError) throw rpcError;
 
-    // Fetch analytics events summary
-    const { data: events, error: eventsError } = await supabaseAdmin
-      .from('analytics_events')
-      .select('event_type, created_at')
-      .gte('created_at', since)
-      .limit(5000);
+    // Add days to summary
+    const result = analytics as Record<string, unknown>;
+    const summary = result.summary as Record<string, unknown>;
+    summary.days = days;
 
-    if (eventsError) throw eventsError;
-
-    // Compute aggregates
-    const totalSearches = logs?.length || 0;
-    const avgConfidence = totalSearches > 0
-      ? (logs!.reduce((sum, l) => sum + (l.confidence_score || 0), 0) / totalSearches)
-      : 0;
-    const avgResponseTime = totalSearches > 0
-      ? (logs!.reduce((sum, l) => sum + (l.response_time_ms || 0), 0) / totalSearches)
-      : 0;
-    const fallbackCount = logs?.filter(l => l.fallback_used).length || 0;
-
-    // Source breakdown
-    const sourceBreakdown: Record<string, number> = {};
-    logs?.forEach(l => {
-      const src = l.source || 'ai';
-      sourceBreakdown[src] = (sourceBreakdown[src] || 0) + 1;
-    });
-
-    // Confidence distribution
-    const confidenceBuckets = { high: 0, medium: 0, low: 0 };
-    logs?.forEach(l => {
-      const c = l.confidence_score || 0;
-      if (c >= 0.8) confidenceBuckets.high++;
-      else if (c >= 0.6) confidenceBuckets.medium++;
-      else confidenceBuckets.low++;
-    });
-
-    // Daily volume
-    const dailyVolume: Record<string, number> = {};
-    logs?.forEach(l => {
-      const day = l.created_at?.substring(0, 10) || 'unknown';
-      dailyVolume[day] = (dailyVolume[day] || 0) + 1;
-    });
-
-    // Event type breakdown
-    const eventBreakdown: Record<string, number> = {};
-    events?.forEach(e => {
-      eventBreakdown[e.event_type] = (eventBreakdown[e.event_type] || 0) + 1;
-    });
-
-    // Recent low-confidence queries for review
-    const lowConfidenceQueries = logs
-      ?.filter(l => (l.confidence_score || 0) < 0.6)
-      .slice(0, 20)
-      .map(l => ({
-        query: l.natural_language_query,
-        translated: l.translated_query,
-        confidence: l.confidence_score,
-        source: l.source,
-        time: l.created_at,
-      })) || [];
-
-    return new Response(JSON.stringify({
-      summary: {
-        totalSearches,
-        avgConfidence: Math.round(avgConfidence * 100) / 100,
-        avgResponseTime: Math.round(avgResponseTime),
-        fallbackRate: totalSearches > 0 ? Math.round((fallbackCount / totalSearches) * 100) : 0,
-        days,
-      },
-      sourceBreakdown,
-      confidenceBuckets,
-      dailyVolume,
-      eventBreakdown,
-      lowConfidenceQueries,
-    }), { headers });
+    return new Response(JSON.stringify(result), { headers });
   } catch (e) {
     console.error('Analytics error:', e);
     return new Response(JSON.stringify({ error: 'Failed to fetch analytics' }), { status: 500, headers });
