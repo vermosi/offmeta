@@ -1,3 +1,11 @@
+/**
+ * Root application component.
+ * Wires up providers (i18n, theme, query cache, tooltips, toasts)
+ * and defines top-level routes via React Router.
+ * All page components are lazy-loaded for optimal bundle splitting.
+ * @module App
+ */
+
 import { lazy, Suspense } from 'react';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';

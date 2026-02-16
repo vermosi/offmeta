@@ -1,3 +1,10 @@
+/**
+ * Home page — the primary search interface.
+ * Orchestrates the search bar, card grid, filters, modals, comparison,
+ * and discovery sections (Daily Pick, Staples, How It Works, FAQ).
+ * All search state is managed via the `useSearch` hook.
+ * @module pages/Index
+ */
 import { lazy, Suspense, useEffect, useCallback, useState } from 'react';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 import { EditableQueryBar } from '@/components/EditableQueryBar';
