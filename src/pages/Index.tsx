@@ -131,6 +131,17 @@ const Index = () => {
 
         {!hasSearched && <HeroSection />}
 
+        {/* Screen reader search status announcements */}
+        <div className="sr-only" role="status" aria-live="assertive" aria-atomic="true">
+          {isSearching
+            ? 'Searching for cards…'
+            : hasSearched && totalCards > 0
+              ? `Found ${totalCards.toLocaleString()} cards`
+              : hasSearched && totalCards === 0
+                ? 'No cards found'
+                : ''}
+        </div>
+
         {/* Main content */}
         <main
           id="main-content"
@@ -371,7 +382,7 @@ const Index = () => {
         <ScrollToTop threshold={800} />
 
         {selectedCard && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<div className="sr-only" role="status">Loading card details…</div>}>
             <CardModal
               card={selectedCard}
               open={true}

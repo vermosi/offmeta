@@ -90,10 +90,14 @@ export function ArtLightbox({ cards, initialIndex, onClose }: ArtLightboxProps) 
         <X className="h-5 w-5" />
       </button>
 
-      {/* Card counter */}
-      <span className="absolute top-4 left-4 text-xs text-white/60 tabular-nums">
+      {/* Card counter (visual) */}
+      <span className="absolute top-4 left-4 text-xs text-white/60 tabular-nums" aria-hidden="true">
         {index + 1} / {cards.length}
       </span>
+      {/* Screen reader card position */}
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        Card {index + 1} of {cards.length}: {card.name}
+      </div>
 
       {/* Prev */}
       {cards.length > 1 && (

@@ -39,7 +39,7 @@ export const CompareBar = memo(function CompareBar({
             />
             <button
               onClick={() => onRemove(card.id)}
-              className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 transition-opacity"
               aria-label={`Remove ${card.name}`}
             >
               <X className="h-2.5 w-2.5" />

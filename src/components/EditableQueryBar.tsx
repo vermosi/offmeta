@@ -244,7 +244,11 @@ export const EditableQueryBar = memo(function EditableQueryBar({
             placeholder="Enter Scryfall query..."
             disabled={isLoading}
             aria-label="Scryfall query"
+            aria-describedby="query-bar-hint"
           />
+          <span id="query-bar-hint" className="sr-only">
+            Edit the Scryfall query and press Enter to re-run the search.
+          </span>
           {isEditing && hasChanges && (
             <button
               onClick={() => {

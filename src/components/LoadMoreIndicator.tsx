@@ -18,7 +18,8 @@ export const LoadMoreIndicator = forwardRef<HTMLDivElement, LoadMoreIndicatorPro
       <div
         ref={ref}
         className="flex justify-center pt-8 pb-4"
-        aria-hidden="true"
+        role="status"
+        aria-live="polite"
       >
         {isFetchingNextPage && (
           <div className="flex items-center gap-2 text-muted-foreground">

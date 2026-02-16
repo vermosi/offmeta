@@ -288,6 +288,7 @@ export const UnifiedSearchBar = forwardRef<
           {EXAMPLE_QUERIES.slice(0, isMobile ? 2 : 3).map((example) => (
             <button
               key={example}
+              type="button"
               onClick={() => {
                 setQuery(example);
                 handleSearch(example);

@@ -72,6 +72,7 @@ export const EmptyState = ({ query, onTryExample }: EmptyStateProps) => {
                 key={example}
                 variant="outline"
                 size="sm"
+                type="button"
                 onClick={() => onTryExample(example)}
                 className="text-xs magnetic"
               >
