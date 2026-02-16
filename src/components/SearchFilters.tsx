@@ -478,9 +478,18 @@ export function SearchFilters({
                 variant="secondary"
                 className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20 text-xs"
                 onClick={() => toggleColor(colorId)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e: React.KeyboardEvent) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleColor(colorId);
+                  }
+                }}
+                aria-label={`Remove ${color?.name || colorId} filter`}
               >
                 {color?.name || colorId}
-                <X className="h-3 w-3" />
+                <X className="h-3 w-3" aria-hidden="true" />
               </Badge>
             );
           })}
@@ -490,9 +499,18 @@ export function SearchFilters({
               variant="secondary"
               className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20 text-xs"
               onClick={() => toggleType(type)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e: React.KeyboardEvent) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  toggleType(type);
+                }
+              }}
+              aria-label={`Remove ${type} filter`}
             >
               {type}
-              <X className="h-3 w-3" />
+              <X className="h-3 w-3" aria-hidden="true" />
             </Badge>
           ))}
           {(filters.cmcRange[0] > 0 || filters.cmcRange[1] < defaultMaxCmc) && (
@@ -502,10 +520,19 @@ export function SearchFilters({
               onClick={() =>
                 setFilters((prev) => ({ ...prev, cmcRange: [0, defaultMaxCmc] }))
               }
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e: React.KeyboardEvent) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setFilters((prev) => ({ ...prev, cmcRange: [0, defaultMaxCmc] }));
+                }
+              }}
+              aria-label={`Remove CMC ${filters.cmcRange[0]}-${filters.cmcRange[1] >= defaultMaxCmc ? `${defaultMaxCmc}+` : filters.cmcRange[1]} filter`}
             >
               CMC {filters.cmcRange[0]}-
               {filters.cmcRange[1] >= defaultMaxCmc ? `${defaultMaxCmc}+` : filters.cmcRange[1]}
-              <X className="h-3 w-3" />
+              <X className="h-3 w-3" aria-hidden="true" />
             </Badge>
           )}
         </div>

@@ -223,7 +223,7 @@ export function VirtualizedCardGrid({
                 const cardIndex = startIndex + colIndex;
                 const card = cards[cardIndex];
 
-                if (!card) return <div key={`empty-${colIndex}`} role="gridcell" />;
+                if (!card) return <div key={`empty-${colIndex}`} role="gridcell" aria-hidden="true" />;
 
                 const isFocused = focusIndex === cardIndex;
 
