@@ -287,4 +287,215 @@ describe('useSearchHandler', () => {
 
     expect(result.current.isSearching).toBe(false);
   });
+
+  // ── Edge Cases ────────────────────────────────────────────
+
+  // 13. Rapid concurrent searches — only latest wins
+  it('rapid-fires 5 searches and only applies the last result', async () => {
+    const resolvers: Array<(v: unknown) => void> = [];
+    mockTranslateQueryWithDedup.mockImplementation(
+      () => new Promise((r) => resolvers.push(r)),
+    );
+
+    const opts = createOptions();
+    const { result } = renderHook(() => useSearchHandler(opts));
+
+    const promises: Promise<void>[] = [];
+    for (let i = 0; i < 5; i++) {
+      act(() => {
+        promises.push(result.current.handleSearch(`query-${i}`));
+      });
+    }
+
+    // Resolve all in reverse order
+    for (let i = resolvers.length - 1; i >= 0; i--) {
+      await act(async () => {
+        resolvers[i](createMockTranslation({ scryfallQuery: `result-${i}` }));
+        await promises[i];
+      });
+    }
+
+    // Only the last search (query-4, result-4) should be applied
+    expect(opts.onSearch).toHaveBeenCalledTimes(1);
+    expect(opts.onSearch.mock.calls[0][0]).toBe('result-4');
+  });
+
+  // 14. Whitespace-only query treated as empty
+  it('treats whitespace-only query as empty', async () => {
+    const opts = createOptions({ query: '   ' });
+    const { result } = renderHook(() => useSearchHandler(opts));
+
+    await act(async () => {
+      await result.current.handleSearch();
+    });
+
+    expect(mockTranslateQueryWithDedup).not.toHaveBeenCalled();
+    expect(opts.onSearch).not.toHaveBeenCalled();
+  });
+
+  // 15. Malformed translation result (missing fields) still works via fallback shape
+  it('handles translation result with missing optional fields', async () => {
+    mockTranslateQueryWithDedup.mockResolvedValue({
+      scryfallQuery: 't:land',
+      explanation: { readable: 'Lands', assumptions: [], confidence: 0.9 },
+      showAffiliate: false,
+      // source, validationIssues, intent all missing
+    });
+
+    const opts = createOptions();
+    const { result } = renderHook(() => useSearchHandler(opts));
+
+    await act(async () => {
+      await result.current.handleSearch();
+    });
+
+    expect(opts.onSearch).toHaveBeenCalledTimes(1);
+    const [, searchResult] = opts.onSearch.mock.calls[0];
+    expect(searchResult!.source).toBe('ai'); // default when missing
+    expect(searchResult!.validationIssues).toBeUndefined();
+  });
+
+  // 16. Non-Error throw (e.g., string thrown)
+  it('handles non-Error thrown value gracefully', async () => {
+    mockTranslateQueryWithDedup.mockRejectedValue('string error');
+
+    const opts = createOptions();
+    const { result } = renderHook(() => useSearchHandler(opts));
+
+    await act(async () => {
+      await result.current.handleSearch();
+    });
+
+    expect(opts.onSearch).toHaveBeenCalledTimes(1);
+    const [, searchResult] = opts.onSearch.mock.calls[0];
+    expect(searchResult!.source).toBe('client_fallback');
+  });
+
+  // 17. Rate limit blocks subsequent search and shows toast
+  it('blocks search during rate limit window', async () => {
+    // First trigger rate limit
+    mockTranslateQueryWithDedup.mockRejectedValueOnce(new Error('429'));
+    const opts = createOptions();
+    const { result } = renderHook(() => useSearchHandler(opts));
+
+    await act(async () => {
+      await result.current.handleSearch();
+    });
+
+    expect(opts.onSearch).not.toHaveBeenCalled();
+
+    // Second search within window should be blocked
+    mockTranslateQueryWithDedup.mockResolvedValue(createMockTranslation());
+    vi.clearAllMocks();
+
+    await act(async () => {
+      await result.current.handleSearch();
+    });
+
+    expect(mockTranslateQueryWithDedup).not.toHaveBeenCalled();
+    expect(opts.onSearch).not.toHaveBeenCalled();
+    expect(mockToast.error).toHaveBeenCalledWith('Please wait', expect.any(Object));
+  });
+
+  // 18. Rate limit expires and search resumes
+  it('allows search after rate limit window expires', async () => {
+    mockTranslateQueryWithDedup.mockRejectedValueOnce(new Error('Rate limit exceeded'));
+    const opts = createOptions();
+    const { result } = renderHook(() => useSearchHandler(opts));
+
+    await act(async () => {
+      await result.current.handleSearch();
+    });
+
+    expect(opts.onSearch).not.toHaveBeenCalled();
+
+    // Advance past the 30s rate limit window
+    mockTranslateQueryWithDedup.mockResolvedValue(createMockTranslation());
+    await act(async () => {
+      vi.advanceTimersByTime(31000);
+    });
+
+    await act(async () => {
+      await result.current.handleSearch();
+    });
+
+    expect(opts.onSearch).toHaveBeenCalledTimes(1);
+  });
+
+  // 19. Abort controller is cleaned up after search completes
+  it('nullifies abort controller after search', async () => {
+    const opts = createOptions();
+    const { result } = renderHook(() => useSearchHandler(opts));
+
+    await act(async () => {
+      await result.current.handleSearch();
+    });
+
+    // isSearching should be false — no dangling abort controller
+    expect(result.current.isSearching).toBe(false);
+  });
+
+  // 20. Extremely long query is still forwarded (no truncation in handler)
+  it('forwards very long queries without truncation', async () => {
+    const longQuery = 'a'.repeat(500);
+    const opts = createOptions({ query: longQuery });
+    const { result } = renderHook(() => useSearchHandler(opts));
+
+    await act(async () => {
+      await result.current.handleSearch();
+    });
+
+    expect(mockTranslateQueryWithDedup).toHaveBeenCalledWith(
+      expect.objectContaining({ query: longQuery }),
+    );
+  });
+
+  // 21. Concurrent timeout and error — timeout fires first
+  it('timeout wins over slow rejection', async () => {
+    mockTranslateQueryWithDedup.mockImplementation(
+      () => new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Slow error')), 20000);
+      }),
+    );
+
+    const opts = createOptions();
+    const { result } = renderHook(() => useSearchHandler(opts));
+
+    await act(async () => {
+      const p = result.current.handleSearch();
+      vi.advanceTimersByTime(16000);
+      await p;
+    });
+
+    const [, searchResult] = opts.onSearch.mock.calls[0];
+    expect(searchResult!.source).toBe('client_fallback');
+    expect(mockToast.error).toHaveBeenCalledWith(
+      'Search took too long',
+      expect.any(Object),
+    );
+  });
+
+  // 22. Multiple error variants trigger correct fallback path
+  it.each([
+    ['Please wait before retrying', true],  // rate-limit variant
+    ['rate limited by server', true],        // rate-limit variant
+    ['Server returned 500', false],          // generic error
+    ['ECONNREFUSED', false],                 // network error
+  ])('error "%s" → rate-limited=%s', async (msg, isRateLimited) => {
+    mockTranslateQueryWithDedup.mockRejectedValue(new Error(msg));
+    const opts = createOptions();
+    const { result } = renderHook(() => useSearchHandler(opts));
+
+    await act(async () => {
+      await result.current.handleSearch();
+    });
+
+    if (isRateLimited) {
+      expect(opts.onSearch).not.toHaveBeenCalled();
+    } else {
+      expect(opts.onSearch).toHaveBeenCalledTimes(1);
+      const [, searchResult] = opts.onSearch.mock.calls[0];
+      expect(searchResult!.source).toBe('client_fallback');
+    }
+  });
 });
