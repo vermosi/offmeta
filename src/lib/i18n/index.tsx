@@ -25,8 +25,6 @@ import zhs from './zhs.json';
 import zht from './zht.json';
 
 import type { SupportedLocale } from './constants';
-export type { SupportedLocale };
-export { SUPPORTED_LOCALES, LOCALE_TO_SCRYFALL_LANG } from './constants';
 
 type TranslationDictionary = Record<string, string>;
 

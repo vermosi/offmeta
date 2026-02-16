@@ -9,7 +9,8 @@ import { getTodayPick } from '@/data/daily-gems';
 import { Sparkles, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ManaCost, OracleText } from '@/components/ManaSymbol';
-import { useTranslation, LOCALE_TO_SCRYFALL_LANG } from '@/lib/i18n';
+import { useTranslation } from '@/lib/i18n';
+import { LOCALE_TO_SCRYFALL_LANG } from '@/lib/i18n/constants';
 import type { ScryfallCard } from '@/types/card';
 
 export function DailyPick() {

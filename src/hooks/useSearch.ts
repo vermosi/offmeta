@@ -21,7 +21,8 @@ import type { SearchIntent } from '@/types/search';
 import { buildFilterQuery, validateScryfallQuery } from '@/lib/scryfall/query';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { CLIENT_CONFIG } from '@/lib/config';
-import { useTranslation, LOCALE_TO_SCRYFALL_LANG } from '@/lib/i18n';
+import { useTranslation } from '@/lib/i18n';
+import { LOCALE_TO_SCRYFALL_LANG } from '@/lib/i18n/constants';
 
 /** Generate unique request ID */
 function generateRequestId(): string {
@@ -77,8 +78,8 @@ export function useSearch() {
   const { locale } = useTranslation();
   const scryfallLang = LOCALE_TO_SCRYFALL_LANG[locale] ?? 'en';
 
-  // Parse initial filter state from URL
-  const initialUrlFilters = useRef(parseFiltersFromUrl(searchParams));
+  // Parse initial filter state from URL (stable across renders)
+  const [initialUrlFilters] = useState(() => parseFiltersFromUrl(searchParams));
 
   // --- Core search state ---
   // Don't initialize searchQuery from URL — wait for translation
@@ -395,6 +396,6 @@ export function useSearch() {
     handleFilteredCards,
 
     // Initial URL filters (for hydrating SearchFilters on load)
-    initialUrlFilters: initialUrlFilters.current,
+    initialUrlFilters,
   };
 }

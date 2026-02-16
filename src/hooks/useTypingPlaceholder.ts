@@ -21,7 +21,15 @@ const SESSION_KEY = 'offmeta_typing_shown';
 
 export function useTypingPlaceholder(fallback: string, enabled: boolean) {
   const [text, setText] = useState('');
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(() => {
+    if (!enabled) return false;
+    if (typeof window === 'undefined') return false;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+    try {
+      if (sessionStorage.getItem(SESSION_KEY)) return false;
+    } catch { /* ignore */ }
+    return true;
+  });
   const cancelledRef = useRef(false);
 
   const shouldAnimate = useCallback(() => {
@@ -38,7 +46,6 @@ export function useTypingPlaceholder(fallback: string, enabled: boolean) {
     if (!shouldAnimate()) return;
 
     cancelledRef.current = false;
-    setIsAnimating(true);
 
     let timeout: ReturnType<typeof setTimeout>;
 

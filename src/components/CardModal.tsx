@@ -62,20 +62,25 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
 
   const isDoubleFaced = card ? isDoubleFacedCard(card) : false;
 
-  // Reset state when card changes
-  useEffect(() => {
-    if (open) {
+  // Reset state and init loading when card/open changes (render-phase adjustment)
+  const [prevCardKey, setPrevCardKey] = useState<string | null>(null);
+  const cardKey = card && open ? card.id : null;
+  if (cardKey !== prevCardKey) {
+    setPrevCardKey(cardKey);
+    if (open && card) {
       setCurrentFace(0);
       setSelectedPrinting(null);
       setShowRulings(false);
       setRulings([]);
+      setIsLoadingRulings(true);
+      setIsLoadingPrintings(true);
+      setRefreshedPrices(null);
     }
-  }, [card, open]);
+  }
 
   // Fetch rulings when modal opens
   useEffect(() => {
     if (card && open) {
-      setIsLoadingRulings(true);
       getCardRulings(card.id).then((data) => {
         setRulings(data);
         setIsLoadingRulings(false);
@@ -91,7 +96,6 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
         card_name: card.name,
         set_code: card.set,
       });
-      setIsLoadingPrintings(true);
       getCardPrintings(card.name).then((data) => {
         setPrintings(data);
         const currentPrinting = data.find((p) => p.id === card.id);
