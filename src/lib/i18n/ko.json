@@ -304,5 +304,18 @@
   "guide.faq1q.multi-constraint-complex-search": "검색의 복잡성에 제한이 있나요?",
   "guide.faq1a.multi-constraint-complex-search": "OffMeta는 매우 복잡한 쿼리를 처리할 수 있지만, 극도로 긴 문장은 정확도가 떨어질 수 있습니다. 결과가 예상과 다르면 약간 단순화하거나 편집 가능한 쿼리 바를 사용하세요.",
   "guide.faq2q.multi-constraint-complex-search": "OffMeta가 쿼리를 잘못 번역하면 어떻게 되나요?",
-  "guide.faq2a.multi-constraint-complex-search": "편집 가능한 바에서 번역된 쿼리를 직접 편집할 수 있습니다. 피드백 버튼으로 문제를 보고할 수도 있습니다. 보고가 시간이 지남에 따라 번역 개선에 도움이 됩니다."
+  "guide.faq2a.multi-constraint-complex-search": "편집 가능한 바에서 번역된 쿼리를 직접 편집할 수 있습니다. 피드백 버튼으로 문제를 보고할 수도 있습니다. 보고가 시간이 지남에 따라 번역 개선에 도움이 됩니다.",
+
+  "dailyPick.heading": "오늘의 오프메타 픽",
+  "dailyPick.loading": "오늘의 숨겨진 보석 로딩 중...",
+  "dailyPick.whyGem": "숨겨진 보석인 이유",
+  "dailyPick.viewOnScryfall": "Scryfall에서 보기",
+
+  "staples.heading": "필수 카드...",
+  "staples.subtitle": "아키타입별 빠른 검색",
+
+  "surpriseMe": "랜덤 카드",
+  "feedback.label": "피드백",
+  "help.label": "도움말",
+  "help.title": "검색 도움말"
 }

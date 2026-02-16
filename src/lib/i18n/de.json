@@ -304,5 +304,18 @@
   "guide.faq1q.multi-constraint-complex-search": "Gibt es ein Komplexitätslimit für meine Suche?",
   "guide.faq1a.multi-constraint-complex-search": "OffMeta kann sehr komplexe Anfragen verarbeiten, aber extrem lange Sätze können an Präzision verlieren. Wenn die Ergebnisse nicht wie erwartet sind, versuche leicht zu vereinfachen oder nutze die editierbare Abfrageleiste.",
   "guide.faq2q.multi-constraint-complex-search": "Was passiert, wenn OffMeta meine Anfrage falsch übersetzt?",
-  "guide.faq2a.multi-constraint-complex-search": "Du kannst die übersetzte Anfrage jederzeit direkt in der editierbaren Leiste bearbeiten. Du kannst auch Probleme mit dem Feedback-Button melden. Deine Berichte helfen, die Übersetzungen im Laufe der Zeit zu verbessern."
+  "guide.faq2a.multi-constraint-complex-search": "Du kannst die übersetzte Anfrage jederzeit direkt in der editierbaren Leiste bearbeiten. Du kannst auch Probleme mit dem Feedback-Button melden. Deine Berichte helfen, die Übersetzungen im Laufe der Zeit zu verbessern.",
+
+  "dailyPick.heading": "Täglicher Off-Meta Pick",
+  "dailyPick.loading": "Lade den heutigen Geheimtipp...",
+  "dailyPick.whyGem": "Warum es ein Geheimtipp ist",
+  "dailyPick.viewOnScryfall": "Auf Scryfall ansehen",
+
+  "staples.heading": "Grundkarten Für...",
+  "staples.subtitle": "Schnellsuche nach Archetyp",
+
+  "surpriseMe": "Überrasch mich",
+  "feedback.label": "Feedback",
+  "help.label": "Hilfe",
+  "help.title": "Suchhilfe"
 }

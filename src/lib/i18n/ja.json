@@ -304,5 +304,18 @@
   "guide.faq1q.multi-constraint-complex-search": "検索の複雑さに制限はありますか？",
   "guide.faq1a.multi-constraint-complex-search": "OffMetaは非常に複雑なクエリを処理できますが、極端に長い文は精度が低下する可能性があります。結果が期待通りでない場合は、少し簡略化するか、編集可能なクエリバーを使用してください。",
   "guide.faq2q.multi-constraint-complex-search": "OffMetaがクエリを誤って翻訳した場合はどうなりますか？",
-  "guide.faq2a.multi-constraint-complex-search": "翻訳されたクエリは編集可能なバーで直接編集できます。フィードバックボタンで問題を報告することもできます。あなたの報告が時間とともに翻訳の改善に役立ちます。"
+  "guide.faq2a.multi-constraint-complex-search": "翻訳されたクエリは編集可能なバーで直接編集できます。フィードバックボタンで問題を報告することもできます。あなたの報告が時間とともに翻訳の改善に役立ちます。",
+
+  "dailyPick.heading": "今日のオフメタピック",
+  "dailyPick.loading": "今日の隠れた名カードを読み込み中...",
+  "dailyPick.whyGem": "隠れた名カードの理由",
+  "dailyPick.viewOnScryfall": "Scryfallで見る",
+
+  "staples.heading": "定番カード...",
+  "staples.subtitle": "アーキタイプ別クイック検索",
+
+  "surpriseMe": "ランダムカード",
+  "feedback.label": "フィードバック",
+  "help.label": "ヘルプ",
+  "help.title": "検索ヘルプ"
 }
