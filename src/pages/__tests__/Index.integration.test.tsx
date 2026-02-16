@@ -232,11 +232,13 @@ describe('Index page integration', () => {
     const exampleBtn = screen.getByText('creatures that make treasure tokens');
     fireEvent.click(exampleBtn);
 
-    expect(mockTranslateQueryWithDedup).toHaveBeenCalledWith(
-      expect.objectContaining({
-        query: 'creatures that make treasure tokens',
-      }),
-    );
+    await waitFor(() => {
+      expect(mockTranslateQueryWithDedup).toHaveBeenCalledWith(
+        expect.objectContaining({
+          query: 'creatures that make treasure tokens',
+        }),
+      );
+    });
   });
 
   it('shows total cards count after search', async () => {
