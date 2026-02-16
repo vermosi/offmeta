@@ -147,8 +147,9 @@ export function sanitizeInputQuery(query: string): {
   }
 
   // Check for excessive non-alphanumeric characters (>50%)
-  const alphanumericCount = (sanitized.match(/[a-zA-Z0-9]/g) || []).length;
-  if (alphanumericCount < sanitized.length * 0.5 && sanitized.length > 10) {
+  // Include CJK, Hangul, Cyrillic, and other Unicode letter ranges as valid
+  const wordCharCount = (sanitized.match(/[\p{L}\p{N}]/gu) || []).length;
+  if (wordCharCount < sanitized.length * 0.5 && sanitized.length > 10) {
     return {
       valid: false,
       reason: 'Query contains too many special characters',

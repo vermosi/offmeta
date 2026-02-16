@@ -453,7 +453,7 @@ serve(async (req) => {
       queryWords > 8 ? 'complex' : queryWords > 4 ? 'medium' : 'simple';
 
     const systemPrompt = buildSystemPrompt(tier, dynamicRules, ''); // Simplified context for now
-    const userMessage = `Translate to Scryfall syntax: "${deterministicResult.intent.remainingQuery}" ${deterministicQuery ? `(must include: ${deterministicQuery})` : ''}`;
+    const userMessage = `Translate this natural language query (which may be in any language) to Scryfall search syntax: "${deterministicResult.intent.remainingQuery}" ${deterministicQuery ? `(must include: ${deterministicQuery})` : ''}`;
 
     try {
       const aiResponse = await fetchWithRetry(
