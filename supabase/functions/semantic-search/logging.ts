@@ -54,18 +54,6 @@ export function logTranslation(
   source: string = 'ai',
   resultCount: number | null = null,
 ): void {
-  // Selective logging for cost optimization
-  const shouldLog =
-    Deno.env.get('LOG_ALL_TRANSLATIONS') === 'true' ||
-    confidenceScore < 0.8 ||
-    validationIssues.length > 0 ||
-    qualityFlags.length > 0 ||
-    fallbackUsed;
-
-  if (!shouldLog) {
-    return;
-  }
-
   logQueue.push({
     natural_language_query: naturalQuery.substring(0, 500),
     translated_query: translatedQuery.substring(0, 1000),

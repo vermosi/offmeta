@@ -29,7 +29,7 @@ import {
   sanitizeInputQuery,
 } from './validation.ts';
 import { buildFallbackQuery, applyFiltersToQuery } from './fallback.ts';
-import { logTranslation, createLogger } from './logging.ts';
+import { logTranslation, createLogger, flushLogQueue } from './logging.ts';
 import { runPipeline, type PipelineContext } from './pipeline/index.ts';
 import {
   validateAIResponse,
@@ -355,6 +355,8 @@ serve(async (req) => {
       if (cached) {
         const responseTimeMs = Date.now() - requestStartTime;
         logInfo('cache_hit', { query: query.substring(0, 50), responseTimeMs });
+        logTranslation(query, cached.scryfallQuery, cached.explanation?.confidence ?? 0.9, responseTimeMs, [], [], filters, false, 'cache');
+        await flushLogQueue();
 
         return new Response(
           JSON.stringify({
@@ -380,6 +382,8 @@ serve(async (req) => {
       });
 
       setCachedResult(query, filters, patternMatch, cacheSalt);
+      logTranslation(query, patternMatch.scryfallQuery, patternMatch.explanation?.confidence ?? 0.85, responseTimeMs, [], [], filters, false, 'pattern_match');
+      await flushLogQueue();
 
       return new Response(
         JSON.stringify({
@@ -426,6 +430,9 @@ serve(async (req) => {
         deterministicQuery || null,
         overlyBroadThreshold,
       );
+      const responseTimeMs = Date.now() - requestStartTime;
+      logTranslation(query, scryfallValidation.query, 0.9, responseTimeMs, [], [], filters, false, 'deterministic');
+      await flushLogQueue();
 
       return new Response(
         JSON.stringify({
@@ -575,6 +582,7 @@ serve(async (req) => {
         filters,
         false,
       );
+      await flushLogQueue();
 
       return new Response(
         JSON.stringify({
