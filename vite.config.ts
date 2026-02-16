@@ -43,7 +43,7 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       workbox: {
-        // Cache card images with a LRU strategy
+        navigateFallbackDenylist: [/^\/~oauth/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/cards\.scryfall\.io\/.*/i,
