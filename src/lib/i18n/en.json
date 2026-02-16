@@ -99,5 +99,28 @@
   "language.es": "Español",
 
   "results.fallbackLangNotice": "Showing English results — not all cards are available in this language.",
-  "card.oracleTextEnglish": "Oracle text (English)"
+  "card.oracleTextEnglish": "Oracle text (English)",
+
+  "howItWorks.heading": "How It Works",
+  "howItWorks.step": "Step",
+  "howItWorks.step1Title": "Describe what you're looking for",
+  "howItWorks.step1Desc": "Type a natural language description of the cards you want to find. For example: 'green creatures that ramp' or 'board wipes under $5 for commander'.",
+  "howItWorks.step2Title": "Review the translation",
+  "howItWorks.step2Desc": "OffMeta shows you the Scryfall query it generated from your description. You can see exactly what syntax was used and edit it if needed.",
+  "howItWorks.step3Title": "Browse your results",
+  "howItWorks.step3Desc": "Scroll through the matching cards. Click any card to see full details including oracle text, prices, legalities, and all printings.",
+  "howItWorks.step4Title": "Refine with filters",
+  "howItWorks.step4Desc": "Use the filter chips to narrow results by color, format, card type, mana cost, price, or rarity without rewriting your search.",
+
+  "faq.heading": "Frequently Asked Questions",
+  "faq.q1": "What is OffMeta?",
+  "faq.a1": "OffMeta is a natural language search tool for Magic: The Gathering cards. Instead of learning complex Scryfall syntax, you can describe what you're looking for in plain English and OffMeta translates it into a valid search query.",
+  "faq.q2": "How does natural language MTG card search work?",
+  "faq.a2": "OffMeta uses AI to understand your search intent and converts it into Scryfall search syntax. For example, typing 'cheap green ramp spells' becomes a proper query filtering by color, card type, mana cost, and oracle text for mana-producing effects.",
+  "faq.q3": "Is OffMeta free to use?",
+  "faq.a3": "Yes, OffMeta is completely free to use. There are no accounts required, no subscriptions, and no limits on searches.",
+  "faq.q4": "Where does OffMeta get its card data?",
+  "faq.a4": "OffMeta uses the Scryfall API as its data source. Scryfall maintains a comprehensive, up-to-date database of all Magic: The Gathering cards including oracle text, prices, legalities, and card images.",
+  "faq.q5": "Can I use OffMeta to search for Commander/EDH cards?",
+  "faq.a5": "Yes! You can search for cards legal in any format including Commander, Standard, Modern, Legacy, and more. Simply mention the format in your search like 'commander legal board wipes under $5' or use the format filter chips."
 }
