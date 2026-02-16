@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { LanguageSelector } from '@/components/LanguageSelector';
 import { Logo } from '@/components/Logo';
 import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n';
@@ -144,7 +145,8 @@ export function Header() {
           </nav>
 
           {/* Right side: theme toggle + hamburger */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <LanguageSelector />
             <ThemeToggle />
             <button
               className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors focus-ring"

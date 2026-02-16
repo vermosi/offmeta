@@ -92,5 +92,9 @@
   "a11y.searchResults": "Search results",
   "a11y.previousCard": "Previous card",
   "a11y.nextCard": "Next card",
-  "a11y.close": "Close"
+  "a11y.close": "Close",
+
+  "language.label": "Language",
+  "language.en": "English",
+  "language.es": "Español"
 }
