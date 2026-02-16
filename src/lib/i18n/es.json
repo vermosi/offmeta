@@ -96,5 +96,8 @@
 
   "language.label": "Idioma",
   "language.en": "English",
-  "language.es": "Español"
+  "language.es": "Español",
+
+  "results.fallbackLangNotice": "Mostrando resultados en inglés — no todas las cartas están disponibles en este idioma.",
+  "card.oracleTextEnglish": "Texto de reglas (inglés)"
 }

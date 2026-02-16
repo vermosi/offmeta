@@ -9,6 +9,8 @@ import type { KeyboardEvent } from 'react';
 import type { ScryfallCard } from '@/types/card';
 import { getCardImage } from '@/lib/scryfall/client';
 import { ManaCost } from '@/components/ManaSymbol';
+import { getLocalizedName, getLocalizedTypeLine } from '@/lib/scryfall/localized';
+import { useTranslation } from '@/lib/i18n';
 
 interface CardItemProps {
   card: ScryfallCard;
@@ -35,6 +37,9 @@ export const CardItem = memo(function CardItem({
 }: CardItemProps) {
   const imageUrl = getCardImage(card, 'normal');
   const [imgError, setImgError] = useState(false);
+  const { locale } = useTranslation();
+  const displayName = getLocalizedName(card, locale);
+  const displayType = getLocalizedTypeLine(card, locale);
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -53,11 +58,11 @@ export const CardItem = memo(function CardItem({
       role="button"
       tabIndex={0}
       className="group relative w-full aspect-[2.5/3.5] rounded-xl overflow-hidden bg-secondary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-transform duration-200 hover:scale-[1.02]"
-      aria-label={`View details for ${card.name}`}
+      aria-label={`View details for ${displayName}`}
     >
       {imgError ? (
         <div className="w-full h-full flex items-center justify-center p-4 text-center">
-          <span className="text-sm text-muted-foreground font-medium">{card.name}</span>
+          <span className="text-sm text-muted-foreground font-medium">{displayName}</span>
         </div>
       ) : (
         <img
@@ -78,10 +83,10 @@ export const CardItem = memo(function CardItem({
         <div className="flex items-end justify-between gap-1">
           <div className="min-w-0 flex-1">
             <p className="text-[10px] sm:text-[11px] leading-tight font-semibold text-white truncate">
-              {card.name}
+              {displayName}
             </p>
             <p className="text-[9px] sm:text-[10px] leading-tight text-white/70 truncate mt-0.5 hidden min-[480px]:block">
-              {card.type_line}
+              {displayType}
             </p>
           </div>
           <div className="flex flex-col items-end gap-0.5 flex-shrink-0">

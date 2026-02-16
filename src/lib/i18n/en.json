@@ -96,5 +96,8 @@
 
   "language.label": "Language",
   "language.en": "English",
-  "language.es": "Español"
+  "language.es": "Español",
+
+  "results.fallbackLangNotice": "Showing English results — not all cards are available in this language.",
+  "card.oracleTextEnglish": "Oracle text (English)"
 }

@@ -7,6 +7,8 @@ import { memo } from 'react';
 import type { KeyboardEvent } from 'react';
 import type { ScryfallCard } from '@/types/card';
 import { ManaCost } from '@/components/ManaSymbol';
+import { getLocalizedName, getLocalizedTypeLine } from '@/lib/scryfall/localized';
+import { useTranslation } from '@/lib/i18n';
 
 interface CardListItemProps {
   card: ScryfallCard;
@@ -26,6 +28,9 @@ export const CardListItem = memo(function CardListItem({
 
   const price = card.prices?.usd ? `$${card.prices.usd}` : '';
   const manaCost = card.mana_cost || card.card_faces?.[0]?.mana_cost || '';
+  const { locale } = useTranslation();
+  const displayName = getLocalizedName(card, locale);
+  const displayType = getLocalizedTypeLine(card, locale);
 
   return (
     <div
@@ -34,11 +39,11 @@ export const CardListItem = memo(function CardListItem({
       role="button"
       tabIndex={0}
       className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/50 bg-card/50 hover:bg-muted/50 hover:border-border cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      aria-label={`View details for ${card.name}`}
+      aria-label={`View details for ${displayName}`}
     >
       {/* Name */}
       <span className="flex-1 min-w-0 text-sm font-medium text-foreground truncate">
-        {card.name}
+        {displayName}
       </span>
 
       {/* Mana cost */}
@@ -50,7 +55,7 @@ export const CardListItem = memo(function CardListItem({
 
       {/* Type */}
       <span className="hidden md:block text-xs text-muted-foreground truncate max-w-[180px] flex-shrink-0">
-        {card.type_line}
+        {displayType}
       </span>
 
       {/* Rarity */}

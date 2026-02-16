@@ -21,6 +21,7 @@ import type { SearchIntent } from '@/types/search';
 import { buildFilterQuery, validateScryfallQuery } from '@/lib/scryfall/query';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { CLIENT_CONFIG } from '@/lib/config';
+import { useTranslation, LOCALE_TO_SCRYFALL_LANG } from '@/lib/i18n';
 
 /** Generate unique request ID */
 function generateRequestId(): string {
@@ -73,6 +74,8 @@ export function useSearch() {
   const [searchParams, setSearchParams] = useSearchParams();
   const urlQuery = searchParams.get('q') || '';
   const queryClient = useQueryClient();
+  const { locale } = useTranslation();
+  const scryfallLang = LOCALE_TO_SCRYFALL_LANG[locale] ?? 'en';
 
   // Parse initial filter state from URL
   const initialUrlFilters = useRef(parseFiltersFromUrl(searchParams));
@@ -137,8 +140,8 @@ export function useSearch() {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ['cards', validatedSearchQuery],
-    queryFn: ({ pageParam = 1 }) => searchCards(validatedSearchQuery, pageParam),
+    queryKey: ['cards', validatedSearchQuery, scryfallLang],
+    queryFn: ({ pageParam = 1 }) => searchCards(validatedSearchQuery, pageParam, scryfallLang),
     getNextPageParam: (lastPage, allPages) =>
       lastPage.has_more ? allPages.length + 1 : undefined,
     initialPageParam: 1,
@@ -242,7 +245,7 @@ export function useSearch() {
         setLastIntent(null);
       }
 
-      queryClient.invalidateQueries({ queryKey: ['cards', executedQuery] });
+      queryClient.invalidateQueries({ queryKey: ['cards', executedQuery, scryfallLang] });
 
       const urlValue = naturalQuery || query;
       if (urlValue) {
@@ -261,7 +264,7 @@ export function useSearch() {
         });
       }
     },
-    [trackSearch, setSearchParams, queryClient],
+    [trackSearch, setSearchParams, queryClient, scryfallLang],
   );
 
   const handleRerunEditedQuery = useCallback(
@@ -297,7 +300,7 @@ export function useSearch() {
           : { scryfallQuery: validation.sanitized, explanation: undefined, showAffiliate: false, validationIssues: [] },
       );
 
-      queryClient.invalidateQueries({ queryKey: ['cards', validation.sanitized] });
+      queryClient.invalidateQueries({ queryKey: ['cards', validation.sanitized, scryfallLang] });
 
       trackEvent('rerun_edited_query', {
         original_query: originalQuery,
@@ -305,7 +308,7 @@ export function useSearch() {
         request_id: requestId,
       });
     },
-    [queryClient, originalQuery, trackEvent, activeFilters],
+    [queryClient, originalQuery, trackEvent, activeFilters, scryfallLang],
   );
 
   const handleCardClick = useCallback(
@@ -356,6 +359,7 @@ export function useSearch() {
 
   return {
     // State
+    locale,
     searchQuery,
     originalQuery,
     selectedCard,
