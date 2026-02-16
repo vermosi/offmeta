@@ -14,22 +14,51 @@ import {
 } from 'react';
 import en from './en.json';
 import es from './es.json';
+import fr from './fr.json';
+import de from './de.json';
+import it from './it.json';
+import pt from './pt.json';
+import ja from './ja.json';
+import ko from './ko.json';
+import ru from './ru.json';
+import zhs from './zhs.json';
+import zht from './zht.json';
 
 type TranslationDictionary = Record<string, string>;
 
-export type SupportedLocale = 'en' | 'es';
+export type SupportedLocale = 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'ja' | 'ko' | 'ru' | 'zhs' | 'zht';
 
 export const SUPPORTED_LOCALES: { code: SupportedLocale; label: string; flag: string }[] = [
   { code: 'en', label: 'English', flag: '🇺🇸' },
   { code: 'es', label: 'Español', flag: '🇪🇸' },
+  { code: 'fr', label: 'Français', flag: '🇫🇷' },
+  { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
+  { code: 'it', label: 'Italiano', flag: '🇮🇹' },
+  { code: 'pt', label: 'Português', flag: '🇧🇷' },
+  { code: 'ja', label: '日本語', flag: '🇯🇵' },
+  { code: 'ko', label: '한국어', flag: '🇰🇷' },
+  { code: 'ru', label: 'Русский', flag: '🇷🇺' },
+  { code: 'zhs', label: '简体中文', flag: '🇨🇳' },
+  { code: 'zht', label: '繁體中文', flag: '🇹🇼' },
 ];
 
-const DICTIONARIES: Record<string, TranslationDictionary> = { en, es };
+const DICTIONARIES: Record<string, TranslationDictionary> = {
+  en, es, fr, de, it, pt, ja, ko, ru, zhs, zht,
+};
 
 /** Map app locales to Scryfall language codes. */
 export const LOCALE_TO_SCRYFALL_LANG: Record<SupportedLocale, string> = {
   en: 'en',
   es: 'es',
+  fr: 'fr',
+  de: 'de',
+  it: 'it',
+  pt: 'pt',
+  ja: 'ja',
+  ko: 'ko',
+  ru: 'ru',
+  zhs: 'zhs',
+  zht: 'zht',
 };
 
 const STORAGE_KEY = 'offmeta-locale';
