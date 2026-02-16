@@ -10,8 +10,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { type ViewMode, storeViewMode } from '@/lib/view-mode-storage';
-
-
+import { useTranslation } from '@/lib/i18n';
 
 interface ViewToggleProps {
   value: ViewMode;
@@ -19,6 +18,8 @@ interface ViewToggleProps {
 }
 
 export function ViewToggle({ value, onChange }: ViewToggleProps) {
+  const { t } = useTranslation();
+
   const handleChange = (val: string) => {
     if (val) {
       const mode = val as ViewMode;
@@ -33,45 +34,45 @@ export function ViewToggle({ value, onChange }: ViewToggleProps) {
       value={value}
       onValueChange={handleChange}
       className="h-8 sm:h-9 border border-border rounded-lg p-0.5 bg-muted/30"
-      aria-label="View mode"
+      aria-label={t('view.label')}
     >
       <Tooltip>
         <TooltipTrigger asChild>
           <ToggleGroupItem
             value="grid"
-            aria-label="Grid view"
+            aria-label={t('view.grid')}
             className="h-7 sm:h-8 w-7 sm:w-8 p-0 data-[state=on]:bg-background data-[state=on]:shadow-sm rounded-md"
           >
             <LayoutGrid className="h-3.5 w-3.5" />
           </ToggleGroupItem>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="text-xs">Grid view</TooltipContent>
+        <TooltipContent side="bottom" className="text-xs">{t('view.grid')}</TooltipContent>
       </Tooltip>
 
       <Tooltip>
         <TooltipTrigger asChild>
           <ToggleGroupItem
             value="list"
-            aria-label="List view"
+            aria-label={t('view.list')}
             className="h-7 sm:h-8 w-7 sm:w-8 p-0 data-[state=on]:bg-background data-[state=on]:shadow-sm rounded-md"
           >
             <List className="h-3.5 w-3.5" />
           </ToggleGroupItem>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="text-xs">List view</TooltipContent>
+        <TooltipContent side="bottom" className="text-xs">{t('view.list')}</TooltipContent>
       </Tooltip>
 
       <Tooltip>
         <TooltipTrigger asChild>
           <ToggleGroupItem
             value="images"
-            aria-label="Image-only view"
+            aria-label={t('view.images')}
             className="h-7 sm:h-8 w-7 sm:w-8 p-0 data-[state=on]:bg-background data-[state=on]:shadow-sm rounded-md"
           >
             <Image className="h-3.5 w-3.5" />
           </ToggleGroupItem>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="text-xs">Images only</TooltipContent>
+        <TooltipContent side="bottom" className="text-xs">{t('view.images')}</TooltipContent>
       </Tooltip>
     </ToggleGroup>
   );

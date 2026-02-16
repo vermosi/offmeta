@@ -6,8 +6,11 @@ import { Link } from 'react-router-dom';
 import { ExternalLink, Github } from 'lucide-react';
 import { GUIDES } from '@/data/guides';
 import { Logo } from '@/components/Logo';
+import { useTranslation } from '@/lib/i18n';
 
 export function Footer() {
+  const { t } = useTranslation();
+
   return (
     <footer className="border-t border-border mt-auto" role="contentinfo">
       <div className="container-main py-6 sm:py-8">
@@ -32,7 +35,7 @@ export function Footer() {
               aria-label="View source on GitHub (opens in new tab)"
             >
               <Github className="h-3.5 w-3.5" aria-hidden="true" />
-              <span className="hidden sm:inline">Source</span>
+              <span className="hidden sm:inline">{t('footer.source')}</span>
             </a>
             <a
               href="https://scryfall.com"
@@ -41,7 +44,7 @@ export function Footer() {
               className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
               aria-label="Powered by Scryfall (opens in new tab)"
             >
-              Powered by Scryfall
+              {t('footer.poweredBy')}
               <ExternalLink className="h-3 w-3 opacity-50" aria-hidden="true" />
             </a>
             <span className="text-xs text-muted-foreground sm:hidden">
@@ -53,7 +56,7 @@ export function Footer() {
         {/* Guide links */}
         <div className="mt-3 pt-3 border-t border-border">
           <div className="flex flex-wrap justify-center gap-x-2 gap-y-1">
-            <span className="text-xs font-medium text-muted-foreground mr-1">Guides:</span>
+            <span className="text-xs font-medium text-muted-foreground mr-1">{t('footer.guides')}:</span>
             {GUIDES.map((guide, i) => (
               <span key={guide.slug} className="inline-flex items-center">
                 <Link
@@ -73,16 +76,16 @@ export function Footer() {
         {/* Legal */}
         <div className="mt-2 pt-2 border-t border-border/50">
           <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
-            Unofficial Fan Content per{' '}
+            {t('footer.legal')}{' '}
             <a
               href="https://company.wizards.com/en/legal/fancontentpolicy"
               target="_blank"
               rel="noopener noreferrer"
               className="underline hover:text-foreground transition-colors"
             >
-              WotC Fan Content Policy
+              {t('footer.fanPolicy')}
             </a>
-            . Magic: The Gathering © Wizards of the Coast.
+            . {t('footer.copyright')}
           </p>
         </div>
       </div>

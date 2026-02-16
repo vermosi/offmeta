@@ -1,17 +1,11 @@
 import { SearchX, Lightbulb, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/lib/i18n';
 
 interface EmptyStateProps {
   query?: string;
   onTryExample?: (query: string) => void;
 }
-
-const suggestions = [
-  "Try broader terms like 'red creatures' instead of specific card names",
-  'Check spelling or use simpler keywords',
-  "Search by card type: 'legendary dragons'",
-  "Search by mechanic: 'cards with flying'",
-];
 
 const exampleQueries = [
   'blue counterspells under $5',
@@ -21,6 +15,15 @@ const exampleQueries = [
 ];
 
 export const EmptyState = ({ query, onTryExample }: EmptyStateProps) => {
+  const { t } = useTranslation();
+
+  const suggestions = [
+    t('empty.tip1'),
+    t('empty.tip2'),
+    t('empty.tip3'),
+    t('empty.tip4'),
+  ];
+
   return (
     <div className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-center animate-reveal">
       <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-secondary flex items-center justify-center mb-5">
@@ -28,12 +31,12 @@ export const EmptyState = ({ query, onTryExample }: EmptyStateProps) => {
       </div>
 
       <h3 className="text-lg font-semibold text-foreground mb-2">
-        No cards found
+        {t('empty.noCards')}
       </h3>
 
       {query && (
         <p className="text-sm text-muted-foreground mb-8 max-w-sm">
-          We couldn't find any cards matching "
+          {t('empty.noMatch')} "
           <span className="font-medium text-foreground">{query}</span>"
         </p>
       )}
@@ -43,7 +46,7 @@ export const EmptyState = ({ query, onTryExample }: EmptyStateProps) => {
         <div className="flex items-center gap-2 mb-3">
           <Lightbulb className="h-4 w-4 text-accent" />
           <span className="text-sm font-medium text-foreground">
-            Search tips
+            {t('empty.tips')}
           </span>
         </div>
         <ul className="text-sm text-muted-foreground space-y-2 text-left">
@@ -61,7 +64,7 @@ export const EmptyState = ({ query, onTryExample }: EmptyStateProps) => {
         <div className="w-full max-w-md">
           <p className="text-xs text-muted-foreground mb-3 flex items-center justify-center gap-1.5">
             <RefreshCw className="h-3 w-3" />
-            Try one of these searches
+            {t('empty.tryOne')}
           </p>
           <div className="flex flex-wrap justify-center gap-2">
             {exampleQueries.map((example) => (

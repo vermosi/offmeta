@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from 'next-themes';
 import { usePrefetchPopularQueries } from '@/hooks/useSearchQuery';
 import { useRealtimeCache } from '@/hooks/useRealtimeCache';
+import { I18nProvider } from '@/lib/i18n';
 
 const Index = lazy(() => import('./pages/Index'));
 const GuidesIndex = lazy(() => import('./pages/GuidesIndex'));
@@ -36,27 +37,29 @@ function AppInitializer() {
 }
 
 const App = () => (
-  <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <AppInitializer />
-        <BrowserRouter>
-          <Suspense fallback={<div className="min-h-screen bg-background" />}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/docs" element={<DocsIndex />} />
-              <Route path="/docs/syntax" element={<SyntaxCheatSheet />} />
-              <Route path="/guides" element={<GuidesIndex />} />
-              <Route path="/guides/:slug" element={<GuidePage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </ThemeProvider>
+  <I18nProvider>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <AppInitializer />
+          <BrowserRouter>
+            <Suspense fallback={<div className="min-h-screen bg-background" />}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/docs" element={<DocsIndex />} />
+                <Route path="/docs/syntax" element={<SyntaxCheatSheet />} />
+                <Route path="/guides" element={<GuidesIndex />} />
+                <Route path="/guides/:slug" element={<GuidePage />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
+  </I18nProvider>
 );
 
 export default App;
