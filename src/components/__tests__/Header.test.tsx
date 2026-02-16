@@ -1,8 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { Header } from '../Header';
 import { AuthProvider } from '@/components/AuthProvider';
+
+// Mock Supabase client so auth resolves synchronously (prevents act warnings)
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: {
+    auth: {
+      getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+      onAuthStateChange: (_cb: unknown) => ({ data: { subscription: { unsubscribe: vi.fn() } } }),
+    },
+    from: () => ({ select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: null }) }) }) }),
+  },
+}));
 
 // Mock ThemeToggle
 vi.mock('@/components/ThemeToggle', () => ({
@@ -16,7 +27,20 @@ vi.mock('react-router-dom', async () => {
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
-function renderHeader(initialRoute = '/') {
+async function renderHeader(initialRoute = '/') {
+  const result = render(
+    <MemoryRouter initialEntries={[initialRoute]}>
+      <AuthProvider>
+        <Header />
+      </AuthProvider>
+    </MemoryRouter>,
+  );
+  // Flush the auth getSession promise
+  await waitFor(() => {});
+  return result;
+}
+
+function renderHeaderSync(initialRoute = '/') {
   return render(
     <MemoryRouter initialEntries={[initialRoute]}>
       <AuthProvider>
@@ -32,36 +56,36 @@ describe('Header', () => {
     vi.clearAllMocks();
   });
 
-  it('renders the logo link', () => {
-    renderHeader();
+  it('renders the logo link', async () => {
+    await renderHeader();
     expect(screen.getByLabelText('OffMeta - Home')).toBeInTheDocument();
   });
 
-  it('renders desktop nav links', () => {
-    renderHeader();
+  it('renders desktop nav links', async () => {
+    await renderHeader();
     expect(screen.getByText('How It Works')).toBeInTheDocument();
     expect(screen.getByText('Daily Pick')).toBeInTheDocument();
     expect(screen.getByText('FAQ')).toBeInTheDocument();
     expect(screen.getByText('Guides')).toBeInTheDocument();
   });
 
-  it('renders hamburger button for mobile', () => {
-    renderHeader();
+  it('renders hamburger button for mobile', async () => {
+    await renderHeader();
     const hamburger = screen.getByTestId('hamburger-button');
     expect(hamburger).toBeInTheDocument();
     expect(hamburger).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('opens mobile menu when hamburger is clicked', () => {
-    renderHeader();
+  it('opens mobile menu when hamburger is clicked', async () => {
+    await renderHeader();
     const hamburger = screen.getByTestId('hamburger-button');
     fireEvent.click(hamburger);
     expect(hamburger).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
-  it('closes mobile menu when hamburger is clicked again', () => {
-    renderHeader();
+  it('closes mobile menu when hamburger is clicked again', async () => {
+    await renderHeader();
     const hamburger = screen.getByTestId('hamburger-button');
     fireEvent.click(hamburger);
     expect(screen.getByRole('dialog')).toBeInTheDocument();
@@ -69,8 +93,8 @@ describe('Header', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('closes mobile menu on Escape key', () => {
-    renderHeader();
+  it('closes mobile menu on Escape key', async () => {
+    await renderHeader();
     const hamburger = screen.getByTestId('hamburger-button');
     fireEvent.click(hamburger);
     expect(screen.getByRole('dialog')).toBeInTheDocument();
@@ -78,8 +102,8 @@ describe('Header', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('locks body scroll when mobile menu is open', () => {
-    renderHeader();
+  it('locks body scroll when mobile menu is open', async () => {
+    await renderHeader();
     const hamburger = screen.getByTestId('hamburger-button');
     fireEvent.click(hamburger);
     expect(document.body.style.overflow).toBe('hidden');
@@ -87,8 +111,8 @@ describe('Header', () => {
     expect(document.body.style.overflow).toBe('');
   });
 
-  it('mobile menu contains all nav links', () => {
-    renderHeader();
+  it('mobile menu contains all nav links', async () => {
+    await renderHeader();
     const hamburger = screen.getByTestId('hamburger-button');
     fireEvent.click(hamburger);
     const dialog = screen.getByRole('dialog');
@@ -98,13 +122,13 @@ describe('Header', () => {
     expect(dialog).toHaveTextContent('Guides');
   });
 
-  it('clicking anchor link on home page scrolls into view', () => {
+  it('clicking anchor link on home page scrolls into view', async () => {
     const mockElement = document.createElement('div');
     mockElement.id = 'how-it-works';
     mockElement.scrollIntoView = vi.fn();
     document.body.appendChild(mockElement);
 
-    renderHeader('/');
+    await renderHeader('/');
     const hamburger = screen.getByTestId('hamburger-button');
     fireEvent.click(hamburger);
 
@@ -121,8 +145,8 @@ describe('Header', () => {
     document.body.removeChild(mockElement);
   });
 
-  it('clicking anchor link on non-home page navigates to home with hash', () => {
-    renderHeader('/guides');
+  it('clicking anchor link on non-home page navigates to home with hash', async () => {
+    await renderHeader('/guides');
     const hamburger = screen.getByTestId('hamburger-button');
     fireEvent.click(hamburger);
 
@@ -136,9 +160,8 @@ describe('Header', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/#daily-pick');
   });
 
-  it('Guides link points to /guides', () => {
-    renderHeader();
-    // Desktop nav Guides link
+  it('Guides link points to /guides', async () => {
+    await renderHeader();
     const guidesLinks = screen.getAllByText('Guides');
     const desktopLink = guidesLinks.find(
       (el) => el.closest('a')?.getAttribute('href') === '/guides',
@@ -146,8 +169,8 @@ describe('Header', () => {
     expect(desktopLink).toBeTruthy();
   });
 
-  it('has proper aria attributes on hamburger', () => {
-    renderHeader();
+  it('has proper aria attributes on hamburger', async () => {
+    await renderHeader();
     const hamburger = screen.getByTestId('hamburger-button');
     expect(hamburger).toHaveAttribute('aria-label', 'Open menu');
     expect(hamburger).toHaveAttribute('aria-controls', 'mobile-nav-menu');
@@ -155,8 +178,8 @@ describe('Header', () => {
     expect(hamburger).toHaveAttribute('aria-label', 'Close menu');
   });
 
-  it('Guides link in mobile menu closes menu', () => {
-    renderHeader();
+  it('Guides link in mobile menu closes menu', async () => {
+    await renderHeader();
     const hamburger = screen.getByTestId('hamburger-button');
     fireEvent.click(hamburger);
     
@@ -166,7 +189,6 @@ describe('Header', () => {
     );
     expect(guidesLink).toBeTruthy();
     fireEvent.click(guidesLink!);
-    // Menu should close after clicking a link
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });
