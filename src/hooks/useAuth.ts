@@ -11,6 +11,7 @@ interface AuthState {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
+  displayName: string | null;
 }
 
 interface AuthContextValue extends AuthState {
@@ -19,6 +20,7 @@ interface AuthContextValue extends AuthState {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
   updatePassword: (password: string) => Promise<{ error: string | null }>;
+  refreshDisplayName: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
@@ -28,20 +30,39 @@ export function useAuthProvider(): AuthContextValue {
     user: null,
     session: null,
     isLoading: true,
+    displayName: null,
   });
 
+  const fetchDisplayName = useCallback(async (userId: string) => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('display_name')
+      .eq('id', userId)
+      .single();
+    return data?.display_name ?? null;
+  }, []);
+
+  const refreshDisplayName = useCallback(async () => {
+    if (!state.user) return;
+    const name = await fetchDisplayName(state.user.id);
+    setState((prev) => ({ ...prev, displayName: name }));
+  }, [state.user, fetchDisplayName]);
+
   useEffect(() => {
-    // Set up listener BEFORE getSession per Supabase best practices
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setState({ user: session?.user ?? null, session, isLoading: false });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const userId = session?.user?.id;
+      const name = userId ? await fetchDisplayName(userId) : null;
+      setState({ user: session?.user ?? null, session, isLoading: false, displayName: name });
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setState({ user: session?.user ?? null, session, isLoading: false });
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      const userId = session?.user?.id;
+      const name = userId ? await fetchDisplayName(userId) : null;
+      setState({ user: session?.user ?? null, session, isLoading: false, displayName: name });
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [fetchDisplayName]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -56,7 +77,6 @@ export function useAuthProvider(): AuthContextValue {
       options: { emailRedirectTo: window.location.origin },
     });
     if (error) return { error: error.message, needsConfirmation: false };
-    // If user exists but identities is empty, email is already taken
     if (data.user && data.user.identities?.length === 0) {
       return { error: 'An account with this email already exists.', needsConfirmation: false };
     }
@@ -81,7 +101,7 @@ export function useAuthProvider(): AuthContextValue {
     return { error: null };
   }, []);
 
-  return { ...state, signIn, signUp, signOut, resetPassword, updatePassword };
+  return { ...state, signIn, signUp, signOut, resetPassword, updatePassword, refreshDisplayName };
 }
 
 export function useAuth(): AuthContextValue {

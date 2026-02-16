@@ -17,7 +17,7 @@ import { Loader2, User, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function ProfileSettings() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, refreshDisplayName } = useAuth();
   const navigate = useNavigate();
   const [displayName, setDisplayName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -68,6 +68,7 @@ export default function ProfileSettings() {
       toast.error('Failed to update profile');
     } else {
       toast.success('Profile updated');
+      await refreshDisplayName();
     }
     setIsSaving(false);
   };

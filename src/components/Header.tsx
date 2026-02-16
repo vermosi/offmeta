@@ -23,7 +23,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 export function Header() {
   const { t } = useTranslation();
-  const { user, signOut } = useAuth();
+  const { user, displayName, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const navigate = useNavigate();
@@ -211,11 +211,12 @@ export function Header() {
                     className="h-8 w-8 rounded-full bg-primary/10 border border-border flex items-center justify-center text-xs font-semibold text-primary hover:bg-primary/20 transition-colors focus-ring"
                     aria-label="User menu"
                   >
-                    {user.email?.charAt(0).toUpperCase() || <User className="h-4 w-4" />}
+                    {displayName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || <User className="h-4 w-4" />}
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <div className="px-2 py-1.5">
+                    {displayName && <p className="text-sm font-medium truncate">{displayName}</p>}
                     <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                   </div>
                   <DropdownMenuSeparator />
