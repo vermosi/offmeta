@@ -20,11 +20,11 @@
 - Reorganized codebase into domain folders (`core/`, `scryfall/`, `search/`, `security/`, `pwa/`)
 - Removed 16 unused UI components (~75KB bundle reduction)
 - Error monitoring placeholders (Sentry-ready)
+- Full i18n support: 11 languages (EN, ES, FR, DE, IT, PT, JA, KO, RU, ZHS, ZHT) covering UI and guide content
 
 ## Near term
 
 - Improve accessibility audits and keyboard navigation
-- Add localization support for UI and queries
 - Deploy docs site with usage guides and prompt examples
 - Add Edge Function contract tests
 

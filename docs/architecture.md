@@ -42,7 +42,8 @@ src/
 │   └── pwa/             # Service worker registration
 ├── pages/               # Route pages (Index, GuidesIndex, GuidePage, NotFound)
 │   └── __tests__/       # Page-level behavioral tests
-└── integrations/        # Supabase client (auto-generated)
+├── integrations/        # Supabase client (auto-generated)
+└── lib/i18n/            # Lightweight i18n: 11 languages, JSON dictionaries
 
 supabase/
 └── functions/
@@ -66,6 +67,7 @@ supabase/
 | Security Suite   | `src/lib/security/`                   | Security utilities, test helpers       |
 | Search Pipeline  | `supabase/functions/semantic-search/` | NL → Scryfall translation              |
 | Supabase Client  | `src/integrations/supabase/client.ts` | Auto-generated DB client               |
+| i18n             | `src/lib/i18n/`                       | 11-language translation system          |
 
 ## Data stores
 

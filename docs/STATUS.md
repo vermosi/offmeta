@@ -24,7 +24,6 @@ OffMeta is a natural-language search frontend for Magic: The Gathering cards. It
 - Add contract tests for Edge Functions when running locally.
 - Document deployment steps once finalized.
 - Expand accessibility audits and keyboard navigation.
-- Add localization support for UI and queries.
 
 ## Recent additions
 
@@ -38,3 +37,4 @@ OffMeta is a natural-language search frontend for Magic: The Gathering cards. It
 - **Cross-page Navigation**: Hash links work from any page (navigate home + scroll).
 - **Security Suite**: 300+ security tests covering injection, CORS, ReDoS, prototype pollution, and timing attacks.
 - **Regression Suite**: 70+ regression tests across caching, virtualization, and analytics.
+- **Internationalization**: Full i18n with 11 languages covering UI strings and all 10 search guide pages (intro, tips, FAQ).

@@ -92,3 +92,7 @@ npm run test -- guides
 The Header component (`src/components/Header.tsx`) includes a "Guides" link pointing to `/guides`. The Footer includes links to all individual guides.
 
 Hash-based anchor links (Daily Pick, How It Works, FAQ) work correctly from guide pages — clicking them navigates to `/#hash` and scrolls to the target section after the home page renders.
+
+## Localization
+
+All guide content (titles, introductions, tips, FAQs) is fully translated into 11 languages. Translations use the `guide.{field}.{slug}` key convention in `src/lib/i18n/*.json`. See [i18n.md](i18n.md) for details on the translation system.

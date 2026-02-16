@@ -9,7 +9,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white&style=flat-square)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white&style=flat-square)](https://tailwindcss.com/)
 [![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white&style=flat-square)](https://vitejs.dev/)
-[![Tests](https://img.shields.io/badge/tests-1300%2B-brightgreen?style=flat-square)](docs/testing.md)
+[![Tests](https://img.shields.io/badge/tests-1450%2B-brightgreen?style=flat-square)](docs/testing.md)
 [![Built with Lovable](https://img.shields.io/badge/Built%20with-Lovable-ff69b4?style=flat-square)](https://lovable.dev)
 
 **Natural language search for Magic: The Gathering cards, powered by Scryfall.**
@@ -37,6 +37,7 @@
 | **PWA Support** | Installable with offline-first architecture |
 | **Dark/Light Theme** | Automatic system preference detection |
 | **Mobile-First Design** | Responsive from 320px to 1920px with progressive spacing |
+| **11-Language i18n** | Full UI and guide content localized in EN, ES, FR, DE, IT, PT, JA, KO, RU, ZHS, ZHT |
 
 ---
 
@@ -178,6 +179,7 @@ For security vulnerability reporting, see [SECURITY.md](SECURITY.md).
 | [Guides](docs/guides.md) | Search guides system documentation |
 | [Roadmap](docs/roadmap.md) | Planned features |
 | [FAQ](docs/FAQ.md) | Common questions |
+| [Internationalization](docs/i18n.md) | i18n system and translation guide |
 
 ---
 
