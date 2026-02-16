@@ -145,7 +145,7 @@ export function SearchFeedback({
 
     if (!validationResult.success) {
       const errorMessage =
-        validationResult.error.errors[0]?.message || 'Invalid input';
+        validationResult.error.issues[0]?.message || 'Invalid input';
       setValidationError(errorMessage);
       toast.error(errorMessage);
       return;
