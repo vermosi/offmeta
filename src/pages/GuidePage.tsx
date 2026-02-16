@@ -111,7 +111,7 @@ export default function GuidePage() {
           <li aria-hidden="true">/</li>
           <li><Link to="/guides" className="hover:text-foreground transition-colors">{t('nav.guides')}</Link></li>
           <li aria-hidden="true">/</li>
-          <li className="text-foreground font-medium truncate">{guide.title}</li>
+          <li className="text-foreground font-medium truncate">{t(`guide.title.${guide.slug}`, guide.title)}</li>
         </ol>
       </nav>
 
@@ -119,9 +119,9 @@ export default function GuidePage() {
         <article className="max-w-2xl mx-auto space-y-8 sm:space-y-10 min-w-0">
           <header className="space-y-4 min-w-0">
             <h1 className="text-2xl sm:text-3xl lg:text-5xl font-semibold text-foreground leading-tight break-words">
-              {guide.heading}
+              {t(`guide.title.${guide.slug}`, guide.heading)}
             </h1>
-            <p className="text-lg text-muted-foreground break-words">{guide.subheading}</p>
+            <p className="text-lg text-muted-foreground break-words">{t(`guide.sub.${guide.slug}`, guide.subheading)}</p>
           </header>
 
           <div className="rounded-xl border border-border bg-card p-5 sm:p-6 space-y-3 overflow-hidden">
@@ -134,7 +134,7 @@ export default function GuidePage() {
           </div>
 
           <section className="prose-section min-w-0">
-            <p className="text-base leading-relaxed text-foreground/90 break-words">{guide.intro}</p>
+            <p className="text-base leading-relaxed text-foreground/90 break-words">{t(`guide.intro.${guide.slug}`, guide.intro)}</p>
           </section>
 
           {'howOffmetaHelps' in guide && guide.howOffmetaHelps && (
@@ -154,7 +154,7 @@ export default function GuidePage() {
                     <code className="px-2 py-0.5 rounded bg-muted text-foreground font-mono text-xs break-all">{(guide as { translatedQuery: string }).translatedQuery}</code>
                   </div>
                 )}
-                <p className="text-sm text-foreground/85 leading-relaxed break-words">{guide.howOffmetaHelps}</p>
+                <p className="text-sm text-foreground/85 leading-relaxed break-words">{t(`guide.howHelps.${guide.slug}`, guide.howOffmetaHelps)}</p>
               </div>
             </section>
           )}
@@ -168,7 +168,7 @@ export default function GuidePage() {
               {guide.tips.map((tip, i) => (
                 <li key={i} className="flex gap-3 text-sm text-foreground/85 leading-relaxed">
                   <span className="flex-shrink-0 mt-1 h-5 w-5 rounded-full bg-primary/10 text-primary text-xs font-medium flex items-center justify-center">{i + 1}</span>
-                  {tip}
+                  {t(`guide.tip${i + 1}.${guide.slug}`, tip)}
                 </li>
               ))}
             </ul>
@@ -182,8 +182,8 @@ export default function GuidePage() {
             <div className="space-y-4">
               {guide.faq.map((f, i) => (
                 <div key={i} className="rounded-lg border border-border bg-card p-4 space-y-2">
-                  <h3 className="font-medium text-foreground">{f.question}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{f.answer}</p>
+                  <h3 className="font-medium text-foreground">{t(`guide.faq${i + 1}q.${guide.slug}`, f.question)}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{t(`guide.faq${i + 1}a.${guide.slug}`, f.answer)}</p>
                 </div>
               ))}
             </div>
@@ -198,8 +198,8 @@ export default function GuidePage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 {relatedGuides.map((rg) => rg && (
                   <Link key={rg.slug} to={`/guides/${rg.slug}`} className="group rounded-lg border border-border bg-card p-4 hover:border-primary/30 transition-colors">
-                    <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">{rg.title}</h3>
-                    <p className="text-xs text-muted-foreground mt-1">{rg.subheading}</p>
+                    <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">{t(`guide.title.${rg.slug}`, rg.title)}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">{t(`guide.sub.${rg.slug}`, rg.subheading)}</p>
                   </Link>
                 ))}
               </div>
