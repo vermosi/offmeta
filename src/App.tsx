@@ -11,6 +11,8 @@ import { useRealtimeCache } from '@/hooks/useRealtimeCache';
 const Index = lazy(() => import('./pages/Index'));
 const GuidesIndex = lazy(() => import('./pages/GuidesIndex'));
 const GuidePage = lazy(() => import('./pages/GuidePage'));
+const DocsIndex = lazy(() => import('./pages/DocsIndex'));
+const SyntaxCheatSheet = lazy(() => import('./pages/SyntaxCheatSheet'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const queryClient = new QueryClient({
@@ -44,6 +46,8 @@ const App = () => (
           <Suspense fallback={<div className="min-h-screen bg-background" />}>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/docs" element={<DocsIndex />} />
+              <Route path="/docs/syntax" element={<SyntaxCheatSheet />} />
               <Route path="/guides" element={<GuidesIndex />} />
               <Route path="/guides/:slug" element={<GuidePage />} />
               <Route path="*" element={<NotFound />} />

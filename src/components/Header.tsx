@@ -14,6 +14,7 @@ const NAV_LINKS = [
   { label: 'How It Works', href: '#how-it-works' },
   { label: 'Daily Pick', href: '#daily-pick' },
   { label: 'FAQ', href: '#faq' },
+  { label: 'Docs', href: '/docs' },
   { label: 'Guides', href: '/guides' },
 ] as const;
 

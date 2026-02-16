@@ -363,6 +363,7 @@ export function SearchFilters({
                         : 'opacity-60 hover:opacity-100 border-transparent',
                     )}
                     title={color.name}
+                    aria-label={`Filter by ${color.name}`}
                     aria-pressed={filters.colors.includes(color.id)}
                   >
                     {color.id}
