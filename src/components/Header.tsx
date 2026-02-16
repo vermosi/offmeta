@@ -9,19 +9,21 @@ import { Menu, X } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Logo } from '@/components/Logo';
 import { cn } from '@/lib/core/utils';
-
-const NAV_LINKS = [
-  { label: 'How It Works', href: '#how-it-works' },
-  { label: 'Daily Pick', href: '#daily-pick' },
-  { label: 'FAQ', href: '#faq' },
-  { label: 'Docs', href: '/docs' },
-  { label: 'Guides', href: '/guides' },
-] as const;
+import { useTranslation } from '@/lib/i18n';
 
 export function Header() {
+  const { t } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const NAV_LINKS = [
+    { label: t('header.howItWorks'), href: '#how-it-works' },
+    { label: t('header.dailyPick'), href: '#daily-pick' },
+    { label: t('header.faq'), href: '#faq' },
+    { label: t('header.docs'), href: '/docs' },
+    { label: t('header.guides'), href: '/guides' },
+  ] as const;
 
   // Close mobile menu on escape key
   useEffect(() => {
@@ -48,11 +50,9 @@ export function Header() {
     if (href.startsWith('#')) {
       const id = href.slice(1);
       if (location.pathname === '/') {
-        // Already on home — just scroll
         const el = document.getElementById(id);
         el?.scrollIntoView({ behavior: 'smooth' });
       } else {
-        // Navigate home with hash, then scroll after render
         navigate('/' + href);
       }
     }
@@ -114,7 +114,7 @@ export function Header() {
           <Link
             to="/"
             className="group flex items-center gap-2.5 min-h-0 focus-ring rounded-lg -ml-2 px-2 py-1"
-            aria-label="OffMeta - Home"
+            aria-label={t('header.home')}
           >
             <Logo variant="gradient" className="h-7 w-7 sm:h-8 sm:w-8 transition-transform duration-200 group-hover:scale-105" />
             <span className="text-lg font-semibold tracking-tight">OffMeta</span>
@@ -149,7 +149,7 @@ export function Header() {
             <button
               className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors focus-ring"
               onClick={() => setMobileMenuOpen((prev) => !prev)}
-              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+              aria-label={mobileMenuOpen ? t('header.closeMenu') : t('header.openMenu')}
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-nav-menu"
               data-testid="hamburger-button"

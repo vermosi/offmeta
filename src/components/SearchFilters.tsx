@@ -23,6 +23,7 @@ import type { ScryfallCard } from '@/types/card';
 import type { FilterState } from '@/types/filters';
 import { cn } from '@/lib/core/utils';
 import { Filter, ArrowUpDown, X, ChevronDown } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 // Color definitions with mana symbols
 const COLORS = [
@@ -123,6 +124,7 @@ export function SearchFilters({
   resetKey,
   initialFilters,
 }: SearchFiltersProps) {
+  const { t } = useTranslation();
   const defaultMaxCmc = useMemo(() => {
     return Math.max(16, ...cards.map((c) => c.cmc || 0));
   }, [cards]);
@@ -320,7 +322,7 @@ export function SearchFilters({
             )}
           >
             <Filter className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden sm:inline">Filters</span>
+            <span className="hidden sm:inline">{t('filters.label')}</span>
             {activeFilterCount > 0 && (
               <Badge
                 variant="secondary"
@@ -341,11 +343,11 @@ export function SearchFilters({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Colors
+                  {t('filters.colors')}
                 </h4>
                 {filters.colors.length > 1 && (
                   <span className="text-[10px] text-muted-foreground">
-                    Must have all
+                    {t('filters.mustHaveAll')}
                   </span>
                 )}
               </div>
@@ -375,7 +377,7 @@ export function SearchFilters({
             {/* Card Types */}
             <div className="space-y-2">
               <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Card Type
+                {t('filters.cardType')}
               </h4>
               <div className="flex flex-wrap gap-1.5">
                 {CARD_TYPES.map((type) => (
@@ -400,7 +402,7 @@ export function SearchFilters({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Mana Value
+                  {t('filters.manaValue')}
                 </h4>
                 <span className="text-xs text-muted-foreground">
                   {filters.cmcRange[0]} –{' '}
@@ -433,7 +435,7 @@ export function SearchFilters({
                 className="w-full gap-2 text-muted-foreground hover:text-destructive"
               >
                 <X className="h-3.5 w-3.5" />
-                Clear all filters
+                {t('filters.clearAll')}
               </Button>
             )}
           </div>
@@ -449,7 +451,7 @@ export function SearchFilters({
       >
         <SelectTrigger className="w-[130px] sm:w-[160px] h-8 sm:h-9 text-xs sm:text-sm">
           <ArrowUpDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2 opacity-50 shrink-0" />
-          <SelectValue placeholder="Sort..." />
+          <SelectValue placeholder={t('filters.sort')} />
         </SelectTrigger>
         <SelectContent className="z-50 bg-popover border border-border shadow-lg">
           {SORT_OPTIONS.map((option) => (

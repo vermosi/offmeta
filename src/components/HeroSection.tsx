@@ -4,8 +4,10 @@
 
 import { useRef, useEffect } from 'react';
 import { RandomCardButton } from '@/components/RandomCardButton';
+import { useTranslation } from '@/lib/i18n';
 
 export function HeroSection() {
+  const { t } = useTranslation();
   const heroRef = useRef<HTMLElement>(null);
   const orb1Ref = useRef<HTMLDivElement>(null);
   const orb2Ref = useRef<HTMLDivElement>(null);
@@ -45,19 +47,19 @@ export function HeroSection() {
           id="hero-heading"
           className="mb-5 sm:mb-8 text-foreground text-4xl sm:text-5xl lg:text-7xl font-semibold"
         >
-          Find Magic Cards
+          {t('hero.title')}
           <br />
-          <span className="text-gradient">Like You Think</span>
+          <span className="text-gradient">{t('hero.titleAccent')}</span>
         </h1>
 
         <p className="text-base sm:text-lg lg:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-lg mx-auto">
-          Skip Scryfall syntax. Just describe what you need —
-          <span className="text-foreground font-medium"> OffMeta translates it instantly.</span>
+          {t('hero.subtitle')}
+          <span className="text-foreground font-medium"> {t('hero.subtitleAccent')}</span>
         </p>
 
         <div className="flex items-center justify-center gap-3 sm:gap-4 mb-2">
           <RandomCardButton />
-          <span className="text-xs text-muted-foreground/60">or start typing below ↓</span>
+          <span className="text-xs text-muted-foreground/60">{t('hero.orStartTyping')}</span>
         </div>
       </div>
     </section>

@@ -7,6 +7,7 @@
 import { useMemo, useState, useCallback } from 'react';
 import { ChevronDown, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/core/utils';
+import { useTranslation } from '@/lib/i18n';
 import { ManaSymbol } from '@/components/ManaSymbol';
 import type { ScryfallCard } from '@/types/card';
 
@@ -69,6 +70,7 @@ function computeStats(cards: ScryfallCard[]) {
 }
 
 export function ResultsStats({ cards }: ResultsStatsProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const stats = useMemo(() => computeStats(cards), [cards]);
   const toggle = useCallback(() => setIsOpen((o) => !o), []);
@@ -87,7 +89,7 @@ export function ResultsStats({ cards }: ResultsStatsProps) {
         aria-label="Toggle results statistics"
       >
         <BarChart3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-        <span>Stats</span>
+        <span>{t('results.stats')}</span>
         <ChevronDown
           className={cn(
             'h-3 w-3 transition-transform duration-200',

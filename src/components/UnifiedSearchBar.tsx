@@ -22,6 +22,7 @@ import type { SearchIntent } from '@/types/search';
 import { useSearchContext } from '@/hooks/useSearchContext';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { useSearchHandler } from '@/hooks/useSearchHandler';
+import { useTranslation } from '@/lib/i18n';
 
 export interface SearchResult {
   scryfallQuery: string;
@@ -68,11 +69,12 @@ export const UnifiedSearchBar = forwardRef<
   ref,
 ) {
   const isMobile = useIsMobile();
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
 
   const { placeholder: animatedPlaceholder, isAnimating: isTyping, stop: stopTyping } = useTypingPlaceholder(
-    isMobile ? 'Describe a card...' : "Describe what you're looking for...",
+    isMobile ? t('search.placeholderMobile') : t('search.placeholder'),
     !query && !isFocused,
   );
   const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
@@ -116,7 +118,7 @@ export const UnifiedSearchBar = forwardRef<
       className="space-y-4 sm:space-y-6 w-full mx-auto px-0 animate-fade-in"
       style={{ maxWidth: 'clamp(320px, 90vw, 672px)', animationDuration: '0.5s', animationDelay: '0.15s', animationFillMode: 'backwards' }}
       role="search"
-      aria-label="Card search"
+      aria-label={t('search.label')}
     >
       {/* Search input */}
       <div className="relative space-y-2">
@@ -147,7 +149,7 @@ export const UnifiedSearchBar = forwardRef<
             `}
           >
             <label htmlFor="search-input" className="sr-only">
-              Search for Magic cards using natural language
+              {t('search.inputLabel')}
             </label>
 
             <div
@@ -196,7 +198,7 @@ export const UnifiedSearchBar = forwardRef<
 
           {query && (
             <button
-              aria-label="Clear search"
+              aria-label={t('search.clear')}
               className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center text-muted-foreground hover:text-foreground flex-shrink-0 rounded-lg hover:bg-secondary transition-colors"
               onClick={() => {
                 setQuery('');
@@ -236,7 +238,7 @@ export const UnifiedSearchBar = forwardRef<
             ) : (
               <>
                 <Search className="h-4 w-4" aria-hidden="true" />
-                <span className="hidden sm:inline">Search</span>
+                <span className="hidden sm:inline">{t('search.button')}</span>
               </>
             )}
           </Button>
@@ -272,7 +274,7 @@ export const UnifiedSearchBar = forwardRef<
         </div>
 
         <p id="search-hint" className="sr-only">
-          Type your search query and press Enter or click Search
+          {t('search.hint')}
         </p>
       </div>
 
