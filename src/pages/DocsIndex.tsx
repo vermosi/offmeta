@@ -2,34 +2,38 @@
  * Docs landing page — indexes guides, FAQ, and syntax cheat sheet.
  */
 
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { GUIDES } from '@/data/guides';
 import { BookOpen, FileText, Sparkles, ChevronRight } from 'lucide-react';
-
-const SECTIONS = [
-  {
-    title: 'Search Syntax Cheat Sheet',
-    description: 'Map natural language to Scryfall syntax with copy-paste examples.',
-    href: '/docs/syntax',
-    icon: Sparkles,
-  },
-  {
-    title: 'Guides',
-    description: `${GUIDES.length} in-depth guides covering common MTG search patterns.`,
-    href: '/guides',
-    icon: BookOpen,
-  },
-  {
-    title: 'FAQ',
-    description: 'Answers to frequently asked questions about OffMeta.',
-    href: '/#faq',
-    icon: FileText,
-  },
-] as const;
+import { useTranslation } from '@/lib/i18n';
 
 export default function DocsIndex() {
+  const { t } = useTranslation();
+
+  const sections = useMemo(() => [
+    {
+      title: t('docs.syntaxTitle'),
+      description: t('docs.syntaxDesc'),
+      href: '/docs/syntax',
+      icon: Sparkles,
+    },
+    {
+      title: t('nav.guides'),
+      description: `${GUIDES.length} ${t('docs.guidesDesc')}`,
+      href: '/guides',
+      icon: BookOpen,
+    },
+    {
+      title: t('docs.faqTitle'),
+      description: t('docs.faqDesc'),
+      href: '/#faq',
+      icon: FileText,
+    },
+  ], [t]);
+
   return (
     <div className="min-h-screen flex flex-col bg-background relative overflow-x-hidden">
       <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
@@ -39,19 +43,17 @@ export default function DocsIndex() {
 
       <main className="flex-1 container-main py-10 sm:py-14 lg:py-20">
         <div className="max-w-2xl mx-auto space-y-10">
-          {/* Hero */}
           <header className="space-y-3 text-center">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-foreground">
-              Documentation
+              {t('docs.title')}
             </h1>
             <p className="text-lg text-muted-foreground max-w-md mx-auto">
-              Everything you need to get the most out of OffMeta search.
+              {t('docs.subtitle')}
             </p>
           </header>
 
-          {/* Section cards */}
           <div className="grid gap-4">
-            {SECTIONS.map((section) => {
+            {sections.map((section) => {
               const Icon = section.icon;
               return (
                 <Link
@@ -76,9 +78,8 @@ export default function DocsIndex() {
             })}
           </div>
 
-          {/* Quick guide list */}
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-foreground">All Guides</h2>
+            <h2 className="text-lg font-semibold text-foreground">{t('docs.allGuides')}</h2>
             <div className="grid sm:grid-cols-2 gap-2">
               {GUIDES.map((guide) => (
                 <Link
