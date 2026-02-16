@@ -138,11 +138,9 @@ export function SearchFilters({
     }),
     [],
   );
-  const initialFiltersApplied = useRef(false);
   const [filters, setFilters] = useState<FilterState>(() => {
     const defaults = buildDefaultFilters(defaultMaxCmc);
-    if (initialFilters && !initialFiltersApplied.current) {
-      initialFiltersApplied.current = true;
+    if (initialFilters) {
       return {
         ...defaults,
         ...initialFilters,

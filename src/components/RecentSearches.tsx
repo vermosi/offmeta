@@ -4,7 +4,7 @@
  * Only renders when the user has search history.
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Clock, X, Trash2 } from 'lucide-react';
 
 const SEARCH_HISTORY_KEY = 'offmeta_search_history';
@@ -14,16 +14,14 @@ interface RecentSearchesProps {
 }
 
 export function RecentSearches({ onSearch }: RecentSearchesProps) {
-  const [history, setHistory] = useState<string[]>([]);
-
-  useEffect(() => {
+  const [history, setHistory] = useState<string[]>(() => {
     try {
       const stored = localStorage.getItem(SEARCH_HISTORY_KEY);
-      if (stored) setHistory(JSON.parse(stored));
+      return stored ? JSON.parse(stored) : [];
     } catch {
-      // Ignore
+      return [];
     }
-  }, []);
+  });
 
   const removeItem = (query: string) => {
     const updated = history.filter((q) => q.toLowerCase() !== query.toLowerCase());

@@ -4,7 +4,7 @@
  * Mobile-optimized with icon-only buttons and dropdown menu.
  */
 
-import { useState, useEffect, useCallback, memo } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -52,13 +52,16 @@ export const EditableQueryBar = memo(function EditableQueryBar({
   const [isEditing, setIsEditing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [shared, setShared] = useState(false);
-  const hasChanges = editedQuery !== scryfallQuery;
 
-  // Sync with incoming query changes (new search)
-  useEffect(() => {
+  // Sync with incoming query changes (render-phase adjustment)
+  const [prevScryfallQuery, setPrevScryfallQuery] = useState(scryfallQuery);
+  if (prevScryfallQuery !== scryfallQuery) {
+    setPrevScryfallQuery(scryfallQuery);
     setEditedQuery(scryfallQuery);
     setIsEditing(false);
-  }, [scryfallQuery]);
+  }
+
+  const hasChanges = editedQuery !== scryfallQuery;
 
   const handleCopy = useCallback(async () => {
     try {

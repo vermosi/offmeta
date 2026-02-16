@@ -10,7 +10,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useTranslation, SUPPORTED_LOCALES, type SupportedLocale } from '@/lib/i18n';
+import { useTranslation } from '@/lib/i18n';
+import { SUPPORTED_LOCALES, type SupportedLocale } from '@/lib/i18n/constants';
 import { cn } from '@/lib/core/utils';
 
 export function LanguageSelector() {
