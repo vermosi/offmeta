@@ -10,6 +10,8 @@ export interface LogEntry {
   quality_flags: string[];
   filters_applied: Record<string, unknown> | null;
   fallback_used: boolean;
+  source: string;
+  result_count: number | null;
 }
 
 const logQueue: LogEntry[] = [];
@@ -49,6 +51,8 @@ export function logTranslation(
   qualityFlags: string[],
   filters: Record<string, unknown> | null,
   fallbackUsed: boolean,
+  source: string = 'ai',
+  resultCount: number | null = null,
 ): void {
   // Selective logging for cost optimization
   const shouldLog =
@@ -72,6 +76,8 @@ export function logTranslation(
     quality_flags: qualityFlags,
     filters_applied: filters,
     fallback_used: fallbackUsed,
+    source,
+    result_count: resultCount,
   });
 
   if (logQueue.length >= LOG_BATCH_SIZE) {
