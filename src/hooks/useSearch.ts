@@ -113,7 +113,6 @@ export function useSearch() {
   const [prevUrlQuery, setPrevUrlQuery] = useState(urlQuery);
   if (urlQuery !== prevUrlQuery) {
     setPrevUrlQuery(urlQuery);
-    lastUrlQueryRef.current = urlQuery;
 
     if (!urlQuery) {
       setSearchQuery('');
