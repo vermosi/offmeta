@@ -177,5 +177,26 @@
   "syntax.cat.format": "Formato y Legalidad",
   "syntax.cat.price": "Precio y Rareza",
   "syntax.cat.sorting": "Ordenación",
-  "syntax.cat.slang": "Jerga y Atajos"
+  "syntax.cat.slang": "Jerga y Atajos",
+
+  "guide.title.search-by-creature-type": "Buscar por Tipo de Criatura",
+  "guide.sub.search-by-creature-type": "La forma más fácil de empezar: solo nombra una tribu",
+  "guide.title.filter-by-color": "Filtrar por Color",
+  "guide.sub.filter-by-color": "Monocolor, pares de gremios e identidad de color explicados",
+  "guide.title.budget-price-filters": "Filtros de Presupuesto y Precio",
+  "guide.sub.budget-price-filters": "Encuentra cartas asequibles a cualquier precio",
+  "guide.title.format-legality-search": "Búsqueda por Legalidad de Formato",
+  "guide.sub.format-legality-search": "Encuentra cartas legales en cualquier formato MTG",
+  "guide.title.keyword-ability-search": "Búsqueda por Habilidad Clave",
+  "guide.sub.keyword-ability-search": "Encuentra cartas con mecánicas y palabras clave específicas",
+  "guide.title.ramp-and-card-draw": "Rampa y Robo de Cartas",
+  "guide.sub.ramp-and-card-draw": "Busca por lo que las cartas HACEN, no por lo que dicen",
+  "guide.title.tribal-synergies-for-commander": "Sinergias Tribales para Commander",
+  "guide.sub.tribal-synergies-for-commander": "Señores, beneficios y piezas de sinergia para cualquier tribu",
+  "guide.title.token-and-sacrifice-synergies": "Sinergias de Fichas y Sacrificio",
+  "guide.sub.token-and-sacrifice-synergies": "Aristócratas, disparadores de muerte y motores de sacrificio",
+  "guide.title.etb-and-flicker-combos": "Combos de ETB y Parpadeo",
+  "guide.sub.etb-and-flicker-combos": "Disparadores de entrar al campo de batalla y sinergias de parpadeo",
+  "guide.title.multi-constraint-complex-search": "Búsqueda Compleja Multi-Restricción",
+  "guide.sub.multi-constraint-complex-search": "Combina tipo, color, formato, precio y función en una búsqueda"
 }

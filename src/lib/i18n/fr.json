@@ -173,5 +173,26 @@
   "syntax.cat.format": "Format et Légalité",
   "syntax.cat.price": "Prix et Rareté",
   "syntax.cat.sorting": "Tri et Ordre",
-  "syntax.cat.slang": "Argot et Raccourcis"
+  "syntax.cat.slang": "Argot et Raccourcis",
+
+  "guide.title.search-by-creature-type": "Recherche par Type de Créature",
+  "guide.sub.search-by-creature-type": "Le moyen le plus simple de commencer : nommez une tribu",
+  "guide.title.filter-by-color": "Filtrer par Couleur",
+  "guide.sub.filter-by-color": "Monocouleur, paires de guildes et identité de couleur expliqués",
+  "guide.title.budget-price-filters": "Filtres Budget et Prix",
+  "guide.sub.budget-price-filters": "Trouvez des cartes abordables à tout prix",
+  "guide.title.format-legality-search": "Recherche par Légalité de Format",
+  "guide.sub.format-legality-search": "Trouvez des cartes légales dans n'importe quel format MTG",
+  "guide.title.keyword-ability-search": "Recherche par Capacité Clé",
+  "guide.sub.keyword-ability-search": "Trouvez des cartes avec des mécaniques et mots-clés spécifiques",
+  "guide.title.ramp-and-card-draw": "Rampe et Pioche",
+  "guide.sub.ramp-and-card-draw": "Cherchez par ce que les cartes FONT, pas ce qu'elles disent",
+  "guide.title.tribal-synergies-for-commander": "Synergies Tribales pour Commander",
+  "guide.sub.tribal-synergies-for-commander": "Seigneurs, récompenses et pièces de synergie pour toute tribu",
+  "guide.title.token-and-sacrifice-synergies": "Synergies Jetons et Sacrifice",
+  "guide.sub.token-and-sacrifice-synergies": "Aristocrates, déclencheurs de mort et moteurs de sacrifice",
+  "guide.title.etb-and-flicker-combos": "Combos ETB et Clignotement",
+  "guide.sub.etb-and-flicker-combos": "Déclencheurs d'arrivée en jeu et synergies de clignotement",
+  "guide.title.multi-constraint-complex-search": "Recherche Complexe Multi-Critères",
+  "guide.sub.multi-constraint-complex-search": "Combinez type, couleur, format, prix et fonction en une recherche"
 }

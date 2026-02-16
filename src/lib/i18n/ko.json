@@ -173,5 +173,26 @@
   "syntax.cat.format": "포맷과 합법성",
   "syntax.cat.price": "가격과 희귀도",
   "syntax.cat.sorting": "정렬과 순서",
-  "syntax.cat.slang": "은어와 단축키"
+  "syntax.cat.slang": "은어와 단축키",
+
+  "guide.title.search-by-creature-type": "생물 유형으로 검색",
+  "guide.sub.search-by-creature-type": "가장 쉬운 시작 방법: 종족 이름을 입력하세요",
+  "guide.title.filter-by-color": "색상으로 필터",
+  "guide.sub.filter-by-color": "단색, 길드 조합, 색상 정체성 설명",
+  "guide.title.budget-price-filters": "예산 및 가격 필터",
+  "guide.sub.budget-price-filters": "모든 가격대에서 저렴한 카드 찾기",
+  "guide.title.format-legality-search": "포맷 합법성 검색",
+  "guide.sub.format-legality-search": "모든 MTG 포맷에서 합법적인 카드 찾기",
+  "guide.title.keyword-ability-search": "키워드 능력 검색",
+  "guide.sub.keyword-ability-search": "특정 메카닉과 키워드를 가진 카드 찾기",
+  "guide.title.ramp-and-card-draw": "램프와 카드 드로우",
+  "guide.sub.ramp-and-card-draw": "카드가 '하는 것'으로 검색, 텍스트가 아닌",
+  "guide.title.tribal-synergies-for-commander": "커맨더용 부족 시너지",
+  "guide.sub.tribal-synergies-for-commander": "군주, 보상, 모든 부족의 시너지 조각",
+  "guide.title.token-and-sacrifice-synergies": "토큰 & 희생 시너지",
+  "guide.sub.token-and-sacrifice-synergies": "귀족 덱, 죽음 트리거, 희생 엔진",
+  "guide.title.etb-and-flicker-combos": "ETB & 깜빡임 콤보",
+  "guide.sub.etb-and-flicker-combos": "전장에 들어올 때 트리거와 깜빡임 시너지",
+  "guide.title.multi-constraint-complex-search": "복합 조건 고급 검색",
+  "guide.sub.multi-constraint-complex-search": "유형, 색상, 포맷, 가격, 기능을 하나의 검색으로 결합"
 }

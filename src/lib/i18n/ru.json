@@ -173,5 +173,26 @@
   "syntax.cat.format": "Формат и Легальность",
   "syntax.cat.price": "Цена и Редкость",
   "syntax.cat.sorting": "Сортировка и Порядок",
-  "syntax.cat.slang": "Сленг и Сокращения"
+  "syntax.cat.slang": "Сленг и Сокращения",
+
+  "guide.title.search-by-creature-type": "Поиск по типу существа",
+  "guide.sub.search-by-creature-type": "Самый простой способ начать: просто назовите племя",
+  "guide.title.filter-by-color": "Фильтр по цвету",
+  "guide.sub.filter-by-color": "Одноцветные, гильдии и цветовая идентичность",
+  "guide.title.budget-price-filters": "Бюджетные и ценовые фильтры",
+  "guide.sub.budget-price-filters": "Находите доступные карты по любой цене",
+  "guide.title.format-legality-search": "Поиск по легальности формата",
+  "guide.sub.format-legality-search": "Находите карты, легальные в любом формате MTG",
+  "guide.title.keyword-ability-search": "Поиск по ключевым способностям",
+  "guide.sub.keyword-ability-search": "Находите карты с конкретными механиками и ключевыми словами",
+  "guide.title.ramp-and-card-draw": "Рампа и добор карт",
+  "guide.sub.ramp-and-card-draw": "Ищите по тому, что карты ДЕЛАЮТ, а не что говорят",
+  "guide.title.tribal-synergies-for-commander": "Племенные синергии для Commander",
+  "guide.sub.tribal-synergies-for-commander": "Лорды, награды и синергии для любого племени",
+  "guide.title.token-and-sacrifice-synergies": "Синергии жетонов и жертвоприношения",
+  "guide.sub.token-and-sacrifice-synergies": "Аристократы, триггеры смерти и жертвенные двигатели",
+  "guide.title.etb-and-flicker-combos": "Комбо ETB и мерцания",
+  "guide.sub.etb-and-flicker-combos": "Триггеры выхода на поле битвы и синергии мерцания",
+  "guide.title.multi-constraint-complex-search": "Сложный многокритериальный поиск",
+  "guide.sub.multi-constraint-complex-search": "Комбинируйте тип, цвет, формат, цену и функцию в одном запросе"
 }

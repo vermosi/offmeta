@@ -173,5 +173,26 @@
   "syntax.cat.format": "Format & Legalität",
   "syntax.cat.price": "Preis & Seltenheit",
   "syntax.cat.sorting": "Sortierung & Reihenfolge",
-  "syntax.cat.slang": "Slang & Abkürzungen"
+  "syntax.cat.slang": "Slang & Abkürzungen",
+
+  "guide.title.search-by-creature-type": "Nach Kreaturentyp suchen",
+  "guide.sub.search-by-creature-type": "Der einfachste Einstieg: benenne einfach einen Stamm",
+  "guide.title.filter-by-color": "Nach Farbe filtern",
+  "guide.sub.filter-by-color": "Monofarbe, Gildenpaare und Farbidentität erklärt",
+  "guide.title.budget-price-filters": "Budget- & Preisfilter",
+  "guide.sub.budget-price-filters": "Finde erschwingliche Karten zu jedem Preis",
+  "guide.title.format-legality-search": "Suche nach Format-Legalität",
+  "guide.sub.format-legality-search": "Finde Karten, die in jedem MTG-Format legal sind",
+  "guide.title.keyword-ability-search": "Suche nach Schlüsselwort-Fähigkeiten",
+  "guide.sub.keyword-ability-search": "Finde Karten mit bestimmten Mechaniken und Schlüsselwörtern",
+  "guide.title.ramp-and-card-draw": "Rampe & Kartenziehen",
+  "guide.sub.ramp-and-card-draw": "Suche nach dem, was Karten TUN, nicht was sie sagen",
+  "guide.title.tribal-synergies-for-commander": "Stammessynergien für Commander",
+  "guide.sub.tribal-synergies-for-commander": "Lords, Belohnungen und Synergieteile für jeden Stamm",
+  "guide.title.token-and-sacrifice-synergies": "Token- & Opfersynergien",
+  "guide.sub.token-and-sacrifice-synergies": "Aristokraten, Todesauslöser und Opfermotoren",
+  "guide.title.etb-and-flicker-combos": "ETB- & Flacker-Kombos",
+  "guide.sub.etb-and-flicker-combos": "Betreten-das-Schlachtfeld-Auslöser und Blink-Synergien",
+  "guide.title.multi-constraint-complex-search": "Komplexe Multi-Kriterien-Suche",
+  "guide.sub.multi-constraint-complex-search": "Kombiniere Typ, Farbe, Format, Preis und Funktion in einer Suche"
 }
