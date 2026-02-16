@@ -4,7 +4,7 @@
  * Protected: requires admin role.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -162,6 +162,109 @@ export default function AdminAnalytics() {
     }
   }, [isAdmin, user, fetchAnalytics]);
 
+  // Real-time subscriptions for live updates
+  const [isLive, setIsLive] = useState(false);
+  const liveCountRef = useRef(0);
+
+  useEffect(() => {
+    if (!isAdmin || !user) return;
+
+    const channel = supabase
+      .channel('admin-analytics-realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'translation_logs' },
+        (payload) => {
+          const row = payload.new as {
+            confidence_score: number | null;
+            response_time_ms: number | null;
+            fallback_used: boolean | null;
+            source: string | null;
+            created_at: string | null;
+            natural_language_query: string;
+            translated_query: string;
+          };
+          liveCountRef.current++;
+
+          setData((prev) => {
+            if (!prev) return prev;
+            const total = prev.summary.totalSearches + 1;
+            const conf = row.confidence_score ?? 0;
+            const respTime = row.response_time_ms ?? 0;
+            const newAvgConf = (prev.summary.avgConfidence * prev.summary.totalSearches + conf) / total;
+            const newAvgResp = Math.round(
+              (prev.summary.avgResponseTime * prev.summary.totalSearches + respTime) / total,
+            );
+            const fallbackCount = Math.round(prev.summary.fallbackRate * prev.summary.totalSearches / 100) + (row.fallback_used ? 1 : 0);
+
+            const src = row.source || 'ai';
+            const sourceBreakdown = { ...prev.sourceBreakdown, [src]: (prev.sourceBreakdown[src] || 0) + 1 };
+
+            const buckets = { ...prev.confidenceBuckets };
+            if (conf >= 0.8) buckets.high++;
+            else if (conf >= 0.6) buckets.medium++;
+            else buckets.low++;
+
+            const day = row.created_at?.substring(0, 10) || 'unknown';
+            const dailyVolume = { ...prev.dailyVolume, [day]: (prev.dailyVolume[day] || 0) + 1 };
+
+            const lowConfidenceQueries = conf < 0.6
+              ? [
+                  {
+                    query: row.natural_language_query,
+                    translated: row.translated_query,
+                    confidence: conf,
+                    source: src,
+                    time: row.created_at || new Date().toISOString(),
+                  },
+                  ...prev.lowConfidenceQueries,
+                ].slice(0, 20)
+              : prev.lowConfidenceQueries;
+
+            return {
+              ...prev,
+              summary: {
+                ...prev.summary,
+                totalSearches: total,
+                avgConfidence: Math.round(newAvgConf * 100) / 100,
+                avgResponseTime: newAvgResp,
+                fallbackRate: total > 0 ? Math.round((fallbackCount / total) * 100) : 0,
+              },
+              sourceBreakdown,
+              confidenceBuckets: buckets,
+              dailyVolume,
+              lowConfidenceQueries,
+            };
+          });
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'analytics_events' },
+        (payload) => {
+          const row = payload.new as { event_type: string };
+          setData((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              eventBreakdown: {
+                ...prev.eventBreakdown,
+                [row.event_type]: (prev.eventBreakdown[row.event_type] || 0) + 1,
+              },
+            };
+          });
+        },
+      )
+      .subscribe((status) => {
+        setIsLive(status === 'SUBSCRIBED');
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+      setIsLive(false);
+    };
+  }, [isAdmin, user]);
+
   if (authLoading || roleLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
@@ -197,6 +300,15 @@ export default function AdminAnalytics() {
               <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
                 <BarChart3 className="h-5 w-5" />
                 Search Analytics
+                {isLive && (
+                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-600 dark:text-green-400">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                    </span>
+                    Live
+                  </span>
+                )}
               </h1>
               <p className="text-sm text-muted-foreground">
                 Translation pipeline performance and query insights
