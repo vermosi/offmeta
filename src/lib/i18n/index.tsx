@@ -1,63 +1,100 @@
 /**
  * Lightweight i18n infrastructure.
  * Provides a `useTranslation` hook backed by a JSON dictionary.
- * Supports future multi-language expansion via I18nProvider context.
+ * Supports locale switching via I18nProvider context.
  */
 
 import {
   createContext,
   useContext,
   useMemo,
+  useState,
+  useCallback,
   type ReactNode,
 } from 'react';
 import en from './en.json';
+import es from './es.json';
 
 type TranslationDictionary = Record<string, string>;
 
-const I18nContext = createContext<TranslationDictionary>(en);
+export type SupportedLocale = 'en' | 'es';
+
+export const SUPPORTED_LOCALES: { code: SupportedLocale; label: string; flag: string }[] = [
+  { code: 'en', label: 'English', flag: '🇺🇸' },
+  { code: 'es', label: 'Español', flag: '🇪🇸' },
+];
+
+const DICTIONARIES: Record<string, TranslationDictionary> = { en, es };
+
+const STORAGE_KEY = 'offmeta-locale';
+
+function getInitialLocale(): SupportedLocale {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored && stored in DICTIONARIES) return stored as SupportedLocale;
+  } catch {
+    // SSR or storage unavailable
+  }
+  return 'en';
+}
+
+interface I18nContextValue {
+  dictionary: TranslationDictionary;
+  locale: SupportedLocale;
+  setLocale: (locale: SupportedLocale) => void;
+}
+
+const I18nContext = createContext<I18nContextValue>({
+  dictionary: en,
+  locale: 'en',
+  setLocale: () => {},
+});
 
 interface I18nProviderProps {
-  locale?: string;
   children: ReactNode;
 }
 
-// Map of locale → dictionary.  Only English for now.
-const DICTIONARIES: Record<string, TranslationDictionary> = {
-  en,
-};
-
 /**
- * Wrap your app with `<I18nProvider>` to set the active locale.
- * Defaults to English.
+ * Wrap your app with `<I18nProvider>` to enable locale switching.
+ * Persists selection to localStorage.
  */
-export function I18nProvider({ locale = 'en', children }: I18nProviderProps) {
-  const dictionary = useMemo(
-    () => DICTIONARIES[locale] ?? en,
-    [locale],
+export function I18nProvider({ children }: I18nProviderProps) {
+  const [locale, setLocaleState] = useState<SupportedLocale>(getInitialLocale);
+
+  const setLocale = useCallback((newLocale: SupportedLocale) => {
+    setLocaleState(newLocale);
+    try {
+      localStorage.setItem(STORAGE_KEY, newLocale);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const value = useMemo<I18nContextValue>(
+    () => ({
+      dictionary: DICTIONARIES[locale] ?? en,
+      locale,
+      setLocale,
+    }),
+    [locale, setLocale],
   );
 
   return (
-    <I18nContext.Provider value={dictionary}>{children}</I18nContext.Provider>
+    <I18nContext.Provider value={value}>{children}</I18nContext.Provider>
   );
 }
 
 /**
- * Returns a `t(key)` function that resolves translation strings.
- * Falls back to the key itself if no translation is found.
- *
- * Usage:
- * ```tsx
- * const { t } = useTranslation();
- * <span>{t('hero.title')}</span>
- * ```
+ * Returns a `t(key)` function that resolves translation strings,
+ * plus `locale` and `setLocale` for switching languages.
  */
 export function useTranslation() {
-  const dictionary = useContext(I18nContext);
+  const { dictionary, locale, setLocale } = useContext(I18nContext);
 
   const t = useMemo(() => {
     return (key: string, fallback?: string): string =>
       dictionary[key] ?? fallback ?? key;
   }, [dictionary]);
 
-  return { t };
+  return { t, locale, setLocale };
 }
