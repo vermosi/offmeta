@@ -12,11 +12,13 @@ import { useTranslation } from '@/lib/i18n';
 interface CardImageItemProps {
   card: ScryfallCard;
   onClick: () => void;
+  tabIndex?: number;
 }
 
 export const CardImageItem = memo(function CardImageItem({
   card,
   onClick,
+  tabIndex = 0,
 }: CardImageItemProps) {
   const imageUrl = getCardImage(card, 'normal');
   const { locale } = useTranslation();
@@ -24,6 +26,7 @@ export const CardImageItem = memo(function CardImageItem({
   return (
     <button
       onClick={onClick}
+      tabIndex={tabIndex}
       className="relative aspect-[2.5/3.5] rounded-lg overflow-hidden bg-secondary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-transform duration-200 hover:scale-[1.03] w-full"
       aria-label={`View ${displayName}`}
     >

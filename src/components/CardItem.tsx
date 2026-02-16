@@ -15,6 +15,7 @@ import { useTranslation } from '@/lib/i18n';
 interface CardItemProps {
   card: ScryfallCard;
   onClick: () => void;
+  tabIndex?: number;
 }
 
 /** Format a price string to a compact display. */
@@ -34,6 +35,7 @@ function getManaCost(card: ScryfallCard): string | undefined {
 export const CardItem = memo(function CardItem({
   card,
   onClick,
+  tabIndex = 0,
 }: CardItemProps) {
   const imageUrl = getCardImage(card, 'normal');
   const [imgError, setImgError] = useState(false);
@@ -56,7 +58,7 @@ export const CardItem = memo(function CardItem({
       onClick={onClick}
       onKeyDown={handleKeyDown}
       role="button"
-      tabIndex={0}
+      tabIndex={tabIndex}
       className="group relative w-full aspect-[2.5/3.5] rounded-xl overflow-hidden bg-secondary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-transform duration-200 hover:scale-[1.02]"
       aria-label={`View details for ${displayName}`}
     >
