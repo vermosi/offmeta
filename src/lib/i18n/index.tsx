@@ -128,7 +128,7 @@ export function useTranslation() {
 
   const t = useMemo(() => {
     return (key: string, fallback?: string): string =>
-      dictionary[key] ?? fallback ?? key;
+      dictionary[key] ?? (en as Record<string, string>)[key] ?? fallback ?? key;
   }, [dictionary]);
 
   return { t, locale, setLocale };
