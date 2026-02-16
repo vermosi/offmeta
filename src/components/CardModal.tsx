@@ -157,13 +157,14 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
     });
   }, []);
 
+  const { locale } = useTranslation();
+
   if (!card) return null;
 
   // Computed display values
   const displayImageUrl = selectedPrinting?.image_uris?.large
     ? selectedPrinting.image_uris.large
     : getCardImage(card, 'large', currentFace);
-  const { locale } = useTranslation();
   const faceDetails = getCardFaceDetails(card, currentFace, locale);
 
   const displaySetName = selectedPrinting?.set_name || card.set_name;
