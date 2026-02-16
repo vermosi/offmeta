@@ -25,6 +25,7 @@ const DocsIndex = lazy(() => import('./pages/DocsIndex'));
 const SyntaxCheatSheet = lazy(() => import('./pages/SyntaxCheatSheet'));
 const SavedSearches = lazy(() => import('./pages/SavedSearches'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const queryClient = new QueryClient({
@@ -66,6 +67,7 @@ const App = () => (
                   <Route path="/guides/:slug" element={<GuidePage />} />
                   <Route path="/saved" element={<SavedSearches />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/profile" element={<ProfileSettings />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
