@@ -105,10 +105,10 @@ export default function GuidesIndex() {
                   </div>
 
                   <h2 className="text-base sm:text-lg font-semibold text-foreground group-hover:text-primary transition-colors mb-1.5">
-                    {guide.title}
+                    {t(`guide.title.${guide.slug}`, guide.title)}
                   </h2>
                   <p className="text-sm text-muted-foreground mb-4 flex-1">
-                    {guide.subheading}
+                    {t(`guide.sub.${guide.slug}`, guide.subheading)}
                   </p>
 
                   <div className="rounded-lg bg-muted/40 border border-border/50 px-3 py-2 mb-4 min-w-0 overflow-hidden">

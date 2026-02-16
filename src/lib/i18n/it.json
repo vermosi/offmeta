@@ -173,5 +173,26 @@
   "syntax.cat.format": "Formato e Legalità",
   "syntax.cat.price": "Prezzo e Rarità",
   "syntax.cat.sorting": "Ordinamento",
-  "syntax.cat.slang": "Gergo e Scorciatoie"
+  "syntax.cat.slang": "Gergo e Scorciatoie",
+
+  "guide.title.search-by-creature-type": "Cerca per Tipo di Creatura",
+  "guide.sub.search-by-creature-type": "Il modo più semplice per iniziare: nomina una tribù",
+  "guide.title.filter-by-color": "Filtra per Colore",
+  "guide.sub.filter-by-color": "Monocolore, coppie di gilde e identità di colore spiegati",
+  "guide.title.budget-price-filters": "Filtri Budget e Prezzo",
+  "guide.sub.budget-price-filters": "Trova carte accessibili a qualsiasi prezzo",
+  "guide.title.format-legality-search": "Ricerca per Legalità di Formato",
+  "guide.sub.format-legality-search": "Trova carte legali in qualsiasi formato MTG",
+  "guide.title.keyword-ability-search": "Ricerca per Abilità Chiave",
+  "guide.sub.keyword-ability-search": "Trova carte con meccaniche e parole chiave specifiche",
+  "guide.title.ramp-and-card-draw": "Rampa e Pesca",
+  "guide.sub.ramp-and-card-draw": "Cerca per quello che le carte FANNO, non per quello che dicono",
+  "guide.title.tribal-synergies-for-commander": "Sinergie Tribali per Commander",
+  "guide.sub.tribal-synergies-for-commander": "Lord, ricompense e pezzi di sinergia per ogni tribù",
+  "guide.title.token-and-sacrifice-synergies": "Sinergie Pedine e Sacrificio",
+  "guide.sub.token-and-sacrifice-synergies": "Aristocratici, innescati di morte e motori di sacrificio",
+  "guide.title.etb-and-flicker-combos": "Combo ETB e Lampeggio",
+  "guide.sub.etb-and-flicker-combos": "Innescati di entrata in campo e sinergie di lampeggio",
+  "guide.title.multi-constraint-complex-search": "Ricerca Complessa Multi-Criterio",
+  "guide.sub.multi-constraint-complex-search": "Combina tipo, colore, formato, prezzo e funzione in una ricerca"
 }

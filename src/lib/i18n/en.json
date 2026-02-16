@@ -177,5 +177,26 @@
   "syntax.cat.format": "Format & Legality",
   "syntax.cat.price": "Price & Rarity",
   "syntax.cat.sorting": "Sorting & Ordering",
-  "syntax.cat.slang": "Slang & Shortcuts"
+  "syntax.cat.slang": "Slang & Shortcuts",
+
+  "guide.title.search-by-creature-type": "Search by Creature Type",
+  "guide.sub.search-by-creature-type": "The easiest way to start: just name a tribe",
+  "guide.title.filter-by-color": "Filter by Color",
+  "guide.sub.filter-by-color": "Mono-color, guild pairs, and color identity explained",
+  "guide.title.budget-price-filters": "Budget & Price Filters",
+  "guide.sub.budget-price-filters": "Find affordable cards at any price point",
+  "guide.title.format-legality-search": "Format Legality Search",
+  "guide.sub.format-legality-search": "Find cards legal in any MTG format",
+  "guide.title.keyword-ability-search": "Keyword Ability Search",
+  "guide.sub.keyword-ability-search": "Find cards with specific mechanics and keywords",
+  "guide.title.ramp-and-card-draw": "Ramp & Card Draw",
+  "guide.sub.ramp-and-card-draw": "Search by what cards DO, not what they say",
+  "guide.title.tribal-synergies-for-commander": "Tribal Synergies for Commander",
+  "guide.sub.tribal-synergies-for-commander": "Lords, payoffs, and synergy pieces for any tribe",
+  "guide.title.token-and-sacrifice-synergies": "Token & Sacrifice Synergies",
+  "guide.sub.token-and-sacrifice-synergies": "Aristocrats, death triggers, and sacrifice engines",
+  "guide.title.etb-and-flicker-combos": "ETB & Flicker Combos",
+  "guide.sub.etb-and-flicker-combos": "Enter-the-battlefield triggers and blink synergies",
+  "guide.title.multi-constraint-complex-search": "Multi-Constraint Complex Search",
+  "guide.sub.multi-constraint-complex-search": "Combine type, color, format, price, and function in one search"
 }

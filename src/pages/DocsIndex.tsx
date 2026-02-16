@@ -87,7 +87,7 @@ export default function DocsIndex() {
                   to={`/guides/${guide.slug}`}
                   className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
                 >
-                  <span>{guide.title}</span>
+                  <span>{t(`guide.title.${guide.slug}`, guide.title)}</span>
                 </Link>
               ))}
             </div>

@@ -173,5 +173,26 @@
   "syntax.cat.format": "賽制與合法性",
   "syntax.cat.price": "價格與稀有度",
   "syntax.cat.sorting": "排序與順序",
-  "syntax.cat.slang": "俚語與快捷方式"
+  "syntax.cat.slang": "俚語與快捷方式",
+
+  "guide.title.search-by-creature-type": "按生物類型搜尋",
+  "guide.sub.search-by-creature-type": "最簡單的開始方式：只需輸入種族名",
+  "guide.title.filter-by-color": "按顏色篩選",
+  "guide.sub.filter-by-color": "單色、公會配對和顏色標識說明",
+  "guide.title.budget-price-filters": "預算與價格篩選",
+  "guide.sub.budget-price-filters": "以任何價位找到實惠的卡牌",
+  "guide.title.format-legality-search": "賽制合法性搜尋",
+  "guide.sub.format-legality-search": "查找在任何MTG賽制中合法的卡牌",
+  "guide.title.keyword-ability-search": "關鍵詞異能搜尋",
+  "guide.sub.keyword-ability-search": "查找具有特定機制和關鍵詞的卡牌",
+  "guide.title.ramp-and-card-draw": "加速與抽牌",
+  "guide.sub.ramp-and-card-draw": "按卡牌的功能搜尋，而非文字",
+  "guide.title.tribal-synergies-for-commander": "指揮官部落協同",
+  "guide.sub.tribal-synergies-for-commander": "領主、獎勵和任何部落的協同組件",
+  "guide.title.token-and-sacrifice-synergies": "衍生物與犧牲協同",
+  "guide.sub.token-and-sacrifice-synergies": "貴族套牌、死亡觸發和犧牲引擎",
+  "guide.title.etb-and-flicker-combos": "ETB與閃爍組合",
+  "guide.sub.etb-and-flicker-combos": "進場觸發和閃爍協同",
+  "guide.title.multi-constraint-complex-search": "多條件複雜搜尋",
+  "guide.sub.multi-constraint-complex-search": "在一次搜尋中組合類型、顏色、賽制、價格和功能"
 }

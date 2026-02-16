@@ -173,5 +173,26 @@
   "syntax.cat.format": "フォーマットと使用可能性",
   "syntax.cat.price": "価格とレアリティ",
   "syntax.cat.sorting": "並べ替えと順序",
-  "syntax.cat.slang": "スラングとショートカット"
+  "syntax.cat.slang": "スラングとショートカット",
+
+  "guide.title.search-by-creature-type": "クリーチャータイプで検索",
+  "guide.sub.search-by-creature-type": "最も簡単な始め方：種族名を入力するだけ",
+  "guide.title.filter-by-color": "色でフィルター",
+  "guide.sub.filter-by-color": "単色、ギルドペア、固有色の解説",
+  "guide.title.budget-price-filters": "予算・価格フィルター",
+  "guide.sub.budget-price-filters": "あらゆる価格帯で手頃なカードを見つける",
+  "guide.title.format-legality-search": "フォーマット使用可能性検索",
+  "guide.sub.format-legality-search": "あらゆるMTGフォーマットで使用可能なカードを検索",
+  "guide.title.keyword-ability-search": "キーワード能力検索",
+  "guide.sub.keyword-ability-search": "特定のメカニクスやキーワードを持つカードを検索",
+  "guide.title.ramp-and-card-draw": "ランプとカードドロー",
+  "guide.sub.ramp-and-card-draw": "カードが「何をするか」で検索、テキストではなく",
+  "guide.title.tribal-synergies-for-commander": "統率者向け部族シナジー",
+  "guide.sub.tribal-synergies-for-commander": "ロード、報酬、あらゆる部族のシナジーパーツ",
+  "guide.title.token-and-sacrifice-synergies": "トークン＆生け贄シナジー",
+  "guide.sub.token-and-sacrifice-synergies": "貴族デッキ、死亡誘発、生け贄エンジン",
+  "guide.title.etb-and-flicker-combos": "ETB＆明滅コンボ",
+  "guide.sub.etb-and-flicker-combos": "戦場に出た時の誘発と明滅シナジー",
+  "guide.title.multi-constraint-complex-search": "複合条件の高度な検索",
+  "guide.sub.multi-constraint-complex-search": "タイプ、色、フォーマット、価格、機能を1つの検索で組み合わせる"
 }
