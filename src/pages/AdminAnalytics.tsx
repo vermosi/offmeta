@@ -149,7 +149,7 @@ export default function AdminAnalytics() {
       const analyticsData = await response.json();
       setData(analyticsData);
     } catch (e) {
-      console.error('Failed to fetch analytics:', e);
+      void e; // logged via toast
       toast.error('Failed to load analytics');
     } finally {
       setIsLoading(false);

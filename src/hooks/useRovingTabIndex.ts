@@ -38,12 +38,12 @@ export function useRovingTabIndex({
   onActivate,
 }: UseRovingTabIndexOptions): UseRovingTabIndexReturn {
   const [activeIndex, setActiveIndex] = useState(0);
-  const itemRefs = useRef<Map<number, HTMLElement>>(new Map());
-
-  // Reset when item count changes
-  useEffect(() => {
+  const [prevItemCount, setPrevItemCount] = useState(itemCount);
+  if (prevItemCount !== itemCount) {
+    setPrevItemCount(itemCount);
     setActiveIndex(0);
-  }, [itemCount]);
+  }
+  const itemRefs = useRef<Map<number, HTMLElement>>(new Map());
 
   const focusItem = useCallback((index: number) => {
     const el = itemRefs.current.get(index);

@@ -2,7 +2,7 @@
  * Header component with nav links, auth controls, and mobile hamburger menu.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, LogIn, LogOut, Bookmark, User, Settings, Shield } from 'lucide-react';

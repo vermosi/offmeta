@@ -61,7 +61,7 @@ export function SaveSearchButton({ naturalQuery, scryfallQuery }: SaveSearchButt
         setSavedId(data.id);
         toast.success('Search saved!');
       }
-    } catch (err) {
+    } catch (_err) {
       toast.error(savedId ? 'Failed to remove' : 'Failed to save');
     } finally {
       setLoading(false);
