@@ -5,7 +5,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, LogIn, LogOut, Bookmark, User } from 'lucide-react';
+import { Menu, X, LogIn, LogOut, Bookmark, User, Settings } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { Logo } from '@/components/Logo';
@@ -121,6 +121,16 @@ export function Header() {
                 >
                   Saved Searches
                 </Link>
+                <Link
+                  to="/profile"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={cn(
+                    'w-full px-4 py-3 text-base font-medium rounded-xl',
+                    'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
+                  )}
+                >
+                  Profile Settings
+                </Link>
                 <button
                   onClick={() => { setMobileMenuOpen(false); signOut(); }}
                   className={cn(
@@ -213,7 +223,10 @@ export function Header() {
                     <Bookmark className="h-4 w-4 mr-2" />
                     Saved Searches
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                    <Settings className="h-4 w-4 mr-2" />
+                    Profile Settings
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => signOut()}>
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign Out
