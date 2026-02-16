@@ -8,6 +8,7 @@ import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/core/utils';
 import type { ScryfallCard } from '@/types/card';
 import { getCardImage } from '@/lib/scryfall/client';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface ArtLightboxProps {
   cards: ScryfallCard[];
@@ -19,6 +20,10 @@ export function ArtLightbox({ cards, initialIndex, onClose }: ArtLightboxProps) 
   const [index, setIndex] = useState(initialIndex);
   const [loaded, setLoaded] = useState(false);
   const touchStart = useRef<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Trap focus within the lightbox overlay
+  useFocusTrap(containerRef);
 
   const card = cards[index];
   const artUrl = card ? getCardImage(card, 'large') : '';
@@ -67,11 +72,13 @@ export function ArtLightbox({ cards, initialIndex, onClose }: ArtLightboxProps) 
 
   return (
     <div
+      ref={containerRef}
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm"
       onClick={onClose}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       role="dialog"
+      aria-modal="true"
       aria-label={`Art view: ${card.name}`}
     >
       {/* Close */}
