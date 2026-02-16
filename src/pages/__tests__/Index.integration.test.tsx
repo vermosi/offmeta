@@ -25,8 +25,8 @@ vi.mock('@/hooks/useSearchQuery', () => ({
 }));
 
 const mockSearchCards = vi.fn();
-vi.mock('@/lib/scryfall/client', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/lib/scryfall/client')>();
+vi.mock('@/lib/scryfall/client', async () => {
+  const actual = await vi.importActual('@/lib/scryfall/client');
   return {
     ...actual,
     searchCards: (...args: unknown[]) => mockSearchCards(...args),
@@ -37,7 +37,7 @@ vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     auth: {
       getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
-      onAuthStateChange: vi.fn((cb: Function) => {
+      onAuthStateChange: vi.fn((cb: (...args: unknown[]) => void) => {
         cb('INITIAL_SESSION', null);
         return { data: { subscription: { unsubscribe: vi.fn() } } };
       }),
