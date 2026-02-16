@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { Header } from '../Header';
+import { AuthProvider } from '@/components/AuthProvider';
 
 // Mock ThemeToggle
 vi.mock('@/components/ThemeToggle', () => ({
@@ -18,7 +19,9 @@ vi.mock('react-router-dom', async () => {
 function renderHeader(initialRoute = '/') {
   return render(
     <MemoryRouter initialEntries={[initialRoute]}>
-      <Header />
+      <AuthProvider>
+        <Header />
+      </AuthProvider>
     </MemoryRouter>,
   );
 }
