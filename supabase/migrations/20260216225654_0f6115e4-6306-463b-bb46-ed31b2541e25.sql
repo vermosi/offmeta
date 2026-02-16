@@ -1,0 +1,2 @@
+CREATE INDEX IF NOT EXISTS idx_translation_logs_created_at ON public.translation_logs (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_created_at ON public.analytics_events (created_at DESC);
