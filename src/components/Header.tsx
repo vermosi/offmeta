@@ -5,7 +5,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, LogIn, LogOut, Bookmark, User, Settings } from 'lucide-react';
+import { Menu, X, LogIn, LogOut, Bookmark, User, Settings, Shield } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { Logo } from '@/components/Logo';
@@ -20,10 +20,12 @@ import {
 import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
 
 export function Header() {
   const { t } = useTranslation();
   const { user, displayName, avatarUrl, signOut } = useAuth();
+  const { hasRole: isAdmin } = useUserRole('admin');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const navigate = useNavigate();
@@ -131,6 +133,18 @@ export function Header() {
                 >
                   Profile Settings
                 </Link>
+                {isAdmin && (
+                  <Link
+                    to="/admin/analytics"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={cn(
+                      'w-full px-4 py-3 text-base font-medium rounded-xl',
+                      'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
+                    )}
+                  >
+                    Admin Dashboard
+                  </Link>
+                )}
                 <button
                   onClick={() => { setMobileMenuOpen(false); signOut(); }}
                   className={cn(
@@ -232,6 +246,12 @@ export function Header() {
                     <Settings className="h-4 w-4 mr-2" />
                     Profile Settings
                   </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem onClick={() => navigate('/admin/analytics')}>
+                      <Shield className="h-4 w-4 mr-2" />
+                      Admin Dashboard
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={() => signOut()}>
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign Out
