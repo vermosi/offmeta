@@ -1,6 +1,7 @@
 /**
  * Daily Off-Meta Pick — showcases a different hidden gem card each day.
  * Displayed as an always-visible card box (not collapsible).
+ * Fetches localized card data based on the current i18n locale.
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -8,6 +9,7 @@ import { getTodayPick } from '@/data/daily-gems';
 import { Sparkles, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ManaCost, OracleText } from '@/components/ManaSymbol';
+import { useTranslation, LOCALE_TO_SCRYFALL_LANG } from '@/lib/i18n';
 import type { ScryfallCard } from '@/types/card';
 
 export function DailyPick() {
@@ -15,18 +17,40 @@ export function DailyPick() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const gem = getTodayPick();
+  const { t, locale } = useTranslation();
 
   useEffect(() => {
     let cancelled = false;
 
     async function fetchCard() {
+      const scryfallLang = LOCALE_TO_SCRYFALL_LANG[locale];
+
       try {
-        const res = await fetch(
-          `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(gem.name)}`,
-        );
-        if (!res.ok) throw new Error('Card not found');
-        const data = await res.json();
-        if (!cancelled) setCard(data);
+        let data: ScryfallCard | null = null;
+
+        // Try fetching localized version first (for non-English locales)
+        if (scryfallLang !== 'en') {
+          const localizedRes = await fetch(
+            `https://api.scryfall.com/cards/search?q=!"${encodeURIComponent(gem.name)}"+lang:${scryfallLang}&unique=prints`,
+          );
+          if (localizedRes.ok) {
+            const json = await localizedRes.json();
+            if (json.data?.length > 0) {
+              data = json.data[0];
+            }
+          }
+        }
+
+        // Fallback to English
+        if (!data) {
+          const res = await fetch(
+            `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(gem.name)}`,
+          );
+          if (!res.ok) throw new Error('Card not found');
+          data = await res.json();
+        }
+
+        if (!cancelled && data) setCard(data);
       } catch {
         if (!cancelled) setError(true);
       } finally {
@@ -36,7 +60,7 @@ export function DailyPick() {
 
     fetchCard();
     return () => { cancelled = true; };
-  }, [gem.name]);
+  }, [gem.name, locale]);
 
   const handleScryfallOpen = useCallback(() => {
     if (!card) return;
@@ -52,8 +76,9 @@ export function DailyPick() {
     '';
 
   const manaCost = card?.mana_cost || card?.card_faces?.[0]?.mana_cost || '';
-  const typeLine = card?.type_line || '';
-  const oracleText = card?.oracle_text || card?.card_faces?.[0]?.oracle_text || '';
+  const typeLine = card?.printed_type_line || card?.type_line || '';
+  const cardName = card?.printed_name || card?.name || '';
+  const oracleText = card?.printed_text || card?.oracle_text || card?.card_faces?.[0]?.oracle_text || '';
 
   return (
     <section
@@ -71,10 +96,10 @@ export function DailyPick() {
               id="daily-pick-heading"
               className="text-sm font-semibold text-foreground"
             >
-              Daily Off-Meta Pick
+              {t('dailyPick.heading')}
             </h2>
             <p className="text-xs text-muted-foreground">
-              {loading ? "Loading today's gem..." : card?.name}
+              {loading ? t('dailyPick.loading') : cardName}
             </p>
           </div>
         </div>
@@ -100,7 +125,7 @@ export function DailyPick() {
               <div className="flex-shrink-0 mx-auto sm:mx-0">
                 <img
                   src={imageUri}
-                  alt={`${card.name} card art`}
+                  alt={`${cardName} card art`}
                   className="w-48 sm:w-56 rounded-lg shadow-lg"
                   loading="lazy"
                 />
@@ -111,7 +136,7 @@ export function DailyPick() {
             <div className="flex-1 space-y-3 min-w-0">
               <div>
                 <h3 className="text-lg font-semibold text-foreground">
-                  {card.name}
+                  {cardName}
                 </h3>
                 <div className="flex items-center gap-2 mt-1">
                   {manaCost && (
@@ -126,7 +151,7 @@ export function DailyPick() {
               {/* Why it's a gem */}
               <div className="rounded-lg bg-accent/5 border border-accent/10 p-3">
                 <p className="text-xs font-medium text-accent mb-1">
-                  Why it's a hidden gem
+                  {t('dailyPick.whyGem')}
                 </p>
                 <p className="text-sm text-foreground/85 leading-relaxed">
                   {gem.reason}
@@ -154,7 +179,7 @@ export function DailyPick() {
                   className="h-8 text-xs gap-1.5"
                 >
                   <ExternalLink className="h-3 w-3" />
-                  View on Scryfall
+                  {t('dailyPick.viewOnScryfall')}
                 </Button>
               </div>
             </div>

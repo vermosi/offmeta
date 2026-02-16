@@ -304,5 +304,18 @@
   "guide.faq1q.multi-constraint-complex-search": "我的搜尋有複雜度限制嗎？",
   "guide.faq1a.multi-constraint-complex-search": "OffMeta可以處理非常複雜的查詢，但極長的句子可能會降低精確度。如果結果不符合預期，嘗試稍微簡化或使用可編輯查詢欄。",
   "guide.faq2q.multi-constraint-complex-search": "如果OffMeta翻譯錯誤怎麼辦？",
-  "guide.faq2a.multi-constraint-complex-search": "你始終可以在可編輯欄中直接編輯翻譯後的查詢。你也可以用回饋按鈕報告問題。你的報告有助於隨時間改進翻譯。"
+  "guide.faq2a.multi-constraint-complex-search": "你始終可以在可編輯欄中直接編輯翻譯後的查詢。你也可以用回饋按鈕報告問題。你的報告有助於隨時間改進翻譯。",
+
+  "dailyPick.heading": "每日非主流精選",
+  "dailyPick.loading": "正在載入今日寶藏卡...",
+  "dailyPick.whyGem": "為什麼它是隱藏寶石",
+  "dailyPick.viewOnScryfall": "在Scryfall查看",
+
+  "staples.heading": "必備卡牌...",
+  "staples.subtitle": "按套路快速搜尋",
+
+  "surpriseMe": "隨機卡牌",
+  "feedback.label": "回饋",
+  "help.label": "幫助",
+  "help.title": "搜尋幫助"
 }

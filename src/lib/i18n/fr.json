@@ -304,5 +304,18 @@
   "guide.faq1q.multi-constraint-complex-search": "Y a-t-il une limite de complexité ?",
   "guide.faq1a.multi-constraint-complex-search": "OffMeta gère des requêtes très complexes, mais les phrases extrêmement longues peuvent perdre en précision. Simplifiez ou utilisez la barre éditable.",
   "guide.faq2q.multi-constraint-complex-search": "Et si OffMeta traduit mal ma requête ?",
-  "guide.faq2a.multi-constraint-complex-search": "Vous pouvez toujours éditer la requête traduite. Vous pouvez aussi signaler des problèmes avec le bouton de feedback."
+  "guide.faq2a.multi-constraint-complex-search": "Vous pouvez toujours éditer la requête traduite. Vous pouvez aussi signaler des problèmes avec le bouton de feedback.",
+
+  "dailyPick.heading": "Carte Off-Meta du Jour",
+  "dailyPick.loading": "Chargement de la pépite du jour...",
+  "dailyPick.whyGem": "Pourquoi c'est une pépite cachée",
+  "dailyPick.viewOnScryfall": "Voir sur Scryfall",
+
+  "staples.heading": "Incontournables Pour...",
+  "staples.subtitle": "Recherches rapides par archétype",
+
+  "surpriseMe": "Carte au Hasard",
+  "feedback.label": "Feedback",
+  "help.label": "Aide",
+  "help.title": "Aide de Recherche"
 }

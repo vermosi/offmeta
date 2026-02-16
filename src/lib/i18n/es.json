@@ -308,5 +308,18 @@
   "guide.faq1q.multi-constraint-complex-search": "¿Hay un límite de complejidad en mi búsqueda?",
   "guide.faq1a.multi-constraint-complex-search": "OffMeta puede manejar consultas muy complejas, pero oraciones extremadamente largas pueden perder precisión. Si los resultados no son lo esperado, intenta simplificar ligeramente o usa la barra de consulta editable.",
   "guide.faq2q.multi-constraint-complex-search": "¿Qué pasa si OffMeta traduce mi consulta mal?",
-  "guide.faq2a.multi-constraint-complex-search": "Siempre puedes editar la consulta traducida directamente en la barra editable. También puedes reportar problemas con el botón de feedback. Tus reportes ayudan a mejorar las traducciones con el tiempo."
+  "guide.faq2a.multi-constraint-complex-search": "Siempre puedes editar la consulta traducida directamente en la barra editable. También puedes reportar problemas con el botón de feedback. Tus reportes ayudan a mejorar las traducciones con el tiempo.",
+
+  "dailyPick.heading": "Carta Off-Meta del Día",
+  "dailyPick.loading": "Cargando la joya del día...",
+  "dailyPick.whyGem": "Por qué es una joya oculta",
+  "dailyPick.viewOnScryfall": "Ver en Scryfall",
+
+  "staples.heading": "Básicos Para...",
+  "staples.subtitle": "Búsquedas rápidas por arquetipo",
+
+  "surpriseMe": "Sorpréndeme",
+  "feedback.label": "Feedback",
+  "help.label": "Ayuda",
+  "help.title": "Ayuda de Búsqueda"
 }

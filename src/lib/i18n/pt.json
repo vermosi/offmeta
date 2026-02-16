@@ -304,5 +304,18 @@
   "guide.faq1q.multi-constraint-complex-search": "Há um limite de complexidade na minha busca?",
   "guide.faq1a.multi-constraint-complex-search": "OffMeta pode lidar com consultas muito complexas, mas frases extremamente longas podem perder precisão. Se os resultados não forem o esperado, tente simplificar levemente ou use a barra de consulta editável.",
   "guide.faq2q.multi-constraint-complex-search": "O que acontece se OffMeta traduzir minha consulta errado?",
-  "guide.faq2a.multi-constraint-complex-search": "Você sempre pode editar a consulta traduzida diretamente na barra editável. Também pode reportar problemas com o botão de feedback. Seus relatórios ajudam a melhorar as traduções ao longo do tempo."
+  "guide.faq2a.multi-constraint-complex-search": "Você sempre pode editar a consulta traduzida diretamente na barra editável. Também pode reportar problemas com o botão de feedback. Seus relatórios ajudam a melhorar as traduções ao longo do tempo.",
+
+  "dailyPick.heading": "Escolha Off-Meta do Dia",
+  "dailyPick.loading": "Carregando a pérola do dia...",
+  "dailyPick.whyGem": "Por que é uma pérola escondida",
+  "dailyPick.viewOnScryfall": "Ver no Scryfall",
+
+  "staples.heading": "Básicos Para...",
+  "staples.subtitle": "Buscas rápidas por arquétipo",
+
+  "surpriseMe": "Surpreenda-me",
+  "feedback.label": "Feedback",
+  "help.label": "Ajuda",
+  "help.title": "Ajuda de Busca"
 }

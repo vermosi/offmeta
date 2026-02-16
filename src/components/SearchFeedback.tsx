@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { MessageSquarePlus, Loader2 } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { logger } from '@/lib/core/logger';
+import { useTranslation } from '@/lib/i18n';
 import { z } from 'zod';
 
 interface SearchFeedbackProps {
@@ -107,6 +108,7 @@ export function SearchFeedback({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const { trackFeedback } = useAnalytics();
+  const { t } = useTranslation();
 
   const triggerProcessing = useCallback(async (feedbackId: string) => {
     try {
@@ -207,7 +209,7 @@ export function SearchFeedback({
           title="Report search issue"
         >
           <MessageSquarePlus className="h-4 w-4" />
-          <span className="hidden sm:inline">Feedback</span>
+          <span className="hidden sm:inline">{t('feedback.label')}</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">

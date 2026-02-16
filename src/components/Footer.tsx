@@ -63,7 +63,7 @@ export function Footer() {
                   to={`/guides/${guide.slug}`}
                   className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {guide.title}
+                  {t(`guide.title.${guide.slug}`, guide.title)}
                 </Link>
                 {i < GUIDES.length - 1 && (
                   <span className="text-border ml-2">·</span>

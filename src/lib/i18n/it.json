@@ -304,5 +304,18 @@
   "guide.faq1q.multi-constraint-complex-search": "C'è un limite di complessità nella mia ricerca?",
   "guide.faq1a.multi-constraint-complex-search": "OffMeta può gestire query molto complesse, ma frasi estremamente lunghe potrebbero perdere precisione. Se i risultati non sono come previsto, prova a semplificare leggermente o usa la barra query modificabile.",
   "guide.faq2q.multi-constraint-complex-search": "Cosa succede se OffMeta traduce male la mia query?",
-  "guide.faq2a.multi-constraint-complex-search": "Puoi sempre modificare la query tradotta direttamente nella barra modificabile. Puoi anche segnalare problemi con il pulsante feedback. Le tue segnalazioni aiutano a migliorare le traduzioni nel tempo."
+  "guide.faq2a.multi-constraint-complex-search": "Puoi sempre modificare la query tradotta direttamente nella barra modificabile. Puoi anche segnalare problemi con il pulsante feedback. Le tue segnalazioni aiutano a migliorare le traduzioni nel tempo.",
+
+  "dailyPick.heading": "Scelta Off-Meta del Giorno",
+  "dailyPick.loading": "Caricamento della gemma del giorno...",
+  "dailyPick.whyGem": "Perché è una gemma nascosta",
+  "dailyPick.viewOnScryfall": "Vedi su Scryfall",
+
+  "staples.heading": "Carte Base Per...",
+  "staples.subtitle": "Ricerche rapide per archetipo",
+
+  "surpriseMe": "Sorprendimi",
+  "feedback.label": "Feedback",
+  "help.label": "Aiuto",
+  "help.title": "Aiuto Ricerca"
 }

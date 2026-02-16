@@ -6,6 +6,7 @@
 import { memo, useRef, useState, useEffect, useCallback } from 'react';
 import { Zap, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ManaSymbol } from '@/components/ManaSymbol';
+import { useTranslation } from '@/lib/i18n';
 
 interface StaplesSectionProps {
   onSearch: (query: string) => void;
@@ -38,6 +39,7 @@ export const StaplesSection = memo(function StaplesSection({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const { t } = useTranslation();
 
   const checkScroll = useCallback(() => {
     const el = scrollRef.current;
@@ -74,10 +76,10 @@ export const StaplesSection = memo(function StaplesSection({
           </div>
           <div>
             <h2 id="staples-heading" className="text-sm font-semibold text-foreground">
-              Staples For...
+              {t('staples.heading')}
             </h2>
             <p className="text-xs text-muted-foreground">
-              Quick searches by archetype
+              {t('staples.subtitle')}
             </p>
           </div>
         </div>

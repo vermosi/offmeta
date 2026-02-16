@@ -26,6 +26,7 @@ import {
   Share2,
 } from 'lucide-react';
 import { cn } from '@/lib/core/utils';
+import { useTranslation } from '@/lib/i18n';
 import {
   EXAMPLE_QUERIES,
   CONFIDENCE_LEVELS,
@@ -40,6 +41,7 @@ interface SearchHelpModalProps {
 
 export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
   const [open, setOpen] = useState(false);
+  const { t } = useTranslation();
 
   const handleTryExample = (query: string) => {
     setOpen(false);
@@ -56,14 +58,14 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
           aria-label="Search help"
         >
           <HelpCircle className="h-4 w-4" />
-          <span className="hidden sm:inline">Help</span>
+          <span className="hidden sm:inline">{t('help.label')}</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[85vh] p-0 gap-0">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="flex items-center gap-2 text-xl">
             <BookOpen className="h-5 w-5 text-primary" />
-            Search Help
+            {t('help.title')}
           </DialogTitle>
         </DialogHeader>
 

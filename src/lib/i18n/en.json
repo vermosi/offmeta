@@ -308,5 +308,18 @@
   "guide.faq1q.multi-constraint-complex-search": "Is there a limit to how complex my search can be?",
   "guide.faq1a.multi-constraint-complex-search": "OffMeta can handle very complex queries, but extremely long sentences may lose precision. If results aren't what you expected, try simplifying slightly or use the editable query bar to tweak the translation.",
   "guide.faq2q.multi-constraint-complex-search": "What if OffMeta translates my query wrong?",
-  "guide.faq2a.multi-constraint-complex-search": "You can always edit the translated query directly in the editable query bar. You can also report issues with the feedback button. Your reports help improve translations over time."
+  "guide.faq2a.multi-constraint-complex-search": "You can always edit the translated query directly in the editable query bar. You can also report issues with the feedback button. Your reports help improve translations over time.",
+
+  "dailyPick.heading": "Daily Off-Meta Pick",
+  "dailyPick.loading": "Loading today's gem...",
+  "dailyPick.whyGem": "Why it's a hidden gem",
+  "dailyPick.viewOnScryfall": "View on Scryfall",
+
+  "staples.heading": "Staples For...",
+  "staples.subtitle": "Quick searches by archetype",
+
+  "surpriseMe": "Surprise Me",
+  "feedback.label": "Feedback",
+  "help.label": "Help",
+  "help.title": "Search Help"
 }
