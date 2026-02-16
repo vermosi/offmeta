@@ -4,7 +4,7 @@
  * Supports Arrow keys, Home, End. Works for grids (with column count) and linear lists.
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
 interface UseRovingTabIndexOptions {
   /** Total number of items */
