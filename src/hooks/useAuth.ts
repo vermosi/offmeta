@@ -12,6 +12,7 @@ interface AuthState {
   session: Session | null;
   isLoading: boolean;
   displayName: string | null;
+  avatarUrl: string | null;
 }
 
 interface AuthContextValue extends AuthState {
@@ -20,7 +21,7 @@ interface AuthContextValue extends AuthState {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
   updatePassword: (password: string) => Promise<{ error: string | null }>;
-  refreshDisplayName: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
@@ -31,38 +32,39 @@ export function useAuthProvider(): AuthContextValue {
     session: null,
     isLoading: true,
     displayName: null,
+    avatarUrl: null,
   });
 
-  const fetchDisplayName = useCallback(async (userId: string) => {
+  const fetchProfile = useCallback(async (userId: string) => {
     const { data } = await supabase
       .from('profiles')
-      .select('display_name')
+      .select('display_name, avatar_url')
       .eq('id', userId)
       .single();
-    return data?.display_name ?? null;
+    return { displayName: data?.display_name ?? null, avatarUrl: data?.avatar_url ?? null };
   }, []);
 
-  const refreshDisplayName = useCallback(async () => {
+  const refreshProfile = useCallback(async () => {
     if (!state.user) return;
-    const name = await fetchDisplayName(state.user.id);
-    setState((prev) => ({ ...prev, displayName: name }));
-  }, [state.user, fetchDisplayName]);
+    const profile = await fetchProfile(state.user.id);
+    setState((prev) => ({ ...prev, displayName: profile.displayName, avatarUrl: profile.avatarUrl }));
+  }, [state.user, fetchProfile]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const userId = session?.user?.id;
-      const name = userId ? await fetchDisplayName(userId) : null;
-      setState({ user: session?.user ?? null, session, isLoading: false, displayName: name });
+      const profile = userId ? await fetchProfile(userId) : { displayName: null, avatarUrl: null };
+      setState({ user: session?.user ?? null, session, isLoading: false, displayName: profile.displayName, avatarUrl: profile.avatarUrl });
     });
 
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       const userId = session?.user?.id;
-      const name = userId ? await fetchDisplayName(userId) : null;
-      setState({ user: session?.user ?? null, session, isLoading: false, displayName: name });
+      const profile = userId ? await fetchProfile(userId) : { displayName: null, avatarUrl: null };
+      setState({ user: session?.user ?? null, session, isLoading: false, displayName: profile.displayName, avatarUrl: profile.avatarUrl });
     });
 
     return () => subscription.unsubscribe();
-  }, [fetchDisplayName]);
+  }, [fetchProfile]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -101,7 +103,7 @@ export function useAuthProvider(): AuthContextValue {
     return { error: null };
   }, []);
 
-  return { ...state, signIn, signUp, signOut, resetPassword, updatePassword, refreshDisplayName };
+  return { ...state, signIn, signUp, signOut, resetPassword, updatePassword, refreshProfile };
 }
 
 export function useAuth(): AuthContextValue {
