@@ -16,12 +16,15 @@ import { ThemeProvider } from 'next-themes';
 import { usePrefetchPopularQueries } from '@/hooks/useSearchQuery';
 import { useRealtimeCache } from '@/hooks/useRealtimeCache';
 import { I18nProvider } from '@/lib/i18n';
+import { AuthProvider } from '@/components/AuthProvider';
 
 const Index = lazy(() => import('./pages/Index'));
 const GuidesIndex = lazy(() => import('./pages/GuidesIndex'));
 const GuidePage = lazy(() => import('./pages/GuidePage'));
 const DocsIndex = lazy(() => import('./pages/DocsIndex'));
 const SyntaxCheatSheet = lazy(() => import('./pages/SyntaxCheatSheet'));
+const SavedSearches = lazy(() => import('./pages/SavedSearches'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const queryClient = new QueryClient({
@@ -48,23 +51,27 @@ const App = () => (
   <I18nProvider>
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <AppInitializer />
-          <BrowserRouter>
-            <Suspense fallback={<div className="min-h-screen bg-background" />}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/docs" element={<DocsIndex />} />
-                <Route path="/docs/syntax" element={<SyntaxCheatSheet />} />
-                <Route path="/guides" element={<GuidesIndex />} />
-                <Route path="/guides/:slug" element={<GuidePage />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
-        </TooltipProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <AppInitializer />
+            <BrowserRouter>
+              <Suspense fallback={<div className="min-h-screen bg-background" />}>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/docs" element={<DocsIndex />} />
+                  <Route path="/docs/syntax" element={<SyntaxCheatSheet />} />
+                  <Route path="/guides" element={<GuidesIndex />} />
+                  <Route path="/guides/:slug" element={<GuidePage />} />
+                  <Route path="/saved" element={<SavedSearches />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
   </I18nProvider>

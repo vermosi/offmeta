@@ -8,6 +8,7 @@
 import { lazy, Suspense, useEffect, useCallback, useState } from 'react';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 import { EditableQueryBar } from '@/components/EditableQueryBar';
+import { SaveSearchButton } from '@/components/SaveSearchButton';
 import { ExplainCompilationPanel } from '@/components/ExplainCompilationPanel';
 import { ReportIssueDialog } from '@/components/ReportIssueDialog';
 import { SearchFilters } from '@/components/SearchFilters';
@@ -146,21 +147,29 @@ const Index = () => {
             />
 
             {hasSearched && (
-              <div className="animate-reveal">
-                <EditableQueryBar
-                  scryfallQuery={(lastSearchResult?.scryfallQuery || searchQuery).trim()}
-                  confidence={lastSearchResult?.explanation?.confidence}
-                  isLoading={isSearching}
-                  originalQuery={originalQuery}
-                  onRerun={handleRerunEditedQuery}
-                  onRegenerate={handleRegenerateTranslation}
-                  onReportIssue={() => setReportDialogOpen(true)}
-                  validationError={
-                    lastSearchResult?.validationIssues?.length
-                      ? lastSearchResult.validationIssues.join(' • ')
-                      : null
-                  }
-                />
+              <div className="animate-reveal flex items-start gap-2">
+                <div className="flex-1 min-w-0">
+                  <EditableQueryBar
+                    scryfallQuery={(lastSearchResult?.scryfallQuery || searchQuery).trim()}
+                    confidence={lastSearchResult?.explanation?.confidence}
+                    isLoading={isSearching}
+                    originalQuery={originalQuery}
+                    onRerun={handleRerunEditedQuery}
+                    onRegenerate={handleRegenerateTranslation}
+                    onReportIssue={() => setReportDialogOpen(true)}
+                    validationError={
+                      lastSearchResult?.validationIssues?.length
+                        ? lastSearchResult.validationIssues.join(' • ')
+                        : null
+                    }
+                  />
+                </div>
+                <div className="pt-[26px]">
+                  <SaveSearchButton
+                    naturalQuery={originalQuery}
+                    scryfallQuery={lastSearchResult?.scryfallQuery || searchQuery}
+                  />
+                </div>
               </div>
             )}
 

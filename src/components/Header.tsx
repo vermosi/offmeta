@@ -1,20 +1,31 @@
 /**
- * Header component with nav links and mobile hamburger menu.
+ * Header component with nav links, auth controls, and mobile hamburger menu.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, LogIn, LogOut, Bookmark, User } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { Logo } from '@/components/Logo';
+import { AuthModal } from '@/components/AuthModal';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n';
+import { useAuth } from '@/hooks/useAuth';
 
 export function Header() {
   const { t } = useTranslation();
+  const { user, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -98,6 +109,39 @@ export function Header() {
                 </Link>
               ),
             )}
+            {user ? (
+              <>
+                <Link
+                  to="/saved"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={cn(
+                    'w-full px-4 py-3 text-base font-medium rounded-xl',
+                    'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
+                  )}
+                >
+                  Saved Searches
+                </Link>
+                <button
+                  onClick={() => { setMobileMenuOpen(false); signOut(); }}
+                  className={cn(
+                    'w-full text-left px-4 py-3 text-base font-medium rounded-xl',
+                    'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
+                  )}
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => { setMobileMenuOpen(false); setAuthModalOpen(true); }}
+                className={cn(
+                  'w-full text-left px-4 py-3 text-base font-medium rounded-xl',
+                  'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
+                )}
+              >
+                Sign In
+              </button>
+            )}
           </nav>
         </div>,
         document.body,
@@ -144,10 +188,48 @@ export function Header() {
             )}
           </nav>
 
-          {/* Right side: theme toggle + hamburger */}
+          {/* Right side: auth + theme toggle + hamburger */}
           <div className="flex items-center gap-1.5 sm:gap-2">
             <LanguageSelector />
             <ThemeToggle />
+
+            {/* Auth controls */}
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="h-8 w-8 rounded-full bg-primary/10 border border-border flex items-center justify-center text-xs font-semibold text-primary hover:bg-primary/20 transition-colors focus-ring"
+                    aria-label="User menu"
+                  >
+                    {user.email?.charAt(0).toUpperCase() || <User className="h-4 w-4" />}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <div className="px-2 py-1.5">
+                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/saved')}>
+                    <Bookmark className="h-4 w-4 mr-2" />
+                    Saved Searches
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => signOut()}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <button
+                onClick={() => setAuthModalOpen(true)}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary/50 focus-ring"
+              >
+                <LogIn className="h-4 w-4" />
+                Sign In
+              </button>
+            )}
+
             <button
               className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors focus-ring"
               onClick={() => setMobileMenuOpen((prev) => !prev)}
@@ -168,6 +250,8 @@ export function Header() {
 
       {/* Mobile menu rendered via portal to escape header stacking context */}
       {mobileMenu}
+
+      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
     </>
   );
 }
