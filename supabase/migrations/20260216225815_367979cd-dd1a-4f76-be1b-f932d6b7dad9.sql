@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS idx_translation_logs_composite ON public.translation_logs (created_at DESC, source, confidence_score);
