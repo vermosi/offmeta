@@ -36,6 +36,72 @@ import {
   extractAIContent,
   parseAIContent,
 } from './schemas.ts';
+import { CONFIG } from './config.ts';
+import { VALID_SEARCH_KEYS } from './constants.ts';
+
+/**
+ * Check if a query is already valid Scryfall syntax (no AI needed).
+ * Detects queries that use Scryfall operators like t:, c:, o:, mv, pow, etc.
+ */
+function isRawScryfallSyntax(query: string): boolean {
+  // Must contain at least one Scryfall operator
+  const operatorPattern = /\b([a-zA-Z]+)[:=<>]/;
+  if (!operatorPattern.test(query)) return false;
+
+  // Extract all tokens that look like operators
+  const tokens = query.split(/\s+/);
+  const operatorTokens = tokens.filter(t => /^-?[a-zA-Z]+[:=<>]/.test(t));
+
+  // If most tokens are operator-based, it's raw syntax
+  if (operatorTokens.length === 0) return false;
+
+  // Check that the operators are valid Scryfall keys
+  for (const token of operatorTokens) {
+    const keyMatch = token.match(/^-?([a-zA-Z]+)[:=<>]/);
+    if (keyMatch) {
+      const key = keyMatch[1].toLowerCase();
+      if (!VALID_SEARCH_KEYS.has(key) && !['kw', 'otag', 'atag', 'in', 'is', 'not', 'has', 'set', 'cn', 'year', 'game', 'banned', 'restricted', 'unique', 'order', 'direction', 'prefer', 'prints', 'new', 'cheapest', 'usd', 'eur', 'tix', 'border', 'frame', 'stamp', 'watermark', 'art', 'flavor', 'lore', 'include', 'language', 'date', 'mana', 'wildpair'].includes(key)) {
+        return false; // Contains invalid operator
+      }
+    }
+  }
+
+  // Non-operator words should be minimal (allow OR, AND, NOT, parens, quotes)
+  const nonOperatorTokens = tokens.filter(t =>
+    !(/^-?[a-zA-Z]+[:=<>]/.test(t)) &&
+    !['or', 'and', 'not', '-'].includes(t.toLowerCase()) &&
+    !t.startsWith('(') && !t.startsWith(')') &&
+    !t.startsWith('"')
+  );
+
+  // If more than 30% of tokens are natural language, it's not raw syntax
+  return nonOperatorTokens.length <= tokens.length * 0.3;
+}
+
+/**
+ * Auto-seed high-confidence AI translations into translation_rules
+ * so future identical queries hit the pattern match layer instead of AI.
+ */
+async function seedTranslationRule(query: string, scryfallQuery: string, confidence: number): Promise<void> {
+  try {
+    const normalized = query.toLowerCase().trim().replace(/\s+/g, ' ');
+    // Don't seed very short or very long queries
+    if (normalized.length < 5 || normalized.length > 200) return;
+
+    await supabase.from('translation_rules').upsert(
+      {
+        pattern: normalized,
+        scryfall_syntax: scryfallQuery,
+        confidence,
+        description: `Auto-seeded from AI translation`,
+        is_active: true,
+      },
+      { onConflict: 'pattern' }
+    );
+  } catch {
+    // Silently fail - this is an optimization, not critical
+  }
+}
 
 // Run self-checks on startup if enabled
 if (Deno.env.get('RUN_QUERY_VALIDATION_CHECKS') === 'true') {
@@ -422,7 +488,45 @@ serve(async (req) => {
       );
     }
 
-    // 6. Deterministic Result check (can we skip AI?)
+    // 6. Raw Scryfall syntax detection (skip AI for already-valid queries)
+    const trimmedQuery = query.trim();
+    if (isRawScryfallSyntax(trimmedQuery)) {
+      const validation = validateQuery(trimmedQuery);
+      const scryfallValidation = await validateAndRelaxQuery(
+        validation.sanitized,
+        null,
+        overlyBroadThreshold,
+      );
+      const responseTimeMs = Date.now() - requestStartTime;
+      logInfo('raw_syntax_passthrough', { query: trimmedQuery.substring(0, 50), responseTimeMs });
+      logTranslation(query, scryfallValidation.query, 0.95, responseTimeMs, [], [], filters, false, 'raw_syntax');
+      await flushLogQueue();
+
+      const rawResult = {
+        scryfallQuery: scryfallValidation.query,
+        explanation: {
+          readable: `Direct Scryfall syntax: ${trimmedQuery}`,
+          assumptions: [...scryfallValidation.relaxedClauses],
+          confidence: 0.95,
+        },
+        showAffiliate: true,
+      };
+
+      setCachedResult(query, filters, rawResult, cacheSalt);
+
+      return new Response(
+        JSON.stringify({
+          originalQuery: query,
+          ...rawResult,
+          responseTimeMs,
+          success: true,
+          source: 'raw_syntax',
+        }),
+        { headers: jsonHeaders },
+      );
+    }
+
+    // 6b. Deterministic Result check (can we skip AI?)
     if (!deterministicResult.intent.remainingQuery) {
       const validation = validateQuery(deterministicQuery || query);
       const scryfallValidation = await validateAndRelaxQuery(
@@ -500,11 +604,16 @@ serve(async (req) => {
       }
     }
 
-    // 8. AI Translation
+    // 8. AI Translation (with tiered model selection)
     const dynamicRules = await fetchDynamicRules();
     const queryWords = query.trim().split(/\s+/).length;
     const tier: QueryTier =
       queryWords > 8 ? 'complex' : queryWords > 4 ? 'medium' : 'simple';
+
+    // Use cheaper model for simple queries to reduce costs
+    const aiModel = tier === 'simple'
+      ? 'google/gemini-2.5-flash-lite'
+      : 'google/gemini-3-flash-preview';
 
     const systemPrompt = buildSystemPrompt(tier, dynamicRules, '');
     const userMessage = `Translate to Scryfall search syntax: "${queryForAI}" ${deterministicQuery ? `(must include: ${deterministicQuery})` : ''}`;
@@ -519,7 +628,7 @@ serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'google/gemini-3-flash-preview', // Next-gen Gemini for improved accuracy
+            model: aiModel,
             messages: [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: userMessage },
@@ -543,7 +652,7 @@ serve(async (req) => {
       const scryfallQuery = parsedContent.scryfallQuery;
       const explanationText =
         parsedContent.explanation || `Translated: ${query}`;
-      const confidence = parsedContent.confidence || 0.7;
+      const confidence = parsedContent.confidence || 0.75;
 
       // 8. Post-Processing & Validation
       const qualityFlags = detectQualityFlags(scryfallQuery);
@@ -567,9 +676,15 @@ serve(async (req) => {
       recordCircuitSuccess();
       const responseTimeMs = Date.now() - requestStartTime;
 
-      if (useCache && confidence >= 0.8) {
+      // Cache AI results more aggressively (>= 0.65 instead of 0.8) to prevent duplicate AI calls
+      if (useCache && confidence >= 0.65) {
         setCachedResult(query, filters, finalResult, cacheSalt);
         setPersistentCache(query, filters, finalResult, cacheSalt);
+      }
+
+      // Auto-seed high-confidence AI translations into translation_rules for future pattern matches
+      if (confidence >= 0.8 && validation.sanitized.length > 0) {
+        seedTranslationRule(query, validation.sanitized, confidence).catch(() => {});
       }
 
       logTranslation(

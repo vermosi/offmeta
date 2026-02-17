@@ -3,12 +3,36 @@ import { supabase } from './client.ts';
 import { type CacheEntry } from './cache.ts';
 
 /**
+ * Hardcoded translations for warmup/prefetch queries.
+ * These MUST never hit AI - they are stable, well-known translations.
+ */
+const HARDCODED_TRANSLATIONS: Record<string, CacheEntry['result']> = {
+  'mana rocks': {
+    scryfallQuery: 't:artifact o:"add" (o:"{C}" or o:"{W}" or o:"{U}" or o:"{B}" or o:"{R}" or o:"{G}" or o:"any color" or o:"one mana")',
+    explanation: {
+      readable: 'Artifacts that produce mana (mana rocks)',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'board wipes': {
+    scryfallQuery: 'otag:board-wipe',
+    explanation: {
+      readable: 'Cards that destroy or remove all creatures/permanents',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+};
+
+/**
  * Normalizes synonyms in a query for better cache/pattern matching.
  */
 export function normalizeSynonyms(query: string): string {
   let normalized = query.toLowerCase();
   for (const [synonym, canonical] of Object.entries(SYNONYM_MAP)) {
-    // Use word boundaries to avoid partial matches
     const regex = new RegExp(`\\b${synonym}\\b`, 'gi');
     normalized = normalized.replace(regex, canonical);
   }
@@ -19,30 +43,36 @@ export function normalizeSynonyms(query: string): string {
  * Normalizes a query for pattern matching (order-independent, lowercase, no punctuation)
  */
 export function normalizeQueryForMatching(query: string): string {
-  // Apply synonym normalization first
   const synonymNormalized = normalizeSynonyms(query);
   return synonymNormalized
     .toLowerCase()
     .trim()
-    .replace(/\s+/g, ' ') // Collapse whitespace
-    .replace(/[^\w\s]/g, '') // Remove punctuation
+    .replace(/\s+/g, ' ')
+    .replace(/[^\w\s]/g, '')
     .split(' ')
-    .sort() // Sort words for order-independent matching
+    .sort()
     .join(' ');
 }
 
 /**
  * Checks translation_rules for an exact pattern match to bypass AI entirely.
+ * Also checks hardcoded translations for warmup queries.
  * Returns the cached result format if a match is found.
  */
 export async function checkPatternMatch(
   query: string,
   _filters?: Record<string, unknown>,
 ): Promise<CacheEntry['result'] | null> {
+  // Check hardcoded translations first (zero latency)
+  const normalizedLower = query.toLowerCase().trim();
+  if (HARDCODED_TRANSLATIONS[normalizedLower]) {
+    console.log(`Hardcoded match: "${query}"`);
+    return HARDCODED_TRANSLATIONS[normalizedLower];
+  }
+
   const normalizedQuery = normalizeQueryForMatching(query);
 
   try {
-    // Check for exact pattern matches in translation_rules
     const { data: rules, error } = await supabase
       .from('translation_rules')
       .select('pattern, scryfall_syntax, confidence, description')
@@ -58,17 +88,15 @@ export async function checkPatternMatch(
           `Pattern match found: "${query}" → "${rule.scryfall_syntax}"`,
         );
 
-        const result = {
+        return {
           scryfallQuery: rule.scryfall_syntax,
           explanation: {
             readable: `Using predefined rule: ${rule.description || query}`,
             assumptions: [],
             confidence: rule.confidence,
           },
-          showAffiliate: true, // Default for pattern matches
+          showAffiliate: true,
         };
-
-        return result;
       }
     }
     return null;
