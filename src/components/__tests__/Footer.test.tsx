@@ -34,7 +34,7 @@ describe('Footer', () => {
 
   it('renders Scryfall attribution link', () => {
     renderFooter();
-    const link = screen.getByLabelText('Powered by Scryfall (opens in new tab)');
+    const link = screen.getByText('Scryfall').closest('a');
     expect(link).toHaveAttribute('href', 'https://scryfall.com');
     expect(link).toHaveAttribute('target', '_blank');
   });

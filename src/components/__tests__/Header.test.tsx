@@ -60,6 +60,24 @@ describe('Header', () => {
     expect(screen.getByText('Guides')).toBeInTheDocument();
   });
 
+  it('renders Combos link in desktop nav', async () => {
+    await renderHeader();
+    const combosLinks = screen.getAllByText('Combos');
+    const desktopLink = combosLinks.find(
+      (el) => el.closest('a')?.getAttribute('href') === '/combos',
+    );
+    expect(desktopLink).toBeTruthy();
+  });
+
+  it('renders Deck Recs link in desktop nav', async () => {
+    await renderHeader();
+    const deckRecsLinks = screen.getAllByText('Deck Recs');
+    const desktopLink = deckRecsLinks.find(
+      (el) => el.closest('a')?.getAttribute('href') === '/deck-recs',
+    );
+    expect(desktopLink).toBeTruthy();
+  });
+
   it('renders hamburger button for mobile', async () => {
     await renderHeader();
     const hamburger = screen.getByTestId('hamburger-button');
@@ -111,6 +129,8 @@ describe('Header', () => {
     expect(dialog).toHaveTextContent('Daily Pick');
     expect(dialog).toHaveTextContent('FAQ');
     expect(dialog).toHaveTextContent('Guides');
+    expect(dialog).toHaveTextContent('Combos');
+    expect(dialog).toHaveTextContent('Deck Recs');
   });
 
   it('clicking anchor link on home page scrolls into view', async () => {
