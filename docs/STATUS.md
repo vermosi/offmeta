@@ -28,7 +28,11 @@ OffMeta is a natural-language search frontend for Magic: The Gathering cards. It
 ## Recent additions
 
 - **Mobile-First Responsive Design**: Standardized spacing system with progressive scaling across mobile (390px), tablet (768px), and desktop (1280px+). Overflow protection on all pages.
-- **Home Discovery Section**: Dedicated section with Recent Searches, Daily Pick, Staples, How It Works, and FAQ.
+- **Home Discovery Section**: Dedicated section with Recent Searches, Daily Pick, Features Showcase, Staples, How It Works, and FAQ.
+- **Deck Recommendations** (`/deck-recs`): AI-powered card suggestions via Moxfield import or text paste. Categorized by High Synergy, Upgrades, and Budget Picks with Commander legality enforcement.
+- **Combo Finder** (`/combos`): Discover card combos for any commander with prerequisites, steps, and pricing.
+- **Commander Archetypes** (`/archetypes`): Browse popular archetypes with curated card lists.
+- **Features Showcase**: Landing page section below Daily Pick highlighting all core tools.
 - **Search Guides**: 10 progressive guides (`/guides`) teaching natural language search from basic to expert.
 - **Card Comparison**: Side-by-side comparison of 2–4 cards.
 - **View Modes**: Grid, list, and image-only views with persistent preference.
