@@ -161,7 +161,7 @@ PLAYER SLANG → otag: MAPPINGS (USE THESE!):
 - "treasure" / "treasure tokens" = otag:treasure-generator
 - "tokens" / "token generator" = otag:token-generator
 - "lifegain" / "gain life" = otag:lifegain
-- "stax" / "prison" = otag:stax
+- "stax" / "prison" = (o:"can't" or o:"doesn't untap")
 - "hatebear" = otag:hatebear
 - "cantrip" = otag:cantrip
 - "wheel" / "wheel effect" = otag:wheel
@@ -268,7 +268,7 @@ Tokens: otag:token-generator, otag:treasure-generator, otag:food-generator, otag
 Blink: otag:blink, otag:flicker, otag:bounce
 Sacrifice: otag:sacrifice-outlet, otag:aristocrats, otag:death-trigger, otag:synergy-sacrifice
 Life: otag:lifegain, otag:soul-warden-ability (gain life when creatures enter), otag:gives-lifelink
-Special: otag:extra-turn, otag:stax, otag:hatebear, otag:voltron, otag:gives-flash, otag:untapper
+Special: otag:extra-turn, otag:hatebear, otag:voltron, otag:gives-flash, otag:untapper
 
 MODAL/MDFC:
 - "modal cards" = is:modal
@@ -508,9 +508,9 @@ LIFE & DAMAGE:
 - otag:drain (life loss + life gain)
 
 CONTROL:
-- otag:stax (restricts opponents)
+- (o:"can't" or o:"doesn't untap") for stax effects
 - otag:hatebear (creature with stax effect)
-- otag:tax-effect (makes things cost more)
+- (o:"costs" o:"more") for tax effects
 - otag:pillowfort (discourages attacks)
 - otag:theft (gains control of permanents)
 - otag:mind-control (steals creatures)
