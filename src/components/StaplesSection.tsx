@@ -3,6 +3,7 @@
  * Pre-built archetype chips that run curated searches.
  */
 
+
 import { memo, useRef, useState, useEffect, useCallback } from 'react';
 import { Zap, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ManaSymbol } from '@/components/ManaSymbol';
