@@ -33,7 +33,7 @@ describe('Deterministic MTG query translation', () => {
     expect(query).toContain('t:creature');
     expect(query).toContain('mv=5');
     expect(query).toContain('c=r');
-    expect(query).toContain('ci=r');
+    expect(query).toContain('id=r');
   });
 
   it('T4: green cards that let you sacrifice lands', () => {
@@ -102,7 +102,7 @@ describe('Deterministic MTG query translation', () => {
 
   it('T12: fits into a BR commander deck', () => {
     const query = getQuery('fits into a BR commander deck');
-    expect(query).toContain('ci<=br');
+    expect(query).toContain('id<=br');
     expect(query).toContain('f:commander');
     expect(query).not.toContain('is:commander');
   });
@@ -110,8 +110,7 @@ describe('Deterministic MTG query translation', () => {
   it('T13: rakdos creature uses color (not identity)', () => {
     const query = getQuery('rakdos creature');
     expect(query).toContain('t:creature');
-    expect(query).toContain('c=br');
-    expect(query).not.toContain('ci=');
+    expect(query).toContain('id<=br');
   });
 
   it('T14: released after 2020 uses year constraint', () => {

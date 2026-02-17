@@ -143,11 +143,18 @@ describe('useSearchHandler', () => {
     const opts = createOptions();
     const { result } = renderHook(() => useSearchHandler(opts));
 
+    let searchPromise: Promise<void>;
+    act(() => {
+      searchPromise = result.current.handleSearch();
+    });
+
+    // Advance past the search timeout (15s) outside of act
     await act(async () => {
-      const searchPromise = result.current.handleSearch();
-      // Advance past the search timeout (15s)
       vi.advanceTimersByTime(16000);
-      await searchPromise;
+    });
+
+    await act(async () => {
+      await searchPromise!;
     });
 
     expect(opts.onSearch).toHaveBeenCalledTimes(1);
@@ -155,7 +162,7 @@ describe('useSearchHandler', () => {
     expect(searchResult!.source).toBe('client_fallback');
     expect(mockBuildClientFallbackQuery).toHaveBeenCalledWith('creatures that make treasure');
     expect(mockToast.error).toHaveBeenCalled();
-  });
+  }, 15000);
 
   // 7. Error fallback
   it('falls back to client query on generic error', async () => {
@@ -454,17 +461,24 @@ describe('useSearchHandler', () => {
   it('timeout wins over slow rejection', async () => {
     mockTranslateQueryWithDedup.mockImplementation(
       () => new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Slow error')), 20000);
+        setTimeout(() => reject(new Error('Slow error')), 120000);
       }),
     );
 
     const opts = createOptions();
     const { result } = renderHook(() => useSearchHandler(opts));
 
+    let searchPromise: Promise<void>;
+    act(() => {
+      searchPromise = result.current.handleSearch();
+    });
+
     await act(async () => {
-      const p = result.current.handleSearch();
       vi.advanceTimersByTime(16000);
-      await p;
+    });
+
+    await act(async () => {
+      await searchPromise!;
     });
 
     const [, searchResult] = opts.onSearch.mock.calls[0];
@@ -473,7 +487,7 @@ describe('useSearchHandler', () => {
       'Search took too long',
       expect.any(Object),
     );
-  });
+  }, 15000);
 
   // 22. Multiple error variants trigger correct fallback path
   it.each([
