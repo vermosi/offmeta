@@ -54,7 +54,7 @@ describe('SearchFilters', () => {
 
   it('renders sort dropdown with default value', () => {
     renderFilters();
-    expect(screen.getByText('Name (A-Z)')).toBeInTheDocument();
+    expect(screen.getByText('Name (A→Z)')).toBeInTheDocument();
   });
 
   it('calls onFilteredCards with all cards when no filters active', () => {
