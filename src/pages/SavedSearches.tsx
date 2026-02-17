@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { SkipLinks } from '@/components/SkipLinks';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import {
@@ -172,8 +173,9 @@ const SavedSearches = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SkipLinks />
       <Header />
-      <main className="flex-1 container-main py-8 sm:py-12">
+      <main id="main-content" className="flex-1 container-main py-8 sm:py-12">
         <div className="max-w-2xl mx-auto space-y-6">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="h-8 px-2">

@@ -9,6 +9,7 @@ import { Footer } from '@/components/Footer';
 import { GUIDES } from '@/data/guides';
 import { BookOpen, FileText, Sparkles, ChevronRight } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import { SkipLinks } from '@/components/SkipLinks';
 
 export default function DocsIndex() {
   const { t } = useTranslation();
@@ -39,9 +40,10 @@ export default function DocsIndex() {
       <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
       <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
 
+      <SkipLinks />
       <Header />
 
-      <main className="flex-1 container-main py-10 sm:py-14 lg:py-20">
+      <main id="main-content" className="flex-1 container-main py-10 sm:py-14 lg:py-20">
         <div className="max-w-2xl mx-auto space-y-10">
           <header className="space-y-3 text-center">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-foreground">

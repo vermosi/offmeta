@@ -34,16 +34,19 @@ import { ArtLightbox } from '@/components/ArtLightbox';
 import { CompareBar } from '@/components/CompareBar';
 import { CompareModal } from '@/components/CompareModal';
 import { PwaInstallBanner } from '@/components/PwaInstallBanner';
+import { SkipLinks } from '@/components/SkipLinks';
 
 import { GitCompareArrows } from 'lucide-react';
 import { CLIENT_CONFIG } from '@/lib/config';
 import { useSearch } from '@/hooks/useSearch';
+import { useTranslation } from '@/lib/i18n';
 import { useCompare } from '@/hooks/useCompare';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useRovingTabIndex } from '@/hooks/useRovingTabIndex';
 const CardModal = lazy(() => import('@/components/CardModal'));
 
 const Index = () => {
+  const { t } = useTranslation();
   const {
     searchQuery,
     originalQuery,
@@ -146,16 +149,8 @@ const Index = () => {
         <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
         <div className="fixed inset-0 pointer-events-none bg-page-mesh" aria-hidden="true" />
 
-        {/* Skip links */}
-        <a href="#main-content" className="skip-link">
-          Skip to main content
-        </a>
-        <a href="#search-input" className="skip-link" onClick={(e) => {
-          e.preventDefault();
-          document.getElementById('search-input')?.focus();
-        }}>
-          Skip to search
-        </a>
+        <SkipLinks showSearchLink />
+
 
         <Header />
 
@@ -164,11 +159,11 @@ const Index = () => {
         {/* Screen reader search status announcements */}
         <div className="sr-only" role="status" aria-live="assertive" aria-atomic="true">
           {isSearching
-            ? 'Searching for cards…'
+            ? t('a11y.searching')
             : hasSearched && totalCards > 0
-              ? `Found ${totalCards.toLocaleString()} cards`
+              ? t('a11y.foundCards').replace('{count}', totalCards.toLocaleString())
               : hasSearched && totalCards === 0
-                ? 'No cards found'
+                ? t('a11y.noCardsFound')
                 : ''}
         </div>
 
@@ -262,7 +257,7 @@ const Index = () => {
                       role="status"
                       aria-live="polite"
                     >
-                      {totalCards.toLocaleString()} cards
+                      {t('a11y.cardsCount').replace('{count}', totalCards.toLocaleString())}
                     </span>
                   )}
                   <ExportResults cards={displayCards} />

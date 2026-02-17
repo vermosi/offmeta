@@ -9,6 +9,7 @@ import { ArrowLeft, Copy, Check } from 'lucide-react';
 import { useState, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
+import { SkipLinks } from '@/components/SkipLinks';
 
 interface SyntaxRow {
   natural: string;
@@ -136,9 +137,10 @@ export default function SyntaxCheatSheet() {
       <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
       <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
 
+      <SkipLinks />
       <Header />
 
-      <main className="flex-1 container-main py-8 sm:py-12">
+      <main id="main-content" className="flex-1 container-main py-8 sm:py-12">
         <div className="max-w-3xl mx-auto space-y-8">
           <Link
             to="/docs"

@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { Loader2, User, ArrowLeft, Camera, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from '@/lib/i18n/useTranslation';
+import { SkipLinks } from '@/components/SkipLinks';
 
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2 MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
@@ -164,9 +165,10 @@ export default function ProfileSettings() {
       <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
       <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
 
+      <SkipLinks />
       <Header />
 
-      <main className="relative flex-1 pt-6 sm:pt-10 pb-16">
+      <main id="main-content" className="relative flex-1 pt-6 sm:pt-10 pb-16">
         <div className="container-main" style={{ maxWidth: 'clamp(320px, 90vw, 480px)' }}>
           <Link
             to="/"

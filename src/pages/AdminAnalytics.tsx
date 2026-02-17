@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { SkipLinks } from '@/components/SkipLinks';
 
 interface PopularQuery {
   query: string;
@@ -347,9 +348,10 @@ export default function AdminAnalytics() {
       <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
       <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
 
+      <SkipLinks />
       <Header />
 
-      <main className="relative flex-1 pt-6 sm:pt-10 pb-16">
+      <main id="main-content" className="relative flex-1 pt-6 sm:pt-10 pb-16">
         <div className="container-main max-w-5xl">
           <Link
             to="/"

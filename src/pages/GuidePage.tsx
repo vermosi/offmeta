@@ -11,6 +11,7 @@ import { ScrollToTop } from '@/components/ScrollToTop';
 import { Search, ArrowRight, Lightbulb, HelpCircle, BookOpen, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n';
+import { SkipLinks } from '@/components/SkipLinks';
 
 export default function GuidePage() {
   const { slug } = useParams<{ slug: string }>();
@@ -103,6 +104,7 @@ export default function GuidePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
 
+      <SkipLinks />
       <Header />
 
       <nav className="container-main pt-4 sm:pt-6 pb-2" aria-label="Breadcrumb">
@@ -115,7 +117,7 @@ export default function GuidePage() {
         </ol>
       </nav>
 
-      <main className="flex-1 container-main py-8 sm:py-10 lg:py-12">
+      <main id="main-content" className="flex-1 container-main py-8 sm:py-10 lg:py-12">
         <article className="max-w-2xl mx-auto space-y-8 sm:space-y-10 min-w-0">
           <header className="space-y-4 min-w-0">
             <h1 className="text-2xl sm:text-3xl lg:text-5xl font-semibold text-foreground leading-tight break-words">

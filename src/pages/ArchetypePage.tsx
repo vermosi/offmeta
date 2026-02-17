@@ -11,6 +11,7 @@ import { ArrowLeft, Compass, Lightbulb, Star, DollarSign, Search } from 'lucide-
 import { Button } from '@/components/ui/button';
 import { useCallback } from 'react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
+import { SkipLinks } from '@/components/SkipLinks';
 
 export default function ArchetypePage() {
   const { t } = useTranslation();
@@ -54,9 +55,10 @@ export default function ArchetypePage() {
       <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
       <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
 
+      <SkipLinks />
       <Header />
 
-      <main className="relative flex-1 pt-6 sm:pt-10 pb-16">
+      <main id="main-content" className="relative flex-1 pt-6 sm:pt-10 pb-16">
         <div className="container-main max-w-3xl">
           <Link
             to="/archetypes"

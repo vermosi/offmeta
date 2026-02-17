@@ -2,7 +2,7 @@
  * Header component with nav links, auth controls, and mobile hamburger menu.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, LogIn, LogOut, Bookmark, User, Settings, Shield } from 'lucide-react';
@@ -10,6 +10,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { Logo } from '@/components/Logo';
 import { AuthModal } from '@/components/AuthModal';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,15 +34,17 @@ export function Header() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+
   const NAV_LINKS = [
     { label: t('header.howItWorks'), href: '#how-it-works' },
     { label: t('header.dailyPick'), href: '#daily-pick' },
     { label: t('header.faq'), href: '#faq' },
     { label: t('header.docs'), href: '/docs' },
     { label: t('header.guides'), href: '/guides' },
-    { label: 'Archetypes', href: '/archetypes' },
-    { label: 'Combos', href: '/combos' },
-    { label: 'Deck Recs', href: '/deck-recs' },
+    { label: t('nav.archetypes'), href: '/archetypes' },
+    { label: t('nav.combos'), href: '/combos' },
+    { label: t('nav.deckRecs'), href: '/deck-recs' },
   ] as const;
 
   // Reset saved count when user logs out (render-phase sync)
@@ -96,9 +99,13 @@ export function Header() {
     }
   };
 
+  // Focus trap for mobile menu
+  useFocusTrap(mobileMenuRef, mobileMenuOpen);
+
   const mobileMenu = mobileMenuOpen
     ? createPortal(
         <div
+          ref={mobileMenuRef}
           className="fixed inset-0 top-[57px] z-[60] bg-background md:hidden animate-fade-in"
           id="mobile-nav-menu"
           role="dialog"
@@ -145,7 +152,7 @@ export function Header() {
                     'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
                   )}
                 >
-                  Saved Searches
+                  {t('nav.savedSearches')}
                 </Link>
                 <Link
                   to="/profile"
@@ -155,7 +162,7 @@ export function Header() {
                     'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
                   )}
                 >
-                  Profile Settings
+                  {t('nav.profileSettings')}
                 </Link>
                 {isAdmin && (
                   <Link
@@ -166,7 +173,7 @@ export function Header() {
                       'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
                     )}
                   >
-                    Admin Dashboard
+                    {t('nav.adminDashboard')}
                   </Link>
                 )}
                 <button
@@ -176,7 +183,7 @@ export function Header() {
                     'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
                   )}
                 >
-                  Sign Out
+                  {t('nav.signOut')}
                 </button>
               </>
             ) : (
@@ -187,7 +194,7 @@ export function Header() {
                   'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
                 )}
               >
-                Sign In
+                {t('nav.signIn')}
               </button>
             )}
           </nav>
@@ -247,7 +254,7 @@ export function Header() {
                 <DropdownMenuTrigger asChild>
                   <button
                     className="h-8 w-8 rounded-full bg-primary/10 border border-border flex items-center justify-center text-xs font-semibold text-primary hover:bg-primary/20 transition-colors focus-ring overflow-hidden"
-                    aria-label="User menu"
+                    aria-label={t('nav.userMenu')}
                   >
                     {avatarUrl ? (
                       <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
@@ -264,7 +271,7 @@ export function Header() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate('/saved')}>
                     <Bookmark className="h-4 w-4 mr-2" />
-                    Saved Searches
+                    {t('nav.savedSearches')}
                     {savedCount > 0 && (
                       <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
                         {savedCount}
@@ -273,17 +280,17 @@ export function Header() {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/profile')}>
                     <Settings className="h-4 w-4 mr-2" />
-                    Profile Settings
+                    {t('nav.profileSettings')}
                   </DropdownMenuItem>
                   {isAdmin && (
                     <DropdownMenuItem onClick={() => navigate('/admin/analytics')}>
                       <Shield className="h-4 w-4 mr-2" />
-                      Admin Dashboard
+                      {t('nav.adminDashboard')}
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem onClick={() => signOut()}>
                     <LogOut className="h-4 w-4 mr-2" />
-                    Sign Out
+                    {t('nav.signOut')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -293,7 +300,7 @@ export function Header() {
                 className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary/50 focus-ring"
               >
                 <LogIn className="h-4 w-4" />
-                Sign In
+                {t('nav.signIn')}
               </button>
             )}
 

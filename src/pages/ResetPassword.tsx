@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { Lock, Loader2, CheckCircle2 } from 'lucide-react';
+import { SkipLinks } from '@/components/SkipLinks';
 
 const ResetPassword = () => {
   const { updatePassword, session } = useAuth();
@@ -52,8 +53,9 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SkipLinks />
       <Header />
-      <main className="flex-1 container-main py-12 flex items-center justify-center">
+      <main id="main-content" className="flex-1 container-main py-12 flex items-center justify-center">
         <div className="w-full max-w-sm space-y-6">
           <h1 className="text-2xl font-semibold tracking-tight text-center">Set New Password</h1>
 

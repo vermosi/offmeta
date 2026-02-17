@@ -11,6 +11,7 @@ import { ScrollToTop } from '@/components/ScrollToTop';
 import { BookOpen, ArrowRight, Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useTranslation } from '@/lib/i18n';
+import { SkipLinks } from '@/components/SkipLinks';
 
 const LEVEL_LABEL_KEYS: Record<number, string> = {
   1: 'guides.levelBeginner',
@@ -59,6 +60,7 @@ export default function GuidesIndex() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
+      <SkipLinks />
       <Header />
 
       <nav className="container-main pt-4 sm:pt-6 pb-2" aria-label="Breadcrumb">
@@ -69,7 +71,7 @@ export default function GuidesIndex() {
         </ol>
       </nav>
 
-      <main className="flex-1 container-main py-8 sm:py-10 lg:py-12">
+      <main id="main-content" className="flex-1 container-main py-8 sm:py-10 lg:py-12">
         <div className="max-w-4xl mx-auto space-y-8 sm:space-y-10 min-w-0">
           <header className="text-center space-y-4">
             <div className="flex items-center justify-center gap-2.5 text-primary">
