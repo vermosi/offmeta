@@ -136,7 +136,7 @@ export function parseSpecialPatterns(query: string, ir: SearchIR): string {
   let remaining = query;
 
   const commanderFormatPattern =
-    /\bcommander(?:-|\s)?(deck|format|legal)\b|\blegal in commander\b|\bfor\s+commander\b|\bin\s+commander\b/gi;
+    /\bcommander(?:-|\s)?(deck|format|legal)\b|\blegal in commander\b|\bfor\s+commander\b|\bin\s+commander\b|\bcommander\s+(staples?|cards?|playable|options?|picks?|pieces?|essentials?|must[- ]haves?)\b/gi;
   if (commanderFormatPattern.test(remaining)) {
     ir.specials.push('f:commander');
     commanderFormatPattern.lastIndex = 0;
@@ -231,6 +231,15 @@ export function parseOraclePatterns(query: string, ir: SearchIR): string {
     ir.oracle.push('-o:/\\{[WUBRG0-9XSC]\\}:/');
     remaining = remaining.replace(/\bactivated ability\b/gi, '').trim();
     remaining = remaining.replace(/\bdoes not cost mana\b/gi, '').trim();
+  }
+
+  // "search for lands" / "searches your library for a land"
+  if (/\bsearch(?:es?)?\s+(?:for\s+|your\s+library\s+for\s+)?(?:a\s+)?lands?\b/i.test(remaining)) {
+    ir.oracle.push('o:"search your library"');
+    ir.oracle.push('o:"land"');
+    remaining = remaining
+      .replace(/\bsearch(?:es?)?\s+(?:for\s+|your\s+library\s+for\s+)?(?:a\s+)?lands?\b/gi, '')
+      .trim();
   }
 
   return remaining;
