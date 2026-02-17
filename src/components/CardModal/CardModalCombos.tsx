@@ -21,6 +21,7 @@ import {
   Sparkles,
   AlertTriangle,
 } from 'lucide-react';
+import { ManaCost } from '@/components/ManaSymbol';
 import { logger } from '@/lib/core/logger';
 
 interface ComboCard {
@@ -202,9 +203,16 @@ export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
 
                   <div className="flex items-center gap-1 text-muted-foreground">
                     {combo.identity && (
-                      <Badge variant="outline" className="text-xs">
-                        {combo.identity}
-                      </Badge>
+                      <span className="inline-flex items-center gap-0.5">
+                        {combo.identity.split('').filter((c: string) => 'WUBRG'.includes(c)).map((c: string, i: number) => (
+                          <img
+                            key={i}
+                            src={`https://svgs.scryfall.io/card-symbols/${c}.svg`}
+                            alt={c}
+                            className="h-4 w-4"
+                          />
+                        ))}
+                      </span>
                     )}
                     {expandedCombo === combo.id ? (
                       <ChevronUp className="h-4 w-4" />

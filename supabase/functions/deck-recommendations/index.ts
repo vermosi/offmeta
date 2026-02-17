@@ -252,7 +252,13 @@ ${cardList}`;
       return status === "legal" || status === "restricted";
     };
 
-    // Merge Scryfall data into recommendations, filtering out illegal cards
+    /** Check if a card has a valid image (normal URI on main or first face). */
+    const hasImage = (card: ScryfallCardData | null): boolean => {
+      if (!card) return false;
+      return !!(card.image_uris?.normal || card.card_faces?.[0]?.image_uris?.normal);
+    };
+
+    // Merge Scryfall data into recommendations, filtering out illegal/non-existent/imageless cards
     const enriched = recommendations.categories.map((cat: { name: string; cards: { name: string; reason: string }[] }) => ({
       name: cat.name,
       cards: cat.cards
@@ -261,7 +267,7 @@ ${cardList}`;
           scryfall: resolved[c.name.toLowerCase()] ?? null,
         }))
         .filter((c: { scryfall: ScryfallCardData | null }) =>
-          isColorLegal(c.scryfall) && isCommanderLegal(c.scryfall)
+          c.scryfall !== null && hasImage(c.scryfall) && isColorLegal(c.scryfall) && isCommanderLegal(c.scryfall)
         ),
     }));
 
