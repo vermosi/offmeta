@@ -1,7 +1,8 @@
 /**
  * Admin analytics dashboard — shows search query metrics,
- * source breakdown, confidence distribution, and low-confidence queries.
- * Protected: requires admin role.
+ * source breakdown, confidence distribution, popular queries,
+ * response time percentiles, deterministic coverage trend,
+ * and low-confidence queries. Protected: requires admin role.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -31,9 +32,19 @@ import {
   RefreshCw,
   Zap,
   ShieldAlert,
+  Download,
+  Search,
+  Gauge,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+
+interface PopularQuery {
+  query: string;
+  count: number;
+  avg_confidence: number;
+  primary_source: string;
+}
 
 interface AnalyticsData {
   summary: {
@@ -54,6 +65,9 @@ interface AnalyticsData {
     source: string;
     time: string;
   }>;
+  popularQueries: PopularQuery[];
+  responsePercentiles: { p50: number; p95: number; p99: number };
+  deterministicCoverage: Record<string, number>;
 }
 
 function StatCard({
@@ -107,6 +121,56 @@ function BarRow({ label, value, total, color }: { label: string; value: number; 
   );
 }
 
+function exportToCsv(data: AnalyticsData) {
+  const rows: string[] = [];
+  
+  // Summary
+  rows.push('Section,Metric,Value');
+  rows.push(`Summary,Total Searches,${data.summary.totalSearches}`);
+  rows.push(`Summary,Avg Confidence,${data.summary.avgConfidence}`);
+  rows.push(`Summary,Avg Response Time (ms),${data.summary.avgResponseTime}`);
+  rows.push(`Summary,Fallback Rate (%),${data.summary.fallbackRate}`);
+  rows.push(`Summary,P50 Response (ms),${data.responsePercentiles.p50}`);
+  rows.push(`Summary,P95 Response (ms),${data.responsePercentiles.p95}`);
+  rows.push(`Summary,P99 Response (ms),${data.responsePercentiles.p99}`);
+  rows.push('');
+  
+  // Source breakdown
+  rows.push('Source,Count');
+  for (const [source, count] of Object.entries(data.sourceBreakdown)) {
+    rows.push(`${source},${count}`);
+  }
+  rows.push('');
+  
+  // Popular queries
+  rows.push('Popular Query,Count,Avg Confidence,Primary Source');
+  for (const pq of data.popularQueries) {
+    rows.push(`"${pq.query.replace(/"/g, '""')}",${pq.count},${pq.avg_confidence},${pq.primary_source}`);
+  }
+  rows.push('');
+  
+  // Daily volume
+  rows.push('Date,Searches');
+  for (const [day, count] of Object.entries(data.dailyVolume).sort(([a], [b]) => a.localeCompare(b))) {
+    rows.push(`${day},${count}`);
+  }
+  rows.push('');
+
+  // Coverage trend
+  rows.push('Date,Deterministic Coverage (%)');
+  for (const [day, pct] of Object.entries(data.deterministicCoverage).sort(([a], [b]) => a.localeCompare(b))) {
+    rows.push(`${day},${pct}`);
+  }
+
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `offmeta-analytics-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function AdminAnalytics() {
   const { user, isLoading: authLoading } = useAuth();
   const { hasRole: isAdmin, isLoading: roleLoading } = useUserRole('admin');
@@ -149,7 +213,7 @@ export default function AdminAnalytics() {
       const analyticsData = await response.json();
       setData(analyticsData);
     } catch (e) {
-      void e; // logged via toast
+      void e;
       toast.error('Failed to load analytics');
     } finally {
       setIsLoading(false);
@@ -327,6 +391,17 @@ export default function AdminAnalytics() {
                   <SelectItem value="90">Last 90 days</SelectItem>
                 </SelectContent>
               </Select>
+              {data && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => exportToCsv(data)}
+                  className="gap-1.5"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  CSV
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -373,6 +448,33 @@ export default function AdminAnalytics() {
                   variant={data.summary.fallbackRate < 10 ? 'success' : data.summary.fallbackRate < 25 ? 'warning' : 'danger'}
                 />
               </div>
+
+              {/* Response time percentiles */}
+              {data.responsePercentiles && (
+                <div className="grid grid-cols-3 gap-3 sm:gap-4">
+                  <StatCard
+                    icon={Gauge}
+                    label="P50 Response"
+                    value={`${data.responsePercentiles.p50}ms`}
+                    subtext="Median"
+                    variant={data.responsePercentiles.p50 < 500 ? 'success' : 'warning'}
+                  />
+                  <StatCard
+                    icon={Gauge}
+                    label="P95 Response"
+                    value={`${data.responsePercentiles.p95}ms`}
+                    subtext="95th percentile"
+                    variant={data.responsePercentiles.p95 < 2000 ? 'success' : data.responsePercentiles.p95 < 5000 ? 'warning' : 'danger'}
+                  />
+                  <StatCard
+                    icon={Gauge}
+                    label="P99 Response"
+                    value={`${data.responsePercentiles.p99}ms`}
+                    subtext="99th percentile"
+                    variant={data.responsePercentiles.p99 < 5000 ? 'success' : 'danger'}
+                  />
+                </div>
+              )}
 
               {/* Source breakdown + confidence */}
               <div className="grid md:grid-cols-2 gap-4">
@@ -432,6 +534,39 @@ export default function AdminAnalytics() {
                 </div>
               </div>
 
+              {/* Deterministic Coverage Trend */}
+              {Object.keys(data.deterministicCoverage).length > 1 && (
+                <div className="surface-elevated p-5 border border-border">
+                  <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4" />
+                    Deterministic Coverage Trend
+                  </h2>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Percentage of queries handled without AI (deterministic + pattern match)
+                  </p>
+                  <div className="space-y-2">
+                    {Object.entries(data.deterministicCoverage)
+                      .sort(([a], [b]) => a.localeCompare(b))
+                      .map(([day, pct]) => (
+                        <div key={day} className="flex items-center gap-3">
+                          <span className="text-xs text-muted-foreground w-20 tabular-nums flex-shrink-0">
+                            {day}
+                          </span>
+                          <div className="flex-1 h-5 bg-muted rounded overflow-hidden">
+                            <div
+                              className="h-full bg-green-500/70 rounded"
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-muted-foreground tabular-nums w-10 text-right">
+                            {pct}%
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
               {/* Daily volume */}
               <div className="surface-elevated p-5 border border-border">
                 <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
@@ -462,6 +597,51 @@ export default function AdminAnalytics() {
                     })}
                 </div>
               </div>
+
+              {/* Popular Queries */}
+              {data.popularQueries && data.popularQueries.length > 0 && (
+                <div className="surface-elevated p-5 border border-border">
+                  <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                    <Search className="h-4 w-4" />
+                    Popular Queries (Top 20)
+                  </h2>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border">
+                          <th className="text-left py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">#</th>
+                          <th className="text-left py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Query</th>
+                          <th className="text-right py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Count</th>
+                          <th className="text-right py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Avg Conf</th>
+                          <th className="text-right py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Source</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.popularQueries.map((pq, i) => (
+                          <tr key={i} className="border-b border-border/30 hover:bg-muted/20">
+                            <td className="py-2 text-muted-foreground tabular-nums">{i + 1}</td>
+                            <td className="py-2 font-medium truncate max-w-[300px]">{pq.query}</td>
+                            <td className="py-2 text-right tabular-nums">{pq.count}</td>
+                            <td className="py-2 text-right">
+                              <Badge
+                                variant="secondary"
+                                className={`text-[10px] ${
+                                  pq.avg_confidence >= 0.8 ? 'bg-green-500/10 text-green-600 dark:text-green-400'
+                                  : pq.avg_confidence >= 0.6 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                  : 'bg-red-500/10 text-red-600 dark:text-red-400'
+                                }`}
+                              >
+                                {Math.round(pq.avg_confidence * 100)}%
+                              </Badge>
+                            </td>
+                            <td className="py-2 text-right text-xs text-muted-foreground">{pq.primary_source}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
 
               {/* Event type breakdown */}
               {Object.keys(data.eventBreakdown).length > 0 && (
