@@ -104,7 +104,7 @@ export const TAG_FIRST_MAP: TagPattern[] = [
   { pattern: /\blandfall\b/gi, tag: 'landfall' },
   {
     pattern: /\breanimation\b/gi,
-    tag: 'reanimation',
+    tag: 'reanimate',
     fallback: 'o:"from your graveyard to the battlefield"',
   },
   {

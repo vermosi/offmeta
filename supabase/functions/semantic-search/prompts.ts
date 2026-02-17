@@ -154,7 +154,7 @@ PLAYER SLANG → otag: MAPPINGS (USE THESE!):
 - "sacrifice outlet" / "sac outlet" = otag:sacrifice-outlet
 - "aristocrats" / "death triggers" = otag:aristocrats
 - "blink" / "flicker" = otag:blink
-- "reanimation" / "reanimate" = otag:reanimation
+- "reanimation" / "reanimate" = otag:reanimate
 - "graveyard recursion" = otag:graveyard-recursion
 - "mana rock" / "rocks" = otag:mana-rock
 - "mana dork" / "dorks" = otag:mana-dork
@@ -262,7 +262,7 @@ Draw: otag:card-draw, otag:cantrip, otag:looting, otag:rummaging, otag:wheel
 Search: otag:tutor, otag:land-tutor, otag:creature-tutor
 Removal: otag:removal, otag:creature-removal, otag:artifact-removal, otag:enchantment-removal, otag:board-wipe
 Counter: otag:counterspell, otag:soft-counter, otag:hard-counter
-Graveyard: otag:self-mill, otag:mill, otag:graveyard-recursion, otag:reanimation, otag:graveyard-hate
+Graveyard: otag:self-mill, otag:mill, otag:graveyard-recursion, otag:reanimate, otag:graveyard-hate
 Combat: otag:pump, otag:combat-trick, otag:fog, otag:gives-menace
 Tokens: otag:token-generator, otag:treasure-generator, otag:food-generator, otag:clue-generator
 Blink: otag:blink, otag:flicker, otag:bounce
@@ -441,7 +441,7 @@ GRAVEYARD:
 - otag:self-mill (mills yourself)
 - otag:mill (mills opponents)
 - otag:graveyard-recursion (returns cards from graveyard)
-- otag:reanimation (puts creatures from graveyard to battlefield)
+- otag:reanimate (puts creatures from graveyard to battlefield)
 - otag:graveyard-hate (exiles graveyards)
 
 TOKENS:
