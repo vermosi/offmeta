@@ -16,12 +16,14 @@ import { SearchHistoryDropdown } from '@/components/SearchHistoryDropdown';
 import { useIsMobile } from '@/hooks/useMobile';
 import { SearchFeedback } from '@/components/SearchFeedback';
 import { SearchHelpModal } from '@/components/SearchHelpModal';
+import { VoiceSearchButton } from '@/components/VoiceSearchButton';
 import type { FilterState } from '@/types/filters';
 import { useTypingPlaceholder } from '@/hooks/useTypingPlaceholder';
 import type { SearchIntent } from '@/types/search';
 import { useSearchContext } from '@/hooks/useSearchContext';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { useSearchHandler } from '@/hooks/useSearchHandler';
+import { useVoiceInput } from '@/hooks/useVoiceInput';
 import { useTranslation } from '@/lib/i18n';
 
 export interface SearchResult {
@@ -95,6 +97,21 @@ export const UnifiedSearchBar = forwardRef<
     onSearch,
     addToHistory,
     saveContext,
+  });
+
+  const {
+    isListening,
+    isSupported: isVoiceSupported,
+    startListening,
+    stopListening,
+  } = useVoiceInput({
+    onFinalTranscript: (transcript) => {
+      setQuery(transcript);
+      handleSearch(transcript);
+    },
+    onTranscript: (transcript) => {
+      setQuery(transcript);
+    },
   });
 
   useImperativeHandle(
@@ -208,6 +225,13 @@ export const UnifiedSearchBar = forwardRef<
               <X className="h-4 w-4" aria-hidden="true" />
             </button>
           )}
+
+          <VoiceSearchButton
+            isListening={isListening}
+            isSupported={isVoiceSupported}
+            onToggle={isListening ? stopListening : startListening}
+            className="h-9 w-9 sm:h-10 sm:w-10"
+          />
 
           <Button
             onClick={() => handleSearch()}
