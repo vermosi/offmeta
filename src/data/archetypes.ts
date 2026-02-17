@@ -208,7 +208,7 @@ export const ARCHETYPES: Archetype[] = [
     slug: 'treasure',
     name: 'Treasure',
     colors: ['R', 'B'],
-    searchQuery: 'rakdos cards that create treasure tokens or benefit from treasures for commander',
+    searchQuery: 'treasure token cards legal in commander',
     tagline: 'Generate treasure tokens for explosive mana',
     description:
       'Treasure decks create massive amounts of treasure tokens, then leverage them for mana acceleration, sacrifice synergies, or win conditions that care about artifact count.',
