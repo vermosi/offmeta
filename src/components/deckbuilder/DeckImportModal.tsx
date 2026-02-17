@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { parseDecklist } from '@/lib/decklist-parser';
 import { toast } from '@/hooks/useToast';
 import { cn } from '@/lib/core/utils';
+import { useTranslation } from '@/lib/i18n';
 
 interface DeckImportModalProps {
   open: boolean;
@@ -27,6 +28,7 @@ interface DeckImportModalProps {
 }
 
 export function DeckImportModal({ open, onOpenChange, onImport }: DeckImportModalProps) {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<'moxfield' | 'paste'>('moxfield');
   const [moxfieldUrl, setMoxfieldUrl] = useState('');
   const [pasteText, setPasteText] = useState('');
@@ -40,7 +42,7 @@ export function DeckImportModal({ open, onOpenChange, onImport }: DeckImportModa
         body: { url: moxfieldUrl.trim() },
       });
       if (error || !data?.decklist) {
-        toast({ title: 'Import failed', description: data?.error || 'Could not fetch deck from Moxfield.', variant: 'destructive' });
+        toast({ title: t('deckImport.failed'), description: data?.error || t('deckImport.failedDesc'), variant: 'destructive' });
         return;
       }
       const parsed = parseDecklist(data.decklist);
@@ -53,9 +55,9 @@ export function DeckImportModal({ open, onOpenChange, onImport }: DeckImportModa
       });
       setMoxfieldUrl('');
       onOpenChange(false);
-      toast({ title: 'Imported!', description: `${parsed.totalCards} cards from "${data.deckName}"` });
+      toast({ title: t('deckImport.success'), description: t('deckImport.successCards').replace('{count}', String(parsed.totalCards)).replace('{name}', data.deckName) });
     } catch {
-      toast({ title: 'Error', description: 'Failed to import from Moxfield.', variant: 'destructive' });
+      toast({ title: 'Error', description: t('deckImport.failedDesc'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -65,7 +67,7 @@ export function DeckImportModal({ open, onOpenChange, onImport }: DeckImportModa
     if (!pasteText.trim()) return;
     const parsed = parseDecklist(pasteText);
     if (parsed.cards.length === 0) {
-      toast({ title: 'No cards found', description: 'Could not parse any cards from the text.', variant: 'destructive' });
+      toast({ title: t('deckImport.noCards'), description: t('deckImport.noCardsDesc'), variant: 'destructive' });
       return;
     }
     onImport({
@@ -74,7 +76,7 @@ export function DeckImportModal({ open, onOpenChange, onImport }: DeckImportModa
     });
     setPasteText('');
     onOpenChange(false);
-    toast({ title: 'Imported!', description: `${parsed.totalCards} cards parsed.` });
+    toast({ title: t('deckImport.success'), description: t('deckImport.successParsed').replace('{count}', String(parsed.totalCards)) });
   };
 
   return (
@@ -83,7 +85,7 @@ export function DeckImportModal({ open, onOpenChange, onImport }: DeckImportModa
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Upload className="h-4 w-4" />
-            Import Deck
+            {t('deckImport.title')}
           </DialogTitle>
         </DialogHeader>
 
@@ -97,7 +99,7 @@ export function DeckImportModal({ open, onOpenChange, onImport }: DeckImportModa
             )}
           >
             <LinkIcon className="h-3 w-3" />
-            Moxfield URL
+            {t('deckImport.moxfieldUrl')}
           </button>
           <button
             onClick={() => setTab('paste')}
@@ -107,7 +109,7 @@ export function DeckImportModal({ open, onOpenChange, onImport }: DeckImportModa
             )}
           >
             <FileText className="h-3 w-3" />
-            Paste List
+            {t('deckImport.pasteList')}
           </button>
         </div>
 
@@ -116,15 +118,13 @@ export function DeckImportModal({ open, onOpenChange, onImport }: DeckImportModa
             <Input
               value={moxfieldUrl}
               onChange={(e) => setMoxfieldUrl(e.target.value)}
-              placeholder="https://www.moxfield.com/decks/..."
+              placeholder={t('deckImport.urlPlaceholder')}
               onKeyDown={(e) => e.key === 'Enter' && handleMoxfieldImport()}
             />
-            <p className="text-[10px] text-muted-foreground">
-              Paste a Moxfield deck URL to import all cards, commander, and format.
-            </p>
+            <p className="text-[10px] text-muted-foreground">{t('deckImport.urlHint')}</p>
             <Button onClick={handleMoxfieldImport} disabled={loading || !moxfieldUrl.trim()} className="w-full gap-2">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-              {loading ? 'Importing...' : 'Import from Moxfield'}
+              {loading ? t('deckImport.importing') : t('deckImport.importMoxfield')}
             </Button>
           </div>
         ) : (
@@ -132,16 +132,14 @@ export function DeckImportModal({ open, onOpenChange, onImport }: DeckImportModa
             <Textarea
               value={pasteText}
               onChange={(e) => setPasteText(e.target.value)}
-              placeholder={'1 Sol Ring\n1 Arcane Signet\n1 Command Tower\n...'}
+              placeholder={t('deckImport.pastePlaceholder')}
               rows={8}
               className="text-sm font-mono"
             />
-            <p className="text-[10px] text-muted-foreground">
-              Paste a decklist in standard format: "1 Card Name" per line. Supports Moxfield export format with set codes.
-            </p>
+            <p className="text-[10px] text-muted-foreground">{t('deckImport.pasteHint')}</p>
             <Button onClick={handlePasteImport} disabled={!pasteText.trim()} className="w-full gap-2">
               <FileText className="h-4 w-4" />
-              Import List
+              {t('deckImport.importList')}
             </Button>
           </div>
         )}

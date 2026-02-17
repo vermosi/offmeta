@@ -14,6 +14,7 @@ import { useDecks, useDeckMutations, useDeckCardMutations } from '@/hooks/useDec
 import { AuthModal } from '@/components/AuthModal';
 import { DeckImportModal } from '@/components/deckbuilder/DeckImportModal';
 import { cn } from '@/lib/core/utils';
+import { useTranslation } from '@/lib/i18n';
 
 const FORMAT_LABELS: Record<string, string> = {
   commander: 'Commander', standard: 'Standard', modern: 'Modern',
@@ -29,6 +30,7 @@ const COLOR_MAP: Record<string, string> = {
 };
 
 export default function DeckBuilder() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { data: decks, isLoading } = useDecks();
   const { createDeck, deleteDeck, updateDeck } = useDeckMutations();
@@ -45,7 +47,7 @@ export default function DeckBuilder() {
   const handleDelete = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
-    if (confirm('Delete this deck? This cannot be undone.')) deleteDeck.mutate(id);
+    if (confirm(t('deck.deleteConfirm'))) deleteDeck.mutate(id);
   };
 
   const handleImport = async (data: {
@@ -58,7 +60,6 @@ export default function DeckBuilder() {
         name: data.name || 'Imported Deck',
         format: data.format || 'commander',
       });
-      // Update deck metadata
       if (data.commander || data.colorIdentity) {
         updateDeck.mutate({
           id: deck.id,
@@ -66,7 +67,6 @@ export default function DeckBuilder() {
           ...(data.colorIdentity && { color_identity: data.colorIdentity }),
         });
       }
-      // Navigate to editor — cards will be added there via bulk import
       navigate(`/deckbuilder/${deck.id}`, {
         state: { importCards: data.cards, importCommander: data.commander },
       });
@@ -81,19 +81,17 @@ export default function DeckBuilder() {
       <main className="flex-1 container-main py-8 sm:py-12">
         <div className="flex items-center justify-between mb-8 gap-3">
           <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Deck Builder</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Build, analyze, and optimize your MTG decks with AI assistance.
-            </p>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('deck.title')}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{t('deck.subtitle')}</p>
           </div>
           <div className="flex gap-2 shrink-0">
             <Button onClick={() => user ? setImportOpen(true) : setAuthModalOpen(true)} variant="outline" size="sm" className="gap-1.5">
               <Upload className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Import</span>
+              <span className="hidden sm:inline">{t('deck.import')}</span>
             </Button>
             <Button onClick={handleCreate} disabled={createDeck.isPending} className="gap-1.5" size="sm">
               <Plus className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">New Deck</span>
+              <span className="hidden sm:inline">{t('deck.newDeck')}</span>
             </Button>
           </div>
         </div>
@@ -101,8 +99,8 @@ export default function DeckBuilder() {
         {!user ? (
           <div className="surface-elevated p-8 text-center">
             <Layers className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground mb-4">Sign in to start building decks.</p>
-            <Button onClick={() => setAuthModalOpen(true)} variant="outline">Sign In</Button>
+            <p className="text-muted-foreground mb-4">{t('deck.signInPrompt')}</p>
+            <Button onClick={() => setAuthModalOpen(true)} variant="outline">{t('nav.signIn')}</Button>
           </div>
         ) : isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -111,13 +109,13 @@ export default function DeckBuilder() {
         ) : !decks?.length ? (
           <div className="surface-elevated p-8 text-center">
             <Layers className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground mb-4">No decks yet. Create your first one!</p>
+            <p className="text-muted-foreground mb-4">{t('deck.noDecks')}</p>
             <div className="flex gap-3 justify-center">
               <Button onClick={() => setImportOpen(true)} variant="outline" className="gap-2">
-                <Upload className="h-4 w-4" />Import Deck
+                <Upload className="h-4 w-4" />{t('deck.importDeck')}
               </Button>
               <Button onClick={handleCreate} disabled={createDeck.isPending} className="gap-2">
-                <Plus className="h-4 w-4" />Create Deck
+                <Plus className="h-4 w-4" />{t('deck.createDeck')}
               </Button>
             </div>
           </div>
@@ -133,7 +131,7 @@ export default function DeckBuilder() {
                       {deck.is_public && <Globe className="h-3 w-3 text-muted-foreground shrink-0" />}
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {FORMAT_LABELS[deck.format] || deck.format} · {deck.card_count} cards
+                      {FORMAT_LABELS[deck.format] || deck.format} · {deck.card_count} {t('deck.cards')}
                     </p>
                   </div>
                   <button onClick={(e) => handleDelete(e, deck.id)}
@@ -155,7 +153,7 @@ export default function DeckBuilder() {
                   </div>
                 )}
                 <p className="text-[10px] text-muted-foreground mt-auto">
-                  Updated {new Date(deck.updated_at).toLocaleDateString()}
+                  {t('deck.updated')} {new Date(deck.updated_at).toLocaleDateString()}
                 </p>
               </Link>
             ))}

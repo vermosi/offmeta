@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/useToast';
 import type { DeckCard, Deck } from '@/hooks/useDeck';
+import { useTranslation } from '@/lib/i18n';
 
 interface DeckExportMenuProps {
   deck: Deck;
@@ -21,10 +22,9 @@ interface DeckExportMenuProps {
   onTogglePublic: () => void;
 }
 
-function buildDecklistText(deck: Deck, cards: DeckCard[]): string {
+export function buildDecklistText(deck: Deck, cards: DeckCard[]): string {
   const lines: string[] = [];
 
-  // Commander first
   const commanders = cards.filter((c) => c.is_commander);
   if (commanders.length > 0) {
     for (const cmd of commanders) {
@@ -33,7 +33,6 @@ function buildDecklistText(deck: Deck, cards: DeckCard[]): string {
     lines.push('');
   }
 
-  // Group by category
   const grouped: Record<string, DeckCard[]> = {};
   for (const card of cards) {
     if (card.is_commander) continue;
@@ -54,10 +53,12 @@ function buildDecklistText(deck: Deck, cards: DeckCard[]): string {
 }
 
 export function DeckExportMenu({ deck, cards, onTogglePublic }: DeckExportMenuProps) {
+  const { t } = useTranslation();
+
   const handleCopyText = async () => {
     const text = buildDecklistText(deck, cards);
     await navigator.clipboard.writeText(text);
-    toast({ title: 'Copied!', description: 'Decklist copied to clipboard.' });
+    toast({ title: t('deckExport.copied'), description: t('deckExport.copiedDesc') });
   };
 
   const handleDownload = () => {
@@ -69,17 +70,17 @@ export function DeckExportMenu({ deck, cards, onTogglePublic }: DeckExportMenuPr
     a.download = `${deck.name.replace(/[^a-zA-Z0-9 ]/g, '')}.txt`;
     a.click();
     URL.revokeObjectURL(url);
-    toast({ title: 'Downloaded', description: `${deck.name}.txt` });
+    toast({ title: t('deckExport.downloaded'), description: `${deck.name}.txt` });
   };
 
   const handleCopyShareLink = async () => {
     if (!deck.is_public) {
-      toast({ title: 'Deck is private', description: 'Make it public first to share.', variant: 'destructive' });
+      toast({ title: t('deckExport.privateFirst'), description: t('deckExport.privateFirstDesc'), variant: 'destructive' });
       return;
     }
     const url = `${window.location.origin}/deckbuilder/${deck.id}`;
     await navigator.clipboard.writeText(url);
-    toast({ title: 'Link copied!', description: 'Share this link with anyone.' });
+    toast({ title: t('deckExport.linkCopied'), description: t('deckExport.linkCopiedDesc') });
   };
 
   return (
@@ -87,27 +88,27 @@ export function DeckExportMenu({ deck, cards, onTogglePublic }: DeckExportMenuPr
       <DropdownMenuTrigger asChild>
         <Button size="sm" variant="ghost" className="h-7 text-[11px] gap-1">
           <Share2 className="h-3 w-3" />
-          <span className="hidden sm:inline">Share</span>
+          <span className="hidden sm:inline">{t('deckExport.share')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem onClick={handleCopyText} className="gap-2 text-xs">
           <Copy className="h-3.5 w-3.5" />
-          Copy as text
+          {t('deckExport.copyText')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleDownload} className="gap-2 text-xs">
           <Download className="h-3.5 w-3.5" />
-          Download .txt
+          {t('deckExport.downloadTxt')}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onTogglePublic} className="gap-2 text-xs">
           {deck.is_public ? <Lock className="h-3.5 w-3.5" /> : <Globe className="h-3.5 w-3.5" />}
-          {deck.is_public ? 'Make private' : 'Make public'}
+          {deck.is_public ? t('deckExport.makePrivate') : t('deckExport.makePublic')}
         </DropdownMenuItem>
         {deck.is_public && (
           <DropdownMenuItem onClick={handleCopyShareLink} className="gap-2 text-xs">
             <Share2 className="h-3.5 w-3.5" />
-            Copy share link
+            {t('deckExport.copyLink')}
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>
