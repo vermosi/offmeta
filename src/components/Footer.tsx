@@ -11,10 +11,10 @@ import { useTranslation } from '@/lib/i18n';
 const MAX_MOBILE_GUIDES = 5;
 
 const EXPLORE_LINKS = [
-  { to: '/archetypes', label: 'Archetypes' },
-  { to: '/deck-recommendations', label: 'Deck Recs' },
-  { to: '/combos', label: 'Combo Finder' },
-  { to: '/syntax', label: 'Syntax Cheat Sheet' },
+  { to: '/archetypes', labelKey: 'nav.archetypes', fallback: 'Archetypes' },
+  { to: '/deck-recommendations', labelKey: 'nav.deckRecs', fallback: 'Deck Recs' },
+  { to: '/combos', labelKey: 'footer.comboFinder', fallback: 'Combo Finder' },
+  { to: '/syntax', labelKey: 'footer.syntaxCheatSheet', fallback: 'Syntax Cheat Sheet' },
 ] as const;
 
 export function Footer() {
@@ -49,7 +49,7 @@ export function Footer() {
                       to={link.to}
                       className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      {link.label}
+                      {t(link.labelKey, link.fallback)}
                     </Link>
                   </li>
                 ))}

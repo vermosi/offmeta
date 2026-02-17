@@ -97,6 +97,10 @@
   "footer.legal": "非公式ファンコンテンツ（準拠：",
   "footer.fanPolicy": "WotCファンコンテンツポリシー",
   "footer.copyright": "Magic: The Gathering © Wizards of the Coast.",
+  "footer.explore": "探索",
+  "footer.allGuides": "すべてのガイド →",
+  "footer.comboFinder": "コンボ検索",
+  "footer.syntaxCheatSheet": "構文チートシート",
 
   "a11y.skipToContent": "メインコンテンツへスキップ",
   "a11y.skipToSearch": "検索へスキップ",
