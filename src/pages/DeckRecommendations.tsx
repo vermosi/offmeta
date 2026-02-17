@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { ManaSymbol, OracleText } from '@/components/ManaSymbol';
 import { useTranslation } from '@/lib/i18n/useTranslation';
+import { SkipLinks } from '@/components/SkipLinks';
 
 const WUBRG = ['W', 'U', 'B', 'R', 'G'] as const;
 const COLOR_NAMES: Record<string, string> = { W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green' };
@@ -133,8 +134,9 @@ export default function DeckRecommendations() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SkipLinks />
       <Header />
-      <main className="container-main flex-1 py-8 space-y-8">
+      <main id="main-content" className="container-main flex-1 py-8 space-y-8">
         <div>
           <h1 className="text-2xl font-bold">{t('deckRecs.title')}</h1>
           <p className="text-muted-foreground text-sm mt-1">

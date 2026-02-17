@@ -9,6 +9,7 @@ import { ManaSymbol } from '@/components/ManaSymbol';
 import { ARCHETYPES } from '@/data/archetypes';
 import { ArrowLeft, Compass } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
+import { SkipLinks } from '@/components/SkipLinks';
 
 export default function ArchetypesIndex() {
   const { t } = useTranslation();
@@ -18,9 +19,10 @@ export default function ArchetypesIndex() {
       <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
       <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
 
+      <SkipLinks />
       <Header />
 
-      <main className="relative flex-1 pt-6 sm:pt-10 pb-16">
+      <main id="main-content" className="relative flex-1 pt-6 sm:pt-10 pb-16">
         <div className="container-main max-w-4xl">
           <Link
             to="/"

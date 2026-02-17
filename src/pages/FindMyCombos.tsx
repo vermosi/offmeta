@@ -21,6 +21,7 @@ import { parseDecklist } from '@/lib/decklist-parser';
 import { supabase } from '@/integrations/supabase/client';
 import { ManaSymbol, OracleText } from '@/components/ManaSymbol';
 import { useTranslation } from '@/lib/i18n/useTranslation';
+import { SkipLinks } from '@/components/SkipLinks';
 import {
   Loader2,
   Zap,
@@ -279,8 +280,9 @@ export default function FindMyCombos() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SkipLinks />
       <Header />
-      <main className="container-main flex-1 py-8 space-y-8">
+      <main id="main-content" className="container-main flex-1 py-8 space-y-8">
         <div>
           <div className="flex items-center gap-2">
             <Zap className="h-6 w-6 text-primary" />
