@@ -39,20 +39,20 @@ export function HeroSection() {
   return (
     <section
       ref={heroRef}
-      className="relative pt-10 sm:pt-14 lg:pt-20 pb-6 sm:pb-8 lg:pb-10"
+      className="relative pt-8 sm:pt-12 lg:pt-16 pb-2 sm:pb-4"
       aria-labelledby="hero-heading"
     >
       <div className="container-main text-center stagger-children relative z-10">
         <h1
           id="hero-heading"
-          className="mb-5 sm:mb-8 text-foreground text-4xl sm:text-5xl lg:text-7xl font-semibold"
+          className="mb-3 sm:mb-5 text-foreground text-3xl sm:text-4xl lg:text-6xl font-semibold"
         >
           {t('hero.title')}
           <br />
           <span className="text-gradient">{t('hero.titleAccent')}</span>
         </h1>
 
-        <p className="text-base sm:text-lg lg:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-lg mx-auto">
+        <p className="text-sm sm:text-base lg:text-lg text-muted-foreground mb-4 sm:mb-6 max-w-md mx-auto leading-relaxed">
           {t('hero.subtitle')}
           <span className="text-foreground font-medium"> {t('hero.subtitleAccent')}</span>
         </p>

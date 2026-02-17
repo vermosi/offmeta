@@ -281,24 +281,29 @@ export const UnifiedSearchBar = forwardRef<
       {/* Example queries - shown when no query typed */}
       {showExamples && (
         <div
-          className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 animate-reveal"
+          className="flex flex-col items-center gap-2 animate-reveal"
           role="group"
           aria-label="Example searches"
         >
-          {EXAMPLE_QUERIES.slice(0, isMobile ? 2 : 3).map((example) => (
-            <button
-              key={example}
-              type="button"
-              onClick={() => {
-                setQuery(example);
-                handleSearch(example);
-              }}
-              className="px-3 py-1.5 rounded-full text-xs text-muted-foreground hover:text-foreground border border-border/60 hover:border-border hover:bg-secondary/50 transition-all duration-200 focus-ring"
-              aria-label={`Search for ${example}`}
-            >
-              {example}
-            </button>
-          ))}
+          <span className="text-[11px] text-muted-foreground/60 uppercase tracking-wider font-medium">
+            Try searching for
+          </span>
+          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+            {EXAMPLE_QUERIES.slice(0, isMobile ? 2 : 3).map((example) => (
+              <button
+                key={example}
+                type="button"
+                onClick={() => {
+                  setQuery(example);
+                  handleSearch(example);
+                }}
+                className="px-3.5 py-2 rounded-full text-xs text-muted-foreground hover:text-foreground border border-border/60 hover:border-primary/40 hover:bg-primary/5 transition-all duration-200 focus-ring"
+                aria-label={`Search for ${example}`}
+              >
+                {example}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </search>

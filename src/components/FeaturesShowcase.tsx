@@ -53,11 +53,11 @@ interface FeaturesShowcaseProps {
 export function FeaturesShowcase({ onScrollTo }: FeaturesShowcaseProps) {
   return (
     <section className="container-main" aria-labelledby="features-heading">
-      <div className="text-center mb-8">
-        <h2 id="features-heading" className="text-xl sm:text-2xl font-bold tracking-tight">
+      <div className="text-center mb-6">
+        <h2 id="features-heading" className="text-lg sm:text-xl font-bold tracking-tight">
           Everything You Need for MTG Deckbuilding
         </h2>
-        <p className="text-sm text-muted-foreground mt-2 max-w-lg mx-auto">
+        <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 max-w-md mx-auto">
           From card discovery to deck optimization — all powered by natural language and AI.
         </p>
       </div>
