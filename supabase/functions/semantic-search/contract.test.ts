@@ -3,15 +3,19 @@
  * Validates request/response schemas without testing internal logic.
  */
 
+// Load .env file if present (for local testing)
+import { loadSync } from 'https://deno.land/std@0.224.0/dotenv/mod.ts';
+try { loadSync({ export: true, allowEmptyValues: true }); } catch { /* ok */ }
+
 import {
   assertEquals,
   assertExists,
   assert,
 } from 'https://deno.land/std@0.224.0/assert/mod.ts';
 
-// Read env vars directly — the test runner provides them
-const SUPABASE_URL = Deno.env.get('VITE_SUPABASE_URL') ?? Deno.env.get('SUPABASE_URL') ?? '';
-const SUPABASE_ANON_KEY = Deno.env.get('VITE_SUPABASE_PUBLISHABLE_KEY') ?? Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+const SUPABASE_URL = Deno.env.get('VITE_SUPABASE_URL') || 'https://nxmzyykkzwomkcentctt.supabase.co';
+const SUPABASE_ANON_KEY = Deno.env.get('VITE_SUPABASE_PUBLISHABLE_KEY') ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54bXp5eWtrendvbWtjZW50Y3R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyMzgwOTYsImV4cCI6MjA4MDgxNDA5Nn0.sJbaqJuvKqIMYV0D2Q4iWgTRlzVGih7OXRRkGmDsGPY';
 
 const FUNCTION_URL = `${SUPABASE_URL}/functions/v1/semantic-search`;
 
@@ -183,7 +187,12 @@ Deno.test('Golden: "red creatures" produces color + type', async () => {
   assertEquals(res.status, 200);
   const data: SuccessResponse = await res.json();
   assertSuccessShape(data);
-  assertQueryContains(data.scryfallQuery, ['c:r', 't:creature'], 'red creatures');
+  assertQueryContains(data.scryfallQuery, ['t:creature'], 'red creatures');
+  // Color may use c:r or c=r depending on mono-color detection
+  assert(
+    data.scryfallQuery.toLowerCase().includes('c:r') || data.scryfallQuery.toLowerCase().includes('c=r'),
+    `[red creatures] Expected color filter, got: ${data.scryfallQuery}`,
+  );
 });
 
 Deno.test('Golden: "white enchantments for commander" includes format', async () => {
@@ -199,7 +208,11 @@ Deno.test('Golden: "cheap green ramp spells" has color + ramp oracle', async () 
   assertEquals(res.status, 200);
   const data: SuccessResponse = await res.json();
   assertSuccessShape(data);
-  assertQueryContains(data.scryfallQuery, ['c:g'], 'green ramp');
+  // Color may use c:g or c=g depending on mono-color detection
+  assert(
+    data.scryfallQuery.toLowerCase().includes('c:g') || data.scryfallQuery.toLowerCase().includes('c=g'),
+    `[green ramp] Expected green color filter, got: ${data.scryfallQuery}`,
+  );
 });
 
 Deno.test('Golden: "artifacts that tap for blue" has artifact + mana', async () => {
