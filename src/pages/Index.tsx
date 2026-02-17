@@ -209,6 +209,7 @@ const Index = () => {
                   <SaveSearchButton
                     naturalQuery={originalQuery}
                     scryfallQuery={lastSearchResult?.scryfallQuery || searchQuery}
+                    filters={activeFilters}
                   />
                 </div>
               </div>
