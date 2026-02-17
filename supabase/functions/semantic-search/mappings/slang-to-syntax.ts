@@ -538,7 +538,7 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
   },
   {
     pattern: /\bcard\s+draw\b/gi,
-    syntax: 'otag:card-draw',
+    syntax: 'otag:draw',
     description: 'Card draw effects',
   },
   {
