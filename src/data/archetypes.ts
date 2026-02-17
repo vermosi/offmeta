@@ -32,7 +32,7 @@ export const ARCHETYPES: Archetype[] = [
     slug: 'aristocrats',
     name: 'Aristocrats',
     colors: ['W', 'B'],
-    searchQuery: 'white black sacrifice payoffs or death triggers for commander',
+    searchQuery: 'creatures that deal damage or drain life when a creature dies for commander',
     tagline: 'Sacrifice creatures for incremental value',
     description:
       'Aristocrats decks create tokens, sacrifice them to free sacrifice outlets, and profit from death triggers. Cards like Blood Artist drain opponents one life at a time, turning every creature death into value.',
