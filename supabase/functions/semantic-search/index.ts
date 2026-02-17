@@ -36,7 +36,6 @@ import {
   extractAIContent,
   parseAIContent,
 } from './schemas.ts';
-import { CONFIG } from './config.ts';
 import { VALID_SEARCH_KEYS } from './constants.ts';
 
 /**
