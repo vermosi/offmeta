@@ -242,6 +242,37 @@ export function parseOraclePatterns(query: string, ir: SearchIR): string {
       .trim();
   }
 
+  // "tribal payoffs" / "tribal synergies" for a specific creature type
+  const tribalPayoffMatch = remaining.match(
+    /\b(\w+)\s+tribal\s+(?:payoffs?|synerg(?:y|ies)|lords?|rewards?)\b/i,
+  );
+  if (tribalPayoffMatch) {
+    const tribe = tribalPayoffMatch[1].toLowerCase().replace(/s$/, '');
+    ir.oracle.push(`(o:"${tribe}" o:"you control" or o:"${tribe}" o:"+1/+1")`);
+    ir.types.push(tribe);
+    remaining = remaining.replace(tribalPayoffMatch[0], '').trim();
+  }
+
+  // "when an opponent [action]" + token creation context
+  if (
+    /\bwhen(?:ever)?\s+(?:an?\s+)?opponents?\s+(?:takes?\s+an\s+action|does\s+something|casts?|attacks?|plays?)\b/i.test(remaining)
+  ) {
+    ir.oracle.push('o:"whenever"');
+    ir.oracle.push('o:"opponent"');
+    remaining = remaining
+      .replace(/\bwhen(?:ever)?\s+(?:an?\s+)?opponents?\s+(?:takes?\s+an\s+action|does\s+something|casts?|attacks?|plays?)\b/gi, '')
+      .trim();
+  }
+
+  // "make/create token creatures" or "that make tokens"
+  if (/\b(?:make|create|generates?)\s+tokens?\s*(?:creatures?)?\b/i.test(remaining)) {
+    ir.oracle.push('o:"create"');
+    ir.oracle.push('o:"token"');
+    remaining = remaining
+      .replace(/\b(?:make|create|generates?)\s+tokens?\s*(?:creatures?)?\b/gi, '')
+      .trim();
+  }
+
   return remaining;
 }
 
