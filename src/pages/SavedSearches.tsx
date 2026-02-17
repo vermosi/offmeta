@@ -13,6 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import {
   Search,
   Trash2,
@@ -35,18 +36,17 @@ interface SavedSearch {
 }
 
 const SavedSearches = () => {
+  const { t } = useTranslation();
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [searches, setSearches] = useState<SavedSearch[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
 
-  // Inline label editing
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
   const editInputRef = useRef<HTMLInputElement>(null);
 
-  // Bulk selection
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const isBulkMode = selected.size > 0;
@@ -68,7 +68,6 @@ const SavedSearches = () => {
       });
   }, [user, authLoading, navigate]);
 
-  // Focus the edit input when editing starts
   useEffect(() => {
     if (editingId) editInputRef.current?.focus();
   }, [editingId]);
@@ -77,14 +76,14 @@ const SavedSearches = () => {
     setDeleting(id);
     const { error } = await supabase.from('saved_searches').delete().eq('id', id);
     if (error) {
-      toast.error('Failed to delete');
+      toast.error(t('savedSearches.deleteFailed'));
     } else {
       setSearches((prev) => prev.filter((s) => s.id !== id));
       setSelected((prev) => { const next = new Set(prev); next.delete(id); return next; });
-      toast.success('Removed');
+      toast.success(t('savedSearches.removed'));
     }
     setDeleting(null);
-  }, []);
+  }, [t]);
 
   const handleBulkDelete = useCallback(async () => {
     if (selected.size === 0) return;
@@ -92,19 +91,18 @@ const SavedSearches = () => {
     const ids = Array.from(selected);
     const { error } = await supabase.from('saved_searches').delete().in('id', ids);
     if (error) {
-      toast.error('Failed to delete selected');
+      toast.error(t('savedSearches.deleteSelectedFailed'));
     } else {
       setSearches((prev) => prev.filter((s) => !ids.includes(s.id)));
       setSelected(new Set());
-      toast.success(`Deleted ${ids.length} ${ids.length === 1 ? 'search' : 'searches'}`);
+      toast.success(`Deleted ${ids.length} ${ids.length === 1 ? t('savedSearches.search') : t('savedSearches.searches')}`);
     }
     setBulkDeleting(false);
-  }, [selected]);
+  }, [selected, t]);
 
   const handleRun = useCallback((query: string, filters?: Record<string, unknown> | null) => {
     const params = new URLSearchParams({ q: query });
     if (filters) {
-      // Encode filter state into URL params for restore
       if (Array.isArray(filters.colors) && filters.colors.length > 0) {
         params.set('colors', (filters.colors as string[]).join(','));
       }
@@ -131,14 +129,14 @@ const SavedSearches = () => {
       .update({ label: trimmed })
       .eq('id', editingId);
     if (error) {
-      toast.error('Failed to update label');
+      toast.error(t('savedSearches.labelFailed'));
     } else {
       setSearches((prev) =>
         prev.map((s) => (s.id === editingId ? { ...s, label: trimmed } : s)),
       );
     }
     setEditingId(null);
-  }, [editingId, editValue]);
+  }, [editingId, editValue, t]);
 
   const cancelEditing = useCallback(() => {
     setEditingId(null);
@@ -182,9 +180,9 @@ const SavedSearches = () => {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="flex-1">
-              <h1 className="text-2xl font-semibold tracking-tight">Saved Searches</h1>
+              <h1 className="text-2xl font-semibold tracking-tight">{t('savedSearches.title')}</h1>
               <p className="text-sm text-muted-foreground mt-0.5">
-                {searches.length} saved {searches.length === 1 ? 'search' : 'searches'}
+                {searches.length} {t('savedSearches.saved')} {searches.length === 1 ? t('savedSearches.search') : t('savedSearches.searches')}
               </p>
             </div>
           </div>
@@ -199,12 +197,12 @@ const SavedSearches = () => {
                 onClick={toggleSelectAll}
               >
                 <CheckSquare className="h-3.5 w-3.5" />
-                {selected.size === searches.length ? 'Deselect all' : 'Select all'}
+                {selected.size === searches.length ? t('savedSearches.deselectAll') : t('savedSearches.selectAll')}
               </Button>
               {isBulkMode && (
                 <>
                   <span className="text-xs text-muted-foreground">
-                    {selected.size} selected
+                    {selected.size} {t('savedSearches.selected')}
                   </span>
                   <Button
                     variant="destructive"
@@ -218,7 +216,7 @@ const SavedSearches = () => {
                     ) : (
                       <Trash2 className="h-3 w-3" />
                     )}
-                    Delete selected
+                    {t('savedSearches.deleteSelected')}
                   </Button>
                   <Button
                     variant="ghost"
@@ -226,7 +224,7 @@ const SavedSearches = () => {
                     className="h-7 px-2 text-xs text-muted-foreground"
                     onClick={() => setSelected(new Set())}
                   >
-                    Cancel
+                    {t('savedSearches.cancel')}
                   </Button>
                 </>
               )}
@@ -236,12 +234,12 @@ const SavedSearches = () => {
           {searches.length === 0 ? (
             <div className="text-center py-16 space-y-3">
               <Bookmark className="h-10 w-10 mx-auto text-muted-foreground/40" />
-              <p className="text-muted-foreground">No saved searches yet.</p>
+              <p className="text-muted-foreground">{t('savedSearches.empty')}</p>
               <p className="text-sm text-muted-foreground">
-                Search for cards and click the bookmark icon to save your favorite queries.
+                {t('savedSearches.emptyDesc')}
               </p>
               <Button variant="outline" onClick={() => navigate('/')}>
-                Start Searching
+                {t('savedSearches.startSearching')}
               </Button>
             </div>
           ) : (
@@ -251,7 +249,6 @@ const SavedSearches = () => {
                   key={s.id}
                   className="group flex items-center gap-3 p-3 rounded-xl border border-border bg-card hover:bg-secondary/30 transition-colors"
                 >
-                  {/* Checkbox for bulk select */}
                   <Checkbox
                     checked={selected.has(s.id)}
                     onCheckedChange={() => toggleSelect(s.id)}
@@ -260,7 +257,6 @@ const SavedSearches = () => {
                   />
 
                   <div className="flex-1 min-w-0">
-                    {/* Label editing */}
                     {editingId === s.id ? (
                       <div className="flex items-center gap-1.5">
                         <Input
@@ -271,7 +267,7 @@ const SavedSearches = () => {
                             if (e.key === 'Enter') saveLabel();
                             if (e.key === 'Escape') cancelEditing();
                           }}
-                          placeholder="Add a label..."
+                          placeholder={t('savedSearches.addLabel')}
                           className="h-7 text-sm"
                         />
                         <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={saveLabel}>
@@ -291,7 +287,7 @@ const SavedSearches = () => {
                         <button
                           onClick={() => startEditing(s)}
                           className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted"
-                          aria-label="Edit label"
+                          aria-label={t('savedSearches.editLabel')}
                         >
                           <Pencil className="h-3 w-3 text-muted-foreground" />
                         </button>
@@ -308,7 +304,7 @@ const SavedSearches = () => {
                         {new Date(s.created_at).toLocaleDateString()}
                       </p>
                       {s.filters_snapshot && (
-                        <span className="text-[10px] text-primary/70">+ filters saved</span>
+                        <span className="text-[10px] text-primary/70">{t('savedSearches.filtersSaved')}</span>
                       )}
                     </div>
                   </div>
@@ -320,7 +316,7 @@ const SavedSearches = () => {
                       onClick={() => handleRun(s.natural_query, s.filters_snapshot)}
                     >
                       <Search className="h-3.5 w-3.5" />
-                      <span className="hidden sm:inline text-xs">Run</span>
+                      <span className="hidden sm:inline text-xs">{t('savedSearches.run')}</span>
                     </Button>
                     <Button
                       variant="ghost"

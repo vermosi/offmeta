@@ -9,12 +9,14 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { parseDecklist, type ParsedDecklist } from '@/lib/decklist-parser';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Sparkles, ExternalLink, Copy, Check, Link2, FileText } from 'lucide-react';
+import { Loader2, Sparkles, ExternalLink, Copy, Check, Link2, FileText, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
-import { ManaSymbol } from '@/components/ManaSymbol';
+import { ManaSymbol, OracleText } from '@/components/ManaSymbol';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 
 const WUBRG = ['W', 'U', 'B', 'R', 'G'] as const;
 const COLOR_NAMES: Record<string, string> = { W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green' };
@@ -39,6 +41,7 @@ interface RecResult {
 type InputMode = 'paste' | 'url';
 
 export default function DeckRecommendations() {
+  const { t } = useTranslation();
   const [inputMode, setInputMode] = useState<InputMode>('url');
   const [rawText, setRawText] = useState('');
   const [copiedAll, setCopiedAll] = useState(false);
@@ -49,6 +52,7 @@ export default function DeckRecommendations() {
   const [colorIdentity, setColorIdentity] = useState<string[]>([]);
   const [result, setResult] = useState<RecResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [copiedCard, setCopiedCard] = useState<string | null>(null);
 
   const handleFetchMoxfield = async () => {
@@ -68,6 +72,7 @@ export default function DeckRecommendations() {
       const p = parseDecklist(data.decklist);
       setParsed(p);
       setResult(null);
+      setError(null);
       toast.success(`Imported "${data.deckName}" (${data.cardCount} cards)`);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Failed to fetch deck from Moxfield';
@@ -81,8 +86,9 @@ export default function DeckRecommendations() {
     if (!rawText.trim()) return;
     const p = parseDecklist(rawText);
     setParsed(p);
-    setColorIdentity([]); // No color data from paste — will be empty until Moxfield import
+    setColorIdentity([]);
     setResult(null);
+    setError(null);
     if (p.cards.length === 0) {
       toast.error('No cards found. Check the format.');
     }
@@ -91,6 +97,7 @@ export default function DeckRecommendations() {
   const handleGetRecs = async () => {
     if (!parsed || parsed.cards.length === 0) return;
     setLoading(true);
+    setError(null);
     try {
       const { data, error } = await supabase.functions.invoke('deck-recommendations', {
         body: { decklist: rawText, commander: parsed.commander, colorIdentity },
@@ -99,7 +106,8 @@ export default function DeckRecommendations() {
       if (data?.error) throw new Error(data.error);
       setResult(data as RecResult);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Failed to get recommendations';
+      const msg = e instanceof Error ? e.message : t('deckRecs.errorFetch');
+      setError(msg);
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -119,7 +127,7 @@ export default function DeckRecommendations() {
     );
     navigator.clipboard.writeText(lines.join('\n'));
     setCopiedAll(true);
-    toast.success('All recommendations copied to clipboard');
+    toast.success(t('deckRecs.allCopied'));
     setTimeout(() => setCopiedAll(false), 2000);
   };
 
@@ -128,9 +136,9 @@ export default function DeckRecommendations() {
       <Header />
       <main className="container-main flex-1 py-8 space-y-8">
         <div>
-          <h1 className="text-2xl font-bold">Deck Recommendations</h1>
+          <h1 className="text-2xl font-bold">{t('deckRecs.title')}</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Import a deck from Moxfield or paste a decklist to get AI-powered card suggestions.
+            {t('deckRecs.subtitle')}
           </p>
         </div>
 
@@ -145,7 +153,7 @@ export default function DeckRecommendations() {
                 }`}
               >
                 <Link2 className="h-3.5 w-3.5" />
-                Moxfield URL
+                {t('deckRecs.moxfieldUrl')}
               </button>
               <button
                 onClick={() => setInputMode('paste')}
@@ -154,13 +162,13 @@ export default function DeckRecommendations() {
                 }`}
               >
                 <FileText className="h-3.5 w-3.5" />
-                Paste List
+                {t('deckRecs.pasteList')}
               </button>
             </div>
 
             {inputMode === 'url' ? (
               <div className="space-y-3">
-                <label className="text-sm font-medium">Moxfield Deck URL</label>
+                <label className="text-sm font-medium">{t('deckRecs.moxfieldLabel')}</label>
                 <Input
                   value={moxfieldUrl}
                   onChange={(e) => setMoxfieldUrl(e.target.value)}
@@ -169,17 +177,17 @@ export default function DeckRecommendations() {
                 />
                 <Button onClick={handleFetchMoxfield} disabled={fetchingDeck || !moxfieldUrl.trim()} variant="secondary" className="w-full gap-2">
                   {fetchingDeck ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
-                  {fetchingDeck ? 'Fetching...' : 'Import from Moxfield'}
+                  {fetchingDeck ? t('deckRecs.importing') : t('deckRecs.importButton')}
                 </Button>
                 {moxfieldDeckName && (
                   <p className="text-xs text-muted-foreground">
-                    ✓ Imported: <span className="font-medium text-foreground">{moxfieldDeckName}</span>
+                    ✓ {t('deckRecs.imported')}: <span className="font-medium text-foreground">{moxfieldDeckName}</span>
                   </p>
                 )}
               </div>
             ) : (
               <div className="space-y-3">
-                <label className="text-sm font-medium">Paste Decklist</label>
+                <label className="text-sm font-medium">{t('deckRecs.pasteLabel')}</label>
                 <Textarea
                   value={rawText}
                   onChange={(e) => setRawText(e.target.value)}
@@ -188,7 +196,7 @@ export default function DeckRecommendations() {
                   maxLength={10000}
                 />
                 <Button onClick={handleParse} variant="secondary" className="w-full">
-                  Parse Decklist
+                  {t('deckRecs.parseButton')}
                 </Button>
               </div>
             )}
@@ -196,14 +204,14 @@ export default function DeckRecommendations() {
 
           {/* Parsed summary */}
           <div className="rounded-xl border border-border p-4 space-y-3">
-            <h2 className="text-sm font-semibold">Parsed Summary</h2>
+            <h2 className="text-sm font-semibold">{t('deckRecs.parsedSummary')}</h2>
             {parsed ? (
               <>
                 <div className="text-sm space-y-1">
-                  <p><span className="text-muted-foreground">Commander:</span> {parsed.commander || 'Not detected'}</p>
+                  <p><span className="text-muted-foreground">{t('deckRecs.commander')}:</span> {parsed.commander || t('deckRecs.notDetected')}</p>
                   {colorIdentity.length > 0 && (
                     <div className="flex items-center gap-1.5">
-                      <span className="text-muted-foreground">Colors:</span>
+                      <span className="text-muted-foreground">{t('deckRecs.colors')}:</span>
                       <span className="inline-flex items-center gap-1">
                         {WUBRG.map((c) => (
                           <span
@@ -217,8 +225,8 @@ export default function DeckRecommendations() {
                       </span>
                     </div>
                   )}
-                  <p><span className="text-muted-foreground">Total cards:</span> {parsed.totalCards}</p>
-                  <p><span className="text-muted-foreground">Unique cards:</span> {parsed.cards.length}</p>
+                  <p><span className="text-muted-foreground">{t('deckRecs.totalCards')}:</span> {parsed.totalCards}</p>
+                  <p><span className="text-muted-foreground">{t('deckRecs.uniqueCards')}:</span> {parsed.cards.length}</p>
                 </div>
                 <div className="max-h-[180px] overflow-y-auto text-xs font-mono text-muted-foreground space-y-0.5">
                   {parsed.cards.map((c, i) => (
@@ -227,29 +235,56 @@ export default function DeckRecommendations() {
                 </div>
                 <Button onClick={handleGetRecs} disabled={loading || parsed.cards.length === 0} className="w-full gap-2">
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                  {loading ? 'Analyzing...' : 'Get Recommendations'}
+                  {loading ? t('deckRecs.analyzing') : t('deckRecs.getButton')}
                 </Button>
               </>
             ) : (
               <p className="text-sm text-muted-foreground">
                 {inputMode === 'url'
-                  ? 'Import a Moxfield deck to see its summary.'
-                  : 'Paste a decklist and click "Parse" to see a summary.'}
+                  ? t('deckRecs.emptyUrl')
+                  : t('deckRecs.emptyPaste')}
               </p>
             )}
           </div>
         </div>
 
+        {/* Loading skeletons */}
+        {loading && (
+          <div className="space-y-6">
+            <Skeleton className="h-8 w-64 rounded-lg" />
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="rounded-xl border border-border overflow-hidden">
+                  <Skeleton className="w-full aspect-[488/680]" />
+                  <div className="p-3 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Error */}
+        {error && !loading && (
+          <div className="flex items-center gap-2 text-sm text-destructive py-3">
+            <AlertTriangle className="h-4 w-4" />
+            <span>{error}</span>
+          </div>
+        )}
+
         {/* Results */}
-        {result && (
+        {result && !loading && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold">
-                Recommendations for {result.commander || 'your deck'}
+                {t('deckRecs.recommendationsFor')} {result.commander || t('deckRecs.yourDeck')}
               </h2>
               <Button variant="secondary" size="sm" className="gap-1.5" onClick={copyAllRecs}>
                 {copiedAll ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                {copiedAll ? 'Copied!' : 'Copy All'}
+                {copiedAll ? t('deckRecs.copied') : t('deckRecs.copyAll')}
               </Button>
             </div>
             {result.categories.map((cat) => (
@@ -270,12 +305,16 @@ export default function DeckRecommendations() {
                         />
                       ) : (
                         <div className="w-full aspect-[488/680] bg-muted flex items-center justify-center text-xs text-muted-foreground">
-                          No image
+                          {t('deckRecs.noImage')}
                         </div>
                       )}
                       <div className="p-3 space-y-1.5 flex-1 flex flex-col">
-                        <p className="text-sm font-medium leading-tight">{card.name}</p>
-                        <p className="text-xs text-muted-foreground flex-1">{card.reason}</p>
+                        <p className="text-sm font-medium leading-tight">
+                          <OracleText text={card.name} size="sm" />
+                        </p>
+                        <p className="text-xs text-muted-foreground flex-1">
+                          <OracleText text={card.reason} size="sm" />
+                        </p>
                         {card.scryfall?.prices?.usd && (
                           <p className="text-xs font-medium text-primary">${card.scryfall.prices.usd}</p>
                         )}
@@ -285,7 +324,7 @@ export default function DeckRecommendations() {
                             className="text-xs px-2 py-1 rounded bg-secondary hover:bg-secondary/80 transition-colors flex items-center gap-1"
                           >
                             {copiedCard === card.name ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                            Copy
+                            {t('deckRecs.copy')}
                           </button>
                           {card.scryfall?.scryfall_uri && (
                             <a

@@ -15,11 +15,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, User, ArrowLeft, Camera, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2 MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 export default function ProfileSettings() {
+  const { t } = useTranslation();
   const { user, isLoading: authLoading, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [displayName, setDisplayName] = useState('');
@@ -59,15 +61,14 @@ export default function ProfileSettings() {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
-    // Reset input so same file can be re-selected
     e.target.value = '';
 
     if (!ALLOWED_TYPES.includes(file.type)) {
-      toast.error('Please upload a JPEG, PNG, WebP, or GIF image');
+      toast.error(t('profile.errorType'));
       return;
     }
     if (file.size > MAX_AVATAR_SIZE) {
-      toast.error('Image must be under 2 MB');
+      toast.error(t('profile.errorSize'));
       return;
     }
 
@@ -75,32 +76,29 @@ export default function ProfileSettings() {
     const ext = file.name.split('.').pop() || 'jpg';
     const filePath = `${user.id}/avatar.${ext}`;
 
-    // Upload to storage (upsert)
     const { error: uploadError } = await supabase.storage
       .from('avatars')
       .upload(filePath, file, { upsert: true, contentType: file.type });
 
     if (uploadError) {
-      toast.error('Failed to upload avatar');
+      toast.error(t('profile.errorUpload'));
       setIsUploadingAvatar(false);
       return;
     }
 
-    // Get public URL
     const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
-    const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`; // cache bust
+    const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
 
-    // Save URL to profile
     const { error: updateError } = await supabase
       .from('profiles')
       .update({ avatar_url: publicUrl })
       .eq('id', user.id);
 
     if (updateError) {
-      toast.error('Failed to save avatar');
+      toast.error(t('profile.errorUpload'));
     } else {
       setAvatarUrl(publicUrl);
-      toast.success('Avatar updated');
+      toast.success(t('profile.avatarUpdated'));
       await refreshProfile();
     }
     setIsUploadingAvatar(false);
@@ -110,17 +108,16 @@ export default function ProfileSettings() {
     if (!user) return;
     setIsUploadingAvatar(true);
 
-    // Remove from profile
     const { error } = await supabase
       .from('profiles')
       .update({ avatar_url: null })
       .eq('id', user.id);
 
     if (error) {
-      toast.error('Failed to remove avatar');
+      toast.error(t('profile.errorRemove'));
     } else {
       setAvatarUrl(null);
-      toast.success('Avatar removed');
+      toast.success(t('profile.avatarRemoved'));
       await refreshProfile();
     }
     setIsUploadingAvatar(false);
@@ -132,7 +129,7 @@ export default function ProfileSettings() {
 
     const trimmed = displayName.trim();
     if (trimmed.length > 100) {
-      toast.error('Display name must be 100 characters or less');
+      toast.error(t('profile.errorNameLength'));
       return;
     }
 
@@ -143,9 +140,9 @@ export default function ProfileSettings() {
       .eq('id', user.id);
 
     if (error) {
-      toast.error('Failed to update profile');
+      toast.error(t('profile.errorUpdate'));
     } else {
-      toast.success('Profile updated');
+      toast.success(t('profile.updated'));
       await refreshProfile();
     }
     setIsSaving(false);
@@ -176,11 +173,11 @@ export default function ProfileSettings() {
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back
+            {t('profile.back')}
           </Link>
 
           <div className="space-y-1 mb-8">
-            <h1 className="text-xl font-semibold text-foreground">Profile Settings</h1>
+            <h1 className="text-xl font-semibold text-foreground">{t('profile.title')}</h1>
             <p className="text-sm text-muted-foreground">{user.email}</p>
           </div>
 
@@ -192,14 +189,14 @@ export default function ProfileSettings() {
             <div className="space-y-8">
               {/* Avatar section */}
               <div className="space-y-3">
-                <Label>Avatar</Label>
+                <Label>{t('profile.avatar')}</Label>
                 <div className="flex items-center gap-4">
                   <div className="relative group">
                     <div className="h-20 w-20 rounded-full bg-primary/10 border-2 border-border overflow-hidden flex items-center justify-center">
                       {avatarUrl ? (
                         <img
                           src={avatarUrl}
-                          alt="Avatar"
+                          alt={t('profile.avatar')}
                           className="h-full w-full object-cover"
                         />
                       ) : (
@@ -221,7 +218,7 @@ export default function ProfileSettings() {
                       disabled={isUploadingAvatar}
                     >
                       <Camera className="h-4 w-4 mr-1.5" />
-                      {avatarUrl ? 'Change' : 'Upload'}
+                      {avatarUrl ? t('profile.avatarChange') : t('profile.avatarUpload')}
                     </Button>
                     {avatarUrl && (
                       <Button
@@ -233,7 +230,7 @@ export default function ProfileSettings() {
                         className="text-destructive hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4 mr-1.5" />
-                        Remove
+                        {t('profile.avatarRemove')}
                       </Button>
                     )}
                   </div>
@@ -246,27 +243,27 @@ export default function ProfileSettings() {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  JPEG, PNG, WebP, or GIF. Max 2 MB.
+                  {t('profile.avatarHint')}
                 </p>
               </div>
 
               {/* Display name form */}
               <form onSubmit={handleSave} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="display-name">Display Name</Label>
+                  <Label htmlFor="display-name">{t('profile.displayName')}</Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     <Input
                       id="display-name"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      placeholder="Enter a display name"
+                      placeholder={t('profile.displayNamePlaceholder')}
                       maxLength={100}
                       className="pl-9"
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {displayName.trim().length}/100 characters
+                    {displayName.trim().length}/100 {t('profile.characters')}
                   </p>
                 </div>
 
@@ -278,10 +275,10 @@ export default function ProfileSettings() {
                   {isSaving ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      Saving…
+                      {t('profile.saving')}
                     </>
                   ) : (
-                    'Save Changes'
+                    t('profile.saveChanges')
                   )}
                 </Button>
               </form>
