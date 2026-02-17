@@ -82,6 +82,7 @@ serve(async (req) => {
 
     // Build text decklist from mainboard + commanders
     const lines: string[] = [];
+    const colorIdentity = new Set<string>();
 
     if (commanders.length > 0) {
       lines.push(`COMMANDER: ${commanders.join(" // ")}`);
@@ -96,6 +97,11 @@ serve(async (req) => {
         const name = entry?.card?.name;
         const qty = entry?.quantity ?? 1;
         if (name) lines.push(`${qty} ${name}`);
+        // Collect color identity from card data
+        const ci = entry?.card?.color_identity;
+        if (Array.isArray(ci)) {
+          for (const c of ci) colorIdentity.add(c);
+        }
       }
     }
 
@@ -104,6 +110,7 @@ serve(async (req) => {
         deckName: deck.name ?? "Unknown Deck",
         format: deck.format ?? "commander",
         commander: commanders.length > 0 ? commanders.join(" // ") : null,
+        colorIdentity: ["W", "U", "B", "R", "G"].filter((c) => colorIdentity.has(c)),
         decklist: lines.join("\n"),
         cardCount: lines.filter((l) => !l.startsWith("COMMANDER:")).length,
       }),
