@@ -98,13 +98,16 @@ export function useSearch() {
 
   const searchBarRef = useRef<UnifiedSearchBarHandle>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  const lastUrlQueryRef = useRef('');
+  const lastUrlQueryRef = useRef(urlQuery);
   const initialUrlQuery = useRef(urlQuery);
+  const hasHandledInitialQuery = useRef(false);
   const { trackSearch, trackCardClick, trackEvent } = useAnalytics();
 
   // --- Initial mount: trigger translation for ?q= parameter ---
   useEffect(() => {
-    if (initialUrlQuery.current && searchBarRef.current) {
+    if (initialUrlQuery.current && searchBarRef.current && !hasHandledInitialQuery.current) {
+      hasHandledInitialQuery.current = true;
+      lastUrlQueryRef.current = initialUrlQuery.current;
       searchBarRef.current.triggerSearch(initialUrlQuery.current);
     }
   }, []);
@@ -125,7 +128,7 @@ export function useSearch() {
     }
   }
 
-  // Trigger search bar for URL query changes (needs ref, so use effect)
+  // Trigger search bar for URL query changes (browser back/forward only, skip initial)
   useEffect(() => {
     if (urlQuery && urlQuery !== lastUrlQueryRef.current) {
       lastUrlQueryRef.current = urlQuery;
