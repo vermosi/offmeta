@@ -21,7 +21,7 @@ export const ARCHETYPES: Archetype[] = [
     slug: 'voltron',
     name: 'Voltron',
     colors: ['W', 'R'],
-    searchQuery: 'equipment or auras that buff equipped or enchanted creature for commander',
+    searchQuery: 'equipment or auras that give bonuses to equipped or enchanted permanent for commander',
     tagline: 'Suit up one creature and swing for lethal',
     description:
       'Voltron decks focus on a single creature — usually your commander — loading it with equipment and auras to deal 21 commander damage as fast as possible. Protection, evasion, and double strike are your best friends.',
