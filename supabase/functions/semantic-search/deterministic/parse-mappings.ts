@@ -275,8 +275,16 @@ export function parseArchetypes(query: string, ir: SearchIR): string {
       remaining,
     );
 
+  // Skip "graveyard" archetype when it's part of a verb phrase like "return from graveyard"
+  const skipGraveyardAsArchetype =
+    /\b(?:return|bring\s+back|reanimate|revive|from)\b/i.test(remaining) &&
+    /\bgraveyard\b/i.test(remaining);
+
   for (const [archetype, scryfallSyntax] of Object.entries(ARCHETYPE_MAP)) {
     if (archetype === 'sacrifice' && skipSacrificeAsArchetype) {
+      continue;
+    }
+    if (archetype === 'graveyard' && skipGraveyardAsArchetype) {
       continue;
     }
 
