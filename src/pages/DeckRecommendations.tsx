@@ -79,9 +79,9 @@ export default function DeckRecommendations() {
       setParsed(p);
       setResult(null);
       toast.success(`Imported "${data.deckName}" (${data.cardCount} cards)`);
-    } catch (e: any) {
-      console.error(e);
-      toast.error(e.message || 'Failed to fetch deck from Moxfield');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Failed to fetch deck from Moxfield';
+      toast.error(msg);
     } finally {
       setFetchingDeck(false);
     }
@@ -108,9 +108,9 @@ export default function DeckRecommendations() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data as RecResult);
-    } catch (e: any) {
-      console.error(e);
-      toast.error(e.message || 'Failed to get recommendations');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Failed to get recommendations';
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
