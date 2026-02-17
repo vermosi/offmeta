@@ -164,7 +164,7 @@ export async function searchCards(
   // When a non-English lang is requested, prepend lang filter
   const langQuery = lang && lang !== 'en' ? `lang:${lang} ${query}` : query;
   // Exclude digital-only Alchemy rebalanced cards from all results
-  const finalQuery = `${langQuery} -is:alchemy`;
+  const finalQuery = `${langQuery} -is:rebalanced`;
   const encodedQuery = encodeURIComponent(finalQuery);
   const response = await rateLimitedFetch(
     `${BASE_URL}/cards/search?q=${encodedQuery}&page=${page}`,
