@@ -31,15 +31,17 @@
 ## Near term
 
 - Improve accessibility audits and keyboard navigation
-- Add Edge Function contract tests
+- Expand combo finder with filtering and sorting options
+- Add EDHREC rank sorting to search results
 
 ## Mid term
 
 - Add search analytics dashboards for maintainers
-- Implement user accounts for saved searches
+- Enhance deck recommendations with sideboard suggestions
+- Add collection management and tracking
 
 ## Long term
 
 - Optimize translation accuracy with community-contributed patterns
 - Add card price tracking and alerts
-- Build collection management features
+- Build social features (shared decklists, user profiles)

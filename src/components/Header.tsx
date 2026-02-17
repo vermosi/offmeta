@@ -40,6 +40,7 @@ export function Header() {
     { label: t('header.docs'), href: '/docs' },
     { label: t('header.guides'), href: '/guides' },
     { label: 'Archetypes', href: '/archetypes' },
+    { label: 'Combos', href: '/combos' },
     { label: 'Deck Recs', href: '/deck-recs' },
   ] as const;
 

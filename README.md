@@ -26,6 +26,9 @@
 |---------|-------------|
 | **Natural Language Search** | Describe cards in plain English — AI translates to Scryfall syntax |
 | **200+ Deterministic Patterns** | Fast, cached translations for common queries without AI calls |
+| **Combo Finder** | Discover card combos for any commander via Commander Spellbook |
+| **Deck Recommendations** | AI-powered suggestions (High Synergy, Upgrades, Budget Picks) from Moxfield import or text paste |
+| **Commander Archetypes** | Browse popular archetypes with curated card lists and quick-search |
 | **10 Progressive Search Guides** | Learn from basic type searches to expert multi-constraint queries |
 | **Voice Input** | Hands-free searching with speech recognition |
 | **Card Details** | Rulings, prices, printings, and legality in a clean modal |
@@ -33,6 +36,7 @@
 | **Multiple View Modes** | Grid, list, and image-only views with persistent preference |
 | **Export Results** | Copy card names or download CSV for deck builders |
 | **Smart Filters** | Color, format, type, CMC, price, and rarity filter chips |
+| **Alchemy Exclusion** | Rebalanced digital-only cards automatically filtered out |
 | **Client-Side Caching** | Sub-100ms response for repeated queries |
 | **PWA Support** | Installable with offline-first architecture |
 | **Dark/Light Theme** | Automatic system preference detection |
@@ -172,7 +176,8 @@ For security vulnerability reporting, see [SECURITY.md](SECURITY.md).
 
 | Document | Description |
 |----------|-------------|
-| [Architecture](docs/architecture.md) | System design and data flow |
+| [Architecture](docs/architecture.md) | System design, data flow, and third-party integrations |
+| [API](docs/api.md) | Edge function request/response contracts |
 | [Configuration](docs/configuration.md) | Environment variables and setup |
 | [Development](docs/development.md) | Local development guide |
 | [Testing](docs/testing.md) | Test suite documentation |
