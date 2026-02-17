@@ -21,6 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Export results: copy card names or download CSV.
 - Staples section on home page with archetype quick-search chips.
 - Cross-page header navigation: hash links (Daily Pick, FAQ, How It Works) work from any page.
+- **Combo Finder** (`/combos`): Discover card combos for any commander via Commander Spellbook.
+- **Deck Recommendations** (`/deck-recs`): AI-powered card suggestions via Moxfield import or text paste. Categorized by High Synergy, Upgrades, and Budget Picks.
+- **Commander Archetypes** (`/archetypes`): Browse popular archetypes with curated card lists and quick-search.
+- **Features Showcase**: Landing page section highlighting all core tools with direct navigation.
+- Footer attribution for Scryfall, Moxfield, and Commander Spellbook.
+- "Try searching for" label above example query chips for better discoverability.
+- Alchemy rebalanced card exclusion (`-is:rebalanced`) applied to all Scryfall queries.
 - 78 new tests: guides data integrity (22), GuidesIndex page (12), GuidePage (31), Header navigation (13).
 - Guides documentation (`docs/guides.md`).
 - OSS documentation, contribution, and governance guides.
@@ -33,9 +40,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Standardized section padding to `py-10 sm:py-14 lg:py-16` across How It Works, FAQ, and similar sections.
 - Standardized main content padding to `py-8 sm:py-10 lg:py-12` across guide pages.
-- Footer padding increased to `py-6 sm:py-8`.
-- Hero section uses progressive spacing (`pt-10 sm:pt-14 lg:pt-20`).
+- Tightened hero section spacing and discovery section gaps for improved UX flow.
+- Reordered landing page sections: Features Showcase now appears above Daily Pick.
 - Header component now uses `useNavigate` and `useLocation` for cross-page hash scrolling.
+- Header nav includes Combos and Deck Recs links for direct access.
 - Guide pages use shared Header component instead of inline headers.
 - Guides link in nav updated from single guide to `/guides` index.
 - Standardized scripts, linting, and formatting tooling.
@@ -48,3 +56,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Guide page button text wrapping causing layout break on narrow screens.
 - Hash navigation (Daily Pick, FAQ, How It Works) now works from non-home pages.
 - Deterministic translation edge cases for mana production and color identity.
+- Alchemy rebalanced cards (e.g., "A-Omnath") no longer appear in search results.
