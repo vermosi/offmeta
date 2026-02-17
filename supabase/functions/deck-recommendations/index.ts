@@ -130,7 +130,10 @@ serve(async (req) => {
 2. "Upgrades" – Strictly better or more efficient replacements for weaker cards in the list.
 3. "Budget Picks" – Powerful cards under $5 that would improve the deck.
 
-For each recommended card, provide the exact English card name (as printed) and a one-sentence reason. Do NOT recommend cards already in the decklist.${ciConstraint}
+STRICT RULES:
+- Every recommended card MUST be legal in the Commander/EDH format. Do NOT suggest banned cards (e.g. Balance, Primeval Titan, Sylvan Primordial, Biorhythm, Coalition Victory, etc.).
+- Do NOT recommend cards already in the decklist.
+- For each card, provide the exact English card name (as printed) and a one-sentence reason.${ciConstraint}
 
 You MUST respond using the suggest_cards tool.`;
 
