@@ -1,6 +1,7 @@
 /**
  * Bookmark toggle button for saving/unsaving a search.
  * Only renders when user is logged in.
+ * Optionally saves current filter state as filters_snapshot.
  */
 
 import { useState, useCallback, useEffect } from 'react';
@@ -9,13 +10,16 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import type { FilterState } from '@/types/filters';
 
 interface SaveSearchButtonProps {
   naturalQuery: string;
   scryfallQuery?: string;
+  /** Current active filters to persist with the saved search */
+  filters?: FilterState | null;
 }
 
-export function SaveSearchButton({ naturalQuery, scryfallQuery }: SaveSearchButtonProps) {
+export function SaveSearchButton({ naturalQuery, scryfallQuery, filters }: SaveSearchButtonProps) {
   const { user } = useAuth();
   const [savedId, setSavedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -48,13 +52,23 @@ export function SaveSearchButton({ naturalQuery, scryfallQuery }: SaveSearchButt
         setSavedId(null);
         toast.success('Search removed');
       } else {
+        // Build filters snapshot — only store if non-default
+        const hasActiveFilters = filters && (
+          filters.colors.length > 0 ||
+          filters.types.length > 0 ||
+          filters.sortBy !== 'name-asc' ||
+          filters.cmcRange[0] > 0 ||
+          filters.cmcRange[1] < 16
+        );
+
         const { data, error } = await supabase
           .from('saved_searches')
-          .insert({
+          .insert([{
             user_id: user.id,
             natural_query: naturalQuery.trim(),
             scryfall_query: scryfallQuery ?? null,
-          })
+            filters_snapshot: hasActiveFilters ? JSON.parse(JSON.stringify(filters)) : null,
+          }])
           .select('id')
           .single();
         if (error) throw error;
@@ -66,7 +80,7 @@ export function SaveSearchButton({ naturalQuery, scryfallQuery }: SaveSearchButt
     } finally {
       setLoading(false);
     }
-  }, [user, savedId, naturalQuery, scryfallQuery, loading]);
+  }, [user, savedId, naturalQuery, scryfallQuery, filters, loading]);
 
   if (!user) return null;
 

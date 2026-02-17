@@ -107,6 +107,7 @@ export type Database = {
       saved_searches: {
         Row: {
           created_at: string
+          filters_snapshot: Json | null
           id: string
           label: string | null
           natural_query: string
@@ -115,6 +116,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          filters_snapshot?: Json | null
           id?: string
           label?: string | null
           natural_query: string
@@ -123,6 +125,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          filters_snapshot?: Json | null
           id?: string
           label?: string | null
           natural_query?: string

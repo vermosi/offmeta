@@ -21,6 +21,7 @@ import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
+import { supabase } from '@/integrations/supabase/client';
 
 export function Header() {
   const { t } = useTranslation();
@@ -28,6 +29,7 @@ export function Header() {
   const { hasRole: isAdmin } = useUserRole('admin');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [savedCount, setSavedCount] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -39,7 +41,16 @@ export function Header() {
     { label: t('header.guides'), href: '/guides' },
   ] as const;
 
-  // Close mobile menu on escape key
+  // Fetch saved search count for badge
+  useEffect(() => {
+    if (!user) { setSavedCount(0); return; }
+    supabase
+      .from('saved_searches')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .then(({ count }) => setSavedCount(count ?? 0));
+  }, [user]);
+
   useEffect(() => {
     if (!mobileMenuOpen) return;
     const handleEscape = (e: KeyboardEvent) => {
@@ -241,6 +252,11 @@ export function Header() {
                   <DropdownMenuItem onClick={() => navigate('/saved')}>
                     <Bookmark className="h-4 w-4 mr-2" />
                     Saved Searches
+                    {savedCount > 0 && (
+                      <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
+                        {savedCount}
+                      </span>
+                    )}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/profile')}>
                     <Settings className="h-4 w-4 mr-2" />
