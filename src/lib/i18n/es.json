@@ -97,6 +97,10 @@
   "footer.legal": "Contenido no oficial de fans según",
   "footer.fanPolicy": "Política de Contenido de Fans de WotC",
   "footer.copyright": "Magic: The Gathering © Wizards of the Coast.",
+  "footer.explore": "Explorar",
+  "footer.allGuides": "Todas las guías →",
+  "footer.comboFinder": "Buscador de Combos",
+  "footer.syntaxCheatSheet": "Hoja de Sintaxis",
 
   "a11y.skipToContent": "Saltar al contenido principal",
   "a11y.skipToSearch": "Saltar a la búsqueda",
