@@ -23,6 +23,8 @@ import {
   parseNumericConstraint,
   parseColors,
   parseTypes,
+  parseSupertypes,
+  parseSubtypes,
 } from './parse-core.ts';
 import {
   parseTargetingPatterns,
@@ -68,6 +70,8 @@ function buildIR(query: string): SearchIR {
   remaining = parseTargetingPatterns(remaining, ir); // CRITICAL: Parse targeting BEFORE types!
   remaining = parseColors(remaining, ir);
   remaining = parseTypes(remaining, ir);
+  remaining = parseSupertypes(remaining, ir);
+  remaining = parseSubtypes(remaining, ir);
 
   if (
     ir.tags.some((tag) => tag === 'otag:manarock' || tag === 'otag:mana-rock')
