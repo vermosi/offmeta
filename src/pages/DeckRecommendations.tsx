@@ -1,17 +1,14 @@
 /**
- * Admin-only Deck Recommendations MVP page.
+ * Deck Recommendations page.
  * Paste a decklist or import from Moxfield URL → get AI-powered card recommendations.
  */
 
 import { useState } from 'react';
 import type { ScryfallCard } from '@/types/card';
-import { Navigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { useUserRole } from '@/hooks/useUserRole';
-import { useAuth } from '@/hooks/useAuth';
 import { parseDecklist, type ParsedDecklist } from '@/lib/decklist-parser';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Sparkles, ExternalLink, Copy, Check, Link2, FileText } from 'lucide-react';
@@ -42,8 +39,6 @@ interface RecResult {
 type InputMode = 'paste' | 'url';
 
 export default function DeckRecommendations() {
-  const { user } = useAuth();
-  const { hasRole: isAdmin, isLoading: roleLoading } = useUserRole('admin');
   const [inputMode, setInputMode] = useState<InputMode>('url');
   const [rawText, setRawText] = useState('');
   const [copiedAll, setCopiedAll] = useState(false);
@@ -55,11 +50,6 @@ export default function DeckRecommendations() {
   const [result, setResult] = useState<RecResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [copiedCard, setCopiedCard] = useState<string | null>(null);
-
-  if (roleLoading) {
-    return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
-  }
-  if (!user || !isAdmin) return <Navigate to="/" replace />;
 
   const handleFetchMoxfield = async () => {
     if (!moxfieldUrl.trim()) return;
