@@ -149,7 +149,7 @@ PLAYER SLANG → otag: MAPPINGS (USE THESE!):
 - "tutor" / "search library" = otag:tutor
 - "counterspell" / "counter" = otag:counterspell
 - "self-mill" / "mill myself" = otag:self-mill
-- "mill" / "mill opponent" = otag:mill
+- "mill" / "mill opponent" = o:"mill"
 - "soul sisters" / "soul warden effect" / "gain life when creatures enter" = otag:soul-warden-ability
 - "sacrifice outlet" / "sac outlet" = otag:sacrifice-outlet
 - "aristocrats" / "death triggers" = otag:aristocrats
@@ -262,7 +262,7 @@ Draw: otag:card-draw, otag:cantrip, otag:looting, otag:rummaging, otag:wheel
 Search: otag:tutor, otag:land-tutor, otag:creature-tutor
 Removal: otag:removal, otag:creature-removal, otag:artifact-removal, otag:enchantment-removal, otag:board-wipe
 Counter: otag:counterspell, otag:soft-counter, otag:hard-counter
-Graveyard: otag:self-mill, otag:mill, otag:graveyard-recursion, otag:reanimate, otag:graveyard-hate
+Graveyard: otag:self-mill, o:"mill", otag:graveyard-recursion, otag:reanimate, otag:graveyard-hate
 Combat: otag:pump, otag:combat-trick, otag:fog, otag:gives-menace
 Tokens: otag:token-generator, otag:treasure-generator, otag:food-generator, otag:clue-generator
 Blink: otag:blink, otag:flicker, otag:bounce
@@ -439,7 +439,7 @@ COUNTERSPELLS:
 
 GRAVEYARD:
 - otag:self-mill (mills yourself)
-- otag:mill (mills opponents)
+- o:"mill" (mills opponents)
 - otag:graveyard-recursion (returns cards from graveyard)
 - otag:reanimate (puts creatures from graveyard to battlefield)
 - otag:graveyard-hate (exiles graveyards)

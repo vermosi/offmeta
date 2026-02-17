@@ -98,7 +98,7 @@ export const ARCHETYPES: Archetype[] = [
     slug: 'mill',
     name: 'Mill',
     colors: ['U', 'B'],
-    searchQuery: 'dimir cards that mill opponents or care about cards in graveyards for commander',
+    searchQuery: 'cards that mill opponents or put cards from library into graveyard for commander',
     tagline: 'Win by emptying their libraries',
     description:
       'Mill decks attack the library instead of life totals, putting cards directly from opponents\' decks into their graveyards. In Commander, you need to mill 3 opponents, so efficient repeatable mill is key.',
