@@ -39,6 +39,7 @@ export function Header() {
     { label: t('header.faq'), href: '#faq' },
     { label: t('header.docs'), href: '/docs' },
     { label: t('header.guides'), href: '/guides' },
+    { label: 'Archetypes', href: '/archetypes' },
   ] as const;
 
   // Fetch saved search count for badge
