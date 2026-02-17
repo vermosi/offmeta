@@ -10,4 +10,5 @@ export { CardModalRulings } from './CardModalRulings';
 export { CardModalLegalities } from './CardModalLegalities';
 export { CardModalPrintings } from './CardModalPrintings';
 export { CardModalToolbox } from './CardModalToolbox';
+export { CardModalCombos } from './CardModalCombos';
 export * from './types';

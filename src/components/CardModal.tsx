@@ -34,6 +34,7 @@ import {
   CardModalLegalities,
   CardModalPrintings,
   CardModalToolbox,
+  CardModalCombos,
   type DisplayPrices,
 } from './CardModal/index';
 
@@ -230,6 +231,8 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
           onToggleRulings={() => setShowRulings(!showRulings)}
         />
 
+        <CardModalCombos cardName={card.name} isMobile />
+
         <CardModalPurchaseLinks
           card={card}
           displayPrices={displayPrices}
@@ -304,6 +307,8 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
             showRulings={showRulings}
             onToggleRulings={() => setShowRulings(!showRulings)}
           />
+
+          <CardModalCombos cardName={card.name} />
 
           <CardModalLegalities legalities={card.legalities} />
 
