@@ -192,7 +192,7 @@ export async function setPersistentCache(
   result: CacheEntry['result'],
   cacheSalt?: string,
 ): Promise<void> {
-  if (result.explanation.confidence < 0.7) return;
+  if (result.explanation.confidence < 0.65) return;
 
   const key = getCacheKey(query, filters, cacheSalt);
   const hash = await hashCacheKey(key);

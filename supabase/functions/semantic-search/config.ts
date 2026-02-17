@@ -45,5 +45,11 @@ export const CONFIG = {
 
   // AI settings
   AI_DEFAULT_MODEL: 'google/gemini-3-flash-preview',
+  AI_SIMPLE_MODEL: 'google/gemini-2.5-flash-lite',
   AI_TEMPERATURE: 0.1,
+  AI_SIMPLE_QUERY_MAX_WORDS: 4,
+
+  // Cache confidence thresholds
+  CACHE_MIN_CONFIDENCE_FOR_STORE: 0.65,
+  CACHE_MIN_CONFIDENCE_FOR_AI_STORE: 0.7,
 } as const;

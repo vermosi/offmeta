@@ -519,4 +519,101 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     syntax: 'o:"flip a coin"',
     description: 'Coin flip cards',
   },
+
+  // NEW: High-frequency queries from analytics logs
+  {
+    pattern: /\bmana\s+dorks?\b/gi,
+    syntax: 'otag:mana-dork',
+    description: 'Creatures that tap for mana',
+  },
+  {
+    pattern: /\butility\s+lands?\b/gi,
+    syntax: 't:land -t:basic o:"{"',
+    description: 'Non-basic lands with abilities',
+  },
+  {
+    pattern: /\btoken\s+doublers?\b/gi,
+    syntax: 'o:"if" (o:"create" or o:"token") o:"twice" (t:enchantment or t:creature or t:artifact)',
+    description: 'Cards that double token creation',
+  },
+  {
+    pattern: /\bcard\s+draw\b/gi,
+    syntax: 'otag:card-draw',
+    description: 'Card draw effects',
+  },
+  {
+    pattern: /\bsignet\b/gi,
+    syntax: 't:artifact o:"add" (o:"{" and o:"}") mv=2',
+    description: 'Signets and 2-mana rocks',
+  },
+  {
+    pattern: /\bfetch\s+lands?\b/gi,
+    syntax: 't:land o:"search" o:"library" o:"land"',
+    description: 'Fetch lands',
+  },
+  {
+    pattern: /\bshock\s+lands?\b/gi,
+    syntax: 't:land o:"pay 2 life"',
+    description: 'Shock lands',
+  },
+  {
+    pattern: /\bdual\s+lands?\b/gi,
+    syntax: 't:land produces>=2',
+    description: 'Lands that produce two or more colors',
+  },
+  {
+    pattern: /\bwrath\s+(?:effect|of god)?s?\b/gi,
+    syntax: 'otag:board-wipe',
+    description: 'Board wipe effects',
+  },
+  {
+    pattern: /\bboard\s+wipes?\b/gi,
+    syntax: 'otag:board-wipe',
+    description: 'Board wipe effects',
+  },
+  {
+    pattern: /\btutors?\b/gi,
+    syntax: 'otag:tutor',
+    description: 'Search library effects',
+  },
+  {
+    pattern: /\bramp\b/gi,
+    syntax: 'otag:ramp',
+    description: 'Mana ramp cards',
+  },
+  {
+    pattern: /\bremoval\b/gi,
+    syntax: '(otag:spot-removal or otag:creature-removal)',
+    description: 'Removal spells',
+  },
+  {
+    pattern: /\bprotection\s+spells?\b/gi,
+    syntax: '(o:"hexproof" or o:"indestructible" or o:"protection from")',
+    description: 'Protection effects',
+  },
+  {
+    pattern: /\blife\s+gain\b/gi,
+    syntax: 'otag:lifegain',
+    description: 'Life gain effects',
+  },
+  {
+    pattern: /\bmill\s+cards?\b/gi,
+    syntax: 'otag:mill',
+    description: 'Mill effects',
+  },
+  {
+    pattern: /\btreasure\s+(?:makers?|generators?|creators?|production)\b/gi,
+    syntax: 'o:"create" o:"Treasure"',
+    description: 'Treasure token creators',
+  },
+  {
+    pattern: /\bclue\s+(?:makers?|generators?|creators?)\b/gi,
+    syntax: 'o:"create" o:"Clue"',
+    description: 'Clue token creators',
+  },
+  {
+    pattern: /\bfood\s+(?:makers?|generators?|creators?)\b/gi,
+    syntax: 'o:"create" o:"Food"',
+    description: 'Food token creators',
+  },
 ];
