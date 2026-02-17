@@ -30,6 +30,39 @@ function ManaCurve({ distribution }: { distribution: number[] }) {
   );
 }
 
+// ── Type Distribution ──
+const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
+  Creature: { label: 'Creatures', color: 'bg-green-500' },
+  Instant: { label: 'Instants', color: 'bg-blue-400' },
+  Sorcery: { label: 'Sorceries', color: 'bg-red-400' },
+  Artifact: { label: 'Artifacts', color: 'bg-zinc-400' },
+  Enchantment: { label: 'Enchantments', color: 'bg-purple-400' },
+  Planeswalker: { label: 'Planeswalkers', color: 'bg-amber-400' },
+  Land: { label: 'Lands', color: 'bg-yellow-700' },
+  Battle: { label: 'Battles', color: 'bg-orange-400' },
+};
+
+function TypeDistribution({ typeCounts }: { typeCounts: Record<string, number> }) {
+  const entries = Object.entries(typeCounts).filter(([, v]) => v > 0);
+  if (entries.length === 0) return null;
+  const total = entries.reduce((s, [, v]) => s + v, 0) || 1;
+
+  return (
+    <div className="flex items-center gap-1.5 flex-wrap">
+      {entries.map(([t, count]) => {
+        const info = TYPE_CONFIG[t] || { label: t, color: 'bg-muted' };
+        const pct = Math.round((count / total) * 100);
+        return (
+          <div key={t} className="flex items-center gap-1" title={`${info.label}: ${count} (${pct}%)`}>
+            <div className={cn('h-2.5 w-2.5 rounded-sm', info.color)} />
+            <span className="text-[9px] text-muted-foreground">{count}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── Color Pie ──
 const COLOR_MAP: Record<string, { label: string; color: string }> = {
   W: { label: 'White', color: 'bg-yellow-100 dark:bg-yellow-200' },
@@ -71,6 +104,7 @@ export function DeckStatsBar({ cards, scryfallCache, formatMax }: DeckStatsData)
   const stats = useMemo(() => {
     const curve = new Array(8).fill(0);
     const colorCounts: Record<string, number> = {};
+    const typeCounts: Record<string, number> = {};
     let totalCmc = 0;
     let nonLandCount = 0;
     let totalPrice = 0;
@@ -88,6 +122,16 @@ export function DeckStatsBar({ cards, scryfallCache, formatMax }: DeckStatsData)
         curve[bucket] += qty;
         totalCmc += cmc * qty;
         nonLandCount += qty;
+      }
+
+      // Type distribution
+      if (sc?.type_line) {
+        const tl = sc.type_line.split('—')[0].toLowerCase();
+        for (const [key] of Object.entries(TYPE_CONFIG)) {
+          if (tl.includes(key.toLowerCase())) {
+            typeCounts[key] = (typeCounts[key] || 0) + qty;
+          }
+        }
       }
 
       // Colors from color_identity or mana_cost
@@ -114,7 +158,7 @@ export function DeckStatsBar({ cards, scryfallCache, formatMax }: DeckStatsData)
     const totalCards = cards.reduce((s, c) => s + c.quantity, 0);
     const avgCmc = nonLandCount > 0 ? (totalCmc / nonLandCount).toFixed(2) : '0.00';
 
-    return { curve, colorCounts, totalCards, avgCmc, totalPrice, priceCount };
+    return { curve, colorCounts, typeCounts, totalCards, avgCmc, totalPrice, priceCount };
   }, [cards, scryfallCache]);
 
   return (
@@ -149,6 +193,12 @@ export function DeckStatsBar({ cards, scryfallCache, formatMax }: DeckStatsData)
         <div className="shrink-0">
           <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Colors</div>
           <ColorPie colorCounts={stats.colorCounts} />
+        </div>
+
+        {/* Type Distribution */}
+        <div className="shrink-0">
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Types</div>
+          <TypeDistribution typeCounts={stats.typeCounts} />
         </div>
 
         {/* Mana Curve */}
