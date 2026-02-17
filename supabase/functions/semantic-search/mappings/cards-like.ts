@@ -50,9 +50,9 @@ export const CARDS_LIKE_MAP: Record<string, string> = {
   'worldly tutor': 'otag:creature-tutor',
 
   // Reanimation
-  reanimate: 'otag:reanimation mv<=3',
-  'animate dead': 'otag:reanimation t:enchantment',
-  exhume: 'otag:reanimation',
+  reanimate: 'otag:reanimate mv<=3',
+  'animate dead': 'otag:reanimate t:enchantment',
+  exhume: 'otag:reanimate',
 
   // Value creatures
   'dark confidant': 'o:"beginning of your upkeep" o:"draw" o:"life"',

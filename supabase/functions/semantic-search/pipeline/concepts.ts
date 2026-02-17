@@ -241,7 +241,7 @@ const CONCEPT_LIBRARY: Record<
       'return from graveyard',
       'graveyard to battlefield',
     ],
-    templates: ['otag:reanimation'],
+    templates: ['otag:reanimate'],
     negativeTemplates: [],
     description: 'Cards that return creatures from graveyard to battlefield',
     category: 'graveyard',

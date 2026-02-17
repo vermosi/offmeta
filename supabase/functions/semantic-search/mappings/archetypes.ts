@@ -17,7 +17,7 @@ export const ARCHETYPE_MAP: Record<string, string> = {
   voltron:
     '(t:equipment or t:aura or o:"equipped creature" or o:"enchanted creature")',
   aristocrats: '(otag:sacrifice-outlet or (o:"whenever" (o:"dies" or o:"sacrifice")))',
-  reanimator: 'otag:reanimation',
+  reanimator: 'otag:reanimate',
   control: '(otag:removal or otag:board-wipe)',
   combo:
     '(o:"infinite" or o:"you win the game" or o:"opponents lose the game")',
@@ -26,7 +26,7 @@ export const ARCHETYPE_MAP: Record<string, string> = {
   mill: 'otag:mill',
   discard: '(o:"discard" o:"opponent")',
   graveyard:
-    '(otag:reanimation or o:"from your graveyard")',
+    '(otag:reanimate or o:"from your graveyard")',
   tribal: 'o:"creature type" or o:"of the chosen type"',
   superfriends: 't:planeswalker',
 };
