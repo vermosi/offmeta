@@ -6,14 +6,18 @@
 import type { ExtractedSlots } from '../types.ts';
 import { COLOR_MAP, MULTICOLOR_MAP } from '../../shared-mappings.ts';
 
-export function extractColors(query: string): {
+export function extractColors(
+  query: string,
+  options?: { forCommander?: boolean },
+): {
   colors: ExtractedSlots['colors'];
   remaining: string;
 } {
   let remaining = query;
 
-  // Check for commander identity context
+  // Check for commander identity context — includes when format is already detected as commander
   const identityContext =
+    options?.forCommander ||
     /\b(commander deck|fits into|goes into|can go in|usable in|color identity|ci)\b/i.test(query);
   const exactContext = /\b(exactly|only|just|strictly|mono)\b/i.test(query);
 

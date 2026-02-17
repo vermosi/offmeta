@@ -23,6 +23,13 @@ export function extractTypes(query: string): {
   const includeOr: string[] = [];
   const exclude: string[] = [];
 
+  // Handle "utility lands" → t:land -t:basic
+  if (/\butility\s+lands?\b/i.test(remaining)) {
+    include.push('land');
+    exclude.push('basic');
+    remaining = remaining.replace(/\butility\s+lands?\b/gi, '').trim();
+  }
+
   // FIRST: Check for "X or Y" type patterns
   const orPatterns = [
     /\b(artifact|creature|instant|sorcery|land|enchantment|planeswalker)s?\s+or\s+(artifact|creature|instant|sorcery|land|enchantment|planeswalker)s?\b/gi,

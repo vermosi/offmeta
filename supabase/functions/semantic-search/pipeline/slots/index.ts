@@ -37,8 +37,8 @@ export function extractSlots(normalizedQuery: string): ExtractedSlots {
   slots.format = formatResult.format;
   remaining = formatResult.remaining;
 
-  // Extract colors
-  const colorResult = extractColors(remaining);
+  // Extract colors — pass format context so guild/shard names use identity mode for commander
+  const colorResult = extractColors(remaining, { forCommander: slots.format === 'commander' });
   slots.colors = colorResult.colors;
   remaining = colorResult.remaining;
 

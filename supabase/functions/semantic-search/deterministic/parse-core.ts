@@ -151,7 +151,10 @@ export function parseNumericConstraint(
 export function parseColors(query: string, ir: SearchIR): string {
   let remaining = query;
 
+  // Identity context: explicit mentions OR if commander format/special was already parsed
+  const hasCommanderContext = ir.specials.some(s => s === 'f:commander' || s === 'is:commander');
   const identityIntent =
+    hasCommanderContext ||
     /\b(ci|color identity|commander deck|fits into|goes into|can go in|usable in|identity)\b/i.test(
       remaining,
     );
@@ -201,12 +204,7 @@ export function parseColors(query: string, ir: SearchIR): string {
         values: codes.split(''),
         mode: identityIntent ? 'identity' : 'color',
         operator:
-          identityIntent &&
-          /\b(commander deck|fits into|goes into|can go in|usable in)\b/i.test(
-            remaining,
-          )
-            ? 'within'
-            : 'exact',
+          identityIntent ? 'within' : 'exact',
       };
       remaining = remaining.replace(regex, '').trim();
       return remaining;
@@ -300,6 +298,15 @@ export function parseColors(query: string, ir: SearchIR): string {
 export function parseTypes(query: string, ir: SearchIR): string {
   let remaining = query;
   const typesHandledAsOr = new Set<string>();
+
+  // Handle "utility lands" → t:land -t:basic
+  if (/\butility\s+lands?\b/i.test(remaining)) {
+    ir.types.push('land');
+    if (!ir.excludedTypes.includes('basic')) {
+      ir.excludedTypes.push('basic');
+    }
+    remaining = remaining.replace(/\butility\s+lands?\b/gi, '').trim();
+  }
 
   // FIRST: Check for "X or Y" type patterns
   const orPatterns = [

@@ -136,9 +136,10 @@ export function parseSpecialPatterns(query: string, ir: SearchIR): string {
   let remaining = query;
 
   const commanderFormatPattern =
-    /\bcommander(?:-|\s)?(deck|format|legal)\b|\blegal in commander\b/gi;
+    /\bcommander(?:-|\s)?(deck|format|legal)\b|\blegal in commander\b|\bfor\s+commander\b|\bin\s+commander\b/gi;
   if (commanderFormatPattern.test(remaining)) {
     ir.specials.push('f:commander');
+    commanderFormatPattern.lastIndex = 0;
     remaining = remaining.replace(commanderFormatPattern, '').trim();
   }
 
