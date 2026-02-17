@@ -16,6 +16,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Sparkles, ExternalLink, Copy, Check, Link2, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
+import { ManaSymbol } from '@/components/ManaSymbol';
+
+const WUBRG = ['W', 'U', 'B', 'R', 'G'] as const;
+const COLOR_NAMES: Record<string, string> = { W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green' };
 
 interface RecommendedCard {
   name: string;
@@ -53,6 +57,7 @@ export default function DeckRecommendations() {
   const [moxfieldDeckName, setMoxfieldDeckName] = useState<string | null>(null);
   const [fetchingDeck, setFetchingDeck] = useState(false);
   const [parsed, setParsed] = useState<ParsedDecklist | null>(null);
+  const [colorIdentity, setColorIdentity] = useState<string[]>([]);
   const [result, setResult] = useState<RecResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [copiedCard, setCopiedCard] = useState<string | null>(null);
@@ -75,6 +80,7 @@ export default function DeckRecommendations() {
 
       setRawText(data.decklist);
       setMoxfieldDeckName(data.deckName);
+      setColorIdentity(data.colorIdentity ?? []);
       const p = parseDecklist(data.decklist);
       setParsed(p);
       setResult(null);
@@ -91,6 +97,7 @@ export default function DeckRecommendations() {
     if (!rawText.trim()) return;
     const p = parseDecklist(rawText);
     setParsed(p);
+    setColorIdentity([]); // No color data from paste — will be empty until Moxfield import
     setResult(null);
     if (p.cards.length === 0) {
       toast.error('No cards found. Check the format.');
@@ -199,6 +206,22 @@ export default function DeckRecommendations() {
               <>
                 <div className="text-sm space-y-1">
                   <p><span className="text-muted-foreground">Commander:</span> {parsed.commander || 'Not detected'}</p>
+                  {colorIdentity.length > 0 && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-muted-foreground">Colors:</span>
+                      <span className="inline-flex items-center gap-1">
+                        {WUBRG.map((c) => (
+                          <span
+                            key={c}
+                            className={`transition-opacity ${colorIdentity.includes(c) ? 'opacity-100' : 'opacity-20'}`}
+                            title={COLOR_NAMES[c]}
+                          >
+                            <ManaSymbol symbol={c} size="sm" />
+                          </span>
+                        ))}
+                      </span>
+                    </div>
+                  )}
                   <p><span className="text-muted-foreground">Total cards:</span> {parsed.totalCards}</p>
                   <p><span className="text-muted-foreground">Unique cards:</span> {parsed.cards.length}</p>
                 </div>
