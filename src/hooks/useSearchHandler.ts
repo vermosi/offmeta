@@ -99,6 +99,13 @@ export function useSearchHandler({
 
       setIsSearching(true);
 
+      const searchStartTime = Date.now();
+      logger.info('[SearchDiag] Search started', {
+        query: queryToSearch,
+        hasFilters: !!filters,
+        bypassCache: !!options?.bypassCache,
+      });
+
       // Timeout promise
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(
@@ -126,6 +133,15 @@ export function useSearchHandler({
 
         saveContext(queryToSearch, result.scryfallQuery);
 
+        const source = result.source || 'ai';
+        const responseMs = Date.now() - searchStartTime;
+        logger.info('[SearchDiag] Translation success', {
+          query: queryToSearch,
+          source,
+          responseMs,
+          scryfallQuery: result.scryfallQuery,
+        });
+
         onSearch(
           result.scryfallQuery,
           {
@@ -134,12 +150,11 @@ export function useSearchHandler({
             showAffiliate: result.showAffiliate,
             validationIssues: result.validationIssues,
             intent: result.intent,
-            source: result.source || 'ai',
+            source,
           },
           queryToSearch,
         );
 
-        const source = result.source || 'ai';
         toast.success(
           `Search translated${source !== 'ai' ? ` (${source})` : ''}`,
           {
@@ -153,9 +168,16 @@ export function useSearchHandler({
         if (requestTokenRef.current !== currentToken) {
           return;
         }
+        const responseMs = Date.now() - searchStartTime;
+
         if (errorMessage === 'Search timeout') {
-          logger.error('Search timeout');
           const fallbackQuery = buildClientFallbackQuery(queryToSearch);
+          logger.warn('[SearchDiag] FALLBACK: timeout', {
+            query: queryToSearch,
+            timeoutMs: CLIENT_CONFIG.SEARCH_TIMEOUT_MS,
+            responseMs,
+            fallbackQuery,
+          });
           toast.error('Search took too long', {
             description: 'Using simplified search instead',
           });
@@ -175,13 +197,19 @@ export function useSearchHandler({
           errorMessage.includes('Rate limit') ||
           errorMessage.includes('Please wait')
         ) {
+          logger.warn('[SearchDiag] Rate limited', { query: queryToSearch, error: errorMessage });
           setRateLimitedUntil(Date.now() + 30000);
           toast.error('Too many searches', {
             description: 'Please wait a moment before searching again',
           });
         } else {
-          logger.error('Search error:', error);
           const fallbackQuery = buildClientFallbackQuery(queryToSearch);
+          logger.warn('[SearchDiag] FALLBACK: error', {
+            query: queryToSearch,
+            error: errorMessage,
+            responseMs,
+            fallbackQuery,
+          });
           toast.error('Search issue', {
             description: 'Using simplified search instead',
           });

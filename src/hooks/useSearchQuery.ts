@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';
 import { CLIENT_CONFIG } from '@/lib/config';
+import { logger } from '@/lib/core/logger';
 
 // Popular queries to prefetch for faster UX (kept small to avoid cold-start flooding)
 const POPULAR_QUERIES_TO_PREFETCH = [
@@ -129,6 +130,7 @@ export async function translateQueryWithDedup(
 
   // Check for pending request with same key
   if (!bypassCache && pendingTranslations.has(key)) {
+    logger.info('[SearchDiag] Dedup hit', { query });
     return pendingTranslations.get(key)!;
   }
 
@@ -144,6 +146,7 @@ export async function translateQueryWithDedup(
         sessionStorage.setItem('offmeta_session_id', sessionId);
       }
 
+      logger.info('[SearchDiag] Edge function call', { query });
       const { data, error } = await supabase.functions.invoke(
         'semantic-search',
         {
@@ -159,7 +162,10 @@ export async function translateQueryWithDedup(
         },
       );
 
-      if (error) throw error;
+      if (error) {
+        logger.warn('[SearchDiag] Edge function error', { query, error: String(error) });
+        throw error;
+      }
 
       if (data?.success && data?.scryfallQuery) {
         // Only count as a search on success (so failures don't eat rate limit)
