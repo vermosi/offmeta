@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.fetch-moxfield-deck]
 verify_jwt = false
+
+[functions.deck-categorize]
+verify_jwt = false
+
+[functions.deck-suggest]
+verify_jwt = false
