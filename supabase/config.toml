@@ -1,1 +1,4 @@
 project_id = "chojxtvzspqqzsmwcbul"
+
+[functions.deck-recommendations]
+verify_jwt = false
