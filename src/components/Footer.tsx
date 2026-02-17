@@ -37,15 +37,35 @@ export function Footer() {
               <Github className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="hidden sm:inline">{t('footer.source')}</span>
             </a>
+            <span className="text-xs text-muted-foreground">Powered by</span>
             <a
               href="https://scryfall.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Powered by Scryfall (opens in new tab)"
+              className="inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              {t('footer.poweredBy')}
-              <ExternalLink className="h-3 w-3 opacity-50" aria-hidden="true" />
+              Scryfall
+              <ExternalLink className="h-2.5 w-2.5 opacity-50" aria-hidden="true" />
+            </a>
+            <span className="text-border">·</span>
+            <a
+              href="https://www.moxfield.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Moxfield
+              <ExternalLink className="h-2.5 w-2.5 opacity-50" aria-hidden="true" />
+            </a>
+            <span className="text-border">·</span>
+            <a
+              href="https://commanderspellbook.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Commander Spellbook
+              <ExternalLink className="h-2.5 w-2.5 opacity-50" aria-hidden="true" />
             </a>
             <span className="text-xs text-muted-foreground sm:hidden">
               © {new Date().getFullYear()}
