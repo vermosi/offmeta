@@ -476,7 +476,7 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
   },
   {
     pattern: /\bchaos\s+cards?\b/gi,
-    syntax: '(o:"random" or o:"flip" o:"coin" or o:"each player")',
+    syntax: '(o:"coin" or o:"random" or o:"chaos")',
     description: 'Random/chaotic effects',
   },
   {
@@ -508,5 +508,15 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     pattern: /\blandfall\b/gi,
     syntax: '(otag:landfall or otag:extra-land)',
     description: 'Landfall triggers and extra land drops',
+  },
+  {
+    pattern: /\bchaos\b/gi,
+    syntax: '(o:"coin" or o:"random" or o:"chaos")',
+    description: 'Chaos and randomness effects',
+  },
+  {
+    pattern: /\bcoin\s+flips?\b/gi,
+    syntax: 'o:"flip a coin"',
+    description: 'Coin flip cards',
   },
 ];

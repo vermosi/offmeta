@@ -230,7 +230,7 @@ export const ARCHETYPES: Archetype[] = [
     slug: 'chaos',
     name: 'Chaos',
     colors: ['R'],
-    searchQuery: 'red cards that randomize or create chaotic effects like coin flips for commander',
+    searchQuery: 'chaos cards legal in commander',
     tagline: 'Embrace randomness and watch the table burn',
     description:
       'Chaos decks thrive on unpredictability — coin flips, random targets, and effects that scramble the board state. While inconsistent, chaos decks create memorable and hilarious games.',

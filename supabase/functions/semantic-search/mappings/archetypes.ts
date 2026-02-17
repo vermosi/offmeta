@@ -31,4 +31,5 @@ export const ARCHETYPE_MAP: Record<string, string> = {
   superfriends: 't:planeswalker',
   landfall: '(otag:landfall or otag:extra-land)',
   treasure: '(o:"create" o:"Treasure" or o:"Treasure token")',
+  chaos: '(o:"coin" or o:"random" or o:"chaos")',
 };
