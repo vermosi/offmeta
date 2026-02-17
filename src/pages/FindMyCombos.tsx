@@ -19,7 +19,8 @@ import {
 } from '@/components/ui/collapsible';
 import { parseDecklist } from '@/lib/decklist-parser';
 import { supabase } from '@/integrations/supabase/client';
-import { ManaSymbol } from '@/components/ManaSymbol';
+import { ManaSymbol, OracleText } from '@/components/ManaSymbol';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import {
   Loader2,
   Zap,
@@ -93,14 +94,14 @@ function ComboItem({
                   .filter((c) => !c.name.startsWith('[Any]'))
                   .map((c, i) => (
                     <Badge key={i} variant="secondary" className="text-xs font-normal">
-                      {c.name}
+                      <OracleText text={c.name} size="sm" />
                     </Badge>
                   ))}
                 {combo.cards
                   .filter((c) => c.name.startsWith('[Any]'))
                   .map((c, i) => (
                     <Badge key={`t-${i}`} variant="outline" className="text-xs font-normal italic">
-                      {c.name.replace('[Any] ', '')}
+                      <OracleText text={c.name.replace('[Any] ', '')} size="sm" />
                     </Badge>
                   ))}
               </div>
@@ -108,7 +109,7 @@ function ComboItem({
                 {combo.produces.slice(0, 3).map((p, i) => (
                   <span key={i} className="text-xs text-primary/80 flex items-center gap-0.5">
                     <Sparkles className="h-3 w-3" />
-                    {p}
+                    <OracleText text={p} size="sm" />
                   </span>
                 ))}
                 {combo.produces.length > 3 && (
@@ -155,7 +156,7 @@ function ComboItem({
                   .split('\n')
                   .filter(Boolean)
                   .map((step, i) => (
-                    <li key={i}>{step.replace(/^\d+\.\s*/, '')}</li>
+                    <li key={i}><OracleText text={step.replace(/^\d+\.\s*/, '')} size="sm" /></li>
                   ))}
               </ol>
             </div>
@@ -169,7 +170,7 @@ function ComboItem({
                   .split('\n')
                   .filter(Boolean)
                   .map((p, i) => (
-                    <li key={i}>{p}</li>
+                    <li key={i}><OracleText text={p} size="sm" /></li>
                   ))}
               </ul>
             </div>
@@ -199,6 +200,7 @@ function ComboItem({
 }
 
 export default function FindMyCombos() {
+  const { t } = useTranslation();
   const [inputMode, setInputMode] = useState<InputMode>('url');
   const [rawText, setRawText] = useState('');
   const [moxfieldUrl, setMoxfieldUrl] = useState('');
@@ -282,14 +284,13 @@ export default function FindMyCombos() {
         <div>
           <div className="flex items-center gap-2">
             <Zap className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold">Find My Combos</h1>
+            <h1 className="text-2xl font-bold">{t('combos.title')}</h1>
           </div>
           <p className="text-muted-foreground text-sm mt-1">
-            Import a deck from Moxfield or paste a decklist to discover all combos your deck can
-            assemble.
+            {t('combos.subtitle')}
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Powered by{' '}
+            {t('combos.poweredBy')}{' '}
             <a
               href="https://commanderspellbook.com"
               target="_blank"
@@ -314,7 +315,7 @@ export default function FindMyCombos() {
                 }`}
               >
                 <Link2 className="h-3.5 w-3.5" />
-                Moxfield URL
+                {t('combos.moxfieldUrl')}
               </button>
               <button
                 onClick={() => setInputMode('paste')}
@@ -325,13 +326,13 @@ export default function FindMyCombos() {
                 }`}
               >
                 <FileText className="h-3.5 w-3.5" />
-                Paste List
+                {t('combos.pasteList')}
               </button>
             </div>
 
             {inputMode === 'url' ? (
               <div className="space-y-3">
-                <label className="text-sm font-medium">Moxfield Deck URL</label>
+                <label className="text-sm font-medium">{t('combos.moxfieldLabel')}</label>
                 <Input
                   value={moxfieldUrl}
                   onChange={(e) => setMoxfieldUrl(e.target.value)}
@@ -349,18 +350,18 @@ export default function FindMyCombos() {
                   ) : (
                     <Link2 className="h-4 w-4" />
                   )}
-                  {fetchingDeck ? 'Fetching...' : 'Import from Moxfield'}
+                  {fetchingDeck ? t('combos.importing') : t('combos.importButton')}
                 </Button>
                 {moxfieldDeckName && (
                   <p className="text-xs text-muted-foreground">
-                    ✓ Imported:{' '}
+                    ✓ {t('combos.imported')}:{' '}
                     <span className="font-medium text-foreground">{moxfieldDeckName}</span>
                   </p>
                 )}
               </div>
             ) : (
               <div className="space-y-3">
-                <label className="text-sm font-medium">Paste Decklist</label>
+                <label className="text-sm font-medium">{t('combos.pasteLabel')}</label>
                 <Textarea
                   value={rawText}
                   onChange={(e) => setRawText(e.target.value)}
@@ -369,7 +370,7 @@ export default function FindMyCombos() {
                   maxLength={10000}
                 />
                 <Button onClick={handleParse} variant="secondary" className="w-full">
-                  Parse Decklist
+                  {t('combos.parseButton')}
                 </Button>
               </div>
             )}
@@ -377,17 +378,17 @@ export default function FindMyCombos() {
 
           {/* Summary + find button */}
           <div className="rounded-xl border border-border p-4 space-y-3">
-            <h2 className="text-sm font-semibold">Deck Summary</h2>
+            <h2 className="text-sm font-semibold">{t('combos.deckSummary')}</h2>
             {cardNames.length > 0 ? (
               <>
                 <div className="text-sm space-y-1">
                   <p>
-                    <span className="text-muted-foreground">Commander:</span>{' '}
-                    {commander || 'Not detected'}
+                    <span className="text-muted-foreground">{t('combos.commander')}:</span>{' '}
+                    {commander || t('combos.notDetected')}
                   </p>
                   {colorIdentity.length > 0 && (
                     <div className="flex items-center gap-1.5">
-                      <span className="text-muted-foreground">Colors:</span>
+                      <span className="text-muted-foreground">{t('combos.colors')}:</span>
                       <span className="inline-flex items-center gap-1">
                         {WUBRG.map((c) => (
                           <span
@@ -402,7 +403,7 @@ export default function FindMyCombos() {
                     </div>
                   )}
                   <p>
-                    <span className="text-muted-foreground">Cards:</span> {cardNames.length}
+                    <span className="text-muted-foreground">{t('combos.cards')}:</span> {cardNames.length}
                   </p>
                 </div>
                 <Button
@@ -415,14 +416,14 @@ export default function FindMyCombos() {
                   ) : (
                     <Zap className="h-4 w-4" />
                   )}
-                  {loading ? 'Searching combos...' : 'Find My Combos'}
+                  {loading ? t('combos.searching') : t('combos.findButton')}
                 </Button>
               </>
             ) : (
               <p className="text-sm text-muted-foreground">
                 {inputMode === 'url'
-                  ? 'Import a Moxfield deck to get started.'
-                  : 'Paste a decklist and click "Parse" to get started.'}
+                  ? t('combos.emptyUrl')
+                  : t('combos.emptyPaste')}
               </p>
             )}
           </div>
@@ -453,13 +454,12 @@ export default function FindMyCombos() {
               <div className="flex items-center gap-2">
                 <Zap className="h-5 w-5 text-primary" />
                 <h2 className="text-lg font-semibold">
-                  Combos in Your Deck ({results.totalIncluded})
+                  {t('combos.combosInDeck')} ({results.totalIncluded})
                 </h2>
               </div>
               {results.included.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  No complete combos found in your deck. Check the "Almost Included" section below
-                  for combos you're close to assembling.
+                  {t('combos.noCombos')}
                 </p>
               ) : (
                 <div className="space-y-2">
@@ -483,11 +483,11 @@ export default function FindMyCombos() {
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-muted-foreground" />
                   <h2 className="text-lg font-semibold text-muted-foreground">
-                    Almost Included ({results.totalAlmostIncluded})
+                    {t('combos.almostIncluded')} ({results.totalAlmostIncluded})
                   </h2>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  These combos are missing 1–2 cards from your deck. Consider adding them!
+                  {t('combos.almostDesc')}
                 </p>
                 <div className="space-y-2">
                   {results.almostIncluded.map((combo) => (
@@ -505,7 +505,7 @@ export default function FindMyCombos() {
             )}
 
             <p className="text-xs text-center text-muted-foreground">
-              Data provided by{' '}
+              {t('combos.dataBy')}{' '}
               <a
                 href="https://commanderspellbook.com"
                 target="_blank"
