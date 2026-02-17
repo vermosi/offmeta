@@ -192,6 +192,12 @@ export function parseSpecialPatterns(query: string, ir: SearchIR): string {
     remaining = remaining.replace(/\bblue\b/gi, '').trim();
   }
 
+  // "phyrexian mana" / "cards with phyrexian mana" → m:/P/
+  if (/\bphyrexian\s+mana\b/i.test(remaining)) {
+    ir.specials.push('m:/P/');
+    remaining = remaining.replace(/\bphyrexian\s+mana\b/gi, '').trim();
+  }
+
   return remaining;
 }
 
@@ -220,13 +226,13 @@ export function parseEquipmentPatterns(query: string, ir: SearchIR): string {
 export function parseOraclePatterns(query: string, ir: SearchIR): string {
   let remaining = query;
 
-  if (/\bdraw cards?\b/i.test(remaining)) {
+  if (/\b(?:draw cards?|card\s+draw)\b/i.test(remaining)) {
     if (KNOWN_OTAGS.has('draw')) {
       ir.tags.push('otag:draw');
     } else {
       ir.oracle.push('o:/draw (a|two|three|\\d+) cards?/');
     }
-    remaining = remaining.replace(/\bdraw cards?\b/gi, '').trim();
+    remaining = remaining.replace(/\b(?:draw cards?|card\s+draw)\b/gi, '').trim();
   }
 
   if (/\bsacrifice\b/i.test(remaining) && /\blands?\b/i.test(remaining)) {
