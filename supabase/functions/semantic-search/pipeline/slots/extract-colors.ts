@@ -36,6 +36,8 @@ export function extractColors(
   }
 
   // Check for multicolor names (guilds/shards/wedges)
+  // Guild/shard/wedge names are inherently color identity concepts,
+  // so always use identity mode regardless of commander context
   for (const [name, codes] of Object.entries(MULTICOLOR_MAP)) {
     const regex = new RegExp(`\\b${name}\\b`, 'i');
     if (regex.test(remaining)) {
@@ -43,8 +45,8 @@ export function extractColors(
       return {
         colors: {
           values: codes.split(''),
-          mode: identityContext ? 'identity' : 'color',
-          operator: identityContext ? (exactContext ? 'exact' : 'within') : 'exact',
+          mode: 'identity',
+          operator: exactContext ? 'exact' : 'within',
         },
         remaining,
       };

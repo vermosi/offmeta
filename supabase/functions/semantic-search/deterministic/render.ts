@@ -19,17 +19,17 @@ export function renderIR(ir: SearchIR): string {
 
   if (ir.monoColor) {
     parts.push(`c=${ir.monoColor}`);
-    parts.push(`ci=${ir.monoColor}`);
+    parts.push(`id=${ir.monoColor}`);
   } else if (ir.colorConstraint) {
     const { values, mode, operator } = ir.colorConstraint;
-    const prefix = mode === 'identity' ? 'ci' : 'c';
+    const prefix = mode === 'identity' ? 'id' : 'c';
     const joined = values.join('');
 
     if (operator === 'or' && values.length > 1) {
       const orParts = values.map((color) => `${prefix}=${color}`);
       parts.push(`(${orParts.join(' or ')})`);
     } else if (operator === 'within') {
-      parts.push(`ci<=${joined}`);
+      parts.push(`id<=${joined}`);
     } else if (operator === 'exact') {
       parts.push(`${prefix}=${joined}`);
     } else if (operator === 'include') {
