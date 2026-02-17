@@ -8,7 +8,7 @@ export const CLIENT_CONFIG = {
   VIRTUALIZATION_THRESHOLD: 50,
 
   // Search settings
-  SEARCH_TIMEOUT_MS: 15000, // 15 seconds
+  SEARCH_TIMEOUT_MS: 25000, // 25 seconds
   SEARCH_DEBOUNCE_MS: 300,
 
   // Cache settings
