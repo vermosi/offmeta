@@ -353,7 +353,7 @@ const CONCEPT_LIBRARY: Record<
   // === CONTROL ===
   stax: {
     aliases: ['stax', 'prison', 'tax effects', 'lockdown'],
-    templates: ['otag:stax'],
+    templates: ['(o:"can\'t" or o:"doesn\'t untap")'],
     negativeTemplates: [],
     description: 'Cards that restrict opponents actions',
     category: 'control',
