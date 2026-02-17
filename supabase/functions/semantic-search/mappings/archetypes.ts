@@ -30,4 +30,5 @@ export const ARCHETYPE_MAP: Record<string, string> = {
   tribal: 'o:"creature type" or o:"of the chosen type"',
   superfriends: 't:planeswalker',
   landfall: '(otag:landfall or otag:extra-land)',
+  treasure: '(o:"create" o:"Treasure" or o:"Treasure token")',
 };
