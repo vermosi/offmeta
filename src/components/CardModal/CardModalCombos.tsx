@@ -3,7 +3,7 @@
  * @module components/CardModal/CardModalCombos
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useReducer } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +21,7 @@ import {
   Sparkles,
   AlertTriangle,
 } from 'lucide-react';
-import { ManaCost } from '@/components/ManaSymbol';
+import { OracleText } from '@/components/ManaSymbol';
 import { logger } from '@/lib/core/logger';
 
 interface ComboCard {
@@ -51,19 +51,45 @@ export interface CardModalCombosProps {
   isMobile?: boolean;
 }
 
+type ComboState = {
+  combos: Combo[];
+  total: number;
+  isLoading: boolean;
+  error: string | null;
+};
+
+type ComboAction =
+  | { type: 'FETCH' }
+  | { type: 'SUCCESS'; combos: Combo[]; total: number }
+  | { type: 'ERROR'; error: string };
+
+function comboReducer(_state: ComboState, action: ComboAction): ComboState {
+  switch (action.type) {
+    case 'FETCH':
+      return { combos: [], total: 0, isLoading: true, error: null };
+    case 'SUCCESS':
+      return { combos: action.combos, total: action.total, isLoading: false, error: null };
+    case 'ERROR':
+      return { combos: [], total: 0, isLoading: false, error: action.error };
+  }
+}
+
 export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
-  const [combos, setCombos] = useState<Combo[]>([]);
-  const [total, setTotal] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [state, dispatch] = useReducer(comboReducer, {
+    combos: [],
+    total: 0,
+    isLoading: true,
+    error: null,
+  });
   const [expandedCombo, setExpandedCombo] = useState<string | null>(null);
+
+  const { combos, total, isLoading, error } = state;
 
   useEffect(() => {
     if (!cardName) return;
 
     let cancelled = false;
-    setIsLoading(true);
-    setError(null);
+    dispatch({ type: 'FETCH' });
 
     supabase.functions
       .invoke('combo-search', {
@@ -73,17 +99,14 @@ export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
         if (cancelled) return;
         if (fnError) {
           logger.warn('Combo search error', fnError);
-          setError('Could not load combos');
-          setIsLoading(false);
+          dispatch({ type: 'ERROR', error: 'Could not load combos' });
           return;
         }
         if (data?.success) {
-          setCombos(data.combos || []);
-          setTotal(data.total || 0);
+          dispatch({ type: 'SUCCESS', combos: data.combos || [], total: data.total || 0 });
         } else {
-          setError(data?.error || 'Unknown error');
+          dispatch({ type: 'ERROR', error: data?.error || 'Unknown error' });
         }
-        setIsLoading(false);
       });
 
     return () => {
@@ -168,7 +191,7 @@ export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
                             variant="secondary"
                             className="text-xs font-normal"
                           >
-                            {c.name}
+                            <OracleText text={c.name} size="sm" />
                           </Badge>
                         ))}
                       {combo.cards.filter((c) => c.name.startsWith('[Any]')).map((c, i) => (
@@ -177,7 +200,7 @@ export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
                           variant="outline"
                           className="text-xs font-normal italic"
                         >
-                          {c.name.replace('[Any] ', '')}
+                          <OracleText text={c.name.replace('[Any] ', '')} size="sm" />
                         </Badge>
                       ))}
                     </div>
@@ -190,7 +213,7 @@ export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
                           className="text-xs text-primary/80 flex items-center gap-0.5"
                         >
                           <Sparkles className="h-3 w-3" />
-                          {p}
+                          <OracleText text={p} size="sm" />
                         </span>
                       ))}
                       {combo.produces.length > 3 && (
@@ -234,7 +257,7 @@ export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
                     </p>
                     <ol className="text-xs space-y-0.5 list-decimal list-inside text-foreground/90">
                       {combo.description.split('\n').filter(Boolean).map((step, i) => (
-                        <li key={i}>{step.replace(/^\d+\.\s*/, '')}</li>
+                        <li key={i}><OracleText text={step.replace(/^\d+\.\s*/, '')} size="sm" /></li>
                       ))}
                     </ol>
                   </div>
@@ -248,7 +271,7 @@ export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
                     </p>
                     <ul className="text-xs space-y-0.5 list-disc list-inside text-foreground/70">
                       {combo.prerequisites.split('\n').filter(Boolean).map((prereq, i) => (
-                        <li key={i}>{prereq}</li>
+                        <li key={i}><OracleText text={prereq} size="sm" /></li>
                       ))}
                     </ul>
                   </div>
