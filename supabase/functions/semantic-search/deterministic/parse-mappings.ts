@@ -258,6 +258,18 @@ export function parseCardsLike(query: string, ir: SearchIR): string {
 export function parseArchetypes(query: string, ir: SearchIR): string {
   let remaining = query;
 
+  // Handle "[type] tribal payoffs/synergies/lords" BEFORE generic tribal archetype
+  const tribalPayoffMatch = remaining.match(
+    /\b(\w+)\s+tribal\s+(?:payoffs?|synerg(?:y|ies)|lords?|rewards?)\b/i,
+  );
+  if (tribalPayoffMatch) {
+    const tribe = tribalPayoffMatch[1].toLowerCase().replace(/s$/, '');
+    ir.oracle.push(`(o:"${tribe}" o:"you control" or o:"${tribe}" o:"+1/+1")`);
+    ir.types.push(tribe);
+    remaining = remaining.replace(tribalPayoffMatch[0], '').trim();
+    // Don't fall through to generic "tribal" below
+  }
+
   const skipSacrificeAsArchetype =
     /\bsacrifice\s+(a\s+)?(creature|land|artifact|enchantment|permanent)/i.test(
       remaining,
