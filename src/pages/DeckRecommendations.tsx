@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import type { ScryfallCard } from '@/types/card';
 import { Navigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -24,15 +25,7 @@ const COLOR_NAMES: Record<string, string> = { W: 'White', U: 'Blue', B: 'Black',
 interface RecommendedCard {
   name: string;
   reason: string;
-  scryfall: {
-    name: string;
-    mana_cost: string;
-    type_line: string;
-    oracle_text: string;
-    image_uri: string | null;
-    scryfall_uri: string;
-    prices: Record<string, string | null>;
-  } | null;
+  scryfall: ScryfallCard | null;
 }
 
 interface Category {
@@ -109,7 +102,7 @@ export default function DeckRecommendations() {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('deck-recommendations', {
-        body: { decklist: rawText, commander: parsed.commander },
+        body: { decklist: rawText, commander: parsed.commander, colorIdentity },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -260,9 +253,9 @@ export default function DeckRecommendations() {
                       key={card.name}
                       className="rounded-xl border border-border bg-card overflow-hidden flex flex-col"
                     >
-                      {card.scryfall?.image_uri ? (
+                      {(card.scryfall?.image_uris?.normal ?? card.scryfall?.card_faces?.[0]?.image_uris?.normal) ? (
                         <img
-                          src={card.scryfall.image_uri}
+                          src={(card.scryfall?.image_uris?.normal ?? card.scryfall?.card_faces?.[0]?.image_uris?.normal)!}
                           alt={card.name}
                           className="w-full aspect-[488/680] object-cover"
                           loading="lazy"
