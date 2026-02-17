@@ -39,6 +39,24 @@ import { renderIR } from './render.ts';
 // Re-export public types
 export type { ParsedIntent, NumericConstraint, SearchIR } from './types.ts';
 
+/**
+ * Detect if the query looks like an exact card name rather than a search description.
+ * Card names are typically 1-5 title-cased words, often with possessives (e.g., "Thassa's Oracle").
+ */
+function isLikelyCardName(query: string): boolean {
+  const trimmed = query.trim();
+  const words = trimmed.split(/\s+/);
+  // Must be 1-5 words
+  if (words.length < 1 || words.length > 6) return false;
+  // Must contain a possessive or ALL words start with uppercase
+  const hasPossessive = /\w's\b/.test(trimmed);
+  const allCapitalized = words.every(w => /^[A-Z]/.test(w) || /^(of|the|and|to|in|for|a|an)$/i.test(w));
+  // Must not contain search-like keywords
+  const hasSearchKeywords = /\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck)\b/i.test(trimmed);
+  if (hasSearchKeywords) return false;
+  return hasPossessive || (allCapitalized && words.length >= 2);
+}
+
 function buildIR(query: string): SearchIR {
   let remaining = normalizeQuery(query);
 
@@ -187,6 +205,29 @@ export function buildDeterministicIntent(query: string): {
   intent: ParsedIntent;
   deterministicQuery: string;
 } {
+  // Short-circuit: if the query looks like an exact card name, use !"name" syntax
+  if (isLikelyCardName(query)) {
+    const exactQuery = `!"${query.trim()}"`;
+    const intent: ParsedIntent = {
+      colors: null,
+      types: [],
+      subtypes: [],
+      cmc: null,
+      power: null,
+      toughness: null,
+      isCommander: false,
+      format: null,
+      yearConstraint: null,
+      priceConstraint: null,
+      remainingQuery: '',
+      warnings: [],
+      oraclePatterns: [],
+      tagTokens: [],
+      statTotalApprox: null,
+    };
+    return { intent, deterministicQuery: exactQuery };
+  }
+
   const ir = buildIR(query);
   const deterministicQuery = renderIR(ir);
 
