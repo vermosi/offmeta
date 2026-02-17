@@ -35,12 +35,12 @@
 - **Deck Recommendations UX polish**: Loading skeletons, persistent error state, and OracleText mana rendering
 - **Sitemap expansion**: Added `/combos`, `/deck-recs`, `/archetypes` routes; domain set to `offmeta.app`
 - **CardModalCombos refactor**: useReducer pattern for complex combo state management
+- **EDHREC rank sorting**: Sort search results by EDHREC popularity rank (most/least popular)
 
 ## Near term
 
 - Improve accessibility audits and keyboard navigation
 - Expand combo finder with filtering and sorting options
-- Add EDHREC rank sorting to search results
 - Localize AdminAnalytics page (lower priority, admin-only)
 
 ## Mid term

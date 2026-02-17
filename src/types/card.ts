@@ -159,6 +159,9 @@ export interface ScryfallCard {
 
   /** Reserved list indicator */
   reserved?: boolean;
+
+  /** EDHREC popularity rank (lower = more popular in Commander) */
+  edhrec_rank?: number;
 }
 
 /**

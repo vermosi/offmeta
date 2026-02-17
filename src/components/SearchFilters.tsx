@@ -85,14 +85,16 @@ const CARD_TYPES = [
 
 // Sort options
 const SORT_OPTIONS = [
-  { value: 'name-asc', label: 'Name (A-Z)' },
-  { value: 'name-desc', label: 'Name (Z-A)' },
-  { value: 'cmc-asc', label: 'CMC (Low to High)' },
-  { value: 'cmc-desc', label: 'CMC (High to Low)' },
-  { value: 'price-asc', label: 'Price (Low to High)' },
-  { value: 'price-desc', label: 'Price (High to Low)' },
-  { value: 'rarity-asc', label: 'Rarity (Common first)' },
-  { value: 'rarity-desc', label: 'Rarity (Mythic first)' },
+  { value: 'name-asc', labelKey: 'filters.sortNameAsc' },
+  { value: 'name-desc', labelKey: 'filters.sortNameDesc' },
+  { value: 'cmc-asc', labelKey: 'filters.sortCmcAsc' },
+  { value: 'cmc-desc', labelKey: 'filters.sortCmcDesc' },
+  { value: 'price-asc', labelKey: 'filters.sortPriceAsc' },
+  { value: 'price-desc', labelKey: 'filters.sortPriceDesc' },
+  { value: 'rarity-asc', labelKey: 'filters.sortRarityAsc' },
+  { value: 'rarity-desc', labelKey: 'filters.sortRarityDesc' },
+  { value: 'edhrec-asc', labelKey: 'filters.sortEdhrecAsc' },
+  { value: 'edhrec-desc', labelKey: 'filters.sortEdhrecDesc' },
 ] as const;
 
 const RARITY_ORDER = {
@@ -227,6 +229,13 @@ export function SearchFilters({
           const rarityB =
             RARITY_ORDER[b.rarity as keyof typeof RARITY_ORDER] || 0;
           comparison = rarityA - rarityB;
+          break;
+        }
+        case 'edhrec': {
+          // Lower rank = more popular; cards without rank go to the end
+          const rankA = a.edhrec_rank ?? 999999;
+          const rankB = b.edhrec_rank ?? 999999;
+          comparison = rankA - rankB;
           break;
         }
       }
@@ -461,7 +470,7 @@ export function SearchFilters({
               value={option.value}
               className="text-xs sm:text-sm"
             >
-              {option.label}
+              {t(option.labelKey)}
             </SelectItem>
           ))}
         </SelectContent>
