@@ -27,7 +27,7 @@ export const ARCHETYPE_MAP: Record<string, string> = {
   discard: '(o:"discard" o:"opponent")',
   graveyard:
     '(otag:reanimate or o:"from your graveyard")',
-  tribal: 'o:"creature type" or o:"of the chosen type"',
+  tribal: '(otag:lord or otag:anthem)',
   superfriends: 't:planeswalker',
   landfall: '(otag:landfall or otag:extra-land)',
   treasure: '(o:"create" o:"Treasure" or o:"Treasure token")',

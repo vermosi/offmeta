@@ -241,7 +241,7 @@ export const ARCHETYPES: Archetype[] = [
     slug: 'tribal',
     name: 'Tribal',
     colors: ['W', 'U', 'B', 'R', 'G'],
-    searchQuery: 'cards that give bonuses to creatures that share a type or lords for commander',
+    searchQuery: 'tribal lords legal in commander',
     tagline: 'Build around your favorite creature type',
     description:
       'Tribal decks pick a creature type — elves, goblins, zombies, dragons — and fill the deck with lords, synergy pieces, and tribal payoffs. Strength in numbers and shared abilities define the strategy.',
