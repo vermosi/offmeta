@@ -10,8 +10,10 @@ import { ARCHETYPES } from '@/data/archetypes';
 import { ArrowLeft, Compass, Lightbulb, Star, DollarSign, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCallback } from 'react';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 
 export default function ArchetypePage() {
+  const { t } = useTranslation();
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const archetype = ARCHETYPES.find((a) => a.slug === slug);
@@ -29,9 +31,9 @@ export default function ArchetypePage() {
         <Header />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center space-y-3">
-            <h1 className="text-lg font-semibold text-foreground">Archetype not found</h1>
+            <h1 className="text-lg font-semibold text-foreground">{t('archetypes.notFound')}</h1>
             <Link to="/archetypes" className="text-sm text-primary hover:underline">
-              Browse all archetypes
+              {t('archetypes.browseAll')}
             </Link>
           </div>
         </main>
@@ -61,7 +63,7 @@ export default function ArchetypePage() {
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
           >
             <ArrowLeft className="h-4 w-4" />
-            All Archetypes
+            {t('archetypes.allArchetypes')}
           </Link>
 
           {/* Header */}
@@ -81,7 +83,7 @@ export default function ArchetypePage() {
           <section className="rounded-xl border border-border/50 bg-card/50 p-5 sm:p-6 mb-6">
             <div className="flex items-center gap-2 mb-3">
               <Compass className="h-4 w-4 text-primary" />
-              <h2 className="text-sm font-semibold text-foreground">Strategy Overview</h2>
+              <h2 className="text-sm font-semibold text-foreground">{t('archetypes.strategyOverview')}</h2>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               {archetype.description}
@@ -92,10 +94,12 @@ export default function ArchetypePage() {
           <section className="rounded-xl border border-primary/20 bg-primary/5 p-5 sm:p-6 mb-6">
             <div className="flex items-center gap-2 mb-3">
               <Search className="h-4 w-4 text-primary" />
-              <h2 className="text-sm font-semibold text-foreground">Find {archetype.name} Cards</h2>
+              <h2 className="text-sm font-semibold text-foreground">
+                {t('archetypes.findCards').replace('{name}', archetype.name)}
+              </h2>
             </div>
             <p className="text-xs text-muted-foreground mb-3">
-              Pre-built search query for this archetype:
+              {t('archetypes.preBuiltQuery')}
             </p>
             <div className="rounded-lg bg-muted/50 border border-border/50 px-4 py-2.5 mb-4">
               <code className="text-xs text-foreground break-all">{archetype.searchQuery}</code>
@@ -106,7 +110,7 @@ export default function ArchetypePage() {
               size="sm"
             >
               <Search className="h-3.5 w-3.5" />
-              Search These Cards
+              {t('archetypes.searchCards')}
             </Button>
           </section>
 
@@ -114,7 +118,7 @@ export default function ArchetypePage() {
           <section className="rounded-xl border border-border/50 bg-card/50 p-5 sm:p-6 mb-6">
             <div className="flex items-center gap-2 mb-3">
               <Star className="h-4 w-4 text-amber-500" />
-              <h2 className="text-sm font-semibold text-foreground">Key Cards</h2>
+              <h2 className="text-sm font-semibold text-foreground">{t('archetypes.keyCards')}</h2>
             </div>
             <div className="flex flex-wrap gap-2">
               {archetype.keyCards.map((card) => (
@@ -134,7 +138,7 @@ export default function ArchetypePage() {
           <section className="rounded-xl border border-border/50 bg-card/50 p-5 sm:p-6 mb-6">
             <div className="flex items-center gap-2 mb-3">
               <DollarSign className="h-4 w-4 text-green-500" />
-              <h2 className="text-sm font-semibold text-foreground">Budget Alternatives</h2>
+              <h2 className="text-sm font-semibold text-foreground">{t('archetypes.budgetAlternatives')}</h2>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               {archetype.budgetTip}
@@ -146,7 +150,7 @@ export default function ArchetypePage() {
             <section className="rounded-xl border border-border/50 bg-card/50 p-5 sm:p-6">
               <div className="flex items-center gap-2 mb-3">
                 <Lightbulb className="h-4 w-4 text-primary" />
-                <h2 className="text-sm font-semibold text-foreground">Related Archetypes</h2>
+                <h2 className="text-sm font-semibold text-foreground">{t('archetypes.relatedArchetypes')}</h2>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {related.map((r) => (

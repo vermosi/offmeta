@@ -8,8 +8,11 @@ import { Footer } from '@/components/Footer';
 import { ManaSymbol } from '@/components/ManaSymbol';
 import { ARCHETYPES } from '@/data/archetypes';
 import { ArrowLeft, Compass } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 
 export default function ArchetypesIndex() {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen flex flex-col bg-background relative">
       <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
@@ -24,19 +27,19 @@ export default function ArchetypesIndex() {
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to search
+            {t('archetypes.backToSearch')}
           </Link>
 
           <div className="space-y-2 mb-10">
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
               <Compass className="h-7 w-7 text-primary" />
-              Commander Archetypes
+              {t('archetypes.title')}
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground max-w-2xl">
-              Explore the most popular Commander deck strategies. Each archetype includes a curated card search, key cards, and budget tips.
+              {t('archetypes.subtitle')}
             </p>
             <p className="text-xs text-muted-foreground">
-              {ARCHETYPES.length} archetypes · Click any to explore
+              {ARCHETYPES.length} {t('archetypes.count')}
             </p>
           </div>
 
