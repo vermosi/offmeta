@@ -146,9 +146,15 @@ const Index = () => {
         <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
         <div className="fixed inset-0 pointer-events-none bg-page-mesh" aria-hidden="true" />
 
-        {/* Skip link */}
+        {/* Skip links */}
         <a href="#main-content" className="skip-link">
           Skip to main content
+        </a>
+        <a href="#search-input" className="skip-link" onClick={(e) => {
+          e.preventDefault();
+          document.getElementById('search-input')?.focus();
+        }}>
+          Skip to search
         </a>
 
         <Header />

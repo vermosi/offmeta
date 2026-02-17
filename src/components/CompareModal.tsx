@@ -3,6 +3,7 @@
  * Compares 2-4 cards across key stats.
  */
 
+import { useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,7 @@ import { ManaCost, OracleText } from '@/components/ManaSymbol';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { getCardImage } from '@/lib/scryfall/client';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import type { ScryfallCard } from '@/types/card';
 
 interface CompareModalProps {
@@ -64,6 +66,9 @@ function StatRow({
 }
 
 export function CompareModal({ cards, open, onClose }: CompareModalProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(contentRef, open && cards.length >= 2);
+
   if (cards.length < 2) return null;
 
   const colStyle = { gridTemplateColumns: `8rem repeat(${cards.length}, 1fr)` };
@@ -75,7 +80,7 @@ export function CompareModal({ cards, open, onClose }: CompareModalProps) {
           <DialogTitle>Compare Cards</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="px-6 pb-6 max-h-[calc(90vh-4rem)]">
+        <ScrollArea className="px-6 pb-6 max-h-[calc(90vh-4rem)]" ref={contentRef}>
           <div className="space-y-6 pt-4">
             {/* Card images */}
             <div className="grid gap-2" style={colStyle}>

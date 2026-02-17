@@ -78,7 +78,18 @@ function assertErrorShape(data: ErrorResponse) {
   assertEquals(data.success, false);
 }
 
-// ── Tests ───────────────────────────────────────────────────────
+/** Assert that a Scryfall query contains all expected fragments (case-insensitive). */
+function assertQueryContains(query: string, fragments: string[], label: string) {
+  const lower = query.toLowerCase();
+  for (const frag of fragments) {
+    assert(
+      lower.includes(frag.toLowerCase()),
+      `[${label}] Expected query to contain "${frag}", got: ${query}`,
+    );
+  }
+}
+
+// ── Tests: Shape & Error Handling ──────────────────────────────
 
 Deno.test('OPTIONS returns CORS headers', async () => {
   const res = await fetch(FUNCTION_URL, { method: 'OPTIONS', headers });
@@ -163,4 +174,103 @@ Deno.test('POST with valid filters succeeds', async () => {
   assertEquals(res.status, 200);
   const data: SuccessResponse = await res.json();
   assertSuccessShape(data);
+});
+
+// ── Tests: Golden Output Assertions ────────────────────────────
+
+Deno.test('Golden: "red creatures" produces color + type', async () => {
+  const res = await postSearch({ query: 'red creatures', useCache: false });
+  assertEquals(res.status, 200);
+  const data: SuccessResponse = await res.json();
+  assertSuccessShape(data);
+  assertQueryContains(data.scryfallQuery, ['c:r', 't:creature'], 'red creatures');
+});
+
+Deno.test('Golden: "white enchantments for commander" includes format', async () => {
+  const res = await postSearch({ query: 'white enchantments for commander', useCache: false });
+  assertEquals(res.status, 200);
+  const data: SuccessResponse = await res.json();
+  assertSuccessShape(data);
+  assertQueryContains(data.scryfallQuery, ['t:enchantment', 'f:commander'], 'white enchantments commander');
+});
+
+Deno.test('Golden: "cheap green ramp spells" has color + ramp oracle', async () => {
+  const res = await postSearch({ query: 'cheap green ramp spells', useCache: false });
+  assertEquals(res.status, 200);
+  const data: SuccessResponse = await res.json();
+  assertSuccessShape(data);
+  assertQueryContains(data.scryfallQuery, ['c:g'], 'green ramp');
+});
+
+Deno.test('Golden: "artifacts that tap for blue" has artifact + mana', async () => {
+  const res = await postSearch({ query: 'artifacts that tap for blue', useCache: false });
+  assertEquals(res.status, 200);
+  const data: SuccessResponse = await res.json();
+  assertSuccessShape(data);
+  assertQueryContains(data.scryfallQuery, ['t:artifact'], 'artifacts tap blue');
+});
+
+// ── Tests: Tribal Payoff & Opponent-Action Regressions ─────────
+
+Deno.test('Regression: "elf tribal payoffs for commander" produces tribe + oracle', async () => {
+  const res = await postSearch({ query: 'elf tribal payoffs for commander', useCache: false });
+  assertEquals(res.status, 200);
+  const data: SuccessResponse = await res.json();
+  assertSuccessShape(data);
+  assertQueryContains(data.scryfallQuery, ['o:"elf"', 'f:commander'], 'elf tribal payoffs');
+});
+
+Deno.test('Regression: "goblin tribal synergies" produces tribe reference', async () => {
+  const res = await postSearch({ query: 'goblin tribal synergies', useCache: false });
+  assertEquals(res.status, 200);
+  const data: SuccessResponse = await res.json();
+  assertSuccessShape(data);
+  assertQueryContains(data.scryfallQuery, ['o:"goblin"'], 'goblin tribal synergies');
+});
+
+Deno.test('Regression: "creatures that make tokens when opponent casts" has opponent + token', async () => {
+  const res = await postSearch({ query: 'creatures that make token creatures when an opponent casts', useCache: false });
+  assertEquals(res.status, 200);
+  const data: SuccessResponse = await res.json();
+  assertSuccessShape(data);
+  assertQueryContains(data.scryfallQuery, ['o:"opponent"', 'o:"token"'], 'opponent token creatures');
+});
+
+// ── Tests: Performance ─────────────────────────────────────────
+
+Deno.test('Performance: deterministic queries respond under 5s', async () => {
+  const start = Date.now();
+  const res = await postSearch({ query: 'blue instants', useCache: false });
+  const elapsed = Date.now() - start;
+  assertEquals(res.status, 200);
+  const data: SuccessResponse = await res.json();
+  assertSuccessShape(data);
+  assert(elapsed < 5000, `Deterministic query took ${elapsed}ms, expected < 5000ms`);
+});
+
+// ── Tests: Filter Combinations ─────────────────────────────────
+
+Deno.test('Filter combo: format + color + price constraints', async () => {
+  const res = await postSearch({
+    query: 'creatures',
+    filters: { format: 'commander', colorIdentity: ['W', 'U', 'B'], maxPrice: 10 },
+    useCache: false,
+  });
+  assertEquals(res.status, 200);
+  const data: SuccessResponse = await res.json();
+  assertSuccessShape(data);
+  // The query should still be valid and contain creature type
+  assertQueryContains(data.scryfallQuery, ['t:creature'], 'filter combo');
+});
+
+Deno.test('Filter combo: type + rarity filters', async () => {
+  const res = await postSearch({
+    query: 'enchantments',
+    filters: { types: ['enchantment'], rarity: 'rare' },
+    useCache: false,
+  });
+  assertEquals(res.status, 200);
+  const data: SuccessResponse = await res.json();
+  assertSuccessShape(data);
+  assertQueryContains(data.scryfallQuery, ['t:enchantment'], 'type+rarity filter');
 });
