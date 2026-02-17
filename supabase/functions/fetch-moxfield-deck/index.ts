@@ -60,57 +60,56 @@ serve(async (req) => {
 
     const deck = await resp.json();
 
-    // Extract commander(s)
+    // The v3 API nests boards inside a "boards" object
+    const boards = deck.boards ?? deck;
+
+    // Extract commander(s) from boards.commanders.cards
     const commanders: string[] = [];
-    if (deck.commanders) {
-      for (const key of Object.keys(deck.commanders)) {
-        const entry = deck.commanders[key];
-        const name = entry?.card?.name;
-        if (name) commanders.push(name);
-      }
-    }
-    // Also check "main" for commander in some formats
-    if (commanders.length === 0 && deck.main) {
-      for (const key of Object.keys(deck.main)) {
-        const entry = deck.main[key];
-        if (entry?.boardType === "commanders") {
-          const name = entry?.card?.name;
+    const cmdBoard = boards.commanders;
+    if (cmdBoard) {
+      const cmdCards = cmdBoard.cards ?? cmdBoard;
+      if (cmdCards && typeof cmdCards === "object") {
+        for (const key of Object.keys(cmdCards)) {
+          const entry = cmdCards[key];
+          const name = entry?.card?.name ?? entry?.name;
           if (name) commanders.push(name);
         }
       }
     }
 
-    // Build text decklist from mainboard + commanders
+    // Build text decklist
     const lines: string[] = [];
-    const colorIdentity = new Set<string>();
 
     if (commanders.length > 0) {
       lines.push(`COMMANDER: ${commanders.join(" // ")}`);
     }
 
-    const boards = ["commanders", "mainboard", "companions"];
-    for (const boardName of boards) {
-      const board = deck[boardName];
+    const boardNames = ["commanders", "mainboard", "companions"];
+    for (const boardName of boardNames) {
+      const board = boards[boardName];
       if (!board || typeof board !== "object") continue;
-      for (const key of Object.keys(board)) {
-        const entry = board[key];
-        const name = entry?.card?.name;
+      const cards = board.cards ?? board;
+      if (!cards || typeof cards !== "object") continue;
+      for (const key of Object.keys(cards)) {
+        const entry = cards[key];
+        if (!entry || typeof entry !== "object") continue;
+        const name = entry?.card?.name ?? entry?.name;
         const qty = entry?.quantity ?? 1;
         if (name) lines.push(`${qty} ${name}`);
-        // Collect color identity from card data
-        const ci = entry?.card?.color_identity;
-        if (Array.isArray(ci)) {
-          for (const c of ci) colorIdentity.add(c);
-        }
       }
     }
+
+    // Use deck-level colorIdentity directly from API
+    const deckColorIdentity: string[] = Array.isArray(deck.colorIdentity)
+      ? ["W", "U", "B", "R", "G"].filter((c) => deck.colorIdentity.includes(c))
+      : [];
 
     return new Response(
       JSON.stringify({
         deckName: deck.name ?? "Unknown Deck",
         format: deck.format ?? "commander",
         commander: commanders.length > 0 ? commanders.join(" // ") : null,
-        colorIdentity: ["W", "U", "B", "R", "G"].filter((c) => colorIdentity.has(c)),
+        colorIdentity: deckColorIdentity,
         decklist: lines.join("\n"),
         cardCount: lines.filter((l) => !l.startsWith("COMMANDER:")).length,
       }),
