@@ -33,7 +33,7 @@
 - **Mana pip rendering**: Site-wide OracleText component renders {B}, {T}, etc. as Scryfall SVG icons in costs, rules text, combo steps, and deck recommendations
 - **Full i18n for Combo Finder, Deck Recommendations, Archetypes, Profile Settings, and Saved Searches**: All user-facing pages localized across 11 languages
 - **Deck Recommendations UX polish**: Loading skeletons, persistent error state, and OracleText mana rendering
-- **Sitemap expansion**: Added `/combos`, `/deck-recs`, `/archetypes` routes; fixed domain to `offmeta.lovable.app`
+- **Sitemap expansion**: Added `/combos`, `/deck-recs`, `/archetypes` routes; domain set to `offmeta.app`
 - **CardModalCombos refactor**: useReducer pattern for complex combo state management
 
 ## Near term
@@ -45,7 +45,6 @@
 
 ## Mid term
 
-- Add search analytics dashboards for maintainers
 - Enhance deck recommendations with sideboard suggestions
 - Add collection management and tracking
 
