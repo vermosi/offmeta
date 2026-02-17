@@ -297,8 +297,9 @@ export function validateQuery(query: string): {
     issues.push('Added missing closing quote');
   }
 
-  // Count single quotes that are NOT apostrophes (word-internal like "Thassa's")
-  const nonApostropheSingleQuotes = (sanitized.match(/(?<!\w)'|'(?!\w)/g) || []).length;
+  // Count single quotes that are NOT apostrophes (word-internal like "Thassa's" or plural possessive like "Praetors'")
+  const strippedOfApostrophes = sanitized.replace(/\w'\w/g, '').replace(/\w'(?=\s|$)/g, '');
+  const nonApostropheSingleQuotes = (strippedOfApostrophes.match(/'/g) || []).length;
   if (nonApostropheSingleQuotes % 2 !== 0) {
     sanitized = sanitized + "'";
     issues.push('Added missing closing quote');
