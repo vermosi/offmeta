@@ -225,7 +225,33 @@ serve(async (req) => {
         .replace(/\bfunction:/gi, 'otag:')
         .replace(/\boracletag:/gi, 'otag:');
 
+    // Also fix any stuck 'processing' items older than 5 minutes (safety net)
+    const { data: stuckItems } = await supabase
+      .from('search_feedback')
+      .select('id')
+      .eq('processing_status', 'processing')
+      .lt('created_at', new Date(Date.now() - 5 * 60 * 1000).toISOString());
+
+    if (stuckItems && stuckItems.length > 0) {
+      const stuckIds = stuckItems.map((s: { id: string }) => s.id);
+      await supabase
+        .from('search_feedback')
+        .update({ processing_status: 'failed', processed_at: new Date().toISOString() })
+        .in('id', stuckIds);
+      console.log(`Reset ${stuckIds.length} stuck processing items to failed`);
+    }
+
     for (const feedback of pendingFeedback) {
+      // Safety timeout: if processing takes > 25s, mark as failed
+      const safetyTimeout = setTimeout(async () => {
+        console.error(`Safety timeout hit for feedback ${feedback.id}`);
+        await supabase
+          .from('search_feedback')
+          .update({ processing_status: 'failed', processed_at: new Date().toISOString() })
+          .eq('id', feedback.id)
+          .eq('processing_status', 'processing');
+      }, 25000);
+
       try {
         // Check how many times similar feedback has been submitted
         const { data: similarFeedback } = await supabase
@@ -496,6 +522,8 @@ IMPORTANT: Only output the JSON object, nothing else.`;
           feedbackId: feedback.id,
           status: `failed - ${processingError instanceof Error ? processingError.message : 'unknown error'}`,
         });
+      } finally {
+        clearTimeout(safetyTimeout);
       }
     }
 
