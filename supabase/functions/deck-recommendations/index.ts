@@ -1,5 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
+/** Minimal Scryfall card shape for type safety in this function. */
+interface ScryfallCardData {
+  name: string;
+  color_identity: string[];
+  image_uris?: { normal?: string };
+  card_faces?: { image_uris?: { normal?: string } }[];
+  prices?: { usd?: string };
+  scryfall_uri?: string;
+  [key: string]: unknown;
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -45,8 +56,8 @@ function cleanCardName(n: string): string {
 }
 
 /** Resolve card names to Scryfall card objects using /cards/collection. */
-async function resolveCards(names: string[]): Promise<Record<string, any>> {
-  const result: Record<string, any> = {};
+async function resolveCards(names: string[]): Promise<Record<string, ScryfallCardData>> {
+  const result: Record<string, ScryfallCardData> = {};
   // Batch in groups of 75
   for (let i = 0; i < names.length; i += 75) {
     const batch = names.slice(i, i + 75);
@@ -226,20 +237,20 @@ ${cardList}`;
     const resolved = await resolveCards(allRecNames);
 
     // Post-filter: remove cards that violate color identity (safety net)
-    const isColorLegal = (card: any): boolean => {
+    const isColorLegal = (card: ScryfallCardData | null): boolean => {
       if (!ciColors || !card?.color_identity) return true;
       return card.color_identity.every((c: string) => ciColors.includes(c));
     };
 
     // Merge Scryfall data into recommendations, filtering out color identity violations
-    const enriched = recommendations.categories.map((cat: any) => ({
+    const enriched = recommendations.categories.map((cat: { name: string; cards: { name: string; reason: string }[] }) => ({
       name: cat.name,
       cards: cat.cards
-        .map((c: any) => ({
+        .map((c: { name: string; reason: string }) => ({
           ...c,
           scryfall: resolved[c.name.toLowerCase()] ?? null,
         }))
-        .filter((c: any) => isColorLegal(c.scryfall)),
+        .filter((c: { scryfall: ScryfallCardData | null }) => isColorLegal(c.scryfall)),
     }));
 
     return new Response(
