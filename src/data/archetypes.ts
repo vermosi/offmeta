@@ -182,4 +182,92 @@ export const ARCHETYPES: Archetype[] = [
     keyCards: ['Doubling Season', 'The Chain Veil', 'Oath of Teferi', 'Vorinclex, Monstrous Raider', 'Atraxa, Praetors\' Voice'],
     budgetTip: 'Many planeswalkers are surprisingly cheap. Evolution Sage, Flux Channeler, and Contentious Plan provide budget proliferate. War of the Spark planeswalkers are affordable.',
   },
+  {
+    slug: 'enchantress',
+    name: 'Enchantress',
+    colors: ['G', 'W'],
+    searchQuery: 'selesnya enchantments or creatures that draw cards when enchantments enter for commander',
+    tagline: 'Draw cards and lock the board with enchantments',
+    description:
+      'Enchantress decks leverage enchantments for card draw, removal, and board control. "Enchantress" creatures draw a card whenever you cast an enchantment, turning every aura and enchantment into a cantrip.',
+    keyCards: ['Enchantress\'s Presence', 'Argothian Enchantress', 'Sterling Grove', 'Sphere of Safety', 'Sigil of the Empty Throne'],
+    budgetTip: 'Mesa Enchantress and Satyr Enchanter are budget draw engines. Abundant Growth and Utopia Sprawl are cheap enchantments that ramp and trigger draws.',
+  },
+  {
+    slug: 'infect',
+    name: 'Infect',
+    colors: ['G', 'U'],
+    searchQuery: 'simic creatures with infect or proliferate for commander',
+    tagline: 'Kill with 10 poison counters instead of 40 damage',
+    description:
+      'Infect decks only need to deal 10 poison counters to eliminate a player, bypassing the 40-life Commander cushion. Pump spells and evasion make infect creatures lethal in one or two swings.',
+    keyCards: ['Blighted Agent', 'Glistener Elf', 'Triumph of the Hordes', 'Infectious Inquiry', 'Grafted Exoskeleton'],
+    budgetTip: 'Most infect creatures are very cheap. Blighted Agent, Glistener Elf, and Ichorclaw Myr cost pennies. Pump spells like Might of Old Krosa and Groundswell are under $1.',
+  },
+  {
+    slug: 'treasure',
+    name: 'Treasure',
+    colors: ['R', 'B'],
+    searchQuery: 'rakdos cards that create treasure tokens or benefit from treasures for commander',
+    tagline: 'Generate treasure tokens for explosive mana',
+    description:
+      'Treasure decks create massive amounts of treasure tokens, then leverage them for mana acceleration, sacrifice synergies, or win conditions that care about artifact count.',
+    keyCards: ['Dockside Extortionist', 'Smothering Tithe', 'Revel in Riches', 'Goldspan Dragon', 'Academy Manufactor'],
+    budgetTip: 'Sticky Fingers, Big Score, and Unexpected Windfall generate treasures cheaply. Magda, Brazen Outlaw and Professional Face-Breaker are affordable treasure engines.',
+  },
+  {
+    slug: 'storm',
+    name: 'Storm',
+    colors: ['U', 'R'],
+    searchQuery: 'izzet cards with storm or that copy spells or reduce spell costs for commander',
+    tagline: 'Chain spells into a lethal storm count',
+    description:
+      'Storm decks cast as many spells as possible in a single turn, then finish with a storm card that copies itself for each prior spell. Mana reduction, rituals, and cantrips fuel the chain.',
+    keyCards: ['Grapeshot', 'Tendrils of Agony', 'Birgi, God of Storytelling', 'Baral, Chief of Compliance', 'Past in Flames'],
+    budgetTip: 'Birgi and Baral are affordable cost reducers. Gitaxian Probe, Manamorphose, and Desperate Ritual are cheap storm enablers. Grapeshot is a budget finisher.',
+  },
+  {
+    slug: 'chaos',
+    name: 'Chaos',
+    colors: ['R'],
+    searchQuery: 'red cards that randomize or create chaotic effects like coin flips for commander',
+    tagline: 'Embrace randomness and watch the table burn',
+    description:
+      'Chaos decks thrive on unpredictability — coin flips, random targets, and effects that scramble the board state. While inconsistent, chaos decks create memorable and hilarious games.',
+    keyCards: ['Krark, the Thumbless', 'Scrambleverse', 'Warp World', 'Possibility Storm', 'Zndrsplt, Eye of Wisdom'],
+    budgetTip: 'Most chaos cards are very budget-friendly since they\'re niche. Goblin Game, Thieves\' Auction, and Wild Evocation are all under $2.',
+  },
+  {
+    slug: 'tribal',
+    name: 'Tribal',
+    colors: ['W', 'U', 'B', 'R', 'G'],
+    searchQuery: 'cards that give bonuses to creatures that share a type or lords for commander',
+    tagline: 'Build around your favorite creature type',
+    description:
+      'Tribal decks pick a creature type — elves, goblins, zombies, dragons — and fill the deck with lords, synergy pieces, and tribal payoffs. Strength in numbers and shared abilities define the strategy.',
+    keyCards: ['Coat of Arms', 'Vanquisher\'s Banner', 'Herald\'s Horn', 'Kindred Discovery', 'Door of Destinies'],
+    budgetTip: 'Herald\'s Horn and Vanquisher\'s Banner work in any tribe. Most tribal lords for common types (elves, goblins, zombies) are very affordable.',
+  },
+  {
+    slug: 'pillowfort',
+    name: 'Pillowfort',
+    colors: ['W', 'U'],
+    searchQuery: 'azorius enchantments or artifacts that prevent attacks or tax attackers for commander',
+    tagline: 'Make yourself impossible to attack',
+    description:
+      'Pillowfort decks stack defensive enchantments and artifacts that discourage or prevent opponents from attacking you. Once safely fortified, you win with alternate win conditions or incremental damage.',
+    keyCards: ['Ghostly Prison', 'Propaganda', 'Sphere of Safety', 'Crawlspace', 'Solitary Confinement'],
+    budgetTip: 'Ghostly Prison and Propaganda are affordable staples. Windborn Muse, Baird, Steward of Argive, and Kazuul, Tyrant of the Cliffs add redundancy on a budget.',
+  },
+  {
+    slug: 'control',
+    name: 'Control',
+    colors: ['U', 'W'],
+    searchQuery: 'azorius counterspells or board wipes or removal for commander',
+    tagline: 'Answer every threat and win on your terms',
+    description:
+      'Control decks use counterspells, board wipes, and removal to neutralize threats while slowly building toward a dominant win condition. Patience and card advantage are the keys to victory.',
+    keyCards: ['Cyclonic Rift', 'Counterspell', 'Swords to Plowshares', 'Teferi, Hero of Dominaria', 'Wrath of God'],
+    budgetTip: 'Counterspell, Negate, and Swords to Plowshares are cheap answers. Day of Judgment and Fumigate are budget board wipes under $1.',
+  },
 ];
