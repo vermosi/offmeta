@@ -143,13 +143,12 @@ const Index = () => {
 
   return (
     <ErrorBoundary>
+      <SkipLinks showSearchLink />
       <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background relative overflow-x-hidden">
         {/* Background layers */}
         <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
         <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
         <div className="fixed inset-0 pointer-events-none bg-page-mesh" aria-hidden="true" />
-
-        <SkipLinks showSearchLink />
 
 
         <Header />
