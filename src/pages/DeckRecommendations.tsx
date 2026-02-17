@@ -46,6 +46,7 @@ export default function DeckRecommendations() {
   const { hasRole: isAdmin, isLoading: roleLoading } = useUserRole('admin');
   const [inputMode, setInputMode] = useState<InputMode>('url');
   const [rawText, setRawText] = useState('');
+  const [copiedAll, setCopiedAll] = useState(false);
   const [moxfieldUrl, setMoxfieldUrl] = useState('');
   const [moxfieldDeckName, setMoxfieldDeckName] = useState<string | null>(null);
   const [fetchingDeck, setFetchingDeck] = useState(false);
@@ -119,6 +120,17 @@ export default function DeckRecommendations() {
     navigator.clipboard.writeText(name);
     setCopiedCard(name);
     setTimeout(() => setCopiedCard(null), 1500);
+  };
+
+  const copyAllRecs = () => {
+    if (!result) return;
+    const lines = result.categories.flatMap((cat) =>
+      [`// ${cat.name}`, ...cat.cards.map((c) => `1 ${c.name}`)]
+    );
+    navigator.clipboard.writeText(lines.join('\n'));
+    setCopiedAll(true);
+    toast.success('All recommendations copied to clipboard');
+    setTimeout(() => setCopiedAll(false), 2000);
   };
 
   return (
@@ -241,9 +253,15 @@ export default function DeckRecommendations() {
         {/* Results */}
         {result && (
           <div className="space-y-6">
-            <h2 className="text-xl font-bold">
-              Recommendations for {result.commander || 'your deck'}
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold">
+                Recommendations for {result.commander || 'your deck'}
+              </h2>
+              <Button variant="secondary" size="sm" className="gap-1.5" onClick={copyAllRecs}>
+                {copiedAll ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                {copiedAll ? 'Copied!' : 'Copy All'}
+              </Button>
+            </div>
             {result.categories.map((cat) => (
               <section key={cat.name} className="space-y-3">
                 <h3 className="text-lg font-semibold text-primary">{cat.name}</h3>
