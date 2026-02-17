@@ -295,6 +295,61 @@ export function parseColors(query: string, ir: SearchIR): string {
  * - (t:X or t:Y) = card must have EITHER type (OR)
  * - -t:X = card must NOT have type
  */
+/**
+ * Common creature/card subtypes to extract in deterministic pipeline
+ */
+const COMMON_SUBTYPES = [
+  'elf', 'goblin', 'zombie', 'vampire', 'dragon', 'angel',
+  'demon', 'spirit', 'human', 'wizard', 'warrior', 'soldier',
+  'merfolk', 'elemental', 'sliver', 'dinosaur', 'knight', 'cleric',
+  'rogue', 'pirate', 'cat', 'dog', 'bird', 'beast',
+  'aura', 'saga', 'vehicle', 'phyrexian', 'faerie', 'fungus',
+  'treefolk', 'drake', 'sphinx', 'hydra', 'wurm', 'rat',
+  'squirrel', 'construct', 'golem', 'horror', 'nightmare', 'shade',
+  'skeleton', 'imp', 'wall',
+];
+
+/**
+ * Supertypes that use Scryfall's t: operator
+ */
+const SUPERTYPES = ['legendary', 'basic', 'snow', 'token', 'world'];
+
+/**
+ * Parse supertypes (legendary, basic, snow) → t:legendary etc.
+ */
+export function parseSupertypes(query: string, ir: SearchIR): string {
+  let remaining = query;
+
+  for (const supertype of SUPERTYPES) {
+    const pattern = new RegExp(`\\b${supertype}\\b`, 'gi');
+    if (pattern.test(remaining)) {
+      ir.types.push(supertype);
+      remaining = remaining.replace(pattern, '').trim();
+    }
+  }
+
+  return remaining;
+}
+
+/**
+ * Parse common creature subtypes (spirit, elf, goblin, etc.) → t:spirit etc.
+ */
+export function parseSubtypes(query: string, ir: SearchIR): string {
+  let remaining = query;
+
+  for (const subtype of COMMON_SUBTYPES) {
+    const pattern = new RegExp(`\\b${subtype}s?\\b`, 'gi');
+    if (pattern.test(remaining)) {
+      if (!ir.subtypes.includes(subtype)) {
+        ir.subtypes.push(subtype);
+      }
+      remaining = remaining.replace(pattern, '').trim();
+    }
+  }
+
+  return remaining;
+}
+
 export function parseTypes(query: string, ir: SearchIR): string {
   let remaining = query;
   const typesHandledAsOr = new Set<string>();
