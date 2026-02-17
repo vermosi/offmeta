@@ -5,9 +5,13 @@
  * Extracts commander from "COMMANDER:" prefix or "*CMDR*" marker.
  */
 
+/** Result of parsing a raw decklist string. */
 export interface ParsedDecklist {
+  /** Individual card entries with name and quantity. */
   cards: { name: string; quantity: number }[];
+  /** Detected commander name, or null if none found. */
   commander: string | null;
+  /** Sum of all card quantities. */
   totalCards: number;
 }
 

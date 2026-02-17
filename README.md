@@ -9,7 +9,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white&style=flat-square)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white&style=flat-square)](https://tailwindcss.com/)
 [![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white&style=flat-square)](https://vitejs.dev/)
-[![Tests](https://img.shields.io/badge/tests-1450%2B-brightgreen?style=flat-square)](docs/testing.md)
+[![Tests](https://img.shields.io/badge/tests-1490%2B-brightgreen?style=flat-square)](docs/testing.md)
 [![Built with Lovable](https://img.shields.io/badge/Built%20with-Lovable-ff69b4?style=flat-square)](https://lovable.dev)
 
 **Natural language search for Magic: The Gathering cards, powered by Scryfall.**

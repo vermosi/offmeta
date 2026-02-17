@@ -1,6 +1,6 @@
 # Testing
 
-OffMeta uses [Vitest](https://vitest.dev/) as the primary testing framework with 1,450+ tests across multiple categories.
+OffMeta uses [Vitest](https://vitest.dev/) as the primary testing framework with 1,490+ tests across multiple categories.
 
 ## Run tests
 
@@ -73,10 +73,25 @@ npm run test -- src/components
 
 ### Page Tests
 
-Tests for page-level components (GuidesIndex, GuidePage) in `src/pages/__tests__/`. Cover rendering, navigation, SEO metadata, structured data, and error states.
+Tests for page-level components in `src/pages/__tests__/`. Covers:
+
+| Page | File | Coverage |
+|------|------|----------|
+| GuidesIndex | `GuidesIndex.test.tsx` | Rendering, navigation, SEO |
+| GuidePage | `GuidePage.test.tsx` | Rendering, structured data, error states |
+| FindMyCombos | `FindMyCombos.test.tsx` | Input modes, parsing, combo search flow |
+| DeckRecommendations | `DeckRecommendations.test.tsx` | Input modes, parsing, recommendation flow |
 
 ```bash
 npm run test -- src/pages
+```
+
+### Decklist Parser Tests
+
+Unit tests for the client-side decklist parser in `src/lib/__tests__/decklist-parser.test.ts`. Covers standard formats, commander detection, Moxfield export format, foil markers, section headers, and edge cases.
+
+```bash
+npm run test -- src/lib/__tests__/decklist-parser
 ```
 
 ### Guides Data Tests
