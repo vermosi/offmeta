@@ -128,7 +128,7 @@ export const KNOWN_OTAGS = new Set([
   'lord',
   'anthem',
   'self-mill',
-  'mill',
+  // NOTE: mill is NOT a valid Scryfall otag — use o:"mill" instead
   'graveyard-order-matters',
   // NOTE: shares-name-with-set is NOT a valid Scryfall otag
 

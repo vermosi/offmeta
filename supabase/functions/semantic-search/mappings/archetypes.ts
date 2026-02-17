@@ -23,7 +23,7 @@ export const ARCHETYPE_MAP: Record<string, string> = {
     '(o:"infinite" or o:"you win the game" or o:"opponents lose the game")',
   midrange: 't:creature mv>=3 mv<=5',
   lifegain: 'otag:lifegain',
-  mill: 'otag:mill',
+  mill: '(o:"mill" or o:"puts cards from" o:"into" o:"graveyard")',
   discard: '(o:"discard" o:"opponent")',
   graveyard:
     '(otag:reanimate or o:"from your graveyard")',

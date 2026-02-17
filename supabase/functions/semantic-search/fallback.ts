@@ -151,7 +151,7 @@ export function buildFallbackQuery(
     [/\breanimation\b/gi, 'otag:reanimate'],
     [/\breanimate\b/gi, 'otag:reanimate'],
     [/\bself[ -]?mill\b/gi, 'otag:self-mill'],
-    [/\bmill\b/gi, 'otag:mill'],
+    [/\bmill\b/gi, 'o:"mill"'],
     // NOTE: otag:graveyard-recursion is NOT valid — use otag:recursion
     [/\bgraveyard recursion\b/gi, 'otag:recursion'],
     [/\brecursion\b/gi, 'otag:recursion'],
