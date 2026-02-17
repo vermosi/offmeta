@@ -15,6 +15,7 @@ const SORT_FIELD_MAP: Record<string, string> = {
   cmc: 'cmc',
   price: 'usd',
   rarity: 'rarity',
+  edhrec: 'edhrec',
 };
 
 /**
