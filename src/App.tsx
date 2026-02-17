@@ -27,6 +27,8 @@ const SavedSearches = lazy(() => import('./pages/SavedSearches'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
 const AdminAnalytics = lazy(() => import('./pages/AdminAnalytics'));
+const ArchetypesIndex = lazy(() => import('./pages/ArchetypesIndex'));
+const ArchetypePage = lazy(() => import('./pages/ArchetypePage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const queryClient = new QueryClient({
@@ -70,6 +72,8 @@ const App = () => (
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/profile" element={<ProfileSettings />} />
                   <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                  <Route path="/archetypes" element={<ArchetypesIndex />} />
+                  <Route path="/archetypes/:slug" element={<ArchetypePage />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>

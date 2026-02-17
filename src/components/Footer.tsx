@@ -53,10 +53,19 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Guide links */}
+        {/* Guide & archetype links */}
         <div className="mt-3 pt-3 border-t border-border">
           <div className="flex flex-wrap justify-center gap-x-2 gap-y-1">
             <span className="text-xs font-medium text-muted-foreground mr-1">{t('footer.guides')}:</span>
+            <span className="inline-flex items-center">
+              <Link
+                to="/archetypes"
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Archetypes
+              </Link>
+              <span className="text-border ml-2">·</span>
+            </span>
             {GUIDES.map((guide, i) => (
               <span key={guide.slug} className="inline-flex items-center">
                 <Link

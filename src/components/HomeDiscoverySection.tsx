@@ -3,6 +3,8 @@
  * Recent Searches, Daily Pick, Staples, How It Works, FAQ.
  */
 
+import { Link } from 'react-router-dom';
+import { Compass } from 'lucide-react';
 import { DailyPick } from '@/components/DailyPick';
 import { StaplesSection } from '@/components/StaplesSection';
 import { HowItWorksSection } from '@/components/HowItWorksSection';
@@ -24,6 +26,18 @@ export function HomeDiscoverySection({ onSearch }: HomeDiscoverySectionProps) {
       </div>
       <div className="container-main">
         <StaplesSection onSearch={onSearch} />
+      </div>
+      <div className="container-main">
+        <Link
+          to="/archetypes"
+          className="flex items-center justify-center gap-2 w-full max-w-2xl mx-auto rounded-xl border border-border/50 bg-card/50 p-4 hover:bg-card hover:border-border transition-all group"
+        >
+          <Compass className="h-4 w-4 text-primary" />
+          <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+            Explore Commander Archetypes
+          </span>
+          <span className="text-xs text-muted-foreground">→</span>
+        </Link>
       </div>
       <div id="how-it-works">
         <HowItWorksSection />
