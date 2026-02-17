@@ -60,18 +60,8 @@ async function resolveCards(names: string[]): Promise<Record<string, any>> {
       if (resp.ok) {
         const data = await resp.json();
         for (const card of data.data ?? []) {
-          result[card.name.toLowerCase()] = {
-            name: card.name,
-            mana_cost: card.mana_cost,
-            type_line: card.type_line,
-            oracle_text: card.oracle_text ?? "",
-            image_uri:
-              card.image_uris?.normal ??
-              card.card_faces?.[0]?.image_uris?.normal ??
-              null,
-            scryfall_uri: card.scryfall_uri,
-            prices: card.prices,
-          };
+          // Return the full Scryfall card object so the frontend gets the same shape as search results
+          result[card.name.toLowerCase()] = card;
         }
       }
       // Small delay to be respectful to Scryfall
@@ -92,7 +82,7 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const { decklist, commander: overrideCommander } = await req.json();
+    const { decklist, commander: overrideCommander, colorIdentity: deckColorIdentity } = await req.json();
     if (!decklist || typeof decklist !== "string" || decklist.length > 10000) {
       return new Response(JSON.stringify({ error: "Invalid or too-long decklist" }), {
         status: 400,
@@ -115,13 +105,20 @@ serve(async (req) => {
     const commanderLine = commander ? `Commander: ${commander}` : "Commander: Unknown (infer from decklist)";
     const cardList = cardNames.join("\n");
 
+    const ciColors = Array.isArray(deckColorIdentity) && deckColorIdentity.length > 0
+      ? deckColorIdentity
+      : null;
+    const ciConstraint = ciColors
+      ? `\n\nCRITICAL COLOR IDENTITY RULE: The commander's color identity is [${ciColors.join(", ")}]. You MUST ONLY recommend cards whose color identity is a subset of [${ciColors.join(", ")}]. Do NOT recommend any card that has colors outside this identity. For example, if the identity is [W, U, B], do NOT recommend cards with R or G in their color identity.`
+      : "";
+
     const systemPrompt = `You are an expert Magic: The Gathering EDH/Commander deckbuilding advisor. Given a decklist and commander, suggest 15-20 card recommendations organized into exactly 3 categories:
 
 1. "High Synergy" – Cards that strongly synergize with the commander's strategy or key themes in the deck.
 2. "Upgrades" – Strictly better or more efficient replacements for weaker cards in the list.
 3. "Budget Picks" – Powerful cards under $5 that would improve the deck.
 
-For each recommended card, provide the exact English card name (as printed) and a one-sentence reason. Do NOT recommend cards already in the decklist.
+For each recommended card, provide the exact English card name (as printed) and a one-sentence reason. Do NOT recommend cards already in the decklist.${ciConstraint}
 
 You MUST respond using the suggest_cards tool.`;
 
@@ -228,13 +225,21 @@ ${cardList}`;
 
     const resolved = await resolveCards(allRecNames);
 
-    // Merge Scryfall data into recommendations
+    // Post-filter: remove cards that violate color identity (safety net)
+    const isColorLegal = (card: any): boolean => {
+      if (!ciColors || !card?.color_identity) return true;
+      return card.color_identity.every((c: string) => ciColors.includes(c));
+    };
+
+    // Merge Scryfall data into recommendations, filtering out color identity violations
     const enriched = recommendations.categories.map((cat: any) => ({
       name: cat.name,
-      cards: cat.cards.map((c: any) => ({
-        ...c,
-        scryfall: resolved[c.name.toLowerCase()] ?? null,
-      })),
+      cards: cat.cards
+        .map((c: any) => ({
+          ...c,
+          scryfall: resolved[c.name.toLowerCase()] ?? null,
+        }))
+        .filter((c: any) => isColorLegal(c.scryfall)),
     }));
 
     return new Response(
