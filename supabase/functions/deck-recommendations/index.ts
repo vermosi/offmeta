@@ -4,6 +4,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 interface ScryfallCardData {
   name: string;
   color_identity: string[];
+  legalities?: Record<string, string>;
   image_uris?: { normal?: string };
   card_faces?: { image_uris?: { normal?: string } }[];
   prices?: { usd?: string };
@@ -236,13 +237,19 @@ ${cardList}`;
 
     const resolved = await resolveCards(allRecNames);
 
-    // Post-filter: remove cards that violate color identity (safety net)
+    // Post-filter: remove cards that violate color identity or are not legal in Commander
     const isColorLegal = (card: ScryfallCardData | null): boolean => {
       if (!ciColors || !card?.color_identity) return true;
       return card.color_identity.every((c: string) => ciColors.includes(c));
     };
 
-    // Merge Scryfall data into recommendations, filtering out color identity violations
+    const isCommanderLegal = (card: ScryfallCardData | null): boolean => {
+      if (!card?.legalities) return true; // if we can't verify, keep it
+      const status = card.legalities.commander;
+      return status === "legal" || status === "restricted";
+    };
+
+    // Merge Scryfall data into recommendations, filtering out illegal cards
     const enriched = recommendations.categories.map((cat: { name: string; cards: { name: string; reason: string }[] }) => ({
       name: cat.name,
       cards: cat.cards
@@ -250,7 +257,9 @@ ${cardList}`;
           ...c,
           scryfall: resolved[c.name.toLowerCase()] ?? null,
         }))
-        .filter((c: { scryfall: ScryfallCardData | null }) => isColorLegal(c.scryfall)),
+        .filter((c: { scryfall: ScryfallCardData | null }) =>
+          isColorLegal(c.scryfall) && isCommanderLegal(c.scryfall)
+        ),
     }));
 
     return new Response(
