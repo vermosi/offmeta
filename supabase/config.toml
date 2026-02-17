@@ -2,3 +2,6 @@ project_id = "chojxtvzspqqzsmwcbul"
 
 [functions.deck-recommendations]
 verify_jwt = false
+
+[functions.fetch-moxfield-deck]
+verify_jwt = false
