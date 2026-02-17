@@ -170,7 +170,7 @@ function buildIR(query: string): SearchIR {
   remaining = remaining
     .replace(/\s+/g, ' ')
     .replace(/^[\s,]+|[\s,]+$/g, '')
-    .replace(/\b(that|which|with|the|a|an|cards?|released|printed|utility|in|for|staples?)\b/gi, '')
+    .replace(/\b(that|which|with|the|a|an|cards?|released|printed|utility|in|for|staples?|search|searches)\b/gi, '')
     .replace(/\s+/g, ' ')
     .trim();
 
