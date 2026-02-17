@@ -174,7 +174,7 @@ function buildIR(query: string): SearchIR {
   remaining = remaining
     .replace(/\s+/g, ' ')
     .replace(/^[\s,]+|[\s,]+$/g, '')
-    .replace(/\b(that|which|with|the|a|an|cards?|released|printed|utility|in|for|staples?|search|searches|tribal|payoffs?|synerg(?:y|ies)|token|tokens?|creature|creatures?|opponent|opponents?|takes?|action|when|whenever)\b/gi, '')
+    .replace(/\b(that|which|with|the|a|an|cards?|released|printed|utility|in|for|from|staples?|search|searches|tribal|payoffs?|synerg(?:y|ies)|token|tokens?|creature|creatures?|opponent|opponents?|takes?|action|when|whenever|graveyard|battlefield|abilities|ability)\b/gi, '')
     .replace(/\s+/g, ' ')
     .trim();
 
