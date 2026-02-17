@@ -38,6 +38,98 @@ export type Database = {
         }
         Relationships: []
       }
+      deck_cards: {
+        Row: {
+          board: string
+          card_name: string
+          category: string | null
+          created_at: string
+          deck_id: string
+          id: string
+          is_commander: boolean
+          is_companion: boolean
+          quantity: number
+          scryfall_id: string | null
+        }
+        Insert: {
+          board?: string
+          card_name: string
+          category?: string | null
+          created_at?: string
+          deck_id: string
+          id?: string
+          is_commander?: boolean
+          is_companion?: boolean
+          quantity?: number
+          scryfall_id?: string | null
+        }
+        Update: {
+          board?: string
+          card_name?: string
+          category?: string | null
+          created_at?: string
+          deck_id?: string
+          id?: string
+          is_commander?: boolean
+          is_companion?: boolean
+          quantity?: number
+          scryfall_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deck_cards_deck_id_fkey"
+            columns: ["deck_id"]
+            isOneToOne: false
+            referencedRelation: "decks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      decks: {
+        Row: {
+          card_count: number
+          color_identity: string[]
+          commander_name: string | null
+          companion_name: string | null
+          created_at: string
+          description: string | null
+          format: string
+          id: string
+          is_public: boolean
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          card_count?: number
+          color_identity?: string[]
+          commander_name?: string | null
+          companion_name?: string | null
+          created_at?: string
+          description?: string | null
+          format?: string
+          id?: string
+          is_public?: boolean
+          name?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          card_count?: number
+          color_identity?: string[]
+          commander_name?: string | null
+          companion_name?: string | null
+          created_at?: string
+          description?: string | null
+          format?: string
+          id?: string
+          is_public?: boolean
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

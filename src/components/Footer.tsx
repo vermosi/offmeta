@@ -14,6 +14,7 @@ const EXPLORE_LINKS = [
   { to: '/archetypes', labelKey: 'nav.archetypes', fallback: 'Archetypes' },
   { to: '/deck-recommendations', labelKey: 'nav.deckRecs', fallback: 'Deck Recs' },
   { to: '/combos', labelKey: 'footer.comboFinder', fallback: 'Combo Finder' },
+  { to: '/deckbuilder', labelKey: 'nav.deckBuilder', fallback: 'Deck Builder' },
   { to: '/syntax', labelKey: 'footer.syntaxCheatSheet', fallback: 'Syntax Cheat Sheet' },
 ] as const;
 

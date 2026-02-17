@@ -31,6 +31,8 @@ const DeckRecommendations = lazy(() => import('./pages/DeckRecommendations'));
 const FindMyCombos = lazy(() => import('./pages/FindMyCombos'));
 const ArchetypesIndex = lazy(() => import('./pages/ArchetypesIndex'));
 const ArchetypePage = lazy(() => import('./pages/ArchetypePage'));
+const DeckBuilder = lazy(() => import('./pages/DeckBuilder'));
+const DeckEditor = lazy(() => import('./pages/DeckEditor'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const queryClient = new QueryClient({
@@ -78,6 +80,8 @@ const App = () => (
                   <Route path="/combos" element={<FindMyCombos />} />
                   <Route path="/archetypes" element={<ArchetypesIndex />} />
                   <Route path="/archetypes/:slug" element={<ArchetypePage />} />
+                  <Route path="/deckbuilder" element={<DeckBuilder />} />
+                  <Route path="/deckbuilder/:id" element={<DeckEditor />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
