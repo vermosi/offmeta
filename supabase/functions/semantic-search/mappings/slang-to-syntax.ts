@@ -616,4 +616,120 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     syntax: 'o:"create" o:"Food"',
     description: 'Food token creators',
   },
+
+  // ── Guide-derived compound patterns ──
+
+  // Tribal payoffs (Level 7 guide)
+  {
+    pattern: /\btribal\s+payoffs?\b/gi,
+    syntax: '(otag:lord or o:"you control" o:"+1/+1" or o:"creatures you control")',
+    description: 'Tribal synergy payoff cards',
+  },
+  {
+    pattern: /\btribal\s+synerg(?:y|ies)\b/gi,
+    syntax: '(otag:lord or o:"you control" o:"+1/+1" or o:"creatures you control")',
+    description: 'Tribal synergy cards',
+  },
+
+  // Equipment voltron (Level 8-adjacent)
+  {
+    pattern: /\bequipment\s+voltron\b/gi,
+    syntax: '(t:equipment or o:"equipped creature gets" or o:"equip")',
+    description: 'Equipment for voltron strategy',
+  },
+  {
+    pattern: /\baura\s+voltron\b/gi,
+    syntax: '(t:aura o:"enchanted creature" (o:"gets" or o:"+"))',
+    description: 'Auras for voltron strategy',
+  },
+
+  // Reanimation (guide Level 8)
+  {
+    pattern: /\breanima(?:tion|te)\s+spells?\b/gi,
+    syntax: 'o:"return" o:"creature" o:"graveyard" o:"battlefield"',
+    description: 'Reanimation spells',
+  },
+
+  // ETB creatures (guide Level 9)
+  {
+    pattern: /\betb\s+creatures?\b/gi,
+    syntax: 't:creature o:"enters the battlefield"',
+    description: 'Creatures with ETB triggers',
+  },
+  {
+    pattern: /\bdouble\s+etb\b/gi,
+    syntax: 'o:"enters the battlefield" (o:"additional time" or o:"twice")',
+    description: 'ETB doublers like Panharmonicon',
+  },
+  {
+    pattern: /\bpanharmonicon\s+effects?\b/gi,
+    syntax: 'o:"enters the battlefield" (o:"additional time" or o:"twice")',
+    description: 'ETB doubling effects',
+  },
+
+  // Sacrifice engines (guide Level 8)
+  {
+    pattern: /\bsac(?:rifice)?\s+engines?\b/gi,
+    syntax: '(otag:sacrifice-outlet or otag:free-sacrifice-outlet)',
+    description: 'Sacrifice engine pieces',
+  },
+  {
+    pattern: /\baristocrats?\s+payoffs?\b/gi,
+    syntax: 'o:"whenever" (o:"dies" or o:"sacrificed") (o:"life" or o:"damage" or o:"draw")',
+    description: 'Aristocrats payoff cards',
+  },
+
+  // Wheel effects
+  {
+    pattern: /\bwheel\s+effects?\b/gi,
+    syntax: 'otag:wheel',
+    description: 'Wheel of Fortune style effects',
+  },
+  {
+    pattern: /\bwheels?\b/gi,
+    syntax: 'otag:wheel',
+    description: 'Wheel effects',
+  },
+
+  // Mana rocks (common guide term)
+  {
+    pattern: /\bmana\s+rocks?\b/gi,
+    syntax: 'otag:mana-rock',
+    description: 'Artifacts that produce mana',
+  },
+
+  // Populate / proliferate
+  {
+    pattern: /\bproliferate\s+(?:cards?|effects?|pieces?)?\b/gi,
+    syntax: 'kw:proliferate',
+    description: 'Proliferate cards',
+  },
+
+  // Counter synergy
+  {
+    pattern: /\b(?:\+1\/\+1|plus one)\s+counter\s+(?:synerg(?:y|ies)|payoffs?|cards?)\b/gi,
+    syntax: 'o:"+1/+1 counter" (o:"whenever" or o:"each" or o:"additional")',
+    description: '+1/+1 counter synergy',
+  },
+
+  // Grave Pact effects (guide tip)
+  {
+    pattern: /\bgrave\s+pact\s+effects?\b/gi,
+    syntax: 'o:"whenever" o:"creature" o:"dies" o:"sacrifice"',
+    description: 'Forced sacrifice on death triggers',
+  },
+
+  // Haste enablers (guide tip)
+  {
+    pattern: /\bhaste\s+enablers?\b/gi,
+    syntax: 'o:"creatures you control" o:"haste"',
+    description: 'Cards that grant haste',
+  },
+
+  // Token generators (generic)
+  {
+    pattern: /\btoken\s+generators?\b/gi,
+    syntax: 'o:"create" o:"token"',
+    description: 'Token generating cards',
+  },
 ];
