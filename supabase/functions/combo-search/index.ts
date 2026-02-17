@@ -168,13 +168,9 @@ serve(async (req) => {
       }
 
       // Build the POST body for /find-my-combos
-      const decklistLines: string[] = [];
-      for (const cmd of commanders) {
-        decklistLines.push(`1 ${cmd}`);
-      }
-      for (const card of cards) {
-        decklistLines.push(`1 ${card}`);
-      }
+      // The Spellbook API expects CardInDeckRequest objects: { card: string, quantity?: number }
+      const mainList = cards.map((name) => ({ card: name, quantity: 1 }));
+      const commanderList = commanders.map((name) => ({ card: name, quantity: 1 }));
 
       const resp = await fetchWithTimeout(
         `${SPELLBOOK_BASE}/find-my-combos`,
@@ -185,11 +181,11 @@ serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            main: decklistLines.join('\n'),
-            commanders: commanders.join('\n'),
+            main: mainList,
+            commanders: commanderList,
           }),
         },
-        20000, // longer timeout for deck analysis
+        25000, // longer timeout for deck analysis
       );
 
       if (!resp.ok) {
