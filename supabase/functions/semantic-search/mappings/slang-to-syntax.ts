@@ -504,4 +504,9 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     syntax: 'mana:X',
     description: 'Spells with X in cost',
   },
+  {
+    pattern: /\blandfall\b/gi,
+    syntax: '(otag:landfall or otag:extra-land)',
+    description: 'Landfall triggers and extra land drops',
+  },
 ];

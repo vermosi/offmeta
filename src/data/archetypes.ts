@@ -109,7 +109,7 @@ export const ARCHETYPES: Archetype[] = [
     slug: 'landfall',
     name: 'Landfall',
     colors: ['G', 'R'],
-    searchQuery: 'gruul creatures with landfall abilities or cards that play extra lands for commander',
+    searchQuery: 'landfall cards legal in commander',
     tagline: 'Turn every land drop into a threat',
     description:
       'Landfall decks trigger powerful abilities every time a land enters the battlefield. Extra land drops, fetch lands, and land recursion multiply these triggers for explosive turns.',

@@ -280,8 +280,12 @@ export function parseArchetypes(query: string, ir: SearchIR): string {
       continue;
     }
 
+    const archetypeExemptFromLookahead = ['landfall'];
+    const lookahead = archetypeExemptFromLookahead.includes(archetype)
+      ? ''
+      : `(?!\\s+(?:a|an|the|your|target|lands?|creatures?|artifacts?))`;
     const standalonPattern = new RegExp(
-      `(?<!(?:to|can|let you|that|which|cards that)\\s)\\b${archetype}\\b(?!\\s+(?:a|an|the|your|target|lands?|creatures?|artifacts?))`,
+      `(?<!(?:to|can|let you|that|which|cards that)\\s)\\b${archetype}\\b${lookahead}`,
       'gi',
     );
 

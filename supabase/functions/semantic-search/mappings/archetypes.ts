@@ -29,4 +29,5 @@ export const ARCHETYPE_MAP: Record<string, string> = {
     '(otag:reanimate or o:"from your graveyard")',
   tribal: 'o:"creature type" or o:"of the chosen type"',
   superfriends: 't:planeswalker',
+  landfall: '(otag:landfall or otag:extra-land)',
 };
