@@ -42,9 +42,19 @@ export function Header() {
     { label: 'Archetypes', href: '/archetypes' },
   ] as const;
 
+  // Reset saved count when user logs out (render-phase sync)
+  const [prevUserId, setPrevUserId] = useState<string | null>(null);
+  const currentUserId = user?.id ?? null;
+  if (currentUserId !== prevUserId) {
+    setPrevUserId(currentUserId);
+    if (!currentUserId) {
+      setSavedCount(0);
+    }
+  }
+
   // Fetch saved search count for badge
   useEffect(() => {
-    if (!user) { setSavedCount(0); return; }
+    if (!user) return;
     supabase
       .from('saved_searches')
       .select('id', { count: 'exact', head: true })
