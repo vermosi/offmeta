@@ -1,5 +1,5 @@
 /**
- * Footer component with branding, guide links, and external links.
+ * Footer component with branding, explore links, guide links, attributions, and legal.
  */
 
 import { Link } from 'react-router-dom';
@@ -8,36 +8,89 @@ import { GUIDES } from '@/data/guides';
 import { Logo } from '@/components/Logo';
 import { useTranslation } from '@/lib/i18n';
 
+const MAX_MOBILE_GUIDES = 5;
+
+const EXPLORE_LINKS = [
+  { to: '/archetypes', label: 'Archetypes' },
+  { to: '/deck-recommendations', label: 'Deck Recs' },
+  { to: '/combos', label: 'Combo Finder' },
+  { to: '/syntax', label: 'Syntax Cheat Sheet' },
+] as const;
+
 export function Footer() {
   const { t } = useTranslation();
 
   return (
     <footer className="border-t border-border mt-auto" role="contentinfo">
-      <div className="container-main py-6 sm:py-8">
-        {/* Top row: Logo + Copyright + Links */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 text-center sm:text-left">
-          <div className="flex items-center gap-2">
-            <Logo variant="mono" className="h-5 w-5 sm:h-6 sm:w-6 text-foreground" />
-            <span className="text-xs sm:text-sm font-medium text-foreground">
-              OffMeta
-            </span>
-            <span className="text-xs text-muted-foreground hidden sm:inline">
-              · © {new Date().getFullYear()}
-            </span>
-          </div>
+      <div className="container-main py-6 sm:py-8 space-y-4">
+        {/* Brand row */}
+        <div className="flex items-center justify-center sm:justify-start gap-2">
+          <Logo variant="mono" className="h-5 w-5 sm:h-6 sm:w-6 text-foreground" />
+          <span className="text-xs sm:text-sm font-medium text-foreground">
+            OffMeta
+          </span>
+          <span className="text-xs text-muted-foreground">
+            · © {new Date().getFullYear()}
+          </span>
+        </div>
 
-          <div className="flex items-center gap-3 sm:gap-4">
-            <a
-              href="https://github.com/vermosi/offmeta"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="View source on GitHub (opens in new tab)"
-            >
-              <Github className="h-3.5 w-3.5" aria-hidden="true" />
-              <span className="hidden sm:inline">{t('footer.source')}</span>
-            </a>
-            <span className="text-xs text-muted-foreground">Powered by</span>
+        {/* Links grid */}
+        <div className="border-t border-border pt-4">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+            {/* Explore column */}
+            <div>
+              <h3 className="text-xs font-semibold text-foreground mb-2">
+                {t('footer.explore', 'Explore')}
+              </h3>
+              <ul className="space-y-1.5">
+                {EXPLORE_LINKS.map((link) => (
+                  <li key={link.to}>
+                    <Link
+                      to={link.to}
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Guides column */}
+            <div>
+              <h3 className="text-xs font-semibold text-foreground mb-2">
+                {t('footer.guides')}
+              </h3>
+              <ul className="space-y-1.5">
+                {GUIDES.slice(0, MAX_MOBILE_GUIDES).map((guide) => (
+                  <li key={guide.slug}>
+                    <Link
+                      to={`/guides/${guide.slug}`}
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {t(`guide.title.${guide.slug}`, guide.title)}
+                    </Link>
+                  </li>
+                ))}
+                {GUIDES.length > MAX_MOBILE_GUIDES && (
+                  <li>
+                    <Link
+                      to="/guides"
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors font-medium"
+                    >
+                      {t('footer.allGuides', 'All guides →')}
+                    </Link>
+                  </li>
+                )}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Attributions */}
+        <div className="border-t border-border pt-4 flex flex-col items-center gap-2 sm:flex-row sm:justify-center sm:gap-4">
+          <span className="text-xs text-muted-foreground">Powered by</span>
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
             <a
               href="https://scryfall.com"
               target="_blank"
@@ -67,43 +120,22 @@ export function Footer() {
               Commander Spellbook
               <ExternalLink className="h-2.5 w-2.5 opacity-50" aria-hidden="true" />
             </a>
-            <span className="text-xs text-muted-foreground sm:hidden">
-              © {new Date().getFullYear()}
-            </span>
-          </div>
-        </div>
-
-        {/* Guide & archetype links */}
-        <div className="mt-3 pt-3 border-t border-border">
-          <div className="flex flex-wrap justify-center gap-x-2 gap-y-1">
-            <span className="text-xs font-medium text-muted-foreground mr-1">{t('footer.guides')}:</span>
-            <span className="inline-flex items-center">
-              <Link
-                to="/archetypes"
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Archetypes
-              </Link>
-              <span className="text-border ml-2">·</span>
-            </span>
-            {GUIDES.map((guide, i) => (
-              <span key={guide.slug} className="inline-flex items-center">
-                <Link
-                  to={`/guides/${guide.slug}`}
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {t(`guide.title.${guide.slug}`, guide.title)}
-                </Link>
-                {i < GUIDES.length - 1 && (
-                  <span className="text-border ml-2">·</span>
-                )}
-              </span>
-            ))}
+            <span className="text-border">·</span>
+            <a
+              href="https://github.com/vermosi/offmeta"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="View source on GitHub (opens in new tab)"
+            >
+              <Github className="h-3.5 w-3.5" aria-hidden="true" />
+              <span className="hidden sm:inline">{t('footer.source')}</span>
+            </a>
           </div>
         </div>
 
         {/* Legal */}
-        <div className="mt-2 pt-2 border-t border-border/50">
+        <div className="border-t border-border/50 pt-3">
           <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
             {t('footer.legal')}{' '}
             <a
