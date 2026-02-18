@@ -9,7 +9,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import {
   ArrowLeft, Search, List, Plus, Minus, Trash2, Crown, ChevronDown, ChevronRight,
-  Pencil, Check, Sparkles, Wand2, Loader2, Brain, Zap, ArrowRightLeft, ChevronUp,
+  Pencil, Check, Sparkles, Wand2, Loader2, Brain, Zap, ArrowRightLeft, ChevronUp, Shield,
 } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -166,12 +166,13 @@ function CardSearchPanel({ onAddCard, onPreview }: {
 }
 
 // ── Category Section ──
-function CategorySection({ category, cards, onRemove, onSetQuantity, onSetCommander, onSetCategory, onMoveToSideboard, isReadOnly }: {
+function CategorySection({ category, cards, onRemove, onSetQuantity, onSetCommander, onSetCompanion, onSetCategory, onMoveToSideboard, isReadOnly }: {
   category: string;
   cards: DeckCard[];
   onRemove: (id: string) => void;
   onSetQuantity: (cardId: string, qty: number) => void;
   onSetCommander: (cardId: string, isCommander: boolean) => void;
+  onSetCompanion: (cardId: string, isCompanion: boolean) => void;
   onSetCategory: (cardId: string, category: string) => void;
   onMoveToSideboard: (cardId: string, toSideboard: boolean) => void;
   isReadOnly: boolean;
@@ -191,7 +192,14 @@ function CategorySection({ category, cards, onRemove, onSetQuantity, onSetComman
           {cards.map((card) => (
             <li key={card.id} className="flex items-center gap-1 px-2 py-1.5 hover:bg-secondary/30 transition-colors group text-sm">
               <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{card.quantity}×</span>
-              <span className={cn('flex-1 truncate text-xs', card.is_commander && 'font-semibold text-accent')}>{card.card_name}</span>
+              <span className={cn(
+                'flex-1 truncate text-xs',
+                card.is_commander && 'font-semibold text-accent',
+                card.is_companion && !card.is_commander && 'font-semibold text-primary',
+              )}>{card.card_name}</span>
+              {/* Companion / commander badge inline */}
+              {card.is_companion && <span title="Companion"><Shield className="h-3 w-3 text-primary shrink-0" /></span>}
+              {card.is_commander && <span title="Commander"><Crown className="h-3 w-3 text-accent shrink-0" /></span>}
               {!isReadOnly && (
                 <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                   {/* Category picker */}
@@ -213,6 +221,10 @@ function CategorySection({ category, cards, onRemove, onSetQuantity, onSetComman
                   <button onClick={() => onSetCommander(card.id, !card.is_commander)}
                     className={cn('p-1 rounded text-muted-foreground hover:text-accent transition-colors', card.is_commander && 'text-accent')}
                     aria-label="Toggle commander" title="Set as commander"><Crown className="h-3 w-3" /></button>
+                  {/* Companion toggle — only allow 1 companion */}
+                  <button onClick={() => onSetCompanion(card.id, !card.is_companion)}
+                    className={cn('p-1 rounded text-muted-foreground hover:text-primary transition-colors', card.is_companion && 'text-primary')}
+                    aria-label="Toggle companion" title="Set as companion"><Shield className="h-3 w-3" /></button>
                   <button onClick={() => onMoveToSideboard(card.id, true)}
                     className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
                     title="Move to sideboard"><ArrowRightLeft className="h-3 w-3" /></button>
@@ -529,6 +541,22 @@ export default function DeckEditor() {
     }
   }, [cards, updateCard, updateDeck, id]);
 
+  const handleSetCompanion = useCallback((cardId: string, isCompanion: boolean) => {
+    const card = cards.find((c) => c.id === cardId);
+    if (!card) return;
+    if (isCompanion) {
+      // Enforce one companion — clear any existing
+      for (const c of cards) {
+        if (c.is_companion && c.id !== cardId) updateCard.mutate({ id: c.id, is_companion: false });
+      }
+      updateCard.mutate({ id: cardId, is_companion: true });
+      updateDeck.mutate({ id: id!, companion_name: card.card_name });
+    } else {
+      updateCard.mutate({ id: cardId, is_companion: false });
+      updateDeck.mutate({ id: id!, companion_name: null });
+    }
+  }, [cards, updateCard, updateDeck, id]);
+
   const handleSetCategory = useCallback((cardId: string, category: string) => {
     updateCard.mutate({ id: cardId, category });
   }, [updateCard]);
@@ -630,6 +658,21 @@ export default function DeckEditor() {
           {totalSideboard > 0 && <span className="text-muted-foreground"> +{totalSideboard}</span>}
         </span>
       </div>
+      {/* Commander / Companion chips */}
+      {(deck.commander_name || deck.companion_name) && (
+        <div className="px-3 sm:px-4 pb-1 flex items-center gap-2 flex-wrap">
+          {deck.commander_name && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20">
+              <Crown className="h-2.5 w-2.5" />{deck.commander_name}
+            </span>
+          )}
+          {deck.companion_name && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+              <Shield className="h-2.5 w-2.5" />{deck.companion_name}
+            </span>
+          )}
+        </div>
+      )}
       {/* Description row */}
       {!isReadOnly && (
         <div className="px-3 sm:px-4 pb-2">
@@ -680,6 +723,7 @@ export default function DeckEditor() {
               onRemove={(cardId) => removeCard.mutate(cardId)}
               onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
               onSetCommander={handleSetCommander}
+              onSetCompanion={handleSetCompanion}
               onSetCategory={handleSetCategory}
               onMoveToSideboard={(cardId, toSb) => handleMoveToSideboard(cardId, toSb)}
             />
@@ -759,6 +803,7 @@ export default function DeckEditor() {
                     onRemove={(cardId) => removeCard.mutate(cardId)}
                     onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
                     onSetCommander={handleSetCommander}
+                    onSetCompanion={handleSetCompanion}
                     onSetCategory={handleSetCategory}
                     onMoveToSideboard={(cardId, toSb) => handleMoveToSideboard(cardId, toSb)}
                   />

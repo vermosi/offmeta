@@ -626,5 +626,11 @@
   "deckCombos.minCards": "Add cards to detect combos.",
   "deckCombos.noCombos": "No combos detected yet.",
 
-  "deckEditor.preview.clickToPreview": "Click a card to preview it."
+  "deckEditor.preview.clickToPreview": "Click a card to preview it.",
+
+  "deckEditor.companion": "Companion",
+  "deckEditor.companionSlot": "Companion slot",
+  "deckEditor.companionTooltip": "Set as companion (one per deck, stays in command zone)",
+  "deckEditor.setCompanion": "Set as companion",
+  "deckEditor.clearCompanion": "Clear companion"
 }
