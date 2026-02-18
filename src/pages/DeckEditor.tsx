@@ -519,6 +519,21 @@ function CardHoverImage({
   );
 }
 
+// Small muted set abbreviation badge shown inline next to the card name
+function SetBadge({ cardName, scryfallCache }: {
+  cardName: string;
+  scryfallCache: React.RefObject<Map<string, import('@/types/card').ScryfallCard>>;
+}) {
+  const card = scryfallCache.current?.get(cardName);
+  const set = card?.set?.toUpperCase();
+  if (!set) return null;
+  return (
+    <span className="ml-1 shrink-0 text-[9px] font-mono text-muted-foreground/60 bg-muted/40 rounded px-1 py-px leading-tight tracking-wide align-middle select-none">
+      {set}
+    </span>
+  );
+}
+
 // ── Printing Picker Popover ──
 // Lets users choose a specific printing of a card.
 // Fetches all printings from Scryfall on first open (cached per card name).
@@ -664,6 +679,7 @@ function CategorySection({ category, cards, onRemove, onSetQuantity, onSetComman
                   card.is_commander && 'font-semibold text-accent',
                   card.is_companion && !card.is_commander && 'font-semibold text-primary',
                 )}>{card.card_name}</span>
+                <SetBadge cardName={card.card_name} scryfallCache={scryfallCache} />
               </CardHoverImage>
               {card.is_companion && <span title="Companion"><Shield className="h-3 w-3 text-primary shrink-0" /></span>}
               {card.is_commander && <span title="Commander"><Crown className="h-3 w-3 text-accent shrink-0" /></span>}
@@ -753,6 +769,7 @@ function SideboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, i
                   <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{card.quantity}×</span>
                   <CardHoverImage cardName={card.card_name} scryfallCache={scryfallCache}>
                     <span className="truncate text-xs text-muted-foreground">{card.card_name}</span>
+                    <SetBadge cardName={card.card_name} scryfallCache={scryfallCache} />
                   </CardHoverImage>
                   {!isReadOnly && (
                     <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
@@ -816,6 +833,7 @@ function MaybeboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, 
                   <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{card.quantity}×</span>
                   <CardHoverImage cardName={card.card_name} scryfallCache={scryfallCache}>
                     <span className="truncate text-xs text-muted-foreground">{card.card_name}</span>
+                    <SetBadge cardName={card.card_name} scryfallCache={scryfallCache} />
                   </CardHoverImage>
                   {!isReadOnly && (
                     <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
