@@ -15,7 +15,6 @@ import { MessageSquarePlus, Loader2 } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { logger } from '@/lib/core/logger';
 import { useTranslation } from '@/lib/i18n';
-import { z } from 'zod';
 
 interface SearchFeedbackProps {
   originalQuery: string;
@@ -27,20 +26,25 @@ const RATE_LIMIT_KEY = 'search_feedback_submissions';
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const MAX_SUBMISSIONS_PER_WINDOW = 5;
 
-// Input validation schema
-const feedbackSchema = z.object({
-  originalQuery: z.string().trim().max(500, 'Query too long'),
-  translatedQuery: z
-    .string()
-    .trim()
-    .max(1000, 'Translated query too long')
-    .nullable(),
-  issueDescription: z
-    .string()
-    .trim()
-    .min(10, 'Please provide more details (at least 10 characters)')
-    .max(1000, 'Description too long (max 1000 characters)'),
-});
+// Input validation (native — no zod dependency)
+function validateFeedback(data: {
+  originalQuery: string;
+  translatedQuery: string | null;
+  issueDescription: string;
+}):
+  | { success: true; data: { originalQuery: string; translatedQuery: string | null; issueDescription: string } }
+  | { success: false; message: string } {
+  const desc = data.issueDescription.trim();
+  if (desc.length < 10)
+    return { success: false, message: 'Please provide more details (at least 10 characters)' };
+  if (desc.length > 1000)
+    return { success: false, message: 'Description too long (max 1000 characters)' };
+  if (data.originalQuery.length > 500)
+    return { success: false, message: 'Query too long' };
+  if (data.translatedQuery && data.translatedQuery.length > 1000)
+    return { success: false, message: 'Translated query too long' };
+  return { success: true, data: { ...data, issueDescription: desc } };
+}
 
 interface RateLimitData {
   submissions: number[];
@@ -73,7 +77,6 @@ function checkRateLimit(): {
   const data = getRateLimitData();
   const validSubmissions = cleanExpiredSubmissions(data.submissions);
 
-  // Update stored data with cleaned submissions
   setRateLimitData({ submissions: validSubmissions });
 
   const remainingSubmissions =
@@ -112,13 +115,10 @@ export function SearchFeedback({
 
   const triggerProcessing = useCallback(async (feedbackId: string) => {
     try {
-      // Trigger the process-feedback function for this specific feedback item
-      // SECURITY: Pass feedbackId to ensure 1 submission = 1 AI call
       await supabase.functions.invoke('process-feedback', {
         body: { feedbackId },
       });
     } catch (error) {
-      // Silently fail - processing is async and will be retried
       logger.info('Background processing triggered', error);
     }
   }, []);
@@ -129,7 +129,6 @@ export function SearchFeedback({
   };
 
   const handleSubmit = async () => {
-    // Check rate limit first
     const rateLimitStatus = checkRateLimit();
     if (!rateLimitStatus.allowed) {
       toast.error('Too many submissions', {
@@ -138,25 +137,20 @@ export function SearchFeedback({
       return;
     }
 
-    // Validate input
-    const validationResult = feedbackSchema.safeParse({
+    const validationResult = validateFeedback({
       originalQuery,
       translatedQuery: translatedQuery || null,
       issueDescription: issue,
     });
 
     if (!validationResult.success) {
-      const errorMessage =
-        validationResult.error.issues[0]?.message || 'Invalid input';
-      setValidationError(errorMessage);
-      toast.error(errorMessage);
+      setValidationError(validationResult.message);
+      toast.error(validationResult.message);
       return;
     }
 
     setIsSubmitting(true);
     try {
-      // Generate ID client-side so we can pass it to process-feedback
-      // without needing SELECT permission on search_feedback
       const feedbackId = crypto.randomUUID();
 
       const { error } = await supabase
@@ -170,10 +164,8 @@ export function SearchFeedback({
 
       if (error) throw error;
 
-      // Record submission for rate limiting
       recordSubmission();
 
-      // Track feedback submission
       trackFeedback({
         query: originalQuery,
         issue_description: validationResult.data.issueDescription,
@@ -187,7 +179,6 @@ export function SearchFeedback({
       setIssue('');
       setValidationError(null);
 
-      // Trigger background processing for this specific feedback item
       triggerProcessing(feedbackId);
     } catch (error) {
       logger.error('Feedback submission failed', error);
