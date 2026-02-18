@@ -259,6 +259,7 @@ function PileView({
 function useDeckPrice(
   mainboardCards: import('@/hooks/useDeck').DeckCard[],
   scryfallCache: React.RefObject<Map<string, import('@/types/card').ScryfallCard>>,
+  onCacheUpdated: () => void,
 ) {
   const [total, setTotal] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
@@ -295,6 +296,8 @@ function useDeckPrice(
               scryfallCache.current?.set(card.name, card);
             }
           }
+          // Notify consumers that the cache was updated so they re-render
+          if (!cancelled) onCacheUpdated();
         }
 
         if (cancelled) return;
@@ -519,18 +522,29 @@ function CardHoverImage({
   );
 }
 
-// Small muted set abbreviation badge shown inline next to the card name
-function SetBadge({ cardName, scryfallCache }: {
+// Small muted set abbreviation badge shown inline next to the card name.
+// cacheVersion is passed purely to trigger a re-render when the cache fills.
+function SetBadge({ cardName, scryfallCache, cacheVersion: _cv }: {
   cardName: string;
   scryfallCache: React.RefObject<Map<string, import('@/types/card').ScryfallCard>>;
+  cacheVersion: number;
 }) {
   const card = scryfallCache.current?.get(cardName);
+  const price = card?.prices?.usd ? `$${card.prices.usd}` : null;
   const set = card?.set?.toUpperCase();
-  if (!set) return null;
   return (
-    <span className="ml-1 shrink-0 text-[9px] font-mono text-muted-foreground/60 bg-muted/40 rounded px-1 py-px leading-tight tracking-wide align-middle select-none">
-      {set}
-    </span>
+    <>
+      {set && (
+        <span className="ml-1 shrink-0 text-[9px] font-mono text-muted-foreground/60 bg-muted/40 rounded px-1 py-px leading-tight tracking-wide align-middle select-none">
+          {set}
+        </span>
+      )}
+      {price && (
+        <span className="ml-1 shrink-0 text-[10px] text-muted-foreground/60 tabular-nums align-middle select-none">
+          {price}
+        </span>
+      )}
+    </>
   );
 }
 
@@ -635,7 +649,7 @@ function PrintingPickerPopover({
 }
 
 // ── Category Section ──
-function CategorySection({ category, cards, onRemove, onSetQuantity, onSetCommander, onSetCompanion, onSetCategory, onMoveToSideboard, onMoveToMaybeboard, isReadOnly, selectedCardId, onSelectCard, scryfallCache, onChangePrinting }: {
+function CategorySection({ category, cards, onRemove, onSetQuantity, onSetCommander, onSetCompanion, onSetCategory, onMoveToSideboard, onMoveToMaybeboard, isReadOnly, selectedCardId, onSelectCard, scryfallCache, onChangePrinting, cacheVersion }: {
   category: string;
   cards: DeckCard[];
   onRemove: (id: string) => void;
@@ -650,6 +664,7 @@ function CategorySection({ category, cards, onRemove, onSetQuantity, onSetComman
   onSelectCard: (id: string) => void;
   scryfallCache: React.RefObject<Map<string, import('@/types/card').ScryfallCard>>;
   onChangePrinting: (cardId: string, printing: import('@/lib/scryfall/printings').CardPrinting) => void;
+  cacheVersion: number;
 }) {
   const [open, setOpen] = useState(true);
   const totalQty = cards.reduce((sum, c) => sum + c.quantity, 0);
@@ -679,7 +694,7 @@ function CategorySection({ category, cards, onRemove, onSetQuantity, onSetComman
                   card.is_commander && 'font-semibold text-accent',
                   card.is_companion && !card.is_commander && 'font-semibold text-primary',
                 )}>{card.card_name}</span>
-                <SetBadge cardName={card.card_name} scryfallCache={scryfallCache} />
+                <SetBadge cardName={card.card_name} scryfallCache={scryfallCache} cacheVersion={cacheVersion} />
               </CardHoverImage>
               {card.is_companion && <span title="Companion"><Shield className="h-3 w-3 text-primary shrink-0" /></span>}
               {card.is_commander && <span title="Commander"><Crown className="h-3 w-3 text-accent shrink-0" /></span>}
@@ -736,7 +751,7 @@ function CategorySection({ category, cards, onRemove, onSetQuantity, onSetComman
 }
 
 // ── Sideboard Section ──
-function SideboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, isReadOnly, scryfallCache, onChangePrinting }: {
+function SideboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, isReadOnly, scryfallCache, onChangePrinting, cacheVersion }: {
   cards: DeckCard[];
   onRemove: (id: string) => void;
   onSetQuantity: (cardId: string, qty: number) => void;
@@ -744,6 +759,7 @@ function SideboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, i
   isReadOnly: boolean;
   scryfallCache: React.RefObject<Map<string, import('@/types/card').ScryfallCard>>;
   onChangePrinting: (cardId: string, printing: import('@/lib/scryfall/printings').CardPrinting) => void;
+  cacheVersion: number;
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(true);
@@ -769,7 +785,7 @@ function SideboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, i
                   <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{card.quantity}×</span>
                   <CardHoverImage cardName={card.card_name} scryfallCache={scryfallCache}>
                     <span className="truncate text-xs text-muted-foreground">{card.card_name}</span>
-                    <SetBadge cardName={card.card_name} scryfallCache={scryfallCache} />
+                    <SetBadge cardName={card.card_name} scryfallCache={scryfallCache} cacheVersion={cacheVersion} />
                   </CardHoverImage>
                   {!isReadOnly && (
                     <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
@@ -800,7 +816,7 @@ function SideboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, i
 }
 
 // ── Maybeboard Section ──
-function MaybeboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, onMoveToSideboard, isReadOnly, scryfallCache, onChangePrinting }: {
+function MaybeboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, onMoveToSideboard, isReadOnly, scryfallCache, onChangePrinting, cacheVersion }: {
   cards: DeckCard[];
   onRemove: (id: string) => void;
   onSetQuantity: (cardId: string, qty: number) => void;
@@ -809,6 +825,7 @@ function MaybeboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, 
   isReadOnly: boolean;
   scryfallCache: React.RefObject<Map<string, import('@/types/card').ScryfallCard>>;
   onChangePrinting: (cardId: string, printing: import('@/lib/scryfall/printings').CardPrinting) => void;
+  cacheVersion: number;
 }) {
   const [open, setOpen] = useState(false);
   const totalQty = cards.reduce((sum, c) => sum + c.quantity, 0);
@@ -833,7 +850,7 @@ function MaybeboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, 
                   <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{card.quantity}×</span>
                   <CardHoverImage cardName={card.card_name} scryfallCache={scryfallCache}>
                     <span className="truncate text-xs text-muted-foreground">{card.card_name}</span>
-                    <SetBadge cardName={card.card_name} scryfallCache={scryfallCache} />
+                    <SetBadge cardName={card.card_name} scryfallCache={scryfallCache} cacheVersion={cacheVersion} />
                   </CardHoverImage>
                   {!isReadOnly && (
                     <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
@@ -1043,7 +1060,7 @@ export default function DeckEditor() {
   const totalMaybeboard = maybeboardCards.reduce((sum, c) => sum + c.quantity, 0);
   const formatConfig = FORMATS.find((f) => f.value === deck?.format) ?? FORMATS[0];
   const formatMax = formatConfig.max;
-  const { total: deckPrice, loading: priceLoading } = useDeckPrice(mainboardCards, scryfallCacheRef);
+  const { total: deckPrice, loading: priceLoading } = useDeckPrice(mainboardCards, scryfallCacheRef, () => setScryfallCacheVersion((v) => v + 1));
 
   const handleAddCard = useCallback(
     async (card: ScryfallCard) => {
@@ -1389,6 +1406,7 @@ export default function DeckEditor() {
           onMoveToMaybeboard={handleMoveToMaybeboard}
           scryfallCache={scryfallCacheRef}
           onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
+          cacheVersion={scryfallCacheVersion}
         />
       ))}
       <SideboardSection
@@ -1399,6 +1417,7 @@ export default function DeckEditor() {
         onMoveToMainboard={(cardId) => handleMoveToSideboard(cardId, false)}
         scryfallCache={scryfallCacheRef}
         onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
+        cacheVersion={scryfallCacheVersion}
       />
       <MaybeboardSection
         cards={maybeboardCards}
@@ -1409,6 +1428,7 @@ export default function DeckEditor() {
         onMoveToSideboard={(cardId) => updateCard.mutate({ id: cardId, board: 'sideboard' })}
         scryfallCache={scryfallCacheRef}
         onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
+        cacheVersion={scryfallCacheVersion}
       />
     </>
   );
