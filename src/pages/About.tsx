@@ -137,9 +137,16 @@ export default function About() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* SkipLinks for a11y keyboard navigation */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:rounded focus:bg-primary focus:text-primary-foreground focus:outline-none"
+      >
+        Skip to main content
+      </a>
       <Header />
 
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         {/* ── Hero ── */}
         <section className="relative py-20 sm:py-32 px-4 overflow-hidden">
           {/* Background glow */}

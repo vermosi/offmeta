@@ -5,8 +5,10 @@
   "header.faq": "FAQ",
   "header.guides": "Guides",
   "header.docs": "Docs",
+  "header.about": "About",
   "header.openMenu": "Open menu",
   "header.closeMenu": "Close menu",
+
 
   "search.placeholder": "Describe what you're looking for...",
   "search.placeholderMobile": "Describe a card...",

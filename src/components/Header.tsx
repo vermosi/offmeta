@@ -46,7 +46,7 @@ export function Header() {
     { label: t('nav.combos'), href: '/combos' },
     { label: t('nav.deckRecs'), href: '/deck-recs' },
     { label: t('nav.deckBuilder', 'Deck Builder'), href: '/deckbuilder' },
-    { label: 'About', href: '/about' },
+    { label: t('header.about'), href: '/about' },
   ] as const;
 
   // Reset saved count when user logs out (render-phase sync)
