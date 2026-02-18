@@ -1,6 +1,18 @@
 /**
  * Sorts a flat array of DeckCards by the given sort mode.
- * Requires access to the Scryfall cache for CMC/color/type/price data.
+ *
+ * Requires access to the Scryfall ref-cache for CMC / color identity / type
+ * line / price data.  Cards not yet in the cache are sorted last (CMC=99,
+ * color='C', price=0).
+ *
+ * Sort modes:
+ * - `category` — no-op (caller groups by category before rendering)
+ * - `name`     — alphabetical by card name
+ * - `cmc`      — ascending mana value, then name
+ * - `color`    — WUBRGC order of primary color identity, then name
+ * - `type`     — alphabetical by type line, then name
+ * - `price`    — descending USD price (most expensive first)
+ *
  * @module lib/deckbuilder/sort-deck-cards
  */
 
