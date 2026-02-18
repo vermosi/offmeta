@@ -10,7 +10,7 @@ import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import {
   ArrowLeft, Search, List, Plus, Minus, Trash2, Crown, ChevronDown, ChevronRight,
   Pencil, Check, Sparkles, Wand2, Loader2, Brain, Zap, ArrowRightLeft, ChevronUp, Shield,
-  Keyboard,
+  Keyboard, DollarSign,
 } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -55,6 +55,72 @@ const FORMATS = [
 ] as const;
 
 const DEFAULT_CATEGORY = 'Other';
+
+// ── Deck Price Hook ──
+// Fetches TCGplayer USD prices for mainboard cards via Scryfall /cards/collection.
+// Uses a ref-based Scryfall cache so cards already previewed are free.
+function useDeckPrice(
+  mainboardCards: import('@/hooks/useDeck').DeckCard[],
+  scryfallCache: React.RefObject<Map<string, import('@/types/card').ScryfallCard>>,
+) {
+  const [total, setTotal] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  // Stable key: sorted card names + quantities
+  const cacheKey = useMemo(
+    () => mainboardCards.map((c) => `${c.card_name}:${c.quantity}`).sort().join('|'),
+    [mainboardCards],
+  );
+
+  useEffect(() => {
+    if (mainboardCards.length === 0) { setTotal(null); return; }
+    let cancelled = false;
+    const run = async () => {
+      setLoading(true);
+      try {
+        // Split into cached vs uncached
+        const uncached = mainboardCards
+          .map((c) => c.card_name)
+          .filter((name) => !scryfallCache.current?.has(name));
+
+        if (uncached.length > 0) {
+          // Scryfall /cards/collection accepts up to 75 identifiers per call
+          const chunks: string[][] = [];
+          for (let i = 0; i < uncached.length; i += 75) chunks.push(uncached.slice(i, i + 75));
+          for (const chunk of chunks) {
+            const res = await fetch('https://api.scryfall.com/cards/collection', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ identifiers: chunk.map((name) => ({ name })) }),
+            });
+            if (!res.ok) continue;
+            const json = await res.json();
+            for (const card of (json.data ?? [])) {
+              scryfallCache.current?.set(card.name, card);
+            }
+          }
+        }
+
+        if (cancelled) return;
+
+        // Sum prices
+        let sum = 0;
+        for (const deckCard of mainboardCards) {
+          const sc = scryfallCache.current?.get(deckCard.card_name);
+          const price = parseFloat(sc?.prices?.usd ?? '');
+          if (!isNaN(price)) sum += price * deckCard.quantity;
+        }
+        setTotal(sum);
+      } catch { /* silent – price is non-critical */ } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    run();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cacheKey]);
+
+  return { total, loading };
+}
 
 function inferCategory(card: ScryfallCard): string {
   const type = card.type_line?.toLowerCase() || '';
@@ -549,6 +615,7 @@ export default function DeckEditor() {
   const totalMaybeboard = maybeboardCards.reduce((sum, c) => sum + c.quantity, 0);
   const formatConfig = FORMATS.find((f) => f.value === deck?.format) ?? FORMATS[0];
   const formatMax = formatConfig.max;
+  const { total: deckPrice, loading: priceLoading } = useDeckPrice(mainboardCards, scryfallCacheRef);
 
   const handleAddCard = useCallback(
     async (card: ScryfallCard) => {
@@ -753,6 +820,18 @@ export default function DeckEditor() {
           </Button>
         )}
         {!isReadOnly && <DeckExportMenu deck={deck} cards={cards} onTogglePublic={handleTogglePublic} />}
+        {/* Price chip */}
+        {mainboardCards.length > 0 && (
+          <span className="inline-flex items-center gap-0.5 text-xs font-medium px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground shrink-0"
+            title="Estimated TCGplayer price (mainboard only)">
+            <DollarSign className="h-3 w-3 text-muted-foreground" />
+            {priceLoading
+              ? <span className="w-10 h-3 shimmer rounded inline-block" />
+              : deckPrice !== null
+                ? deckPrice.toFixed(2)
+                : <span className="text-muted-foreground text-[10px]">—</span>}
+          </span>
+        )}
         <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full shrink-0',
           totalMainboard >= formatMax ? 'bg-accent/10 text-accent' : 'bg-secondary text-secondary-foreground')}>
           {totalMainboard}/{formatMax}
