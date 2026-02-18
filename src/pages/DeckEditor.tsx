@@ -10,6 +10,7 @@ import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import {
   ArrowLeft, Search, List, Plus, Minus, Trash2, Crown, ChevronDown, ChevronRight,
   Pencil, Check, Sparkles, Wand2, Loader2, Brain, Zap, ArrowRightLeft, ChevronUp, Shield,
+  Keyboard,
 } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,7 @@ import { useTranslation } from '@/lib/i18n';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 // ── Constants ──
 const CATEGORIES = [
@@ -74,9 +76,10 @@ interface CardSuggestion {
 }
 
 // ── Card Search Panel ──
-function CardSearchPanel({ onAddCard, onPreview }: {
+function CardSearchPanel({ onAddCard, onPreview, searchInputRef }: {
   onAddCard: (card: ScryfallCard) => void;
   onPreview: (card: ScryfallCard) => void;
+  searchInputRef?: React.RefObject<HTMLInputElement | null>;
 }) {
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
@@ -128,7 +131,7 @@ function CardSearchPanel({ onAddCard, onPreview }: {
           </button>
         </div>
         <div className="flex gap-2">
-          <Input value={query} onChange={(e) => setQuery(e.target.value)}
+          <Input ref={searchInputRef} value={query} onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             placeholder={mode === 'smart' ? t('deckEditor.searchSmart') : t('deckEditor.searchName')} className="text-sm" />
           <Button size="sm" onClick={handleSearch} disabled={loading} className="shrink-0 min-w-[36px]">
@@ -166,7 +169,7 @@ function CardSearchPanel({ onAddCard, onPreview }: {
 }
 
 // ── Category Section ──
-function CategorySection({ category, cards, onRemove, onSetQuantity, onSetCommander, onSetCompanion, onSetCategory, onMoveToSideboard, isReadOnly }: {
+function CategorySection({ category, cards, onRemove, onSetQuantity, onSetCommander, onSetCompanion, onSetCategory, onMoveToSideboard, isReadOnly, selectedCardId, onSelectCard }: {
   category: string;
   cards: DeckCard[];
   onRemove: (id: string) => void;
@@ -176,6 +179,8 @@ function CategorySection({ category, cards, onRemove, onSetQuantity, onSetComman
   onSetCategory: (cardId: string, category: string) => void;
   onMoveToSideboard: (cardId: string, toSideboard: boolean) => void;
   isReadOnly: boolean;
+  selectedCardId: string | null;
+  onSelectCard: (id: string) => void;
 }) {
   const [open, setOpen] = useState(true);
   const totalQty = cards.reduce((sum, c) => sum + c.quantity, 0);
@@ -190,7 +195,14 @@ function CategorySection({ category, cards, onRemove, onSetQuantity, onSetComman
       <CollapsibleContent>
         <ul className="ml-2 border-l border-border/50">
           {cards.map((card) => (
-            <li key={card.id} className="flex items-center gap-1 px-2 py-1.5 hover:bg-secondary/30 transition-colors group text-sm">
+            <li key={card.id}
+              onClick={() => onSelectCard(card.id)}
+              className={cn(
+                'flex items-center gap-1 px-2 py-1.5 transition-colors group text-sm cursor-pointer',
+                selectedCardId === card.id
+                  ? 'bg-accent/10 border-l-2 border-accent -ml-px'
+                  : 'hover:bg-secondary/30',
+              )}>
               <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{card.quantity}×</span>
               <span className={cn(
                 'flex-1 truncate text-xs',
@@ -205,7 +217,8 @@ function CategorySection({ category, cards, onRemove, onSetQuantity, onSetComman
                   {/* Category picker */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors" title="Change category">
+                      <button className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors" title="Change category"
+                        onClick={(e) => e.stopPropagation()}>
                         <Pencil className="h-3 w-3" />
                       </button>
                     </DropdownMenuTrigger>
@@ -218,21 +231,22 @@ function CategorySection({ category, cards, onRemove, onSetQuantity, onSetComman
                       ))}
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  <button onClick={() => onSetCommander(card.id, !card.is_commander)}
+                  <button onClick={(e) => { e.stopPropagation(); onSetCommander(card.id, !card.is_commander); }}
                     className={cn('p-1 rounded text-muted-foreground hover:text-accent transition-colors', card.is_commander && 'text-accent')}
                     aria-label="Toggle commander" title="Set as commander"><Crown className="h-3 w-3" /></button>
                   {/* Companion toggle — only allow 1 companion */}
-                  <button onClick={() => onSetCompanion(card.id, !card.is_companion)}
+                  <button onClick={(e) => { e.stopPropagation(); onSetCompanion(card.id, !card.is_companion); }}
                     className={cn('p-1 rounded text-muted-foreground hover:text-primary transition-colors', card.is_companion && 'text-primary')}
                     aria-label="Toggle companion" title="Set as companion"><Shield className="h-3 w-3" /></button>
-                  <button onClick={() => onMoveToSideboard(card.id, true)}
+                  <button onClick={(e) => { e.stopPropagation(); onMoveToSideboard(card.id, true); }}
                     className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
-                    title="Move to sideboard"><ArrowRightLeft className="h-3 w-3" /></button>
-                  <button onClick={() => onSetQuantity(card.id, card.quantity - 1)} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
+                    title="Move to sideboard (Shift+S)"><ArrowRightLeft className="h-3 w-3" /></button>
+                  <button onClick={(e) => { e.stopPropagation(); onSetQuantity(card.id, card.quantity - 1); }} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
                     <Minus className="h-3 w-3" /></button>
-                  <button onClick={() => onSetQuantity(card.id, card.quantity + 1)} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
+                  <button onClick={(e) => { e.stopPropagation(); onSetQuantity(card.id, card.quantity + 1); }} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
                     <Plus className="h-3 w-3" /></button>
-                  <button onClick={() => onRemove(card.id)} className="p-1 rounded text-muted-foreground hover:text-destructive transition-colors">
+                  <button onClick={(e) => { e.stopPropagation(); onRemove(card.id); }} className="p-1 rounded text-muted-foreground hover:text-destructive transition-colors"
+                    title="Remove (Del)">
                     <Trash2 className="h-3 w-3" /></button>
                 </div>
               )}
@@ -244,6 +258,7 @@ function CategorySection({ category, cards, onRemove, onSetQuantity, onSetComman
   );
 }
 
+// ── Sideboard Section ──
 // ── Sideboard Section ──
 function SideboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, isReadOnly }: {
   cards: DeckCard[];
@@ -395,16 +410,35 @@ export default function DeckEditor() {
   const [categorizingAll, setCategorizingAll] = useState(false);
   const [descriptionOpen, setDescriptionOpen] = useState(false);
   const [descriptionInput, setDescriptionInput] = useState('');
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const queryClient = useQueryClient();
   const scryfallCacheRef = useRef<Map<string, ScryfallCard>>(new Map());
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [scryfallCacheVersion, setScryfallCacheVersion] = useState(0);
   const importProcessedRef = useRef(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Sync description input when deck loads
   useEffect(() => {
     if (deck?.description !== undefined) setDescriptionInput(deck.description || '');
   }, [deck?.description]);
+
+  // ── Keyboard Shortcuts ──
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName;
+      const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable;
+      if (e.key === '?' && !isInput) { e.preventDefault(); setShortcutsOpen((o) => !o); return; }
+      if (isInput || !user) return;
+      if (e.key === '/') { e.preventDefault(); searchInputRef.current?.focus(); return; }
+      if (e.key === 'Delete' && selectedCardId) { e.preventDefault(); removeCard.mutate(selectedCardId); setSelectedCardId(null); return; }
+      if (e.key === 'S' && e.shiftKey && selectedCardId) { e.preventDefault(); updateCard.mutate({ id: selectedCardId, board: 'sideboard' }); setSelectedCardId(null); return; }
+      if (e.key === 'Escape') { setSelectedCardId(null); setShortcutsOpen(false); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [user, selectedCardId, removeCard, updateCard]);
 
   // ── Handle imported cards from navigation state ──
   useEffect(() => {
@@ -720,6 +754,8 @@ export default function DeckEditor() {
               category={category}
               cards={catCards}
               isReadOnly={isReadOnly}
+              selectedCardId={selectedCardId}
+              onSelectCard={setSelectedCardId}
               onRemove={(cardId) => removeCard.mutate(cardId)}
               onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
               onSetCommander={handleSetCommander}
@@ -750,7 +786,7 @@ export default function DeckEditor() {
       <div className="flex-1 flex overflow-hidden">
         {!isReadOnly && (
           <div className="w-80 border-r border-border flex flex-col bg-card">
-            <CardSearchPanel onAddCard={handleAddCard} onPreview={setPreviewCard} />
+            <CardSearchPanel onAddCard={handleAddCard} onPreview={setPreviewCard} searchInputRef={searchInputRef} />
           </div>
         )}
         <div className="flex-1 flex flex-col overflow-hidden">
@@ -800,6 +836,8 @@ export default function DeckEditor() {
                     category={category}
                     cards={catCards}
                     isReadOnly={isReadOnly}
+                    selectedCardId={selectedCardId}
+                    onSelectCard={setSelectedCardId}
                     onRemove={(cardId) => removeCard.mutate(cardId)}
                     onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
                     onSetCommander={handleSetCommander}
