@@ -3,6 +3,8 @@
  * only export React components (required for Vite fast-refresh).
  */
 
+import type { CardPrinting } from '@/lib/scryfall/printings';
+
 export const CATEGORIES = [
   'Commander', 'Creatures', 'Instants', 'Sorceries', 'Artifacts',
   'Enchantments', 'Planeswalkers', 'Lands', 'Ramp', 'Removal',
@@ -13,4 +15,4 @@ export const CATEGORIES = [
 export const cardImageFetchCache = new Map<string, string | null>();
 
 /** Module-level cache: card name → printings list. Caller should .clear() on unmount. */
-export const printingsByName = new Map<string, import('@/lib/scryfall/printings').CardPrinting[]>();
+export const printingsByName = new Map<string, CardPrinting[]>();
