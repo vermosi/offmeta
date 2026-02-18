@@ -4,7 +4,7 @@
  * using the Commander Spellbook API.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Textarea } from '@/components/ui/textarea';
@@ -202,6 +202,27 @@ function ComboItem({
 
 export default function FindMyCombos() {
   const { t } = useTranslation();
+
+  useEffect(() => {
+    const prev = document.title;
+    document.title = 'Find My Combos — OffMeta MTG';
+    const s = document.createElement('script');
+    s.type = 'application/ld+json';
+    s.id = 'combos-jsonld';
+    s.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'OffMeta', item: 'https://offmeta.app/' },
+        { '@type': 'ListItem', position: 2, name: 'Combos', item: 'https://offmeta.app/combos' },
+      ],
+    });
+    document.head.appendChild(s);
+    return () => {
+      document.title = prev;
+      document.getElementById('combos-jsonld')?.remove();
+    };
+  }, []);
   const [inputMode, setInputMode] = useState<InputMode>('url');
   const [rawText, setRawText] = useState('');
   const [moxfieldUrl, setMoxfieldUrl] = useState('');

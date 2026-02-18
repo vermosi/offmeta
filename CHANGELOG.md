@@ -9,7 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Deck Builder** (`/deckbuilder`, `/deckbuilder/:id`): Full-featured deck editor with:
+- **About Page** (`/about`): Cinematic 7-phase product story. Features animated stat counters, staggered IntersectionObserver scroll-reveal phase timeline, Evolution Arc milestone block, and Phase 7 teaser cards. Includes BreadcrumbList JSON-LD, OG/Twitter meta tags, canonical tag, and a `useTypewriterCycle` hook cycling "Find the card. / Build the deck. / Discover the combo." with `prefers-reduced-motion` support.
+- **`useTypewriterCycle` hook**: Reusable always-on cycling typewriter hook (distinct from the session-gated search bar animation). Respects `prefers-reduced-motion`.
+- **JSON-LD BreadcrumbList schemas**: Added to `/about`, `/docs`, `/combos`, `/deck-recs`, `/archetypes`. Mount/unmount cleanly via `useEffect` with no DOM leaks.
+- **i18n — `header.about`**: Added to all 11 language files (en, de, es, fr, it, pt, ja, ko, ru, zh-Hans, zh-Hant).
+- **a11y — `/about`**: Added `<main id="main-content">` and a visible-on-focus skip link for keyboard navigation.
+- **`sitemap.xml`**: Added `/about` entry (`priority 0.8`, `changefreq monthly`).
+
   - Multi-board support: Mainboard, Sideboard, Maybeboard, and Commander/Companion slots
   - Four view modes: List (by category), Visual (image grid), Pile (color columns), Stats bar
   - AI-powered functional categorization via `deck-categorize` edge function (Gemini Flash)

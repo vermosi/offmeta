@@ -23,10 +23,12 @@ OffMeta is a natural-language search frontend for Magic: The Gathering cards. It
 
 - Add contract tests for Edge Functions when running locally.
 - Document deployment steps once finalized.
-- Expand accessibility audits and keyboard navigation.
 
 ## Recent additions
 
+- **About Page** (`/about`): Cinematic 7-phase product story with animated stat counters, staggered scroll-reveal phase timeline, Evolution Arc milestone visualizer, and Phase 7 teaser cards. Includes BreadcrumbList JSON-LD, OG/Twitter meta tags, and a typewriter tagline cycling "Find the card. / Build the deck. / Discover the combo."
+- **Structured data (JSON-LD)**: BreadcrumbList schemas added to `/about`, `/docs`, `/combos`, `/deck-recs`, and `/archetypes`. `/guides` and individual guide pages already had breadcrumbs. All schemas mount/unmount cleanly via `useEffect`.
+- **i18n**: `header.about` key added across all 11 language files (en, de, es, fr, it, pt, ja, ko, ru, zh-Hans, zh-Hant). About page nav link is fully localized.
 - **Mobile-First Responsive Design**: Standardized spacing system with progressive scaling across mobile (390px), tablet (768px), and desktop (1280px+). Overflow protection on all pages.
 - **Home Discovery Section**: Dedicated section with Recent Searches, Features Showcase (moved above Daily Pick), Daily Pick, Staples, How It Works, and FAQ.
 - **Deck Recommendations** (`/deck-recs`): AI-powered card suggestions via Moxfield import or text paste. Categorized by High Synergy, Upgrades, and Budget Picks with Commander legality enforcement.
@@ -44,3 +46,4 @@ OffMeta is a natural-language search frontend for Magic: The Gathering cards. It
 - **Security Suite**: 300+ security tests covering injection, CORS, ReDoS, prototype pollution, and timing attacks.
 - **Regression Suite**: 70+ regression tests across caching, virtualization, and analytics.
 - **Internationalization**: Full i18n with 11 languages covering UI strings and all 10 search guide pages (intro, tips, FAQ).
+- **Accessibility**: WCAG 2.1 AA — skip links, focus trap on mobile nav, ARIA live regions, roving tab index for card grids, reduced-motion support for all animations.

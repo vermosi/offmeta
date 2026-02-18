@@ -3,7 +3,7 @@
  * Paste a decklist or import from Moxfield URL → get AI-powered card recommendations.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { ScryfallCard } from '@/types/card';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -44,6 +44,27 @@ type InputMode = 'paste' | 'url';
 export default function DeckRecommendations() {
   const { t } = useTranslation();
   const [inputMode, setInputMode] = useState<InputMode>('url');
+
+  useEffect(() => {
+    const prev = document.title;
+    document.title = 'Deck Recommendations — OffMeta MTG';
+    const s = document.createElement('script');
+    s.type = 'application/ld+json';
+    s.id = 'deck-recs-jsonld';
+    s.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'OffMeta', item: 'https://offmeta.app/' },
+        { '@type': 'ListItem', position: 2, name: 'Deck Recommendations', item: 'https://offmeta.app/deck-recs' },
+      ],
+    });
+    document.head.appendChild(s);
+    return () => {
+      document.title = prev;
+      document.getElementById('deck-recs-jsonld')?.remove();
+    };
+  }, []);
   const [rawText, setRawText] = useState('');
   const [copiedAll, setCopiedAll] = useState(false);
   const [moxfieldUrl, setMoxfieldUrl] = useState('');

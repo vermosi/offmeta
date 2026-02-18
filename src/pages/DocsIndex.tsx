@@ -2,7 +2,7 @@
  * Docs landing page — indexes guides, FAQ, and syntax cheat sheet.
  */
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -13,6 +13,27 @@ import { SkipLinks } from '@/components/SkipLinks';
 
 export default function DocsIndex() {
   const { t } = useTranslation();
+
+  useEffect(() => {
+    const prev = document.title;
+    document.title = 'Docs — OffMeta MTG';
+    const s = document.createElement('script');
+    s.type = 'application/ld+json';
+    s.id = 'docs-jsonld';
+    s.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'OffMeta', item: 'https://offmeta.app/' },
+        { '@type': 'ListItem', position: 2, name: 'Docs', item: 'https://offmeta.app/docs' },
+      ],
+    });
+    document.head.appendChild(s);
+    return () => {
+      document.title = prev;
+      document.getElementById('docs-jsonld')?.remove();
+    };
+  }, []);
 
   const sections = useMemo(() => [
     {
