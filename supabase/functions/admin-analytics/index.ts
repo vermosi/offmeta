@@ -51,8 +51,12 @@ serve(async (req) => {
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
   try {
-    // Call RPC for server-side aggregation (no row limit issues)
-    const { data: analytics, error: rpcError } = await supabaseAdmin.rpc(
+    // Call RPC using the user's JWT so auth.uid() resolves correctly inside the function
+    // (service role bypasses auth.uid(), causing the admin check to fail)
+    const supabaseUserForRpc = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: analytics, error: rpcError } = await supabaseUserForRpc.rpc(
       'get_search_analytics',
       { since_date: since, max_low_confidence: 20 },
     );
