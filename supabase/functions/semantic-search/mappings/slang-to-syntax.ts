@@ -576,6 +576,18 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     syntax: 'mana:X',
     description: 'Spells with X in cost',
   },
+  // "X cost [type]" — e.g. "X cost sorcery", "X mana sorcery"
+  // Must come before type/numeric parsing intercepts "X" as a number
+  {
+    pattern: /\bx[\s-](?:mana[\s-])?cost\s+(sorcery|instant|creature|spell)s?\b/gi,
+    syntax: 'mana:X',
+    description: 'Spells with X in their mana cost (X cost sorcery, etc.)',
+  },
+  {
+    pattern: /\b(sorcery|instant|creature|spell)s?\s+with\s+x\s+(?:in\s+(?:their|its)\s+)?(?:mana\s+)?cost\b/gi,
+    syntax: 'mana:X',
+    description: 'Spells with X in their mana cost',
+  },
   {
     pattern: /\blandfall\b/gi,
     syntax: '(otag:landfall or otag:extra-land)',
