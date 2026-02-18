@@ -74,8 +74,8 @@ function buildIR(query: string): SearchIR {
   };
 
   // Apply all parsing functions in order
-  remaining = parseCardsLike(remaining, ir); // Parse "cards like X" FIRST
-  remaining = parseSlangTerms(remaining, ir); // Parse slang terms EARLY
+  remaining = parseSlangTerms(remaining, ir); // Parse slang terms FIRST (before cards-like steals "X alternatives")
+  remaining = parseCardsLike(remaining, ir); // Parse "cards like X" after slang is consumed
   remaining = applyTagMappings(remaining, ir);
   remaining = parseTokenCreation(remaining, ir); // Parse token creation BEFORE type parsing
   remaining = parseEnablers(remaining, ir); // Parse enablers early
