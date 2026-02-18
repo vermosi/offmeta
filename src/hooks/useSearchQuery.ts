@@ -85,9 +85,10 @@ function checkSearchRateLimit(query: string): {
     };
   }
 
-  // Check cooldown for identical searches
+  // Check cooldown for identical searches — only block if called multiple times in <500ms
+  // (dedup handles the rest via pendingTranslations)
   const lastSearchTime = recentSearches.get(normalizedQuery);
-  if (lastSearchTime && now - lastSearchTime < CLIENT_CONFIG.SEARCH_RATE_LIMIT.cooldownMs) {
+  if (lastSearchTime && now - lastSearchTime < 500) {
     return { allowed: false, reason: 'Rate limited: please wait before searching again.' };
   }
 

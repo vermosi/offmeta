@@ -155,12 +155,7 @@ export function useSearchHandler({
           queryToSearch,
         );
 
-        toast.success(
-          `Search translated${source !== 'ai' ? ` (${source})` : ''}`,
-          {
-            description: `Found: ${result.scryfallQuery.substring(0, 50)}${result.scryfallQuery.length > 50 ? '...' : ''}`,
-          },
-        );
+        // No success toast — results appearing is sufficient feedback
       } catch (error: unknown) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);
