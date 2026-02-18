@@ -5,7 +5,6 @@
  */
 
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import {
   ArrowLeft, Search, List, Plus, Minus, Trash2, Crown, ChevronDown, ChevronRight,
@@ -159,9 +158,10 @@ const PILE_COLORS: { key: string; label: string; identity: string[] }[] = [
 ];
 
 function PileView({
-  cards, scryfallCache, onSelectCard, selectedCardId,
+  mainboardCards: cards, scryfallCache, onSelectCard, selectedCardId,
 }: {
-  cards: DeckCard[];
+  /** Must be mainboard cards only — mixing boards will produce incorrect color columns. */
+  mainboardCards: DeckCard[];
   scryfallCache: React.RefObject<Map<string, ScryfallCard>>;
   onSelectCard: (id: string) => void;
   selectedCardId: string | null;
@@ -986,7 +986,8 @@ export default function DeckEditor() {
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [deckViewMode, setDeckViewMode] = useState<DeckViewMode>('list');
   const [deckSortMode, setDeckSortMode] = useState<DeckSortMode>('category');
-  const queryClient = useQueryClient();
+  // queryClient removed — no longer needed after handleRecategorizeAll was updated
+  //   to use updateCard.mutate() which handles its own cache invalidation
   const scryfallCacheRef = useRef<Map<string, ScryfallCard>>(new Map());
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [scryfallCacheVersion, setScryfallCacheVersion] = useState(0);
@@ -997,6 +998,15 @@ export default function DeckEditor() {
   useEffect(() => {
     if (deck?.description !== undefined) setDescriptionInput(deck.description || '');
   }, [deck?.description]);
+
+  // Clear module-level caches on unmount so stale data doesn't bleed
+  // across different deck sessions opened in the same browser tab.
+  useEffect(() => {
+    return () => {
+      printingsByName.clear();
+      cardImageFetchCache.clear();
+    };
+  }, []);
 
   // ── Keyboard Shortcuts ──
   useEffect(() => {
@@ -1098,17 +1108,20 @@ export default function DeckEditor() {
         toast({ title: t('deckEditor.categorizeFailed'), description: t('deckEditor.categorizeFailedDesc'), variant: 'destructive' });
         return;
       }
+      // Use updateCard.mutate() for each card so React Query cache stays in sync
       for (const card of cards) {
         if (card.is_commander) continue;
         const newCat = data.categories[card.card_name];
-        if (newCat && newCat !== card.category) await supabase.from('deck_cards').update({ category: newCat }).eq('id', card.id);
+        if (newCat && newCat !== card.category) {
+          updateCard.mutate({ id: card.id, category: newCat });
+        }
       }
       toast({ title: t('deckEditor.categorizeSuccess'), description: t('deckEditor.categorizeSuccessDesc').replace('{count}', String(cardNames.length)) });
-      queryClient.invalidateQueries({ queryKey: ['deck-cards', id] });
+      // No need for manual invalidateQueries — each updateCard.mutate() triggers it via onSuccess
     } catch {
       toast({ title: 'Error', description: t('deckEditor.categorizeFailed'), variant: 'destructive' });
     } finally { setCategorizingAll(false); }
-  }, [cards, id, queryClient, t]);
+  }, [cards, updateCard, t]);
 
   const handleSuggest = useCallback(async () => {
     if (cards.length < 5) return;
@@ -1458,7 +1471,7 @@ export default function DeckEditor() {
           />
         ) : deckViewMode === 'pile' ? (
           <PileView
-            cards={mainboardCards}
+            mainboardCards={mainboardCards}
             scryfallCache={scryfallCacheRef}
             onSelectCard={setSelectedCardId}
             selectedCardId={selectedCardId}
