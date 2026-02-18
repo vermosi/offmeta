@@ -12,21 +12,21 @@ const DELETE_SPEED = 35;   // ms per character deleted
 const PAUSE_AFTER = 2000;  // ms to hold completed phrase
 const PAUSE_BETWEEN = 400; // ms gap between delete and next phrase
 
+const PREFERS_REDUCED =
+  typeof window !== 'undefined' &&
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 export function useTypewriterCycle(phrases: readonly string[]): string {
-  const [display, setDisplay] = useState('');
+  const [display, setDisplay] = useState(() =>
+    PREFERS_REDUCED && phrases.length ? phrases[0] : '',
+  );
   const cancelledRef = useRef(false);
 
   useEffect(() => {
     if (!phrases.length) return;
 
-    // Respect reduced-motion preference — just show the first phrase statically
-    if (
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    ) {
-      setDisplay(phrases[0]);
-      return;
-    }
+    // Respect reduced-motion preference — handled via useState initializer above
+    if (PREFERS_REDUCED) return;
 
     cancelledRef.current = false;
 
