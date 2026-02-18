@@ -108,14 +108,14 @@ export function Header() {
     ? createPortal(
         <div
           ref={mobileMenuRef}
-          className="fixed inset-0 top-[57px] z-[60] bg-background md:hidden animate-fade-in"
+          className="fixed inset-x-0 top-[57px] bottom-0 z-[60] bg-background md:hidden animate-fade-in overflow-y-auto overscroll-contain"
           id="mobile-nav-menu"
           role="dialog"
           aria-modal="true"
           aria-label="Mobile navigation"
         >
           <nav
-            className="container-main py-6 flex flex-col gap-1"
+            className="container-main py-6 flex flex-col gap-1 pb-safe"
             aria-label="Mobile navigation"
           >
             {NAV_LINKS.map((link) =>
