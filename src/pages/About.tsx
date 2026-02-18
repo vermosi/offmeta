@@ -4,6 +4,7 @@
  * @module pages/About
  */
 
+import { useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { StatCounters } from '@/components/about/StatCounters';
@@ -13,7 +14,91 @@ import { NextPhaseCards } from '@/components/about/NextPhaseCards';
 import { Link } from 'react-router-dom';
 import { Search, Layers, Swords } from 'lucide-react';
 
+const ABOUT_META = {
+  title: 'The OffMeta Story — 7 Phases from Search to Meta Intelligence',
+  description:
+    "Follow OffMeta's journey: from natural language MTG card search to a full Meta Intelligence Platform \u2014 AI deck tools, combo discovery, and more.",
+  url: 'https://offmeta.app/about',
+  image: 'https://offmeta.app/og-image.png',
+} as const;
+
+const DEFAULT_META = {
+  title: 'OffMeta — Natural Language MTG Card Search',
+  description:
+    'Type what you mean and find Magic cards instantly. No syntax required.',
+  url: 'https://offmeta.app/',
+  image: 'https://offmeta.app/og-image.png',
+} as const;
+
+/** Set or update a <meta> tag by property or name attribute. */
+function setMeta(attr: 'property' | 'name', key: string, value: string) {
+  let el = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement | null;
+  if (!el) {
+    el = document.createElement('meta');
+    el.setAttribute(attr, key);
+    document.head.appendChild(el);
+  }
+  el.setAttribute('content', value);
+}
+
+/** Set or update the canonical <link> tag. */
+function setCanonical(url: string) {
+  let el = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+  if (!el) {
+    el = document.createElement('link');
+    el.setAttribute('rel', 'canonical');
+    document.head.appendChild(el);
+  }
+  el.setAttribute('href', url);
+}
+
 export default function About() {
+  useEffect(() => {
+    const prev = {
+      title: document.title,
+      description: document.querySelector('meta[name="description"]')?.getAttribute('content') ?? '',
+      canonical: document.querySelector('link[rel="canonical"]')?.getAttribute('href') ?? '',
+    };
+
+    // Page title
+    document.title = ABOUT_META.title;
+
+    // Canonical
+    setCanonical(ABOUT_META.url);
+
+    // Standard meta
+    setMeta('name', 'description', ABOUT_META.description);
+
+    // Open Graph
+    setMeta('property', 'og:title', ABOUT_META.title);
+    setMeta('property', 'og:description', ABOUT_META.description);
+    setMeta('property', 'og:url', ABOUT_META.url);
+    setMeta('property', 'og:image', ABOUT_META.image);
+    setMeta('property', 'og:type', 'website');
+
+    // Twitter/X Card
+    setMeta('name', 'twitter:card', 'summary_large_image');
+    setMeta('name', 'twitter:title', ABOUT_META.title);
+    setMeta('name', 'twitter:description', ABOUT_META.description);
+    setMeta('name', 'twitter:url', ABOUT_META.url);
+    setMeta('name', 'twitter:image', ABOUT_META.image);
+
+    return () => {
+      // Restore defaults when leaving the page
+      document.title = prev.title;
+      setCanonical(prev.canonical);
+      setMeta('name', 'description', prev.description);
+      setMeta('property', 'og:title', DEFAULT_META.title);
+      setMeta('property', 'og:description', DEFAULT_META.description);
+      setMeta('property', 'og:url', DEFAULT_META.url);
+      setMeta('property', 'og:image', DEFAULT_META.image);
+      setMeta('name', 'twitter:title', DEFAULT_META.title);
+      setMeta('name', 'twitter:description', DEFAULT_META.description);
+      setMeta('name', 'twitter:url', DEFAULT_META.url);
+      setMeta('name', 'twitter:image', DEFAULT_META.image);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
