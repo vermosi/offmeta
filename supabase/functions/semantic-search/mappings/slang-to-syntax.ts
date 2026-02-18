@@ -72,6 +72,22 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     syntax: 'o:"search" o:"library" o:"land"',
     description: 'Cards that fetch lands',
   },
+  // Budget fetch land alternatives
+  {
+    pattern: /\bbudget\s+fetch\s+(?:land\s+)?alternatives?\b/gi,
+    syntax: 't:land o:"search" o:"library" -is:fetchland usd<=2',
+    description: 'Budget alternatives to fetch lands',
+  },
+  {
+    pattern: /\bfetch\s+(?:land\s+)?alternatives?\b/gi,
+    syntax: 't:land o:"search" o:"library" -is:fetchland',
+    description: 'Alternatives to fetch lands',
+  },
+  {
+    pattern: /\b(?:cheap|budget)\s+(?:dual|mana\s+fixing)\s+lands?\b/gi,
+    syntax: 't:land produces>=2 usd<=2',
+    description: 'Budget dual lands for mana fixing',
+  },
   {
     pattern: /\bland\s+acceleration\b/gi,
     syntax: 'otag:ramp',
@@ -540,6 +556,12 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     pattern: /\bcard\s+draw\b/gi,
     syntax: 'otag:draw',
     description: 'Card draw effects',
+  },
+  // Enchantments that draw cards each turn / repeatedly
+  {
+    pattern: /\benchantments?\s+that\s+draw\s+(?:cards?\s+)?(?:each\s+turn|every\s+turn|repeatedly|per\s+turn)\b/gi,
+    syntax: 't:enchantment (o:"draw" (o:"beginning of" or o:"upkeep" or o:"each turn" or o:"your draw step" or o:"whenever"))',
+    description: 'Enchantments with repeatable card draw',
   },
   {
     pattern: /\bsignet\b/gi,

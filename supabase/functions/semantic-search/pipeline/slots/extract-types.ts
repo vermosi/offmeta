@@ -81,6 +81,17 @@ export function extractTypes(query: string): {
     if (includeOr.includes(type)) continue;
     const pattern = new RegExp(`\\b${type}s?\\b`, 'gi');
     if (pattern.test(remaining) && !exclude.includes(type)) {
+      // Don't add 'creature' as an AND type when the query is about
+      // equipment/auras buffing — "equipped creature" or "enchanted creature"
+      // just describes what the equipment/aura affects, not a type filter.
+      if (
+        type === 'creature' &&
+        (includeOr.includes('equipment') || includeOr.includes('aura')) &&
+        /\b(equipped|enchanted)\s+creature\b/i.test(query)
+      ) {
+        remaining = remaining.replace(pattern, '').trim();
+        continue;
+      }
       include.push(type);
       remaining = remaining.replace(pattern, '').trim();
     }
