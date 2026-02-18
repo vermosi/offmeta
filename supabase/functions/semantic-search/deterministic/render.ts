@@ -26,14 +26,19 @@ export function renderIR(ir: SearchIR): string {
     const joined = values.join('');
 
     if (operator === 'or' && values.length > 1) {
-      const orParts = values.map((color) => `${prefix}=${color}`);
+      // "white or black" → (c:w or c:b) — includes, not exact
+      const orParts = values.map((color) => `${prefix}:${color}`);
       parts.push(`(${orParts.join(' or ')})`);
     } else if (operator === 'within') {
       parts.push(`id<=${joined}`);
     } else if (operator === 'exact') {
       parts.push(`${prefix}=${joined}`);
     } else if (operator === 'include') {
-      parts.push(`${prefix}>=${joined}`);
+      // Single color "includes" → c:w (card must contain that color)
+      parts.push(`${prefix}:${joined}`);
+    } else if (operator === 'and' && mode === 'color') {
+      // "blue and green" → c:ug (must include both colors, not exactly those two)
+      parts.push(`${prefix}:${joined}`);
     } else {
       parts.push(`${prefix}=${joined}`);
     }
