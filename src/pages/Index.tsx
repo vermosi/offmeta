@@ -243,9 +243,10 @@ const Index = () => {
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                     }`}
                     aria-pressed={compareMode}
+                    aria-label={t('compare.label')}
                   >
                     <GitCompareArrows className="h-3.5 w-3.5" />
-                    <span>Compare</span>
+                    <span>{t('compare.label')}</span>
                   </button>
 
                   <div className="flex-1" />
@@ -399,10 +400,10 @@ const Index = () => {
                 ) : (
                   <div className="text-center py-12">
                     <p className="text-muted-foreground">
-                      No cards match your filters.
+                      {t('results.noMatch')}
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Try adjusting your filter criteria.
+                      {t('results.adjustFilters')}
                     </p>
                   </div>
                 )}

@@ -8,6 +8,7 @@ import { X, GitCompareArrows } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { ScryfallCard } from '@/types/card';
 import { getCardImage } from '@/lib/scryfall/client';
+import { useTranslation } from '@/lib/i18n';
 
 interface CompareBarProps {
   cards: ScryfallCard[];
@@ -24,6 +25,7 @@ export const CompareBar = memo(function CompareBar({
   onClear,
   onCompare,
 }: CompareBarProps) {
+  const { t } = useTranslation();
   if (cards.length === 0) return null;
 
   return (
@@ -51,6 +53,7 @@ export const CompareBar = memo(function CompareBar({
           <div
             key={`empty-${i}`}
             className="h-14 w-10 rounded-md border-2 border-dashed border-border/30"
+            aria-hidden="true"
           />
         ))}
       </div>
@@ -59,7 +62,7 @@ export const CompareBar = memo(function CompareBar({
         <span className="text-xs font-medium text-foreground">
           {cards.length}/{MAX_COMPARE}
         </span>
-        <span className="text-[10px] text-muted-foreground">selected</span>
+        <span className="text-[10px] text-muted-foreground">{t('compare.selected', 'selected')}</span>
       </div>
 
       <div className="flex items-center gap-1.5">
@@ -71,7 +74,7 @@ export const CompareBar = memo(function CompareBar({
           className="gap-1.5 h-9"
         >
           <GitCompareArrows className="h-3.5 w-3.5" />
-          Compare
+          {t('compare.label')}
         </Button>
         <Button
           size="sm"
@@ -79,7 +82,7 @@ export const CompareBar = memo(function CompareBar({
           onClick={onClear}
           className="h-9 px-2 text-muted-foreground"
         >
-          Clear
+          {t('compare.clear', 'Clear')}
         </Button>
       </div>
     </div>

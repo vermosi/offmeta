@@ -9,6 +9,7 @@ import { Badge, type BadgeProps } from '@/components/ui/badge';
 import { Palette, Shield } from 'lucide-react';
 import { cn } from '@/lib/core/utils';
 import type { CardModalDetailsProps } from './types';
+import { useTranslation } from '@/lib/i18n';
 
 function getRarityVariant(rarity: string): BadgeProps['variant'] {
   switch (rarity) {
@@ -37,6 +38,7 @@ export function CardModalDetails({
   cardId,
   isMobile = false,
 }: CardModalDetailsProps) {
+  const { t } = useTranslation();
   // Calculate special badges
   const sortedByDate = [...englishPrintings].sort(
     (a, b) =>
@@ -92,7 +94,7 @@ export function CardModalDetails({
             className="bg-amber-500/10 text-amber-600 border-amber-500/30 gap-1"
           >
             <Shield className="h-3 w-3" />
-            {isMobile ? 'Reserved' : 'Reserved List'}
+            {t('card.reservedList', 'Reserved List')}
           </Badge>
         )}
         {isFirstPrinting && (
@@ -100,7 +102,7 @@ export function CardModalDetails({
             variant="outline"
             className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
           >
-            First Printing
+            {t('card.firstPrinting', 'First Printing')}
           </Badge>
         )}
         {isOnlyPrinting && (
@@ -108,7 +110,7 @@ export function CardModalDetails({
             variant="outline"
             className="bg-purple-500/10 text-purple-600 border-purple-500/30"
           >
-            Only Printing
+            {t('card.onlyPrinting', 'Only Printing')}
           </Badge>
         )}
         {isUniqueArt && (
@@ -116,7 +118,7 @@ export function CardModalDetails({
             variant="outline"
             className="bg-pink-500/10 text-pink-600 border-pink-500/30"
           >
-            Unique Art
+            {t('card.uniqueArt', 'Unique Art')}
           </Badge>
         )}
       </div>
@@ -131,7 +133,7 @@ export function CardModalDetails({
         >
           {!isMobile && (
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Card Text
+              {t('card.text', 'Card Text')}
             </h3>
           )}
           <div
@@ -191,7 +193,7 @@ export function CardModalDetails({
           )}
         >
           <Palette className="h-4 w-4 text-muted-foreground" />
-          <span className="text-muted-foreground">Illustrated by</span>
+          <span className="text-muted-foreground">{t('card.illustratedBy', 'Illustrated by')}</span>
           <span className="text-foreground font-medium">{displayArtist}</span>
         </div>
       )}

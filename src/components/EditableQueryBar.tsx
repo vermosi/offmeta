@@ -26,6 +26,7 @@ import {
   Share2,
 } from 'lucide-react';
 import { cn } from '@/lib/core/utils';
+import { useTranslation } from '@/lib/i18n';
 
 interface EditableQueryBarProps {
   scryfallQuery: string;
@@ -48,6 +49,7 @@ export const EditableQueryBar = memo(function EditableQueryBar({
   onRegenerate,
   onReportIssue,
 }: EditableQueryBarProps) {
+  const { t } = useTranslation();
   const [editedQuery, setEditedQuery] = useState(scryfallQuery);
   const [isEditing, setIsEditing] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -144,15 +146,15 @@ export const EditableQueryBar = memo(function EditableQueryBar({
       {/* Header - simplified */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2 text-xs">
-          <span className="text-muted-foreground">Scryfall query · click to edit</span>
+          <span className="text-muted-foreground">{t('queryBar.label', 'Scryfall query · click to edit')}</span>
           {showConfidenceWarning && (
             <span className="text-amber-600 dark:text-amber-400 font-medium">
-              Low confidence
+              {t('queryBar.lowConfidence', 'Low confidence')}
             </span>
           )}
           {hasChanges && (
             <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20">
-              edited
+              {t('queryBar.edited', 'edited')}
             </span>
           )}
         </div>
@@ -167,7 +169,7 @@ export const EditableQueryBar = memo(function EditableQueryBar({
               className="h-6 px-2 text-xs gap-1 text-muted-foreground hover:text-foreground"
             >
               <RotateCcw className="h-3 w-3" />
-              Regenerate
+              {t('queryBar.regenerate', 'Regenerate')}
             </Button>
           )}
           {onReportIssue && (
@@ -178,7 +180,7 @@ export const EditableQueryBar = memo(function EditableQueryBar({
               className="h-6 px-2 text-xs gap-1 text-muted-foreground hover:text-foreground"
             >
               <AlertTriangle className="h-3 w-3" />
-              Report Issue
+              {t('queryBar.reportIssue', 'Report Issue')}
             </Button>
           )}
         </div>
@@ -192,7 +194,7 @@ export const EditableQueryBar = memo(function EditableQueryBar({
                   variant="ghost"
                   size="sm"
                   className="h-8 w-8 p-0"
-                  aria-label="More options"
+                  aria-label={t('queryBar.moreOptions', 'More options')}
                 >
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
@@ -201,13 +203,13 @@ export const EditableQueryBar = memo(function EditableQueryBar({
                 {onRegenerate && (
                   <DropdownMenuItem onClick={onRegenerate}>
                     <RotateCcw className="h-4 w-4 mr-2" />
-                    Regenerate
+                    {t('queryBar.regenerate', 'Regenerate')}
                   </DropdownMenuItem>
                 )}
                 {onReportIssue && (
                   <DropdownMenuItem onClick={handleReportClick}>
                     <AlertTriangle className="h-4 w-4 mr-2" />
-                    Report Issue
+                    {t('queryBar.reportIssue', 'Report Issue')}
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
@@ -241,13 +243,13 @@ export const EditableQueryBar = memo(function EditableQueryBar({
                 'border-red-500/50 focus-visible:ring-red-500/20',
               hasChanges && !validationError && 'border-blue-500/50',
             )}
-            placeholder="Enter Scryfall query..."
+          placeholder={t('queryBar.placeholder', 'Enter Scryfall query...')}
             disabled={isLoading}
-            aria-label="Scryfall query"
+            aria-label={t('queryBar.ariaLabel', 'Scryfall query')}
             aria-describedby="query-bar-hint"
           />
           <span id="query-bar-hint" className="sr-only">
-            Edit the Scryfall query and press Enter to re-run the search.
+            {t('queryBar.hint', 'Edit the Scryfall query and press Enter to re-run the search.')}
           </span>
           {isEditing && hasChanges && (
             <button
@@ -256,7 +258,7 @@ export const EditableQueryBar = memo(function EditableQueryBar({
                 setIsEditing(false);
               }}
               className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground rounded"
-              aria-label="Reset to original query"
+              aria-label={t('queryBar.reset', 'Reset to original query')}
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -271,10 +273,10 @@ export const EditableQueryBar = memo(function EditableQueryBar({
             onClick={handleRerun}
             disabled={isLoading || !editedQuery.trim()}
             className="h-10 px-3 gap-1.5"
-            title="Re-run query (Enter)"
+            title={t('queryBar.rerunTitle', 'Re-run query (Enter)')}
           >
             <Play className="h-3.5 w-3.5" />
-            <span>Re-run</span>
+            <span>{t('queryBar.rerun', 'Re-run')}</span>
           </Button>
 
           <Button
@@ -282,7 +284,7 @@ export const EditableQueryBar = memo(function EditableQueryBar({
             size="sm"
             onClick={handleCopy}
             className="h-10 w-10 sm:w-auto sm:px-2.5 p-0 sm:p-2"
-            title="Copy query"
+            title={t('queryBar.copy', 'Copy query')}
           >
             {copied ? (
               <Check className="h-3.5 w-3.5" />
@@ -296,14 +298,14 @@ export const EditableQueryBar = memo(function EditableQueryBar({
             size="sm"
             onClick={handleShare}
             className="h-10 px-2.5 gap-1.5"
-            title="Share this search"
+            title={t('queryBar.shareTitle', 'Share this search')}
           >
             {shared ? (
               <Check className="h-3.5 w-3.5" />
             ) : (
               <Share2 className="h-3.5 w-3.5" />
             )}
-            <span className="hidden sm:inline">Share</span>
+            <span className="hidden sm:inline">{t('queryBar.share', 'Share')}</span>
           </Button>
 
           <Button
@@ -311,10 +313,10 @@ export const EditableQueryBar = memo(function EditableQueryBar({
             size="sm"
             onClick={handleOpenInScryfall}
             className="h-10 px-2.5 gap-1.5"
-            title="Open in Scryfall"
+            title={t('queryBar.openInScryfall', 'Open in Scryfall')}
           >
             <ExternalLink className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Scryfall</span>
+            <span className="hidden sm:inline">{t('queryBar.scryfall', 'Scryfall')}</span>
           </Button>
         </div>
       </div>
