@@ -523,15 +523,27 @@ function CardHoverImage({
 }
 
 // Small muted set abbreviation badge shown inline next to the card name.
+// Shows the selected printing's set (e.g. "CMR") when available, otherwise falls back
+// to the default printing from the Scryfall cache.
 // cacheVersion is passed purely to trigger a re-render when the cache fills.
-function SetBadge({ cardName, scryfallCache, cacheVersion: _cv }: {
+function SetBadge({ cardName, scryfallId, scryfallCache, cacheVersion: _cv }: {
   cardName: string;
+  scryfallId?: string | null;
   scryfallCache: React.RefObject<Map<string, import('@/types/card').ScryfallCard>>;
   cacheVersion: number;
 }) {
+  // Prefer the selected printing's set from the printings cache
+  const selectedPrinting = scryfallId
+    ? printingsByName.get(cardName)?.find((p) => p.id === scryfallId)
+    : undefined;
+
+  const set = selectedPrinting
+    ? selectedPrinting.set.toUpperCase()
+    : scryfallCache.current?.get(cardName)?.set?.toUpperCase();
+
   const card = scryfallCache.current?.get(cardName);
   const price = card?.prices?.usd ? `$${card.prices.usd}` : null;
-  const set = card?.set?.toUpperCase();
+
   return (
     <>
       {set && (
@@ -694,7 +706,7 @@ function CategorySection({ category, cards, onRemove, onSetQuantity, onSetComman
                   card.is_commander && 'font-semibold text-accent',
                   card.is_companion && !card.is_commander && 'font-semibold text-primary',
                 )}>{card.card_name}</span>
-                <SetBadge cardName={card.card_name} scryfallCache={scryfallCache} cacheVersion={cacheVersion} />
+                <SetBadge cardName={card.card_name} scryfallId={card.scryfall_id} scryfallCache={scryfallCache} cacheVersion={cacheVersion} />
               </CardHoverImage>
               {card.is_companion && <span title="Companion"><Shield className="h-3 w-3 text-primary shrink-0" /></span>}
               {card.is_commander && <span title="Commander"><Crown className="h-3 w-3 text-accent shrink-0" /></span>}
@@ -785,7 +797,7 @@ function SideboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, i
                   <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{card.quantity}×</span>
                   <CardHoverImage cardName={card.card_name} scryfallCache={scryfallCache}>
                     <span className="truncate text-xs text-muted-foreground">{card.card_name}</span>
-                    <SetBadge cardName={card.card_name} scryfallCache={scryfallCache} cacheVersion={cacheVersion} />
+                    <SetBadge cardName={card.card_name} scryfallId={card.scryfall_id} scryfallCache={scryfallCache} cacheVersion={cacheVersion} />
                   </CardHoverImage>
                   {!isReadOnly && (
                     <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
@@ -850,7 +862,7 @@ function MaybeboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, 
                   <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{card.quantity}×</span>
                   <CardHoverImage cardName={card.card_name} scryfallCache={scryfallCache}>
                     <span className="truncate text-xs text-muted-foreground">{card.card_name}</span>
-                    <SetBadge cardName={card.card_name} scryfallCache={scryfallCache} cacheVersion={cacheVersion} />
+                    <SetBadge cardName={card.card_name} scryfallId={card.scryfall_id} scryfallCache={scryfallCache} cacheVersion={cacheVersion} />
                   </CardHoverImage>
                   {!isReadOnly && (
                     <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
