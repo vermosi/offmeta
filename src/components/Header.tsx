@@ -49,17 +49,12 @@ export function Header() {
     { label: t('header.about'), href: '/about' },
   ] as const;
 
-  // Reset saved count when user logs out
-  const currentUserId = user?.id ?? null;
+  // Fetch saved search count for badge; reset to 0 on logout
   useEffect(() => {
-    if (!currentUserId) {
+    if (!user) {
       setSavedCount(0);
+      return;
     }
-  }, [currentUserId]);
-
-  // Fetch saved search count for badge
-  useEffect(() => {
-    if (!user) return;
     supabase
       .from('saved_searches')
       .select('id', { count: 'exact', head: true })
