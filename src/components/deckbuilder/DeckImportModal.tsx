@@ -1,10 +1,10 @@
 /**
- * Deck Import Modal — import from Moxfield URL or paste decklist.
+ * Deck Import Modal — import from Moxfield URL, paste, or upload a file.
  * @module components/deckbuilder/DeckImportModal
  */
 
-import { useState } from 'react';
-import { Upload, Link as LinkIcon, FileText, Loader2 } from 'lucide-react';
+import { useState, useRef, useCallback } from 'react';
+import { Upload, Link as LinkIcon, FileText, Loader2, File } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,12 +27,18 @@ interface DeckImportModalProps {
   }) => void;
 }
 
+type Tab = 'moxfield' | 'paste' | 'upload';
+
 export function DeckImportModal({ open, onOpenChange, onImport }: DeckImportModalProps) {
   const { t } = useTranslation();
-  const [tab, setTab] = useState<'moxfield' | 'paste'>('moxfield');
+  const [tab, setTab] = useState<Tab>('moxfield');
   const [moxfieldUrl, setMoxfieldUrl] = useState('');
   const [pasteText, setPasteText] = useState('');
   const [loading, setLoading] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [uploadedText, setUploadedText] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleMoxfieldImport = async () => {
     if (!moxfieldUrl.trim()) return;
@@ -70,14 +76,63 @@ export function DeckImportModal({ open, onOpenChange, onImport }: DeckImportModa
       toast({ title: t('deckImport.noCards'), description: t('deckImport.noCardsDesc'), variant: 'destructive' });
       return;
     }
-    onImport({
-      commander: parsed.commander,
-      cards: parsed.cards,
-    });
+    onImport({ commander: parsed.commander, cards: parsed.cards });
     setPasteText('');
     onOpenChange(false);
     toast({ title: t('deckImport.success'), description: t('deckImport.successParsed').replace('{count}', String(parsed.totalCards)) });
   };
+
+  const handleFileContent = useCallback((text: string, fileName: string) => {
+    setUploadedFileName(fileName);
+    setUploadedText(text);
+  }, []);
+
+  const processFile = (file: File) => {
+    if (!file) return;
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (!['txt', 'dec', 'cod'].includes(ext || '')) {
+      toast({ title: t('deckImport.invalidFile'), description: t('deckImport.invalidFileDesc'), variant: 'destructive' });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      handleFileContent(text, file.name);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processFile(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) processFile(file);
+  };
+
+  const handleUploadImport = () => {
+    if (!uploadedText.trim()) return;
+    const parsed = parseDecklist(uploadedText);
+    if (parsed.cards.length === 0) {
+      toast({ title: t('deckImport.noCards'), description: t('deckImport.noCardsDesc'), variant: 'destructive' });
+      return;
+    }
+    onImport({ commander: parsed.commander, cards: parsed.cards });
+    setUploadedText('');
+    setUploadedFileName(null);
+    onOpenChange(false);
+    toast({ title: t('deckImport.success'), description: t('deckImport.successParsed').replace('{count}', String(parsed.totalCards)) });
+  };
+
+  const TABS: { key: Tab; icon: React.ReactNode; label: string }[] = [
+    { key: 'moxfield', icon: <LinkIcon className="h-3 w-3" />, label: t('deckImport.moxfieldUrl') },
+    { key: 'paste', icon: <FileText className="h-3 w-3" />, label: t('deckImport.pasteList') },
+    { key: 'upload', icon: <Upload className="h-3 w-3" />, label: t('deckImport.uploadFile') },
+  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -91,29 +146,22 @@ export function DeckImportModal({ open, onOpenChange, onImport }: DeckImportModa
 
         {/* Tab toggle */}
         <div className="flex gap-1 p-0.5 bg-secondary/50 rounded-lg">
-          <button
-            onClick={() => setTab('moxfield')}
-            className={cn(
-              'flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium rounded-md transition-colors',
-              tab === 'moxfield' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            <LinkIcon className="h-3 w-3" />
-            {t('deckImport.moxfieldUrl')}
-          </button>
-          <button
-            onClick={() => setTab('paste')}
-            className={cn(
-              'flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium rounded-md transition-colors',
-              tab === 'paste' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            <FileText className="h-3 w-3" />
-            {t('deckImport.pasteList')}
-          </button>
+          {TABS.map(({ key, icon, label }) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className={cn(
+                'flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium rounded-md transition-colors',
+                tab === key ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {icon}
+              <span className="hidden sm:inline">{label}</span>
+            </button>
+          ))}
         </div>
 
-        {tab === 'moxfield' ? (
+        {tab === 'moxfield' && (
           <div className="space-y-3">
             <Input
               value={moxfieldUrl}
@@ -127,7 +175,9 @@ export function DeckImportModal({ open, onOpenChange, onImport }: DeckImportModa
               {loading ? t('deckImport.importing') : t('deckImport.importMoxfield')}
             </Button>
           </div>
-        ) : (
+        )}
+
+        {tab === 'paste' && (
           <div className="space-y-3">
             <Textarea
               value={pasteText}
@@ -140,6 +190,54 @@ export function DeckImportModal({ open, onOpenChange, onImport }: DeckImportModa
             <Button onClick={handlePasteImport} disabled={!pasteText.trim()} className="w-full gap-2">
               <FileText className="h-4 w-4" />
               {t('deckImport.importList')}
+            </Button>
+          </div>
+        )}
+
+        {tab === 'upload' && (
+          <div className="space-y-3">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".txt,.dec,.cod"
+              className="hidden"
+              onChange={handleFileInputChange}
+            />
+            {!uploadedFileName ? (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={handleDrop}
+                className={cn(
+                  'border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors',
+                  dragging ? 'border-accent bg-accent/5' : 'border-border hover:border-accent/50 hover:bg-secondary/30',
+                )}
+              >
+                <Upload className="h-8 w-8 mx-auto mb-3 text-muted-foreground" />
+                <p className="text-sm font-medium">{t('deckImport.uploadDrop')}</p>
+                <p className="text-[10px] text-muted-foreground mt-1">{t('deckImport.uploadHint')}</p>
+              </div>
+            ) : (
+              <div className="border border-border rounded-lg p-4 flex items-center gap-3 bg-secondary/20">
+                <File className="h-8 w-8 text-accent shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{uploadedFileName}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {parseDecklist(uploadedText).totalCards} {t('deckImport.cardsFound')}
+                  </p>
+                </div>
+                <button
+                  onClick={() => { setUploadedFileName(null); setUploadedText(''); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {t('deckImport.change')}
+                </button>
+              </div>
+            )}
+            <Button onClick={handleUploadImport} disabled={!uploadedText.trim()} className="w-full gap-2">
+              <Upload className="h-4 w-4" />
+              {t('deckImport.importFile')}
             </Button>
           </div>
         )}
