@@ -10,7 +10,7 @@ import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import {
   ArrowLeft, Search, List, Plus, Minus, Trash2, Crown, ChevronDown, ChevronRight,
   Pencil, Check, Sparkles, Wand2, Loader2, Brain, Zap, ArrowRightLeft, ChevronUp, Shield,
-  Keyboard, DollarSign, Layers,
+  Keyboard, DollarSign, Layers, LayoutGrid, Columns3, SortAsc,
 } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -55,6 +55,203 @@ const FORMATS = [
 ] as const;
 
 const DEFAULT_CATEGORY = 'Other';
+
+type DeckViewMode = 'list' | 'visual' | 'pile';
+type DeckSortMode = 'category' | 'name' | 'cmc' | 'color' | 'type' | 'price';
+
+const COLOR_ORDER: Record<string, number> = { W: 0, U: 1, B: 2, R: 3, G: 4, C: 5 };
+
+function sortDeckCards(cards: DeckCard[], sort: DeckSortMode, scryfallCache: Map<string, ScryfallCard>): DeckCard[] {
+  return [...cards].sort((a, b) => {
+    const sa = scryfallCache.get(a.card_name);
+    const sb = scryfallCache.get(b.card_name);
+    switch (sort) {
+      case 'name': return a.card_name.localeCompare(b.card_name);
+      case 'cmc': return (sa?.cmc ?? 99) - (sb?.cmc ?? 99) || a.card_name.localeCompare(b.card_name);
+      case 'color': {
+        const ca = sa?.color_identity[0] ?? 'C';
+        const cb = sb?.color_identity[0] ?? 'C';
+        return (COLOR_ORDER[ca] ?? 5) - (COLOR_ORDER[cb] ?? 5) || a.card_name.localeCompare(b.card_name);
+      }
+      case 'type': return (sa?.type_line ?? '').localeCompare(sb?.type_line ?? '') || a.card_name.localeCompare(b.card_name);
+      case 'price': {
+        const pa = parseFloat(sa?.prices?.usd ?? '0');
+        const pb = parseFloat(sb?.prices?.usd ?? '0');
+        return pb - pa;
+      }
+      default: return 0;
+    }
+  });
+}
+
+// ── Visual Card Grid (image-based view) ──
+function VisualCardGrid({
+  cards, scryfallCache, onSelectCard, selectedCardId, onRemove, onSetQuantity, isReadOnly,
+}: {
+  cards: DeckCard[];
+  scryfallCache: React.RefObject<Map<string, ScryfallCard>>;
+  onSelectCard: (id: string) => void;
+  selectedCardId: string | null;
+  onRemove: (id: string) => void;
+  onSetQuantity: (cardId: string, qty: number) => void;
+  isReadOnly: boolean;
+}) {
+  // Collect image URLs from the cache; missing ones show a placeholder shimmer
+  return (
+    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 p-3">
+      {cards.map((card) => {
+        const sc = scryfallCache.current?.get(card.card_name);
+        const imgUrl = sc?.image_uris?.normal ?? sc?.card_faces?.[0]?.image_uris?.normal ?? null;
+        return (
+          <div
+            key={card.id}
+            className={cn(
+              'relative group cursor-pointer rounded-lg overflow-hidden transition-all duration-150 hover:scale-[1.04] hover:shadow-xl',
+              selectedCardId === card.id && 'ring-2 ring-accent scale-[1.04]',
+            )}
+            onClick={() => onSelectCard(card.id)}
+          >
+            {imgUrl ? (
+              <img
+                src={imgUrl}
+                alt={card.card_name}
+                className="w-full aspect-[2.5/3.5] object-cover"
+                loading="lazy"
+              />
+            ) : (
+              <div className="w-full aspect-[2.5/3.5] bg-secondary shimmer rounded-lg flex items-end p-1">
+                <span className="text-[9px] text-muted-foreground leading-tight line-clamp-2 break-words">{card.card_name}</span>
+              </div>
+            )}
+            {/* Quantity badge */}
+            {card.quantity > 1 && (
+              <span className="absolute top-1 left-1 text-[10px] font-bold bg-background/90 text-foreground rounded-full px-1 leading-5 min-w-[18px] text-center shadow">
+                {card.quantity}×
+              </span>
+            )}
+            {/* Hover overlay with controls */}
+            {!isReadOnly && (
+              <div className="absolute inset-0 bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-1">
+                <span className="text-[10px] font-medium text-center line-clamp-2 leading-tight">{card.card_name}</span>
+                <div className="flex items-center gap-1">
+                  <button onClick={(e) => { e.stopPropagation(); onSetQuantity(card.id, card.quantity - 1); }}
+                    className="p-1 rounded bg-secondary text-foreground hover:bg-destructive/20 hover:text-destructive transition-colors">
+                    <Minus className="h-3 w-3" />
+                  </button>
+                  <span className="text-xs font-semibold w-4 text-center">{card.quantity}</span>
+                  <button onClick={(e) => { e.stopPropagation(); onSetQuantity(card.id, card.quantity + 1); }}
+                    className="p-1 rounded bg-secondary text-foreground hover:bg-accent/20 hover:text-accent transition-colors">
+                    <Plus className="h-3 w-3" />
+                  </button>
+                </div>
+                <button onClick={(e) => { e.stopPropagation(); onRemove(card.id); }}
+                  className="p-1 rounded bg-secondary text-muted-foreground hover:text-destructive transition-colors">
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Pile View (columns by color) ──
+const PILE_COLORS: { key: string; label: string; identity: string[] }[] = [
+  { key: 'W', label: 'White', identity: ['W'] },
+  { key: 'U', label: 'Blue', identity: ['U'] },
+  { key: 'B', label: 'Black', identity: ['B'] },
+  { key: 'R', label: 'Red', identity: ['R'] },
+  { key: 'G', label: 'Green', identity: ['G'] },
+  { key: 'M', label: 'Multi', identity: [] },
+  { key: 'C', label: 'Colorless', identity: [] },
+  { key: 'L', label: 'Lands', identity: [] },
+];
+
+function PileView({
+  cards, scryfallCache, onSelectCard, selectedCardId,
+}: {
+  cards: DeckCard[];
+  scryfallCache: React.RefObject<Map<string, ScryfallCard>>;
+  onSelectCard: (id: string) => void;
+  selectedCardId: string | null;
+}) {
+  const piles = useMemo(() => {
+    const buckets: Record<string, DeckCard[]> = { W: [], U: [], B: [], R: [], G: [], M: [], C: [], L: [] };
+    for (const card of cards) {
+      const sc = scryfallCache.current?.get(card.card_name);
+      const typeLine = sc?.type_line?.toLowerCase() ?? card.card_name.toLowerCase();
+      if (typeLine.includes('land')) { buckets.L.push(card); continue; }
+      const ci = sc?.color_identity ?? [];
+      if (ci.length === 0) { buckets.C.push(card); }
+      else if (ci.length === 1) { buckets[ci[0]]?.push(card) ?? buckets.C.push(card); }
+      else { buckets.M.push(card); }
+    }
+    // Sort each bucket by CMC then name
+    for (const key of Object.keys(buckets)) {
+      buckets[key].sort((a, b) => {
+        const sa = scryfallCache.current?.get(a.card_name);
+        const sb = scryfallCache.current?.get(b.card_name);
+        return (sa?.cmc ?? 0) - (sb?.cmc ?? 0) || a.card_name.localeCompare(b.card_name);
+      });
+    }
+    return buckets;
+  }, [cards, scryfallCache]);
+
+  const COLOR_BG: Record<string, string> = {
+    W: 'bg-yellow-50/10', U: 'bg-blue-950/20', B: 'bg-gray-950/30',
+    R: 'bg-red-950/20', G: 'bg-green-950/20', M: 'bg-amber-950/20', C: 'bg-secondary/30', L: 'bg-secondary/20',
+  };
+
+  return (
+    <div className="flex gap-2 p-3 overflow-x-auto min-h-0 h-full">
+      {PILE_COLORS.map(({ key, label }) => {
+        const pile = piles[key];
+        if (!pile?.length) return null;
+        return (
+          <div key={key} className={cn('flex-shrink-0 w-32 rounded-lg', COLOR_BG[key])}>
+            <div className="px-2 pt-2 pb-1">
+              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">{label}</span>
+              <span className="text-[10px] text-muted-foreground ml-1">({pile.reduce((s, c) => s + c.quantity, 0)})</span>
+            </div>
+            <div className="relative" style={{ height: pile.length * 18 + 60 }}>
+              {pile.map((card, i) => {
+                const sc = scryfallCache.current?.get(card.card_name);
+                const imgUrl = sc?.image_uris?.normal ?? sc?.card_faces?.[0]?.image_uris?.normal ?? null;
+                return (
+                  <div
+                    key={card.id}
+                    className={cn(
+                      'absolute left-1 right-1 cursor-pointer transition-all duration-100 hover:z-10 hover:-translate-y-0.5',
+                      selectedCardId === card.id && 'z-20 -translate-y-1',
+                    )}
+                    style={{ top: i * 18 }}
+                    onClick={() => onSelectCard(card.id)}
+                    title={card.card_name}
+                  >
+                    {imgUrl ? (
+                      <img src={imgUrl} alt={card.card_name} className="w-full rounded shadow-sm" loading="lazy" />
+                    ) : (
+                      <div className="w-full h-10 bg-secondary rounded shadow-sm flex items-center px-1">
+                        <span className="text-[8px] text-muted-foreground truncate">{card.card_name}</span>
+                      </div>
+                    )}
+                    {card.quantity > 1 && (
+                      <span className="absolute top-0.5 left-0.5 text-[8px] font-bold bg-background/90 text-foreground rounded-full px-1 leading-4 shadow">
+                        {card.quantity}×
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 // ── Deck Price Hook ──
 // Fetches TCGplayer USD prices for mainboard cards via Scryfall /cards/collection.
@@ -749,6 +946,8 @@ export default function DeckEditor() {
   const [descriptionInput, setDescriptionInput] = useState('');
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [deckViewMode, setDeckViewMode] = useState<DeckViewMode>('list');
+  const [deckSortMode, setDeckSortMode] = useState<DeckSortMode>('category');
   const queryClient = useQueryClient();
   const scryfallCacheRef = useRef<Map<string, ScryfallCard>>(new Map());
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -1095,56 +1294,137 @@ export default function DeckEditor() {
     </div>
   );
 
-  const deckListContent = (
-    <div className="flex-1 overflow-y-auto p-2 space-y-1">
-      {cardsLoading ? (
-        <div className="p-4 space-y-2">{[1, 2, 3].map((i) => <div key={i} className="h-8 shimmer rounded-lg" />)}</div>
-      ) : cards.length === 0 ? (
-        <div className="flex items-center justify-center h-full text-muted-foreground text-sm p-4">
-          <p className="text-center">{isReadOnly ? t('deckEditor.emptyDeckReadOnly') : t('deckEditor.emptyDeck')}</p>
-        </div>
-      ) : (
-        <>
-          {grouped.map(([category, catCards]) => (
-            <CategorySection
-              key={category}
-              category={category}
-              cards={catCards}
-              isReadOnly={isReadOnly}
-              selectedCardId={selectedCardId}
-              onSelectCard={setSelectedCardId}
-              onRemove={(cardId) => removeCard.mutate(cardId)}
-              onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
-              onSetCommander={handleSetCommander}
-              onSetCompanion={handleSetCompanion}
-              onSetCategory={handleSetCategory}
-              onMoveToSideboard={(cardId, toSb) => handleMoveToSideboard(cardId, toSb)}
-              onMoveToMaybeboard={handleMoveToMaybeboard}
-              scryfallCache={scryfallCacheRef}
-              onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
-            />
+  // Sorted flat list for visual/pile views
+  const sortedMainboard = useMemo(
+    () => deckSortMode === 'category'
+      ? mainboardCards
+      : sortDeckCards(mainboardCards, deckSortMode, scryfallCacheRef.current),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [mainboardCards, deckSortMode, scryfallCacheVersion],
+  );
+
+  // ── View/Sort Toolbar ──
+  const viewSortToolbar = cards.length > 0 && (
+    <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-border bg-card/50">
+      {/* View mode toggles */}
+      <div className="flex items-center gap-0.5 p-0.5 bg-secondary/50 rounded-md">
+        {([
+          { mode: 'list' as DeckViewMode, icon: List, label: 'List' },
+          { mode: 'visual' as DeckViewMode, icon: LayoutGrid, label: 'Visual' },
+          { mode: 'pile' as DeckViewMode, icon: Columns3, label: 'Pile' },
+        ] as const).map(({ mode, icon: Icon, label }) => (
+          <button
+            key={mode}
+            onClick={() => setDeckViewMode(mode)}
+            title={label}
+            className={cn(
+              'p-1.5 rounded transition-colors',
+              deckViewMode === mode
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            <Icon className="h-3.5 w-3.5" />
+          </button>
+        ))}
+      </div>
+      {/* Sort dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-1 rounded hover:bg-secondary/50">
+            <SortAsc className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline capitalize">{deckSortMode}</span>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-36 bg-popover border border-border z-50">
+          {(['category', 'name', 'cmc', 'color', 'type', 'price'] as DeckSortMode[]).map((s) => (
+            <DropdownMenuItem
+              key={s}
+              onClick={() => setDeckSortMode(s)}
+              className={cn('text-xs capitalize', deckSortMode === s && 'text-accent font-medium')}
+            >
+              {s === 'cmc' ? 'CMC' : s}
+            </DropdownMenuItem>
           ))}
-          <SideboardSection
-            cards={sideboardCards}
-            isReadOnly={isReadOnly}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+
+  const categorySection = (
+    <>
+      {grouped.map(([category, catCards]) => (
+        <CategorySection
+          key={category}
+          category={category}
+          cards={catCards}
+          isReadOnly={isReadOnly}
+          selectedCardId={selectedCardId}
+          onSelectCard={setSelectedCardId}
+          onRemove={(cardId) => removeCard.mutate(cardId)}
+          onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
+          onSetCommander={handleSetCommander}
+          onSetCompanion={handleSetCompanion}
+          onSetCategory={handleSetCategory}
+          onMoveToSideboard={(cardId, toSb) => handleMoveToSideboard(cardId, toSb)}
+          onMoveToMaybeboard={handleMoveToMaybeboard}
+          scryfallCache={scryfallCacheRef}
+          onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
+        />
+      ))}
+      <SideboardSection
+        cards={sideboardCards}
+        isReadOnly={isReadOnly}
+        onRemove={(cardId) => removeCard.mutate(cardId)}
+        onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
+        onMoveToMainboard={(cardId) => handleMoveToSideboard(cardId, false)}
+        scryfallCache={scryfallCacheRef}
+        onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
+      />
+      <MaybeboardSection
+        cards={maybeboardCards}
+        isReadOnly={isReadOnly}
+        onRemove={(cardId) => removeCard.mutate(cardId)}
+        onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
+        onMoveToMainboard={(cardId) => handleMoveToSideboard(cardId, false)}
+        onMoveToSideboard={(cardId) => updateCard.mutate({ id: cardId, board: 'sideboard' })}
+        scryfallCache={scryfallCacheRef}
+        onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
+      />
+    </>
+  );
+
+  const deckListContent = (
+    <div className="flex-1 flex flex-col overflow-hidden">
+      {viewSortToolbar}
+      <div className={cn('flex-1 overflow-y-auto', deckViewMode !== 'pile' ? 'p-2 space-y-1' : 'overflow-x-auto')}>
+        {cardsLoading ? (
+          <div className="p-4 space-y-2">{[1, 2, 3].map((i) => <div key={i} className="h-8 shimmer rounded-lg" />)}</div>
+        ) : cards.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-muted-foreground text-sm p-4">
+            <p className="text-center">{isReadOnly ? t('deckEditor.emptyDeckReadOnly') : t('deckEditor.emptyDeck')}</p>
+          </div>
+        ) : deckViewMode === 'visual' ? (
+          <VisualCardGrid
+            cards={deckSortMode === 'category' ? mainboardCards : sortedMainboard}
+            scryfallCache={scryfallCacheRef}
+            onSelectCard={setSelectedCardId}
+            selectedCardId={selectedCardId}
             onRemove={(cardId) => removeCard.mutate(cardId)}
             onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
-            onMoveToMainboard={(cardId) => handleMoveToSideboard(cardId, false)}
-            scryfallCache={scryfallCacheRef}
-            onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
-          />
-          <MaybeboardSection
-            cards={maybeboardCards}
             isReadOnly={isReadOnly}
-            onRemove={(cardId) => removeCard.mutate(cardId)}
-            onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
-            onMoveToMainboard={(cardId) => handleMoveToSideboard(cardId, false)}
-            onMoveToSideboard={(cardId) => updateCard.mutate({ id: cardId, board: 'sideboard' })}
-            scryfallCache={scryfallCacheRef}
-            onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
           />
-        </>
-      )}
+        ) : deckViewMode === 'pile' ? (
+          <PileView
+            cards={mainboardCards}
+            scryfallCache={scryfallCacheRef}
+            onSelectCard={setSelectedCardId}
+            selectedCardId={selectedCardId}
+          />
+        ) : (
+          categorySection
+        )}
+      </div>
     </div>
   );
 
@@ -1194,56 +1474,7 @@ export default function DeckEditor() {
         {mobileTab === 'search' && !isReadOnly && (
           <CardSearchPanel onAddCard={handleAddCard} onPreview={(card) => { setPreviewCard(card); setMobileTab('preview'); }} />
         )}
-        {mobileTab === 'list' && (
-          <div className="overflow-y-auto h-full p-2 space-y-1">
-            {cards.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-muted-foreground text-sm p-4">
-                <p className="text-center">{isReadOnly ? t('deckEditor.emptyDeckReadOnly') : t('deckEditor.emptyDeckMobile')}</p>
-              </div>
-            ) : (
-              <>
-                {grouped.map(([category, catCards]) => (
-                  <CategorySection
-                    key={category}
-                    category={category}
-                    cards={catCards}
-                    isReadOnly={isReadOnly}
-                    selectedCardId={selectedCardId}
-                    onSelectCard={setSelectedCardId}
-                    onRemove={(cardId) => removeCard.mutate(cardId)}
-                    onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
-                    onSetCommander={handleSetCommander}
-                    onSetCompanion={handleSetCompanion}
-                    onSetCategory={handleSetCategory}
-                    onMoveToSideboard={(cardId, toSb) => handleMoveToSideboard(cardId, toSb)}
-                    onMoveToMaybeboard={handleMoveToMaybeboard}
-                    scryfallCache={scryfallCacheRef}
-                    onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
-                  />
-                ))}
-                <SideboardSection
-                  cards={sideboardCards}
-                  isReadOnly={isReadOnly}
-                  onRemove={(cardId) => removeCard.mutate(cardId)}
-                  onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
-                  onMoveToMainboard={(cardId) => handleMoveToSideboard(cardId, false)}
-                  scryfallCache={scryfallCacheRef}
-                  onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
-                />
-                <MaybeboardSection
-                  cards={maybeboardCards}
-                  isReadOnly={isReadOnly}
-                  onRemove={(cardId) => removeCard.mutate(cardId)}
-                  onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
-                  onMoveToMainboard={(cardId) => handleMoveToSideboard(cardId, false)}
-                  onMoveToSideboard={(cardId) => updateCard.mutate({ id: cardId, board: 'sideboard' })}
-                  scryfallCache={scryfallCacheRef}
-                  onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
-                />
-              </>
-            )}
-          </div>
-        )}
+        {mobileTab === 'list' && deckListContent}
         {mobileTab === 'preview' && <CardPreviewPanel {...previewPanelProps} />}
       </div>
       {statsBar}
