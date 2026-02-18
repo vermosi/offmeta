@@ -8,6 +8,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
+import { useTranslation } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -113,6 +114,7 @@ export function ReportIssueDialog({
   filters,
   requestId,
 }: ReportIssueDialogProps) {
+  const { t } = useTranslation();
   const [issue, setIssue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -164,8 +166,8 @@ export function ReportIssueDialog({
   const handleSubmit = async () => {
     const rateLimitStatus = checkRateLimit();
     if (!rateLimitStatus.allowed) {
-      toast.error('Too many submissions', {
-        description: `Please wait ${rateLimitStatus.resetInMinutes} minute(s) before submitting more feedback.`,
+      toast.error(t('report.tooMany', 'Too many submissions'), {
+        description: t('report.wait', 'Please wait {minutes} minute(s) before submitting more feedback.').replace('{minutes}', rateLimitStatus.resetInMinutes.toString()),
       });
       return;
     }
@@ -198,14 +200,14 @@ export function ReportIssueDialog({
       });
 
       const remaining = checkRateLimit().remainingSubmissions;
-      toast.success('Issue reported', {
-        description: `Thanks! We'll use this to improve searches.${remaining <= 2 ? ` (${remaining} submissions remaining)` : ''}`,
+      toast.success(t('report.success', 'Issue reported'), {
+        description: `${t('report.thanks', "Thanks! We'll use this to improve searches.")}${remaining <= 2 ? ` (${remaining} submissions remaining)` : ''}`,
       });
       onOpenChange(false);
       triggerProcessing();
     } catch (error) {
       logger.error('Feedback submission failed', error);
-      toast.error('Failed to submit feedback');
+      toast.error(t('report.failed', 'Failed to submit feedback'));
     } finally {
       setIsSubmitting(false);
     }
@@ -217,10 +219,9 @@ export function ReportIssueDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Report Search Issue</DialogTitle>
+          <DialogTitle>{t('report.title', 'Report Search Issue')}</DialogTitle>
           <DialogDescription>
-            Help us improve by describing what went wrong. Context is
-            auto-included.
+            {t('report.description', 'Help us improve by describing what went wrong. Context is auto-included.')}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 pt-2">
@@ -228,7 +229,7 @@ export function ReportIssueDialog({
           <div className="p-3 rounded-lg border border-border bg-secondary/50 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Auto-included context
+                {t('report.autoContext', 'Auto-included context')}
               </span>
               <div className="flex items-center gap-1">
                 <Button
@@ -242,20 +243,21 @@ export function ReportIssueDialog({
                   ) : (
                     <Copy className="h-3 w-3" />
                   )}
-                  Copy
+                  {t('report.copy', 'Copy')}
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowContext(!showContext)}
                   className="h-6 px-2 text-xs gap-1"
+                  aria-expanded={showContext}
                 >
                   {showContext ? (
                     <ChevronUp className="h-3 w-3" />
                   ) : (
                     <ChevronDown className="h-3 w-3" />
                   )}
-                  {showContext ? 'Hide' : 'Show'}
+                  {showContext ? t('report.hide', 'Hide') : t('report.show', 'Show')}
                 </Button>
               </div>
             </div>
@@ -263,12 +265,12 @@ export function ReportIssueDialog({
             {!showContext && (
               <div className="text-xs text-muted-foreground space-y-1">
                 <p>
-                  <span className="font-medium">Prompt:</span> "
+                  <span className="font-medium">{t('report.prompt', 'Prompt:')}</span> "
                   {originalQuery.substring(0, 50)}
                   {originalQuery.length > 50 ? '...' : ''}"
                 </p>
                 <p>
-                  <span className="font-medium">Query:</span>{' '}
+                  <span className="font-medium">{t('report.query', 'Query:')}</span>{' '}
                   <code className="bg-muted px-1 rounded">
                     {compiledQuery.substring(0, 40)}
                     {compiledQuery.length > 40 ? '...' : ''}
@@ -287,11 +289,11 @@ export function ReportIssueDialog({
           {/* Issue description */}
           <div className="space-y-2">
             <label htmlFor="issue" className="text-sm font-medium">
-              What went wrong?
+              {t('report.label', 'What went wrong?')}
             </label>
             <Textarea
               id="issue"
-              placeholder="e.g., I expected to see cards that give flash, but it only showed creatures with flash..."
+              placeholder={t('report.placeholder', 'e.g., I expected to see cards that give flash, but it only showed creatures with flash...')}
               value={issue}
               onChange={(e) => {
                 setIssue(e.target.value);
@@ -311,14 +313,13 @@ export function ReportIssueDialog({
 
           {!rateLimitStatus.allowed && (
             <p className="text-xs text-destructive">
-              Rate limit reached. Please wait {rateLimitStatus.resetInMinutes}{' '}
-              minute(s).
+              {t('report.rateLimit', 'Rate limit reached. Please wait {minutes} minute(s).').replace('{minutes}', rateLimitStatus.resetInMinutes.toString())}
             </p>
           )}
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t('report.cancel', 'Cancel')}
             </Button>
             <Button
               onClick={handleSubmit}
@@ -329,7 +330,7 @@ export function ReportIssueDialog({
               {isSubmitting && (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               )}
-              Submit Report
+              {t('report.submit', 'Submit Report')}
             </Button>
           </div>
         </div>

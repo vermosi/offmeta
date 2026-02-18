@@ -7,12 +7,14 @@
 import { Button } from '@/components/ui/button';
 import { ExternalLink } from 'lucide-react';
 import type { CardModalToolboxProps } from './types';
+import { useTranslation } from '@/lib/i18n';
 
 export function CardModalToolbox({
   cardName,
   scryfallUri,
   isMobile = false,
 }: CardModalToolboxProps) {
+  const { t } = useTranslation();
   const cardNameEncoded = encodeURIComponent(cardName);
 
   const toolboxLinks = [
@@ -44,7 +46,7 @@ export function CardModalToolbox({
   return (
     <div className="space-y-2">
       <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-        Toolbox
+        {t('card.toolbox', 'Toolbox')}
       </h3>
       <div className="flex flex-wrap gap-2">
         {displayLinks.map((link) => (
@@ -53,9 +55,10 @@ export function CardModalToolbox({
             variant="outline"
             size="sm"
             className="gap-1.5 text-xs h-7"
-            onClick={() => window.open(link.url, '_blank')}
+            onClick={() => window.open(link.url, '_blank', 'noopener,noreferrer')}
+            aria-label={`${link.name} (opens in new tab)`}
           >
-            <ExternalLink className="h-3 w-3" />
+            <ExternalLink className="h-3 w-3" aria-hidden="true" />
             {link.name}
           </Button>
         ))}
@@ -63,9 +66,10 @@ export function CardModalToolbox({
           variant="outline"
           size="sm"
           className="gap-1.5 text-xs h-7"
-          onClick={() => window.open(scryfallUri, '_blank')}
+          onClick={() => window.open(scryfallUri, '_blank', 'noopener,noreferrer')}
+          aria-label="Scryfall (opens in new tab)"
         >
-          <ExternalLink className="h-3 w-3" />
+          <ExternalLink className="h-3 w-3" aria-hidden="true" />
           Scryfall
         </Button>
       </div>

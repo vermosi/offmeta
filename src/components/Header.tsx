@@ -49,15 +49,13 @@ export function Header() {
     { label: t('header.about'), href: '/about' },
   ] as const;
 
-  // Reset saved count when user logs out (render-phase sync)
-  const [prevUserId, setPrevUserId] = useState<string | null>(null);
+  // Reset saved count when user logs out
   const currentUserId = user?.id ?? null;
-  if (currentUserId !== prevUserId) {
-    setPrevUserId(currentUserId);
+  useEffect(() => {
     if (!currentUserId) {
       setSavedCount(0);
     }
-  }
+  }, [currentUserId]);
 
   // Fetch saved search count for badge
   useEffect(() => {
@@ -116,7 +114,7 @@ export function Header() {
         >
           <nav
             className="container-main py-6 flex flex-col gap-1 pb-safe"
-            aria-label="Mobile navigation"
+            aria-label="Main navigation links"
           >
             {NAV_LINKS.map((link) =>
               link.href.startsWith('#') ? (

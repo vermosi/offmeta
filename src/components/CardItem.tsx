@@ -67,9 +67,9 @@ export const CardItem = memo(function CardItem({
           <span className="text-sm text-muted-foreground font-medium">{displayName}</span>
         </div>
       ) : (
-        <img
+          <img
           src={imageUrl}
-          alt={card.name}
+          alt={displayName}
           loading="lazy"
           decoding="async"
           className="w-full h-full object-cover"
