@@ -183,10 +183,6 @@ export function DeckExportMenu({ deck, cards, onTogglePublic }: DeckExportMenuPr
   };
 
   const handleCopyShareLink = async () => {
-    if (!deck.is_public) {
-      toast({ title: t('deckExport.privateFirst'), description: t('deckExport.privateFirstDesc'), variant: 'destructive' });
-      return;
-    }
     const url = `${window.location.origin}/deckbuilder/${deck.id}`;
     await navigator.clipboard.writeText(url);
     toast({ title: t('deckExport.linkCopied'), description: t('deckExport.linkCopiedDesc') });
@@ -220,16 +216,19 @@ export function DeckExportMenu({ deck, cards, onTogglePublic }: DeckExportMenuPr
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuLabel className="text-[10px] text-muted-foreground font-normal">{t('deckExport.shareLabel')}</DropdownMenuLabel>
+        {/* Public by default — toggle to make private */}
         <DropdownMenuItem onClick={onTogglePublic} className="gap-2 text-xs">
-          {deck.is_public ? <Lock className="h-3.5 w-3.5" /> : <Globe className="h-3.5 w-3.5" />}
-          {deck.is_public ? t('deckExport.makePrivate') : t('deckExport.makePublic')}
+          {deck.is_public
+            ? <><Lock className="h-3.5 w-3.5" />{t('deckExport.makePrivate')}</>
+            : <><Globe className="h-3.5 w-3.5" />{t('deckExport.makePublic')}</>}
         </DropdownMenuItem>
-        {deck.is_public && (
-          <DropdownMenuItem onClick={handleCopyShareLink} className="gap-2 text-xs">
-            <Share2 className="h-3.5 w-3.5" />
-            {t('deckExport.copyLink')}
-          </DropdownMenuItem>
-        )}
+        {/* Copy link always available; deck must be public to be accessible */}
+        <DropdownMenuItem onClick={handleCopyShareLink} className="gap-2 text-xs"
+          disabled={!deck.is_public}
+          title={deck.is_public ? undefined : 'Make deck public first'}>
+          <Share2 className="h-3.5 w-3.5" />
+          {t('deckExport.copyLink')}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
