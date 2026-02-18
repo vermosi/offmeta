@@ -36,7 +36,15 @@ export interface DeckCard {
   created_at: string;
 }
 
-/** Fetch all decks for the current user. */
+/** Ensure a session exists (anonymous if needed) for testing without signup. */
+export async function ensureSession() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    await supabase.auth.signInAnonymously();
+  }
+}
+
+/** Fetch all decks for the current user (including anonymous). */
 export function useDecks() {
   const { user } = useAuth();
   return useQuery({
@@ -49,7 +57,7 @@ export function useDecks() {
       if (error) throw error;
       return data as Deck[];
     },
-    enabled: !!user,
+    enabled: !!user, // anonymous sign-in sets user too
   });
 }
 
