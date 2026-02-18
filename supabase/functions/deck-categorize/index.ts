@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-
+import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
+import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
@@ -30,15 +31,31 @@ Prioritize functional role over card type. For example:
 
 Return ONLY a JSON object mapping card name to category. No explanation.`;
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
-};
-
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Require valid auth token
+  const { authorized, error: authError } = validateAuth(req);
+  if (!authorized) {
+    return new Response(JSON.stringify({ error: authError || 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Rate limiting: 10 AI requests per minute per IP
+  maybeCleanup();
+  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const { allowed, retryAfter } = await checkRateLimit(clientIp, undefined, 10, 200);
+  if (!allowed) {
+    return new Response(JSON.stringify({ error: 'Too many AI requests. Please slow down.', retryAfter }), {
+      status: 429,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': String(retryAfter) },
+    });
   }
 
   try {
