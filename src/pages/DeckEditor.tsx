@@ -522,6 +522,11 @@ function CardHoverImage({
   );
 }
 
+// ── Printing Picker Popover ──
+// Module-level cache: card name → all known printings (populated on first open).
+// Declared here so SetBadge can reference it without a forward-ref issue.
+const printingsByName = new Map<string, import('@/lib/scryfall/printings').CardPrinting[]>();
+
 // Small muted set abbreviation badge shown inline next to the card name.
 // Shows the selected printing's set (e.g. "CMR") when available, otherwise falls back
 // to the default printing from the Scryfall cache.
@@ -559,11 +564,6 @@ function SetBadge({ cardName, scryfallId, scryfallCache, cacheVersion: _cv }: {
     </>
   );
 }
-
-// ── Printing Picker Popover ──
-// Lets users choose a specific printing of a card.
-// Fetches all printings from Scryfall on first open (cached per card name).
-const printingsByName = new Map<string, import('@/lib/scryfall/printings').CardPrinting[]>();
 
 function PrintingPickerPopover({
   cardName,
