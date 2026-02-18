@@ -44,7 +44,7 @@ export default function DeckBuilder() {
       const deck = await createDeck.mutateAsync({});
       navigate(`/deckbuilder/${deck.id}`);
     } catch (err) {
-      console.error('[DeckBuilder] Failed to create deck:', err);
+      void err;
     }
   };
 
@@ -80,7 +80,7 @@ export default function DeckBuilder() {
         state: { importCards: data.cards, importCommander: data.commander },
       });
     } catch (err) {
-      console.error('[DeckBuilder] Failed to import deck:', err);
+      void err;
     }
   };
 

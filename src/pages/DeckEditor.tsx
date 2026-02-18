@@ -32,9 +32,8 @@ import {
 import { FORMATS } from '@/data/formats';
 import { VisualCardGrid } from '@/components/deckbuilder/VisualCardGrid';
 import { PileView } from '@/components/deckbuilder/PileView';
-import { cardImageFetchCache } from '@/components/deckbuilder/CardHoverImage';
-import { printingsByName } from '@/components/deckbuilder/PrintingPickerPopover';
-import { CategorySection, CATEGORIES } from '@/components/deckbuilder/CategorySection';
+import { cardImageFetchCache, printingsByName, CATEGORIES } from '@/components/deckbuilder/constants';
+import { CategorySection } from '@/components/deckbuilder/CategorySection';
 import { SideboardSection } from '@/components/deckbuilder/SideboardSection';
 import { MaybeboardSection } from '@/components/deckbuilder/MaybeboardSection';
 import { CardSearchPanel } from '@/components/deckbuilder/CardSearchPanel';

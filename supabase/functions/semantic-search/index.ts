@@ -19,7 +19,7 @@ import {
 } from './circuit-breaker.ts';
 import { checkPatternMatch } from './matching.ts';
 import { fetchDynamicRules } from './rules.ts';
-import { validateAndRelaxQuery } from './scryfall.ts';
+
 import { DEFAULT_OVERLY_BROAD_THRESHOLD } from './constants.ts';
 import {
   validateQuery,
