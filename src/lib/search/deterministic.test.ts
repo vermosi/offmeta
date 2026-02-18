@@ -23,9 +23,9 @@ describe('Deterministic MTG query translation', () => {
     );
     expect(query).toContain('t:creature');
     expect(query).toContain('mv>=5');
-    expect(query).toContain('(c=r or c=b)');
+    expect(query).toContain('(c:r or c:b)');
     expect(query).toMatch(/otag:draw|o:\/draw/i);
-    expect(query).not.toMatch(/c=u|c=g/);
+    expect(query).not.toMatch(/c:u|c:g/);
   });
 
   it('T3: 5 mana mono red creature', () => {
@@ -38,7 +38,7 @@ describe('Deterministic MTG query translation', () => {
 
   it('T4: green cards that let you sacrifice lands', () => {
     const query = getQuery('green cards that let you sacrifice lands');
-    expect(query).toContain('c=g');
+    expect(query).toContain('c:g');
     expect(query).toContain('-t:land');
     expect(query).toContain('o:sacrifice');
     expect(query).toContain('o:land');
@@ -55,7 +55,7 @@ describe('Deterministic MTG query translation', () => {
     const query = getQuery(
       'show me all the green soul sisters released after 2020',
     );
-    expect(query).toContain('c=g');
+    expect(query).toContain('c:g');
     expect(query).toContain('otag:soul-warden-ability');
     expect(query).toContain('year>2020');
     expect(query).not.toMatch(/e:202/);
