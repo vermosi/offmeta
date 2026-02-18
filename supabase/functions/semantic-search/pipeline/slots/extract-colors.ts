@@ -37,11 +37,15 @@ export function extractColors(
 
   // Check for multicolor names (guilds/shards/wedges)
   // Guild/shard/wedge names are inherently color identity concepts,
-  // so always use identity mode regardless of commander context
+  // so always use identity mode regardless of commander context.
+  // Also matches "in Naya colors" / "Naya colored" patterns.
   for (const [name, codes] of Object.entries(MULTICOLOR_MAP)) {
-    const regex = new RegExp(`\\b${name}\\b`, 'i');
+    // Match bare name OR "in X colors" / "X colors" / "X colored"
+    const regex = new RegExp(`\\b${name}(?:\\s+colou?rs?|\\s+colou?red)?\\b`, 'i');
     if (regex.test(remaining)) {
       remaining = remaining.replace(regex, '').trim();
+      // Remove stray "in" left behind (e.g. "in  that create")
+      remaining = remaining.replace(/\bin\s{2,}/g, 'in ').replace(/\s{2,}/g, ' ').trim();
       return {
         colors: {
           values: codes.split(''),
