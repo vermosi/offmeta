@@ -9,6 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Deck Builder** (`/deckbuilder`, `/deckbuilder/:id`): Full-featured deck editor with:
+  - Multi-board support: Mainboard, Sideboard, Maybeboard, and Commander/Companion slots
+  - Four view modes: List (by category), Visual (image grid), Pile (color columns), Stats bar
+  - AI-powered functional categorization via `deck-categorize` edge function (Gemini Flash)
+  - AI card suggestions via `deck-suggest` edge function, ranked by priority
+  - Inline combo detection via `combo-search` (Commander Spellbook), auto-fires at 10+ cards with "Almost There" combos
+  - Printing/set picker with lazy Scryfall fetch and per-print USD prices
+  - Real-time USD price estimate aggregated via Scryfall `/cards/collection` API
+  - Moxfield URL import and plain-text decklist import
+  - Export: copy card names, download CSV, copy as text list
+  - Smart Search toggle for natural-language card search within the editor
+  - Format selector with deck-size enforcement (Commander=100, Standard=60, etc.)
+  - Auto-save deck notes field
+  - Keyboard shortcuts (Del to remove, Shift+S to sideboard)
+  - Public deck sharing (read-only view for unauthenticated visitors)
+- **DeckEditor refactor**: Split monolithic `DeckEditor.tsx` (~1600 lines) into 14 focused modules in `src/components/deckbuilder/` and `src/lib/deckbuilder/` for maintainability.
+  - `constants.ts` — shared caches and CATEGORIES array (fixes Vite fast-refresh)
+  - `CardHoverImage.tsx`, `CardSearchPanel.tsx`, `CardPreviewPanel.tsx`
+  - `CategorySection.tsx`, `SideboardSection.tsx`, `MaybeboardSection.tsx`
+  - `VisualCardGrid.tsx`, `PileView.tsx`, `PrintingPickerPopover.tsx`
+  - `SuggestionsPanel.tsx`, `DeckCombos.tsx`
+  - `src/hooks/useDeckPrice.ts` — mainboard USD price hook
+  - `src/lib/deckbuilder/sort-deck-cards.ts` — sort by name/CMC/color/type/price
+  - `src/lib/deckbuilder/infer-category.ts` — rule-based category inference from type line
+- **Auth fix**: Edge function JWT validator (`_shared/auth.ts`) now correctly accepts authenticated user tokens (`iss: 'https://...supabase.co/auth/v1'`) in addition to anon tokens (`iss: 'supabase'`). Previously, all logged-in users received 401 errors from all edge functions.
+- **Search performance**: Non-blocking log flushing — `flushLogQueue()` is now fire-and-forget, removing it from the response-path critical chain.
+- **Search UX**: Removed redundant "Search translated" success toast; reduced identical-query cooldown from 2s to 500ms.
 - Mobile-first responsive design with standardized spacing system across all pages and sections.
 - Home discovery section component (`HomeDiscoverySection`) grouping pre-search content.
 - How It Works section with 4-step visual guide on the home page.
@@ -26,10 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Commander Archetypes** (`/archetypes`): Browse popular archetypes with curated card lists and quick-search.
 - **Features Showcase**: Landing page section highlighting all core tools with direct navigation.
 - Footer attribution for Scryfall, Moxfield, and Commander Spellbook.
-- "Try searching for" label above example query chips for better discoverability.
 - Alchemy rebalanced card exclusion (`-is:rebalanced`) applied to all Scryfall queries.
-- 78 new tests: guides data integrity (22), GuidesIndex page (12), GuidePage (31), Header navigation (13).
-- Guides documentation (`docs/guides.md`).
 - OSS documentation, contribution, and governance guides.
 - CI workflow and Dependabot configuration.
 - Runtime environment validation and example configuration.
@@ -52,8 +76,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Critical**: Authenticated users receiving 401 from all edge functions due to JWT `iss` mismatch in `validateAuth`.
 - Horizontal overflow on mobile viewports across all pages.
 - Guide page button text wrapping causing layout break on narrow screens.
 - Hash navigation (Daily Pick, FAQ, How It Works) now works from non-home pages.
 - Deterministic translation edge cases for mana production and color identity.
 - Alchemy rebalanced cards (e.g., "A-Omnath") no longer appear in search results.
+- Fast-refresh violations: `CATEGORIES`, `cardImageFetchCache`, and `printingsByName` extracted from component files to `constants.ts`.
+- PileView: nullish-coalescing expression replaced with explicit conditional to satisfy `@typescript-eslint/no-unused-expressions`.
+- `useDeckPrice` and `DeckBuilder.tsx`: replaced `console.*` calls with silent error swallowing per `no-console` rule.
+- `DeckCombos`: stabilised `useCallback` dependency array using pre-computed key strings.
+- `semantic-search/index.ts`: removed unused `validateAndRelaxQuery` import.

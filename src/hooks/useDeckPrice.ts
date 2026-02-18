@@ -1,7 +1,20 @@
 /**
- * Fetches estimated USD prices for mainboard cards via Scryfall /cards/collection.
- * Uses the shared Scryfall ref-cache so cards already previewed cost nothing.
- * Returns { total, loading } where total is null until prices are loaded.
+ * Fetches estimated USD prices for mainboard cards via the Scryfall
+ * `/cards/collection` endpoint (up to 75 names per request).
+ *
+ * Uses the shared Scryfall ref-cache (`scryfallCache`) so cards already
+ * previewed or loaded elsewhere cost zero additional network requests.
+ * When new cards are fetched, `onCacheUpdated()` is called so the parent
+ * component can bump a version counter and re-render dependent UI.
+ *
+ * Returns:
+ * - `total`   — sum of (quantity × USD price) for all mainboard cards, or
+ *               `null` if the deck is empty or prices are still loading.
+ * - `loading` — true while any Scryfall request is in flight.
+ *
+ * Price fetch failures are silently swallowed — the price estimate is
+ * non-critical and should never surface an error to the user.
+ *
  * @module hooks/useDeckPrice
  */
 
@@ -20,7 +33,7 @@ export function useDeckPrice(
   const onCacheUpdatedRef = useRef(onCacheUpdated);
   onCacheUpdatedRef.current = onCacheUpdated;
 
-  // Stable key: sorted card names + quantities
+  // Stable key: sorted card names + quantities — only re-runs when the deck changes
   const cacheKey = useMemo(
     () => mainboardCards.map((c) => `${c.card_name}:${c.quantity}`).sort().join('|'),
     [mainboardCards],
@@ -32,11 +45,13 @@ export function useDeckPrice(
     const run = async () => {
       setLoading(true);
       try {
+        // Only fetch cards not already in the ref-cache
         const uncached = mainboardCards
           .map((c) => c.card_name)
           .filter((name) => !scryfallCache.current?.has(name));
 
         if (uncached.length > 0) {
+          // Scryfall collection API accepts max 75 identifiers per request
           const chunks: string[][] = [];
           for (let i = 0; i < uncached.length; i += 75) chunks.push(uncached.slice(i, i + 75));
           for (const chunk of chunks) {
