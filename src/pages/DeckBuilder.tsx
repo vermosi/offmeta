@@ -1,5 +1,6 @@
 /**
  * My Decks page – lists all user decks with create/delete/import.
+ * Anonymous sign-in is used automatically so auth is not required to test.
  * @module pages/DeckBuilder
  */
 
@@ -9,9 +10,7 @@ import { Plus, Trash2, Layers, Crown, Upload, Globe } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
-import { useDecks, useDeckMutations, useDeckCardMutations } from '@/hooks/useDeck';
-import { AuthModal } from '@/components/AuthModal';
+import { useDecks, useDeckMutations, ensureSession } from '@/hooks/useDeck';
 import { DeckImportModal } from '@/components/deckbuilder/DeckImportModal';
 import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n';
@@ -31,15 +30,13 @@ const COLOR_MAP: Record<string, string> = {
 
 export default function DeckBuilder() {
   const { t } = useTranslation();
-  const { user } = useAuth();
   const { data: decks, isLoading } = useDecks();
   const { createDeck, deleteDeck, updateDeck } = useDeckMutations();
   const navigate = useNavigate();
-  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
 
   const handleCreate = async () => {
-    if (!user) { setAuthModalOpen(true); return; }
+    await ensureSession();
     const deck = await createDeck.mutateAsync({});
     navigate(`/deckbuilder/${deck.id}`);
   };
@@ -54,7 +51,7 @@ export default function DeckBuilder() {
     name?: string; format?: string; commander?: string | null;
     colorIdentity?: string[]; cards: { name: string; quantity: number }[];
   }) => {
-    if (!user) { setAuthModalOpen(true); return; }
+    await ensureSession();
     try {
       const deck = await createDeck.mutateAsync({
         name: data.name || 'Imported Deck',
@@ -85,7 +82,7 @@ export default function DeckBuilder() {
             <p className="text-sm text-muted-foreground mt-1">{t('deck.subtitle')}</p>
           </div>
           <div className="flex gap-2 shrink-0">
-            <Button onClick={() => user ? setImportOpen(true) : setAuthModalOpen(true)} variant="outline" size="sm" className="gap-1.5">
+            <Button onClick={() => setImportOpen(true)} variant="outline" size="sm" className="gap-1.5">
               <Upload className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">{t('deck.import')}</span>
             </Button>
@@ -96,13 +93,7 @@ export default function DeckBuilder() {
           </div>
         </div>
 
-        {!user ? (
-          <div className="surface-elevated p-8 text-center">
-            <Layers className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground mb-4">{t('deck.signInPrompt')}</p>
-            <Button onClick={() => setAuthModalOpen(true)} variant="outline">{t('nav.signIn')}</Button>
-          </div>
-        ) : isLoading ? (
+        {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => <div key={i} className="surface-elevated p-5 h-32 shimmer rounded-xl" />)}
           </div>
@@ -161,7 +152,6 @@ export default function DeckBuilder() {
         )}
       </main>
       <Footer />
-      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
       <DeckImportModal open={importOpen} onOpenChange={setImportOpen} onImport={handleImport} />
     </div>
   );
