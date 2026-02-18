@@ -178,6 +178,29 @@ function buildIR(query: string): SearchIR {
     remaining = remaining.replace(yearMatch[0], '').trim();
   }
 
+  // Handle "more than N reprints / printings" → prints>N (Scryfall uses "prints:", not "reprints:")
+  const reprintsMatch = remaining.match(
+    /\b(?:more\s+than|over|greater\s+than|at\s+least)\s+(\d+)\s+(?:reprints?|printings?|editions?|versions?)\b/i,
+  );
+  if (reprintsMatch) {
+    const n = Number(reprintsMatch[1]);
+    if (!Number.isNaN(n)) {
+      ir.specials.push(`prints>${n}`);
+      remaining = remaining.replace(reprintsMatch[0], '').trim();
+    }
+  }
+  // Also handle "fewer than N reprints"
+  const fewerReprintsMatch = remaining.match(
+    /\b(?:fewer\s+than|less\s+than|under)\s+(\d+)\s+(?:reprints?|printings?)\b/i,
+  );
+  if (fewerReprintsMatch) {
+    const n = Number(fewerReprintsMatch[1]);
+    if (!Number.isNaN(n)) {
+      ir.specials.push(`prints<${n}`);
+      remaining = remaining.replace(fewerReprintsMatch[0], '').trim();
+    }
+  }
+
   if (
     /\breleased\b/i.test(remaining) &&
     /\bafter\s+(\d{4})\b/i.test(remaining)
