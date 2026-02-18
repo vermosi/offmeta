@@ -56,6 +56,7 @@ function TypeDistribution({ typeCounts }: { typeCounts: Record<string, number> }
           <div key={t} className="flex items-center gap-1" title={`${info.label}: ${count} (${pct}%)`}>
             <div className={cn('h-2.5 w-2.5 rounded-sm', info.color)} />
             <span className="text-[9px] text-muted-foreground">{count}</span>
+            <span className="text-[8px] text-muted-foreground/60">{pct}%</span>
           </div>
         );
       })}
