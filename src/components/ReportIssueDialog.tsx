@@ -22,7 +22,6 @@ import { toast } from 'sonner';
 import { Loader2, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { logger } from '@/lib/core/logger';
-import { z } from 'zod';
 import type { FilterState } from '@/types/filters';
 
 interface ReportIssueDialogProps {
@@ -39,14 +38,17 @@ const RATE_LIMIT_KEY = 'search_feedback_submissions';
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const MAX_SUBMISSIONS_PER_WINDOW = 5;
 
-// Input validation schema
-const feedbackSchema = z.object({
-  issueDescription: z
-    .string()
-    .trim()
-    .min(10, 'Please provide more details (at least 10 characters)')
-    .max(1000, 'Description too long (max 1000 characters)'),
-});
+// Input validation (native — no zod dependency)
+function validateIssue(issueDescription: string):
+  | { success: true; data: { issueDescription: string } }
+  | { success: false; message: string } {
+  const desc = issueDescription.trim();
+  if (desc.length < 10)
+    return { success: false, message: 'Please provide more details (at least 10 characters)' };
+  if (desc.length > 1000)
+    return { success: false, message: 'Description too long (max 1000 characters)' };
+  return { success: true, data: { issueDescription: desc } };
+}
 
 interface RateLimitData {
   submissions: number[];
@@ -120,7 +122,6 @@ export function ReportIssueDialog({
 
   const timestamp = new Date().toISOString();
 
-  // Reset form when dialog opens
   useEffect(() => {
     if (open) {
       setIssue('');
@@ -169,21 +170,16 @@ export function ReportIssueDialog({
       return;
     }
 
-    const validationResult = feedbackSchema.safeParse({
-      issueDescription: issue,
-    });
+    const validationResult = validateIssue(issue);
 
     if (!validationResult.success) {
-      const errorMessage =
-        validationResult.error.issues[0]?.message || 'Invalid input';
-      setValidationError(errorMessage);
-      toast.error(errorMessage);
+      setValidationError(validationResult.message);
+      toast.error(validationResult.message);
       return;
     }
 
     setIsSubmitting(true);
     try {
-      // Include all context in the issue description for processing
       const fullDescription = `${validationResult.data.issueDescription}\n\n---\nContext:\n- Request ID: ${requestId || 'N/A'}\n- Timestamp: ${timestamp}\n- Filters: ${JSON.stringify(filters || {})}`;
 
       const { error } = await supabase.from('search_feedback').insert({
