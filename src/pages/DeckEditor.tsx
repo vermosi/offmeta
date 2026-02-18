@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { FORMATS } from '@/data/formats';
+import type { CardPrinting } from '@/lib/scryfall/printings';
 
 // ── Constants ──
 const CATEGORIES = [
@@ -246,8 +247,8 @@ function PileView({
 // Fetches TCGplayer USD prices for mainboard cards via Scryfall /cards/collection.
 // Uses a ref-based Scryfall cache so cards already previewed are free.
 function useDeckPrice(
-  mainboardCards: import('@/hooks/useDeck').DeckCard[],
-  scryfallCache: React.RefObject<Map<string, import('@/types/card').ScryfallCard>>,
+  mainboardCards: DeckCard[],
+  scryfallCache: React.RefObject<Map<string, ScryfallCard>>,
   onCacheUpdated: () => void,
 ) {
   const [total, setTotal] = useState<number | null>(null);
@@ -434,7 +435,7 @@ function CardHoverImage({
   cardName, scryfallCache, children,
 }: {
   cardName: string;
-  scryfallCache: React.RefObject<Map<string, import('@/types/card').ScryfallCard>>;
+  scryfallCache: React.RefObject<Map<string, ScryfallCard>>;
   children: React.ReactNode;
 }) {
   const [imgUrl, setImgUrl] = useState<string | null | undefined>(undefined);
@@ -516,7 +517,7 @@ function CardHoverImage({
 // ── Printing Picker Popover ──
 // Module-level cache: card name → all known printings (populated on first open).
 // Declared here so SetBadge can reference it without a forward-ref issue.
-const printingsByName = new Map<string, import('@/lib/scryfall/printings').CardPrinting[]>();
+const printingsByName = new Map<string, CardPrinting[]>();
 
 // Small muted set abbreviation badge shown inline next to the card name.
 // Shows the selected printing's set (e.g. "CMR") when available, otherwise falls back
@@ -525,7 +526,7 @@ const printingsByName = new Map<string, import('@/lib/scryfall/printings').CardP
 function SetBadge({ cardName, scryfallId, scryfallCache, cacheVersion: _cv }: {
   cardName: string;
   scryfallId?: string | null;
-  scryfallCache: React.RefObject<Map<string, import('@/types/card').ScryfallCard>>;
+  scryfallCache: React.RefObject<Map<string, ScryfallCard>>;
   cacheVersion: number;
 }) {
   // Prefer the selected printing's set from the printings cache
@@ -563,10 +564,10 @@ function PrintingPickerPopover({
 }: {
   cardName: string;
   currentScryfallId: string | null;
-  onSelect: (printing: import('@/lib/scryfall/printings').CardPrinting) => void;
+  onSelect: (printing: CardPrinting) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [printings, setPrintings] = useState<import('@/lib/scryfall/printings').CardPrinting[]>([]);
+  const [printings, setPrintings] = useState<CardPrinting[]>([]);
   const [loading, setLoading] = useState(false);
 
   const load = useCallback(async () => {
@@ -665,8 +666,8 @@ function CategorySection({ category, cards, onRemove, onSetQuantity, onSetComman
   isReadOnly: boolean;
   selectedCardId: string | null;
   onSelectCard: (id: string) => void;
-  scryfallCache: React.RefObject<Map<string, import('@/types/card').ScryfallCard>>;
-  onChangePrinting: (cardId: string, printing: import('@/lib/scryfall/printings').CardPrinting) => void;
+  scryfallCache: React.RefObject<Map<string, ScryfallCard>>;
+  onChangePrinting: (cardId: string, printing: CardPrinting) => void;
   cacheVersion: number;
 }) {
   const [open, setOpen] = useState(true);
@@ -760,8 +761,8 @@ function SideboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, i
   onSetQuantity: (cardId: string, qty: number) => void;
   onMoveToMainboard: (cardId: string) => void;
   isReadOnly: boolean;
-  scryfallCache: React.RefObject<Map<string, import('@/types/card').ScryfallCard>>;
-  onChangePrinting: (cardId: string, printing: import('@/lib/scryfall/printings').CardPrinting) => void;
+  scryfallCache: React.RefObject<Map<string, ScryfallCard>>;
+  onChangePrinting: (cardId: string, printing: CardPrinting) => void;
   cacheVersion: number;
 }) {
   const { t } = useTranslation();
@@ -826,8 +827,8 @@ function MaybeboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, 
   onMoveToMainboard: (cardId: string) => void;
   onMoveToSideboard: (cardId: string) => void;
   isReadOnly: boolean;
-  scryfallCache: React.RefObject<Map<string, import('@/types/card').ScryfallCard>>;
-  onChangePrinting: (cardId: string, printing: import('@/lib/scryfall/printings').CardPrinting) => void;
+  scryfallCache: React.RefObject<Map<string, ScryfallCard>>;
+  onChangePrinting: (cardId: string, printing: CardPrinting) => void;
   cacheVersion: number;
 }) {
   const [open, setOpen] = useState(false);
@@ -989,7 +990,6 @@ export default function DeckEditor() {
   // queryClient removed — no longer needed after handleRecategorizeAll was updated
   //   to use updateCard.mutate() which handles its own cache invalidation
   const scryfallCacheRef = useRef<Map<string, ScryfallCard>>(new Map());
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [scryfallCacheVersion, setScryfallCacheVersion] = useState(0);
   const importProcessedRef = useRef(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -1063,7 +1063,7 @@ export default function DeckEditor() {
       if (groups[cat]) sorted.push([cat, groups[cat]]);
     }
     for (const [cat, catCards] of Object.entries(groups)) {
-      if (!CATEGORIES.includes(cat as any)) sorted.push([cat, catCards]);
+      if (!(CATEGORIES as readonly string[]).includes(cat)) sorted.push([cat, catCards]);
     }
     return sorted;
   }, [mainboardCards]);
@@ -1213,6 +1213,15 @@ export default function DeckEditor() {
 
   const startEditName = () => { setNameInput(deck?.name || ''); setEditingName(true); };
   const saveName = () => { if (nameInput.trim() && id) updateDeck.mutate({ id, name: nameInput.trim() }); setEditingName(false); };
+
+  // Sorted flat list for visual/pile views — must be before early returns (Rules of Hooks)
+  const sortedMainboard = useMemo(
+    () => deckSortMode === 'category'
+      ? mainboardCards
+      : sortDeckCards(mainboardCards, deckSortMode, scryfallCacheRef.current),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [mainboardCards, deckSortMode, scryfallCacheVersion],
+  );
 
   if (deckLoading) return (
     <div className="min-h-screen flex flex-col bg-background"><Header />

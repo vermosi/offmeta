@@ -16,137 +16,16 @@ import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/useToast';
 import type { DeckCard, Deck } from '@/hooks/useDeck';
 import { useTranslation } from '@/lib/i18n';
+import {
+  buildDecklistText,
+  buildArenaText,
+  buildMtgoText,
+} from '@/lib/deckbuilder/decklist-formatters';
 
 interface DeckExportMenuProps {
   deck: Deck;
   cards: DeckCard[];
   onTogglePublic: () => void;
-}
-
-export function buildDecklistText(deck: Deck, cards: DeckCard[]): string {
-  const lines: string[] = [];
-
-  const commanders = cards.filter((c) => c.is_commander);
-  if (commanders.length > 0) {
-    for (const cmd of commanders) {
-      lines.push(`COMMANDER: ${cmd.card_name}`);
-    }
-    lines.push('');
-  }
-
-  const companions = cards.filter((c) => c.is_companion);
-  if (companions.length > 0) {
-    for (const cmp of companions) {
-      lines.push(`COMPANION: ${cmp.card_name}`);
-    }
-    lines.push('');
-  }
-
-  const mainboard = cards.filter(
-    (c) => !c.is_commander && !c.is_companion && c.board !== 'sideboard' && c.board !== 'maybeboard',
-  );
-  const grouped: Record<string, DeckCard[]> = {};
-  for (const card of mainboard) {
-    const cat = card.category || 'Other';
-    if (!grouped[cat]) grouped[cat] = [];
-    grouped[cat].push(card);
-  }
-
-  for (const [category, catCards] of Object.entries(grouped)) {
-    lines.push(`// ${category}`);
-    for (const card of catCards.sort((a, b) => a.card_name.localeCompare(b.card_name))) {
-      lines.push(`${card.quantity} ${card.card_name}`);
-    }
-    lines.push('');
-  }
-
-  const sideboard = cards.filter((c) => c.board === 'sideboard');
-  if (sideboard.length > 0) {
-    lines.push('// Sideboard');
-    for (const card of sideboard.sort((a, b) => a.card_name.localeCompare(b.card_name))) {
-      lines.push(`${card.quantity} ${card.card_name}`);
-    }
-    lines.push('');
-  }
-
-  return lines.join('\n').trim();
-}
-
-export function buildArenaText(cards: DeckCard[]): string {
-  const lines: string[] = [];
-
-  const commanders = cards.filter((c) => c.is_commander);
-  const companions = cards.filter((c) => c.is_companion);
-  // Arena: Companion section must appear BEFORE Deck
-  const mainboard = cards.filter(
-    (c) => !c.is_commander && !c.is_companion && c.board !== 'sideboard' && c.board !== 'maybeboard',
-  );
-  const sideboard = cards.filter((c) => c.board === 'sideboard');
-
-  if (commanders.length > 0) {
-    lines.push('Commander');
-    for (const c of commanders) lines.push(`${c.quantity} ${c.card_name}`);
-    lines.push('');
-  }
-
-  // Companion section must come before Deck in Arena format
-  if (companions.length > 0) {
-    lines.push('Companion');
-    for (const c of companions) lines.push(`${c.quantity} ${c.card_name}`);
-    lines.push('');
-  }
-
-  if (mainboard.length > 0) {
-    lines.push('Deck');
-    for (const c of mainboard.sort((a, b) => a.card_name.localeCompare(b.card_name))) {
-      lines.push(`${c.quantity} ${c.card_name}`);
-    }
-  }
-
-  if (sideboard.length > 0) {
-    lines.push('');
-    lines.push('Sideboard');
-    for (const c of sideboard.sort((a, b) => a.card_name.localeCompare(b.card_name))) {
-      lines.push(`${c.quantity} ${c.card_name}`);
-    }
-  }
-
-  return lines.join('\n').trim();
-}
-
-export function buildMtgoText(cards: DeckCard[]): string {
-  const lines: string[] = [];
-
-  const commanders = cards.filter((c) => c.is_commander);
-  const companions = cards.filter((c) => c.is_companion);
-  // MTGO: companion is listed separately before the mainboard, NOT in SB
-  const mainboard = cards.filter(
-    (c) => !c.is_commander && !c.is_companion && c.board !== 'sideboard' && c.board !== 'maybeboard',
-  );
-  const sideboard = cards.filter((c) => c.board === 'sideboard');
-
-  // MTGO treats commander as part of mainboard
-  const allMain = [...commanders, ...mainboard];
-
-  // Companion block appears first in MTGO format
-  if (companions.length > 0) {
-    for (const c of companions) lines.push(`1 ${c.card_name}`);
-    lines.push('');
-  }
-
-  for (const c of allMain.sort((a, b) => a.card_name.localeCompare(b.card_name))) {
-    lines.push(`${c.quantity} ${c.card_name}`);
-  }
-
-  if (sideboard.length > 0) {
-    lines.push('');
-    lines.push('SB:');
-    for (const c of sideboard.sort((a, b) => a.card_name.localeCompare(b.card_name))) {
-      lines.push(`SB: ${c.quantity} ${c.card_name}`);
-    }
-  }
-
-  return lines.join('\n').trim();
 }
 
 export function DeckExportMenu({ deck, cards, onTogglePublic }: DeckExportMenuProps) {
@@ -216,13 +95,11 @@ export function DeckExportMenu({ deck, cards, onTogglePublic }: DeckExportMenuPr
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuLabel className="text-[10px] text-muted-foreground font-normal">{t('deckExport.shareLabel')}</DropdownMenuLabel>
-        {/* Public by default — toggle to make private */}
         <DropdownMenuItem onClick={onTogglePublic} className="gap-2 text-xs">
           {deck.is_public
             ? <><Lock className="h-3.5 w-3.5" />{t('deckExport.makePrivate')}</>
             : <><Globe className="h-3.5 w-3.5" />{t('deckExport.makePublic')}</>}
         </DropdownMenuItem>
-        {/* Copy link always available; deck must be public to be accessible */}
         <DropdownMenuItem onClick={handleCopyShareLink} className="gap-2 text-xs"
           disabled={!deck.is_public}
           title={deck.is_public ? undefined : 'Make deck public first'}>

@@ -1,5 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { getCorsHeaders } from '../_shared/auth.ts';
+
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
