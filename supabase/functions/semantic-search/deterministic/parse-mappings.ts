@@ -28,7 +28,10 @@ export function parseSlangTerms(query: string, ir: SearchIR): string {
 
   for (const { pattern, syntax } of SLANG_TO_SYNTAX_MAP) {
     if (pattern.test(remaining)) {
-      ir.specials.push(syntax);
+      // Only push non-empty syntax (empty string = consume-only, no output)
+      if (syntax.trim().length > 0) {
+        ir.specials.push(syntax);
+      }
       remaining = remaining.replace(pattern, '').trim();
     }
     // Reset regex state for global patterns

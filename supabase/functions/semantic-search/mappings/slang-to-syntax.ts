@@ -20,6 +20,32 @@ export interface SlangMapping {
  * This layer intercepts them and converts to valid Scryfall syntax.
  */
 export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
+  // Equipment and auras that buff equipped/enchanted creatures
+  // Must be FIRST to consume "equipped/enchanted creature" before it becomes t:creature
+  {
+    // Full pattern: "equipment or auras that buff equipped or enchanted creature"
+    pattern: /\b(?:equipment|auras?)\s+(?:or\s+(?:equipment|auras?)\s+)?that\s+buff\s+(?:(?:the\s+)?(?:equipped|enchanted)\s+creature|creatures?|equipped|enchanted)\b/gi,
+    syntax: '(t:equipment or t:aura) (o:"equipped" or o:"enchanted") (o:"gets" or o:"gains" or o:"have" or o:"+" )',
+    description: 'Equipment or auras that grant bonuses to equipped/enchanted creatures',
+  },
+  {
+    // Shorter: "equipment or auras that buff" without specifying creature
+    pattern: /\b(?:equipment|auras?)\s+(?:or\s+(?:equipment|auras?)\s+)?that\s+buff\b/gi,
+    syntax: '(t:equipment or t:aura) (o:"equipped" or o:"enchanted") (o:"gets" or o:"gains" or o:"have" or o:"+" )',
+    description: 'Equipment or auras that buff',
+  },
+  {
+    // "equipped or enchanted creature" descriptor — consume so it doesn't become t:creature
+    pattern: /\b(?:equipped|enchanted)\s+creatures?\b/gi,
+    syntax: '',
+    description: 'Consume "equipped creature" / "enchanted creature" descriptors (not a type filter)',
+  },
+  {
+    pattern: /\b(?:equipment\s+or\s+auras?|auras?\s+or\s+equipment)\b/gi,
+    syntax: '(t:equipment or t:aura)',
+    description: 'Equipment or auras (both types)',
+  },
+
   // Counter magic (use oracle text search for reliability)
   {
     pattern: /\bcounterspells?\b/gi,
