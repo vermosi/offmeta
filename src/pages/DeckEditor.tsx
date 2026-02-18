@@ -9,11 +9,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import {
   ArrowLeft, Search, List, Plus, Minus, Trash2, Crown, ChevronDown, ChevronRight,
-  Pencil, Check, Sparkles, Wand2, Loader2, Brain, Zap,
+  Pencil, Check, Sparkles, Wand2, Loader2, Brain, Zap, ArrowRightLeft, ChevronUp,
 } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { useDeck, useDeckCards, useDeckMutations, useDeckCardMutations } from '@/hooks/useDeck';
 import type { DeckCard } from '@/hooks/useDeck';
 import { useAuth } from '@/hooks/useAuth';
@@ -28,12 +29,27 @@ import { DeckStatsBar } from '@/components/deckbuilder/DeckStats';
 import { DeckCombos } from '@/components/deckbuilder/DeckCombos';
 import { DeckExportMenu } from '@/components/deckbuilder/DeckExportMenu';
 import { useTranslation } from '@/lib/i18n';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 // ── Constants ──
 const CATEGORIES = [
   'Commander', 'Creatures', 'Instants', 'Sorceries', 'Artifacts',
   'Enchantments', 'Planeswalkers', 'Lands', 'Ramp', 'Removal',
   'Draw', 'Protection', 'Combo', 'Recursion', 'Utility', 'Finisher', 'Other',
+] as const;
+
+const FORMATS = [
+  { value: 'commander', label: 'Commander', max: 100 },
+  { value: 'standard', label: 'Standard', max: 60 },
+  { value: 'modern', label: 'Modern', max: 60 },
+  { value: 'pioneer', label: 'Pioneer', max: 60 },
+  { value: 'legacy', label: 'Legacy', max: 60 },
+  { value: 'vintage', label: 'Vintage', max: 60 },
+  { value: 'pauper', label: 'Pauper', max: 60 },
+  { value: 'oathbreaker', label: 'Oathbreaker', max: 60 },
+  { value: 'brawl', label: 'Brawl', max: 60 },
 ] as const;
 
 const DEFAULT_CATEGORY = 'Other';
@@ -150,10 +166,15 @@ function CardSearchPanel({ onAddCard, onPreview }: {
 }
 
 // ── Category Section ──
-function CategorySection({ category, cards, onRemove, onSetQuantity, onSetCommander }: {
-  category: string; cards: DeckCard[]; onRemove: (id: string) => void;
+function CategorySection({ category, cards, onRemove, onSetQuantity, onSetCommander, onSetCategory, onMoveToSideboard, isReadOnly }: {
+  category: string;
+  cards: DeckCard[];
+  onRemove: (id: string) => void;
   onSetQuantity: (cardId: string, qty: number) => void;
   onSetCommander: (cardId: string, isCommander: boolean) => void;
+  onSetCategory: (cardId: string, category: string) => void;
+  onMoveToSideboard: (cardId: string, toSideboard: boolean) => void;
+  isReadOnly: boolean;
 }) {
   const [open, setOpen] = useState(true);
   const totalQty = cards.reduce((sum, c) => sum + c.quantity, 0);
@@ -171,22 +192,97 @@ function CategorySection({ category, cards, onRemove, onSetQuantity, onSetComman
             <li key={card.id} className="flex items-center gap-1 px-2 py-1.5 hover:bg-secondary/30 transition-colors group text-sm">
               <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{card.quantity}×</span>
               <span className={cn('flex-1 truncate text-xs', card.is_commander && 'font-semibold text-accent')}>{card.card_name}</span>
-              <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                <button onClick={() => onSetCommander(card.id, !card.is_commander)}
-                  className={cn('p-1 rounded text-muted-foreground hover:text-accent transition-colors', card.is_commander && 'text-accent')}
-                  aria-label="Toggle commander" title="Set as commander"><Crown className="h-3 w-3" /></button>
-                <button onClick={() => onSetQuantity(card.id, card.quantity - 1)} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
-                  <Minus className="h-3 w-3" /></button>
-                <button onClick={() => onSetQuantity(card.id, card.quantity + 1)} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
-                  <Plus className="h-3 w-3" /></button>
-                <button onClick={() => onRemove(card.id)} className="p-1 rounded text-muted-foreground hover:text-destructive transition-colors">
-                  <Trash2 className="h-3 w-3" /></button>
-              </div>
+              {!isReadOnly && (
+                <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                  {/* Category picker */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors" title="Change category">
+                        <Pencil className="h-3 w-3" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-40 max-h-60 overflow-y-auto">
+                      {CATEGORIES.filter(c => c !== 'Commander').map((cat) => (
+                        <DropdownMenuItem key={cat} onClick={() => onSetCategory(card.id, cat)}
+                          className={cn('text-xs', card.category === cat && 'text-accent font-medium')}>
+                          {cat}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <button onClick={() => onSetCommander(card.id, !card.is_commander)}
+                    className={cn('p-1 rounded text-muted-foreground hover:text-accent transition-colors', card.is_commander && 'text-accent')}
+                    aria-label="Toggle commander" title="Set as commander"><Crown className="h-3 w-3" /></button>
+                  <button onClick={() => onMoveToSideboard(card.id, true)}
+                    className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
+                    title="Move to sideboard"><ArrowRightLeft className="h-3 w-3" /></button>
+                  <button onClick={() => onSetQuantity(card.id, card.quantity - 1)} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
+                    <Minus className="h-3 w-3" /></button>
+                  <button onClick={() => onSetQuantity(card.id, card.quantity + 1)} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
+                    <Plus className="h-3 w-3" /></button>
+                  <button onClick={() => onRemove(card.id)} className="p-1 rounded text-muted-foreground hover:text-destructive transition-colors">
+                    <Trash2 className="h-3 w-3" /></button>
+                </div>
+              )}
             </li>
           ))}
         </ul>
       </CollapsibleContent>
     </Collapsible>
+  );
+}
+
+// ── Sideboard Section ──
+function SideboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, isReadOnly }: {
+  cards: DeckCard[];
+  onRemove: (id: string) => void;
+  onSetQuantity: (cardId: string, qty: number) => void;
+  onMoveToMainboard: (cardId: string) => void;
+  isReadOnly: boolean;
+}) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(true);
+  const totalQty = cards.reduce((sum, c) => sum + c.quantity, 0);
+
+  if (cards.length === 0 && isReadOnly) return null;
+
+  return (
+    <div className="mt-2 pt-2 border-t border-border/50">
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CollapsibleTrigger className="flex items-center gap-2 w-full px-3 py-2 hover:bg-secondary/30 transition-colors rounded-lg text-left">
+          {open ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+          <span className="text-xs font-semibold text-muted-foreground">{t('deckEditor.sideboard')}</span>
+          <span className="text-[10px] text-muted-foreground">({totalQty})</span>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          {cards.length === 0 ? (
+            <p className="px-3 py-2 text-[10px] text-muted-foreground">{t('deckEditor.sideboardEmpty')}</p>
+          ) : (
+            <ul className="ml-2 border-l border-border/30">
+              {cards.map((card) => (
+                <li key={card.id} className="flex items-center gap-1 px-2 py-1.5 hover:bg-secondary/30 transition-colors group text-sm">
+                  <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{card.quantity}×</span>
+                  <span className="flex-1 truncate text-xs text-muted-foreground">{card.card_name}</span>
+                  {!isReadOnly && (
+                    <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => onMoveToMainboard(card.id)}
+                        className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
+                        title={t('deckEditor.moveToMainboard')}><ChevronUp className="h-3 w-3" /></button>
+                      <button onClick={() => onSetQuantity(card.id, card.quantity - 1)} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
+                        <Minus className="h-3 w-3" /></button>
+                      <button onClick={() => onSetQuantity(card.id, card.quantity + 1)} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
+                        <Plus className="h-3 w-3" /></button>
+                      <button onClick={() => onRemove(card.id)} className="p-1 rounded text-muted-foreground hover:text-destructive transition-colors">
+                        <Trash2 className="h-3 w-3" /></button>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
   );
 }
 
@@ -285,11 +381,18 @@ export default function DeckEditor() {
   const [suggestionsAnalysis, setSuggestionsAnalysis] = useState('');
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [categorizingAll, setCategorizingAll] = useState(false);
+  const [descriptionOpen, setDescriptionOpen] = useState(false);
+  const [descriptionInput, setDescriptionInput] = useState('');
   const queryClient = useQueryClient();
   const scryfallCacheRef = useRef<Map<string, ScryfallCard>>(new Map());
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [scryfallCacheVersion, setScryfallCacheVersion] = useState(0);
   const importProcessedRef = useRef(false);
+
+  // Sync description input when deck loads
+  useEffect(() => {
+    if (deck?.description !== undefined) setDescriptionInput(deck.description || '');
+  }, [deck?.description]);
 
   // ── Handle imported cards from navigation state ──
   useEffect(() => {
@@ -311,10 +414,14 @@ export default function DeckEditor() {
     importCards();
   }, [id, location.state, addCard, navigate, location.pathname, t]);
 
-  // Group cards by category
+  // Separate mainboard and sideboard
+  const mainboardCards = useMemo(() => cards.filter((c) => c.board !== 'sideboard' && c.board !== 'maybeboard'), [cards]);
+  const sideboardCards = useMemo(() => cards.filter((c) => c.board === 'sideboard'), [cards]);
+
+  // Group mainboard cards by category
   const grouped = useMemo(() => {
     const groups: Record<string, DeckCard[]> = {};
-    for (const card of cards) {
+    for (const card of mainboardCards) {
       const cat = card.is_commander ? 'Commander' : card.category || DEFAULT_CATEGORY;
       if (!groups[cat]) groups[cat] = [];
       groups[cat].push(card);
@@ -327,10 +434,12 @@ export default function DeckEditor() {
       if (!CATEGORIES.includes(cat as any)) sorted.push([cat, catCards]);
     }
     return sorted;
-  }, [cards]);
+  }, [mainboardCards]);
 
-  const totalCards = cards.reduce((sum, c) => sum + c.quantity, 0);
-  const formatMax = deck?.format === 'commander' ? 100 : 60;
+  const totalMainboard = mainboardCards.reduce((sum, c) => sum + c.quantity, 0);
+  const totalSideboard = sideboardCards.reduce((sum, c) => sum + c.quantity, 0);
+  const formatConfig = FORMATS.find((f) => f.value === deck?.format) ?? FORMATS[0];
+  const formatMax = formatConfig.max;
 
   const handleAddCard = useCallback(
     async (card: ScryfallCard) => {
@@ -420,12 +529,30 @@ export default function DeckEditor() {
     }
   }, [cards, updateCard, updateDeck, id]);
 
+  const handleSetCategory = useCallback((cardId: string, category: string) => {
+    updateCard.mutate({ id: cardId, category });
+  }, [updateCard]);
+
+  const handleMoveToSideboard = useCallback((cardId: string, toSideboard: boolean) => {
+    updateCard.mutate({ id: cardId, board: toSideboard ? 'sideboard' : 'mainboard' });
+  }, [updateCard]);
+
   const handleTogglePublic = useCallback(() => {
     if (!deck || !id) return;
     updateDeck.mutate({ id, is_public: !deck.is_public });
     toast({ title: deck.is_public ? t('deckExport.nowPrivate') : t('deckExport.nowPublic'),
       description: deck.is_public ? t('deckExport.nowPrivateDesc') : t('deckExport.nowPublicDesc') });
   }, [deck, id, updateDeck, t]);
+
+  const handleFormatChange = useCallback((format: string) => {
+    if (!id) return;
+    updateDeck.mutate({ id, format });
+  }, [id, updateDeck]);
+
+  const handleDescriptionBlur = useCallback(() => {
+    if (!id || descriptionInput === (deck?.description || '')) return;
+    updateDeck.mutate({ id, description: descriptionInput || null });
+  }, [id, descriptionInput, deck?.description, updateDeck]);
 
   const startEditName = () => { setNameInput(deck?.name || ''); setEditingName(true); };
   const saveName = () => { if (nameInput.trim() && id) updateDeck.mutate({ id, name: nameInput.trim() }); setEditingName(false); };
@@ -453,34 +580,84 @@ export default function DeckEditor() {
 
   // ── Deck Header Bar ──
   const deckHeader = (
-    <div className="px-3 sm:px-4 py-2.5 sm:py-3 border-b border-border flex items-center gap-2 sm:gap-3">
-      <Link to="/deckbuilder" className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors">
-        <ArrowLeft className="h-4 w-4" />
-      </Link>
-      {editingName && !isReadOnly ? (
-        <div className="flex items-center gap-2 flex-1">
-          <Input value={nameInput} onChange={(e) => setNameInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && saveName()} className="text-sm h-8" autoFocus />
-          <Button size="sm" variant="ghost" onClick={saveName}><Check className="h-4 w-4" /></Button>
+    <div className="border-b border-border">
+      <div className="px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3">
+        <Link to="/deckbuilder" className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors">
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
+        {editingName && !isReadOnly ? (
+          <div className="flex items-center gap-2 flex-1">
+            <Input value={nameInput} onChange={(e) => setNameInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && saveName()} className="text-sm h-8" autoFocus />
+            <Button size="sm" variant="ghost" onClick={saveName}><Check className="h-4 w-4" /></Button>
+          </div>
+        ) : (
+          <button onClick={isReadOnly ? undefined : startEditName}
+            className={cn('flex items-center gap-1.5 text-left flex-1 min-w-0', !isReadOnly && 'group')}>
+            <h2 className={cn('font-semibold truncate', isMobile && 'text-sm')}>{deck.name}</h2>
+            {!isReadOnly && <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />}
+          </button>
+        )}
+        {/* Format selector */}
+        {!isReadOnly && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="ghost" className="h-7 text-[11px] gap-1 shrink-0 hidden sm:flex">
+                <Zap className="h-3 w-3" />
+                {formatConfig.label}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              {FORMATS.map((f) => (
+                <DropdownMenuItem key={f.value} onClick={() => handleFormatChange(f.value)}
+                  className={cn('text-xs', deck.format === f.value && 'text-accent font-medium')}>
+                  {f.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+        {!isReadOnly && cards.length >= 3 && (
+          <Button size="sm" variant="ghost" onClick={handleRecategorizeAll} disabled={categorizingAll}
+            className="h-7 text-[11px] gap-1 hidden sm:flex" title="AI re-categorize all cards">
+            {categorizingAll ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
+            {t('deckEditor.categorize')}
+          </Button>
+        )}
+        {!isReadOnly && <DeckExportMenu deck={deck} cards={cards} onTogglePublic={handleTogglePublic} />}
+        <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full shrink-0',
+          totalMainboard >= formatMax ? 'bg-accent/10 text-accent' : 'bg-secondary text-secondary-foreground')}>
+          {totalMainboard}/{formatMax}
+          {totalSideboard > 0 && <span className="text-muted-foreground"> +{totalSideboard}</span>}
+        </span>
+      </div>
+      {/* Description row */}
+      {!isReadOnly && (
+        <div className="px-3 sm:px-4 pb-2">
+          {descriptionOpen ? (
+            <Textarea
+              value={descriptionInput}
+              onChange={(e) => setDescriptionInput(e.target.value)}
+              onBlur={() => { handleDescriptionBlur(); setDescriptionOpen(false); }}
+              placeholder={t('deckEditor.descriptionPlaceholder')}
+              rows={2}
+              className="text-xs resize-none"
+              autoFocus
+            />
+          ) : (
+            <button
+              onClick={() => setDescriptionOpen(true)}
+              className="text-[11px] text-muted-foreground hover:text-foreground transition-colors text-left truncate w-full"
+            >
+              {descriptionInput || t('deckEditor.addNotes')}
+            </button>
+          )}
         </div>
-      ) : (
-        <button onClick={isReadOnly ? undefined : startEditName}
-          className={cn('flex items-center gap-1.5 text-left flex-1 min-w-0', !isReadOnly && 'group')}>
-          <h2 className={cn('font-semibold truncate', isMobile && 'text-sm')}>{deck.name}</h2>
-          {!isReadOnly && <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />}
-        </button>
       )}
-      {!isReadOnly && cards.length >= 3 && (
-        <Button size="sm" variant="ghost" onClick={handleRecategorizeAll} disabled={categorizingAll}
-          className="h-7 text-[11px] gap-1 hidden sm:flex" title="AI re-categorize all cards">
-          {categorizingAll ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
-          {t('deckEditor.categorize')}
-        </Button>
+      {isReadOnly && deck.description && (
+        <div className="px-3 sm:px-4 pb-2">
+          <p className="text-[11px] text-muted-foreground">{deck.description}</p>
+        </div>
       )}
-      {!isReadOnly && <DeckExportMenu deck={deck} cards={cards} onTogglePublic={handleTogglePublic} />}
-      <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full shrink-0',
-        totalCards >= formatMax ? 'bg-accent/10 text-accent' : 'bg-secondary text-secondary-foreground')}>
-        {totalCards}/{formatMax}
-      </span>
     </div>
   );
 
@@ -493,18 +670,34 @@ export default function DeckEditor() {
           <p className="text-center">{isReadOnly ? t('deckEditor.emptyDeckReadOnly') : t('deckEditor.emptyDeck')}</p>
         </div>
       ) : (
-        grouped.map(([category, catCards]) => (
-          <CategorySection key={category} category={category} cards={catCards}
-            onRemove={isReadOnly ? () => {} : (cardId) => removeCard.mutate(cardId)}
-            onSetQuantity={isReadOnly ? () => {} : (cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
-            onSetCommander={isReadOnly ? () => {} : handleSetCommander} />
-        ))
+        <>
+          {grouped.map(([category, catCards]) => (
+            <CategorySection
+              key={category}
+              category={category}
+              cards={catCards}
+              isReadOnly={isReadOnly}
+              onRemove={(cardId) => removeCard.mutate(cardId)}
+              onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
+              onSetCommander={handleSetCommander}
+              onSetCategory={handleSetCategory}
+              onMoveToSideboard={(cardId, toSb) => handleMoveToSideboard(cardId, toSb)}
+            />
+          ))}
+          <SideboardSection
+            cards={sideboardCards}
+            isReadOnly={isReadOnly}
+            onRemove={(cardId) => removeCard.mutate(cardId)}
+            onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
+            onMoveToMainboard={(cardId) => handleMoveToSideboard(cardId, false)}
+          />
+        </>
       )}
     </div>
   );
 
   const statsBar = cards.length > 0 && (
-    <DeckStatsBar cards={cards} scryfallCache={scryfallCacheRef.current} formatMax={formatMax} />
+    <DeckStatsBar cards={mainboardCards} scryfallCache={scryfallCacheRef.current} formatMax={formatMax} />
   );
 
   // ── Desktop Layout ──
@@ -556,12 +749,28 @@ export default function DeckEditor() {
                 <p className="text-center">{isReadOnly ? t('deckEditor.emptyDeckReadOnly') : t('deckEditor.emptyDeckMobile')}</p>
               </div>
             ) : (
-              grouped.map(([category, catCards]) => (
-                <CategorySection key={category} category={category} cards={catCards}
-                  onRemove={isReadOnly ? () => {} : (cardId) => removeCard.mutate(cardId)}
-                  onSetQuantity={isReadOnly ? () => {} : (cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
-                  onSetCommander={isReadOnly ? () => {} : handleSetCommander} />
-              ))
+              <>
+                {grouped.map(([category, catCards]) => (
+                  <CategorySection
+                    key={category}
+                    category={category}
+                    cards={catCards}
+                    isReadOnly={isReadOnly}
+                    onRemove={(cardId) => removeCard.mutate(cardId)}
+                    onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
+                    onSetCommander={handleSetCommander}
+                    onSetCategory={handleSetCategory}
+                    onMoveToSideboard={(cardId, toSb) => handleMoveToSideboard(cardId, toSb)}
+                  />
+                ))}
+                <SideboardSection
+                  cards={sideboardCards}
+                  isReadOnly={isReadOnly}
+                  onRemove={(cardId) => removeCard.mutate(cardId)}
+                  onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
+                  onMoveToMainboard={(cardId) => handleMoveToSideboard(cardId, false)}
+                />
+              </>
             )}
           </div>
         )}
