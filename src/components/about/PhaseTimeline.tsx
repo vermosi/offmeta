@@ -185,7 +185,7 @@ function PhaseCard({ phase, index }: { phase: Phase; index: number }) {
           observer.disconnect();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0, rootMargin: '0px 0px -40px 0px' }
     );
     observer.observe(el);
     return () => observer.disconnect();
