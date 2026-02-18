@@ -83,6 +83,13 @@ export type Database = {
             referencedRelation: "decks"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "deck_cards_deck_id_fkey"
+            columns: ["deck_id"]
+            isOneToOne: false
+            referencedRelation: "decks_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       decks: {
@@ -384,7 +391,51 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      decks_public: {
+        Row: {
+          card_count: number | null
+          color_identity: string[] | null
+          commander_name: string | null
+          companion_name: string | null
+          created_at: string | null
+          description: string | null
+          format: string | null
+          id: string | null
+          is_public: boolean | null
+          name: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          card_count?: number | null
+          color_identity?: string[] | null
+          commander_name?: string | null
+          companion_name?: string | null
+          created_at?: string | null
+          description?: string | null
+          format?: string | null
+          id?: string | null
+          is_public?: boolean | null
+          name?: string | null
+          updated_at?: string | null
+          user_id?: never
+        }
+        Update: {
+          card_count?: number | null
+          color_identity?: string[] | null
+          commander_name?: string | null
+          companion_name?: string | null
+          created_at?: string | null
+          description?: string | null
+          format?: string | null
+          id?: string | null
+          is_public?: boolean | null
+          name?: string | null
+          updated_at?: string | null
+          user_id?: never
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_expired_cache: { Args: never; Returns: undefined }
