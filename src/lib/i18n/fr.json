@@ -148,7 +148,7 @@
   "faq.q2": "Comment fonctionne la recherche de cartes MTG en langage naturel ?",
   "faq.a2": "OffMeta utilise l'IA pour comprendre votre intention de recherche et la convertit en syntaxe Scryfall. Par exemple, taper 'sorts verts de rampe pas chers' devient une requête filtrant par couleur, type de carte, coût de mana et texte de règles.",
   "faq.q3": "OffMeta est-il gratuit ?",
-  "faq.a3": "Oui, OffMeta est entièrement gratuit. Aucun compte requis, aucun abonnement et aucune limite de recherches.",
+  "faq.a3": "Oui, OffMeta est entièrement gratuit. Des comptes optionnels vous permettent de sauvegarder des recherches et d'accéder à des fonctionnalités supplémentaires, mais aucun compte n'est requis pour effectuer des recherches.",
   "faq.q4": "D'où OffMeta tire-t-il ses données de cartes ?",
   "faq.a4": "OffMeta utilise l'API Scryfall comme source de données. Scryfall maintient une base de données complète et à jour de toutes les cartes Magic: The Gathering.",
   "faq.q5": "Puis-je utiliser OffMeta pour chercher des cartes Commander/EDH ?",
