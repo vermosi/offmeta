@@ -7,6 +7,7 @@ import { useMemo } from 'react';
 import type { DeckCard } from '@/hooks/useDeck';
 import type { ScryfallCard } from '@/types/card';
 import { cn } from '@/lib/core/utils';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 
 // ── Mana Curve ──
 const CURVE_LABELS = ['0', '1', '2', '3', '4', '5', '6', '7+'];
@@ -102,6 +103,7 @@ export interface DeckStatsData {
 }
 
 export function DeckStatsBar({ cards, scryfallCache, formatMax }: DeckStatsData) {
+  const { t } = useTranslation();
   const stats = useMemo(() => {
     const curve = new Array(8).fill(0);
     const colorCounts: Record<string, number> = {};
@@ -167,7 +169,7 @@ export function DeckStatsBar({ cards, scryfallCache, formatMax }: DeckStatsData)
       <div className="flex items-center gap-6 overflow-x-auto">
         {/* Card count */}
         <div className="shrink-0">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Cards</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{t('deckEditor.stats.cards')}</div>
           <div className={cn(
             'text-sm font-semibold',
             stats.totalCards >= formatMax ? 'text-accent' : 'text-foreground',
@@ -178,13 +180,13 @@ export function DeckStatsBar({ cards, scryfallCache, formatMax }: DeckStatsData)
 
         {/* Avg CMC */}
         <div className="shrink-0">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Avg CMC</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{t('deckEditor.stats.avgCmc')}</div>
           <div className="text-sm font-semibold">{stats.avgCmc}</div>
         </div>
 
         {/* Price */}
         <div className="shrink-0">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Est. Price</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{t('deckEditor.stats.estPrice')}</div>
           <div className="text-sm font-semibold">
             {stats.priceCount > 0 ? `$${stats.totalPrice.toFixed(2)}` : '—'}
           </div>
@@ -192,19 +194,19 @@ export function DeckStatsBar({ cards, scryfallCache, formatMax }: DeckStatsData)
 
         {/* Color Pie */}
         <div className="shrink-0">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Colors</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{t('deckEditor.stats.colors')}</div>
           <ColorPie colorCounts={stats.colorCounts} />
         </div>
 
         {/* Type Distribution */}
         <div className="shrink-0">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Types</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{t('deckEditor.stats.types')}</div>
           <TypeDistribution typeCounts={stats.typeCounts} />
         </div>
 
         {/* Mana Curve */}
         <div className="flex-1 min-w-[140px]">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Mana Curve</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{t('deckEditor.stats.manaCurve')}</div>
           <ManaCurve distribution={stats.curve} />
         </div>
       </div>
