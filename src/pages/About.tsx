@@ -93,6 +93,30 @@ export default function About() {
     setMeta('name', 'twitter:url', ABOUT_META.url);
     setMeta('name', 'twitter:image', ABOUT_META.image);
 
+    // JSON-LD BreadcrumbList — helps Google display "OffMeta > About" in results
+    const breadcrumb = document.createElement('script');
+    breadcrumb.type = 'application/ld+json';
+    breadcrumb.id = 'about-breadcrumb-jsonld';
+    breadcrumb.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'OffMeta',
+          item: 'https://offmeta.app/',
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'About',
+          item: 'https://offmeta.app/about',
+        },
+      ],
+    });
+    document.head.appendChild(breadcrumb);
+
     return () => {
       // Restore defaults when leaving the page
       document.title = prev.title;
@@ -106,6 +130,8 @@ export default function About() {
       setMeta('name', 'twitter:description', DEFAULT_META.description);
       setMeta('name', 'twitter:url', DEFAULT_META.url);
       setMeta('name', 'twitter:image', DEFAULT_META.image);
+      // Remove breadcrumb script on unmount
+      document.getElementById('about-breadcrumb-jsonld')?.remove();
     };
   }, []);
 
