@@ -988,6 +988,7 @@ export default function DeckEditor() {
       if (e.key === '/') { e.preventDefault(); searchInputRef.current?.focus(); return; }
       if (e.key === 'Delete' && selectedCardId) { e.preventDefault(); removeCard.mutate(selectedCardId); setSelectedCardId(null); return; }
       if (e.key === 'S' && e.shiftKey && selectedCardId) { e.preventDefault(); updateCard.mutate({ id: selectedCardId, board: 'sideboard' }); setSelectedCardId(null); return; }
+      if (e.key === 'M' && e.shiftKey && selectedCardId) { e.preventDefault(); updateCard.mutate({ id: selectedCardId, board: 'maybeboard' }); setSelectedCardId(null); return; }
       if (e.key === 'Escape') { setSelectedCardId(null); setShortcutsOpen(false); }
     };
     window.addEventListener('keydown', onKey);
@@ -1503,6 +1504,55 @@ export default function DeckEditor() {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       {isMobile ? mobileLayout : desktopLayout}
+      {/* Keyboard shortcuts help overlay */}
+      {shortcutsOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm"
+          onClick={() => setShortcutsOpen(false)}
+        >
+          <div
+            className="bg-popover border border-border rounded-xl shadow-2xl p-5 w-72 space-y-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <Keyboard className="h-4 w-4 text-muted-foreground" />
+                Keyboard Shortcuts
+              </h3>
+              <button
+                onClick={() => setShortcutsOpen(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors text-xs"
+              >
+                ✕
+              </button>
+            </div>
+            <ul className="space-y-2 text-xs">
+              {[
+                { keys: ['/'], desc: 'Focus search' },
+                { keys: ['Del'], desc: 'Remove selected card' },
+                { keys: ['Shift', 'S'], desc: 'Move selected to sideboard' },
+                { keys: ['Shift', 'M'], desc: 'Move selected to maybeboard' },
+                { keys: ['?'], desc: 'Toggle this help panel' },
+                { keys: ['Esc'], desc: 'Deselect / close' },
+              ].map(({ keys, desc }) => (
+                <li key={desc} className="flex items-center justify-between gap-3">
+                  <span className="text-muted-foreground">{desc}</span>
+                  <span className="flex items-center gap-1 shrink-0">
+                    {keys.map((k) => (
+                      <kbd key={k} className="inline-flex items-center px-1.5 py-0.5 rounded bg-secondary border border-border font-mono text-[10px] leading-none">
+                        {k}
+                      </kbd>
+                    ))}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="text-[10px] text-muted-foreground">
+              Shortcuts require a card to be selected (click a row first).
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
