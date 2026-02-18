@@ -851,7 +851,7 @@ export default function AdminAnalytics() {
                                 onClick={() =>
                                   setExpandedFeedback((prev) => {
                                     const next = new Set(prev);
-                                    next.has(f.id) ? next.delete(f.id) : next.add(f.id);
+                                    if (next.has(f.id)) { next.delete(f.id); } else { next.add(f.id); }
                                     return next;
                                   })
                                 }
