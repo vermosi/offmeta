@@ -10,13 +10,8 @@
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
-  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-};
+import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
+import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
 
 const SPELLBOOK_BASE = 'https://backend.commanderspellbook.com';
 const FETCH_TIMEOUT_MS = 15000;
@@ -108,16 +103,38 @@ function parseVariant(variant: Record<string, unknown>): ComboResult {
   };
 }
 
-function json(data: unknown, status = 200) {
+function json(data: unknown, status = 200, extraHeaders: Record<string, string> = {}) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...extraHeaders },
   });
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Require valid auth token
+  const { authorized, error: authError } = validateAuth(req);
+  if (!authorized) {
+    return new Response(JSON.stringify({ error: authError || 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Rate limiting: 20 requests per minute per IP (no AI cost, but external API)
+  maybeCleanup();
+  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const { allowed, retryAfter } = await checkRateLimit(clientIp, undefined, 20, 500);
+  if (!allowed) {
+    return new Response(JSON.stringify({ error: 'Too many requests. Please slow down.', retryAfter }), {
+      status: 429,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': String(retryAfter) },
+    });
   }
 
   try {
@@ -128,7 +145,7 @@ serve(async (req) => {
     if (action === 'card') {
       const cardName = (body.cardName as string)?.trim();
       if (!cardName || cardName.length > 200) {
-        return json({ error: 'Invalid cardName' }, 400);
+        return json({ error: 'Invalid cardName' }, 400, corsHeaders);
       }
 
       const q = encodeURIComponent(`card:"${cardName}"`);
@@ -144,6 +161,7 @@ serve(async (req) => {
         return json(
           { error: `Commander Spellbook API error (${resp.status})` },
           502,
+          corsHeaders,
         );
       }
 
@@ -155,7 +173,7 @@ serve(async (req) => {
         cardName,
         combos: results,
         total: data.count ?? results.length,
-      });
+      }, 200, corsHeaders);
     }
 
     // ── Find my combos (decklist) ──
@@ -164,11 +182,9 @@ serve(async (req) => {
       const cards: string[] = (body.cards || []).slice(0, MAX_DECK_CARDS);
 
       if (cards.length === 0 && commanders.length === 0) {
-        return json({ error: 'Provide at least one commander or card' }, 400);
+        return json({ error: 'Provide at least one commander or card' }, 400, corsHeaders);
       }
 
-      // Build the POST body for /find-my-combos
-      // The Spellbook API expects CardInDeckRequest objects: { card: string, quantity?: number }
       const mainList = cards.map((name) => ({ card: name, quantity: 1 }));
       const commanderList = commanders.map((name) => ({ card: name, quantity: 1 }));
 
@@ -185,7 +201,7 @@ serve(async (req) => {
             commanders: commanderList,
           }),
         },
-        25000, // longer timeout for deck analysis
+        25000,
       );
 
       if (!resp.ok) {
@@ -194,6 +210,7 @@ serve(async (req) => {
         return json(
           { error: `Commander Spellbook API error (${resp.status})` },
           502,
+          corsHeaders,
         );
       }
 
@@ -213,14 +230,14 @@ serve(async (req) => {
         totalIncluded: included.length,
         totalAlmostIncluded:
           (results.almostIncluded as unknown[])?.length ?? 0,
-      });
+      }, 200, corsHeaders);
     }
 
-    return json({ error: 'Invalid action. Use "card" or "deck".' }, 400);
+    return json({ error: 'Invalid action. Use "card" or "deck".' }, 400, corsHeaders);
   } catch (e) {
     console.error('combo-search error:', e);
     if (e instanceof DOMException && e.name === 'AbortError') {
-      return json({ error: 'Commander Spellbook API timed out' }, 504);
+      return json({ error: 'Commander Spellbook API timed out' }, 504, corsHeaders);
     }
     return json(
       {
@@ -228,6 +245,7 @@ serve(async (req) => {
           e instanceof Error ? e.message : 'Internal error',
       },
       500,
+      corsHeaders,
     );
   }
 });
