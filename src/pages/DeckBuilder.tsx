@@ -6,7 +6,8 @@
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Trash2, Layers, Crown, Upload, Globe } from 'lucide-react';
+import { Plus, Trash2, Layers, Crown, Upload, Globe, Lock } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -119,7 +120,15 @@ export default function DeckBuilder() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <h3 className="font-semibold truncate group-hover:text-accent transition-colors">{deck.name}</h3>
-                      {deck.is_public && <Globe className="h-3 w-3 text-muted-foreground shrink-0" />}
+                      {deck.is_public ? (
+                        <Badge variant="info" size="sm" className="gap-0.5 shrink-0">
+                          <Globe className="h-2.5 w-2.5" />Public
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" size="sm" className="gap-0.5 shrink-0 text-muted-foreground">
+                          <Lock className="h-2.5 w-2.5" />Private
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {FORMAT_LABELS[deck.format] || deck.format} · {deck.card_count} {t('deck.cards')}
