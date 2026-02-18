@@ -46,6 +46,36 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     description: 'Equipment or auras (both types)',
   },
 
+  // "lands are mountains" type effects (Blood Moon, Magus of the Moon, etc.)
+  // Must intercept before t:land is extracted from "lands"
+  {
+    pattern: /\b(?:cards?\s+that\s+)?(?:turn|make|turns?|makes?|change[sd]?)\s+all\s+lands?\s+into\s+mountains?\b/gi,
+    syntax: 'o:"lands are mountains"',
+    description: 'Cards that turn all lands into mountains (Blood Moon effects)',
+  },
+  {
+    pattern: /\b(?:turns?|makes?)\s+(?:all\s+)?lands?\s+into\s+mountains?\b/gi,
+    syntax: 'o:"lands are mountains"',
+    description: 'Cards that turn lands into mountains',
+  },
+  {
+    pattern: /\bblood\s+moon\s+effects?\b/gi,
+    syntax: 'o:"lands are mountains"',
+    description: 'Blood Moon-style land type changing effects',
+  },
+
+  // EDHREC rank ordering — high rank = most popular = desc
+  {
+    pattern: /\bhigh(?:est)?\s+(?:edhrec\s+)?rank(?:ed)?\b/gi,
+    syntax: 'order:edhrec direction:desc',
+    description: 'Sort by highest EDHREC popularity (most played first)',
+  },
+  {
+    pattern: /\bmost\s+popular\s+(?:in\s+)?(?:edhrec|commander)\b/gi,
+    syntax: 'order:edhrec direction:desc',
+    description: 'Most popular in EDHREC/commander',
+  },
+
   // Counter magic (use oracle text search for reliability)
   {
     pattern: /\bcounterspells?\b/gi,
