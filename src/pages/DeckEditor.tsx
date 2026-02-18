@@ -234,8 +234,96 @@ function CardSearchPanel({ onAddCard, onPreview, searchInputRef }: {
   );
 }
 
+// ── Card Hover Image ──
+// Shows a small card image in a floating popover on hover.
+// Reuses the shared Scryfall cache; fetches once per card name on first hover.
+const cardImageFetchCache = new Map<string, string | null>(); // name → img url or null
+
+function CardHoverImage({
+  cardName, scryfallCache, children,
+}: {
+  cardName: string;
+  scryfallCache: React.RefObject<Map<string, import('@/types/card').ScryfallCard>>;
+  children: React.ReactNode;
+}) {
+  const [imgUrl, setImgUrl] = useState<string | null | undefined>(undefined);
+  const [visible, setVisible] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const onMouseEnter = useCallback(async () => {
+    timerRef.current = setTimeout(async () => {
+      setVisible(true);
+      if (cardImageFetchCache.has(cardName)) {
+        setImgUrl(cardImageFetchCache.get(cardName) ?? null);
+        return;
+      }
+      // Try Scryfall cache first (populated by add / price fetch)
+      const cached = scryfallCache.current?.get(cardName);
+      if (cached) {
+        const url = cached.image_uris?.normal
+          ?? cached.card_faces?.[0]?.image_uris?.normal
+          ?? null;
+        cardImageFetchCache.set(cardName, url);
+        setImgUrl(url);
+        return;
+      }
+      // Fetch from Scryfall named endpoint
+      try {
+        const res = await fetch(
+          `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(cardName)}`,
+        );
+        if (res.ok) {
+          const data = await res.json();
+          scryfallCache.current?.set(cardName, data);
+          const url = data.image_uris?.normal
+            ?? data.card_faces?.[0]?.image_uris?.normal
+            ?? null;
+          cardImageFetchCache.set(cardName, url);
+          setImgUrl(url);
+        } else {
+          cardImageFetchCache.set(cardName, null);
+          setImgUrl(null);
+        }
+      } catch {
+        cardImageFetchCache.set(cardName, null);
+        setImgUrl(null);
+      }
+    }, 350);
+  }, [cardName, scryfallCache]);
+
+  const onMouseLeave = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setVisible(false);
+  }, []);
+
+  return (
+    <span
+      className="relative flex-1 truncate min-w-0"
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      {children}
+      {visible && imgUrl && (
+        <span
+          className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 rounded-xl shadow-2xl border border-border overflow-hidden"
+          style={{ width: 146, height: 204 }}
+        >
+          <img
+            src={imgUrl}
+            alt={cardName}
+            width={146}
+            height={204}
+            className="block object-cover w-full h-full"
+            loading="lazy"
+          />
+        </span>
+      )}
+    </span>
+  );
+}
+
 // ── Category Section ──
-function CategorySection({ category, cards, onRemove, onSetQuantity, onSetCommander, onSetCompanion, onSetCategory, onMoveToSideboard, onMoveToMaybeboard, isReadOnly, selectedCardId, onSelectCard }: {
+function CategorySection({ category, cards, onRemove, onSetQuantity, onSetCommander, onSetCompanion, onSetCategory, onMoveToSideboard, onMoveToMaybeboard, isReadOnly, selectedCardId, onSelectCard, scryfallCache }: {
   category: string;
   cards: DeckCard[];
   onRemove: (id: string) => void;
@@ -248,6 +336,7 @@ function CategorySection({ category, cards, onRemove, onSetQuantity, onSetComman
   isReadOnly: boolean;
   selectedCardId: string | null;
   onSelectCard: (id: string) => void;
+  scryfallCache: React.RefObject<Map<string, import('@/types/card').ScryfallCard>>;
 }) {
   const [open, setOpen] = useState(true);
   const totalQty = cards.reduce((sum, c) => sum + c.quantity, 0);
@@ -265,23 +354,23 @@ function CategorySection({ category, cards, onRemove, onSetQuantity, onSetComman
             <li key={card.id}
               onClick={() => onSelectCard(card.id)}
               className={cn(
-                'flex items-center gap-1 px-2 py-1.5 transition-colors group text-sm cursor-pointer',
+                'flex items-center gap-1 px-2 py-1.5 transition-colors group text-sm cursor-pointer overflow-visible',
                 selectedCardId === card.id
                   ? 'bg-accent/10 border-l-2 border-accent -ml-px'
                   : 'hover:bg-secondary/30',
               )}>
               <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{card.quantity}×</span>
-              <span className={cn(
-                'flex-1 truncate text-xs',
-                card.is_commander && 'font-semibold text-accent',
-                card.is_companion && !card.is_commander && 'font-semibold text-primary',
-              )}>{card.card_name}</span>
-              {/* Companion / commander badge inline */}
+              <CardHoverImage cardName={card.card_name} scryfallCache={scryfallCache}>
+                <span className={cn(
+                  'truncate text-xs',
+                  card.is_commander && 'font-semibold text-accent',
+                  card.is_companion && !card.is_commander && 'font-semibold text-primary',
+                )}>{card.card_name}</span>
+              </CardHoverImage>
               {card.is_companion && <span title="Companion"><Shield className="h-3 w-3 text-primary shrink-0" /></span>}
               {card.is_commander && <span title="Commander"><Crown className="h-3 w-3 text-accent shrink-0" /></span>}
               {!isReadOnly && (
                 <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                  {/* Category picker */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors" title="Change category"
@@ -301,7 +390,6 @@ function CategorySection({ category, cards, onRemove, onSetQuantity, onSetComman
                   <button onClick={(e) => { e.stopPropagation(); onSetCommander(card.id, !card.is_commander); }}
                     className={cn('p-1 rounded text-muted-foreground hover:text-accent transition-colors', card.is_commander && 'text-accent')}
                     aria-label="Toggle commander" title="Set as commander"><Crown className="h-3 w-3" /></button>
-                  {/* Companion toggle — only allow 1 companion */}
                   <button onClick={(e) => { e.stopPropagation(); onSetCompanion(card.id, !card.is_companion); }}
                     className={cn('p-1 rounded text-muted-foreground hover:text-primary transition-colors', card.is_companion && 'text-primary')}
                     aria-label="Toggle companion" title="Set as companion"><Shield className="h-3 w-3" /></button>
@@ -329,13 +417,13 @@ function CategorySection({ category, cards, onRemove, onSetQuantity, onSetComman
 }
 
 // ── Sideboard Section ──
-// ── Sideboard Section ──
-function SideboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, isReadOnly }: {
+function SideboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, isReadOnly, scryfallCache }: {
   cards: DeckCard[];
   onRemove: (id: string) => void;
   onSetQuantity: (cardId: string, qty: number) => void;
   onMoveToMainboard: (cardId: string) => void;
   isReadOnly: boolean;
+  scryfallCache: React.RefObject<Map<string, import('@/types/card').ScryfallCard>>;
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(true);
@@ -357,9 +445,11 @@ function SideboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, i
           ) : (
             <ul className="ml-2 border-l border-border/30">
               {cards.map((card) => (
-                <li key={card.id} className="flex items-center gap-1 px-2 py-1.5 hover:bg-secondary/30 transition-colors group text-sm">
+                <li key={card.id} className="flex items-center gap-1 px-2 py-1.5 hover:bg-secondary/30 transition-colors group text-sm overflow-visible">
                   <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{card.quantity}×</span>
-                  <span className="flex-1 truncate text-xs text-muted-foreground">{card.card_name}</span>
+                  <CardHoverImage cardName={card.card_name} scryfallCache={scryfallCache}>
+                    <span className="truncate text-xs text-muted-foreground">{card.card_name}</span>
+                  </CardHoverImage>
                   {!isReadOnly && (
                     <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                       <button onClick={() => onMoveToMainboard(card.id)}
@@ -384,15 +474,16 @@ function SideboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, i
 }
 
 // ── Maybeboard Section ──
-function MaybeboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, onMoveToSideboard, isReadOnly }: {
+function MaybeboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, onMoveToSideboard, isReadOnly, scryfallCache }: {
   cards: DeckCard[];
   onRemove: (id: string) => void;
   onSetQuantity: (cardId: string, qty: number) => void;
   onMoveToMainboard: (cardId: string) => void;
   onMoveToSideboard: (cardId: string) => void;
   isReadOnly: boolean;
+  scryfallCache: React.RefObject<Map<string, import('@/types/card').ScryfallCard>>;
 }) {
-  const [open, setOpen] = useState(false); // collapsed by default
+  const [open, setOpen] = useState(false);
   const totalQty = cards.reduce((sum, c) => sum + c.quantity, 0);
 
   if (cards.length === 0 && isReadOnly) return null;
@@ -411,9 +502,11 @@ function MaybeboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, 
           ) : (
             <ul className="ml-2 border-l border-border/30">
               {cards.map((card) => (
-                <li key={card.id} className="flex items-center gap-1 px-2 py-1.5 hover:bg-secondary/30 transition-colors group text-sm">
+                <li key={card.id} className="flex items-center gap-1 px-2 py-1.5 hover:bg-secondary/30 transition-colors group text-sm overflow-visible">
                   <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{card.quantity}×</span>
-                  <span className="flex-1 truncate text-xs text-muted-foreground">{card.card_name}</span>
+                  <CardHoverImage cardName={card.card_name} scryfallCache={scryfallCache}>
+                    <span className="truncate text-xs text-muted-foreground">{card.card_name}</span>
+                  </CardHoverImage>
                   {!isReadOnly && (
                     <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                       <button onClick={() => onMoveToMainboard(card.id)}
@@ -440,7 +533,6 @@ function MaybeboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, 
   );
 }
 
-// ── AI Suggestions Panel ──
 function SuggestionsPanel({ suggestions, analysis, loading, onSuggest, onAddSuggestion, cardCount }: {
   suggestions: CardSuggestion[]; analysis: string; loading: boolean;
   onSuggest: () => void; onAddSuggestion: (name: string) => void; cardCount: number;
@@ -910,6 +1002,7 @@ export default function DeckEditor() {
               onSetCategory={handleSetCategory}
               onMoveToSideboard={(cardId, toSb) => handleMoveToSideboard(cardId, toSb)}
               onMoveToMaybeboard={handleMoveToMaybeboard}
+              scryfallCache={scryfallCacheRef}
             />
           ))}
           <SideboardSection
@@ -918,6 +1011,7 @@ export default function DeckEditor() {
             onRemove={(cardId) => removeCard.mutate(cardId)}
             onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
             onMoveToMainboard={(cardId) => handleMoveToSideboard(cardId, false)}
+            scryfallCache={scryfallCacheRef}
           />
           <MaybeboardSection
             cards={maybeboardCards}
@@ -926,6 +1020,7 @@ export default function DeckEditor() {
             onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
             onMoveToMainboard={(cardId) => handleMoveToSideboard(cardId, false)}
             onMoveToSideboard={(cardId) => updateCard.mutate({ id: cardId, board: 'sideboard' })}
+            scryfallCache={scryfallCacheRef}
           />
         </>
       )}
@@ -1001,6 +1096,7 @@ export default function DeckEditor() {
                     onSetCategory={handleSetCategory}
                     onMoveToSideboard={(cardId, toSb) => handleMoveToSideboard(cardId, toSb)}
                     onMoveToMaybeboard={handleMoveToMaybeboard}
+                    scryfallCache={scryfallCacheRef}
                   />
                 ))}
                 <SideboardSection
@@ -1009,6 +1105,7 @@ export default function DeckEditor() {
                   onRemove={(cardId) => removeCard.mutate(cardId)}
                   onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
                   onMoveToMainboard={(cardId) => handleMoveToSideboard(cardId, false)}
+                  scryfallCache={scryfallCacheRef}
                 />
                 <MaybeboardSection
                   cards={maybeboardCards}
@@ -1017,6 +1114,7 @@ export default function DeckEditor() {
                   onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
                   onMoveToMainboard={(cardId) => handleMoveToSideboard(cardId, false)}
                   onMoveToSideboard={(cardId) => updateCard.mutate({ id: cardId, board: 'sideboard' })}
+                  scryfallCache={scryfallCacheRef}
                 />
               </>
             )}
