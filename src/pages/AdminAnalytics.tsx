@@ -2,7 +2,8 @@
  * Admin analytics dashboard — shows search query metrics,
  * source breakdown, confidence distribution, popular queries,
  * response time percentiles, deterministic coverage trend,
- * and low-confidence queries. Protected: requires admin role.
+ * low-confidence queries, and user-submitted search feedback.
+ * Protected: requires admin role.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -35,10 +36,25 @@ import {
   Download,
   Search,
   Gauge,
+  MessageSquareWarning,
+  CheckCircle2,
+  Circle,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { SkipLinks } from '@/components/SkipLinks';
+
+interface FeedbackItem {
+  id: string;
+  original_query: string;
+  translated_query: string | null;
+  issue_description: string;
+  processing_status: string | null;
+  created_at: string;
+  processed_at: string | null;
+}
 
 interface PopularQuery {
   query: string;
@@ -179,6 +195,10 @@ export default function AdminAnalytics() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [days, setDays] = useState('7');
+  const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedbackFilter, setFeedbackFilter] = useState<'all' | 'pending' | 'done'>('all');
+  const [expandedFeedback, setExpandedFeedback] = useState<Set<string>>(new Set());
 
   // Redirect if not admin
   useEffect(() => {
@@ -221,11 +241,44 @@ export default function AdminAnalytics() {
     }
   }, [days]);
 
+  const fetchFeedback = useCallback(async () => {
+    setFeedbackLoading(true);
+    try {
+      const { data: rows, error } = await supabase
+        .from('search_feedback')
+        .select('id, original_query, translated_query, issue_description, processing_status, created_at, processed_at')
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      setFeedback((rows as FeedbackItem[]) ?? []);
+    } catch {
+      toast.error('Failed to load feedback');
+    } finally {
+      setFeedbackLoading(false);
+    }
+  }, []);
+
+  const markFeedbackDone = useCallback(async (id: string) => {
+    const { error } = await supabase
+      .from('search_feedback')
+      .update({ processing_status: 'done', processed_at: new Date().toISOString() })
+      .eq('id', id);
+    if (error) {
+      toast.error('Failed to update feedback');
+    } else {
+      setFeedback((prev) =>
+        prev.map((f) => f.id === id ? { ...f, processing_status: 'done', processed_at: new Date().toISOString() } : f)
+      );
+      toast.success('Marked as resolved');
+    }
+  }, []);
+
   useEffect(() => {
     if (isAdmin && user) {
       fetchAnalytics();
+      fetchFeedback();
     }
-  }, [isAdmin, user, fetchAnalytics]);
+  }, [isAdmin, user, fetchAnalytics, fetchFeedback]);
 
   // Real-time subscriptions for live updates
   const [isLive, setIsLive] = useState(false);
@@ -700,6 +753,137 @@ export default function AdminAnalytics() {
                   </div>
                 </div>
               )}
+              {/* ── User Feedback ── */}
+              <div className="surface-elevated p-5 border border-border">
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                  <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <MessageSquareWarning className="h-4 w-4 text-amber-500" />
+                    User Feedback
+                    {feedback.length > 0 && (
+                      <Badge variant="secondary" className="text-[10px]">
+                        {feedback.filter((f) => (f.processing_status ?? 'pending') !== 'done').length} open
+                      </Badge>
+                    )}
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <Select value={feedbackFilter} onValueChange={(v) => setFeedbackFilter(v as typeof feedbackFilter)}>
+                      <SelectTrigger className="h-8 w-[120px] text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="pending">Open</SelectItem>
+                        <SelectItem value="done">Resolved</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button variant="ghost" size="sm" onClick={fetchFeedback} disabled={feedbackLoading} className="h-8 w-8 p-0">
+                      <RefreshCw className={`h-3.5 w-3.5 ${feedbackLoading ? 'animate-spin' : ''}`} />
+                    </Button>
+                  </div>
+                </div>
+
+                {feedbackLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (() => {
+                  const filtered = feedback.filter((f) => {
+                    if (feedbackFilter === 'pending') return (f.processing_status ?? 'pending') !== 'done';
+                    if (feedbackFilter === 'done') return f.processing_status === 'done';
+                    return true;
+                  });
+                  if (filtered.length === 0) {
+                    return (
+                      <p className="text-sm text-muted-foreground text-center py-8">
+                        {feedbackFilter === 'pending' ? 'No open feedback 🎉' : 'No feedback yet'}
+                      </p>
+                    );
+                  }
+                  return (
+                    <div className="space-y-2 max-h-[480px] overflow-y-auto pr-1">
+                      {filtered.map((f) => {
+                        const isDone = f.processing_status === 'done';
+                        const isExpanded = expandedFeedback.has(f.id);
+                        return (
+                          <div
+                            key={f.id}
+                            className={`rounded-lg border p-3 transition-colors ${isDone ? 'border-border/30 bg-muted/10 opacity-60' : 'border-amber-500/30 bg-amber-500/5'}`}
+                          >
+                            <div className="flex items-start gap-3">
+                              {/* Status icon */}
+                              <button
+                                onClick={() => !isDone && markFeedbackDone(f.id)}
+                                title={isDone ? 'Resolved' : 'Mark as resolved'}
+                                className={`mt-0.5 flex-shrink-0 transition-colors ${isDone ? 'text-green-500 cursor-default' : 'text-muted-foreground hover:text-green-500'}`}
+                              >
+                                {isDone
+                                  ? <CheckCircle2 className="h-4 w-4" />
+                                  : <Circle className="h-4 w-4" />}
+                              </button>
+
+                              <div className="flex-1 min-w-0">
+                                {/* Original query */}
+                                <p className="text-sm font-medium text-foreground truncate">
+                                  "{f.original_query}"
+                                </p>
+
+                                {/* Issue description */}
+                                <p className={`text-xs text-muted-foreground mt-0.5 ${isExpanded ? '' : 'line-clamp-2'}`}>
+                                  {f.issue_description}
+                                </p>
+
+                                {/* Translated query — collapsed by default */}
+                                {f.translated_query && isExpanded && (
+                                  <p className="text-xs font-mono text-muted-foreground mt-1 truncate">
+                                    → {f.translated_query}
+                                  </p>
+                                )}
+
+                                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {new Date(f.created_at).toLocaleString()}
+                                  </span>
+                                  {isDone && f.processed_at && (
+                                    <>
+                                      <span className="text-[10px] text-muted-foreground">·</span>
+                                      <span className="text-[10px] text-green-600 dark:text-green-400">
+                                        resolved {new Date(f.processed_at).toLocaleDateString()}
+                                      </span>
+                                    </>
+                                  )}
+                                  <button
+                                    onClick={() =>
+                                      setExpandedFeedback((prev) => {
+                                        const next = new Set(prev);
+                                        next.has(f.id) ? next.delete(f.id) : next.add(f.id);
+                                        return next;
+                                      })
+                                    }
+                                    className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-0.5"
+                                  >
+                                    {isExpanded ? <><ChevronUp className="h-3 w-3" />Less</> : <><ChevronDown className="h-3 w-3" />More</>}
+                                  </button>
+                                </div>
+                              </div>
+
+                              {!isDone && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 px-2 text-xs flex-shrink-0"
+                                  onClick={() => markFeedbackDone(f.id)}
+                                >
+                                  Resolve
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
           ) : (
             <div className="text-center py-20 text-muted-foreground">
