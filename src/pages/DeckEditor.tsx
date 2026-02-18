@@ -10,7 +10,7 @@ import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import {
   ArrowLeft, Search, List, Plus, Minus, Trash2, Crown, ChevronDown, ChevronRight,
   Pencil, Check, Sparkles, Wand2, Loader2, Brain, Zap, ArrowRightLeft, ChevronUp, Shield,
-  Keyboard, DollarSign,
+  Keyboard, DollarSign, Layers,
 } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -322,8 +322,108 @@ function CardHoverImage({
   );
 }
 
+// ── Printing Picker Popover ──
+// Lets users choose a specific printing of a card.
+// Fetches all printings from Scryfall on first open (cached per card name).
+const printingsByName = new Map<string, import('@/lib/scryfall/printings').CardPrinting[]>();
+
+function PrintingPickerPopover({
+  cardName,
+  currentScryfallId,
+  onSelect,
+}: {
+  cardName: string;
+  currentScryfallId: string | null;
+  onSelect: (printing: import('@/lib/scryfall/printings').CardPrinting) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [printings, setPrintings] = useState<import('@/lib/scryfall/printings').CardPrinting[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const load = useCallback(async () => {
+    if (printingsByName.has(cardName)) {
+      setPrintings(printingsByName.get(cardName)!);
+      return;
+    }
+    setLoading(true);
+    try {
+      const { getCardPrintings } = await import('@/lib/scryfall/printings');
+      const data = await getCardPrintings(cardName);
+      printingsByName.set(cardName, data);
+      setPrintings(data);
+    } finally {
+      setLoading(false);
+    }
+  }, [cardName]);
+
+  const rarityDot = (rarity: string) =>
+    cn('h-2 w-2 rounded-full flex-shrink-0 inline-block mr-1.5',
+      rarity === 'mythic' && 'bg-orange-500',
+      rarity === 'rare' && 'bg-amber-500',
+      rarity === 'uncommon' && 'bg-slate-400',
+      rarity === 'common' && 'bg-slate-600',
+    );
+
+  return (
+    <Popover open={open} onOpenChange={(v) => { setOpen(v); if (v) load(); }}>
+      <PopoverTrigger asChild>
+        <button
+          onClick={(e) => e.stopPropagation()}
+          className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
+          title="Change printing / set"
+        >
+          <Layers className="h-3 w-3" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-72 p-0 overflow-hidden"
+        align="end"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-3 py-2 border-b border-border">
+          <p className="text-xs font-semibold truncate">{cardName}</p>
+          <p className="text-[10px] text-muted-foreground">Select a printing</p>
+        </div>
+        <div className="overflow-y-auto max-h-64">
+          {loading ? (
+            <div className="flex items-center justify-center py-6">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            </div>
+          ) : printings.length === 0 ? (
+            <p className="text-xs text-muted-foreground text-center py-6">No printings found</p>
+          ) : (
+            printings.map((p) => {
+              const isSelected = currentScryfallId === p.id;
+              return (
+                <button
+                  key={p.id}
+                  className={cn(
+                    'flex items-center w-full px-3 py-2 text-left text-xs hover:bg-muted/50 transition-colors gap-1',
+                    isSelected && 'bg-primary/10 font-semibold',
+                  )}
+                  onClick={() => { onSelect(p); setOpen(false); }}
+                >
+                  <span className={rarityDot(p.rarity)} />
+                  <span className="flex-1 truncate">{p.set_name}</span>
+                  <span className="text-[10px] text-muted-foreground shrink-0 mr-2">
+                    #{p.collector_number} · {p.lang.toUpperCase()}
+                  </span>
+                  <span className="text-[10px] text-emerald-500 shrink-0 font-medium">
+                    {p.prices.usd ? `$${p.prices.usd}` : '—'}
+                  </span>
+                  {isSelected && <Check className="h-3 w-3 text-primary ml-1 shrink-0" />}
+                </button>
+              );
+            })
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 // ── Category Section ──
-function CategorySection({ category, cards, onRemove, onSetQuantity, onSetCommander, onSetCompanion, onSetCategory, onMoveToSideboard, onMoveToMaybeboard, isReadOnly, selectedCardId, onSelectCard, scryfallCache }: {
+function CategorySection({ category, cards, onRemove, onSetQuantity, onSetCommander, onSetCompanion, onSetCategory, onMoveToSideboard, onMoveToMaybeboard, isReadOnly, selectedCardId, onSelectCard, scryfallCache, onChangePrinting }: {
   category: string;
   cards: DeckCard[];
   onRemove: (id: string) => void;
@@ -337,6 +437,7 @@ function CategorySection({ category, cards, onRemove, onSetQuantity, onSetComman
   selectedCardId: string | null;
   onSelectCard: (id: string) => void;
   scryfallCache: React.RefObject<Map<string, import('@/types/card').ScryfallCard>>;
+  onChangePrinting: (cardId: string, printing: import('@/lib/scryfall/printings').CardPrinting) => void;
 }) {
   const [open, setOpen] = useState(true);
   const totalQty = cards.reduce((sum, c) => sum + c.quantity, 0);
@@ -371,6 +472,11 @@ function CategorySection({ category, cards, onRemove, onSetQuantity, onSetComman
               {card.is_commander && <span title="Commander"><Crown className="h-3 w-3 text-accent shrink-0" /></span>}
               {!isReadOnly && (
                 <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                  <PrintingPickerPopover
+                    cardName={card.card_name}
+                    currentScryfallId={card.scryfall_id}
+                    onSelect={(p) => { onChangePrinting(card.id, p); }}
+                  />
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors" title="Change category"
@@ -417,13 +523,14 @@ function CategorySection({ category, cards, onRemove, onSetQuantity, onSetComman
 }
 
 // ── Sideboard Section ──
-function SideboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, isReadOnly, scryfallCache }: {
+function SideboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, isReadOnly, scryfallCache, onChangePrinting }: {
   cards: DeckCard[];
   onRemove: (id: string) => void;
   onSetQuantity: (cardId: string, qty: number) => void;
   onMoveToMainboard: (cardId: string) => void;
   isReadOnly: boolean;
   scryfallCache: React.RefObject<Map<string, import('@/types/card').ScryfallCard>>;
+  onChangePrinting: (cardId: string, printing: import('@/lib/scryfall/printings').CardPrinting) => void;
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(true);
@@ -452,6 +559,11 @@ function SideboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, i
                   </CardHoverImage>
                   {!isReadOnly && (
                     <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                      <PrintingPickerPopover
+                        cardName={card.card_name}
+                        currentScryfallId={card.scryfall_id}
+                        onSelect={(p) => onChangePrinting(card.id, p)}
+                      />
                       <button onClick={() => onMoveToMainboard(card.id)}
                         className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
                         title={t('deckEditor.moveToMainboard')}><ChevronUp className="h-3 w-3" /></button>
@@ -474,7 +586,7 @@ function SideboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, i
 }
 
 // ── Maybeboard Section ──
-function MaybeboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, onMoveToSideboard, isReadOnly, scryfallCache }: {
+function MaybeboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, onMoveToSideboard, isReadOnly, scryfallCache, onChangePrinting }: {
   cards: DeckCard[];
   onRemove: (id: string) => void;
   onSetQuantity: (cardId: string, qty: number) => void;
@@ -482,6 +594,7 @@ function MaybeboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, 
   onMoveToSideboard: (cardId: string) => void;
   isReadOnly: boolean;
   scryfallCache: React.RefObject<Map<string, import('@/types/card').ScryfallCard>>;
+  onChangePrinting: (cardId: string, printing: import('@/lib/scryfall/printings').CardPrinting) => void;
 }) {
   const [open, setOpen] = useState(false);
   const totalQty = cards.reduce((sum, c) => sum + c.quantity, 0);
@@ -509,6 +622,11 @@ function MaybeboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, 
                   </CardHoverImage>
                   {!isReadOnly && (
                     <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                      <PrintingPickerPopover
+                        cardName={card.card_name}
+                        currentScryfallId={card.scryfall_id}
+                        onSelect={(p) => onChangePrinting(card.id, p)}
+                      />
                       <button onClick={() => onMoveToMainboard(card.id)}
                         className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
                         title="Move to mainboard"><ChevronUp className="h-3 w-3" /></button>
@@ -1003,6 +1121,7 @@ export default function DeckEditor() {
               onMoveToSideboard={(cardId, toSb) => handleMoveToSideboard(cardId, toSb)}
               onMoveToMaybeboard={handleMoveToMaybeboard}
               scryfallCache={scryfallCacheRef}
+              onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
             />
           ))}
           <SideboardSection
@@ -1012,6 +1131,7 @@ export default function DeckEditor() {
             onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
             onMoveToMainboard={(cardId) => handleMoveToSideboard(cardId, false)}
             scryfallCache={scryfallCacheRef}
+            onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
           />
           <MaybeboardSection
             cards={maybeboardCards}
@@ -1021,6 +1141,7 @@ export default function DeckEditor() {
             onMoveToMainboard={(cardId) => handleMoveToSideboard(cardId, false)}
             onMoveToSideboard={(cardId) => updateCard.mutate({ id: cardId, board: 'sideboard' })}
             scryfallCache={scryfallCacheRef}
+            onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
           />
         </>
       )}
@@ -1097,6 +1218,7 @@ export default function DeckEditor() {
                     onMoveToSideboard={(cardId, toSb) => handleMoveToSideboard(cardId, toSb)}
                     onMoveToMaybeboard={handleMoveToMaybeboard}
                     scryfallCache={scryfallCacheRef}
+                    onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
                   />
                 ))}
                 <SideboardSection
@@ -1106,6 +1228,7 @@ export default function DeckEditor() {
                   onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
                   onMoveToMainboard={(cardId) => handleMoveToSideboard(cardId, false)}
                   scryfallCache={scryfallCacheRef}
+                  onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
                 />
                 <MaybeboardSection
                   cards={maybeboardCards}
@@ -1115,6 +1238,7 @@ export default function DeckEditor() {
                   onMoveToMainboard={(cardId) => handleMoveToSideboard(cardId, false)}
                   onMoveToSideboard={(cardId) => updateCard.mutate({ id: cardId, board: 'sideboard' })}
                   scryfallCache={scryfallCacheRef}
+                  onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
                 />
               </>
             )}
