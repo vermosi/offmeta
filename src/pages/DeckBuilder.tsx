@@ -8,6 +8,11 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Trash2, Layers, Crown, Upload, Globe, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -15,11 +20,7 @@ import { useDecks, useDeckMutations, ensureSession } from '@/hooks/useDeck';
 import { DeckImportModal } from '@/components/deckbuilder/DeckImportModal';
 import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n';
-
-const FORMAT_LABELS: Record<string, string> = {
-  commander: 'Commander', standard: 'Standard', modern: 'Modern',
-  pioneer: 'Pioneer', pauper: 'Pauper', legacy: 'Legacy', vintage: 'Vintage',
-};
+import { FORMAT_LABELS } from '@/data/formats';
 
 const COLOR_MAP: Record<string, string> = {
   W: 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300',
@@ -35,25 +36,35 @@ export default function DeckBuilder() {
   const { createDeck, deleteDeck, updateDeck } = useDeckMutations();
   const navigate = useNavigate();
   const [importOpen, setImportOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const handleCreate = async () => {
-    await ensureSession();
-    const deck = await createDeck.mutateAsync({});
-    navigate(`/deckbuilder/${deck.id}`);
+    try {
+      await ensureSession();
+      const deck = await createDeck.mutateAsync({});
+      navigate(`/deckbuilder/${deck.id}`);
+    } catch (err) {
+      console.error('[DeckBuilder] Failed to create deck:', err);
+    }
   };
 
   const handleDelete = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
-    if (confirm(t('deck.deleteConfirm'))) deleteDeck.mutate(id);
+    setDeleteTarget(id);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget) deleteDeck.mutate(deleteTarget);
+    setDeleteTarget(null);
   };
 
   const handleImport = async (data: {
     name?: string; format?: string; commander?: string | null;
     colorIdentity?: string[]; cards: { name: string; quantity: number }[];
   }) => {
-    await ensureSession();
     try {
+      await ensureSession();
       const deck = await createDeck.mutateAsync({
         name: data.name || 'Imported Deck',
         format: data.format || 'commander',
@@ -68,8 +79,8 @@ export default function DeckBuilder() {
       navigate(`/deckbuilder/${deck.id}`, {
         state: { importCards: data.cards, importCommander: data.commander },
       });
-    } catch {
-      // Error handled by mutation
+    } catch (err) {
+      console.error('[DeckBuilder] Failed to import deck:', err);
     }
   };
 
@@ -162,6 +173,22 @@ export default function DeckBuilder() {
       </main>
       <Footer />
       <DeckImportModal open={importOpen} onOpenChange={setImportOpen} onImport={handleImport} />
+
+      {/* Styled delete confirmation — replaces window.confirm() */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('deck.deleteConfirm')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The deck and all its cards will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

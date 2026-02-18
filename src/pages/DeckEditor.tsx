@@ -34,24 +34,13 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { FORMATS } from '@/data/formats';
 
 // ── Constants ──
 const CATEGORIES = [
   'Commander', 'Creatures', 'Instants', 'Sorceries', 'Artifacts',
   'Enchantments', 'Planeswalkers', 'Lands', 'Ramp', 'Removal',
   'Draw', 'Protection', 'Combo', 'Recursion', 'Utility', 'Finisher', 'Other',
-] as const;
-
-const FORMATS = [
-  { value: 'commander', label: 'Commander', max: 100 },
-  { value: 'standard', label: 'Standard', max: 60 },
-  { value: 'modern', label: 'Modern', max: 60 },
-  { value: 'pioneer', label: 'Pioneer', max: 60 },
-  { value: 'legacy', label: 'Legacy', max: 60 },
-  { value: 'vintage', label: 'Vintage', max: 60 },
-  { value: 'pauper', label: 'Pauper', max: 60 },
-  { value: 'oathbreaker', label: 'Oathbreaker', max: 60 },
-  { value: 'brawl', label: 'Brawl', max: 60 },
 ] as const;
 
 const DEFAULT_CATEGORY = 'Other';
@@ -310,7 +299,9 @@ function useDeckPrice(
           if (!isNaN(price)) sum += price * deckCard.quantity;
         }
         setTotal(sum);
-      } catch { /* silent – price is non-critical */ } finally {
+      } catch (err) {
+        console.warn('[useDeckPrice] Failed to fetch card prices from Scryfall:', err);
+      } finally {
         if (!cancelled) setLoading(false);
       }
     };

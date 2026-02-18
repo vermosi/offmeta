@@ -6,7 +6,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useCallback } from 'react';
 
 export interface Deck {
   id: string;
@@ -109,7 +108,7 @@ export function useDeckMutations() {
           user_id: user!.id,
           name: opts?.name || 'Untitled Deck',
           format: opts?.format || 'commander',
-          is_public: true,
+          // is_public defaults to true at the DB level — no need to repeat it here
         })
         .select()
         .single();
@@ -155,35 +154,29 @@ export function useDeckCardMutations(deckId: string | undefined) {
       is_companion?: boolean;
       scryfall_id?: string;
     }) => {
-      // Check if card already exists in this deck+board
-      const { data: existing } = await supabase
+      const board = card.board || 'mainboard';
+      const qty = card.quantity || 1;
+      // Atomic upsert: unique constraint on (deck_id, card_name, board) prevents
+      // the race condition where two rapid clicks create duplicate rows.
+      const { error } = await supabase
         .from('deck_cards')
-        .select('id, quantity')
-        .eq('deck_id', deckId!)
-        .eq('card_name', card.card_name)
-        .eq('board', card.board || 'mainboard')
-        .single();
-
-      if (existing) {
-        // Increment quantity
-        const { error } = await supabase
-          .from('deck_cards')
-          .update({ quantity: existing.quantity + (card.quantity || 1) })
-          .eq('id', existing.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from('deck_cards').insert({
-          deck_id: deckId!,
-          card_name: card.card_name,
-          quantity: card.quantity || 1,
-          board: card.board || 'mainboard',
-          category: card.category || null,
-          is_commander: card.is_commander || false,
-          is_companion: card.is_companion || false,
-          scryfall_id: card.scryfall_id || null,
-        });
-        if (error) throw error;
-      }
+        .upsert(
+          {
+            deck_id: deckId!,
+            card_name: card.card_name,
+            quantity: qty,
+            board,
+            category: card.category || null,
+            is_commander: card.is_commander || false,
+            is_companion: card.is_companion || false,
+            scryfall_id: card.scryfall_id || null,
+          },
+          {
+            onConflict: 'deck_id,card_name,board',
+            ignoreDuplicates: false,
+          },
+        );
+      if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['deck-cards', deckId] });
