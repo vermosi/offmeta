@@ -32,7 +32,6 @@ interface DeckCombosProps {
 }
 
 export function DeckCombos({ cards, commanderName, onAddCard }: DeckCombosProps) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [included, setIncluded] = useState<Combo[]>([]);
   const [almostIncluded, setAlmostIncluded] = useState<Combo[]>([]);
   const [loading, setLoading] = useState(false);
