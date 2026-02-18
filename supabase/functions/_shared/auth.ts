@@ -19,7 +19,7 @@ declare const Deno: {
  */
 export function validateAuth(req: Request) {
   const authHeader = req.headers.get('Authorization');
-  const apiKeyHeader = req.headers.get('apikey');
+  
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   const apiSecret = Deno.env.get('OFFMETA_API_SECRET');
 
