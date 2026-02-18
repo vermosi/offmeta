@@ -34,7 +34,17 @@ export function buildDecklistText(deck: Deck, cards: DeckCard[]): string {
     lines.push('');
   }
 
-  const mainboard = cards.filter((c) => !c.is_commander && c.board !== 'sideboard' && c.board !== 'maybeboard');
+  const companions = cards.filter((c) => c.is_companion);
+  if (companions.length > 0) {
+    for (const cmp of companions) {
+      lines.push(`COMPANION: ${cmp.card_name}`);
+    }
+    lines.push('');
+  }
+
+  const mainboard = cards.filter(
+    (c) => !c.is_commander && !c.is_companion && c.board !== 'sideboard' && c.board !== 'maybeboard',
+  );
   const grouped: Record<string, DeckCard[]> = {};
   for (const card of mainboard) {
     const cat = card.category || 'Other';
@@ -66,12 +76,23 @@ export function buildArenaText(cards: DeckCard[]): string {
   const lines: string[] = [];
 
   const commanders = cards.filter((c) => c.is_commander);
-  const mainboard = cards.filter((c) => !c.is_commander && c.board !== 'sideboard' && c.board !== 'maybeboard');
+  const companions = cards.filter((c) => c.is_companion);
+  // Arena: Companion section must appear BEFORE Deck
+  const mainboard = cards.filter(
+    (c) => !c.is_commander && !c.is_companion && c.board !== 'sideboard' && c.board !== 'maybeboard',
+  );
   const sideboard = cards.filter((c) => c.board === 'sideboard');
 
   if (commanders.length > 0) {
     lines.push('Commander');
     for (const c of commanders) lines.push(`${c.quantity} ${c.card_name}`);
+    lines.push('');
+  }
+
+  // Companion section must come before Deck in Arena format
+  if (companions.length > 0) {
+    lines.push('Companion');
+    for (const c of companions) lines.push(`${c.quantity} ${c.card_name}`);
     lines.push('');
   }
 
@@ -96,12 +117,22 @@ export function buildArenaText(cards: DeckCard[]): string {
 export function buildMtgoText(cards: DeckCard[]): string {
   const lines: string[] = [];
 
-  const mainboard = cards.filter((c) => !c.is_commander && c.board !== 'sideboard' && c.board !== 'maybeboard');
-  const sideboard = cards.filter((c) => c.board === 'sideboard');
   const commanders = cards.filter((c) => c.is_commander);
+  const companions = cards.filter((c) => c.is_companion);
+  // MTGO: companion is listed separately before the mainboard, NOT in SB
+  const mainboard = cards.filter(
+    (c) => !c.is_commander && !c.is_companion && c.board !== 'sideboard' && c.board !== 'maybeboard',
+  );
+  const sideboard = cards.filter((c) => c.board === 'sideboard');
 
   // MTGO treats commander as part of mainboard
   const allMain = [...commanders, ...mainboard];
+
+  // Companion block appears first in MTGO format
+  if (companions.length > 0) {
+    for (const c of companions) lines.push(`1 ${c.card_name}`);
+    lines.push('');
+  }
 
   for (const c of allMain.sort((a, b) => a.card_name.localeCompare(b.card_name))) {
     lines.push(`${c.quantity} ${c.card_name}`);
