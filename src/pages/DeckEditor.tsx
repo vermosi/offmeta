@@ -169,7 +169,7 @@ function CardSearchPanel({ onAddCard, onPreview, searchInputRef }: {
 }
 
 // ── Category Section ──
-function CategorySection({ category, cards, onRemove, onSetQuantity, onSetCommander, onSetCompanion, onSetCategory, onMoveToSideboard, isReadOnly, selectedCardId, onSelectCard }: {
+function CategorySection({ category, cards, onRemove, onSetQuantity, onSetCommander, onSetCompanion, onSetCategory, onMoveToSideboard, onMoveToMaybeboard, isReadOnly, selectedCardId, onSelectCard }: {
   category: string;
   cards: DeckCard[];
   onRemove: (id: string) => void;
@@ -178,6 +178,7 @@ function CategorySection({ category, cards, onRemove, onSetQuantity, onSetComman
   onSetCompanion: (cardId: string, isCompanion: boolean) => void;
   onSetCategory: (cardId: string, category: string) => void;
   onMoveToSideboard: (cardId: string, toSideboard: boolean) => void;
+  onMoveToMaybeboard: (cardId: string) => void;
   isReadOnly: boolean;
   selectedCardId: string | null;
   onSelectCard: (id: string) => void;
@@ -241,6 +242,9 @@ function CategorySection({ category, cards, onRemove, onSetQuantity, onSetComman
                   <button onClick={(e) => { e.stopPropagation(); onMoveToSideboard(card.id, true); }}
                     className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
                     title="Move to sideboard (Shift+S)"><ArrowRightLeft className="h-3 w-3" /></button>
+                  <button onClick={(e) => { e.stopPropagation(); onMoveToMaybeboard(card.id); }}
+                    className="p-1 rounded text-muted-foreground hover:text-muted-foreground/60 hover:text-foreground transition-colors"
+                    title="Move to maybeboard"><List className="h-3 w-3" /></button>
                   <button onClick={(e) => { e.stopPropagation(); onSetQuantity(card.id, card.quantity - 1); }} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
                     <Minus className="h-3 w-3" /></button>
                   <button onClick={(e) => { e.stopPropagation(); onSetQuantity(card.id, card.quantity + 1); }} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
@@ -295,6 +299,63 @@ function SideboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, i
                       <button onClick={() => onMoveToMainboard(card.id)}
                         className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
                         title={t('deckEditor.moveToMainboard')}><ChevronUp className="h-3 w-3" /></button>
+                      <button onClick={() => onSetQuantity(card.id, card.quantity - 1)} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
+                        <Minus className="h-3 w-3" /></button>
+                      <button onClick={() => onSetQuantity(card.id, card.quantity + 1)} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
+                        <Plus className="h-3 w-3" /></button>
+                      <button onClick={() => onRemove(card.id)} className="p-1 rounded text-muted-foreground hover:text-destructive transition-colors">
+                        <Trash2 className="h-3 w-3" /></button>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
+  );
+}
+
+// ── Maybeboard Section ──
+function MaybeboardSection({ cards, onRemove, onSetQuantity, onMoveToMainboard, onMoveToSideboard, isReadOnly }: {
+  cards: DeckCard[];
+  onRemove: (id: string) => void;
+  onSetQuantity: (cardId: string, qty: number) => void;
+  onMoveToMainboard: (cardId: string) => void;
+  onMoveToSideboard: (cardId: string) => void;
+  isReadOnly: boolean;
+}) {
+  const [open, setOpen] = useState(false); // collapsed by default
+  const totalQty = cards.reduce((sum, c) => sum + c.quantity, 0);
+
+  if (cards.length === 0 && isReadOnly) return null;
+
+  return (
+    <div className="mt-2 pt-2 border-t border-border/50">
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CollapsibleTrigger className="flex items-center gap-2 w-full px-3 py-2 hover:bg-secondary/30 transition-colors rounded-lg text-left">
+          {open ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+          <span className="text-xs font-semibold text-muted-foreground">Maybeboard</span>
+          <span className="text-[10px] text-muted-foreground">({totalQty})</span>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          {cards.length === 0 ? (
+            <p className="px-3 py-2 text-[10px] text-muted-foreground">No cards yet. Use the ⋯ menu on any card to add here.</p>
+          ) : (
+            <ul className="ml-2 border-l border-border/30">
+              {cards.map((card) => (
+                <li key={card.id} className="flex items-center gap-1 px-2 py-1.5 hover:bg-secondary/30 transition-colors group text-sm">
+                  <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{card.quantity}×</span>
+                  <span className="flex-1 truncate text-xs text-muted-foreground">{card.card_name}</span>
+                  {!isReadOnly && (
+                    <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => onMoveToMainboard(card.id)}
+                        className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
+                        title="Move to mainboard"><ChevronUp className="h-3 w-3" /></button>
+                      <button onClick={() => onMoveToSideboard(card.id)}
+                        className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
+                        title="Move to sideboard"><ArrowRightLeft className="h-3 w-3" /></button>
                       <button onClick={() => onSetQuantity(card.id, card.quantity - 1)} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
                         <Minus className="h-3 w-3" /></button>
                       <button onClick={() => onSetQuantity(card.id, card.quantity + 1)} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
@@ -460,9 +521,10 @@ export default function DeckEditor() {
     importCards();
   }, [id, location.state, addCard, navigate, location.pathname, t]);
 
-  // Separate mainboard and sideboard
+  // Separate mainboard, sideboard, and maybeboard
   const mainboardCards = useMemo(() => cards.filter((c) => c.board !== 'sideboard' && c.board !== 'maybeboard'), [cards]);
   const sideboardCards = useMemo(() => cards.filter((c) => c.board === 'sideboard'), [cards]);
+  const maybeboardCards = useMemo(() => cards.filter((c) => c.board === 'maybeboard'), [cards]);
 
   // Group mainboard cards by category
   const grouped = useMemo(() => {
@@ -484,6 +546,7 @@ export default function DeckEditor() {
 
   const totalMainboard = mainboardCards.reduce((sum, c) => sum + c.quantity, 0);
   const totalSideboard = sideboardCards.reduce((sum, c) => sum + c.quantity, 0);
+  const totalMaybeboard = maybeboardCards.reduce((sum, c) => sum + c.quantity, 0);
   const formatConfig = FORMATS.find((f) => f.value === deck?.format) ?? FORMATS[0];
   const formatMax = formatConfig.max;
 
@@ -599,6 +662,10 @@ export default function DeckEditor() {
     updateCard.mutate({ id: cardId, board: toSideboard ? 'sideboard' : 'mainboard' });
   }, [updateCard]);
 
+  const handleMoveToMaybeboard = useCallback((cardId: string) => {
+    updateCard.mutate({ id: cardId, board: 'maybeboard' });
+  }, [updateCard]);
+
   const handleTogglePublic = useCallback(() => {
     if (!deck || !id) return;
     updateDeck.mutate({ id, is_public: !deck.is_public });
@@ -689,7 +756,8 @@ export default function DeckEditor() {
         <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full shrink-0',
           totalMainboard >= formatMax ? 'bg-accent/10 text-accent' : 'bg-secondary text-secondary-foreground')}>
           {totalMainboard}/{formatMax}
-          {totalSideboard > 0 && <span className="text-muted-foreground"> +{totalSideboard}</span>}
+          {totalSideboard > 0 && <span className="text-muted-foreground"> +{totalSideboard}sb</span>}
+          {totalMaybeboard > 0 && <span className="text-muted-foreground"> +{totalMaybeboard}mb</span>}
         </span>
       </div>
       {/* Commander / Companion chips */}
@@ -762,6 +830,7 @@ export default function DeckEditor() {
               onSetCompanion={handleSetCompanion}
               onSetCategory={handleSetCategory}
               onMoveToSideboard={(cardId, toSb) => handleMoveToSideboard(cardId, toSb)}
+              onMoveToMaybeboard={handleMoveToMaybeboard}
             />
           ))}
           <SideboardSection
@@ -770,6 +839,14 @@ export default function DeckEditor() {
             onRemove={(cardId) => removeCard.mutate(cardId)}
             onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
             onMoveToMainboard={(cardId) => handleMoveToSideboard(cardId, false)}
+          />
+          <MaybeboardSection
+            cards={maybeboardCards}
+            isReadOnly={isReadOnly}
+            onRemove={(cardId) => removeCard.mutate(cardId)}
+            onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
+            onMoveToMainboard={(cardId) => handleMoveToSideboard(cardId, false)}
+            onMoveToSideboard={(cardId) => updateCard.mutate({ id: cardId, board: 'sideboard' })}
           />
         </>
       )}
@@ -844,6 +921,7 @@ export default function DeckEditor() {
                     onSetCompanion={handleSetCompanion}
                     onSetCategory={handleSetCategory}
                     onMoveToSideboard={(cardId, toSb) => handleMoveToSideboard(cardId, toSb)}
+                    onMoveToMaybeboard={handleMoveToMaybeboard}
                   />
                 ))}
                 <SideboardSection
@@ -852,6 +930,14 @@ export default function DeckEditor() {
                   onRemove={(cardId) => removeCard.mutate(cardId)}
                   onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
                   onMoveToMainboard={(cardId) => handleMoveToSideboard(cardId, false)}
+                />
+                <MaybeboardSection
+                  cards={maybeboardCards}
+                  isReadOnly={isReadOnly}
+                  onRemove={(cardId) => removeCard.mutate(cardId)}
+                  onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
+                  onMoveToMainboard={(cardId) => handleMoveToSideboard(cardId, false)}
+                  onMoveToSideboard={(cardId) => updateCard.mutate({ id: cardId, board: 'sideboard' })}
                 />
               </>
             )}
