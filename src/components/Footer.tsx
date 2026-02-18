@@ -16,6 +16,7 @@ const EXPLORE_LINKS = [
   { to: '/combos', labelKey: 'footer.comboFinder', fallback: 'Combo Finder' },
   { to: '/deckbuilder', labelKey: 'nav.deckBuilder', fallback: 'Deck Builder' },
   { to: '/syntax', labelKey: 'footer.syntaxCheatSheet', fallback: 'Syntax Cheat Sheet' },
+  { to: '/about', labelKey: 'footer.about', fallback: 'About' },
 ] as const;
 
 export function Footer() {
