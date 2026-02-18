@@ -108,8 +108,8 @@ describe('useSearchHandler', () => {
     );
   });
 
-  // 4. Shows success toast
-  it('shows success toast with truncated query preview', async () => {
+  // 4. No success toast on successful search (results appearing is sufficient feedback)
+  it('does not show a success toast on successful search', async () => {
     const opts = createOptions();
     const { result } = renderHook(() => useSearchHandler(opts));
 
@@ -117,8 +117,8 @@ describe('useSearchHandler', () => {
       await result.current.handleSearch();
     });
 
-    expect(mockToast.success).toHaveBeenCalledTimes(1);
-    expect(mockToast.success.mock.calls[0][0]).toContain('Search translated');
+    expect(mockToast.success).not.toHaveBeenCalled();
+    expect(mockToast.error).not.toHaveBeenCalled();
   });
 
   // 5. Empty query prevention
