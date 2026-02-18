@@ -1355,15 +1355,6 @@ export default function DeckEditor() {
     </div>
   );
 
-  // Sorted flat list for visual/pile views
-  const sortedMainboard = useMemo(
-    () => deckSortMode === 'category'
-      ? mainboardCards
-      : sortDeckCards(mainboardCards, deckSortMode, scryfallCacheRef.current),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [mainboardCards, deckSortMode, scryfallCacheVersion],
-  );
-
   // ── View/Sort Toolbar ──
   const viewSortToolbar = cards.length > 0 && (
     <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-border bg-card/50">
