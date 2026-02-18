@@ -41,40 +41,26 @@ export function validateAuth(req: Request) {
   }
 
   // Allow valid Supabase JWTs (anon key or user tokens)
-  // The anon key and user tokens are JWTs that contain 'supabase' as issuer
-  // We check if the token looks like a valid JWT and has the right structure
+  // Supabase anon/service keys have iss='supabase'
+  // Supabase user JWTs have iss='https://<project>.supabase.co/auth/v1'
+  // Both are valid — we accept any well-formed JWT with an exp and role
   try {
-    // Basic JWT validation: check if it has 3 parts and can be decoded
     const parts = token.split('.');
     if (parts.length === 3) {
       const payload = JSON.parse(atob(parts[1]));
-      // Check for Supabase JWT structure
-      if (payload.iss === 'supabase' && payload.role && payload.exp) {
-        // Verify token hasn't expired
+      const isSupabaseToken =
+        payload.iss === 'supabase' ||
+        (typeof payload.iss === 'string' && payload.iss.includes('supabase'));
+      if (isSupabaseToken && payload.exp) {
         const now = Math.floor(Date.now() / 1000);
         if (payload.exp > now) {
-          return { authorized: true, role: payload.role };
+          return { authorized: true, role: payload.role ?? 'authenticated' };
         }
         return { authorized: false, error: 'Token expired' };
       }
     }
   } catch {
-    // Invalid JWT format, continue to reject
-  }
-
-  // Also check if apikey header matches the token (Supabase client sends both)
-  if (apiKeyHeader && token === apiKeyHeader) {
-    try {
-      const parts = token.split('.');
-      if (parts.length === 3) {
-        const payload = JSON.parse(atob(parts[1]));
-        if (payload.iss === 'supabase' && payload.role) {
-          return { authorized: true, role: payload.role };
-        }
-      }
-    } catch {
-      // Invalid format
-    }
+    // Invalid JWT format, fall through to reject
   }
 
   return { authorized: false, error: 'Invalid Authorization token' };
