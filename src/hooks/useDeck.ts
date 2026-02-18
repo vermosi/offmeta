@@ -109,6 +109,7 @@ export function useDeckMutations() {
           user_id: user!.id,
           name: opts?.name || 'Untitled Deck',
           format: opts?.format || 'commander',
+          is_public: true,
         })
         .select()
         .single();
