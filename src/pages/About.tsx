@@ -5,6 +5,7 @@
  */
 
 import { useEffect } from 'react';
+import { useTypewriterCycle } from '@/hooks/useTypewriterCycle';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { StatCounters } from '@/components/about/StatCounters';
@@ -52,7 +53,16 @@ function setCanonical(url: string) {
   el.setAttribute('href', url);
 }
 
+const TAGLINE_PHRASES = [
+  'Find the card.',
+  'Build the deck.',
+  'Discover the combo.',
+  'Search smarter.',
+] as const;
+
 export default function About() {
+  const tagline = useTypewriterCycle(TAGLINE_PHRASES);
+
   useEffect(() => {
     const prev = {
       title: document.title,
@@ -123,6 +133,21 @@ export default function About() {
                 think in text
               </span>
             </h1>
+
+            {/* Animated cycling tagline */}
+            <div
+              aria-live="polite"
+              aria-atomic="true"
+              className="h-10 mb-6 flex items-center justify-center"
+            >
+              <span className="text-2xl sm:text-3xl font-semibold text-foreground/90 tracking-tight">
+                {tagline}
+                <span
+                  className="inline-block w-0.5 h-7 sm:h-8 ml-0.5 align-middle bg-accent animate-pulse"
+                  aria-hidden="true"
+                />
+              </span>
+            </div>
 
             <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed mb-12 max-w-2xl mx-auto">
               OffMeta started as a simple question: <em>"What if you could find Magic cards just by describing what you want?"</em> 
