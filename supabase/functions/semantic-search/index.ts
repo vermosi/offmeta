@@ -184,8 +184,8 @@ serve(async (req) => {
     'unknown';
   const sessionId = req.headers.get('x-session-id');
 
-  // Check IP-based rate limit
-  const rateCheck = await checkRateLimit(clientIP, supabase);
+  // Check IP-based rate limit (in-memory only — skip DB RPC which doesn't exist)
+  const rateCheck = await checkRateLimit(clientIP);
   if (!rateCheck.allowed) {
     logWarn('rate_limit_exceeded', {
       ip: clientIP.substring(0, 20),
@@ -421,7 +421,7 @@ serve(async (req) => {
         const responseTimeMs = Date.now() - requestStartTime;
         logInfo('cache_hit', { query: query.substring(0, 50), responseTimeMs });
         logTranslation(query, cached.scryfallQuery, cached.explanation?.confidence ?? 0.9, responseTimeMs, [], [], filters, false, 'cache');
-        await flushLogQueue();
+        flushLogQueue(); // fire-and-forget — don't block the response
 
         return new Response(
           JSON.stringify({
@@ -448,7 +448,7 @@ serve(async (req) => {
 
       setCachedResult(query, filters, patternMatch, cacheSalt);
       logTranslation(query, patternMatch.scryfallQuery, patternMatch.explanation?.confidence ?? 0.85, responseTimeMs, [], [], filters, false, 'pattern_match');
-      await flushLogQueue();
+      flushLogQueue(); // fire-and-forget
 
       return new Response(
         JSON.stringify({
@@ -488,24 +488,20 @@ serve(async (req) => {
     }
 
     // 6. Raw Scryfall syntax detection (skip AI for already-valid queries)
+    // No Scryfall validation here — raw syntax is trusted, validation adds latency with no benefit.
     const trimmedQuery = query.trim();
     if (isRawScryfallSyntax(trimmedQuery)) {
       const validation = validateQuery(trimmedQuery);
-      const scryfallValidation = await validateAndRelaxQuery(
-        validation.sanitized,
-        null,
-        overlyBroadThreshold,
-      );
       const responseTimeMs = Date.now() - requestStartTime;
       logInfo('raw_syntax_passthrough', { query: trimmedQuery.substring(0, 50), responseTimeMs });
-      logTranslation(query, scryfallValidation.query, 0.95, responseTimeMs, [], [], filters, false, 'raw_syntax');
-      await flushLogQueue();
+      logTranslation(query, validation.sanitized, 0.95, responseTimeMs, [], [], filters, false, 'raw_syntax');
+      flushLogQueue(); // fire-and-forget
 
       const rawResult = {
-        scryfallQuery: scryfallValidation.query,
+        scryfallQuery: validation.sanitized,
         explanation: {
           readable: `Direct Scryfall syntax: ${trimmedQuery}`,
-          assumptions: [...scryfallValidation.relaxedClauses],
+          assumptions: [],
           confidence: 0.95,
         },
         showAffiliate: true,
@@ -526,27 +522,20 @@ serve(async (req) => {
     }
 
     // 6b. Deterministic Result check (can we skip AI?)
+    // Skip Scryfall network validation — deterministic results are pre-validated, validation adds latency.
     if (!deterministicResult.intent.remainingQuery) {
       const validation = validateQuery(deterministicQuery || query);
-      const scryfallValidation = await validateAndRelaxQuery(
-        validation.sanitized,
-        deterministicQuery || null,
-        overlyBroadThreshold,
-      );
       const responseTimeMs = Date.now() - requestStartTime;
-      logTranslation(query, scryfallValidation.query, 0.9, responseTimeMs, [], [], filters, false, 'deterministic');
-      await flushLogQueue();
+      logTranslation(query, validation.sanitized, 0.9, responseTimeMs, [], [], filters, false, 'deterministic');
+      flushLogQueue(); // fire-and-forget
 
       return new Response(
         JSON.stringify({
           originalQuery: query,
-          scryfallQuery: scryfallValidation.query,
+          scryfallQuery: validation.sanitized,
           explanation: {
             readable: `Searching for: ${query}`,
-            assumptions: [
-              ...deterministicResult.intent.warnings,
-              ...scryfallValidation.relaxedClauses,
-            ],
+            assumptions: deterministicResult.intent.warnings,
             confidence: 0.9,
           },
           success: true,
@@ -696,7 +685,7 @@ serve(async (req) => {
         filters,
         false,
       );
-      await flushLogQueue();
+      flushLogQueue(); // fire-and-forget
 
       return new Response(
         JSON.stringify({
