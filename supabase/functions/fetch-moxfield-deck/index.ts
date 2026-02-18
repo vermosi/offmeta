@@ -1,18 +1,45 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { validateAuth, getCorsHeaders } from "../_shared/auth.ts";
+import { checkRateLimit, maybeCleanup } from "../_shared/rateLimit.ts";
 
 /**
  * Proxy edge function to fetch a Moxfield deck by public ID.
  * Avoids CORS issues from calling Moxfield API directly from the browser.
+ * Requires authentication to prevent abuse / Moxfield API exhaustion.
  */
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Require valid auth token (anon key, user JWT, or service role)
+  const { authorized, error: authError } = validateAuth(req);
+  if (!authorized) {
+    return new Response(JSON.stringify({ error: authError || "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // IP-based rate limiting: 10 req/min per IP, 200 global
+  maybeCleanup();
+  const clientIp =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const { allowed, retryAfter } = await checkRateLimit(clientIp, undefined, 10, 200);
+  if (!allowed) {
+    return new Response(
+      JSON.stringify({ error: "Too many requests", retryAfter }),
+      {
+        status: 429,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+          "Retry-After": String(retryAfter),
+        },
+      }
+    );
   }
 
   try {
@@ -53,8 +80,16 @@ serve(async (req) => {
       const status = resp.status;
       await resp.text(); // consume body
       return new Response(
-        JSON.stringify({ error: status === 404 ? "Deck not found on Moxfield" : `Moxfield API error (${status})` }),
-        { status: status === 404 ? 404 : 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({
+          error:
+            status === 404
+              ? "Deck not found on Moxfield"
+              : `Moxfield API error (${status})`,
+        }),
+        {
+          status: status === 404 ? 404 : 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
       );
     }
 
@@ -118,7 +153,7 @@ serve(async (req) => {
   } catch (e) {
     console.error("fetch-moxfield-deck error:", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      JSON.stringify({ error: "Failed to fetch deck" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
