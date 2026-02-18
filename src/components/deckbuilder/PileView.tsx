@@ -43,7 +43,7 @@ export function PileView({ mainboardCards, scryfallCache, onSelectCard, selected
       if (typeLine.includes('land')) { buckets.L.push(card); continue; }
       const ci = sc?.color_identity ?? [];
       if (ci.length === 0) { buckets.C.push(card); }
-      else if (ci.length === 1) { buckets[ci[0]]?.push(card) ?? buckets.C.push(card); }
+      else if (ci.length === 1) { const bucket = buckets[ci[0]]; if (bucket) { bucket.push(card); } else { buckets.C.push(card); } }
       else { buckets.M.push(card); }
     }
     for (const key of Object.keys(buckets)) {

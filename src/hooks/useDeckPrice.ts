@@ -64,7 +64,7 @@ export function useDeckPrice(
         }
         setTotal(sum);
       } catch (err) {
-        console.warn('[useDeckPrice] Failed to fetch card prices from Scryfall:', err);
+        void err; // swallow — price fetch failure is non-critical
       } finally {
         if (!cancelled) setLoading(false);
       }

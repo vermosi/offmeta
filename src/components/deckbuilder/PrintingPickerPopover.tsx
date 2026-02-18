@@ -14,9 +14,7 @@ import { cn } from '@/lib/core/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import type { ScryfallCard } from '@/types/card';
 import type { CardPrinting } from '@/lib/scryfall/printings';
-
-/** Module-level cache: card name → printings list. Caller should .clear() on unmount. */
-export const printingsByName = new Map<string, CardPrinting[]>();
+import { printingsByName } from './constants';
 
 // ── Set Badge ──────────────────────────────────────────────────────────────────
 interface SetBadgeProps {

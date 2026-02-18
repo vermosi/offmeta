@@ -20,11 +20,7 @@ import type { DeckCard } from '@/hooks/useDeck';
 import type { ScryfallCard } from '@/types/card';
 import type { CardPrinting } from '@/lib/scryfall/printings';
 
-export const CATEGORIES = [
-  'Commander', 'Creatures', 'Instants', 'Sorceries', 'Artifacts',
-  'Enchantments', 'Planeswalkers', 'Lands', 'Ramp', 'Removal',
-  'Draw', 'Protection', 'Combo', 'Recursion', 'Utility', 'Finisher', 'Other',
-] as const;
+import { CATEGORIES } from './constants';
 
 interface CategorySectionProps {
   category: string;

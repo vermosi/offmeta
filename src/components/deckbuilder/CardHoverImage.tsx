@@ -11,9 +11,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import type { ScryfallCard } from '@/types/card';
-
-/** Module-level cache: card name → image URL or null. Caller should .clear() on unmount. */
-export const cardImageFetchCache = new Map<string, string | null>();
+import { cardImageFetchCache } from './constants';
 
 interface CardHoverImageProps {
   cardName: string;

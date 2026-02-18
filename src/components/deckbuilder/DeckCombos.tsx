@@ -9,7 +9,7 @@ import { Zap, Plus, Loader2, ChevronDown, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { cn } from '@/lib/core/utils';
+
 
 import type { DeckCard } from '@/hooks/useDeck';
 
@@ -43,6 +43,9 @@ export function DeckCombos({ cards, commanderName, onAddCard }: DeckCombosProps)
   const cardNames = cards.map((c) => c.card_name);
   const commanders = commanderName ? [commanderName] : cards.filter((c) => c.is_commander).map((c) => c.card_name);
 
+  const cardNamesKey = cardNames.join(',');
+  const commandersKey = commanders.join(',');
+
   const fetchCombos = useCallback(async () => {
     if (cardNames.length < 10) return;
     setLoading(true);
@@ -64,7 +67,8 @@ export function DeckCombos({ cards, commanderName, onAddCard }: DeckCombosProps)
     } finally {
       setLoading(false);
     }
-  }, [cardNames.join(','), commanders.join(',')]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cardNamesKey, commandersKey]);
 
   // Auto-detect when deck changes significantly (every 5 cards added)
   useEffect(() => {
