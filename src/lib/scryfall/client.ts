@@ -19,7 +19,7 @@ const MAX_RETRIES = 2;
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 let lastRequestTime = 0;
-const MIN_REQUEST_INTERVAL = 100;
+const MIN_REQUEST_INTERVAL = 50; // Scryfall recommends ≥50ms; 100ms was overly conservative
 
 // Request queue for high-traffic scenarios
 interface QueuedRequest {

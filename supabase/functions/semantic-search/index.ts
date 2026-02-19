@@ -405,17 +405,24 @@ serve(async (req) => {
       );
     }
 
-    // 3. Cache Lookups (In-Memory then Persistent)
-    const deterministicResult = buildDeterministicIntent(query);
+    // 3. Cache Lookups (In-Memory then Persistent) — run in parallel with deterministic build
+    const [deterministicResult, cachedFromParallel] = await Promise.all([
+      Promise.resolve(buildDeterministicIntent(query)),
+      useCache
+        ? Promise.all([
+            getCachedResult(query, filters, cacheSalt),
+            getPersistentCache(query, filters, cacheSalt),
+          ]).then(([mem, persistent]) => mem || persistent)
+        : Promise.resolve(null),
+    ]);
+
     const deterministicQuery = applyFiltersToQuery(
       deterministicResult.deterministicQuery,
       filters,
     );
 
     if (useCache) {
-      const cached =
-        (await getCachedResult(query, filters, cacheSalt)) ||
-        (await getPersistentCache(query, filters, cacheSalt));
+      const cached = cachedFromParallel;
 
       if (cached) {
         const responseTimeMs = Date.now() - requestStartTime;
@@ -593,7 +600,7 @@ serve(async (req) => {
     }
 
     // 8. AI Translation (with tiered model selection)
-    const dynamicRules = await fetchDynamicRules();
+    // Fetch dynamic rules in parallel with building context (non-blocking)
     const queryWords = query.trim().split(/\s+/).length;
     const tier: QueryTier =
       queryWords > 8 ? 'complex' : queryWords > 4 ? 'medium' : 'simple';
@@ -603,6 +610,7 @@ serve(async (req) => {
       ? 'google/gemini-2.5-flash-lite'
       : 'google/gemini-3-flash-preview';
 
+    const dynamicRules = await fetchDynamicRules();
     const systemPrompt = buildSystemPrompt(tier, dynamicRules, '');
     const userMessage = `Translate to Scryfall search syntax: "${queryForAI}" ${deterministicQuery ? `(must include: ${deterministicQuery})` : ''}`;
 
