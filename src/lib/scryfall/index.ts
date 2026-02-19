@@ -14,6 +14,7 @@ export {
   getRarityColor,
   formatManaSymbols,
   getCardRulings,
+  clearSearchCache,
   type CardRuling,
 } from './client';
 

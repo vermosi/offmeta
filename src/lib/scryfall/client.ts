@@ -15,6 +15,48 @@ const BASE_URL = 'https://api.scryfall.com';
 const FETCH_TIMEOUT_MS = 8000;
 const MAX_RETRIES = 2;
 
+// ── In-memory search result cache ─────────────────────────────────────────────
+// Keyed by "lang::page::query" so page-2 results are cached independently.
+// TTL matches CARD_SEARCH_STALE_TIME_MS in config (15 min).
+const SEARCH_CACHE_TTL_MS = 15 * 60 * 1000;
+const SEARCH_CACHE_MAX_SIZE = 200;
+
+interface SearchCacheEntry {
+  data: SearchResult;
+  ts: number;
+}
+
+const searchResultCache = new Map<string, SearchCacheEntry>();
+
+function makeSearchCacheKey(query: string, page: number, lang?: string): string {
+  return `${lang ?? 'en'}::${page}::${query}`;
+}
+
+function getSearchCache(key: string): SearchResult | null {
+  const entry = searchResultCache.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.ts > SEARCH_CACHE_TTL_MS) {
+    searchResultCache.delete(key);
+    return null;
+  }
+  return entry.data;
+}
+
+function setSearchCache(key: string, data: SearchResult): void {
+  // Evict oldest entry when at capacity
+  if (searchResultCache.size >= SEARCH_CACHE_MAX_SIZE) {
+    const oldest = searchResultCache.keys().next().value;
+    if (oldest) searchResultCache.delete(oldest);
+  }
+  searchResultCache.set(key, { data, ts: Date.now() });
+}
+
+/** Clear the search result cache (useful for forced refresh / tests). */
+export function clearSearchCache(): void {
+  searchResultCache.clear();
+}
+// ──────────────────────────────────────────────────────────────────────────────
+
 // Rate limiting: Scryfall asks for 50-100ms between requests
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -165,6 +207,13 @@ export async function searchCards(
   const langQuery = lang && lang !== 'en' ? `lang:${lang} ${query}` : query;
   // Exclude digital-only Alchemy rebalanced cards from all results
   const finalQuery = `${langQuery} -is:rebalanced`;
+
+  // ── Cache check (avoids API call + queue delay entirely) ───────────────────
+  const cacheKey = makeSearchCacheKey(finalQuery, page, lang);
+  const cached = getSearchCache(cacheKey);
+  if (cached) return cached;
+  // ──────────────────────────────────────────────────────────────────────────
+
   const encodedQuery = encodeURIComponent(finalQuery);
   const response = await rateLimitedFetch(
     `${BASE_URL}/cards/search?q=${encodedQuery}&page=${page}`,
@@ -177,7 +226,9 @@ export async function searchCards(
     throw new Error(`Search failed: ${response.statusText}`);
   }
 
-  return response.json();
+  const result: SearchResult = await response.json();
+  setSearchCache(cacheKey, result);
+  return result;
 }
 
 /**
