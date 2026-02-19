@@ -382,7 +382,7 @@ const Index = () => {
                                     ? 'bg-primary border-primary text-primary-foreground'
                                     : 'bg-card/80 border-border/60 text-muted-foreground hover:border-primary/50'
                                 }`}
-                                aria-label={`${isCardSelected(card.id) ? 'Remove from' : 'Add to'} comparison`}
+                                aria-label={isCardSelected(card.id) ? t('compare.removeFrom') : t('compare.addTo')}
                                 tabIndex={-1}
                               >
                                 {isCardSelected(card.id) ? '✓' : '+'}

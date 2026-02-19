@@ -54,18 +54,20 @@ interface UnifiedSearchBarProps {
 
 /** Maps a search phase to its display label and icon */
 function PhaseIndicator({ phase, isCardFetching }: { phase: SearchPhase; isCardFetching?: boolean }) {
+  const { t } = useTranslation();
   // 'fetching' phase means translation done, cards loading
   const effectivePhase = phase === 'fetching' || (phase === 'idle' && isCardFetching) ? 'fetching' : phase;
   if (effectivePhase === 'idle') return null;
 
   const isTranslating = effectivePhase === 'translating';
+  const label = isTranslating ? t('search.phaseTranslating') : t('search.phaseFetching');
 
   return (
     <div
       className="flex items-center justify-center gap-2 animate-fade-in"
       role="status"
       aria-live="polite"
-      aria-label={isTranslating ? 'Translating query…' : 'Fetching cards…'}
+      aria-label={label}
     >
       <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-300 ${
         isTranslating
@@ -75,12 +77,12 @@ function PhaseIndicator({ phase, isCardFetching }: { phase: SearchPhase; isCardF
         {isTranslating ? (
           <>
             <Sparkles className="h-3 w-3 animate-pulse" aria-hidden="true" />
-            <span>Translating query…</span>
+            <span>{t('search.phaseTranslating')}</span>
           </>
         ) : (
           <>
             <Database className="h-3 w-3 animate-pulse" aria-hidden="true" />
-            <span>Fetching cards…</span>
+            <span>{t('search.phaseFetching')}</span>
           </>
         )}
         <Loader2 className="h-3 w-3 animate-spin ml-0.5" aria-hidden="true" />
@@ -285,10 +287,10 @@ export const UnifiedSearchBar = forwardRef<
             className="h-9 sm:h-10 px-3 sm:px-4 rounded-lg gap-1.5 sm:gap-2 font-medium flex-shrink-0"
             aria-label={
               rateLimitCountdown > 0
-                ? `Wait ${rateLimitCountdown}s`
+                ? t('search.waitSeconds').replace('{seconds}', String(rateLimitCountdown))
                 : isSearching
-                  ? 'Searching...'
-                  : 'Search for cards'
+                  ? t('search.searching')
+                  : t('search.searchForCards')
             }
           >
             {rateLimitCountdown > 0 ? (
@@ -349,10 +351,10 @@ export const UnifiedSearchBar = forwardRef<
         <div
           className="flex flex-col items-center gap-2 animate-reveal"
           role="group"
-          aria-label="Example searches"
+          aria-label={t('search.trySearchingFor')}
         >
           <span className="text-[11px] text-muted-foreground/60 uppercase tracking-wider font-medium">
-            Try searching for
+            {t('search.trySearchingFor')}
           </span>
           <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
             {EXAMPLE_QUERIES.slice(0, isMobile ? 2 : 3).map((example) => (
@@ -364,7 +366,7 @@ export const UnifiedSearchBar = forwardRef<
                   handleSearch(example);
                 }}
                 className="px-3.5 py-2 rounded-full text-xs text-muted-foreground hover:text-foreground border border-border/60 hover:border-primary/40 hover:bg-primary/5 transition-all duration-200 focus-ring"
-                aria-label={`Search for ${example}`}
+                aria-label={t('search.searchFor').replace('{query}', example)}
               >
                 {example}
               </button>
