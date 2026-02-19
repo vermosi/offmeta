@@ -224,7 +224,7 @@ export function usePrefetchPopularQueries() {
     if (hasPrefetched.current) return;
     hasPrefetched.current = true;
 
-    // Stagger prefetch requests to avoid cold-start flooding
+    // Stagger prefetch requests to avoid competing with user's first search
     const timeoutIds: ReturnType<typeof setTimeout>[] = [];
     POPULAR_QUERIES_TO_PREFETCH.forEach((query, index) => {
       const id = setTimeout(() => {
@@ -238,7 +238,7 @@ export function usePrefetchPopularQueries() {
             }),
           staleTime: CLIENT_CONFIG.TRANSLATION_STALE_TIME_MS,
         });
-      }, 3000 + index * 2000); // Start after 3s, space 2s apart
+      }, 8000 + index * 3000); // Start after 8s (after first interaction window), space 3s apart
       timeoutIds.push(id);
     });
 
