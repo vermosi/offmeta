@@ -633,5 +633,21 @@
   "enabled": "Activé",
   "disabled": "Désactivé",
   "on": "Marche",
-  "off": "Arrêt"
+  "off": "Arrêt",
+
+  "search.phaseTranslating": "Traduction en cours…",
+  "search.phaseFetching": "Chargement des cartes…",
+  "search.trySearchingFor": "Essayez de chercher",
+  "search.searchFor": "Rechercher {query}",
+  "search.waitSeconds": "Attendez {seconds}s",
+  "search.searchForCards": "Rechercher des cartes",
+
+  "results.loadingMore": "Chargement de plus de cartes...",
+  "results.endMessage": "Vous avez atteint la fin · {count} cartes au total",
+  "results.cardsTotal": "{count} cartes au total",
+
+  "compare.addTo": "Ajouter à la comparaison",
+  "compare.removeFrom": "Retirer de la comparaison",
+
+  "footer.poweredByLabel": "Propulsé par"
 }

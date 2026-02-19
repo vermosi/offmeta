@@ -642,5 +642,21 @@
   "deckCombos.almostThere": "Почти готово",
   "deckCombos.minCards": "Добавьте карты для обнаружения комбо.",
   "deckCombos.noCombos": "Комбо пока не обнаружены.",
-  "deckEditor.preview.clickToPreview": "Нажмите на карту для предпросмотра."
+  "deckEditor.preview.clickToPreview": "Нажмите на карту для предпросмотра.",
+
+  "search.phaseTranslating": "Перевод запроса…",
+  "search.phaseFetching": "Загрузка карт…",
+  "search.trySearchingFor": "Попробуйте поискать",
+  "search.searchFor": "Найти {query}",
+  "search.waitSeconds": "Подождите {seconds}с",
+  "search.searchForCards": "Поиск карт",
+
+  "results.loadingMore": "Загрузка дополнительных карт...",
+  "results.endMessage": "Вы достигли конца · всего {count} карт",
+  "results.cardsTotal": "всего {count} карт",
+
+  "compare.addTo": "Добавить к сравнению",
+  "compare.removeFrom": "Убрать из сравнения",
+
+  "footer.poweredByLabel": "Работает на"
 }

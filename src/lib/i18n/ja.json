@@ -633,5 +633,21 @@
   "enabled": "有効",
   "disabled": "無効",
   "on": "オン",
-  "off": "オフ"
+  "off": "オフ",
+
+  "search.phaseTranslating": "クエリを翻訳中…",
+  "search.phaseFetching": "カードを取得中…",
+  "search.trySearchingFor": "試してみましょう",
+  "search.searchFor": "{query} を検索",
+  "search.waitSeconds": "{seconds}秒お待ちください",
+  "search.searchForCards": "カードを検索",
+
+  "results.loadingMore": "さらにカードを読み込み中...",
+  "results.endMessage": "最後まで到達しました · 合計{count}枚",
+  "results.cardsTotal": "合計{count}枚",
+
+  "compare.addTo": "比較に追加",
+  "compare.removeFrom": "比較から削除",
+
+  "footer.poweredByLabel": "提供："
 }

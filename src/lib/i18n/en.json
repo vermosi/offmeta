@@ -18,6 +18,12 @@
   "search.hint": "Type your search query and press Enter or click Search",
   "search.label": "Card search",
   "search.inputLabel": "Search for Magic cards using natural language",
+  "search.phaseTranslating": "Translating query…",
+  "search.phaseFetching": "Fetching cards…",
+  "search.trySearchingFor": "Try searching for",
+  "search.searchFor": "Search for {query}",
+  "search.waitSeconds": "Wait {seconds}s",
+  "search.searchForCards": "Search for cards",
 
   "hero.title": "Find Magic Cards",
   "hero.titleAccent": "Like You Think",
@@ -53,6 +59,9 @@
   "results.noMatch": "No cards match your filters.",
   "results.adjustFilters": "Try adjusting your filter criteria.",
   "results.stats": "Stats",
+  "results.loadingMore": "Loading more cards...",
+  "results.endMessage": "You've reached the end · {count} cards total",
+  "results.cardsTotal": "{count} cards total",
 
   "empty.noCards": "No cards found",
   "empty.noMatch": "We couldn't find any cards matching",
@@ -81,6 +90,8 @@
   "compare.title": "Compare Cards",
   "compare.selected": "selected",
   "compare.clear": "Clear",
+  "compare.addTo": "Add to comparison",
+  "compare.removeFrom": "Remove from comparison",
 
   "theme.switchToLight": "Switch to light theme",
   "theme.switchToDark": "Switch to dark theme",
@@ -88,6 +99,7 @@
 
   "footer.source": "Source",
   "footer.poweredBy": "Powered by Scryfall",
+  "footer.poweredByLabel": "Powered by",
   "footer.guides": "Guides",
   "footer.legal": "Unofficial Fan Content per",
   "footer.fanPolicy": "WotC Fan Content Policy",

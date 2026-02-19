@@ -91,7 +91,7 @@ export function Footer() {
 
         {/* Attributions */}
         <div className="border-t border-border pt-4 flex flex-col items-center gap-2 sm:flex-row sm:justify-center sm:gap-4">
-          <span className="text-xs text-muted-foreground">Powered by</span>
+          <span className="text-xs text-muted-foreground">{t('footer.poweredByLabel', 'Powered by')}</span>
           <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
             <a
               href="https://scryfall.com"

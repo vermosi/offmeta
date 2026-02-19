@@ -642,5 +642,21 @@
   "deckCombos.almostThere": "即将完成",
   "deckCombos.minCards": "添加卡牌以检测组合技。",
   "deckCombos.noCombos": "尚未检测到组合技。",
-  "deckEditor.preview.clickToPreview": "点击卡牌预览。"
+  "deckEditor.preview.clickToPreview": "点击卡牌预览。",
+
+  "search.phaseTranslating": "正在翻译查询…",
+  "search.phaseFetching": "正在获取卡牌…",
+  "search.trySearchingFor": "试试搜索",
+  "search.searchFor": "搜索 {query}",
+  "search.waitSeconds": "等待 {seconds}秒",
+  "search.searchForCards": "搜索卡牌",
+
+  "results.loadingMore": "正在加载更多卡牌...",
+  "results.endMessage": "已到达末尾 · 共 {count} 张",
+  "results.cardsTotal": "共 {count} 张",
+
+  "compare.addTo": "添加到对比",
+  "compare.removeFrom": "从对比中移除",
+
+  "footer.poweredByLabel": "技术支持："
 }

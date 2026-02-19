@@ -642,5 +642,21 @@
   "deckCombos.almostThere": "거의 완성",
   "deckCombos.minCards": "콤보 감지를 위해 카드를 추가하세요.",
   "deckCombos.noCombos": "아직 감지된 콤보가 없습니다.",
-  "deckEditor.preview.clickToPreview": "카드를 클릭하여 미리보기."
+  "deckEditor.preview.clickToPreview": "카드를 클릭하여 미리보기.",
+
+  "search.phaseTranslating": "쿼리 번역 중…",
+  "search.phaseFetching": "카드 불러오는 중…",
+  "search.trySearchingFor": "검색해 보세요",
+  "search.searchFor": "{query} 검색",
+  "search.waitSeconds": "{seconds}초 대기",
+  "search.searchForCards": "카드 검색",
+
+  "results.loadingMore": "카드 더 불러오는 중...",
+  "results.endMessage": "끝에 도달했습니다 · 총 {count}장",
+  "results.cardsTotal": "총 {count}장",
+
+  "compare.addTo": "비교에 추가",
+  "compare.removeFrom": "비교에서 제거",
+
+  "footer.poweredByLabel": "제공:"
 }
