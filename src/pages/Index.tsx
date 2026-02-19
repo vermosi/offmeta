@@ -179,6 +179,7 @@ const Index = () => {
               isLoading={isSearching}
               lastTranslatedQuery={lastSearchResult?.scryfallQuery}
               filters={activeFilters}
+              isCardFetching={isSearching}
             />
 
             {hasSearched && (
