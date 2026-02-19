@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/core/utils';
 import type { CardModalImageProps } from './types';
+import { useTranslation } from '@/lib/i18n';
 
 export function CardModalImage({
   displayImageUrl,
@@ -17,6 +18,7 @@ export function CardModalImage({
   onTransform,
   isMobile = false,
 }: CardModalImageProps) {
+  const { t } = useTranslation();
   const maxWidth = isMobile ? 'max-w-[180px]' : 'max-w-[220px]';
 
   return (
@@ -42,7 +44,7 @@ export function CardModalImage({
           <RefreshCw
             className={cn('h-3.5 w-3.5', isFlipping && 'animate-spin')}
           />
-          Transform
+          {t('card.transform', 'Transform')}
         </Button>
       )}
     </div>

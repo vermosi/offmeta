@@ -69,12 +69,12 @@ export const EditableQueryBar = memo(function EditableQueryBar({
     try {
       await navigator.clipboard.writeText(editedQuery);
       setCopied(true);
-      toast.success('Query copied!');
+      toast.success(t('queryBar.copied', 'Query copied!'));
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error('Failed to copy');
+      toast.error(t('queryBar.copyFailed', 'Failed to copy'));
     }
-  }, [editedQuery]);
+  }, [editedQuery, t]);
 
   const handleOpenInScryfall = useCallback(() => {
     const url = `https://scryfall.com/search?q=${encodeURIComponent(editedQuery)}`;
@@ -96,26 +96,26 @@ export const EditableQueryBar = memo(function EditableQueryBar({
       } else {
         await navigator.clipboard.writeText(shareUrl);
         setShared(true);
-        toast.success('Link copied!');
+        toast.success(t('queryBar.linkCopied', 'Link copied!'));
         setTimeout(() => setShared(false), 2000);
       }
     } catch (err) {
       if ((err as Error)?.name !== 'AbortError') {
         await navigator.clipboard.writeText(shareUrl);
         setShared(true);
-        toast.success('Link copied!');
+        toast.success(t('queryBar.linkCopied', 'Link copied!'));
         setTimeout(() => setShared(false), 2000);
       }
     }
-  }, [originalQuery, editedQuery]);
+  }, [originalQuery, editedQuery, t]);
 
   const handleRerun = useCallback(() => {
     if (!editedQuery.trim()) {
-      toast.error('Query cannot be empty');
+      toast.error(t('queryBar.emptyError', 'Query cannot be empty'));
       return;
     }
     onRerun(editedQuery);
-  }, [editedQuery, onRerun]);
+  }, [editedQuery, onRerun, t]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {

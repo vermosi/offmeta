@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ShoppingCart, Loader2, Sparkles, Monitor } from 'lucide-react';
 import { getTCGPlayerUrl, getCardmarketUrl } from '@/lib/scryfall/printings';
 import type { CardModalPurchaseLinksProps } from './types';
+import { useTranslation } from '@/lib/i18n';
 
 export function CardModalPurchaseLinks({
   card,
@@ -18,6 +19,7 @@ export function CardModalPurchaseLinks({
   onAffiliateClick,
   isMobile = false,
 }: CardModalPurchaseLinksProps) {
+  const { t } = useTranslation();
   const cardNameEncoded = encodeURIComponent(card.name);
 
   const getCardhoarderUrl = () => {
@@ -28,11 +30,15 @@ export function CardModalPurchaseLinks({
     return `https://www.cardhoarder.com/cards?data%5Bsearch%5D=${cardNameEncoded}`;
   };
 
+  const foilLabel = t('card.foil', 'Foil');
+  const tixLabel = t('card.tix', 'tix');
+  const buyLabel = t('card.buyThisCard', 'Buy This Card');
+
   if (isMobile) {
     return (
       <div className="space-y-2">
         <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          Buy This Card
+          {buyLabel}
         </h3>
         <div className="grid grid-cols-2 gap-2">
           {displayPrices.usd && (
@@ -90,7 +96,7 @@ export function CardModalPurchaseLinks({
               >
                 <span className="flex items-center gap-1">
                   <Sparkles className="h-3 w-3" />
-                  Foil
+                  {foilLabel}
                 </span>
                 <span className="font-semibold">${displayPrices.usd_foil}</span>
               </Button>
@@ -116,7 +122,7 @@ export function CardModalPurchaseLinks({
               >
                 <span className="flex items-center gap-1">
                   <Sparkles className="h-3 w-3" />
-                  Foil
+                  {foilLabel}
                 </span>
                 <span className="font-semibold">€{displayPrices.eur_foil}</span>
               </Button>
@@ -136,7 +142,7 @@ export function CardModalPurchaseLinks({
   return (
     <div className="w-full mt-3 max-w-[220px]">
       <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-        Buy This Card
+        {buyLabel}
       </h3>
       <div className="space-y-1.5">
         {displayPrices.usd && (
@@ -178,7 +184,7 @@ export function CardModalPurchaseLinks({
           >
             <span className="flex items-center gap-2">
               <Sparkles className="h-3.5 w-3.5" />
-              TCGplayer Foil
+              TCGplayer {foilLabel}
             </span>
             <span className="font-semibold">${displayPrices.usd_foil}</span>
           </Button>
@@ -223,7 +229,7 @@ export function CardModalPurchaseLinks({
           >
             <span className="flex items-center gap-2">
               <Sparkles className="h-3.5 w-3.5" />
-              Cardmarket Foil
+              Cardmarket {foilLabel}
             </span>
             <span className="font-semibold">€{displayPrices.eur_foil}</span>
           </Button>
@@ -241,7 +247,7 @@ export function CardModalPurchaseLinks({
               <Monitor className="h-3.5 w-3.5" />
               Cardhoarder (MTGO)
             </span>
-            <span className="font-semibold">{displayTix} tix</span>
+            <span className="font-semibold">{displayTix} {tixLabel}</span>
           </Button>
         )}
         {isLoadingPrintings && !displayPrices.usd && !displayPrices.eur && (

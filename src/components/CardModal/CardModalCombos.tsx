@@ -4,7 +4,9 @@
  */
 
 import { useState, useEffect, useReducer } from 'react';
+import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/integrations/supabase/client';
+
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -75,6 +77,7 @@ function comboReducer(_state: ComboState, action: ComboAction): ComboState {
 }
 
 export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
+  const { t } = useTranslation();
   const [state, dispatch] = useReducer(comboReducer, {
     combos: [],
     total: 0,
@@ -119,7 +122,7 @@ export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <Zap className="h-4 w-4 text-primary" />
-          <span className="text-sm font-medium">Loading combos…</span>
+          <span className="text-sm font-medium">{t('card.combosLoading', 'Loading combos…')}</span>
         </div>
         {[1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-20 w-full rounded-lg" />
@@ -140,10 +143,16 @@ export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
   if (combos.length === 0) {
     return (
       <div className="text-sm text-muted-foreground py-3">
-        No known combos found for this card.
+        {t('card.combosNone', 'No known combos found for this card.')}
       </div>
     );
   }
+
+  const combosLabel = total > combos.length
+    ? t('card.combosOf', '{shown} of {total}')
+        .replace('{shown}', String(combos.length))
+        .replace('{total}', String(total))
+    : String(combos.length);
 
   return (
     <div className="space-y-3">
@@ -151,7 +160,7 @@ export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
         <div className="flex items-center gap-2">
           <Zap className="h-4 w-4 text-primary" />
           <span className="text-sm font-medium">
-            Combos ({total > combos.length ? `${combos.length} of ${total}` : combos.length})
+            {t('card.combos', 'Combos ({count})').replace('{count}', combosLabel)}
           </span>
         </div>
         <a
@@ -160,10 +169,11 @@ export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
           rel="noopener noreferrer"
           className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
         >
-          View all
+          {t('card.combosViewAll', 'View all')}
           <ExternalLink className="h-3 w-3" />
         </a>
       </div>
+
 
       <div className="space-y-2">
         {combos.map((combo) => (
@@ -253,7 +263,7 @@ export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
                 {combo.description && (
                   <div>
                     <p className="text-xs font-medium text-muted-foreground mb-1">
-                      Steps
+                      {t('card.combosSteps', 'Steps')}
                     </p>
                     <ol className="text-xs space-y-0.5 list-decimal list-inside text-foreground/90">
                       {combo.description.split('\n').filter(Boolean).map((step, i) => (
@@ -267,7 +277,7 @@ export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
                 {combo.prerequisites && (
                   <div>
                     <p className="text-xs font-medium text-muted-foreground mb-1">
-                      Prerequisites
+                      {t('card.combosPrerequisites', 'Prerequisites')}
                     </p>
                     <ul className="text-xs space-y-0.5 list-disc list-inside text-foreground/70">
                       {combo.prerequisites.split('\n').filter(Boolean).map((prereq, i) => (
@@ -281,7 +291,7 @@ export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
                 <div className="flex items-center justify-between">
                   {combo.prices?.tcgplayer && (
                     <span className="text-xs text-muted-foreground">
-                      Combo cost: ~${combo.prices.tcgplayer}
+                      {t('card.combosCost', 'Combo cost: ~${price}').replace('{price}', combo.prices.tcgplayer)}
                     </span>
                   )}
                   <Button
