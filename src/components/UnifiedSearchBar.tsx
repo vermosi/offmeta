@@ -11,7 +11,7 @@ import {
   forwardRef,
 } from 'react';
 import { Button } from '@/components/ui/button';
-import { Search, Loader2, X, Clock } from 'lucide-react';
+import { Search, Loader2, X, Clock, Sparkles, Database } from 'lucide-react';
 import { SearchHistoryDropdown } from '@/components/SearchHistoryDropdown';
 import { useIsMobile } from '@/hooks/useMobile';
 import { SearchFeedback } from '@/components/SearchFeedback';
@@ -22,7 +22,7 @@ import { useTypingPlaceholder } from '@/hooks/useTypingPlaceholder';
 import type { SearchIntent } from '@/types/search';
 import { useSearchContext } from '@/hooks/useSearchContext';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
-import { useSearchHandler } from '@/hooks/useSearchHandler';
+import { useSearchHandler, type SearchPhase } from '@/hooks/useSearchHandler';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
 import { useTranslation } from '@/lib/i18n';
 
@@ -48,6 +48,45 @@ interface UnifiedSearchBarProps {
   isLoading: boolean;
   lastTranslatedQuery?: string;
   filters?: FilterState | null;
+  /** Phase from the card-fetching layer (TanStack Query) */
+  isCardFetching?: boolean;
+}
+
+/** Maps a search phase to its display label and icon */
+function PhaseIndicator({ phase, isCardFetching }: { phase: SearchPhase; isCardFetching?: boolean }) {
+  // 'fetching' phase means translation done, cards loading
+  const effectivePhase = phase === 'fetching' || (phase === 'idle' && isCardFetching) ? 'fetching' : phase;
+  if (effectivePhase === 'idle') return null;
+
+  const isTranslating = effectivePhase === 'translating';
+
+  return (
+    <div
+      className="flex items-center justify-center gap-2 animate-fade-in"
+      role="status"
+      aria-live="polite"
+      aria-label={isTranslating ? 'Translating query…' : 'Fetching cards…'}
+    >
+      <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-300 ${
+        isTranslating
+          ? 'bg-primary/10 border-primary/20 text-primary'
+          : 'bg-accent/10 border-accent/20 text-accent-foreground'
+      }`}>
+        {isTranslating ? (
+          <>
+            <Sparkles className="h-3 w-3 animate-pulse" aria-hidden="true" />
+            <span>Translating query…</span>
+          </>
+        ) : (
+          <>
+            <Database className="h-3 w-3 animate-pulse" aria-hidden="true" />
+            <span>Fetching cards…</span>
+          </>
+        )}
+        <Loader2 className="h-3 w-3 animate-spin ml-0.5" aria-hidden="true" />
+      </div>
+    </div>
+  );
 }
 
 export interface UnifiedSearchBarHandle {
@@ -67,7 +106,7 @@ export const UnifiedSearchBar = forwardRef<
   UnifiedSearchBarHandle,
   UnifiedSearchBarProps
 >(function UnifiedSearchBar(
-  { onSearch, isLoading, lastTranslatedQuery, filters },
+  { onSearch, isLoading, lastTranslatedQuery, filters, isCardFetching },
   ref,
 ) {
   const isMobile = useIsMobile();
@@ -91,7 +130,7 @@ export const UnifiedSearchBar = forwardRef<
 
   const { saveContext } = useSearchContext();
   const { history, addToHistory, removeFromHistory, clearHistory } = useSearchHistory();
-  const { isSearching, rateLimitCountdown, handleSearch } = useSearchHandler({
+  const { isSearching, searchPhase, rateLimitCountdown, handleSearch } = useSearchHandler({
     query,
     filters,
     onSearch,
@@ -301,6 +340,9 @@ export const UnifiedSearchBar = forwardRef<
           {t('search.hint')}
         </p>
       </div>
+
+      {/* Progressive loading phase indicator */}
+      <PhaseIndicator phase={searchPhase} isCardFetching={isCardFetching} />
 
       {/* Example queries - shown when no query typed */}
       {showExamples && (

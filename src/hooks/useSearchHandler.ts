@@ -12,6 +12,8 @@ import { CLIENT_CONFIG } from '@/lib/config';
 import type { FilterState } from '@/types/filters';
 import type { SearchResult } from '@/components/UnifiedSearchBar';
 
+export type SearchPhase = 'idle' | 'translating' | 'fetching';
+
 interface UseSearchHandlerOptions {
   query: string;
   filters?: FilterState | null;
@@ -32,6 +34,7 @@ export function useSearchHandler({
   saveContext,
 }: UseSearchHandlerOptions) {
   const [isSearching, setIsSearching] = useState(false);
+  const [searchPhase, setSearchPhase] = useState<SearchPhase>('idle');
   const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
   const [rateLimitCountdown, setRateLimitCountdown] = useState<number>(0);
   const rateLimitCountdownRef = useRef<number>(0);
@@ -98,6 +101,7 @@ export function useSearchHandler({
       abortControllerRef.current = new AbortController();
 
       setIsSearching(true);
+      setSearchPhase('translating');
 
       const searchStartTime = Date.now();
       logger.info('[SearchDiag] Search started', {
@@ -141,6 +145,9 @@ export function useSearchHandler({
           responseMs,
           scryfallQuery: result.scryfallQuery,
         });
+
+        // Translation done — now card fetch begins
+        setSearchPhase('fetching');
 
         onSearch(
           result.scryfallQuery,
@@ -221,6 +228,7 @@ export function useSearchHandler({
         }
       } finally {
         setIsSearching(false);
+        setSearchPhase('idle');
         abortControllerRef.current = null;
       }
     },
@@ -236,6 +244,7 @@ export function useSearchHandler({
 
   return {
     isSearching,
+    searchPhase,
     rateLimitCountdown,
     handleSearch,
   };
