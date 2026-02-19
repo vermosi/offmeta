@@ -375,7 +375,7 @@ export function SearchFilters({
                         : 'opacity-60 hover:opacity-100 border-transparent',
                     )}
                     title={color.name}
-                    aria-label={`Filter by ${color.name}`}
+                    aria-label={t('filters.filterByColor', 'Filter by {name}').replace('{name}', color.name)}
                     aria-pressed={filters.colors.includes(color.id)}
                   >
                     {color.id}
@@ -495,7 +495,7 @@ export function SearchFilters({
                     toggleColor(colorId);
                   }
                 }}
-                aria-label={`Remove ${color?.name || colorId} filter`}
+                aria-label={t('filters.removeColor', 'Remove {name} filter').replace('{name}', color?.name || colorId)}
               >
                 {color?.name || colorId}
                 <X className="h-3 w-3" aria-hidden="true" />
@@ -516,7 +516,7 @@ export function SearchFilters({
                   toggleType(type);
                 }
               }}
-              aria-label={`Remove ${type} filter`}
+              aria-label={t('filters.removeType', 'Remove {type} filter').replace('{type}', type)}
             >
               {type}
               <X className="h-3 w-3" aria-hidden="true" />
@@ -537,10 +537,11 @@ export function SearchFilters({
                   setFilters((prev) => ({ ...prev, cmcRange: [0, defaultMaxCmc] }));
                 }
               }}
-              aria-label={`Remove CMC ${filters.cmcRange[0]}-${filters.cmcRange[1] >= defaultMaxCmc ? `${defaultMaxCmc}+` : filters.cmcRange[1]} filter`}
+              aria-label={t('filters.removeCmc', 'Remove CMC {range} filter').replace('{range}', `${filters.cmcRange[0]}-${filters.cmcRange[1] >= defaultMaxCmc ? `${defaultMaxCmc}+` : filters.cmcRange[1]}`)}
             >
-              CMC {filters.cmcRange[0]}-
-              {filters.cmcRange[1] >= defaultMaxCmc ? `${defaultMaxCmc}+` : filters.cmcRange[1]}
+              {t('filters.cmcRange', 'CMC {min}-{max}')
+                .replace('{min}', String(filters.cmcRange[0]))
+                .replace('{max}', filters.cmcRange[1] >= defaultMaxCmc ? `${defaultMaxCmc}+` : String(filters.cmcRange[1]))}
               <X className="h-3 w-3" aria-hidden="true" />
             </Badge>
           )}

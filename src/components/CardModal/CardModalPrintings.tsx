@@ -7,6 +7,7 @@
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/core/utils';
 import type { CardModalPrintingsProps } from './types';
+import { useTranslation } from '@/lib/i18n';
 
 export function CardModalPrintings({
   printings,
@@ -16,13 +17,14 @@ export function CardModalPrintings({
   onSelectPrinting,
   isMobile = false,
 }: CardModalPrintingsProps) {
+  const { t } = useTranslation();
   const maxItems = isMobile ? 8 : 15;
 
   if (isMobile) {
     return (
       <div className="space-y-2">
         <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          Printings ({printings.length})
+          {t('card.printings', 'Printings ({count})').replace('{count}', String(printings.length))}
         </h3>
         {isLoading ? (
           <div className="flex items-center justify-center py-3">
@@ -66,7 +68,7 @@ export function CardModalPrintings({
             ))}
             {printings.length > maxItems && (
               <p className="text-xs text-muted-foreground text-center py-1">
-                +{printings.length - maxItems} more
+                {t('card.moreMobile', '+{count} more').replace('{count}', String(printings.length - maxItems))}
               </p>
             )}
           </div>
@@ -79,7 +81,7 @@ export function CardModalPrintings({
   return (
     <div className="space-y-2">
       <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-        Printings ({printings.length})
+        {t('card.printings', 'Printings ({count})').replace('{count}', String(printings.length))}
       </h3>
       {isLoading ? (
         <div className="flex items-center justify-center py-4">
@@ -87,17 +89,17 @@ export function CardModalPrintings({
         </div>
       ) : printings.length === 0 ? (
         <p className="text-muted-foreground text-center py-4 text-sm">
-          No printings found
+          {t('card.noPrintingsFound', 'No printings found')}
         </p>
       ) : (
         <div className="space-y-1">
           <div className="grid grid-cols-[1fr_40px_40px_40px_40px_35px] gap-1 px-2 py-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider border-b border-border/50">
-            <span>Set</span>
-            <span className="text-right">USD</span>
-            <span className="text-right">Foil</span>
-            <span className="text-right">EUR</span>
-            <span className="text-right">Foil</span>
-            <span className="text-right">Tix</span>
+            <span>{t('card.printingColSet', 'Set')}</span>
+            <span className="text-right">{t('card.printingColUsd', 'USD')}</span>
+            <span className="text-right">{t('card.printingColFoil', 'Foil')}</span>
+            <span className="text-right">{t('card.printingColEur', 'EUR')}</span>
+            <span className="text-right">{t('card.printingColFoil', 'Foil')}</span>
+            <span className="text-right">{t('card.printingColTix', 'Tix')}</span>
           </div>
 
           {printings.slice(0, maxItems).map((printing) => (
@@ -152,7 +154,7 @@ export function CardModalPrintings({
 
           {printings.length > maxItems && (
             <p className="text-xs text-muted-foreground text-center py-2">
-              +{printings.length - maxItems} more printings
+              {t('card.morePrintings', '+{count} more printings').replace('{count}', String(printings.length - maxItems))}
             </p>
           )}
         </div>

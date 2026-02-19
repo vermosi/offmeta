@@ -7,6 +7,7 @@
 import { OracleText } from '@/components/ManaSymbol';
 import { Gavel, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import type { CardModalRulingsProps } from './types';
+import { useTranslation } from '@/lib/i18n';
 
 export function CardModalRulings({
   rulings,
@@ -14,6 +15,8 @@ export function CardModalRulings({
   showRulings,
   onToggleRulings,
 }: CardModalRulingsProps) {
+  const { t, locale } = useTranslation();
+
   if (rulings.length === 0 && !isLoading) {
     return null;
   }
@@ -25,7 +28,7 @@ export function CardModalRulings({
         className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors w-full"
       >
         <Gavel className="h-3.5 w-3.5" />
-        <span>Rulings ({rulings.length})</span>
+        <span>{t('card.rulings', 'Rulings ({count})').replace('{count}', String(rulings.length))}</span>
         {showRulings ? (
           <ChevronUp className="h-3.5 w-3.5 ml-auto" />
         ) : (
@@ -50,7 +53,7 @@ export function CardModalRulings({
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {ruling.source} •{' '}
-                  {new Date(ruling.published_at).toLocaleDateString('en-US', {
+                  {new Date(ruling.published_at).toLocaleDateString(locale, {
                     year: 'numeric',
                     month: 'short',
                     day: 'numeric',

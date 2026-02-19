@@ -7,11 +7,23 @@
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/core/utils';
 import { formatFormatName, type CardModalLegalitiesProps } from './types';
+import { useTranslation } from '@/lib/i18n';
+
+function localizeStatus(status: string, t: (key: string, fallback?: string) => string): string {
+  switch (status) {
+    case 'legal': return t('card.statusLegal', 'legal');
+    case 'not_legal': return t('card.statusNotLegal', 'not legal');
+    case 'banned': return t('card.statusBanned', 'banned');
+    case 'restricted': return t('card.statusRestricted', 'restricted');
+    default: return status.replace('_', ' ');
+  }
+}
 
 export function CardModalLegalities({
   legalities,
   isMobile = false,
 }: CardModalLegalitiesProps) {
+  const { t } = useTranslation();
   const legalFormats = Object.entries(legalities).filter(
     ([, status]) => status === 'legal',
   );
@@ -20,7 +32,7 @@ export function CardModalLegalities({
     return (
       <div className="space-y-2">
         <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          Legal In
+          {t('card.legalIn', 'Legal In')}
         </h3>
         <div className="flex flex-wrap gap-1.5">
           {legalFormats.map(([format]) => (
@@ -34,7 +46,7 @@ export function CardModalLegalities({
           ))}
           {legalFormats.length === 0 && (
             <span className="text-xs text-muted-foreground">
-              Not legal in any format
+              {t('card.notLegalInAny', 'Not legal in any format')}
             </span>
           )}
         </div>
@@ -46,7 +58,7 @@ export function CardModalLegalities({
   return (
     <div className="space-y-2">
       <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-        Format Legality
+        {t('card.formatLegality', 'Format Legality')}
       </h3>
       <div className="grid grid-cols-2 gap-1">
         {Object.entries(legalities).map(([format, status]) => (
@@ -71,7 +83,7 @@ export function CardModalLegalities({
                   'bg-amber-500/10 text-amber-500 border-amber-500/30',
               )}
             >
-              {status.replace('_', ' ')}
+              {localizeStatus(status, t)}
             </Badge>
           </div>
         ))}
