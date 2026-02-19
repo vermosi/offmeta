@@ -35,6 +35,28 @@ const DICTIONARIES: Record<string, TranslationDictionary> = {
 
 const STORAGE_KEY = 'offmeta-locale';
 
+/**
+ * Maps a BCP-47 browser language tag (e.g. "fr-FR", "zh-Hans-CN") to the
+ * closest supported app locale, or returns null if no match.
+ */
+function detectBrowserLocale(): SupportedLocale | null {
+  try {
+    const langs = navigator.languages?.length ? navigator.languages : [navigator.language];
+    for (const lang of langs) {
+      const lower = lang.toLowerCase();
+      // Chinese variants first (more specific)
+      if (lower.startsWith('zh-hant') || lower === 'zh-tw' || lower === 'zh-hk' || lower === 'zh-mo') return 'zht';
+      if (lower.startsWith('zh-hans') || lower === 'zh-cn' || lower === 'zh-sg' || lower === 'zh') return 'zhs';
+      // Simple prefix match for the rest
+      const prefix = lower.split('-')[0] as SupportedLocale;
+      if (prefix in DICTIONARIES) return prefix;
+    }
+  } catch {
+    // navigator not available (SSR / privacy mode)
+  }
+  return null;
+}
+
 function getInitialLocale(): SupportedLocale {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -42,8 +64,9 @@ function getInitialLocale(): SupportedLocale {
   } catch {
     // SSR or storage unavailable
   }
-  return 'en';
+  return detectBrowserLocale() ?? 'en';
 }
+
 
 interface I18nProviderProps {
   children: ReactNode;
