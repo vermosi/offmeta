@@ -355,7 +355,40 @@ serve(async (req) => {
       );
     }
 
-    // 2.5. New Pipeline Mode (opt-in via debug flag)
+    // 2.5. Fast-path for short, likely card-name queries (skip cache/pattern/AI entirely)
+    // Card names are 1-6 title-cased words with no search keywords — deterministic is instant.
+    const queryWords = query.trim().split(/\s+/);
+    const isFastNameCandidate = queryWords.length <= 6 && queryWords.length >= 1
+      && queryWords.every((w: string) => /^[A-Z]/.test(w) || /^(of|the|and|to|in|for|a|an)$/i.test(w))
+      && !/\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries)\b/i.test(query);
+
+    if (isFastNameCandidate) {
+      const fastResult = buildDeterministicIntent(query);
+      const fastQuery = applyFiltersToQuery(fastResult.deterministicQuery, filters);
+      if (fastQuery && !fastResult.intent.remainingQuery) {
+        const validation = validateQuery(fastQuery);
+        const responseTimeMs = Date.now() - requestStartTime;
+        logTranslation(query, validation.sanitized, 0.9, responseTimeMs, [], [], filters, false, 'deterministic');
+        flushLogQueue();
+
+        return new Response(
+          JSON.stringify({
+            originalQuery: query,
+            scryfallQuery: validation.sanitized,
+            explanation: {
+              readable: `Searching for: ${query}`,
+              assumptions: fastResult.intent.warnings,
+              confidence: 0.9,
+            },
+            success: true,
+            source: 'deterministic',
+          }),
+          { headers: jsonHeaders },
+        );
+      }
+    }
+
+    // 2.6. New Pipeline Mode (opt-in via debug flag)
     const usePipeline = Boolean(debugOptions.usePipeline);
     if (usePipeline) {
       const pipelineContext: PipelineContext = {
@@ -601,10 +634,10 @@ serve(async (req) => {
 
     // 8. AI Translation (with tiered model selection)
     // Fetch dynamic rules in parallel with building context (non-blocking)
-    const queryWords = query.trim().split(/\s+/).length;
+    const queryWordCount = query.trim().split(/\s+/).length;
     const isLikelyName = deterministicResult.intent.warnings.includes('likely_card_name');
     const tier: QueryTier =
-      queryWords > 8 ? 'complex' : queryWords > 4 ? 'medium' : 'simple';
+      queryWordCount > 8 ? 'complex' : queryWordCount > 4 ? 'medium' : 'simple';
 
     // Use stronger model for card name queries (needs MTG knowledge for fuzzy matching)
     const aiModel = isLikelyName
