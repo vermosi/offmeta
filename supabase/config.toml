@@ -1,5 +1,8 @@
 project_id = "chojxtvzspqqzsmwcbul"
 
+[functions.process-feedback]
+verify_jwt = false
+
 [functions.deck-recommendations]
 verify_jwt = false
 
