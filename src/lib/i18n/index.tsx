@@ -3,6 +3,7 @@
  * useTranslation is re-exported here for convenience.
  */
 
+// eslint-disable-next-line react-refresh/only-export-components
 export { useTranslation } from './useTranslation';
 
 import {
@@ -29,6 +30,7 @@ import { detectBrowserLocale } from './detect-locale';
 import { logger } from '@/lib/core/logger';
 
 // Re-export for unit tests
+// eslint-disable-next-line react-refresh/only-export-components
 export { detectBrowserLocale } from './detect-locale';
 
 type TranslationDictionary = Record<string, string>;
