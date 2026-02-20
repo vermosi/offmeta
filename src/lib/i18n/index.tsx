@@ -3,7 +3,6 @@
  * useTranslation is re-exported here for convenience.
  */
 
-// eslint-disable-next-line react-refresh/only-export-components
 export { useTranslation } from './useTranslation';
 
 import {
@@ -26,6 +25,11 @@ import zht from './zht.json';
 
 import type { SupportedLocale } from './constants';
 import { I18nContext, type I18nContextValue } from './context';
+import { detectBrowserLocale } from './detect-locale';
+import { logger } from '@/lib/core/logger';
+
+// Re-export for unit tests
+export { detectBrowserLocale } from './detect-locale';
 
 type TranslationDictionary = Record<string, string>;
 
@@ -35,34 +39,11 @@ const DICTIONARIES: Record<string, TranslationDictionary> = {
 
 const STORAGE_KEY = 'offmeta-locale';
 
-/**
- * Maps a BCP-47 browser language tag (e.g. "fr-FR", "zh-Hans-CN") to the
- * closest supported app locale, or returns null if no match.
- * Exported for unit testing only.
- */
-export function detectBrowserLocale(): SupportedLocale | null {
-  try {
-    const langs = navigator.languages?.length ? navigator.languages : [navigator.language];
-    for (const lang of langs) {
-      const lower = lang.toLowerCase();
-      // Chinese variants first (more specific)
-      if (lower.startsWith('zh-hant') || lower === 'zh-tw' || lower === 'zh-hk' || lower === 'zh-mo') return 'zht';
-      if (lower.startsWith('zh-hans') || lower === 'zh-cn' || lower === 'zh-sg' || lower === 'zh') return 'zhs';
-      // Simple prefix match for the rest
-      const prefix = lower.split('-')[0] as SupportedLocale;
-      if (prefix in DICTIONARIES) return prefix;
-    }
-  } catch {
-    // navigator not available (SSR / privacy mode)
-  }
-  return null;
-}
-
 function getInitialLocale(): SupportedLocale {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored && stored in DICTIONARIES) {
-      console.info(`[i18n] Restored locale from storage: ${stored}`);
+      logger.info(`[i18n] Restored locale from storage: ${stored}`);
       return stored as SupportedLocale;
     }
   } catch {
@@ -70,7 +51,7 @@ function getInitialLocale(): SupportedLocale {
   }
   const detected = detectBrowserLocale();
   const locale = detected ?? 'en';
-  console.info(
+  logger.info(
     `[i18n] navigator.languages=${JSON.stringify(navigator.languages ?? [navigator.language])} → detected=${detected ?? 'none'} → using=${locale}`,
   );
   // Persist so detection only runs once — subsequent loads restore from storage.
