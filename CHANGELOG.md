@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **FK constraint `fk_search_feedback_generated_rule`**: `search_feedback.generated_rule_id → translation_rules.id ON DELETE SET NULL` — orphaned rule references are automatically nulled when a rule is deleted, enforcing referential integrity at the database level.
+
 - **Pattern promotion thresholds tightened**: `generate-patterns` `MIN_OCCURRENCES` lowered from 3 → 2 to catch faster-rising patterns; new `MIN_RESULT_COUNT = 1` guard added to both the DB query filter and the candidate filter so only queries that returned ≥1 Scryfall result are ever promoted, eliminating zero-result noise in `translation_rules`. Rule `description` now records both occurrence count and minimum result count.
 - **Nightly log cleanup** (`cleanup-logs-nightly`): `pg_cron` job registered at 02:00 UTC daily via `pg_net.http_post`. Deletes `translation_logs` and `analytics_events` rows older than 30 days; ensures the pattern-promotion window is always clean when `generate-patterns` fires at 03:00 UTC.
 - **Nightly pattern promotion** (`generate-patterns-nightly`): `pg_cron` job registered at 03:00 UTC daily via `pg_net.http_post`. Scans the last 30 days of `translation_logs`, promotes qualifying queries into `translation_rules` (up to 50 per run), and skips patterns that already have a matching rule.
