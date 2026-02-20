@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Standalone Translation Rules management panel**: New section in the admin analytics dashboard (`/admin`) showing the full `translation_rules` table — pattern, Scryfall syntax, confidence badge, active/inactive dot indicator, creation date, and a source-feedback deep link that scrolls and expands the originating feedback row. Includes pattern/syntax/description text filter, active/all/inactive dropdown filter, and Activate/Deactivate toggles with optimistic updates. Both panels (rules + feedback) stay in sync via a shared realtime subscription.
+
+- **Real-time feedback queue updates**: The admin analytics channel (`admin-analytics-realtime`) now subscribes to `search_feedback` INSERT and UPDATE events. New submissions appear at the top of the queue without a manual refresh; status transitions from `process-feedback` (e.g. `pending → processing → completed`) patch existing rows in-place. When `generated_rule_id` is populated by an UPDATE, the component fires a targeted single-row join fetch to hydrate the inline rule box with the full `translation_rules` object.
+
+- **Real-time translation_rules sync**: The same realtime channel also subscribes to `translation_rules` INSERT and UPDATE events. New rules are prepended to the standalone panel; UPDATE events (e.g. `is_active` toggle from either panel) are merged into both the rules table and the feedback queue simultaneously, keeping both views consistent without a full refetch.
+
+- **Semantic design tokens — `--success` and `--warning`**: Added to `src/index.css` as HSL variables in both light and dark modes, and registered in `tailwind.config.ts` as `success` and `warning` color keys. Used across the admin dashboard for: active-rule status dots, high-confidence badges (≥80%), live indicator pulse, and completed/updated_existing status badges (`--success`); medium-confidence badges (60–79%), alert icons, and processing-status indicators (`--warning`). This replaces all previous hardcoded `green-*` / `amber-*` / `red-*` palette classes with semantic tokens that correctly follow the active theme.
+
+- **Admin RLS — `translation_rules` UPDATE policy**: Added `Admins can update translation_rules` policy so authenticated users with the `admin` role can flip `is_active` directly from the client, complementing the existing service-role-only write policies. Uses `public.has_role(auth.uid(), 'admin')` in both the USING and WITH CHECK expressions to prevent privilege escalation.
+
 - **FK constraint `fk_search_feedback_generated_rule`**: `search_feedback.generated_rule_id → translation_rules.id ON DELETE SET NULL` — orphaned rule references are automatically nulled when a rule is deleted, enforcing referential integrity at the database level.
 
 - **Pattern promotion thresholds tightened**: `generate-patterns` `MIN_OCCURRENCES` lowered from 3 → 2 to catch faster-rising patterns; new `MIN_RESULT_COUNT = 1` guard added to both the DB query filter and the candidate filter so only queries that returned ≥1 Scryfall result are ever promoted, eliminating zero-result noise in `translation_rules`. Rule `description` now records both occurrence count and minimum result count.

@@ -126,6 +126,21 @@ The deck editor is split into focused single-responsibility modules:
 | Supabase Client      | `src/integrations/supabase/client.ts`     | Auto-generated DB client (do not edit)     |
 | i18n                 | `src/lib/i18n/`                           | 11-language translation system             |
 
+## Design system
+
+### Semantic color tokens
+
+All state-based colors use semantic HSL CSS variables defined in `src/index.css` and registered in `tailwind.config.ts`. Never use raw Tailwind palette classes (e.g. `text-green-600`) in components — always use the semantic token.
+
+| Token | CSS variable | Light mode | Dark mode | Usage |
+|-------|-------------|------------|-----------|-------|
+| `success` | `--success` | `142 71% 45%` | `142 71% 55%` | Active rules, high confidence (≥80%), live indicator, completed status |
+| `warning` | `--warning` | `38 92% 50%` | `38 92% 60%` | Medium confidence (60–79%), alert icons, processing indicators |
+| `destructive` | `--destructive` | (shadcn default) | (shadcn default) | Low confidence (<60%), deactivate actions, failed status |
+| `primary` | `--primary` | (shadcn default) | (shadcn default) | Brand actions, cache source bars, links |
+
+Foreground variants (`--success-foreground`, `--warning-foreground`) are provided for text-on-colored-background cases.
+
 ## Data stores
 
 Supabase tables:
@@ -143,6 +158,21 @@ Supabase tables:
 | `user_roles` | Admin / moderator role assignments |
 | `saved_searches` | User-saved search queries with filter snapshots (max 100/user) |
 
+### Realtime publication
+
+The following tables are added to the `supabase_realtime` publication so that Postgres WAL events are broadcast to connected clients:
+
+| Table | Subscribed events | Consumer |
+|-------|------------------|----------|
+| `translation_logs` | `INSERT` | Admin analytics — live search counter, confidence buckets, source breakdown, daily volume, low-confidence list |
+| `analytics_events` | `INSERT` | Admin analytics — live event-type breakdown |
+| `search_feedback` | `INSERT`, `UPDATE` | Admin feedback queue — new submissions prepended; status/rule updates patched in-place |
+| `translation_rules` | `INSERT`, `UPDATE` | Admin rules panel — new rules prepended; `is_active` toggle synced across both rules table and feedback queue simultaneously |
+
+All four subscriptions share a single Supabase channel (`admin-analytics-realtime`). The channel is opened when an admin user loads the analytics page and torn down on unmount.
+
+**UPDATE merge strategy for `search_feedback`**: When `generated_rule_id` is present in the UPDATE payload, the component fires a targeted single-row join fetch (`search_feedback` + `translation_rules`) to hydrate the inline rule box. When `generated_rule_id` is null, only the scalar fields (`processing_status`, `processed_at`) are patched, avoiding unnecessary network round-trips.
+
 ## Authentication
 
 Edge functions use a shared `validateAuth` helper in `supabase/functions/_shared/auth.ts` that accepts:
@@ -152,6 +182,23 @@ Edge functions use a shared `validateAuth` helper in `supabase/functions/_shared
 - **Supabase JWTs** — both anon JWTs (`iss: 'supabase'`) and authenticated user JWTs (`iss: 'https://<project>.supabase.co/auth/v1'`) are accepted
 
 > **Note**: Authenticated user tokens use a full URL issuer, not just `'supabase'`. The validator checks `payload.iss.includes('supabase')` to handle both forms.
+
+## Row-level security
+
+RLS follows the **consolidation pattern**: duplicate `authenticated` + `anon` policies are collapsed into a single `public` role policy to reduce maintenance surface. Sensitive tables (`translation_logs`, `query_cache`, `analytics_events`) are restricted to `service_role` only, with an additional admin-role SELECT policy using `public.has_role(auth.uid(), 'admin')`.
+
+### `translation_rules` access matrix
+
+| Operation | Who | Policy |
+|-----------|-----|--------|
+| SELECT | service_role | `auth.role() = 'service_role'` |
+| SELECT | admin users | `has_role(auth.uid(), 'admin')` |
+| INSERT | service_role | `auth.role() = 'service_role'` |
+| UPDATE | service_role | `auth.role() = 'service_role'` |
+| UPDATE | admin users | `has_role(auth.uid(), 'admin')` (both USING + WITH CHECK) |
+| DELETE | service_role | `auth.role() = 'service_role'` |
+
+Admin UPDATE access allows admins to flip `is_active` directly from the client (rules management panel) without routing through an edge function. All admin policies use the `public.has_role` security-definer function to avoid recursive RLS lookups.
 
 ## Error handling
 
