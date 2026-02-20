@@ -470,6 +470,62 @@ export default function AdminAnalytics() {
           });
         },
       )
+      // ── Feedback queue: new submission arrives ──────────────────────────
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'search_feedback' },
+        (payload) => {
+          const row = payload.new as FeedbackItem;
+          setFeedback((prev) => {
+            // Avoid duplicates if fetchFeedback already picked it up
+            if (prev.some((f) => f.id === row.id)) return prev;
+            return [{ ...row, translation_rules: null }, ...prev].slice(0, 100);
+          });
+        },
+      )
+      // ── Feedback queue: status or rule changes (process-feedback writes) ─
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'search_feedback' },
+        (payload) => {
+          const row = payload.new as FeedbackItem;
+          setFeedback((prev) => {
+            const exists = prev.some((f) => f.id === row.id);
+            if (!exists) return prev;
+
+            // If generated_rule_id just appeared we need the full join —
+            // refetch so the inline rule box populates.
+            if (row.generated_rule_id) {
+              // Fire-and-forget: fetchFeedback keeps the ref fresh
+              void supabase
+                .from('search_feedback')
+                .select(`
+                  id, original_query, translated_query, issue_description,
+                  processing_status, created_at, processed_at, generated_rule_id,
+                  translation_rules ( pattern, scryfall_syntax, confidence, is_active, description )
+                `)
+                .eq('id', row.id)
+                .single()
+                .then(({ data }) => {
+                  if (!data) return;
+                  setFeedback((cur) =>
+                    cur.map((f) => (f.id === row.id ? (data as unknown as FeedbackItem) : f)),
+                  );
+                });
+            } else {
+              // No linked rule yet — just update the scalar fields
+              setFeedback((cur) =>
+                cur.map((f) =>
+                  f.id === row.id
+                    ? { ...f, processing_status: row.processing_status, processed_at: row.processed_at }
+                    : f,
+                ),
+              );
+            }
+            return prev; // state is updated inside the async branch above
+          });
+        },
+      )
       .subscribe((status) => {
         setIsLive(status === 'SUBSCRIBED');
       });
@@ -479,6 +535,7 @@ export default function AdminAnalytics() {
       setIsLive(false);
     };
   }, [isAdmin, user]);
+
 
   if (authLoading || roleLoading) {
     return (
