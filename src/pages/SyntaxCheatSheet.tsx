@@ -49,6 +49,22 @@ export default function SyntaxCheatSheet() {
   useEffect(() => {
     const prev = document.title;
     document.title = 'Scryfall Syntax Cheat Sheet — Natural Language MTG Search Reference | OffMeta';
+
+    // Canonical
+    const canonical = document.createElement('link');
+    canonical.rel = 'canonical';
+    canonical.href = 'https://offmeta.app/docs/syntax';
+    canonical.id = 'syntax-canonical';
+    document.head.appendChild(canonical);
+
+    // Meta description
+    const desc = document.createElement('meta');
+    desc.name = 'description';
+    desc.content = 'Scryfall syntax cheat sheet — maps natural language MTG phrases to Scryfall search operators. Colors, types, mana cost, format, price, power/toughness, ramp, removal, and more.';
+    desc.id = 'syntax-meta-desc';
+    document.head.appendChild(desc);
+
+    // JSON-LD
     const s = document.createElement('script');
     s.type = 'application/ld+json';
     s.id = 'syntax-jsonld';
@@ -62,8 +78,11 @@ export default function SyntaxCheatSheet() {
       ],
     });
     document.head.appendChild(s);
+
     return () => {
       document.title = prev;
+      document.getElementById('syntax-canonical')?.remove();
+      document.getElementById('syntax-meta-desc')?.remove();
       document.getElementById('syntax-jsonld')?.remove();
     };
   }, []);

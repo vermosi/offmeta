@@ -17,6 +17,22 @@ export default function DocsIndex() {
   useEffect(() => {
     const prev = document.title;
     document.title = 'OffMeta Docs — MTG Search Guides & Syntax Reference';
+
+    // Canonical
+    const canonical = document.createElement('link');
+    canonical.rel = 'canonical';
+    canonical.href = 'https://offmeta.app/docs';
+    canonical.id = 'docs-canonical';
+    document.head.appendChild(canonical);
+
+    // Meta description
+    const desc = document.createElement('meta');
+    desc.name = 'description';
+    desc.content = 'OffMeta MTG card search reference — guides, syntax cheat sheet, and FAQ for natural language Magic: The Gathering card search. Find cards fast without learning Scryfall syntax.';
+    desc.id = 'docs-meta-desc';
+    document.head.appendChild(desc);
+
+    // JSON-LD
     const s = document.createElement('script');
     s.type = 'application/ld+json';
     s.id = 'docs-jsonld';
@@ -29,8 +45,11 @@ export default function DocsIndex() {
       ],
     });
     document.head.appendChild(s);
+
     return () => {
       document.title = prev;
+      document.getElementById('docs-canonical')?.remove();
+      document.getElementById('docs-meta-desc')?.remove();
       document.getElementById('docs-jsonld')?.remove();
     };
   }, []);
