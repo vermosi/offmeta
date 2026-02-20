@@ -16,7 +16,7 @@ export default function DocsIndex() {
 
   useEffect(() => {
     const prev = document.title;
-    document.title = 'Docs — OffMeta MTG';
+    document.title = 'OffMeta Docs — MTG Search Guides & Syntax Reference';
     const s = document.createElement('script');
     s.type = 'application/ld+json';
     s.id = 'docs-jsonld';
@@ -66,14 +66,39 @@ export default function DocsIndex() {
 
       <main id="main-content" className="flex-1 container-main py-10 sm:py-14 lg:py-20">
         <div className="max-w-2xl mx-auto space-y-10">
-          <header className="space-y-3 text-center">
+          <header className="space-y-4 text-center">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-foreground">
-              {t('docs.title')}
+              OffMeta Documentation
             </h1>
-            <p className="text-lg text-muted-foreground max-w-md mx-auto">
+            <p className="text-lg text-muted-foreground max-w-lg mx-auto">
               {t('docs.subtitle')}
             </p>
           </header>
+
+          {/* Substantive intro — gives Googlebot enough prose to assess page quality */}
+          <section className="prose prose-sm max-w-none text-muted-foreground space-y-3 text-sm leading-relaxed border-b border-border/30 pb-8">
+            <p>
+              OffMeta is a natural language Magic: The Gathering card search engine. Instead of
+              learning Scryfall's query syntax, you describe what you need in plain English —
+              <em> "cheap green ramp spells," "blue flying creatures under $2," "commander-legal
+              board wipes"</em> — and OffMeta translates it into a valid Scryfall query and
+              returns real card results instantly.
+            </p>
+            <p>
+              This documentation covers everything you need to get the most out of OffMeta: a
+              full <strong>Search Syntax Cheat Sheet</strong> mapping natural phrases to Scryfall
+              operators, <strong>{GUIDES.length} progressive search guides</strong> from beginner
+              creature-type searches to expert multi-constraint queries, and a{' '}
+              <strong>FAQ</strong> answering common questions about how the translation engine
+              works.
+            </p>
+            <p>
+              Whether you are building a Commander deck, looking for budget staples, searching
+              by keyword ability, or hunting for tribal synergy pieces, the guides below teach
+              you the patterns OffMeta understands — so your natural language searches get more
+              accurate results.
+            </p>
+          </section>
 
           <div className="grid gap-4">
             {sections.map((section) => {
@@ -114,6 +139,42 @@ export default function DocsIndex() {
                 </Link>
               ))}
             </div>
+          </section>
+
+          {/* Additional substantive content for search indexing */}
+          <section className="space-y-3 border-t border-border/30 pt-8 text-sm text-muted-foreground leading-relaxed">
+            <h2 className="text-base font-semibold text-foreground">How OffMeta Search Works</h2>
+            <p>
+              OffMeta uses a combination of deterministic rule matching and AI translation to
+              convert your natural language input into valid{' '}
+              <a
+                href="https://scryfall.com/docs/syntax"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                Scryfall search syntax
+              </a>
+              . Common patterns — colors, creature types, formats, price ranges, keywords — are
+              resolved instantly using a curated rule set, with no AI latency. Complex or
+              ambiguous queries fall back to AI translation so results remain accurate even for
+              unusual requests.
+            </p>
+            <p>
+              Scryfall is the most comprehensive Magic: The Gathering card database available,
+              covering every card ever printed including oracle text, rulings, prices, legalities,
+              and alternate art printings. OffMeta acts as the natural language layer on top of
+              Scryfall — you describe what you need, OffMeta writes the Scryfall query, and
+              Scryfall returns the matching cards.
+            </p>
+            <p>
+              The search guides cover the most common MTG search patterns: finding cards by{' '}
+              <strong>creature type</strong>, filtering by <strong>color identity</strong>,
+              setting <strong>budget price limits</strong>, checking <strong>format
+              legality</strong>, searching by <strong>keyword ability</strong>, finding{' '}
+              <strong>ramp and card draw</strong> effects, building <strong>tribal
+              synergy</strong> packages, and combining multiple constraints in a single query.
+            </p>
           </section>
         </div>
       </main>
