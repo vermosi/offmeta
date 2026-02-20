@@ -46,14 +46,17 @@ export type { ParsedIntent, NumericConstraint, SearchIR } from './types.ts';
 function isLikelyCardName(query: string): boolean {
   const trimmed = query.trim();
   const words = trimmed.split(/\s+/);
-  // Must be 1-5 words
+  // Must be 1-6 words
   if (words.length < 1 || words.length > 6) return false;
   // Must contain a possessive or ALL words start with uppercase
   const hasPossessive = /\w's\b/.test(trimmed);
   const allCapitalized = words.every(w => /^[A-Z]/.test(w) || /^(of|the|and|to|in|for|a|an)$/i.test(w));
   // Must not contain search-like keywords
-  const hasSearchKeywords = /\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck)\b/i.test(trimmed);
+  const hasSearchKeywords = /\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries)\b/i.test(trimmed);
   if (hasSearchKeywords) return false;
+  // Single capitalized word that looks like a proper noun (not a common MTG keyword)
+  const singleWordMtgTerms = /^(flying|trample|haste|deathtouch|lifelink|vigilance|reach|menace|flash|hexproof|indestructible|ward|defender|first|double|strike|prowess|cascade|storm|affinity|convoke|delve|dredge|infect|wither|persist|undying|annihilator|protection|shroud|regenerate|morph|suspend|evoke|unearth|exalted|devour|bloodthirst|modular|sunburst|equip|ninjutsu|bushido|flanking|phasing|banding|rampage|cumulative|echo|fading|vanishing|kicker|buyback|flashback|madness|retrace|rebound|overload|bestow|dash|surge|emerge|escalate|improvise|aftermath|embalm|eternalize|explore|ascend|adapt|riot|spectacle|escape|mutate|companion|foretell|boast|learn|disturb|daybound|nightbound|cleave|training|blitz|casualty|connive|ravenous|enlist|prototype|toxic|backup|bargain|craft|discover|collect|adventure|channel|cycling|landfall|mill|scry|proliferate|populate|manifest|amass|food|treasure|blood|clue|map|powerstone|incubate|transform|meld|partner|eminence|encore|demonstrate|decayed|exploit|skulk|changeling|devoid|ingest|rally|cohort|support|investigate|fabricate|crew|revolt|improvise|afflict|exert|eternalize|surveil|undergrowth|spectacle|afterlife|jump|red|blue|green|white|black|colorless|multicolor|mono|tribal|removal|ramp|draw|tutor|counter|burn|mill|blink|bounce|copy|clone|theft|discard|sacrifice|token|anthem|lord|stax|hatebear|pillowfort|voltron|aristocrats|reanimator|control|aggro|combo|midrange|tempo|prison|taxes|storm|dredge|infect|aura|equipment)$/i;
+  if (words.length === 1 && allCapitalized && !singleWordMtgTerms.test(trimmed)) return true;
   return hasPossessive || (allCapitalized && words.length >= 2);
 }
 
@@ -228,9 +231,13 @@ export function buildDeterministicIntent(query: string): {
   intent: ParsedIntent;
   deterministicQuery: string;
 } {
-  // Short-circuit: if the query looks like an exact card name, use !"name" syntax
+  // Short-circuit: if the query looks like a card name, use name search
   if (isLikelyCardName(query)) {
-    const exactQuery = `!"${query.trim()}"`;
+    const trimmedName = query.trim();
+    const wordCount = trimmedName.split(/\s+/).length;
+    // Single word → partial match (name:X finds all cards containing that word)
+    // Multi-word → exact match (!"Name" finds the specific card)
+    const exactQuery = wordCount === 1 ? `name:${trimmedName}` : `!"${trimmedName}"`;
     const intent: ParsedIntent = {
       colors: null,
       types: [],
