@@ -240,7 +240,84 @@ Returns: summary stats, daily volume, source breakdown, confidence buckets, resp
 
 **Endpoint**: `POST supabase/functions/process-feedback`
 
-Processes a pending `search_feedback` row: validates the issue, optionally generates a `translation_rules` entry, and updates the feedback status.
+Processes a pending `search_feedback` row: validates the issue, uses Gemini 2.5 Flash Lite to generate a corrected Scryfall query, optionally inserts a new `translation_rules` entry, and updates the feedback row's `processing_status`.
+
+**Auth**: `verify_jwt = false` — accepts requests without a JWT (anon callers can submit corrections).
+
+**Rate limit**: 5 requests per 60 seconds per session.
+
+#### Request body
+
+```json
+{ "feedbackId": "uuid-of-the-search_feedback-row" }
+```
+
+#### Response body (success)
+
+```json
+{
+  "success": true,
+  "status": "completed",
+  "ruleId": "uuid-of-created-translation_rules-row"
+}
+```
+
+#### `status` values
+
+| Value | Meaning |
+|---|---|
+| `completed` | AI generated a new rule; rule inserted and linked to the feedback row |
+| `updated_existing` | Pattern already existed; existing rule confidence updated |
+| `duplicate` | Feedback query identical to an existing rule; no write performed |
+| `skipped` | AI returned a low-confidence or empty result; no rule created |
+| `failed` | Unrecoverable error (timeout, AI error); feedback row marked `failed` |
+
+> A 25-second safety timeout resets any feedback row still in `processing` state to `failed` on the next invocation, preventing permanently stuck rows.
+
+---
+
+### Generate Patterns
+
+**Endpoint**: `POST supabase/functions/generate-patterns`
+
+Scans `translation_logs` for the last 30 days and batch-promotes high-frequency, high-confidence queries into `translation_rules`. Triggered nightly by the `generate-patterns-nightly` pg_cron job at 03:00 UTC.
+
+**Auth**: Anon JWT (Bearer token) accepted by `validateAuth`. `verify_jwt` is not set to `false` — the anon JWT passes the standard validator.
+
+#### Request body
+
+```json
+{ "source": "cron" }
+```
+
+`source` is optional and used only for log tracing. Omitting it is valid.
+
+#### Response body (success)
+
+```json
+{
+  "success": true,
+  "patternsCreated": 3,
+  "analyzed": 120,
+  "timeMs": 450
+}
+```
+
+| Field | Description |
+|---|---|
+| `patternsCreated` | Number of new `translation_rules` rows inserted |
+| `analyzed` | Number of candidate log entries examined |
+| `timeMs` | Total wall-clock time for the run |
+
+#### Promotion criteria
+
+A log entry is promoted to a rule when **all** of the following hold:
+
+- Seen ≥ 3 times in the last 30 days
+- Average confidence ≥ 0.8
+- No existing `translation_rules` row matches the normalized query form
+
+Up to 50 rules are inserted per run. Once promoted, those patterns are picked up by `fetchDynamicRules()` in `semantic-search/rules.ts` within its 10-minute TTL cache, after which identical queries resolve without any AI call.
 
 ---
 

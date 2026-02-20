@@ -73,10 +73,10 @@ supabase/
     ├── combo-search/         # Commander Spellbook combo search (in-deck + almost-there)
     ├── deck-recommendations/ # AI-powered full deck recommendations via Moxfield import
     ├── fetch-moxfield-deck/  # Moxfield deck import proxy (CORS bypass)
-    ├── process-feedback/     # Feedback processing pipeline → translation rules
+    ├── process-feedback/     # Feedback → AI rule generation (per-submission; verify_jwt = false)
     ├── admin-analytics/      # Admin analytics aggregation (requires admin role)
-    ├── cleanup-logs/         # Log rotation (scheduled)
-    ├── generate-patterns/    # Pattern generation from search feedback
+    ├── cleanup-logs/         # Log rotation (scheduled; companion to generate-patterns)
+    ├── generate-patterns/    # Nightly batch: promote high-frequency logs → rules (pg_cron 03:00 UTC)
     └── warmup-cache/         # Cache pre-warming (scheduled)
 ```
 
@@ -134,10 +134,10 @@ Supabase tables:
 |-------|---------|
 | `decks` | User deck metadata (name, format, commander, color identity, public flag) |
 | `deck_cards` | Cards in a deck (board, quantity, category, scryfall_id) |
-| `translation_rules` | Concept patterns and Scryfall mappings (seeded from AI + feedback) |
-| `translation_logs` | Query translation history for analytics |
+| `translation_rules` | Concept patterns and Scryfall mappings. Populated by `process-feedback` (per-submission) and `generate-patterns` (nightly batch). `source_feedback_id` links back to the originating `search_feedback` row. |
+| `translation_logs` | Query translation history for analytics. Used as the source for nightly pattern promotion (entries ≥3 occurrences, ≥0.8 confidence). |
 | `query_cache` | Persistent NL → Scryfall query cache (48h TTL) |
-| `search_feedback` | User-reported translation issues |
+| `search_feedback` | User-reported translation issues. `processing_status` follows the lifecycle: `pending → processing → completed \| failed \| skipped \| duplicate \| updated_existing`. `generated_rule_id` links to the `translation_rules` row created for this submission. |
 | `analytics_events` | Usage analytics (event-type + session-id) |
 | `profiles` | User display names and avatars |
 | `user_roles` | Admin / moderator role assignments |

@@ -1,3 +1,26 @@
+/**
+ * Admin Analytics Edge Function
+ *
+ * Returns aggregated search analytics for the admin dashboard, including:
+ * - Summary stats (total searches, avg confidence, AI usage rate)
+ * - Daily search volume breakdown
+ * - Source distribution (cache / deterministic / ai / pattern_match)
+ * - Confidence score buckets
+ * - Response time percentiles (p50 / p95 / p99)
+ * - Top 20 most-searched queries
+ * - Low-confidence queries (for translation review)
+ * - Deterministic coverage trend over the requested window
+ *
+ * Auth: requires the caller to hold the `admin` role in the `user_roles` table.
+ * The check is performed with a service-role client; the RPC itself is called
+ * with the user's own JWT so that `auth.uid()` resolves correctly inside the
+ * `get_search_analytics` database function.
+ *
+ * Query params:
+ *   ?days=7   — lookback window in days (1–90, default 7)
+ *
+ * @module admin-analytics
+ */
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
