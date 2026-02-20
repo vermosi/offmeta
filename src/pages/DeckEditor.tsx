@@ -437,9 +437,9 @@ export default function DeckEditor() {
     <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-border bg-card/50">
       <div className="flex items-center gap-0.5 p-0.5 bg-secondary/50 rounded-md">
         {([
-          { mode: 'list' as DeckViewMode, icon: List, label: 'List' },
-          { mode: 'visual' as DeckViewMode, icon: LayoutGrid, label: 'Visual' },
-          { mode: 'pile' as DeckViewMode, icon: Columns3, label: 'Pile' },
+          { mode: 'list' as DeckViewMode, icon: List, label: t('deckEditor.view.list') },
+          { mode: 'visual' as DeckViewMode, icon: LayoutGrid, label: t('deckEditor.view.visual') },
+          { mode: 'pile' as DeckViewMode, icon: Columns3, label: t('deckEditor.view.pile') },
         ] as const).map(({ mode, icon: Icon, label }) => (
           <button
             key={mode}
@@ -468,7 +468,7 @@ export default function DeckEditor() {
               onClick={() => setDeckSortMode(s)}
               className={cn('text-xs capitalize', deckSortMode === s && 'text-accent font-medium')}
             >
-              {s === 'cmc' ? 'CMC' : s}
+              {t(`deckEditor.sort.${s}`)}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
@@ -623,21 +623,21 @@ export default function DeckEditor() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold flex items-center gap-2">
+          <h3 className="text-sm font-semibold flex items-center gap-2">
                 <Keyboard className="h-4 w-4 text-muted-foreground" />
-                Keyboard Shortcuts
+                {t('deckEditor.shortcuts.title')}
               </h3>
               <button onClick={() => setShortcutsOpen(false)} className="text-muted-foreground hover:text-foreground transition-colors text-xs">✕</button>
             </div>
             <ul className="space-y-2 text-xs">
-              {[
-                { keys: ['/'], desc: 'Focus search' },
-                { keys: ['Del'], desc: 'Remove selected card' },
-                { keys: ['Shift', 'S'], desc: 'Move selected to sideboard' },
-                { keys: ['Shift', 'M'], desc: 'Move selected to maybeboard' },
-                { keys: ['?'], desc: 'Toggle this help panel' },
-                { keys: ['Esc'], desc: 'Deselect / close' },
-              ].map(({ keys, desc }) => (
+              {([
+                { keys: ['/'], desc: t('deckEditor.shortcuts.focusSearch') },
+                { keys: ['Del'], desc: t('deckEditor.shortcuts.removeCard') },
+                { keys: ['Shift', 'S'], desc: t('deckEditor.shortcuts.toSideboard') },
+                { keys: ['Shift', 'M'], desc: t('deckEditor.shortcuts.toMaybeboard') },
+                { keys: ['?'], desc: t('deckEditor.shortcuts.toggleHelp') },
+                { keys: ['Esc'], desc: t('deckEditor.shortcuts.deselectClose') },
+              ] as const).map(({ keys, desc }) => (
                 <li key={desc} className="flex items-center justify-between gap-3">
                   <span className="text-muted-foreground">{desc}</span>
                   <span className="flex items-center gap-1 shrink-0">
@@ -648,7 +648,7 @@ export default function DeckEditor() {
                 </li>
               ))}
             </ul>
-            <p className="text-[10px] text-muted-foreground">Shortcuts require a card to be selected (click a row first).</p>
+            <p className="text-[10px] text-muted-foreground">{t('deckEditor.shortcuts.hint')}</p>
           </div>
         </div>
       )}
