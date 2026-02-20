@@ -142,9 +142,9 @@ function StatCard({
 }) {
   const variantClasses = {
     default: 'border-border',
-    success: 'border-green-500/30',
-    warning: 'border-amber-500/30',
-    danger: 'border-red-500/30',
+    success: 'border-success/30',
+    warning: 'border-warning/30',
+    danger: 'border-destructive/30',
   };
 
   return (
@@ -574,11 +574,11 @@ export default function AdminAnalytics() {
                 <BarChart3 className="h-5 w-5" />
                 Search Analytics
                 {isLive && (
-                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-600 dark:text-green-400">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-                    </span>
+                   <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success">
+                     <span className="relative flex h-2 w-2">
+                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
+                       <span className="relative inline-flex rounded-full h-2 w-2 bg-success" />
+                     </span>
                     Live
                   </span>
                 )}
@@ -703,11 +703,11 @@ export default function AdminAnalytics() {
                           value={count}
                           total={data.summary.totalSearches}
                           color={
-                            source === 'deterministic' ? 'bg-green-500'
-                            : source === 'cache' ? 'bg-blue-500'
-                            : source === 'ai' ? 'bg-primary'
-                            : source === 'pattern_match' ? 'bg-cyan-500'
-                            : 'bg-amber-500'
+                            source === 'deterministic' ? 'bg-success'
+                            : source === 'cache' ? 'bg-primary'
+                            : source === 'ai' ? 'bg-accent'
+                            : source === 'pattern_match' ? 'bg-success/70'
+                            : 'bg-warning'
                           }
                         />
                       ))}
@@ -725,19 +725,19 @@ export default function AdminAnalytics() {
                       label="High (≥80%)"
                       value={data.confidenceBuckets.high}
                       total={data.summary.totalSearches}
-                      color="bg-green-500"
+                      color="bg-success"
                     />
                     <BarRow
                       label="Medium (60-79%)"
                       value={data.confidenceBuckets.medium}
                       total={data.summary.totalSearches}
-                      color="bg-amber-500"
+                      color="bg-warning"
                     />
                     <BarRow
                       label="Low (<60%)"
                       value={data.confidenceBuckets.low}
                       total={data.summary.totalSearches}
-                      color="bg-red-500"
+                      color="bg-destructive"
                     />
                   </div>
                 </div>
@@ -763,7 +763,7 @@ export default function AdminAnalytics() {
                           </span>
                           <div className="flex-1 h-5 bg-muted rounded overflow-hidden">
                             <div
-                              className="h-full bg-green-500/70 rounded"
+                              className="h-full bg-success/60 rounded"
                               style={{ width: `${pct}%` }}
                             />
                           </div>
@@ -835,9 +835,9 @@ export default function AdminAnalytics() {
                               <Badge
                                 variant="secondary"
                                 className={`text-[10px] ${
-                                  pq.avg_confidence >= 0.8 ? 'bg-green-500/10 text-green-600 dark:text-green-400'
-                                  : pq.avg_confidence >= 0.6 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                                  : 'bg-red-500/10 text-red-600 dark:text-red-400'
+                                  pq.avg_confidence >= 0.8 ? 'bg-success/10 text-success'
+                                  : pq.avg_confidence >= 0.6 ? 'bg-warning/10 text-warning'
+                                  : 'bg-destructive/10 text-destructive'
                                 }`}
                               >
                                 {Math.round(pq.avg_confidence * 100)}%
@@ -875,7 +875,7 @@ export default function AdminAnalytics() {
               {data.lowConfidenceQueries.length > 0 && (
                 <div className="surface-elevated p-5 border border-border">
                   <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                    <ShieldAlert className="h-4 w-4 text-amber-500" />
+                    <ShieldAlert className="h-4 w-4 text-warning" />
                     Low Confidence Queries (for review)
                   </h2>
                   <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -888,7 +888,7 @@ export default function AdminAnalytics() {
                           <Badge
                             variant="secondary"
                             className={`text-[10px] flex-shrink-0 ${
-                              (q.confidence || 0) < 0.4 ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-500'
+                              (q.confidence || 0) < 0.4 ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning'
                             }`}
                           >
                             {Math.round((q.confidence || 0) * 100)}%
@@ -919,7 +919,7 @@ export default function AdminAnalytics() {
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-border flex-wrap gap-2">
               <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <MessageSquareWarning className="h-4 w-4 text-amber-500" />
+                <MessageSquareWarning className="h-4 w-4 text-warning" />
                 Feedback Queue
                 {feedback.length > 0 && (
                   <Badge variant="secondary" className="text-[10px]">
@@ -1035,10 +1035,10 @@ export default function AdminAnalytics() {
                                   variant="secondary"
                                   className={`ml-auto text-[10px] ${
                                     rule.confidence >= 0.8
-                                      ? 'bg-green-500/10 text-green-600 dark:text-green-400'
+                                      ? 'bg-success/10 text-success'
                                       : rule.confidence >= 0.6
-                                      ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                                      : 'bg-red-500/10 text-red-600 dark:text-red-400'
+                                      ? 'bg-warning/10 text-warning'
+                                      : 'bg-destructive/10 text-destructive'
                                   }`}
                                 >
                                   {Math.round(rule.confidence * 100)}% conf
@@ -1064,14 +1064,14 @@ export default function AdminAnalytics() {
 
                             {/* Approve / Reject */}
                             <div className="flex items-center justify-end gap-2 pt-1 border-t border-border/50">
-                              <span className={`text-[10px] font-medium ${rule.is_active ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
+                              <span className={`text-[10px] font-medium ${rule.is_active ? 'text-success' : 'text-muted-foreground'}`}>
                                 {rule.is_active ? 'Active' : 'Inactive'}
                               </span>
                               {rule.is_active ? (
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="h-6 px-2 text-[10px] gap-1 border-red-500/40 text-red-600 dark:text-red-400 hover:bg-red-500/10"
+                                  className="h-6 px-2 text-[10px] gap-1 border-destructive/40 text-destructive hover:bg-destructive/10"
                                   disabled={isTogglingRule}
                                   onClick={() => toggleRuleActive(f.id, f.generated_rule_id!, true)}
                                 >
@@ -1082,7 +1082,7 @@ export default function AdminAnalytics() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="h-6 px-2 text-[10px] gap-1 border-green-500/40 text-green-600 dark:text-green-400 hover:bg-green-500/10"
+                                  className="h-6 px-2 text-[10px] gap-1 border-success/40 text-success hover:bg-success/10"
                                   disabled={isTogglingRule}
                                   onClick={() => toggleRuleActive(f.id, f.generated_rule_id!, false)}
                                 >

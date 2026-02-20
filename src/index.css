@@ -49,6 +49,12 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
+    /* Semantic status tokens */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
     /* Borders */
     --border: 270 20% 88%;
     --input: 270 20% 88%;
@@ -113,6 +119,12 @@
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
+
+    /* Semantic status tokens */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
 
     /* Borders - Subtle purple */
     --border: 270 30% 18%;
