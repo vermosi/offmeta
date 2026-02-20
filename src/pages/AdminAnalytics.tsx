@@ -71,6 +71,8 @@ import {
   BookOpen,
   ExternalLink,
   Filter,
+  Archive,
+  ArchiveRestore,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -107,6 +109,7 @@ interface TranslationRuleRow {
   description: string | null;
   created_at: string;
   source_feedback_id: string | null;
+  archived_at: string | null;
 }
 
 type RulesFilter = 'all' | 'active' | 'inactive';
@@ -265,6 +268,9 @@ export default function AdminAnalytics() {
   const [rulesFilter, setRulesFilter] = useState<RulesFilter>('all');
   const [rulesSearch, setRulesSearch] = useState('');
   const [ruleDirectTogglingId, setRuleDirectTogglingId] = useState<string | null>(null);
+  const [showArchivedRules, setShowArchivedRules] = useState(false);
+  const showArchivedRulesRef = useRef(false);
+  const [archivingRuleId, setArchivingRuleId] = useState<string | null>(null);
 
   // Redirect if not admin
   useEffect(() => {
@@ -329,14 +335,20 @@ export default function AdminAnalytics() {
   }, []);
 
   /** Fetch all translation_rules for the standalone management panel. */
-  const fetchRules = useCallback(async () => {
+  const fetchRules = useCallback(async (includeArchived = showArchivedRulesRef.current) => {
     setRulesLoading(true);
     try {
-      const { data: rows, error } = await supabase
+      let query = supabase
         .from('translation_rules')
-        .select('id, pattern, scryfall_syntax, confidence, is_active, description, created_at, source_feedback_id')
+        .select('id, pattern, scryfall_syntax, confidence, is_active, description, created_at, source_feedback_id, archived_at')
         .order('created_at', { ascending: false })
         .limit(200);
+
+      if (!includeArchived) {
+        query = query.is('archived_at', null);
+      }
+
+      const { data: rows, error } = await query;
       if (error) throw error;
       setRules((rows as TranslationRuleRow[]) ?? []);
     } catch {
@@ -344,6 +356,34 @@ export default function AdminAnalytics() {
     } finally {
       setRulesLoading(false);
     }
+  }, []);
+
+  /** Soft-delete (archive) or restore a rule with optimistic update. */
+  const archiveRule = useCallback(async (ruleId: string, isCurrentlyArchived: boolean) => {
+    setArchivingRuleId(ruleId);
+    const newArchivedAt = isCurrentlyArchived ? null : new Date().toISOString();
+    // Optimistic update
+    setRules((prev) =>
+      prev.map((r) => r.id === ruleId ? { ...r, archived_at: newArchivedAt } : r),
+    );
+    const { error } = await supabase
+      .from('translation_rules')
+      .update({ archived_at: newArchivedAt })
+      .eq('id', ruleId);
+    if (error) {
+      // Revert
+      setRules((prev) =>
+        prev.map((r) => r.id === ruleId ? { ...r, archived_at: isCurrentlyArchived ? new Date().toISOString() : null } : r),
+      );
+      toast.error('Failed to update rule');
+    } else {
+      toast.success(isCurrentlyArchived ? 'Rule restored' : 'Rule archived');
+      // If not showing archived, remove it from view after a tick
+      if (!showArchivedRulesRef.current && !isCurrentlyArchived) {
+        setTimeout(() => setRules((prev) => prev.filter((r) => r.id !== ruleId)), 600);
+      }
+    }
+    setArchivingRuleId(null);
   }, []);
 
   /** Toggle is_active directly in the rules panel with optimistic update. */
@@ -1030,12 +1070,18 @@ export default function AdminAnalytics() {
           <div className="surface-elevated border border-border mt-8 overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-border flex-wrap gap-2">
-              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2 flex-wrap">
                 <MessageSquareWarning className="h-4 w-4 text-warning" />
                 Feedback Queue
-                {feedback.length > 0 && (
+                {feedback.filter((f) => f.processing_status === 'pending' || f.processing_status == null).length > 0 && (
                   <Badge variant="secondary" className="text-[10px]">
                     {feedback.filter((f) => f.processing_status === 'pending' || f.processing_status == null).length} pending
+                  </Badge>
+                )}
+                {feedback.filter((f) => f.processing_status === 'archived').length > 0 && (
+                  <Badge variant="outline" className="text-[10px] text-muted-foreground gap-1">
+                    <Archive className="h-2.5 w-2.5" />
+                    {feedback.filter((f) => f.processing_status === 'archived').length} archived
                   </Badge>
                 )}
               </h2>
@@ -1231,20 +1277,43 @@ export default function AdminAnalytics() {
             })()}
           </div>
 
-          {/* ── Translation Rules Management ── */}
+           {/* ── Translation Rules Management ── */}
           <div className="surface-elevated border border-border mt-8 overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-border flex-wrap gap-3">
-              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2 flex-wrap">
                 <BookOpen className="h-4 w-4 text-primary" />
                 Translation Rules
                 {rules.length > 0 && (
                   <Badge variant="secondary" className="text-[10px]">
-                    {rules.filter((r) => r.is_active).length} active / {rules.length} total
+                    {rules.filter((r) => r.is_active && !r.archived_at).length} active / {rules.filter((r) => !r.archived_at).length} total
+                  </Badge>
+                )}
+                {rules.filter((r) => r.archived_at).length > 0 && (
+                  <Badge variant="outline" className="text-[10px] text-muted-foreground gap-1">
+                    <Archive className="h-2.5 w-2.5" />
+                    {rules.filter((r) => r.archived_at).length} archived
                   </Badge>
                 )}
               </h2>
               <div className="flex items-center gap-2 flex-wrap">
+                {/* Show archived toggle */}
+                <button
+                  onClick={() => {
+                    const next = !showArchivedRules;
+                    setShowArchivedRules(next);
+                    showArchivedRulesRef.current = next;
+                    void fetchRules(next);
+                  }}
+                  className={`inline-flex items-center gap-1.5 h-8 px-2.5 text-xs rounded-md border transition-colors ${
+                    showArchivedRules
+                      ? 'border-primary/40 text-primary bg-primary/5 hover:bg-primary/10'
+                      : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                  }`}
+                >
+                  <Archive className="h-3 w-3" />
+                  {showArchivedRules ? 'Hide archived' : 'Show archived'}
+                </button>
                 {/* Search */}
                 <div className="relative">
                   <Filter className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
@@ -1253,7 +1322,7 @@ export default function AdminAnalytics() {
                     value={rulesSearch}
                     onChange={(e) => setRulesSearch(e.target.value)}
                     placeholder="Filter pattern / syntax…"
-                    className="h-8 pl-6 pr-3 text-xs rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring w-52"
+                    className="h-8 pl-6 pr-3 text-xs rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring w-48"
                   />
                 </div>
                 {/* Active filter */}
@@ -1267,7 +1336,7 @@ export default function AdminAnalytics() {
                     <SelectItem value="inactive">Inactive</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="ghost" size="sm" onClick={fetchRules} disabled={rulesLoading} className="h-8 w-8 p-0">
+                <Button variant="ghost" size="sm" onClick={() => fetchRules()} disabled={rulesLoading} className="h-8 w-8 p-0">
                   <RefreshCw className={`h-3.5 w-3.5 ${rulesLoading ? 'animate-spin' : ''}`} />
                 </Button>
               </div>
@@ -1294,11 +1363,31 @@ export default function AdminAnalytics() {
 
               if (filtered.length === 0) {
                 return (
-                  <p className="text-sm text-muted-foreground text-center py-10">
-                    {rules.length === 0
-                      ? 'No translation rules yet — they are generated when feedback is processed'
-                      : 'No rules match your filter'}
-                  </p>
+                  <div className="flex flex-col items-center gap-3 py-12 px-5 text-center">
+                    <BookOpen className="h-8 w-8 text-muted-foreground/30" />
+                    <p className="text-sm text-muted-foreground">
+                      {rules.length === 0
+                        ? 'No active translation rules yet'
+                        : 'No rules match your filter'}
+                    </p>
+                    {rules.length === 0 && (
+                      <p className="text-xs text-muted-foreground/70 max-w-xs">
+                        Rules are generated automatically when users submit search feedback.{' '}
+                        {!showArchivedRules && (
+                          <button
+                            className="text-primary hover:underline"
+                            onClick={() => {
+                              setShowArchivedRules(true);
+                              showArchivedRulesRef.current = true;
+                              void fetchRules(true);
+                            }}
+                          >
+                            Show archived rules
+                          </button>
+                        )}
+                      </p>
+                    )}
+                  </div>
                 );
               }
 
@@ -1316,19 +1405,21 @@ export default function AdminAnalytics() {
                         <th className="text-right px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Action</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border/50">
+                     <tbody className="divide-y divide-border/50">
                       {filtered.map((rule) => {
                         const isToggling = ruleDirectTogglingId === rule.id;
+                        const isArchiving = archivingRuleId === rule.id;
+                        const isArchived = !!rule.archived_at;
                         return (
                           <tr
                             key={rule.id}
-                            className={`hover:bg-muted/20 transition-colors ${!rule.is_active ? 'opacity-60' : ''}`}
+                            className={`hover:bg-muted/20 transition-colors ${!rule.is_active || isArchived ? 'opacity-60' : ''} ${isArchived ? 'bg-muted/10' : ''}`}
                           >
                             {/* Active indicator dot */}
                             <td className="px-5 py-3">
                               <span
-                                className={`inline-flex h-2 w-2 rounded-full ${rule.is_active ? 'bg-success' : 'bg-muted-foreground/40'}`}
-                                title={rule.is_active ? 'Active' : 'Inactive'}
+                                className={`inline-flex h-2 w-2 rounded-full ${isArchived ? 'bg-muted-foreground/20' : rule.is_active ? 'bg-success' : 'bg-muted-foreground/40'}`}
+                                title={isArchived ? 'Archived' : rule.is_active ? 'Active' : 'Inactive'}
                               />
                             </td>
                             {/* Pattern */}
@@ -1394,31 +1485,52 @@ export default function AdminAnalytics() {
                                 <span className="text-[10px] text-muted-foreground">Manual</span>
                               )}
                             </td>
-                            {/* Toggle */}
+                            {/* Actions */}
                             <td className="px-5 py-3 text-right">
-                              {rule.is_active ? (
+                              <div className="flex items-center justify-end gap-1.5">
+                                {/* Activate / Deactivate (hidden when archived) */}
+                                {!isArchived && (
+                                  rule.is_active ? (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-6 px-2 text-[10px] gap-1 border-destructive/40 text-destructive hover:bg-destructive/10"
+                                      disabled={isToggling || isArchiving}
+                                      onClick={() => toggleRuleDirect(rule.id, true)}
+                                    >
+                                      {isToggling ? <Loader2 className="h-3 w-3 animate-spin" /> : <XCircle className="h-3 w-3" />}
+                                      Deactivate
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-6 px-2 text-[10px] gap-1 border-success/40 text-success hover:bg-success/10"
+                                      disabled={isToggling || isArchiving}
+                                      onClick={() => toggleRuleDirect(rule.id, false)}
+                                    >
+                                      {isToggling ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
+                                      Activate
+                                    </Button>
+                                  )
+                                )}
+                                {/* Archive / Restore */}
                                 <Button
                                   size="sm"
-                                  variant="outline"
-                                  className="h-6 px-2 text-[10px] gap-1 border-destructive/40 text-destructive hover:bg-destructive/10"
-                                  disabled={isToggling}
-                                  onClick={() => toggleRuleDirect(rule.id, true)}
+                                  variant="ghost"
+                                  className="h-6 px-2 text-[10px] gap-1 text-muted-foreground hover:text-foreground"
+                                  disabled={isArchiving || isToggling}
+                                  onClick={() => archiveRule(rule.id, isArchived)}
+                                  title={isArchived ? 'Restore rule' : 'Archive rule (soft-delete)'}
                                 >
-                                  {isToggling ? <Loader2 className="h-3 w-3 animate-spin" /> : <XCircle className="h-3 w-3" />}
-                                  Deactivate
+                                  {isArchiving
+                                    ? <Loader2 className="h-3 w-3 animate-spin" />
+                                    : isArchived
+                                    ? <ArchiveRestore className="h-3 w-3" />
+                                    : <Archive className="h-3 w-3" />}
+                                  {isArchived ? 'Restore' : 'Archive'}
                                 </Button>
-                              ) : (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-6 px-2 text-[10px] gap-1 border-success/40 text-success hover:bg-success/10"
-                                  disabled={isToggling}
-                                  onClick={() => toggleRuleDirect(rule.id, false)}
-                                >
-                                  {isToggling ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
-                                  Activate
-                                </Button>
-                              )}
+                              </div>
                             </td>
                           </tr>
                         );
