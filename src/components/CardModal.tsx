@@ -35,6 +35,7 @@ import {
   CardModalPrintings,
   CardModalToolbox,
   CardModalCombos,
+  CardModalAddToDeck,
   type DisplayPrices,
 } from './CardModal/index';
 
@@ -233,6 +234,8 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
 
         <CardModalCombos cardName={card.name} isMobile />
 
+        <CardModalAddToDeck card={card} isMobile />
+
         <CardModalPurchaseLinks
           card={card}
           displayPrices={displayPrices}
@@ -309,6 +312,8 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
           />
 
           <CardModalCombos cardName={card.name} />
+
+          <CardModalAddToDeck card={card} />
 
           <CardModalLegalities legalities={card.legalities} />
 

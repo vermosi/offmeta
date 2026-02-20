@@ -238,7 +238,7 @@ const Index = () => {
                       setCompareMode((m) => !m);
                       if (compareMode) clearCompare();
                     }}
-                    className={`hidden sm:flex items-center gap-1 py-1 px-2.5 text-xs rounded-md transition-colors ${
+                    className={`flex items-center gap-1 py-1 px-2.5 text-xs rounded-md transition-colors ${
                       compareMode
                         ? 'bg-primary/10 text-primary border border-primary/30'
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
