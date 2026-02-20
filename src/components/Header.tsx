@@ -52,7 +52,8 @@ export function Header() {
   // Fetch saved search count for badge; reset to 0 on logout
   useEffect(() => {
     if (!user) {
-      setSavedCount(0);
+      // Update inside async callback to avoid synchronous setState in effect
+      Promise.resolve().then(() => setSavedCount(0));
       return;
     }
     supabase

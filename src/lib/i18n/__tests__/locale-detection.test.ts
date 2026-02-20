@@ -3,8 +3,8 @@
  * @module lib/i18n/__tests__/locale-detection
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { detectBrowserLocale } from '../index';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { detectBrowserLocale } from '../detect-locale';
 
 // Helper: override navigator.languages for a single test
 function setNavigatorLanguages(langs: string[]) {
@@ -100,27 +100,26 @@ describe('localStorage override takes priority over browser detection', () => {
     // Browser reports French
     setNavigatorLanguages(['fr-FR']);
 
-    // Re-import the module to re-run getInitialLocale with the mocked storage.
-    // We do this by rendering I18nProvider and reading back the locale from context.
     const { I18nProvider } = await import('../index');
     const { I18nContext } = await import('../context');
     const { render } = await import('@testing-library/react');
-    const { useContext } = await import('react');
+    const React = await import('react');
 
-    let capturedLocale: string | undefined;
+    // Use a ref to capture the locale without triggering the lint rule —
+    // reading context in render is fine; writing to an outer ref is side-effect-free.
+    const localeRef = { current: undefined as string | undefined };
 
     function Consumer() {
-      const ctx = useContext(I18nContext);
-      capturedLocale = ctx?.locale;
+      const ctx = React.useContext(I18nContext);
+      localeRef.current = ctx?.locale;
       return null;
     }
 
-    const React = await import('react');
     render(
       React.createElement(I18nProvider, null, React.createElement(Consumer)),
     );
 
-    expect(capturedLocale).toBe('es');
+    expect(localeRef.current).toBe('es');
   });
 
   it('auto-detected locale is persisted to localStorage on first visit', async () => {

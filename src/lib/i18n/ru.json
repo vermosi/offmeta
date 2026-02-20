@@ -813,8 +813,7 @@
   "deckExport.nowPublic": "Колода теперь публичная",
   "deckExport.nowPublicDesc": "Любой со ссылкой может просмотреть вашу колоду",
   "deckExport.nowPrivate": "Колода теперь приватная",
-  "deckExport.nowPrivateDesc": "Только вы можете видеть эту колоду"
-}
+  "deckExport.nowPrivateDesc": "Только вы можете видеть эту колоду",
   "compare.removeFrom": "Убрать из сравнения",
 
   "footer.poweredByLabel": "Работает на"

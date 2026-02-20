@@ -813,8 +813,7 @@
   "deckExport.nowPublic": "덱이 공개되었습니다",
   "deckExport.nowPublicDesc": "링크를 가진 누구나 덱을 볼 수 있습니다",
   "deckExport.nowPrivate": "덱이 비공개가 되었습니다",
-  "deckExport.nowPrivateDesc": "당신만 이 덱을 볼 수 있습니다"
-}
+  "deckExport.nowPrivateDesc": "당신만 이 덱을 볼 수 있습니다",
   "compare.removeFrom": "비교에서 제거",
 
   "footer.poweredByLabel": "제공:"
