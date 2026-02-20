@@ -68,6 +68,9 @@ import {
   RotateCcw,
   Code2,
   Sparkles,
+  BookOpen,
+  ExternalLink,
+  Filter,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -93,6 +96,20 @@ interface FeedbackItem {
   generated_rule_id: string | null;
   translation_rules: TranslationRule | null;
 }
+
+/** Full translation_rules row for the standalone rules panel. */
+interface TranslationRuleRow {
+  id: string;
+  pattern: string;
+  scryfall_syntax: string;
+  confidence: number | null;
+  is_active: boolean;
+  description: string | null;
+  created_at: string;
+  source_feedback_id: string | null;
+}
+
+type RulesFilter = 'all' | 'active' | 'inactive';
 
 type FeedbackFilter = 'all' | 'pending' | 'processing' | 'completed' | 'failed' | 'skipped' | 'archived';
 
@@ -242,6 +259,13 @@ export default function AdminAnalytics() {
   const [ruleTogglingId, setRuleTogglingId] = useState<string | null>(null);
   const [retriggeringId, setRetriggeringId] = useState<string | null>(null);
 
+  // Translation Rules panel state
+  const [rules, setRules] = useState<TranslationRuleRow[]>([]);
+  const [rulesLoading, setRulesLoading] = useState(false);
+  const [rulesFilter, setRulesFilter] = useState<RulesFilter>('all');
+  const [rulesSearch, setRulesSearch] = useState('');
+  const [ruleDirectTogglingId, setRuleDirectTogglingId] = useState<string | null>(null);
+
   // Redirect if not admin
   useEffect(() => {
     if (!authLoading && !roleLoading) {
@@ -302,6 +326,62 @@ export default function AdminAnalytics() {
     } finally {
       setFeedbackLoading(false);
     }
+  }, []);
+
+  /** Fetch all translation_rules for the standalone management panel. */
+  const fetchRules = useCallback(async () => {
+    setRulesLoading(true);
+    try {
+      const { data: rows, error } = await supabase
+        .from('translation_rules')
+        .select('id, pattern, scryfall_syntax, confidence, is_active, description, created_at, source_feedback_id')
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      setRules((rows as TranslationRuleRow[]) ?? []);
+    } catch {
+      toast.error('Failed to load translation rules');
+    } finally {
+      setRulesLoading(false);
+    }
+  }, []);
+
+  /** Toggle is_active directly in the rules panel with optimistic update. */
+  const toggleRuleDirect = useCallback(async (ruleId: string, currentActive: boolean) => {
+    setRuleDirectTogglingId(ruleId);
+    // Optimistic
+    setRules((prev) =>
+      prev.map((r) => r.id === ruleId ? { ...r, is_active: !currentActive } : r),
+    );
+    // Also sync feedback panel if rule appears there
+    setFeedback((prev) =>
+      prev.map((f) =>
+        f.generated_rule_id === ruleId && f.translation_rules
+          ? { ...f, translation_rules: { ...f.translation_rules, is_active: !currentActive } }
+          : f,
+      ),
+    );
+    const { error } = await supabase
+      .from('translation_rules')
+      .update({ is_active: !currentActive })
+      .eq('id', ruleId);
+    if (error) {
+      // Revert
+      setRules((prev) =>
+        prev.map((r) => r.id === ruleId ? { ...r, is_active: currentActive } : r),
+      );
+      setFeedback((prev) =>
+        prev.map((f) =>
+          f.generated_rule_id === ruleId && f.translation_rules
+            ? { ...f, translation_rules: { ...f.translation_rules, is_active: currentActive } }
+            : f,
+        ),
+      );
+      toast.error('Failed to update rule');
+    } else {
+      toast.success(currentActive ? 'Rule deactivated' : 'Rule activated');
+    }
+    setRuleDirectTogglingId(null);
   }, []);
 
   /** Toggle is_active on a linked translation_rules row with optimistic update. */
@@ -374,8 +454,9 @@ export default function AdminAnalytics() {
     if (isAdmin && user) {
       fetchAnalytics();
       fetchFeedback();
+      fetchRules();
     }
-  }, [isAdmin, user, fetchAnalytics, fetchFeedback]);
+  }, [isAdmin, user, fetchAnalytics, fetchFeedback, fetchRules]);
 
   // Real-time subscriptions for live updates
   const [isLive, setIsLive] = useState(false);
@@ -524,6 +605,37 @@ export default function AdminAnalytics() {
             }
             return prev; // state is updated inside the async branch above
           });
+        },
+      )
+      // ── Translation Rules panel: new rule generated ─────────────────────
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'translation_rules' },
+        (payload) => {
+          const row = payload.new as TranslationRuleRow;
+          setRules((prev) => {
+            if (prev.some((r) => r.id === row.id)) return prev;
+            return [row, ...prev].slice(0, 200);
+          });
+        },
+      )
+      // ── Translation Rules panel: rule updated (e.g. is_active toggled) ──
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'translation_rules' },
+        (payload) => {
+          const row = payload.new as TranslationRuleRow;
+          setRules((prev) =>
+            prev.map((r) => r.id === row.id ? { ...r, ...row } : r),
+          );
+          // Keep feedback panel in sync
+          setFeedback((prev) =>
+            prev.map((f) =>
+              f.generated_rule_id === row.id && f.translation_rules
+                ? { ...f, translation_rules: { ...f.translation_rules, is_active: row.is_active } }
+                : f,
+            ),
+          );
         },
       )
       .subscribe((status) => {
@@ -979,7 +1091,7 @@ export default function AdminAnalytics() {
                     const isTogglingRule = ruleTogglingId === f.id;
 
                     return (
-                      <div key={f.id} className="px-5 py-4 space-y-3">
+                      <div key={f.id} id={`feedback-${f.id}`} className="px-5 py-4 space-y-3 scroll-mt-4">
                         {/* Row 1 — status + query + timestamp */}
                         <div className="flex items-start gap-3 flex-wrap sm:flex-nowrap">
                           <StatusBadge status={status} />
@@ -1114,6 +1226,205 @@ export default function AdminAnalytics() {
                       </div>
                     );
                   })}
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* ── Translation Rules Management ── */}
+          <div className="surface-elevated border border-border mt-8 overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border flex-wrap gap-3">
+              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-primary" />
+                Translation Rules
+                {rules.length > 0 && (
+                  <Badge variant="secondary" className="text-[10px]">
+                    {rules.filter((r) => r.is_active).length} active / {rules.length} total
+                  </Badge>
+                )}
+              </h2>
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Search */}
+                <div className="relative">
+                  <Filter className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
+                  <input
+                    type="text"
+                    value={rulesSearch}
+                    onChange={(e) => setRulesSearch(e.target.value)}
+                    placeholder="Filter pattern / syntax…"
+                    className="h-8 pl-6 pr-3 text-xs rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring w-52"
+                  />
+                </div>
+                {/* Active filter */}
+                <Select value={rulesFilter} onValueChange={(v) => setRulesFilter(v as RulesFilter)}>
+                  <SelectTrigger className="h-8 w-[110px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button variant="ghost" size="sm" onClick={fetchRules} disabled={rulesLoading} className="h-8 w-8 p-0">
+                  <RefreshCw className={`h-3.5 w-3.5 ${rulesLoading ? 'animate-spin' : ''}`} />
+                </Button>
+              </div>
+            </div>
+
+            {rulesLoading ? (
+              <div className="flex justify-center py-10">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : (() => {
+              const filtered = rules.filter((r) => {
+                const matchesFilter =
+                  rulesFilter === 'all' ||
+                  (rulesFilter === 'active' && r.is_active) ||
+                  (rulesFilter === 'inactive' && !r.is_active);
+                const q = rulesSearch.trim().toLowerCase();
+                const matchesSearch =
+                  !q ||
+                  r.pattern.toLowerCase().includes(q) ||
+                  r.scryfall_syntax.toLowerCase().includes(q) ||
+                  (r.description ?? '').toLowerCase().includes(q);
+                return matchesFilter && matchesSearch;
+              });
+
+              if (filtered.length === 0) {
+                return (
+                  <p className="text-sm text-muted-foreground text-center py-10">
+                    {rules.length === 0
+                      ? 'No translation rules yet — they are generated when feedback is processed'
+                      : 'No rules match your filter'}
+                  </p>
+                );
+              }
+
+              return (
+                <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 bg-background border-b border-border z-10">
+                      <tr>
+                        <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider w-5"></th>
+                        <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Pattern</th>
+                        <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Scryfall Syntax</th>
+                        <th className="text-center px-3 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Conf</th>
+                        <th className="text-left px-3 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Added</th>
+                        <th className="text-left px-3 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Source</th>
+                        <th className="text-right px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/50">
+                      {filtered.map((rule) => {
+                        const isToggling = ruleDirectTogglingId === rule.id;
+                        return (
+                          <tr
+                            key={rule.id}
+                            className={`hover:bg-muted/20 transition-colors ${!rule.is_active ? 'opacity-60' : ''}`}
+                          >
+                            {/* Active indicator dot */}
+                            <td className="px-5 py-3">
+                              <span
+                                className={`inline-flex h-2 w-2 rounded-full ${rule.is_active ? 'bg-success' : 'bg-muted-foreground/40'}`}
+                                title={rule.is_active ? 'Active' : 'Inactive'}
+                              />
+                            </td>
+                            {/* Pattern */}
+                            <td className="px-5 py-3 max-w-[200px]">
+                              <p className="font-medium text-foreground text-xs truncate" title={rule.pattern}>
+                                {rule.pattern}
+                              </p>
+                              {rule.description && (
+                                <p className="text-[10px] text-muted-foreground truncate mt-0.5" title={rule.description}>
+                                  {rule.description}
+                                </p>
+                              )}
+                            </td>
+                            {/* Scryfall syntax */}
+                            <td className="px-5 py-3 max-w-[220px]">
+                              <code className="text-[11px] font-mono text-foreground/80 break-all line-clamp-2" title={rule.scryfall_syntax}>
+                                {rule.scryfall_syntax}
+                              </code>
+                            </td>
+                            {/* Confidence */}
+                            <td className="px-3 py-3 text-center">
+                              {rule.confidence != null ? (
+                                <Badge
+                                  variant="secondary"
+                                  className={`text-[10px] ${
+                                    rule.confidence >= 0.8
+                                      ? 'bg-success/10 text-success'
+                                      : rule.confidence >= 0.6
+                                      ? 'bg-warning/10 text-warning'
+                                      : 'bg-destructive/10 text-destructive'
+                                  }`}
+                                >
+                                  {Math.round(rule.confidence * 100)}%
+                                </Badge>
+                              ) : (
+                                <span className="text-muted-foreground text-[10px]">—</span>
+                              )}
+                            </td>
+                            {/* Created at */}
+                            <td className="px-3 py-3 text-[10px] text-muted-foreground whitespace-nowrap">
+                              {new Date(rule.created_at).toLocaleDateString()}
+                            </td>
+                            {/* Source feedback link */}
+                            <td className="px-3 py-3">
+                              {rule.source_feedback_id ? (
+                                <button
+                                  className="inline-flex items-center gap-1 text-[10px] text-primary hover:underline"
+                                  onClick={() => {
+                                    // Scroll feedback queue into view and highlight the item
+                                    document.getElementById(`feedback-${rule.source_feedback_id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    setExpandedFeedback((prev) => {
+                                      const next = new Set(prev);
+                                      next.add(rule.source_feedback_id!);
+                                      return next;
+                                    });
+                                  }}
+                                  title="Jump to source feedback"
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                  Feedback
+                                </button>
+                              ) : (
+                                <span className="text-[10px] text-muted-foreground">Manual</span>
+                              )}
+                            </td>
+                            {/* Toggle */}
+                            <td className="px-5 py-3 text-right">
+                              {rule.is_active ? (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-6 px-2 text-[10px] gap-1 border-destructive/40 text-destructive hover:bg-destructive/10"
+                                  disabled={isToggling}
+                                  onClick={() => toggleRuleDirect(rule.id, true)}
+                                >
+                                  {isToggling ? <Loader2 className="h-3 w-3 animate-spin" /> : <XCircle className="h-3 w-3" />}
+                                  Deactivate
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-6 px-2 text-[10px] gap-1 border-success/40 text-success hover:bg-success/10"
+                                  disabled={isToggling}
+                                  onClick={() => toggleRuleDirect(rule.id, false)}
+                                >
+                                  {isToggling ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
+                                  Activate
+                                </Button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               );
             })()}
