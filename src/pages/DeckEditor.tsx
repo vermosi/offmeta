@@ -71,6 +71,28 @@ export default function DeckEditor() {
   const [descriptionOpen, setDescriptionOpen] = useState(false);
   const [descriptionInput, setDescriptionInput] = useState('');
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+
+  // When a card is selected in the deck list, also load its preview
+  const handleSelectCard = useCallback((cardId: string) => {
+    setSelectedCardId(cardId);
+    const card = cards.find((c) => c.id === cardId);
+    if (!card) return;
+    // Check scryfall cache first
+    const cached = scryfallCacheRef.current.get(card.card_name);
+    if (cached) {
+      setPreviewCard(cached);
+      return;
+    }
+    // Fetch from Scryfall if not cached
+    searchCards(`!"${card.card_name}"`).then((res) => {
+      const sc = res.data?.[0];
+      if (sc) {
+        scryfallCacheRef.current.set(card.card_name, sc);
+        setScryfallCacheVersion((v) => v + 1);
+        setPreviewCard(sc);
+      }
+    }).catch(() => { /* silent */ });
+  }, [cards]);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [deckViewMode, setDeckViewMode] = useState<DeckViewMode>('list');
   const [deckSortMode, setDeckSortMode] = useState<DeckSortMode>('category');
@@ -485,7 +507,7 @@ export default function DeckEditor() {
           cards={catCards}
           isReadOnly={isReadOnly}
           selectedCardId={selectedCardId}
-          onSelectCard={setSelectedCardId}
+          onSelectCard={handleSelectCard}
           onRemove={(cardId) => removeCard.mutate(cardId)}
           onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
           onSetCommander={handleSetCommander}
@@ -536,7 +558,7 @@ export default function DeckEditor() {
           <VisualCardGrid
             cards={deckSortMode === 'category' ? mainboardCards : sortedMainboard}
             scryfallCache={scryfallCacheRef}
-            onSelectCard={setSelectedCardId}
+            onSelectCard={handleSelectCard}
             selectedCardId={selectedCardId}
             onRemove={(cardId) => removeCard.mutate(cardId)}
             onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
@@ -546,7 +568,7 @@ export default function DeckEditor() {
           <PileView
             mainboardCards={mainboardCards}
             scryfallCache={scryfallCacheRef}
-            onSelectCard={setSelectedCardId}
+            onSelectCard={handleSelectCard}
             selectedCardId={selectedCardId}
           />
         ) : (

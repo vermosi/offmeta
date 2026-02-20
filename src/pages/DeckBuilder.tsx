@@ -7,6 +7,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Trash2, Layers, Crown, Upload, Globe, Lock } from 'lucide-react';
+import { AuthModal } from '@/components/AuthModal';
+import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
@@ -16,7 +18,7 @@ import {
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
-import { useDecks, useDeckMutations, ensureSession } from '@/hooks/useDeck';
+import { useDecks, useDeckMutations } from '@/hooks/useDeck';
 import { DeckImportModal } from '@/components/deckbuilder/DeckImportModal';
 import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n';
@@ -32,15 +34,20 @@ const COLOR_MAP: Record<string, string> = {
 
 export default function DeckBuilder() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const { data: decks, isLoading } = useDecks();
   const { createDeck, deleteDeck, updateDeck } = useDeckMutations();
   const navigate = useNavigate();
   const [importOpen, setImportOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [authOpen, setAuthOpen] = useState(false);
 
   const handleCreate = async () => {
+    if (!user) {
+      setAuthOpen(true);
+      return;
+    }
     try {
-      await ensureSession();
       const deck = await createDeck.mutateAsync({});
       navigate(`/deckbuilder/${deck.id}`);
     } catch (err) {
@@ -63,8 +70,11 @@ export default function DeckBuilder() {
     name?: string; format?: string; commander?: string | null;
     colorIdentity?: string[]; cards: { name: string; quantity: number }[];
   }) => {
+    if (!user) {
+      setAuthOpen(true);
+      return;
+    }
     try {
-      await ensureSession();
       const deck = await createDeck.mutateAsync({
         name: data.name || 'Imported Deck',
         format: data.format || 'commander',
@@ -189,6 +199,7 @@ export default function DeckBuilder() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <AuthModal open={authOpen} onOpenChange={setAuthOpen} />
     </div>
   );
 }
