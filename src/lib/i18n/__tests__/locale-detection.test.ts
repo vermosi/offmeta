@@ -5,6 +5,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { detectBrowserLocale } from '../detect-locale';
+import * as React from 'react';
 
 // Helper: override navigator.languages for a single test
 function setNavigatorLanguages(langs: string[]) {
@@ -102,24 +103,20 @@ describe('localStorage override takes priority over browser detection', () => {
 
     const { I18nProvider } = await import('../index');
     const { I18nContext } = await import('../context');
-    const { render } = await import('@testing-library/react');
-    const React = await import('react');
+    const { render, screen } = await import('@testing-library/react');
 
-    // Use a ref to capture the locale without triggering the lint rule —
-    // reading context in render is fine; writing to an outer ref is side-effect-free.
-    const localeRef = { current: undefined as string | undefined };
-
+    // Render a Consumer that writes the locale as DOM text — no outer variable
+    // mutation inside render, satisfying react-hooks/immutability.
     function Consumer() {
       const ctx = React.useContext(I18nContext);
-      localeRef.current = ctx?.locale;
-      return null;
+      return React.createElement('span', { 'data-testid': 'locale' }, ctx?.locale ?? '');
     }
 
     render(
       React.createElement(I18nProvider, null, React.createElement(Consumer)),
     );
 
-    expect(localeRef.current).toBe('es');
+    expect(screen.getByTestId('locale').textContent).toBe('es');
   });
 
   it('auto-detected locale is persisted to localStorage on first visit', async () => {
@@ -129,7 +126,6 @@ describe('localStorage override takes priority over browser detection', () => {
 
     const { I18nProvider } = await import('../index');
     const { render } = await import('@testing-library/react');
-    const React = await import('react');
 
     render(React.createElement(I18nProvider, null, null));
 
@@ -142,7 +138,6 @@ describe('localStorage override takes priority over browser detection', () => {
 
     const { I18nProvider } = await import('../index');
     const { render } = await import('@testing-library/react');
-    const React = await import('react');
 
     render(React.createElement(I18nProvider, null, null));
 
