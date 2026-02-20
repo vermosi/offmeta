@@ -1,23 +1,29 @@
 /**
  * Admin Analytics Edge Function
  *
- * Returns aggregated search analytics for the admin dashboard, including:
- * - Summary stats (total searches, avg confidence, AI usage rate)
- * - Daily search volume breakdown
- * - Source distribution (cache / deterministic / ai / pattern_match)
- * - Confidence score buckets
- * - Response time percentiles (p50 / p95 / p99)
- * - Top 20 most-searched queries
- * - Low-confidence queries (for translation review)
- * - Deterministic coverage trend over the requested window
+ * Returns aggregated search analytics for the admin dashboard via the
+ * `get_search_analytics` database RPC function.
  *
- * Auth: requires the caller to hold the `admin` role in the `user_roles` table.
- * The check is performed with a service-role client; the RPC itself is called
- * with the user's own JWT so that `auth.uid()` resolves correctly inside the
- * `get_search_analytics` database function.
+ * ### Response payload sections
+ * - `summary` — total searches, avg confidence, AI usage rate, days window
+ * - `daily_volume` — per-day search counts over the lookback window
+ * - `source_distribution` — cache / deterministic / pattern_match / ai / raw_syntax breakdown
+ * - `confidence_buckets` — histogram of confidence score ranges
+ * - `response_percentiles` — p50 / p95 / p99 response times in ms
+ * - `top_queries` — top 20 most-searched natural-language queries
+ * - `low_confidence` — queries with confidence < 0.6 (up to `max_low_confidence`, default 20)
+ * - `deterministic_trend` — daily deterministic-vs-AI ratio over the window
  *
- * Query params:
- *   ?days=7   — lookback window in days (1–90, default 7)
+ * ### Auth
+ * Requires the caller's JWT to belong to a user with `role = 'admin'` in
+ * `user_roles`. Checked via the service-role client before the RPC is invoked.
+ * The RPC itself is called with the user's own JWT so `auth.uid()` resolves
+ * correctly inside `get_search_analytics`.
+ *
+ * ### Query params
+ * | Param  | Default | Range  | Description                  |
+ * |--------|---------|--------|------------------------------|
+ * | `days` | `7`     | 1–90   | Lookback window in whole days |
  *
  * @module admin-analytics
  */

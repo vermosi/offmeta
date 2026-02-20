@@ -1,14 +1,21 @@
 /**
- * Admin analytics dashboard — shows search query metrics,
- * source breakdown, confidence distribution, popular queries,
- * response time percentiles, deterministic coverage trend,
- * low-confidence queries, and a full feedback queue panel.
+ * Admin Analytics Dashboard
  *
- * **Feedback queue** (upgraded panel):
- * - Displays every `search_feedback` row with a color-coded pipeline
- *   status badge: `pending` (amber) · `processing` (blue) ·
- *   `completed` / `updated_existing` (green) · `failed` (red) ·
- *   `skipped` / `duplicate` / `archived` (gray).
+ * Protected page (`user_roles.role = 'admin'` required) that surfaces
+ * aggregated search pipeline telemetry and a full feedback queue panel.
+ *
+ * ## Analytics sections
+ * - Summary stats: total searches, avg confidence, AI usage rate, p50/p95/p99 response times
+ * - Daily search volume chart (lookback window: 1–90 days, default 7)
+ * - Source distribution: cache / deterministic / pattern_match / ai / raw_syntax
+ * - Confidence score buckets and deterministic coverage trend
+ * - Top 20 most-searched queries and low-confidence query review list
+ *
+ * ## Feedback queue panel
+ * - Displays every `search_feedback` row with a color-coded pipeline status badge:
+ *   `pending` (amber) · `processing` (blue) · `completed` / `updated_existing` (green)
+ *   · `failed` (red) · `skipped` / `duplicate` / `archived` (gray).
+ * - Filter by status via dropdown.
  * - Inline display of the linked AI-generated `translation_rules` row
  *   (pattern, Scryfall syntax, confidence %).
  * - One-click approve/reject toggle: flips `translation_rules.is_active`
@@ -16,7 +23,11 @@
  * - Re-trigger button for `failed` and `skipped` rows — calls the
  *   `process-feedback` edge function and resets status to `pending`.
  *
- * Protected: requires admin role (`user_roles.role = 'admin'`).
+ * Data is fetched from the `admin-analytics` edge function (GET ?days=N)
+ * and supplemented by direct Supabase queries for the feedback queue.
+ *
+ * @see supabase/functions/admin-analytics/index.ts
+ * @see src/hooks/useUserRole.ts
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';

@@ -135,7 +135,7 @@ Supabase tables:
 | `decks` | User deck metadata (name, format, commander, color identity, public flag) |
 | `deck_cards` | Cards in a deck (board, quantity, category, scryfall_id) |
 | `translation_rules` | Concept patterns and Scryfall mappings. Populated by `process-feedback` (per-submission) and `generate-patterns` (nightly batch). `source_feedback_id` links back to the originating `search_feedback` row. |
-| `translation_logs` | Query translation history for analytics. Used as the source for nightly pattern promotion (entries ≥3 occurrences, ≥0.8 confidence). |
+| `translation_logs` | Query translation history for analytics. Pruned nightly at 02:00 UTC by `cleanup-logs-nightly` (30-day retention). Used as the source for nightly pattern promotion at 03:00 UTC (entries ≥2 occurrences, ≥0.8 confidence, ≥1 Scryfall result). |
 | `query_cache` | Persistent NL → Scryfall query cache (48h TTL) |
 | `search_feedback` | User-reported translation issues. `processing_status` follows the lifecycle: `pending → processing → completed \| failed \| skipped \| duplicate \| updated_existing`. `generated_rule_id` links to the `translation_rules` row created for this submission. |
 | `analytics_events` | Usage analytics (event-type + session-id) |
