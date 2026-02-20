@@ -40,11 +40,11 @@
 - **Feedback auto-repair pipeline**: `process-feedback` processes each submission through Gemini 2.5 Flash Lite, generating a linked `translation_rules` row and transitioning the feedback row through `pending → processing → completed`. Fixed 401 rejection by adding `verify_jwt = false`.
 - **Nightly pattern promotion**: `generate-patterns-nightly` pg_cron job promotes high-frequency, high-confidence `translation_logs` queries (≥3 occurrences, ≥0.8 confidence) into `translation_rules` automatically each night at 03:00 UTC. Up to 50 new rules per run with deduplication against existing patterns.
 - **Admin feedback queue panel**: Upgraded feedback section in the admin analytics dashboard with full pipeline status badges, inline AI-generated rule display (pattern + Scryfall syntax + confidence), and one-click approve/reject actions that toggle `translation_rules.is_active`.
+- **Nightly log cleanup** (`cleanup-logs-nightly`): pg_cron job at 02:00 UTC deletes `translation_logs` and `analytics_events` older than 30 days, ensuring the pattern-promotion window is always clean when `generate-patterns` fires one hour later.
 
 ## Near term
 
 - Expand combo finder with filtering and sorting options
-- Schedule `cleanup-logs` as a companion nightly cron at 02:00 UTC (one hour before `generate-patterns`) to ensure the 30-day retention window is pruned before pattern generation runs
 
 ## Mid term
 
