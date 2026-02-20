@@ -34,13 +34,36 @@ const COLOR_MAP: Record<string, string> = {
 
 export default function DeckBuilder() {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { data: decks, isLoading } = useDecks();
   const { createDeck, deleteDeck, updateDeck } = useDeckMutations();
   const navigate = useNavigate();
   const [importOpen, setImportOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
+
+  // Auto-open sign-in modal when visiting /deckbuilder while logged out
+  const needsAuth = !authLoading && !user;
+
+  if (needsAuth) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-1 container-main py-8 sm:py-12 flex flex-col items-center justify-center gap-4">
+          <Layers className="h-12 w-12 text-muted-foreground" />
+          <h1 className="text-xl font-semibold">{t('deck.title')}</h1>
+          <p className="text-sm text-muted-foreground text-center max-w-sm">
+            Sign in to create and manage your decks.
+          </p>
+          <Button onClick={() => setAuthOpen(true)} className="gap-2">
+            Sign In to Get Started
+          </Button>
+          <AuthModal open={authOpen} onOpenChange={setAuthOpen} />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   const handleCreate = async () => {
     if (!user) {
