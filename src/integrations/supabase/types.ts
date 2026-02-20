@@ -250,6 +250,7 @@ export type Database = {
           original_query: string
           processed_at: string | null
           processing_status: string | null
+          scryfall_validation_count: number | null
           translated_query: string | null
         }
         Insert: {
@@ -260,6 +261,7 @@ export type Database = {
           original_query: string
           processed_at?: string | null
           processing_status?: string | null
+          scryfall_validation_count?: number | null
           translated_query?: string | null
         }
         Update: {
@@ -270,6 +272,7 @@ export type Database = {
           original_query?: string
           processed_at?: string | null
           processing_status?: string | null
+          scryfall_validation_count?: number | null
           translated_query?: string | null
         }
         Relationships: [

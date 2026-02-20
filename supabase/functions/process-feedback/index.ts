@@ -471,6 +471,12 @@ IMPORTANT: Only output the JSON object, nothing else.`;
           `"${ruleData.scryfall_syntax}" returned ${scryfallTotalCards} cards`,
         );
 
+        // Persist the validated card count so admins can see rule breadth
+        await supabase
+          .from('search_feedback')
+          .update({ scryfall_validation_count: scryfallTotalCards })
+          .eq('id', feedback.id);
+
         // Check for duplicate patterns - but if this is a retry, update the existing rule
         const { data: existingRule } = await supabase
           .from('translation_rules')
