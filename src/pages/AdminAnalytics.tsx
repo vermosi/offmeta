@@ -73,7 +73,12 @@ import {
   Filter,
   Archive,
   ArchiveRestore,
+  Pencil,
+  X,
+  Save,
+  AlertCircle,
 } from 'lucide-react';
+
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { SkipLinks } from '@/components/SkipLinks';
@@ -274,7 +279,15 @@ export default function AdminAnalytics() {
   const showArchivedRulesRef = useRef(false);
   const [archivingRuleId, setArchivingRuleId] = useState<string | null>(null);
 
-  // Redirect if not admin
+  // Inline syntax editing state
+  const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
+  const [editingSyntax, setEditingSyntax] = useState('');
+  const [editValidating, setEditValidating] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editValidationError, setEditValidationError] = useState<string | null>(null);
+  const [editValidationCount, setEditValidationCount] = useState<number | null>(null);
+
+
   useEffect(() => {
     if (!authLoading && !roleLoading) {
       if (!user || !isAdmin) {
@@ -390,7 +403,102 @@ export default function AdminAnalytics() {
     setArchivingRuleId(null);
   }, []);
 
-  /** Toggle is_active directly in the rules panel with optimistic update. */
+  /**
+   * Validate a new scryfall_syntax string against the live Scryfall API,
+   * then save it if valid. Shows an inline error without saving on failure.
+   */
+  const validateAndSaveRuleSyntax = useCallback(async (ruleId: string, newSyntax: string) => {
+    const trimmed = newSyntax.trim();
+    if (!trimmed) return;
+
+    setEditValidating(true);
+    setEditValidationError(null);
+    setEditValidationCount(null);
+
+    // ── Scryfall validation ────────────────────────────────────────────────
+    let validationOk = false;
+    let validationCount = 0;
+    let validationError = '';
+
+    try {
+      const url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(trimmed)}&extras=true`;
+      const resp = await fetch(url, {
+        headers: { 'User-Agent': 'OffMeta-Admin/1.0 (rule-editor)' },
+      });
+
+      if (resp.status === 200) {
+        const data = await resp.json();
+        validationCount = data.total_cards ?? 0;
+        if (validationCount > 0) {
+          validationOk = true;
+          setEditValidationCount(validationCount);
+        } else {
+          validationError = 'Query returned 0 results on Scryfall — tighten or correct the syntax';
+        }
+      } else if (resp.status === 404) {
+        await resp.text();
+        validationError = 'Scryfall returned 404 — query is invalid or matched no cards';
+      } else {
+        const body = await resp.text();
+        // Extract Scryfall's human-readable details if present
+        try {
+          const parsed = JSON.parse(body);
+          validationError = parsed.details || parsed.warnings?.join('; ') || `Scryfall error ${resp.status}`;
+        } catch {
+          validationError = `Scryfall returned HTTP ${resp.status}`;
+        }
+      }
+    } catch {
+      // Network error — block the save to avoid pushing unknown syntax
+      validationError = 'Could not reach Scryfall to validate — check your connection and try again';
+    }
+
+    setEditValidating(false);
+
+    if (!validationOk) {
+      setEditValidationError(validationError);
+      return; // do NOT save
+    }
+
+    // ── Persist ────────────────────────────────────────────────────────────
+    setEditSaving(true);
+    const { error } = await supabase
+      .from('translation_rules')
+      .update({ scryfall_syntax: trimmed })
+      .eq('id', ruleId);
+
+    if (error) {
+      toast.error('Failed to save rule syntax');
+    } else {
+      // Optimistic update + close edit mode
+      setRules((prev) =>
+        prev.map((r) => r.id === ruleId ? { ...r, scryfall_syntax: trimmed } : r),
+      );
+      // Sync feedback panel
+      setFeedback((prev) =>
+        prev.map((f) =>
+          f.generated_rule_id === ruleId && f.translation_rules
+            ? { ...f, translation_rules: { ...f.translation_rules, scryfall_syntax: trimmed } }
+            : f,
+        ),
+      );
+      toast.success(`Rule updated · ${validationCount.toLocaleString()} cards found`);
+      setEditingRuleId(null);
+      setEditingSyntax('');
+      setEditValidationCount(null);
+    }
+    setEditSaving(false);
+  }, []);
+
+  /** Cancel inline edit without saving. */
+  const cancelEditRule = useCallback(() => {
+    setEditingRuleId(null);
+    setEditingSyntax('');
+    setEditValidationError(null);
+    setEditValidationCount(null);
+  }, []);
+
+
   const toggleRuleDirect = useCallback(async (ruleId: string, currentActive: boolean) => {
     setRuleDirectTogglingId(ruleId);
     // Optimistic
@@ -1437,7 +1545,10 @@ export default function AdminAnalytics() {
                         const isToggling = ruleDirectTogglingId === rule.id;
                         const isArchiving = archivingRuleId === rule.id;
                         const isArchived = !!rule.archived_at;
+                        const isEditing = editingRuleId === rule.id;
+                        const isEditBusy = editValidating || editSaving;
                         return (
+
                           <tr
                             key={rule.id}
                             className={`hover:bg-muted/20 transition-colors ${!rule.is_active || isArchived ? 'opacity-60' : ''} ${isArchived ? 'bg-muted/10' : ''}`}
@@ -1460,12 +1571,73 @@ export default function AdminAnalytics() {
                                 </p>
                               )}
                             </td>
-                            {/* Scryfall syntax */}
-                            <td className="px-5 py-3 max-w-[220px]">
-                              <code className="text-[11px] font-mono text-foreground/80 break-all line-clamp-2" title={rule.scryfall_syntax}>
-                                {rule.scryfall_syntax}
-                              </code>
+                            {/* Scryfall syntax — editable inline */}
+                            <td className="px-5 py-3 max-w-[260px]">
+                              {isEditing ? (
+                                <div className="space-y-1.5">
+                                  <textarea
+                                    autoFocus
+                                    value={editingSyntax}
+                                    onChange={(e) => {
+                                      setEditingSyntax(e.target.value);
+                                      setEditValidationError(null);
+                                      setEditValidationCount(null);
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Escape') cancelEditRule();
+                                      if ((e.key === 'Enter') && (e.metaKey || e.ctrlKey)) {
+                                        void validateAndSaveRuleSyntax(rule.id, editingSyntax);
+                                      }
+                                    }}
+                                    rows={2}
+                                    className="w-full text-[11px] font-mono rounded border border-border bg-background text-foreground px-2 py-1 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+                                    placeholder="e.g. otag:ramp c:g"
+                                  />
+                                  {/* Validation feedback */}
+                                  {editValidationError && (
+                                    <div className="flex items-start gap-1 text-[10px] text-destructive">
+                                      <AlertCircle className="h-3 w-3 flex-shrink-0 mt-0.5" />
+                                      <span>{editValidationError}</span>
+                                    </div>
+                                  )}
+                                  {editValidationCount != null && !editValidationError && (
+                                    <div className="flex items-center gap-1 text-[10px] text-success">
+                                      <CheckCircle2 className="h-3 w-3" />
+                                      <span>{editValidationCount.toLocaleString()} cards found</span>
+                                    </div>
+                                  )}
+                                  {/* Save / Cancel buttons */}
+                                  <div className="flex items-center gap-1.5">
+                                    <button
+                                      disabled={isEditBusy || !editingSyntax.trim()}
+                                      onClick={() => void validateAndSaveRuleSyntax(rule.id, editingSyntax)}
+                                      className="inline-flex items-center gap-1 h-5 px-2 text-[10px] rounded bg-primary text-primary-foreground disabled:opacity-50 hover:bg-primary/90"
+                                      title="Validate against Scryfall then save (⌘Enter)"
+                                    >
+                                      {editValidating
+                                        ? <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                                        : editSaving
+                                        ? <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                                        : <Save className="h-2.5 w-2.5" />}
+                                      {editValidating ? 'Validating…' : editSaving ? 'Saving…' : 'Validate & Save'}
+                                    </button>
+                                    <button
+                                      disabled={isEditBusy}
+                                      onClick={cancelEditRule}
+                                      className="inline-flex items-center gap-1 h-5 px-2 text-[10px] rounded border border-border text-muted-foreground hover:text-foreground disabled:opacity-50"
+                                    >
+                                      <X className="h-2.5 w-2.5" />
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <code className="text-[11px] font-mono text-foreground/80 break-all line-clamp-2" title={rule.scryfall_syntax}>
+                                  {rule.scryfall_syntax}
+                                </code>
+                              )}
                             </td>
+
                             {/* Confidence */}
                             <td className="px-3 py-3 text-center">
                               {rule.confidence != null ? (
@@ -1514,9 +1686,28 @@ export default function AdminAnalytics() {
                             </td>
                             {/* Actions */}
                             <td className="px-5 py-3 text-right">
-                              <div className="flex items-center justify-end gap-1.5">
-                                {/* Activate / Deactivate (hidden when archived) */}
-                                {!isArchived && (
+                              <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                                {/* Edit syntax (hidden when archived or already editing) */}
+                                {!isArchived && !isEditing && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 px-2 text-[10px] gap-1 text-muted-foreground hover:text-foreground"
+                                    disabled={isToggling || isArchiving || (editingRuleId !== null && editingRuleId !== rule.id)}
+                                    onClick={() => {
+                                      setEditingRuleId(rule.id);
+                                      setEditingSyntax(rule.scryfall_syntax);
+                                      setEditValidationError(null);
+                                      setEditValidationCount(null);
+                                    }}
+                                    title="Edit Scryfall syntax (validates before saving)"
+                                  >
+                                    <Pencil className="h-3 w-3" />
+                                    Edit
+                                  </Button>
+                                )}
+                                {/* Activate / Deactivate (hidden when archived or editing) */}
+                                {!isArchived && !isEditing && (
                                   rule.is_active ? (
                                     <Button
                                       size="sm"
@@ -1541,24 +1732,27 @@ export default function AdminAnalytics() {
                                     </Button>
                                   )
                                 )}
-                                {/* Archive / Restore */}
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-6 px-2 text-[10px] gap-1 text-muted-foreground hover:text-foreground"
-                                  disabled={isArchiving || isToggling}
-                                  onClick={() => archiveRule(rule.id, isArchived)}
-                                  title={isArchived ? 'Restore rule' : 'Archive rule (soft-delete)'}
-                                >
-                                  {isArchiving
-                                    ? <Loader2 className="h-3 w-3 animate-spin" />
-                                    : isArchived
-                                    ? <ArchiveRestore className="h-3 w-3" />
-                                    : <Archive className="h-3 w-3" />}
-                                  {isArchived ? 'Restore' : 'Archive'}
-                                </Button>
+                                {/* Archive / Restore (hidden while editing) */}
+                                {!isEditing && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 px-2 text-[10px] gap-1 text-muted-foreground hover:text-foreground"
+                                    disabled={isArchiving || isToggling}
+                                    onClick={() => archiveRule(rule.id, isArchived)}
+                                    title={isArchived ? 'Restore rule' : 'Archive rule (soft-delete)'}
+                                  >
+                                    {isArchiving
+                                      ? <Loader2 className="h-3 w-3 animate-spin" />
+                                      : isArchived
+                                      ? <ArchiveRestore className="h-3 w-3" />
+                                      : <Archive className="h-3 w-3" />}
+                                    {isArchived ? 'Restore' : 'Archive'}
+                                  </Button>
+                                )}
                               </div>
                             </td>
+
                           </tr>
                         );
                       })}
