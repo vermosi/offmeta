@@ -165,7 +165,7 @@ describe('Index page integration', () => {
   it('renders example query buttons when no search has been made', () => {
     renderIndex();
     expect(
-      screen.getByRole('group', { name: /example searches/i }),
+      screen.getByRole('group', { name: /try searching for/i }),
     ).toBeInTheDocument();
     expect(
       screen.getByText('creatures that make treasure tokens'),
