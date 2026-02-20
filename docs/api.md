@@ -313,8 +313,9 @@ Scans `translation_logs` for the last 30 days and batch-promotes high-frequency,
 
 A log entry is promoted to a rule when **all** of the following hold:
 
-- Seen ≥ 3 times in the last 30 days
+- Seen ≥ 2 times in the last 30 days (lowered from 3 to catch faster-rising patterns)
 - Average confidence ≥ 0.8
+- Returned ≥ 1 Scryfall result across all occurrences (guards against zero-result noise)
 - No existing `translation_rules` row matches the normalized query form
 
 Up to 50 rules are inserted per run. Once promoted, those patterns are picked up by `fetchDynamicRules()` in `semantic-search/rules.ts` within its 10-minute TTL cache, after which identical queries resolve without any AI call.
