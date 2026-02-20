@@ -149,7 +149,7 @@ Supabase tables:
 |-------|---------|
 | `decks` | User deck metadata (name, format, commander, color identity, public flag) |
 | `deck_cards` | Cards in a deck (board, quantity, category, scryfall_id) |
-| `translation_rules` | Concept patterns and Scryfall mappings. Populated by `process-feedback` (per-submission) and `generate-patterns` (nightly batch). `source_feedback_id` links back to the originating `search_feedback` row. |
+| `translation_rules` | Concept patterns and Scryfall mappings. Populated by `process-feedback` (per-submission) and `generate-patterns` (nightly batch). `source_feedback_id` links back to the originating `search_feedback` row. `archived_at TIMESTAMPTZ` enables soft-delete — null means active; a timestamp means archived. Archived rows are excluded from default queries via a partial index `WHERE archived_at IS NULL`. Full audit trail is preserved — archived rows are never deleted from the database. |
 | `translation_logs` | Query translation history for analytics. Pruned nightly at 02:00 UTC by `cleanup-logs-nightly` (30-day retention). Used as the source for nightly pattern promotion at 03:00 UTC (entries ≥2 occurrences, ≥0.8 confidence, ≥1 Scryfall result). |
 | `query_cache` | Persistent NL → Scryfall query cache (48h TTL) |
 | `search_feedback` | User-reported translation issues. `processing_status` follows the lifecycle: `pending → processing → completed \| failed \| skipped \| duplicate \| updated_existing`. `generated_rule_id` is a FK to `translation_rules.id` (`ON DELETE SET NULL`) — nulled automatically when a rule is deleted. |
@@ -189,16 +189,16 @@ RLS follows the **consolidation pattern**: duplicate `authenticated` + `anon` po
 
 ### `translation_rules` access matrix
 
-| Operation | Who | Policy |
-|-----------|-----|--------|
-| SELECT | service_role | `auth.role() = 'service_role'` |
-| SELECT | admin users | `has_role(auth.uid(), 'admin')` |
-| INSERT | service_role | `auth.role() = 'service_role'` |
-| UPDATE | service_role | `auth.role() = 'service_role'` |
-| UPDATE | admin users | `has_role(auth.uid(), 'admin')` (both USING + WITH CHECK) |
-| DELETE | service_role | `auth.role() = 'service_role'` |
+| Operation | Who | Policy | Notes |
+|-----------|-----|--------|-------|
+| SELECT | service_role | `auth.role() = 'service_role'` | |
+| SELECT | admin users | `has_role(auth.uid(), 'admin')` | |
+| INSERT | service_role **only** | `auth.role() = 'service_role'` | Admins cannot INSERT directly — rules are created by `process-feedback` or `generate-patterns` edge functions only |
+| UPDATE | service_role | `auth.role() = 'service_role'` | |
+| UPDATE | admin users | `has_role(auth.uid(), 'admin')` (both USING + WITH CHECK) | Covers `is_active` toggle and `archived_at` soft-delete from the admin UI |
+| DELETE | service_role **only** | `auth.role() = 'service_role'` | Admins cannot hard-delete rules; use `archived_at` for soft-delete instead |
 
-Admin UPDATE access allows admins to flip `is_active` directly from the client (rules management panel) without routing through an edge function. All admin policies use the `public.has_role` security-definer function to avoid recursive RLS lookups.
+Admin UPDATE access allows admins to flip `is_active` and set/clear `archived_at` directly from the client (rules management panel) without routing through an edge function. All admin policies use the `public.has_role` security-definer function to avoid recursive RLS lookups.
 
 ## Error handling
 

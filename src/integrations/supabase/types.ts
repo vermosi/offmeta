@@ -332,7 +332,8 @@ export type Database = {
       }
       translation_rules: {
         Row: {
-          confidence: number | null
+          archived_at: string | null
+          confidence: number
           created_at: string
           description: string | null
           id: string
@@ -342,7 +343,8 @@ export type Database = {
           source_feedback_id: string | null
         }
         Insert: {
-          confidence?: number | null
+          archived_at?: string | null
+          confidence?: number
           created_at?: string
           description?: string | null
           id?: string
@@ -352,7 +354,8 @@ export type Database = {
           source_feedback_id?: string | null
         }
         Update: {
-          confidence?: number | null
+          archived_at?: string | null
+          confidence?: number
           created_at?: string
           description?: string | null
           id?: string
