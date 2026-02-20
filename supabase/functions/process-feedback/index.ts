@@ -447,24 +447,139 @@ IMPORTANT: Only output the JSON object, nothing else.`;
         }
 
         if (!scryfallOk) {
-          console.error(
-            `Scryfall validation FAILED for feedback ${feedback.id}:`,
+          console.warn(
+            `Scryfall validation FAILED (attempt 1) for feedback ${feedback.id}:`,
             scryfallError,
-            `| syntax: "${ruleData.scryfall_syntax}"`,
+            `| syntax: "${ruleData.scryfall_syntax}" — asking AI to self-correct`,
           );
-          await supabase
-            .from('search_feedback')
-            .update({
-              processing_status: 'failed',
-              processed_at: new Date().toISOString(),
-            })
-            .eq('id', feedback.id);
-          results.push({
-            feedbackId: feedback.id,
-            status: `failed - no_results: ${scryfallError}`,
-          });
-          continue;
+
+          // ──────────────────────────────────────────────────────────────────
+          // SELF-CORRECTION: give the AI one chance to fix the broken syntax.
+          // We pass the failed syntax + the Scryfall error back so the model
+          // understands exactly what went wrong and can try a different approach.
+          // ──────────────────────────────────────────────────────────────────
+          const correctionPrompt = `You are a Scryfall query expert. Your previous translation attempt produced an INVALID query.
+
+ORIGINAL FEEDBACK:
+- User searched for: "${feedback.original_query}"
+- User's issue: "${feedback.issue_description}"
+
+YOUR PREVIOUS ATTEMPT FAILED:
+- You generated: "${ruleData.scryfall_syntax}"
+- Scryfall error: "${scryfallError}"
+
+COMMON REASONS FOR FAILURE:
+1. Impossible type combos: t:artifact AND t:instant are mutually exclusive — use otag:artifact-removal instead
+2. Non-existent oracle tags: only use verified tags (otag:ramp, otag:removal, otag:board-wipe, etc.)
+3. Wrong syntax: check spelling, use mv: not cmc:, use is: not has:
+4. Over-constrained: too many filters = 0 results — simplify
+
+AVAILABLE ORACLE TAGS (verified valid):
+otag:ramp, otag:mana-rock, otag:mana-dork, otag:draw, otag:tutor, otag:removal, otag:board-wipe,
+otag:artifact-removal, otag:enchantment-removal, otag:graveyard-hate, otag:recursion, otag:counter,
+otag:lifegain, otag:burn, otag:evasion, otag:blink, otag:bounce, otag:copy, otag:theft, otag:discard,
+otag:sacrifice-outlet, otag:extra-turn, otag:cost-reducer, otag:lord, otag:anthem, otag:mill, otag:pinger
+
+Try a DIFFERENT approach — simpler is better. If the failed query used type filters, switch to oracle tags.
+If it used oracle tags, fall back to oracle text search with o:"...".
+
+Respond in this EXACT JSON format only (no other text):
+{
+  "pattern": "natural language pattern to match",
+  "scryfall_syntax": "corrected Scryfall syntax that WILL return results",
+  "description": "brief explanation of what changed and why",
+  "confidence": 0.7,
+  "uses_otag": false
+}`;
+
+          // eslint-disable-next-line prefer-const
+          let correctedRuleData: typeof ruleData | null = null;
+          try {
+            const correctionResponse = await fetch(
+              'https://ai.gateway.lovable.dev/v1/chat/completions',
+              {
+                method: 'POST',
+                headers: {
+                  Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  model: 'google/gemini-2.5-flash-lite',
+                  messages: [{ role: 'user', content: correctionPrompt }],
+                  temperature: 0.2,
+                }),
+              },
+            );
+
+            if (correctionResponse.ok) {
+              const correctionData = await correctionResponse.json();
+              const correctionText = correctionData.choices?.[0]?.message?.content || '';
+              const jsonMatch = correctionText.match(/\{[\s\S]*\}/);
+              if (jsonMatch) {
+                correctedRuleData = JSON.parse(jsonMatch[0]);
+                correctedRuleData.scryfall_syntax = normalizeTagAliases(correctedRuleData.scryfall_syntax);
+                console.log(`AI self-correction for feedback ${feedback.id}:`, correctedRuleData.scryfall_syntax);
+              }
+            }
+          } catch (correctionErr) {
+            console.error(`Self-correction AI call failed for feedback ${feedback.id}:`, correctionErr);
+          }
+
+          // Validate the corrected syntax against Scryfall
+          let correctionOk = false;
+          if (correctedRuleData?.scryfall_syntax && correctedRuleData.confidence >= 0.5) {
+            try {
+              const correctionValidationUrl = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(
+                correctedRuleData.scryfall_syntax,
+              )}&extras=true`;
+              const correctionResp = await fetch(correctionValidationUrl, {
+                headers: { 'User-Agent': 'OffMeta/1.0 (feedback-validator)' },
+              });
+
+              if (correctionResp.status === 200) {
+                const correctionScryfallData = await correctionResp.json();
+                const correctionCards = correctionScryfallData.total_cards ?? 0;
+                if (correctionCards > 0) {
+                  correctionOk = true;
+                  scryfallTotalCards = correctionCards;
+                  ruleData = correctedRuleData;
+                  console.log(
+                    `Self-correction PASSED for feedback ${feedback.id}:`,
+                    `"${ruleData.scryfall_syntax}" returned ${scryfallTotalCards} cards`,
+                  );
+                } else {
+                  console.error(`Self-correction also returned 0 results for feedback ${feedback.id}`);
+                }
+              } else {
+                await correctionResp.text();
+                console.error(`Self-correction Scryfall returned ${correctionResp.status} for feedback ${feedback.id}`);
+              }
+            } catch (correctionFetchErr) {
+              console.warn(`Self-correction validation network error for feedback ${feedback.id}:`, correctionFetchErr);
+            }
+          }
+
+          if (!correctionOk) {
+            console.error(
+              `Both validation attempts FAILED for feedback ${feedback.id}. Marking as failed.`,
+            );
+            await supabase
+              .from('search_feedback')
+              .update({
+                processing_status: 'failed',
+                processed_at: new Date().toISOString(),
+              })
+              .eq('id', feedback.id);
+            results.push({
+              feedbackId: feedback.id,
+              status: `failed - no_results after self-correction: ${scryfallError}`,
+            });
+            continue;
+          }
+          // Self-correction succeeded — fall through with promoted ruleData
+          scryfallOk = true;
         }
+
 
         console.log(
           `Scryfall validation PASSED for feedback ${feedback.id}:`,
