@@ -153,10 +153,10 @@ export function ReportIssueDialog({
     }
   }, [contextText]);
 
-  const triggerProcessing = useCallback(async () => {
+  const triggerProcessing = useCallback(async (feedbackId: string) => {
     try {
       await supabase.functions.invoke('process-feedback', {
-        body: {},
+        body: { feedbackId },
       });
     } catch (error) {
       logger.info('Background processing triggered', error);
@@ -184,11 +184,11 @@ export function ReportIssueDialog({
     try {
       const fullDescription = `${validationResult.data.issueDescription}\n\n---\nContext:\n- Request ID: ${requestId || 'N/A'}\n- Timestamp: ${timestamp}\n- Filters: ${JSON.stringify(filters || {})}`;
 
-      const { error } = await supabase.from('search_feedback').insert({
+      const { data: insertedRow, error } = await supabase.from('search_feedback').insert({
         original_query: originalQuery.substring(0, 500),
         translated_query: compiledQuery.substring(0, 1000),
         issue_description: fullDescription.substring(0, 2000),
-      });
+      }).select('id').single();
 
       if (error) throw error;
 
@@ -204,7 +204,7 @@ export function ReportIssueDialog({
         description: `${t('report.thanks', "Thanks! We'll use this to improve searches.")}${remaining <= 2 ? ` (${remaining} submissions remaining)` : ''}`,
       });
       onOpenChange(false);
-      triggerProcessing();
+      if (insertedRow?.id) triggerProcessing(insertedRow.id);
     } catch (error) {
       logger.error('Feedback submission failed', error);
       toast.error(t('report.failed', 'Failed to submit feedback'));
