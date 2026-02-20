@@ -274,6 +274,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_search_feedback_generated_rule"
+            columns: ["generated_rule_id"]
+            isOneToOne: false
+            referencedRelation: "translation_rules"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "search_feedback_generated_rule_id_fkey"
             columns: ["generated_rule_id"]
             isOneToOne: false

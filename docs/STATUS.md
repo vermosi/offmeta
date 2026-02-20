@@ -21,7 +21,7 @@ OffMeta is a natural-language search frontend for Magic: The Gathering cards. It
 
 ## Known gaps / TODO
 
-- Add a formal FK constraint from `search_feedback.generated_rule_id` to `translation_rules.id` with `ON DELETE SET NULL` to enforce referential integrity at the database level.
+- None at this time.
 
 ## Recent additions
 
