@@ -117,11 +117,14 @@ describe('GuidePage', () => {
     it('renders JSON-LD structured data', () => {
       const { container } = renderGuidePage('search-by-creature-type');
       const scripts = container.querySelectorAll('script[type="application/ld+json"]');
-      expect(scripts.length).toBe(2); // Article + FAQPage
+      expect(scripts.length).toBe(3); // Article + FAQPage + BreadcrumbList
       const articleLd = JSON.parse(scripts[0].textContent || '{}');
       expect(articleLd['@type']).toBe('Article');
       const faqLd = JSON.parse(scripts[1].textContent || '{}');
       expect(faqLd['@type']).toBe('FAQPage');
+      const breadcrumbLd = JSON.parse(scripts[2].textContent || '{}');
+      expect(breadcrumbLd['@type']).toBe('BreadcrumbList');
+      expect(breadcrumbLd.itemListElement).toHaveLength(3);
     });
 
     it('renders the bottom CTA', () => {
