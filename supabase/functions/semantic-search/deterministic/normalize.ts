@@ -15,6 +15,12 @@ export function normalizeQuery(query: string): string {
     .replace(/['']/g, "'")
     .trim();
 
+  // Common MTG card name spelling corrections (before slang)
+  normalized = normalized
+    .replace(/\bgrey\b/gi, 'gray')
+    .replace(/\baether\b/gi, 'aether') // already correct but normalize æther
+    .replace(/\bcolour\b/gi, 'color');
+
   // Apply slang mappings
   for (const [slang, formal] of Object.entries(SLANG_MAP)) {
     const regex = new RegExp(`\\b${slang}\\b`, 'gi');
