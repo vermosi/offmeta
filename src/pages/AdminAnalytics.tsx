@@ -96,8 +96,10 @@ interface FeedbackItem {
   created_at: string;
   processed_at: string | null;
   generated_rule_id: string | null;
+  scryfall_validation_count: number | null;
   translation_rules: TranslationRule | null;
 }
+
 
 /** Full translation_rules row for the standalone rules panel. */
 interface TranslationRuleRow {
@@ -321,10 +323,12 @@ export default function AdminAnalytics() {
         .select(`
           id, original_query, translated_query, issue_description,
           processing_status, created_at, processed_at, generated_rule_id,
+          scryfall_validation_count,
           translation_rules ( pattern, scryfall_syntax, confidence, is_active, description )
         `)
         .order('created_at', { ascending: false })
         .limit(100);
+
       if (error) throw error;
       setFeedback((rows as unknown as FeedbackItem[]) ?? []);
     } catch {
@@ -600,10 +604,11 @@ export default function AdminAnalytics() {
           setFeedback((prev) => {
             // Avoid duplicates if fetchFeedback already picked it up
             if (prev.some((f) => f.id === row.id)) return prev;
-            return [{ ...row, translation_rules: null }, ...prev].slice(0, 100);
+            return [{ ...row, translation_rules: null, scryfall_validation_count: null }, ...prev].slice(0, 100);
           });
         },
       )
+
       // ── Feedback queue: status or rule changes (process-feedback writes) ─
       .on(
         'postgres_changes',
@@ -623,6 +628,7 @@ export default function AdminAnalytics() {
                 .select(`
                   id, original_query, translated_query, issue_description,
                   processing_status, created_at, processed_at, generated_rule_id,
+                  scryfall_validation_count,
                   translation_rules ( pattern, scryfall_syntax, confidence, is_active, description )
                 `)
                 .eq('id', row.id)
@@ -633,16 +639,18 @@ export default function AdminAnalytics() {
                     cur.map((f) => (f.id === row.id ? (data as unknown as FeedbackItem) : f)),
                   );
                 });
+
             } else {
               // No linked rule yet — just update the scalar fields
               setFeedback((cur) =>
                 cur.map((f) =>
                   f.id === row.id
-                    ? { ...f, processing_status: row.processing_status, processed_at: row.processed_at }
+                    ? { ...f, processing_status: row.processing_status, processed_at: row.processed_at, scryfall_validation_count: row.scryfall_validation_count }
                     : f,
                 ),
               );
             }
+
             return prev; // state is updated inside the async branch above
           });
         },
@@ -1184,25 +1192,44 @@ export default function AdminAnalytics() {
                         {/* Row 4 — AI-generated rule box */}
                         {rule && (
                           <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
-                            <div className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                              <Sparkles className="h-3 w-3" />
-                              AI-Generated Rule
-                              {/* Confidence badge */}
-                              {rule.confidence != null && (
-                                <Badge
-                                  variant="secondary"
-                                  className={`ml-auto text-[10px] ${
-                                    rule.confidence >= 0.8
-                                      ? 'bg-success/10 text-success'
-                                      : rule.confidence >= 0.6
-                                      ? 'bg-warning/10 text-warning'
-                                      : 'bg-destructive/10 text-destructive'
-                                  }`}
-                                >
-                                  {Math.round(rule.confidence * 100)}% conf
-                                </Badge>
-                              )}
-                            </div>
+                             <div className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                               <Sparkles className="h-3 w-3" />
+                               AI-Generated Rule
+                               <div className="ml-auto flex items-center gap-1.5">
+                                 {/* Cards found badge */}
+                                 {f.scryfall_validation_count != null && (
+                                   <Badge
+                                     variant="secondary"
+                                     className={`text-[10px] ${
+                                       f.scryfall_validation_count >= 100
+                                         ? 'bg-success/10 text-success'
+                                         : f.scryfall_validation_count >= 10
+                                         ? 'bg-warning/10 text-warning'
+                                         : 'bg-destructive/10 text-destructive'
+                                     }`}
+                                     title="Number of cards returned by this rule's Scryfall query during validation"
+                                   >
+                                     {f.scryfall_validation_count.toLocaleString()} cards
+                                   </Badge>
+                                 )}
+                                 {/* Confidence badge */}
+                                 {rule.confidence != null && (
+                                   <Badge
+                                     variant="secondary"
+                                     className={`text-[10px] ${
+                                       rule.confidence >= 0.8
+                                         ? 'bg-success/10 text-success'
+                                         : rule.confidence >= 0.6
+                                         ? 'bg-warning/10 text-warning'
+                                         : 'bg-destructive/10 text-destructive'
+                                     }`}
+                                   >
+                                     {Math.round(rule.confidence * 100)}% conf
+                                   </Badge>
+                                 )}
+                               </div>
+                             </div>
+
                             <div className="space-y-1">
                               <div className="flex gap-2 text-xs">
                                 <span className="text-muted-foreground flex-shrink-0 w-14">Pattern</span>
