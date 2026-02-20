@@ -807,5 +807,16 @@
   "enabled": "Enabled",
   "disabled": "Disabled",
   "on": "On",
-  "off": "Off"
+  "off": "Off",
+
+  "deck.title": "My Decks",
+  "deck.subtitle": "Build, tweak, and manage your MTG decklists.",
+  "deck.import": "Import",
+  "deck.newDeck": "New Deck",
+  "deck.noDecks": "You haven't built any decks yet.",
+  "deck.importDeck": "Import a Deck",
+  "deck.createDeck": "Create Your First Deck",
+  "deck.cards": "cards",
+  "deck.updated": "Updated",
+  "deck.deleteConfirm": "Delete this deck?"
 }
