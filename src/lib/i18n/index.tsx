@@ -60,11 +60,18 @@ function detectBrowserLocale(): SupportedLocale | null {
 function getInitialLocale(): SupportedLocale {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored && stored in DICTIONARIES) return stored as SupportedLocale;
+    if (stored && stored in DICTIONARIES) {
+      console.info(`[i18n] Restored locale from storage: ${stored}`);
+      return stored as SupportedLocale;
+    }
   } catch {
     // SSR or storage unavailable
   }
-  return detectBrowserLocale() ?? 'en';
+  const detected = detectBrowserLocale();
+  console.info(
+    `[i18n] navigator.languages=${JSON.stringify(navigator.languages ?? [navigator.language])} → detected=${detected ?? 'none'} → using=${detected ?? 'en'}`,
+  );
+  return detected ?? 'en';
 }
 
 
