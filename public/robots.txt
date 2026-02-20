@@ -4,6 +4,14 @@
 User-agent: *
 Allow: /
 Disallow: /api/
+# Block parameterised search URLs — they are dynamic SPA state, not indexable pages
+Disallow: /?q=
+Disallow: /?*q=
+# Block admin routes from crawlers
+Disallow: /admin/
+Disallow: /profile/
+Disallow: /saved/
+Disallow: /reset-password/
 
 # Sitemap location
 Sitemap: https://offmeta.app/sitemap.xml
