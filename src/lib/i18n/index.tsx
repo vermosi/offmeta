@@ -68,10 +68,17 @@ function getInitialLocale(): SupportedLocale {
     // SSR or storage unavailable
   }
   const detected = detectBrowserLocale();
+  const locale = detected ?? 'en';
   console.info(
-    `[i18n] navigator.languages=${JSON.stringify(navigator.languages ?? [navigator.language])} → detected=${detected ?? 'none'} → using=${detected ?? 'en'}`,
+    `[i18n] navigator.languages=${JSON.stringify(navigator.languages ?? [navigator.language])} → detected=${detected ?? 'none'} → using=${locale}`,
   );
-  return detected ?? 'en';
+  // Persist so detection only runs once — subsequent loads restore from storage.
+  try {
+    localStorage.setItem(STORAGE_KEY, locale);
+  } catch {
+    // storage unavailable
+  }
+  return locale;
 }
 
 
