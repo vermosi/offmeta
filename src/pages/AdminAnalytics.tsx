@@ -50,14 +50,26 @@ import {
   Search,
   Gauge,
   MessageSquareWarning,
-  CheckCircle2,
-  Circle,
   ChevronDown,
   ChevronUp,
+  CheckCircle2,
+  XCircle,
+  RotateCcw,
+  Code2,
+  Sparkles,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { SkipLinks } from '@/components/SkipLinks';
+
+/** Joined shape returned by the search_feedback + translation_rules query. */
+interface TranslationRule {
+  pattern: string;
+  scryfall_syntax: string;
+  confidence: number | null;
+  is_active: boolean;
+  description: string | null;
+}
 
 interface FeedbackItem {
   id: string;
@@ -67,7 +79,11 @@ interface FeedbackItem {
   processing_status: string | null;
   created_at: string;
   processed_at: string | null;
+  generated_rule_id: string | null;
+  translation_rules: TranslationRule | null;
 }
+
+type FeedbackFilter = 'all' | 'pending' | 'processing' | 'completed' | 'failed' | 'skipped' | 'archived';
 
 interface PopularQuery {
   query: string;
@@ -210,8 +226,10 @@ export default function AdminAnalytics() {
   const [days, setDays] = useState('7');
   const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
-  const [feedbackFilter, setFeedbackFilter] = useState<'all' | 'pending' | 'done'>('all');
+  const [feedbackFilter, setFeedbackFilter] = useState<FeedbackFilter>('all');
   const [expandedFeedback, setExpandedFeedback] = useState<Set<string>>(new Set());
+  const [ruleTogglingId, setRuleTogglingId] = useState<string | null>(null);
+  const [retriggeringId, setRetriggeringId] = useState<string | null>(null);
 
   // Redirect if not admin
   useEffect(() => {
@@ -259,11 +277,15 @@ export default function AdminAnalytics() {
     try {
       const { data: rows, error } = await supabase
         .from('search_feedback')
-        .select('id, original_query, translated_query, issue_description, processing_status, created_at, processed_at')
+        .select(`
+          id, original_query, translated_query, issue_description,
+          processing_status, created_at, processed_at, generated_rule_id,
+          translation_rules ( pattern, scryfall_syntax, confidence, is_active, description )
+        `)
         .order('created_at', { ascending: false })
         .limit(100);
       if (error) throw error;
-      setFeedback((rows as FeedbackItem[]) ?? []);
+      setFeedback((rows as unknown as FeedbackItem[]) ?? []);
     } catch {
       toast.error('Failed to load feedback');
     } finally {
@@ -271,20 +293,71 @@ export default function AdminAnalytics() {
     }
   }, []);
 
-  const markFeedbackDone = useCallback(async (id: string) => {
+  /** Toggle is_active on a linked translation_rules row with optimistic update. */
+  const toggleRuleActive = useCallback(async (feedbackId: string, ruleId: string, currentActive: boolean) => {
+    setRuleTogglingId(feedbackId);
+    // Optimistic update
+    setFeedback((prev) =>
+      prev.map((f) =>
+        f.id === feedbackId && f.translation_rules
+          ? { ...f, translation_rules: { ...f.translation_rules, is_active: !currentActive } }
+          : f,
+      ),
+    );
     const { error } = await supabase
-      .from('search_feedback')
-      .update({ processing_status: 'done', processed_at: new Date().toISOString() })
-      .eq('id', id);
+      .from('translation_rules')
+      .update({ is_active: !currentActive })
+      .eq('id', ruleId);
     if (error) {
-      toast.error('Failed to update feedback');
-    } else {
+      // Revert on failure
       setFeedback((prev) =>
-        prev.map((f) => f.id === id ? { ...f, processing_status: 'done', processed_at: new Date().toISOString() } : f)
+        prev.map((f) =>
+          f.id === feedbackId && f.translation_rules
+            ? { ...f, translation_rules: { ...f.translation_rules, is_active: currentActive } }
+            : f,
+        ),
       );
-      toast.success('Marked as resolved');
+      toast.error('Failed to update rule');
+    } else {
+      toast.success(currentActive ? 'Rule deactivated' : 'Rule activated');
     }
+    setRuleTogglingId(null);
   }, []);
+
+  /** Re-trigger process-feedback for failed/skipped items. */
+  const retriggerFeedback = useCallback(async (feedbackId: string) => {
+    setRetriggeringId(feedbackId);
+    // Optimistically reset status to processing
+    setFeedback((prev) =>
+      prev.map((f) => f.id === feedbackId ? { ...f, processing_status: 'processing' } : f),
+    );
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-feedback`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session?.access_token ?? ''}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ feedbackId }),
+        },
+      );
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error ?? `HTTP ${res.status}`);
+      toast.success(`Re-processed: ${result.status ?? 'done'}`);
+      await fetchFeedback();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Re-trigger failed');
+      setFeedback((prev) =>
+        prev.map((f) => f.id === feedbackId ? { ...f, processing_status: 'failed' } : f),
+      );
+    } finally {
+      setRetriggeringId(null);
+    }
+  }, [fetchFeedback]);
 
   useEffect(() => {
     if (isAdmin && user) {
@@ -773,27 +846,32 @@ export default function AdminAnalytics() {
             </div>
           )}
 
-          {/* ── User Feedback — always shown to admins ── */}
-          <div className="surface-elevated p-5 border border-border mt-8">
-            <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+          {/* ── Feedback Queue ── */}
+          <div className="surface-elevated border border-border mt-8 overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border flex-wrap gap-2">
               <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
                 <MessageSquareWarning className="h-4 w-4 text-amber-500" />
-                User Feedback
+                Feedback Queue
                 {feedback.length > 0 && (
                   <Badge variant="secondary" className="text-[10px]">
-                    {feedback.filter((f) => (f.processing_status ?? 'pending') !== 'done').length} open
+                    {feedback.filter((f) => f.processing_status === 'pending' || f.processing_status == null).length} pending
                   </Badge>
                 )}
               </h2>
               <div className="flex items-center gap-2">
-                <Select value={feedbackFilter} onValueChange={(v) => setFeedbackFilter(v as typeof feedbackFilter)}>
-                  <SelectTrigger className="h-8 w-[120px] text-xs">
+                <Select value={feedbackFilter} onValueChange={(v) => setFeedbackFilter(v as FeedbackFilter)}>
+                  <SelectTrigger className="h-8 w-[140px] text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="pending">Open</SelectItem>
-                    <SelectItem value="done">Resolved</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="processing">Processing</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="failed">Failed</SelectItem>
+                    <SelectItem value="skipped">Skipped</SelectItem>
+                    <SelectItem value="archived">Archived</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button variant="ghost" size="sm" onClick={fetchFeedback} disabled={feedbackLoading} className="h-8 w-8 p-0">
@@ -803,89 +881,168 @@ export default function AdminAnalytics() {
             </div>
 
             {feedbackLoading ? (
-              <div className="flex justify-center py-8">
+              <div className="flex justify-center py-10">
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
             ) : (() => {
               const filtered = feedback.filter((f) => {
-                if (feedbackFilter === 'pending') return (f.processing_status ?? 'pending') !== 'done';
-                if (feedbackFilter === 'done') return f.processing_status === 'done';
-                return true;
+                const s = f.processing_status ?? 'pending';
+                if (feedbackFilter === 'all') return true;
+                if (feedbackFilter === 'completed') return s === 'completed' || s === 'updated_existing' || s === 'done';
+                return s === feedbackFilter;
               });
+
               if (filtered.length === 0) {
                 return (
-                  <p className="text-sm text-muted-foreground text-center py-8">
-                    {feedbackFilter === 'pending' ? 'No open feedback 🎉' : 'No feedback yet'}
+                  <p className="text-sm text-muted-foreground text-center py-10">
+                    {feedbackFilter === 'all' ? 'No feedback submitted yet' : `No ${feedbackFilter} items`}
                   </p>
                 );
               }
-              return (
-                <div className="space-y-2 max-h-[480px] overflow-y-auto pr-1">
-                  {filtered.map((f) => {
-                    const isDone = f.processing_status === 'done';
-                    const isExpanded = expandedFeedback.has(f.id);
-                    return (
-                      <div
-                        key={f.id}
-                        className={`rounded-lg border p-3 transition-colors ${isDone ? 'border-border/30 bg-muted/10 opacity-60' : 'border-amber-500/30 bg-amber-500/5'}`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <button
-                            onClick={() => !isDone && markFeedbackDone(f.id)}
-                            title={isDone ? 'Resolved' : 'Mark as resolved'}
-                            className={`mt-0.5 flex-shrink-0 transition-colors ${isDone ? 'text-green-500 cursor-default' : 'text-muted-foreground hover:text-green-500'}`}
-                          >
-                            {isDone ? <CheckCircle2 className="h-4 w-4" /> : <Circle className="h-4 w-4" />}
-                          </button>
 
+              return (
+                <div className="divide-y divide-border max-h-[640px] overflow-y-auto">
+                  {filtered.map((f) => {
+                    const status = f.processing_status ?? 'pending';
+                    const isExpanded = expandedFeedback.has(f.id);
+                    const rule = f.translation_rules;
+                    const canRetrigger = status === 'failed' || status === 'skipped';
+                    const isRetriggering = retriggeringId === f.id;
+                    const isTogglingRule = ruleTogglingId === f.id;
+
+                    return (
+                      <div key={f.id} className="px-5 py-4 space-y-3">
+                        {/* Row 1 — status + query + timestamp */}
+                        <div className="flex items-start gap-3 flex-wrap sm:flex-nowrap">
+                          <StatusBadge status={status} />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">"{f.original_query}"</p>
-                            <p className={`text-xs text-muted-foreground mt-0.5 ${isExpanded ? '' : 'line-clamp-2'}`}>
-                              {f.issue_description}
+                            <p className="text-sm font-medium text-foreground truncate">
+                              &ldquo;{f.original_query}&rdquo;
                             </p>
-                            {f.translated_query && isExpanded && (
-                              <p className="text-xs font-mono text-muted-foreground mt-1 truncate">
-                                → {f.translated_query}
-                              </p>
-                            )}
-                            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                              <span className="text-[10px] text-muted-foreground">
-                                {new Date(f.created_at).toLocaleString()}
-                              </span>
-                              {isDone && f.processed_at && (
-                                <>
-                                  <span className="text-[10px] text-muted-foreground">·</span>
-                                  <span className="text-[10px] text-green-600 dark:text-green-400">
-                                    resolved {new Date(f.processed_at).toLocaleDateString()}
-                                  </span>
-                                </>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                              {new Date(f.created_at).toLocaleString()}
+                              {f.processed_at && (
+                                <> · processed {new Date(f.processed_at).toLocaleDateString()}</>
                               )}
-                              <button
-                                onClick={() =>
-                                  setExpandedFeedback((prev) => {
-                                    const next = new Set(prev);
-                                    if (next.has(f.id)) { next.delete(f.id); } else { next.add(f.id); }
-                                    return next;
-                                  })
-                                }
-                                className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-0.5"
-                              >
-                                {isExpanded ? <><ChevronUp className="h-3 w-3" />Less</> : <><ChevronDown className="h-3 w-3" />More</>}
-                              </button>
+                            </p>
+                          </div>
+                          {/* Expand toggle */}
+                          <button
+                            onClick={() =>
+                              setExpandedFeedback((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(f.id)) next.delete(f.id); else next.add(f.id);
+                                return next;
+                              })
+                            }
+                            className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors mt-0.5"
+                            aria-label={isExpanded ? 'Collapse' : 'Expand'}
+                          >
+                            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                          </button>
+                        </div>
+
+                        {/* Row 2 — issue description (always visible) */}
+                        <p className={`text-xs text-muted-foreground leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
+                          {f.issue_description}
+                        </p>
+
+                        {/* Row 3 — translated query (expanded only) */}
+                        {isExpanded && f.translated_query && (
+                          <div className="flex items-start gap-1.5 text-xs">
+                            <Code2 className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground mt-0.5" />
+                            <span className="font-mono text-muted-foreground break-all">{f.translated_query}</span>
+                          </div>
+                        )}
+
+                        {/* Row 4 — AI-generated rule box */}
+                        {rule && (
+                          <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
+                            <div className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                              <Sparkles className="h-3 w-3" />
+                              AI-Generated Rule
+                              {/* Confidence badge */}
+                              {rule.confidence != null && (
+                                <Badge
+                                  variant="secondary"
+                                  className={`ml-auto text-[10px] ${
+                                    rule.confidence >= 0.8
+                                      ? 'bg-green-500/10 text-green-600 dark:text-green-400'
+                                      : rule.confidence >= 0.6
+                                      ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                      : 'bg-red-500/10 text-red-600 dark:text-red-400'
+                                  }`}
+                                >
+                                  {Math.round(rule.confidence * 100)}% conf
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="space-y-1">
+                              <div className="flex gap-2 text-xs">
+                                <span className="text-muted-foreground flex-shrink-0 w-14">Pattern</span>
+                                <span className="text-foreground font-medium break-words">{rule.pattern}</span>
+                              </div>
+                              <div className="flex gap-2 text-xs">
+                                <span className="text-muted-foreground flex-shrink-0 w-14">Syntax</span>
+                                <span className="font-mono text-foreground break-all">{rule.scryfall_syntax}</span>
+                              </div>
+                              {rule.description && (
+                                <div className="flex gap-2 text-xs">
+                                  <span className="text-muted-foreground flex-shrink-0 w-14">Note</span>
+                                  <span className="text-muted-foreground">{rule.description}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Approve / Reject */}
+                            <div className="flex items-center justify-end gap-2 pt-1 border-t border-border/50">
+                              <span className={`text-[10px] font-medium ${rule.is_active ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
+                                {rule.is_active ? 'Active' : 'Inactive'}
+                              </span>
+                              {rule.is_active ? (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-6 px-2 text-[10px] gap-1 border-red-500/40 text-red-600 dark:text-red-400 hover:bg-red-500/10"
+                                  disabled={isTogglingRule}
+                                  onClick={() => toggleRuleActive(f.id, f.generated_rule_id!, true)}
+                                >
+                                  {isTogglingRule ? <Loader2 className="h-3 w-3 animate-spin" /> : <XCircle className="h-3 w-3" />}
+                                  Deactivate
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-6 px-2 text-[10px] gap-1 border-green-500/40 text-green-600 dark:text-green-400 hover:bg-green-500/10"
+                                  disabled={isTogglingRule}
+                                  onClick={() => toggleRuleActive(f.id, f.generated_rule_id!, false)}
+                                >
+                                  {isTogglingRule ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
+                                  Activate
+                                </Button>
+                              )}
                             </div>
                           </div>
+                        )}
 
-                          {!isDone && (
+                        {/* Row 5 — actions */}
+                        {canRetrigger && (
+                          <div className="flex justify-end">
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-7 px-2 text-xs flex-shrink-0"
-                              onClick={() => markFeedbackDone(f.id)}
+                              className="h-7 px-2 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+                              disabled={isRetriggering}
+                              onClick={() => retriggerFeedback(f.id)}
                             >
-                              Resolve
+                              {isRetriggering
+                                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                : <RotateCcw className="h-3.5 w-3.5" />}
+                              Re-process
                             </Button>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -900,3 +1057,26 @@ export default function AdminAnalytics() {
     </div>
   );
 }
+
+/** Color-coded status badge for the feedback pipeline lifecycle. */
+function StatusBadge({ status }: { status: string }) {
+  const map: Record<string, { label: string; className: string }> = {
+    pending:          { label: 'Pending',          className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30' },
+    processing:       { label: 'Processing',       className: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30' },
+    completed:        { label: 'Completed',        className: 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30' },
+    updated_existing: { label: 'Updated',          className: 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30' },
+    done:             { label: 'Resolved',         className: 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30' },
+    failed:           { label: 'Failed',           className: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30' },
+    skipped:          { label: 'Skipped',          className: 'bg-muted text-muted-foreground border-border' },
+    duplicate:        { label: 'Duplicate',        className: 'bg-muted text-muted-foreground border-border' },
+    archived:         { label: 'Archived',         className: 'bg-muted text-muted-foreground border-border' },
+  };
+  const { label, className } = map[status] ?? { label: status, className: 'bg-muted text-muted-foreground border-border' };
+  return (
+    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold rounded-full border px-2 py-0.5 flex-shrink-0 ${className}`}>
+      {status === 'processing' && <Loader2 className="h-2.5 w-2.5 animate-spin" />}
+      {label}
+    </span>
+  );
+}
+
