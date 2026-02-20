@@ -530,7 +530,7 @@ serve(async (req) => {
 
     // 6b. Deterministic Result check (can we skip AI?)
     // Skip Scryfall network validation — deterministic results are pre-validated, validation adds latency.
-    if (!deterministicResult.intent.remainingQuery) {
+    if (deterministicQuery && !deterministicResult.intent.remainingQuery) {
       const validation = validateQuery(deterministicQuery || query);
       const responseTimeMs = Date.now() - requestStartTime;
       logTranslation(query, validation.sanitized, 0.9, responseTimeMs, [], [], filters, false, 'deterministic');
@@ -602,17 +602,23 @@ serve(async (req) => {
     // 8. AI Translation (with tiered model selection)
     // Fetch dynamic rules in parallel with building context (non-blocking)
     const queryWords = query.trim().split(/\s+/).length;
+    const isLikelyName = deterministicResult.intent.warnings.includes('likely_card_name');
     const tier: QueryTier =
       queryWords > 8 ? 'complex' : queryWords > 4 ? 'medium' : 'simple';
 
-    // Use cheaper model for simple queries to reduce costs
-    const aiModel = tier === 'simple'
-      ? 'google/gemini-2.5-flash-lite'
-      : 'google/gemini-3-flash-preview';
+    // Use stronger model for card name queries (needs MTG knowledge for fuzzy matching)
+    const aiModel = isLikelyName
+      ? 'google/gemini-2.5-flash'
+      : tier === 'simple'
+        ? 'google/gemini-2.5-flash-lite'
+        : 'google/gemini-3-flash-preview';
 
     const dynamicRules = await fetchDynamicRules();
     const systemPrompt = buildSystemPrompt(tier, dynamicRules, '');
-    const userMessage = `Translate to Scryfall search syntax: "${queryForAI}" ${deterministicQuery ? `(must include: ${deterministicQuery})` : ''}`;
+    const cardNameHint = isLikelyName
+      ? ' (IMPORTANT: This is likely a Magic: The Gathering card name, not a search description. Output ONLY the exact Scryfall name search like !"Gray Merchant of Asphodel" using the correct card name. Fix common misspellings: grey→gray, etc. If unsure of full name, use name: syntax like name:merchant.)'
+      : '';
+    const userMessage = `Translate to Scryfall search syntax: "${queryForAI}"${cardNameHint} ${deterministicQuery ? `(must include: ${deterministicQuery})` : ''}`;
 
     try {
       const aiResponse = await fetchWithRetry(

@@ -233,11 +233,15 @@ export function buildDeterministicIntent(query: string): {
 } {
   // Short-circuit: if the query looks like a card name, use name search
   if (isLikelyCardName(query)) {
-    const trimmedName = query.trim();
-    const wordCount = trimmedName.split(/\s+/).length;
-    // Single word → partial match (name:X finds all cards containing that word)
-    // Multi-word → exact match (!"Name" finds the specific card)
-    const exactQuery = wordCount === 1 ? `name:${trimmedName}` : `!"${trimmedName}"`;
+    const trimmed = query.trim();
+    const wordCount = trimmed.split(/\s+/).length;
+    // Single word → name:X (partial match, e.g. "Atraxa" finds all Atraxa cards)
+    // Multi-word → name:"X Y" (substring match in name, handles partial names)
+    // Normalization already fixes spelling (grey→gray) before we get here
+    const normalizedName = normalizeQuery(trimmed);
+    const exactQuery = wordCount === 1
+      ? `name:${normalizedName}`
+      : `name:"${normalizedName}"`;
     const intent: ParsedIntent = {
       colors: null,
       types: [],
