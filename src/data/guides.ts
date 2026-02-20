@@ -171,33 +171,44 @@ export const GUIDES: Guide[] = [
   {
     slug: 'keyword-ability-search',
     level: 5,
-    title: 'Keyword Ability Search',
-    metaTitle: 'Search MTG Cards by Keyword Abilities — OffMeta Guide',
+    title: 'MTG Keyword Ability Search',
+    metaTitle: 'MTG Keywords List & Search — Find Cards by Keyword Ability | OffMeta',
     metaDescription:
-      'Find cards with flying, deathtouch, haste, and any keyword ability. Combine multiple keywords for precise MTG searches.',
-    heading: 'Keyword Ability Search',
-    subheading: 'Find cards with specific mechanics and keywords',
-    intro: `Magic has over 100 keyword abilities, from evergreen staples like Flying and Haste to set-specific mechanics like Connive and Offspring. OffMeta maps these to Scryfall's dedicated keyword operator for precise results, which is much better than searching oracle text (that often produces false positives).`,
+      'Full list of MTG keywords: flying, deathtouch, haste, trample, lifelink & 100+ more. Search Magic cards by any keyword ability — no syntax needed.',
+    heading: 'Magic: The Gathering Keywords List & Search',
+    subheading: 'Find any card by keyword ability — flying, deathtouch, trample, and 100+ more',
+    intro: `Magic: The Gathering has over 100 keyword abilities. From evergreen staples like Flying, Haste, and Deathtouch to set-specific mechanics like Connive, Casualty, and Offspring — OffMeta maps all of them to Scryfall's dedicated keyword operator (kw:) for precise results. This is far more accurate than searching oracle text, which produces false positives. If you've been searching for a full list of MTG keywords or a way to search by keyword, this guide explains exactly how.`,
     searchQuery: 'creatures with flying and deathtouch',
     translatedQuery: 't:creature kw:flying kw:deathtouch',
-    howOffmetaHelps: `Instead of searching oracle text for the word "flying" (which would also match "flying carpet" or references to flight), OffMeta uses Scryfall's kw: operator. This targets the actual keyword abilities a card has. It also knows that "deathtouch" and "flying" are separate keywords and applies them as AND filters.`,
+    howOffmetaHelps: `Instead of searching oracle text for "flying" (which matches "flying carpet" or mentions of flight), OffMeta uses Scryfall's kw: operator. This targets the actual keyword abilities a card has, not just the word. It also recognises that "deathtouch" and "flying" are separate keywords and applies them as AND filters — returning only creatures that have both.`,
     tips: [
-      'OffMeta knows 80+ keyword abilities: haste, trample, lifelink, vigilance, menace, flash, hexproof, and many more.',
-      'Combine keywords: "creatures with haste and trample" finds creatures that have both.',
+      'OffMeta knows 100+ keyword abilities: haste, trample, lifelink, vigilance, menace, flash, hexproof, reach, ward, and many more.',
+      'Combine keywords: "creatures with haste and trample" finds creatures that have both simultaneously.',
       'Some keywords need oracle text search: "goad" and "annihilator" use o: instead of kw: for accuracy.',
-      'Try "evasion creatures" as a shortcut. OffMeta expands it to flying, menace, skulk, shadow, and more.',
+      'Try "evasion creatures" as a shortcut — OffMeta expands it to flying, menace, skulk, shadow, and more.',
+      'Search "all keywords" to browse the complete Magic: The Gathering keyword ability list via Scryfall.',
     ],
     relatedGuides: ['format-legality-search', 'ramp-and-card-draw'],
     faq: [
       {
+        question: 'What is the full list of MTG keyword abilities?',
+        answer:
+          'Magic: The Gathering has over 100 official keyword abilities. Evergreen keywords (always in print) include: Flying, First Strike, Double Strike, Deathtouch, Haste, Hexproof, Indestructible, Lifelink, Menace, Reach, Trample, Vigilance, and Ward. Deciduous keywords include Flash, Defender, and Equipment. Hundreds of set-specific keywords like Convoke, Delve, Escape, Kicker, Morph, and Cycling appear on older or returning sets. OffMeta maps all of them.',
+      },
+      {
         question: 'What is the difference between kw: and searching oracle text?',
         answer:
-          'The kw: operator checks a card\'s actual keyword abilities, not just text. Searching oracle text for "flying" might match cards that mention flying but don\'t have it. kw:flying only returns cards that actually have flying.',
+          'The kw: operator checks a card\'s actual keyword abilities, not just text. Searching oracle text for "flying" might match cards that mention flying but don\'t have it. kw:flying only returns cards that actually have Flying as a keyword.',
       },
       {
         question: 'Can I search for cards that GRANT keywords to others?',
         answer:
-          'Yes. Try "cards that give haste" or "haste enablers." OffMeta searches for oracle text that grants the ability to other creatures.',
+          'Yes. Try "cards that give haste" or "haste enablers." OffMeta searches oracle text for effects that grant the ability to other creatures, like "Swiftfoot Boots" or "Lightning Greaves."',
+      },
+      {
+        question: 'What MTG keywords work with the kw: search operator?',
+        answer:
+          'Scryfall\'s kw: operator works with all officially keyworded abilities: Flying, Haste, Trample, Deathtouch, Lifelink, Vigilance, Reach, Menace, Flash, Hexproof, Indestructible, First Strike, Double Strike, Ward, Convoke, Escape, Kicker, Cycling, and many more. OffMeta handles the translation automatically.',
       },
     ],
   },
