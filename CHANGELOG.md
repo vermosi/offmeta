@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Nightly pattern promotion** (`generate-patterns-nightly`): `pg_cron` job registered at 03:00 UTC daily via `pg_net.http_post`. Scans the last 30 days of `translation_logs`, promotes queries with ≥3 occurrences and ≥0.8 confidence into `translation_rules` (up to 50 per run), and skips patterns that already have a matching rule.
+- **Pattern promotion thresholds tightened**: `generate-patterns` `MIN_OCCURRENCES` lowered from 3 → 2 to catch faster-rising patterns; new `MIN_RESULT_COUNT = 1` guard added to both the DB query filter and the candidate filter so only queries that returned ≥1 Scryfall result are ever promoted, eliminating zero-result noise in `translation_rules`. Rule `description` now records both occurrence count and minimum result count.
+- **Nightly log cleanup** (`cleanup-logs-nightly`): `pg_cron` job registered at 02:00 UTC daily via `pg_net.http_post`. Deletes `translation_logs` and `analytics_events` rows older than 30 days; ensures the pattern-promotion window is always clean when `generate-patterns` fires at 03:00 UTC.
+- **Nightly pattern promotion** (`generate-patterns-nightly`): `pg_cron` job registered at 03:00 UTC daily via `pg_net.http_post`. Scans the last 30 days of `translation_logs`, promotes qualifying queries into `translation_rules` (up to 50 per run), and skips patterns that already have a matching rule.
 - **Admin feedback queue panel**: Upgraded feedback section in the analytics dashboard with full pipeline status visibility (pending / processing / completed / failed / skipped / duplicate / updated_existing), inline display of the AI-generated `translation_rules` row (pattern, Scryfall syntax, confidence), one-click approve/reject toggle on `translation_rules.is_active`, and a re-trigger button for failed/skipped items.
 - **`pg_cron` + `pg_net` extensions**: Enabled via idempotent migration (`create extension if not exists`) required for scheduled HTTP calls from the database.
 
