@@ -8,6 +8,7 @@ import { ChevronDown, ChevronRight, Minus, Plus, Trash2, ChevronUp, ArrowRightLe
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { CardHoverImage } from '@/components/deckbuilder/CardHoverImage';
 import { SetBadge, PrintingPickerPopover } from '@/components/deckbuilder/PrintingPickerPopover';
+import { useTranslation } from '@/lib/i18n';
 import type { DeckCard } from '@/hooks/useDeck';
 import type { ScryfallCard } from '@/types/card';
 import type { CardPrinting } from '@/lib/scryfall/printings';
@@ -28,6 +29,7 @@ export function MaybeboardSection({
   cards, onRemove, onSetQuantity, onMoveToMainboard, onMoveToSideboard,
   isReadOnly, scryfallCache, onChangePrinting, cacheVersion,
 }: MaybeboardSectionProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const totalQty = cards.reduce((sum, c) => sum + c.quantity, 0);
 
@@ -38,12 +40,12 @@ export function MaybeboardSection({
       <Collapsible open={open} onOpenChange={setOpen}>
         <CollapsibleTrigger className="flex items-center gap-2 w-full px-3 py-2 hover:bg-secondary/30 transition-colors rounded-lg text-left">
           {open ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
-          <span className="text-xs font-semibold text-muted-foreground">Maybeboard</span>
+          <span className="text-xs font-semibold text-muted-foreground">{t('deckEditor.maybeboard')}</span>
           <span className="text-[10px] text-muted-foreground">({totalQty})</span>
         </CollapsibleTrigger>
         <CollapsibleContent>
           {cards.length === 0 ? (
-            <p className="px-3 py-2 text-[10px] text-muted-foreground">No cards yet. Use the ⋯ menu on any card to add here.</p>
+            <p className="px-3 py-2 text-[10px] text-muted-foreground">{t('deckEditor.maybeboardEmpty')}</p>
           ) : (
             <ul className="ml-2 border-l border-border/30">
               {cards.map((card) => (
@@ -62,10 +64,10 @@ export function MaybeboardSection({
                       />
                       <button onClick={() => onMoveToMainboard(card.id)}
                         className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
-                        title="Move to mainboard"><ChevronUp className="h-3 w-3" /></button>
+                        title={t('deckEditor.moveToMainboard')}><ChevronUp className="h-3 w-3" /></button>
                       <button onClick={() => onMoveToSideboard(card.id)}
                         className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
-                        title="Move to sideboard"><ArrowRightLeft className="h-3 w-3" /></button>
+                        title={t('deckEditor.moveToSideboard')}><ArrowRightLeft className="h-3 w-3" /></button>
                       <button onClick={() => onSetQuantity(card.id, card.quantity - 1)} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
                         <Minus className="h-3 w-3" /></button>
                       <button onClick={() => onSetQuantity(card.id, card.quantity + 1)} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">

@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { CardHoverImage } from '@/components/deckbuilder/CardHoverImage';
 import { SetBadge, PrintingPickerPopover } from '@/components/deckbuilder/PrintingPickerPopover';
+import { useTranslation } from '@/lib/i18n';
 import type { DeckCard } from '@/hooks/useDeck';
 import type { ScryfallCard } from '@/types/card';
 import type { CardPrinting } from '@/lib/scryfall/printings';
@@ -45,6 +46,7 @@ export function CategorySection({
   onSetCategory, onMoveToSideboard, onMoveToMaybeboard, isReadOnly,
   selectedCardId, onSelectCard, scryfallCache, onChangePrinting, cacheVersion,
 }: CategorySectionProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(true);
   const totalQty = cards.reduce((sum, c) => sum + c.quantity, 0);
 
@@ -90,7 +92,7 @@ export function CategorySection({
                   />
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors" title="Change category"
+                      <button className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors" title={t('deckEditor.changeCategory')}
                         onClick={(e) => e.stopPropagation()}>
                         <Pencil className="h-3 w-3" />
                       </button>
@@ -106,22 +108,22 @@ export function CategorySection({
                   </DropdownMenu>
                   <button onClick={(e) => { e.stopPropagation(); onSetCommander(card.id, !card.is_commander); }}
                     className={cn('p-1 rounded text-muted-foreground hover:text-accent transition-colors', card.is_commander && 'text-accent')}
-                    aria-label="Toggle commander" title="Set as commander"><Crown className="h-3 w-3" /></button>
+                    aria-label={t('deckEditor.setAsCommander')} title={t('deckEditor.setAsCommander')}><Crown className="h-3 w-3" /></button>
                   <button onClick={(e) => { e.stopPropagation(); onSetCompanion(card.id, !card.is_companion); }}
                     className={cn('p-1 rounded text-muted-foreground hover:text-primary transition-colors', card.is_companion && 'text-primary')}
-                    aria-label="Toggle companion" title="Set as companion"><Shield className="h-3 w-3" /></button>
+                    aria-label={t('deckEditor.setAsCompanion')} title={t('deckEditor.setAsCompanion')}><Shield className="h-3 w-3" /></button>
                   <button onClick={(e) => { e.stopPropagation(); onMoveToSideboard(card.id, true); }}
                     className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
-                    title="Move to sideboard (Shift+S)"><ArrowRightLeft className="h-3 w-3" /></button>
+                    title={t('deckEditor.moveToSideboard')}><ArrowRightLeft className="h-3 w-3" /></button>
                   <button onClick={(e) => { e.stopPropagation(); onMoveToMaybeboard(card.id); }}
                     className="p-1 rounded text-muted-foreground hover:text-muted-foreground/60 hover:text-foreground transition-colors"
-                    title="Move to maybeboard"><List className="h-3 w-3" /></button>
+                    title={t('deckEditor.moveToMaybeboard')}><List className="h-3 w-3" /></button>
                   <button onClick={(e) => { e.stopPropagation(); onSetQuantity(card.id, card.quantity - 1); }} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
                     <Minus className="h-3 w-3" /></button>
                   <button onClick={(e) => { e.stopPropagation(); onSetQuantity(card.id, card.quantity + 1); }} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
                     <Plus className="h-3 w-3" /></button>
                   <button onClick={(e) => { e.stopPropagation(); onRemove(card.id); }} className="p-1 rounded text-muted-foreground hover:text-destructive transition-colors"
-                    title="Remove (Del)">
+                    title={t('deckEditor.removeCard')}>
                     <Trash2 className="h-3 w-3" /></button>
                 </div>
               )}
