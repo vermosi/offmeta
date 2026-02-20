@@ -4,7 +4,14 @@
  * Analyzes translation_logs to find high-frequency, high-confidence queries
  * and creates translation_rules to bypass AI for future identical searches.
  *
- * Run manually or via cron to reduce AI costs over time.
+ * Promotion criteria (all must hold):
+ *  - Seen ≥ MIN_OCCURRENCES times in the last 30 days
+ *  - Average confidence ≥ MIN_CONFIDENCE
+ *  - Returned ≥ MIN_RESULT_COUNT Scryfall results (filters zero-result noise)
+ *  - No existing translation_rules row matches the normalized query form
+ *
+ * Run manually or via cron (cleanup-logs-nightly runs at 02:00 UTC first,
+ * then this job fires at 03:00 UTC so the 30-day window is always fresh).
  *
  * @module generate-patterns
  */
@@ -22,9 +29,11 @@ const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = validateEnv([
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 // Minimum requirements for a query to become a pattern
-const MIN_OCCURRENCES = 3;
+const MIN_OCCURRENCES = 2;   // lowered from 3 — catches faster-rising patterns
 const MIN_CONFIDENCE = 0.8;
+const MIN_RESULT_COUNT = 1;  // must have returned at least one Scryfall result
 const MAX_NEW_PATTERNS = 50;
+
 
 /**
  * Normalizes a query for pattern matching (order-independent, lowercase)
@@ -79,9 +88,10 @@ serve(async (req) => {
 
     const { data: logs, error: logsError } = await supabase
       .from('translation_logs')
-      .select('natural_language_query, translated_query, confidence_score')
+      .select('natural_language_query, translated_query, confidence_score, result_count')
       .gte('created_at', thirtyDaysAgo.toISOString())
       .gte('confidence_score', MIN_CONFIDENCE)
+      .gte('result_count', MIN_RESULT_COUNT)
       .eq('fallback_used', false)
       .order('created_at', { ascending: false })
       .limit(5000);
@@ -112,6 +122,7 @@ serve(async (req) => {
       bestTranslation: string;
       bestConfidence: number;
       originalQuery: string;
+      minResultCount: number; // lowest result_count seen across occurrences
     }
 
     const queryFrequency = new Map<string, QueryData>();
@@ -119,9 +130,11 @@ serve(async (req) => {
     for (const log of logs) {
       const normalized = normalizePattern(log.natural_language_query);
       const existing = queryFrequency.get(normalized);
+      const resultCount = log.result_count ?? 0;
 
       if (existing) {
         existing.count++;
+        existing.minResultCount = Math.min(existing.minResultCount, resultCount);
         // Keep the highest confidence translation
         if (log.confidence_score > existing.bestConfidence) {
           existing.bestTranslation = log.translated_query;
@@ -133,15 +146,18 @@ serve(async (req) => {
           bestTranslation: log.translated_query,
           bestConfidence: log.confidence_score,
           originalQuery: log.natural_language_query,
+          minResultCount: resultCount,
         });
       }
     }
 
-    // Filter to queries meeting minimum occurrences and not already patterns
+    // Filter to queries meeting minimum occurrences, result count, and not already patterns
     const candidates = Array.from(queryFrequency.entries())
       .filter(
         ([normalized, data]) =>
-          data.count >= MIN_OCCURRENCES && !existingPatterns.has(normalized),
+          data.count >= MIN_OCCURRENCES &&
+          data.minResultCount >= MIN_RESULT_COUNT &&
+          !existingPatterns.has(normalized),
       )
       .sort((a, b) => b[1].count - a[1].count)
       .slice(0, MAX_NEW_PATTERNS);
@@ -168,7 +184,7 @@ serve(async (req) => {
       pattern: data.originalQuery.toLowerCase().trim(),
       scryfall_syntax: data.bestTranslation,
       confidence: data.bestConfidence,
-      description: `Auto-generated from ${data.count} occurrences`,
+      description: `Auto-generated: ${data.count} occurrences, min ${data.minResultCount} result(s)`,
       is_active: true,
     }));
 
