@@ -38,8 +38,9 @@ const STORAGE_KEY = 'offmeta-locale';
 /**
  * Maps a BCP-47 browser language tag (e.g. "fr-FR", "zh-Hans-CN") to the
  * closest supported app locale, or returns null if no match.
+ * Exported for unit testing only.
  */
-function detectBrowserLocale(): SupportedLocale | null {
+export function detectBrowserLocale(): SupportedLocale | null {
   try {
     const langs = navigator.languages?.length ? navigator.languages : [navigator.language];
     for (const lang of langs) {
