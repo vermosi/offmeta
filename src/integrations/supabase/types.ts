@@ -280,13 +280,6 @@ export type Database = {
             referencedRelation: "translation_rules"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "search_feedback_generated_rule_id_fkey"
-            columns: ["generated_rule_id"]
-            isOneToOne: false
-            referencedRelation: "translation_rules"
-            referencedColumns: ["id"]
-          },
         ]
       }
       translation_logs: {
