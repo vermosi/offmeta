@@ -191,15 +191,15 @@ describe('usePrefetchPopularQueries', () => {
       wrapper: createWrapper(),
     });
 
-    // Before 3s: no calls
+    // Before 8s: no calls yet (first fires at 8000ms)
     expect(mockInvoke).not.toHaveBeenCalled();
 
-    // After 3s: first prefetch fires
-    vi.advanceTimersByTime(3100);
+    // After 8s: first prefetch fires
+    vi.advanceTimersByTime(8100);
     expect(mockInvoke).toHaveBeenCalledTimes(1);
 
-    // After 5s: second prefetch fires
-    vi.advanceTimersByTime(2000);
+    // After 3s more: second prefetch fires (8000 + 1*3000 = 11000ms total)
+    vi.advanceTimersByTime(3000);
     expect(mockInvoke).toHaveBeenCalledTimes(2);
   });
 });

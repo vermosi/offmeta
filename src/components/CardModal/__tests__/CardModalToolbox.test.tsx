@@ -57,6 +57,7 @@ describe('CardModalToolbox', () => {
     expect(windowOpenSpy).toHaveBeenCalledWith(
       expect.stringContaining('edhrec.com'),
       '_blank',
+      'noopener,noreferrer',
     );
   });
 
@@ -67,6 +68,7 @@ describe('CardModalToolbox', () => {
     expect(windowOpenSpy).toHaveBeenCalledWith(
       expect.stringContaining('moxfield.com'),
       '_blank',
+      'noopener,noreferrer',
     );
   });
 
@@ -77,6 +79,7 @@ describe('CardModalToolbox', () => {
     expect(windowOpenSpy).toHaveBeenCalledWith(
       'https://scryfall.com/card/leb/161/lightning-bolt',
       '_blank',
+      'noopener,noreferrer',
     );
   });
 
@@ -92,6 +95,7 @@ describe('CardModalToolbox', () => {
     expect(windowOpenSpy).toHaveBeenCalledWith(
       expect.stringContaining('Korvold%2C%20Fae-Cursed%20King'),
       '_blank',
+      'noopener,noreferrer',
     );
   });
 
@@ -132,6 +136,7 @@ describe('CardModalToolbox', () => {
     expect(windowOpenSpy).toHaveBeenCalledWith(
       expect.stringContaining('mtggoldfish.com/price/Lightning+Bolt'),
       '_blank',
+      'noopener,noreferrer',
     );
   });
 
@@ -142,6 +147,7 @@ describe('CardModalToolbox', () => {
     expect(windowOpenSpy).toHaveBeenCalledWith(
       expect.stringContaining('gatherer.wizards.com'),
       '_blank',
+      'noopener,noreferrer',
     );
   });
 });

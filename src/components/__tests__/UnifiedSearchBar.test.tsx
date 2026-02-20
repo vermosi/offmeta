@@ -78,7 +78,7 @@ describe('UnifiedSearchBar', () => {
 
   it('renders example query buttons when input is empty', () => {
     render(<UnifiedSearchBar {...defaultProps} />);
-    expect(screen.getByRole('group', { name: /example searches/i })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: /try searching for/i })).toBeInTheDocument();
     expect(screen.getByText('creatures that make treasure tokens')).toBeInTheDocument();
     expect(screen.getByText('cheap green ramp spells')).toBeInTheDocument();
   });
@@ -86,7 +86,7 @@ describe('UnifiedSearchBar', () => {
   it('hides examples when query is typed', () => {
     render(<UnifiedSearchBar {...defaultProps} />);
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'test' } });
-    expect(screen.queryByRole('group', { name: /example searches/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: /try searching for/i })).not.toBeInTheDocument();
   });
 
   it('shows clear button when query has text', () => {

@@ -20,7 +20,7 @@ describe('CLIENT_CONFIG', () => {
     expect(CLIENT_CONFIG.RESULT_CACHE_TTL_MS).toBe(30 * 60 * 1000);
     expect(CLIENT_CONFIG.MAX_CACHE_SIZE).toBe(50);
     expect(CLIENT_CONFIG.TRANSLATION_STALE_TIME_MS).toBe(24 * 60 * 60 * 1000);
-    expect(CLIENT_CONFIG.CARD_SEARCH_STALE_TIME_MS).toBe(5 * 60 * 1000);
+    expect(CLIENT_CONFIG.CARD_SEARCH_STALE_TIME_MS).toBe(15 * 60 * 1000);
   });
 
   it('exports rate limiting settings', () => {
