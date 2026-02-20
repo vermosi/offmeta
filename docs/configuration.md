@@ -25,3 +25,43 @@ Copy `.env.example` to `.env` and populate the values.
 ## Cache controls
 
 The semantic search edge function accepts a `useCache` flag in the request body. Set `useCache: false` to bypass all cache layers for debugging.
+
+## Scheduled jobs
+
+Cron jobs are registered in the database using `pg_cron` (enabled via migration). They fire HTTP requests to edge functions via `pg_net`.
+
+| Job name | Schedule | Function | Purpose |
+| --- | --- | --- | --- |
+| `generate-patterns-nightly` | `0 3 * * *` (03:00 UTC) | `generate-patterns` | Promote high-confidence translation logs (≥3 occurrences, ≥0.8 confidence) into `translation_rules` |
+
+### Verifying job registration
+
+```sql
+-- Confirm the job is registered
+select jobname, schedule, active from cron.job where jobname = 'generate-patterns-nightly';
+
+-- Check recent run results (the morning after first execution)
+select jobname, status, return_message, start_time
+from cron.job_run_details
+where jobname = 'generate-patterns-nightly'
+order by start_time desc
+limit 5;
+```
+
+### Adding a new cron job
+
+Use `cron.schedule()` via `supabase--insert` (not a migration) since the call embeds live project credentials:
+
+```sql
+select cron.schedule(
+  'my-job-name',
+  '0 2 * * *',
+  $$
+  select net.http_post(
+    url     := 'https://<project-ref>.supabase.co/functions/v1/<function-name>',
+    headers := '{"Content-Type": "application/json", "Authorization": "Bearer <anon-key>"}'::jsonb,
+    body    := '{}'::jsonb
+  ) as request_id;
+  $$
+);
+```

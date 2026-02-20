@@ -34,3 +34,13 @@ Yes. OffMeta supports 11 languages (en, es, fr, de, it, pt, ja, ko, ru, zhs, zht
 ## What Scryfall syntax does OffMeta use?
 
 OffMeta prefers `otag:` (Oracle Tags) for effect-based searches (e.g., `otag:card-draw`, `otag:removal`, `otag:counterspell`) as they are more accurate than raw oracle text searches. It uses `mv` (mana value) instead of the deprecated `cmc`. ETB effects use `o:"enters"` (short form) rather than the full phrase.
+
+## How does the feedback loop work?
+
+When you submit a correction via "Report Issue", it is stored as a `pending` feedback entry. The `process-feedback` backend function immediately analyzes it using AI (Gemini 2.5 Flash Lite) and, if the translation can be improved, generates a new `translation_rules` entry linked to your submission. Future identical searches will match the rule directly without going through AI at all.
+
+The nightly `generate-patterns` job additionally promotes any query seen 3+ times across all users with ≥80% confidence into a permanent rule. Admins can review, approve, or reject generated rules from the analytics dashboard's Feedback Queue panel.
+
+## How can I approve or reject AI-generated rules?
+
+Admins can visit the Admin Analytics page and use the Feedback Queue panel. Each feedback row shows its pipeline status and the AI-generated rule (pattern, Scryfall syntax, confidence). Clicking the approve/reject toggle immediately updates the rule's active state — approved rules are used by the translation pipeline; rejected rules are disabled but kept for audit purposes.

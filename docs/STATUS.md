@@ -21,11 +21,14 @@ OffMeta is a natural-language search frontend for Magic: The Gathering cards. It
 
 ## Known gaps / TODO
 
-- Add contract tests for Edge Functions when running locally.
-- Document deployment steps once finalized.
+- Schedule `cleanup-logs` as a nightly cron at 02:00 UTC (companion to `generate-patterns-nightly`) to enforce the 30-day `translation_logs` retention window before pattern promotion runs.
+- Add a formal FK constraint from `search_feedback.generated_rule_id` to `translation_rules.id` with `ON DELETE SET NULL` to enforce referential integrity at the database level.
 
 ## Recent additions
 
+- **Feedback auto-repair pipeline**: `process-feedback` edge function processes each user-submitted correction through Gemini 2.5 Flash Lite, generates a linked `translation_rules` row, and transitions the feedback row through `pending → processing → completed`. Fixed a 401 rejection that prevented anon callers from triggering the pipeline (`verify_jwt = false` added to config).
+- **Nightly pattern promotion** (`generate-patterns-nightly`): pg_cron job registered at 03:00 UTC. Scans the last 30 days of `translation_logs`, promotes queries with ≥3 occurrences and ≥0.8 confidence into `translation_rules` (up to 50 per run, with deduplication).
+- **Admin feedback queue panel**: Upgraded feedback section in the admin analytics dashboard — full pipeline status badges (pending/processing/completed/failed/skipped/duplicate/updated_existing), inline AI-generated `translation_rules` display (pattern, Scryfall syntax, confidence), and one-click approve/reject toggle.
 - **About Page** (`/about`): Cinematic 7-phase product story with animated stat counters, staggered scroll-reveal phase timeline, Evolution Arc milestone visualizer, and Phase 7 teaser cards. Includes BreadcrumbList JSON-LD, OG/Twitter meta tags, and a typewriter tagline cycling "Find the card. / Build the deck. / Discover the combo."
 - **Structured data (JSON-LD)**: BreadcrumbList schemas added to `/about`, `/docs`, `/combos`, `/deck-recs`, and `/archetypes`. `/guides` and individual guide pages already had breadcrumbs. All schemas mount/unmount cleanly via `useEffect`.
 - **i18n**: `header.about` key added across all 11 language files (en, de, es, fr, it, pt, ja, ko, ru, zh-Hans, zh-Hant). About page nav link is fully localized.

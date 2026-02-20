@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Nightly pattern promotion** (`generate-patterns-nightly`): `pg_cron` job registered at 03:00 UTC daily via `pg_net.http_post`. Scans the last 30 days of `translation_logs`, promotes queries with ≥3 occurrences and ≥0.8 confidence into `translation_rules` (up to 50 per run), and skips patterns that already have a matching rule.
+- **Admin feedback queue panel**: Upgraded feedback section in the analytics dashboard with full pipeline status visibility (pending / processing / completed / failed / skipped / duplicate / updated_existing), inline display of the AI-generated `translation_rules` row (pattern, Scryfall syntax, confidence), one-click approve/reject toggle on `translation_rules.is_active`, and a re-trigger button for failed/skipped items.
+- **`pg_cron` + `pg_net` extensions**: Enabled via idempotent migration (`create extension if not exists`) required for scheduled HTTP calls from the database.
+
+### Fixed
+
+- **`process-feedback` 401**: Added `verify_jwt = false` to `supabase/config.toml` so anon and unauthenticated callers can submit feedback corrections without receiving a JWT rejection from the Supabase gateway.
+
+
+
 - **About Page** (`/about`): Cinematic 7-phase product story. Features animated stat counters, staggered IntersectionObserver scroll-reveal phase timeline, Evolution Arc milestone block, and Phase 7 teaser cards. Includes BreadcrumbList JSON-LD, OG/Twitter meta tags, canonical tag, and a `useTypewriterCycle` hook cycling "Find the card. / Build the deck. / Discover the combo." with `prefers-reduced-motion` support.
 - **`useTypewriterCycle` hook**: Reusable always-on cycling typewriter hook (distinct from the session-gated search bar animation). Respects `prefers-reduced-motion`.
 - **JSON-LD BreadcrumbList schemas**: Added to `/about`, `/docs`, `/combos`, `/deck-recs`, `/archetypes`. Mount/unmount cleanly via `useEffect` with no DOM leaks.

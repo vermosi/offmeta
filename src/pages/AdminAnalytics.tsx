@@ -2,8 +2,21 @@
  * Admin analytics dashboard — shows search query metrics,
  * source breakdown, confidence distribution, popular queries,
  * response time percentiles, deterministic coverage trend,
- * low-confidence queries, and user-submitted search feedback.
- * Protected: requires admin role.
+ * low-confidence queries, and a full feedback queue panel.
+ *
+ * **Feedback queue** (upgraded panel):
+ * - Displays every `search_feedback` row with a color-coded pipeline
+ *   status badge: `pending` (amber) · `processing` (blue) ·
+ *   `completed` / `updated_existing` (green) · `failed` (red) ·
+ *   `skipped` / `duplicate` / `archived` (gray).
+ * - Inline display of the linked AI-generated `translation_rules` row
+ *   (pattern, Scryfall syntax, confidence %).
+ * - One-click approve/reject toggle: flips `translation_rules.is_active`
+ *   with an optimistic update that reverts on error.
+ * - Re-trigger button for `failed` and `skipped` rows — calls the
+ *   `process-feedback` edge function and resets status to `pending`.
+ *
+ * Protected: requires admin role (`user_roles.role = 'admin'`).
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
