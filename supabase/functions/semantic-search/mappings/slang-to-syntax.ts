@@ -471,6 +471,31 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     syntax: 'o:"destroy" o:"creature"',
     description: 'Creature destruction',
   },
+
+  // CRITICAL: "color [type] instants/sorceries that destroy X" patterns
+  // These prevent the AI from generating the impossible t:artifact t:instant combination.
+  // "white artifact instants that destroy" → white instants that destroy artifacts
+  {
+    pattern: /\b(white|mono[\s-]white)\s+artifact\s+instants?\s+that\s+(destroy|remove|exile)\b/gi,
+    syntax: 'c:w t:instant otag:artifact-removal',
+    description: 'White instant spells that destroy artifacts (not t:artifact t:instant which is impossible)',
+  },
+  {
+    pattern: /\b(white|mono[\s-]white)\s+artifact\s+sorceries?\s+that\s+(destroy|remove|exile)\b/gi,
+    syntax: 'c:w t:sorcery otag:artifact-removal',
+    description: 'White sorcery spells that destroy artifacts',
+  },
+  {
+    pattern: /\b(white|mono[\s-]white)\s+artifact\s+(instants?\s+or\s+sorceries?|sorceries?\s+or\s+instants?)\s+that\s+(destroy|remove|exile)\b/gi,
+    syntax: 'c:w (t:instant or t:sorcery) otag:artifact-removal',
+    description: 'White instants or sorceries that destroy artifacts',
+  },
+  // Guard against "color enchantment instants that destroy" (same impossible combo)
+  {
+    pattern: /\benchantment\s+instants?\s+that\s+(destroy|remove|exile)\b/gi,
+    syntax: 't:instant otag:enchantment-removal',
+    description: 'Instants that destroy enchantments (not t:enchantment t:instant which is impossible)',
+  },
   {
     pattern: /\bplaneswalker\s+hate\b/gi,
     syntax: '(o:"destroy" o:"planeswalker" or o:"damage" o:"planeswalker")',
