@@ -401,6 +401,76 @@ IMPORTANT: Only output the JSON object, nothing else.`;
           ruleData.scryfall_syntax,
         );
 
+        // ──────────────────────────────────────────────────────────────────
+        // SCRYFALL VALIDATION GATE
+        // Test the generated syntax against the live Scryfall API before
+        // writing anything to translation_rules. A 404 or 0-result response
+        // means the query is broken (e.g. impossible type combos like
+        // t:artifact t:instant) and must never reach the rules table.
+        // ──────────────────────────────────────────────────────────────────
+        const scryfallValidationUrl = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(
+          ruleData.scryfall_syntax,
+        )}&extras=true`;
+
+        let scryfallOk = false;
+        let scryfallTotalCards = 0;
+        let scryfallError = '';
+
+        try {
+          const scryfallResp = await fetch(scryfallValidationUrl, {
+            headers: { 'User-Agent': 'OffMeta/1.0 (feedback-validator)' },
+          });
+
+          if (scryfallResp.status === 200) {
+            const scryfallData = await scryfallResp.json();
+            scryfallTotalCards = scryfallData.total_cards ?? 0;
+            scryfallOk = scryfallTotalCards > 0;
+            if (!scryfallOk) {
+              scryfallError = `Query returned 0 results (total_cards=0)`;
+            }
+          } else if (scryfallResp.status === 404) {
+            // Consume body to avoid resource leak
+            await scryfallResp.text();
+            scryfallError = `Scryfall returned 404 — query matched no cards`;
+          } else {
+            const errBody = await scryfallResp.text();
+            scryfallError = `Scryfall returned HTTP ${scryfallResp.status}: ${errBody.slice(0, 200)}`;
+          }
+        } catch (fetchErr) {
+          // Network error — treat as inconclusive, allow the rule through
+          // to avoid blocking rules on transient Scryfall downtime
+          console.warn(
+            `Scryfall validation network error for feedback ${feedback.id}:`,
+            fetchErr,
+          );
+          scryfallOk = true; // fail-open on network errors
+        }
+
+        if (!scryfallOk) {
+          console.error(
+            `Scryfall validation FAILED for feedback ${feedback.id}:`,
+            scryfallError,
+            `| syntax: "${ruleData.scryfall_syntax}"`,
+          );
+          await supabase
+            .from('search_feedback')
+            .update({
+              processing_status: 'failed',
+              processed_at: new Date().toISOString(),
+            })
+            .eq('id', feedback.id);
+          results.push({
+            feedbackId: feedback.id,
+            status: `failed - no_results: ${scryfallError}`,
+          });
+          continue;
+        }
+
+        console.log(
+          `Scryfall validation PASSED for feedback ${feedback.id}:`,
+          `"${ruleData.scryfall_syntax}" returned ${scryfallTotalCards} cards`,
+        );
+
         // Check for duplicate patterns - but if this is a retry, update the existing rule
         const { data: existingRule } = await supabase
           .from('translation_rules')
