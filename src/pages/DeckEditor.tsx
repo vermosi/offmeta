@@ -464,7 +464,7 @@ export default function DeckEditor() {
 
   // ── Category sections ──
   const categorySection = (
-    <>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
       {grouped.map(([category, catCards]) => (
         <CategorySection key={category} category={category} cards={catCards}
           isReadOnly={isReadOnly} selectedCardId={selectedCardId}
@@ -494,7 +494,7 @@ export default function DeckEditor() {
         scryfallCache={scryfallCacheRef}
         onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
         cacheVersion={scryfallCacheVersion} />
-    </>
+    </div>
   );
 
   // ── Deck List Content ──
