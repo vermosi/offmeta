@@ -108,22 +108,42 @@ describe('scryfall client', () => {
     expect(result).toEqual(['Sol Ring', 'Soul Warden']);
   });
 
-  it('fetches random cards and named cards with error handling', async () => {
-    vi.spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(mockResponse(buildCard({ id: 'random-card' })))
-      .mockResolvedValueOnce(mockResponse(buildCard({ id: 'named-card' })))
-      .mockResolvedValueOnce(mockResponse({ object: 'error' }, 500))
-      .mockResolvedValueOnce(mockResponse({ object: 'error' }, 404));
+  it('getRandomCard returns a card on success', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      mockResponse(buildCard({ id: 'random-card' })),
+    );
 
-    const { getRandomCard, getCardByName } = await loadModule();
+    const { getRandomCard } = await loadModule();
+    const card = await getRandomCard();
+    expect(card.id).toBe('random-card');
+  });
 
-    const randomCard = await getRandomCard();
-    expect(randomCard.id).toBe('random-card');
+  it('getCardByName returns a card on success', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      mockResponse(buildCard({ id: 'named-card' })),
+    );
 
-    const namedCard = await getCardByName('Test Card');
-    expect(namedCard.id).toBe('named-card');
+    const { getCardByName } = await loadModule();
+    const card = await getCardByName('Test Card');
+    expect(card.id).toBe('named-card');
+  });
 
+  it('getRandomCard throws on server error after retries', async () => {
+    // Mock all attempts (initial + retries) as 500
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      mockResponse({ object: 'error' }, 500),
+    );
+
+    const { getRandomCard } = await loadModule();
     await expect(getRandomCard()).rejects.toThrow(/Failed to get random card/i);
+  });
+
+  it('getCardByName throws on 404', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      mockResponse({ object: 'error' }, 404),
+    );
+
+    const { getCardByName } = await loadModule();
     await expect(getCardByName('Missing Card')).rejects.toThrow(
       /Card not found/i,
     );
@@ -193,9 +213,9 @@ describe('scryfall client', () => {
     expect(getCardFaceDetails(doubleFacedCard, 1).name).toBe('Back');
     expect(getCardFaceDetails(cardWithImage).name).toBe('Test Card');
 
-    expect(getRarityColor('mythic')).toBe('text-orange-400');
+    expect(getRarityColor('mythic')).toBe('text-warning');
     expect(getRarityColor('rare')).toBe('text-gold');
-    expect(getRarityColor('uncommon')).toBe('text-slate-300');
+    expect(getRarityColor('uncommon')).toBe('text-muted-foreground');
     expect(getRarityColor('common')).toBe('text-muted-foreground');
 
     expect(formatManaSymbols('{2}{W}{U}')).toEqual(['2', 'W', 'U']);

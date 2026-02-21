@@ -39,6 +39,9 @@ function getSearchCache(key: string): SearchResult | null {
     searchResultCache.delete(key);
     return null;
   }
+  // LRU touch: delete + re-insert moves entry to end of Map iteration order
+  searchResultCache.delete(key);
+  searchResultCache.set(key, entry);
   return entry.data;
 }
 
@@ -367,11 +370,11 @@ export function getCardFaceDetails(card: ScryfallCard, faceIndex: number = 0, lo
 export function getRarityColor(rarity: string): string {
   switch (rarity) {
     case 'mythic':
-      return 'text-orange-400';
+      return 'text-warning';
     case 'rare':
       return 'text-gold';
     case 'uncommon':
-      return 'text-slate-300';
+      return 'text-muted-foreground';
     default:
       return 'text-muted-foreground';
   }
