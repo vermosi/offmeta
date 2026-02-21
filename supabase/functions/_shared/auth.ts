@@ -71,7 +71,9 @@ export function validateAuth(req: Request) {
  */
 export function getCorsHeaders(req: Request) {
   const origin = req.headers.get('Origin');
-  const allowedOrigins = Deno.env.get('ALLOWED_ORIGINS')?.split(',') || ['*'];
+  const allowedOrigins = (Deno.env.get('ALLOWED_ORIGINS')?.split(',') || ['*']).map(
+    (o) => o.trim().replace(/\/+$/, ''),
+  );
 
   let corsOrigin = '*';
   if (
