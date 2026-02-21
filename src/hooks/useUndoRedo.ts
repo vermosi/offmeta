@@ -38,6 +38,21 @@ export function useUndoRedo() {
     return action;
   }, []);
 
+  /** Undo multiple actions at once (jump to a point in history). */
+  const undoTo = useCallback(async (index: number) => {
+    const count = undoStack.current.length - index;
+    let last: UndoableAction | null = null;
+    for (let i = 0; i < count; i++) {
+      const action = undoStack.current.pop();
+      if (!action) break;
+      await action.undo();
+      redoStack.current.push(action);
+      last = action;
+    }
+    setVersion((v) => v + 1);
+    return last;
+  }, []);
+
   const redo = useCallback(async () => {
     const action = redoStack.current.pop();
     if (!action) return null;
@@ -56,10 +71,15 @@ export function useUndoRedo() {
   return {
     push,
     undo,
+    undoTo,
     redo,
     clear,
     canUndo: undoStack.current.length > 0,
     canRedo: redoStack.current.length > 0,
+    /** Read-only snapshot of undo labels (oldest first) */
+    undoLabels: undoStack.current.map((a) => a.label),
+    /** Read-only snapshot of redo labels (most recent first) */
+    redoLabels: [...redoStack.current].reverse().map((a) => a.label),
     /** Subscribe to changes by reading this value */
     version,
   };

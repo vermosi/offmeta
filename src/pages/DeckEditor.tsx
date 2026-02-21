@@ -8,7 +8,7 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import {
   ArrowLeft, List, Crown, Check, Sparkles, Wand2, Loader2, Zap, Shield,
-  Keyboard, DollarSign, LayoutGrid, Columns3, SortAsc, Pencil, ChevronRight, Eye, EyeOff, Undo2, Redo2,
+  Keyboard, DollarSign, LayoutGrid, Columns3, SortAsc, Pencil, ChevronRight, Eye, EyeOff, Undo2, Redo2, History, ChevronDown,
 } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -567,6 +567,45 @@ export default function DeckEditor() {
             className={cn('p-1.5 rounded transition-colors', undoRedo.canRedo ? 'text-muted-foreground hover:text-foreground hover:bg-secondary/50' : 'text-muted-foreground/30 cursor-not-allowed')}>
             <Redo2 className="h-3.5 w-3.5" />
           </button>
+          {(undoRedo.canUndo || undoRedo.canRedo) && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button title="Action history"
+                  className="p-1.5 rounded transition-colors text-muted-foreground hover:text-foreground hover:bg-secondary/50 flex items-center gap-0.5">
+                  <History className="h-3.5 w-3.5" />
+                  <ChevronDown className="h-2.5 w-2.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56 max-h-72 overflow-y-auto bg-popover z-50">
+                {/* Redo items (future) shown at top, faded */}
+                {undoRedo.redoLabels.map((label, i) => (
+                  <DropdownMenuItem key={`redo-${i}`}
+                    onClick={() => undoRedo.redo().then((a) => { if (a) toast({ title: `Redo: ${a.label}` }); })}
+                    className="text-xs text-muted-foreground/50 italic flex items-center gap-2">
+                    <Redo2 className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{label}</span>
+                  </DropdownMenuItem>
+                ))}
+                {/* Current state marker */}
+                <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium text-accent border-y border-border bg-accent/5">
+                  <div className="h-1.5 w-1.5 rounded-full bg-accent shrink-0" />
+                  Current state
+                </div>
+                {/* Undo items (past) shown below, most recent first */}
+                {[...undoRedo.undoLabels].reverse().map((label, i) => {
+                  const stackIndex = undoRedo.undoLabels.length - 1 - i;
+                  return (
+                    <DropdownMenuItem key={`undo-${i}`}
+                      onClick={() => undoRedo.undoTo(stackIndex).then((a) => { if (a) toast({ title: `Undid ${undoRedo.undoLabels.length - stackIndex} action(s)` }); })}
+                      className="text-xs flex items-center gap-2">
+                      <Undo2 className="h-3 w-3 shrink-0 text-muted-foreground" />
+                      <span className="truncate">{label}</span>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       )}
       <div className="flex-1" />
