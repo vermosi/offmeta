@@ -3,6 +3,7 @@
  */
 
 import { useEffect } from 'react';
+import { applySeoMeta } from '@/lib/seo';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -17,31 +18,37 @@ export default function ArchetypesIndex() {
   const { t } = useTranslation();
 
   useEffect(() => {
-    const prev = document.title;
-    document.title = 'Commander Archetypes — OffMeta MTG';
-    const injectJsonLd = () => {
-      const s = document.createElement('script');
-      s.type = 'application/ld+json';
-      s.id = 'archetypes-jsonld';
-      s.textContent = JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'BreadcrumbList',
-        itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'OffMeta', item: 'https://offmeta.app/' },
-          { '@type': 'ListItem', position: 2, name: 'Archetypes', item: 'https://offmeta.app/archetypes' },
-        ],
-      });
-      document.head.appendChild(s);
-    };
-    injectJsonLd();
-    return () => {
-      document.title = prev;
-      document.getElementById('archetypes-jsonld')?.remove();
-    };
+    return applySeoMeta({
+      title: 'Commander Archetypes — Voltron, Aristocrats, Tokens & More | OffMeta',
+      description: `Explore ${ARCHETYPES.length} Commander archetypes with strategy guides, key cards, budget tips, and pre-built searches. Find your playstyle for EDH.`,
+      url: 'https://offmeta.app/archetypes',
+      type: 'website',
+    });
   }, []);
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'OffMeta', item: 'https://offmeta.app/' },
+      { '@type': 'ListItem', position: 2, name: 'Archetypes', item: 'https://offmeta.app/archetypes' },
+    ],
+  };
+
+  const collectionJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'Commander Archetypes',
+    description: `Explore ${ARCHETYPES.length} Commander archetypes with strategy guides and key cards.`,
+    url: 'https://offmeta.app/archetypes',
+    publisher: { '@type': 'Organization', name: 'OffMeta' },
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background relative">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }} />
+
       <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
       <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
 
