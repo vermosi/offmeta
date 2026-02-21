@@ -14,7 +14,7 @@ import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useDeck, useDeckCards, useDeckMutations, useDeckCardMutations } from '@/hooks/useDeck';
+import { useDeck, useDeckCards, useDeckMutations } from '@/hooks/useDeck';
 import type { DeckCard } from '@/hooks/useDeck';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/core/utils';
@@ -41,9 +41,11 @@ import { CardPreviewPanel } from '@/components/deckbuilder/CardPreviewPanel';
 import type { CardSuggestion } from '@/components/deckbuilder/SuggestionsPanel';
 import { useDeckPrice } from '@/hooks/useDeckPrice';
 import { useUndoRedo } from '@/hooks/useUndoRedo';
+import { useDeckActions } from '@/hooks/useDeckActions';
+import { useDeckKeyboardShortcuts } from '@/hooks/useDeckKeyboardShortcuts';
 import { sortDeckCards } from '@/lib/deckbuilder/sort-deck-cards';
 import type { DeckSortMode } from '@/lib/deckbuilder/sort-deck-cards';
-import { inferCategory, DEFAULT_CATEGORY } from '@/lib/deckbuilder/infer-category';
+import { DEFAULT_CATEGORY } from '@/lib/deckbuilder/infer-category';
 import { FORMAT_LABELS } from '@/data/formats';
 
 type DeckViewMode = 'list' | 'visual' | 'pile';
@@ -59,7 +61,12 @@ export default function DeckEditor() {
   const { data: deck, isLoading: deckLoading } = useDeck(id);
   const { data: cards = [], isLoading: cardsLoading } = useDeckCards(id);
   const { updateDeck } = useDeckMutations();
-  const { addCard, removeCard, setQuantity, updateCard } = useDeckCardMutations(id);
+  const undoRedo = useUndoRedo();
+  const {
+    addCard, updateCard, removeCard,
+    handleAddCard: handleAddCardBase, handleRemoveCard, handleSetQuantity,
+    handleMoveToSideboard, handleMoveToMaybeboard,
+  } = useDeckActions({ deckId: id, cards, undoRedo });
 
   const [previewCard, setPreviewCard] = useState<ScryfallCard | null>(null);
   const [editingName, setEditingName] = useState(false);
@@ -79,7 +86,17 @@ export default function DeckEditor() {
   const [scryfallCacheVersion, setScryfallCacheVersion] = useState(0);
   const importProcessedRef = useRef(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const undoRedo = useUndoRedo();
+
+  // ── Keyboard Shortcuts (extracted hook) ──
+  useDeckKeyboardShortcuts({
+    user, selectedCardId, cards, undoRedo, searchInputRef,
+    onSelectCard: setSelectedCardId,
+    onToggleShortcuts: (open?: boolean) => setShortcutsOpen(open !== undefined ? open : (o: boolean) => !o),
+    onRemove: handleRemoveCard,
+    onSetQuantity: handleSetQuantity,
+    onMoveToSideboard: handleMoveToSideboard,
+    onMoveToMaybeboard: handleMoveToMaybeboard,
+  });
 
   // When a card is selected in the deck list, also load its preview
   const handleSelectCard = useCallback((cardId: string) => {
@@ -108,125 +125,27 @@ export default function DeckEditor() {
     return () => { printingsByName.clear(); cardImageFetchCache.clear(); };
   }, []);
 
-  // ── Keyboard Shortcuts ──
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement).tagName;
-      const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable;
-
-      // Ctrl+Z / Ctrl+Shift+Z work even in inputs
-      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
-        e.preventDefault();
-        undoRedo.undo().then((a) => { if (a) toast({ title: `Undo: ${a.label}` }); });
-        return;
-      }
-      if ((e.metaKey || e.ctrlKey) && (e.key === 'Z' || (e.key === 'z' && e.shiftKey)) ) {
-        e.preventDefault();
-        undoRedo.redo().then((a) => { if (a) toast({ title: `Redo: ${a.label}` }); });
-        return;
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'y') {
-        e.preventDefault();
-        undoRedo.redo().then((a) => { if (a) toast({ title: `Redo: ${a.label}` }); });
-        return;
-      }
-
-      if (e.key === '?' && !isInput) { e.preventDefault(); setShortcutsOpen((o) => !o); return; }
-      if (isInput || !user) return;
-      if (e.key === '/') { e.preventDefault(); searchInputRef.current?.focus(); return; }
-
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedCardId) {
-        e.preventDefault();
-        const card = cards?.find(c => c.id === selectedCardId);
-        if (card) {
-          removeCard.mutate(selectedCardId);
-          undoRedo.push({
-            label: `Remove ${card.card_name}`,
-            undo: () => addCard.mutateAsync({ card_name: card.card_name, quantity: card.quantity, board: card.board, category: card.category || undefined, is_commander: card.is_commander, is_companion: card.is_companion, scryfall_id: card.scryfall_id || undefined }),
-            redo: () => removeCard.mutateAsync(selectedCardId),
-          });
+  // ── Handle Add Card (wraps base with AI categorization) ──
+  const handleAddCard = useCallback(async (card: ScryfallCard) => {
+    scryfallCacheRef.current.set(card.name, card);
+    setScryfallCacheVersion((v) => v + 1);
+    setPreviewCard(card);
+    const typeCategory = await handleAddCardBase(card);
+    try {
+      const { data, error } = await supabase.functions.invoke('deck-categorize', { body: { cards: [card.name] } });
+      if (!error && data?.categories?.[card.name]) {
+        const aiCategory = data.categories[card.name];
+        if (aiCategory !== typeCategory) {
+          setTimeout(async () => {
+            const { data: deckCards } = await supabase.from('deck_cards').select('id')
+              .eq('deck_id', id!).eq('card_name', card.name).eq('board', 'mainboard')
+              .order('created_at', { ascending: false }).limit(1).single();
+            if (deckCards) updateCard.mutate({ id: deckCards.id, category: aiCategory });
+          }, 500);
         }
-        setSelectedCardId(null);
-        return;
       }
-
-      if ((e.key === '+' || e.key === '=') && selectedCardId) {
-        e.preventDefault();
-        const card = cards?.find(c => c.id === selectedCardId);
-        if (card) {
-          const oldQty = card.quantity;
-          setQuantity.mutate({ cardId: selectedCardId, quantity: oldQty + 1 });
-          undoRedo.push({
-            label: `${card.card_name} qty ${oldQty}→${oldQty + 1}`,
-            undo: () => setQuantity.mutateAsync({ cardId: selectedCardId, quantity: oldQty }),
-            redo: () => setQuantity.mutateAsync({ cardId: selectedCardId, quantity: oldQty + 1 }),
-          });
-        }
-        return;
-      }
-
-      if (e.key === '-' && selectedCardId) {
-        e.preventDefault();
-        const card = cards?.find(c => c.id === selectedCardId);
-        if (card) {
-          const oldQty = card.quantity;
-          if (oldQty <= 1) {
-            removeCard.mutate(selectedCardId);
-            undoRedo.push({
-              label: `Remove ${card.card_name}`,
-              undo: () => addCard.mutateAsync({ card_name: card.card_name, quantity: 1, board: card.board, category: card.category || undefined, is_commander: card.is_commander, is_companion: card.is_companion, scryfall_id: card.scryfall_id || undefined }),
-              redo: () => removeCard.mutateAsync(selectedCardId),
-            });
-            setSelectedCardId(null);
-          } else {
-            setQuantity.mutate({ cardId: selectedCardId, quantity: oldQty - 1 });
-            undoRedo.push({
-              label: `${card.card_name} qty ${oldQty}→${oldQty - 1}`,
-              undo: () => setQuantity.mutateAsync({ cardId: selectedCardId, quantity: oldQty }),
-              redo: () => setQuantity.mutateAsync({ cardId: selectedCardId, quantity: oldQty - 1 }),
-            });
-          }
-        }
-        return;
-      }
-
-      if (e.key === 'S' && e.shiftKey && selectedCardId) {
-        e.preventDefault();
-        const card = cards?.find(c => c.id === selectedCardId);
-        if (card) {
-          const oldBoard = card.board;
-          updateCard.mutate({ id: selectedCardId, board: 'sideboard' });
-          undoRedo.push({
-            label: `Move ${card.card_name} to sideboard`,
-            undo: () => updateCard.mutateAsync({ id: selectedCardId, board: oldBoard }),
-            redo: () => updateCard.mutateAsync({ id: selectedCardId, board: 'sideboard' }),
-          });
-        }
-        setSelectedCardId(null);
-        return;
-      }
-
-      if (e.key === 'M' && e.shiftKey && selectedCardId) {
-        e.preventDefault();
-        const card = cards?.find(c => c.id === selectedCardId);
-        if (card) {
-          const oldBoard = card.board;
-          updateCard.mutate({ id: selectedCardId, board: 'maybeboard' });
-          undoRedo.push({
-            label: `Move ${card.card_name} to maybeboard`,
-            undo: () => updateCard.mutateAsync({ id: selectedCardId, board: oldBoard }),
-            redo: () => updateCard.mutateAsync({ id: selectedCardId, board: 'maybeboard' }),
-          });
-        }
-        setSelectedCardId(null);
-        return;
-      }
-
-      if (e.key === 'Escape') { setSelectedCardId(null); setShortcutsOpen(false); }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [user, selectedCardId, removeCard, updateCard, setQuantity, cards, addCard, undoRedo]);
+    } catch { /* silent */ }
+  }, [handleAddCardBase, id, updateCard]);
 
   // ── Handle imported cards ──
   useEffect(() => {
@@ -278,40 +197,6 @@ export default function DeckEditor() {
   );
 
   // ── Handlers ──
-  const handleAddCard = useCallback(async (card: ScryfallCard) => {
-    scryfallCacheRef.current.set(card.name, card);
-    setScryfallCacheVersion((v) => v + 1);
-    setPreviewCard(card);
-    const typeCategory = inferCategory(card);
-    addCard.mutate({ card_name: card.name, category: typeCategory, scryfall_id: card.id });
-    // Push undo for the add — undo removes the card we just added
-    undoRedo.push({
-      label: `Add ${card.name}`,
-      undo: async () => {
-        // Find the card row that was just added
-        const { data: rows } = await supabase.from('deck_cards').select('id')
-          .eq('deck_id', id!).eq('card_name', card.name).eq('board', 'mainboard')
-          .order('created_at', { ascending: false }).limit(1).single();
-        if (rows) removeCard.mutateAsync(rows.id);
-      },
-      redo: () => addCard.mutateAsync({ card_name: card.name, category: typeCategory, scryfall_id: card.id }),
-    });
-    try {
-      const { data, error } = await supabase.functions.invoke('deck-categorize', { body: { cards: [card.name] } });
-      if (!error && data?.categories?.[card.name]) {
-        const aiCategory = data.categories[card.name];
-        if (aiCategory !== typeCategory) {
-          setTimeout(async () => {
-            const { data: deckCards } = await supabase.from('deck_cards').select('id')
-              .eq('deck_id', id!).eq('card_name', card.name).eq('board', 'mainboard')
-              .order('created_at', { ascending: false }).limit(1).single();
-            if (deckCards) updateCard.mutate({ id: deckCards.id, category: aiCategory });
-          }, 500);
-        }
-      }
-    } catch { /* silent */ }
-  }, [addCard, id, updateCard, removeCard, undoRedo]);
-
   const handleRecategorizeAll = useCallback(async () => {
     if (cards.length === 0) return;
     setCategorizingAll(true);
@@ -381,66 +266,6 @@ export default function DeckEditor() {
 
   const handleSetCategory = useCallback((cardId: string, category: string) => { updateCard.mutate({ id: cardId, category }); }, [updateCard]);
 
-  const handleMoveToSideboard = useCallback((cardId: string, toSideboard: boolean) => {
-    const card = cards.find(c => c.id === cardId);
-    if (card) {
-      const oldBoard = card.board;
-      const newBoard = toSideboard ? 'sideboard' : 'mainboard';
-      updateCard.mutate({ id: cardId, board: newBoard });
-      undoRedo.push({
-        label: `Move ${card.card_name} to ${newBoard}`,
-        undo: () => updateCard.mutateAsync({ id: cardId, board: oldBoard }),
-        redo: () => updateCard.mutateAsync({ id: cardId, board: newBoard }),
-      });
-    } else {
-      updateCard.mutate({ id: cardId, board: toSideboard ? 'sideboard' : 'mainboard' });
-    }
-  }, [updateCard, cards, undoRedo]);
-
-  const handleMoveToMaybeboard = useCallback((cardId: string) => {
-    const card = cards.find(c => c.id === cardId);
-    if (card) {
-      const oldBoard = card.board;
-      updateCard.mutate({ id: cardId, board: 'maybeboard' });
-      undoRedo.push({
-        label: `Move ${card.card_name} to maybeboard`,
-        undo: () => updateCard.mutateAsync({ id: cardId, board: oldBoard }),
-        redo: () => updateCard.mutateAsync({ id: cardId, board: 'maybeboard' }),
-      });
-    } else {
-      updateCard.mutate({ id: cardId, board: 'maybeboard' });
-    }
-  }, [updateCard, cards, undoRedo]);
-
-  const handleRemoveCard = useCallback((cardId: string) => {
-    const card = cards.find(c => c.id === cardId);
-    if (card) {
-      removeCard.mutate(cardId);
-      undoRedo.push({
-        label: `Remove ${card.card_name}`,
-        undo: () => addCard.mutateAsync({ card_name: card.card_name, quantity: card.quantity, board: card.board, category: card.category || undefined, is_commander: card.is_commander, is_companion: card.is_companion, scryfall_id: card.scryfall_id || undefined }),
-        redo: () => removeCard.mutateAsync(cardId),
-      });
-    } else {
-      removeCard.mutate(cardId);
-    }
-  }, [removeCard, addCard, cards, undoRedo]);
-
-  const handleSetQuantity = useCallback((cardId: string, qty: number) => {
-    const card = cards.find(c => c.id === cardId);
-    if (card) {
-      const oldQty = card.quantity;
-      setQuantity.mutate({ cardId, quantity: qty });
-      undoRedo.push({
-        label: `${card.card_name} qty ${oldQty}→${qty}`,
-        undo: () => setQuantity.mutateAsync({ cardId, quantity: oldQty }),
-        redo: () => setQuantity.mutateAsync({ cardId, quantity: qty }),
-      });
-    } else {
-      setQuantity.mutate({ cardId, quantity: qty });
-    }
-  }, [setQuantity, cards, undoRedo]);
-
   const handleTogglePublic = useCallback(() => {
     if (!deck || !id) return;
     updateDeck.mutate({ id, is_public: !deck.is_public });
@@ -481,7 +306,6 @@ export default function DeckEditor() {
   // ── Deck Header ──
   const deckHeader = (
     <div className="border-b border-border bg-card">
-      {/* Top row: nav + name + actions */}
       <div className="px-4 py-3 flex items-center gap-3">
         <Link to="/deckbuilder" className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors shrink-0">
           <ArrowLeft className="h-4 w-4" />
@@ -500,7 +324,6 @@ export default function DeckEditor() {
           </button>
         )}
 
-        {/* Inline stats badges */}
         <div className="flex items-center gap-2 shrink-0">
           {!isReadOnly && (
             <DropdownMenu>
@@ -544,7 +367,6 @@ export default function DeckEditor() {
         {!isReadOnly && <DeckExportMenu deck={deck} cards={cards} onTogglePublic={handleTogglePublic} />}
       </div>
 
-      {/* Commander / Companion badges + description */}
       {(deck.commander_name || deck.companion_name || !isReadOnly) && (
         <div className="px-4 pb-2 flex items-center gap-2 flex-wrap">
           {deck.commander_name && (
@@ -586,7 +408,6 @@ export default function DeckEditor() {
     </div>
   );
 
-  // ── Inline Search Bar (below header) ──
   const searchBar = !isReadOnly && (
     <div className="px-4 py-3 border-b border-border bg-card/50">
       <InlineCardSearch onAddCard={handleAddCard} onPreview={setPreviewCard} searchInputRef={searchInputRef} />
@@ -647,7 +468,6 @@ export default function DeckEditor() {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-56 max-h-72 overflow-y-auto bg-popover z-50">
-                {/* Redo items (future) shown at top, faded */}
                 {undoRedo.redoLabels.map((label, i) => (
                   <DropdownMenuItem key={`redo-${i}`}
                     onClick={() => undoRedo.redo().then((a) => { if (a) toast({ title: `Redo: ${a.label}` }); })}
@@ -656,12 +476,10 @@ export default function DeckEditor() {
                     <span className="truncate">{label}</span>
                   </DropdownMenuItem>
                 ))}
-                {/* Current state marker */}
                 <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium text-accent border-y border-border bg-accent/5">
                   <div className="h-1.5 w-1.5 rounded-full bg-accent shrink-0" />
                   Current state
                 </div>
-                {/* Undo items (past) shown below, most recent first */}
                 {[...undoRedo.undoLabels].reverse().map((label, i) => {
                   const stackIndex = undoRedo.undoLabels.length - 1 - i;
                   return (
@@ -777,18 +595,16 @@ export default function DeckEditor() {
     <DeckStatsBar cards={mainboardCards} scryfallCache={scryfallCacheRef.current} formatMax={formatMax} cacheVersion={scryfallCacheVersion} />
   );
 
-  // ── Desktop Layout: header → search → [deck list | preview sidebar] → stats ──
+  // ── Desktop Layout ──
   const desktopLayout = (
     <div className="flex-1 flex flex-col overflow-hidden">
       {deckHeader}
       {searchBar}
       <div className="flex-1 flex overflow-hidden">
-        {/* Main deck list */}
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
           {viewSortToolbar}
           {deckListContent}
         </div>
-        {/* Preview sidebar */}
         {previewOpen && (
           <div className="w-80 border-l border-border bg-card flex flex-col overflow-hidden shrink-0">
             <CardPreviewPanel {...previewPanelProps} />
@@ -810,7 +626,6 @@ export default function DeckEditor() {
         {deckListContent}
       </div>
       {statsBar}
-      {/* Mobile preview drawer */}
       {previewOpen && previewCard && isMobile && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm" onClick={() => setPreviewOpen(false)}>
           <div className="absolute bottom-0 left-0 right-0 bg-card border-t border-border rounded-t-2xl max-h-[70vh] overflow-y-auto"
