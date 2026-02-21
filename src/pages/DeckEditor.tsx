@@ -520,6 +520,31 @@ export default function DeckEditor() {
     </div>
   );
 
+  const mainCount = mainboardCards.reduce((s, c) => s + c.quantity, 0);
+  const sideCount = sideboardCards.reduce((s, c) => s + c.quantity, 0);
+  const maybeCount = maybeboardCards.reduce((s, c) => s + c.quantity, 0);
+
+  const deckCountBar = cards.length > 0 && (
+    <div className="flex items-center gap-3 px-4 py-1.5 border-t border-border bg-card text-xs text-muted-foreground">
+      <span className="font-semibold text-foreground">{mainCount}</span>
+      <span>main deck</span>
+      {sideCount > 0 && (
+        <>
+          <span className="text-border">/</span>
+          <span className="font-semibold text-foreground">{sideCount}</span>
+          <span>sideboard</span>
+        </>
+      )}
+      {maybeCount > 0 && (
+        <>
+          <span className="text-border">/</span>
+          <span className="font-semibold text-foreground">{maybeCount}</span>
+          <span>maybe</span>
+        </>
+      )}
+    </div>
+  );
+
   const statsBar = cards.length > 0 && (
     <DeckStatsBar cards={mainboardCards} scryfallCache={scryfallCacheRef.current} formatMax={formatMax} cacheVersion={scryfallCacheVersion} />
   );
@@ -542,6 +567,8 @@ export default function DeckEditor() {
           </div>
         )}
       </div>
+      {deckCountBar}
+      {deckCountBar}
       {statsBar}
     </div>
   );
