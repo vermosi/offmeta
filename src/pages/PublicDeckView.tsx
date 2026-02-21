@@ -128,28 +128,32 @@ function usePublicDeckCards(deckId: string | undefined) {
 
 /** Progressively fetch Scryfall data for all cards. */
 function useScryfallHydration(cards: DeckCard[]) {
-  const cacheRef = useRef<Map<string, ScryfallCard>>(new Map());
+  const [scryfallMap, setScryfallMap] = useState<Map<string, ScryfallCard>>(new Map());
   const [version, setVersion] = useState(0);
+  const fetchedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (cards.length === 0) return;
     let cancelled = false;
     const names = [...new Set(cards.map((c) => c.card_name))];
-    const missing = names.filter((n) => !cacheRef.current.has(n));
+    const missing = names.filter((n) => !fetchedRef.current.has(n));
 
-    // Batch fetch in groups of 10
     const fetchBatch = async (batch: string[]) => {
       for (const name of batch) {
         if (cancelled) return;
+        fetchedRef.current.add(name);
         try {
           const res = await searchCards(`!"${name}"`);
           const sc = res.data?.[0];
           if (sc) {
-            cacheRef.current.set(name, sc);
+            setScryfallMap((prev) => {
+              const next = new Map(prev);
+              next.set(name, sc);
+              return next;
+            });
             setVersion((v) => v + 1);
           }
         } catch { /* silent */ }
-        // Small delay to not hammer Scryfall
         await new Promise((r) => setTimeout(r, 80));
       }
     };
@@ -158,7 +162,7 @@ function useScryfallHydration(cards: DeckCard[]) {
     return () => { cancelled = true; };
   }, [cards]);
 
-  return { cacheRef, version };
+  return { scryfallMap, version };
 }
 
 export default function PublicDeckView() {
@@ -166,7 +170,7 @@ export default function PublicDeckView() {
   const { user } = useAuth();
   const { data: deck, isLoading: deckLoading, error: deckError } = usePublicDeck(id);
   const { data: cards = [], isLoading: cardsLoading } = usePublicDeckCards(id);
-  const { cacheRef, version } = useScryfallHydration(cards);
+  const { scryfallMap, version } = useScryfallHydration(cards);
   const [copied, setCopied] = useState(false);
 
   useOpenGraphMeta(deck, cards);
@@ -193,8 +197,6 @@ export default function PublicDeckView() {
   const totalMainboard = mainboardCards.reduce((s, c) => s + c.quantity, 0);
   const formatConfig = FORMATS.find((f) => f.value === deck?.format) ?? FORMATS[0];
 
-  // Dereference the ref once so we don't read .current during render in children
-  const scryfallMap = cacheRef.current;
 
   const handleCopyUrl = () => {
     navigator.clipboard.writeText(window.location.href);
