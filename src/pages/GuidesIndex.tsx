@@ -3,6 +3,7 @@
  */
 
 import { useEffect } from 'react';
+import { applySeoMeta } from '@/lib/seo';
 import { Link } from 'react-router-dom';
 import { GUIDES } from '@/data/guides';
 import { Footer } from '@/components/Footer';
@@ -37,29 +38,39 @@ export default function GuidesIndex() {
   const { t } = useTranslation();
 
   useEffect(() => {
-    document.title = 'Search Guides — OffMeta MTG';
-    const setMeta = (name: string, content: string, attr = 'name') => {
-      let el = document.querySelector(`meta[${attr}="${name}"]`) as HTMLMetaElement | null;
-      if (!el) {
-        el = document.createElement('meta');
-        el.setAttribute(attr, name);
-        document.head.appendChild(el);
-      }
-      el.content = content;
-    };
-    setMeta('description', 'Learn how to search for Magic: The Gathering cards with OffMeta. 10 guides from basic type searches to complex multi-constraint queries.');
-    setMeta('og:title', 'Search Guides — OffMeta MTG', 'property');
-    setMeta('og:description', 'Learn how to search for Magic: The Gathering cards with OffMeta. 10 guides from basic to complex.', 'property');
-
-    return () => {
-      document.title = 'OffMeta — Natural Language MTG Card Search';
-    };
+    return applySeoMeta({
+      title: 'MTG Search Guides — Learn to Find Any Magic Card | OffMeta',
+      description: 'Master Magic: The Gathering card search with 10 progressive guides. From basic type searches to complex multi-constraint queries. Find any card using natural language.',
+      url: 'https://offmeta.app/guides',
+      type: 'website',
+    });
   }, []);
 
   const sorted = [...GUIDES].sort((a, b) => a.level - b.level);
 
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'OffMeta', item: 'https://offmeta.app/' },
+      { '@type': 'ListItem', position: 2, name: 'Guides', item: 'https://offmeta.app/guides' },
+    ],
+  };
+
+  const collectionJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'MTG Search Guides',
+    description: 'Master Magic: The Gathering card search with 10 progressive guides.',
+    url: 'https://offmeta.app/guides',
+    publisher: { '@type': 'Organization', name: 'OffMeta' },
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }} />
+
       <SkipLinks />
       <Header />
 

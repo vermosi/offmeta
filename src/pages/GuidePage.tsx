@@ -3,6 +3,7 @@
  */
 
 import { useEffect } from 'react';
+import { applySeoMeta } from '@/lib/seo';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getGuideBySlug, GUIDES } from '@/data/guides';
 import { Footer } from '@/components/Footer';
@@ -22,37 +23,11 @@ export default function GuidePage() {
   // Update document head for SEO
   useEffect(() => {
     if (!guide) return;
-    document.title = guide.metaTitle;
-
-    const setMeta = (name: string, content: string, attr = 'name') => {
-      let el = document.querySelector(`meta[${attr}="${name}"]`) as HTMLMetaElement | null;
-      if (!el) {
-        el = document.createElement('meta');
-        el.setAttribute(attr, name);
-        document.head.appendChild(el);
-      }
-      el.content = content;
-    };
-
-    setMeta('description', guide.metaDescription);
-    setMeta('og:title', guide.metaTitle, 'property');
-    setMeta('og:description', guide.metaDescription, 'property');
-    setMeta('og:url', `https://offmeta.app/guides/${guide.slug}`, 'property');
-    setMeta('twitter:title', guide.metaTitle);
-    setMeta('twitter:description', guide.metaDescription);
-
-    let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
-    if (!canonical) {
-      canonical = document.createElement('link');
-      canonical.rel = 'canonical';
-      document.head.appendChild(canonical);
-    }
-    canonical.href = `https://offmeta.app/guides/${guide.slug}`;
-
-    return () => {
-      document.title = 'OffMeta — Natural Language MTG Card Search';
-      if (canonical) canonical.href = 'https://offmeta.app/';
-    };
+    return applySeoMeta({
+      title: guide.metaTitle,
+      description: guide.metaDescription,
+      url: `https://offmeta.app/guides/${guide.slug}`,
+    });
   }, [guide]);
 
   if (!guide) {

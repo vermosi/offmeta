@@ -1,23 +1,35 @@
 /**
  * Individual archetype page with description, auto-run search, key cards, and budget tips.
+ * Now includes full SEO: meta tags, Open Graph, canonical, JSON-LD.
  */
 
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useEffect, useCallback } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { ManaSymbol } from '@/components/ManaSymbol';
 import { ARCHETYPES } from '@/data/archetypes';
 import { ArrowLeft, Compass, Lightbulb, Star, DollarSign, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useCallback } from 'react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { SkipLinks } from '@/components/SkipLinks';
+import { applySeoMeta } from '@/lib/seo';
 
 export default function ArchetypePage() {
   const { t } = useTranslation();
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const archetype = ARCHETYPES.find((a) => a.slug === slug);
+
+  // SEO meta tags
+  useEffect(() => {
+    if (!archetype) return;
+    return applySeoMeta({
+      title: `${archetype.name} Commander Archetype — Strategy, Key Cards & Budget Tips | OffMeta`,
+      description: `${archetype.tagline}. Learn the ${archetype.name} strategy, discover key cards like ${archetype.keyCards.slice(0, 3).join(', ')}, and find budget alternatives for Commander.`,
+      url: `https://offmeta.app/archetypes/${archetype.slug}`,
+    });
+  }, [archetype]);
 
   const handleSearch = useCallback(
     (query: string) => {
@@ -50,24 +62,52 @@ export default function ArchetypePage() {
       a.colors.some((c) => archetype.colors.includes(c)),
   ).slice(0, 4);
 
+  // Structured data
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'OffMeta', item: 'https://offmeta.app/' },
+      { '@type': 'ListItem', position: 2, name: 'Archetypes', item: 'https://offmeta.app/archetypes' },
+      { '@type': 'ListItem', position: 3, name: archetype.name, item: `https://offmeta.app/archetypes/${archetype.slug}` },
+    ],
+  };
+
+  const articleJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: `${archetype.name} Commander Archetype — Strategy & Key Cards`,
+    description: archetype.tagline,
+    url: `https://offmeta.app/archetypes/${archetype.slug}`,
+    author: { '@type': 'Organization', name: 'OffMeta' },
+    publisher: { '@type': 'Organization', name: 'OffMeta' },
+    mainEntityOfPage: `https://offmeta.app/archetypes/${archetype.slug}`,
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background relative">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
+
       <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
       <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
 
       <SkipLinks />
       <Header />
 
-      <main id="main-content" className="relative flex-1 pt-6 sm:pt-10 pb-16">
-        <div className="container-main max-w-3xl">
-          <Link
-            to="/archetypes"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            {t('archetypes.allArchetypes')}
-          </Link>
+      {/* Breadcrumb nav */}
+      <nav className="container-main pt-4 sm:pt-6 pb-2" aria-label="Breadcrumb">
+        <ol className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <li><Link to="/" className="hover:text-foreground transition-colors">{t('nav.home')}</Link></li>
+          <li aria-hidden="true">/</li>
+          <li><Link to="/archetypes" className="hover:text-foreground transition-colors">{t('archetypes.allArchetypes')}</Link></li>
+          <li aria-hidden="true">/</li>
+          <li className="text-foreground font-medium truncate">{archetype.name}</li>
+        </ol>
+      </nav>
 
+      <main id="main-content" className="relative flex-1 pt-2 sm:pt-4 pb-16">
+        <div className="container-main max-w-3xl">
           {/* Header */}
           <div className="space-y-3 mb-8">
             <div className="flex items-center gap-2.5">
