@@ -114,14 +114,29 @@ export default function DeckEditor() {
       if (e.key === '?' && !isInput) { e.preventDefault(); setShortcutsOpen((o) => !o); return; }
       if (isInput || !user) return;
       if (e.key === '/') { e.preventDefault(); searchInputRef.current?.focus(); return; }
-      if (e.key === 'Delete' && selectedCardId) { e.preventDefault(); removeCard.mutate(selectedCardId); setSelectedCardId(null); return; }
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedCardId) { e.preventDefault(); removeCard.mutate(selectedCardId); setSelectedCardId(null); return; }
+      if ((e.key === '+' || e.key === '=') && selectedCardId) {
+        e.preventDefault();
+        const card = cards?.find(c => c.id === selectedCardId);
+        if (card) setQuantity.mutate({ cardId: selectedCardId, quantity: card.quantity + 1 });
+        return;
+      }
+      if (e.key === '-' && selectedCardId) {
+        e.preventDefault();
+        const card = cards?.find(c => c.id === selectedCardId);
+        if (card) {
+          if (card.quantity <= 1) { removeCard.mutate(selectedCardId); setSelectedCardId(null); }
+          else setQuantity.mutate({ cardId: selectedCardId, quantity: card.quantity - 1 });
+        }
+        return;
+      }
       if (e.key === 'S' && e.shiftKey && selectedCardId) { e.preventDefault(); updateCard.mutate({ id: selectedCardId, board: 'sideboard' }); setSelectedCardId(null); return; }
       if (e.key === 'M' && e.shiftKey && selectedCardId) { e.preventDefault(); updateCard.mutate({ id: selectedCardId, board: 'maybeboard' }); setSelectedCardId(null); return; }
       if (e.key === 'Escape') { setSelectedCardId(null); setShortcutsOpen(false); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [user, selectedCardId, removeCard, updateCard]);
+  }, [user, selectedCardId, removeCard, updateCard, setQuantity, cards]);
 
   // ── Handle imported cards ──
   useEffect(() => {
@@ -615,7 +630,8 @@ export default function DeckEditor() {
             <ul className="space-y-2 text-xs">
               {([
                 { keys: ['/'], desc: t('deckEditor.shortcuts.focusSearch') },
-                { keys: ['Del'], desc: t('deckEditor.shortcuts.removeCard') },
+                { keys: ['Del', '/', 'Backspace'], desc: t('deckEditor.shortcuts.removeCard') },
+                { keys: ['+', '/', '-'], desc: 'Adjust quantity' },
                 { keys: ['Shift', 'S'], desc: t('deckEditor.shortcuts.toSideboard') },
                 { keys: ['Shift', 'M'], desc: t('deckEditor.shortcuts.toMaybeboard') },
                 { keys: ['?'], desc: t('deckEditor.shortcuts.toggleHelp') },
