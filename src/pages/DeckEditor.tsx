@@ -521,7 +521,7 @@ export default function DeckEditor() {
   );
 
   const statsBar = cards.length > 0 && (
-    <DeckStatsBar cards={mainboardCards} scryfallCache={scryfallCacheRef.current} formatMax={formatMax} />
+    <DeckStatsBar cards={mainboardCards} scryfallCache={scryfallCacheRef.current} formatMax={formatMax} cacheVersion={scryfallCacheVersion} />
   );
 
   // ── Desktop Layout: header → search → [deck list | preview sidebar] → stats ──

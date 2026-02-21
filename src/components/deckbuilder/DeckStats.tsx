@@ -100,9 +100,11 @@ export interface DeckStatsData {
   cards: DeckCard[];
   scryfallCache: Map<string, ScryfallCard>;
   formatMax: number;
+  /** Bump this counter to force re-computation when the cache mutates in place. */
+  cacheVersion?: number;
 }
 
-export function DeckStatsBar({ cards, scryfallCache, formatMax }: DeckStatsData) {
+export function DeckStatsBar({ cards, scryfallCache, formatMax, cacheVersion }: DeckStatsData) {
   const { t } = useTranslation();
   const stats = useMemo(() => {
     const curve = new Array(8).fill(0);
@@ -162,7 +164,8 @@ export function DeckStatsBar({ cards, scryfallCache, formatMax }: DeckStatsData)
     const avgCmc = nonLandCount > 0 ? (totalCmc / nonLandCount).toFixed(2) : '0.00';
 
     return { curve, colorCounts, typeCounts, totalCards, avgCmc, totalPrice, priceCount };
-  }, [cards, scryfallCache]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cards, scryfallCache, cacheVersion]);
 
   return (
     <div className="border-t border-border bg-card px-4 py-2.5">
