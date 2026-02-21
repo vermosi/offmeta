@@ -3,14 +3,16 @@
  *
  * Deletes translation_logs older than 30 days to prevent database bloat.
  * Should be called via cron job or manual trigger.
+ * Requires admin role.
  *
  * @module cleanup-logs
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
+import { requireAdmin, getCorsHeaders } from '../_shared/auth.ts';
 import { validateEnv } from '../_shared/env.ts';
+import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
 
 const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = validateEnv([
   'SUPABASE_URL',
@@ -27,13 +29,21 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Verify authorization
-  const { authorized, error: authError } = validateAuth(req);
-  if (!authorized) {
-    return new Response(JSON.stringify({ error: authError, success: false }), {
-      status: 401,
-      headers: corsHeaders,
-    });
+  // Require admin role (not just any valid token)
+  const adminCheck = await requireAdmin(req, corsHeaders);
+  if (!adminCheck.authorized) {
+    return adminCheck.response;
+  }
+
+  // Rate limiting: 1 req/min (batch job)
+  maybeCleanup();
+  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const { allowed, retryAfter } = await checkRateLimit(clientIp, undefined, 1, 10);
+  if (!allowed) {
+    return new Response(
+      JSON.stringify({ error: 'Rate limit exceeded', success: false }),
+      { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': String(retryAfter) } },
+    );
   }
 
   const startTime = Date.now();

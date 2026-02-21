@@ -93,3 +93,86 @@ export function getCorsHeaders(req: Request) {
     'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
   };
 }
+
+/**
+ * Verifies the caller is an authenticated user with the 'admin' role.
+ * Uses getUser() + user_roles query (same pattern as admin-analytics).
+ *
+ * Returns `{ authorized: true, userId }` on success, or
+ * `{ authorized: false, response }` with a ready-to-return Response on failure.
+ */
+export async function requireAdmin(
+  req: Request,
+  corsHeaders: Record<string, string>,
+): Promise<
+  | { authorized: true; userId: string }
+  | { authorized: false; response: Response }
+> {
+  const headers = { ...corsHeaders, 'Content-Type': 'application/json' };
+
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return {
+      authorized: false,
+      response: new Response(
+        JSON.stringify({ error: 'Unauthorized', success: false }),
+        { status: 401, headers },
+      ),
+    };
+  }
+
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+  if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
+    return {
+      authorized: false,
+      response: new Response(
+        JSON.stringify({ error: 'Server misconfigured', success: false }),
+        { status: 500, headers },
+      ),
+    };
+  }
+
+  // Dynamic import to avoid top-level side effects in shared module
+  const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+
+  const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+
+  const {
+    data: { user },
+    error: userError,
+  } = await userClient.auth.getUser();
+  if (userError || !user) {
+    return {
+      authorized: false,
+      response: new Response(
+        JSON.stringify({ error: 'Unauthorized', success: false }),
+        { status: 401, headers },
+      ),
+    };
+  }
+
+  const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+  const { data: roleData } = await adminClient
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .eq('role', 'admin')
+    .maybeSingle();
+
+  if (!roleData) {
+    return {
+      authorized: false,
+      response: new Response(
+        JSON.stringify({ error: 'Forbidden: admin role required', success: false }),
+        { status: 403, headers },
+      ),
+    };
+  }
+
+  return { authorized: true, userId: user.id };
+}

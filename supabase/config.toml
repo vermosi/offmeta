@@ -14,3 +14,27 @@ verify_jwt = false
 
 [functions.deck-suggest]
 verify_jwt = false
+
+[functions.cleanup-logs]
+verify_jwt = false
+
+[functions.warmup-cache]
+verify_jwt = false
+
+[functions.generate-patterns]
+verify_jwt = false
+
+[functions.firecrawl-scrape]
+verify_jwt = false
+
+[functions.firecrawl-map]
+verify_jwt = false
+
+[functions.admin-analytics]
+verify_jwt = false
+
+[functions.combo-search]
+verify_jwt = false
+
+[functions.semantic-search]
+verify_jwt = false

@@ -41,6 +41,16 @@ serve(async (req) => {
       });
     }
 
+    // Validate card name lengths to prevent payload bloat
+    for (const c of cards) {
+      if (typeof c?.name === 'string' && c.name.length > 200) {
+        return new Response(JSON.stringify({ error: 'Card name exceeds 200 character limit' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     if (!LOVABLE_API_KEY) {
       return new Response(JSON.stringify({ error: 'AI not configured' }), {
         status: 500,

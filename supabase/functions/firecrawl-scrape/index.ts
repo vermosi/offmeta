@@ -1,11 +1,63 @@
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
-};
+/**
+ * Firecrawl Scrape Edge Function
+ *
+ * Proxies scrape requests to the Firecrawl API.
+ * Requires admin role. URL allowlisted to MTG-related domains.
+ */
+
+import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
+import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
+
+/** Domains allowed for scraping (SSRF prevention) */
+const ALLOWED_DOMAINS = [
+  'scryfall.com',
+  'moxfield.com',
+  'archidekt.com',
+  'edhrec.com',
+  'gatherer.wizards.com',
+  'tappedout.net',
+  'mtggoldfish.com',
+  'tcgplayer.com',
+  'cardkingdom.com',
+];
+
+function isAllowedUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return ALLOWED_DOMAINS.some(
+      (domain) =>
+        parsed.hostname === domain || parsed.hostname.endsWith(`.${domain}`),
+    );
+  } catch {
+    return false;
+  }
+}
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Require valid auth token
+  const { authorized, error: authError } = validateAuth(req);
+  if (!authorized) {
+    return new Response(
+      JSON.stringify({ success: false, error: authError || 'Unauthorized' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
+  }
+
+  // Rate limiting: 5 req/min
+  maybeCleanup();
+  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const { allowed, retryAfter } = await checkRateLimit(clientIp, undefined, 5, 50);
+  if (!allowed) {
+    return new Response(
+      JSON.stringify({ success: false, error: 'Rate limit exceeded' }),
+      { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': String(retryAfter) } },
+    );
   }
 
   try {
@@ -14,7 +66,7 @@ Deno.serve(async (req) => {
     if (!url) {
       return new Response(
         JSON.stringify({ success: false, error: 'URL is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
@@ -22,13 +74,21 @@ Deno.serve(async (req) => {
     if (!apiKey) {
       return new Response(
         JSON.stringify({ success: false, error: 'Firecrawl connector not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
     let formattedUrl = url.trim();
     if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
       formattedUrl = `https://${formattedUrl}`;
+    }
+
+    // SSRF protection: only allow MTG-related domains
+    if (!isAllowedUrl(formattedUrl)) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Domain not allowed' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
     }
 
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
@@ -50,19 +110,19 @@ Deno.serve(async (req) => {
     if (!response.ok) {
       return new Response(
         JSON.stringify({ success: false, error: data.error || `Request failed with status ${response.status}` }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
     return new Response(
       JSON.stringify(data),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Failed to scrape';
     return new Response(
       JSON.stringify({ success: false, error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
 });
