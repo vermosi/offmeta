@@ -1,9 +1,10 @@
 /**
  * Hook for deck CRUD operations and card management.
+ * All card mutations use optimistic updates for instant UI feedback.
  * @module hooks/useDeck
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -141,7 +142,30 @@ export function useDeckMutations() {
   return { createDeck, updateDeck, deleteDeck };
 }
 
-/** Mutations for card management within a deck. */
+// ── Optimistic update helpers ──
+
+/** Snapshot the current deck-cards cache for rollback. */
+function snapshotDeckCards(qc: QueryClient, deckId: string) {
+  return qc.getQueryData<DeckCard[]>(['deck-cards', deckId]) ?? [];
+}
+
+/** Apply an optimistic transform to the deck-cards cache. */
+function optimisticSet(qc: QueryClient, deckId: string, updater: (prev: DeckCard[]) => DeckCard[]) {
+  qc.setQueryData<DeckCard[]>(['deck-cards', deckId], (old) => updater(old ?? []));
+}
+
+/** Rollback to a previous snapshot. */
+function rollback(qc: QueryClient, deckId: string, snapshot: DeckCard[]) {
+  qc.setQueryData<DeckCard[]>(['deck-cards', deckId], snapshot);
+}
+
+/** Invalidate deck-related queries after mutation settles (success or error). */
+function settle(qc: QueryClient, deckId: string) {
+  qc.invalidateQueries({ queryKey: ['deck-cards', deckId] });
+  qc.invalidateQueries({ queryKey: ['deck', deckId] });
+}
+
+/** Mutations for card management within a deck — all with optimistic updates. */
 export function useDeckCardMutations(deckId: string | undefined) {
   const qc = useQueryClient();
 
@@ -157,8 +181,6 @@ export function useDeckCardMutations(deckId: string | undefined) {
     }) => {
       const board = card.board || 'mainboard';
       const qty = card.quantity || 1;
-      // Atomic upsert: unique constraint on (deck_id, card_name, board) prevents
-      // the race condition where two rapid clicks create duplicate rows.
       const { error } = await supabase
         .from('deck_cards')
         .upsert(
@@ -172,17 +194,43 @@ export function useDeckCardMutations(deckId: string | undefined) {
             is_companion: card.is_companion || false,
             scryfall_id: card.scryfall_id || null,
           },
-          {
-            onConflict: 'deck_id,card_name,board',
-            ignoreDuplicates: false,
-          },
+          { onConflict: 'deck_id,card_name,board', ignoreDuplicates: false },
         );
       if (error) throw error;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['deck-cards', deckId] });
-      qc.invalidateQueries({ queryKey: ['deck', deckId] });
+    onMutate: async (card) => {
+      await qc.cancelQueries({ queryKey: ['deck-cards', deckId] });
+      const snapshot = snapshotDeckCards(qc, deckId!);
+      const board = card.board || 'mainboard';
+      const qty = card.quantity || 1;
+      optimisticSet(qc, deckId!, (prev) => {
+        // If card already exists on this board, update quantity
+        const idx = prev.findIndex((c) => c.card_name === card.card_name && c.board === board);
+        if (idx >= 0) {
+          const updated = [...prev];
+          updated[idx] = { ...updated[idx], quantity: qty };
+          return updated;
+        }
+        // Otherwise add a temporary optimistic entry
+        return [...prev, {
+          id: `optimistic-${Date.now()}`,
+          deck_id: deckId!,
+          card_name: card.card_name,
+          quantity: qty,
+          board,
+          category: card.category || null,
+          is_commander: card.is_commander || false,
+          is_companion: card.is_companion || false,
+          scryfall_id: card.scryfall_id || null,
+          created_at: new Date().toISOString(),
+        }];
+      });
+      return { snapshot };
     },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.snapshot) rollback(qc, deckId!, ctx.snapshot);
+    },
+    onSettled: () => settle(qc, deckId!),
   });
 
   const updateCard = useMutation({
@@ -190,10 +238,18 @@ export function useDeckCardMutations(deckId: string | undefined) {
       const { error } = await supabase.from('deck_cards').update(updates).eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['deck-cards', deckId] });
-      qc.invalidateQueries({ queryKey: ['deck', deckId] });
+    onMutate: async ({ id, ...updates }) => {
+      await qc.cancelQueries({ queryKey: ['deck-cards', deckId] });
+      const snapshot = snapshotDeckCards(qc, deckId!);
+      optimisticSet(qc, deckId!, (prev) =>
+        prev.map((c) => (c.id === id ? { ...c, ...updates } : c)),
+      );
+      return { snapshot };
     },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.snapshot) rollback(qc, deckId!, ctx.snapshot);
+    },
+    onSettled: () => settle(qc, deckId!),
   });
 
   const removeCard = useMutation({
@@ -201,10 +257,16 @@ export function useDeckCardMutations(deckId: string | undefined) {
       const { error } = await supabase.from('deck_cards').delete().eq('id', cardId);
       if (error) throw error;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['deck-cards', deckId] });
-      qc.invalidateQueries({ queryKey: ['deck', deckId] });
+    onMutate: async (cardId) => {
+      await qc.cancelQueries({ queryKey: ['deck-cards', deckId] });
+      const snapshot = snapshotDeckCards(qc, deckId!);
+      optimisticSet(qc, deckId!, (prev) => prev.filter((c) => c.id !== cardId));
+      return { snapshot };
     },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.snapshot) rollback(qc, deckId!, ctx.snapshot);
+    },
+    onSettled: () => settle(qc, deckId!),
   });
 
   const setQuantity = useMutation({
@@ -220,10 +282,22 @@ export function useDeckCardMutations(deckId: string | undefined) {
         if (error) throw error;
       }
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['deck-cards', deckId] });
-      qc.invalidateQueries({ queryKey: ['deck', deckId] });
+    onMutate: async ({ cardId, quantity }) => {
+      await qc.cancelQueries({ queryKey: ['deck-cards', deckId] });
+      const snapshot = snapshotDeckCards(qc, deckId!);
+      if (quantity <= 0) {
+        optimisticSet(qc, deckId!, (prev) => prev.filter((c) => c.id !== cardId));
+      } else {
+        optimisticSet(qc, deckId!, (prev) =>
+          prev.map((c) => (c.id === cardId ? { ...c, quantity } : c)),
+        );
+      }
+      return { snapshot };
     },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.snapshot) rollback(qc, deckId!, ctx.snapshot);
+    },
+    onSettled: () => settle(qc, deckId!),
   });
 
   return { addCard, updateCard, removeCard, setQuantity };
