@@ -3,23 +3,16 @@
  *
  * Analyzes translation_logs to find high-frequency, high-confidence queries
  * and creates translation_rules to bypass AI for future identical searches.
- *
- * Promotion criteria (all must hold):
- *  - Seen ≥ MIN_OCCURRENCES times in the last 30 days
- *  - Average confidence ≥ MIN_CONFIDENCE
- *  - Returned ≥ MIN_RESULT_COUNT Scryfall results (filters zero-result noise)
- *  - No existing translation_rules row matches the normalized query form
- *
- * Run manually or via cron (cleanup-logs-nightly runs at 02:00 UTC first,
- * then this job fires at 03:00 UTC so the 30-day window is always fresh).
+ * Requires admin role.
  *
  * @module generate-patterns
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
+import { requireAdmin, getCorsHeaders } from '../_shared/auth.ts';
 import { validateEnv } from '../_shared/env.ts';
+import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
 
 const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = validateEnv([
   'SUPABASE_URL',
@@ -28,22 +21,17 @@ const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = validateEnv([
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-// Minimum requirements for a query to become a pattern
-const MIN_OCCURRENCES = 2;   // lowered from 3 — catches faster-rising patterns
+const MIN_OCCURRENCES = 2;
 const MIN_CONFIDENCE = 0.8;
-const MIN_RESULT_COUNT = 1;  // must have returned at least one Scryfall result
+const MIN_RESULT_COUNT = 1;
 const MAX_NEW_PATTERNS = 50;
 
-
-/**
- * Normalizes a query for pattern matching (order-independent, lowercase)
- */
 function normalizePattern(query: string): string {
   return query
     .toLowerCase()
     .trim()
     .replace(/\s+/g, ' ')
-    .replace(/[^\\w\\s]/g, '')
+    .replace(/[^\w\s]/g, '')
     .split(' ')
     .sort()
     .join(' ');
@@ -55,19 +43,26 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Verify authorization
-  const { authorized, error: authError } = validateAuth(req);
-  if (!authorized) {
-    return new Response(JSON.stringify({ error: authError, success: false }), {
-      status: 401,
-      headers: corsHeaders,
-    });
+  // Require admin role
+  const adminCheck = await requireAdmin(req, corsHeaders);
+  if (!adminCheck.authorized) {
+    return adminCheck.response;
+  }
+
+  // Rate limiting: 1 req/min (batch job)
+  maybeCleanup();
+  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const { allowed, retryAfter } = await checkRateLimit(clientIp, undefined, 1, 10);
+  if (!allowed) {
+    return new Response(
+      JSON.stringify({ error: 'Rate limit exceeded', success: false }),
+      { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': String(retryAfter) } },
+    );
   }
 
   const startTime = Date.now();
 
   try {
-    // Get existing patterns to avoid duplicates
     const { data: existingRules, error: rulesError } = await supabase
       .from('translation_rules')
       .select('pattern');
@@ -82,7 +77,6 @@ serve(async (req) => {
 
     console.log(`Found ${existingPatterns.size} existing patterns`);
 
-    // Find high-frequency, high-confidence translations from the last 30 days
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -116,13 +110,12 @@ serve(async (req) => {
 
     console.log(`Analyzing ${logs.length} translation logs`);
 
-    // Count query frequencies and track best translation
     interface QueryData {
       count: number;
       bestTranslation: string;
       bestConfidence: number;
       originalQuery: string;
-      minResultCount: number; // lowest result_count seen across occurrences
+      minResultCount: number;
     }
 
     const queryFrequency = new Map<string, QueryData>();
@@ -135,7 +128,6 @@ serve(async (req) => {
       if (existing) {
         existing.count++;
         existing.minResultCount = Math.min(existing.minResultCount, resultCount);
-        // Keep the highest confidence translation
         if (log.confidence_score > existing.bestConfidence) {
           existing.bestTranslation = log.translated_query;
           existing.bestConfidence = log.confidence_score;
@@ -151,7 +143,6 @@ serve(async (req) => {
       }
     }
 
-    // Filter to queries meeting minimum occurrences, result count, and not already patterns
     const candidates = Array.from(queryFrequency.entries())
       .filter(
         ([normalized, data]) =>
@@ -179,7 +170,6 @@ serve(async (req) => {
       );
     }
 
-    // Create new translation rules
     const newRules = candidates.map(([_, data]) => ({
       pattern: data.originalQuery.toLowerCase().trim(),
       scryfall_syntax: data.bestTranslation,

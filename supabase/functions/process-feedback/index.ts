@@ -44,7 +44,7 @@ serve(async (req) => {
     clientIp,
     supabase,
     5, // Stricter limit: 5 requests per 60 seconds
-    60000,
+    100, // Global limit: 100 requests per minute across all IPs
   );
   if (!allowed) {
     return new Response(

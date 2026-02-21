@@ -3,39 +3,17 @@
  *
  * Returns aggregated search analytics for the admin dashboard via the
  * `get_search_analytics` database RPC function.
- *
- * ### Response payload sections
- * - `summary` — total searches, avg confidence, AI usage rate, days window
- * - `daily_volume` — per-day search counts over the lookback window
- * - `source_distribution` — cache / deterministic / pattern_match / ai / raw_syntax breakdown
- * - `confidence_buckets` — histogram of confidence score ranges
- * - `response_percentiles` — p50 / p95 / p99 response times in ms
- * - `top_queries` — top 20 most-searched natural-language queries
- * - `low_confidence` — queries with confidence < 0.6 (up to `max_low_confidence`, default 20)
- * - `deterministic_trend` — daily deterministic-vs-AI ratio over the window
- *
- * ### Auth
- * Requires the caller's JWT to belong to a user with `role = 'admin'` in
- * `user_roles`. Checked via the service-role client before the RPC is invoked.
- * The RPC itself is called with the user's own JWT so `auth.uid()` resolves
- * correctly inside `get_search_analytics`.
- *
- * ### Query params
- * | Param  | Default | Range  | Description                  |
- * |--------|---------|--------|------------------------------|
- * | `days` | `7`     | 1–90   | Lookback window in whole days |
+ * Requires admin role (checked via getUser + user_roles query).
  *
  * @module admin-analytics
  */
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
-};
+import { getCorsHeaders } from '../_shared/auth.ts';
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -81,7 +59,6 @@ serve(async (req) => {
 
   try {
     // Call RPC using the user's JWT so auth.uid() resolves correctly inside the function
-    // (service role bypasses auth.uid(), causing the admin check to fail)
     const supabaseUserForRpc = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
       global: { headers: { Authorization: authHeader } },
     });
