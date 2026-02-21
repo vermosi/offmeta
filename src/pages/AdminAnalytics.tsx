@@ -610,6 +610,16 @@ export default function AdminAnalytics() {
     }
   }, [isAdmin, user, fetchAnalytics, fetchFeedback, fetchRules]);
 
+  // Poll feedback & rules every 30s as a fallback for realtime RLS limitations
+  useEffect(() => {
+    if (!isAdmin || !user) return;
+    const interval = setInterval(() => {
+      fetchFeedback();
+      fetchRules();
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, [isAdmin, user, fetchFeedback, fetchRules]);
+
   // Real-time subscriptions for live updates
   const [isLive, setIsLive] = useState(false);
   const liveCountRef = useRef(0);
