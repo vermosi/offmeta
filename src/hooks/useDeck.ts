@@ -125,7 +125,20 @@ export function useDeckMutations() {
       const { error } = await supabase.from('decks').update(updates).eq('id', id);
       if (error) throw error;
     },
-    onSuccess: (_, vars) => {
+    onMutate: async ({ id, ...updates }) => {
+      await qc.cancelQueries({ queryKey: ['deck', id] });
+      await qc.cancelQueries({ queryKey: ['decks'] });
+      const prevDeck = qc.getQueryData<Deck>(['deck', id]);
+      const prevDecks = qc.getQueryData<Deck[]>(['decks', user?.id]);
+      if (prevDeck) qc.setQueryData<Deck>(['deck', id], { ...prevDeck, ...updates });
+      if (prevDecks) qc.setQueryData<Deck[]>(['decks', user?.id], prevDecks.map((d) => d.id === id ? { ...d, ...updates } : d));
+      return { prevDeck, prevDecks };
+    },
+    onError: (_err, vars, ctx) => {
+      if (ctx?.prevDeck) qc.setQueryData(['deck', vars.id], ctx.prevDeck);
+      if (ctx?.prevDecks) qc.setQueryData(['decks', user?.id], ctx.prevDecks);
+    },
+    onSettled: (_, __, vars) => {
       qc.invalidateQueries({ queryKey: ['decks'] });
       qc.invalidateQueries({ queryKey: ['deck', vars.id] });
     },
@@ -136,7 +149,16 @@ export function useDeckMutations() {
       const { error } = await supabase.from('decks').delete().eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['decks'] }),
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: ['decks'] });
+      const prevDecks = qc.getQueryData<Deck[]>(['decks', user?.id]);
+      if (prevDecks) qc.setQueryData<Deck[]>(['decks', user?.id], prevDecks.filter((d) => d.id !== id));
+      return { prevDecks };
+    },
+    onError: (_err, _id, ctx) => {
+      if (ctx?.prevDecks) qc.setQueryData(['decks', user?.id], ctx.prevDecks);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ['decks'] }),
   });
 
   return { createDeck, updateDeck, deleteDeck };
