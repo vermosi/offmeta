@@ -35,6 +35,7 @@ const ArchetypesIndex = lazy(() => import('./pages/ArchetypesIndex'));
 const ArchetypePage = lazy(() => import('./pages/ArchetypePage'));
 const DeckBuilder = lazy(() => import('./pages/DeckBuilder'));
 const DeckEditor = lazy(() => import('./pages/DeckEditor'));
+const PublicDeckView = lazy(() => import('./pages/PublicDeckView'));
 const About = lazy(() => import('./pages/About'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
@@ -117,6 +118,7 @@ const App = () => (
                   <Route path="/archetypes/:slug" element={<ArchetypePage />} />
                   <Route path="/deckbuilder" element={<DeckBuilder />} />
                   <Route path="/deckbuilder/:id" element={<DeckEditor />} />
+                  <Route path="/deck/:id" element={<PublicDeckView />} />
                   <Route path="/about" element={<About />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
