@@ -568,7 +568,6 @@ export default function DeckEditor() {
         )}
       </div>
       {deckCountBar}
-      {deckCountBar}
       {statsBar}
     </div>
   );
