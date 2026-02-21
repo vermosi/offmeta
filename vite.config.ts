@@ -76,7 +76,7 @@ export default defineConfig(({ mode }) => ({
           },
         ],
         // Precache app shell
-        globPatterns: ['**/*.{js,css,html,ico,svg,png,woff2}'],
+        globPatterns: ['index.html', 'assets/*.{js,css}'],
       },
     }),
   ].filter(Boolean),

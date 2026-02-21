@@ -36,11 +36,11 @@ export interface DeckCard {
   created_at: string;
 }
 
-/** Ensure a session exists (anonymous if needed) for testing without signup. */
+/** Ensure a session exists. Throws if no session is available. */
 export async function ensureSession() {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) {
-    await supabase.auth.signInAnonymously();
+    throw new Error('No active session. Please sign in to continue.');
   }
 }
 

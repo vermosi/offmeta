@@ -17,6 +17,7 @@ import { usePrefetchPopularQueries } from '@/hooks/useSearchQuery';
 import { useRealtimeCache } from '@/hooks/useRealtimeCache';
 import { I18nProvider } from '@/lib/i18n';
 import { AuthProvider } from '@/components/AuthProvider';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { supabase } from '@/integrations/supabase/client';
 
 const Index = lazy(() => import('./pages/Index'));
@@ -98,6 +99,7 @@ const App = () => (
             <Sonner />
             <AppInitializer />
             <BrowserRouter>
+              <ErrorBoundary>
               <Suspense fallback={<div className="min-h-screen bg-background" />}>
                 <Routes>
                   <Route path="/" element={<Index />} />
@@ -119,6 +121,7 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
+              </ErrorBoundary>
             </BrowserRouter>
           </TooltipProvider>
         </AuthProvider>
