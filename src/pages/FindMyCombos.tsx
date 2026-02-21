@@ -32,6 +32,8 @@ import {
   ExternalLink,
   Sparkles,
   AlertTriangle,
+  X,
+  ArrowUpDown,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -235,6 +237,40 @@ export default function FindMyCombos() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedCombo, setExpandedCombo] = useState<string | null>(null);
+  const [filterColors, setFilterColors] = useState<string[]>([]);
+  const [filterCardCount, setFilterCardCount] = useState<string>('any');
+  const [sortBy, setSortBy] = useState<string>('popularity');
+
+  const hasActiveFilters = filterColors.length > 0 || filterCardCount !== 'any' || sortBy !== 'popularity';
+
+  const clearFilters = () => {
+    setFilterColors([]);
+    setFilterCardCount('any');
+    setSortBy('popularity');
+  };
+
+  const toggleColor = (c: string) =>
+    setFilterColors((prev) =>
+      prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c],
+    );
+
+  const filterAndSortCombos = (combos: Combo[]): Combo[] => {
+    let filtered = [...combos];
+    if (filterColors.length > 0) {
+      filtered = filtered.filter((c) =>
+        filterColors.some((color) => c.identity.toUpperCase().includes(color)),
+      );
+    }
+    if (filterCardCount === '2') filtered = filtered.filter((c) => c.cards.length === 2);
+    else if (filterCardCount === '3') filtered = filtered.filter((c) => c.cards.length === 3);
+    else if (filterCardCount === '4+') filtered = filtered.filter((c) => c.cards.length >= 4);
+
+    if (sortBy === 'popularity') filtered.sort((a, b) => b.popularity - a.popularity);
+    else if (sortBy === 'cards-asc') filtered.sort((a, b) => a.cards.length - b.cards.length);
+    else if (sortBy === 'cards-desc') filtered.sort((a, b) => b.cards.length - a.cards.length);
+
+    return filtered;
+  };
 
   const handleFetchMoxfield = async () => {
     if (!moxfieldUrl.trim()) return;
@@ -292,6 +328,7 @@ export default function FindMyCombos() {
       if (fnError) throw fnError;
       if (data?.error) throw new Error(data.error);
       setResults(data as ComboResults);
+      clearFilters();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to find combos');
     } finally {
@@ -470,23 +507,91 @@ export default function FindMyCombos() {
         )}
 
         {/* Results */}
-        {results && !loading && (
+        {results && !loading && (() => {
+          const filteredIncluded = filterAndSortCombos(results.included);
+          const filteredAlmost = filterAndSortCombos(results.almostIncluded);
+          return (
           <div className="space-y-6">
+            {/* Filter toolbar */}
+            <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border/50 bg-muted/30 p-3">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-muted-foreground mr-1">Colors:</span>
+                {WUBRG.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => toggleColor(c)}
+                    className={`rounded-full p-0.5 transition-all ${
+                      filterColors.includes(c)
+                        ? 'ring-2 ring-primary ring-offset-1 ring-offset-background opacity-100'
+                        : 'opacity-40 hover:opacity-70'
+                    }`}
+                    title={COLOR_NAMES[c]}
+                  >
+                    <ManaSymbol symbol={c} size="sm" />
+                  </button>
+                ))}
+              </div>
+
+              <span className="hidden sm:block h-5 w-px bg-border" />
+
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground mr-1">Cards:</span>
+                {(['any', '2', '3', '4+'] as const).map((v) => (
+                  <button
+                    key={v}
+                    onClick={() => setFilterCardCount(v)}
+                    className={`px-2 py-0.5 rounded text-xs transition-colors ${
+                      filterCardCount === v
+                        ? 'bg-primary text-primary-foreground font-medium'
+                        : 'bg-secondary/60 text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {v === 'any' ? 'Any' : v}
+                  </button>
+                ))}
+              </div>
+
+              <span className="hidden sm:block h-5 w-px bg-border" />
+
+              <div className="flex items-center gap-1">
+                <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="text-xs bg-secondary/60 border-none rounded px-2 py-1 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  <option value="popularity">Popularity</option>
+                  <option value="cards-asc">Fewest cards</option>
+                  <option value="cards-desc">Most cards</option>
+                </select>
+              </div>
+
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="ml-auto flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="h-3 w-3" />
+                  Clear
+                </button>
+              )}
+            </div>
+
             {/* Included combos */}
             <section className="space-y-3">
               <div className="flex items-center gap-2">
                 <Zap className="h-5 w-5 text-primary" />
                 <h2 className="text-lg font-semibold">
-                  {t('combos.combosInDeck')} ({results.totalIncluded})
+                  {t('combos.combosInDeck')} ({filteredIncluded.length})
                 </h2>
               </div>
-              {results.included.length === 0 ? (
+              {filteredIncluded.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  {t('combos.noCombos')}
+                  {hasActiveFilters ? 'No combos match the current filters.' : t('combos.noCombos')}
                 </p>
               ) : (
                 <div className="space-y-2">
-                  {results.included.map((combo) => (
+                  {filteredIncluded.map((combo) => (
                     <ComboItem
                       key={combo.id}
                       combo={combo}
@@ -501,19 +606,19 @@ export default function FindMyCombos() {
             </section>
 
             {/* Almost included */}
-            {results.almostIncluded.length > 0 && (
+            {filteredAlmost.length > 0 && (
               <section className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-muted-foreground" />
                   <h2 className="text-lg font-semibold text-muted-foreground">
-                    {t('combos.almostIncluded')} ({results.totalAlmostIncluded})
+                    {t('combos.almostIncluded')} ({filteredAlmost.length})
                   </h2>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {t('combos.almostDesc')}
                 </p>
                 <div className="space-y-2">
-                  {results.almostIncluded.map((combo) => (
+                  {filteredAlmost.map((combo) => (
                     <ComboItem
                       key={combo.id}
                       combo={combo}
@@ -539,7 +644,8 @@ export default function FindMyCombos() {
               </a>
             </p>
           </div>
-        )}
+          );
+        })()}
       </main>
       <Footer />
     </div>
