@@ -193,6 +193,9 @@ export default function PublicDeckView() {
   const totalMainboard = mainboardCards.reduce((s, c) => s + c.quantity, 0);
   const formatConfig = FORMATS.find((f) => f.value === deck?.format) ?? FORMATS[0];
 
+  // Dereference the ref once so we don't read .current during render in children
+  const scryfallMap = cacheRef.current;
+
   const handleCopyUrl = () => {
     navigator.clipboard.writeText(window.location.href);
     setCopied(true);
@@ -296,7 +299,7 @@ export default function PublicDeckView() {
         {/* ── Stats Bar ── */}
         {mainboardCards.length > 0 && (
           <div className="rounded-xl border border-border overflow-hidden">
-            <DeckStatsBar cards={mainboardCards} scryfallCache={cacheRef.current}
+            <DeckStatsBar cards={mainboardCards} scryfallCache={scryfallMap}
               formatMax={formatConfig.max} cacheVersion={version} />
           </div>
         )}
@@ -311,15 +314,15 @@ export default function PublicDeckView() {
             <>
               {grouped.map(([category, catCards]) => (
                 <PublicCategorySection key={category} category={category} cards={catCards}
-                  scryfallCache={cacheRef} cacheVersion={version} />
+                  scryfallCache={scryfallMap} cacheVersion={version} />
               ))}
               {sideboardCards.length > 0 && (
                 <PublicCategorySection category="Sideboard" cards={sideboardCards}
-                  scryfallCache={cacheRef} cacheVersion={version} />
+                  scryfallCache={scryfallMap} cacheVersion={version} />
               )}
               {maybeboardCards.length > 0 && (
                 <PublicCategorySection category="Maybeboard" cards={maybeboardCards}
-                  scryfallCache={cacheRef} cacheVersion={version} />
+                  scryfallCache={scryfallMap} cacheVersion={version} />
               )}
             </>
           )}
@@ -337,7 +340,7 @@ function PublicCategorySection({
 }: {
   category: string;
   cards: DeckCard[];
-  scryfallCache: React.RefObject<Map<string, ScryfallCard>>;
+  scryfallCache: Map<string, ScryfallCard>;
   cacheVersion: number;
 }) {
   const totalQty = cards.reduce((s, c) => s + c.quantity, 0);
@@ -345,7 +348,7 @@ function PublicCategorySection({
   const categoryPrice = useMemo(() => {
     let total = 0;
     for (const card of cards) {
-      const cached = scryfallCache.current?.get(card.card_name);
+      const cached = scryfallCache.get(card.card_name);
       const price = cached?.prices?.usd ? parseFloat(cached.prices.usd) : 0;
       total += price * card.quantity;
     }
@@ -367,7 +370,7 @@ function PublicCategorySection({
       </div>
       <ul>
         {cards.map((card) => {
-          const cached = scryfallCache.current?.get(card.card_name);
+          const cached = scryfallCache.get(card.card_name);
           const manaCost = cached?.mana_cost || cached?.card_faces?.[0]?.mana_cost;
           const price = cached?.prices?.usd;
 

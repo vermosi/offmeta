@@ -1,5 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { useUndoRedo } from '@/hooks/useUndoRedo';
+import type { UndoableAction } from '@/hooks/useUndoRedo';
 
 describe('useUndoRedo', () => {
   it('starts empty with no undo/redo available', () => {
@@ -28,13 +29,13 @@ describe('useUndoRedo', () => {
       result.current.push({ label: 'Remove Card', undo: undoFn, redo: redoFn });
     });
 
-    let returned: any;
+    let returned: UndoableAction | null = null;
     await act(async () => {
       returned = await result.current.undo();
     });
 
     expect(undoFn).toHaveBeenCalledOnce();
-    expect(returned?.label).toBe('Remove Card');
+    expect((returned as UndoableAction | null)?.label).toBe('Remove Card');
     expect(result.current.canUndo).toBe(false);
     expect(result.current.canRedo).toBe(true);
     expect(result.current.redoLabels).toEqual(['Remove Card']);
@@ -68,14 +69,14 @@ describe('useUndoRedo', () => {
 
   it('undo returns null when stack is empty', async () => {
     const { result } = renderHook(() => useUndoRedo());
-    let returned: any;
+    let returned: UndoableAction | null = null;
     await act(async () => { returned = await result.current.undo(); });
     expect(returned).toBeNull();
   });
 
   it('redo returns null when stack is empty', async () => {
     const { result } = renderHook(() => useUndoRedo());
-    let returned: any;
+    let returned: UndoableAction | null = null;
     await act(async () => { returned = await result.current.redo(); });
     expect(returned).toBeNull();
   });

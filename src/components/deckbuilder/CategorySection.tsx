@@ -7,7 +7,7 @@
 import { useState, useMemo } from 'react';
 import {
   ChevronDown, ChevronRight, Minus, Plus, Trash2,
-  Crown, Shield, ArrowRightLeft, List, Pencil, MoreVertical,
+  Crown, Shield, ArrowRightLeft, List, MoreVertical,
 } from 'lucide-react';
 import { cn } from '@/lib/core/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -15,12 +15,10 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { CardHoverImage } from '@/components/deckbuilder/CardHoverImage';
-import { SetBadge, PrintingPickerPopover } from '@/components/deckbuilder/PrintingPickerPopover';
 import { ManaCost } from '@/components/ManaSymbol';
 import { useTranslation } from '@/lib/i18n';
 import type { DeckCard } from '@/hooks/useDeck';
 import type { ScryfallCard } from '@/types/card';
-import type { CardPrinting } from '@/lib/scryfall/printings';
 
 import { CATEGORIES } from './constants';
 
@@ -38,14 +36,14 @@ interface CategorySectionProps {
   selectedCardId: string | null;
   onSelectCard: (id: string) => void;
   scryfallCache: React.RefObject<Map<string, ScryfallCard>>;
-  onChangePrinting: (cardId: string, printing: CardPrinting) => void;
+  onChangePrinting: (cardId: string, printing: { id: string }) => void;
   cacheVersion: number;
 }
 
 export function CategorySection({
   category, cards, onRemove, onSetQuantity, onSetCommander, onSetCompanion,
   onSetCategory, onMoveToSideboard, onMoveToMaybeboard, isReadOnly,
-  selectedCardId, onSelectCard, scryfallCache, onChangePrinting, cacheVersion,
+  selectedCardId, onSelectCard, scryfallCache, cacheVersion,
 }: CategorySectionProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(true);

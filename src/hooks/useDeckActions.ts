@@ -7,8 +7,7 @@
 import { useCallback } from 'react';
 import { useDeckCardMutations } from '@/hooks/useDeck';
 import type { DeckCard } from '@/hooks/useDeck';
-import { useUndoRedo } from '@/hooks/useUndoRedo';
-import type { UndoableAction } from '@/hooks/useUndoRedo';
+import type { useUndoRedo } from '@/hooks/useUndoRedo';
 import { supabase } from '@/integrations/supabase/client';
 import type { ScryfallCard } from '@/types/card';
 import { inferCategory } from '@/lib/deckbuilder/infer-category';

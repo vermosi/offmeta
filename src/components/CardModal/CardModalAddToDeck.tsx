@@ -6,7 +6,6 @@
  */
 
 import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Plus, FolderPlus, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
-import { useDecks, useDeckMutations, useDeckCardMutations } from '@/hooks/useDeck';
+import { useDecks, useDeckMutations } from '@/hooks/useDeck';
 import { toast } from '@/hooks/useToast';
 import { useTranslation } from '@/lib/i18n';
 import type { ScryfallCard } from '@/types/card';
@@ -31,7 +30,6 @@ interface CardModalAddToDeckProps {
 export function CardModalAddToDeck({ card, isMobile = false }: CardModalAddToDeckProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const navigate = useNavigate();
   const { data: decks = [], isLoading: decksLoading } = useDecks();
   const { createDeck } = useDeckMutations();
   const [addedToDeckId, setAddedToDeckId] = useState<string | null>(null);
@@ -65,8 +63,7 @@ export function CardModalAddToDeck({ card, isMobile = false }: CardModalAddToDec
       });
       // Reset the check after 2s
       setTimeout(() => setAddedToDeckId(null), 2000);
-    } catch (err) {
-      console.error('Failed to add card to deck:', err);
+    } catch {
       toast({
         title: t('card.addToDeckFailed', 'Failed to add'),
         description: t('card.addToDeckFailedDesc', 'Could not add card to deck. Please try again.'),
@@ -82,8 +79,7 @@ export function CardModalAddToDeck({ card, isMobile = false }: CardModalAddToDec
     try {
       const newDeck = await createDeck.mutateAsync({ name: `${card.name} Deck` });
       await handleAddToDeck(newDeck.id, newDeck.name);
-    } catch (err) {
-      console.error('Failed to create deck:', err);
+    } catch {
       toast({
         title: t('card.createDeckFailed', 'Failed to create deck'),
         variant: 'destructive',

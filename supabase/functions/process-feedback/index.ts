@@ -492,7 +492,6 @@ Respond in this EXACT JSON format only (no other text):
   "uses_otag": false
 }`;
 
-          // eslint-disable-next-line prefer-const
           let correctedRuleData: typeof ruleData | null = null;
           try {
             const correctionResponse = await fetch(
