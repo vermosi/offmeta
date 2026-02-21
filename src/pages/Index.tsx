@@ -27,6 +27,7 @@ import { ScrollToTop } from '@/components/ScrollToTop';
 import { SimilarSearches } from '@/components/SimilarSearches';
 import { VirtualizedCardGrid } from '@/components/VirtualizedCardGrid';
 import { ExportResults } from '@/components/ExportResults';
+import { ShareSearchButton } from '@/components/ShareSearchButton';
 import { ViewToggle } from '@/components/ViewToggle';
 import { type ViewMode, getStoredViewMode } from '@/lib/view-mode-storage';
 import { ResultsStats } from '@/components/ResultsStats';
@@ -261,6 +262,7 @@ const Index = () => {
                       {t('a11y.cardsCount').replace('{count}', totalCards.toLocaleString())}
                     </span>
                   )}
+                  <ShareSearchButton />
                   <ExportResults cards={displayCards} />
                   <ResultsStats cards={displayCards} />
                 </div>
