@@ -1,14 +1,14 @@
 /**
- * Deck Editor page – three-panel layout for building a deck.
- * Left: Card search (Scryfall + NL). Center: Categorized deck list. Right: Card preview + AI suggestions + combos.
+ * Deck Editor page – Moxfield-inspired layout.
+ * Top: deck header + inline search. Two columns: deck list (left) + preview sidebar (right).
  * @module pages/DeckEditor
  */
 
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import {
-  ArrowLeft, Search, List, Crown, Check, Sparkles, Wand2, Loader2, Zap, Shield,
-  Keyboard, DollarSign, LayoutGrid, Columns3, SortAsc, Pencil,
+  ArrowLeft, List, Crown, Check, Sparkles, Wand2, Loader2, Zap, Shield,
+  Keyboard, DollarSign, LayoutGrid, Columns3, SortAsc, Pencil, ChevronRight, Eye, EyeOff,
 } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -36,17 +36,17 @@ import { cardImageFetchCache, printingsByName, CATEGORIES } from '@/components/d
 import { CategorySection } from '@/components/deckbuilder/CategorySection';
 import { SideboardSection } from '@/components/deckbuilder/SideboardSection';
 import { MaybeboardSection } from '@/components/deckbuilder/MaybeboardSection';
-import { CardSearchPanel } from '@/components/deckbuilder/CardSearchPanel';
-import type { CardSuggestion } from '@/components/deckbuilder/SuggestionsPanel';
+import { InlineCardSearch } from '@/components/deckbuilder/InlineCardSearch';
 import { CardPreviewPanel } from '@/components/deckbuilder/CardPreviewPanel';
+import type { CardSuggestion } from '@/components/deckbuilder/SuggestionsPanel';
 import { useDeckPrice } from '@/hooks/useDeckPrice';
 import { sortDeckCards } from '@/lib/deckbuilder/sort-deck-cards';
 import type { DeckSortMode } from '@/lib/deckbuilder/sort-deck-cards';
 import { inferCategory, DEFAULT_CATEGORY } from '@/lib/deckbuilder/infer-category';
+import { FORMAT_LABELS } from '@/data/formats';
 
 type DeckViewMode = 'list' | 'visual' | 'pile';
 
-// ── Main Editor ──
 export default function DeckEditor() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
@@ -63,7 +63,6 @@ export default function DeckEditor() {
   const [previewCard, setPreviewCard] = useState<ScryfallCard | null>(null);
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
-  const [mobileTab, setMobileTab] = useState<'search' | 'list' | 'preview'>('list');
   const [suggestions, setSuggestions] = useState<CardSuggestion[]>([]);
   const [suggestionsAnalysis, setSuggestionsAnalysis] = useState('');
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
@@ -71,48 +70,40 @@ export default function DeckEditor() {
   const [descriptionOpen, setDescriptionOpen] = useState(false);
   const [descriptionInput, setDescriptionInput] = useState('');
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [deckViewMode, setDeckViewMode] = useState<DeckViewMode>('list');
+  const [deckSortMode, setDeckSortMode] = useState<DeckSortMode>('category');
+  const [previewOpen, setPreviewOpen] = useState(!isMobile);
+  const scryfallCacheRef = useRef<Map<string, ScryfallCard>>(new Map());
+  const [scryfallCacheVersion, setScryfallCacheVersion] = useState(0);
+  const importProcessedRef = useRef(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // When a card is selected in the deck list, also load its preview
   const handleSelectCard = useCallback((cardId: string) => {
     setSelectedCardId(cardId);
     const card = cards.find((c) => c.id === cardId);
     if (!card) return;
-    // Check scryfall cache first
     const cached = scryfallCacheRef.current.get(card.card_name);
-    if (cached) {
-      setPreviewCard(cached);
-      return;
-    }
-    // Fetch from Scryfall if not cached
+    if (cached) { setPreviewCard(cached); if (isMobile) setPreviewOpen(true); return; }
     searchCards(`!"${card.card_name}"`).then((res) => {
       const sc = res.data?.[0];
       if (sc) {
         scryfallCacheRef.current.set(card.card_name, sc);
         setScryfallCacheVersion((v) => v + 1);
         setPreviewCard(sc);
+        if (isMobile) setPreviewOpen(true);
       }
-    }).catch(() => { /* silent */ });
-  }, [cards]);
-  const [shortcutsOpen, setShortcutsOpen] = useState(false);
-  const [deckViewMode, setDeckViewMode] = useState<DeckViewMode>('list');
-  const [deckSortMode, setDeckSortMode] = useState<DeckSortMode>('category');
-  const scryfallCacheRef = useRef<Map<string, ScryfallCard>>(new Map());
-  const [scryfallCacheVersion, setScryfallCacheVersion] = useState(0);
-  const importProcessedRef = useRef(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
+    }).catch(() => {});
+  }, [cards, isMobile]);
 
   // Sync description input when deck loads
   useEffect(() => {
     if (deck?.description !== undefined) setDescriptionInput(deck.description || '');
   }, [deck?.description]);
 
-  // Clear module-level caches on unmount so stale data doesn't bleed
-  // across different deck sessions opened in the same browser tab.
   useEffect(() => {
-    return () => {
-      printingsByName.clear();
-      cardImageFetchCache.clear();
-    };
+    return () => { printingsByName.clear(); cardImageFetchCache.clear(); };
   }, []);
 
   // ── Keyboard Shortcuts ──
@@ -132,19 +123,14 @@ export default function DeckEditor() {
     return () => window.removeEventListener('keydown', onKey);
   }, [user, selectedCardId, removeCard, updateCard]);
 
-  // ── Handle imported cards from navigation state ──
+  // ── Handle imported cards ──
   useEffect(() => {
     const state = location.state as { importCards?: { name: string; quantity: number }[]; importCommander?: string | null } | null;
     if (!state?.importCards || importProcessedRef.current || !id) return;
     importProcessedRef.current = true;
-
     const importCards = async () => {
       for (const card of state.importCards!) {
-        addCard.mutate({
-          card_name: card.name,
-          quantity: card.quantity,
-          is_commander: state.importCommander === card.name,
-        });
+        addCard.mutate({ card_name: card.name, quantity: card.quantity, is_commander: state.importCommander === card.name });
       }
       toast({ title: t('deckEditor.cardsImported'), description: t('deckEditor.cardsImportedDesc').replace('{count}', String(state.importCards!.length)) });
       navigate(location.pathname, { replace: true, state: null });
@@ -152,12 +138,12 @@ export default function DeckEditor() {
     importCards();
   }, [id, location.state, addCard, navigate, location.pathname, t]);
 
-  // Separate mainboard, sideboard, and maybeboard
+  // Board separation
   const mainboardCards = useMemo(() => cards.filter((c) => c.board !== 'sideboard' && c.board !== 'maybeboard'), [cards]);
   const sideboardCards = useMemo(() => cards.filter((c) => c.board === 'sideboard'), [cards]);
   const maybeboardCards = useMemo(() => cards.filter((c) => c.board === 'maybeboard'), [cards]);
 
-  // Group mainboard cards by category
+  // Group mainboard by category
   const grouped = useMemo(() => {
     const groups: Record<string, DeckCard[]> = {};
     for (const card of mainboardCards) {
@@ -166,9 +152,7 @@ export default function DeckEditor() {
       groups[cat].push(card);
     }
     const sorted: [string, DeckCard[]][] = [];
-    for (const cat of CATEGORIES) {
-      if (groups[cat]) sorted.push([cat, groups[cat]]);
-    }
+    for (const cat of CATEGORIES) { if (groups[cat]) sorted.push([cat, groups[cat]]); }
     for (const [cat, catCards] of Object.entries(groups)) {
       if (!(CATEGORIES as readonly string[]).includes(cat)) sorted.push([cat, catCards]);
     }
@@ -182,37 +166,34 @@ export default function DeckEditor() {
   const formatMax = formatConfig.max;
   const { total: deckPrice, loading: priceLoading } = useDeckPrice(mainboardCards, scryfallCacheRef, () => setScryfallCacheVersion((v) => v + 1));
 
-  // Sorted flat list for visual/pile views — must be before early returns (Rules of Hooks)
   const sortedMainboard = useMemo(
-    () => deckSortMode === 'category'
-      ? mainboardCards
-      : sortDeckCards(mainboardCards, deckSortMode, scryfallCacheRef.current),
+    () => deckSortMode === 'category' ? mainboardCards : sortDeckCards(mainboardCards, deckSortMode, scryfallCacheRef.current),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [mainboardCards, deckSortMode, scryfallCacheVersion],
   );
 
-  const handleAddCard = useCallback(
-    async (card: ScryfallCard) => {
-      scryfallCacheRef.current.set(card.name, card);
-      setScryfallCacheVersion((v) => v + 1);
-      const typeCategory = inferCategory(card);
-      addCard.mutate({ card_name: card.name, category: typeCategory, scryfall_id: card.id });
-      try {
-        const { data, error } = await supabase.functions.invoke('deck-categorize', { body: { cards: [card.name] } });
-        if (!error && data?.categories?.[card.name]) {
-          const aiCategory = data.categories[card.name];
-          if (aiCategory !== typeCategory) {
-            setTimeout(async () => {
-              const { data: deckCards } = await supabase.from('deck_cards').select('id')
-                .eq('deck_id', id!).eq('card_name', card.name).eq('board', 'mainboard')
-                .order('created_at', { ascending: false }).limit(1).single();
-              if (deckCards) updateCard.mutate({ id: deckCards.id, category: aiCategory });
-            }, 500);
-          }
+  // ── Handlers ──
+  const handleAddCard = useCallback(async (card: ScryfallCard) => {
+    scryfallCacheRef.current.set(card.name, card);
+    setScryfallCacheVersion((v) => v + 1);
+    setPreviewCard(card);
+    const typeCategory = inferCategory(card);
+    addCard.mutate({ card_name: card.name, category: typeCategory, scryfall_id: card.id });
+    try {
+      const { data, error } = await supabase.functions.invoke('deck-categorize', { body: { cards: [card.name] } });
+      if (!error && data?.categories?.[card.name]) {
+        const aiCategory = data.categories[card.name];
+        if (aiCategory !== typeCategory) {
+          setTimeout(async () => {
+            const { data: deckCards } = await supabase.from('deck_cards').select('id')
+              .eq('deck_id', id!).eq('card_name', card.name).eq('board', 'mainboard')
+              .order('created_at', { ascending: false }).limit(1).single();
+            if (deckCards) updateCard.mutate({ id: deckCards.id, category: aiCategory });
+          }, 500);
         }
-      } catch { /* silent */ }
-    }, [addCard, id, updateCard],
-  );
+      }
+    } catch { /* silent */ }
+  }, [addCard, id, updateCard]);
 
   const handleRecategorizeAll = useCallback(async () => {
     if (cards.length === 0) return;
@@ -220,21 +201,15 @@ export default function DeckEditor() {
     try {
       const cardNames = cards.filter((c) => !c.is_commander).map((c) => c.card_name);
       const { data, error } = await supabase.functions.invoke('deck-categorize', { body: { cards: cardNames } });
-      if (error || !data?.categories) {
-        toast({ title: t('deckEditor.categorizeFailed'), description: t('deckEditor.categorizeFailedDesc'), variant: 'destructive' });
-        return;
-      }
+      if (error || !data?.categories) { toast({ title: t('deckEditor.categorizeFailed'), variant: 'destructive' }); return; }
       for (const card of cards) {
         if (card.is_commander) continue;
         const newCat = data.categories[card.card_name];
-        if (newCat && newCat !== card.category) {
-          updateCard.mutate({ id: card.id, category: newCat });
-        }
+        if (newCat && newCat !== card.category) updateCard.mutate({ id: card.id, category: newCat });
       }
       toast({ title: t('deckEditor.categorizeSuccess'), description: t('deckEditor.categorizeSuccessDesc').replace('{count}', String(cardNames.length)) });
-    } catch {
-      toast({ title: 'Error', description: t('deckEditor.categorizeFailed'), variant: 'destructive' });
-    } finally { setCategorizingAll(false); }
+    } catch { toast({ title: 'Error', variant: 'destructive' }); }
+    finally { setCategorizingAll(false); }
   }, [cards, updateCard, t]);
 
   const handleSuggest = useCallback(async () => {
@@ -245,15 +220,11 @@ export default function DeckEditor() {
         body: { commander: deck?.commander_name, cards: cards.map((c) => ({ name: c.card_name, category: c.category })),
           color_identity: deck?.color_identity, format: deck?.format },
       });
-      if (error || !data?.suggestions) {
-        toast({ title: t('deckEditor.suggestions.failed'), description: t('deckEditor.suggestions.failedDesc'), variant: 'destructive' });
-        return;
-      }
+      if (error || !data?.suggestions) { toast({ title: t('deckEditor.suggestions.failed'), variant: 'destructive' }); return; }
       setSuggestions(data.suggestions);
       setSuggestionsAnalysis(data.analysis || '');
-    } catch {
-      toast({ title: 'Error', description: t('deckEditor.suggestions.failed'), variant: 'destructive' });
-    } finally { setSuggestionsLoading(false); }
+    } catch { toast({ title: 'Error', variant: 'destructive' }); }
+    finally { setSuggestionsLoading(false); }
   }, [cards, deck, t]);
 
   const handleAddSuggestion = useCallback(async (cardName: string) => {
@@ -269,9 +240,7 @@ export default function DeckEditor() {
     const card = cards.find((c) => c.id === cardId);
     if (!card) return;
     if (isCommander) {
-      for (const c of cards) {
-        if (c.is_commander && c.id !== cardId) updateCard.mutate({ id: c.id, is_commander: false, category: c.category || DEFAULT_CATEGORY });
-      }
+      for (const c of cards) { if (c.is_commander && c.id !== cardId) updateCard.mutate({ id: c.id, is_commander: false, category: c.category || DEFAULT_CATEGORY }); }
       updateCard.mutate({ id: cardId, is_commander: true });
       updateDeck.mutate({ id: id!, commander_name: card.card_name });
     } else {
@@ -284,9 +253,7 @@ export default function DeckEditor() {
     const card = cards.find((c) => c.id === cardId);
     if (!card) return;
     if (isCompanion) {
-      for (const c of cards) {
-        if (c.is_companion && c.id !== cardId) updateCard.mutate({ id: c.id, is_companion: false });
-      }
+      for (const c of cards) { if (c.is_companion && c.id !== cardId) updateCard.mutate({ id: c.id, is_companion: false }); }
       updateCard.mutate({ id: cardId, is_companion: true });
       updateDeck.mutate({ id: id!, companion_name: card.card_name });
     } else {
@@ -295,17 +262,9 @@ export default function DeckEditor() {
     }
   }, [cards, updateCard, updateDeck, id]);
 
-  const handleSetCategory = useCallback((cardId: string, category: string) => {
-    updateCard.mutate({ id: cardId, category });
-  }, [updateCard]);
-
-  const handleMoveToSideboard = useCallback((cardId: string, toSideboard: boolean) => {
-    updateCard.mutate({ id: cardId, board: toSideboard ? 'sideboard' : 'mainboard' });
-  }, [updateCard]);
-
-  const handleMoveToMaybeboard = useCallback((cardId: string) => {
-    updateCard.mutate({ id: cardId, board: 'maybeboard' });
-  }, [updateCard]);
+  const handleSetCategory = useCallback((cardId: string, category: string) => { updateCard.mutate({ id: cardId, category }); }, [updateCard]);
+  const handleMoveToSideboard = useCallback((cardId: string, toSideboard: boolean) => { updateCard.mutate({ id: cardId, board: toSideboard ? 'sideboard' : 'mainboard' }); }, [updateCard]);
+  const handleMoveToMaybeboard = useCallback((cardId: string) => { updateCard.mutate({ id: cardId, board: 'maybeboard' }); }, [updateCard]);
 
   const handleTogglePublic = useCallback(() => {
     if (!deck || !id) return;
@@ -314,10 +273,7 @@ export default function DeckEditor() {
       description: deck.is_public ? t('deckExport.nowPrivateDesc') : t('deckExport.nowPublicDesc') });
   }, [deck, id, updateDeck, t]);
 
-  const handleFormatChange = useCallback((format: string) => {
-    if (!id) return;
-    updateDeck.mutate({ id, format });
-  }, [id, updateDeck]);
+  const handleFormatChange = useCallback((format: string) => { if (id) updateDeck.mutate({ id, format }); }, [id, updateDeck]);
 
   const handleDescriptionBlur = useCallback(() => {
     if (!id || descriptionInput === (deck?.description || '')) return;
@@ -327,11 +283,11 @@ export default function DeckEditor() {
   const startEditName = () => { setNameInput(deck?.name || ''); setEditingName(true); };
   const saveName = () => { if (nameInput.trim() && id) updateDeck.mutate({ id, name: nameInput.trim() }); setEditingName(false); };
 
+  // ── Loading / Not Found States ──
   if (deckLoading) return (
     <div className="min-h-screen flex flex-col bg-background"><Header />
       <div className="flex-1 flex items-center justify-center"><div className="h-8 w-48 shimmer rounded-lg" /></div></div>
   );
-
   if (!deck) return (
     <div className="min-h-screen flex flex-col bg-background"><Header />
       <div className="flex-1 flex items-center justify-center flex-col gap-4">
@@ -347,13 +303,15 @@ export default function DeckEditor() {
     cardCount: cards.length, deckCards: cards, commanderName: deck.commander_name,
   };
 
-  // ── Deck Header Bar ──
+  // ── Deck Header ──
   const deckHeader = (
-    <div className="border-b border-border">
-      <div className="px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3">
-        <Link to="/deckbuilder" className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors">
+    <div className="border-b border-border bg-card">
+      {/* Top row: nav + name + actions */}
+      <div className="px-4 py-3 flex items-center gap-3">
+        <Link to="/deckbuilder" className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors shrink-0">
           <ArrowLeft className="h-4 w-4" />
         </Link>
+
         {editingName && !isReadOnly ? (
           <div className="flex items-center gap-2 flex-1">
             <Input value={nameInput} onChange={(e) => setNameInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && saveName()} className="text-sm h-8" autoFocus />
@@ -362,56 +320,58 @@ export default function DeckEditor() {
         ) : (
           <button onClick={isReadOnly ? undefined : startEditName}
             className={cn('flex items-center gap-1.5 text-left flex-1 min-w-0', !isReadOnly && 'group')}>
-            <h2 className={cn('font-semibold truncate', isMobile && 'text-sm')}>{deck.name}</h2>
+            <h2 className="font-semibold truncate text-base">{deck.name}</h2>
             {!isReadOnly && <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />}
           </button>
         )}
-        {!isReadOnly && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm" variant="ghost" className="h-7 text-[11px] gap-1 shrink-0 hidden sm:flex">
-                <Zap className="h-3 w-3" />
-                {formatConfig.label}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              {FORMATS.map((f) => (
-                <DropdownMenuItem key={f.value} onClick={() => handleFormatChange(f.value)}
-                  className={cn('text-xs', deck.format === f.value && 'text-accent font-medium')}>
-                  {f.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-        {!isReadOnly && cards.length >= 3 && (
-          <Button size="sm" variant="ghost" onClick={handleRecategorizeAll} disabled={categorizingAll}
-            className="h-7 text-[11px] gap-1 hidden sm:flex" title="AI re-categorize all cards">
-            {categorizingAll ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
-            {t('deckEditor.categorize')}
-          </Button>
-        )}
-        {!isReadOnly && <DeckExportMenu deck={deck} cards={cards} onTogglePublic={handleTogglePublic} />}
-        {mainboardCards.length > 0 && (
-          <span className="inline-flex items-center gap-0.5 text-xs font-medium px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground shrink-0"
-            title="Estimated TCGplayer price (mainboard only)">
-            <DollarSign className="h-3 w-3 text-muted-foreground" />
-            {priceLoading
-              ? <span className="w-10 h-3 shimmer rounded inline-block" />
-              : deckPrice !== null
-                ? deckPrice.toFixed(2)
-                : <span className="text-muted-foreground text-[10px]">—</span>}
+
+        {/* Inline stats badges */}
+        <div className="flex items-center gap-2 shrink-0">
+          {!isReadOnly && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="text-[11px] font-medium px-2 py-1 rounded-md bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors">
+                  {formatConfig.label}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                {FORMATS.map((f) => (
+                  <DropdownMenuItem key={f.value} onClick={() => handleFormatChange(f.value)}
+                    className={cn('text-xs', deck.format === f.value && 'text-accent font-medium')}>
+                    {f.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          {isReadOnly && (
+            <span className="text-[11px] font-medium px-2 py-1 rounded-md bg-secondary/50 text-muted-foreground">
+              {FORMAT_LABELS[deck.format] || deck.format}
+            </span>
+          )}
+
+          <span className={cn('text-xs font-semibold px-2 py-1 rounded-md',
+            totalMainboard >= formatMax ? 'bg-accent/10 text-accent' : 'bg-secondary/50 text-muted-foreground')}>
+            {totalMainboard}/{formatMax}
+            {totalSideboard > 0 && <span className="text-muted-foreground/60"> +{totalSideboard}sb</span>}
+            {totalMaybeboard > 0 && <span className="text-muted-foreground/60"> +{totalMaybeboard}mb</span>}
           </span>
-        )}
-        <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full shrink-0',
-          totalMainboard >= formatMax ? 'bg-accent/10 text-accent' : 'bg-secondary text-secondary-foreground')}>
-          {totalMainboard}/{formatMax}
-          {totalSideboard > 0 && <span className="text-muted-foreground"> +{totalSideboard}sb</span>}
-          {totalMaybeboard > 0 && <span className="text-muted-foreground"> +{totalMaybeboard}mb</span>}
-        </span>
+
+          {mainboardCards.length > 0 && (
+            <span className="text-xs font-medium px-2 py-1 rounded-md bg-secondary/50 text-muted-foreground flex items-center gap-0.5">
+              <DollarSign className="h-3 w-3" />
+              {priceLoading ? <span className="w-8 h-3 shimmer rounded inline-block" />
+                : deckPrice !== null ? deckPrice.toFixed(2) : '—'}
+            </span>
+          )}
+        </div>
+
+        {!isReadOnly && <DeckExportMenu deck={deck} cards={cards} onTogglePublic={handleTogglePublic} />}
       </div>
-      {(deck.commander_name || deck.companion_name) && (
-        <div className="px-3 sm:px-4 pb-1 flex items-center gap-2 flex-wrap">
+
+      {/* Commander / Companion badges + description */}
+      {(deck.commander_name || deck.companion_name || !isReadOnly) && (
+        <div className="px-4 pb-2 flex items-center gap-2 flex-wrap">
           {deck.commander_name && (
             <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20">
               <Crown className="h-2.5 w-2.5" />{deck.commander_name}
@@ -422,56 +382,54 @@ export default function DeckEditor() {
               <Shield className="h-2.5 w-2.5" />{deck.companion_name}
             </span>
           )}
-        </div>
-      )}
-      {!isReadOnly && (
-        <div className="px-3 sm:px-4 pb-2">
-          {descriptionOpen ? (
-            <Textarea
-              value={descriptionInput}
-              onChange={(e) => setDescriptionInput(e.target.value)}
-              onBlur={() => { handleDescriptionBlur(); setDescriptionOpen(false); }}
-              placeholder={t('deckEditor.descriptionPlaceholder')}
-              rows={2}
-              className="text-xs resize-none"
-              autoFocus
-            />
-          ) : (
-            <button
-              onClick={() => setDescriptionOpen(true)}
-              className="text-[11px] text-muted-foreground hover:text-foreground transition-colors text-left truncate w-full"
-            >
-              {descriptionInput || t('deckEditor.addNotes')}
+          {!isReadOnly && cards.length >= 3 && (
+            <Button size="sm" variant="ghost" onClick={handleRecategorizeAll} disabled={categorizingAll}
+              className="h-6 text-[10px] gap-1 px-2" title="AI re-categorize all cards">
+              {categorizingAll ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
+              {t('deckEditor.categorize')}
+            </Button>
+          )}
+          <div className="flex-1" />
+          {!isReadOnly && (
+            <button onClick={() => setDescriptionOpen((o) => !o)}
+              className="text-[10px] text-muted-foreground hover:text-foreground transition-colors">
+              {descriptionInput ? 'Edit notes' : '+ Add notes'}
             </button>
           )}
         </div>
       )}
-      {isReadOnly && deck.description && (
-        <div className="px-3 sm:px-4 pb-2">
-          <p className="text-[11px] text-muted-foreground">{deck.description}</p>
+      {descriptionOpen && !isReadOnly && (
+        <div className="px-4 pb-2">
+          <Textarea value={descriptionInput} onChange={(e) => setDescriptionInput(e.target.value)}
+            onBlur={() => { handleDescriptionBlur(); setDescriptionOpen(false); }}
+            placeholder={t('deckEditor.descriptionPlaceholder')} rows={2} className="text-xs resize-none" autoFocus />
         </div>
       )}
+      {isReadOnly && deck.description && (
+        <div className="px-4 pb-2"><p className="text-[11px] text-muted-foreground">{deck.description}</p></div>
+      )}
+    </div>
+  );
+
+  // ── Inline Search Bar (below header) ──
+  const searchBar = !isReadOnly && (
+    <div className="px-4 py-3 border-b border-border bg-card/50">
+      <InlineCardSearch onAddCard={handleAddCard} onPreview={setPreviewCard} searchInputRef={searchInputRef} />
     </div>
   );
 
   // ── View/Sort Toolbar ──
   const viewSortToolbar = cards.length > 0 && (
-    <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-border bg-card/50">
+    <div className="flex items-center gap-1.5 px-4 py-2 border-b border-border bg-card/30">
       <div className="flex items-center gap-0.5 p-0.5 bg-secondary/50 rounded-md">
         {([
           { mode: 'list' as DeckViewMode, icon: List, label: t('deckEditor.view.list') },
           { mode: 'visual' as DeckViewMode, icon: LayoutGrid, label: t('deckEditor.view.visual') },
           { mode: 'pile' as DeckViewMode, icon: Columns3, label: t('deckEditor.view.pile') },
         ] as const).map(({ mode, icon: Icon, label }) => (
-          <button
-            key={mode}
-            onClick={() => setDeckViewMode(mode)}
-            title={label}
-            className={cn(
-              'p-1.5 rounded transition-colors',
-              deckViewMode === mode ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
+          <button key={mode} onClick={() => setDeckViewMode(mode)} title={label}
+            className={cn('p-1.5 rounded transition-colors',
+              deckViewMode === mode ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}>
             <Icon className="h-3.5 w-3.5" />
           </button>
         ))}
@@ -483,97 +441,81 @@ export default function DeckEditor() {
             <span className="hidden sm:inline capitalize">{deckSortMode}</span>
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-36 bg-popover border border-border z-50">
+        <DropdownMenuContent align="start" className="w-36">
           {(['category', 'name', 'cmc', 'color', 'type', 'price'] as DeckSortMode[]).map((s) => (
-            <DropdownMenuItem
-              key={s}
-              onClick={() => setDeckSortMode(s)}
-              className={cn('text-xs capitalize', deckSortMode === s && 'text-accent font-medium')}
-            >
+            <DropdownMenuItem key={s} onClick={() => setDeckSortMode(s)}
+              className={cn('text-xs capitalize', deckSortMode === s && 'text-accent font-medium')}>
               {t(`deckEditor.sort.${s}`)}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
+      <div className="flex-1" />
+      {!isMobile && (
+        <button onClick={() => setPreviewOpen((o) => !o)}
+          className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-1 rounded hover:bg-secondary/50"
+          title={previewOpen ? 'Hide preview' : 'Show preview'}>
+          {previewOpen ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+          <span className="hidden sm:inline">Preview</span>
+        </button>
+      )}
     </div>
   );
 
+  // ── Category sections ──
   const categorySection = (
     <>
       {grouped.map(([category, catCards]) => (
-        <CategorySection
-          key={category}
-          category={category}
-          cards={catCards}
-          isReadOnly={isReadOnly}
-          selectedCardId={selectedCardId}
+        <CategorySection key={category} category={category} cards={catCards}
+          isReadOnly={isReadOnly} selectedCardId={selectedCardId}
           onSelectCard={handleSelectCard}
           onRemove={(cardId) => removeCard.mutate(cardId)}
           onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
-          onSetCommander={handleSetCommander}
-          onSetCompanion={handleSetCompanion}
+          onSetCommander={handleSetCommander} onSetCompanion={handleSetCompanion}
           onSetCategory={handleSetCategory}
           onMoveToSideboard={(cardId, toSb) => handleMoveToSideboard(cardId, toSb)}
           onMoveToMaybeboard={handleMoveToMaybeboard}
           scryfallCache={scryfallCacheRef}
           onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
-          cacheVersion={scryfallCacheVersion}
-        />
+          cacheVersion={scryfallCacheVersion} />
       ))}
-      <SideboardSection
-        cards={sideboardCards}
-        isReadOnly={isReadOnly}
+      <SideboardSection cards={sideboardCards} isReadOnly={isReadOnly}
         onRemove={(cardId) => removeCard.mutate(cardId)}
         onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
         onMoveToMainboard={(cardId) => handleMoveToSideboard(cardId, false)}
         scryfallCache={scryfallCacheRef}
         onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
-        cacheVersion={scryfallCacheVersion}
-      />
-      <MaybeboardSection
-        cards={maybeboardCards}
-        isReadOnly={isReadOnly}
+        cacheVersion={scryfallCacheVersion} />
+      <MaybeboardSection cards={maybeboardCards} isReadOnly={isReadOnly}
         onRemove={(cardId) => removeCard.mutate(cardId)}
         onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
         onMoveToMainboard={(cardId) => handleMoveToSideboard(cardId, false)}
         onMoveToSideboard={(cardId) => updateCard.mutate({ id: cardId, board: 'sideboard' })}
         scryfallCache={scryfallCacheRef}
         onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
-        cacheVersion={scryfallCacheVersion}
-      />
+        cacheVersion={scryfallCacheVersion} />
     </>
   );
 
+  // ── Deck List Content ──
   const deckListContent = (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      {viewSortToolbar}
-      <div className={cn('flex-1 overflow-y-auto', deckViewMode !== 'pile' ? 'p-2 space-y-1' : 'overflow-x-auto')}>
+    <div className="flex-1 overflow-y-auto">
+      <div className={cn(deckViewMode !== 'pile' ? 'p-3 space-y-1' : 'overflow-x-auto')}>
         {cardsLoading ? (
           <div className="p-4 space-y-2">{[1, 2, 3].map((i) => <div key={i} className="h-8 shimmer rounded-lg" />)}</div>
         ) : cards.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-muted-foreground text-sm p-4">
+          <div className="flex items-center justify-center py-16 text-muted-foreground text-sm">
             <p className="text-center">{isReadOnly ? t('deckEditor.emptyDeckReadOnly') : t('deckEditor.emptyDeck')}</p>
           </div>
         ) : deckViewMode === 'visual' ? (
-          <VisualCardGrid
-            cards={deckSortMode === 'category' ? mainboardCards : sortedMainboard}
-            scryfallCache={scryfallCacheRef}
-            onSelectCard={handleSelectCard}
-            selectedCardId={selectedCardId}
-            onRemove={(cardId) => removeCard.mutate(cardId)}
-            onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })}
-            isReadOnly={isReadOnly}
-          />
+          <VisualCardGrid cards={deckSortMode === 'category' ? mainboardCards : sortedMainboard}
+            scryfallCache={scryfallCacheRef} onSelectCard={handleSelectCard}
+            selectedCardId={selectedCardId} onRemove={(cardId) => removeCard.mutate(cardId)}
+            onSetQuantity={(cardId, qty) => setQuantity.mutate({ cardId, quantity: qty })} isReadOnly={isReadOnly} />
         ) : deckViewMode === 'pile' ? (
-          <PileView
-            mainboardCards={mainboardCards}
-            scryfallCache={scryfallCacheRef}
-            onSelectCard={handleSelectCard}
-            selectedCardId={selectedCardId}
-          />
-        ) : (
-          categorySection
-        )}
+          <PileView mainboardCards={mainboardCards} scryfallCache={scryfallCacheRef}
+            onSelectCard={handleSelectCard} selectedCardId={selectedCardId} />
+        ) : categorySection}
       </div>
     </div>
   );
@@ -582,52 +524,50 @@ export default function DeckEditor() {
     <DeckStatsBar cards={mainboardCards} scryfallCache={scryfallCacheRef.current} formatMax={formatMax} />
   );
 
-  // ── Desktop Layout ──
+  // ── Desktop Layout: header → search → [deck list | preview sidebar] → stats ──
   const desktopLayout = (
     <div className="flex-1 flex flex-col overflow-hidden">
+      {deckHeader}
+      {searchBar}
       <div className="flex-1 flex overflow-hidden">
-        {!isReadOnly && (
-          <div className="w-80 border-r border-border flex flex-col bg-card">
-            <CardSearchPanel onAddCard={handleAddCard} onPreview={setPreviewCard} searchInputRef={searchInputRef} />
-          </div>
-        )}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {deckHeader}
+        {/* Main deck list */}
+        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+          {viewSortToolbar}
           {deckListContent}
         </div>
-        <div className={cn('border-l border-border bg-card flex flex-col overflow-hidden', isReadOnly ? 'w-80' : 'w-72')}>
-          <CardPreviewPanel {...previewPanelProps} />
-        </div>
+        {/* Preview sidebar */}
+        {previewOpen && (
+          <div className="w-80 border-l border-border bg-card flex flex-col overflow-hidden shrink-0">
+            <CardPreviewPanel {...previewPanelProps} />
+          </div>
+        )}
       </div>
       {statsBar}
     </div>
   );
 
   // ── Mobile Layout ──
-  const mobileTabs = isReadOnly
-    ? [{ key: 'list' as const, icon: List, label: t('deckEditor.tab.deck') }, { key: 'preview' as const, icon: Sparkles, label: t('deckEditor.tab.details') }]
-    : [{ key: 'search' as const, icon: Search, label: t('deckEditor.tab.search') }, { key: 'list' as const, icon: List, label: t('deckEditor.tab.deck') }, { key: 'preview' as const, icon: Sparkles, label: t('deckEditor.tab.ai') }];
-
   const mobileLayout = (
     <div className="flex-1 flex flex-col overflow-hidden">
       {deckHeader}
-      <div className="flex border-b border-border">
-        {mobileTabs.map((tab) => (
-          <button key={tab.key} onClick={() => setMobileTab(tab.key)}
-            className={cn('flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors',
-              mobileTab === tab.key ? 'text-accent border-b-2 border-accent' : 'text-muted-foreground')}>
-            <tab.icon className="h-3.5 w-3.5" />{tab.label}
-          </button>
-        ))}
-      </div>
-      <div className="flex-1 overflow-hidden">
-        {mobileTab === 'search' && !isReadOnly && (
-          <CardSearchPanel onAddCard={handleAddCard} onPreview={(card) => { setPreviewCard(card); setMobileTab('preview'); }} />
-        )}
-        {mobileTab === 'list' && deckListContent}
-        {mobileTab === 'preview' && <CardPreviewPanel {...previewPanelProps} />}
+      {searchBar}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {viewSortToolbar}
+        {deckListContent}
       </div>
       {statsBar}
+      {/* Mobile preview drawer */}
+      {previewOpen && previewCard && isMobile && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm" onClick={() => setPreviewOpen(false)}>
+          <div className="absolute bottom-0 left-0 right-0 bg-card border-t border-border rounded-t-2xl max-h-[70vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-center py-2">
+              <div className="w-10 h-1 rounded-full bg-border" />
+            </div>
+            <CardPreviewPanel {...previewPanelProps} />
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -636,18 +576,13 @@ export default function DeckEditor() {
       <Header />
       {isMobile ? mobileLayout : desktopLayout}
       {shortcutsOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm"
-          onClick={() => setShortcutsOpen(false)}
-        >
-          <div
-            className="bg-popover border border-border rounded-xl shadow-2xl p-5 w-72 space-y-3"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm"
+          onClick={() => setShortcutsOpen(false)}>
+          <div className="bg-popover border border-border rounded-xl shadow-2xl p-5 w-72 space-y-3"
+            onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold flex items-center gap-2">
-                <Keyboard className="h-4 w-4 text-muted-foreground" />
-                {t('deckEditor.shortcuts.title')}
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <Keyboard className="h-4 w-4 text-muted-foreground" />{t('deckEditor.shortcuts.title')}
               </h3>
               <button onClick={() => setShortcutsOpen(false)} className="text-muted-foreground hover:text-foreground transition-colors text-xs">✕</button>
             </div>
