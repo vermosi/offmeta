@@ -155,7 +155,7 @@ const Index = () => {
 
         {!hasSearched && <HeroSection />}
 
-        {/* Screen reader search status announcements */}
+        {/* Screen reader search status announcements — no extra gap between hero & search */}
         <div className="sr-only" role="status" aria-live="assertive" aria-atomic="true">
           {isSearching
             ? t('a11y.searching')
@@ -169,7 +169,7 @@ const Index = () => {
         {/* Main content */}
         <main
           id="main-content"
-          className={`relative flex-1 ${hasSearched ? 'pt-4 sm:pt-6' : ''} pb-4 sm:pb-8 safe-bottom`}
+          className={`relative flex-1 ${hasSearched ? 'pt-4 sm:pt-6' : 'pt-2 sm:pt-3'} pb-4 sm:pb-8 safe-bottom`}
           role="main"
         >
           <div className="container-main space-y-3 sm:space-y-6">
