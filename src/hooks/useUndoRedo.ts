@@ -1,6 +1,8 @@
 /**
  * Generic undo/redo stack for reversible actions.
  * Each action stores an `undo` and `redo` callback plus a human-readable label.
+ * Uses state for derived render values while keeping mutable stacks in refs
+ * that are only accessed inside callbacks (not during render).
  * @module hooks/useUndoRedo
  */
 
@@ -17,56 +19,87 @@ export interface UndoableAction {
 
 const MAX_STACK = 30;
 
+/**
+ * Derived state that is safe to read during render.
+ * Updated via setState whenever the stacks change.
+ */
+interface UndoRedoState {
+  canUndo: boolean;
+  canRedo: boolean;
+  undoLabels: string[];
+  redoLabels: string[];
+}
+
+const EMPTY_STATE: UndoRedoState = {
+  canUndo: false,
+  canRedo: false,
+  undoLabels: [],
+  redoLabels: [],
+};
+
 export function useUndoRedo() {
-  const undoStack = useRef<UndoableAction[]>([]);
-  const redoStack = useRef<UndoableAction[]>([]);
+  const undoStackRef = useRef<UndoableAction[]>([]);
+  const redoStackRef = useRef<UndoableAction[]>([]);
+  const [derived, setDerived] = useState<UndoRedoState>(EMPTY_STATE);
   const [version, setVersion] = useState(0);
 
-  const push = useCallback((action: UndoableAction) => {
-    undoStack.current.push(action);
-    if (undoStack.current.length > MAX_STACK) undoStack.current.shift();
-    redoStack.current = []; // clear redo on new action
+  /** Sync render-safe derived state from the mutable refs. */
+  const sync = useCallback(() => {
+    const u = undoStackRef.current;
+    const r = redoStackRef.current;
+    setDerived({
+      canUndo: u.length > 0,
+      canRedo: r.length > 0,
+      undoLabels: u.map((a) => a.label),
+      redoLabels: [...r].reverse().map((a) => a.label),
+    });
     setVersion((v) => v + 1);
   }, []);
+
+  const push = useCallback((action: UndoableAction) => {
+    undoStackRef.current.push(action);
+    if (undoStackRef.current.length > MAX_STACK) undoStackRef.current.shift();
+    redoStackRef.current = [];
+    sync();
+  }, [sync]);
 
   const undo = useCallback(async () => {
-    const action = undoStack.current.pop();
+    const action = undoStackRef.current.pop();
     if (!action) return null;
     await action.undo();
-    redoStack.current.push(action);
-    setVersion((v) => v + 1);
+    redoStackRef.current.push(action);
+    sync();
     return action;
-  }, []);
+  }, [sync]);
 
-  /** Undo multiple actions at once (jump to a point in history). */
   const undoTo = useCallback(async (index: number) => {
-    const count = undoStack.current.length - index;
+    const count = undoStackRef.current.length - index;
     let last: UndoableAction | null = null;
     for (let i = 0; i < count; i++) {
-      const action = undoStack.current.pop();
+      const action = undoStackRef.current.pop();
       if (!action) break;
       await action.undo();
-      redoStack.current.push(action);
+      redoStackRef.current.push(action);
       last = action;
     }
-    setVersion((v) => v + 1);
+    sync();
     return last;
-  }, []);
+  }, [sync]);
 
   const redo = useCallback(async () => {
-    const action = redoStack.current.pop();
+    const action = redoStackRef.current.pop();
     if (!action) return null;
     await action.redo();
-    undoStack.current.push(action);
-    setVersion((v) => v + 1);
+    undoStackRef.current.push(action);
+    sync();
     return action;
-  }, []);
+  }, [sync]);
 
   const clear = useCallback(() => {
-    undoStack.current = [];
-    redoStack.current = [];
-    setVersion((v) => v + 1);
-  }, []);
+    undoStackRef.current = [];
+    redoStackRef.current = [];
+    sync();
+  }, [sync]);
 
   return {
     push,
@@ -74,13 +107,7 @@ export function useUndoRedo() {
     undoTo,
     redo,
     clear,
-    canUndo: undoStack.current.length > 0,
-    canRedo: redoStack.current.length > 0,
-    /** Read-only snapshot of undo labels (oldest first) */
-    undoLabels: undoStack.current.map((a) => a.label),
-    /** Read-only snapshot of redo labels (most recent first) */
-    redoLabels: [...redoStack.current].reverse().map((a) => a.label),
-    /** Subscribe to changes by reading this value */
+    ...derived,
     version,
   };
 }

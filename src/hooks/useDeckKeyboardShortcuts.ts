@@ -4,7 +4,7 @@
  * @module hooks/useDeckKeyboardShortcuts
  */
 
-import { useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import type { DeckCard } from '@/hooks/useDeck';
 import type { useUndoRedo } from '@/hooks/useUndoRedo';
 import { toast } from '@/hooks/useToast';

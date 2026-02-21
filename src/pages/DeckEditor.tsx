@@ -7,8 +7,8 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import {
-  ArrowLeft, List, Crown, Check, Sparkles, Wand2, Loader2, Zap, Shield,
-  Keyboard, DollarSign, LayoutGrid, Columns3, SortAsc, Pencil, ChevronRight, Eye, EyeOff, Undo2, Redo2, History, ChevronDown,
+  ArrowLeft, List, Crown, Check, Wand2, Loader2, Shield,
+  Keyboard, DollarSign, LayoutGrid, Columns3, SortAsc, Pencil, Eye, EyeOff, Undo2, Redo2, History, ChevronDown,
 } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -63,7 +63,7 @@ export default function DeckEditor() {
   const { updateDeck } = useDeckMutations();
   const undoRedo = useUndoRedo();
   const {
-    addCard, updateCard, removeCard,
+    addCard, updateCard,
     handleAddCard: handleAddCardBase, handleRemoveCard, handleSetQuantity,
     handleMoveToSideboard, handleMoveToMaybeboard,
   } = useDeckActions({ deckId: id, cards, undoRedo });
