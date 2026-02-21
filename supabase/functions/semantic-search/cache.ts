@@ -49,6 +49,9 @@ export async function getCachedResult(
   const hash = await hashCacheKey(key);
   const cached = queryCache.get(key);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    // LRU touch: delete + re-insert moves entry to end of Map iteration order
+    queryCache.delete(key);
+    queryCache.set(key, cached);
     logCacheEvent('memory_cache_hit', query, hash, null);
     return cached.result;
   }
