@@ -8,7 +8,7 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import {
   ArrowLeft, List, Crown, Check, Sparkles, Wand2, Loader2, Zap, Shield,
-  Keyboard, DollarSign, LayoutGrid, Columns3, SortAsc, Pencil, ChevronRight, Eye, EyeOff,
+  Keyboard, DollarSign, LayoutGrid, Columns3, SortAsc, Pencil, ChevronRight, Eye, EyeOff, Undo2, Redo2,
 } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,7 @@ import { InlineCardSearch } from '@/components/deckbuilder/InlineCardSearch';
 import { CardPreviewPanel } from '@/components/deckbuilder/CardPreviewPanel';
 import type { CardSuggestion } from '@/components/deckbuilder/SuggestionsPanel';
 import { useDeckPrice } from '@/hooks/useDeckPrice';
+import { useUndoRedo } from '@/hooks/useUndoRedo';
 import { sortDeckCards } from '@/lib/deckbuilder/sort-deck-cards';
 import type { DeckSortMode } from '@/lib/deckbuilder/sort-deck-cards';
 import { inferCategory, DEFAULT_CATEGORY } from '@/lib/deckbuilder/infer-category';
@@ -78,6 +79,7 @@ export default function DeckEditor() {
   const [scryfallCacheVersion, setScryfallCacheVersion] = useState(0);
   const importProcessedRef = useRef(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const undoRedo = useUndoRedo();
 
   // When a card is selected in the deck list, also load its preview
   const handleSelectCard = useCallback((cardId: string) => {
@@ -111,32 +113,120 @@ export default function DeckEditor() {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName;
       const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable;
+
+      // Ctrl+Z / Ctrl+Shift+Z work even in inputs
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undoRedo.undo().then((a) => { if (a) toast({ title: `Undo: ${a.label}` }); });
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'Z' || (e.key === 'z' && e.shiftKey)) ) {
+        e.preventDefault();
+        undoRedo.redo().then((a) => { if (a) toast({ title: `Redo: ${a.label}` }); });
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'y') {
+        e.preventDefault();
+        undoRedo.redo().then((a) => { if (a) toast({ title: `Redo: ${a.label}` }); });
+        return;
+      }
+
       if (e.key === '?' && !isInput) { e.preventDefault(); setShortcutsOpen((o) => !o); return; }
       if (isInput || !user) return;
       if (e.key === '/') { e.preventDefault(); searchInputRef.current?.focus(); return; }
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedCardId) { e.preventDefault(); removeCard.mutate(selectedCardId); setSelectedCardId(null); return; }
+
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedCardId) {
+        e.preventDefault();
+        const card = cards?.find(c => c.id === selectedCardId);
+        if (card) {
+          removeCard.mutate(selectedCardId);
+          undoRedo.push({
+            label: `Remove ${card.card_name}`,
+            undo: () => addCard.mutateAsync({ card_name: card.card_name, quantity: card.quantity, board: card.board, category: card.category || undefined, is_commander: card.is_commander, is_companion: card.is_companion, scryfall_id: card.scryfall_id || undefined }),
+            redo: () => removeCard.mutateAsync(selectedCardId),
+          });
+        }
+        setSelectedCardId(null);
+        return;
+      }
+
       if ((e.key === '+' || e.key === '=') && selectedCardId) {
         e.preventDefault();
         const card = cards?.find(c => c.id === selectedCardId);
-        if (card) setQuantity.mutate({ cardId: selectedCardId, quantity: card.quantity + 1 });
+        if (card) {
+          const oldQty = card.quantity;
+          setQuantity.mutate({ cardId: selectedCardId, quantity: oldQty + 1 });
+          undoRedo.push({
+            label: `${card.card_name} qty ${oldQty}→${oldQty + 1}`,
+            undo: () => setQuantity.mutateAsync({ cardId: selectedCardId, quantity: oldQty }),
+            redo: () => setQuantity.mutateAsync({ cardId: selectedCardId, quantity: oldQty + 1 }),
+          });
+        }
         return;
       }
+
       if (e.key === '-' && selectedCardId) {
         e.preventDefault();
         const card = cards?.find(c => c.id === selectedCardId);
         if (card) {
-          if (card.quantity <= 1) { removeCard.mutate(selectedCardId); setSelectedCardId(null); }
-          else setQuantity.mutate({ cardId: selectedCardId, quantity: card.quantity - 1 });
+          const oldQty = card.quantity;
+          if (oldQty <= 1) {
+            removeCard.mutate(selectedCardId);
+            undoRedo.push({
+              label: `Remove ${card.card_name}`,
+              undo: () => addCard.mutateAsync({ card_name: card.card_name, quantity: 1, board: card.board, category: card.category || undefined, is_commander: card.is_commander, is_companion: card.is_companion, scryfall_id: card.scryfall_id || undefined }),
+              redo: () => removeCard.mutateAsync(selectedCardId),
+            });
+            setSelectedCardId(null);
+          } else {
+            setQuantity.mutate({ cardId: selectedCardId, quantity: oldQty - 1 });
+            undoRedo.push({
+              label: `${card.card_name} qty ${oldQty}→${oldQty - 1}`,
+              undo: () => setQuantity.mutateAsync({ cardId: selectedCardId, quantity: oldQty }),
+              redo: () => setQuantity.mutateAsync({ cardId: selectedCardId, quantity: oldQty - 1 }),
+            });
+          }
         }
         return;
       }
-      if (e.key === 'S' && e.shiftKey && selectedCardId) { e.preventDefault(); updateCard.mutate({ id: selectedCardId, board: 'sideboard' }); setSelectedCardId(null); return; }
-      if (e.key === 'M' && e.shiftKey && selectedCardId) { e.preventDefault(); updateCard.mutate({ id: selectedCardId, board: 'maybeboard' }); setSelectedCardId(null); return; }
+
+      if (e.key === 'S' && e.shiftKey && selectedCardId) {
+        e.preventDefault();
+        const card = cards?.find(c => c.id === selectedCardId);
+        if (card) {
+          const oldBoard = card.board;
+          updateCard.mutate({ id: selectedCardId, board: 'sideboard' });
+          undoRedo.push({
+            label: `Move ${card.card_name} to sideboard`,
+            undo: () => updateCard.mutateAsync({ id: selectedCardId, board: oldBoard }),
+            redo: () => updateCard.mutateAsync({ id: selectedCardId, board: 'sideboard' }),
+          });
+        }
+        setSelectedCardId(null);
+        return;
+      }
+
+      if (e.key === 'M' && e.shiftKey && selectedCardId) {
+        e.preventDefault();
+        const card = cards?.find(c => c.id === selectedCardId);
+        if (card) {
+          const oldBoard = card.board;
+          updateCard.mutate({ id: selectedCardId, board: 'maybeboard' });
+          undoRedo.push({
+            label: `Move ${card.card_name} to maybeboard`,
+            undo: () => updateCard.mutateAsync({ id: selectedCardId, board: oldBoard }),
+            redo: () => updateCard.mutateAsync({ id: selectedCardId, board: 'maybeboard' }),
+          });
+        }
+        setSelectedCardId(null);
+        return;
+      }
+
       if (e.key === 'Escape') { setSelectedCardId(null); setShortcutsOpen(false); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [user, selectedCardId, removeCard, updateCard, setQuantity, cards]);
+  }, [user, selectedCardId, removeCard, updateCard, setQuantity, cards, addCard, undoRedo]);
 
   // ── Handle imported cards ──
   useEffect(() => {
@@ -465,6 +555,20 @@ export default function DeckEditor() {
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
+      {!isReadOnly && (
+        <div className="flex items-center gap-0.5">
+          <button onClick={() => undoRedo.undo().then((a) => { if (a) toast({ title: `Undo: ${a.label}` }); })}
+            disabled={!undoRedo.canUndo} title="Undo (Ctrl+Z)"
+            className={cn('p-1.5 rounded transition-colors', undoRedo.canUndo ? 'text-muted-foreground hover:text-foreground hover:bg-secondary/50' : 'text-muted-foreground/30 cursor-not-allowed')}>
+            <Undo2 className="h-3.5 w-3.5" />
+          </button>
+          <button onClick={() => undoRedo.redo().then((a) => { if (a) toast({ title: `Redo: ${a.label}` }); })}
+            disabled={!undoRedo.canRedo} title="Redo (Ctrl+Shift+Z)"
+            className={cn('p-1.5 rounded transition-colors', undoRedo.canRedo ? 'text-muted-foreground hover:text-foreground hover:bg-secondary/50' : 'text-muted-foreground/30 cursor-not-allowed')}>
+            <Redo2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
       <div className="flex-1" />
       {!isMobile && (
         <button onClick={() => setPreviewOpen((o) => !o)}
@@ -636,6 +740,8 @@ export default function DeckEditor() {
                 { keys: ['Shift', 'M'], desc: t('deckEditor.shortcuts.toMaybeboard') },
                 { keys: ['?'], desc: t('deckEditor.shortcuts.toggleHelp') },
                 { keys: ['Esc'], desc: t('deckEditor.shortcuts.deselectClose') },
+                { keys: ['Ctrl', 'Z'], desc: 'Undo' },
+                { keys: ['Ctrl', 'Shift', 'Z'], desc: 'Redo' },
               ] as const).map(({ keys, desc }) => (
                 <li key={desc} className="flex items-center justify-between gap-3">
                   <span className="text-muted-foreground">{desc}</span>
