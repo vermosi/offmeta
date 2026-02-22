@@ -27,6 +27,7 @@ import { DeckStatsBar } from '@/components/deckbuilder/DeckStats';
 import { DeckExportMenu } from '@/components/deckbuilder/DeckExportMenu';
 import { useTranslation } from '@/lib/i18n';
 import { useDeckTags, useDeckTagMutations, usePopularTags } from '@/hooks/useDeckTags';
+import { useCollectionLookup } from '@/hooks/useCollection';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -64,6 +65,7 @@ export default function DeckEditor() {
   const { data: cards = [], isLoading: cardsLoading } = useDeckCards(id);
   const { updateDeck } = useDeckMutations();
   const undoRedo = useUndoRedo();
+  const collectionLookup = useCollectionLookup();
   const {
     addCard, updateCard,
     handleAddCard: handleAddCardBase, handleRemoveCard, handleSetQuantity,
@@ -197,6 +199,23 @@ export default function DeckEditor() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [mainboardCards, deckSortMode, scryfallCacheVersion],
   );
+
+  // ── Missing cards summary ──
+  const missingCards = useMemo(() => {
+    if (!user || (collectionLookup.size === 0 && cards.length === 0)) return [];
+    const missing: { name: string; needed: number }[] = [];
+    for (const card of cards) {
+      if (card.board === 'maybeboard') continue;
+      const owned = collectionLookup.get(card.card_name) || 0;
+      const needed = card.quantity - owned;
+      if (needed > 0) {
+        const existing = missing.find((m) => m.name === card.card_name);
+        if (existing) existing.needed += needed;
+        else missing.push({ name: card.card_name, needed });
+      }
+    }
+    return missing;
+  }, [user, collectionLookup, cards]);
 
   // ── Handlers ──
   const handleRecategorizeAll = useCallback(async () => {
@@ -527,7 +546,8 @@ export default function DeckEditor() {
           onMoveToMaybeboard={handleMoveToMaybeboard}
           scryfallCache={scryfallCacheRef}
           onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
-          cacheVersion={scryfallCacheVersion} />
+          cacheVersion={scryfallCacheVersion}
+          collectionLookup={user ? collectionLookup : undefined} />
       ))}
       <SideboardSection cards={sideboardCards} isReadOnly={isReadOnly}
         onRemove={handleRemoveCard}
@@ -535,7 +555,8 @@ export default function DeckEditor() {
         onMoveToMainboard={(cardId) => handleMoveToSideboard(cardId, false)}
         scryfallCache={scryfallCacheRef}
         onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
-        cacheVersion={scryfallCacheVersion} />
+        cacheVersion={scryfallCacheVersion}
+        collectionLookup={user ? collectionLookup : undefined} />
       <MaybeboardSection cards={maybeboardCards} isReadOnly={isReadOnly}
         onRemove={handleRemoveCard}
         onSetQuantity={handleSetQuantity}
@@ -543,7 +564,8 @@ export default function DeckEditor() {
         onMoveToSideboard={(cardId) => handleMoveToSideboard(cardId, true)}
         scryfallCache={scryfallCacheRef}
         onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
-        cacheVersion={scryfallCacheVersion} />
+        cacheVersion={scryfallCacheVersion}
+        collectionLookup={user ? collectionLookup : undefined} />
     </div>
   );
 
@@ -573,6 +595,18 @@ export default function DeckEditor() {
   const mainCount = mainboardCards.reduce((s, c) => s + c.quantity, 0);
   const sideCount = sideboardCards.reduce((s, c) => s + c.quantity, 0);
   const maybeCount = maybeboardCards.reduce((s, c) => s + c.quantity, 0);
+
+
+  const missingCardsBar = user && missingCards.length > 0 && (
+    <div className="flex items-center gap-2 px-4 py-1.5 border-t border-destructive/20 bg-destructive/5 text-xs">
+      <span className="text-destructive font-semibold shrink-0">
+        {t('collection.missingCards', 'Missing Cards')}:
+      </span>
+      <span className="text-destructive/80 truncate">
+        {missingCards.length} card{missingCards.length !== 1 ? 's' : ''} ({missingCards.reduce((s, m) => s + m.needed, 0)} total)
+      </span>
+    </div>
+  );
 
   const deckCountBar = cards.length > 0 && (
     <div className="flex items-center gap-3 px-4 py-1.5 border-t border-border bg-card text-xs text-muted-foreground">
@@ -615,6 +649,7 @@ export default function DeckEditor() {
           </div>
         )}
       </div>
+      {missingCardsBar}
       {deckCountBar}
       {statsBar}
     </div>
@@ -629,6 +664,7 @@ export default function DeckEditor() {
         {viewSortToolbar}
         {deckListContent}
       </div>
+      {missingCardsBar}
       {statsBar}
       {previewOpen && previewCard && isMobile && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm" onClick={() => setPreviewOpen(false)}>
