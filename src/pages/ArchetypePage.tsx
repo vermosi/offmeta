@@ -9,7 +9,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { ManaSymbol } from '@/components/ManaSymbol';
 import { ARCHETYPES } from '@/data/archetypes';
-import { ArrowLeft, Compass, Lightbulb, Star, DollarSign, Search } from 'lucide-react';
+import { Compass, Lightbulb, Star, DollarSign, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { SkipLinks } from '@/components/SkipLinks';
