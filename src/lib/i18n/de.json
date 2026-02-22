@@ -814,5 +814,15 @@
   "compare.addTo": "Zum Vergleich hinzufügen",
   "compare.removeFrom": "Aus Vergleich entfernen",
 
-  "footer.poweredByLabel": "Unterstützt von"
+  "footer.poweredByLabel": "Unterstützt von",
+
+  "nav.browseDecks": "Decks durchsuchen",
+  "browse.title": "Decks durchsuchen",
+  "browse.subtitle": "Entdecke geteilte Decklisten der Community.",
+  "browse.noResults": "Keine Decks entsprechen deinen Filtern.",
+  "browse.loadMore": "Mehr laden",
+  "deck.tags": "Tags",
+  "deck.addTag": "Tag hinzufügen",
+  "deck.tagPlaceholder": "Tag hinzufügen...",
+  "deck.maxTags": "Maximal 5 Tags"
 }

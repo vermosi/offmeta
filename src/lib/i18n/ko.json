@@ -822,5 +822,15 @@
   "deckExport.nowPrivateDesc": "당신만 이 덱을 볼 수 있습니다",
   "compare.removeFrom": "비교에서 제거",
 
-  "footer.poweredByLabel": "제공:"
+  "footer.poweredByLabel": "제공:",
+
+  "nav.browseDecks": "덱 둘러보기",
+  "browse.title": "덱 둘러보기",
+  "browse.subtitle": "커뮤니티가 공유한 덱 리스트를 발견하세요.",
+  "browse.noResults": "필터와 일치하는 덱이 없습니다.",
+  "browse.loadMore": "더 보기",
+  "deck.tags": "태그",
+  "deck.addTag": "태그 추가",
+  "deck.tagPlaceholder": "태그 추가...",
+  "deck.maxTags": "최대 5개 태그"
 }

@@ -822,5 +822,15 @@
   "deckExport.nowPrivateDesc": "Только вы можете видеть эту колоду",
   "compare.removeFrom": "Убрать из сравнения",
 
-  "footer.poweredByLabel": "Работает на"
+  "footer.poweredByLabel": "Работает на",
+
+  "nav.browseDecks": "Обзор колод",
+  "browse.title": "Обзор колод",
+  "browse.subtitle": "Откройте для себя колоды, которыми поделилось сообщество.",
+  "browse.noResults": "Нет колод, соответствующих вашим фильтрам.",
+  "browse.loadMore": "Загрузить ещё",
+  "deck.tags": "Теги",
+  "deck.addTag": "Добавить тег",
+  "deck.tagPlaceholder": "Добавить тег...",
+  "deck.maxTags": "Максимум 5 тегов"
 }
