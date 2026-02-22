@@ -839,5 +839,19 @@
   "browse.allFormats": "All Formats",
   "browse.sortNewest": "Newest",
   "browse.sortCards": "Most Cards",
-  "browse.sortAlpha": "A-Z"
+  "browse.sortAlpha": "A-Z",
+
+  "nav.collection": "My Collection",
+
+  "collection.title": "My Collection",
+  "collection.subtitle": "{count} unique cards · {total} total",
+  "collection.empty": "Your collection is empty. Add cards from search results!",
+  "collection.noMatch": "No cards match your search.",
+  "collection.searchPlaceholder": "Search your collection...",
+  "collection.exportCsv": "Exported!",
+  "collection.showOwnedOnly": "Owned Only",
+
+  "card.addToCollection": "Add to collection",
+  "card.removeFromCollection": "Remove from collection",
+  "card.ownedQuantity": "Owned"
 }

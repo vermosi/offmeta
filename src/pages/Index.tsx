@@ -44,10 +44,14 @@ import { useTranslation } from '@/lib/i18n';
 import { useCompare } from '@/hooks/useCompare';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useRovingTabIndex } from '@/hooks/useRovingTabIndex';
+import { useCollectionLookup } from '@/hooks/useCollection';
+import { useAuth } from '@/hooks/useAuth';
 const CardModal = lazy(() => import('@/components/CardModal'));
 
 const Index = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const collectionLookup = useCollectionLookup();
   const {
     searchQuery,
     originalQuery,
@@ -230,6 +234,7 @@ const Index = () => {
                     totalCards={totalCards}
                     resetKey={filtersResetKey}
                     initialFilters={initialUrlFilters}
+                    collectionLookup={user ? collectionLookup : undefined}
                   />
                   <ViewToggle value={viewMode} onChange={setViewMode} />
 
@@ -318,6 +323,7 @@ const Index = () => {
                               card={card}
                               onClick={() => handleCardClick(card, index)}
                               tabIndex={rovingProps.tabIndex}
+                              isOwned={collectionLookup.has(card.name)}
                             />
                           </div>
                         );
@@ -346,6 +352,7 @@ const Index = () => {
                               card={card}
                               onClick={() => openLightbox(index)}
                               tabIndex={rovingProps.tabIndex}
+                              isOwned={collectionLookup.has(card.name)}
                             />
                           </div>
                         );
@@ -394,6 +401,7 @@ const Index = () => {
                               card={card}
                               onClick={() => compareMode ? toggleCompareCard(card) : handleCardClick(card, index)}
                               tabIndex={rovingProps.tabIndex}
+                              isOwned={collectionLookup.has(card.name)}
                             />
                           </div>
                         );

@@ -38,6 +38,7 @@ const DeckEditor = lazy(() => import('./pages/DeckEditor'));
 const PublicDeckView = lazy(() => import('./pages/PublicDeckView'));
 const BrowseDecks = lazy(() => import('./pages/BrowseDecks'));
 const About = lazy(() => import('./pages/About'));
+const Collection = lazy(() => import('./pages/Collection'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const queryClient = new QueryClient({
@@ -122,6 +123,7 @@ const App = () => (
                   <Route path="/deck/:id" element={<PublicDeckView />} />
                   <Route path="/decks" element={<BrowseDecks />} />
                   <Route path="/about" element={<About />} />
+                  <Route path="/collection" element={<Collection />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>

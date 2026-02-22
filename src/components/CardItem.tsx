@@ -16,6 +16,7 @@ interface CardItemProps {
   card: ScryfallCard;
   onClick: () => void;
   tabIndex?: number;
+  isOwned?: boolean;
 }
 
 /** Format a price string to a compact display. */
@@ -36,6 +37,7 @@ export const CardItem = memo(function CardItem({
   card,
   onClick,
   tabIndex = 0,
+  isOwned,
 }: CardItemProps) {
   const imageUrl = getCardImage(card, 'normal');
   const [imgError, setImgError] = useState(false);
@@ -75,6 +77,13 @@ export const CardItem = memo(function CardItem({
           className="w-full h-full object-cover"
           onError={() => setImgError(true)}
         />
+      )}
+
+      {/* Owned badge */}
+      {isOwned && (
+        <div className="absolute top-1.5 left-1.5 z-10 h-5 w-5 rounded-full bg-emerald-500/90 flex items-center justify-center shadow-sm" aria-label="Owned">
+          <svg className="h-3 w-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+        </div>
       )}
 
       {/* Info overlay — always visible on mobile, hover on desktop */}

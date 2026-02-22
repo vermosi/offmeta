@@ -5,7 +5,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, LogIn, LogOut, Bookmark, User, Settings, Shield } from 'lucide-react';
+import { Menu, X, LogIn, LogOut, Bookmark, User, Settings, Shield, Package } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { Logo } from '@/components/Logo';
@@ -152,6 +152,16 @@ export function Header() {
                   {t('nav.savedSearches')}
                 </Link>
                 <Link
+                  to="/collection"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={cn(
+                    'w-full px-4 py-3 text-base font-medium rounded-xl',
+                    'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
+                  )}
+                >
+                  {t('nav.collection', 'My Collection')}
+                </Link>
+                <Link
                   to="/profile"
                   onClick={() => setMobileMenuOpen(false)}
                   className={cn(
@@ -274,6 +284,10 @@ export function Header() {
                         {savedCount}
                       </span>
                     )}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/collection')}>
+                    <Package className="h-4 w-4 mr-2" />
+                    {t('nav.collection', 'My Collection')}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/profile')}>
                     <Settings className="h-4 w-4 mr-2" />

@@ -22,8 +22,9 @@ import {
 import type { ScryfallCard } from '@/types/card';
 import type { FilterState } from '@/types/filters';
 import { cn } from '@/lib/core/utils';
-import { Filter, ArrowUpDown, X, ChevronDown } from 'lucide-react';
+import { Filter, ArrowUpDown, X, ChevronDown, Package } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import { useAuth } from '@/hooks/useAuth';
 
 // Color definitions with mana symbols
 const COLORS = [
@@ -117,6 +118,8 @@ interface SearchFiltersProps {
   resetKey: number;
   /** Initial filter state from URL params (applied once on mount) */
   initialFilters?: Partial<FilterState> | null;
+  /** Collection lookup map for "owned only" filtering */
+  collectionLookup?: Map<string, number>;
 }
 
 export function SearchFilters({
@@ -125,8 +128,10 @@ export function SearchFilters({
   totalCards,
   resetKey,
   initialFilters,
+  collectionLookup,
 }: SearchFiltersProps) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const defaultMaxCmc = useMemo(() => {
     return Math.max(16, ...cards.map((c) => c.cmc || 0));
   }, [cards]);
@@ -160,6 +165,11 @@ export function SearchFilters({
   // Apply filters and sorting
   const filteredCards = useMemo(() => {
     let result = [...cards];
+
+    // Owned-only filter
+    if (filters.ownedOnly && collectionLookup) {
+      result = result.filter((card) => collectionLookup.has(card.name));
+    }
 
     // Color filter - AND logic: card must have ALL selected colors
     if (filters.colors.length > 0) {
@@ -244,14 +254,15 @@ export function SearchFilters({
     });
 
     return result;
-  }, [cards, filters]);
+  }, [cards, filters, collectionLookup]);
 
   // Calculate if filters are active (before the effect that uses it)
   const hasActiveFilters =
     filters.colors.length > 0 ||
     filters.types.length > 0 ||
     filters.cmcRange[0] > 0 ||
-    filters.cmcRange[1] < defaultMaxCmc;
+    filters.cmcRange[1] < defaultMaxCmc ||
+    !!filters.ownedOnly;
 
   // Notify parent of filtered results - use useEffect instead of useMemo for side effects
   useEffect(() => {
@@ -316,7 +327,8 @@ export function SearchFilters({
   const activeFilterCount =
     filters.colors.length +
     filters.types.length +
-    (filters.cmcRange[0] > 0 || filters.cmcRange[1] < defaultMaxCmc ? 1 : 0);
+    (filters.cmcRange[0] > 0 || filters.cmcRange[1] < defaultMaxCmc ? 1 : 0) +
+    (filters.ownedOnly ? 1 : 0);
 
   return (
     <div className="contents">
@@ -451,6 +463,24 @@ export function SearchFilters({
           </div>
         </PopoverContent>
       </Popover>
+
+      {/* Owned Only toggle — only for authenticated users */}
+      {user && collectionLookup && (
+        <button
+          onClick={() => setFilters((prev) => ({ ...prev, ownedOnly: !prev.ownedOnly }))}
+          className={cn(
+            'flex items-center gap-1 py-1 px-2.5 text-xs rounded-md transition-colors h-8 sm:h-9',
+            filters.ownedOnly
+              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
+          )}
+          aria-pressed={!!filters.ownedOnly}
+          aria-label={t('collection.showOwnedOnly', 'Owned Only')}
+        >
+          <Package className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">{t('collection.showOwnedOnly', 'Owned Only')}</span>
+        </button>
+      )}
 
       {/* Sort Dropdown */}
       <Select

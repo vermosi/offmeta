@@ -38,6 +38,39 @@ export type Database = {
         }
         Relationships: []
       }
+      collection_cards: {
+        Row: {
+          card_name: string
+          created_at: string
+          foil: boolean
+          id: string
+          quantity: number
+          scryfall_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          card_name: string
+          created_at?: string
+          foil?: boolean
+          id?: string
+          quantity?: number
+          scryfall_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          card_name?: string
+          created_at?: string
+          foil?: boolean
+          id?: string
+          quantity?: number
+          scryfall_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       deck_cards: {
         Row: {
           board: string
