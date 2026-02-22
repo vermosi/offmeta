@@ -90,7 +90,7 @@ describe('GuidesIndex', () => {
 
   it('sets the document title', () => {
     renderGuidesIndex();
-    expect(document.title).toBe('Search Guides — OffMeta MTG');
+    expect(document.title).toBe('MTG Search Guides — Learn to Find Any Magic Card | OffMeta');
   });
 
   it('renders Header and Footer', () => {
