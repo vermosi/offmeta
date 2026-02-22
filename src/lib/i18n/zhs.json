@@ -813,5 +813,19 @@
   "deck.tags": "标签",
   "deck.addTag": "添加标签",
   "deck.tagPlaceholder": "添加标签...",
-  "deck.maxTags": "最多5个标签"
+  "deck.maxTags": "最多5个标签",
+
+  "nav.collection": "我的收藏",
+  "collection.title": "我的收藏",
+  "collection.subtitle": "{count}种卡牌 · 共{total}张",
+  "collection.empty": "你的收藏是空的。从搜索结果中添加卡牌吧！",
+  "collection.noMatch": "没有匹配搜索的卡牌。",
+  "collection.searchPlaceholder": "搜索收藏...",
+  "collection.exportCsv": "已导出！",
+  "collection.showOwnedOnly": "仅已拥有",
+  "collection.missingCards": "缺少的卡牌",
+
+  "card.addToCollection": "添加到收藏",
+  "card.removeFromCollection": "从收藏移除",
+  "card.ownedQuantity": "拥有"
 }

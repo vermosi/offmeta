@@ -824,5 +824,19 @@
   "deck.tags": "タグ",
   "deck.addTag": "タグを追加",
   "deck.tagPlaceholder": "タグを追加...",
-  "deck.maxTags": "最大5つのタグ"
+  "deck.maxTags": "最大5つのタグ",
+
+  "nav.collection": "マイコレクション",
+  "collection.title": "マイコレクション",
+  "collection.subtitle": "{count}種類のカード · 合計{total}枚",
+  "collection.empty": "コレクションは空です。検索結果からカードを追加しましょう！",
+  "collection.noMatch": "検索に一致するカードがありません。",
+  "collection.searchPlaceholder": "コレクションを検索...",
+  "collection.exportCsv": "エクスポート完了！",
+  "collection.showOwnedOnly": "所有のみ",
+  "collection.missingCards": "不足カード",
+
+  "card.addToCollection": "コレクションに追加",
+  "card.removeFromCollection": "コレクションから削除",
+  "card.ownedQuantity": "所有"
 }

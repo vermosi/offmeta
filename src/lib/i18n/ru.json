@@ -832,5 +832,19 @@
   "deck.tags": "Теги",
   "deck.addTag": "Добавить тег",
   "deck.tagPlaceholder": "Добавить тег...",
-  "deck.maxTags": "Максимум 5 тегов"
+  "deck.maxTags": "Максимум 5 тегов",
+
+  "nav.collection": "Моя коллекция",
+  "collection.title": "Моя коллекция",
+  "collection.subtitle": "{count} уникальных карт · {total} всего",
+  "collection.empty": "Ваша коллекция пуста. Добавьте карты из результатов поиска!",
+  "collection.noMatch": "Нет карт, соответствующих вашему поиску.",
+  "collection.searchPlaceholder": "Поиск в коллекции...",
+  "collection.exportCsv": "Экспортировано!",
+  "collection.showOwnedOnly": "Только в наличии",
+  "collection.missingCards": "Недостающие карты",
+
+  "card.addToCollection": "Добавить в коллекцию",
+  "card.removeFromCollection": "Удалить из коллекции",
+  "card.ownedQuantity": "В наличии"
 }

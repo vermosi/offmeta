@@ -832,5 +832,19 @@
   "deck.tags": "태그",
   "deck.addTag": "태그 추가",
   "deck.tagPlaceholder": "태그 추가...",
-  "deck.maxTags": "최대 5개 태그"
+  "deck.maxTags": "최대 5개 태그",
+
+  "nav.collection": "내 컬렉션",
+  "collection.title": "내 컬렉션",
+  "collection.subtitle": "{count}종의 카드 · 총 {total}장",
+  "collection.empty": "컬렉션이 비어 있습니다. 검색 결과에서 카드를 추가하세요!",
+  "collection.noMatch": "검색과 일치하는 카드가 없습니다.",
+  "collection.searchPlaceholder": "컬렉션 검색...",
+  "collection.exportCsv": "내보내기 완료!",
+  "collection.showOwnedOnly": "보유만",
+  "collection.missingCards": "부족한 카드",
+
+  "card.addToCollection": "컬렉션에 추가",
+  "card.removeFromCollection": "컬렉션에서 제거",
+  "card.ownedQuantity": "보유"
 }
