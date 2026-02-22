@@ -163,6 +163,12 @@
   "card.combosSteps": "Schritte",
   "card.combosPrerequisites": "Voraussetzungen",
   "card.combosCost": "Combo-Kosten: ~${price}",
+
+  "card.whyPlayed": "Warum wird sie gespielt",
+  "card.edhrecRank": "EDHREC-Rang",
+  "card.metaLoading": "Strategie wird analysiert…",
+  "card.metaError": "Metakontext konnte nicht geladen werden",
+
   "queryBar.copied": "Abfrage kopiert!",
   "queryBar.copyFailed": "Kopieren fehlgeschlagen",
   "queryBar.linkCopied": "Link kopiert!",

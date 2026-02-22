@@ -172,6 +172,12 @@
   "card.combosSteps": "단계",
   "card.combosPrerequisites": "전제 조건",
   "card.combosCost": "콤보 비용: ~${price}",
+
+  "card.whyPlayed": "왜 사용되는가",
+  "card.edhrecRank": "EDHREC 순위",
+  "card.metaLoading": "전략 분석 중…",
+  "card.metaError": "메타 컨텍스트를 로드할 수 없습니다",
+
   "queryBar.copied": "쿼리가 복사되었습니다!",
   "queryBar.copyFailed": "복사 실패",
   "queryBar.linkCopied": "링크가 복사되었습니다!",

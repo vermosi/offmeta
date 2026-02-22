@@ -172,6 +172,12 @@
   "card.combosSteps": "步驟",
   "card.combosPrerequisites": "前提條件",
   "card.combosCost": "連擊費用：約 ${price}",
+
+  "card.whyPlayed": "為什麼被使用",
+  "card.edhrecRank": "EDHREC 排名",
+  "card.metaLoading": "分析策略中…",
+  "card.metaError": "無法載入元數據",
+
   "queryBar.copied": "查詢已複製！",
   "queryBar.copyFailed": "複製失敗",
   "queryBar.linkCopied": "連結已複製！",

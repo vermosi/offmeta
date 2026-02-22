@@ -172,6 +172,12 @@
   "card.combosSteps": "步骤",
   "card.combosPrerequisites": "前提条件",
   "card.combosCost": "连击费用：约 ${price}",
+
+  "card.whyPlayed": "为什么被使用",
+  "card.edhrecRank": "EDHREC 排名",
+  "card.metaLoading": "分析策略中…",
+  "card.metaError": "无法加载元数据",
+
   "queryBar.copied": "查询已复制！",
   "queryBar.copyFailed": "复制失败",
   "queryBar.linkCopied": "链接已复制！",

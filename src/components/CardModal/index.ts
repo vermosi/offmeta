@@ -12,4 +12,5 @@ export { CardModalPrintings } from './CardModalPrintings';
 export { CardModalToolbox } from './CardModalToolbox';
 export { CardModalCombos } from './CardModalCombos';
 export { CardModalAddToDeck } from './CardModalAddToDeck';
+export { CardModalMetaContext } from './CardModalMetaContext';
 export * from './types';
