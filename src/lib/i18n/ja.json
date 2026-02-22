@@ -163,6 +163,12 @@
   "card.combosSteps": "手順",
   "card.combosPrerequisites": "前提条件",
   "card.combosCost": "コンボコスト: ~${price}",
+
+  "card.whyPlayed": "なぜ使われるか",
+  "card.edhrecRank": "EDHRECランク",
+  "card.metaLoading": "戦略を分析中…",
+  "card.metaError": "メタ情報を読み込めません",
+
   "queryBar.copied": "クエリをコピーしました！",
   "queryBar.copyFailed": "コピーに失敗しました",
   "queryBar.linkCopied": "リンクをコピーしました！",

@@ -177,6 +177,11 @@
   "card.combosPrerequisites": "Prerequisites",
   "card.combosCost": "Combo cost: ~${price}",
 
+  "card.whyPlayed": "Why It's Played",
+  "card.edhrecRank": "EDHREC Rank",
+  "card.metaLoading": "Analyzing card strategy…",
+  "card.metaError": "Could not load meta context",
+
   "queryBar.copied": "Query copied!",
   "queryBar.copyFailed": "Failed to copy",
   "queryBar.linkCopied": "Link copied!",

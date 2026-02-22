@@ -163,6 +163,12 @@
   "card.combosSteps": "Passi",
   "card.combosPrerequisites": "Prerequisiti",
   "card.combosCost": "Costo combo: ~${price}",
+
+  "card.whyPlayed": "Perché viene giocata",
+  "card.edhrecRank": "Classifica EDHREC",
+  "card.metaLoading": "Analisi della strategia…",
+  "card.metaError": "Impossibile caricare il contesto",
+
   "queryBar.copied": "Query copiata!",
   "queryBar.copyFailed": "Copia non riuscita",
   "queryBar.linkCopied": "Link copiato!",

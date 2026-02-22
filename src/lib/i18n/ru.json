@@ -172,6 +172,12 @@
   "card.combosSteps": "Шаги",
   "card.combosPrerequisites": "Предпосылки",
   "card.combosCost": "Стоимость комбо: ~${price}",
+
+  "card.whyPlayed": "Почему эта карта играется",
+  "card.edhrecRank": "Рейтинг EDHREC",
+  "card.metaLoading": "Анализ стратегии…",
+  "card.metaError": "Не удалось загрузить контекст",
+
   "queryBar.copied": "Запрос скопирован!",
   "queryBar.copyFailed": "Ошибка копирования",
   "queryBar.linkCopied": "Ссылка скопирована!",

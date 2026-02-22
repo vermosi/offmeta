@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.semantic-search]
 verify_jwt = false
+
+[functions.card-meta-context]
+verify_jwt = false
