@@ -30,18 +30,25 @@ export function SetBadge({ cardName, scryfallId, scryfallCache, cacheVersion: _c
     ? printingsByName.get(cardName)?.find((p) => p.id === scryfallId)
     : undefined;
 
-  const set = selectedPrinting
-    ? selectedPrinting.set.toUpperCase()
-    : scryfallCache.current?.get(cardName)?.set?.toUpperCase();
+  const setCode = selectedPrinting
+    ? selectedPrinting.set
+    : scryfallCache.current?.get(cardName)?.set;
 
   const card = scryfallCache.current?.get(cardName);
   const price = card?.prices?.usd ? `$${card.prices.usd}` : null;
 
   return (
     <>
-      {set && (
-        <span className="ml-1 shrink-0 text-[9px] font-mono text-muted-foreground/60 bg-muted/40 rounded px-1 py-px leading-tight tracking-wide align-middle select-none">
-          {set}
+      {setCode && (
+        <span className="ml-1 shrink-0 inline-flex items-center gap-0.5 text-[9px] font-mono text-muted-foreground/60 bg-muted/40 rounded px-1 py-px leading-tight tracking-wide align-middle select-none">
+          <img
+            src={`https://svgs.scryfall.io/sets/${setCode.toLowerCase()}.svg`}
+            alt={setCode.toUpperCase()}
+            className="h-2.5 w-2.5 inline-block opacity-60"
+            loading="lazy"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+          />
+          {setCode.toUpperCase()}
         </span>
       )}
       {price && (
@@ -125,8 +132,14 @@ export function PrintingPickerPopover({ cardName, currentScryfallId, onSelect }:
                   )}
                   onClick={() => { onSelect(p); setOpen(false); }}
                 >
-                  <span className={rarityDot(p.rarity)} />
-                  <span className="flex-1 truncate">{p.set_name}</span>
+                   <img
+                      src={`https://svgs.scryfall.io/sets/${p.set.toLowerCase()}.svg`}
+                      alt={p.set}
+                      className="h-3 w-3 shrink-0 opacity-70"
+                      loading="lazy"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                    />
+                   <span className="flex-1 truncate">{p.set_name}</span>
                   <span className="text-[10px] text-muted-foreground shrink-0 mr-2">
                     #{p.collector_number} · {p.lang.toUpperCase()}
                   </span>
