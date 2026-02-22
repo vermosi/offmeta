@@ -22,11 +22,12 @@ interface SideboardSectionProps {
   scryfallCache: React.RefObject<Map<string, ScryfallCard>>;
   onChangePrinting: (cardId: string, printing: CardPrinting) => void;
   cacheVersion: number;
+  collectionLookup?: Map<string, number>;
 }
 
 export function SideboardSection({
   cards, onRemove, onSetQuantity, onMoveToMainboard, isReadOnly,
-  scryfallCache, onChangePrinting, cacheVersion,
+  scryfallCache, onChangePrinting, cacheVersion, collectionLookup,
 }: SideboardSectionProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(true);
@@ -54,6 +55,15 @@ export function SideboardSection({
                     <span className="truncate text-xs text-muted-foreground">{card.card_name}</span>
                     <SetBadge cardName={card.card_name} scryfallId={card.scryfall_id} scryfallCache={scryfallCache} cacheVersion={cacheVersion} />
                   </CardHoverImage>
+                  {collectionLookup && (() => {
+                    const owned = collectionLookup.get(card.card_name) || 0;
+                    const needed = card.quantity - owned;
+                    return needed > 0 ? (
+                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20 shrink-0 whitespace-nowrap">
+                        Need {needed}
+                      </span>
+                    ) : null;
+                  })()}
                   {!isReadOnly && (
                     <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                       <PrintingPickerPopover

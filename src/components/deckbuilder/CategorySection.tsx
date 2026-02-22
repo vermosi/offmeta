@@ -38,12 +38,14 @@ interface CategorySectionProps {
   scryfallCache: React.RefObject<Map<string, ScryfallCard>>;
   onChangePrinting: (cardId: string, printing: { id: string }) => void;
   cacheVersion: number;
+  /** Collection lookup map for "Need X more" indicators */
+  collectionLookup?: Map<string, number>;
 }
 
 export function CategorySection({
   category, cards, onRemove, onSetQuantity, onSetCommander, onSetCompanion,
   onSetCategory, onMoveToSideboard, onMoveToMaybeboard, isReadOnly,
-  selectedCardId, onSelectCard, scryfallCache, cacheVersion,
+  selectedCardId, onSelectCard, scryfallCache, cacheVersion, collectionLookup,
 }: CategorySectionProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(true);
@@ -130,6 +132,17 @@ export function CategorySection({
                     ${price}
                   </span>
                 )}
+
+                {/* Missing from collection indicator */}
+                {collectionLookup && (() => {
+                  const owned = collectionLookup.get(card.card_name) || 0;
+                  const needed = card.quantity - owned;
+                  return needed > 0 ? (
+                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20 shrink-0 whitespace-nowrap">
+                      Need {needed}
+                    </span>
+                  ) : null;
+                })()}
 
                 {/* Context menu dropdown (replaces inline button cluster) */}
                 {!isReadOnly && (
