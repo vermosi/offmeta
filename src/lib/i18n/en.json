@@ -823,5 +823,21 @@
   "deck.createDeck": "Create Your First Deck",
   "deck.cards": "cards",
   "deck.updated": "Updated",
-  "deck.deleteConfirm": "Delete this deck?"
+  "deck.deleteConfirm": "Delete this deck?",
+  "deck.tags": "Tags",
+  "deck.addTag": "Add tag",
+  "deck.tagPlaceholder": "Add a tag...",
+  "deck.maxTags": "Maximum 5 tags",
+
+  "nav.browseDecks": "Browse Decks",
+
+  "browse.title": "Browse Decks",
+  "browse.subtitle": "Discover shared decklists from the community.",
+  "browse.noResults": "No decks match your filters.",
+  "browse.loadMore": "Load More",
+  "browse.searchPlaceholder": "Search decks...",
+  "browse.allFormats": "All Formats",
+  "browse.sortNewest": "Newest",
+  "browse.sortCards": "Most Cards",
+  "browse.sortAlpha": "A-Z"
 }

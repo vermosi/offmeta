@@ -46,6 +46,7 @@ export function Header() {
     { label: t('nav.combos'), href: '/combos' },
     { label: t('nav.deckRecs'), href: '/deck-recs' },
     { label: t('nav.deckBuilder', 'Deck Builder'), href: '/deckbuilder' },
+    { label: t('nav.browseDecks', 'Browse Decks'), href: '/decks' },
     { label: t('header.about'), href: '/about' },
   ] as const;
 

@@ -92,6 +92,42 @@ export type Database = {
           },
         ]
       }
+      deck_tags: {
+        Row: {
+          created_at: string
+          deck_id: string
+          id: string
+          tag: string
+        }
+        Insert: {
+          created_at?: string
+          deck_id: string
+          id?: string
+          tag: string
+        }
+        Update: {
+          created_at?: string
+          deck_id?: string
+          id?: string
+          tag?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deck_tags_deck_id_fkey"
+            columns: ["deck_id"]
+            isOneToOne: false
+            referencedRelation: "decks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deck_tags_deck_id_fkey"
+            columns: ["deck_id"]
+            isOneToOne: false
+            referencedRelation: "decks_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       decks: {
         Row: {
           card_count: number

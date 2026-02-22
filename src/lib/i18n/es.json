@@ -814,5 +814,15 @@
   "compare.addTo": "Añadir a comparación",
   "compare.removeFrom": "Quitar de comparación",
 
-  "footer.poweredByLabel": "Desarrollado por"
+  "footer.poweredByLabel": "Desarrollado por",
+
+  "nav.browseDecks": "Explorar Mazos",
+  "browse.title": "Explorar Mazos",
+  "browse.subtitle": "Descubre listas de mazos compartidas por la comunidad.",
+  "browse.noResults": "No hay mazos que coincidan con tus filtros.",
+  "browse.loadMore": "Cargar más",
+  "deck.tags": "Etiquetas",
+  "deck.addTag": "Añadir etiqueta",
+  "deck.tagPlaceholder": "Añadir etiqueta...",
+  "deck.maxTags": "Máximo 5 etiquetas"
 }

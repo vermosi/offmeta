@@ -813,5 +813,15 @@
   "compare.addTo": "Adicionar à comparação",
   "compare.removeFrom": "Remover da comparação",
 
-  "footer.poweredByLabel": "Desenvolvido por"
+  "footer.poweredByLabel": "Desenvolvido por",
+
+  "nav.browseDecks": "Explorar Decks",
+  "browse.title": "Explorar Decks",
+  "browse.subtitle": "Descubra listas compartilhadas pela comunidade.",
+  "browse.noResults": "Nenhum deck corresponde aos seus filtros.",
+  "browse.loadMore": "Carregar mais",
+  "deck.tags": "Tags",
+  "deck.addTag": "Adicionar tag",
+  "deck.tagPlaceholder": "Adicionar tag...",
+  "deck.maxTags": "Máximo de 5 tags"
 }

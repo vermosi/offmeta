@@ -8,6 +8,8 @@ import { useMemo, useEffect, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Crown, Shield, ExternalLink, Copy, Check, Users } from 'lucide-react';
 import { Header } from '@/components/Header';
+import { Badge } from '@/components/ui/badge';
+import { useDeckTags } from '@/hooks/useDeckTags';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -170,6 +172,7 @@ export default function PublicDeckView() {
   const { user } = useAuth();
   const { data: deck, isLoading: deckLoading, error: deckError } = usePublicDeck(id);
   const { data: cards = [], isLoading: cardsLoading } = usePublicDeckCards(id);
+  const { data: deckTags = [] } = useDeckTags(id);
   const { scryfallMap, version } = useScryfallHydration(cards);
   const [copied, setCopied] = useState(false);
 
@@ -295,6 +298,18 @@ export default function PublicDeckView() {
 
           {deck.description && (
             <p className="text-sm text-muted-foreground leading-relaxed">{deck.description}</p>
+          )}
+
+          {deckTags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {deckTags.map((tag) => (
+                <Link key={tag.id} to={`/decks?tag=${encodeURIComponent(tag.tag)}`}>
+                  <Badge variant="outline" size="sm" className="hover:bg-accent/10 hover:text-accent transition-colors cursor-pointer">
+                    {tag.tag}
+                  </Badge>
+                </Link>
+              ))}
+            </div>
           )}
         </div>
 

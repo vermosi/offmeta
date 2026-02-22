@@ -814,5 +814,15 @@
   "compare.addTo": "比較に追加",
   "compare.removeFrom": "比較から削除",
 
-  "footer.poweredByLabel": "提供："
+  "footer.poweredByLabel": "提供：",
+
+  "nav.browseDecks": "デッキを探す",
+  "browse.title": "デッキを探す",
+  "browse.subtitle": "コミュニティが共有したデッキリストを発見しましょう。",
+  "browse.noResults": "フィルターに一致するデッキがありません。",
+  "browse.loadMore": "もっと読み込む",
+  "deck.tags": "タグ",
+  "deck.addTag": "タグを追加",
+  "deck.tagPlaceholder": "タグを追加...",
+  "deck.maxTags": "最大5つのタグ"
 }

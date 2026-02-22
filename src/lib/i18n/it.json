@@ -814,5 +814,15 @@
   "compare.addTo": "Aggiungi al confronto",
   "compare.removeFrom": "Rimuovi dal confronto",
 
-  "footer.poweredByLabel": "Sviluppato da"
+  "footer.poweredByLabel": "Sviluppato da",
+
+  "nav.browseDecks": "Sfoglia Mazzi",
+  "browse.title": "Sfoglia Mazzi",
+  "browse.subtitle": "Scopri le liste condivise dalla comunità.",
+  "browse.noResults": "Nessun mazzo corrisponde ai tuoi filtri.",
+  "browse.loadMore": "Carica altro",
+  "deck.tags": "Tag",
+  "deck.addTag": "Aggiungi tag",
+  "deck.tagPlaceholder": "Aggiungi tag...",
+  "deck.maxTags": "Massimo 5 tag"
 }

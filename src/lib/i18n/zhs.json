@@ -803,5 +803,15 @@
   "enabled": "已启用",
   "disabled": "已禁用",
   "on": "开",
-  "off": "关"
+  "off": "关",
+
+  "nav.browseDecks": "浏览套牌",
+  "browse.title": "浏览套牌",
+  "browse.subtitle": "发现社区分享的套牌列表。",
+  "browse.noResults": "没有匹配过滤条件的套牌。",
+  "browse.loadMore": "加载更多",
+  "deck.tags": "标签",
+  "deck.addTag": "添加标签",
+  "deck.tagPlaceholder": "添加标签...",
+  "deck.maxTags": "最多5个标签"
 }
