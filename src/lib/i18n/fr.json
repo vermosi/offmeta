@@ -824,5 +824,19 @@
   "deck.tags": "Tags",
   "deck.addTag": "Ajouter un tag",
   "deck.tagPlaceholder": "Ajouter un tag...",
-  "deck.maxTags": "Maximum 5 tags"
+  "deck.maxTags": "Maximum 5 tags",
+
+  "nav.collection": "Ma Collection",
+  "collection.title": "Ma Collection",
+  "collection.subtitle": "{count} cartes uniques · {total} total",
+  "collection.empty": "Votre collection est vide. Ajoutez des cartes depuis les résultats de recherche !",
+  "collection.noMatch": "Aucune carte ne correspond à votre recherche.",
+  "collection.searchPlaceholder": "Rechercher dans votre collection...",
+  "collection.exportCsv": "Exporté !",
+  "collection.showOwnedOnly": "Possédées uniquement",
+  "collection.missingCards": "Cartes manquantes",
+
+  "card.addToCollection": "Ajouter à la collection",
+  "card.removeFromCollection": "Retirer de la collection",
+  "card.ownedQuantity": "Possédées"
 }

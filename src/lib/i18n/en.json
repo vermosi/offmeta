@@ -850,6 +850,7 @@
   "collection.searchPlaceholder": "Search your collection...",
   "collection.exportCsv": "Exported!",
   "collection.showOwnedOnly": "Owned Only",
+  "collection.missingCards": "Missing Cards",
 
   "card.addToCollection": "Add to collection",
   "card.removeFromCollection": "Remove from collection",

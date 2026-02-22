@@ -824,5 +824,19 @@
   "deck.tags": "Tags",
   "deck.addTag": "Tag hinzufügen",
   "deck.tagPlaceholder": "Tag hinzufügen...",
-  "deck.maxTags": "Maximal 5 Tags"
+  "deck.maxTags": "Maximal 5 Tags",
+
+  "nav.collection": "Meine Sammlung",
+  "collection.title": "Meine Sammlung",
+  "collection.subtitle": "{count} einzigartige Karten · {total} gesamt",
+  "collection.empty": "Deine Sammlung ist leer. Füge Karten aus den Suchergebnissen hinzu!",
+  "collection.noMatch": "Keine Karten entsprechen deiner Suche.",
+  "collection.searchPlaceholder": "Sammlung durchsuchen...",
+  "collection.exportCsv": "Exportiert!",
+  "collection.showOwnedOnly": "Nur besessene",
+  "collection.missingCards": "Fehlende Karten",
+
+  "card.addToCollection": "Zur Sammlung hinzufügen",
+  "card.removeFromCollection": "Aus Sammlung entfernen",
+  "card.ownedQuantity": "Besessen"
 }
