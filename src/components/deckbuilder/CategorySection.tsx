@@ -15,10 +15,12 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { CardHoverImage } from '@/components/deckbuilder/CardHoverImage';
+import { SetBadge, PrintingPickerPopover } from '@/components/deckbuilder/PrintingPickerPopover';
 import { ManaCost } from '@/components/ManaSymbol';
 import { useTranslation } from '@/lib/i18n';
 import type { DeckCard } from '@/hooks/useDeck';
 import type { ScryfallCard } from '@/types/card';
+import type { CardPrinting } from '@/lib/scryfall/printings';
 
 import { CATEGORIES } from './constants';
 
@@ -36,7 +38,7 @@ interface CategorySectionProps {
   selectedCardId: string | null;
   onSelectCard: (id: string) => void;
   scryfallCache: React.RefObject<Map<string, ScryfallCard>>;
-  onChangePrinting: (cardId: string, printing: { id: string }) => void;
+  onChangePrinting: (cardId: string, printing: CardPrinting) => void;
   cacheVersion: number;
   /** Collection lookup map for "Need X more" indicators */
   collectionLookup?: Map<string, number>;
@@ -45,7 +47,7 @@ interface CategorySectionProps {
 export function CategorySection({
   category, cards, onRemove, onSetQuantity, onSetCommander, onSetCompanion,
   onSetCategory, onMoveToSideboard, onMoveToMaybeboard, isReadOnly,
-  selectedCardId, onSelectCard, scryfallCache, cacheVersion, collectionLookup,
+  selectedCardId, onSelectCard, scryfallCache, onChangePrinting, cacheVersion, collectionLookup,
 }: CategorySectionProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(true);
@@ -116,6 +118,7 @@ export function CategorySection({
                   )}>
                     {card.card_name}
                   </span>
+                  <SetBadge cardName={card.card_name} scryfallId={card.scryfall_id} scryfallCache={scryfallCache} cacheVersion={cacheVersion} />
                 </CardHoverImage>
 
                 {/* Spacer */}
@@ -146,6 +149,12 @@ export function CategorySection({
 
                 {/* Context menu dropdown (replaces inline button cluster) */}
                 {!isReadOnly && (
+                  <div className="flex items-center gap-0.5 shrink-0">
+                    <PrintingPickerPopover
+                      cardName={card.card_name}
+                      currentScryfallId={card.scryfall_id}
+                      onSelect={(p) => onChangePrinting(card.id, p)}
+                    />
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
@@ -214,6 +223,7 @@ export function CategorySection({
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+                  </div>
                 )}
               </li>
             );
