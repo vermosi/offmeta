@@ -37,6 +37,7 @@ import {
   CardModalCombos,
   CardModalAddToDeck,
   CardModalMetaContext,
+  CardModalCollection,
   type DisplayPrices,
 } from './CardModal/index';
 
@@ -228,6 +229,8 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
 
         <CardModalMetaContext card={card} isMobile />
 
+        <CardModalCollection cardName={card.name} isMobile />
+
         <CardModalRulings
           rulings={rulings}
           isLoading={isLoadingRulings}
@@ -308,6 +311,8 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
           />
 
           <CardModalMetaContext card={card} />
+
+          <CardModalCollection cardName={card.name} />
 
           <CardModalRulings
             rulings={rulings}

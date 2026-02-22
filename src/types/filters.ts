@@ -13,4 +13,6 @@ export interface FilterState {
   cmcRange: [number, number];
   /** Sort order key (e.g., "name-asc", "price-desc", "cmc-asc") */
   sortBy: string;
+  /** When true, only show cards the user owns (client-side filter) */
+  ownedOnly?: boolean;
 }
