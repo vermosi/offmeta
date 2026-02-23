@@ -16,6 +16,19 @@ import type { ScryfallCard } from '@/types/card';
 import type { CardPrinting } from '@/lib/scryfall/printings';
 import { printingsByName } from './constants';
 
+/** CSS filter to tint black SVGs to rarity colors */
+const RARITY_FILTER: Record<string, string> = {
+  mythic:   'brightness(0) saturate(100%) invert(50%) sepia(90%) saturate(600%) hue-rotate(360deg)',
+  rare:     'brightness(0) saturate(100%) invert(70%) sepia(60%) saturate(500%) hue-rotate(15deg)',
+  uncommon: 'brightness(0) saturate(100%) invert(70%) sepia(10%) saturate(200%) hue-rotate(180deg)',
+  common:   '',
+};
+
+function rarityFilter(rarity?: string): React.CSSProperties | undefined {
+  const f = rarity ? RARITY_FILTER[rarity] : undefined;
+  return f ? { filter: f } : undefined;
+}
+
 // ── Set Badge ──────────────────────────────────────────────────────────────────
 interface SetBadgeProps {
   cardName: string;
@@ -35,6 +48,7 @@ export function SetBadge({ cardName, scryfallId, scryfallCache, cacheVersion: _c
     : scryfallCache.current?.get(cardName)?.set;
 
   const card = scryfallCache.current?.get(cardName);
+  const rarity = selectedPrinting?.rarity ?? card?.rarity;
   const price = card?.prices?.usd ? `$${card.prices.usd}` : null;
 
   return (
@@ -44,7 +58,8 @@ export function SetBadge({ cardName, scryfallId, scryfallCache, cacheVersion: _c
           <img
             src={`https://svgs.scryfall.io/sets/${setCode.toLowerCase()}.svg`}
             alt={setCode.toUpperCase()}
-            className="h-2.5 w-2.5 inline-block opacity-60"
+            className="h-2.5 w-2.5 inline-block"
+            style={rarityFilter(rarity)}
             loading="lazy"
             onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
           />
@@ -88,15 +103,6 @@ export function PrintingPickerPopover({ cardName, currentScryfallId, onSelect }:
     }
   }, [cardName]);
 
-  const rarityDot = (rarity: string) =>
-    cn(
-      'h-2 w-2 rounded-full flex-shrink-0 inline-block mr-1.5',
-      rarity === 'mythic' && 'bg-orange-500',
-      rarity === 'rare' && 'bg-amber-500',
-      rarity === 'uncommon' && 'bg-slate-400',
-      rarity === 'common' && 'bg-slate-600',
-    );
-
   return (
     <Popover open={open} onOpenChange={(v) => { setOpen(v); if (v) load(); }}>
       <PopoverTrigger asChild>
@@ -135,7 +141,8 @@ export function PrintingPickerPopover({ cardName, currentScryfallId, onSelect }:
                    <img
                       src={`https://svgs.scryfall.io/sets/${p.set.toLowerCase()}.svg`}
                       alt={p.set}
-                      className="h-3 w-3 shrink-0 opacity-70"
+                      className="h-3 w-3 shrink-0"
+                      style={rarityFilter(p.rarity)}
                       loading="lazy"
                       onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                     />
