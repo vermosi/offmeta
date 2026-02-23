@@ -12,6 +12,7 @@ import { useState, useCallback } from 'react';
 import { Loader2, Check, Layers } from 'lucide-react';
 import { cn } from '@/lib/core/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import type { ScryfallCard } from '@/types/card';
 import type { CardPrinting } from '@/lib/scryfall/printings';
 import { printingsByName } from './constants';
@@ -51,20 +52,31 @@ export function SetBadge({ cardName, scryfallId, scryfallCache, cacheVersion: _c
   const rarity = selectedPrinting?.rarity ?? card?.rarity;
   const price = card?.prices?.usd ? `$${card.prices.usd}` : null;
 
+  const setName = selectedPrinting?.set_name;
+  const rarityLabel = rarity ? rarity.charAt(0).toUpperCase() + rarity.slice(1) : null;
+  const tooltipText = [setName, rarityLabel].filter(Boolean).join(' · ') || setCode?.toUpperCase();
+
   return (
     <>
       {setCode && (
-        <span className="ml-1 shrink-0 inline-flex items-center gap-0.5 text-[9px] font-mono text-muted-foreground/60 bg-muted/40 rounded px-1 py-px leading-tight tracking-wide align-middle select-none">
-          <img
-            src={`https://svgs.scryfall.io/sets/${setCode.toLowerCase()}.svg`}
-            alt={setCode.toUpperCase()}
-            className="h-2.5 w-2.5 inline-block"
-            style={rarityFilter(rarity)}
-            loading="lazy"
-            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-          />
-          {setCode.toUpperCase()}
-        </span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="ml-1 shrink-0 inline-flex items-center gap-0.5 text-[9px] font-mono text-muted-foreground/60 bg-muted/40 rounded px-1 py-px leading-tight tracking-wide align-middle select-none cursor-default">
+              <img
+                src={`https://svgs.scryfall.io/sets/${setCode.toLowerCase()}.svg`}
+                alt={setCode.toUpperCase()}
+                className="h-2.5 w-2.5 inline-block"
+                style={rarityFilter(rarity)}
+                loading="lazy"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+              />
+              {setCode.toUpperCase()}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs">
+            {tooltipText}
+          </TooltipContent>
+        </Tooltip>
       )}
       {price && (
         <span className="ml-1 shrink-0 text-[10px] text-muted-foreground/60 tabular-nums align-middle select-none">
