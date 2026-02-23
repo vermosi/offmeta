@@ -74,36 +74,42 @@ export function CardModalMetaContext({ card, isMobile }: CardModalMetaContextPro
     if (!expanded || rationale !== null || isLoading) return;
 
     let cancelled = false;
-    setIsLoading(true);
-    setError(null);
 
-    supabase.functions
-      .invoke('card-meta-context', {
-        body: {
-          cardName: card.name,
-          typeLine: card.type_line,
-          oracleText,
-          colorIdentity: card.color_identity,
-          edhrecRank: card.edhrec_rank,
-          legalities: card.legalities,
+    const fetchMeta = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      const { data, error: fnError } = await supabase.functions.invoke(
+        'card-meta-context',
+        {
+          body: {
+            cardName: card.name,
+            typeLine: card.type_line,
+            oracleText,
+            colorIdentity: card.color_identity,
+            edhrecRank: card.edhrec_rank,
+            legalities: card.legalities,
+          },
         },
-      })
-      .then(({ data, error: fnError }) => {
-        if (cancelled) return;
-        if (fnError) {
-          logger.warn('Meta context fetch error', fnError);
-          setError(t('card.metaError', 'Could not load meta context'));
-          setIsLoading(false);
-          return;
-        }
-        if (data?.success) {
-          setRationale(data.rationale || '');
-          setAiArchetypes(data.archetypes || []);
-        } else {
-          setError(data?.error || t('card.metaError', 'Could not load meta context'));
-        }
+      );
+
+      if (cancelled) return;
+      if (fnError) {
+        logger.warn('Meta context fetch error', fnError);
+        setError(t('card.metaError', 'Could not load meta context'));
         setIsLoading(false);
-      });
+        return;
+      }
+      if (data?.success) {
+        setRationale(data.rationale || '');
+        setAiArchetypes(data.archetypes || []);
+      } else {
+        setError(data?.error || t('card.metaError', 'Could not load meta context'));
+      }
+      setIsLoading(false);
+    };
+
+    fetchMeta();
 
     return () => {
       cancelled = true;
