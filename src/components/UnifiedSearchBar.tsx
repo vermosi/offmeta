@@ -53,14 +53,25 @@ interface UnifiedSearchBarProps {
 }
 
 /** Maps a search phase to its display label and icon */
-function PhaseIndicator({ phase, isCardFetching }: { phase: SearchPhase; isCardFetching?: boolean }) {
+function PhaseIndicator({
+  phase,
+  isCardFetching,
+}: {
+  phase: SearchPhase;
+  isCardFetching?: boolean;
+}) {
   const { t } = useTranslation();
   // 'fetching' phase means translation done, cards loading
-  const effectivePhase = phase === 'fetching' || (phase === 'idle' && isCardFetching) ? 'fetching' : phase;
+  const effectivePhase =
+    phase === 'fetching' || (phase === 'idle' && isCardFetching)
+      ? 'fetching'
+      : phase;
   if (effectivePhase === 'idle') return null;
 
   const isTranslating = effectivePhase === 'translating';
-  const label = isTranslating ? t('search.phaseTranslating') : t('search.phaseFetching');
+  const label = isTranslating
+    ? t('search.phaseTranslating')
+    : t('search.phaseFetching');
 
   return (
     <div
@@ -69,11 +80,13 @@ function PhaseIndicator({ phase, isCardFetching }: { phase: SearchPhase; isCardF
       aria-live="polite"
       aria-label={label}
     >
-      <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-300 ${
-        isTranslating
-          ? 'bg-primary/10 border-primary/20 text-primary'
-          : 'bg-accent/10 border-accent/20 text-accent-foreground'
-      }`}>
+      <div
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-300 ${
+          isTranslating
+            ? 'bg-primary/10 border-primary/20 text-primary'
+            : 'bg-accent/10 border-accent/20 text-accent-foreground'
+        }`}
+      >
         {isTranslating ? (
           <>
             <Sparkles className="h-3 w-3 animate-pulse" aria-hidden="true" />
@@ -116,7 +129,11 @@ export const UnifiedSearchBar = forwardRef<
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
 
-  const { placeholder: animatedPlaceholder, isAnimating: isTyping, stop: stopTyping } = useTypingPlaceholder(
+  const {
+    placeholder: animatedPlaceholder,
+    isAnimating: isTyping,
+    stop: stopTyping,
+  } = useTypingPlaceholder(
     isMobile ? t('search.placeholderMobile') : t('search.placeholder'),
     !query && !isFocused,
   );
@@ -131,14 +148,16 @@ export const UnifiedSearchBar = forwardRef<
   }, [isMobile]);
 
   const { saveContext } = useSearchContext();
-  const { history, addToHistory, removeFromHistory, clearHistory } = useSearchHistory();
-  const { isSearching, searchPhase, rateLimitCountdown, handleSearch } = useSearchHandler({
-    query,
-    filters,
-    onSearch,
-    addToHistory,
-    saveContext,
-  });
+  const { history, addToHistory, removeFromHistory, clearHistory } =
+    useSearchHistory();
+  const { isSearching, searchPhase, rateLimitCountdown, handleSearch } =
+    useSearchHandler({
+      query,
+      filters,
+      onSearch,
+      addToHistory,
+      saveContext,
+    });
 
   const {
     isListening,
@@ -172,9 +191,14 @@ export const UnifiedSearchBar = forwardRef<
   const showExamples = !query;
 
   return (
-    <search
+    <div
       className="space-y-4 sm:space-y-6 w-full mx-auto px-0 animate-fade-in"
-      style={{ maxWidth: 'clamp(320px, 90vw, 672px)', animationDuration: '0.5s', animationDelay: '0.15s', animationFillMode: 'backwards' }}
+      style={{
+        maxWidth: 'clamp(320px, 90vw, 672px)',
+        animationDuration: '0.5s',
+        animationDelay: '0.15s',
+        animationFillMode: 'backwards',
+      }}
       role="search"
       aria-label={t('search.label')}
     >
@@ -242,7 +266,8 @@ export const UnifiedSearchBar = forwardRef<
               onBlur={(e) => {
                 setIsFocused(false);
                 const relatedTarget = e.relatedTarget as HTMLElement | null;
-                const isDropdownClick = relatedTarget?.closest('[role="listbox"]');
+                const isDropdownClick =
+                  relatedTarget?.closest('[role="listbox"]');
                 if (!isDropdownClick) {
                   setTimeout(() => setShowHistoryDropdown(false), 200);
                 }
@@ -254,73 +279,76 @@ export const UnifiedSearchBar = forwardRef<
               aria-describedby="search-hint"
             />
 
-          {query && (
-            <button
-              aria-label={t('search.clear')}
-              className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center text-muted-foreground hover:text-foreground flex-shrink-0 rounded-lg hover:bg-secondary transition-colors"
-              onClick={() => {
-                setQuery('');
-                inputRef.current?.focus();
-              }}
-            >
-              <X className="h-4 w-4" aria-hidden="true" />
-            </button>
-          )}
-
-          <VoiceSearchButton
-            isListening={isListening}
-            isSupported={isVoiceSupported}
-            onToggle={isListening ? stopListening : startListening}
-            className="h-9 w-9 sm:h-10 sm:w-10"
-          />
-
-          <Button
-            onClick={() => handleSearch()}
-            disabled={
-              isSearching ||
-              isLoading ||
-              !query.trim() ||
-              rateLimitCountdown > 0
-            }
-            variant="accent"
-            size="sm"
-            className="h-9 sm:h-10 px-3 sm:px-4 rounded-lg gap-1.5 sm:gap-2 font-medium flex-shrink-0"
-            aria-label={
-              rateLimitCountdown > 0
-                ? t('search.waitSeconds').replace('{seconds}', String(rateLimitCountdown))
-                : isSearching
-                  ? t('search.searching')
-                  : t('search.searchForCards')
-            }
-          >
-            {rateLimitCountdown > 0 ? (
-              <>
-                <Clock className="h-4 w-4" aria-hidden="true" />
-                <span className="text-xs">{rateLimitCountdown}s</span>
-              </>
-            ) : isSearching ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <>
-                <Search className="h-4 w-4" aria-hidden="true" />
-                <span className="hidden sm:inline">{t('search.button')}</span>
-              </>
+            {query && (
+              <button
+                aria-label={t('search.clear')}
+                className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center text-muted-foreground hover:text-foreground flex-shrink-0 rounded-lg hover:bg-secondary transition-colors"
+                onClick={() => {
+                  setQuery('');
+                  inputRef.current?.focus();
+                }}
+              >
+                <X className="h-4 w-4" aria-hidden="true" />
+              </button>
             )}
-          </Button>
 
-          {/* Desktop-only inline buttons */}
-          <div className="hidden sm:flex items-center gap-1 flex-shrink-0">
-            <SearchFeedback
-              originalQuery={query || history[0] || ''}
-              translatedQuery={lastTranslatedQuery}
+            <VoiceSearchButton
+              isListening={isListening}
+              isSupported={isVoiceSupported}
+              onToggle={isListening ? stopListening : startListening}
+              className="h-9 w-9 sm:h-10 sm:w-10"
             />
-            <SearchHelpModal
-              onTryExample={(exampleQuery) => {
-                setQuery(exampleQuery);
-                handleSearch(exampleQuery);
-              }}
-            />
-          </div>
+
+            <Button
+              onClick={() => handleSearch()}
+              disabled={
+                isSearching ||
+                isLoading ||
+                !query.trim() ||
+                rateLimitCountdown > 0
+              }
+              variant="accent"
+              size="sm"
+              className="h-9 sm:h-10 px-3 sm:px-4 rounded-lg gap-1.5 sm:gap-2 font-medium flex-shrink-0"
+              aria-label={
+                rateLimitCountdown > 0
+                  ? t('search.waitSeconds').replace(
+                      '{seconds}',
+                      String(rateLimitCountdown),
+                    )
+                  : isSearching
+                    ? t('search.searching')
+                    : t('search.searchForCards')
+              }
+            >
+              {rateLimitCountdown > 0 ? (
+                <>
+                  <Clock className="h-4 w-4" aria-hidden="true" />
+                  <span className="text-xs">{rateLimitCountdown}s</span>
+                </>
+              ) : isSearching ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <>
+                  <Search className="h-4 w-4" aria-hidden="true" />
+                  <span className="hidden sm:inline">{t('search.button')}</span>
+                </>
+              )}
+            </Button>
+
+            {/* Desktop-only inline buttons */}
+            <div className="hidden sm:flex items-center gap-1 flex-shrink-0">
+              <SearchFeedback
+                originalQuery={query || history[0] || ''}
+                translatedQuery={lastTranslatedQuery}
+              />
+              <SearchHelpModal
+                onTryExample={(exampleQuery) => {
+                  setQuery(exampleQuery);
+                  handleSearch(exampleQuery);
+                }}
+              />
+            </div>
           </div>
         </SearchHistoryDropdown>
 
@@ -374,6 +402,6 @@ export const UnifiedSearchBar = forwardRef<
           </div>
         </div>
       )}
-    </search>
+    </div>
   );
 });
