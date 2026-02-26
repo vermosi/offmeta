@@ -6,7 +6,22 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { SearchFilters } from '../SearchFilters';
+import { AuthContext } from '@/hooks/useAuth';
 import type { ScryfallCard } from '@/types/card';
+
+const mockAuth = {
+  user: null,
+  session: null,
+  isLoading: false,
+  displayName: null,
+  avatarUrl: null,
+  signIn: vi.fn(),
+  signUp: vi.fn(),
+  signOut: vi.fn(),
+  resetPassword: vi.fn(),
+  updatePassword: vi.fn(),
+  refreshProfile: vi.fn(),
+};
 
 function makeCard(overrides: Partial<ScryfallCard> = {}): ScryfallCard {
   return {
@@ -36,12 +51,14 @@ const defaultCards: ScryfallCard[] = [
 function renderFilters(cards = defaultCards) {
   const onFilteredCards = vi.fn();
   const result = render(
-    <SearchFilters
-      cards={cards}
-      onFilteredCards={onFilteredCards}
-      totalCards={cards.length}
-      resetKey={0}
-    />,
+    <AuthContext.Provider value={mockAuth}>
+      <SearchFilters
+        cards={cards}
+        onFilteredCards={onFilteredCards}
+        totalCards={cards.length}
+        resetKey={0}
+      />
+    </AuthContext.Provider>,
   );
   return { ...result, onFilteredCards };
 }
