@@ -137,6 +137,7 @@ export async function requireAdmin(
     };
   }
 
+  // @ts-ignore: Deno esm.sh import
   const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
 
   const userClient = createClient(supabaseUrl, supabaseAnonKey, {

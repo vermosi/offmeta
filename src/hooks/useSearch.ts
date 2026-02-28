@@ -226,7 +226,8 @@ export function useSearch() {
     }
   }, [totalCards, lastSearchResult, originalQuery, trackEvent, currentRequestId]);
 
-  const displayCards = hasActiveFilters ? filteredCards : cards;
+  const hasSortOverride = activeFilters?.sortBy && activeFilters.sortBy !== 'name-asc';
+  const displayCards = (hasActiveFilters || hasSortOverride) ? filteredCards : cards;
 
   // --- Callbacks ---
 
