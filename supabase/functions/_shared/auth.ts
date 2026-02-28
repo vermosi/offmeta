@@ -137,7 +137,6 @@ export async function requireAdmin(
     };
   }
 
-  // @ts-expect-error: Deno esm.sh import — not resolvable by tsc but works at runtime
   const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
 
   const userClient = createClient(supabaseUrl, supabaseAnonKey, {

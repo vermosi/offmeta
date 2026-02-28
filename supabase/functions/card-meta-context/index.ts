@@ -99,13 +99,12 @@ serve(async (req: Request): Promise<Response> => {
 
     if (supabaseUrl && serviceRoleKey) {
       try {
-        // @ts-expect-error: Deno esm.sh import
         const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
         const supabase = createClient(supabaseUrl, serviceRoleKey);
 
         const { data: cached } = await supabase
           .from('query_cache')
-          .select('scryfall_query, explanation')
+          .select('scryfall_query, explanation, hit_count')
           .eq('query_hash', cacheKey)
           .gt('expires_at', new Date().toISOString())
           .maybeSingle();
@@ -114,7 +113,7 @@ serve(async (req: Request): Promise<Response> => {
           // Update hit count
           await supabase
             .from('query_cache')
-            .update({ hit_count: cached.hit_count + 1, last_hit_at: new Date().toISOString() })
+            .update({ hit_count: (cached.hit_count ?? 0) + 1, last_hit_at: new Date().toISOString() })
             .eq('query_hash', cacheKey);
 
           const explanation = typeof cached.explanation === 'string'
@@ -267,7 +266,6 @@ Explain why this card is played in competitive and casual Magic, what archetypes
     // Cache the result (7 days)
     if (supabaseUrl && serviceRoleKey) {
       try {
-        // @ts-expect-error: Deno esm.sh import
         const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
         const supabase = createClient(supabaseUrl, serviceRoleKey);
 
