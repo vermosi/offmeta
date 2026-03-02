@@ -156,9 +156,46 @@ jobs:
             fi
           fi
 
-  # ─── E2E tests (nightly + manual + PR opt-in label) ────────────────
+  # ─── PR smoke E2E gate (always-on for PRs) ─────────────────────────
+  e2e-smoke:
+    if: github.event_name == 'pull_request'
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - name: Install Playwright deps (OS libraries only)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - name: Run PR smoke E2E tests (navigation + search + dialog)
+        run: npx playwright test src/tests/e2e/navigation.spec.ts src/tests/e2e/search.spec.ts src/tests/e2e/dialog-keyboard-accessibility.spec.ts --project=chromium
+      - name: Upload smoke Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-smoke
+          path: playwright-report
+          retention-days: 14
+
+  # ─── Full E2E tests (push + nightly + manual + PR opt-in label) ───
   e2e:
     if: |
+      github.event_name == 'push' ||
       github.event_name == 'schedule' ||
       (github.event_name == 'workflow_dispatch' && inputs.run_e2e) ||
       (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ci:e2e'))
@@ -202,9 +239,46 @@ jobs:
           path: test-results
           retention-days: 7
 
-  # ─── Accessibility tests (nightly + manual + PR opt-in label) ──────
+  # ─── PR smoke accessibility gate (always-on for PRs) ────────────────
+  a11y-smoke:
+    if: github.event_name == 'pull_request'
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - name: Install Playwright deps (OS libraries only)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - name: Run PR smoke accessibility suite (axe)
+        run: npx playwright test src/tests/e2e/accessibility.spec.ts --project=chromium
+      - name: Upload smoke a11y report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: a11y-report-smoke
+          path: playwright-report
+          retention-days: 14
+
+  # ─── Full accessibility tests (push + nightly + manual + PR label) ─
   a11y:
     if: |
+      github.event_name == 'push' ||
       github.event_name == 'schedule' ||
       (github.event_name == 'workflow_dispatch' && inputs.run_a11y) ||
       (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ci:a11y'))
