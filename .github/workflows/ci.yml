@@ -12,7 +12,7 @@ on:
 # Cancel in-progress runs for the same branch/PR
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false  # TODO: re-enable once Playwright browser cache is seeded
 
 jobs:
   # ─── Shared setup ───────────────────────────────────────────────────
