@@ -367,9 +367,6 @@ serve(async (req) => {
   try {
     const { query, filters, debug, useCache, cacheSalt } = requestBody;
     const requestBudget = parseRequestBudget(req, requestStartTime);
-    const requestDeadlineMs = requestBudget.deadlineMs;
-
-    const isRequestBudgetExceeded = () => Date.now() >= requestDeadlineMs;
 
     const createBudgetExceededResponse = (): Response => {
       const fallback = buildFallbackQuery(query, filters);
@@ -954,7 +951,7 @@ serve(async (req) => {
       preTranslationSkippedReason = 'no_strong_non_english_signal';
     }
 
-    if (isRequestBudgetExceeded()) {
+    if (!requestBudget.hasBudgetFor(1)) {
       logWarn('request_budget_exceeded_after_pretranslate');
       return createBudgetExceededResponse();
     }
@@ -981,7 +978,7 @@ serve(async (req) => {
     }
 
     const dynamicRules = await fetchDynamicRules();
-    if (isRequestBudgetExceeded()) {
+    if (!requestBudget.hasBudgetFor(1)) {
       logWarn('request_budget_exceeded_before_ai_translate');
       return createBudgetExceededResponse();
     }
@@ -1019,7 +1016,7 @@ serve(async (req) => {
           {
             timeoutMs: AI_FETCH_TIMEOUT_MS,
             retries: AI_MAX_RETRIES,
-            deadlineMs: requestDeadlineMs,
+            deadlineMs: requestBudget.deadlineMs,
           },
         ),
       );
@@ -1111,7 +1108,7 @@ serve(async (req) => {
         { headers: jsonHeaders },
       );
     } catch (e) {
-      if (isRequestBudgetExceeded()) {
+      if (!requestBudget.hasBudgetFor(1)) {
         logWarn('request_budget_exceeded_during_ai_translate');
         return createBudgetExceededResponse();
       }
