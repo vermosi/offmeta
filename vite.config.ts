@@ -92,12 +92,12 @@ export default defineConfig(({ mode }) => ({
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'lcov'],
-      // Enable coverage thresholds for production
-      lines: 80,
-      functions: 75,
-      branches: 70,
-      statements: 80,
+      reporter: ['text', 'json-summary', 'lcov'],
+      // Enforced coverage thresholds — CI fails if not met
+      lines: 85,
+      functions: 85,
+      branches: 80,
+      statements: 85,
       include: ['src/lib/**'],
       exclude: ['src/lib/logger.ts'],
     },
