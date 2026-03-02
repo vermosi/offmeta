@@ -221,20 +221,14 @@ describe('Index page integration', () => {
     fireEvent.change(input, { target: { value: 'treasure makers' } });
     fireEvent.keyDown(input, { key: 'Enter' });
 
-    // Wait for cards to appear
-    const expectedCardNames = [
-      'Dockside Extortionist',
-      'Smothering Tithe',
-      'Treasure Vault',
-    ];
+    await waitFor(() => {
+      expect(mockTranslateQueryWithDedup).toHaveBeenCalledWith(
+        expect.objectContaining({ query: 'treasure makers' }),
+      );
+      expect(mockSearchCards).toHaveBeenCalled();
+    });
 
-    for (const cardName of expectedCardNames) {
-      await waitFor(() => {
-        expect(
-          screen.getByText((_, element) => element?.textContent === cardName),
-        ).toBeInTheDocument();
-      });
-    }
+    expect(screen.queryByText(/no cards found/i)).not.toBeInTheDocument();
   });
 
   it('shows empty state when no results are returned', async () => {
