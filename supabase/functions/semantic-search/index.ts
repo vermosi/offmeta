@@ -37,11 +37,13 @@ import {
   parseAIContent,
 } from './schemas.ts';
 import { VALID_SEARCH_KEYS } from './constants.ts';
-import { AI_FETCH_TIMEOUT_MS, AI_MAX_RETRIES } from './config.ts';
-
-const DEFAULT_REQUEST_BUDGET_MS = 8_000;
-const MIN_DYNAMIC_RULES_BUDGET_MS = 1_200;
-const MIN_AI_CALL_BUDGET_MS = 2_500;
+import {
+  AI_FETCH_TIMEOUT_MS,
+  AI_MAX_RETRIES,
+  REQUEST_BUDGET_MS,
+  REQUEST_STAGE_MIN_BUDGET_MS,
+  PRE_TRANSLATION_TIMEOUT_MS,
+} from './config.ts';
 
 type BudgetStage = 'dynamic_rules' | 'pre_translation' | 'ai_call';
 
@@ -66,7 +68,7 @@ function parseRequestBudget(
   const effectiveDeadline =
     Number.isFinite(deadlineHeader) && deadlineHeader > effectiveStart
       ? deadlineHeader
-      : effectiveStart + DEFAULT_REQUEST_BUDGET_MS;
+      : effectiveStart + REQUEST_BUDGET_MS;
 
   return {
     deadlineMs: effectiveDeadline,
@@ -234,9 +236,6 @@ function sanitizeError(error: unknown): string {
   return 'Unknown error';
 }
 
-const REQUEST_LATENCY_BUDGET_MS = 15_000;
-const PRE_TRANSLATION_MIN_REMAINING_BUDGET_MS = 4_000;
-const PRE_TRANSLATION_TIMEOUT_MS = 2_500;
 const ACCENTED_LATIN_HIGH_CONFIDENCE_THRESHOLD = 0.9;
 
 /**
@@ -884,12 +883,12 @@ serve(async (req) => {
     const looksNonEnglish = hasNonLatin || shouldPreTranslateAccentedLatin;
 
     if (looksNonEnglish && remainingQuery.trim().length > 0) {
-      const elapsedBeforePreTranslationMs = Date.now() - requestStartTime;
-      const remainingBudgetMs =
-        REQUEST_LATENCY_BUDGET_MS - elapsedBeforePreTranslationMs;
+      const remainingBudgetMs = requestBudget.deadlineMs - Date.now();
 
-      if (remainingBudgetMs < PRE_TRANSLATION_MIN_REMAINING_BUDGET_MS) {
-        preTranslationSkippedReason = 'low_remaining_budget';
+      if (remainingBudgetMs < REQUEST_STAGE_MIN_BUDGET_MS.preTranslation) {
+        return buildBudgetExceededResponse('pre_translation', 0.58, [
+          'Skipped pre-translation due to low remaining request budget',
+        ]);
       } else {
         preTranslationAttempted = true;
         try {
@@ -974,7 +973,9 @@ serve(async (req) => {
         ? 'google/gemini-2.5-flash-lite'
         : 'google/gemini-3-flash-preview';
 
-    if (!requestBudget.hasBudgetFor(MIN_DYNAMIC_RULES_BUDGET_MS)) {
+    // Deterministic fallback guard: skip optional dynamic rules if remaining budget
+    // drops below the stage floor derived from REQUEST_BUDGET_MS.
+    if (!requestBudget.hasBudgetFor(REQUEST_STAGE_MIN_BUDGET_MS.dynamicRules)) {
       return buildBudgetExceededResponse('dynamic_rules', 0.57, [
         'Skipped dynamic rules fetch due to low remaining request budget',
       ]);
@@ -991,7 +992,9 @@ serve(async (req) => {
       : '';
     const userMessage = `Translate to Scryfall search syntax: "${queryForAI}"${cardNameHint} ${deterministicQuery ? `(must include: ${deterministicQuery})` : ''}`;
 
-    if (!requestBudget.hasBudgetFor(MIN_AI_CALL_BUDGET_MS)) {
+    // Deterministic fallback guard: never start the AI call unless there is
+    // enough time budget remaining for it to complete.
+    if (!requestBudget.hasBudgetFor(REQUEST_STAGE_MIN_BUDGET_MS.aiCall)) {
       return buildBudgetExceededResponse('ai_call', 0.56, [
         'Skipped AI translation due to low remaining request budget',
       ]);

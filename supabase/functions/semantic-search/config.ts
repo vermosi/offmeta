@@ -48,7 +48,8 @@ export const CONFIG = {
   AI_SIMPLE_MODEL: 'google/gemini-2.5-flash-lite',
   AI_TEMPERATURE: 0.1,
   AI_SIMPLE_QUERY_MAX_WORDS: 4,
-  REQUEST_BUDGET_MS: 4000,
+  // Single request budget used by all stages. Stage minima are derived from this value.
+  REQUEST_BUDGET_MS: 8000,
   AI_FETCH_TIMEOUT_MS: 3500,
   AI_MAX_RETRIES: 1,
 
@@ -60,3 +61,23 @@ export const CONFIG = {
 export const REQUEST_BUDGET_MS = CONFIG.REQUEST_BUDGET_MS;
 export const AI_FETCH_TIMEOUT_MS = CONFIG.AI_FETCH_TIMEOUT_MS;
 export const AI_MAX_RETRIES = CONFIG.AI_MAX_RETRIES;
+
+/**
+ * Stage budget floors are intentionally derived from one request budget so tuning
+ * `REQUEST_BUDGET_MS` automatically keeps stage guardrails consistent.
+ */
+export const REQUEST_STAGE_MIN_BUDGET_MS = {
+  preTranslation: Math.floor(REQUEST_BUDGET_MS * 0.5),
+  dynamicRules: Math.floor(REQUEST_BUDGET_MS * 0.15),
+  aiCall: Math.floor(REQUEST_BUDGET_MS * 0.3125),
+} as const;
+
+/**
+ * Pre-translation should only run when there is enough budget left for
+ * downstream deterministic fallback + AI translation. Keep timeout conservative
+ * and bounded below the pre-translation minimum floor.
+ */
+export const PRE_TRANSLATION_TIMEOUT_MS = Math.min(
+  AI_FETCH_TIMEOUT_MS,
+  Math.floor(REQUEST_STAGE_MIN_BUDGET_MS.preTranslation * 0.625),
+);
