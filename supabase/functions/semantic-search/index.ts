@@ -38,6 +38,44 @@ import {
 } from './schemas.ts';
 import { VALID_SEARCH_KEYS } from './constants.ts';
 
+const DEFAULT_REQUEST_BUDGET_MS = 8_000;
+const MIN_DYNAMIC_RULES_BUDGET_MS = 1_200;
+const MIN_PRE_TRANSLATION_BUDGET_MS = 1_800;
+const MIN_AI_CALL_BUDGET_MS = 2_500;
+
+type BudgetStage = 'dynamic_rules' | 'pre_translation' | 'ai_call';
+
+interface RequestBudget {
+  deadlineMs: number;
+  remainingMs: () => number;
+  hasBudgetFor: (minimumMs: number) => boolean;
+}
+
+function parseRequestBudget(
+  req: Request,
+  requestStartTime: number,
+): RequestBudget {
+  const requestStartHeader = Number(req.headers.get('x-request-start'));
+  const deadlineHeader = Number(req.headers.get('x-deadline-ms'));
+
+  const effectiveStart =
+    Number.isFinite(requestStartHeader) && requestStartHeader > 0
+      ? requestStartHeader
+      : requestStartTime;
+
+  const effectiveDeadline =
+    Number.isFinite(deadlineHeader) && deadlineHeader > effectiveStart
+      ? deadlineHeader
+      : effectiveStart + DEFAULT_REQUEST_BUDGET_MS;
+
+  return {
+    deadlineMs: effectiveDeadline,
+    remainingMs: () => Math.max(0, effectiveDeadline - Date.now()),
+    hasBudgetFor: (minimumMs: number) =>
+      effectiveDeadline - Date.now() >= minimumMs,
+  };
+}
+
 /**
  * Check if a query is already valid Scryfall syntax (no AI needed).
  * Detects queries that use Scryfall operators like t:, c:, o:, mv, pow, etc.
@@ -49,7 +87,7 @@ function isRawScryfallSyntax(query: string): boolean {
 
   // Extract all tokens that look like operators
   const tokens = query.split(/\s+/);
-  const operatorTokens = tokens.filter(t => /^-?[a-zA-Z]+[:=<>]/.test(t));
+  const operatorTokens = tokens.filter((t) => /^-?[a-zA-Z]+[:=<>]/.test(t));
 
   // If most tokens are operator-based, it's raw syntax
   if (operatorTokens.length === 0) return false;
@@ -59,18 +97,59 @@ function isRawScryfallSyntax(query: string): boolean {
     const keyMatch = token.match(/^-?([a-zA-Z]+)[:=<>]/);
     if (keyMatch) {
       const key = keyMatch[1].toLowerCase();
-      if (!VALID_SEARCH_KEYS.has(key) && !['kw', 'otag', 'atag', 'in', 'is', 'not', 'has', 'set', 'cn', 'year', 'game', 'banned', 'restricted', 'unique', 'order', 'direction', 'prefer', 'prints', 'new', 'cheapest', 'usd', 'eur', 'tix', 'border', 'frame', 'stamp', 'watermark', 'art', 'flavor', 'lore', 'include', 'language', 'date', 'mana', 'wildpair'].includes(key)) {
+      if (
+        !VALID_SEARCH_KEYS.has(key) &&
+        ![
+          'kw',
+          'otag',
+          'atag',
+          'in',
+          'is',
+          'not',
+          'has',
+          'set',
+          'cn',
+          'year',
+          'game',
+          'banned',
+          'restricted',
+          'unique',
+          'order',
+          'direction',
+          'prefer',
+          'prints',
+          'new',
+          'cheapest',
+          'usd',
+          'eur',
+          'tix',
+          'border',
+          'frame',
+          'stamp',
+          'watermark',
+          'art',
+          'flavor',
+          'lore',
+          'include',
+          'language',
+          'date',
+          'mana',
+          'wildpair',
+        ].includes(key)
+      ) {
         return false; // Contains invalid operator
       }
     }
   }
 
   // Non-operator words should be minimal (allow OR, AND, NOT, parens, quotes)
-  const nonOperatorTokens = tokens.filter(t =>
-    !(/^-?[a-zA-Z]+[:=<>]/.test(t)) &&
-    !['or', 'and', 'not', '-'].includes(t.toLowerCase()) &&
-    !t.startsWith('(') && !t.startsWith(')') &&
-    !t.startsWith('"')
+  const nonOperatorTokens = tokens.filter(
+    (t) =>
+      !/^-?[a-zA-Z]+[:=<>]/.test(t) &&
+      !['or', 'and', 'not', '-'].includes(t.toLowerCase()) &&
+      !t.startsWith('(') &&
+      !t.startsWith(')') &&
+      !t.startsWith('"'),
   );
 
   // If more than 30% of tokens are natural language, it's not raw syntax
@@ -81,7 +160,11 @@ function isRawScryfallSyntax(query: string): boolean {
  * Auto-seed high-confidence AI translations into translation_rules
  * so future identical queries hit the pattern match layer instead of AI.
  */
-async function seedTranslationRule(query: string, scryfallQuery: string, confidence: number): Promise<void> {
+async function seedTranslationRule(
+  query: string,
+  scryfallQuery: string,
+  confidence: number,
+): Promise<void> {
   try {
     const normalized = query.toLowerCase().trim().replace(/\s+/g, ' ');
     // Don't seed very short or very long queries
@@ -95,7 +178,7 @@ async function seedTranslationRule(query: string, scryfallQuery: string, confide
         description: `Auto-seeded from AI translation`,
         is_active: true,
       },
-      { onConflict: 'pattern' }
+      { onConflict: 'pattern' },
     );
   } catch {
     // Silently fail - this is an optimization, not critical
@@ -163,6 +246,7 @@ serve(async (req) => {
   const requestStartTime = Date.now();
   const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
   const { logInfo, logWarn } = createLogger(requestId);
+  const requestBudget = parseRequestBudget(req, requestStartTime);
 
   const jsonHeaders = {
     ...corsHeaders,
@@ -358,17 +442,37 @@ serve(async (req) => {
     // 2.5. Fast-path for short, likely card-name queries (skip cache/pattern/AI entirely)
     // Card names are 1-6 title-cased words with no search keywords — deterministic is instant.
     const queryWords = query.trim().split(/\s+/);
-    const isFastNameCandidate = queryWords.length <= 6 && queryWords.length >= 1
-      && queryWords.every((w: string) => /^[A-Z]/.test(w) || /^(of|the|and|to|in|for|a|an)$/i.test(w))
-      && !/\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries)\b/i.test(query);
+    const isFastNameCandidate =
+      queryWords.length <= 6 &&
+      queryWords.length >= 1 &&
+      queryWords.every(
+        (w: string) =>
+          /^[A-Z]/.test(w) || /^(of|the|and|to|in|for|a|an)$/i.test(w),
+      ) &&
+      !/\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries)\b/i.test(
+        query,
+      );
 
     if (isFastNameCandidate) {
       const fastResult = buildDeterministicIntent(query);
-      const fastQuery = applyFiltersToQuery(fastResult.deterministicQuery, filters);
+      const fastQuery = applyFiltersToQuery(
+        fastResult.deterministicQuery,
+        filters,
+      );
       if (fastQuery && !fastResult.intent.remainingQuery) {
         const validation = validateQuery(fastQuery);
         const responseTimeMs = Date.now() - requestStartTime;
-        logTranslation(query, validation.sanitized, 0.9, responseTimeMs, [], [], filters, false, 'deterministic');
+        logTranslation(
+          query,
+          validation.sanitized,
+          0.9,
+          responseTimeMs,
+          [],
+          [],
+          filters,
+          false,
+          'deterministic',
+        );
         flushLogQueue();
 
         return new Response(
@@ -460,7 +564,17 @@ serve(async (req) => {
       if (cached) {
         const responseTimeMs = Date.now() - requestStartTime;
         logInfo('cache_hit', { query: query.substring(0, 50), responseTimeMs });
-        logTranslation(query, cached.scryfallQuery, cached.explanation?.confidence ?? 0.9, responseTimeMs, [], [], filters, false, 'cache');
+        logTranslation(
+          query,
+          cached.scryfallQuery,
+          cached.explanation?.confidence ?? 0.9,
+          responseTimeMs,
+          [],
+          [],
+          filters,
+          false,
+          'cache',
+        );
         flushLogQueue(); // fire-and-forget — don't block the response
 
         return new Response(
@@ -487,7 +601,17 @@ serve(async (req) => {
       });
 
       setCachedResult(query, filters, patternMatch, cacheSalt);
-      logTranslation(query, patternMatch.scryfallQuery, patternMatch.explanation?.confidence ?? 0.85, responseTimeMs, [], [], filters, false, 'pattern_match');
+      logTranslation(
+        query,
+        patternMatch.scryfallQuery,
+        patternMatch.explanation?.confidence ?? 0.85,
+        responseTimeMs,
+        [],
+        [],
+        filters,
+        false,
+        'pattern_match',
+      );
       flushLogQueue(); // fire-and-forget
 
       return new Response(
@@ -508,6 +632,7 @@ serve(async (req) => {
         reason: isCircuitOpen() ? 'circuit_open' : 'missing_api_key',
       });
       const fallback = buildFallbackQuery(query, filters);
+      const responseTimeMs = Date.now() - requestStartTime;
       return new Response(
         JSON.stringify({
           originalQuery: query,
@@ -519,6 +644,7 @@ serve(async (req) => {
             ],
             confidence: 0.6,
           },
+          responseTimeMs,
           success: true,
           fallback: true,
           source: 'fallback',
@@ -533,8 +659,21 @@ serve(async (req) => {
     if (isRawScryfallSyntax(trimmedQuery)) {
       const validation = validateQuery(trimmedQuery);
       const responseTimeMs = Date.now() - requestStartTime;
-      logInfo('raw_syntax_passthrough', { query: trimmedQuery.substring(0, 50), responseTimeMs });
-      logTranslation(query, validation.sanitized, 0.95, responseTimeMs, [], [], filters, false, 'raw_syntax');
+      logInfo('raw_syntax_passthrough', {
+        query: trimmedQuery.substring(0, 50),
+        responseTimeMs,
+      });
+      logTranslation(
+        query,
+        validation.sanitized,
+        0.95,
+        responseTimeMs,
+        [],
+        [],
+        filters,
+        false,
+        'raw_syntax',
+      );
       flushLogQueue(); // fire-and-forget
 
       const rawResult = {
@@ -566,7 +705,17 @@ serve(async (req) => {
     if (deterministicQuery && !deterministicResult.intent.remainingQuery) {
       const validation = validateQuery(deterministicQuery || query);
       const responseTimeMs = Date.now() - requestStartTime;
-      logTranslation(query, validation.sanitized, 0.9, responseTimeMs, [], [], filters, false, 'deterministic');
+      logTranslation(
+        query,
+        validation.sanitized,
+        0.9,
+        responseTimeMs,
+        [],
+        [],
+        filters,
+        false,
+        'deterministic',
+      );
       flushLogQueue(); // fire-and-forget
 
       return new Response(
@@ -585,16 +734,63 @@ serve(async (req) => {
       );
     }
 
+    const buildBudgetExceededResponse = (
+      stage: BudgetStage,
+      confidence: number,
+      assumptions: string[],
+    ): Response => {
+      const fallback = buildFallbackQuery(query, filters);
+      const responseTimeMs = Date.now() - requestStartTime;
+      const remainingBudgetMs = requestBudget.remainingMs();
+      logWarn('budget_exceeded', {
+        stage,
+        responseTimeMs,
+        remainingBudgetMs,
+        deadlineMs: requestBudget.deadlineMs,
+      });
+
+      return new Response(
+        JSON.stringify({
+          originalQuery: query,
+          scryfallQuery: fallback.sanitized,
+          explanation: {
+            readable: `Searching for: ${query}`,
+            assumptions,
+            confidence,
+          },
+          responseTimeMs,
+          budgetExceededAtStage: stage,
+          success: true,
+          fallback: true,
+          source: 'budget_fallback',
+        }),
+        { headers: jsonHeaders },
+      );
+    };
+
     // 7. Pre-translate non-English queries to English for better AI accuracy
     const remainingQuery = deterministicResult.intent.remainingQuery || '';
     let queryForAI = remainingQuery;
 
     // Detect non-Latin scripts or common non-English patterns
-    const hasNonLatin = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Cyrillic}\p{Script=Arabic}\p{Script=Devanagari}]/u.test(remainingQuery);
-    const hasAccentedLatin = /[àáâãäåæçèéêëìíîïðñòóôõöùúûüýþÿ]/i.test(remainingQuery);
-    const looksNonEnglish = hasNonLatin || (hasAccentedLatin && !/^[a-zA-Z0-9\s\-:=<>!'"()+/*.,;$]+$/.test(remainingQuery));
+    const hasNonLatin =
+      /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Cyrillic}\p{Script=Arabic}\p{Script=Devanagari}]/u.test(
+        remainingQuery,
+      );
+    const hasAccentedLatin = /[àáâãäåæçèéêëìíîïðñòóôõöùúûüýþÿ]/i.test(
+      remainingQuery,
+    );
+    const looksNonEnglish =
+      hasNonLatin ||
+      (hasAccentedLatin &&
+        !/^[a-zA-Z0-9\s\-:=<>!'"()+/*.,;$]+$/.test(remainingQuery));
 
     if (looksNonEnglish && remainingQuery.trim().length > 0) {
+      if (!requestBudget.hasBudgetFor(MIN_PRE_TRANSLATION_BUDGET_MS)) {
+        return buildBudgetExceededResponse('pre_translation', 0.58, [
+          'Skipped pre-translation due to low remaining request budget',
+        ]);
+      }
       try {
         const preTranslateResponse = await fetchWithRetry(
           'https://ai.gateway.lovable.dev/v1/chat/completions',
@@ -609,7 +805,8 @@ serve(async (req) => {
               messages: [
                 {
                   role: 'system',
-                  content: 'You are a translator. Translate the following Magic: The Gathering card search query into English. Preserve all MTG-specific intent (counter, destroy, exile, ramp, etc.). Output ONLY the English translation, nothing else.',
+                  content:
+                    'You are a translator. Translate the following Magic: The Gathering card search query into English. Preserve all MTG-specific intent (counter, destroy, exile, ramp, etc.). Output ONLY the English translation, nothing else.',
                 },
                 { role: 'user', content: remainingQuery },
               ],
@@ -620,7 +817,8 @@ serve(async (req) => {
 
         if (preTranslateResponse.ok) {
           const preTranslateData = await preTranslateResponse.json();
-          const translated = preTranslateData?.choices?.[0]?.message?.content?.trim();
+          const translated =
+            preTranslateData?.choices?.[0]?.message?.content?.trim();
           if (translated && translated.length > 0) {
             logInfo(`Pre-translated: "${remainingQuery}" → "${translated}"`);
             queryForAI = translated;
@@ -635,7 +833,8 @@ serve(async (req) => {
     // 8. AI Translation (with tiered model selection)
     // Fetch dynamic rules in parallel with building context (non-blocking)
     const queryWordCount = query.trim().split(/\s+/).length;
-    const isLikelyName = deterministicResult.intent.warnings.includes('likely_card_name');
+    const isLikelyName =
+      deterministicResult.intent.warnings.includes('likely_card_name');
     const tier: QueryTier =
       queryWordCount > 8 ? 'complex' : queryWordCount > 4 ? 'medium' : 'simple';
 
@@ -646,12 +845,24 @@ serve(async (req) => {
         ? 'google/gemini-2.5-flash-lite'
         : 'google/gemini-3-flash-preview';
 
+    if (!requestBudget.hasBudgetFor(MIN_DYNAMIC_RULES_BUDGET_MS)) {
+      return buildBudgetExceededResponse('dynamic_rules', 0.57, [
+        'Skipped dynamic rules fetch due to low remaining request budget',
+      ]);
+    }
+
     const dynamicRules = await fetchDynamicRules();
     const systemPrompt = buildSystemPrompt(tier, dynamicRules, '');
     const cardNameHint = isLikelyName
       ? ' (IMPORTANT: This is likely a Magic: The Gathering card name, not a search description. Output ONLY the exact Scryfall name search like !"Gray Merchant of Asphodel" using the correct card name. Fix common misspellings: grey→gray, etc. If unsure of full name, use name: syntax like name:merchant.)'
       : '';
     const userMessage = `Translate to Scryfall search syntax: "${queryForAI}"${cardNameHint} ${deterministicQuery ? `(must include: ${deterministicQuery})` : ''}`;
+
+    if (!requestBudget.hasBudgetFor(MIN_AI_CALL_BUDGET_MS)) {
+      return buildBudgetExceededResponse('ai_call', 0.56, [
+        'Skipped AI translation due to low remaining request budget',
+      ]);
+    }
 
     try {
       const aiResponse = await fetchWithRetry(
@@ -719,7 +930,9 @@ serve(async (req) => {
 
       // Auto-seed high-confidence AI translations into translation_rules for future pattern matches
       if (confidence >= 0.8 && validation.sanitized.length > 0) {
-        seedTranslationRule(query, validation.sanitized, confidence).catch(() => {});
+        seedTranslationRule(query, validation.sanitized, confidence).catch(
+          () => {},
+        );
       }
 
       logTranslation(
@@ -749,6 +962,7 @@ serve(async (req) => {
       recordCircuitFailure();
       logWarn('ai_failure', { error: sanitizeError(e) });
       const fallback = buildFallbackQuery(query, filters);
+      const responseTimeMs = Date.now() - requestStartTime;
       return new Response(
         JSON.stringify({
           originalQuery: query,
@@ -758,6 +972,7 @@ serve(async (req) => {
             assumptions: ['AI failed - using fallback'],
             confidence: 0.5,
           },
+          responseTimeMs,
           success: true,
           fallback: true,
           source: 'ai_failure_fallback',

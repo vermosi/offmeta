@@ -4,11 +4,7 @@
  */
 
 import { useEffect, useRef } from 'react';
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';
@@ -16,10 +12,7 @@ import { CLIENT_CONFIG } from '@/lib/config';
 import { logger } from '@/lib/core/logger';
 
 // Popular queries to prefetch for faster UX (kept small to avoid cold-start flooding)
-const POPULAR_QUERIES_TO_PREFETCH = [
-  'mana rocks',
-  'board wipes',
-];
+const POPULAR_QUERIES_TO_PREFETCH = ['mana rocks', 'board wipes'];
 
 // Track recent searches for rate limiting
 const recentSearches = new Map<string, number>(); // query -> timestamp
@@ -89,7 +82,10 @@ function checkSearchRateLimit(query: string): {
   // (dedup handles the rest via pendingTranslations)
   const lastSearchTime = recentSearches.get(normalizedQuery);
   if (lastSearchTime && now - lastSearchTime < 500) {
-    return { allowed: false, reason: 'Rate limited: please wait before searching again.' };
+    return {
+      allowed: false,
+      reason: 'Rate limited: please wait before searching again.',
+    };
   }
 
   return { allowed: true };
@@ -148,6 +144,8 @@ export async function translateQueryWithDedup(
       }
 
       logger.info('[SearchDiag] Edge function call', { query });
+      const requestStart = Date.now();
+      const requestDeadline = requestStart + 8000;
       const { data, error } = await supabase.functions.invoke(
         'semantic-search',
         {
@@ -159,12 +157,17 @@ export async function translateQueryWithDedup(
           },
           headers: {
             'x-session-id': sessionId,
+            'x-request-start': String(requestStart),
+            'x-deadline-ms': String(requestDeadline),
           },
         },
       );
 
       if (error) {
-        logger.warn('[SearchDiag] Edge function error', { query, error: String(error) });
+        logger.warn('[SearchDiag] Edge function error', {
+          query,
+          error: String(error),
+        });
         throw error;
       }
 
@@ -227,18 +230,21 @@ export function usePrefetchPopularQueries() {
     // Stagger prefetch requests to avoid competing with user's first search
     const timeoutIds: ReturnType<typeof setTimeout>[] = [];
     POPULAR_QUERIES_TO_PREFETCH.forEach((query, index) => {
-      const id = setTimeout(() => {
-        queryClient.prefetchQuery({
-          queryKey: ['translation', query, null, undefined],
-          queryFn: () =>
-            translateQueryWithDedup({
-              query,
-              filters: null,
-              bypassCache: false,
-            }),
-          staleTime: CLIENT_CONFIG.TRANSLATION_STALE_TIME_MS,
-        });
-      }, 8000 + index * 3000); // Start after 8s (after first interaction window), space 3s apart
+      const id = setTimeout(
+        () => {
+          queryClient.prefetchQuery({
+            queryKey: ['translation', query, null, undefined],
+            queryFn: () =>
+              translateQueryWithDedup({
+                query,
+                filters: null,
+                bypassCache: false,
+              }),
+            staleTime: CLIENT_CONFIG.TRANSLATION_STALE_TIME_MS,
+          });
+        },
+        8000 + index * 3000,
+      ); // Start after 8s (after first interaction window), space 3s apart
       timeoutIds.push(id);
     });
 
