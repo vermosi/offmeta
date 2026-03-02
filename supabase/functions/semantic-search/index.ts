@@ -293,7 +293,7 @@ serve(async (req) => {
   };
 
   // Authentication check
-  const authResult = validateAuth(req);
+  const authResult = await validateAuth(req);
   if (!authResult.authorized) {
     logWarn('auth_failed', { error: authResult.error });
     return errorResponse(authResult.error || 'Unauthorized', 401, jsonHeaders);

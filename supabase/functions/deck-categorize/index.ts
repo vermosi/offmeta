@@ -39,49 +39,77 @@ serve(async (req) => {
   }
 
   // Require valid auth token
-  const { authorized, error: authError } = validateAuth(req);
+  const { authorized, error: authError } = await validateAuth(req);
   if (!authorized) {
-    return new Response(JSON.stringify({ error: authError || 'Unauthorized' }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ error: authError || 'Unauthorized' }),
+      {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
+    );
   }
 
   // Rate limiting: 10 AI requests per minute per IP
   maybeCleanup();
-  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  const { allowed, retryAfter } = await checkRateLimit(clientIp, undefined, 10, 200);
+  const clientIp =
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const { allowed, retryAfter } = await checkRateLimit(
+    clientIp,
+    undefined,
+    10,
+    200,
+  );
   if (!allowed) {
-    return new Response(JSON.stringify({ error: 'Too many AI requests. Please slow down.', retryAfter }), {
-      status: 429,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': String(retryAfter) },
-    });
+    return new Response(
+      JSON.stringify({
+        error: 'Too many AI requests. Please slow down.',
+        retryAfter,
+      }),
+      {
+        status: 429,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'Retry-After': String(retryAfter),
+        },
+      },
+    );
   }
 
   try {
     const { cards } = await req.json();
 
     if (!Array.isArray(cards) || cards.length === 0) {
-      return new Response(JSON.stringify({ error: 'cards array is required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return new Response(
+        JSON.stringify({ error: 'cards array is required' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      );
     }
 
     if (cards.length > 100) {
-      return new Response(JSON.stringify({ error: 'Max 100 cards per request' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return new Response(
+        JSON.stringify({ error: 'Max 100 cards per request' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      );
     }
 
     // Validate card name lengths to prevent payload bloat
     for (const name of cards) {
       if (typeof name === 'string' && name.length > 200) {
-        return new Response(JSON.stringify({ error: 'Card name exceeds 200 character limit' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return new Response(
+          JSON.stringify({ error: 'Card name exceeds 200 character limit' }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          },
+        );
       }
     }
 
@@ -92,42 +120,51 @@ serve(async (req) => {
       });
     }
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: `Categorize these cards:\n${cards.join('\n')}` },
-        ],
-        tools: [
-          {
-            type: 'function',
-            function: {
-              name: 'categorize_cards',
-              description: 'Return the category for each card',
-              parameters: {
-                type: 'object',
-                properties: {
-                  categories: {
-                    type: 'object',
-                    additionalProperties: { type: 'string' },
-                    description: 'Map of card name to category',
+    const response = await fetch(
+      'https://ai.gateway.lovable.dev/v1/chat/completions',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-3-flash-preview',
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            {
+              role: 'user',
+              content: `Categorize these cards:\n${cards.join('\n')}`,
+            },
+          ],
+          tools: [
+            {
+              type: 'function',
+              function: {
+                name: 'categorize_cards',
+                description: 'Return the category for each card',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    categories: {
+                      type: 'object',
+                      additionalProperties: { type: 'string' },
+                      description: 'Map of card name to category',
+                    },
                   },
+                  required: ['categories'],
+                  additionalProperties: false,
                 },
-                required: ['categories'],
-                additionalProperties: false,
               },
             },
+          ],
+          tool_choice: {
+            type: 'function',
+            function: { name: 'categorize_cards' },
           },
-        ],
-        tool_choice: { type: 'function', function: { name: 'categorize_cards' } },
-      }),
-    });
+        }),
+      },
+    );
 
     if (!response.ok) {
       const status = response.status;
@@ -135,10 +172,13 @@ serve(async (req) => {
       console.error('AI gateway error:', status, text);
 
       if (status === 429) {
-        return new Response(JSON.stringify({ error: 'Rate limit exceeded, try again later' }), {
-          status: 429,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return new Response(
+          JSON.stringify({ error: 'Rate limit exceeded, try again later' }),
+          {
+            status: 429,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          },
+        );
       }
       if (status === 402) {
         return new Response(JSON.stringify({ error: 'AI credits exhausted' }), {
@@ -147,27 +187,36 @@ serve(async (req) => {
         });
       }
 
-      return new Response(JSON.stringify({ error: 'AI categorization failed' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return new Response(
+        JSON.stringify({ error: 'AI categorization failed' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      );
     }
 
     const data = await response.json();
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
 
     if (!toolCall) {
-      return new Response(JSON.stringify({ error: 'AI returned no categories' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return new Response(
+        JSON.stringify({ error: 'AI returned no categories' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      );
     }
 
     const parsed = JSON.parse(toolCall.function.arguments);
 
-    return new Response(JSON.stringify({ categories: parsed.categories, success: true }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ categories: parsed.categories, success: true }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
+    );
   } catch (e) {
     console.error('deck-categorize error:', e);
     return new Response(JSON.stringify({ error: 'Internal error' }), {
