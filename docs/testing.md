@@ -160,4 +160,6 @@ deno test --allow-env --allow-net supabase/functions/semantic-search/benchmark.t
 
 ## CI Integration
 
-All tests run automatically on pull requests via GitHub Actions (`.github/workflows/ci.yml`). Security tests are included in the regression suite exported from `src/lib/regression/index.ts`. Live Scryfall validation runs in a separate job on a weekly schedule to avoid flaky builds from external API dependencies.
+All tests run automatically on pull requests via GitHub Actions (`.github/workflows/ci.yml`). Pull requests always run lightweight `e2e-smoke` and `a11y-smoke` jobs (critical navigation/search/dialog + one axe suite), while full `e2e` and `a11y` coverage remains on push/nightly/manual runs and can be opted into on PRs with `ci:e2e` / `ci:a11y` labels. Security tests are included in the regression suite exported from `src/lib/regression/index.ts`. Live Scryfall validation runs in a separate job on a weekly schedule to avoid flaky builds from external API dependencies.
+
+For branch protection, require: `lint`, `typecheck`, `test`, `build`, `bundle-size`, `e2e-smoke`, and `a11y-smoke`.

@@ -25,17 +25,72 @@ import { cn } from '@/lib/core/utils';
 import { Filter, ArrowUpDown, X, ChevronDown, Package } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { useAuth } from '@/hooks/useAuth';
-import {
-  CARD_TYPES,
-  COLORS,
-  SORT_OPTIONS,
-} from '@/components/SearchFilters/constants';
-import {
-  applyCardFilters,
-  countActiveFilters,
-  hasActiveFilters as getHasActiveFilters,
-} from '@/components/SearchFilters/filtering';
-import { useSearchFilterState } from '@/components/SearchFilters/useSearchFilterState';
+
+// Color definitions with mana symbols
+const COLORS = [
+  { id: 'W', name: 'White' },
+  { id: 'U', name: 'Blue' },
+  { id: 'B', name: 'Black' },
+  { id: 'R', name: 'Red' },
+  { id: 'G', name: 'Green' },
+  { id: 'C', name: 'Colorless' },
+] as const;
+
+const COLOR_IDENTITY_STYLES: Record<(typeof COLORS)[number]['id'], string> = {
+  W: 'data-[identity=W]:font-semibold data-[identity=W]:tracking-tight',
+  U: 'data-[identity=U]:italic',
+  B: 'data-[identity=B]:font-black',
+  R: 'data-[identity=R]:uppercase',
+  G: 'data-[identity=G]:font-semibold',
+  C: 'data-[identity=C]:font-medium data-[identity=C]:text-[11px]',
+};
+
+const getColorFilterButtonClass = (
+  isSelected: boolean,
+  colorId: (typeof COLORS)[number]['id'],
+) =>
+  cn(
+    'h-8 w-8 rounded-full border flex items-center justify-center text-xs transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+    COLOR_IDENTITY_STYLES[colorId],
+    isSelected
+      ? 'bg-primary text-primary-foreground border-primary shadow-sm scale-110'
+      : 'bg-muted text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground hover:border-accent-foreground/20',
+  );
+
+// Card types to filter by
+const CARD_TYPES = [
+  'Creature',
+  'Instant',
+  'Sorcery',
+  'Enchantment',
+  'Artifact',
+  'Planeswalker',
+  'Land',
+  'Battle',
+] as const;
+
+// Sort options
+const SORT_OPTIONS = [
+  { value: 'name-asc', labelKey: 'filters.sortNameAsc' },
+  { value: 'name-desc', labelKey: 'filters.sortNameDesc' },
+  { value: 'cmc-asc', labelKey: 'filters.sortCmcAsc' },
+  { value: 'cmc-desc', labelKey: 'filters.sortCmcDesc' },
+  { value: 'price-asc', labelKey: 'filters.sortPriceAsc' },
+  { value: 'price-desc', labelKey: 'filters.sortPriceDesc' },
+  { value: 'rarity-asc', labelKey: 'filters.sortRarityAsc' },
+  { value: 'rarity-desc', labelKey: 'filters.sortRarityDesc' },
+  { value: 'edhrec-asc', labelKey: 'filters.sortEdhrecAsc' },
+  { value: 'edhrec-desc', labelKey: 'filters.sortEdhrecDesc' },
+] as const;
+
+const RARITY_ORDER = {
+  common: 0,
+  uncommon: 1,
+  rare: 2,
+  mythic: 3,
+  special: 4,
+  bonus: 5,
+};
 
 interface SearchFiltersProps {
   cards: ScryfallCard[];
@@ -175,15 +230,12 @@ export function SearchFilters({
                   <button
                     key={color.id}
                     onClick={() => toggleColor(color.id)}
-                    className={cn(
-                      'h-8 w-8 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all',
-                      color.bg,
-                      color.text,
-                      filters.colors.includes(color.id)
-                        ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110'
-                        : 'opacity-60 hover:opacity-100 border-transparent',
+                    className={getColorFilterButtonClass(
+                      filters.colors.includes(color.id),
+                      color.id,
                     )}
                     title={color.name}
+                    data-identity={color.id}
                     aria-label={t(
                       'filters.filterByColor',
                       'Filter by {name}',
