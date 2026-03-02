@@ -89,19 +89,42 @@ export async function validateAuth(req: Request): Promise<AuthResult> {
  */
 export function getCorsHeaders(req: Request) {
   const origin = req.headers.get('Origin');
-  const allowedOrigins = (
-    Deno.env.get('ALLOWED_ORIGINS')?.split(',') || ['*']
-  ).map((o) => o.trim().replace(/\/+$/, ''));
+  const endpoint = new URL(req.url).pathname.split('/').filter(Boolean).pop();
 
-  let corsOrigin = '*';
-  if (
-    origin &&
-    (allowedOrigins.includes('*') || allowedOrigins.includes(origin))
-  ) {
-    corsOrigin = origin;
-  } else if (!allowedOrigins.includes('*')) {
-    corsOrigin = allowedOrigins[0]; // Fallback to first allowed origin
-  }
+  const firstPartyOrigins = [
+    'https://offmeta.app',
+    'https://www.offmeta.app',
+    'https://offmeta.lovable.app',
+  ];
+  const sensitiveEndpoints = new Set([
+    'admin-analytics',
+    'cleanup-logs',
+    'warmup-cache',
+  ]);
+
+  const parseOrigins = (envValue?: string): string[] => {
+    if (!envValue) return [];
+
+    return envValue
+      .split(',')
+      .map((value) => value.trim().replace(/\/+$/, ''))
+      .filter((value) => value.length > 0 && value !== '*');
+  };
+
+  const generalOrigins = parseOrigins(Deno.env.get('ALLOWED_ORIGINS'));
+  const adminOrigins = parseOrigins(Deno.env.get('ALLOWED_ORIGINS_ADMIN'));
+
+  const allowedOrigins = sensitiveEndpoints.has(endpoint ?? '')
+    ? adminOrigins.length > 0
+      ? adminOrigins
+      : generalOrigins
+    : generalOrigins;
+
+  const effectiveOrigins =
+    allowedOrigins.length > 0 ? allowedOrigins : firstPartyOrigins;
+
+  const corsOrigin =
+    origin && effectiveOrigins.includes(origin) ? origin : effectiveOrigins[0];
 
   return {
     'Access-Control-Allow-Origin': corsOrigin,
