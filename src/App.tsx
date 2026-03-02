@@ -21,24 +21,12 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { supabase } from '@/integrations/supabase/client';
 
 const Index = lazy(() => import('./pages/Index'));
-const GuidesIndex = lazy(() => import('./pages/GuidesIndex'));
-const GuidePage = lazy(() => import('./pages/GuidePage'));
 const DocsIndex = lazy(() => import('./pages/DocsIndex'));
 const SyntaxCheatSheet = lazy(() => import('./pages/SyntaxCheatSheet'));
 const SavedSearches = lazy(() => import('./pages/SavedSearches'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
 const AdminAnalytics = lazy(() => import('./pages/AdminAnalytics'));
-const DeckRecommendations = lazy(() => import('./pages/DeckRecommendations'));
-const FindMyCombos = lazy(() => import('./pages/FindMyCombos'));
-const ArchetypesIndex = lazy(() => import('./pages/ArchetypesIndex'));
-const ArchetypePage = lazy(() => import('./pages/ArchetypePage'));
-const DeckBuilder = lazy(() => import('./pages/DeckBuilder'));
-const DeckEditor = lazy(() => import('./pages/DeckEditor'));
-const PublicDeckView = lazy(() => import('./pages/PublicDeckView'));
-const BrowseDecks = lazy(() => import('./pages/BrowseDecks'));
-const About = lazy(() => import('./pages/About'));
-const Collection = lazy(() => import('./pages/Collection'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const queryClient = new QueryClient({
@@ -108,22 +96,10 @@ const App = () => (
                   <Route path="/" element={<Index />} />
                   <Route path="/docs" element={<DocsIndex />} />
                   <Route path="/docs/syntax" element={<SyntaxCheatSheet />} />
-                  <Route path="/guides" element={<GuidesIndex />} />
-                  <Route path="/guides/:slug" element={<GuidePage />} />
                   <Route path="/saved" element={<SavedSearches />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/profile" element={<ProfileSettings />} />
                   <Route path="/admin/analytics" element={<AdminAnalytics />} />
-                  <Route path="/deck-recs" element={<DeckRecommendations />} />
-                  <Route path="/combos" element={<FindMyCombos />} />
-                  <Route path="/archetypes" element={<ArchetypesIndex />} />
-                  <Route path="/archetypes/:slug" element={<ArchetypePage />} />
-                  <Route path="/deckbuilder" element={<DeckBuilder />} />
-                  <Route path="/deckbuilder/:id" element={<DeckEditor />} />
-                  <Route path="/deck/:id" element={<PublicDeckView />} />
-                  <Route path="/decks" element={<BrowseDecks />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/collection" element={<Collection />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
