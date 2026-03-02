@@ -9,7 +9,9 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white&style=flat-square)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white&style=flat-square)](https://tailwindcss.com/)
 [![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white&style=flat-square)](https://vitejs.dev/)
-[![Tests](https://img.shields.io/badge/tests-1490%2B-brightgreen?style=flat-square)](docs/testing.md)
+[![Tests](https://img.shields.io/badge/tests-1560%2B-brightgreen?style=flat-square)](docs/testing.md)
+[![E2E](https://img.shields.io/badge/e2e-23%20Playwright%20scenarios-0ea5e9?style=flat-square)](src/tests/e2e)
+[![A11y](https://img.shields.io/badge/a11y-3%20axe%20suites-14b8a6?style=flat-square)](src/tests/e2e/accessibility.spec.ts)
 [![Built with Lovable](https://img.shields.io/badge/Built%20with-Lovable-ff69b4?style=flat-square)](https://lovable.dev)
 
 **Natural language search for Magic: The Gathering cards, powered by Scryfall.**
@@ -22,26 +24,26 @@
 
 ## ✨ Features
 
-| Feature | Description |
-|---------|-------------|
-| **Natural Language Search** | Describe cards in plain English — AI translates to Scryfall syntax |
-| **200+ Deterministic Patterns** | Fast, cached translations for common queries without AI calls |
-| **Combo Finder** | Discover card combos for any commander via Commander Spellbook |
-| **Deck Recommendations** | AI-powered suggestions (High Synergy, Upgrades, Budget Picks) from Moxfield import or text paste |
-| **Commander Archetypes** | Browse popular archetypes with curated card lists and quick-search |
-| **10 Progressive Search Guides** | Learn from basic type searches to expert multi-constraint queries |
-| **Voice Input** | Hands-free searching with speech recognition |
-| **Card Details** | Rulings, prices, printings, and legality in a clean modal |
-| **Card Comparison** | Compare 2–4 cards side-by-side on stats, price, and legality |
-| **Multiple View Modes** | Grid, list, and image-only views with persistent preference |
-| **Export Results** | Copy card names or download CSV for deck builders |
-| **Smart Filters** | Color, format, type, CMC, price, and rarity filter chips |
-| **Alchemy Exclusion** | Rebalanced digital-only cards automatically filtered out |
-| **Client-Side Caching** | Sub-100ms response for repeated queries |
-| **PWA Support** | Installable with offline-first architecture |
-| **Dark/Light Theme** | Automatic system preference detection |
-| **Mobile-First Design** | Responsive from 320px to 1920px with progressive spacing |
-| **11-Language i18n** | Full UI and guide content localized in EN, ES, FR, DE, IT, PT, JA, KO, RU, ZHS, ZHT |
+| Feature                          | Description                                                                                      |
+| -------------------------------- | ------------------------------------------------------------------------------------------------ |
+| **Natural Language Search**      | Describe cards in plain English — AI translates to Scryfall syntax                               |
+| **200+ Deterministic Patterns**  | Fast, cached translations for common queries without AI calls                                    |
+| **Combo Finder**                 | Discover card combos for any commander via Commander Spellbook                                   |
+| **Deck Recommendations**         | AI-powered suggestions (High Synergy, Upgrades, Budget Picks) from Moxfield import or text paste |
+| **Commander Archetypes**         | Browse popular archetypes with curated card lists and quick-search                               |
+| **10 Progressive Search Guides** | Learn from basic type searches to expert multi-constraint queries                                |
+| **Voice Input**                  | Hands-free searching with speech recognition                                                     |
+| **Card Details**                 | Rulings, prices, printings, and legality in a clean modal                                        |
+| **Card Comparison**              | Compare 2–4 cards side-by-side on stats, price, and legality                                     |
+| **Multiple View Modes**          | Grid, list, and image-only views with persistent preference                                      |
+| **Export Results**               | Copy card names or download CSV for deck builders                                                |
+| **Smart Filters**                | Color, format, type, CMC, price, and rarity filter chips                                         |
+| **Alchemy Exclusion**            | Rebalanced digital-only cards automatically filtered out                                         |
+| **Client-Side Caching**          | Sub-100ms response for repeated queries                                                          |
+| **PWA Support**                  | Installable with offline-first architecture                                                      |
+| **Dark/Light Theme**             | Automatic system preference detection                                                            |
+| **Mobile-First Design**          | Responsive from 320px to 1920px with progressive spacing                                         |
+| **11-Language i18n**             | Full UI and guide content localized in EN, ES, FR, DE, IT, PT, JA, KO, RU, ZHS, ZHT              |
 
 ---
 
@@ -62,24 +64,34 @@ npm run dev
 OffMeta includes enterprise-grade features:
 
 - **Security**: 300+ security tests covering input sanitization, injection prevention, and rate limiting
+- **E2E Coverage**: 23 Playwright scenarios across search, navigation, deck workflows, and regression-critical user paths
+- **Accessibility Coverage**: Dedicated axe-core Playwright suite for critical pages and interactive flows
 - **Rate Limiting**: Server and client-side throttling with abuse prevention
 - **CORS Protection**: Origin allowlist enforcement with proper security headers
 - **Error Sanitization**: Prevents leaking file paths, stack traces, and credentials
 - **Offline-First PWA**: Service worker with intelligent caching strategies
 
 Run security tests:
+
 ```bash
 npm run test -- src/lib/security
+```
+
+Run E2E and accessibility tests:
+
+```bash
+npx playwright test --project=chromium
+npx playwright test --grep @a11y
 ```
 
 ---
 
 ## ⚙️ Configuration
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `VITE_SUPABASE_URL` | Yes | Supabase project URL |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Yes | Supabase anon/publishable key |
+| Variable                        | Required | Description                   |
+| ------------------------------- | -------- | ----------------------------- |
+| `VITE_SUPABASE_URL`             | Yes      | Supabase project URL          |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Yes      | Supabase anon/publishable key |
 
 For Edge Function environment variables, see [`docs/configuration.md`](docs/configuration.md).
 
@@ -125,18 +137,18 @@ Try these searches:
 
 OffMeta includes 10 progressive guides that teach natural language card search from beginner to expert:
 
-| Level | Guide | Example Query |
-|-------|-------|---------------|
-| 1 | Search by Creature Type | `"dragons"` |
-| 2 | Filter by Color | `"mono red creatures"` |
-| 3 | Budget & Price Filters | `"budget board wipes under $5"` |
-| 4 | Format Legality Search | `"commander staples under $3"` |
-| 5 | Keyword Ability Search | `"creatures with flying and deathtouch"` |
-| 6 | Ramp & Card Draw | `"green ramp spells that search for lands"` |
-| 7 | Tribal Synergies | `"elf tribal payoffs for commander"` |
-| 8 | Token & Sacrifice | `"creatures that make tokens when opponents act"` |
-| 9 | ETB & Flicker Combos | `"cards that double ETB effects"` |
-| 10 | Multi-Constraint | `"utility lands for commander in Esper under $5"` |
+| Level | Guide                   | Example Query                                     |
+| ----- | ----------------------- | ------------------------------------------------- |
+| 1     | Search by Creature Type | `"dragons"`                                       |
+| 2     | Filter by Color         | `"mono red creatures"`                            |
+| 3     | Budget & Price Filters  | `"budget board wipes under $5"`                   |
+| 4     | Format Legality Search  | `"commander staples under $3"`                    |
+| 5     | Keyword Ability Search  | `"creatures with flying and deathtouch"`          |
+| 6     | Ramp & Card Draw        | `"green ramp spells that search for lands"`       |
+| 7     | Tribal Synergies        | `"elf tribal payoffs for commander"`              |
+| 8     | Token & Sacrifice       | `"creatures that make tokens when opponents act"` |
+| 9     | ETB & Flicker Combos    | `"cards that double ETB effects"`                 |
+| 10    | Multi-Constraint        | `"utility lands for commander in Esper under $5"` |
 
 Browse all guides at [`/guides`](https://offmeta.lovable.app/guides).
 
@@ -174,24 +186,24 @@ For security vulnerability reporting, see [SECURITY.md](SECURITY.md).
 
 ## 📚 Documentation
 
-| Document | Description |
-|----------|-------------|
-| [Architecture](docs/architecture.md) | System design, data flow, and third-party integrations |
-| [API](docs/api.md) | Edge function request/response contracts |
-| [Configuration](docs/configuration.md) | Environment variables and setup |
-| [Development](docs/development.md) | Local development guide |
-| [Testing](docs/testing.md) | Test suite documentation |
-| [Guides](docs/guides.md) | Search guides system documentation |
-| [Roadmap](docs/roadmap.md) | Planned features |
-| [FAQ](docs/FAQ.md) | Common questions |
-| [Internationalization](docs/i18n.md) | i18n system and translation guide |
+| Document                               | Description                                            |
+| -------------------------------------- | ------------------------------------------------------ |
+| [Architecture](docs/architecture.md)   | System design, data flow, and third-party integrations |
+| [API](docs/api.md)                     | Edge function request/response contracts               |
+| [Configuration](docs/configuration.md) | Environment variables and setup                        |
+| [Development](docs/development.md)     | Local development guide                                |
+| [Testing](docs/testing.md)             | Test suite documentation                               |
+| [Guides](docs/guides.md)               | Search guides system documentation                     |
+| [Roadmap](docs/roadmap.md)             | Planned features                                       |
+| [FAQ](docs/FAQ.md)                     | Common questions                                       |
+| [Internationalization](docs/i18n.md)   | i18n system and translation guide                      |
 
 ---
 
 ## 📄 Legal
 
-| Document | Description |
-|----------|-------------|
-| [LICENSE](LICENSE) | AGPL-3.0 License |
-| [SECURITY](SECURITY.md) | Vulnerability reporting |
-| [TRADEMARK](TRADEMARK.md) | Branding guidelines |
+| Document                  | Description             |
+| ------------------------- | ----------------------- |
+| [LICENSE](LICENSE)        | AGPL-3.0 License        |
+| [SECURITY](SECURITY.md)   | Vulnerability reporting |
+| [TRADEMARK](TRADEMARK.md) | Branding guidelines     |

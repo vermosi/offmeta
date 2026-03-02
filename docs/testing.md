@@ -36,18 +36,18 @@ npm run test -- translation-golden
 
 Located in `src/lib/security/`. Comprehensive security coverage including:
 
-| Category | File | Description |
-|----------|------|-------------|
-| Input Sanitization | `input-sanitization.test.ts` | SQL/XSS/command injection prevention |
-| Injection Attacks | `injection.test.ts` | NoSQL and header injection |
-| Rate Limiting | `rate-limiting.test.ts` | Request throttling and abuse prevention |
-| Authentication | `authentication.test.ts` | Auth bypass and token validation |
-| CORS Protection | `cors-bypass.test.ts` | Origin allowlist and security headers |
-| Prototype Pollution | `prototype-pollution.test.ts` | `__proto__` and constructor attacks |
-| ReDoS Prevention | `redos.test.ts` | Regex denial-of-service mitigation |
-| Timing Attacks | `timing-attacks.test.ts` | Constant-time comparison validation |
-| Error Leakage | `error-leakage.test.ts` | Path/stack/credential sanitization |
-| Config Sync | `config-sync.test.ts` | Security constant synchronization |
+| Category            | File                          | Description                             |
+| ------------------- | ----------------------------- | --------------------------------------- |
+| Input Sanitization  | `input-sanitization.test.ts`  | SQL/XSS/command injection prevention    |
+| Injection Attacks   | `injection.test.ts`           | NoSQL and header injection              |
+| Rate Limiting       | `rate-limiting.test.ts`       | Request throttling and abuse prevention |
+| Authentication      | `authentication.test.ts`      | Auth bypass and token validation        |
+| CORS Protection     | `cors-bypass.test.ts`         | Origin allowlist and security headers   |
+| Prototype Pollution | `prototype-pollution.test.ts` | `__proto__` and constructor attacks     |
+| ReDoS Prevention    | `redos.test.ts`               | Regex denial-of-service mitigation      |
+| Timing Attacks      | `timing-attacks.test.ts`      | Constant-time comparison validation     |
+| Error Leakage       | `error-leakage.test.ts`       | Path/stack/credential sanitization      |
+| Config Sync         | `config-sync.test.ts`         | Security constant synchronization       |
 
 Run security tests only:
 
@@ -75,11 +75,11 @@ npm run test -- src/components
 
 Tests for page-level components in `src/pages/__tests__/`. Covers:
 
-| Page | File | Coverage |
-|------|------|----------|
-| GuidesIndex | `GuidesIndex.test.tsx` | Rendering, navigation, SEO |
-| GuidePage | `GuidePage.test.tsx` | Rendering, structured data, error states |
-| FindMyCombos | `FindMyCombos.test.tsx` | Input modes, parsing, combo search flow |
+| Page                | File                           | Coverage                                  |
+| ------------------- | ------------------------------ | ----------------------------------------- |
+| GuidesIndex         | `GuidesIndex.test.tsx`         | Rendering, navigation, SEO                |
+| GuidePage           | `GuidePage.test.tsx`           | Rendering, structured data, error states  |
+| FindMyCombos        | `FindMyCombos.test.tsx`        | Input modes, parsing, combo search flow   |
 | DeckRecommendations | `DeckRecommendations.test.tsx` | Input modes, parsing, recommendation flow |
 
 ```bash
@@ -139,6 +139,23 @@ import {
   isRegexSafe,
   SECURITY_LIMITS,
 } from '@/lib/security';
+```
+
+## Semantic Search Performance SLOs
+
+The edge translation pipeline has explicit latency SLOs measured by the benchmark suite in `supabase/functions/semantic-search/benchmark.test.ts`:
+
+- Deterministic path: **< 300ms**
+- Cache path: **< 300ms**
+- Pattern-match path: **< 800ms**
+- AI path: **< 5000ms** (budget target range 3–5s)
+
+These SLO assertions are enforced in CI via benchmark tests and will fail the build if thresholds are exceeded.
+
+Run the benchmark suite locally with:
+
+```bash
+deno test --allow-env --allow-net supabase/functions/semantic-search/benchmark.test.ts
 ```
 
 ## CI Integration

@@ -4,8 +4,11 @@
  * @module semantic-search/benchmark.test
  */
 
-import { loadSync } from "https://deno.land/std@0.224.0/dotenv/mod.ts";
-import { assertEquals, assert } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { loadSync } from 'https://deno.land/std@0.224.0/dotenv/mod.ts';
+import {
+  assertEquals,
+  assert,
+} from 'https://deno.land/std@0.224.0/assert/mod.ts';
 
 // Try to load env vars, but don't fail if some are missing
 try {
@@ -14,18 +17,30 @@ try {
   // .env.example may have vars not set in actual .env - that's OK
 }
 
-const SUPABASE_URL = Deno.env.get("VITE_SUPABASE_URL") || "https://nxmzyykkzwomkcentctt.supabase.co";
-const SUPABASE_ANON_KEY = Deno.env.get("VITE_SUPABASE_PUBLISHABLE_KEY") ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54bXp5eWtrendvbWtjZW50Y3R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyMzgwOTYsImV4cCI6MjA4MDgxNDA5Nn0.sJbaqJuvKqIMYV0D2Q4iWgTRlzVGih7OXRRkGmDsGPY";
+const SUPABASE_URL =
+  Deno.env.get('VITE_SUPABASE_URL') ||
+  'https://nxmzyykkzwomkcentctt.supabase.co';
+const SUPABASE_ANON_KEY =
+  Deno.env.get('VITE_SUPABASE_PUBLISHABLE_KEY') ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54bXp5eWtrendvbWtjZW50Y3R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyMzgwOTYsImV4cCI6MjA4MDgxNDA5Nn0.sJbaqJuvKqIMYV0D2Q4iWgTRlzVGih7OXRRkGmDsGPY';
 const FUNCTION_URL = `${SUPABASE_URL}/functions/v1/semantic-search`;
+
+const PERF_SLOS_MS = {
+  deterministic: 300,
+  cache: 300,
+  pattern: 800,
+  ai: 5000,
+} as const;
 
 interface BenchmarkResult {
   queryType: string;
   query: string;
   responseTimeMs: number;
+  edgeResponseTimeMs: number;
   confidence: number;
   success: boolean;
   cached: boolean;
+  source: string;
 }
 
 interface BenchmarkStats {
@@ -53,11 +68,11 @@ async function makeRequest(
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       const start = performance.now();
-      
+
       const response = await fetch(FUNCTION_URL, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         },
         body: JSON.stringify({
@@ -75,42 +90,52 @@ async function makeRequest(
         const isTransient = response.status >= 500 || response.status === 429;
         if (isTransient) {
           const delay = RETRY_DELAYS[attempt] ?? 2000;
-          console.log(`  ⚠️ Transient error (${response.status}), retrying in ${delay}ms...`);
+          console.log(
+            `  ⚠️ Transient error (${response.status}), retrying in ${delay}ms...`,
+          );
           await new Promise((r) => setTimeout(r, delay));
           continue;
         }
       }
 
       return {
-        queryType: "",
+        queryType: '',
         query,
         responseTimeMs: elapsed,
-        confidence: data.confidence ?? 0,
+        edgeResponseTimeMs: data.responseTimeMs ?? Math.round(elapsed),
+        confidence: data.explanation?.confidence ?? 0,
         success: response.ok && !!data.scryfallQuery,
         cached: data.cached ?? false,
-        scryfallQuery: data.scryfallQuery ?? "",
+        source: data.source ?? 'unknown',
+        scryfallQuery: data.scryfallQuery ?? '',
       };
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
-      
+
       if (attempt < maxRetries) {
         const delay = RETRY_DELAYS[attempt] ?? 2000;
-        console.log(`  ⚠️ Network error, retrying in ${delay}ms: ${lastError.message}`);
+        console.log(
+          `  ⚠️ Network error, retrying in ${delay}ms: ${lastError.message}`,
+        );
         await new Promise((r) => setTimeout(r, delay));
       }
     }
   }
 
   // All retries exhausted, return failure result
-  console.log(`  ❌ All ${maxRetries + 1} attempts failed for query: "${query}"`);
+  console.log(
+    `  ❌ All ${maxRetries + 1} attempts failed for query: "${query}"`,
+  );
   return {
-    queryType: "",
+    queryType: '',
     query,
     responseTimeMs: 0,
+    edgeResponseTimeMs: 0,
     confidence: 0,
     success: false,
     cached: false,
-    scryfallQuery: "",
+    source: 'unknown',
+    scryfallQuery: '',
   };
 }
 
@@ -121,13 +146,13 @@ async function makeRequest(
 async function warmup(): Promise<void> {
   try {
     const response = await fetch(FUNCTION_URL, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
       },
       body: JSON.stringify({
-        query: "warmup",
+        query: 'warmup',
         cacheSalt: `warmup-${Date.now()}`,
       }),
     });
@@ -142,7 +167,7 @@ async function warmup(): Promise<void> {
 function calculateStats(results: BenchmarkResult[]): BenchmarkStats {
   if (results.length === 0) {
     return {
-      queryType: "unknown",
+      queryType: 'unknown',
       count: 0,
       avgMs: 0,
       minMs: 0,
@@ -154,7 +179,9 @@ function calculateStats(results: BenchmarkResult[]): BenchmarkStats {
     };
   }
 
-  const times = results.map((r) => r.responseTimeMs).sort((a, b) => a - b);
+  const times = results
+    .map((r) => r.edgeResponseTimeMs || r.responseTimeMs)
+    .sort((a, b) => a - b);
   const successCount = results.filter((r) => r.success).length;
   const cacheHitCount = results.filter((r) => r.cached).length;
 
@@ -165,7 +192,9 @@ function calculateStats(results: BenchmarkResult[]): BenchmarkStats {
     minMs: Math.round(times[0]),
     maxMs: Math.round(times[times.length - 1]),
     p50Ms: Math.round(times[Math.floor(times.length * 0.5)]),
-    p95Ms: Math.round(times[Math.floor(times.length * 0.95)] ?? times[times.length - 1]),
+    p95Ms: Math.round(
+      times[Math.floor(times.length * 0.95)] ?? times[times.length - 1],
+    ),
     successRate: Math.round((successCount / results.length) * 100),
     cacheHitRate: Math.round((cacheHitCount / results.length) * 100),
   };
@@ -174,280 +203,389 @@ function calculateStats(results: BenchmarkResult[]): BenchmarkStats {
 // Query categories for benchmarking
 const BENCHMARK_QUERIES = {
   simple: [
-    "red creatures",
-    "blue instants",
-    "green ramp",
-    "black removal",
-    "white enchantments",
+    'red creatures',
+    'blue instants',
+    'green ramp',
+    'black removal',
+    'white enchantments',
   ],
   medium: [
-    "creatures with flying under $5",
-    "legendary creatures from modern",
-    "artifacts that tap for mana",
-    "instants that draw cards",
-    "enchantments with flash",
+    'creatures with flying under $5',
+    'legendary creatures from modern',
+    'artifacts that tap for mana',
+    'instants that draw cards',
+    'enchantments with flash',
   ],
   complex: [
-    "mono red aggressive creatures under $2 from pioneer",
-    "blue green legendary creatures with card draw abilities",
-    "artifacts that create treasure tokens legal in commander",
-    "creatures with power greater than toughness that cost 3 or less",
-    "multicolor enchantments from the last 3 years",
+    'mono red aggressive creatures under $2 from pioneer',
+    'blue green legendary creatures with card draw abilities',
+    'artifacts that create treasure tokens legal in commander',
+    'creatures with power greater than toughness that cost 3 or less',
+    'multicolor enchantments from the last 3 years',
   ],
   deterministic: [
-    "t:creature c=r",
-    "t:instant c=u cmc<=3",
-    "t:legendary t:creature",
+    't:creature c=r',
+    't:instant c=u cmc<=3',
+    't:legendary t:creature',
     'o:"draw a card"',
-    "r:mythic",
+    'r:mythic',
   ],
   slang: [
-    "ETB creatures",
-    "mana rocks",
-    "board wipes",
-    "tutors",
-    "stax pieces",
+    'ETB creatures',
+    'mana rocks',
+    'board wipes',
+    'tutors',
+    'stax pieces',
   ],
 };
 
 Deno.test({
-  name: "Benchmark: Simple queries (baseline)",
+  name: 'Benchmark: Simple queries (baseline)',
   sanitizeResources: false,
   sanitizeOps: false,
   async fn() {
     // Warmup to reduce cold start impact
     await warmup();
-    
+
     const results: BenchmarkResult[] = [];
 
     for (const query of BENCHMARK_QUERIES.simple) {
-      const result = await makeRequest(query, { cacheSalt: `bench-${Date.now()}` });
-      results.push({ ...result, queryType: "simple" });
+      const result = await makeRequest(query, {
+        cacheSalt: `bench-${Date.now()}`,
+      });
+      results.push({ ...result, queryType: 'simple' });
       // Small delay between requests
       await new Promise((r) => setTimeout(r, 100));
     }
 
     const stats = calculateStats(results);
-    console.log("\n📊 Simple Query Stats:");
+    console.log('\n📊 Simple Query Stats:');
     console.log(`   Count: ${stats.count}`);
-    console.log(`   Avg: ${stats.avgMs}ms | Min: ${stats.minMs}ms | Max: ${stats.maxMs}ms`);
+    console.log(
+      `   Avg: ${stats.avgMs}ms | Min: ${stats.minMs}ms | Max: ${stats.maxMs}ms`,
+    );
     console.log(`   P50: ${stats.p50Ms}ms | P95: ${stats.p95Ms}ms`);
     console.log(`   Success Rate: ${stats.successRate}%`);
 
-    assertEquals(stats.successRate, 100, "All simple queries should succeed");
+    assertEquals(stats.successRate, 100, 'All simple queries should succeed');
     // Allow for cold starts and network variability
-    assert(stats.avgMs < 10000, `Average response time should be under 10s (was ${stats.avgMs}ms)`);
+    assert(
+      stats.avgMs < 10000,
+      `Average response time should be under 10s (was ${stats.avgMs}ms)`,
+    );
   },
 });
 
 Deno.test({
-  name: "Benchmark: Medium complexity queries",
+  name: 'Benchmark: Medium complexity queries',
   sanitizeResources: false,
   sanitizeOps: false,
   async fn() {
     // Warmup to reduce cold start impact
     await warmup();
-    
+
     const results: BenchmarkResult[] = [];
 
     for (const query of BENCHMARK_QUERIES.medium) {
-      const result = await makeRequest(query, { cacheSalt: `bench-${Date.now()}` });
-      results.push({ ...result, queryType: "medium" });
+      const result = await makeRequest(query, {
+        cacheSalt: `bench-${Date.now()}`,
+      });
+      results.push({ ...result, queryType: 'medium' });
       await new Promise((r) => setTimeout(r, 100));
     }
 
     const stats = calculateStats(results);
-    console.log("\n📊 Medium Complexity Query Stats:");
+    console.log('\n📊 Medium Complexity Query Stats:');
     console.log(`   Count: ${stats.count}`);
-    console.log(`   Avg: ${stats.avgMs}ms | Min: ${stats.minMs}ms | Max: ${stats.maxMs}ms`);
+    console.log(
+      `   Avg: ${stats.avgMs}ms | Min: ${stats.minMs}ms | Max: ${stats.maxMs}ms`,
+    );
     console.log(`   P50: ${stats.p50Ms}ms | P95: ${stats.p95Ms}ms`);
     console.log(`   Success Rate: ${stats.successRate}%`);
 
-    assertEquals(stats.successRate, 100, "All medium queries should succeed");
+    assertEquals(stats.successRate, 100, 'All medium queries should succeed');
     // Allow for cold starts and network variability
-    assert(stats.avgMs < 15000, `Average response time should be under 15s (was ${stats.avgMs}ms)`);
+    assert(
+      stats.avgMs < 15000,
+      `Average response time should be under 15s (was ${stats.avgMs}ms)`,
+    );
   },
 });
 
 Deno.test({
-  name: "Benchmark: Complex queries",
+  name: 'Benchmark: Complex queries',
   sanitizeResources: false,
   sanitizeOps: false,
   async fn() {
     // Warmup to reduce cold start impact
     await warmup();
-    
+
     const results: BenchmarkResult[] = [];
 
     for (const query of BENCHMARK_QUERIES.complex) {
-      const result = await makeRequest(query, { cacheSalt: `bench-${Date.now()}` });
-      results.push({ ...result, queryType: "complex" });
+      const result = await makeRequest(query, {
+        cacheSalt: `bench-${Date.now()}`,
+      });
+      results.push({ ...result, queryType: 'complex' });
       await new Promise((r) => setTimeout(r, 100));
     }
 
     const stats = calculateStats(results);
-    console.log("\n📊 Complex Query Stats:");
+    console.log('\n📊 Complex Query Stats:');
     console.log(`   Count: ${stats.count}`);
-    console.log(`   Avg: ${stats.avgMs}ms | Min: ${stats.minMs}ms | Max: ${stats.maxMs}ms`);
+    console.log(
+      `   Avg: ${stats.avgMs}ms | Min: ${stats.minMs}ms | Max: ${stats.maxMs}ms`,
+    );
     console.log(`   P50: ${stats.p50Ms}ms | P95: ${stats.p95Ms}ms`);
     console.log(`   Success Rate: ${stats.successRate}%`);
 
-    assert(stats.successRate >= 80, "At least 80% of complex queries should succeed");
+    assert(
+      stats.successRate >= 80,
+      'At least 80% of complex queries should succeed',
+    );
     // Complex queries may take longer due to AI processing and network variability
-    assert(stats.avgMs < 20000, `Average response time should be under 20s (was ${stats.avgMs}ms)`);
+    assert(
+      stats.avgMs < 20000,
+      `Average response time should be under 20s (was ${stats.avgMs}ms)`,
+    );
   },
 });
 
 Deno.test({
-  name: "Benchmark: Deterministic queries (fastest path)",
+  name: 'Benchmark: Deterministic queries (fastest path)',
   sanitizeResources: false,
   sanitizeOps: false,
   async fn() {
     // Warmup to reduce cold start impact
     await warmup();
-    
+
     const results: BenchmarkResult[] = [];
 
     for (const query of BENCHMARK_QUERIES.deterministic) {
-      const result = await makeRequest(query, { cacheSalt: `bench-${Date.now()}` });
-      results.push({ ...result, queryType: "deterministic" });
+      const result = await makeRequest(query, {
+        cacheSalt: `bench-${Date.now()}`,
+      });
+      results.push({ ...result, queryType: 'deterministic' });
       await new Promise((r) => setTimeout(r, 100));
     }
 
     const stats = calculateStats(results);
-    console.log("\n📊 Deterministic Query Stats (should be fastest):");
+    console.log('\n📊 Deterministic Query Stats (should be fastest):');
     console.log(`   Count: ${stats.count}`);
-    console.log(`   Avg: ${stats.avgMs}ms | Min: ${stats.minMs}ms | Max: ${stats.maxMs}ms`);
+    console.log(
+      `   Avg: ${stats.avgMs}ms | Min: ${stats.minMs}ms | Max: ${stats.maxMs}ms`,
+    );
     console.log(`   P50: ${stats.p50Ms}ms | P95: ${stats.p95Ms}ms`);
     console.log(`   Success Rate: ${stats.successRate}%`);
 
-    assertEquals(stats.successRate, 100, "All deterministic queries should succeed");
-    // Deterministic queries skip AI but still have network overhead + cold start potential
-    assert(stats.avgMs < 5000, `Deterministic queries should average under 5s (was ${stats.avgMs}ms)`);
+    assertEquals(
+      stats.successRate,
+      100,
+      'All deterministic queries should succeed',
+    );
+    assert(
+      stats.avgMs < PERF_SLOS_MS.deterministic,
+      `Deterministic stage SLO breach: avg ${stats.avgMs}ms exceeded ${PERF_SLOS_MS.deterministic}ms`,
+    );
   },
 });
 
 Deno.test({
-  name: "Benchmark: Slang/jargon queries",
+  name: 'Benchmark: Slang/jargon queries',
   sanitizeResources: false,
   sanitizeOps: false,
   async fn() {
     // Warmup to reduce cold start impact
     await warmup();
-    
+
     const results: BenchmarkResult[] = [];
 
     for (const query of BENCHMARK_QUERIES.slang) {
-      const result = await makeRequest(query, { cacheSalt: `bench-${Date.now()}` });
-      results.push({ ...result, queryType: "slang" });
+      const result = await makeRequest(query, {
+        cacheSalt: `bench-${Date.now()}`,
+      });
+      results.push({ ...result, queryType: 'slang' });
       await new Promise((r) => setTimeout(r, 100));
     }
 
     const stats = calculateStats(results);
-    console.log("\n📊 Slang/Jargon Query Stats:");
+    console.log('\n📊 Slang/Jargon Query Stats:');
     console.log(`   Count: ${stats.count}`);
-    console.log(`   Avg: ${stats.avgMs}ms | Min: ${stats.minMs}ms | Max: ${stats.maxMs}ms`);
+    console.log(
+      `   Avg: ${stats.avgMs}ms | Min: ${stats.minMs}ms | Max: ${stats.maxMs}ms`,
+    );
     console.log(`   P50: ${stats.p50Ms}ms | P95: ${stats.p95Ms}ms`);
     console.log(`   Success Rate: ${stats.successRate}%`);
 
-    assert(stats.successRate >= 80, "At least 80% of slang queries should succeed");
+    assert(
+      stats.successRate >= 80,
+      'At least 80% of slang queries should succeed',
+    );
   },
 });
 
 Deno.test({
-  name: "Benchmark: Cache performance",
+  name: 'Benchmark: Pattern-match path',
+  sanitizeResources: false,
+  sanitizeOps: false,
+  async fn() {
+    await warmup();
+
+    const query = 'mana rocks';
+    const result = await makeRequest(query, {
+      useCache: false,
+      cacheSalt: `pattern-${Date.now()}`,
+    });
+
+    console.log('\n📊 Pattern Path Stats:');
+    console.log(`   Source: ${result.source}`);
+    console.log(`   Edge response: ${Math.round(result.edgeResponseTimeMs)}ms`);
+
+    assert(result.success, 'Pattern path query should succeed');
+    assertEquals(
+      result.source,
+      'pattern_match',
+      'Query should resolve via pattern matching path',
+    );
+    assert(
+      result.edgeResponseTimeMs < PERF_SLOS_MS.pattern,
+      `Pattern stage SLO breach: ${Math.round(result.edgeResponseTimeMs)}ms exceeded ${PERF_SLOS_MS.pattern}ms`,
+    );
+  },
+});
+
+Deno.test({
+  name: 'Benchmark: AI path SLO',
+  sanitizeResources: false,
+  sanitizeOps: false,
+  async fn() {
+    await warmup();
+
+    const query = 'cards that punish opponents for drawing cards';
+    const result = await makeRequest(query, {
+      useCache: false,
+      cacheSalt: `ai-${Date.now()}`,
+    });
+
+    console.log('\n📊 AI Path Stats:');
+    console.log(`   Source: ${result.source}`);
+    console.log(`   Edge response: ${Math.round(result.edgeResponseTimeMs)}ms`);
+
+    assert(result.success, 'AI path query should succeed');
+    assertEquals(result.source, 'ai', 'Query should resolve via AI path');
+    assert(
+      result.edgeResponseTimeMs < PERF_SLOS_MS.ai,
+      `AI stage SLO breach: ${Math.round(result.edgeResponseTimeMs)}ms exceeded ${PERF_SLOS_MS.ai}ms`,
+    );
+  },
+});
+
+Deno.test({
+  name: 'Benchmark: Cache performance',
   sanitizeResources: false,
   sanitizeOps: false,
   async fn() {
     // Warmup to reduce cold start impact
     await warmup();
-    
-    const testQuery = "creatures with flying";
+
+    const testQuery = 'creatures with flying';
     const results: BenchmarkResult[] = [];
 
     // First request (cache miss expected)
     const firstResult = await makeRequest(testQuery, { useCache: true });
-    results.push({ ...firstResult, queryType: "cache-miss" });
+    results.push({ ...firstResult, queryType: 'cache-miss' });
     console.log(`\n📊 Cache Performance Test:`);
-    console.log(`   First request (miss): ${Math.round(firstResult.responseTimeMs)}ms`);
+    console.log(
+      `   First request (miss): ${Math.round(firstResult.responseTimeMs)}ms`,
+    );
 
     // Subsequent requests (cache hit expected)
     for (let i = 0; i < 3; i++) {
       await new Promise((r) => setTimeout(r, 50));
       const result = await makeRequest(testQuery, { useCache: true });
-      results.push({ ...result, queryType: "cache-hit" });
+      results.push({ ...result, queryType: 'cache-hit' });
     }
 
     const cachedResults = results.slice(1);
     const cachedStats = calculateStats(cachedResults);
-    
+
     console.log(`   Cached requests avg: ${cachedStats.avgMs}ms`);
     console.log(`   Cache hit rate: ${cachedStats.cacheHitRate}%`);
-    console.log(`   Speedup: ${Math.round(firstResult.responseTimeMs / cachedStats.avgMs)}x`);
+    console.log(
+      `   Speedup: ${Math.round(firstResult.responseTimeMs / cachedStats.avgMs)}x`,
+    );
 
-    // Cache should provide speedup (relaxed threshold for network variability)
-    if (cachedStats.cacheHitRate > 0) {
-      assert(
-        cachedStats.avgMs < firstResult.responseTimeMs * 0.8,
-        "Cached requests should be faster than uncached",
-      );
-    }
+    assert(
+      cachedStats.avgMs < PERF_SLOS_MS.cache,
+      `Cache stage SLO breach: avg ${cachedStats.avgMs}ms exceeded ${PERF_SLOS_MS.cache}ms`,
+    );
   },
 });
 
 Deno.test({
-  name: "Benchmark: Concurrent request handling",
+  name: 'Benchmark: Concurrent request handling',
   sanitizeResources: false,
   sanitizeOps: false,
   async fn() {
     // Warmup to reduce cold start impact
     await warmup();
-    
+
     const queries = [
-      "red creatures",
-      "blue spells",
-      "green ramp",
-      "white tokens",
-      "black zombies",
+      'red creatures',
+      'blue spells',
+      'green ramp',
+      'white tokens',
+      'black zombies',
     ];
 
     const start = performance.now();
-    
+
     // Fire all requests concurrently
     const promises = queries.map((q) =>
-      makeRequest(q, { cacheSalt: `concurrent-${Date.now()}-${Math.random()}` })
+      makeRequest(q, {
+        cacheSalt: `concurrent-${Date.now()}-${Math.random()}`,
+      }),
     );
-    
+
     const results = await Promise.all(promises);
     const totalTime = performance.now() - start;
-    
+
     const individualTimes = results.map((r) => r.responseTimeMs);
-    const avgIndividual = individualTimes.reduce((a, b) => a + b, 0) / individualTimes.length;
+    const avgIndividual =
+      individualTimes.reduce((a, b) => a + b, 0) / individualTimes.length;
     const successCount = results.filter((r) => r.success).length;
 
-    console.log("\n📊 Concurrent Request Stats:");
+    console.log('\n📊 Concurrent Request Stats:');
     console.log(`   Total wall clock time: ${Math.round(totalTime)}ms`);
     console.log(`   Avg individual response: ${Math.round(avgIndividual)}ms`);
-    console.log(`   Concurrency benefit: ${Math.round((avgIndividual * queries.length) / totalTime)}x`);
-    console.log(`   Success rate: ${Math.round((successCount / queries.length) * 100)}%`);
+    console.log(
+      `   Concurrency benefit: ${Math.round((avgIndividual * queries.length) / totalTime)}x`,
+    );
+    console.log(
+      `   Success rate: ${Math.round((successCount / queries.length) * 100)}%`,
+    );
 
-    assertEquals(successCount, queries.length, "All concurrent requests should succeed");
+    assertEquals(
+      successCount,
+      queries.length,
+      'All concurrent requests should succeed',
+    );
     // Concurrent requests should complete faster than sequential (relaxed for variability)
     assert(
       totalTime < avgIndividual * queries.length * 0.9,
-      "Concurrent handling should provide some benefit over sequential",
+      'Concurrent handling should provide some benefit over sequential',
     );
   },
 });
 
 Deno.test({
-  name: "Benchmark: Summary report",
+  name: 'Benchmark: Summary report',
   sanitizeResources: false,
   sanitizeOps: false,
   async fn() {
     // Warmup to reduce cold start impact
     await warmup();
-    
+
     // Run a quick sample across all categories
     const allResults: BenchmarkResult[] = [];
     const categories = Object.entries(BENCHMARK_QUERIES);
@@ -455,7 +593,9 @@ Deno.test({
     for (const [category, queries] of categories) {
       // Sample 2 queries per category for the summary
       for (const query of queries.slice(0, 2)) {
-        const result = await makeRequest(query, { cacheSalt: `summary-${Date.now()}` });
+        const result = await makeRequest(query, {
+          cacheSalt: `summary-${Date.now()}`,
+        });
         allResults.push({ ...result, queryType: category });
         await new Promise((r) => setTimeout(r, 50));
       }
@@ -469,11 +609,11 @@ Deno.test({
       byCategory.set(result.queryType, existing);
     }
 
-    console.log("\n" + "=".repeat(60));
-    console.log("📈 PERFORMANCE BENCHMARK SUMMARY");
-    console.log("=".repeat(60));
-    console.log("\nCategory           | Avg (ms) | P95 (ms) | Success");
-    console.log("-".repeat(60));
+    console.log('\n' + '='.repeat(60));
+    console.log('📈 PERFORMANCE BENCHMARK SUMMARY');
+    console.log('='.repeat(60));
+    console.log('\nCategory           | Avg (ms) | P95 (ms) | Success');
+    console.log('-'.repeat(60));
 
     for (const [category, results] of byCategory) {
       const stats = calculateStats(results);
@@ -481,14 +621,21 @@ Deno.test({
       const avgPadded = String(stats.avgMs).padStart(8);
       const p95Padded = String(stats.p95Ms).padStart(8);
       const successPadded = `${stats.successRate}%`.padStart(7);
-      console.log(`${categoryPadded} | ${avgPadded} | ${p95Padded} | ${successPadded}`);
+      console.log(
+        `${categoryPadded} | ${avgPadded} | ${p95Padded} | ${successPadded}`,
+      );
     }
 
     const overallStats = calculateStats(allResults);
-    console.log("-".repeat(60));
-    console.log(`${"OVERALL".padEnd(18)} | ${String(overallStats.avgMs).padStart(8)} | ${String(overallStats.p95Ms).padStart(8)} | ${`${overallStats.successRate}%`.padStart(7)}`);
-    console.log("=".repeat(60));
+    console.log('-'.repeat(60));
+    console.log(
+      `${'OVERALL'.padEnd(18)} | ${String(overallStats.avgMs).padStart(8)} | ${String(overallStats.p95Ms).padStart(8)} | ${`${overallStats.successRate}%`.padStart(7)}`,
+    );
+    console.log('='.repeat(60));
 
-    assert(overallStats.successRate >= 80, "Overall success rate should be at least 80%");
+    assert(
+      overallStats.successRate >= 80,
+      'Overall success rate should be at least 80%',
+    );
   },
 });

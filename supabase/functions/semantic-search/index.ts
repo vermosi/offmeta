@@ -11,7 +11,7 @@ import {
   setPersistentCache,
   maybeCacheCleanup,
 } from './cache.ts';
-import { fetchWithRetry } from './utils.ts';
+import { fetchWithRetry, fetchWithTimeout } from './utils.ts';
 import {
   isCircuitOpen,
   recordCircuitFailure,
@@ -42,6 +42,44 @@ import {
   AI_MAX_RETRIES,
   REQUEST_BUDGET_MS,
 } from './config.ts';
+
+const DEFAULT_REQUEST_BUDGET_MS = 8_000;
+const MIN_DYNAMIC_RULES_BUDGET_MS = 1_200;
+const MIN_PRE_TRANSLATION_BUDGET_MS = 1_800;
+const MIN_AI_CALL_BUDGET_MS = 2_500;
+
+type BudgetStage = 'dynamic_rules' | 'pre_translation' | 'ai_call';
+
+interface RequestBudget {
+  deadlineMs: number;
+  remainingMs: () => number;
+  hasBudgetFor: (minimumMs: number) => boolean;
+}
+
+function parseRequestBudget(
+  req: Request,
+  requestStartTime: number,
+): RequestBudget {
+  const requestStartHeader = Number(req.headers.get('x-request-start'));
+  const deadlineHeader = Number(req.headers.get('x-deadline-ms'));
+
+  const effectiveStart =
+    Number.isFinite(requestStartHeader) && requestStartHeader > 0
+      ? requestStartHeader
+      : requestStartTime;
+
+  const effectiveDeadline =
+    Number.isFinite(deadlineHeader) && deadlineHeader > effectiveStart
+      ? deadlineHeader
+      : effectiveStart + DEFAULT_REQUEST_BUDGET_MS;
+
+  return {
+    deadlineMs: effectiveDeadline,
+    remainingMs: () => Math.max(0, effectiveDeadline - Date.now()),
+    hasBudgetFor: (minimumMs: number) =>
+      effectiveDeadline - Date.now() >= minimumMs,
+  };
+}
 
 /**
  * Check if a query is already valid Scryfall syntax (no AI needed).
@@ -172,6 +210,14 @@ interface RequestFilters {
   maxCmc?: number;
 }
 
+type StageName =
+  | 'deterministic'
+  | 'cache'
+  | 'pattern'
+  | 'preTranslate'
+  | 'ai'
+  | 'fallback';
+
 // Helper function for consistent error responses
 function errorResponse(
   message: string,
@@ -193,6 +239,11 @@ function sanitizeError(error: unknown): string {
   return 'Unknown error';
 }
 
+const REQUEST_LATENCY_BUDGET_MS = 15_000;
+const PRE_TRANSLATION_MIN_REMAINING_BUDGET_MS = 4_000;
+const PRE_TRANSLATION_TIMEOUT_MS = 2_500;
+const ACCENTED_LATIN_HIGH_CONFIDENCE_THRESHOLD = 0.9;
+
 /**
  * Main Edge Function Handler
  */
@@ -213,6 +264,32 @@ serve(async (req) => {
   const requestStartTime = Date.now();
   const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
   const { logInfo, logWarn } = createLogger(requestId);
+  const stageDurationsMs: Partial<Record<StageName, number>> = {};
+
+  const markStage = async <T>(
+    stage: StageName,
+    task: () => Promise<T> | T,
+  ): Promise<T> => {
+    const stageStartTime = Date.now();
+    try {
+      return await task();
+    } finally {
+      stageDurationsMs[stage] = Date.now() - stageStartTime;
+    }
+  };
+
+  const getPerfLogFields = (source: string, responseTimeMs: number) => ({
+    source,
+    responseTimeMs,
+    stageDurationsMs: {
+      deterministic: stageDurationsMs.deterministic ?? null,
+      cache: stageDurationsMs.cache ?? null,
+      pattern: stageDurationsMs.pattern ?? null,
+      preTranslate: stageDurationsMs.preTranslate ?? null,
+      ai: stageDurationsMs.ai ?? null,
+      fallback: stageDurationsMs.fallback ?? null,
+    },
+  });
 
   const jsonHeaders = {
     ...corsHeaders,
@@ -405,8 +482,14 @@ serve(async (req) => {
 
     // 2. Forced Fallback / Core Tests (Debug Mode)
     if (shouldForceFallback) {
-      const fallbackResult = buildFallbackQuery(query, filters);
+      const fallbackResult = await markStage('fallback', () =>
+        Promise.resolve(buildFallbackQuery(query, filters)),
+      );
       const responseTimeMs = Date.now() - requestStartTime;
+      logInfo(
+        'request_completed',
+        getPerfLogFields('forced_fallback', responseTimeMs),
+      );
 
       return new Response(
         JSON.stringify({
@@ -442,7 +525,9 @@ serve(async (req) => {
       );
 
     if (isFastNameCandidate) {
-      const fastResult = buildDeterministicIntent(query);
+      const fastResult = await markStage('deterministic', () =>
+        Promise.resolve(buildDeterministicIntent(query)),
+      );
       const fastQuery = applyFiltersToQuery(
         fastResult.deterministicQuery,
         filters,
@@ -532,13 +617,17 @@ serve(async (req) => {
 
     // 3. Cache Lookups (In-Memory then Persistent) — run in parallel with deterministic build
     const [deterministicResult, cachedFromParallel] = await Promise.all([
-      Promise.resolve(buildDeterministicIntent(query)),
-      useCache
-        ? Promise.all([
-            getCachedResult(query, filters, cacheSalt),
-            getPersistentCache(query, filters, cacheSalt),
-          ]).then(([mem, persistent]) => mem || persistent)
-        : Promise.resolve(null),
+      markStage('deterministic', () =>
+        Promise.resolve(buildDeterministicIntent(query)),
+      ),
+      markStage('cache', () =>
+        useCache
+          ? Promise.all([
+              getCachedResult(query, filters, cacheSalt),
+              getPersistentCache(query, filters, cacheSalt),
+            ]).then(([mem, persistent]) => mem || persistent)
+          : Promise.resolve(null),
+      ),
     ]);
 
     const deterministicQuery = applyFiltersToQuery(
@@ -552,6 +641,7 @@ serve(async (req) => {
       if (cached) {
         const responseTimeMs = Date.now() - requestStartTime;
         logInfo('cache_hit', { query: query.substring(0, 50), responseTimeMs });
+        logInfo('request_completed', getPerfLogFields('cache', responseTimeMs));
         logTranslation(
           query,
           cached.scryfallQuery,
@@ -580,13 +670,19 @@ serve(async (req) => {
     }
 
     // 4. Pattern Matching (Known queries)
-    const patternMatch = await checkPatternMatch(query, filters);
+    const patternMatch = await markStage('pattern', () =>
+      checkPatternMatch(query, filters),
+    );
     if (patternMatch) {
       const responseTimeMs = Date.now() - requestStartTime;
       logInfo('pattern_match_hit', {
         query: query.substring(0, 50),
         responseTimeMs,
       });
+      logInfo(
+        'request_completed',
+        getPerfLogFields('pattern_match', responseTimeMs),
+      );
 
       setCachedResult(query, filters, patternMatch, cacheSalt);
       logTranslation(
@@ -619,7 +715,14 @@ serve(async (req) => {
       logWarn('ai_unavailable', {
         reason: isCircuitOpen() ? 'circuit_open' : 'missing_api_key',
       });
-      const fallback = buildFallbackQuery(query, filters);
+      const fallback = await markStage('fallback', () =>
+        Promise.resolve(buildFallbackQuery(query, filters)),
+      );
+      const responseTimeMs = Date.now() - requestStartTime;
+      logInfo(
+        'request_completed',
+        getPerfLogFields('fallback', responseTimeMs),
+      );
       return new Response(
         JSON.stringify({
           originalQuery: query,
@@ -631,6 +734,7 @@ serve(async (req) => {
             ],
             confidence: 0.6,
           },
+          responseTimeMs,
           success: true,
           fallback: true,
           source: 'fallback',
@@ -649,6 +753,10 @@ serve(async (req) => {
         query: trimmedQuery.substring(0, 50),
         responseTimeMs,
       });
+      logInfo(
+        'request_completed',
+        getPerfLogFields('raw_syntax', responseTimeMs),
+      );
       logTranslation(
         query,
         validation.sanitized,
@@ -691,6 +799,10 @@ serve(async (req) => {
     if (deterministicQuery && !deterministicResult.intent.remainingQuery) {
       const validation = validateQuery(deterministicQuery || query);
       const responseTimeMs = Date.now() - requestStartTime;
+      logInfo(
+        'request_completed',
+        getPerfLogFields('deterministic', responseTimeMs),
+      );
       logTranslation(
         query,
         validation.sanitized,
@@ -720,14 +832,45 @@ serve(async (req) => {
       );
     }
 
-    if (isRequestBudgetExceeded()) {
-      logWarn('request_budget_exceeded_before_translation');
-      return createBudgetExceededResponse();
-    }
+    const buildBudgetExceededResponse = (
+      stage: BudgetStage,
+      confidence: number,
+      assumptions: string[],
+    ): Response => {
+      const fallback = buildFallbackQuery(query, filters);
+      const responseTimeMs = Date.now() - requestStartTime;
+      const remainingBudgetMs = requestBudget.remainingMs();
+      logWarn('budget_exceeded', {
+        stage,
+        responseTimeMs,
+        remainingBudgetMs,
+        deadlineMs: requestBudget.deadlineMs,
+      });
+
+      return new Response(
+        JSON.stringify({
+          originalQuery: query,
+          scryfallQuery: fallback.sanitized,
+          explanation: {
+            readable: `Searching for: ${query}`,
+            assumptions,
+            confidence,
+          },
+          responseTimeMs,
+          budgetExceededAtStage: stage,
+          success: true,
+          fallback: true,
+          source: 'budget_fallback',
+        }),
+        { headers: jsonHeaders },
+      );
+    };
 
     // 7. Pre-translate non-English queries to English for better AI accuracy
     const remainingQuery = deterministicResult.intent.remainingQuery || '';
     let queryForAI = remainingQuery;
+    let preTranslationAttempted = false;
+    let preTranslationSkippedReason: string | null = null;
 
     // Detect non-Latin scripts or common non-English patterns
     const hasNonLatin =
@@ -737,54 +880,82 @@ serve(async (req) => {
     const hasAccentedLatin = /[àáâãäåæçèéêëìíîïðñòóôõöùúûüýþÿ]/i.test(
       remainingQuery,
     );
-    const looksNonEnglish =
-      hasNonLatin ||
-      (hasAccentedLatin &&
-        !/^[a-zA-Z0-9\s\-:=<>!'"()+/*.,;$]+$/.test(remainingQuery));
+    const deterministicConfidence = deterministicResult.intent.confidence ?? 0;
+    const shouldPreTranslateAccentedLatin =
+      hasAccentedLatin &&
+      !hasNonLatin &&
+      deterministicConfidence >= ACCENTED_LATIN_HIGH_CONFIDENCE_THRESHOLD;
+    const looksNonEnglish = hasNonLatin || shouldPreTranslateAccentedLatin;
 
     if (looksNonEnglish && remainingQuery.trim().length > 0) {
-      try {
-        const preTranslateResponse = await fetchWithRetry(
-          'https://ai.gateway.lovable.dev/v1/chat/completions',
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${LOVABLE_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: 'google/gemini-2.5-flash-lite',
-              messages: [
-                {
-                  role: 'system',
-                  content:
-                    'You are a translator. Translate the following Magic: The Gathering card search query into English. Preserve all MTG-specific intent (counter, destroy, exile, ramp, etc.). Output ONLY the English translation, nothing else.',
-                },
-                { role: 'user', content: remainingQuery },
-              ],
-              temperature: 0.0,
-            }),
-          },
-          {
-            timeoutMs: AI_FETCH_TIMEOUT_MS,
-            retries: AI_MAX_RETRIES,
-            deadlineMs: requestDeadlineMs,
-          },
-        );
+      const elapsedBeforePreTranslationMs = Date.now() - requestStartTime;
+      const remainingBudgetMs =
+        REQUEST_LATENCY_BUDGET_MS - elapsedBeforePreTranslationMs;
 
-        if (preTranslateResponse.ok) {
-          const preTranslateData = await preTranslateResponse.json();
-          const translated =
-            preTranslateData?.choices?.[0]?.message?.content?.trim();
-          if (translated && translated.length > 0) {
-            logInfo(`Pre-translated: "${remainingQuery}" → "${translated}"`);
-            queryForAI = translated;
+      if (remainingBudgetMs < PRE_TRANSLATION_MIN_REMAINING_BUDGET_MS) {
+        preTranslationSkippedReason = 'low_remaining_budget';
+      } else {
+        preTranslationAttempted = true;
+        try {
+          const preTranslateResponse = await fetchWithTimeout(
+            'https://ai.gateway.lovable.dev/v1/chat/completions',
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: 'google/gemini-2.5-flash-lite',
+                messages: [
+                  {
+                    role: 'system',
+                    content:
+                      'You are a translator. Translate the following Magic: The Gathering card search query into English. Preserve all MTG-specific intent (counter, destroy, exile, ramp, etc.). Output ONLY the English translation, nothing else.',
+                  },
+                  { role: 'user', content: remainingQuery },
+                ],
+                temperature: 0.0,
+              }),
+            },
+            PRE_TRANSLATION_TIMEOUT_MS,
+          );
+
+          if (preTranslateResponse.ok) {
+            const preTranslateData = await preTranslateResponse.json();
+            const translated =
+              preTranslateData?.choices?.[0]?.message?.content?.trim();
+            if (translated && translated.length > 0) {
+              logInfo('pre_translation_applied', {
+                preTranslationAttempted,
+                preTranslationSkippedReason,
+              });
+              queryForAI = translated;
+            } else {
+              preTranslationSkippedReason = 'empty_translation';
+            }
+          } else {
+            preTranslationSkippedReason = 'gateway_non_ok';
           }
+        } catch (e) {
+          // Pre-translation failed, proceed with original query without retries.
+          preTranslationSkippedReason =
+            e instanceof Error && e.name === 'AbortError'
+              ? 'pre_translation_timeout'
+              : 'pre_translation_failure';
+          logWarn('pre_translation_failed', {
+            error: sanitizeError(e),
+            preTranslationAttempted,
+            preTranslationSkippedReason,
+          });
         }
-      } catch (e) {
-        // Pre-translation failed, proceed with original query
-        logWarn(`Pre-translation failed, using original: ${e}`);
       }
+    } else if (remainingQuery.trim().length === 0) {
+      preTranslationSkippedReason = 'empty_remaining_query';
+    } else if (hasAccentedLatin && !shouldPreTranslateAccentedLatin) {
+      preTranslationSkippedReason = 'accented_latin_low_confidence';
+    } else {
+      preTranslationSkippedReason = 'no_strong_non_english_signal';
     }
 
     if (isRequestBudgetExceeded()) {
@@ -807,6 +978,12 @@ serve(async (req) => {
         ? 'google/gemini-2.5-flash-lite'
         : 'google/gemini-3-flash-preview';
 
+    if (!requestBudget.hasBudgetFor(MIN_DYNAMIC_RULES_BUDGET_MS)) {
+      return buildBudgetExceededResponse('dynamic_rules', 0.57, [
+        'Skipped dynamic rules fetch due to low remaining request budget',
+      ]);
+    }
+
     const dynamicRules = await fetchDynamicRules();
     if (isRequestBudgetExceeded()) {
       logWarn('request_budget_exceeded_before_ai_translate');
@@ -818,10 +995,15 @@ serve(async (req) => {
       : '';
     const userMessage = `Translate to Scryfall search syntax: "${queryForAI}"${cardNameHint} ${deterministicQuery ? `(must include: ${deterministicQuery})` : ''}`;
 
+    if (!requestBudget.hasBudgetFor(MIN_AI_CALL_BUDGET_MS)) {
+      return buildBudgetExceededResponse('ai_call', 0.56, [
+        'Skipped AI translation due to low remaining request budget',
+      ]);
+    }
+
     try {
-      const aiResponse = await fetchWithRetry(
-        'https://ai.gateway.lovable.dev/v1/chat/completions',
-        {
+      const aiResponse = await markStage('ai', () =>
+        fetchWithRetry('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -880,6 +1062,7 @@ serve(async (req) => {
       // 9. Success Housekeeping
       recordCircuitSuccess();
       const responseTimeMs = Date.now() - requestStartTime;
+      logInfo('request_completed', getPerfLogFields('ai', responseTimeMs));
 
       // Cache AI results more aggressively (>= 0.65 instead of 0.8) to prevent duplicate AI calls
       if (useCache && confidence >= 0.65) {
@@ -903,7 +1086,18 @@ serve(async (req) => {
         qualityFlags,
         filters,
         false,
+        'ai',
+        null,
+        {
+          preTranslationAttempted,
+          preTranslationSkippedReason,
+        },
       );
+      logInfo('ai_translation_success', {
+        responseTimeMs,
+        preTranslationAttempted,
+        preTranslationSkippedReason,
+      });
       flushLogQueue(); // fire-and-forget
 
       return new Response(
@@ -925,7 +1119,14 @@ serve(async (req) => {
 
       recordCircuitFailure();
       logWarn('ai_failure', { error: sanitizeError(e) });
-      const fallback = buildFallbackQuery(query, filters);
+      const fallback = await markStage('fallback', () =>
+        Promise.resolve(buildFallbackQuery(query, filters)),
+      );
+      const responseTimeMs = Date.now() - requestStartTime;
+      logInfo(
+        'request_completed',
+        getPerfLogFields('ai_failure_fallback', responseTimeMs),
+      );
       return new Response(
         JSON.stringify({
           originalQuery: query,
@@ -935,6 +1136,7 @@ serve(async (req) => {
             assumptions: ['AI failed - using fallback'],
             confidence: 0.5,
           },
+          responseTimeMs,
           success: true,
           fallback: true,
           source: 'ai_failure_fallback',
@@ -944,6 +1146,11 @@ serve(async (req) => {
     }
   } catch {
     // Errors are logged via structured logging in individual handlers
+    const responseTimeMs = Date.now() - requestStartTime;
+    logWarn(
+      'request_completed',
+      getPerfLogFields('internal_error', responseTimeMs),
+    );
     return new Response(
       JSON.stringify({ error: 'Internal search error', success: false }),
       { status: 500, headers: jsonHeaders },
