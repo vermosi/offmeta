@@ -21,6 +21,7 @@ export function ThemeToggle() {
       className="rounded-lg magnetic"
       aria-label={isDark ? t('theme.switchToLight') : t('theme.switchToDark')}
       aria-pressed={isDark}
+      data-testid="theme-toggle"
     >
       <Sun
         className="h-4 w-4 rotate-0 scale-100 transition-all duration-300 dark:-rotate-90 dark:scale-0"

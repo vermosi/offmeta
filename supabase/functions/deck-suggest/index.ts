@@ -16,7 +16,7 @@ serve(async (req) => {
   }
 
   // Require valid auth token
-  const { authorized, error: authError } = validateAuth(req);
+  const { authorized, error: authError } = await validateAuth(req);
   if (!authorized) {
     return new Response(
       JSON.stringify({ error: authError || 'Unauthorized' }),
@@ -29,33 +29,26 @@ serve(async (req) => {
 
   // Rate limiting: 10 AI requests per minute per IP
   maybeCleanup();
-  const rateLimitKey = await resolveRateLimitKey(req);
-  const { allowed, retryAfter, statusCode } = await checkRateLimit(
-    rateLimitKey,
+  const clientIp =
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const { allowed, retryAfter } = await checkRateLimit(
+    clientIp,
     undefined,
     10,
     200,
-    60000,
-    { failOpen: false },
   );
   if (!allowed) {
-    const status = statusCode ?? 429;
-    const retry = retryAfter ?? 1;
-
     return new Response(
       JSON.stringify({
-        error:
-          status === 503
-            ? 'Rate limiter temporarily unavailable. Please retry shortly.'
-            : 'Too many AI requests. Please slow down.',
-        retryAfter: retry,
+        error: 'Too many AI requests. Please slow down.',
+        retryAfter,
       }),
       {
-        status,
+        status: 429,
         headers: {
           ...corsHeaders,
           'Content-Type': 'application/json',
-          'Retry-After': String(retry),
+          'Retry-After': String(retryAfter),
         },
       },
     );

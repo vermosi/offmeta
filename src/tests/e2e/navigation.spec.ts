@@ -1,63 +1,50 @@
 import { test, expect } from '@playwright/test';
-import AxeBuilder from '@axe-core/playwright';
+import { runAxeAudit } from '@/tests/e2e/axe-helpers';
 
 const SEARCH_INPUT_SELECTOR = '#search-input';
-
-/**
- * Helper: log and return critical/serious a11y violations.
- */
-function filterCritical(results: Awaited<ReturnType<AxeBuilder['analyze']>>) {
-  const bad = results.violations.filter(
-    (v) => v.impact === 'critical' || v.impact === 'serious',
-  );
-  if (bad.length > 0) {
-    const summary = bad
-      .map((v) => `[${v.impact}] ${v.id}: ${v.description} (${v.nodes.length} nodes)`)
-      .join('\n');
-    // eslint-disable-next-line no-console
-    console.error('A11y violations:\n' + summary);
-  }
-  return bad;
-}
 
 /* ------------------------------------------------------------------ */
 /*  Accessibility audits for secondary pages                          */
 /* ------------------------------------------------------------------ */
 
 test.describe('Page Accessibility @a11y', () => {
-  test('about page has no critical or serious violations', async ({ page }) => {
+  test('about page has no critical or serious violations', async ({
+    page,
+  }, testInfo) => {
     await page.goto('/about');
     await page.waitForLoadState('networkidle');
 
-    const results = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-      .analyze();
+    const { blockingViolations } = await runAxeAudit(page, testInfo, {
+      context: 'about-page',
+    });
 
-    expect(filterCritical(results)).toHaveLength(0);
+    expect(blockingViolations).toHaveLength(0);
   });
 
-  test('404 page has no critical or serious violations', async ({ page }) => {
+  test('404 page has no critical or serious violations', async ({
+    page,
+  }, testInfo) => {
     await page.goto('/this-page-does-not-exist');
     await page.waitForLoadState('networkidle');
 
-    const results = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-      .analyze();
+    const { blockingViolations } = await runAxeAudit(page, testInfo, {
+      context: '404-page',
+    });
 
-    expect(filterCritical(results)).toHaveLength(0);
+    expect(blockingViolations).toHaveLength(0);
   });
 
   test('syntax cheat sheet has no critical or serious violations', async ({
     page,
-  }) => {
+  }, testInfo) => {
     await page.goto('/docs/syntax');
     await page.waitForLoadState('networkidle');
 
-    const results = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-      .analyze();
+    const { blockingViolations } = await runAxeAudit(page, testInfo, {
+      context: 'syntax-cheatsheet',
+    });
 
-    expect(filterCritical(results)).toHaveLength(0);
+    expect(blockingViolations).toHaveLength(0);
   });
 });
 
@@ -107,9 +94,7 @@ test.describe('Navigation Flow', () => {
     await expect(searchInput).toBeVisible({ timeout: 15_000 });
   });
 
-  test('skip-to-content link exists and is accessible', async ({
-    page,
-  }) => {
+  test('skip-to-content link exists and is accessible', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 

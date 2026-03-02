@@ -27,7 +27,7 @@ serve(async (req) => {
   }
 
   // Authentication check - require valid token (anon key, service role, or JWT)
-  const { authorized, error: authError } = validateAuth(req);
+  const { authorized, error: authError } = await validateAuth(req);
   if (!authorized) {
     return new Response(
       JSON.stringify({ error: authError || 'Unauthorized', success: false }),
