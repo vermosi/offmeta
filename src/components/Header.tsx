@@ -1,11 +1,22 @@
 /**
- * Header component with nav links, auth controls, and mobile hamburger menu.
+ * Header component — clean, minimal nav with grouped dropdowns.
  */
 
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, LogIn, LogOut, Bookmark, User, Settings, Shield, Package } from 'lucide-react';
+import {
+  Menu,
+  X,
+  LogIn,
+  LogOut,
+  Bookmark,
+  User,
+  Settings,
+  Shield,
+  Package,
+  ChevronDown,
+} from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { Logo } from '@/components/Logo';
@@ -24,6 +35,34 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
 
+/* ------------------------------------------------------------------ */
+/*  Tiny helper – a header dropdown trigger                           */
+/* ------------------------------------------------------------------ */
+function NavDropdown({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="flex items-center gap-1 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary/50 focus-ring">
+          {label}
+          <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="min-w-[160px]">
+        {children}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Header                                                            */
+/* ------------------------------------------------------------------ */
 export function Header() {
   const { t } = useTranslation();
   const { user, displayName, avatarUrl, signOut } = useAuth();
@@ -36,24 +75,30 @@ export function Header() {
 
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
-  const NAV_LINKS = [
-    { label: t('header.howItWorks'), href: '#how-it-works' },
-    { label: t('header.dailyPick'), href: '#daily-pick' },
-    { label: t('header.faq'), href: '#faq' },
-    { label: t('header.docs'), href: '/docs' },
-    { label: t('header.guides'), href: '/guides' },
-    { label: t('nav.archetypes'), href: '/archetypes' },
-    { label: t('nav.combos'), href: '/combos' },
-    { label: t('nav.deckRecs'), href: '/deck-recs' },
+  /* ---- Grouped nav data ---- */
+  const DECK_LINKS = [
     { label: t('nav.deckBuilder', 'Deck Builder'), href: '/deckbuilder' },
     { label: t('nav.browseDecks', 'Browse Decks'), href: '/decks' },
+    { label: t('nav.deckRecs'), href: '/deck-recs' },
+  ];
+
+  const DISCOVER_LINKS = [
+    { label: t('nav.archetypes'), href: '/archetypes' },
+    { label: t('nav.combos'), href: '/combos' },
+  ];
+
+  const LEARN_LINKS = [
+    { label: t('header.docs'), href: '/docs' },
+    { label: t('header.guides'), href: '/guides' },
     { label: t('header.about'), href: '/about' },
-  ] as const;
+  ];
+
+  /* All links for mobile menu (flat list) */
+  const ALL_LINKS = [...DECK_LINKS, ...DISCOVER_LINKS, ...LEARN_LINKS];
 
   // Fetch saved search count for badge; reset to 0 on logout
   useEffect(() => {
     if (!user) {
-      // Update inside async callback to avoid synchronous setState in effect
       Promise.resolve().then(() => setSavedCount(0));
       return;
     }
@@ -80,7 +125,9 @@ export function Header() {
     } else {
       document.body.style.overflow = '';
     }
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [mobileMenuOpen]);
 
   const handleNavClick = (href: string) => {
@@ -99,6 +146,7 @@ export function Header() {
   // Focus trap for mobile menu
   useFocusTrap(mobileMenuRef, mobileMenuOpen);
 
+  /* ---- Mobile menu (portal) ---- */
   const mobileMenu = mobileMenuOpen
     ? createPortal(
         <div
@@ -113,97 +161,134 @@ export function Header() {
             className="container-main py-6 flex flex-col gap-1 pb-safe"
             aria-label="Main navigation links"
           >
-            {NAV_LINKS.map((link) =>
-              link.href.startsWith('#') ? (
-                <button
-                  key={link.label}
-                  onClick={() => handleNavClick(link.href)}
-                  className={cn(
-                    'w-full text-left px-4 py-3 text-base font-medium rounded-xl',
-                    'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
-                  )}
-                >
-                  {link.label}
-                </button>
-              ) : (
-                <Link
-                  key={link.label}
-                  to={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={cn(
-                    'w-full px-4 py-3 text-base font-medium rounded-xl',
-                    'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
-                  )}
-                >
-                  {link.label}
-                </Link>
-              ),
-            )}
-            {user ? (
-              <>
-                <Link
-                  to="/saved"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={cn(
-                    'w-full px-4 py-3 text-base font-medium rounded-xl',
-                    'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
-                  )}
-                >
-                  {t('nav.savedSearches')}
-                </Link>
-                <Link
-                  to="/collection"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={cn(
-                    'w-full px-4 py-3 text-base font-medium rounded-xl',
-                    'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
-                  )}
-                >
-                  {t('nav.collection', 'My Collection')}
-                </Link>
-                <Link
-                  to="/profile"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={cn(
-                    'w-full px-4 py-3 text-base font-medium rounded-xl',
-                    'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
-                  )}
-                >
-                  {t('nav.profileSettings')}
-                </Link>
-                {isAdmin && (
+            {/* Section: Decks */}
+            <p className="px-4 pt-2 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Decks
+            </p>
+            {DECK_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                to={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={cn(
+                  'w-full px-4 py-3 text-base font-medium rounded-xl',
+                  'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
+
+            {/* Section: Discover */}
+            <p className="px-4 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Discover
+            </p>
+            {DISCOVER_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                to={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={cn(
+                  'w-full px-4 py-3 text-base font-medium rounded-xl',
+                  'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
+
+            {/* Section: Learn */}
+            <p className="px-4 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Learn
+            </p>
+            {LEARN_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                to={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={cn(
+                  'w-full px-4 py-3 text-base font-medium rounded-xl',
+                  'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
+
+            {/* Auth section */}
+            <div className="mt-4 pt-4 border-t border-border/50">
+              {user ? (
+                <>
                   <Link
-                    to="/admin/analytics"
+                    to="/saved"
                     onClick={() => setMobileMenuOpen(false)}
                     className={cn(
                       'w-full px-4 py-3 text-base font-medium rounded-xl',
                       'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
                     )}
                   >
-                    {t('nav.adminDashboard')}
+                    {t('nav.savedSearches')}
                   </Link>
-                )}
+                  <Link
+                    to="/collection"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={cn(
+                      'w-full px-4 py-3 text-base font-medium rounded-xl',
+                      'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
+                    )}
+                  >
+                    {t('nav.collection', 'My Collection')}
+                  </Link>
+                  <Link
+                    to="/profile"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={cn(
+                      'w-full px-4 py-3 text-base font-medium rounded-xl',
+                      'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
+                    )}
+                  >
+                    {t('nav.profileSettings')}
+                  </Link>
+                  {isAdmin && (
+                    <Link
+                      to="/admin/analytics"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        'w-full px-4 py-3 text-base font-medium rounded-xl',
+                        'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
+                      )}
+                    >
+                      {t('nav.adminDashboard')}
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      signOut();
+                    }}
+                    className={cn(
+                      'w-full text-left px-4 py-3 text-base font-medium rounded-xl',
+                      'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
+                    )}
+                  >
+                    {t('nav.signOut')}
+                  </button>
+                </>
+              ) : (
                 <button
-                  onClick={() => { setMobileMenuOpen(false); signOut(); }}
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setAuthModalOpen(true);
+                  }}
                   className={cn(
                     'w-full text-left px-4 py-3 text-base font-medium rounded-xl',
                     'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
                   )}
                 >
-                  {t('nav.signOut')}
+                  {t('nav.signIn')}
                 </button>
-              </>
-            ) : (
-              <button
-                onClick={() => { setMobileMenuOpen(false); setAuthModalOpen(true); }}
-                className={cn(
-                  'w-full text-left px-4 py-3 text-base font-medium rounded-xl',
-                  'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
-                )}
-              >
-                {t('nav.signIn')}
-              </button>
-            )}
+              )}
+            </div>
           </nav>
         </div>,
         document.body,
@@ -223,31 +308,38 @@ export function Header() {
             className="group flex items-center gap-2.5 min-h-0 focus-ring rounded-lg -ml-2 px-2 py-1"
             aria-label={t('header.home')}
           >
-            <Logo variant="gradient" className="h-7 w-7 sm:h-8 sm:w-8 transition-transform duration-200 group-hover:scale-105" />
+            <Logo
+              variant="gradient"
+              className="h-7 w-7 sm:h-8 sm:w-8 transition-transform duration-200 group-hover:scale-105"
+            />
             <span className="text-lg font-semibold tracking-tight">OffMeta</span>
           </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-1" aria-label="Main navigation">
-            {NAV_LINKS.map((link) =>
-              link.href.startsWith('#') ? (
-                <button
-                  key={link.label}
-                  onClick={() => handleNavClick(link.href)}
-                  className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary/50 focus-ring"
-                >
+          {/* Desktop nav – grouped dropdowns */}
+          <nav className="hidden md:flex items-center gap-0.5" aria-label="Main navigation">
+            <NavDropdown label="Decks">
+              {DECK_LINKS.map((link) => (
+                <DropdownMenuItem key={link.href} onClick={() => navigate(link.href)}>
                   {link.label}
-                </button>
-              ) : (
-                <Link
-                  key={link.label}
-                  to={link.href}
-                  className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary/50 focus-ring"
-                >
+                </DropdownMenuItem>
+              ))}
+            </NavDropdown>
+
+            <NavDropdown label="Discover">
+              {DISCOVER_LINKS.map((link) => (
+                <DropdownMenuItem key={link.href} onClick={() => navigate(link.href)}>
                   {link.label}
-                </Link>
-              ),
-            )}
+                </DropdownMenuItem>
+              ))}
+            </NavDropdown>
+
+            <NavDropdown label="Learn">
+              {LEARN_LINKS.map((link) => (
+                <DropdownMenuItem key={link.href} onClick={() => navigate(link.href)}>
+                  {link.label}
+                </DropdownMenuItem>
+              ))}
+            </NavDropdown>
           </nav>
 
           {/* Right side: auth + theme toggle + hamburger */}
@@ -266,13 +358,18 @@ export function Header() {
                     {avatarUrl ? (
                       <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
                     ) : (
-                      displayName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || <User className="h-4 w-4" />
+                      displayName?.charAt(0).toUpperCase() ||
+                      user.email?.charAt(0).toUpperCase() || (
+                        <User className="h-4 w-4" />
+                      )
                     )}
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <div className="px-2 py-1.5">
-                    {displayName && <p className="text-sm font-medium truncate">{displayName}</p>}
+                    {displayName && (
+                      <p className="text-sm font-medium truncate">{displayName}</p>
+                    )}
                     <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                   </div>
                   <DropdownMenuSeparator />
@@ -333,7 +430,6 @@ export function Header() {
         </div>
       </header>
 
-      {/* Mobile menu rendered via portal to escape header stacking context */}
       {mobileMenu}
 
       <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
