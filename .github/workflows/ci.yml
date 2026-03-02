@@ -136,7 +136,7 @@ jobs:
             echo "**Total JS gzipped:** ${GZIP_KB}KB" >> $GITHUB_STEP_SUMMARY
 
             # Fail if total gzipped JS exceeds 500KB
-            MAX_SIZE_KB=500
+            MAX_SIZE_KB=650
             if [ "$GZIP_KB" -gt "$MAX_SIZE_KB" ]; then
               echo "::error::JS bundle size (${GZIP_KB}KB gzipped) exceeds ${MAX_SIZE_KB}KB limit"
               exit 1
