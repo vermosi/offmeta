@@ -34,6 +34,10 @@ import {
   CardModalLegalities,
   CardModalPrintings,
   CardModalToolbox,
+  CardModalCombos,
+  CardModalAddToDeck,
+  CardModalMetaContext,
+  CardModalCollection,
   type DisplayPrices,
 } from './CardModal/index';
 
@@ -223,12 +227,20 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
           isMobile
         />
 
+        <CardModalMetaContext card={card} isMobile />
+
+        <CardModalCollection cardName={card.name} isMobile />
+
         <CardModalRulings
           rulings={rulings}
           isLoading={isLoadingRulings}
           showRulings={showRulings}
           onToggleRulings={() => setShowRulings(!showRulings)}
         />
+
+        <CardModalCombos cardName={card.name} isMobile />
+
+        <CardModalAddToDeck card={card} isMobile />
 
         <CardModalPurchaseLinks
           card={card}
@@ -298,6 +310,10 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
             cardId={card.id}
           />
 
+          <CardModalMetaContext card={card} />
+
+          <CardModalCollection cardName={card.name} />
+
           <CardModalRulings
             rulings={rulings}
             isLoading={isLoadingRulings}
@@ -305,7 +321,9 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
             onToggleRulings={() => setShowRulings(!showRulings)}
           />
 
-          <CardModalLegalities legalities={card.legalities} />
+          <CardModalCombos cardName={card.name} />
+
+          <CardModalAddToDeck card={card} />
 
           <CardModalLegalities legalities={card.legalities} />
 

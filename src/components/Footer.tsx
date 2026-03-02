@@ -1,15 +1,22 @@
 /**
- * Footer component with branding, attributions, and legal.
+ * Footer component with branding, explore links, guide links, attributions, and legal.
  */
 
 import { Link } from 'react-router-dom';
 import { ExternalLink, Github } from 'lucide-react';
+import { GUIDES } from '@/data/guides';
 import { Logo } from '@/components/Logo';
 import { useTranslation } from '@/lib/i18n';
 
+const MAX_MOBILE_GUIDES = 5;
+
 const EXPLORE_LINKS = [
+  { to: '/archetypes', labelKey: 'nav.archetypes', fallback: 'Archetypes' },
+  { to: '/deck-recs', labelKey: 'nav.deckRecs', fallback: 'Deck Recs' },
+  { to: '/combos', labelKey: 'footer.comboFinder', fallback: 'Combo Finder' },
+  { to: '/deckbuilder', labelKey: 'nav.deckBuilder', fallback: 'Deck Builder' },
   { to: '/docs/syntax', labelKey: 'footer.syntaxCheatSheet', fallback: 'Syntax Cheat Sheet' },
-  { to: '/saved', labelKey: 'nav.savedSearches', fallback: 'Saved Searches' },
+  { to: '/about', labelKey: 'footer.about', fallback: 'About' },
 ] as const;
 
 export function Footer() {
@@ -29,18 +36,56 @@ export function Footer() {
           </span>
         </div>
 
-        {/* Links */}
+        {/* Links grid */}
         <div className="border-t border-border pt-4">
-          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
-            {EXPLORE_LINKS.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {t(link.labelKey, link.fallback)}
-              </Link>
-            ))}
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+            {/* Explore column */}
+            <div>
+              <h3 className="text-xs font-semibold text-foreground mb-2">
+                {t('footer.explore', 'Explore')}
+              </h3>
+              <ul className="space-y-1.5">
+                {EXPLORE_LINKS.map((link) => (
+                  <li key={link.to}>
+                    <Link
+                      to={link.to}
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {t(link.labelKey, link.fallback)}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Guides column */}
+            <div>
+              <h3 className="text-xs font-semibold text-foreground mb-2">
+                {t('footer.guides')}
+              </h3>
+              <ul className="space-y-1.5">
+                {GUIDES.slice(0, MAX_MOBILE_GUIDES).map((guide) => (
+                  <li key={guide.slug}>
+                    <Link
+                      to={`/guides/${guide.slug}`}
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {t(`guide.title.${guide.slug}`, guide.title)}
+                    </Link>
+                  </li>
+                ))}
+                {GUIDES.length > MAX_MOBILE_GUIDES && (
+                  <li>
+                    <Link
+                      to="/guides"
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors font-medium"
+                    >
+                      {t('footer.allGuides', 'All guides →')}
+                    </Link>
+                  </li>
+                )}
+              </ul>
+            </div>
           </div>
         </div>
 
@@ -55,6 +100,26 @@ export function Footer() {
               className="inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
               Scryfall
+              <ExternalLink className="h-2.5 w-2.5 opacity-50" aria-hidden="true" />
+            </a>
+            <span className="text-border">·</span>
+            <a
+              href="https://www.moxfield.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Moxfield
+              <ExternalLink className="h-2.5 w-2.5 opacity-50" aria-hidden="true" />
+            </a>
+            <span className="text-border">·</span>
+            <a
+              href="https://commanderspellbook.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Commander Spellbook
               <ExternalLink className="h-2.5 w-2.5 opacity-50" aria-hidden="true" />
             </a>
             <span className="text-border">·</span>
