@@ -11,7 +11,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-import { checkRateLimit } from '../_shared/rateLimit.ts';
+import { checkRateLimit, resolveRateLimitKey } from '../_shared/rateLimit.ts';
 import { getCorsHeaders, validateAuth } from '../_shared/auth.ts';
 import { validateEnv } from '../_shared/env.ts';
 
@@ -39,22 +39,35 @@ serve(async (req) => {
   }
 
   // Rate limiting to prevent AI cost abuse
-  const clientIp = req.headers.get('x-forwarded-for') || 'unknown';
-  const { allowed, retryAfter } = await checkRateLimit(
-    clientIp,
+  const rateLimitKey = await resolveRateLimitKey(req);
+  const { allowed, retryAfter, statusCode } = await checkRateLimit(
+    rateLimitKey,
     supabase,
     5, // Stricter limit: 5 requests per 60 seconds
     100, // Global limit: 100 requests per minute across all IPs
+    60000,
+    { failOpen: false },
   );
   if (!allowed) {
+    const status = statusCode ?? 429;
+    const retry = retryAfter ?? 1;
+
     return new Response(
       JSON.stringify({
-        error: 'Too many feedback submissions. Please try again later.',
+        error:
+          status === 503
+            ? 'Rate limiter temporarily unavailable. Please retry shortly.'
+            : 'Too many feedback submissions. Please try again later.',
         success: false,
+        retryAfter: retry,
       }),
       {
-        status: 429,
-        headers: { ...corsHeaders, 'Retry-After': String(retryAfter) },
+        status,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'Retry-After': String(retry),
+        },
       },
     );
   }
@@ -84,7 +97,8 @@ serve(async (req) => {
     }
 
     // Validate UUID format to prevent injection
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(feedbackId)) {
       return new Response(
         JSON.stringify({
@@ -236,7 +250,10 @@ serve(async (req) => {
       const stuckIds = stuckItems.map((s: { id: string }) => s.id);
       await supabase
         .from('search_feedback')
-        .update({ processing_status: 'failed', processed_at: new Date().toISOString() })
+        .update({
+          processing_status: 'failed',
+          processed_at: new Date().toISOString(),
+        })
         .in('id', stuckIds);
       console.log(`Reset ${stuckIds.length} stuck processing items to failed`);
     }
@@ -247,7 +264,10 @@ serve(async (req) => {
         console.error(`Safety timeout hit for feedback ${feedback.id}`);
         await supabase
           .from('search_feedback')
-          .update({ processing_status: 'failed', processed_at: new Date().toISOString() })
+          .update({
+            processing_status: 'failed',
+            processed_at: new Date().toISOString(),
+          })
           .eq('id', feedback.id)
           .eq('processing_status', 'processing');
       }, 25000);
@@ -512,21 +532,33 @@ Respond in this EXACT JSON format only (no other text):
 
             if (correctionResponse.ok) {
               const correctionData = await correctionResponse.json();
-              const correctionText = correctionData.choices?.[0]?.message?.content || '';
+              const correctionText =
+                correctionData.choices?.[0]?.message?.content || '';
               const jsonMatch = correctionText.match(/\{[\s\S]*\}/);
               if (jsonMatch) {
                 correctedRuleData = JSON.parse(jsonMatch[0]);
-                correctedRuleData.scryfall_syntax = normalizeTagAliases(correctedRuleData.scryfall_syntax);
-                console.log(`AI self-correction for feedback ${feedback.id}:`, correctedRuleData.scryfall_syntax);
+                correctedRuleData.scryfall_syntax = normalizeTagAliases(
+                  correctedRuleData.scryfall_syntax,
+                );
+                console.log(
+                  `AI self-correction for feedback ${feedback.id}:`,
+                  correctedRuleData.scryfall_syntax,
+                );
               }
             }
           } catch (correctionErr) {
-            console.error(`Self-correction AI call failed for feedback ${feedback.id}:`, correctionErr);
+            console.error(
+              `Self-correction AI call failed for feedback ${feedback.id}:`,
+              correctionErr,
+            );
           }
 
           // Validate the corrected syntax against Scryfall
           let correctionOk = false;
-          if (correctedRuleData?.scryfall_syntax && correctedRuleData.confidence >= 0.5) {
+          if (
+            correctedRuleData?.scryfall_syntax &&
+            correctedRuleData.confidence >= 0.5
+          ) {
             try {
               const correctionValidationUrl = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(
                 correctedRuleData.scryfall_syntax,
@@ -547,14 +579,21 @@ Respond in this EXACT JSON format only (no other text):
                     `"${ruleData.scryfall_syntax}" returned ${scryfallTotalCards} cards`,
                   );
                 } else {
-                  console.error(`Self-correction also returned 0 results for feedback ${feedback.id}`);
+                  console.error(
+                    `Self-correction also returned 0 results for feedback ${feedback.id}`,
+                  );
                 }
               } else {
                 await correctionResp.text();
-                console.error(`Self-correction Scryfall returned ${correctionResp.status} for feedback ${feedback.id}`);
+                console.error(
+                  `Self-correction Scryfall returned ${correctionResp.status} for feedback ${feedback.id}`,
+                );
               }
             } catch (correctionFetchErr) {
-              console.warn(`Self-correction validation network error for feedback ${feedback.id}:`, correctionFetchErr);
+              console.warn(
+                `Self-correction validation network error for feedback ${feedback.id}:`,
+                correctionFetchErr,
+              );
             }
           }
 
@@ -578,7 +617,6 @@ Respond in this EXACT JSON format only (no other text):
           // Self-correction succeeded — fall through with promoted ruleData
           scryfallOk = true;
         }
-
 
         console.log(
           `Scryfall validation PASSED for feedback ${feedback.id}:`,

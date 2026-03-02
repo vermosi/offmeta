@@ -1,7 +1,11 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { buildDeterministicIntent } from './deterministic/index.ts';
 import { buildSystemPrompt, type QueryTier } from './prompts.ts';
-import { checkRateLimit, checkSessionRateLimit } from '../_shared/rateLimit.ts';
+import {
+  checkRateLimit,
+  checkSessionRateLimit,
+  resolveRateLimitKey,
+} from '../_shared/rateLimit.ts';
 import { getCorsHeaders, validateAuth } from '../_shared/auth.ts';
 import { LOVABLE_API_KEY, supabase } from './client.ts';
 import {
@@ -300,31 +304,42 @@ serve(async (req) => {
   }
 
   // Rate limiting check - both IP and session-based
-  const clientIP =
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    req.headers.get('x-real-ip') ||
-    'unknown';
+  const rateLimitKey = await resolveRateLimitKey(req);
   const sessionId = req.headers.get('x-session-id');
 
-  // Check IP-based rate limit (in-memory only — skip DB RPC which doesn't exist)
-  const rateCheck = await checkRateLimit(clientIP);
+  // High-cost endpoint: fail closed on limiter errors
+  const rateCheck = await checkRateLimit(
+    rateLimitKey,
+    undefined,
+    30,
+    1000,
+    60000,
+    { failOpen: false },
+  );
   if (!rateCheck.allowed) {
+    const status = rateCheck.statusCode ?? 429;
+    const retryAfter = rateCheck.retryAfter ?? 1;
+
     logWarn('rate_limit_exceeded', {
-      ip: clientIP.substring(0, 20),
-      retryAfter: rateCheck.retryAfter,
+      bucket: rateLimitKey.slice(0, 20),
+      retryAfter,
+      status,
     });
 
     return new Response(
       JSON.stringify({
-        error: 'Too many requests. Please slow down.',
-        retryAfter: rateCheck.retryAfter,
+        error:
+          status === 503
+            ? 'Service temporarily unavailable. Please retry shortly.'
+            : 'Too many requests. Please slow down.',
+        retryAfter,
         success: false,
       }),
       {
-        status: 429,
+        status,
         headers: {
           ...jsonHeaders,
-          'Retry-After': String(rateCheck.retryAfter),
+          'Retry-After': String(retryAfter),
         },
       },
     );
