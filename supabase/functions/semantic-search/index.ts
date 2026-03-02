@@ -1,7 +1,11 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { buildDeterministicIntent } from './deterministic/index.ts';
 import { buildSystemPrompt, type QueryTier } from './prompts.ts';
-import { checkRateLimit, checkSessionRateLimit } from '../_shared/rateLimit.ts';
+import {
+  checkRateLimit,
+  checkSessionRateLimit,
+  resolveRateLimitKey,
+} from '../_shared/rateLimit.ts';
 import { getCorsHeaders, validateAuth } from '../_shared/auth.ts';
 import { LOVABLE_API_KEY, supabase } from './client.ts';
 import {
@@ -37,11 +41,13 @@ import {
   parseAIContent,
 } from './schemas.ts';
 import { VALID_SEARCH_KEYS } from './constants.ts';
-import { AI_FETCH_TIMEOUT_MS, AI_MAX_RETRIES } from './config.ts';
-
-const DEFAULT_REQUEST_BUDGET_MS = 8_000;
-const MIN_DYNAMIC_RULES_BUDGET_MS = 1_200;
-const MIN_AI_CALL_BUDGET_MS = 2_500;
+import {
+  AI_FETCH_TIMEOUT_MS,
+  AI_MAX_RETRIES,
+  REQUEST_BUDGET_MS,
+  REQUEST_STAGE_MIN_BUDGET_MS,
+  PRE_TRANSLATION_TIMEOUT_MS,
+} from './config.ts';
 
 type BudgetStage = 'dynamic_rules' | 'pre_translation' | 'ai_call';
 
@@ -66,7 +72,7 @@ function parseRequestBudget(
   const effectiveDeadline =
     Number.isFinite(deadlineHeader) && deadlineHeader > effectiveStart
       ? deadlineHeader
-      : effectiveStart + DEFAULT_REQUEST_BUDGET_MS;
+      : effectiveStart + REQUEST_BUDGET_MS;
 
   return {
     deadlineMs: effectiveDeadline,
@@ -234,9 +240,6 @@ function sanitizeError(error: unknown): string {
   return 'Unknown error';
 }
 
-const REQUEST_LATENCY_BUDGET_MS = 15_000;
-const PRE_TRANSLATION_MIN_REMAINING_BUDGET_MS = 4_000;
-const PRE_TRANSLATION_TIMEOUT_MS = 2_500;
 const ACCENTED_LATIN_HIGH_CONFIDENCE_THRESHOLD = 0.9;
 
 /**
@@ -293,38 +296,49 @@ serve(async (req) => {
   };
 
   // Authentication check
-  const authResult = validateAuth(req);
+  const authResult = await validateAuth(req);
   if (!authResult.authorized) {
     logWarn('auth_failed', { error: authResult.error });
     return errorResponse(authResult.error || 'Unauthorized', 401, jsonHeaders);
   }
 
   // Rate limiting check - both IP and session-based
-  const clientIP =
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    req.headers.get('x-real-ip') ||
-    'unknown';
+  const rateLimitKey = await resolveRateLimitKey(req);
   const sessionId = req.headers.get('x-session-id');
 
-  // Check IP-based rate limit (in-memory only — skip DB RPC which doesn't exist)
-  const rateCheck = await checkRateLimit(clientIP);
+  // High-cost endpoint: fail closed on limiter errors
+  const rateCheck = await checkRateLimit(
+    rateLimitKey,
+    undefined,
+    30,
+    1000,
+    60000,
+    { failOpen: false },
+  );
   if (!rateCheck.allowed) {
+    const status = rateCheck.statusCode ?? 429;
+    const retryAfter = rateCheck.retryAfter ?? 1;
+
     logWarn('rate_limit_exceeded', {
-      ip: clientIP.substring(0, 20),
-      retryAfter: rateCheck.retryAfter,
+      bucket: rateLimitKey.slice(0, 20),
+      retryAfter,
+      status,
     });
 
     return new Response(
       JSON.stringify({
-        error: 'Too many requests. Please slow down.',
-        retryAfter: rateCheck.retryAfter,
+        error:
+          status === 503
+            ? 'Service temporarily unavailable. Please retry shortly.'
+            : 'Too many requests. Please slow down.',
+        retryAfter,
         success: false,
       }),
       {
-        status: 429,
+        status,
         headers: {
           ...jsonHeaders,
-          'Retry-After': String(rateCheck.retryAfter),
+          'Retry-After': String(retryAfter),
         },
       },
     );
@@ -367,9 +381,6 @@ serve(async (req) => {
   try {
     const { query, filters, debug, useCache, cacheSalt } = requestBody;
     const requestBudget = parseRequestBudget(req, requestStartTime);
-    const requestDeadlineMs = requestBudget.deadlineMs;
-
-    const isRequestBudgetExceeded = () => Date.now() >= requestDeadlineMs;
 
     const createBudgetExceededResponse = (): Response => {
       const fallback = buildFallbackQuery(query, filters);
@@ -884,12 +895,12 @@ serve(async (req) => {
     const looksNonEnglish = hasNonLatin || shouldPreTranslateAccentedLatin;
 
     if (looksNonEnglish && remainingQuery.trim().length > 0) {
-      const elapsedBeforePreTranslationMs = Date.now() - requestStartTime;
-      const remainingBudgetMs =
-        REQUEST_LATENCY_BUDGET_MS - elapsedBeforePreTranslationMs;
+      const remainingBudgetMs = requestBudget.deadlineMs - Date.now();
 
-      if (remainingBudgetMs < PRE_TRANSLATION_MIN_REMAINING_BUDGET_MS) {
-        preTranslationSkippedReason = 'low_remaining_budget';
+      if (remainingBudgetMs < REQUEST_STAGE_MIN_BUDGET_MS.preTranslation) {
+        return buildBudgetExceededResponse('pre_translation', 0.58, [
+          'Skipped pre-translation due to low remaining request budget',
+        ]);
       } else {
         preTranslationAttempted = true;
         try {
@@ -954,7 +965,7 @@ serve(async (req) => {
       preTranslationSkippedReason = 'no_strong_non_english_signal';
     }
 
-    if (isRequestBudgetExceeded()) {
+    if (!requestBudget.hasBudgetFor(1)) {
       logWarn('request_budget_exceeded_after_pretranslate');
       return createBudgetExceededResponse();
     }
@@ -974,14 +985,16 @@ serve(async (req) => {
         ? 'google/gemini-2.5-flash-lite'
         : 'google/gemini-3-flash-preview';
 
-    if (!requestBudget.hasBudgetFor(MIN_DYNAMIC_RULES_BUDGET_MS)) {
+    // Deterministic fallback guard: skip optional dynamic rules if remaining budget
+    // drops below the stage floor derived from REQUEST_BUDGET_MS.
+    if (!requestBudget.hasBudgetFor(REQUEST_STAGE_MIN_BUDGET_MS.dynamicRules)) {
       return buildBudgetExceededResponse('dynamic_rules', 0.57, [
         'Skipped dynamic rules fetch due to low remaining request budget',
       ]);
     }
 
     const dynamicRules = await fetchDynamicRules();
-    if (isRequestBudgetExceeded()) {
+    if (!requestBudget.hasBudgetFor(1)) {
       logWarn('request_budget_exceeded_before_ai_translate');
       return createBudgetExceededResponse();
     }
@@ -991,7 +1004,9 @@ serve(async (req) => {
       : '';
     const userMessage = `Translate to Scryfall search syntax: "${queryForAI}"${cardNameHint} ${deterministicQuery ? `(must include: ${deterministicQuery})` : ''}`;
 
-    if (!requestBudget.hasBudgetFor(MIN_AI_CALL_BUDGET_MS)) {
+    // Deterministic fallback guard: never start the AI call unless there is
+    // enough time budget remaining for it to complete.
+    if (!requestBudget.hasBudgetFor(REQUEST_STAGE_MIN_BUDGET_MS.aiCall)) {
       return buildBudgetExceededResponse('ai_call', 0.56, [
         'Skipped AI translation due to low remaining request budget',
       ]);
@@ -1019,7 +1034,7 @@ serve(async (req) => {
           {
             timeoutMs: AI_FETCH_TIMEOUT_MS,
             retries: AI_MAX_RETRIES,
-            deadlineMs: requestDeadlineMs,
+            deadlineMs: requestBudget.deadlineMs,
           },
         ),
       );
@@ -1111,7 +1126,7 @@ serve(async (req) => {
         { headers: jsonHeaders },
       );
     } catch (e) {
-      if (isRequestBudgetExceeded()) {
+      if (!requestBudget.hasBudgetFor(1)) {
         logWarn('request_budget_exceeded_during_ai_translate');
         return createBudgetExceededResponse();
       }

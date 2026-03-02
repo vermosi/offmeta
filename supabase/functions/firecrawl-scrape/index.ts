@@ -41,22 +41,38 @@ Deno.serve(async (req) => {
   }
 
   // Require valid auth token
-  const { authorized, error: authError } = validateAuth(req);
+  const { authorized, error: authError } = await validateAuth(req);
   if (!authorized) {
     return new Response(
       JSON.stringify({ success: false, error: authError || 'Unauthorized' }),
-      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
     );
   }
 
   // Rate limiting: 5 req/min
   maybeCleanup();
-  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  const { allowed, retryAfter } = await checkRateLimit(clientIp, undefined, 5, 50);
+  const clientIp =
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const { allowed, retryAfter } = await checkRateLimit(
+    clientIp,
+    undefined,
+    5,
+    50,
+  );
   if (!allowed) {
     return new Response(
       JSON.stringify({ success: false, error: 'Rate limit exceeded' }),
-      { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': String(retryAfter) } },
+      {
+        status: 429,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'Retry-After': String(retryAfter),
+        },
+      },
     );
   }
 
@@ -66,20 +82,32 @@ Deno.serve(async (req) => {
     if (!url) {
       return new Response(
         JSON.stringify({ success: false, error: 'URL is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
       );
     }
 
     const apiKey = Deno.env.get('FIRECRAWL_API_KEY');
     if (!apiKey) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Firecrawl connector not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        JSON.stringify({
+          success: false,
+          error: 'Firecrawl connector not configured',
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
       );
     }
 
     let formattedUrl = url.trim();
-    if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
+    if (
+      !formattedUrl.startsWith('http://') &&
+      !formattedUrl.startsWith('https://')
+    ) {
       formattedUrl = `https://${formattedUrl}`;
     }
 
@@ -87,14 +115,17 @@ Deno.serve(async (req) => {
     if (!isAllowedUrl(formattedUrl)) {
       return new Response(
         JSON.stringify({ success: false, error: 'Domain not allowed' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
       );
     }
 
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -109,20 +140,29 @@ Deno.serve(async (req) => {
 
     if (!response.ok) {
       return new Response(
-        JSON.stringify({ success: false, error: data.error || `Request failed with status ${response.status}` }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        JSON.stringify({
+          success: false,
+          error: data.error || `Request failed with status ${response.status}`,
+        }),
+        {
+          status: response.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
       );
     }
 
-    return new Response(
-      JSON.stringify(data),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    );
+    return new Response(JSON.stringify(data), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Failed to scrape';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Failed to scrape';
     return new Response(
       JSON.stringify({ success: false, error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
     );
   }
 });

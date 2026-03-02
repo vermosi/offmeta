@@ -266,8 +266,9 @@ export const UnifiedSearchBar = forwardRef<
               onBlur={(e) => {
                 setIsFocused(false);
                 const relatedTarget = e.relatedTarget as HTMLElement | null;
-                const isDropdownClick =
-                  relatedTarget?.closest('[data-search-history-dropdown="true"]');
+                const isDropdownClick = relatedTarget?.closest(
+                  '[data-search-history-dropdown="true"]',
+                );
                 if (!isDropdownClick) {
                   setTimeout(() => setShowHistoryDropdown(false), 200);
                 }
@@ -282,6 +283,7 @@ export const UnifiedSearchBar = forwardRef<
             {query && (
               <button
                 aria-label={t('search.clear')}
+                data-testid="search-clear-button"
                 className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center text-muted-foreground hover:text-foreground flex-shrink-0 rounded-lg hover:bg-secondary transition-colors"
                 onClick={() => {
                   setQuery('');
@@ -310,6 +312,7 @@ export const UnifiedSearchBar = forwardRef<
               variant="accent"
               size="sm"
               className="h-9 sm:h-10 px-3 sm:px-4 rounded-lg gap-1.5 sm:gap-2 font-medium flex-shrink-0"
+              data-testid="search-submit-button"
               aria-label={
                 rateLimitCountdown > 0
                   ? t('search.waitSeconds').replace(

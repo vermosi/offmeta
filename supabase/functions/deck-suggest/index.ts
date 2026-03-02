@@ -1,6 +1,10 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
-import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
+import {
+  checkRateLimit,
+  maybeCleanup,
+  resolveRateLimitKey,
+} from '../_shared/rateLimit.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
@@ -12,42 +16,67 @@ serve(async (req) => {
   }
 
   // Require valid auth token
-  const { authorized, error: authError } = validateAuth(req);
+  const { authorized, error: authError } = await validateAuth(req);
   if (!authorized) {
-    return new Response(JSON.stringify({ error: authError || 'Unauthorized' }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ error: authError || 'Unauthorized' }),
+      {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
+    );
   }
 
   // Rate limiting: 10 AI requests per minute per IP
   maybeCleanup();
-  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  const { allowed, retryAfter } = await checkRateLimit(clientIp, undefined, 10, 200);
+  const clientIp =
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const { allowed, retryAfter } = await checkRateLimit(
+    clientIp,
+    undefined,
+    10,
+    200,
+  );
   if (!allowed) {
-    return new Response(JSON.stringify({ error: 'Too many AI requests. Please slow down.', retryAfter }), {
-      status: 429,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': String(retryAfter) },
-    });
+    return new Response(
+      JSON.stringify({
+        error: 'Too many AI requests. Please slow down.',
+        retryAfter,
+      }),
+      {
+        status: 429,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'Retry-After': String(retryAfter),
+        },
+      },
+    );
   }
 
   try {
     const { commander, cards, color_identity, format } = await req.json();
 
     if (!Array.isArray(cards) || cards.length === 0) {
-      return new Response(JSON.stringify({ error: 'cards array is required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return new Response(
+        JSON.stringify({ error: 'cards array is required' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      );
     }
 
     // Validate card name lengths to prevent payload bloat
     for (const c of cards) {
       if (typeof c?.name === 'string' && c.name.length > 200) {
-        return new Response(JSON.stringify({ error: 'Card name exceeds 200 character limit' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return new Response(
+          JSON.stringify({ error: 'Card name exceeds 200 character limit' }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          },
+        );
       }
     }
 
@@ -59,9 +88,12 @@ serve(async (req) => {
     }
 
     const colorStr = (color_identity || []).join('') || 'colorless';
-    const cardList = cards.map((c: { name: string; category?: string }) =>
-      `${c.name}${c.category ? ` [${c.category}]` : ''}`
-    ).join(', ');
+    const cardList = cards
+      .map(
+        (c: { name: string; category?: string }) =>
+          `${c.name}${c.category ? ` [${c.category}]` : ''}`,
+      )
+      .join(', ');
 
     const systemPrompt = `You are an expert Magic: The Gathering deck builder and strategist. Analyze a deck and suggest cards that would improve it.
 
@@ -82,55 +114,80 @@ Use the provided tool to return structured suggestions.`;
 
 What cards should be added to improve this deck?`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        tools: [
-          {
-            type: 'function',
-            function: {
-              name: 'suggest_cards',
-              description: 'Return card suggestions organized by deck needs',
-              parameters: {
-                type: 'object',
-                properties: {
-                  suggestions: {
-                    type: 'array',
-                    items: {
-                      type: 'object',
-                      properties: {
-                        card_name: { type: 'string', description: 'Exact card name' },
-                        reason: { type: 'string', description: 'Why this card fits (1-2 sentences)' },
-                        category: { type: 'string', description: 'Functional category: Ramp, Removal, Draw, Protection, Combo, Utility, Finisher, Recursion' },
-                        priority: { type: 'string', enum: ['high', 'medium', 'low'] },
+    const response = await fetch(
+      'https://ai.gateway.lovable.dev/v1/chat/completions',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-3-flash-preview',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
+          tools: [
+            {
+              type: 'function',
+              function: {
+                name: 'suggest_cards',
+                description: 'Return card suggestions organized by deck needs',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    suggestions: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          card_name: {
+                            type: 'string',
+                            description: 'Exact card name',
+                          },
+                          reason: {
+                            type: 'string',
+                            description: 'Why this card fits (1-2 sentences)',
+                          },
+                          category: {
+                            type: 'string',
+                            description:
+                              'Functional category: Ramp, Removal, Draw, Protection, Combo, Utility, Finisher, Recursion',
+                          },
+                          priority: {
+                            type: 'string',
+                            enum: ['high', 'medium', 'low'],
+                          },
+                        },
+                        required: [
+                          'card_name',
+                          'reason',
+                          'category',
+                          'priority',
+                        ],
+                        additionalProperties: false,
                       },
-                      required: ['card_name', 'reason', 'category', 'priority'],
-                      additionalProperties: false,
+                    },
+                    analysis: {
+                      type: 'string',
+                      description:
+                        'Brief overall deck analysis (1-2 sentences)',
                     },
                   },
-                  analysis: {
-                    type: 'string',
-                    description: 'Brief overall deck analysis (1-2 sentences)',
-                  },
+                  required: ['suggestions', 'analysis'],
+                  additionalProperties: false,
                 },
-                required: ['suggestions', 'analysis'],
-                additionalProperties: false,
               },
             },
+          ],
+          tool_choice: {
+            type: 'function',
+            function: { name: 'suggest_cards' },
           },
-        ],
-        tool_choice: { type: 'function', function: { name: 'suggest_cards' } },
-      }),
-    });
+        }),
+      },
+    );
 
     if (!response.ok) {
       const status = response.status;
@@ -138,10 +195,13 @@ What cards should be added to improve this deck?`;
       console.error('AI gateway error:', status, text);
 
       if (status === 429) {
-        return new Response(JSON.stringify({ error: 'Rate limit exceeded, try again later' }), {
-          status: 429,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return new Response(
+          JSON.stringify({ error: 'Rate limit exceeded, try again later' }),
+          {
+            status: 429,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          },
+        );
       }
       if (status === 402) {
         return new Response(JSON.stringify({ error: 'AI credits exhausted' }), {
@@ -160,10 +220,13 @@ What cards should be added to improve this deck?`;
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
 
     if (!toolCall) {
-      return new Response(JSON.stringify({ error: 'AI returned no suggestions' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return new Response(
+        JSON.stringify({ error: 'AI returned no suggestions' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      );
     }
 
     const parsed = JSON.parse(toolCall.function.arguments);

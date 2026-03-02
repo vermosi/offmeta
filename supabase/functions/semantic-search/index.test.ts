@@ -5,7 +5,10 @@
 
 // Load .env file if present (for local testing), with allowEmptyValues
 import { loadSync } from 'https://deno.land/std@0.224.0/dotenv/mod.ts';
-import { assertEquals, assertExists } from 'https://deno.land/std@0.224.0/assert/mod.ts';
+import {
+  assertEquals,
+  assertExists,
+} from 'https://deno.land/std@0.224.0/assert/mod.ts';
 
 // Try to load env vars, but don't fail if some are missing
 try {
@@ -14,8 +17,11 @@ try {
   // .env.example may have vars not set in actual .env - that's OK
 }
 
-const SUPABASE_URL = Deno.env.get('VITE_SUPABASE_URL') || 'https://nxmzyykkzwomkcentctt.supabase.co';
-const SUPABASE_ANON_KEY = Deno.env.get('VITE_SUPABASE_PUBLISHABLE_KEY') || 
+const SUPABASE_URL =
+  Deno.env.get('VITE_SUPABASE_URL') ||
+  'https://nxmzyykkzwomkcentctt.supabase.co';
+const SUPABASE_ANON_KEY =
+  Deno.env.get('VITE_SUPABASE_PUBLISHABLE_KEY') ||
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54bXp5eWtrendvbWtjZW50Y3R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyMzgwOTYsImV4cCI6MjA4MDgxNDA5Nn0.sJbaqJuvKqIMYV0D2Q4iWgTRlzVGih7OXRRkGmDsGPY';
 
 const FUNCTION_URL = `${SUPABASE_URL}/functions/v1/semantic-search`;
@@ -37,12 +43,14 @@ interface TranslationResponse {
 async function callSemanticSearch(
   query: string,
   filters?: Record<string, unknown>,
+  headers: Record<string, string> = {},
 ): Promise<TranslationResponse> {
   const response = await fetch(FUNCTION_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      ...headers,
     },
     body: JSON.stringify({ query, filters, useCache: false }),
   });
@@ -57,6 +65,65 @@ async function callSemanticSearch(
   return data as TranslationResponse;
 }
 
+Deno.test(
+  'returns budget fallback when request budget is already exceeded',
+  async () => {
+    const result = await callSemanticSearch(
+      'show me cards that make treasure whenever you cast an instant or sorcery',
+      undefined,
+      {
+        'x-request-start': String(Date.now() - 10_000),
+        'x-deadline-ms': String(Date.now() - 1),
+      },
+    );
+
+    assertEquals(result.success, true);
+    assertEquals(result.fallback, true);
+    assertEquals(result.source, 'budget_fallback');
+  },
+);
+
+Deno.test(
+  'runs normal AI translation path when request budget is available',
+  async () => {
+    const now = Date.now();
+    const result = await callSemanticSearch(
+      'cards that reward sacrificing creatures for value and card draw',
+      undefined,
+      {
+        'x-request-start': String(now),
+        'x-deadline-ms': String(now + 30_000),
+      },
+    );
+
+    assertEquals(result.success, true);
+    assertEquals(
+      Boolean(result.scryfallQuery && result.scryfallQuery.length > 0),
+      true,
+    );
+    assertEquals(result.source !== 'budget_fallback', true);
+  },
+);
+
+Deno.test(
+  'AI translation flow does not throw ReferenceError with valid budget headers',
+  async () => {
+    const now = Date.now();
+    const result = await callSemanticSearch(
+      'cartas azules que compran cartas cuando lanzas hechizos',
+      undefined,
+      {
+        'x-request-start': String(now),
+        'x-deadline-ms': String(now + 30_000),
+      },
+    );
+
+    assertEquals(result.success, true);
+    assertEquals(result.source !== 'internal_error', true);
+    assertEquals(result.source !== 'budget_fallback', true);
+  },
+);
+
 // ============================================================
 // Core Translation Tests
 // ============================================================
@@ -70,10 +137,14 @@ Deno.test('returns valid response for basic creature search', async () => {
 
   // Should contain color and type - flexible matching for AI variations
   const query = result.scryfallQuery.toLowerCase();
-  const hasColorFilter = query.includes('c:r') || query.includes('color:r') || 
-    query.includes('c=r') || query.includes('red');
-  const hasCreatureType = query.includes('t:creature') || query.includes('type:creature');
-  
+  const hasColorFilter =
+    query.includes('c:r') ||
+    query.includes('color:r') ||
+    query.includes('c=r') ||
+    query.includes('red');
+  const hasCreatureType =
+    query.includes('t:creature') || query.includes('type:creature');
+
   assertEquals(
     hasColorFilter || hasCreatureType,
     true,
@@ -107,7 +178,9 @@ Deno.test('translates mana value constraints', async () => {
   assertEquals(result.success, true);
   const query = result.scryfallQuery.toLowerCase();
   assertEquals(
-    query.includes('mv<=3') || query.includes('cmc<=3') || query.includes('mv<4'),
+    query.includes('mv<=3') ||
+      query.includes('cmc<=3') ||
+      query.includes('mv<4'),
     true,
     'Should include mana value constraint',
   );
@@ -123,8 +196,12 @@ Deno.test('translates X-cost spells', async () => {
   assertEquals(result.success, true);
   const query = result.scryfallQuery.toLowerCase();
   // AI may output various X-cost patterns
-  const hasXCost = query.includes('{x}') || query.includes('m:{x}') || 
-    query.includes('mana:{x}') || query.includes('mana>=x') || query.includes('o:x');
+  const hasXCost =
+    query.includes('{x}') ||
+    query.includes('m:{x}') ||
+    query.includes('mana:{x}') ||
+    query.includes('mana>=x') ||
+    query.includes('o:x');
   assertEquals(
     hasXCost || result.success,
     true,
@@ -162,7 +239,9 @@ Deno.test('translates phyrexian mana costs', async () => {
   assertEquals(result.success, true);
   const query = result.scryfallQuery.toLowerCase();
   assertEquals(
-    query.includes('is:phyrexian') || query.includes('m:/p') || query.includes('{p}'),
+    query.includes('is:phyrexian') ||
+      query.includes('m:/p') ||
+      query.includes('{p}'),
     true,
     'Should reference phyrexian mana',
   );
@@ -173,7 +252,9 @@ Deno.test('translates phyrexian mana costs', async () => {
 // ============================================================
 
 Deno.test('translates power greater than toughness', async () => {
-  const result = await callSemanticSearch('creatures with power greater than toughness');
+  const result = await callSemanticSearch(
+    'creatures with power greater than toughness',
+  );
 
   assertEquals(result.success, true);
   const query = result.scryfallQuery.toLowerCase();
@@ -202,14 +283,18 @@ Deno.test('translates low toughness creatures', async () => {
   assertEquals(result.success, true);
   const query = result.scryfallQuery.toLowerCase();
   assertEquals(
-    query.includes('tou=1') || query.includes('toughness=1') || query.includes('tou:1'),
+    query.includes('tou=1') ||
+      query.includes('toughness=1') ||
+      query.includes('tou:1'),
     true,
     'Should include toughness = 1',
   );
 });
 
 Deno.test('translates total stats comparisons', async () => {
-  const result = await callSemanticSearch('creatures with total power and toughness 10 or more');
+  const result = await callSemanticSearch(
+    'creatures with total power and toughness 10 or more',
+  );
 
   assertEquals(result.success, true);
   // This might use wildpair syntax or just high stats
@@ -221,12 +306,16 @@ Deno.test('translates total stats comparisons', async () => {
 // ============================================================
 
 Deno.test('translates ETB triggers', async () => {
-  const result = await callSemanticSearch('creatures with enter the battlefield effects');
+  const result = await callSemanticSearch(
+    'creatures with enter the battlefield effects',
+  );
 
   assertEquals(result.success, true);
   const query = result.scryfallQuery.toLowerCase();
   assertEquals(
-    query.includes('enters') || query.includes('etb') || query.includes('o:"enters the battlefield"'),
+    query.includes('enters') ||
+      query.includes('etb') ||
+      query.includes('o:"enters the battlefield"'),
     true,
     'Should reference ETB',
   );
@@ -238,7 +327,7 @@ Deno.test('translates death triggers', async () => {
   assertEquals(result.success, true);
   const query = result.scryfallQuery.toLowerCase();
   assertEquals(
-    query.includes('dies') || query.includes('when') && query.includes('die'),
+    query.includes('dies') || (query.includes('when') && query.includes('die')),
     true,
     'Should reference death triggers',
   );
@@ -250,7 +339,9 @@ Deno.test('translates activated abilities with tap', async () => {
   assertEquals(result.success, true);
   const query = result.scryfallQuery.toLowerCase();
   assertEquals(
-    query.includes('{t}') || query.includes('o:"{t}"') || query.includes('o:/\\{t\\}/'),
+    query.includes('{t}') ||
+      query.includes('o:"{t}"') ||
+      query.includes('o:/\\{t\\}/'),
     true,
     'Should reference tap symbol',
   );
@@ -290,9 +381,14 @@ Deno.test('handles multiple color constraints', async () => {
   assertEquals(result.success, true);
   const query = result.scryfallQuery.toLowerCase();
   // Should have color references and creature type - flexible matching
-  const hasColors = query.includes('c:u') || query.includes('c:b') || 
-    query.includes('blue') || query.includes('black') || query.includes('id');
-  const hasCreature = query.includes('t:creature') || query.includes('creature');
+  const hasColors =
+    query.includes('c:u') ||
+    query.includes('c:b') ||
+    query.includes('blue') ||
+    query.includes('black') ||
+    query.includes('id');
+  const hasCreature =
+    query.includes('t:creature') || query.includes('creature');
   assertEquals(
     hasColors || hasCreature,
     true,
@@ -301,13 +397,20 @@ Deno.test('handles multiple color constraints', async () => {
 });
 
 Deno.test('handles color identity for commander', async () => {
-  const result = await callSemanticSearch('cards in Azorius colors for commander');
+  const result = await callSemanticSearch(
+    'cards in Azorius colors for commander',
+  );
 
   assertEquals(result.success, true);
   const query = result.scryfallQuery.toLowerCase();
-  const hasIdentity = query.includes('id<=wu') || query.includes('id:wu') || 
-    query.includes('id=wu') || query.includes('id<=uw') || query.includes('commander') ||
-    query.includes('c:w') || query.includes('c:u');
+  const hasIdentity =
+    query.includes('id<=wu') ||
+    query.includes('id:wu') ||
+    query.includes('id=wu') ||
+    query.includes('id<=uw') ||
+    query.includes('commander') ||
+    query.includes('c:w') ||
+    query.includes('c:u');
   assertEquals(
     hasIdentity,
     true,
@@ -321,8 +424,10 @@ Deno.test('combines type, color, and effect constraints', async () => {
   assertEquals(result.success, true);
   const query = result.scryfallQuery.toLowerCase();
   // Flexible matching - at least some constraints should be present
-  const hasGreen = query.includes('c:g') || query.includes('c=g') || query.includes('green');
-  const hasCreature = query.includes('t:creature') || query.includes('creature');
+  const hasGreen =
+    query.includes('c:g') || query.includes('c=g') || query.includes('green');
+  const hasCreature =
+    query.includes('t:creature') || query.includes('creature');
   const hasDraw = query.includes('draw');
   assertEquals(
     hasGreen || hasCreature || hasDraw,
@@ -336,12 +441,16 @@ Deno.test('combines type, color, and effect constraints', async () => {
 // ============================================================
 
 Deno.test('translates keyword abilities', async () => {
-  const result = await callSemanticSearch('creatures with flying and vigilance');
+  const result = await callSemanticSearch(
+    'creatures with flying and vigilance',
+  );
 
   assertEquals(result.success, true);
   const query = result.scryfallQuery.toLowerCase();
   assertEquals(
-    query.includes('flying') || query.includes('o:flying') || query.includes('keyword:flying'),
+    query.includes('flying') ||
+      query.includes('o:flying') ||
+      query.includes('keyword:flying'),
     true,
     'Should include flying',
   );
@@ -353,7 +462,9 @@ Deno.test('translates repeatable abilities', async () => {
   assertEquals(result.success, true);
   const query = result.scryfallQuery.toLowerCase();
   assertEquals(
-    query.includes('buyback') || query.includes('o:buyback') || query.includes('keyword:buyback'),
+    query.includes('buyback') ||
+      query.includes('o:buyback') ||
+      query.includes('keyword:buyback'),
     true,
     'Should include buyback',
   );
@@ -365,7 +476,9 @@ Deno.test('translates protection abilities', async () => {
   assertEquals(result.success, true);
   const query = result.scryfallQuery.toLowerCase();
   // Flexible matching for protection
-  const hasProtection = query.includes('protection') || query.includes('pro red') ||
+  const hasProtection =
+    query.includes('protection') ||
+    query.includes('pro red') ||
     query.includes('o:"protection from red"');
   const hasRedRef = query.includes('red') || result.success;
   assertEquals(
@@ -385,7 +498,9 @@ Deno.test('translates rarity filters', async () => {
   assertEquals(result.success, true);
   const query = result.scryfallQuery.toLowerCase();
   assertEquals(
-    query.includes('r:m') || query.includes('r:mythic') || query.includes('rarity:mythic'),
+    query.includes('r:m') ||
+      query.includes('r:mythic') ||
+      query.includes('rarity:mythic'),
     true,
     'Should include mythic rarity',
   );
@@ -410,8 +525,11 @@ Deno.test('translates budget constraint language', async () => {
   const query = result.scryfallQuery.toLowerCase();
   // Should have price filter or board wipe keywords - flexible
   const hasBudget = query.includes('usd<') || query.includes('usd<=');
-  const hasBoardWipe = query.includes('destroy all') || query.includes('exile all') ||
-    query.includes('wipe') || query.includes('otag:board-wipe');
+  const hasBoardWipe =
+    query.includes('destroy all') ||
+    query.includes('exile all') ||
+    query.includes('wipe') ||
+    query.includes('otag:board-wipe');
   assertEquals(
     hasBudget || hasBoardWipe || result.success,
     true,
@@ -456,8 +574,11 @@ Deno.test('handles unicode characters', async () => {
   assertEquals(result.success, true);
   const query = result.scryfallQuery.toLowerCase();
   // Flexible matching for Aether/Æther
-  const hasAether = query.includes('aether') || query.includes('æther') || 
-    query.includes('ether') || result.success;
+  const hasAether =
+    query.includes('aether') ||
+    query.includes('æther') ||
+    query.includes('ether') ||
+    result.success;
   assertEquals(
     hasAether,
     true,
@@ -547,7 +668,10 @@ Deno.test('rejects empty query string', async () => {
   const data = await response.json();
   assertEquals(response.status, 400);
   assertEquals(data.success, false);
-  assertEquals(data.error.includes('Query is required') || data.error.includes('required'), true);
+  assertEquals(
+    data.error.includes('Query is required') || data.error.includes('required'),
+    true,
+  );
 });
 
 Deno.test('rejects whitespace-only query', async () => {
@@ -579,7 +703,10 @@ Deno.test('rejects query exceeding max length (500 chars)', async () => {
   const data = await response.json();
   assertEquals(response.status, 400);
   assertEquals(data.success, false);
-  assertEquals(data.error.includes('too long') || data.error.includes('500'), true);
+  assertEquals(
+    data.error.includes('too long') || data.error.includes('500'),
+    true,
+  );
 });
 
 Deno.test('rejects missing query field', async () => {
@@ -625,28 +752,41 @@ Deno.test('rejects invalid JSON body', async () => {
   const data = await response.json();
   assertEquals(response.status, 400);
   assertEquals(data.success, false);
-  assertEquals(data.error.includes('JSON') || data.error.includes('json'), true);
+  assertEquals(
+    data.error.includes('JSON') || data.error.includes('json'),
+    true,
+  );
 });
 
 // ============================================================
 // Error Cases: Invalid Filters
 // ============================================================
 
-Deno.test('rejects invalid filters type (array instead of object)', async () => {
-  const response = await fetch(FUNCTION_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-    },
-    body: JSON.stringify({ query: 'creatures', filters: ['commander'], useCache: false }),
-  });
+Deno.test(
+  'rejects invalid filters type (array instead of object)',
+  async () => {
+    const response = await fetch(FUNCTION_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({
+        query: 'creatures',
+        filters: ['commander'],
+        useCache: false,
+      }),
+    });
 
-  const data = await response.json();
-  assertEquals(response.status, 400);
-  assertEquals(data.success, false);
-  assertEquals(data.error.includes('filters') || data.error.includes('Invalid'), true);
-});
+    const data = await response.json();
+    assertEquals(response.status, 400);
+    assertEquals(data.success, false);
+    assertEquals(
+      data.error.includes('filters') || data.error.includes('Invalid'),
+      true,
+    );
+  },
+);
 
 Deno.test('rejects invalid format type', async () => {
   const response = await fetch(FUNCTION_URL, {
@@ -655,10 +795,10 @@ Deno.test('rejects invalid format type', async () => {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({ 
-      query: 'creatures', 
-      filters: { format: 123 }, 
-      useCache: false 
+    body: JSON.stringify({
+      query: 'creatures',
+      filters: { format: 123 },
+      useCache: false,
     }),
   });
 
@@ -674,10 +814,10 @@ Deno.test('rejects invalid colorIdentity type', async () => {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({ 
-      query: 'creatures', 
+    body: JSON.stringify({
+      query: 'creatures',
       filters: { colorIdentity: 'WUB' }, // Should be array
-      useCache: false 
+      useCache: false,
     }),
   });
 
@@ -693,17 +833,20 @@ Deno.test('rejects too many colors in colorIdentity (>5)', async () => {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({ 
-      query: 'creatures', 
+    body: JSON.stringify({
+      query: 'creatures',
       filters: { colorIdentity: ['W', 'U', 'B', 'R', 'G', 'C'] }, // 6 colors
-      useCache: false 
+      useCache: false,
     }),
   });
 
   const data = await response.json();
   assertEquals(response.status, 400);
   assertEquals(data.success, false);
-  assertEquals(data.error.includes('max 5') || data.error.includes('colors'), true);
+  assertEquals(
+    data.error.includes('max 5') || data.error.includes('colors'),
+    true,
+  );
 });
 
 Deno.test('rejects invalid maxCmc (negative)', async () => {
@@ -713,10 +856,10 @@ Deno.test('rejects invalid maxCmc (negative)', async () => {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({ 
-      query: 'creatures', 
+    body: JSON.stringify({
+      query: 'creatures',
       filters: { maxCmc: -1 },
-      useCache: false 
+      useCache: false,
     }),
   });
 
@@ -732,10 +875,10 @@ Deno.test('rejects invalid maxCmc (>20)', async () => {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({ 
-      query: 'creatures', 
+    body: JSON.stringify({
+      query: 'creatures',
       filters: { maxCmc: 25 },
-      useCache: false 
+      useCache: false,
     }),
   });
 
@@ -751,9 +894,9 @@ Deno.test('rejects invalid useCache type', async () => {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({ 
-      query: 'creatures', 
-      useCache: 'yes' // Should be boolean
+    body: JSON.stringify({
+      query: 'creatures',
+      useCache: 'yes', // Should be boolean
     }),
   });
 
@@ -825,9 +968,9 @@ Deno.test('rejects potential injection attempts', async () => {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({ 
-      query: '<script>alert("xss")</script>', 
-      useCache: false 
+    body: JSON.stringify({
+      query: '<script>alert("xss")</script>',
+      useCache: false,
     }),
   });
 
@@ -848,9 +991,9 @@ Deno.test('handles SQL-like injection attempts safely', async () => {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({ 
-      query: "creatures'; DROP TABLE cards;--", 
-      useCache: false 
+    body: JSON.stringify({
+      query: "creatures'; DROP TABLE cards;--",
+      useCache: false,
     }),
   });
 
@@ -876,16 +1019,20 @@ Deno.test('handles URL-like content in query', async () => {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({ 
-      query: 'creatures https://malicious.com/script.js', 
-      useCache: false 
+    body: JSON.stringify({
+      query: 'creatures https://malicious.com/script.js',
+      useCache: false,
     }),
   });
 
   const data = await response.json();
   // Should reject or strip URLs
   if (data.success) {
-    assertEquals(data.scryfallQuery.includes('http'), false, 'URLs should be stripped');
+    assertEquals(
+      data.scryfallQuery.includes('http'),
+      false,
+      'URLs should be stripped',
+    );
   }
   await response.text().catch(() => {}); // Consume body if not already
 });
@@ -894,6 +1041,48 @@ Deno.test('handles URL-like content in query', async () => {
 // AI Fallback Scenarios
 // ============================================================
 
+Deno.test(
+  'falls back when budget crosses pre-translation threshold',
+  async () => {
+    const result = await callSemanticSearchWithBudget(
+      'criaturas con dañar primero',
+      3_900,
+    );
+
+    assertEquals(result.success, true);
+    assertEquals(result.fallback, true);
+    assertEquals(result.source, 'budget_fallback');
+    assertEquals(result.budgetExceededAtStage, 'pre_translation');
+  },
+);
+
+Deno.test(
+  'falls back when budget crosses dynamic rules threshold',
+  async () => {
+    const result = await callSemanticSearchWithBudget(
+      'draw cards with cycling',
+      1_000,
+    );
+
+    assertEquals(result.success, true);
+    assertEquals(result.fallback, true);
+    assertEquals(result.source, 'budget_fallback');
+    assertEquals(result.budgetExceededAtStage, 'dynamic_rules');
+  },
+);
+
+Deno.test('falls back when budget crosses ai-call threshold', async () => {
+  const result = await callSemanticSearchWithBudget(
+    'draw cards with cycling',
+    2_300,
+  );
+
+  assertEquals(result.success, true);
+  assertEquals(result.fallback, true);
+  assertEquals(result.source, 'budget_fallback');
+  assertEquals(result.budgetExceededAtStage, 'ai_call');
+});
+
 Deno.test('handles forced fallback via debug flag', async () => {
   const response = await fetch(FUNCTION_URL, {
     method: 'POST',
@@ -901,10 +1090,10 @@ Deno.test('handles forced fallback via debug flag', async () => {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({ 
-      query: 'dragons that breathe fire', 
+    body: JSON.stringify({
+      query: 'dragons that breathe fire',
       useCache: false,
-      debug: { forceFallback: true }
+      debug: { forceFallback: true },
     }),
   });
 
@@ -922,10 +1111,10 @@ Deno.test('handles simulated AI failure via debug flag', async () => {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({ 
-      query: 'complex multi-part query', 
+    body: JSON.stringify({
+      query: 'complex multi-part query',
       useCache: false,
-      debug: { simulateAiFailure: true }
+      debug: { simulateAiFailure: true },
     }),
   });
 
@@ -942,10 +1131,10 @@ Deno.test('fallback still returns valid scryfall query', async () => {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({ 
-      query: 'green elves', 
+    body: JSON.stringify({
+      query: 'green elves',
       useCache: false,
-      debug: { forceFallback: true }
+      debug: { forceFallback: true },
     }),
   });
 
@@ -953,7 +1142,11 @@ Deno.test('fallback still returns valid scryfall query', async () => {
   assertEquals(response.ok, true);
   assertEquals(data.success, true);
   assertExists(data.scryfallQuery);
-  assertEquals(data.scryfallQuery.length > 0, true, 'Fallback should produce non-empty query');
+  assertEquals(
+    data.scryfallQuery.length > 0,
+    true,
+    'Fallback should produce non-empty query',
+  );
 });
 
 Deno.test('fallback includes explanation with assumptions', async () => {
@@ -963,10 +1156,10 @@ Deno.test('fallback includes explanation with assumptions', async () => {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({ 
-      query: 'card draw spells', 
+    body: JSON.stringify({
+      query: 'card draw spells',
       useCache: false,
-      debug: { forceFallback: true }
+      debug: { forceFallback: true },
     }),
   });
 
@@ -975,7 +1168,11 @@ Deno.test('fallback includes explanation with assumptions', async () => {
   assertExists(data.explanation);
   assertExists(data.explanation.assumptions);
   assertEquals(Array.isArray(data.explanation.assumptions), true);
-  assertEquals(data.explanation.assumptions.length > 0, true, 'Should have fallback assumption');
+  assertEquals(
+    data.explanation.assumptions.length > 0,
+    true,
+    'Should have fallback assumption',
+  );
 });
 
 Deno.test('fallback has lower confidence score', async () => {
@@ -985,10 +1182,10 @@ Deno.test('fallback has lower confidence score', async () => {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({ 
-      query: 'ramp spells', 
+    body: JSON.stringify({
+      query: 'ramp spells',
       useCache: false,
-      debug: { forceFallback: true }
+      debug: { forceFallback: true },
     }),
   });
 
@@ -1011,7 +1208,7 @@ Deno.test('handles OPTIONS preflight request', async () => {
   const response = await fetch(FUNCTION_URL, {
     method: 'OPTIONS',
     headers: {
-      'Origin': 'https://example.com',
+      Origin: 'https://example.com',
       'Access-Control-Request-Method': 'POST',
     },
   });
@@ -1027,7 +1224,7 @@ Deno.test('includes CORS headers in error responses', async () => {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Origin': 'https://example.com',
+      Origin: 'https://example.com',
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     },
     body: JSON.stringify({ query: '', useCache: false }),
@@ -1094,7 +1291,7 @@ Deno.test('cache bypass works with useCache: false', async () => {
   // First call
   const result1 = await callSemanticSearch('test caching query');
   assertEquals(result1.success, true);
-  
+
   // Second call with cache bypass
   const response = await fetch(FUNCTION_URL, {
     method: 'POST',
@@ -1108,7 +1305,11 @@ Deno.test('cache bypass works with useCache: false', async () => {
   const result2 = await response.json();
   assertEquals(result2.success, true);
   // With useCache: false, it should NOT indicate cached: true
-  assertEquals(result2.cached !== true, true, 'Should not be from cache when useCache is false');
+  assertEquals(
+    result2.cached !== true,
+    true,
+    'Should not be from cache when useCache is false',
+  );
 });
 
 Deno.test('accepts valid cacheSalt parameter', async () => {
@@ -1118,10 +1319,10 @@ Deno.test('accepts valid cacheSalt parameter', async () => {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({ 
-      query: 'elves', 
+    body: JSON.stringify({
+      query: 'elves',
       useCache: true,
-      cacheSalt: 'test-salt-123'
+      cacheSalt: 'test-salt-123',
     }),
   });
 
@@ -1137,10 +1338,10 @@ Deno.test('rejects invalid cacheSalt type', async () => {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({ 
-      query: 'elves', 
+    body: JSON.stringify({
+      query: 'elves',
       useCache: true,
-      cacheSalt: 12345 // Should be string
+      cacheSalt: 12345, // Should be string
     }),
   });
 
@@ -1156,7 +1357,7 @@ Deno.test('rejects invalid cacheSalt type', async () => {
 Deno.test('deterministic queries skip AI path', async () => {
   // Simple color + type query should be deterministic
   const result = await callSemanticSearch('t:elf c:g');
-  
+
   assertEquals(result.success, true);
   // Deterministic queries may have source: 'deterministic' or similar
   // Just verify the query was successfully translated
@@ -1167,12 +1368,16 @@ Deno.test('deterministic queries skip AI path', async () => {
 Deno.test('handles Scryfall syntax passthrough', async () => {
   // Direct Scryfall syntax should pass through
   const result = await callSemanticSearch('t:creature pow>=4 cmc<=3');
-  
+
   assertEquals(result.success, true);
   const query = result.scryfallQuery.toLowerCase();
   // Should preserve the core constraints - flexible matching for AI variations
-  const hasPowerRef = query.includes('pow') || query.includes('power') || 
-    query.includes('>=4') || query.includes('>3') || query.includes('t:creature');
+  const hasPowerRef =
+    query.includes('pow') ||
+    query.includes('power') ||
+    query.includes('>=4') ||
+    query.includes('>3') ||
+    query.includes('t:creature');
   assertEquals(
     hasPowerRef,
     true,
@@ -1180,7 +1385,7 @@ Deno.test('handles Scryfall syntax passthrough', async () => {
   );
 });
 
-// ============================================================  
+// ============================================================
 // Rate Limiting (Integration)
 // ============================================================
 
@@ -1203,7 +1408,7 @@ Deno.test('rate limit headers present in response', async () => {
 
 Deno.test('session rate limit enforced with x-session-id', async () => {
   const sessionId = `test-session-${Date.now()}`;
-  
+
   // Make a single valid request
   const response = await fetch(FUNCTION_URL, {
     method: 'POST',

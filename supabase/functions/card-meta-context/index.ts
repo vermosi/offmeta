@@ -40,7 +40,7 @@ function hashCardName(name: string): string {
   let hash = 0;
   for (let i = 0; i < normalized.length; i++) {
     const chr = normalized.charCodeAt(i);
-    hash = ((hash << 5) - hash) + chr;
+    hash = (hash << 5) - hash + chr;
     hash |= 0;
   }
   return `meta_${Math.abs(hash).toString(36)}`;
@@ -62,7 +62,7 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   // Auth validation
-  const auth = validateAuth(req);
+  const auth = await validateAuth(req);
   if (!auth.authorized) {
     return new Response(
       JSON.stringify({ success: false, error: 'Unauthorized' }),
@@ -72,22 +72,37 @@ serve(async (req: Request): Promise<Response> => {
 
   // Rate limiting
   maybeCleanup();
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const ip =
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
   const rateCheck = await checkRateLimit(ip, undefined, 15, 500);
   if (!rateCheck.allowed) {
     return new Response(
-      JSON.stringify({ success: false, error: 'Rate limited', retryAfter: rateCheck.retryAfter }),
+      JSON.stringify({
+        success: false,
+        error: 'Rate limited',
+        retryAfter: rateCheck.retryAfter,
+      }),
       { status: 429, headers },
     );
   }
 
   try {
     const body: MetaContextRequest = await req.json();
-    const { cardName, typeLine, oracleText, colorIdentity, edhrecRank, legalities } = body;
+    const {
+      cardName,
+      typeLine,
+      oracleText,
+      colorIdentity,
+      edhrecRank,
+      legalities,
+    } = body;
 
     if (!cardName || !typeLine) {
       return new Response(
-        JSON.stringify({ success: false, error: 'cardName and typeLine are required' }),
+        JSON.stringify({
+          success: false,
+          error: 'cardName and typeLine are required',
+        }),
         { status: 400, headers },
       );
     }
@@ -99,7 +114,8 @@ serve(async (req: Request): Promise<Response> => {
 
     if (supabaseUrl && serviceRoleKey) {
       try {
-        const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+        const { createClient } =
+          await import('https://esm.sh/@supabase/supabase-js@2');
         const supabase = createClient(supabaseUrl, serviceRoleKey);
 
         const { data: cached } = await supabase
@@ -113,12 +129,16 @@ serve(async (req: Request): Promise<Response> => {
           // Update hit count
           await supabase
             .from('query_cache')
-            .update({ hit_count: (cached.hit_count ?? 0) + 1, last_hit_at: new Date().toISOString() })
+            .update({
+              hit_count: (cached.hit_count ?? 0) + 1,
+              last_hit_at: new Date().toISOString(),
+            })
             .eq('query_hash', cacheKey);
 
-          const explanation = typeof cached.explanation === 'string'
-            ? JSON.parse(cached.explanation)
-            : cached.explanation;
+          const explanation =
+            typeof cached.explanation === 'string'
+              ? JSON.parse(cached.explanation)
+              : cached.explanation;
 
           return new Response(
             JSON.stringify({
@@ -136,8 +156,12 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     // Build prompt
-    const colorStr = colorIdentity?.length ? colorIdentity.join('') : 'colorless';
-    const rankStr = edhrecRank ? `EDHREC rank: ${edhrecRank}` : 'No EDHREC rank available';
+    const colorStr = colorIdentity?.length
+      ? colorIdentity.join('')
+      : 'colorless';
+    const rankStr = edhrecRank
+      ? `EDHREC rank: ${edhrecRank}`
+      : 'No EDHREC rank available';
     const legalFormats = legalities
       ? Object.entries(legalities)
           .filter(([, v]) => v === 'legal')
@@ -164,49 +188,59 @@ Explain why this card is played in competitive and casual Magic, what archetypes
       );
     }
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a Magic: The Gathering strategy expert. Given a card\'s details, explain in 2-3 concise sentences why this card is played, what archetypes or strategies it supports, and any notable synergies. Be specific and practical. Do not invent card names or rules.',
-          },
-          { role: 'user', content: userPrompt },
-        ],
-        tools: [
-          {
-            type: 'function',
-            function: {
-              name: 'provide_meta_context',
-              description: 'Provide a strategic rationale for why a Magic card is played, along with matching archetype tags.',
-              parameters: {
-                type: 'object',
-                properties: {
-                  rationale: {
-                    type: 'string',
-                    description: '2-3 concise sentences explaining why this card is played, its strategic role, and key synergies.',
+    const aiResponse = await fetch(
+      'https://ai.gateway.lovable.dev/v1/chat/completions',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-3-flash-preview',
+          messages: [
+            {
+              role: 'system',
+              content:
+                "You are a Magic: The Gathering strategy expert. Given a card's details, explain in 2-3 concise sentences why this card is played, what archetypes or strategies it supports, and any notable synergies. Be specific and practical. Do not invent card names or rules.",
+            },
+            { role: 'user', content: userPrompt },
+          ],
+          tools: [
+            {
+              type: 'function',
+              function: {
+                name: 'provide_meta_context',
+                description:
+                  'Provide a strategic rationale for why a Magic card is played, along with matching archetype tags.',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    rationale: {
+                      type: 'string',
+                      description:
+                        '2-3 concise sentences explaining why this card is played, its strategic role, and key synergies.',
+                    },
+                    archetypes: {
+                      type: 'array',
+                      items: { type: 'string' },
+                      description:
+                        'List of 1-4 archetype tags this card fits (e.g., "Aristocrats", "Tokens", "Reanimator", "Control").',
+                    },
                   },
-                  archetypes: {
-                    type: 'array',
-                    items: { type: 'string' },
-                    description: 'List of 1-4 archetype tags this card fits (e.g., "Aristocrats", "Tokens", "Reanimator", "Control").',
-                  },
+                  required: ['rationale', 'archetypes'],
+                  additionalProperties: false,
                 },
-                required: ['rationale', 'archetypes'],
-                additionalProperties: false,
               },
             },
+          ],
+          tool_choice: {
+            type: 'function',
+            function: { name: 'provide_meta_context' },
           },
-        ],
-        tool_choice: { type: 'function', function: { name: 'provide_meta_context' } },
-      }),
-    });
+        }),
+      },
+    );
 
     if (!aiResponse.ok) {
       const status = aiResponse.status;
@@ -215,7 +249,10 @@ Explain why this card is played in competitive and casual Magic, what archetypes
 
       if (status === 429) {
         return new Response(
-          JSON.stringify({ success: false, error: 'AI rate limited, please try again later' }),
+          JSON.stringify({
+            success: false,
+            error: 'AI rate limited, please try again later',
+          }),
           { status: 429, headers },
         );
       }
@@ -241,9 +278,10 @@ Explain why this card is played in competitive and casual Magic, what archetypes
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     if (toolCall?.function?.arguments) {
       try {
-        const args = typeof toolCall.function.arguments === 'string'
-          ? JSON.parse(toolCall.function.arguments)
-          : toolCall.function.arguments;
+        const args =
+          typeof toolCall.function.arguments === 'string'
+            ? JSON.parse(toolCall.function.arguments)
+            : toolCall.function.arguments;
         rationale = args.rationale || '';
         archetypes = args.archetypes || [];
       } catch {
@@ -258,7 +296,10 @@ Explain why this card is played in competitive and casual Magic, what archetypes
 
     if (!rationale) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Could not generate rationale' }),
+        JSON.stringify({
+          success: false,
+          error: 'Could not generate rationale',
+        }),
         { status: 500, headers },
       );
     }
@@ -266,10 +307,13 @@ Explain why this card is played in competitive and casual Magic, what archetypes
     // Cache the result (7 days)
     if (supabaseUrl && serviceRoleKey) {
       try {
-        const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+        const { createClient } =
+          await import('https://esm.sh/@supabase/supabase-js@2');
         const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+        const expiresAt = new Date(
+          Date.now() + 7 * 24 * 60 * 60 * 1000,
+        ).toISOString();
         await supabase.from('query_cache').upsert(
           {
             query_hash: cacheKey,
