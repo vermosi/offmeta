@@ -3,7 +3,7 @@
  * Provides color filters, type filters, CMC range, and sorting.
  */
 
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
@@ -25,87 +25,17 @@ import { cn } from '@/lib/core/utils';
 import { Filter, ArrowUpDown, X, ChevronDown, Package } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { useAuth } from '@/hooks/useAuth';
-
-// Color definitions with mana symbols
-const COLORS = [
-  {
-    id: 'W',
-    name: 'White',
-    bg: 'bg-amber-100 dark:bg-amber-200',
-    text: 'text-amber-900',
-    border: 'border-amber-300',
-  },
-  {
-    id: 'U',
-    name: 'Blue',
-    bg: 'bg-blue-100 dark:bg-blue-200',
-    text: 'text-blue-900',
-    border: 'border-blue-300',
-  },
-  {
-    id: 'B',
-    name: 'Black',
-    bg: 'bg-zinc-200 dark:bg-zinc-300',
-    text: 'text-zinc-900',
-    border: 'border-zinc-400',
-  },
-  {
-    id: 'R',
-    name: 'Red',
-    bg: 'bg-red-100 dark:bg-red-200',
-    text: 'text-red-900',
-    border: 'border-red-300',
-  },
-  {
-    id: 'G',
-    name: 'Green',
-    bg: 'bg-green-100 dark:bg-green-200',
-    text: 'text-green-900',
-    border: 'border-green-300',
-  },
-  {
-    id: 'C',
-    name: 'Colorless',
-    bg: 'bg-slate-100 dark:bg-slate-200',
-    text: 'text-slate-700',
-    border: 'border-slate-300',
-  },
-] as const;
-
-// Card types to filter by
-const CARD_TYPES = [
-  'Creature',
-  'Instant',
-  'Sorcery',
-  'Enchantment',
-  'Artifact',
-  'Planeswalker',
-  'Land',
-  'Battle',
-] as const;
-
-// Sort options
-const SORT_OPTIONS = [
-  { value: 'name-asc', labelKey: 'filters.sortNameAsc' },
-  { value: 'name-desc', labelKey: 'filters.sortNameDesc' },
-  { value: 'cmc-asc', labelKey: 'filters.sortCmcAsc' },
-  { value: 'cmc-desc', labelKey: 'filters.sortCmcDesc' },
-  { value: 'price-asc', labelKey: 'filters.sortPriceAsc' },
-  { value: 'price-desc', labelKey: 'filters.sortPriceDesc' },
-  { value: 'rarity-asc', labelKey: 'filters.sortRarityAsc' },
-  { value: 'rarity-desc', labelKey: 'filters.sortRarityDesc' },
-  { value: 'edhrec-asc', labelKey: 'filters.sortEdhrecAsc' },
-  { value: 'edhrec-desc', labelKey: 'filters.sortEdhrecDesc' },
-] as const;
-
-const RARITY_ORDER = {
-  common: 0,
-  uncommon: 1,
-  rare: 2,
-  mythic: 3,
-  special: 4,
-  bonus: 5,
-};
+import {
+  CARD_TYPES,
+  COLORS,
+  SORT_OPTIONS,
+} from '@/components/SearchFilters/constants';
+import {
+  applyCardFilters,
+  countActiveFilters,
+  hasActiveFilters as getHasActiveFilters,
+} from '@/components/SearchFilters/filtering';
+import { useSearchFilterState } from '@/components/SearchFilters/useSearchFilterState';
 
 interface SearchFiltersProps {
   cards: ScryfallCard[];
@@ -135,200 +65,67 @@ export function SearchFilters({
   const defaultMaxCmc = useMemo(() => {
     return Math.max(16, ...cards.map((c) => c.cmc || 0));
   }, [cards]);
-  const lastDefaultMaxCmc = useRef(defaultMaxCmc);
-  const buildDefaultFilters = useCallback(
-    (maxCmc: number): FilterState => ({
-      colors: [],
-      types: [],
-      cmcRange: [0, maxCmc],
-      sortBy: 'name-asc',
-    }),
-    [],
-  );
-  const [filters, setFilters] = useState<FilterState>(() => {
-    const defaults = buildDefaultFilters(defaultMaxCmc);
-    if (initialFilters) {
-      return {
-        ...defaults,
-        ...initialFilters,
-        cmcRange: initialFilters.cmcRange || defaults.cmcRange,
-      };
-    }
-    return defaults;
+  const {
+    filters,
+    setFilters,
+    defaultFilters,
+    applyResetIfNeeded,
+    syncCmcRangeIfPristine,
+  } = useSearchFilterState({
+    defaultMaxCmc,
+    initialFilters,
+    resetKey,
   });
   const [isOpen, setIsOpen] = useState(false);
-  const defaultFilters = useMemo(
-    () => buildDefaultFilters(defaultMaxCmc),
-    [buildDefaultFilters, defaultMaxCmc],
-  );
 
-  // Apply filters and sorting
   const filteredCards = useMemo(() => {
-    let result = [...cards];
-
-    // Owned-only filter
-    if (filters.ownedOnly && collectionLookup) {
-      result = result.filter((card) => collectionLookup.has(card.name));
-    }
-
-    // Color filter - AND logic: card must have ALL selected colors
-    if (filters.colors.length > 0) {
-      result = result.filter((card) => {
-        const cardColors = card.colors || [];
-        const isColorless = cardColors.length === 0;
-
-        // Handle colorless separately
-        const wantsColorless = filters.colors.includes('C');
-        const colorFilters = filters.colors.filter((c) => c !== 'C');
-
-        // If only colorless is selected, match colorless cards
-        if (colorFilters.length === 0 && wantsColorless) {
-          return isColorless;
-        }
-
-        // If colorless + colors selected, that's contradictory - show nothing
-        if (colorFilters.length > 0 && wantsColorless && isColorless) {
-          return false;
-        }
-
-        // Card must have ALL selected colors (AND logic)
-        return colorFilters.every((color) => cardColors.includes(color));
-      });
-    }
-
-    // Type filter
-    if (filters.types.length > 0) {
-      result = result.filter((card) => {
-        const typeLine = card.type_line.toLowerCase();
-        return filters.types.some((type) =>
-          typeLine.includes(type.toLowerCase()),
-        );
-      });
-    }
-
-    // CMC range filter
-    result = result.filter((card) => {
-      const cmc = card.cmc || 0;
-      return cmc >= filters.cmcRange[0] && cmc <= filters.cmcRange[1];
-    });
-
-    // Sorting
-    const [sortField, sortDir] = filters.sortBy.split('-') as [
-      string,
-      'asc' | 'desc',
-    ];
-    result.sort((a, b) => {
-      let comparison = 0;
-
-      switch (sortField) {
-        case 'name':
-          comparison = a.name.localeCompare(b.name);
-          break;
-        case 'cmc':
-          comparison = (a.cmc || 0) - (b.cmc || 0);
-          break;
-        case 'price': {
-          const priceA = parseFloat(a.prices?.usd || '0');
-          const priceB = parseFloat(b.prices?.usd || '0');
-          comparison = priceA - priceB;
-          break;
-        }
-        case 'rarity': {
-          const rarityA =
-            RARITY_ORDER[a.rarity as keyof typeof RARITY_ORDER] || 0;
-          const rarityB =
-            RARITY_ORDER[b.rarity as keyof typeof RARITY_ORDER] || 0;
-          comparison = rarityA - rarityB;
-          break;
-        }
-        case 'edhrec': {
-          // Lower rank = more popular; cards without rank go to the end
-          const rankA = a.edhrec_rank ?? 999999;
-          const rankB = b.edhrec_rank ?? 999999;
-          comparison = rankA - rankB;
-          break;
-        }
-      }
-
-      return sortDir === 'desc' ? -comparison : comparison;
-    });
-
-    return result;
+    return applyCardFilters(cards, filters, collectionLookup);
   }, [cards, filters, collectionLookup]);
 
-  // Calculate if filters are active (before the effect that uses it)
-  const hasActiveFilters =
-    filters.colors.length > 0 ||
-    filters.types.length > 0 ||
-    filters.cmcRange[0] > 0 ||
-    filters.cmcRange[1] < defaultMaxCmc ||
-    !!filters.ownedOnly;
+  const hasActiveFilters = getHasActiveFilters(filters, defaultMaxCmc);
 
   // Notify parent of filtered results - use useEffect instead of useMemo for side effects
   useEffect(() => {
     onFilteredCards(filteredCards, hasActiveFilters, filters);
   }, [filteredCards, hasActiveFilters, onFilteredCards, filters]);
 
-  // Reset filters when resetKey changes (render-phase adjustment)
-  const [prevResetKey, setPrevResetKey] = useState(resetKey);
-  if (prevResetKey !== resetKey) {
-    setPrevResetKey(resetKey);
-    setFilters(defaultFilters);
+  if (applyResetIfNeeded()) {
     setIsOpen(false);
   }
 
   useEffect(() => {
-    if (lastDefaultMaxCmc.current === defaultMaxCmc) {
-      return;
-    }
-    setFilters((prev) => {
-      const isDefaultRange =
-        prev.colors.length === 0 &&
-        prev.types.length === 0 &&
-        prev.sortBy === 'name-asc' &&
-        prev.cmcRange[0] === 0 &&
-        prev.cmcRange[1] === lastDefaultMaxCmc.current;
+    syncCmcRangeIfPristine();
+  }, [syncCmcRangeIfPristine]);
 
-      lastDefaultMaxCmc.current = defaultMaxCmc;
-
-      if (!isDefaultRange) {
-        return prev;
-      }
-
-      return {
+  const toggleColor = useCallback(
+    (colorId: string) => {
+      setFilters((prev) => ({
         ...prev,
-        cmcRange: [0, defaultMaxCmc],
-      };
-    });
-  }, [defaultMaxCmc]);
+        colors: prev.colors.includes(colorId)
+          ? prev.colors.filter((c) => c !== colorId)
+          : [...prev.colors, colorId],
+      }));
+    },
+    [setFilters],
+  );
 
-  const toggleColor = useCallback((colorId: string) => {
-    setFilters((prev) => ({
-      ...prev,
-      colors: prev.colors.includes(colorId)
-        ? prev.colors.filter((c) => c !== colorId)
-        : [...prev.colors, colorId],
-    }));
-  }, []);
-
-  const toggleType = useCallback((type: string) => {
-    setFilters((prev) => ({
-      ...prev,
-      types: prev.types.includes(type)
-        ? prev.types.filter((t) => t !== type)
-        : [...prev.types, type],
-    }));
-  }, []);
+  const toggleType = useCallback(
+    (type: string) => {
+      setFilters((prev) => ({
+        ...prev,
+        types: prev.types.includes(type)
+          ? prev.types.filter((t) => t !== type)
+          : [...prev.types, type],
+      }));
+    },
+    [setFilters],
+  );
 
   const clearFilters = useCallback(() => {
     setFilters(defaultFilters);
-  }, [defaultFilters]);
+  }, [defaultFilters, setFilters]);
 
-  const activeFilterCount =
-    filters.colors.length +
-    filters.types.length +
-    (filters.cmcRange[0] > 0 || filters.cmcRange[1] < defaultMaxCmc ? 1 : 0) +
-    (filters.ownedOnly ? 1 : 0);
+  const activeFilterCount = countActiveFilters(filters, defaultMaxCmc);
 
   return (
     <div className="contents">
@@ -387,7 +184,10 @@ export function SearchFilters({
                         : 'opacity-60 hover:opacity-100 border-transparent',
                     )}
                     title={color.name}
-                    aria-label={t('filters.filterByColor', 'Filter by {name}').replace('{name}', color.name)}
+                    aria-label={t(
+                      'filters.filterByColor',
+                      'Filter by {name}',
+                    ).replace('{name}', color.name)}
                     aria-pressed={filters.colors.includes(color.id)}
                   >
                     {color.id}
@@ -467,7 +267,9 @@ export function SearchFilters({
       {/* Owned Only toggle — only for authenticated users */}
       {user && collectionLookup && (
         <button
-          onClick={() => setFilters((prev) => ({ ...prev, ownedOnly: !prev.ownedOnly }))}
+          onClick={() =>
+            setFilters((prev) => ({ ...prev, ownedOnly: !prev.ownedOnly }))
+          }
           className={cn(
             'flex items-center gap-1 py-1 px-2.5 text-xs rounded-md transition-colors h-8 sm:h-9',
             filters.ownedOnly
@@ -478,7 +280,9 @@ export function SearchFilters({
           aria-label={t('collection.showOwnedOnly', 'Owned Only')}
         >
           <Package className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">{t('collection.showOwnedOnly', 'Owned Only')}</span>
+          <span className="hidden sm:inline">
+            {t('collection.showOwnedOnly', 'Owned Only')}
+          </span>
         </button>
       )}
 
@@ -525,7 +329,10 @@ export function SearchFilters({
                     toggleColor(colorId);
                   }
                 }}
-                aria-label={t('filters.removeColor', 'Remove {name} filter').replace('{name}', color?.name || colorId)}
+                aria-label={t(
+                  'filters.removeColor',
+                  'Remove {name} filter',
+                ).replace('{name}', color?.name || colorId)}
               >
                 {color?.name || colorId}
                 <X className="h-3 w-3" aria-hidden="true" />
@@ -546,7 +353,10 @@ export function SearchFilters({
                   toggleType(type);
                 }
               }}
-              aria-label={t('filters.removeType', 'Remove {type} filter').replace('{type}', type)}
+              aria-label={t(
+                'filters.removeType',
+                'Remove {type} filter',
+              ).replace('{type}', type)}
             >
               {type}
               <X className="h-3 w-3" aria-hidden="true" />
@@ -557,21 +367,38 @@ export function SearchFilters({
               variant="secondary"
               className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20 text-xs"
               onClick={() =>
-                setFilters((prev) => ({ ...prev, cmcRange: [0, defaultMaxCmc] }))
+                setFilters((prev) => ({
+                  ...prev,
+                  cmcRange: [0, defaultMaxCmc],
+                }))
               }
               role="button"
               tabIndex={0}
               onKeyDown={(e: React.KeyboardEvent) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
-                  setFilters((prev) => ({ ...prev, cmcRange: [0, defaultMaxCmc] }));
+                  setFilters((prev) => ({
+                    ...prev,
+                    cmcRange: [0, defaultMaxCmc],
+                  }));
                 }
               }}
-              aria-label={t('filters.removeCmc', 'Remove CMC {range} filter').replace('{range}', `${filters.cmcRange[0]}-${filters.cmcRange[1] >= defaultMaxCmc ? `${defaultMaxCmc}+` : filters.cmcRange[1]}`)}
+              aria-label={t(
+                'filters.removeCmc',
+                'Remove CMC {range} filter',
+              ).replace(
+                '{range}',
+                `${filters.cmcRange[0]}-${filters.cmcRange[1] >= defaultMaxCmc ? `${defaultMaxCmc}+` : filters.cmcRange[1]}`,
+              )}
             >
               {t('filters.cmcRange', 'CMC {min}-{max}')
                 .replace('{min}', String(filters.cmcRange[0]))
-                .replace('{max}', filters.cmcRange[1] >= defaultMaxCmc ? `${defaultMaxCmc}+` : String(filters.cmcRange[1]))}
+                .replace(
+                  '{max}',
+                  filters.cmcRange[1] >= defaultMaxCmc
+                    ? `${defaultMaxCmc}+`
+                    : String(filters.cmcRange[1]),
+                )}
               <X className="h-3 w-3" aria-hidden="true" />
             </Badge>
           )}

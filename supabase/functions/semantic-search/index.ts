@@ -1,12 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { buildDeterministicIntent } from './deterministic/index.ts';
 import { buildSystemPrompt, type QueryTier } from './prompts.ts';
-import {
-  checkRateLimit,
-  checkSessionRateLimit,
-  resolveRateLimitKey,
-} from '../_shared/rateLimit.ts';
-import { getCorsHeaders, validateAuth } from '../_shared/auth.ts';
+import { getCorsHeaders } from '../_shared/auth.ts';
 import { LOVABLE_API_KEY, supabase } from './client.ts';
 import {
   getCachedResult,
@@ -48,39 +43,16 @@ import {
   REQUEST_STAGE_MIN_BUDGET_MS,
   PRE_TRANSLATION_TIMEOUT_MS,
 } from './config.ts';
+import {
+  enforceRequestGuards,
+  errorResponse,
+  handleCorsPreflight,
+  parseJsonBody,
+  parseRequestBudget,
+  sanitizeError,
+} from './handlers/http.ts';
 
 type BudgetStage = 'dynamic_rules' | 'pre_translation' | 'ai_call';
-
-interface RequestBudget {
-  deadlineMs: number;
-  remainingMs: () => number;
-  hasBudgetFor: (minimumMs: number) => boolean;
-}
-
-function parseRequestBudget(
-  req: Request,
-  requestStartTime: number,
-): RequestBudget {
-  const requestStartHeader = Number(req.headers.get('x-request-start'));
-  const deadlineHeader = Number(req.headers.get('x-deadline-ms'));
-
-  const effectiveStart =
-    Number.isFinite(requestStartHeader) && requestStartHeader > 0
-      ? requestStartHeader
-      : requestStartTime;
-
-  const effectiveDeadline =
-    Number.isFinite(deadlineHeader) && deadlineHeader > effectiveStart
-      ? deadlineHeader
-      : effectiveStart + REQUEST_BUDGET_MS;
-
-  return {
-    deadlineMs: effectiveDeadline,
-    remainingMs: () => Math.max(0, effectiveDeadline - Date.now()),
-    hasBudgetFor: (minimumMs: number) =>
-      effectiveDeadline - Date.now() >= minimumMs,
-  };
-}
 
 /**
  * Check if a query is already valid Scryfall syntax (no AI needed).
@@ -219,27 +191,6 @@ type StageName =
   | 'ai'
   | 'fallback';
 
-// Helper function for consistent error responses
-function errorResponse(
-  message: string,
-  status: number,
-  headers: Record<string, string>,
-): Response {
-  return new Response(JSON.stringify({ error: message, success: false }), {
-    status,
-    headers,
-  });
-}
-
-// Sanitize error messages to prevent sensitive data leakage
-function sanitizeError(error: unknown): string {
-  if (error instanceof Error) {
-    // Remove file paths and sensitive details
-    return error.message.replace(/\/[^\s]+/g, '[PATH]');
-  }
-  return 'Unknown error';
-}
-
 const ACCENTED_LATIN_HIGH_CONFIDENCE_THRESHOLD = 0.9;
 
 /**
@@ -251,12 +202,9 @@ serve(async (req) => {
 
   const corsHeaders = getCorsHeaders(req);
 
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
-    return new Response(null, {
-      headers: { ...corsHeaders, 'x-request-id': requestId },
-    });
+  const preflightResponse = handleCorsPreflight(req, corsHeaders);
+  if (preflightResponse) {
+    return preflightResponse;
   }
 
   const requestStartTime = Date.now();
@@ -295,92 +243,28 @@ serve(async (req) => {
     'x-request-id': requestId,
   };
 
-  // Authentication check
-  const authResult = await validateAuth(req);
-  if (!authResult.authorized) {
-    logWarn('auth_failed', { error: authResult.error });
-    return errorResponse(authResult.error || 'Unauthorized', 401, jsonHeaders);
-  }
-
-  // Rate limiting check - both IP and session-based
-  const rateLimitKey = await resolveRateLimitKey(req);
-  const sessionId = req.headers.get('x-session-id');
-
-  // High-cost endpoint: fail closed on limiter errors
-  const rateCheck = await checkRateLimit(
-    rateLimitKey,
-    undefined,
-    30,
-    1000,
-    60000,
-    { failOpen: false },
+  const guardFailureResponse = await enforceRequestGuards(
+    req,
+    jsonHeaders,
+    logWarn,
   );
-  if (!rateCheck.allowed) {
-    const status = rateCheck.statusCode ?? 429;
-    const retryAfter = rateCheck.retryAfter ?? 1;
-
-    logWarn('rate_limit_exceeded', {
-      bucket: rateLimitKey.slice(0, 20),
-      retryAfter,
-      status,
-    });
-
-    return new Response(
-      JSON.stringify({
-        error:
-          status === 503
-            ? 'Service temporarily unavailable. Please retry shortly.'
-            : 'Too many requests. Please slow down.',
-        retryAfter,
-        success: false,
-      }),
-      {
-        status,
-        headers: {
-          ...jsonHeaders,
-          'Retry-After': String(retryAfter),
-        },
-      },
-    );
+  if (guardFailureResponse) {
+    return guardFailureResponse;
   }
 
-  // Check session-based rate limit (stricter - 20/min per session)
-  const sessionCheck = checkSessionRateLimit(sessionId);
-  if (!sessionCheck.allowed) {
-    logWarn('session_rate_limit_exceeded', {
-      sessionId: sessionId?.substring(0, 20),
-      retryAfter: sessionCheck.retryAfter,
-    });
-
-    return new Response(
-      JSON.stringify({
-        error:
-          'Session rate limit exceeded. Please wait before searching again.',
-        retryAfter: sessionCheck.retryAfter,
-        success: false,
-      }),
-      {
-        status: 429,
-        headers: {
-          ...jsonHeaders,
-          'Retry-After': String(sessionCheck.retryAfter),
-        },
-      },
-    );
+  const parsedBody = await parseJsonBody(req, jsonHeaders, logWarn);
+  if ('response' in parsedBody) {
+    return parsedBody.response;
   }
-
-  // Parse request body with proper error handling
-  let requestBody;
-  try {
-    requestBody = await req.json();
-  } catch (e) {
-    logWarn('invalid_json', { error: sanitizeError(e) });
-    return errorResponse('Invalid JSON in request body', 400, jsonHeaders);
-  }
+  const requestBody = parsedBody.requestBody;
 
   try {
     const { query, filters, debug, useCache, cacheSalt } = requestBody;
-    const requestBudget = parseRequestBudget(req, requestStartTime);
+    const requestBudget = parseRequestBudget(
+      req,
+      requestStartTime,
+      REQUEST_BUDGET_MS,
+    );
 
     const createBudgetExceededResponse = (): Response => {
       const fallback = buildFallbackQuery(query, filters);
