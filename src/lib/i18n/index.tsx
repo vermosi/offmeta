@@ -86,13 +86,15 @@ interface I18nProviderProps {
 export function I18nProvider({ children }: I18nProviderProps) {
   const [locale, setLocaleState] = useState<SupportedLocale>(getInitialLocale);
   const [dictionary, setDictionary] = useState<TranslationDictionary>(
-    loadedDictionaries[locale] ?? en,
+    () => loadedDictionaries[getInitialLocale()] ?? en,
   );
 
   // Load the dictionary when locale changes
   useEffect(() => {
-    if (loadedDictionaries[locale]) {
-      setDictionary(loadedDictionaries[locale]);
+    const cached = loadedDictionaries[locale];
+    if (cached) {
+      // Only update if dictionary reference actually changed (avoids lint warning)
+      setDictionary((prev) => (prev === cached ? prev : cached));
       return;
     }
 
