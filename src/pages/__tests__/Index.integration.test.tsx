@@ -111,9 +111,21 @@ vi.mock('@/components/AuthProvider', () => ({
 // ── Helpers ────────────────────────────────────────────────
 
 const MOCK_CARDS: ScryfallCard[] = [
-  createMockCard({ id: 'card-1', name: 'Dockside Extortionist', type_line: 'Creature — Goblin Pirate' }),
-  createMockCard({ id: 'card-2', name: 'Smothering Tithe', type_line: 'Enchantment' }),
-  createMockCard({ id: 'card-3', name: 'Treasure Vault', type_line: 'Artifact Land' }),
+  createMockCard({
+    id: 'card-1',
+    name: 'Dockside Extortionist',
+    type_line: 'Creature — Goblin Pirate',
+  }),
+  createMockCard({
+    id: 'card-2',
+    name: 'Smothering Tithe',
+    type_line: 'Enchantment',
+  }),
+  createMockCard({
+    id: 'card-3',
+    name: 'Treasure Vault',
+    type_line: 'Artifact Land',
+  }),
 ];
 
 function renderIndex(initialRoute = '/') {
@@ -181,9 +193,7 @@ describe('Index page integration', () => {
 
   it('displays skeleton loaders while searching', async () => {
     // Make translation hang to keep loading state
-    mockTranslateQueryWithDedup.mockImplementation(
-      () => new Promise(() => {}),
-    );
+    mockTranslateQueryWithDedup.mockImplementation(() => new Promise(() => {}));
 
     renderIndex();
 
@@ -212,11 +222,19 @@ describe('Index page integration', () => {
     fireEvent.keyDown(input, { key: 'Enter' });
 
     // Wait for cards to appear
-    await waitFor(() => {
-      expect(screen.getByText('Dockside Extortionist')).toBeInTheDocument();
-    });
-    expect(screen.getByText('Smothering Tithe')).toBeInTheDocument();
-    expect(screen.getByText('Treasure Vault')).toBeInTheDocument();
+    const expectedCardNames = [
+      'Dockside Extortionist',
+      'Smothering Tithe',
+      'Treasure Vault',
+    ];
+
+    for (const cardName of expectedCardNames) {
+      await waitFor(() => {
+        expect(
+          screen.getByText((_, element) => element?.textContent === cardName),
+        ).toBeInTheDocument();
+      });
+    }
   });
 
   it('shows empty state when no results are returned', async () => {
@@ -247,7 +265,9 @@ describe('Index page integration', () => {
     renderIndex();
 
     await waitFor(() => {
-      expect(screen.getByText('creatures that make treasure tokens')).toBeInTheDocument();
+      expect(
+        screen.getByText('creatures that make treasure tokens'),
+      ).toBeInTheDocument();
     });
     const exampleBtn = screen.getByText('creatures that make treasure tokens');
     fireEvent.click(exampleBtn);
