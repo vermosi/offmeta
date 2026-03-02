@@ -42,10 +42,42 @@ function makeCard(overrides: Partial<ScryfallCard> = {}): ScryfallCard {
 }
 
 const defaultCards: ScryfallCard[] = [
-  makeCard({ id: '1', name: 'Alpha', cmc: 1, colors: ['W'], type_line: 'Creature — Human', rarity: 'common', prices: { usd: '0.50' } }),
-  makeCard({ id: '2', name: 'Beta', cmc: 5, colors: ['U'], type_line: 'Instant', rarity: 'rare', prices: { usd: '5.00' } }),
-  makeCard({ id: '3', name: 'Gamma', cmc: 3, colors: ['R', 'G'], type_line: 'Sorcery', rarity: 'mythic', prices: { usd: '15.00' } }),
-  makeCard({ id: '4', name: 'Delta', cmc: 0, colors: [], type_line: 'Artifact', rarity: 'uncommon', prices: { usd: '2.00' } }),
+  makeCard({
+    id: '1',
+    name: 'Alpha',
+    cmc: 1,
+    colors: ['W'],
+    type_line: 'Creature — Human',
+    rarity: 'common',
+    prices: { usd: '0.50' },
+  }),
+  makeCard({
+    id: '2',
+    name: 'Beta',
+    cmc: 5,
+    colors: ['U'],
+    type_line: 'Instant',
+    rarity: 'rare',
+    prices: { usd: '5.00' },
+  }),
+  makeCard({
+    id: '3',
+    name: 'Gamma',
+    cmc: 3,
+    colors: ['R', 'G'],
+    type_line: 'Sorcery',
+    rarity: 'mythic',
+    prices: { usd: '15.00' },
+  }),
+  makeCard({
+    id: '4',
+    name: 'Delta',
+    cmc: 0,
+    colors: [],
+    type_line: 'Artifact',
+    rarity: 'uncommon',
+    prices: { usd: '2.00' },
+  }),
 ];
 
 function renderFilters(cards = defaultCards) {
@@ -77,7 +109,8 @@ describe('SearchFilters', () => {
   it('calls onFilteredCards with all cards when no filters active', () => {
     const { onFilteredCards } = renderFilters();
     expect(onFilteredCards).toHaveBeenCalled();
-    const [filteredCards, hasActive] = onFilteredCards.mock.calls[onFilteredCards.mock.calls.length - 1];
+    const [filteredCards, hasActive] =
+      onFilteredCards.mock.calls[onFilteredCards.mock.calls.length - 1];
     expect(filteredCards).toHaveLength(4);
     expect(hasActive).toBe(false);
   });
@@ -126,10 +159,13 @@ describe('SearchFilters', () => {
     fireEvent.click(screen.getByRole('button', { name: /filter/i }));
     fireEvent.click(screen.getByTitle('Blue'));
 
-    const lastCall = onFilteredCards.mock.calls[onFilteredCards.mock.calls.length - 1];
+    const lastCall =
+      onFilteredCards.mock.calls[onFilteredCards.mock.calls.length - 1];
     const [filteredCards, hasActive] = lastCall;
     expect(hasActive).toBe(true);
-    expect(filteredCards.every((c: ScryfallCard) => c.colors?.includes('U'))).toBe(true);
+    expect(
+      filteredCards.every((c: ScryfallCard) => c.colors?.includes('U')),
+    ).toBe(true);
   });
 
   it('filters cards by type', () => {
@@ -137,9 +173,14 @@ describe('SearchFilters', () => {
     fireEvent.click(screen.getByRole('button', { name: /filter/i }));
     fireEvent.click(screen.getByText('Instant'));
 
-    const lastCall = onFilteredCards.mock.calls[onFilteredCards.mock.calls.length - 1];
+    const lastCall =
+      onFilteredCards.mock.calls[onFilteredCards.mock.calls.length - 1];
     const [filteredCards] = lastCall;
-    expect(filteredCards.every((c: ScryfallCard) => c.type_line.toLowerCase().includes('instant'))).toBe(true);
+    expect(
+      filteredCards.every((c: ScryfallCard) =>
+        c.type_line.toLowerCase().includes('instant'),
+      ),
+    ).toBe(true);
   });
 
   it('shows active filter count badge', () => {
@@ -164,7 +205,8 @@ describe('SearchFilters', () => {
     fireEvent.click(screen.getByTitle('White'));
     fireEvent.click(screen.getByText('Clear all filters'));
 
-    const lastCall = onFilteredCards.mock.calls[onFilteredCards.mock.calls.length - 1];
+    const lastCall =
+      onFilteredCards.mock.calls[onFilteredCards.mock.calls.length - 1];
     const [filteredCards, hasActive] = lastCall;
     expect(hasActive).toBe(false);
     expect(filteredCards).toHaveLength(4);
@@ -194,9 +236,46 @@ describe('SearchFilters', () => {
 
   it('sorts cards by default name A-Z', () => {
     const { onFilteredCards } = renderFilters();
-    const lastCall = onFilteredCards.mock.calls[onFilteredCards.mock.calls.length - 1];
+    const lastCall =
+      onFilteredCards.mock.calls[onFilteredCards.mock.calls.length - 1];
     const [filteredCards] = lastCall;
     const names = filteredCards.map((c: ScryfallCard) => c.name);
     expect(names).toEqual(['Alpha', 'Beta', 'Delta', 'Gamma']);
+  });
+
+  it('uses semantic token classes on key wrappers and controls', () => {
+    renderFilters();
+
+    const filterButton = screen.getByRole('button', { name: /filter/i });
+    expect(filterButton.className).toContain('bg-background');
+    expect(filterButton.className).toContain('border-border');
+
+    fireEvent.click(filterButton);
+
+    const popoverSurface = document.querySelector('.bg-popover.border-border');
+    expect(popoverSurface).toBeInTheDocument();
+
+    const manaValueLabel = screen.getByText('Mana Value');
+    expect(manaValueLabel.className).toContain('text-muted-foreground');
+
+    const cardTypeButton = screen.getByRole('button', { name: 'Artifact' });
+    expect(cardTypeButton.className).toContain('border-border');
+    expect(cardTypeButton.className).toContain('text-muted-foreground');
+    expect(cardTypeButton.className).toContain('hover:text-foreground');
+  });
+
+  it('prevents raw palette classes on primary filter controls', () => {
+    renderFilters();
+
+    const filterButton = screen.getByRole('button', { name: /filter/i });
+    const sortTrigger = screen.getByRole('combobox');
+
+    fireEvent.click(filterButton);
+    const cardTypeButton = screen.getByRole('button', { name: 'Instant' });
+
+    for (const control of [filterButton, sortTrigger, cardTypeButton]) {
+      expect(control.className).not.toContain('text-white');
+      expect(control.className).not.toContain('bg-black');
+    }
   });
 });
