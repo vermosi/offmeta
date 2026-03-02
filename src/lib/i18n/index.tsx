@@ -85,34 +85,35 @@ interface I18nProviderProps {
  */
 export function I18nProvider({ children }: I18nProviderProps) {
   const [locale, setLocaleState] = useState<SupportedLocale>(getInitialLocale);
-  const [dictionary, setDictionary] = useState<TranslationDictionary>(
-    () => loadedDictionaries[getInitialLocale()] ?? en,
-  );
+  const [asyncDict, setAsyncDict] = useState<TranslationDictionary | null>(null);
 
-  // Load the dictionary when locale changes
+  // Synchronously resolve the dictionary when it's already cached
+  const syncDict = useMemo(() => loadedDictionaries[locale] ?? null, [locale]);
+
+  // The active dictionary: prefer sync (cached), then async (loaded), then English fallback
+  const dictionary = syncDict ?? asyncDict ?? en;
+
+  // Only run the effect for async loading when no sync dictionary is available
   useEffect(() => {
-    const cached = loadedDictionaries[locale];
-    if (cached) {
-      // Only update if dictionary reference actually changed (avoids lint warning)
-      setDictionary((prev) => (prev === cached ? prev : cached));
-      return;
-    }
+    // If already cached synchronously, nothing to load
+    if (loadedDictionaries[locale]) return;
 
     const loader = LOCALE_LOADERS[locale];
     if (!loader) {
-      setDictionary(en);
+      setAsyncDict(en);
       return;
     }
 
     let cancelled = false;
+    setAsyncDict(null); // reset while loading
     loader()
       .then((mod) => {
         const dict = mod.default;
         loadedDictionaries[locale] = dict;
-        if (!cancelled) setDictionary(dict);
+        if (!cancelled) setAsyncDict(dict);
       })
       .catch(() => {
-        if (!cancelled) setDictionary(en);
+        if (!cancelled) setAsyncDict(en);
       });
 
     return () => {
