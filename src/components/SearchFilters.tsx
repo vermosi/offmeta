@@ -25,6 +25,12 @@ import { cn } from '@/lib/core/utils';
 import { Filter, ArrowUpDown, X, ChevronDown, Package } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { useAuth } from '@/hooks/useAuth';
+import { useSearchFilterState } from '@/components/SearchFilters/useSearchFilterState';
+import {
+  applyCardFilters,
+  countActiveFilters,
+  hasActiveFilters as getHasActiveFilters,
+} from '@/components/SearchFilters/filtering';
 
 // Color definitions with mana symbols
 const COLORS = [
@@ -82,15 +88,6 @@ const SORT_OPTIONS = [
   { value: 'edhrec-asc', labelKey: 'filters.sortEdhrecAsc' },
   { value: 'edhrec-desc', labelKey: 'filters.sortEdhrecDesc' },
 ] as const;
-
-const RARITY_ORDER = {
-  common: 0,
-  uncommon: 1,
-  rare: 2,
-  mythic: 3,
-  special: 4,
-  bonus: 5,
-};
 
 interface SearchFiltersProps {
   cards: ScryfallCard[];
