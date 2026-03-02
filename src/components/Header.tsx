@@ -93,8 +93,7 @@ export function Header() {
     { label: t('header.about'), href: '/about' },
   ];
 
-  /* All links for mobile menu (flat list) */
-  const ALL_LINKS = [...DECK_LINKS, ...DISCOVER_LINKS, ...LEARN_LINKS];
+  /* Link groups used in the mobile menu */
 
   // Fetch saved search count for badge; reset to 0 on logout
   useEffect(() => {
@@ -130,18 +129,6 @@ export function Header() {
     };
   }, [mobileMenuOpen]);
 
-  const handleNavClick = (href: string) => {
-    setMobileMenuOpen(false);
-    if (href.startsWith('#')) {
-      const id = href.slice(1);
-      if (location.pathname === '/') {
-        const el = document.getElementById(id);
-        el?.scrollIntoView({ behavior: 'smooth' });
-      } else {
-        navigate('/' + href);
-      }
-    }
-  };
 
   // Focus trap for mobile menu
   useFocusTrap(mobileMenuRef, mobileMenuOpen);
