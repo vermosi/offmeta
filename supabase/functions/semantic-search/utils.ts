@@ -20,19 +20,45 @@ export async function fetchWithTimeout(
   }
 }
 
+interface FetchWithRetryOptions {
+  retries?: number;
+  timeoutMs?: number;
+  deadlineMs?: number;
+}
+
 export async function fetchWithRetry(
   url: string,
   init: RequestInit = {},
-  retries = MAX_FETCH_RETRIES,
+  options: FetchWithRetryOptions = {},
 ): Promise<Response> {
+  const retries = options.retries ?? MAX_FETCH_RETRIES;
+  const timeoutMs = options.timeoutMs ?? FETCH_TIMEOUT_MS;
+  const deadlineMs = options.deadlineMs;
+
   let attempt = 0;
   let lastError: Error | undefined;
 
   while (attempt <= retries) {
+    const now = Date.now();
+    if (deadlineMs !== undefined && now >= deadlineMs) {
+      throw new Error('Request budget exceeded');
+    }
+
+    const remainingBudget =
+      deadlineMs !== undefined ? Math.max(deadlineMs - now, 1) : undefined;
+    const requestTimeoutMs =
+      remainingBudget !== undefined
+        ? Math.min(timeoutMs, remainingBudget)
+        : timeoutMs;
+
     try {
-      const response = await fetchWithTimeout(url, init);
+      const response = await fetchWithTimeout(url, init, requestTimeoutMs);
       if (RETRYABLE_STATUS.has(response.status) && attempt < retries) {
-        await sleep(400 * (attempt + 1));
+        const backoffMs = 400 * (attempt + 1);
+        if (deadlineMs !== undefined && Date.now() + backoffMs >= deadlineMs) {
+          return response;
+        }
+        await sleep(backoffMs);
         attempt += 1;
         continue;
       }
@@ -42,7 +68,13 @@ export async function fetchWithRetry(
       if (attempt >= retries) {
         throw lastError;
       }
-      await sleep(400 * (attempt + 1));
+
+      const backoffMs = 400 * (attempt + 1);
+      if (deadlineMs !== undefined && Date.now() + backoffMs >= deadlineMs) {
+        throw lastError;
+      }
+
+      await sleep(backoffMs);
       attempt += 1;
     }
   }
