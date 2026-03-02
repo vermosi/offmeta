@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import AxeBuilder from '@axe-core/playwright';
+import { runAxeAudit } from '@/tests/e2e/axe-helpers';
 
 async function openFirstPublicDeck(page: Page) {
   await page.goto('/decks');
@@ -50,28 +50,13 @@ test.describe('Deck page hydration', () => {
 
   test('public deck view has no critical or serious accessibility violations @a11y', async ({
     page,
-  }) => {
+  }, testInfo) => {
     await openFirstPublicDeck(page);
 
-    const results = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-      .analyze();
+    const { blockingViolations } = await runAxeAudit(page, testInfo, {
+      context: 'public-deck-view',
+    });
 
-    const criticalOrSerious = results.violations.filter(
-      (v) => v.impact === 'critical' || v.impact === 'serious',
-    );
-
-    if (criticalOrSerious.length > 0) {
-      const summary = criticalOrSerious
-        .map(
-          (v) =>
-            `[${v.impact}] ${v.id}: ${v.description} (${v.nodes.length} nodes)`,
-        )
-        .join('\n');
-      // eslint-disable-next-line no-console
-      console.error('Deck view accessibility violations:\n' + summary);
-    }
-
-    expect(criticalOrSerious).toHaveLength(0);
+    expect(blockingViolations).toHaveLength(0);
   });
 });
