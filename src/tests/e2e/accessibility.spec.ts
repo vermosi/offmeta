@@ -59,4 +59,17 @@ test.describe('Accessibility Audits @a11y', () => {
 
     expect(blockingViolations).toHaveLength(0);
   });
+
+  test('deckbuilder primary view has no critical or serious violations', async ({
+    page,
+  }, testInfo) => {
+    await page.goto('/deckbuilder');
+    await page.waitForLoadState('networkidle');
+
+    const { blockingViolations } = await runAxeAudit(page, testInfo, {
+      context: 'deckbuilder-primary',
+    });
+
+    expect(blockingViolations).toHaveLength(0);
+  });
 });
