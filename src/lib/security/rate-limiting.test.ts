@@ -11,6 +11,11 @@ import {
   expectRateLimited,
   SECURITY_LIMITS,
 } from './index';
+import {
+  checkRateLimit,
+  cleanupRateLimiter,
+  resolveRateLimitKey,
+} from '../../../supabase/functions/_shared/rateLimit.ts';
 
 // ============================================================================
 // IP Extraction and Spoofing Prevention Tests
@@ -55,7 +60,7 @@ describe('Security: IP Extraction and Spoofing Prevention', () => {
 
   it('uses default IP when no headers present', () => {
     const headers = { get: () => null };
-    
+
     const ip = extractClientIP(headers, '127.0.0.1');
     expect(ip).toBe('127.0.0.1');
   });
@@ -102,7 +107,7 @@ describe('Security: Rate Limit Enforcement', () => {
 
   it('allows requests under the limit', () => {
     const ip = '10.0.0.1';
-    
+
     for (let i = 0; i < SECURITY_LIMITS.IP_RATE_LIMIT - 1; i++) {
       const result = rateLimiter.check(ip);
       expect(result.allowed).toBe(true);
@@ -111,7 +116,7 @@ describe('Security: Rate Limit Enforcement', () => {
 
   it('blocks requests at the limit', () => {
     const ip = '10.0.0.2';
-    
+
     // Exhaust the limit
     for (let i = 0; i < SECURITY_LIMITS.IP_RATE_LIMIT; i++) {
       rateLimiter.check(ip);
@@ -125,7 +130,7 @@ describe('Security: Rate Limit Enforcement', () => {
 
   it('returns appropriate retryAfter value', () => {
     const ip = '10.0.0.3';
-    
+
     // Exhaust the limit
     for (let i = 0; i < SECURITY_LIMITS.IP_RATE_LIMIT; i++) {
       rateLimiter.check(ip);
@@ -140,7 +145,7 @@ describe('Security: Rate Limit Enforcement', () => {
   it('tracks different IPs independently', () => {
     const ip1 = '10.0.0.10';
     const ip2 = '10.0.0.11';
-    
+
     // Exhaust limit for ip1
     for (let i = 0; i < SECURITY_LIMITS.IP_RATE_LIMIT; i++) {
       rateLimiter.check(ip1);
@@ -148,14 +153,14 @@ describe('Security: Rate Limit Enforcement', () => {
 
     // ip1 should be blocked
     expect(rateLimiter.check(ip1).allowed).toBe(false);
-    
+
     // ip2 should still be allowed
     expect(rateLimiter.check(ip2).allowed).toBe(true);
   });
 
   it('resets after clearing', () => {
     const ip = '10.0.0.20';
-    
+
     // Make some requests
     for (let i = 0; i < 10; i++) {
       rateLimiter.check(ip);
@@ -187,7 +192,7 @@ describe('Security: Session Rate Limiting', () => {
 
   it('enforces per-session limits', () => {
     const sessionId = 'session-123';
-    
+
     // Exhaust session limit
     for (let i = 0; i < SECURITY_LIMITS.SESSION_RATE_LIMIT; i++) {
       sessionLimiter.check(sessionId);
@@ -205,7 +210,7 @@ describe('Security: Session Rate Limiting', () => {
     );
 
     const ip = '10.0.0.100';
-    
+
     // Simulate requests with rotating sessions but same IP
     for (let i = 0; i < SECURITY_LIMITS.IP_RATE_LIMIT; i++) {
       ipLimiter.check(ip);
@@ -230,7 +235,7 @@ describe('Security: Burst Attack Prevention', () => {
   it('handles rapid sequential requests', () => {
     const rateLimiter = createMockRateLimiter(30, 60000);
     const ip = '10.0.0.50';
-    
+
     // Simulate burst of 50 requests
     const results: boolean[] = [];
     for (let i = 0; i < 50; i++) {
@@ -247,7 +252,7 @@ describe('Security: Burst Attack Prevention', () => {
   it('counts all requests in burst atomically', () => {
     const rateLimiter = createMockRateLimiter(10, 60000);
     const ip = '10.0.0.51';
-    
+
     // Make exactly limit requests
     for (let i = 0; i < 10; i++) {
       const result = rateLimiter.check(ip);
@@ -278,8 +283,11 @@ describe('Security: Distributed Attack Prevention', () => {
     }
 
     // Simulate requests from many different IPs
-    const ips = Array.from({ length: 150 }, (_, i) => `10.0.${Math.floor(i / 256)}.${i % 256}`);
-    
+    const ips = Array.from(
+      { length: 150 },
+      (_, i) => `10.0.${Math.floor(i / 256)}.${i % 256}`,
+    );
+
     let allowed = 0;
     let blocked = 0;
 
@@ -321,7 +329,7 @@ describe('Security: Distributed Attack Prevention', () => {
     }
 
     const now = Date.now();
-    
+
     // Simulate coordinated attack from 10 IPs
     for (let i = 0; i < 10; i++) {
       recordRequest(`10.0.0.${i}`, now);
@@ -367,7 +375,7 @@ describe('Security: Rate Limit Timing', () => {
     }
 
     const result = rateLimiter.check(ip);
-    
+
     expect(result.allowed).toBe(false);
     expect(result.retryAfter).toBeDefined();
     expect(result.retryAfter).toBeGreaterThan(0);
@@ -402,7 +410,7 @@ describe('Security: Custom Rate Limit Configuration', () => {
     }
 
     const result = rateLimiter.check(ip);
-    
+
     // retryAfter should be based on custom window
     expect(result.retryAfter).toBeDefined();
     expect(result.retryAfter).toBeLessThanOrEqual(30);
@@ -425,5 +433,96 @@ describe('Security: Custom Rate Limit Configuration', () => {
       searchLimiter.check(ip);
     }
     expect(searchLimiter.check(ip).allowed).toBe(true);
+  });
+});
+
+describe('Security: Trusted IP source and fail-closed behavior', () => {
+  beforeEach(() => {
+    cleanupRateLimiter();
+  });
+
+  it('uses trusted platform IP header even when x-forwarded-for rotates', async () => {
+    const trustedHeaders = {
+      'cf-connecting-ip': '203.0.113.10',
+      'x-forwarded-for': '198.51.100.1, 198.51.100.2',
+      authorization: 'Bearer test-token',
+    };
+
+    const firstKey = await resolveRateLimitKey(
+      new Request('https://example.test', { headers: trustedHeaders }),
+    );
+    const secondKey = await resolveRateLimitKey(
+      new Request('https://example.test', {
+        headers: {
+          ...trustedHeaders,
+          'x-forwarded-for': '198.51.100.200, 198.51.100.201',
+        },
+      }),
+    );
+
+    expect(firstKey).toBe('ip:203.0.113.10');
+    expect(secondKey).toBe('ip:203.0.113.10');
+  });
+
+  it('maps malformed platform IPs to constrained unknown bucket and still rate limits', async () => {
+    const malformedRequest = new Request('https://example.test', {
+      headers: {
+        'cf-connecting-ip': 'not-an-ip',
+      },
+    });
+
+    const bucketKey = await resolveRateLimitKey(malformedRequest);
+    expect(bucketKey).toBe('constrained:unknown');
+
+    const first = await checkRateLimit(bucketKey, undefined, 1, 1000, 60000);
+    const second = await checkRateLimit(bucketKey, undefined, 1, 1000, 60000);
+
+    expect(first.allowed).toBe(true);
+    expect(second.allowed).toBe(false);
+    expect(second.statusCode).toBe(429);
+  });
+
+  it('prevents x-forwarded-for rotation bypass when trusted platform IP is stable', async () => {
+    for (let i = 0; i < 3; i++) {
+      const req = new Request('https://example.test', {
+        headers: {
+          'cf-connecting-ip': '203.0.113.55',
+          'x-forwarded-for': `198.51.100.${i}, 198.51.100.${i + 10}`,
+        },
+      });
+
+      const key = await resolveRateLimitKey(req);
+      const result = await checkRateLimit(key, undefined, 2, 1000, 60000);
+
+      if (i < 2) {
+        expect(result.allowed).toBe(true);
+      } else {
+        expect(result.allowed).toBe(false);
+        expect(result.statusCode).toBe(429);
+      }
+    }
+  });
+  it('fails closed with 503 when limiter backend catastrophically fails', async () => {
+    const brokenSupabase = {
+      rpc: async () => {
+        throw new Error('database unavailable');
+      },
+      from: () => {
+        throw new Error('unreachable');
+      },
+    };
+
+    const result = await checkRateLimit(
+      'ip:203.0.113.99',
+      brokenSupabase,
+      10,
+      200,
+      60000,
+      { failOpen: false },
+    );
+
+    expect(result.allowed).toBe(false);
+    expect(result.statusCode).toBe(503);
+    expect(result.retryAfter).toBe(1);
   });
 });

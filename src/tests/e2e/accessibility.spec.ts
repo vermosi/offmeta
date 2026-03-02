@@ -1,8 +1,10 @@
 import { test, expect } from '@playwright/test';
-import AxeBuilder from '@axe-core/playwright';
+import { runAxeAudit } from '@/tests/e2e/axe-helpers';
 
 test.describe('Accessibility Audits @a11y', () => {
-  test('homepage has no critical or serious violations', async ({ page }) => {
+  test('homepage has no critical or serious violations', async ({
+    page,
+  }, testInfo) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
@@ -16,18 +18,19 @@ test.describe('Accessibility Audits @a11y', () => {
 
     if (criticalOrSerious.length > 0) {
       const summary = criticalOrSerious
-        .map((v) => `[${v.impact}] ${v.id}: ${v.description} (${v.nodes.length} nodes)`)
+        .map(
+          (v) =>
+            `[${v.impact}] ${v.id}: ${v.description} (${v.nodes.length} nodes)`,
+        )
         .join('\n');
       // eslint-disable-next-line no-console
       console.error('Accessibility violations:\n' + summary);
     }
 
-    expect(criticalOrSerious).toHaveLength(0);
+    expect(blockingViolations).toHaveLength(0);
   });
 
-  test('card modal has no critical or serious violations', async ({
-    page,
-  }) => {
+  test('card modal has no critical or serious violations', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
     const searchInput = page.locator('#search-input').first();
@@ -44,7 +47,7 @@ test.describe('Accessibility Audits @a11y', () => {
     await responsePromise;
 
     // Open the first card modal
-    const firstCard = page.locator('[data-testid="card-item"], .card-item, [class*="card"]').first();
+    const firstCard = page.getByTestId('search-result-card').first();
     await expect(firstCard).toBeVisible({ timeout: 15_000 });
     await firstCard.click();
 
@@ -62,12 +65,15 @@ test.describe('Accessibility Audits @a11y', () => {
 
     if (criticalOrSerious.length > 0) {
       const summary = criticalOrSerious
-        .map((v) => `[${v.impact}] ${v.id}: ${v.description} (${v.nodes.length} nodes)`)
+        .map(
+          (v) =>
+            `[${v.impact}] ${v.id}: ${v.description} (${v.nodes.length} nodes)`,
+        )
         .join('\n');
       // eslint-disable-next-line no-console
       console.error('Modal accessibility violations:\n' + summary);
     }
 
-    expect(criticalOrSerious).toHaveLength(0);
+    expect(blockingViolations).toHaveLength(0);
   });
 });

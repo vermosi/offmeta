@@ -5,14 +5,25 @@ on:
     branches: ['main']
   pull_request:
   schedule:
-    - cron: '0 3 * * *'   # nightly — e2e + a11y
-    - cron: '0 6 * * 1'   # weekly — live Scryfall validation
+    - cron: '0 3 * * *' # nightly — e2e + a11y
+    - cron: '0 6 * * 1' # weekly — live Scryfall validation
   workflow_dispatch:
+    inputs:
+      run_e2e:
+        description: 'Run E2E tests (default: true)'
+        required: false
+        default: true
+        type: boolean
+      run_a11y:
+        description: 'Run accessibility tests (default: true)'
+        required: false
+        default: true
+        type: boolean
 
 # Cancel in-progress runs for the same branch/PR
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: false  # TODO: re-enable once Playwright browser cache is seeded
+  cancel-in-progress: false # TODO: re-enable once Playwright browser cache is seeded
 
 jobs:
   # ─── Shared setup ───────────────────────────────────────────────────
@@ -145,8 +156,12 @@ jobs:
             fi
           fi
 
-  # ─── E2E tests (nightly + on-demand) ───────────────────────────────
+  # ─── E2E tests (nightly + manual + PR opt-in label) ────────────────
   e2e:
+    if: |
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' && inputs.run_e2e) ||
+      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ci:e2e'))
     needs: install
     runs-on: ubuntu-latest
     steps:
@@ -187,8 +202,12 @@ jobs:
           path: test-results
           retention-days: 7
 
-  # ─── Accessibility tests (nightly) ──────────────────────────────────
+  # ─── Accessibility tests (nightly + manual + PR opt-in label) ──────
   a11y:
+    if: |
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' && inputs.run_a11y) ||
+      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ci:a11y'))
     needs: install
     runs-on: ubuntu-latest
     steps:

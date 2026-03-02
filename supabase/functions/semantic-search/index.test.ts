@@ -43,12 +43,14 @@ interface TranslationResponse {
 async function callSemanticSearch(
   query: string,
   filters?: Record<string, unknown>,
+  headers: Record<string, string> = {},
 ): Promise<TranslationResponse> {
   const response = await fetch(FUNCTION_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      ...headers,
     },
     body: JSON.stringify({ query, filters, useCache: false }),
   });
@@ -63,29 +65,65 @@ async function callSemanticSearch(
   return data as TranslationResponse;
 }
 
-async function callSemanticSearchWithBudget(
-  query: string,
-  remainingBudgetMs: number,
-): Promise<TranslationResponse & { budgetExceededAtStage?: string }> {
-  const requestStart = Date.now();
-  const response = await fetch(FUNCTION_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      'x-request-start': String(requestStart),
-      'x-deadline-ms': String(requestStart + remainingBudgetMs),
-    },
-    body: JSON.stringify({ query, useCache: false }),
-  });
+Deno.test(
+  'returns budget fallback when request budget is already exceeded',
+  async () => {
+    const result = await callSemanticSearch(
+      'show me cards that make treasure whenever you cast an instant or sorcery',
+      undefined,
+      {
+        'x-request-start': String(Date.now() - 10_000),
+        'x-deadline-ms': String(Date.now() - 1),
+      },
+    );
 
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(`API error ${response.status}: ${JSON.stringify(data)}`);
-  }
+    assertEquals(result.success, true);
+    assertEquals(result.fallback, true);
+    assertEquals(result.source, 'budget_fallback');
+  },
+);
 
-  return data as TranslationResponse & { budgetExceededAtStage?: string };
-}
+Deno.test(
+  'runs normal AI translation path when request budget is available',
+  async () => {
+    const now = Date.now();
+    const result = await callSemanticSearch(
+      'cards that reward sacrificing creatures for value and card draw',
+      undefined,
+      {
+        'x-request-start': String(now),
+        'x-deadline-ms': String(now + 30_000),
+      },
+    );
+
+    assertEquals(result.success, true);
+    assertEquals(
+      Boolean(result.scryfallQuery && result.scryfallQuery.length > 0),
+      true,
+    );
+    assertEquals(result.source !== 'budget_fallback', true);
+  },
+);
+
+Deno.test(
+  'AI translation flow does not throw ReferenceError with valid budget headers',
+  async () => {
+    const now = Date.now();
+    const result = await callSemanticSearch(
+      'cartas azules que compran cartas cuando lanzas hechizos',
+      undefined,
+      {
+        'x-request-start': String(now),
+        'x-deadline-ms': String(now + 30_000),
+      },
+    );
+
+    assertEquals(result.success, true);
+    assertEquals(result.source !== 'internal_error', true);
+    assertEquals(result.source !== 'budget_fallback', true);
+  },
+);
+
 // ============================================================
 // Core Translation Tests
 // ============================================================

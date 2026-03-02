@@ -1,8 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 const SEARCH_INPUT_SELECTOR = '#search-input';
-const CARD_SELECTOR =
-  '[data-testid="card-item"], .card-item, [class*="card"]';
+const CARD_SELECTOR = '[data-testid="search-result-card"]';
 
 /* ------------------------------------------------------------------ */
 /*  Example chip & search bar interactions                            */
@@ -52,9 +51,7 @@ test.describe('User Flows', () => {
     await expect(searchInput).toHaveValue('test query');
 
     // The clear (X) button appears when there is text
-    const clearButton = page.locator('button[aria-label]').filter({
-      has: page.locator('svg.lucide-x'),
-    });
+    const clearButton = page.getByTestId('search-clear-button');
     await expect(clearButton).toBeVisible({ timeout: 3_000 });
     await clearButton.click();
 
@@ -67,11 +64,19 @@ test.describe('User Flows', () => {
     await expect(searchInput).toBeVisible({ timeout: 15_000 });
 
     // The search submit button should be present
-    const searchButton = page.locator(
-      'button[aria-label*="search" i], button:has(svg.lucide-search)',
-    ).first();
+    const searchButton = page.getByTestId('search-submit-button');
     await expect(searchButton).toBeVisible();
     await expect(searchButton).toBeEnabled();
+  });
+
+  test('search help trigger opens the help modal', async ({ page }) => {
+    await page.goto('/');
+
+    const helpTrigger = page.getByTestId('search-help-trigger').first();
+    await expect(helpTrigger).toBeVisible({ timeout: 15_000 });
+    await helpTrigger.click();
+
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5_000 });
   });
 
   test('keyboard shortcut / focuses the search input', async ({ page }) => {
@@ -92,17 +97,15 @@ test.describe('User Flows', () => {
     await page.waitForLoadState('domcontentloaded');
 
     // Find the theme toggle button
-    const themeToggle = page.locator('button[aria-label*="theme" i]').first();
+    const themeToggle = page.getByTestId('theme-toggle');
 
     // Skip if not visible (may be hidden in mobile)
     if (await themeToggle.isVisible()) {
       const htmlBefore = await page.locator('html').getAttribute('class');
       await themeToggle.click();
-      await page.waitForTimeout(500);
-      const htmlAfter = await page.locator('html').getAttribute('class');
-
-      // The class should have changed (dark ↔ light)
-      expect(htmlAfter).not.toBe(htmlBefore);
+      await expect
+        .poll(async () => page.locator('html').getAttribute('class'))
+        .not.toBe(htmlBefore);
     }
   });
 
