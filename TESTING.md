@@ -27,21 +27,21 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) runs parallel jobs for 
       ├──► typecheck     (tsc --noEmit, every push/PR)
       ├──► test          (vitest + coverage thresholds, every push/PR)
       ├──► build         (vite build, every push/PR)
-      └──► bundle-size   (gzip check ≤500KB JS, every push/PR)
+       └──► bundle-size   (gzip check ≤500KB JS, every push/PR)
+       ├──► e2e            (Playwright search flow, every push/PR + nightly)
+       ├──► a11y           (axe accessibility audits, every push/PR + nightly)
 
-Scheduled / on-demand jobs:
-  ├──► e2e              (Playwright search flow, nightly + workflow_dispatch)
-  ├──► a11y             (axe accessibility audits, nightly + workflow_dispatch)
-  ├──► api-security     (edge function HTTP tests, workflow_dispatch only)
-  └──► live-scryfall    (syntax + otag validation, weekly Monday 06:00 UTC)
+On-demand jobs:
+   ├──► api-security     (edge function HTTP tests, workflow_dispatch only)
+   └──► live-scryfall    (syntax + otag validation, weekly Monday 06:00 UTC)
 ```
 
 ### Triggers
 
 | Trigger | Jobs |
 |---------|------|
-| `push` to `main` | lint, typecheck, test, build, bundle-size |
-| Pull request | lint, typecheck, test, build, bundle-size |
+| `push` to `main` | lint, typecheck, test, build, bundle-size, e2e, a11y |
+| Pull request | lint, typecheck, test, build, bundle-size, e2e, a11y |
 | Nightly (`0 3 * * *`) | e2e, a11y |
 | Weekly (`0 6 * * 1`) | live-scryfall-validation |
 | `workflow_dispatch` | All jobs available on-demand |
