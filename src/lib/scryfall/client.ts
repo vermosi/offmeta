@@ -28,7 +28,11 @@ interface SearchCacheEntry {
 
 const searchResultCache = new Map<string, SearchCacheEntry>();
 
-function makeSearchCacheKey(query: string, page: number, lang?: string): string {
+function makeSearchCacheKey(
+  query: string,
+  page: number,
+  lang?: string,
+): string {
   return `${lang ?? 'en'}::${page}::${query}`;
 }
 
@@ -126,7 +130,10 @@ async function processQueue(): Promise<void> {
 async function rateLimitedFetch(url: string): Promise<Response> {
   // Clean up any stale timed-out requests before checking size
   const now = Date.now();
-  while (requestQueue.length > 0 && now - requestQueue[0].timestamp > QUEUE_ITEM_TIMEOUT_MS) {
+  while (
+    requestQueue.length > 0 &&
+    now - requestQueue[0].timestamp > QUEUE_ITEM_TIMEOUT_MS
+  ) {
     const stale = requestQueue.shift();
     stale?.reject(new Error('Request timed out while waiting in queue'));
   }
@@ -140,13 +147,6 @@ async function rateLimitedFetch(url: string): Promise<Response> {
     requestQueue.push({ url, resolve, reject, timestamp: Date.now() });
     processQueue();
   });
-}
-
-async function fetchWithTimeout(
-  url: string,
-  timeoutMs: number,
-): Promise<Response> {
-  return fetchWithTimeoutWithInit(url, timeoutMs);
 }
 
 async function fetchWithTimeoutWithInit(
@@ -178,7 +178,11 @@ async function fetchWithRetry(
 
   while (attempt <= retries) {
     try {
-      const response = await fetchWithTimeoutWithInit(url, FETCH_TIMEOUT_MS, init);
+      const response = await fetchWithTimeoutWithInit(
+        url,
+        FETCH_TIMEOUT_MS,
+        init,
+      );
       if (
         !response.ok &&
         (response.status === 429 || response.status >= 500) &&
@@ -253,10 +257,14 @@ interface ScryfallCollectionResponse {
  * Fetch many cards by exact name using Scryfall's collection endpoint.
  * Uses chunking to respect Scryfall's 75 identifiers/request limit.
  */
-export async function getCardsByExactNames(names: string[]): Promise<ScryfallCard[]> {
+export async function getCardsByExactNames(
+  names: string[],
+): Promise<ScryfallCard[]> {
   if (names.length === 0) return [];
 
-  const uniqueNames = [...new Set(names.map((name) => name.trim()).filter(Boolean))];
+  const uniqueNames = [
+    ...new Set(names.map((name) => name.trim()).filter(Boolean)),
+  ];
   const chunks: string[][] = [];
 
   for (let i = 0; i < uniqueNames.length; i += 75) {
@@ -280,7 +288,7 @@ export async function getCardsByExactNames(names: string[]): Promise<ScryfallCar
       throw new Error(`Collection fetch failed: ${response.statusText}`);
     }
 
-    const result = await response.json() as ScryfallCollectionResponse;
+    const result = (await response.json()) as ScryfallCollectionResponse;
     cards.push(...result.data);
   }
 
@@ -387,17 +395,30 @@ export function isDoubleFacedCard(card: ScryfallCard): boolean {
  * @param faceIndex - Which face (0 = front, 1 = back)
  * @returns The face data or the card itself if single-faced
  */
-export function getCardFaceDetails(card: ScryfallCard, faceIndex: number = 0, locale: string = 'en') {
+export function getCardFaceDetails(
+  card: ScryfallCard,
+  faceIndex: number = 0,
+  locale: string = 'en',
+) {
   // Import-free localization: prefer printed_* fields for non-English
   const useLocalized = locale !== 'en';
 
   if (card.card_faces && card.card_faces[faceIndex]) {
     const face = card.card_faces[faceIndex];
     return {
-      name: (useLocalized && card.printed_name) ? card.printed_name.split(' // ')[faceIndex] || face.name : face.name,
+      name:
+        useLocalized && card.printed_name
+          ? card.printed_name.split(' // ')[faceIndex] || face.name
+          : face.name,
       mana_cost: face.mana_cost,
-      type_line: (useLocalized && card.printed_type_line) ? card.printed_type_line.split(' // ')[faceIndex] || face.type_line : face.type_line,
-      oracle_text: (useLocalized && card.printed_text) ? card.printed_text : face.oracle_text,
+      type_line:
+        useLocalized && card.printed_type_line
+          ? card.printed_type_line.split(' // ')[faceIndex] || face.type_line
+          : face.type_line,
+      oracle_text:
+        useLocalized && card.printed_text
+          ? card.printed_text
+          : face.oracle_text,
       power: face.power,
       toughness: face.toughness,
       flavor_text: face.flavor_text,
