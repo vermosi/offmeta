@@ -1,4 +1,3 @@
-// deno-lint-ignore-file no-explicit-any
 /**
  * Shared authentication and security utilities for Supabase Edge Functions
  */
@@ -17,22 +16,40 @@ declare const Deno: {
  * - A valid Supabase JWT (for authenticated users)
  * - Custom API secret (for internal integrations)
  */
-export function validateAuth(req: Request) {
+type AuthResult =
+  | { authorized: true; role: string }
+  | { authorized: false; error: string };
+
+export async function validateAuth(req: Request): Promise<AuthResult> {
   const authHeader = req.headers.get('Authorization');
-  
+
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   const apiSecret = Deno.env.get('OFFMETA_API_SECRET');
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
 
   // If no auth header is present, reject
   if (!authHeader) {
     return { authorized: false, error: 'Missing Authorization header' };
   }
 
-  const token = authHeader.replace('Bearer ', '');
+  if (!authHeader.startsWith('Bearer ')) {
+    return { authorized: false, error: 'Invalid Authorization token' };
+  }
 
-  // Allow service role key
+  const token = authHeader.slice('Bearer '.length).trim();
+  if (!token) {
+    return { authorized: false, error: 'Invalid Authorization token' };
+  }
+
+  // Allow machine auth tokens in controlled contexts.
   if (serviceRoleKey && token === serviceRoleKey) {
     return { authorized: true, role: 'service' };
+  }
+
+  // Allow explicit public anon key for unauthenticated end-user access.
+  if (supabaseAnonKey && token === supabaseAnonKey) {
+    return { authorized: true, role: 'anon' };
   }
 
   // Allow custom API secret
@@ -40,30 +57,31 @@ export function validateAuth(req: Request) {
     return { authorized: true, role: 'api' };
   }
 
-  // Allow valid Supabase JWTs (anon key or user tokens)
-  // Supabase anon/service keys have iss='supabase'
-  // Supabase user JWTs have iss='https://<project>.supabase.co/auth/v1'
-  // Both are valid — we accept any well-formed JWT with an exp and role
-  try {
-    const parts = token.split('.');
-    if (parts.length === 3) {
-      const payload = JSON.parse(atob(parts[1]));
-      const isSupabaseToken =
-        payload.iss === 'supabase' ||
-        (typeof payload.iss === 'string' && payload.iss.includes('supabase'));
-      if (isSupabaseToken && payload.exp) {
-        const now = Math.floor(Date.now() / 1000);
-        if (payload.exp > now) {
-          return { authorized: true, role: payload.role ?? 'authenticated' };
-        }
-        return { authorized: false, error: 'Token expired' };
-      }
-    }
-  } catch {
-    // Invalid JWT format, fall through to reject
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return { authorized: false, error: 'Auth verification unavailable' };
   }
 
-  return { authorized: false, error: 'Invalid Authorization token' };
+  try {
+    // @ts-expect-error: Deno esm.sh import
+    const { createClient } =
+      await import('https://esm.sh/@supabase/supabase-js@2');
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const {
+      data: { user },
+      error,
+    } = await userClient.auth.getUser(token);
+
+    if (error || !user) {
+      return { authorized: false, error: 'Invalid Authorization token' };
+    }
+
+    return { authorized: true, role: 'authenticated' };
+  } catch {
+    return { authorized: false, error: 'Invalid Authorization token' };
+  }
 }
 
 /**
@@ -71,9 +89,9 @@ export function validateAuth(req: Request) {
  */
 export function getCorsHeaders(req: Request) {
   const origin = req.headers.get('Origin');
-  const allowedOrigins = (Deno.env.get('ALLOWED_ORIGINS')?.split(',') || ['*']).map(
-    (o) => o.trim().replace(/\/+$/, ''),
-  );
+  const allowedOrigins = (
+    Deno.env.get('ALLOWED_ORIGINS')?.split(',') || ['*']
+  ).map((o) => o.trim().replace(/\/+$/, ''));
 
   let corsOrigin = '*';
   if (
@@ -138,7 +156,8 @@ export async function requireAdmin(
   }
 
   // @ts-expect-error: Deno esm.sh import
-  const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+  const { createClient } =
+    await import('https://esm.sh/@supabase/supabase-js@2');
 
   const userClient = createClient(supabaseUrl, supabaseAnonKey, {
     global: { headers: { Authorization: authHeader } },
@@ -170,7 +189,10 @@ export async function requireAdmin(
     return {
       authorized: false,
       response: new Response(
-        JSON.stringify({ error: 'Forbidden: admin role required', success: false }),
+        JSON.stringify({
+          error: 'Forbidden: admin role required',
+          success: false,
+        }),
         { status: 403, headers },
       ),
     };

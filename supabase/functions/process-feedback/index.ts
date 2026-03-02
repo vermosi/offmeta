@@ -27,7 +27,7 @@ serve(async (req) => {
   }
 
   // Authentication check - require valid token (anon key, service role, or JWT)
-  const { authorized, error: authError } = validateAuth(req);
+  const { authorized, error: authError } = await validateAuth(req);
   if (!authorized) {
     return new Response(
       JSON.stringify({ error: authError || 'Unauthorized', success: false }),
@@ -84,7 +84,8 @@ serve(async (req) => {
     }
 
     // Validate UUID format to prevent injection
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(feedbackId)) {
       return new Response(
         JSON.stringify({
@@ -236,7 +237,10 @@ serve(async (req) => {
       const stuckIds = stuckItems.map((s: { id: string }) => s.id);
       await supabase
         .from('search_feedback')
-        .update({ processing_status: 'failed', processed_at: new Date().toISOString() })
+        .update({
+          processing_status: 'failed',
+          processed_at: new Date().toISOString(),
+        })
         .in('id', stuckIds);
       console.log(`Reset ${stuckIds.length} stuck processing items to failed`);
     }
@@ -247,7 +251,10 @@ serve(async (req) => {
         console.error(`Safety timeout hit for feedback ${feedback.id}`);
         await supabase
           .from('search_feedback')
-          .update({ processing_status: 'failed', processed_at: new Date().toISOString() })
+          .update({
+            processing_status: 'failed',
+            processed_at: new Date().toISOString(),
+          })
           .eq('id', feedback.id)
           .eq('processing_status', 'processing');
       }, 25000);
@@ -512,21 +519,33 @@ Respond in this EXACT JSON format only (no other text):
 
             if (correctionResponse.ok) {
               const correctionData = await correctionResponse.json();
-              const correctionText = correctionData.choices?.[0]?.message?.content || '';
+              const correctionText =
+                correctionData.choices?.[0]?.message?.content || '';
               const jsonMatch = correctionText.match(/\{[\s\S]*\}/);
               if (jsonMatch) {
                 correctedRuleData = JSON.parse(jsonMatch[0]);
-                correctedRuleData.scryfall_syntax = normalizeTagAliases(correctedRuleData.scryfall_syntax);
-                console.log(`AI self-correction for feedback ${feedback.id}:`, correctedRuleData.scryfall_syntax);
+                correctedRuleData.scryfall_syntax = normalizeTagAliases(
+                  correctedRuleData.scryfall_syntax,
+                );
+                console.log(
+                  `AI self-correction for feedback ${feedback.id}:`,
+                  correctedRuleData.scryfall_syntax,
+                );
               }
             }
           } catch (correctionErr) {
-            console.error(`Self-correction AI call failed for feedback ${feedback.id}:`, correctionErr);
+            console.error(
+              `Self-correction AI call failed for feedback ${feedback.id}:`,
+              correctionErr,
+            );
           }
 
           // Validate the corrected syntax against Scryfall
           let correctionOk = false;
-          if (correctedRuleData?.scryfall_syntax && correctedRuleData.confidence >= 0.5) {
+          if (
+            correctedRuleData?.scryfall_syntax &&
+            correctedRuleData.confidence >= 0.5
+          ) {
             try {
               const correctionValidationUrl = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(
                 correctedRuleData.scryfall_syntax,
@@ -547,14 +566,21 @@ Respond in this EXACT JSON format only (no other text):
                     `"${ruleData.scryfall_syntax}" returned ${scryfallTotalCards} cards`,
                   );
                 } else {
-                  console.error(`Self-correction also returned 0 results for feedback ${feedback.id}`);
+                  console.error(
+                    `Self-correction also returned 0 results for feedback ${feedback.id}`,
+                  );
                 }
               } else {
                 await correctionResp.text();
-                console.error(`Self-correction Scryfall returned ${correctionResp.status} for feedback ${feedback.id}`);
+                console.error(
+                  `Self-correction Scryfall returned ${correctionResp.status} for feedback ${feedback.id}`,
+                );
               }
             } catch (correctionFetchErr) {
-              console.warn(`Self-correction validation network error for feedback ${feedback.id}:`, correctionFetchErr);
+              console.warn(
+                `Self-correction validation network error for feedback ${feedback.id}:`,
+                correctionFetchErr,
+              );
             }
           }
 
@@ -578,7 +604,6 @@ Respond in this EXACT JSON format only (no other text):
           // Self-correction succeeded — fall through with promoted ruleData
           scryfallOk = true;
         }
-
 
         console.log(
           `Scryfall validation PASSED for feedback ${feedback.id}:`,

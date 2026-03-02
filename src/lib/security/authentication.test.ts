@@ -5,11 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  buildInvalidToken,
-  createMockJWT,
-  buildMockRequest,
-} from './index';
+import { buildInvalidToken, createMockJWT, buildMockRequest } from './index';
 
 // ============================================================================
 // JWT Validation Tests
@@ -66,21 +62,21 @@ describe('Security: JWT Token Validation', () => {
 
   it('rejects requests without Authorization header', () => {
     const result = validateAuth(null);
-    
+
     expect(result.authorized).toBe(false);
     expect(result.error).toBe('Missing Authorization header');
   });
 
   it('rejects empty Authorization header', () => {
     const result = validateAuth('');
-    
+
     expect(result.authorized).toBe(false);
   });
 
   it('rejects malformed JWT tokens', () => {
     const malformedToken = buildInvalidToken('malformed');
     const result = validateAuth(`Bearer ${malformedToken}`);
-    
+
     expect(result.authorized).toBe(false);
     expect(result.error).toContain('Invalid');
   });
@@ -88,7 +84,7 @@ describe('Security: JWT Token Validation', () => {
   it('rejects expired tokens', () => {
     const expiredToken = buildInvalidToken('expired');
     const result = validateAuth(`Bearer ${expiredToken}`);
-    
+
     expect(result.authorized).toBe(false);
     expect(result.error).toBe('Token expired');
   });
@@ -96,14 +92,14 @@ describe('Security: JWT Token Validation', () => {
   it('rejects tokens with missing claims', () => {
     const tokenMissingClaims = buildInvalidToken('missing_claims');
     const result = validateAuth(`Bearer ${tokenMissingClaims}`);
-    
+
     expect(result.authorized).toBe(false);
   });
 
   it('rejects tokens with wrong issuer', () => {
     const wrongIssuerToken = buildInvalidToken('wrong_issuer');
     const result = validateAuth(`Bearer ${wrongIssuerToken}`);
-    
+
     expect(result.authorized).toBe(false);
     expect(result.error).toBe('Invalid issuer');
   });
@@ -116,9 +112,9 @@ describe('Security: JWT Token Validation', () => {
       exp: now + 3600,
       iat: now,
     });
-    
+
     const result = validateAuth(`Bearer ${validToken}`);
-    
+
     expect(result.authorized).toBe(true);
     expect(result.role).toBe('anon');
   });
@@ -131,9 +127,9 @@ describe('Security: JWT Token Validation', () => {
       exp: now + 3600,
       iat: now,
     });
-    
+
     const result = validateAuth(`Bearer ${serviceToken}`);
-    
+
     expect(result.authorized).toBe(true);
     expect(result.role).toBe('service_role');
   });
@@ -146,11 +142,11 @@ describe('Security: JWT Token Validation', () => {
       exp: now + 3600,
       iat: now,
     });
-    
+
     // Token without Bearer prefix - validateAuth still strips "Bearer "
     // so direct token should work if the implementation handles it
     const result = validateAuth(validToken);
-    
+
     // Depends on implementation - ours strips "Bearer " which handles this case
     expect(result).toBeDefined();
   });
@@ -164,7 +160,7 @@ describe('Security: Token Replay Prevention', () => {
   it('tracks token usage for replay detection', () => {
     const usedTokens = new Set<string>();
     const now = Math.floor(Date.now() / 1000);
-    
+
     function checkReplay(tokenId: string): boolean {
       if (usedTokens.has(tokenId)) {
         return true; // Is a replay
@@ -183,14 +179,14 @@ describe('Security: Token Replay Prevention', () => {
 
     // First use - not a replay
     expect(checkReplay('unique-token-id-123')).toBe(false);
-    
+
     // Second use - is a replay
     expect(checkReplay('unique-token-id-123')).toBe(true);
   });
 
   it('allows different tokens from same session', () => {
     const usedTokens = new Set<string>();
-    
+
     function checkReplay(jti: string): boolean {
       if (usedTokens.has(jti)) return true;
       usedTokens.add(jti);
@@ -213,9 +209,9 @@ describe('Security: Role Escalation Prevention', () => {
     requiredRole: string,
   ): boolean {
     const roleHierarchy: Record<string, number> = {
-      'anon': 0,
-      'authenticated': 1,
-      'service_role': 2,
+      anon: 0,
+      authenticated: 1,
+      service_role: 2,
     };
 
     const userLevel = roleHierarchy[userRole] ?? -1;
@@ -253,14 +249,16 @@ describe('Security: Role Escalation Prevention', () => {
 
     // Attempt to modify the payload to escalate role
     const parts = anonToken.split('.');
-    const modifiedPayload = btoa(JSON.stringify({
-      iss: 'supabase',
-      role: 'service_role', // Attempted escalation
-      exp: now + 3600,
-    }));
+    const modifiedPayload = btoa(
+      JSON.stringify({
+        iss: 'supabase',
+        role: 'service_role', // Attempted escalation
+        exp: now + 3600,
+      }),
+    );
 
     const tamperedToken = `${parts[0]}.${modifiedPayload}.${parts[2]}`;
-    
+
     // In a real implementation, signature verification would fail
     // Here we verify the structure allows detection
     expect(tamperedToken).not.toBe(anonToken);
@@ -306,7 +304,7 @@ describe('Security: API Key Validation', () => {
     const similarKey = 'secret-api-key-12346';
 
     const validKeys = new Set([validKey]);
-    
+
     expect(validateApiKey(validKey, validKeys)).toBe(true);
     expect(validateApiKey(similarKey, validKeys)).toBe(false);
   });
@@ -320,7 +318,7 @@ describe('Security: Request Header Validation', () => {
   it('extracts authorization from correct header', () => {
     const request = buildMockRequest({
       headers: {
-        'authorization': 'Bearer test-token',
+        authorization: 'Bearer test-token',
         'content-type': 'application/json',
       },
     });
@@ -332,7 +330,7 @@ describe('Security: Request Header Validation', () => {
   it('header lookup uses the key as provided', () => {
     const request = buildMockRequest({
       headers: {
-        'authorization': 'Bearer test-token',
+        authorization: 'Bearer test-token',
       },
     });
 
@@ -344,14 +342,14 @@ describe('Security: Request Header Validation', () => {
     // Only one Authorization header should be used
     const request = buildMockRequest({
       headers: {
-        'authorization': 'Bearer primary-token',
+        authorization: 'Bearer primary-token',
         'x-custom-auth': 'secondary-token',
       },
     });
 
     const primaryAuth = request.headers.get('authorization');
     const secondaryAuth = request.headers.get('x-custom-auth');
-    
+
     expect(primaryAuth).toBe('Bearer primary-token');
     expect(secondaryAuth).toBe('secondary-token');
   });
@@ -373,22 +371,25 @@ describe('Security: Session Management', () => {
       expect(sessions.has(id)).toBe(false);
       sessions.add(id);
     }
-    
+
     expect(sessions.size).toBe(1000);
   });
 
   it('session IDs have sufficient entropy', () => {
     const sessionId = crypto.randomUUID();
-    
+
     // UUID v4 has 122 bits of randomness
     expect(sessionId.length).toBe(36); // Standard UUID format
-    expect(sessionId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+    expect(sessionId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    );
   });
 
   it('rejects predictable session IDs', () => {
     function isValidSessionId(id: string): boolean {
       // Must be UUID format
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (!uuidRegex.test(id)) return false;
 
       // Reject predictable patterns
@@ -397,12 +398,107 @@ describe('Security: Session Management', () => {
         '11111111-1111-1111-1111-111111111111',
         '12345678-1234-1234-1234-123456789012',
       ];
-      
+
       return !predictable.includes(id);
     }
 
-    expect(isValidSessionId('00000000-0000-0000-0000-000000000000')).toBe(false);
+    expect(isValidSessionId('00000000-0000-0000-0000-000000000000')).toBe(
+      false,
+    );
     expect(isValidSessionId('abc')).toBe(false);
     expect(isValidSessionId(crypto.randomUUID())).toBe(true);
+  });
+});
+
+// ============================================================================
+// Forged Payload Rejection Regression
+// ============================================================================
+
+describe('Security: Forged JWT payload regression', () => {
+  type AuthResult =
+    | { authorized: true; role: string }
+    | { authorized: false; error: string };
+
+  async function validateAuthWithVerifier(
+    authHeader: string | null,
+    verifyUserToken: (token: string) => Promise<{ id: string } | null>,
+    config: { serviceRoleKey?: string; apiSecret?: string; anonKey?: string },
+  ): Promise<AuthResult> {
+    if (!authHeader) {
+      return { authorized: false, error: 'Missing Authorization header' };
+    }
+
+    if (!authHeader.startsWith('Bearer ')) {
+      return { authorized: false, error: 'Invalid Authorization token' };
+    }
+
+    const token = authHeader.slice('Bearer '.length).trim();
+    if (!token) {
+      return { authorized: false, error: 'Invalid Authorization token' };
+    }
+
+    if (config.serviceRoleKey && token === config.serviceRoleKey) {
+      return { authorized: true, role: 'service' };
+    }
+
+    if (config.anonKey && token === config.anonKey) {
+      return { authorized: true, role: 'anon' };
+    }
+
+    if (config.apiSecret && token === config.apiSecret) {
+      return { authorized: true, role: 'api' };
+    }
+
+    const user = await verifyUserToken(token);
+    if (!user) {
+      return { authorized: false, error: 'Invalid Authorization token' };
+    }
+
+    return { authorized: true, role: 'authenticated' };
+  }
+
+  it('rejects forged JWT payload that would pass naive atob checks', async () => {
+    const now = Math.floor(Date.now() / 1000);
+    const forgedPayloadToken = createMockJWT({
+      iss: 'supabase',
+      role: 'service_role',
+      exp: now + 3600,
+      sub: 'attacker-user-id',
+    });
+
+    const result = await validateAuthWithVerifier(
+      `Bearer ${forgedPayloadToken}`,
+      async () => null,
+      {},
+    );
+
+    expect(result.authorized).toBe(false);
+    expect(result.error).toBe('Invalid Authorization token');
+  });
+
+  it('still allows explicit machine secret without JWT verification', async () => {
+    const apiSecret = 'test-machine-secret';
+
+    const result = await validateAuthWithVerifier(
+      `Bearer ${apiSecret}`,
+      async () => null,
+      { apiSecret },
+    );
+
+    expect(result.authorized).toBe(true);
+    expect(result.role).toBe('api');
+  });
+
+  it('allows explicit anon key for unauthenticated public usage', async () => {
+    const anonKey = 'test-anon-key';
+
+    const result = await validateAuthWithVerifier(
+      `Bearer ${anonKey}`,
+      async () => null,
+      { anonKey },
+    );
+
+    expect(result.authorized).toBe(true);
+    expect(result.role).toBe('anon');
   });
 });

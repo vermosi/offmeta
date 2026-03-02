@@ -56,6 +56,7 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
           size="sm"
           className="h-8 px-2 gap-1.5 text-xs rounded-full text-muted-foreground hover:text-foreground"
           aria-label="Search help"
+          data-testid="search-help-trigger"
         >
           <HelpCircle className="h-4 w-4" />
           <span className="hidden sm:inline">{t('help.label')}</span>
