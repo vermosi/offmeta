@@ -198,7 +198,7 @@ export default function SyntaxCheatSheet() {
             <p className="text-muted-foreground">
               {t('syntax.subtitle')}
             </p>
-            <div className="text-sm text-muted-foreground leading-relaxed space-y-2 border-b border-border/30 pb-6">
+            <div className="text-sm text-foreground/90 leading-relaxed space-y-2 border-b border-border/30 pb-6">
               <p>
                 Scryfall uses a powerful query language to filter the entire Magic: The Gathering
                 card database. Operators like <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">t:</code> (type),{' '}
@@ -259,7 +259,7 @@ export default function SyntaxCheatSheet() {
           </div>
 
           {/* Closing explanatory section — gives Googlebot substantive prose */}
-          <section className="space-y-3 border-t border-border/30 pt-6 text-sm text-muted-foreground leading-relaxed">
+          <section className="space-y-3 border-t border-border/30 pt-6 text-sm text-foreground/90 leading-relaxed">
             <h2 className="text-base font-semibold text-foreground">
               Why Use Natural Language Instead of Scryfall Syntax Directly?
             </h2>
