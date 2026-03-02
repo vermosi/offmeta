@@ -4,48 +4,238 @@ on:
   push:
     branches: ['main']
   pull_request:
+  schedule:
+    - cron: '0 3 * * *'   # nightly — e2e + a11y
+    - cron: '0 6 * * 1'   # weekly — live Scryfall validation
+  workflow_dispatch:
+
+# Cancel in-progress runs for the same branch/PR
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
+  # ─── Shared setup ───────────────────────────────────────────────────
+  install:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
-      - name: Install dependencies
-        run: npm install
-      - name: Lint
-        run: npm run lint
-      - name: Typecheck
-        run: npm run typecheck
-      - name: Test
+      - run: npm ci
+      - uses: actions/cache/save@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+  # ─── Parallel quality gates ─────────────────────────────────────────
+  lint:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - run: npm run lint
+
+  typecheck:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - run: npm run typecheck
+
+  test:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - name: Run tests with coverage
         run: npm run test -- --coverage
-      - name: Build
-        run: npm run build
-      - name: Upload coverage
+      - name: Upload coverage (lcov + json-summary)
         uses: actions/upload-artifact@v4
         with:
           name: coverage
           path: coverage
 
+  build:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+  # ─── Bundle size check ──────────────────────────────────────────────
+  bundle-size:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - name: Check bundle size
+        run: |
+          echo "## Bundle Size Report" >> $GITHUB_STEP_SUMMARY
+
+          # Total dist size
+          TOTAL_SIZE=$(du -sh dist | cut -f1)
+          echo "**Total dist size:** $TOTAL_SIZE" >> $GITHUB_STEP_SUMMARY
+
+          # JS assets gzipped size
+          JS_FILES=$(find dist/assets -name '*.js' 2>/dev/null || true)
+          if [ -n "$JS_FILES" ]; then
+            GZIP_SIZE=0
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| File | Raw | Gzipped |" >> $GITHUB_STEP_SUMMARY
+            echo "|------|-----|---------|" >> $GITHUB_STEP_SUMMARY
+            for f in $JS_FILES; do
+              RAW=$(wc -c < "$f")
+              GZ=$(gzip -c "$f" | wc -c)
+              RAW_KB=$((RAW / 1024))
+              GZ_KB=$((GZ / 1024))
+              GZIP_SIZE=$((GZIP_SIZE + GZ))
+              BASENAME=$(basename "$f")
+              echo "| $BASENAME | ${RAW_KB}KB | ${GZ_KB}KB |" >> $GITHUB_STEP_SUMMARY
+            done
+
+            GZIP_KB=$((GZIP_SIZE / 1024))
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Total JS gzipped:** ${GZIP_KB}KB" >> $GITHUB_STEP_SUMMARY
+
+            # Fail if total gzipped JS exceeds 500KB
+            MAX_SIZE_KB=500
+            if [ "$GZIP_KB" -gt "$MAX_SIZE_KB" ]; then
+              echo "::error::JS bundle size (${GZIP_KB}KB gzipped) exceeds ${MAX_SIZE_KB}KB limit"
+              exit 1
+            else
+              echo "✅ Bundle size OK (${GZIP_KB}KB < ${MAX_SIZE_KB}KB)" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+  # ─── E2E tests (nightly + on-demand) ───────────────────────────────
+  e2e:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: Run E2E tests
+        run: npx playwright test --project=chromium
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 14
+      - name: Upload traces on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: test-results
+          retention-days: 7
+
+  # ─── Accessibility tests (nightly) ──────────────────────────────────
+  a11y:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: Run accessibility tests
+        run: npx playwright test --grep @a11y
+      - name: Upload a11y report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: a11y-report
+          path: playwright-report
+          retention-days: 14
+
+  # ─── API security tests (on-demand) ─────────────────────────────────
+  api-security:
+    if: github.event_name == 'workflow_dispatch'
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - name: Run API security tests
+        env:
+          RUN_API_TESTS: '1'
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+        run: npx vitest run src/tests/api/
+
+  # ─── Live Scryfall validation (weekly) ──────────────────────────────
   live-scryfall-validation:
     runs-on: ubuntu-latest
-    # Run weekly and on-demand only — not on every push/PR
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: github.event.schedule == '0 6 * * 1' || github.event_name == 'workflow_dispatch'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
-      - name: Install dependencies
-        run: npm install
+      - run: npm ci
       - name: Run live Scryfall validation
         env:
           RUN_SCRYFALL_LIVE_TESTS: '1'
