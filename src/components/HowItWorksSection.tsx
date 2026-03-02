@@ -42,7 +42,7 @@ export function HowItWorksSection() {
                 animationFillMode: 'forwards',
               }}
             >
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-accent text-accent-foreground text-xs font-semibold">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold">
                 {t('howItWorks.step')} {index + 1}
               </div>
 

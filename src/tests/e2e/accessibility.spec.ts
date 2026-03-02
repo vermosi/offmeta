@@ -29,7 +29,8 @@ test.describe('Accessibility Audits @a11y', () => {
     page,
   }) => {
     await page.goto('/');
-    const searchInput = page.getByPlaceholder(/search/i).first();
+    await page.waitForLoadState('domcontentloaded');
+    const searchInput = page.locator('#search-input').first();
 
     const responsePromise = page.waitForResponse(
       (res) =>

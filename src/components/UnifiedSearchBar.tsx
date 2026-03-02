@@ -381,7 +381,7 @@ export const UnifiedSearchBar = forwardRef<
           role="group"
           aria-label={t('search.trySearchingFor')}
         >
-          <span className="text-[11px] text-muted-foreground/60 uppercase tracking-wider font-medium">
+          <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
             {t('search.trySearchingFor')}
           </span>
           <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
