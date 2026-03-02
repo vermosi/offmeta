@@ -27,44 +27,50 @@ describe('Edge Functions Shared Utils', () => {
   });
 
   describe('validateAuth', () => {
-    it('returns false if no header', () => {
+    it('returns false if no header', async () => {
       const req = new Request('http://localhost', { headers: {} });
-      expect(validateAuth(req)).toEqual({
+      expect(await validateAuth(req)).toEqual({
         authorized: false,
         error: 'Missing Authorization header',
       });
     });
 
-    it('validates service role key', () => {
+    it('validates service role key', async () => {
       mockGet.mockImplementation((key) =>
         key === 'SUPABASE_SERVICE_ROLE_KEY' ? 'secret-key' : null,
       );
       const req = new Request('http://localhost', {
         headers: { Authorization: 'Bearer secret-key' },
       });
-      expect(validateAuth(req)).toEqual({ authorized: true, role: 'service' });
+      expect(await validateAuth(req)).toEqual({
+        authorized: true,
+        role: 'service',
+      });
     });
 
-    it('validates api secret', () => {
+    it('validates api secret', async () => {
       mockGet.mockImplementation((key) =>
         key === 'OFFMETA_API_SECRET' ? 'api-key' : null,
       );
       const req = new Request('http://localhost', {
         headers: { Authorization: 'Bearer api-key' },
       });
-      expect(validateAuth(req)).toEqual({ authorized: true, role: 'api' });
+      expect(await validateAuth(req)).toEqual({
+        authorized: true,
+        role: 'api',
+      });
     });
 
-    it('rejects invalid key', () => {
+    it('rejects invalid key', async () => {
       mockGet.mockImplementation((key) =>
         key === 'SUPABASE_SERVICE_ROLE_KEY' ? 'secret-key' : null,
       );
       const req = new Request('http://localhost', {
         headers: { Authorization: 'Bearer wrong-key' },
       });
-      expect(validateAuth(req)).toEqual({
+      expect(await validateAuth(req)).toEqual({
         authorized: false,
-        error: 'Invalid Authorization token',
+        error: 'Auth verification unavailable',
       });
     });
   });
