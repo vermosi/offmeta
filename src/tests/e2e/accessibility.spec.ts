@@ -48,11 +48,11 @@ test.describe('Accessibility Audits @a11y', () => {
     await expect(firstCard).toBeVisible({ timeout: 15_000 });
     await firstCard.click();
 
-    const modal = page.locator('[role="dialog"], [data-testid="card-modal"]');
-    await expect(modal).toBeVisible({ timeout: 5_000 });
+    const modal = page.locator('[role="dialog"]');
+    await expect(modal.first()).toBeVisible({ timeout: 5_000 });
 
     const results = await new AxeBuilder({ page })
-      .include('[role="dialog"], [data-testid="card-modal"]')
+      .include('[role="dialog"]')
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
       .analyze();
 

@@ -43,14 +43,10 @@ export function SearchHistoryDropdown({
         sideOffset={4}
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
-        <div
-          className="bg-popover border border-border rounded-lg shadow-lg overflow-hidden"
-          role="listbox"
-          aria-label="Recent searches"
-        >
+        <div className="bg-popover border border-border rounded-lg shadow-lg overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-muted/30">
-            <span className="text-xs font-medium text-muted-foreground">
+            <span className="text-xs font-medium text-foreground/70">
               Recent Searches
             </span>
             <Button
@@ -60,7 +56,7 @@ export function SearchHistoryDropdown({
                 e.stopPropagation();
                 onClearAll();
               }}
-              className="h-6 px-2 text-xs text-muted-foreground hover:text-destructive"
+              className="h-6 px-2 text-xs text-foreground/70 hover:text-destructive"
               aria-label="Clear all search history"
             >
               Clear all
@@ -68,9 +64,9 @@ export function SearchHistoryDropdown({
           </div>
 
           {/* History items */}
-          <ul className="py-1">
+          <ul className="py-1" aria-label="Recent searches">
             {history.map((query, index) => (
-              <li key={`${query}-${index}`} role="option" aria-selected="false">
+              <li key={`${query}-${index}`}>
                 <div className="flex items-center gap-2 px-3 py-2 hover:bg-accent/50 transition-colors group">
                   <button
                     onClick={() => onSelectQuery(query)}
