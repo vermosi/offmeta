@@ -28,8 +28,10 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) runs parallel jobs for 
       ├──► test          (vitest + coverage thresholds, every push/PR)
       ├──► build         (vite build, every push/PR)
        └──► bundle-size   (gzip check ≤500KB JS, every push/PR)
-       ├──► e2e            (Playwright search flow, every push/PR + nightly)
-       ├──► a11y           (axe accessibility audits, every push/PR + nightly)
+       ├──► e2e-smoke      (PR-required smoke suite: navigation + search + dialog)
+       ├──► a11y-smoke     (PR-required axe smoke suite)
+       ├──► e2e            (full Playwright matrix on push/nightly/manual + PR opt-in label)
+       ├──► a11y           (full axe matrix on push/nightly/manual + PR opt-in label)
 
 On-demand jobs:
    ├──► api-security     (edge function HTTP tests, workflow_dispatch only)
@@ -38,13 +40,27 @@ On-demand jobs:
 
 ### Triggers
 
-| Trigger | Jobs |
-|---------|------|
-| `push` to `main` | lint, typecheck, test, build, bundle-size, e2e, a11y |
-| Pull request | lint, typecheck, test, build, bundle-size, e2e, a11y |
-| Nightly (`0 3 * * *`) | e2e, a11y |
-| Weekly (`0 6 * * 1`) | live-scryfall-validation |
-| `workflow_dispatch` | All jobs available on-demand |
+| Trigger               | Jobs                                                                                                             |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `push` to `main`      | lint, typecheck, test, build, bundle-size, e2e, a11y                                                             |
+| Pull request          | lint, typecheck, test, build, bundle-size, e2e-smoke, a11y-smoke (full e2e/a11y via `ci:e2e` / `ci:a11y` labels) |
+| Nightly (`0 3 * * *`) | e2e, a11y                                                                                                        |
+| Weekly (`0 6 * * 1`)  | live-scryfall-validation                                                                                         |
+| `workflow_dispatch`   | All jobs available on-demand                                                                                     |
+
+### Required status checks for branch protection
+
+Configure branch protection for `main` to require these checks on pull requests:
+
+- `lint`
+- `typecheck`
+- `test`
+- `build`
+- `bundle-size`
+- `e2e-smoke`
+- `a11y-smoke`
+
+This keeps a lightweight always-on gate (critical navigation/search/dialog plus one axe suite) while preserving broader full-suite coverage in push/nightly/manual runs.
 
 ---
 
@@ -83,18 +99,18 @@ npm run test -- translation-golden
 
 Located in `src/lib/security/`. Comprehensive coverage:
 
-| Category | File |
-|----------|------|
-| Input Sanitization | `input-sanitization.test.ts` |
-| Injection Attacks | `injection.test.ts` |
-| Rate Limiting | `rate-limiting.test.ts` |
-| Authentication | `authentication.test.ts` |
-| CORS Protection | `cors-bypass.test.ts` |
+| Category            | File                          |
+| ------------------- | ----------------------------- |
+| Input Sanitization  | `input-sanitization.test.ts`  |
+| Injection Attacks   | `injection.test.ts`           |
+| Rate Limiting       | `rate-limiting.test.ts`       |
+| Authentication      | `authentication.test.ts`      |
+| CORS Protection     | `cors-bypass.test.ts`         |
 | Prototype Pollution | `prototype-pollution.test.ts` |
-| ReDoS Prevention | `redos.test.ts` |
-| Timing Attacks | `timing-attacks.test.ts` |
-| Error Leakage | `error-leakage.test.ts` |
-| Config Sync | `config-sync.test.ts` |
+| ReDoS Prevention    | `redos.test.ts`               |
+| Timing Attacks      | `timing-attacks.test.ts`      |
+| Error Leakage       | `error-leakage.test.ts`       |
+| Config Sync         | `config-sync.test.ts`         |
 
 ```bash
 npm run test -- src/lib/security
@@ -118,6 +134,7 @@ npx playwright test
 ```
 
 **Tests:**
+
 1. Page loads and search input is visible
 2. Typing a query and pressing Enter shows card results
 3. Submitting empty query shows inline error without network call
@@ -166,12 +183,12 @@ npm run test -- src/lib/regression
 
 Coverage is enforced by Vitest on every test run. The build **fails** if thresholds are not met.
 
-| Metric | Threshold |
-|--------|-----------|
-| Lines | 85% |
-| Functions | 85% |
-| Branches | 80% |
-| Statements | 85% |
+| Metric     | Threshold |
+| ---------- | --------- |
+| Lines      | 85%       |
+| Functions  | 85%       |
+| Branches   | 80%       |
+| Statements | 85%       |
 
 **Scope:** `src/lib/**` (excluding `src/lib/logger.ts`)
 
@@ -193,12 +210,12 @@ CI fails if total gzipped JS assets in `dist/assets/` exceed **500KB**. The bund
 
 ## Configuration Files
 
-| File | Purpose |
-|------|---------|
-| `vite.config.ts` | Vitest config (test section), coverage thresholds |
-| `playwright.config.ts` | Playwright config, targets `localhost:8080` |
-| `.github/workflows/ci.yml` | Full CI pipeline definition |
-| `src/test/setup.ts` | Vitest setup (jest-dom, matchMedia polyfill) |
+| File                       | Purpose                                           |
+| -------------------------- | ------------------------------------------------- |
+| `vite.config.ts`           | Vitest config (test section), coverage thresholds |
+| `playwright.config.ts`     | Playwright config, targets `localhost:8080`       |
+| `.github/workflows/ci.yml` | Full CI pipeline definition                       |
+| `src/test/setup.ts`        | Vitest setup (jest-dom, matchMedia polyfill)      |
 
 ---
 
