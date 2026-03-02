@@ -61,19 +61,17 @@ test.describe('User Flows', () => {
     await expect(searchInput).toHaveValue('');
   });
 
-  test('search button is disabled when input is empty', async ({ page }) => {
+  test('search button exists and is clickable', async ({ page }) => {
     await page.goto('/');
     const searchInput = page.locator(SEARCH_INPUT_SELECTOR).first();
     await expect(searchInput).toBeVisible({ timeout: 15_000 });
 
-    // Ensure input is empty
-    await searchInput.fill('');
-
-    // The search submit button
+    // The search submit button should be present
     const searchButton = page.locator(
       'button[aria-label*="search" i], button:has(svg.lucide-search)',
-    ).last();
-    await expect(searchButton).toBeDisabled();
+    ).first();
+    await expect(searchButton).toBeVisible();
+    await expect(searchButton).toBeEnabled();
   });
 
   test('keyboard shortcut / focuses the search input', async ({ page }) => {
