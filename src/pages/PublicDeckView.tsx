@@ -20,7 +20,7 @@ import { DeckStatsBar } from '@/components/deckbuilder/DeckStats';
 import { CATEGORIES } from '@/components/deckbuilder/constants';
 import { FORMAT_LABELS } from '@/data/formats';
 import { FORMATS } from '@/data/formats';
-import { searchCards } from '@/lib/scryfall';
+import { getCardsByExactNames } from '@/lib/scryfall';
 import { useAuth } from '@/hooks/useAuth';
 import type { Deck, DeckCard } from '@/hooks/useDeck';
 import type { ScryfallCard } from '@/types/card';
@@ -128,7 +128,10 @@ function usePublicDeckCards(deckId: string | undefined) {
   });
 }
 
-/** Progressively fetch Scryfall data for all cards. */
+/**
+ * Hydrate Scryfall card metadata for deck cards in one collection request.
+ * This prevents incremental UI pop-in when opening decks from /decks.
+ */
 function useScryfallHydration(cards: DeckCard[]) {
   const [scryfallMap, setScryfallMap] = useState<Map<string, ScryfallCard>>(new Map());
   const [version, setVersion] = useState(0);
@@ -136,31 +139,33 @@ function useScryfallHydration(cards: DeckCard[]) {
 
   useEffect(() => {
     if (cards.length === 0) return;
+
     let cancelled = false;
     const names = [...new Set(cards.map((c) => c.card_name))];
     const missing = names.filter((n) => !fetchedRef.current.has(n));
+    if (missing.length === 0) return;
 
-    const fetchBatch = async (batch: string[]) => {
-      for (const name of batch) {
-        if (cancelled) return;
-        fetchedRef.current.add(name);
-        try {
-          const res = await searchCards(`!"${name}"`);
-          const sc = res.data?.[0];
-          if (sc) {
-            setScryfallMap((prev) => {
-              const next = new Map(prev);
-              next.set(name, sc);
-              return next;
-            });
-            setVersion((v) => v + 1);
+    missing.forEach((name) => fetchedRef.current.add(name));
+
+    const fetchAll = async () => {
+      try {
+        const fetchedCards = await getCardsByExactNames(missing);
+        if (cancelled || fetchedCards.length === 0) return;
+
+        setScryfallMap((prev) => {
+          const next = new Map(prev);
+          for (const card of fetchedCards) {
+            next.set(card.name, card);
           }
-        } catch { /* silent */ }
-        await new Promise((r) => setTimeout(r, 80));
+          return next;
+        });
+        setVersion((v) => v + 1);
+      } catch {
+        // Keep deck usable even if metadata hydration fails.
       }
     };
 
-    fetchBatch(missing);
+    void fetchAll();
     return () => { cancelled = true; };
   }, [cards]);
 
