@@ -40,14 +40,22 @@ const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const MAX_SUBMISSIONS_PER_WINDOW = 5;
 
 // Input validation (native — no zod dependency)
-function validateIssue(issueDescription: string):
+function validateIssue(
+  issueDescription: string,
+):
   | { success: true; data: { issueDescription: string } }
   | { success: false; message: string } {
   const desc = issueDescription.trim();
   if (desc.length < 10)
-    return { success: false, message: 'Please provide more details (at least 10 characters)' };
+    return {
+      success: false,
+      message: 'Please provide more details (at least 10 characters)',
+    };
   if (desc.length > 1000)
-    return { success: false, message: 'Description too long (max 1000 characters)' };
+    return {
+      success: false,
+      message: 'Description too long (max 1000 characters)',
+    };
   return { success: true, data: { issueDescription: desc } };
 }
 
@@ -167,7 +175,10 @@ export function ReportIssueDialog({
     const rateLimitStatus = checkRateLimit();
     if (!rateLimitStatus.allowed) {
       toast.error(t('report.tooMany', 'Too many submissions'), {
-        description: t('report.wait', 'Please wait {minutes} minute(s) before submitting more feedback.').replace('{minutes}', rateLimitStatus.resetInMinutes.toString()),
+        description: t(
+          'report.wait',
+          'Please wait {minutes} minute(s) before submitting more feedback.',
+        ).replace('{minutes}', rateLimitStatus.resetInMinutes.toString()),
       });
       return;
     }
@@ -184,13 +195,16 @@ export function ReportIssueDialog({
     try {
       const fullDescription = `${validationResult.data.issueDescription}\n\n---\nContext:\n- Request ID: ${requestId || 'N/A'}\n- Timestamp: ${timestamp}\n- Filters: ${JSON.stringify(filters || {})}`;
 
-      const { data: insertedRow, error } = await supabase.from('search_feedback').insert({
+      const feedbackId = crypto.randomUUID();
+
+      const { error } = await supabase.from('search_feedback').insert({
+        id: feedbackId,
         original_query: originalQuery.substring(0, 500),
         translated_query: compiledQuery.substring(0, 1000),
         issue_description: fullDescription.substring(0, 2000),
-      }).select('id').single();
+      });
 
-      if (error) throw error;
+      if (error !== null) throw error;
 
       recordSubmission();
 
@@ -204,7 +218,7 @@ export function ReportIssueDialog({
         description: `${t('report.thanks', "Thanks! We'll use this to improve searches.")}${remaining <= 2 ? ` (${remaining} submissions remaining)` : ''}`,
       });
       onOpenChange(false);
-      if (insertedRow?.id) triggerProcessing(insertedRow.id);
+      triggerProcessing(feedbackId);
     } catch (error) {
       logger.error('Feedback submission failed', error);
       toast.error(t('report.failed', 'Failed to submit feedback'));
@@ -221,7 +235,10 @@ export function ReportIssueDialog({
         <DialogHeader>
           <DialogTitle>{t('report.title', 'Report Search Issue')}</DialogTitle>
           <DialogDescription>
-            {t('report.description', 'Help us improve by describing what went wrong. Context is auto-included.')}
+            {t(
+              'report.description',
+              'Help us improve by describing what went wrong. Context is auto-included.',
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 pt-2">
@@ -257,7 +274,9 @@ export function ReportIssueDialog({
                   ) : (
                     <ChevronDown className="h-3 w-3" />
                   )}
-                  {showContext ? t('report.hide', 'Hide') : t('report.show', 'Show')}
+                  {showContext
+                    ? t('report.hide', 'Hide')
+                    : t('report.show', 'Show')}
                 </Button>
               </div>
             </div>
@@ -265,12 +284,16 @@ export function ReportIssueDialog({
             {!showContext && (
               <div className="text-xs text-muted-foreground space-y-1">
                 <p>
-                  <span className="font-medium">{t('report.prompt', 'Prompt:')}</span> "
-                  {originalQuery.substring(0, 50)}
+                  <span className="font-medium">
+                    {t('report.prompt', 'Prompt:')}
+                  </span>{' '}
+                  "{originalQuery.substring(0, 50)}
                   {originalQuery.length > 50 ? '...' : ''}"
                 </p>
                 <p>
-                  <span className="font-medium">{t('report.query', 'Query:')}</span>{' '}
+                  <span className="font-medium">
+                    {t('report.query', 'Query:')}
+                  </span>{' '}
                   <code className="bg-muted px-1 rounded">
                     {compiledQuery.substring(0, 40)}
                     {compiledQuery.length > 40 ? '...' : ''}
@@ -293,7 +316,10 @@ export function ReportIssueDialog({
             </label>
             <Textarea
               id="issue"
-              placeholder={t('report.placeholder', 'e.g., I expected to see cards that give flash, but it only showed creatures with flash...')}
+              placeholder={t(
+                'report.placeholder',
+                'e.g., I expected to see cards that give flash, but it only showed creatures with flash...',
+              )}
               value={issue}
               onChange={(e) => {
                 setIssue(e.target.value);
@@ -313,7 +339,10 @@ export function ReportIssueDialog({
 
           {!rateLimitStatus.allowed && (
             <p className="text-xs text-destructive">
-              {t('report.rateLimit', 'Rate limit reached. Please wait {minutes} minute(s).').replace('{minutes}', rateLimitStatus.resetInMinutes.toString())}
+              {t(
+                'report.rateLimit',
+                'Rate limit reached. Please wait {minutes} minute(s).',
+              ).replace('{minutes}', rateLimitStatus.resetInMinutes.toString())}
             </p>
           )}
 

@@ -12,6 +12,13 @@ export interface LogEntry {
   fallback_used: boolean;
   source: string;
   result_count: number | null;
+  pre_translation_attempted: boolean;
+  pre_translation_skipped_reason: string | null;
+}
+
+interface PreTranslationTelemetry {
+  preTranslationAttempted: boolean;
+  preTranslationSkippedReason: string | null;
 }
 
 const logQueue: LogEntry[] = [];
@@ -53,6 +60,7 @@ export function logTranslation(
   fallbackUsed: boolean,
   source: string = 'ai',
   resultCount: number | null = null,
+  preTranslationTelemetry?: PreTranslationTelemetry,
 ): void {
   logQueue.push({
     natural_language_query: naturalQuery.substring(0, 500),
@@ -66,6 +74,10 @@ export function logTranslation(
     fallback_used: fallbackUsed,
     source,
     result_count: resultCount,
+    pre_translation_attempted:
+      preTranslationTelemetry?.preTranslationAttempted ?? false,
+    pre_translation_skipped_reason:
+      preTranslationTelemetry?.preTranslationSkippedReason ?? null,
   });
 
   if (logQueue.length >= LOG_BATCH_SIZE) {

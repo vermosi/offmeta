@@ -11,7 +11,7 @@ import {
   setPersistentCache,
   maybeCacheCleanup,
 } from './cache.ts';
-import { fetchWithRetry } from './utils.ts';
+import { fetchWithRetry, fetchWithTimeout } from './utils.ts';
 import {
   isCircuitOpen,
   recordCircuitFailure,
@@ -225,6 +225,11 @@ function sanitizeError(error: unknown): string {
   }
   return 'Unknown error';
 }
+
+const REQUEST_LATENCY_BUDGET_MS = 15_000;
+const PRE_TRANSLATION_MIN_REMAINING_BUDGET_MS = 4_000;
+const PRE_TRANSLATION_TIMEOUT_MS = 2_500;
+const ACCENTED_LATIN_HIGH_CONFIDENCE_THRESHOLD = 0.9;
 
 /**
  * Main Edge Function Handler
@@ -771,8 +776,10 @@ serve(async (req) => {
     // 7. Pre-translate non-English queries to English for better AI accuracy
     const remainingQuery = deterministicResult.intent.remainingQuery || '';
     let queryForAI = remainingQuery;
+    let preTranslationAttempted = false;
+    let preTranslationSkippedReason: string | null = null;
 
-    // Detect non-Latin scripts or common non-English patterns
+    // Detect stronger non-English signals
     const hasNonLatin =
       /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Cyrillic}\p{Script=Arabic}\p{Script=Devanagari}]/u.test(
         remainingQuery,
@@ -780,54 +787,82 @@ serve(async (req) => {
     const hasAccentedLatin = /[àáâãäåæçèéêëìíîïðñòóôõöùúûüýþÿ]/i.test(
       remainingQuery,
     );
-    const looksNonEnglish =
-      hasNonLatin ||
-      (hasAccentedLatin &&
-        !/^[a-zA-Z0-9\s\-:=<>!'"()+/*.,;$]+$/.test(remainingQuery));
+    const deterministicConfidence = deterministicResult.intent.confidence ?? 0;
+    const shouldPreTranslateAccentedLatin =
+      hasAccentedLatin &&
+      !hasNonLatin &&
+      deterministicConfidence >= ACCENTED_LATIN_HIGH_CONFIDENCE_THRESHOLD;
+    const looksNonEnglish = hasNonLatin || shouldPreTranslateAccentedLatin;
 
     if (looksNonEnglish && remainingQuery.trim().length > 0) {
-      if (!requestBudget.hasBudgetFor(MIN_PRE_TRANSLATION_BUDGET_MS)) {
-        return buildBudgetExceededResponse('pre_translation', 0.58, [
-          'Skipped pre-translation due to low remaining request budget',
-        ]);
-      }
-      try {
-        const preTranslateResponse = await fetchWithRetry(
-          'https://ai.gateway.lovable.dev/v1/chat/completions',
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${LOVABLE_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: 'google/gemini-2.5-flash-lite',
-              messages: [
-                {
-                  role: 'system',
-                  content:
-                    'You are a translator. Translate the following Magic: The Gathering card search query into English. Preserve all MTG-specific intent (counter, destroy, exile, ramp, etc.). Output ONLY the English translation, nothing else.',
-                },
-                { role: 'user', content: remainingQuery },
-              ],
-              temperature: 0.0,
-            }),
-          },
-        );
+      const elapsedBeforePreTranslationMs = Date.now() - requestStartTime;
+      const remainingBudgetMs =
+        REQUEST_LATENCY_BUDGET_MS - elapsedBeforePreTranslationMs;
 
-        if (preTranslateResponse.ok) {
-          const preTranslateData = await preTranslateResponse.json();
-          const translated =
-            preTranslateData?.choices?.[0]?.message?.content?.trim();
-          if (translated && translated.length > 0) {
-            logInfo(`Pre-translated: "${remainingQuery}" → "${translated}"`);
-            queryForAI = translated;
+      if (remainingBudgetMs < PRE_TRANSLATION_MIN_REMAINING_BUDGET_MS) {
+        preTranslationSkippedReason = 'low_remaining_budget';
+      } else {
+        preTranslationAttempted = true;
+        try {
+          const preTranslateResponse = await fetchWithTimeout(
+            'https://ai.gateway.lovable.dev/v1/chat/completions',
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: 'google/gemini-2.5-flash-lite',
+                messages: [
+                  {
+                    role: 'system',
+                    content:
+                      'You are a translator. Translate the following Magic: The Gathering card search query into English. Preserve all MTG-specific intent (counter, destroy, exile, ramp, etc.). Output ONLY the English translation, nothing else.',
+                  },
+                  { role: 'user', content: remainingQuery },
+                ],
+                temperature: 0.0,
+              }),
+            },
+            PRE_TRANSLATION_TIMEOUT_MS,
+          );
+
+          if (preTranslateResponse.ok) {
+            const preTranslateData = await preTranslateResponse.json();
+            const translated =
+              preTranslateData?.choices?.[0]?.message?.content?.trim();
+            if (translated && translated.length > 0) {
+              logInfo('pre_translation_applied', {
+                preTranslationAttempted,
+                preTranslationSkippedReason,
+              });
+              queryForAI = translated;
+            } else {
+              preTranslationSkippedReason = 'empty_translation';
+            }
+          } else {
+            preTranslationSkippedReason = 'gateway_non_ok';
           }
+        } catch (e) {
+          // Pre-translation failed, proceed with original query without retries.
+          preTranslationSkippedReason =
+            e instanceof Error && e.name === 'AbortError'
+              ? 'pre_translation_timeout'
+              : 'pre_translation_failure';
+          logWarn('pre_translation_failed', {
+            error: sanitizeError(e),
+            preTranslationAttempted,
+            preTranslationSkippedReason,
+          });
         }
-      } catch (e) {
-        // Pre-translation failed, proceed with original query
-        logWarn(`Pre-translation failed, using original: ${e}`);
       }
+    } else if (remainingQuery.trim().length === 0) {
+      preTranslationSkippedReason = 'empty_remaining_query';
+    } else if (hasAccentedLatin && !shouldPreTranslateAccentedLatin) {
+      preTranslationSkippedReason = 'accented_latin_low_confidence';
+    } else {
+      preTranslationSkippedReason = 'no_strong_non_english_signal';
     }
 
     // 8. AI Translation (with tiered model selection)
@@ -944,7 +979,18 @@ serve(async (req) => {
         qualityFlags,
         filters,
         false,
+        'ai',
+        null,
+        {
+          preTranslationAttempted,
+          preTranslationSkippedReason,
+        },
       );
+      logInfo('ai_translation_success', {
+        responseTimeMs,
+        preTranslationAttempted,
+        preTranslationSkippedReason,
+      });
       flushLogQueue(); // fire-and-forget
 
       return new Response(
@@ -960,7 +1006,11 @@ serve(async (req) => {
       );
     } catch (e) {
       recordCircuitFailure();
-      logWarn('ai_failure', { error: sanitizeError(e) });
+      logWarn('ai_failure', {
+        error: sanitizeError(e),
+        preTranslationAttempted,
+        preTranslationSkippedReason,
+      });
       const fallback = buildFallbackQuery(query, filters);
       const responseTimeMs = Date.now() - requestStartTime;
       return new Response(

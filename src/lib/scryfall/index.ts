@@ -8,6 +8,7 @@ export {
   autocomplete,
   getRandomCard,
   getCardByName,
+  getCardsByExactNames,
   getCardImage,
   isDoubleFacedCard,
   getCardFaceDetails,
