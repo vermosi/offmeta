@@ -1,8 +1,10 @@
 import { test, expect } from '@playwright/test';
-import AxeBuilder from '@axe-core/playwright';
+import { runAxeAudit } from '@/tests/e2e/axe-helpers';
 
 test.describe('Accessibility Audits @a11y', () => {
-  test('homepage has no critical or serious violations', async ({ page }) => {
+  test('homepage has no critical or serious violations', async ({
+    page,
+  }, testInfo) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
@@ -25,7 +27,7 @@ test.describe('Accessibility Audits @a11y', () => {
       console.error('Accessibility violations:\n' + summary);
     }
 
-    expect(criticalOrSerious).toHaveLength(0);
+    expect(blockingViolations).toHaveLength(0);
   });
 
   test('card modal has no critical or serious violations', async ({ page }) => {
@@ -72,6 +74,6 @@ test.describe('Accessibility Audits @a11y', () => {
       console.error('Modal accessibility violations:\n' + summary);
     }
 
-    expect(criticalOrSerious).toHaveLength(0);
+    expect(blockingViolations).toHaveLength(0);
   });
 });
