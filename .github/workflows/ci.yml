@@ -147,7 +147,6 @@ jobs:
 
   # ─── E2E tests (nightly + on-demand) ───────────────────────────────
   e2e:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     needs: install
     runs-on: ubuntu-latest
     steps:
@@ -180,7 +179,6 @@ jobs:
 
   # ─── Accessibility tests (nightly) ──────────────────────────────────
   a11y:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     needs: install
     runs-on: ubuntu-latest
     steps:
