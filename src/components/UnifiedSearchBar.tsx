@@ -267,7 +267,7 @@ export const UnifiedSearchBar = forwardRef<
                 setIsFocused(false);
                 const relatedTarget = e.relatedTarget as HTMLElement | null;
                 const isDropdownClick =
-                  relatedTarget?.closest('[role="listbox"]');
+                  relatedTarget?.closest('[data-search-history-dropdown="true"]');
                 if (!isDropdownClick) {
                   setTimeout(() => setShowHistoryDropdown(false), 200);
                 }

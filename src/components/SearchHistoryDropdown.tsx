@@ -43,10 +43,12 @@ export function SearchHistoryDropdown({
         sideOffset={4}
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
-        <div className="bg-popover border border-border rounded-lg shadow-lg overflow-hidden">
-          {/* Header */}
+        <div
+          data-search-history-dropdown="true"
+          className="bg-popover border border-border rounded-lg shadow-lg overflow-hidden"
+        >
           <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-muted/30">
-            <span className="text-xs font-medium text-foreground/70">
+            <span className="text-xs font-medium text-foreground">
               Recent Searches
             </span>
             <Button
@@ -56,19 +58,19 @@ export function SearchHistoryDropdown({
                 e.stopPropagation();
                 onClearAll();
               }}
-              className="h-6 px-2 text-xs text-foreground/70 hover:text-destructive"
+              className="h-6 px-2 text-xs text-foreground hover:text-foreground hover:bg-accent"
               aria-label="Clear all search history"
             >
               Clear all
             </Button>
           </div>
 
-          {/* History items */}
           <ul className="py-1" aria-label="Recent searches">
             {history.map((query, index) => (
               <li key={`${query}-${index}`}>
                 <div className="flex items-center gap-2 px-3 py-2 hover:bg-accent/50 transition-colors group">
                   <button
+                    type="button"
                     onClick={() => onSelectQuery(query)}
                     className="flex-1 flex items-center gap-2 text-left min-w-0"
                     aria-label={`Search for ${query}`}
@@ -82,11 +84,12 @@ export function SearchHistoryDropdown({
                     </span>
                   </button>
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       onRemoveQuery(query);
                     }}
-                    className="p-1 rounded text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all focus:opacity-100"
+                    className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-70 group-hover:opacity-100 transition-all focus:opacity-100"
                     aria-label={`Remove "${query}" from history`}
                   >
                     <X className="h-3.5 w-3.5" aria-hidden="true" />
