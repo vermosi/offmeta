@@ -38,6 +38,44 @@ import {
 } from './schemas.ts';
 import { VALID_SEARCH_KEYS } from './constants.ts';
 
+const DEFAULT_REQUEST_BUDGET_MS = 8_000;
+const MIN_DYNAMIC_RULES_BUDGET_MS = 1_200;
+const MIN_PRE_TRANSLATION_BUDGET_MS = 1_800;
+const MIN_AI_CALL_BUDGET_MS = 2_500;
+
+type BudgetStage = 'dynamic_rules' | 'pre_translation' | 'ai_call';
+
+interface RequestBudget {
+  deadlineMs: number;
+  remainingMs: () => number;
+  hasBudgetFor: (minimumMs: number) => boolean;
+}
+
+function parseRequestBudget(
+  req: Request,
+  requestStartTime: number,
+): RequestBudget {
+  const requestStartHeader = Number(req.headers.get('x-request-start'));
+  const deadlineHeader = Number(req.headers.get('x-deadline-ms'));
+
+  const effectiveStart =
+    Number.isFinite(requestStartHeader) && requestStartHeader > 0
+      ? requestStartHeader
+      : requestStartTime;
+
+  const effectiveDeadline =
+    Number.isFinite(deadlineHeader) && deadlineHeader > effectiveStart
+      ? deadlineHeader
+      : effectiveStart + DEFAULT_REQUEST_BUDGET_MS;
+
+  return {
+    deadlineMs: effectiveDeadline,
+    remainingMs: () => Math.max(0, effectiveDeadline - Date.now()),
+    hasBudgetFor: (minimumMs: number) =>
+      effectiveDeadline - Date.now() >= minimumMs,
+  };
+}
+
 /**
  * Check if a query is already valid Scryfall syntax (no AI needed).
  * Detects queries that use Scryfall operators like t:, c:, o:, mv, pow, etc.
@@ -213,6 +251,7 @@ serve(async (req) => {
   const requestStartTime = Date.now();
   const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
   const { logInfo, logWarn } = createLogger(requestId);
+  const requestBudget = parseRequestBudget(req, requestStartTime);
 
   const jsonHeaders = {
     ...corsHeaders,
@@ -598,6 +637,7 @@ serve(async (req) => {
         reason: isCircuitOpen() ? 'circuit_open' : 'missing_api_key',
       });
       const fallback = buildFallbackQuery(query, filters);
+      const responseTimeMs = Date.now() - requestStartTime;
       return new Response(
         JSON.stringify({
           originalQuery: query,
@@ -609,6 +649,7 @@ serve(async (req) => {
             ],
             confidence: 0.6,
           },
+          responseTimeMs,
           success: true,
           fallback: true,
           source: 'fallback',
@@ -697,6 +738,40 @@ serve(async (req) => {
         { headers: jsonHeaders },
       );
     }
+
+    const buildBudgetExceededResponse = (
+      stage: BudgetStage,
+      confidence: number,
+      assumptions: string[],
+    ): Response => {
+      const fallback = buildFallbackQuery(query, filters);
+      const responseTimeMs = Date.now() - requestStartTime;
+      const remainingBudgetMs = requestBudget.remainingMs();
+      logWarn('budget_exceeded', {
+        stage,
+        responseTimeMs,
+        remainingBudgetMs,
+        deadlineMs: requestBudget.deadlineMs,
+      });
+
+      return new Response(
+        JSON.stringify({
+          originalQuery: query,
+          scryfallQuery: fallback.sanitized,
+          explanation: {
+            readable: `Searching for: ${query}`,
+            assumptions,
+            confidence,
+          },
+          responseTimeMs,
+          budgetExceededAtStage: stage,
+          success: true,
+          fallback: true,
+          source: 'budget_fallback',
+        }),
+        { headers: jsonHeaders },
+      );
+    };
 
     // 7. Pre-translate non-English queries to English for better AI accuracy
     const remainingQuery = deterministicResult.intent.remainingQuery || '';
@@ -805,12 +880,24 @@ serve(async (req) => {
         ? 'google/gemini-2.5-flash-lite'
         : 'google/gemini-3-flash-preview';
 
+    if (!requestBudget.hasBudgetFor(MIN_DYNAMIC_RULES_BUDGET_MS)) {
+      return buildBudgetExceededResponse('dynamic_rules', 0.57, [
+        'Skipped dynamic rules fetch due to low remaining request budget',
+      ]);
+    }
+
     const dynamicRules = await fetchDynamicRules();
     const systemPrompt = buildSystemPrompt(tier, dynamicRules, '');
     const cardNameHint = isLikelyName
       ? ' (IMPORTANT: This is likely a Magic: The Gathering card name, not a search description. Output ONLY the exact Scryfall name search like !"Gray Merchant of Asphodel" using the correct card name. Fix common misspellings: grey→gray, etc. If unsure of full name, use name: syntax like name:merchant.)'
       : '';
     const userMessage = `Translate to Scryfall search syntax: "${queryForAI}"${cardNameHint} ${deterministicQuery ? `(must include: ${deterministicQuery})` : ''}`;
+
+    if (!requestBudget.hasBudgetFor(MIN_AI_CALL_BUDGET_MS)) {
+      return buildBudgetExceededResponse('ai_call', 0.56, [
+        'Skipped AI translation due to low remaining request budget',
+      ]);
+    }
 
     try {
       const aiResponse = await fetchWithRetry(
@@ -925,6 +1012,7 @@ serve(async (req) => {
         preTranslationSkippedReason,
       });
       const fallback = buildFallbackQuery(query, filters);
+      const responseTimeMs = Date.now() - requestStartTime;
       return new Response(
         JSON.stringify({
           originalQuery: query,
@@ -934,6 +1022,7 @@ serve(async (req) => {
             assumptions: ['AI failed - using fallback'],
             confidence: 0.5,
           },
+          responseTimeMs,
           success: true,
           fallback: true,
           source: 'ai_failure_fallback',
