@@ -18,6 +18,7 @@ test.describe('Accessibility Audits @a11y', () => {
       const summary = criticalOrSerious
         .map((v) => `[${v.impact}] ${v.id}: ${v.description} (${v.nodes.length} nodes)`)
         .join('\n');
+      // eslint-disable-next-line no-console
       console.error('Accessibility violations:\n' + summary);
     }
 
@@ -62,6 +63,7 @@ test.describe('Accessibility Audits @a11y', () => {
       const summary = criticalOrSerious
         .map((v) => `[${v.impact}] ${v.id}: ${v.description} (${v.nodes.length} nodes)`)
         .join('\n');
+      // eslint-disable-next-line no-console
       console.error('Modal accessibility violations:\n' + summary);
     }
 
