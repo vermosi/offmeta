@@ -92,13 +92,15 @@ describe('Edge Functions Shared Utils', () => {
       );
     });
 
-    it('allows *', () => {
+    it('falls back to first-party origin when config is wildcard', () => {
       mockGet.mockReturnValue('*');
       const req = new Request('http://localhost', {
         headers: { Origin: 'https://any.com' },
       });
       const headers = getCorsHeaders(req);
-      expect(headers['Access-Control-Allow-Origin']).toBe('https://any.com');
+      expect(headers['Access-Control-Allow-Origin']).toBe(
+        'https://offmeta.app',
+      );
     });
   });
 

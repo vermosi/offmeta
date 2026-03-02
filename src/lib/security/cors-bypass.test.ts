@@ -24,7 +24,7 @@ describe('CORS Bypass Prevention', () => {
   });
 
   describe('Origin Validation', () => {
-    it('returns wildcard when ALLOWED_ORIGINS not configured', () => {
+    it('falls back to first-party origin when ALLOWED_ORIGINS is unset', () => {
       mockEnvGet.mockReturnValue(undefined);
       const req = new Request('http://localhost', {
         headers: { Origin: 'https://any-site.com' },
@@ -32,30 +32,45 @@ describe('CORS Bypass Prevention', () => {
 
       const headers = getCorsHeaders(req);
 
-      expect(headers['Access-Control-Allow-Origin']).toBe('https://any-site.com');
+      expect(headers['Access-Control-Allow-Origin']).toBe(
+        'https://offmeta.app',
+      );
+      expect(headers['Access-Control-Allow-Origin']).not.toBe(
+        'https://any-site.com',
+      );
     });
 
     it('reflects allowed origin when in allowlist', () => {
-      mockEnvGet.mockReturnValue('https://offmeta.lovable.app,https://localhost:5173');
+      mockEnvGet.mockReturnValue(
+        'https://offmeta.lovable.app,https://localhost:5173',
+      );
       const req = new Request('http://localhost', {
         headers: { Origin: 'https://offmeta.lovable.app' },
       });
 
       const headers = getCorsHeaders(req);
 
-      expect(headers['Access-Control-Allow-Origin']).toBe('https://offmeta.lovable.app');
+      expect(headers['Access-Control-Allow-Origin']).toBe(
+        'https://offmeta.lovable.app',
+      );
     });
 
     it('falls back to first allowed origin when origin not in allowlist', () => {
-      mockEnvGet.mockReturnValue('https://offmeta.lovable.app,https://localhost:5173');
+      mockEnvGet.mockReturnValue(
+        'https://offmeta.lovable.app,https://localhost:5173',
+      );
       const req = new Request('http://localhost', {
         headers: { Origin: 'https://evil-site.com' },
       });
 
       const headers = getCorsHeaders(req);
 
-      expect(headers['Access-Control-Allow-Origin']).toBe('https://offmeta.lovable.app');
-      expect(headers['Access-Control-Allow-Origin']).not.toBe('https://evil-site.com');
+      expect(headers['Access-Control-Allow-Origin']).toBe(
+        'https://offmeta.lovable.app',
+      );
+      expect(headers['Access-Control-Allow-Origin']).not.toBe(
+        'https://evil-site.com',
+      );
     });
 
     it('handles missing Origin header gracefully', () => {
@@ -65,7 +80,9 @@ describe('CORS Bypass Prevention', () => {
       const headers = getCorsHeaders(req);
 
       // Should fallback to first allowed origin
-      expect(headers['Access-Control-Allow-Origin']).toBe('https://offmeta.lovable.app');
+      expect(headers['Access-Control-Allow-Origin']).toBe(
+        'https://offmeta.lovable.app',
+      );
     });
 
     it('handles empty string Origin header', () => {
@@ -79,7 +96,7 @@ describe('CORS Bypass Prevention', () => {
       expect(headers['Access-Control-Allow-Origin']).toBeDefined();
     });
 
-    it('allows wildcard in ALLOWED_ORIGINS for any origin', () => {
+    it('does not allow wildcard ALLOWED_ORIGINS values', () => {
       mockEnvGet.mockReturnValue('*');
       const req = new Request('http://localhost', {
         headers: { Origin: 'https://any-random-site.com' },
@@ -87,7 +104,12 @@ describe('CORS Bypass Prevention', () => {
 
       const headers = getCorsHeaders(req);
 
-      expect(headers['Access-Control-Allow-Origin']).toBe('https://any-random-site.com');
+      expect(headers['Access-Control-Allow-Origin']).toBe(
+        'https://offmeta.app',
+      );
+      expect(headers['Access-Control-Allow-Origin']).not.toBe(
+        'https://any-random-site.com',
+      );
     });
 
     it('handles localhost variations correctly', () => {
@@ -98,7 +120,9 @@ describe('CORS Bypass Prevention', () => {
 
       const headers = getCorsHeaders(req);
 
-      expect(headers['Access-Control-Allow-Origin']).toBe('http://localhost:5173');
+      expect(headers['Access-Control-Allow-Origin']).toBe(
+        'http://localhost:5173',
+      );
     });
 
     it('is case-sensitive for origin matching', () => {
@@ -110,7 +134,46 @@ describe('CORS Bypass Prevention', () => {
       const headers = getCorsHeaders(req);
 
       // Should NOT match due to case difference
-      expect(headers['Access-Control-Allow-Origin']).toBe('https://OffMeta.lovable.app');
+      expect(headers['Access-Control-Allow-Origin']).toBe(
+        'https://OffMeta.lovable.app',
+      );
+    });
+
+    it('uses admin allowlist for sensitive endpoints', () => {
+      mockEnvGet.mockImplementation((key: string) => {
+        if (key === 'ALLOWED_ORIGINS') return 'https://offmeta.lovable.app';
+        if (key === 'ALLOWED_ORIGINS_ADMIN') return 'https://admin.offmeta.app';
+        return undefined;
+      });
+      const req = new Request('http://localhost/functions/v1/admin-analytics', {
+        headers: { Origin: 'https://admin.offmeta.app' },
+      });
+
+      const headers = getCorsHeaders(req);
+
+      expect(headers['Access-Control-Allow-Origin']).toBe(
+        'https://admin.offmeta.app',
+      );
+    });
+
+    it('rejects non-admin origins on sensitive endpoints', () => {
+      mockEnvGet.mockImplementation((key: string) => {
+        if (key === 'ALLOWED_ORIGINS') return 'https://offmeta.lovable.app';
+        if (key === 'ALLOWED_ORIGINS_ADMIN') return 'https://admin.offmeta.app';
+        return undefined;
+      });
+      const req = new Request('http://localhost/functions/v1/admin-analytics', {
+        headers: { Origin: 'https://offmeta.lovable.app' },
+      });
+
+      const headers = getCorsHeaders(req);
+
+      expect(headers['Access-Control-Allow-Origin']).toBe(
+        'https://admin.offmeta.app',
+      );
+      expect(headers['Access-Control-Allow-Origin']).not.toBe(
+        'https://offmeta.lovable.app',
+      );
     });
   });
 
@@ -139,7 +202,9 @@ describe('CORS Bypass Prevention', () => {
 
       const headers = getCorsHeaders(req);
 
-      expect(headers['Strict-Transport-Security']).toBe('max-age=31536000; includeSubDomains');
+      expect(headers['Strict-Transport-Security']).toBe(
+        'max-age=31536000; includeSubDomains',
+      );
     });
 
     it('includes required Access-Control-Allow-Headers', () => {
@@ -190,7 +255,9 @@ describe('CORS Bypass Prevention', () => {
 
       const headers = getCorsHeaders(req);
 
-      expect(headers['Access-Control-Allow-Origin']).not.toBe('https://evil.offmeta.lovable.app');
+      expect(headers['Access-Control-Allow-Origin']).not.toBe(
+        'https://evil.offmeta.lovable.app',
+      );
     });
 
     it('prevents null origin attacks', () => {

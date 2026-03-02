@@ -19,7 +19,7 @@ declare const Deno: {
  */
 export function validateAuth(req: Request) {
   const authHeader = req.headers.get('Authorization');
-  
+
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   const apiSecret = Deno.env.get('OFFMETA_API_SECRET');
 
@@ -71,19 +71,42 @@ export function validateAuth(req: Request) {
  */
 export function getCorsHeaders(req: Request) {
   const origin = req.headers.get('Origin');
-  const allowedOrigins = (Deno.env.get('ALLOWED_ORIGINS')?.split(',') || ['*']).map(
-    (o) => o.trim().replace(/\/+$/, ''),
-  );
+  const endpoint = new URL(req.url).pathname.split('/').filter(Boolean).pop();
 
-  let corsOrigin = '*';
-  if (
-    origin &&
-    (allowedOrigins.includes('*') || allowedOrigins.includes(origin))
-  ) {
-    corsOrigin = origin;
-  } else if (!allowedOrigins.includes('*')) {
-    corsOrigin = allowedOrigins[0]; // Fallback to first allowed origin
-  }
+  const firstPartyOrigins = [
+    'https://offmeta.app',
+    'https://www.offmeta.app',
+    'https://offmeta.lovable.app',
+  ];
+  const sensitiveEndpoints = new Set([
+    'admin-analytics',
+    'cleanup-logs',
+    'warmup-cache',
+  ]);
+
+  const parseOrigins = (envValue?: string): string[] => {
+    if (!envValue) return [];
+
+    return envValue
+      .split(',')
+      .map((value) => value.trim().replace(/\/+$/, ''))
+      .filter((value) => value.length > 0 && value !== '*');
+  };
+
+  const generalOrigins = parseOrigins(Deno.env.get('ALLOWED_ORIGINS'));
+  const adminOrigins = parseOrigins(Deno.env.get('ALLOWED_ORIGINS_ADMIN'));
+
+  const allowedOrigins = sensitiveEndpoints.has(endpoint ?? '')
+    ? adminOrigins.length > 0
+      ? adminOrigins
+      : generalOrigins
+    : generalOrigins;
+
+  const effectiveOrigins =
+    allowedOrigins.length > 0 ? allowedOrigins : firstPartyOrigins;
+
+  const corsOrigin =
+    origin && effectiveOrigins.includes(origin) ? origin : effectiveOrigins[0];
 
   return {
     'Access-Control-Allow-Origin': corsOrigin,
@@ -138,7 +161,8 @@ export async function requireAdmin(
   }
 
   // @ts-expect-error: Deno esm.sh import
-  const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+  const { createClient } =
+    await import('https://esm.sh/@supabase/supabase-js@2');
 
   const userClient = createClient(supabaseUrl, supabaseAnonKey, {
     global: { headers: { Authorization: authHeader } },
@@ -170,7 +194,10 @@ export async function requireAdmin(
     return {
       authorized: false,
       response: new Response(
-        JSON.stringify({ error: 'Forbidden: admin role required', success: false }),
+        JSON.stringify({
+          error: 'Forbidden: admin role required',
+          success: false,
+        }),
         { status: 403, headers },
       ),
     };
