@@ -11,7 +11,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-import { checkRateLimit } from '../_shared/rateLimit.ts';
+import { checkRateLimit, resolveRateLimitKey } from '../_shared/rateLimit.ts';
 import { getCorsHeaders, validateAuth } from '../_shared/auth.ts';
 import { validateEnv } from '../_shared/env.ts';
 
@@ -39,22 +39,35 @@ serve(async (req) => {
   }
 
   // Rate limiting to prevent AI cost abuse
-  const clientIp = req.headers.get('x-forwarded-for') || 'unknown';
-  const { allowed, retryAfter } = await checkRateLimit(
-    clientIp,
+  const rateLimitKey = await resolveRateLimitKey(req);
+  const { allowed, retryAfter, statusCode } = await checkRateLimit(
+    rateLimitKey,
     supabase,
     5, // Stricter limit: 5 requests per 60 seconds
     100, // Global limit: 100 requests per minute across all IPs
+    60000,
+    { failOpen: false },
   );
   if (!allowed) {
+    const status = statusCode ?? 429;
+    const retry = retryAfter ?? 1;
+
     return new Response(
       JSON.stringify({
-        error: 'Too many feedback submissions. Please try again later.',
+        error:
+          status === 503
+            ? 'Rate limiter temporarily unavailable. Please retry shortly.'
+            : 'Too many feedback submissions. Please try again later.',
         success: false,
+        retryAfter: retry,
       }),
       {
-        status: 429,
-        headers: { ...corsHeaders, 'Retry-After': String(retryAfter) },
+        status,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'Retry-After': String(retry),
+        },
       },
     );
   }
