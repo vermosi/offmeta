@@ -6,7 +6,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { logger } from '@/lib/core/logger';
-import { translateQueryWithDedup, type TranslationResult } from '@/hooks/useSearchQuery';
+import {
+  translateQueryWithDedup,
+  type TranslationResult,
+} from '@/hooks/useSearchQuery';
 import { buildClientFallbackQuery } from '@/lib/search/fallback';
 import { CLIENT_CONFIG } from '@/lib/config';
 import type { FilterState } from '@/types/filters';
@@ -138,11 +141,12 @@ export function useSearchHandler({
         saveContext(queryToSearch, result.scryfallQuery);
 
         const source = result.source || 'ai';
-        const responseMs = Date.now() - searchStartTime;
-        logger.info('[SearchDiag] Translation success', {
+        const endToEndElapsedMs = Date.now() - searchStartTime;
+        logger.info('[SearchDiag] Search diagnostics', {
           query: queryToSearch,
-          source,
-          responseMs,
+          edgeSource: result.edgeSource || source,
+          endToEndElapsedMs,
+          edgeResponseTimeMs: result.edgeResponseTimeMs ?? null,
           scryfallQuery: result.scryfallQuery,
         });
 
@@ -177,29 +181,38 @@ export function useSearchHandler({
           logger.warn('[SearchDiag] FALLBACK: timeout', {
             query: queryToSearch,
             timeoutMs: CLIENT_CONFIG.SEARCH_TIMEOUT_MS,
-            responseMs,
+            endToEndElapsedMs: responseMs,
             fallbackQuery,
           });
           toast.error('Search took too long', {
             description: 'Using simplified search instead',
           });
-          onSearch(fallbackQuery, {
-            scryfallQuery: fallbackQuery,
-            explanation: {
-              readable: `Searching for: ${queryToSearch}`,
-              assumptions: ['Search timed out — using simplified translation'],
-              confidence: 0.5,
+          onSearch(
+            fallbackQuery,
+            {
+              scryfallQuery: fallbackQuery,
+              explanation: {
+                readable: `Searching for: ${queryToSearch}`,
+                assumptions: [
+                  'Search timed out — using simplified translation',
+                ],
+                confidence: 0.5,
+              },
+              showAffiliate: false,
+              source: 'client_fallback',
             },
-            showAffiliate: false,
-            source: 'client_fallback',
-          }, queryToSearch);
+            queryToSearch,
+          );
         } else if (
           errorMessage.includes('429') ||
           errorMessage.includes('rate') ||
           errorMessage.includes('Rate limit') ||
           errorMessage.includes('Please wait')
         ) {
-          logger.warn('[SearchDiag] Rate limited', { query: queryToSearch, error: errorMessage });
+          logger.warn('[SearchDiag] Rate limited', {
+            query: queryToSearch,
+            error: errorMessage,
+          });
           setRateLimitedUntil(Date.now() + 30000);
           toast.error('Too many searches', {
             description: 'Please wait a moment before searching again',
@@ -209,22 +222,26 @@ export function useSearchHandler({
           logger.warn('[SearchDiag] FALLBACK: error', {
             query: queryToSearch,
             error: errorMessage,
-            responseMs,
+            endToEndElapsedMs: responseMs,
             fallbackQuery,
           });
           toast.error('Search issue', {
             description: 'Using simplified search instead',
           });
-          onSearch(fallbackQuery, {
-            scryfallQuery: fallbackQuery,
-            explanation: {
-              readable: `Searching for: ${queryToSearch}`,
-              assumptions: ['AI unavailable — using simplified translation'],
-              confidence: 0.5,
+          onSearch(
+            fallbackQuery,
+            {
+              scryfallQuery: fallbackQuery,
+              explanation: {
+                readable: `Searching for: ${queryToSearch}`,
+                assumptions: ['AI unavailable — using simplified translation'],
+                confidence: 0.5,
+              },
+              showAffiliate: false,
+              source: 'client_fallback',
             },
-            showAffiliate: false,
-            source: 'client_fallback',
-          }, queryToSearch);
+            queryToSearch,
+          );
         }
       } finally {
         setIsSearching(false);
@@ -232,14 +249,7 @@ export function useSearchHandler({
         abortControllerRef.current = null;
       }
     },
-    [
-      addToHistory,
-      filters,
-      onSearch,
-      query,
-      rateLimitedUntil,
-      saveContext,
-    ],
+    [addToHistory, filters, onSearch, query, rateLimitedUntil, saveContext],
   );
 
   return {

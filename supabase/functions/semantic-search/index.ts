@@ -49,7 +49,7 @@ function isRawScryfallSyntax(query: string): boolean {
 
   // Extract all tokens that look like operators
   const tokens = query.split(/\s+/);
-  const operatorTokens = tokens.filter(t => /^-?[a-zA-Z]+[:=<>]/.test(t));
+  const operatorTokens = tokens.filter((t) => /^-?[a-zA-Z]+[:=<>]/.test(t));
 
   // If most tokens are operator-based, it's raw syntax
   if (operatorTokens.length === 0) return false;
@@ -59,18 +59,59 @@ function isRawScryfallSyntax(query: string): boolean {
     const keyMatch = token.match(/^-?([a-zA-Z]+)[:=<>]/);
     if (keyMatch) {
       const key = keyMatch[1].toLowerCase();
-      if (!VALID_SEARCH_KEYS.has(key) && !['kw', 'otag', 'atag', 'in', 'is', 'not', 'has', 'set', 'cn', 'year', 'game', 'banned', 'restricted', 'unique', 'order', 'direction', 'prefer', 'prints', 'new', 'cheapest', 'usd', 'eur', 'tix', 'border', 'frame', 'stamp', 'watermark', 'art', 'flavor', 'lore', 'include', 'language', 'date', 'mana', 'wildpair'].includes(key)) {
+      if (
+        !VALID_SEARCH_KEYS.has(key) &&
+        ![
+          'kw',
+          'otag',
+          'atag',
+          'in',
+          'is',
+          'not',
+          'has',
+          'set',
+          'cn',
+          'year',
+          'game',
+          'banned',
+          'restricted',
+          'unique',
+          'order',
+          'direction',
+          'prefer',
+          'prints',
+          'new',
+          'cheapest',
+          'usd',
+          'eur',
+          'tix',
+          'border',
+          'frame',
+          'stamp',
+          'watermark',
+          'art',
+          'flavor',
+          'lore',
+          'include',
+          'language',
+          'date',
+          'mana',
+          'wildpair',
+        ].includes(key)
+      ) {
         return false; // Contains invalid operator
       }
     }
   }
 
   // Non-operator words should be minimal (allow OR, AND, NOT, parens, quotes)
-  const nonOperatorTokens = tokens.filter(t =>
-    !(/^-?[a-zA-Z]+[:=<>]/.test(t)) &&
-    !['or', 'and', 'not', '-'].includes(t.toLowerCase()) &&
-    !t.startsWith('(') && !t.startsWith(')') &&
-    !t.startsWith('"')
+  const nonOperatorTokens = tokens.filter(
+    (t) =>
+      !/^-?[a-zA-Z]+[:=<>]/.test(t) &&
+      !['or', 'and', 'not', '-'].includes(t.toLowerCase()) &&
+      !t.startsWith('(') &&
+      !t.startsWith(')') &&
+      !t.startsWith('"'),
   );
 
   // If more than 30% of tokens are natural language, it's not raw syntax
@@ -81,7 +122,11 @@ function isRawScryfallSyntax(query: string): boolean {
  * Auto-seed high-confidence AI translations into translation_rules
  * so future identical queries hit the pattern match layer instead of AI.
  */
-async function seedTranslationRule(query: string, scryfallQuery: string, confidence: number): Promise<void> {
+async function seedTranslationRule(
+  query: string,
+  scryfallQuery: string,
+  confidence: number,
+): Promise<void> {
   try {
     const normalized = query.toLowerCase().trim().replace(/\s+/g, ' ');
     // Don't seed very short or very long queries
@@ -95,7 +140,7 @@ async function seedTranslationRule(query: string, scryfallQuery: string, confide
         description: `Auto-seeded from AI translation`,
         is_active: true,
       },
-      { onConflict: 'pattern' }
+      { onConflict: 'pattern' },
     );
   } catch {
     // Silently fail - this is an optimization, not critical
@@ -121,6 +166,14 @@ interface RequestFilters {
   colorIdentity?: string[];
   maxCmc?: number;
 }
+
+type StageName =
+  | 'deterministic'
+  | 'cache'
+  | 'pattern'
+  | 'preTranslate'
+  | 'ai'
+  | 'fallback';
 
 // Helper function for consistent error responses
 function errorResponse(
@@ -163,6 +216,32 @@ serve(async (req) => {
   const requestStartTime = Date.now();
   const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
   const { logInfo, logWarn } = createLogger(requestId);
+  const stageDurationsMs: Partial<Record<StageName, number>> = {};
+
+  const markStage = async <T>(
+    stage: StageName,
+    task: () => Promise<T> | T,
+  ): Promise<T> => {
+    const stageStartTime = Date.now();
+    try {
+      return await task();
+    } finally {
+      stageDurationsMs[stage] = Date.now() - stageStartTime;
+    }
+  };
+
+  const getPerfLogFields = (source: string, responseTimeMs: number) => ({
+    source,
+    responseTimeMs,
+    stageDurationsMs: {
+      deterministic: stageDurationsMs.deterministic ?? null,
+      cache: stageDurationsMs.cache ?? null,
+      pattern: stageDurationsMs.pattern ?? null,
+      preTranslate: stageDurationsMs.preTranslate ?? null,
+      ai: stageDurationsMs.ai ?? null,
+      fallback: stageDurationsMs.fallback ?? null,
+    },
+  });
 
   const jsonHeaders = {
     ...corsHeaders,
@@ -333,8 +412,14 @@ serve(async (req) => {
 
     // 2. Forced Fallback / Core Tests (Debug Mode)
     if (shouldForceFallback) {
-      const fallbackResult = buildFallbackQuery(query, filters);
+      const fallbackResult = await markStage('fallback', () =>
+        Promise.resolve(buildFallbackQuery(query, filters)),
+      );
       const responseTimeMs = Date.now() - requestStartTime;
+      logInfo(
+        'request_completed',
+        getPerfLogFields('forced_fallback', responseTimeMs),
+      );
 
       return new Response(
         JSON.stringify({
@@ -358,17 +443,43 @@ serve(async (req) => {
     // 2.5. Fast-path for short, likely card-name queries (skip cache/pattern/AI entirely)
     // Card names are 1-6 title-cased words with no search keywords — deterministic is instant.
     const queryWords = query.trim().split(/\s+/);
-    const isFastNameCandidate = queryWords.length <= 6 && queryWords.length >= 1
-      && queryWords.every((w: string) => /^[A-Z]/.test(w) || /^(of|the|and|to|in|for|a|an)$/i.test(w))
-      && !/\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries)\b/i.test(query);
+    const isFastNameCandidate =
+      queryWords.length <= 6 &&
+      queryWords.length >= 1 &&
+      queryWords.every(
+        (w: string) =>
+          /^[A-Z]/.test(w) || /^(of|the|and|to|in|for|a|an)$/i.test(w),
+      ) &&
+      !/\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries)\b/i.test(
+        query,
+      );
 
     if (isFastNameCandidate) {
-      const fastResult = buildDeterministicIntent(query);
-      const fastQuery = applyFiltersToQuery(fastResult.deterministicQuery, filters);
+      const fastResult = await markStage('deterministic', () =>
+        Promise.resolve(buildDeterministicIntent(query)),
+      );
+      const fastQuery = applyFiltersToQuery(
+        fastResult.deterministicQuery,
+        filters,
+      );
       if (fastQuery && !fastResult.intent.remainingQuery) {
         const validation = validateQuery(fastQuery);
         const responseTimeMs = Date.now() - requestStartTime;
-        logTranslation(query, validation.sanitized, 0.9, responseTimeMs, [], [], filters, false, 'deterministic');
+        logInfo(
+          'request_completed',
+          getPerfLogFields('deterministic', responseTimeMs),
+        );
+        logTranslation(
+          query,
+          validation.sanitized,
+          0.9,
+          responseTimeMs,
+          [],
+          [],
+          filters,
+          false,
+          'deterministic',
+        );
         flushLogQueue();
 
         return new Response(
@@ -440,13 +551,17 @@ serve(async (req) => {
 
     // 3. Cache Lookups (In-Memory then Persistent) — run in parallel with deterministic build
     const [deterministicResult, cachedFromParallel] = await Promise.all([
-      Promise.resolve(buildDeterministicIntent(query)),
-      useCache
-        ? Promise.all([
-            getCachedResult(query, filters, cacheSalt),
-            getPersistentCache(query, filters, cacheSalt),
-          ]).then(([mem, persistent]) => mem || persistent)
-        : Promise.resolve(null),
+      markStage('deterministic', () =>
+        Promise.resolve(buildDeterministicIntent(query)),
+      ),
+      markStage('cache', () =>
+        useCache
+          ? Promise.all([
+              getCachedResult(query, filters, cacheSalt),
+              getPersistentCache(query, filters, cacheSalt),
+            ]).then(([mem, persistent]) => mem || persistent)
+          : Promise.resolve(null),
+      ),
     ]);
 
     const deterministicQuery = applyFiltersToQuery(
@@ -460,7 +575,18 @@ serve(async (req) => {
       if (cached) {
         const responseTimeMs = Date.now() - requestStartTime;
         logInfo('cache_hit', { query: query.substring(0, 50), responseTimeMs });
-        logTranslation(query, cached.scryfallQuery, cached.explanation?.confidence ?? 0.9, responseTimeMs, [], [], filters, false, 'cache');
+        logInfo('request_completed', getPerfLogFields('cache', responseTimeMs));
+        logTranslation(
+          query,
+          cached.scryfallQuery,
+          cached.explanation?.confidence ?? 0.9,
+          responseTimeMs,
+          [],
+          [],
+          filters,
+          false,
+          'cache',
+        );
         flushLogQueue(); // fire-and-forget — don't block the response
 
         return new Response(
@@ -478,16 +604,32 @@ serve(async (req) => {
     }
 
     // 4. Pattern Matching (Known queries)
-    const patternMatch = await checkPatternMatch(query, filters);
+    const patternMatch = await markStage('pattern', () =>
+      checkPatternMatch(query, filters),
+    );
     if (patternMatch) {
       const responseTimeMs = Date.now() - requestStartTime;
       logInfo('pattern_match_hit', {
         query: query.substring(0, 50),
         responseTimeMs,
       });
+      logInfo(
+        'request_completed',
+        getPerfLogFields('pattern_match', responseTimeMs),
+      );
 
       setCachedResult(query, filters, patternMatch, cacheSalt);
-      logTranslation(query, patternMatch.scryfallQuery, patternMatch.explanation?.confidence ?? 0.85, responseTimeMs, [], [], filters, false, 'pattern_match');
+      logTranslation(
+        query,
+        patternMatch.scryfallQuery,
+        patternMatch.explanation?.confidence ?? 0.85,
+        responseTimeMs,
+        [],
+        [],
+        filters,
+        false,
+        'pattern_match',
+      );
       flushLogQueue(); // fire-and-forget
 
       return new Response(
@@ -507,7 +649,14 @@ serve(async (req) => {
       logWarn('ai_unavailable', {
         reason: isCircuitOpen() ? 'circuit_open' : 'missing_api_key',
       });
-      const fallback = buildFallbackQuery(query, filters);
+      const fallback = await markStage('fallback', () =>
+        Promise.resolve(buildFallbackQuery(query, filters)),
+      );
+      const responseTimeMs = Date.now() - requestStartTime;
+      logInfo(
+        'request_completed',
+        getPerfLogFields('fallback', responseTimeMs),
+      );
       return new Response(
         JSON.stringify({
           originalQuery: query,
@@ -533,8 +682,25 @@ serve(async (req) => {
     if (isRawScryfallSyntax(trimmedQuery)) {
       const validation = validateQuery(trimmedQuery);
       const responseTimeMs = Date.now() - requestStartTime;
-      logInfo('raw_syntax_passthrough', { query: trimmedQuery.substring(0, 50), responseTimeMs });
-      logTranslation(query, validation.sanitized, 0.95, responseTimeMs, [], [], filters, false, 'raw_syntax');
+      logInfo('raw_syntax_passthrough', {
+        query: trimmedQuery.substring(0, 50),
+        responseTimeMs,
+      });
+      logInfo(
+        'request_completed',
+        getPerfLogFields('raw_syntax', responseTimeMs),
+      );
+      logTranslation(
+        query,
+        validation.sanitized,
+        0.95,
+        responseTimeMs,
+        [],
+        [],
+        filters,
+        false,
+        'raw_syntax',
+      );
       flushLogQueue(); // fire-and-forget
 
       const rawResult = {
@@ -566,7 +732,21 @@ serve(async (req) => {
     if (deterministicQuery && !deterministicResult.intent.remainingQuery) {
       const validation = validateQuery(deterministicQuery || query);
       const responseTimeMs = Date.now() - requestStartTime;
-      logTranslation(query, validation.sanitized, 0.9, responseTimeMs, [], [], filters, false, 'deterministic');
+      logInfo(
+        'request_completed',
+        getPerfLogFields('deterministic', responseTimeMs),
+      );
+      logTranslation(
+        query,
+        validation.sanitized,
+        0.9,
+        responseTimeMs,
+        [],
+        [],
+        filters,
+        false,
+        'deterministic',
+      );
       flushLogQueue(); // fire-and-forget
 
       return new Response(
@@ -590,52 +770,65 @@ serve(async (req) => {
     let queryForAI = remainingQuery;
 
     // Detect non-Latin scripts or common non-English patterns
-    const hasNonLatin = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Cyrillic}\p{Script=Arabic}\p{Script=Devanagari}]/u.test(remainingQuery);
-    const hasAccentedLatin = /[àáâãäåæçèéêëìíîïðñòóôõöùúûüýþÿ]/i.test(remainingQuery);
-    const looksNonEnglish = hasNonLatin || (hasAccentedLatin && !/^[a-zA-Z0-9\s\-:=<>!'"()+/*.,;$]+$/.test(remainingQuery));
+    const hasNonLatin =
+      /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Cyrillic}\p{Script=Arabic}\p{Script=Devanagari}]/u.test(
+        remainingQuery,
+      );
+    const hasAccentedLatin = /[àáâãäåæçèéêëìíîïðñòóôõöùúûüýþÿ]/i.test(
+      remainingQuery,
+    );
+    const looksNonEnglish =
+      hasNonLatin ||
+      (hasAccentedLatin &&
+        !/^[a-zA-Z0-9\s\-:=<>!'"()+/*.,;$]+$/.test(remainingQuery));
 
     if (looksNonEnglish && remainingQuery.trim().length > 0) {
-      try {
-        const preTranslateResponse = await fetchWithRetry(
-          'https://ai.gateway.lovable.dev/v1/chat/completions',
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${LOVABLE_API_KEY}`,
-              'Content-Type': 'application/json',
+      await markStage('preTranslate', async () => {
+        try {
+          const preTranslateResponse = await fetchWithRetry(
+            'https://ai.gateway.lovable.dev/v1/chat/completions',
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: 'google/gemini-2.5-flash-lite',
+                messages: [
+                  {
+                    role: 'system',
+                    content:
+                      'You are a translator. Translate the following Magic: The Gathering card search query into English. Preserve all MTG-specific intent (counter, destroy, exile, ramp, etc.). Output ONLY the English translation, nothing else.',
+                  },
+                  { role: 'user', content: remainingQuery },
+                ],
+                temperature: 0.0,
+              }),
             },
-            body: JSON.stringify({
-              model: 'google/gemini-2.5-flash-lite',
-              messages: [
-                {
-                  role: 'system',
-                  content: 'You are a translator. Translate the following Magic: The Gathering card search query into English. Preserve all MTG-specific intent (counter, destroy, exile, ramp, etc.). Output ONLY the English translation, nothing else.',
-                },
-                { role: 'user', content: remainingQuery },
-              ],
-              temperature: 0.0,
-            }),
-          },
-        );
+          );
 
-        if (preTranslateResponse.ok) {
-          const preTranslateData = await preTranslateResponse.json();
-          const translated = preTranslateData?.choices?.[0]?.message?.content?.trim();
-          if (translated && translated.length > 0) {
-            logInfo(`Pre-translated: "${remainingQuery}" → "${translated}"`);
-            queryForAI = translated;
+          if (preTranslateResponse.ok) {
+            const preTranslateData = await preTranslateResponse.json();
+            const translated =
+              preTranslateData?.choices?.[0]?.message?.content?.trim();
+            if (translated && translated.length > 0) {
+              logInfo(`Pre-translated: "${remainingQuery}" → "${translated}"`);
+              queryForAI = translated;
+            }
           }
+        } catch (e) {
+          // Pre-translation failed, proceed with original query
+          logWarn(`Pre-translation failed, using original: ${e}`);
         }
-      } catch (e) {
-        // Pre-translation failed, proceed with original query
-        logWarn(`Pre-translation failed, using original: ${e}`);
-      }
+      });
     }
 
     // 8. AI Translation (with tiered model selection)
     // Fetch dynamic rules in parallel with building context (non-blocking)
     const queryWordCount = query.trim().split(/\s+/).length;
-    const isLikelyName = deterministicResult.intent.warnings.includes('likely_card_name');
+    const isLikelyName =
+      deterministicResult.intent.warnings.includes('likely_card_name');
     const tier: QueryTier =
       queryWordCount > 8 ? 'complex' : queryWordCount > 4 ? 'medium' : 'simple';
 
@@ -654,9 +847,8 @@ serve(async (req) => {
     const userMessage = `Translate to Scryfall search syntax: "${queryForAI}"${cardNameHint} ${deterministicQuery ? `(must include: ${deterministicQuery})` : ''}`;
 
     try {
-      const aiResponse = await fetchWithRetry(
-        'https://ai.gateway.lovable.dev/v1/chat/completions',
-        {
+      const aiResponse = await markStage('ai', () =>
+        fetchWithRetry('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -670,7 +862,7 @@ serve(async (req) => {
             ],
             temperature: 0.1,
           }),
-        },
+        }),
       );
 
       if (!aiResponse.ok)
@@ -710,6 +902,7 @@ serve(async (req) => {
       // 9. Success Housekeeping
       recordCircuitSuccess();
       const responseTimeMs = Date.now() - requestStartTime;
+      logInfo('request_completed', getPerfLogFields('ai', responseTimeMs));
 
       // Cache AI results more aggressively (>= 0.65 instead of 0.8) to prevent duplicate AI calls
       if (useCache && confidence >= 0.65) {
@@ -719,7 +912,9 @@ serve(async (req) => {
 
       // Auto-seed high-confidence AI translations into translation_rules for future pattern matches
       if (confidence >= 0.8 && validation.sanitized.length > 0) {
-        seedTranslationRule(query, validation.sanitized, confidence).catch(() => {});
+        seedTranslationRule(query, validation.sanitized, confidence).catch(
+          () => {},
+        );
       }
 
       logTranslation(
@@ -748,7 +943,14 @@ serve(async (req) => {
     } catch (e) {
       recordCircuitFailure();
       logWarn('ai_failure', { error: sanitizeError(e) });
-      const fallback = buildFallbackQuery(query, filters);
+      const fallback = await markStage('fallback', () =>
+        Promise.resolve(buildFallbackQuery(query, filters)),
+      );
+      const responseTimeMs = Date.now() - requestStartTime;
+      logInfo(
+        'request_completed',
+        getPerfLogFields('ai_failure_fallback', responseTimeMs),
+      );
       return new Response(
         JSON.stringify({
           originalQuery: query,
@@ -767,6 +969,11 @@ serve(async (req) => {
     }
   } catch {
     // Errors are logged via structured logging in individual handlers
+    const responseTimeMs = Date.now() - requestStartTime;
+    logWarn(
+      'request_completed',
+      getPerfLogFields('internal_error', responseTimeMs),
+    );
     return new Response(
       JSON.stringify({ error: 'Internal search error', success: false }),
       { status: 500, headers: jsonHeaders },
