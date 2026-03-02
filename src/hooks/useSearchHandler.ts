@@ -180,6 +180,8 @@ export function useSearchHandler({
           const fallbackQuery = buildClientFallbackQuery(queryToSearch);
           logger.warn('[SearchDiag] FALLBACK: timeout', {
             query: queryToSearch,
+            timeoutBehavior: 'fast_timeout',
+            timeoutTriggered: true,
             timeoutMs: CLIENT_CONFIG.SEARCH_TIMEOUT_MS,
             endToEndElapsedMs: responseMs,
             fallbackQuery,

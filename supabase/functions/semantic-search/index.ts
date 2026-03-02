@@ -11,7 +11,7 @@ import {
   setPersistentCache,
   maybeCacheCleanup,
 } from './cache.ts';
-import { fetchWithRetry } from './utils.ts';
+import { fetchWithRetry, fetchWithTimeout } from './utils.ts';
 import {
   isCircuitOpen,
   recordCircuitFailure,
@@ -37,6 +37,44 @@ import {
   parseAIContent,
 } from './schemas.ts';
 import { VALID_SEARCH_KEYS } from './constants.ts';
+
+const DEFAULT_REQUEST_BUDGET_MS = 8_000;
+const MIN_DYNAMIC_RULES_BUDGET_MS = 1_200;
+const MIN_PRE_TRANSLATION_BUDGET_MS = 1_800;
+const MIN_AI_CALL_BUDGET_MS = 2_500;
+
+type BudgetStage = 'dynamic_rules' | 'pre_translation' | 'ai_call';
+
+interface RequestBudget {
+  deadlineMs: number;
+  remainingMs: () => number;
+  hasBudgetFor: (minimumMs: number) => boolean;
+}
+
+function parseRequestBudget(
+  req: Request,
+  requestStartTime: number,
+): RequestBudget {
+  const requestStartHeader = Number(req.headers.get('x-request-start'));
+  const deadlineHeader = Number(req.headers.get('x-deadline-ms'));
+
+  const effectiveStart =
+    Number.isFinite(requestStartHeader) && requestStartHeader > 0
+      ? requestStartHeader
+      : requestStartTime;
+
+  const effectiveDeadline =
+    Number.isFinite(deadlineHeader) && deadlineHeader > effectiveStart
+      ? deadlineHeader
+      : effectiveStart + DEFAULT_REQUEST_BUDGET_MS;
+
+  return {
+    deadlineMs: effectiveDeadline,
+    remainingMs: () => Math.max(0, effectiveDeadline - Date.now()),
+    hasBudgetFor: (minimumMs: number) =>
+      effectiveDeadline - Date.now() >= minimumMs,
+  };
+}
 
 /**
  * Check if a query is already valid Scryfall syntax (no AI needed).
@@ -195,6 +233,11 @@ function sanitizeError(error: unknown): string {
   }
   return 'Unknown error';
 }
+
+const REQUEST_LATENCY_BUDGET_MS = 15_000;
+const PRE_TRANSLATION_MIN_REMAINING_BUDGET_MS = 4_000;
+const PRE_TRANSLATION_TIMEOUT_MS = 2_500;
+const ACCENTED_LATIN_HIGH_CONFIDENCE_THRESHOLD = 0.9;
 
 /**
  * Main Edge Function Handler
@@ -668,6 +711,7 @@ serve(async (req) => {
             ],
             confidence: 0.6,
           },
+          responseTimeMs,
           success: true,
           fallback: true,
           source: 'fallback',
@@ -765,9 +809,45 @@ serve(async (req) => {
       );
     }
 
+    const buildBudgetExceededResponse = (
+      stage: BudgetStage,
+      confidence: number,
+      assumptions: string[],
+    ): Response => {
+      const fallback = buildFallbackQuery(query, filters);
+      const responseTimeMs = Date.now() - requestStartTime;
+      const remainingBudgetMs = requestBudget.remainingMs();
+      logWarn('budget_exceeded', {
+        stage,
+        responseTimeMs,
+        remainingBudgetMs,
+        deadlineMs: requestBudget.deadlineMs,
+      });
+
+      return new Response(
+        JSON.stringify({
+          originalQuery: query,
+          scryfallQuery: fallback.sanitized,
+          explanation: {
+            readable: `Searching for: ${query}`,
+            assumptions,
+            confidence,
+          },
+          responseTimeMs,
+          budgetExceededAtStage: stage,
+          success: true,
+          fallback: true,
+          source: 'budget_fallback',
+        }),
+        { headers: jsonHeaders },
+      );
+    };
+
     // 7. Pre-translate non-English queries to English for better AI accuracy
     const remainingQuery = deterministicResult.intent.remainingQuery || '';
     let queryForAI = remainingQuery;
+    let preTranslationAttempted = false;
+    let preTranslationSkippedReason: string | null = null;
 
     // Detect non-Latin scripts or common non-English patterns
     const hasNonLatin =
@@ -777,15 +857,24 @@ serve(async (req) => {
     const hasAccentedLatin = /[àáâãäåæçèéêëìíîïðñòóôõöùúûüýþÿ]/i.test(
       remainingQuery,
     );
-    const looksNonEnglish =
-      hasNonLatin ||
-      (hasAccentedLatin &&
-        !/^[a-zA-Z0-9\s\-:=<>!'"()+/*.,;$]+$/.test(remainingQuery));
+    const deterministicConfidence = deterministicResult.intent.confidence ?? 0;
+    const shouldPreTranslateAccentedLatin =
+      hasAccentedLatin &&
+      !hasNonLatin &&
+      deterministicConfidence >= ACCENTED_LATIN_HIGH_CONFIDENCE_THRESHOLD;
+    const looksNonEnglish = hasNonLatin || shouldPreTranslateAccentedLatin;
 
     if (looksNonEnglish && remainingQuery.trim().length > 0) {
-      await markStage('preTranslate', async () => {
+      const elapsedBeforePreTranslationMs = Date.now() - requestStartTime;
+      const remainingBudgetMs =
+        REQUEST_LATENCY_BUDGET_MS - elapsedBeforePreTranslationMs;
+
+      if (remainingBudgetMs < PRE_TRANSLATION_MIN_REMAINING_BUDGET_MS) {
+        preTranslationSkippedReason = 'low_remaining_budget';
+      } else {
+        preTranslationAttempted = true;
         try {
-          const preTranslateResponse = await fetchWithRetry(
+          const preTranslateResponse = await fetchWithTimeout(
             'https://ai.gateway.lovable.dev/v1/chat/completions',
             {
               method: 'POST',
@@ -806,6 +895,7 @@ serve(async (req) => {
                 temperature: 0.0,
               }),
             },
+            PRE_TRANSLATION_TIMEOUT_MS,
           );
 
           if (preTranslateResponse.ok) {
@@ -813,15 +903,36 @@ serve(async (req) => {
             const translated =
               preTranslateData?.choices?.[0]?.message?.content?.trim();
             if (translated && translated.length > 0) {
-              logInfo(`Pre-translated: "${remainingQuery}" → "${translated}"`);
+              logInfo('pre_translation_applied', {
+                preTranslationAttempted,
+                preTranslationSkippedReason,
+              });
               queryForAI = translated;
+            } else {
+              preTranslationSkippedReason = 'empty_translation';
             }
+          } else {
+            preTranslationSkippedReason = 'gateway_non_ok';
           }
         } catch (e) {
-          // Pre-translation failed, proceed with original query
-          logWarn(`Pre-translation failed, using original: ${e}`);
+          // Pre-translation failed, proceed with original query without retries.
+          preTranslationSkippedReason =
+            e instanceof Error && e.name === 'AbortError'
+              ? 'pre_translation_timeout'
+              : 'pre_translation_failure';
+          logWarn('pre_translation_failed', {
+            error: sanitizeError(e),
+            preTranslationAttempted,
+            preTranslationSkippedReason,
+          });
         }
-      });
+      }
+    } else if (remainingQuery.trim().length === 0) {
+      preTranslationSkippedReason = 'empty_remaining_query';
+    } else if (hasAccentedLatin && !shouldPreTranslateAccentedLatin) {
+      preTranslationSkippedReason = 'accented_latin_low_confidence';
+    } else {
+      preTranslationSkippedReason = 'no_strong_non_english_signal';
     }
 
     // 8. AI Translation (with tiered model selection)
@@ -839,12 +950,24 @@ serve(async (req) => {
         ? 'google/gemini-2.5-flash-lite'
         : 'google/gemini-3-flash-preview';
 
+    if (!requestBudget.hasBudgetFor(MIN_DYNAMIC_RULES_BUDGET_MS)) {
+      return buildBudgetExceededResponse('dynamic_rules', 0.57, [
+        'Skipped dynamic rules fetch due to low remaining request budget',
+      ]);
+    }
+
     const dynamicRules = await fetchDynamicRules();
     const systemPrompt = buildSystemPrompt(tier, dynamicRules, '');
     const cardNameHint = isLikelyName
       ? ' (IMPORTANT: This is likely a Magic: The Gathering card name, not a search description. Output ONLY the exact Scryfall name search like !"Gray Merchant of Asphodel" using the correct card name. Fix common misspellings: grey→gray, etc. If unsure of full name, use name: syntax like name:merchant.)'
       : '';
     const userMessage = `Translate to Scryfall search syntax: "${queryForAI}"${cardNameHint} ${deterministicQuery ? `(must include: ${deterministicQuery})` : ''}`;
+
+    if (!requestBudget.hasBudgetFor(MIN_AI_CALL_BUDGET_MS)) {
+      return buildBudgetExceededResponse('ai_call', 0.56, [
+        'Skipped AI translation due to low remaining request budget',
+      ]);
+    }
 
     try {
       const aiResponse = await markStage('ai', () =>
@@ -926,7 +1049,18 @@ serve(async (req) => {
         qualityFlags,
         filters,
         false,
+        'ai',
+        null,
+        {
+          preTranslationAttempted,
+          preTranslationSkippedReason,
+        },
       );
+      logInfo('ai_translation_success', {
+        responseTimeMs,
+        preTranslationAttempted,
+        preTranslationSkippedReason,
+      });
       flushLogQueue(); // fire-and-forget
 
       return new Response(
@@ -960,6 +1094,7 @@ serve(async (req) => {
             assumptions: ['AI failed - using fallback'],
             confidence: 0.5,
           },
+          responseTimeMs,
           success: true,
           fallback: true,
           source: 'ai_failure_fallback',
