@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sortDeckCards, type DeckSortMode } from '../sort-deck-cards';
+import { sortDeckCards } from '../sort-deck-cards';
 import type { DeckCard } from '@/hooks/useDeck';
 import type { ScryfallCard } from '@/types/card';
 
