@@ -1,10 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
-import {
-  checkRateLimit,
-  maybeCleanup,
-  resolveRateLimitKey,
-} from '../_shared/rateLimit.ts';
+import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
