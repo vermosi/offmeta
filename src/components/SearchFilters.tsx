@@ -28,49 +28,34 @@ import { useAuth } from '@/hooks/useAuth';
 
 // Color definitions with mana symbols
 const COLORS = [
-  {
-    id: 'W',
-    name: 'White',
-    bg: 'bg-amber-100 dark:bg-amber-200',
-    text: 'text-amber-900',
-    border: 'border-amber-300',
-  },
-  {
-    id: 'U',
-    name: 'Blue',
-    bg: 'bg-blue-100 dark:bg-blue-200',
-    text: 'text-blue-900',
-    border: 'border-blue-300',
-  },
-  {
-    id: 'B',
-    name: 'Black',
-    bg: 'bg-zinc-200 dark:bg-zinc-300',
-    text: 'text-zinc-900',
-    border: 'border-zinc-400',
-  },
-  {
-    id: 'R',
-    name: 'Red',
-    bg: 'bg-red-100 dark:bg-red-200',
-    text: 'text-red-900',
-    border: 'border-red-300',
-  },
-  {
-    id: 'G',
-    name: 'Green',
-    bg: 'bg-green-100 dark:bg-green-200',
-    text: 'text-green-900',
-    border: 'border-green-300',
-  },
-  {
-    id: 'C',
-    name: 'Colorless',
-    bg: 'bg-slate-100 dark:bg-slate-200',
-    text: 'text-slate-700',
-    border: 'border-slate-300',
-  },
+  { id: 'W', name: 'White' },
+  { id: 'U', name: 'Blue' },
+  { id: 'B', name: 'Black' },
+  { id: 'R', name: 'Red' },
+  { id: 'G', name: 'Green' },
+  { id: 'C', name: 'Colorless' },
 ] as const;
+
+const COLOR_IDENTITY_STYLES: Record<(typeof COLORS)[number]['id'], string> = {
+  W: 'data-[identity=W]:font-semibold data-[identity=W]:tracking-tight',
+  U: 'data-[identity=U]:italic',
+  B: 'data-[identity=B]:font-black',
+  R: 'data-[identity=R]:uppercase',
+  G: 'data-[identity=G]:font-semibold',
+  C: 'data-[identity=C]:font-medium data-[identity=C]:text-[11px]',
+};
+
+const getColorFilterButtonClass = (
+  isSelected: boolean,
+  colorId: (typeof COLORS)[number]['id'],
+) =>
+  cn(
+    'h-8 w-8 rounded-full border flex items-center justify-center text-xs transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+    COLOR_IDENTITY_STYLES[colorId],
+    isSelected
+      ? 'bg-primary text-primary-foreground border-primary shadow-sm scale-110'
+      : 'bg-muted text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground hover:border-accent-foreground/20',
+  );
 
 // Card types to filter by
 const CARD_TYPES = [
@@ -378,16 +363,16 @@ export function SearchFilters({
                   <button
                     key={color.id}
                     onClick={() => toggleColor(color.id)}
-                    className={cn(
-                      'h-8 w-8 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all',
-                      color.bg,
-                      color.text,
-                      filters.colors.includes(color.id)
-                        ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110'
-                        : 'opacity-60 hover:opacity-100 border-transparent',
+                    className={getColorFilterButtonClass(
+                      filters.colors.includes(color.id),
+                      color.id,
                     )}
                     title={color.name}
-                    aria-label={t('filters.filterByColor', 'Filter by {name}').replace('{name}', color.name)}
+                    data-identity={color.id}
+                    aria-label={t(
+                      'filters.filterByColor',
+                      'Filter by {name}',
+                    ).replace('{name}', color.name)}
                     aria-pressed={filters.colors.includes(color.id)}
                   >
                     {color.id}
@@ -467,7 +452,9 @@ export function SearchFilters({
       {/* Owned Only toggle — only for authenticated users */}
       {user && collectionLookup && (
         <button
-          onClick={() => setFilters((prev) => ({ ...prev, ownedOnly: !prev.ownedOnly }))}
+          onClick={() =>
+            setFilters((prev) => ({ ...prev, ownedOnly: !prev.ownedOnly }))
+          }
           className={cn(
             'flex items-center gap-1 py-1 px-2.5 text-xs rounded-md transition-colors h-8 sm:h-9',
             filters.ownedOnly
@@ -478,7 +465,9 @@ export function SearchFilters({
           aria-label={t('collection.showOwnedOnly', 'Owned Only')}
         >
           <Package className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">{t('collection.showOwnedOnly', 'Owned Only')}</span>
+          <span className="hidden sm:inline">
+            {t('collection.showOwnedOnly', 'Owned Only')}
+          </span>
         </button>
       )}
 
@@ -525,7 +514,10 @@ export function SearchFilters({
                     toggleColor(colorId);
                   }
                 }}
-                aria-label={t('filters.removeColor', 'Remove {name} filter').replace('{name}', color?.name || colorId)}
+                aria-label={t(
+                  'filters.removeColor',
+                  'Remove {name} filter',
+                ).replace('{name}', color?.name || colorId)}
               >
                 {color?.name || colorId}
                 <X className="h-3 w-3" aria-hidden="true" />
@@ -546,7 +538,10 @@ export function SearchFilters({
                   toggleType(type);
                 }
               }}
-              aria-label={t('filters.removeType', 'Remove {type} filter').replace('{type}', type)}
+              aria-label={t(
+                'filters.removeType',
+                'Remove {type} filter',
+              ).replace('{type}', type)}
             >
               {type}
               <X className="h-3 w-3" aria-hidden="true" />
@@ -557,21 +552,38 @@ export function SearchFilters({
               variant="secondary"
               className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20 text-xs"
               onClick={() =>
-                setFilters((prev) => ({ ...prev, cmcRange: [0, defaultMaxCmc] }))
+                setFilters((prev) => ({
+                  ...prev,
+                  cmcRange: [0, defaultMaxCmc],
+                }))
               }
               role="button"
               tabIndex={0}
               onKeyDown={(e: React.KeyboardEvent) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
-                  setFilters((prev) => ({ ...prev, cmcRange: [0, defaultMaxCmc] }));
+                  setFilters((prev) => ({
+                    ...prev,
+                    cmcRange: [0, defaultMaxCmc],
+                  }));
                 }
               }}
-              aria-label={t('filters.removeCmc', 'Remove CMC {range} filter').replace('{range}', `${filters.cmcRange[0]}-${filters.cmcRange[1] >= defaultMaxCmc ? `${defaultMaxCmc}+` : filters.cmcRange[1]}`)}
+              aria-label={t(
+                'filters.removeCmc',
+                'Remove CMC {range} filter',
+              ).replace(
+                '{range}',
+                `${filters.cmcRange[0]}-${filters.cmcRange[1] >= defaultMaxCmc ? `${defaultMaxCmc}+` : filters.cmcRange[1]}`,
+              )}
             >
               {t('filters.cmcRange', 'CMC {min}-{max}')
                 .replace('{min}', String(filters.cmcRange[0]))
-                .replace('{max}', filters.cmcRange[1] >= defaultMaxCmc ? `${defaultMaxCmc}+` : String(filters.cmcRange[1]))}
+                .replace(
+                  '{max}',
+                  filters.cmcRange[1] >= defaultMaxCmc
+                    ? `${defaultMaxCmc}+`
+                    : String(filters.cmcRange[1]),
+                )}
               <X className="h-3 w-3" aria-hidden="true" />
             </Badge>
           )}
