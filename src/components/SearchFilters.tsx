@@ -3,7 +3,7 @@
  * Provides color filters, type filters, CMC range, and sorting.
  */
 
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
@@ -120,200 +120,67 @@ export function SearchFilters({
   const defaultMaxCmc = useMemo(() => {
     return Math.max(16, ...cards.map((c) => c.cmc || 0));
   }, [cards]);
-  const lastDefaultMaxCmc = useRef(defaultMaxCmc);
-  const buildDefaultFilters = useCallback(
-    (maxCmc: number): FilterState => ({
-      colors: [],
-      types: [],
-      cmcRange: [0, maxCmc],
-      sortBy: 'name-asc',
-    }),
-    [],
-  );
-  const [filters, setFilters] = useState<FilterState>(() => {
-    const defaults = buildDefaultFilters(defaultMaxCmc);
-    if (initialFilters) {
-      return {
-        ...defaults,
-        ...initialFilters,
-        cmcRange: initialFilters.cmcRange || defaults.cmcRange,
-      };
-    }
-    return defaults;
+  const {
+    filters,
+    setFilters,
+    defaultFilters,
+    applyResetIfNeeded,
+    syncCmcRangeIfPristine,
+  } = useSearchFilterState({
+    defaultMaxCmc,
+    initialFilters,
+    resetKey,
   });
   const [isOpen, setIsOpen] = useState(false);
-  const defaultFilters = useMemo(
-    () => buildDefaultFilters(defaultMaxCmc),
-    [buildDefaultFilters, defaultMaxCmc],
-  );
 
-  // Apply filters and sorting
   const filteredCards = useMemo(() => {
-    let result = [...cards];
-
-    // Owned-only filter
-    if (filters.ownedOnly && collectionLookup) {
-      result = result.filter((card) => collectionLookup.has(card.name));
-    }
-
-    // Color filter - AND logic: card must have ALL selected colors
-    if (filters.colors.length > 0) {
-      result = result.filter((card) => {
-        const cardColors = card.colors || [];
-        const isColorless = cardColors.length === 0;
-
-        // Handle colorless separately
-        const wantsColorless = filters.colors.includes('C');
-        const colorFilters = filters.colors.filter((c) => c !== 'C');
-
-        // If only colorless is selected, match colorless cards
-        if (colorFilters.length === 0 && wantsColorless) {
-          return isColorless;
-        }
-
-        // If colorless + colors selected, that's contradictory - show nothing
-        if (colorFilters.length > 0 && wantsColorless && isColorless) {
-          return false;
-        }
-
-        // Card must have ALL selected colors (AND logic)
-        return colorFilters.every((color) => cardColors.includes(color));
-      });
-    }
-
-    // Type filter
-    if (filters.types.length > 0) {
-      result = result.filter((card) => {
-        const typeLine = card.type_line.toLowerCase();
-        return filters.types.some((type) =>
-          typeLine.includes(type.toLowerCase()),
-        );
-      });
-    }
-
-    // CMC range filter
-    result = result.filter((card) => {
-      const cmc = card.cmc || 0;
-      return cmc >= filters.cmcRange[0] && cmc <= filters.cmcRange[1];
-    });
-
-    // Sorting
-    const [sortField, sortDir] = filters.sortBy.split('-') as [
-      string,
-      'asc' | 'desc',
-    ];
-    result.sort((a, b) => {
-      let comparison = 0;
-
-      switch (sortField) {
-        case 'name':
-          comparison = a.name.localeCompare(b.name);
-          break;
-        case 'cmc':
-          comparison = (a.cmc || 0) - (b.cmc || 0);
-          break;
-        case 'price': {
-          const priceA = parseFloat(a.prices?.usd || '0');
-          const priceB = parseFloat(b.prices?.usd || '0');
-          comparison = priceA - priceB;
-          break;
-        }
-        case 'rarity': {
-          const rarityA =
-            RARITY_ORDER[a.rarity as keyof typeof RARITY_ORDER] || 0;
-          const rarityB =
-            RARITY_ORDER[b.rarity as keyof typeof RARITY_ORDER] || 0;
-          comparison = rarityA - rarityB;
-          break;
-        }
-        case 'edhrec': {
-          // Lower rank = more popular; cards without rank go to the end
-          const rankA = a.edhrec_rank ?? 999999;
-          const rankB = b.edhrec_rank ?? 999999;
-          comparison = rankA - rankB;
-          break;
-        }
-      }
-
-      return sortDir === 'desc' ? -comparison : comparison;
-    });
-
-    return result;
+    return applyCardFilters(cards, filters, collectionLookup);
   }, [cards, filters, collectionLookup]);
 
-  // Calculate if filters are active (before the effect that uses it)
-  const hasActiveFilters =
-    filters.colors.length > 0 ||
-    filters.types.length > 0 ||
-    filters.cmcRange[0] > 0 ||
-    filters.cmcRange[1] < defaultMaxCmc ||
-    !!filters.ownedOnly;
+  const hasActiveFilters = getHasActiveFilters(filters, defaultMaxCmc);
 
   // Notify parent of filtered results - use useEffect instead of useMemo for side effects
   useEffect(() => {
     onFilteredCards(filteredCards, hasActiveFilters, filters);
   }, [filteredCards, hasActiveFilters, onFilteredCards, filters]);
 
-  // Reset filters when resetKey changes (render-phase adjustment)
-  const [prevResetKey, setPrevResetKey] = useState(resetKey);
-  if (prevResetKey !== resetKey) {
-    setPrevResetKey(resetKey);
-    setFilters(defaultFilters);
+  if (applyResetIfNeeded()) {
     setIsOpen(false);
   }
 
   useEffect(() => {
-    if (lastDefaultMaxCmc.current === defaultMaxCmc) {
-      return;
-    }
-    setFilters((prev) => {
-      const isDefaultRange =
-        prev.colors.length === 0 &&
-        prev.types.length === 0 &&
-        prev.sortBy === 'name-asc' &&
-        prev.cmcRange[0] === 0 &&
-        prev.cmcRange[1] === lastDefaultMaxCmc.current;
+    syncCmcRangeIfPristine();
+  }, [syncCmcRangeIfPristine]);
 
-      lastDefaultMaxCmc.current = defaultMaxCmc;
-
-      if (!isDefaultRange) {
-        return prev;
-      }
-
-      return {
+  const toggleColor = useCallback(
+    (colorId: string) => {
+      setFilters((prev) => ({
         ...prev,
-        cmcRange: [0, defaultMaxCmc],
-      };
-    });
-  }, [defaultMaxCmc]);
+        colors: prev.colors.includes(colorId)
+          ? prev.colors.filter((c) => c !== colorId)
+          : [...prev.colors, colorId],
+      }));
+    },
+    [setFilters],
+  );
 
-  const toggleColor = useCallback((colorId: string) => {
-    setFilters((prev) => ({
-      ...prev,
-      colors: prev.colors.includes(colorId)
-        ? prev.colors.filter((c) => c !== colorId)
-        : [...prev.colors, colorId],
-    }));
-  }, []);
-
-  const toggleType = useCallback((type: string) => {
-    setFilters((prev) => ({
-      ...prev,
-      types: prev.types.includes(type)
-        ? prev.types.filter((t) => t !== type)
-        : [...prev.types, type],
-    }));
-  }, []);
+  const toggleType = useCallback(
+    (type: string) => {
+      setFilters((prev) => ({
+        ...prev,
+        types: prev.types.includes(type)
+          ? prev.types.filter((t) => t !== type)
+          : [...prev.types, type],
+      }));
+    },
+    [setFilters],
+  );
 
   const clearFilters = useCallback(() => {
     setFilters(defaultFilters);
-  }, [defaultFilters]);
+  }, [defaultFilters, setFilters]);
 
-  const activeFilterCount =
-    filters.colors.length +
-    filters.types.length +
-    (filters.cmcRange[0] > 0 || filters.cmcRange[1] < defaultMaxCmc ? 1 : 0) +
-    (filters.ownedOnly ? 1 : 0);
+  const activeFilterCount = countActiveFilters(filters, defaultMaxCmc);
 
   return (
     <div className="contents">
