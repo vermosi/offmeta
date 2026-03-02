@@ -3,8 +3,11 @@ import { render, screen } from '@testing-library/react';
 import { ErrorBoundary } from '../ErrorBoundary';
 
 // Suppress console.error in tests for expected errors
+// eslint-disable-next-line no-console
 const originalError = console.error;
+// eslint-disable-next-line no-console
 beforeAll(() => { console.error = vi.fn(); });
+// eslint-disable-next-line no-console
 afterAll(() => { console.error = originalError; });
 
 function ThrowingChild({ shouldThrow }: { shouldThrow: boolean }) {
