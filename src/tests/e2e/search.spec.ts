@@ -39,10 +39,13 @@ test.describe('Search Flow', () => {
     const searchInput = page.locator(SEARCH_INPUT_SELECTOR).first();
     await expect(searchInput).toBeVisible({ timeout: 15_000 });
 
-    let edgeFunctionCalled = false;
+    // Wait for any warmup/ping calls to finish before attaching listener
+    await page.waitForTimeout(3000);
+
+    const semanticSearchCalls: string[] = [];
     page.on('request', (req) => {
       if (req.url().includes('semantic-search')) {
-        edgeFunctionCalled = true;
+        semanticSearchCalls.push(req.url());
       }
     });
 
@@ -50,7 +53,7 @@ test.describe('Search Flow', () => {
     await searchInput.press('Enter');
 
     await page.waitForTimeout(1000);
-    expect(edgeFunctionCalled).toBe(false);
+    expect(semanticSearchCalls).toHaveLength(0);
   });
 
   test('clicking the first card opens a modal with card details', async ({
