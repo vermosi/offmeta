@@ -7,6 +7,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { Suspense } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TooltipProvider } from '@radix-ui/react-tooltip';
@@ -126,7 +127,9 @@ function renderIndex(initialRoute = '/') {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <MemoryRouter initialEntries={[initialRoute]}>
-          <IndexPage />
+          <Suspense fallback={<div>Loading…</div>}>
+            <IndexPage />
+          </Suspense>
         </MemoryRouter>
       </TooltipProvider>
     </QueryClientProvider>,
@@ -156,17 +159,21 @@ beforeEach(async () => {
 // ── Tests ──────────────────────────────────────────────────
 
 describe('Index page integration', () => {
-  it('renders hero section and search bar on initial load', () => {
+  it('renders hero section and search bar on initial load', async () => {
     renderIndex();
-    expect(screen.getByRole('search')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole('search')).toBeInTheDocument();
+    });
     expect(screen.getByRole('searchbox')).toBeInTheDocument();
   });
 
-  it('renders example query buttons when no search has been made', () => {
+  it('renders example query buttons when no search has been made', async () => {
     renderIndex();
-    expect(
-      screen.getByRole('group', { name: /try searching for/i }),
-    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.getByRole('group', { name: /try searching for/i }),
+      ).toBeInTheDocument();
+    });
     expect(
       screen.getByText('creatures that make treasure tokens'),
     ).toBeInTheDocument();
@@ -179,6 +186,10 @@ describe('Index page integration', () => {
     );
 
     renderIndex();
+
+    await waitFor(() => {
+      expect(screen.getByRole('searchbox')).toBeInTheDocument();
+    });
 
     const input = screen.getByRole('searchbox');
     fireEvent.change(input, { target: { value: 'treasure makers' } });
@@ -193,6 +204,9 @@ describe('Index page integration', () => {
   it('renders card results after successful search flow', async () => {
     renderIndex();
 
+    await waitFor(() => {
+      expect(screen.getByRole('searchbox')).toBeInTheDocument();
+    });
     const input = screen.getByRole('searchbox');
     fireEvent.change(input, { target: { value: 'treasure makers' } });
     fireEvent.keyDown(input, { key: 'Enter' });
@@ -215,6 +229,9 @@ describe('Index page integration', () => {
 
     renderIndex();
 
+    await waitFor(() => {
+      expect(screen.getByRole('searchbox')).toBeInTheDocument();
+    });
     const input = screen.getByRole('searchbox');
     fireEvent.change(input, { target: { value: 'nonexistent card xyz' } });
     fireEvent.keyDown(input, { key: 'Enter' });
@@ -229,6 +246,9 @@ describe('Index page integration', () => {
   it('clicking an example query triggers search', async () => {
     renderIndex();
 
+    await waitFor(() => {
+      expect(screen.getByText('creatures that make treasure tokens')).toBeInTheDocument();
+    });
     const exampleBtn = screen.getByText('creatures that make treasure tokens');
     fireEvent.click(exampleBtn);
 
@@ -244,6 +264,9 @@ describe('Index page integration', () => {
   it('shows total cards count after search', async () => {
     renderIndex();
 
+    await waitFor(() => {
+      expect(screen.getByRole('searchbox')).toBeInTheDocument();
+    });
     const input = screen.getByRole('searchbox');
     fireEvent.change(input, { target: { value: 'treasure' } });
     fireEvent.keyDown(input, { key: 'Enter' });
