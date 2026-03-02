@@ -20,8 +20,7 @@ vi.mock('@/hooks/useSearchQuery', () => ({
 
 const mockBuildClientFallbackQuery = vi.fn((q: string) => `o:"${q}"`);
 vi.mock('@/lib/search/fallback', () => ({
-  buildClientFallbackQuery: (q: string) =>
-    mockBuildClientFallbackQuery(q),
+  buildClientFallbackQuery: (q: string) => mockBuildClientFallbackQuery(q),
 }));
 
 vi.mock('sonner', () => ({
@@ -36,11 +35,18 @@ vi.mock('@/lib/core/logger', () => ({
 import { useSearchHandler } from '@/hooks/useSearchHandler';
 import { toast } from 'sonner';
 
-const mockToast = toast as unknown as { success: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn> };
+const mockToast = toast as unknown as {
+  success: ReturnType<typeof vi.fn>;
+  error: ReturnType<typeof vi.fn>;
+};
 
 // ── Helpers ────────────────────────────────────────────────
 
-type OnSearchFn = (query: string, result?: SearchResult, naturalQuery?: string) => void;
+type OnSearchFn = (
+  query: string,
+  result?: SearchResult,
+  naturalQuery?: string,
+) => void;
 
 function createOptions(overrides?: Record<string, unknown>) {
   return {
@@ -90,7 +96,9 @@ describe('useSearchHandler', () => {
       await result.current.handleSearch();
     });
 
-    expect(opts.addToHistory).toHaveBeenCalledWith('creatures that make treasure');
+    expect(opts.addToHistory).toHaveBeenCalledWith(
+      'creatures that make treasure',
+    );
   });
 
   // 3. Saves context
@@ -148,9 +156,9 @@ describe('useSearchHandler', () => {
       searchPromise = result.current.handleSearch();
     });
 
-    // Advance past the search timeout (15s) outside of act
+    // Advance past the fast search timeout (3.5s) outside of act
     await act(async () => {
-      vi.advanceTimersByTime(16000);
+      vi.advanceTimersByTime(4000);
     });
 
     await act(async () => {
@@ -160,9 +168,34 @@ describe('useSearchHandler', () => {
     expect(opts.onSearch).toHaveBeenCalledTimes(1);
     const [, searchResult] = opts.onSearch.mock.calls[0];
     expect(searchResult!.source).toBe('client_fallback');
-    expect(mockBuildClientFallbackQuery).toHaveBeenCalledWith('creatures that make treasure');
-    expect(mockToast.error).toHaveBeenCalled();
-  }, 15000);
+    expect(mockBuildClientFallbackQuery).toHaveBeenCalledTimes(1);
+    expect(mockBuildClientFallbackQuery).toHaveBeenCalledWith(
+      'creatures that make treasure',
+    );
+    expect(mockToast.error).toHaveBeenCalledTimes(1);
+  });
+
+  it('triggers timeout fallback exactly once per timed-out request token', async () => {
+    const neverResolvingPromise = new Promise(() => {});
+    mockTranslateQueryWithDedup.mockReturnValue(neverResolvingPromise);
+
+    const opts = createOptions();
+    const { result } = renderHook(() => useSearchHandler(opts));
+
+    let searchPromise: Promise<void>;
+    act(() => {
+      searchPromise = result.current.handleSearch();
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(4000);
+      await searchPromise!;
+    });
+
+    expect(opts.onSearch).toHaveBeenCalledTimes(1);
+    expect(mockToast.error).toHaveBeenCalledTimes(1);
+    expect(mockBuildClientFallbackQuery).toHaveBeenCalledTimes(1);
+  });
 
   // 7. Error fallback
   it('falls back to client query on generic error', async () => {
@@ -183,7 +216,9 @@ describe('useSearchHandler', () => {
 
   // 8. Rate limit handling (429)
   it('sets rate limit on 429 error and blocks subsequent searches', async () => {
-    mockTranslateQueryWithDedup.mockRejectedValue(new Error('429 Too Many Requests'));
+    mockTranslateQueryWithDedup.mockRejectedValue(
+      new Error('429 Too Many Requests'),
+    );
 
     const opts = createOptions();
     const { result } = renderHook(() => useSearchHandler(opts));
@@ -238,7 +273,9 @@ describe('useSearchHandler', () => {
   // 11. Request cancellation (stale token)
   it('ignores stale response when a newer search is triggered', async () => {
     let resolveFirst: (v: unknown) => void;
-    const firstPromise = new Promise((r) => { resolveFirst = r; });
+    const firstPromise = new Promise((r) => {
+      resolveFirst = r;
+    });
     const secondResult = createMockTranslation({
       scryfallQuery: 't:artifact',
       source: 'ai',
@@ -401,12 +438,17 @@ describe('useSearchHandler', () => {
 
     expect(mockTranslateQueryWithDedup).not.toHaveBeenCalled();
     expect(opts.onSearch).not.toHaveBeenCalled();
-    expect(mockToast.error).toHaveBeenCalledWith('Please wait', expect.any(Object));
+    expect(mockToast.error).toHaveBeenCalledWith(
+      'Please wait',
+      expect.any(Object),
+    );
   });
 
   // 18. Rate limit expires and search resumes
   it('allows search after rate limit window expires', async () => {
-    mockTranslateQueryWithDedup.mockRejectedValueOnce(new Error('Rate limit exceeded'));
+    mockTranslateQueryWithDedup.mockRejectedValueOnce(
+      new Error('Rate limit exceeded'),
+    );
     const opts = createOptions();
     const { result } = renderHook(() => useSearchHandler(opts));
 
@@ -460,9 +502,10 @@ describe('useSearchHandler', () => {
   // 21. Concurrent timeout and error — timeout fires first
   it('timeout wins over slow rejection', async () => {
     mockTranslateQueryWithDedup.mockImplementation(
-      () => new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Slow error')), 120000);
-      }),
+      () =>
+        new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Slow error')), 120000);
+        }),
     );
 
     const opts = createOptions();
@@ -474,7 +517,7 @@ describe('useSearchHandler', () => {
     });
 
     await act(async () => {
-      vi.advanceTimersByTime(16000);
+      vi.advanceTimersByTime(4000);
     });
 
     await act(async () => {
@@ -487,14 +530,15 @@ describe('useSearchHandler', () => {
       'Search took too long',
       expect.any(Object),
     );
-  }, 15000);
+    expect(mockToast.error).toHaveBeenCalledTimes(1);
+  });
 
   // 22. Multiple error variants trigger correct fallback path
   it.each([
-    ['Please wait before retrying', true],  // rate-limit variant
-    ['rate limited by server', true],        // rate-limit variant
-    ['Server returned 500', false],          // generic error
-    ['ECONNREFUSED', false],                 // network error
+    ['Please wait before retrying', true], // rate-limit variant
+    ['rate limited by server', true], // rate-limit variant
+    ['Server returned 500', false], // generic error
+    ['ECONNREFUSED', false], // network error
   ])('error "%s" → rate-limited=%s', async (msg, isRateLimited) => {
     mockTranslateQueryWithDedup.mockRejectedValue(new Error(msg));
     const opts = createOptions();
