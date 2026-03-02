@@ -37,15 +37,10 @@ import {
   parseAIContent,
 } from './schemas.ts';
 import { VALID_SEARCH_KEYS } from './constants.ts';
-import {
-  AI_FETCH_TIMEOUT_MS,
-  AI_MAX_RETRIES,
-  REQUEST_BUDGET_MS,
-} from './config.ts';
+import { AI_FETCH_TIMEOUT_MS, AI_MAX_RETRIES } from './config.ts';
 
 const DEFAULT_REQUEST_BUDGET_MS = 8_000;
 const MIN_DYNAMIC_RULES_BUDGET_MS = 1_200;
-const MIN_PRE_TRANSLATION_BUDGET_MS = 1_800;
 const MIN_AI_CALL_BUDGET_MS = 2_500;
 
 type BudgetStage = 'dynamic_rules' | 'pre_translation' | 'ai_call';
@@ -371,7 +366,8 @@ serve(async (req) => {
 
   try {
     const { query, filters, debug, useCache, cacheSalt } = requestBody;
-    const requestDeadlineMs = requestStartTime + REQUEST_BUDGET_MS;
+    const requestBudget = parseRequestBudget(req, requestStartTime);
+    const requestDeadlineMs = requestBudget.deadlineMs;
 
     const isRequestBudgetExceeded = () => Date.now() >= requestDeadlineMs;
 
@@ -1003,26 +999,29 @@ serve(async (req) => {
 
     try {
       const aiResponse = await markStage('ai', () =>
-        fetchWithRetry('https://ai.gateway.lovable.dev/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            'Content-Type': 'application/json',
+        fetchWithRetry(
+          'https://ai.gateway.lovable.dev/v1/chat/completions',
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: aiModel,
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userMessage },
+              ],
+              temperature: 0.1,
+            }),
           },
-          body: JSON.stringify({
-            model: aiModel,
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: userMessage },
-            ],
-            temperature: 0.1,
-          }),
-        },
-        {
-          timeoutMs: AI_FETCH_TIMEOUT_MS,
-          retries: AI_MAX_RETRIES,
-          deadlineMs: requestDeadlineMs,
-        },
+          {
+            timeoutMs: AI_FETCH_TIMEOUT_MS,
+            retries: AI_MAX_RETRIES,
+            deadlineMs: requestDeadlineMs,
+          },
+        ),
       );
 
       if (!aiResponse.ok)
