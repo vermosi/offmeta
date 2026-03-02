@@ -82,7 +82,7 @@ export function NextPhaseCards() {
             >
               {/* Coming soon badge */}
               <div className="absolute top-3 right-3">
-                <span className="text-[10px] font-medium text-muted-foreground/60 tracking-wide uppercase">
+                <span className="text-[10px] font-medium text-muted-foreground tracking-wide uppercase">
                   Soon
                 </span>
               </div>
@@ -100,8 +100,8 @@ export function NextPhaseCards() {
               <ul className="space-y-1.5 mt-auto">
                 {card.features.map((f) => (
                   <li key={f} className="flex items-start gap-1.5">
-                    <span className="text-muted-foreground/40 mt-0.5 text-xs">—</span>
-                    <span className="text-xs text-muted-foreground/70">{f}</span>
+                    <span className="text-muted-foreground mt-0.5 text-xs">—</span>
+                    <span className="text-xs text-muted-foreground">{f}</span>
                   </li>
                 ))}
               </ul>

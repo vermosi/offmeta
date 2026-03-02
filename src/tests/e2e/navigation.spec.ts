@@ -97,8 +97,8 @@ test.describe('Navigation Flow', () => {
     await page.goto('/nonexistent-route-12345');
     await page.waitForLoadState('domcontentloaded');
 
-    await expect(page.locator('h1')).toContainText('404');
-    const homeLink = page.locator('a[href="/"]');
+    await expect(page.getByRole('heading', { name: '404' })).toBeVisible();
+    const homeLink = page.locator('a[href="/"]').first();
     await expect(homeLink).toBeVisible();
 
     await homeLink.click();
