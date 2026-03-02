@@ -20,6 +20,8 @@ let searchCountThisMinute = 0;
 let minuteWindowStart = Date.now();
 
 export interface TranslationResult {
+  edgeSource?: string;
+  edgeResponseTimeMs?: number;
   scryfallQuery: string;
   explanation?: {
     readable: string;
@@ -143,6 +145,7 @@ export async function translateQueryWithDedup(
         sessionStorage.setItem('offmeta_session_id', sessionId);
       }
 
+      const edgeCallStartedAt = performance.now();
       logger.info('[SearchDiag] Edge function call', { query });
       const requestStart = Date.now();
       const requestDeadline = requestStart + 8000;
@@ -171,16 +174,28 @@ export async function translateQueryWithDedup(
         throw error;
       }
 
+      const edgeElapsedMs = Math.round(performance.now() - edgeCallStartedAt);
+
       if (data?.success && data?.scryfallQuery) {
         // Only count as a search on success (so failures don't eat rate limit)
         recordSearch(query);
+        const edgeSource = data.source || 'ai';
+        logger.info('[SearchDiag] Translation diagnostics', {
+          query,
+          edgeSource,
+          edgeElapsedMs,
+          edgeResponseTimeMs: data.responseTimeMs ?? null,
+        });
+
         return {
           scryfallQuery: data.scryfallQuery,
           explanation: data.explanation,
           showAffiliate: data.showAffiliate,
           validationIssues: data.validationIssues,
           intent: data.intent,
-          source: data.source || 'ai',
+          source: edgeSource,
+          edgeSource,
+          edgeResponseTimeMs: data.responseTimeMs,
         };
       }
 

@@ -205,6 +205,14 @@ interface RequestFilters {
   maxCmc?: number;
 }
 
+type StageName =
+  | 'deterministic'
+  | 'cache'
+  | 'pattern'
+  | 'preTranslate'
+  | 'ai'
+  | 'fallback';
+
 // Helper function for consistent error responses
 function errorResponse(
   message: string,
@@ -251,7 +259,32 @@ serve(async (req) => {
   const requestStartTime = Date.now();
   const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
   const { logInfo, logWarn } = createLogger(requestId);
-  const requestBudget = parseRequestBudget(req, requestStartTime);
+  const stageDurationsMs: Partial<Record<StageName, number>> = {};
+
+  const markStage = async <T>(
+    stage: StageName,
+    task: () => Promise<T> | T,
+  ): Promise<T> => {
+    const stageStartTime = Date.now();
+    try {
+      return await task();
+    } finally {
+      stageDurationsMs[stage] = Date.now() - stageStartTime;
+    }
+  };
+
+  const getPerfLogFields = (source: string, responseTimeMs: number) => ({
+    source,
+    responseTimeMs,
+    stageDurationsMs: {
+      deterministic: stageDurationsMs.deterministic ?? null,
+      cache: stageDurationsMs.cache ?? null,
+      pattern: stageDurationsMs.pattern ?? null,
+      preTranslate: stageDurationsMs.preTranslate ?? null,
+      ai: stageDurationsMs.ai ?? null,
+      fallback: stageDurationsMs.fallback ?? null,
+    },
+  });
 
   const jsonHeaders = {
     ...corsHeaders,
@@ -422,8 +455,14 @@ serve(async (req) => {
 
     // 2. Forced Fallback / Core Tests (Debug Mode)
     if (shouldForceFallback) {
-      const fallbackResult = buildFallbackQuery(query, filters);
+      const fallbackResult = await markStage('fallback', () =>
+        Promise.resolve(buildFallbackQuery(query, filters)),
+      );
       const responseTimeMs = Date.now() - requestStartTime;
+      logInfo(
+        'request_completed',
+        getPerfLogFields('forced_fallback', responseTimeMs),
+      );
 
       return new Response(
         JSON.stringify({
@@ -459,7 +498,9 @@ serve(async (req) => {
       );
 
     if (isFastNameCandidate) {
-      const fastResult = buildDeterministicIntent(query);
+      const fastResult = await markStage('deterministic', () =>
+        Promise.resolve(buildDeterministicIntent(query)),
+      );
       const fastQuery = applyFiltersToQuery(
         fastResult.deterministicQuery,
         filters,
@@ -467,6 +508,10 @@ serve(async (req) => {
       if (fastQuery && !fastResult.intent.remainingQuery) {
         const validation = validateQuery(fastQuery);
         const responseTimeMs = Date.now() - requestStartTime;
+        logInfo(
+          'request_completed',
+          getPerfLogFields('deterministic', responseTimeMs),
+        );
         logTranslation(
           query,
           validation.sanitized,
@@ -549,13 +594,17 @@ serve(async (req) => {
 
     // 3. Cache Lookups (In-Memory then Persistent) — run in parallel with deterministic build
     const [deterministicResult, cachedFromParallel] = await Promise.all([
-      Promise.resolve(buildDeterministicIntent(query)),
-      useCache
-        ? Promise.all([
-            getCachedResult(query, filters, cacheSalt),
-            getPersistentCache(query, filters, cacheSalt),
-          ]).then(([mem, persistent]) => mem || persistent)
-        : Promise.resolve(null),
+      markStage('deterministic', () =>
+        Promise.resolve(buildDeterministicIntent(query)),
+      ),
+      markStage('cache', () =>
+        useCache
+          ? Promise.all([
+              getCachedResult(query, filters, cacheSalt),
+              getPersistentCache(query, filters, cacheSalt),
+            ]).then(([mem, persistent]) => mem || persistent)
+          : Promise.resolve(null),
+      ),
     ]);
 
     const deterministicQuery = applyFiltersToQuery(
@@ -569,6 +618,7 @@ serve(async (req) => {
       if (cached) {
         const responseTimeMs = Date.now() - requestStartTime;
         logInfo('cache_hit', { query: query.substring(0, 50), responseTimeMs });
+        logInfo('request_completed', getPerfLogFields('cache', responseTimeMs));
         logTranslation(
           query,
           cached.scryfallQuery,
@@ -597,13 +647,19 @@ serve(async (req) => {
     }
 
     // 4. Pattern Matching (Known queries)
-    const patternMatch = await checkPatternMatch(query, filters);
+    const patternMatch = await markStage('pattern', () =>
+      checkPatternMatch(query, filters),
+    );
     if (patternMatch) {
       const responseTimeMs = Date.now() - requestStartTime;
       logInfo('pattern_match_hit', {
         query: query.substring(0, 50),
         responseTimeMs,
       });
+      logInfo(
+        'request_completed',
+        getPerfLogFields('pattern_match', responseTimeMs),
+      );
 
       setCachedResult(query, filters, patternMatch, cacheSalt);
       logTranslation(
@@ -636,8 +692,14 @@ serve(async (req) => {
       logWarn('ai_unavailable', {
         reason: isCircuitOpen() ? 'circuit_open' : 'missing_api_key',
       });
-      const fallback = buildFallbackQuery(query, filters);
+      const fallback = await markStage('fallback', () =>
+        Promise.resolve(buildFallbackQuery(query, filters)),
+      );
       const responseTimeMs = Date.now() - requestStartTime;
+      logInfo(
+        'request_completed',
+        getPerfLogFields('fallback', responseTimeMs),
+      );
       return new Response(
         JSON.stringify({
           originalQuery: query,
@@ -668,6 +730,10 @@ serve(async (req) => {
         query: trimmedQuery.substring(0, 50),
         responseTimeMs,
       });
+      logInfo(
+        'request_completed',
+        getPerfLogFields('raw_syntax', responseTimeMs),
+      );
       logTranslation(
         query,
         validation.sanitized,
@@ -710,6 +776,10 @@ serve(async (req) => {
     if (deterministicQuery && !deterministicResult.intent.remainingQuery) {
       const validation = validateQuery(deterministicQuery || query);
       const responseTimeMs = Date.now() - requestStartTime;
+      logInfo(
+        'request_completed',
+        getPerfLogFields('deterministic', responseTimeMs),
+      );
       logTranslation(
         query,
         validation.sanitized,
@@ -779,7 +849,7 @@ serve(async (req) => {
     let preTranslationAttempted = false;
     let preTranslationSkippedReason: string | null = null;
 
-    // Detect stronger non-English signals
+    // Detect non-Latin scripts or common non-English patterns
     const hasNonLatin =
       /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Cyrillic}\p{Script=Arabic}\p{Script=Devanagari}]/u.test(
         remainingQuery,
@@ -900,9 +970,8 @@ serve(async (req) => {
     }
 
     try {
-      const aiResponse = await fetchWithRetry(
-        'https://ai.gateway.lovable.dev/v1/chat/completions',
-        {
+      const aiResponse = await markStage('ai', () =>
+        fetchWithRetry('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -916,7 +985,7 @@ serve(async (req) => {
             ],
             temperature: 0.1,
           }),
-        },
+        }),
       );
 
       if (!aiResponse.ok)
@@ -956,6 +1025,7 @@ serve(async (req) => {
       // 9. Success Housekeeping
       recordCircuitSuccess();
       const responseTimeMs = Date.now() - requestStartTime;
+      logInfo('request_completed', getPerfLogFields('ai', responseTimeMs));
 
       // Cache AI results more aggressively (>= 0.65 instead of 0.8) to prevent duplicate AI calls
       if (useCache && confidence >= 0.65) {
@@ -1006,13 +1076,15 @@ serve(async (req) => {
       );
     } catch (e) {
       recordCircuitFailure();
-      logWarn('ai_failure', {
-        error: sanitizeError(e),
-        preTranslationAttempted,
-        preTranslationSkippedReason,
-      });
-      const fallback = buildFallbackQuery(query, filters);
+      logWarn('ai_failure', { error: sanitizeError(e) });
+      const fallback = await markStage('fallback', () =>
+        Promise.resolve(buildFallbackQuery(query, filters)),
+      );
       const responseTimeMs = Date.now() - requestStartTime;
+      logInfo(
+        'request_completed',
+        getPerfLogFields('ai_failure_fallback', responseTimeMs),
+      );
       return new Response(
         JSON.stringify({
           originalQuery: query,
@@ -1032,6 +1104,11 @@ serve(async (req) => {
     }
   } catch {
     // Errors are logged via structured logging in individual handlers
+    const responseTimeMs = Date.now() - requestStartTime;
+    logWarn(
+      'request_completed',
+      getPerfLogFields('internal_error', responseTimeMs),
+    );
     return new Response(
       JSON.stringify({ error: 'Internal search error', success: false }),
       { status: 500, headers: jsonHeaders },

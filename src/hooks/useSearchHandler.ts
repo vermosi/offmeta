@@ -141,11 +141,12 @@ export function useSearchHandler({
         saveContext(queryToSearch, result.scryfallQuery);
 
         const source = result.source || 'ai';
-        const responseMs = Date.now() - searchStartTime;
-        logger.info('[SearchDiag] Translation success', {
+        const endToEndElapsedMs = Date.now() - searchStartTime;
+        logger.info('[SearchDiag] Search diagnostics', {
           query: queryToSearch,
-          source,
-          responseMs,
+          edgeSource: result.edgeSource || source,
+          endToEndElapsedMs,
+          edgeResponseTimeMs: result.edgeResponseTimeMs ?? null,
           scryfallQuery: result.scryfallQuery,
         });
 
@@ -182,7 +183,7 @@ export function useSearchHandler({
             timeoutBehavior: 'fast_timeout',
             timeoutTriggered: true,
             timeoutMs: CLIENT_CONFIG.SEARCH_TIMEOUT_MS,
-            responseMs,
+            endToEndElapsedMs: responseMs,
             fallbackQuery,
           });
           toast.error('Search took too long', {
@@ -223,7 +224,7 @@ export function useSearchHandler({
           logger.warn('[SearchDiag] FALLBACK: error', {
             query: queryToSearch,
             error: errorMessage,
-            responseMs,
+            endToEndElapsedMs: responseMs,
             fallbackQuery,
           });
           toast.error('Search issue', {
