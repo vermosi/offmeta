@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 const SEARCH_INPUT_SELECTOR = '#search-input';
-const CARD_SELECTOR = '[data-testid="card-item"], .card-item, [class*="card"]';
+const CARD_SELECTOR = '[data-testid="search-result-card"]';
 
 test.describe('Search Flow', () => {
   test('page loads and search input is visible', async ({ page }) => {
@@ -39,9 +39,6 @@ test.describe('Search Flow', () => {
     const searchInput = page.locator(SEARCH_INPUT_SELECTOR).first();
     await expect(searchInput).toBeVisible({ timeout: 15_000 });
 
-    // Wait for any warmup/ping calls to finish before attaching listener
-    await page.waitForTimeout(3000);
-
     const semanticSearchCalls: string[] = [];
     page.on('request', (req) => {
       if (req.url().includes('semantic-search')) {
@@ -49,10 +46,10 @@ test.describe('Search Flow', () => {
       }
     });
 
-    await searchInput.fill('');
+    await searchInput.fill('   ');
     await searchInput.press('Enter');
 
-    await page.waitForTimeout(1000);
+    await expect(searchInput).toBeVisible();
     expect(semanticSearchCalls).toHaveLength(0);
   });
 

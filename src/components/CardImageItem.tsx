@@ -29,12 +29,26 @@ export const CardImageItem = memo(function CardImageItem({
     <button
       onClick={onClick}
       tabIndex={tabIndex}
+      data-testid="search-result-card"
       className="relative aspect-[2.5/3.5] rounded-lg overflow-hidden bg-secondary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-transform duration-200 hover:scale-[1.03] w-full"
       aria-label={`View ${displayName}`}
     >
       {isOwned && (
-        <div className="absolute top-1.5 left-1.5 z-10 h-5 w-5 rounded-full bg-emerald-500/90 flex items-center justify-center shadow-sm" aria-label="Owned">
-          <svg className="h-3 w-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+        <div
+          className="absolute top-1.5 left-1.5 z-10 h-5 w-5 rounded-full bg-emerald-500/90 flex items-center justify-center shadow-sm"
+          aria-label="Owned"
+        >
+          <svg
+            className="h-3 w-3 text-white"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
         </div>
       )}
       <img
