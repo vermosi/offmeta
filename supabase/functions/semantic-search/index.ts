@@ -37,6 +37,11 @@ import {
   parseAIContent,
 } from './schemas.ts';
 import { VALID_SEARCH_KEYS } from './constants.ts';
+import {
+  AI_FETCH_TIMEOUT_MS,
+  AI_MAX_RETRIES,
+  REQUEST_BUDGET_MS,
+} from './config.ts';
 
 const DEFAULT_REQUEST_BUDGET_MS = 8_000;
 const MIN_DYNAMIC_RULES_BUDGET_MS = 1_200;
@@ -366,6 +371,28 @@ serve(async (req) => {
 
   try {
     const { query, filters, debug, useCache, cacheSalt } = requestBody;
+    const requestDeadlineMs = requestStartTime + REQUEST_BUDGET_MS;
+
+    const isRequestBudgetExceeded = () => Date.now() >= requestDeadlineMs;
+
+    const createBudgetExceededResponse = (): Response => {
+      const fallback = buildFallbackQuery(query, filters);
+      return new Response(
+        JSON.stringify({
+          originalQuery: query,
+          scryfallQuery: fallback.sanitized,
+          explanation: {
+            readable: `Searching for: ${query}`,
+            assumptions: ['Request budget exceeded - using fallback'],
+            confidence: 0.5,
+          },
+          success: true,
+          fallback: true,
+          source: 'budget_fallback',
+        }),
+        { headers: jsonHeaders },
+      );
+    };
 
     // Type-safe debug options
     const debugOptions: DebugOptions =
@@ -508,10 +535,6 @@ serve(async (req) => {
       if (fastQuery && !fastResult.intent.remainingQuery) {
         const validation = validateQuery(fastQuery);
         const responseTimeMs = Date.now() - requestStartTime;
-        logInfo(
-          'request_completed',
-          getPerfLogFields('deterministic', responseTimeMs),
-        );
         logTranslation(
           query,
           validation.sanitized,
@@ -935,6 +958,11 @@ serve(async (req) => {
       preTranslationSkippedReason = 'no_strong_non_english_signal';
     }
 
+    if (isRequestBudgetExceeded()) {
+      logWarn('request_budget_exceeded_after_pretranslate');
+      return createBudgetExceededResponse();
+    }
+
     // 8. AI Translation (with tiered model selection)
     // Fetch dynamic rules in parallel with building context (non-blocking)
     const queryWordCount = query.trim().split(/\s+/).length;
@@ -957,6 +985,10 @@ serve(async (req) => {
     }
 
     const dynamicRules = await fetchDynamicRules();
+    if (isRequestBudgetExceeded()) {
+      logWarn('request_budget_exceeded_before_ai_translate');
+      return createBudgetExceededResponse();
+    }
     const systemPrompt = buildSystemPrompt(tier, dynamicRules, '');
     const cardNameHint = isLikelyName
       ? ' (IMPORTANT: This is likely a Magic: The Gathering card name, not a search description. Output ONLY the exact Scryfall name search like !"Gray Merchant of Asphodel" using the correct card name. Fix common misspellings: grey→gray, etc. If unsure of full name, use name: syntax like name:merchant.)'
@@ -985,7 +1017,12 @@ serve(async (req) => {
             ],
             temperature: 0.1,
           }),
-        }),
+        },
+        {
+          timeoutMs: AI_FETCH_TIMEOUT_MS,
+          retries: AI_MAX_RETRIES,
+          deadlineMs: requestDeadlineMs,
+        },
       );
 
       if (!aiResponse.ok)
@@ -1075,6 +1112,11 @@ serve(async (req) => {
         { headers: jsonHeaders },
       );
     } catch (e) {
+      if (isRequestBudgetExceeded()) {
+        logWarn('request_budget_exceeded_during_ai_translate');
+        return createBudgetExceededResponse();
+      }
+
       recordCircuitFailure();
       logWarn('ai_failure', { error: sanitizeError(e) });
       const fallback = await markStage('fallback', () =>
