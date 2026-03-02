@@ -146,11 +146,20 @@ async function fetchWithTimeout(
   url: string,
   timeoutMs: number,
 ): Promise<Response> {
+  return fetchWithTimeoutWithInit(url, timeoutMs);
+}
+
+async function fetchWithTimeoutWithInit(
+  url: string,
+  timeoutMs: number,
+  init?: RequestInit,
+): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     return await fetch(url, {
+      ...init,
       signal: controller.signal,
       credentials: 'omit',
     });
@@ -161,6 +170,7 @@ async function fetchWithTimeout(
 
 async function fetchWithRetry(
   url: string,
+  init?: RequestInit,
   retries = MAX_RETRIES,
 ): Promise<Response> {
   let attempt = 0;
@@ -168,7 +178,7 @@ async function fetchWithRetry(
 
   while (attempt <= retries) {
     try {
-      const response = await fetchWithTimeout(url, FETCH_TIMEOUT_MS);
+      const response = await fetchWithTimeoutWithInit(url, FETCH_TIMEOUT_MS, init);
       if (
         !response.ok &&
         (response.status === 429 || response.status >= 500) &&
@@ -232,6 +242,49 @@ export async function searchCards(
   const result: SearchResult = await response.json();
   setSearchCache(cacheKey, result);
   return result;
+}
+
+interface ScryfallCollectionResponse {
+  object: 'list';
+  data: ScryfallCard[];
+}
+
+/**
+ * Fetch many cards by exact name using Scryfall's collection endpoint.
+ * Uses chunking to respect Scryfall's 75 identifiers/request limit.
+ */
+export async function getCardsByExactNames(names: string[]): Promise<ScryfallCard[]> {
+  if (names.length === 0) return [];
+
+  const uniqueNames = [...new Set(names.map((name) => name.trim()).filter(Boolean))];
+  const chunks: string[][] = [];
+
+  for (let i = 0; i < uniqueNames.length; i += 75) {
+    chunks.push(uniqueNames.slice(i, i + 75));
+  }
+
+  const cards: ScryfallCard[] = [];
+
+  for (const chunk of chunks) {
+    const response = await fetchWithRetry(`${BASE_URL}/cards/collection`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'omit',
+      body: JSON.stringify({
+        identifiers: chunk.map((name) => ({ name })),
+      }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) continue;
+      throw new Error(`Collection fetch failed: ${response.statusText}`);
+    }
+
+    const result = await response.json() as ScryfallCollectionResponse;
+    cards.push(...result.data);
+  }
+
+  return cards;
 }
 
 /**
