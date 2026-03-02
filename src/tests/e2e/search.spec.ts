@@ -1,19 +1,22 @@
 import { test, expect } from '@playwright/test';
 
+const SEARCH_INPUT_SELECTOR = '#search-input';
+const CARD_SELECTOR = '[data-testid="card-item"], .card-item, [class*="card"]';
+
 test.describe('Search Flow', () => {
   test('page loads and search input is visible', async ({ page }) => {
     await page.goto('/');
-    const searchInput = page.getByPlaceholder(/search/i).first();
-    await expect(searchInput).toBeVisible();
+    const searchInput = page.locator(SEARCH_INPUT_SELECTOR).first();
+    await expect(searchInput).toBeVisible({ timeout: 15_000 });
   });
 
   test('typing a query and pressing Enter shows card results', async ({
     page,
   }) => {
     await page.goto('/');
-    const searchInput = page.getByPlaceholder(/search/i).first();
+    const searchInput = page.locator(SEARCH_INPUT_SELECTOR).first();
+    await expect(searchInput).toBeVisible({ timeout: 15_000 });
 
-    // Wait for the edge function response when submitting
     const responsePromise = page.waitForResponse(
       (res) =>
         res.url().includes('semantic-search') ||
@@ -23,11 +26,9 @@ test.describe('Search Flow', () => {
 
     await searchInput.fill('cheap green ramp spells');
     await searchInput.press('Enter');
-
     await responsePromise;
 
-    // Wait for results to appear (card names or images)
-    const results = page.locator('[data-testid="card-item"], .card-item, [class*="card"]');
+    const results = page.locator(CARD_SELECTOR);
     await expect(results.first()).toBeVisible({ timeout: 15_000 });
   });
 
@@ -35,9 +36,9 @@ test.describe('Search Flow', () => {
     page,
   }) => {
     await page.goto('/');
-    const searchInput = page.getByPlaceholder(/search/i).first();
+    const searchInput = page.locator(SEARCH_INPUT_SELECTOR).first();
+    await expect(searchInput).toBeVisible({ timeout: 15_000 });
 
-    // Track network calls to the edge function
     let edgeFunctionCalled = false;
     page.on('request', (req) => {
       if (req.url().includes('semantic-search')) {
@@ -48,7 +49,6 @@ test.describe('Search Flow', () => {
     await searchInput.fill('');
     await searchInput.press('Enter');
 
-    // Give a moment for potential requests
     await page.waitForTimeout(1000);
     expect(edgeFunctionCalled).toBe(false);
   });
@@ -57,7 +57,8 @@ test.describe('Search Flow', () => {
     page,
   }) => {
     await page.goto('/');
-    const searchInput = page.getByPlaceholder(/search/i).first();
+    const searchInput = page.locator(SEARCH_INPUT_SELECTOR).first();
+    await expect(searchInput).toBeVisible({ timeout: 15_000 });
 
     const responsePromise = page.waitForResponse(
       (res) =>
@@ -70,19 +71,18 @@ test.describe('Search Flow', () => {
     await searchInput.press('Enter');
     await responsePromise;
 
-    // Click the first card result
-    const firstCard = page.locator('[data-testid="card-item"], .card-item, [class*="card"]').first();
+    const firstCard = page.locator(CARD_SELECTOR).first();
     await expect(firstCard).toBeVisible({ timeout: 15_000 });
     await firstCard.click();
 
-    // Modal should appear with card details
-    const modal = page.locator('[role="dialog"], [data-testid="card-modal"]');
+    const modal = page.locator('[role="dialog"]').first();
     await expect(modal).toBeVisible({ timeout: 5_000 });
   });
 
   test('pressing Escape closes the modal', async ({ page }) => {
     await page.goto('/');
-    const searchInput = page.getByPlaceholder(/search/i).first();
+    const searchInput = page.locator(SEARCH_INPUT_SELECTOR).first();
+    await expect(searchInput).toBeVisible({ timeout: 15_000 });
 
     const responsePromise = page.waitForResponse(
       (res) =>
@@ -95,11 +95,11 @@ test.describe('Search Flow', () => {
     await searchInput.press('Enter');
     await responsePromise;
 
-    const firstCard = page.locator('[data-testid="card-item"], .card-item, [class*="card"]').first();
+    const firstCard = page.locator(CARD_SELECTOR).first();
     await expect(firstCard).toBeVisible({ timeout: 15_000 });
     await firstCard.click();
 
-    const modal = page.locator('[role="dialog"], [data-testid="card-modal"]');
+    const modal = page.locator('[role="dialog"]').first();
     await expect(modal).toBeVisible({ timeout: 5_000 });
 
     await page.keyboard.press('Escape');
