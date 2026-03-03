@@ -1,0 +1,38 @@
+name: Discord - CI Status
+
+on:
+  workflow_run:
+    workflows: ['CI']
+    types: [completed]
+
+jobs:
+  notify-discord:
+    if: github.event.workflow_run.head_branch == github.event.repository.default_branch && (github.event.workflow_run.conclusion == 'success' || github.event.workflow_run.conclusion == 'failure')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate webhook secret
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "Missing required secret: DISCORD_WEBHOOK_URL"
+            exit 1
+          fi
+
+      - name: Post CI status to Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          REPOSITORY: ${{ github.repository }}
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+          COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+        run: |
+          set -euo pipefail
+
+          MESSAGE=$(python -c "import json, os; status=os.environ['CONCLUSION']; emoji='✅' if status == 'success' else '❌'; label='Passed' if status == 'success' else 'Failed'; short_sha=os.environ['COMMIT_SHA'][:7]; content=(f\"{emoji} **CI {label}** in `{os.environ['REPOSITORY']}`\\n\" f\"**Workflow:** {os.environ['WORKFLOW_NAME']}\\n\" f\"**Branch:** `{os.environ['BRANCH']}`\\n\" f\"**Commit:** `{short_sha}`\\n\" f\"{os.environ['RUN_URL']}\"); print(json.dumps({'content': content}))")
+
+          curl -fsS -X POST "$DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            --data "$MESSAGE"
