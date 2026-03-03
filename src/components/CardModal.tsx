@@ -347,7 +347,10 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onClose} modal={false}>
-        <DrawerContent className="max-h-[90vh] px-0 overflow-hidden">
+        <DrawerContent
+          className="max-h-[90vh] px-0 overflow-hidden"
+          aria-label={card.name}
+        >
           <VisuallyHidden>
             <DrawerTitle>{card.name}</DrawerTitle>
           </VisuallyHidden>
@@ -356,6 +359,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
             size="icon"
             className="absolute right-2 top-2 z-10 h-8 w-8"
             onClick={onClose}
+            aria-label="Close card details"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -369,7 +373,10 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl w-[95vw] p-0 bg-background border-border/50 overflow-hidden max-h-[85vh] gap-0">
+      <DialogContent
+        className="max-w-3xl w-[95vw] p-0 bg-background border-border/50 overflow-hidden max-h-[85vh] gap-0"
+        aria-label={card.name}
+      >
         <VisuallyHidden>
           <DialogTitle>{card.name}</DialogTitle>
         </VisuallyHidden>
