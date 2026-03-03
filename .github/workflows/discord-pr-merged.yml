@@ -1,0 +1,38 @@
+name: Discord - PR Merged
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  notify-discord:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate webhook secret
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "Missing required secret: DISCORD_WEBHOOK_URL"
+            exit 1
+          fi
+
+      - name: Post merge message to Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          MERGED_BY: ${{ github.actor }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          set -euo pipefail
+
+          MESSAGE=$(python -c "import json, os; content=(f\"🚀 **PR Merged** in `{os.environ['REPOSITORY']}`\\n\" f\"**#{os.environ['PR_NUMBER']}:** {os.environ['PR_TITLE']}\\n\" f\"**Merged by:** {os.environ['MERGED_BY']}\\n\" f\"**Branch:** `{os.environ['HEAD_REF']}` → `{os.environ['BASE_REF']}`\\n\" f\"{os.environ['PR_URL']}\"); print(json.dumps({'content': content}))")
+
+          curl -fsS -X POST "$DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            --data "$MESSAGE"
