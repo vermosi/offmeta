@@ -139,6 +139,18 @@ test.describe('Accessibility Audits @a11y', () => {
   test('card modal has no critical or serious violations', async ({
     page,
   }, testInfo) => {
+    await page.route('**/semantic-search**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          source: 'deterministic',
+          scryfallQuery: 'lightning bolt',
+        }),
+      });
+    });
+
     await page.route('**/api.scryfall.com/cards/search**', async (route) => {
       await route.fulfill({
         status: 200,
