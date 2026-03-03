@@ -153,6 +153,8 @@ let IndexPage: React.ComponentType;
 
 beforeEach(async () => {
   vi.clearAllMocks();
+  localStorage.clear();
+  localStorage.setItem('offmeta-locale', 'en');
   mockTranslateQueryWithDedup.mockResolvedValue(
     createMockTranslation({ scryfallQuery: 'o:"treasure"' }),
   );
