@@ -178,6 +178,14 @@ Browse [GitHub Issues](https://github.com/vermosi/offmeta/issues) for current ta
 
 ---
 
+## 💬 Community Discord
+
+Join the OffMeta community on Discord to share ideas, get help, and discuss deckbuilding:
+
+**Invite link:** [https://discord.com/invite/9UEv6vrTD4](https://discord.com/invite/9UEv6vrTD4)
+
+---
+
 ## 🔒 Security
 
 For security vulnerability reporting, see [SECURITY.md](SECURITY.md).
