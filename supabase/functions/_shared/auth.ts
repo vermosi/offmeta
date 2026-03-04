@@ -8,6 +8,10 @@ declare const Deno: {
   };
 };
 
+// Dynamic ESM import helper that satisfies both Deno and frontend type-checkers
+const importSupabase = (): Promise<{ createClient: (...args: unknown[]) => unknown }> =>
+  import(/* @vite-ignore */ 'https://esm.sh/@supabase/supabase-js@2' as string) as Promise<{ createClient: (...args: unknown[]) => unknown }>;
+
 /**
  * Validates that the request has a valid authorization header.
  * For public edge functions, we accept:
@@ -62,10 +66,9 @@ export async function validateAuth(req: Request): Promise<AuthResult> {
   }
 
   try {
-    // @ts-expect-error: Deno esm.sh import
-    const { createClient } =
-      await import('https://esm.sh/@supabase/supabase-js@2');
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+    const { createClient } = await importSupabase();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const userClient: any = (createClient as Function)(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
 
@@ -177,12 +180,11 @@ export async function requireAdmin(
       ),
     };
   }
+  const { createClient } = await importSupabase();
+  const createFn = createClient as Function;
 
-  // @ts-expect-error: Deno esm.sh import
-  const { createClient } =
-    await import('https://esm.sh/@supabase/supabase-js@2');
-
-  const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const userClient: any = createFn(supabaseUrl, supabaseAnonKey, {
     global: { headers: { Authorization: authHeader } },
   });
 
@@ -200,7 +202,8 @@ export async function requireAdmin(
     };
   }
 
-  const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const adminClient: any = createFn(supabaseUrl, supabaseServiceKey);
   const { data: roleData } = await adminClient
     .from('user_roles')
     .select('role')

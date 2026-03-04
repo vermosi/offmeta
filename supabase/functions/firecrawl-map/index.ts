@@ -41,10 +41,10 @@ Deno.serve(async (req) => {
   }
 
   // Require valid auth token
-  const { authorized, error: authError } = await validateAuth(req);
-  if (!authorized) {
+  const authResult = await validateAuth(req);
+  if (!authResult.authorized) {
     return new Response(
-      JSON.stringify({ success: false, error: authError || 'Unauthorized' }),
+      JSON.stringify({ success: false, error: authResult.error || 'Unauthorized' }),
       {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

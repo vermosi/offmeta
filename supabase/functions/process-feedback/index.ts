@@ -27,10 +27,10 @@ serve(async (req) => {
   }
 
   // Authentication check - require valid token (anon key, service role, or JWT)
-  const { authorized, error: authError } = await validateAuth(req);
-  if (!authorized) {
+  const authResult = await validateAuth(req);
+  if (!authResult.authorized) {
     return new Response(
-      JSON.stringify({ error: authError || 'Unauthorized', success: false }),
+      JSON.stringify({ error: authResult.error || 'Unauthorized', success: false }),
       {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

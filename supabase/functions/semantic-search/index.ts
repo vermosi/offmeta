@@ -259,7 +259,8 @@ serve(async (req) => {
   const requestBody = parsedBody.requestBody;
 
   try {
-    const { query, filters, debug, useCache, cacheSalt } = requestBody;
+    const { query, filters: rawFilters, debug, useCache, cacheSalt } = requestBody;
+    const filters = (rawFilters ?? undefined) as Record<string, unknown> | undefined;
     const requestBudget = parseRequestBudget(
       req,
       requestStartTime,
@@ -771,7 +772,7 @@ serve(async (req) => {
     const hasAccentedLatin = /[àáâãäåæçèéêëìíîïðñòóôõöùúûüýþÿ]/i.test(
       remainingQuery,
     );
-    const deterministicConfidence = deterministicResult.intent.confidence ?? 0;
+    const deterministicConfidence = (deterministicResult.intent as Record<string, unknown>).confidence as number ?? 0;
     const shouldPreTranslateAccentedLatin =
       hasAccentedLatin &&
       !hasNonLatin &&
