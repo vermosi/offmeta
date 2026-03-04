@@ -239,13 +239,15 @@ export default function FindMyCombos() {
   const [expandedCombo, setExpandedCombo] = useState<string | null>(null);
   const [filterColors, setFilterColors] = useState<string[]>([]);
   const [filterCardCount, setFilterCardCount] = useState<string>('any');
+  const [filterPriceCeiling, setFilterPriceCeiling] = useState<string>('any');
   const [sortBy, setSortBy] = useState<string>('popularity');
 
-  const hasActiveFilters = filterColors.length > 0 || filterCardCount !== 'any' || sortBy !== 'popularity';
+  const hasActiveFilters = filterColors.length > 0 || filterCardCount !== 'any' || filterPriceCeiling !== 'any' || sortBy !== 'popularity';
 
   const clearFilters = () => {
     setFilterColors([]);
     setFilterCardCount('any');
+    setFilterPriceCeiling('any');
     setSortBy('popularity');
   };
 
@@ -253,6 +255,13 @@ export default function FindMyCombos() {
     setFilterColors((prev) =>
       prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c],
     );
+
+  const getComboPrice = (combo: Combo): number | null => {
+    const raw = combo.prices?.tcgplayer;
+    if (!raw) return null;
+    const num = parseFloat(raw);
+    return isNaN(num) ? null : num;
+  };
 
   const filterAndSortCombos = (combos: Combo[]): Combo[] => {
     let filtered = [...combos];
@@ -265,9 +274,22 @@ export default function FindMyCombos() {
     else if (filterCardCount === '3') filtered = filtered.filter((c) => c.cards.length === 3);
     else if (filterCardCount === '4+') filtered = filtered.filter((c) => c.cards.length >= 4);
 
+    if (filterPriceCeiling !== 'any') {
+      const ceiling = parseFloat(filterPriceCeiling);
+      filtered = filtered.filter((c) => {
+        const price = getComboPrice(c);
+        return price !== null && price <= ceiling;
+      });
+    }
+
     if (sortBy === 'popularity') filtered.sort((a, b) => b.popularity - a.popularity);
     else if (sortBy === 'cards-asc') filtered.sort((a, b) => a.cards.length - b.cards.length);
     else if (sortBy === 'cards-desc') filtered.sort((a, b) => b.cards.length - a.cards.length);
+    else if (sortBy === 'price-asc') {
+      filtered.sort((a, b) => (getComboPrice(a) ?? Infinity) - (getComboPrice(b) ?? Infinity));
+    } else if (sortBy === 'price-desc') {
+      filtered.sort((a, b) => (getComboPrice(b) ?? -1) - (getComboPrice(a) ?? -1));
+    }
 
     return filtered;
   };
@@ -554,6 +576,25 @@ export default function FindMyCombos() {
               <span className="hidden sm:block h-5 w-px bg-border" />
 
               <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground mr-1">Budget:</span>
+                {(['any', '10', '25', '50', '100'] as const).map((v) => (
+                  <button
+                    key={v}
+                    onClick={() => setFilterPriceCeiling(v)}
+                    className={`px-2 py-0.5 rounded text-xs transition-colors ${
+                      filterPriceCeiling === v
+                        ? 'bg-primary text-primary-foreground font-medium'
+                        : 'bg-secondary/60 text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {v === 'any' ? 'Any' : `≤$${v}`}
+                  </button>
+                ))}
+              </div>
+
+              <span className="hidden sm:block h-5 w-px bg-border" />
+
+              <div className="flex items-center gap-1">
                 <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
                 <select
                   value={sortBy}
@@ -561,6 +602,8 @@ export default function FindMyCombos() {
                   className="text-xs bg-secondary/60 border-none rounded px-2 py-1 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 >
                   <option value="popularity">Popularity</option>
+                  <option value="price-asc">Price: Low → High</option>
+                  <option value="price-desc">Price: High → Low</option>
                   <option value="cards-asc">Fewest cards</option>
                   <option value="cards-desc">Most cards</option>
                 </select>
