@@ -131,4 +131,37 @@ describe('buildClientFallbackQuery', () => {
     expect(buildClientFallbackQuery('voltron')).toContain('(t:equipment or t:aura)');
     expect(buildClientFallbackQuery('aristocrats')).toContain('o:"when" o:"dies"');
   });
+
+  // Mana production queries
+  it('translates "artifacts that produce 2 mana" to mana-production search', () => {
+    const q = buildClientFallbackQuery('artifacts that produce 2 mana');
+    expect(q).toContain('t:artifact');
+    expect(q).toContain('o:"add"');
+    expect(q).not.toContain('o:"2 mana"');
+  });
+
+  it('translates "produce mana" to mana-production search', () => {
+    const q = buildClientFallbackQuery('creatures that produce mana');
+    expect(q).toContain('t:creature');
+    expect(q).toContain('o:"add"');
+    expect(q).toContain('o:"{"');
+  });
+
+  it('translates "add mana" to mana-production search', () => {
+    const q = buildClientFallbackQuery('artifacts that add mana');
+    expect(q).toContain('t:artifact');
+    expect(q).toContain('o:"add"');
+  });
+
+  it('translates "tap for mana" to mana-production search', () => {
+    const q = buildClientFallbackQuery('creatures that tap for mana');
+    expect(q).toContain('t:creature');
+    expect(q).toContain('o:"add"');
+  });
+
+  it('translates "mana producing" to mana-production search', () => {
+    const q = buildClientFallbackQuery('mana producing artifacts');
+    expect(q).toContain('t:artifact');
+    expect(q).toContain('o:"add"');
+  });
 });

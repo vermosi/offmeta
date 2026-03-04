@@ -169,6 +169,19 @@ const KEYWORD_WORDS: Record<string, string> = {
 };
 
 /**
+ * Mana-production patterns recognized before filler stripping.
+ * Matches phrases like "produce 2 mana", "add mana", "tap for mana".
+ */
+const MANA_PRODUCTION_PATTERNS: Array<{ regex: RegExp; syntax: string }> = [
+  // "produce/generate/add X mana" or "tap for X mana"
+  { regex: /\b(?:produce|generate|add|tap for)\s+(\d+)\s*(?:or more\s+)?mana\b/i, syntax: 'o:"add"' },
+  // "produce/generate/add mana" (no number)
+  { regex: /\b(?:produce|generate|add|tap for)\s+mana\b/i, syntax: 'o:"add" o:"{"' },
+  // "mana production" / "mana producing"
+  { regex: /\bmana[- ](?:production|producing)\b/i, syntax: 'o:"add" o:"{"' },
+];
+
+/**
  * Build a best-effort Scryfall query from a natural language string.
  * Intended as a client-side fallback when the AI edge function is unreachable.
  */
@@ -258,16 +271,30 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
     }
   }
 
-  // 9. Clean up filler words from residual
+  // 9. Extract mana-production patterns (before filler strip eats "mana")
+  for (const { regex, syntax } of MANA_PRODUCTION_PATTERNS) {
+    if (regex.test(residual)) {
+      // Split syntax into individual parts to avoid duplicates
+      for (const part of syntax.split(' ')) {
+        if (!parts.includes(part)) {
+          parts.push(part);
+        }
+      }
+      residual = residual.replace(regex, ' ').trim();
+      break; // Only match one mana pattern
+    }
+  }
+
+  // 10. Clean up filler words from residual
   residual = residual
     .replace(
-      /\b(that|the|with|for|and|or|a|an|in|of|to|make|produce|spells?|bonuses?|reward|casting|gives?|when|dies?|deal|drain|legal|cards?|pieces?)\b/gi,
+      /\b(that|the|with|for|and|or|a|an|in|of|to|make|spells?|bonuses?|reward|casting|gives?|when|dies?|deal|drain|legal|cards?|pieces?)\b/gi,
       ' ',
     )
     .replace(/\s+/g, ' ')
     .trim();
 
-  // 10. If there's meaningful residual, add as oracle text search
+  // 11. If there's meaningful residual, add as oracle text search
   if (residual.length > 2) {
     parts.push(`o:"${residual}"`);
   }
