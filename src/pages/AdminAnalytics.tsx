@@ -95,6 +95,7 @@ import {
   StatCard,
   StatusBadge,
 } from '@/pages/admin-analytics/components/AnalyticsPrimitives';
+import { PipelineHealthIndicator } from '@/pages/admin-analytics/components/PipelineHealthIndicator';
 
 export default function AdminAnalytics() {
   const { user, isLoading: authLoading } = useAuth();
@@ -842,6 +843,7 @@ export default function AdminAnalytics() {
               <p className="text-sm text-muted-foreground">
                 Translation pipeline performance and query insights
               </p>
+              <PipelineHealthIndicator />
             </div>
 
             <div className="flex items-center gap-2">
