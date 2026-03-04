@@ -81,6 +81,46 @@ describe('detectBrowserLocale()', () => {
     setNavigatorLanguages(['pt-BR']);
     expect(detectBrowserLocale()).toBe('pt');
   });
+
+  it('maps zh-HK → zht', () => {
+    setNavigatorLanguages(['zh-HK']);
+    expect(detectBrowserLocale()).toBe('zht');
+  });
+
+  it('maps zh-MO → zht', () => {
+    setNavigatorLanguages(['zh-MO']);
+    expect(detectBrowserLocale()).toBe('zht');
+  });
+
+  it('maps zh-SG → zhs', () => {
+    setNavigatorLanguages(['zh-SG']);
+    expect(detectBrowserLocale()).toBe('zhs');
+  });
+
+  it('maps bare zh → zhs', () => {
+    setNavigatorLanguages(['zh']);
+    expect(detectBrowserLocale()).toBe('zhs');
+  });
+
+  it('maps ko-KR → ko', () => {
+    setNavigatorLanguages(['ko-KR']);
+    expect(detectBrowserLocale()).toBe('ko');
+  });
+
+  it('maps ru-RU → ru', () => {
+    setNavigatorLanguages(['ru-RU']);
+    expect(detectBrowserLocale()).toBe('ru');
+  });
+
+  it('maps it-IT → it', () => {
+    setNavigatorLanguages(['it-IT']);
+    expect(detectBrowserLocale()).toBe('it');
+  });
+
+  it('maps es-MX → es', () => {
+    setNavigatorLanguages(['es-MX']);
+    expect(detectBrowserLocale()).toBe('es');
+  });
 });
 
 describe('localStorage override takes priority over browser detection', () => {

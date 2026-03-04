@@ -17,6 +17,18 @@ describe('getEdhrecPercentile', () => {
     expect(getEdhrecPercentile(7500)).toBe('Top 25%');
   });
 
+  it('returns correct percentile for cards in top 26-50%', () => {
+    // 12000 / 30000 = 40%
+    expect(getEdhrecPercentile(12000)).toBe('Top 40%');
+    expect(getEdhrecPercentile(15000)).toBe('Top 50%');
+  });
+
+  it('returns correct percentile for cards above 50%', () => {
+    // 20000 / 30000 = 66.7%
+    expect(getEdhrecPercentile(20000)).toBe('Top 67%');
+    expect(getEdhrecPercentile(29000)).toBe('Top 97%');
+  });
+
   it('returns "N/A" for invalid ranks', () => {
     expect(getEdhrecPercentile(0)).toBe('N/A');
     expect(getEdhrecPercentile(-1)).toBe('N/A');
