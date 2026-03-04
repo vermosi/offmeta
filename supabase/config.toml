@@ -41,3 +41,9 @@ verify_jwt = false
 
 [functions.card-meta-context]
 verify_jwt = false
+
+[functions.card-similarity]
+verify_jwt = false
+
+[functions.deck-ideas]
+verify_jwt = false

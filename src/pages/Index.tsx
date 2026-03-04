@@ -1,7 +1,7 @@
 /**
  * Home page — the primary search interface.
  * Orchestrates the search bar, card grid, filters, modals, comparison,
- * and discovery sections (Daily Pick, Staples, How It Works, FAQ).
+ * discovery sections, and tabbed results (Cards | Similar | Deck Ideas | Explain).
  * All search state is managed via the `useSearch` hook.
  * @module pages/Index
  */
@@ -31,6 +31,10 @@ import { ShareSearchButton } from '@/components/ShareSearchButton';
 import { ViewToggle } from '@/components/ViewToggle';
 import { type ViewMode, getStoredViewMode } from '@/lib/view-mode-storage';
 import { ResultsStats } from '@/components/ResultsStats';
+import { ResultsTabs, type ResultsTab } from '@/components/ResultsTabs';
+import { SimilarCardsPanel } from '@/components/SimilarCardsPanel';
+import { DeckIdeasPanel } from '@/components/DeckIdeasPanel';
+import { ExplanationPanel } from '@/components/ExplanationPanel';
 const ArtLightbox = lazy(() => import('@/components/ArtLightbox').then(m => ({ default: m.ArtLightbox })));
 const CompareBar = lazy(() => import('@/components/CompareBar').then(m => ({ default: m.CompareBar })));
 const CompareModal = lazy(() => import('@/components/CompareModal').then(m => ({ default: m.CompareModal })));
@@ -46,6 +50,8 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useRovingTabIndex } from '@/hooks/useRovingTabIndex';
 import { useCollectionLookup } from '@/hooks/useCollection';
 import { useAuth } from '@/hooks/useAuth';
+import { useSimilarCards } from '@/hooks/useSimilarCards';
+import { useDeckIdeas } from '@/hooks/useDeckIdeas';
 const CardModal = lazy(() => import('@/components/CardModal'));
 
 const Index = () => {
@@ -86,6 +92,25 @@ const Index = () => {
   // View mode toggle
   const [viewMode, setViewMode] = useState<ViewMode>(getStoredViewMode);
 
+  // Results tab state
+  const [activeTab, setActiveTab] = useState<ResultsTab>('cards');
+
+  // Similar cards & deck ideas hooks
+  const { similarityData, isLoading: similarLoading, activate: activateSimilar } = useSimilarCards(originalQuery);
+  const { deckIdea, isLoading: deckIdeasLoading, isDeckQuery, activate: activateDeckIdeas } = useDeckIdeas(originalQuery);
+
+  // Reset to cards tab on new search
+  useEffect(() => {
+    setActiveTab('cards');
+  }, [originalQuery]);
+
+  // Activate feature hooks when tab is selected
+  const handleTabChange = useCallback((tab: ResultsTab) => {
+    setActiveTab(tab);
+    if (tab === 'similar') activateSimilar();
+    if (tab === 'deck-ideas') activateDeckIdeas();
+  }, [activateSimilar, activateDeckIdeas]);
+
   // Card comparison
   const {
     compareCards,
@@ -111,11 +136,11 @@ const Index = () => {
   const openLightbox = useCallback((index: number) => setLightboxIndex(index), []);
   const closeLightbox = useCallback(() => setLightboxIndex(null), []);
 
-  // Roving tabindex column count based on view mode (approximate; CSS breakpoints vary)
+  // Roving tabindex column count based on view mode
   const rovingColumns = useMemo(() => {
     if (viewMode === 'list') return 1;
-    if (viewMode === 'images') return 6; // xl:grid-cols-6
-    return 4; // lg:grid-cols-4 for standard grid
+    if (viewMode === 'images') return 6;
+    return 4;
   }, [viewMode]);
 
   const rovingActivate = useCallback(
@@ -135,7 +160,7 @@ const Index = () => {
     onActivate: rovingActivate,
   });
 
-  // Handle hash-based scroll when navigating from another page
+  // Handle hash-based scroll
   useEffect(() => {
     const hash = window.location.hash;
     if (!hash) return;
@@ -146,6 +171,11 @@ const Index = () => {
     return () => clearTimeout(timeout);
   }, []);
 
+  // Determine which tabs to show
+  const showSimilarTab = hasSearched && !isSearching;
+  const showDeckIdeasTab = hasSearched && !isSearching && isDeckQuery;
+  const showExplanationTab = hasSearched && !isSearching;
+
   return (
     <ErrorBoundary>
       <SkipLinks showSearchLink />
@@ -155,12 +185,11 @@ const Index = () => {
         <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
         <div className="fixed inset-0 pointer-events-none bg-page-mesh" aria-hidden="true" />
 
-
         <Header />
 
         {!hasSearched && <HeroSection />}
 
-        {/* Screen reader search status announcements — no extra gap between hero & search */}
+        {/* Screen reader search status announcements */}
         <div className="sr-only" role="status" aria-live="assertive" aria-atomic="true">
           {isSearching
             ? t('a11y.searching')
@@ -224,9 +253,24 @@ const Index = () => {
               </div>
             )}
 
-            {cards.length > 0 && !isSearching && (
+            {/* Results Tabs */}
+            {hasSearched && !isSearching && (
+              <div className="animate-reveal">
+                <ResultsTabs
+                  activeTab={activeTab}
+                  onTabChange={handleTabChange}
+                  showSimilar={showSimilarTab}
+                  showDeckIdeas={showDeckIdeasTab}
+                  showExplanation={showExplanationTab}
+                  similarLoading={similarLoading}
+                  deckIdeasLoading={deckIdeasLoading}
+                />
+              </div>
+            )}
+
+            {/* Toolbar row — only show for Cards tab */}
+            {cards.length > 0 && !isSearching && activeTab === 'cards' && (
               <div className="animate-reveal space-y-2">
-                {/* Toolbar row */}
                 <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                   <SearchFilters
                     cards={cards}
@@ -275,7 +319,7 @@ const Index = () => {
             )}
 
             {/* Similar searches — hidden on mobile */}
-            {hasSearched && !isSearching && (
+            {hasSearched && !isSearching && activeTab === 'cards' && (
               <div className="hidden sm:block">
                 <SimilarSearches
                   originalQuery={originalQuery}
@@ -285,153 +329,184 @@ const Index = () => {
             )}
           </div>
 
-          {/* Card grid */}
+          {/* Tab content area */}
           <div className="mt-3 sm:mt-6 container-main">
-            {cards.length > 0 ? (
+            {/* Cards tab */}
+            {activeTab === 'cards' && (
               <>
-                {displayCards.length > 0 ? (
-                  viewMode === 'grid' && displayCards.length > CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD ? (
-                    <VirtualizedCardGrid
-                      cards={displayCards}
-                      onCardClick={handleCardClick}
-                      onLoadMore={
-                        hasNextPage && !isFetchingNextPage ? fetchNextPage : undefined
-                      }
-                      hasNextPage={hasNextPage}
-                      isFetchingNextPage={isFetchingNextPage}
-                    />
-                  ) : viewMode === 'list' ? (
-                    <div
-                      className="flex flex-col gap-1.5"
-                      role="list"
-                      aria-label="Search results"
-                      data-testid="list-view"
-                    >
-                      {displayCards.map((card, index) => {
-                        const rovingProps = getRovingProps(index);
-                        return (
-                          <div
-                            key={card.id}
-                            className="animate-reveal"
-                            role="listitem"
-                            style={{ animationDelay: `${Math.min(index * 15, 200)}ms` }}
-                            ref={rovingProps.ref}
-                            onKeyDown={rovingProps.onKeyDown}
-                            onFocus={rovingProps.onFocus}
-                          >
-                            <CardListItem
-                              card={card}
-                              onClick={() => handleCardClick(card, index)}
-                              tabIndex={rovingProps.tabIndex}
-                              isOwned={collectionLookup.has(card.name)}
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : viewMode === 'images' ? (
-                    <div
-                      className="grid grid-cols-2 min-[480px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3"
-                      role="list"
-                      aria-label="Search results"
-                      data-testid="images-view"
-                    >
-                      {displayCards.map((card, index) => {
-                        const rovingProps = getRovingProps(index);
-                        return (
-                          <div
-                            key={card.id}
-                            className="animate-reveal"
-                            role="listitem"
-                            style={{ animationDelay: `${Math.min(index * 15, 200)}ms` }}
-                            ref={rovingProps.ref}
-                            onKeyDown={rovingProps.onKeyDown}
-                            onFocus={rovingProps.onFocus}
-                          >
-                            <CardImageItem
-                              card={card}
-                              onClick={() => openLightbox(index)}
-                              tabIndex={rovingProps.tabIndex}
-                              isOwned={collectionLookup.has(card.name)}
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div
-                      className="grid grid-cols-2 min-[480px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 content-visibility-auto"
-                      role="list"
-                      aria-label="Search results"
-                      data-testid="standard-grid"
-                    >
-                      {displayCards.map((card, index) => {
-                        const rovingProps = getRovingProps(index);
-                        return (
-                          <div
-                            key={card.id}
-                            className={`animate-reveal relative ${compareMode ? '' : 'contain-layout'}`}
-                            role="listitem"
-                            style={{
-                              animationDelay: `${Math.min(index * 25, 300)}ms`,
-                              ...(compareMode ? {} : { contentVisibility: 'auto', containIntrinsicSize: '0 200px' }),
-                            }}
-                            ref={rovingProps.ref}
-                            onKeyDown={rovingProps.onKeyDown}
-                            onFocus={rovingProps.onFocus}
-                          >
-                            {compareMode && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleCompareCard(card);
-                                }}
-                                className={`absolute top-2 left-2 z-10 h-6 w-6 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all ${
-                                  isCardSelected(card.id)
-                                    ? 'bg-primary border-primary text-primary-foreground'
-                                    : 'bg-card/80 border-border/60 text-muted-foreground hover:border-primary/50'
-                                }`}
-                                aria-label={isCardSelected(card.id) ? t('compare.removeFrom') : t('compare.addTo')}
-                                tabIndex={-1}
+                {cards.length > 0 ? (
+                  <>
+                    {displayCards.length > 0 ? (
+                      viewMode === 'grid' && displayCards.length > CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD ? (
+                        <VirtualizedCardGrid
+                          cards={displayCards}
+                          onCardClick={handleCardClick}
+                          onLoadMore={
+                            hasNextPage && !isFetchingNextPage ? fetchNextPage : undefined
+                          }
+                          hasNextPage={hasNextPage}
+                          isFetchingNextPage={isFetchingNextPage}
+                        />
+                      ) : viewMode === 'list' ? (
+                        <div
+                          className="flex flex-col gap-1.5"
+                          role="list"
+                          aria-label="Search results"
+                          data-testid="list-view"
+                        >
+                          {displayCards.map((card, index) => {
+                            const rovingProps = getRovingProps(index);
+                            return (
+                              <div
+                                key={card.id}
+                                className="animate-reveal"
+                                role="listitem"
+                                style={{ animationDelay: `${Math.min(index * 15, 200)}ms` }}
+                                ref={rovingProps.ref}
+                                onKeyDown={rovingProps.onKeyDown}
+                                onFocus={rovingProps.onFocus}
                               >
-                                {isCardSelected(card.id) ? '✓' : '+'}
-                              </button>
-                            )}
-                            <CardItem
-                              card={card}
-                              onClick={() => compareMode ? toggleCompareCard(card) : handleCardClick(card, index)}
-                              tabIndex={rovingProps.tabIndex}
-                              isOwned={collectionLookup.has(card.name)}
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )
-                ) : (
-                  <div className="text-center py-12">
-                    <p className="text-muted-foreground">
-                      {t('results.noMatch')}
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {t('results.adjustFilters')}
-                    </p>
-                  </div>
-                )}
+                                <CardListItem
+                                  card={card}
+                                  onClick={() => handleCardClick(card, index)}
+                                  tabIndex={rovingProps.tabIndex}
+                                  isOwned={collectionLookup.has(card.name)}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : viewMode === 'images' ? (
+                        <div
+                          className="grid grid-cols-2 min-[480px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3"
+                          role="list"
+                          aria-label="Search results"
+                          data-testid="images-view"
+                        >
+                          {displayCards.map((card, index) => {
+                            const rovingProps = getRovingProps(index);
+                            return (
+                              <div
+                                key={card.id}
+                                className="animate-reveal"
+                                role="listitem"
+                                style={{ animationDelay: `${Math.min(index * 15, 200)}ms` }}
+                                ref={rovingProps.ref}
+                                onKeyDown={rovingProps.onKeyDown}
+                                onFocus={rovingProps.onFocus}
+                              >
+                                <CardImageItem
+                                  card={card}
+                                  onClick={() => openLightbox(index)}
+                                  tabIndex={rovingProps.tabIndex}
+                                  isOwned={collectionLookup.has(card.name)}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div
+                          className="grid grid-cols-2 min-[480px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 content-visibility-auto"
+                          role="list"
+                          aria-label="Search results"
+                          data-testid="standard-grid"
+                        >
+                          {displayCards.map((card, index) => {
+                            const rovingProps = getRovingProps(index);
+                            return (
+                              <div
+                                key={card.id}
+                                className={`animate-reveal relative ${compareMode ? '' : 'contain-layout'}`}
+                                role="listitem"
+                                style={{
+                                  animationDelay: `${Math.min(index * 25, 300)}ms`,
+                                  ...(compareMode ? {} : { contentVisibility: 'auto', containIntrinsicSize: '0 200px' }),
+                                }}
+                                ref={rovingProps.ref}
+                                onKeyDown={rovingProps.onKeyDown}
+                                onFocus={rovingProps.onFocus}
+                              >
+                                {compareMode && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toggleCompareCard(card);
+                                    }}
+                                    className={`absolute top-2 left-2 z-10 h-6 w-6 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all ${
+                                      isCardSelected(card.id)
+                                        ? 'bg-primary border-primary text-primary-foreground'
+                                        : 'bg-card/80 border-border/60 text-muted-foreground hover:border-primary/50'
+                                    }`}
+                                    aria-label={isCardSelected(card.id) ? t('compare.removeFrom') : t('compare.addTo')}
+                                    tabIndex={-1}
+                                  >
+                                    {isCardSelected(card.id) ? '✓' : '+'}
+                                  </button>
+                                )}
+                                <CardItem
+                                  card={card}
+                                  onClick={() => compareMode ? toggleCompareCard(card) : handleCardClick(card, index)}
+                                  tabIndex={rovingProps.tabIndex}
+                                  isOwned={collectionLookup.has(card.name)}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )
+                    ) : (
+                      <div className="text-center py-12">
+                        <p className="text-muted-foreground">
+                          {t('results.noMatch')}
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {t('results.adjustFilters')}
+                        </p>
+                      </div>
+                    )}
 
-                <LoadMoreIndicator
-                  ref={displayCards.length <= CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD ? loadMoreRef : undefined}
-                  isFetchingNextPage={isFetchingNextPage}
-                  hasNextPage={hasNextPage}
-                  totalCards={totalCards}
-                  showEndMessage={cards.length > 0}
-                />
+                    <LoadMoreIndicator
+                      ref={displayCards.length <= CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD ? loadMoreRef : undefined}
+                      isFetchingNextPage={isFetchingNextPage}
+                      hasNextPage={hasNextPage}
+                      totalCards={totalCards}
+                      showEndMessage={cards.length > 0}
+                    />
+                  </>
+                ) : isSearching ? (
+                  <CardSkeletonGrid count={10} />
+                ) : hasSearched && totalCards === 0 ? (
+                  <EmptyState query={searchQuery} onTryExample={handleTryExample} />
+                ) : null}
               </>
-            ) : isSearching ? (
-              <CardSkeletonGrid count={10} />
-            ) : hasSearched && totalCards === 0 ? (
-              <EmptyState query={searchQuery} onTryExample={handleTryExample} />
-            ) : null}
+            )}
+
+            {/* Similar tab */}
+            {activeTab === 'similar' && (
+              <SimilarCardsPanel
+                data={similarityData}
+                isLoading={similarLoading}
+                onCardClick={handleCardClick}
+              />
+            )}
+
+            {/* Deck Ideas tab */}
+            {activeTab === 'deck-ideas' && (
+              <DeckIdeasPanel
+                data={deckIdea}
+                isLoading={deckIdeasLoading}
+                query={originalQuery}
+              />
+            )}
+
+            {/* Explanation tab */}
+            {activeTab === 'explanation' && (
+              <ExplanationPanel
+                card={similarityData?.sourceCard}
+                isLoading={similarLoading}
+              />
+            )}
           </div>
         </main>
 
