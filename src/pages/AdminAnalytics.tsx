@@ -96,6 +96,7 @@ import {
   StatusBadge,
 } from '@/pages/admin-analytics/components/AnalyticsPrimitives';
 import { PipelineHealthIndicator } from '@/pages/admin-analytics/components/PipelineHealthIndicator';
+import { AuthFailuresPanel } from '@/pages/admin-analytics/components/AuthFailuresPanel';
 
 export default function AdminAnalytics() {
   const { user, isLoading: authLoading } = useAuth();
@@ -968,6 +969,9 @@ export default function AdminAnalytics() {
                   />
                 </div>
               )}
+
+              {/* Auth Failures Panel */}
+              <AuthFailuresPanel days={Number(days)} />
 
               {/* Source breakdown + confidence */}
               <div className="grid md:grid-cols-2 gap-4">
