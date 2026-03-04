@@ -9,7 +9,7 @@
  */
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { getCorsHeaders } from '../_shared/auth.ts';
+import { getCorsHeaders, logAuthFailure } from '../_shared/auth.ts';
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -23,6 +23,7 @@ serve(async (req) => {
   // Validate auth token
   const authHeader = req.headers.get('authorization');
   if (!authHeader) {
+    await logAuthFailure(req, 'Missing Authorization header', 'admin-analytics');
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers });
   }
 
@@ -36,6 +37,7 @@ serve(async (req) => {
 
   const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
   if (userError || !user) {
+    await logAuthFailure(req, userError?.message ?? 'Invalid token', 'admin-analytics');
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers });
   }
 
@@ -49,6 +51,7 @@ serve(async (req) => {
     .maybeSingle();
 
   if (!roleData) {
+    await logAuthFailure(req, 'Forbidden: admin role required', 'admin-analytics');
     return new Response(JSON.stringify({ error: 'Forbidden: admin role required' }), { status: 403, headers });
   }
 

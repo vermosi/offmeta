@@ -12,7 +12,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 import { checkRateLimit, resolveRateLimitKey } from '../_shared/rateLimit.ts';
-import { getCorsHeaders, validateAuth } from '../_shared/auth.ts';
+import { getCorsHeaders, validateAuth, logAuthFailure } from '../_shared/auth.ts';
 import { validateEnv } from '../_shared/env.ts';
 
 const { LOVABLE_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } =
@@ -29,6 +29,7 @@ serve(async (req) => {
   // Authentication check - require valid token (anon key, service role, or JWT)
   const authResult = await validateAuth(req);
   if (!authResult.authorized) {
+    await logAuthFailure(req, authResult.error || 'Unauthorized', 'process-feedback');
     return new Response(
       JSON.stringify({ error: authResult.error || 'Unauthorized', success: false }),
       {

@@ -211,6 +211,41 @@ export function getCorsHeaders(req: Request) {
  * Returns `{ authorized: true, userId }` on success, or
  * `{ authorized: false, response }` with a ready-to-return Response on failure.
  */
+/**
+ * Best-effort logging of auth failures to `analytics_events` for admin monitoring.
+ * Uses the service role key so inserts bypass RLS.
+ */
+export async function logAuthFailure(
+  req: Request,
+  error: string,
+  functionName: string,
+): Promise<void> {
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!supabaseUrl || !serviceKey) return;
+
+    const { createClient } = await importSupabase();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const client: any = (createClient as Function)(supabaseUrl, serviceKey);
+
+    const origin = req.headers.get('Origin') ?? 'unknown';
+    const ua = req.headers.get('User-Agent') ?? '';
+
+    await client.from('analytics_events').insert({
+      event_type: 'auth_failure',
+      event_data: {
+        error,
+        origin,
+        user_agent_prefix: ua.slice(0, 100),
+        function_name: functionName,
+      },
+    });
+  } catch {
+    // best-effort, don't block response
+  }
+}
+
 export async function requireAdmin(
   req: Request,
   corsHeaders: Record<string, string>,

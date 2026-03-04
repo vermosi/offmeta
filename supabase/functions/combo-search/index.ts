@@ -10,7 +10,7 @@
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
+import { validateAuth, getCorsHeaders, logAuthFailure } from '../_shared/auth.ts';
 import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
 
 const SPELLBOOK_BASE = 'https://backend.commanderspellbook.com';
@@ -124,6 +124,7 @@ serve(async (req) => {
   // Require valid auth token
   const authResult = await validateAuth(req);
   if (!authResult.authorized) {
+    await logAuthFailure(req, authResult.error || 'Unauthorized', 'combo-search');
     return new Response(
       JSON.stringify({ error: authResult.error || 'Unauthorized' }),
       {
