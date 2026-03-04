@@ -4,7 +4,7 @@ import {
   resolveRateLimitKey,
 } from '../../_shared/rateLimit.ts';
 import { validateAuth, logAuthFailure } from '../../_shared/auth.ts';
-import { supabase } from '../client.ts';
+
 
 export interface RequestBudget {
   deadlineMs: number;
