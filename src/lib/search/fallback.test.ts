@@ -164,4 +164,37 @@ describe('buildClientFallbackQuery', () => {
     expect(q).toContain('t:artifact');
     expect(q).toContain('o:"add"');
   });
+
+  // Pre-translated mana patterns
+  it('returns pre-translated "artifacts that tap for blue"', () => {
+    expect(buildClientFallbackQuery('artifacts that tap for blue'))
+      .toBe('t:artifact o:"add" o:"{U}"');
+  });
+
+  it('returns pre-translated "lands that add any color"', () => {
+    expect(buildClientFallbackQuery('lands that add any color'))
+      .toBe('t:land o:"add" o:"any color"');
+  });
+
+  // Dynamic mana color patterns
+  it('translates "tap for red" to color-specific mana search', () => {
+    const q = buildClientFallbackQuery('artifacts that tap for red');
+    expect(q).toContain('t:artifact');
+    expect(q).toContain('o:"add"');
+    expect(q).toContain('o:"{R}"');
+  });
+
+  it('handles treasure token creation via slang map', () => {
+    const q = buildClientFallbackQuery('enchantments that create treasure tokens');
+    expect(q).toContain('t:enchantment');
+    expect(q).toContain('o:"create"');
+    expect(q).toContain('o:"treasure"');
+  });
+
+  it('translates "add any color of mana" pattern', () => {
+    const q = buildClientFallbackQuery('artifacts that add any color of mana');
+    expect(q).toContain('t:artifact');
+    expect(q).toContain('o:"add"');
+    expect(q).toContain('o:"any color"');
+  });
 });

@@ -45,6 +45,8 @@ const PRETRANSLATED: Record<string, string> = {
   'tribal lords legal in commander': '(otag:lord or otag:anthem) f:commander',
   'azorius enchantments or artifacts that prevent attacks or tax attackers for commander': 'id<=wu (t:enchantment or t:artifact) (o:"can\'t attack" or o:"attacks" o:"pay") f:commander',
   'azorius counterspells or board wipes or removal for commander': 'id<=wu (otag:counter or otag:boardwipe or otag:removal) f:commander',
+  'artifacts that tap for blue': 't:artifact o:"add" o:"{U}"',
+  'lands that add any color': 't:land o:"add" o:"any color"',
 };
 
 /** Common MTG slang → Scryfall syntax fragments */
@@ -172,13 +174,30 @@ const KEYWORD_WORDS: Record<string, string> = {
  * Mana-production patterns recognized before filler stripping.
  * Matches phrases like "produce 2 mana", "add mana", "tap for mana".
  */
-const MANA_PRODUCTION_PATTERNS: Array<{ regex: RegExp; syntax: string }> = [
+const MANA_COLOR_MAP: Record<string, string> = {
+  white: '{W}', blue: '{U}', black: '{B}', red: '{R}', green: '{G}',
+  colorless: '{C}', any: 'any color',
+};
+
+const MANA_PRODUCTION_PATTERNS: Array<{ regex: RegExp; syntax: string | ((m: RegExpMatchArray) => string) }> = [
+  // "tap for <color>" e.g. "tap for blue", "tap for any color"
+  { regex: /\b(?:tap for|produce|generate|add)\s+(white|blue|black|red|green|colorless|any(?:\s+color)?)\b/i,
+    syntax: (m: RegExpMatchArray) => {
+      const color = m[1].toLowerCase().replace(/\s+color$/, '');
+      const symbol = MANA_COLOR_MAP[color] ?? 'any color';
+      return `o:"add" o:"${symbol}"`;
+    },
+  },
   // "produce/generate/add X mana" or "tap for X mana"
   { regex: /\b(?:produce|generate|add|tap for)\s+(\d+)\s*(?:or more\s+)?mana\b/i, syntax: 'o:"add"' },
   // "produce/generate/add mana" (no number)
   { regex: /\b(?:produce|generate|add|tap for)\s+mana\b/i, syntax: 'o:"add" o:"{"' },
   // "mana production" / "mana producing"
   { regex: /\bmana[- ](?:production|producing)\b/i, syntax: 'o:"add" o:"{"' },
+  // "add any color" / "any color of mana"
+  { regex: /\b(?:add\s+)?any\s+color(?:\s+of\s+mana)?\b/i, syntax: 'o:"add" o:"any color"' },
+  // "make/create treasure token(s)"
+  { regex: /\b(?:make|create|generate)\s+treasure\s+tokens?\b/i, syntax: 'o:"create" o:"Treasure token"' },
 ];
 
 /**
@@ -216,7 +235,22 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
     }
   }
 
-  // 3. Extract guild/shard colors
+  // 3. Extract mana-production patterns EARLY (before colors consume "red", "blue", etc.)
+  for (const { regex, syntax } of MANA_PRODUCTION_PATTERNS) {
+    const match = residual.match(regex);
+    if (match) {
+      const resolved = typeof syntax === 'function' ? syntax(match) : syntax;
+      for (const part of resolved.split(' ')) {
+        if (!parts.includes(part)) {
+          parts.push(part);
+        }
+      }
+      residual = residual.replace(regex, ' ').trim();
+      break;
+    }
+  }
+
+  // 4. Extract guild/shard colors
   for (const [word, syntax] of Object.entries(GUILD_WORDS)) {
     const re = new RegExp(`\\b${word}\\b`, 'i');
     if (re.test(residual)) {
@@ -225,7 +259,7 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
     }
   }
 
-  // 4. Extract colors
+  // 5. Extract colors
   for (const [word, syntax] of Object.entries(COLOR_WORDS)) {
     const re = new RegExp(`\\b${word}\\b`, 'i');
     if (re.test(residual)) {
@@ -234,7 +268,7 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
     }
   }
 
-  // 5. Extract types
+  // 6. Extract types
   for (const [word, syntax] of Object.entries(TYPE_WORDS)) {
     const re = new RegExp(`\\b${word}\\b`, 'i');
     if (re.test(residual)) {
@@ -243,7 +277,7 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
     }
   }
 
-  // 6. Extract formats
+  // 7. Extract formats
   for (const [word, syntax] of Object.entries(FORMAT_WORDS)) {
     const re = new RegExp(`\\b${word}\\b`, 'i');
     if (re.test(residual)) {
@@ -252,9 +286,9 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
     }
   }
 
-  // 7. Extract single-word keywords
+  // 8. Extract single-word keywords
   for (const [word, syntax] of Object.entries(KEYWORD_WORDS)) {
-    if (word.includes(' ')) continue; // already handled
+    if (word.includes(' ')) continue;
     const re = new RegExp(`\\b${word}\\b`, 'i');
     if (re.test(residual)) {
       parts.push(syntax);
@@ -262,26 +296,12 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
     }
   }
 
-  // 8. Extract cost modifiers
+  // 9. Extract cost modifiers
   for (const [word, syntax] of Object.entries(COST_WORDS)) {
     const re = new RegExp(`\\b${word}\\b`, 'i');
     if (re.test(residual)) {
       parts.push(syntax);
       residual = residual.replace(re, ' ').trim();
-    }
-  }
-
-  // 9. Extract mana-production patterns (before filler strip eats "mana")
-  for (const { regex, syntax } of MANA_PRODUCTION_PATTERNS) {
-    if (regex.test(residual)) {
-      // Split syntax into individual parts to avoid duplicates
-      for (const part of syntax.split(' ')) {
-        if (!parts.includes(part)) {
-          parts.push(part);
-        }
-      }
-      residual = residual.replace(regex, ' ').trim();
-      break; // Only match one mana pattern
     }
   }
 
