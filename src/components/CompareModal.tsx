@@ -75,7 +75,7 @@ export function CompareModal({ cards, open, onClose }: CompareModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] p-0 overflow-hidden">
+      <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] p-0 overflow-hidden" aria-describedby={undefined}>
         <DialogHeader className="px-6 pt-6 pb-0">
           <DialogTitle>Compare Cards</DialogTitle>
         </DialogHeader>
