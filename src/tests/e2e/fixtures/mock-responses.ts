@@ -1,0 +1,150 @@
+/**
+ * Shared mock API responses for E2E tests.
+ * Prevents tests from depending on live edge functions or Scryfall API.
+ */
+
+export const MOCK_SEMANTIC_SEARCH_RESPONSE = {
+  originalQuery: 'cheap green ramp spells',
+  scryfallQuery: 't:creature o:"add" c:g cmc<=2',
+  explanation: {
+    readable: 'Green creatures that add mana, costing 2 or less',
+    confidence: 0.9,
+    assumptions: [],
+  },
+  showAffiliate: false,
+  responseTimeMs: 50,
+  success: true,
+  cached: false,
+  source: 'deterministic',
+};
+
+export const MOCK_LIGHTNING_BOLT_SEMANTIC_RESPONSE = {
+  originalQuery: 'lightning bolt',
+  scryfallQuery: '!"Lightning Bolt"',
+  explanation: {
+    readable: 'Exact card: Lightning Bolt',
+    confidence: 1.0,
+    assumptions: [],
+  },
+  showAffiliate: false,
+  responseTimeMs: 20,
+  success: true,
+  cached: false,
+  source: 'deterministic',
+};
+
+const MOCK_CARD_BASE = {
+  object: 'card' as const,
+  oracle_id: '00000000-0000-0000-0000-000000000002',
+  lang: 'en',
+  released_at: '1993-08-05',
+  layout: 'normal',
+  image_uris: {
+    small: 'https://cards.scryfall.io/small/front/e/2/e2c2d2f9.jpg',
+    normal: 'https://cards.scryfall.io/normal/front/e/2/e2c2d2f9.jpg',
+    large: 'https://cards.scryfall.io/large/front/e/2/e2c2d2f9.jpg',
+    png: 'https://cards.scryfall.io/png/front/e/2/e2c2d2f9.png',
+    art_crop: 'https://cards.scryfall.io/art_crop/front/e/2/e2c2d2f9.jpg',
+    border_crop: 'https://cards.scryfall.io/border_crop/front/e/2/e2c2d2f9.jpg',
+  },
+  keywords: [],
+  legalities: {
+    standard: 'not_legal',
+    modern: 'legal',
+    legacy: 'legal',
+    commander: 'legal',
+    vintage: 'legal',
+    pauper: 'legal',
+    pioneer: 'legal',
+  },
+  games: ['paper', 'mtgo'],
+  reserved: false,
+  foil: true,
+  nonfoil: true,
+  finishes: ['nonfoil', 'foil'],
+  oversized: false,
+  promo: false,
+  reprint: true,
+  variation: false,
+  set: 'lea',
+  set_name: 'Limited Edition Alpha',
+  set_type: 'core',
+  collector_number: '161',
+  digital: false,
+  rarity: 'common',
+  artist: 'Christopher Rush',
+  border_color: 'black',
+  frame: '1993',
+  full_art: false,
+  textless: false,
+  booster: true,
+  prices: { usd: '1.00', usd_foil: null, eur: '0.80', tix: '0.05' },
+};
+
+export const MOCK_SCRYFALL_SEARCH_RESPONSE = {
+  object: 'list' as const,
+  total_cards: 3,
+  has_more: false,
+  data: [
+    {
+      ...MOCK_CARD_BASE,
+      id: '00000000-0000-0000-0000-000000000001',
+      name: 'Llanowar Elves',
+      uri: 'https://api.scryfall.com/cards/00000000-0000-0000-0000-000000000001',
+      scryfall_uri: 'https://scryfall.com/card/lea/161/llanowar-elves',
+      mana_cost: '{G}',
+      cmc: 1,
+      type_line: 'Creature — Elf Druid',
+      oracle_text: '{T}: Add {G}.',
+      colors: ['G'],
+      color_identity: ['G'],
+    },
+    {
+      ...MOCK_CARD_BASE,
+      id: '00000000-0000-0000-0000-000000000002',
+      name: 'Elvish Mystic',
+      uri: 'https://api.scryfall.com/cards/00000000-0000-0000-0000-000000000002',
+      scryfall_uri: 'https://scryfall.com/card/m14/169/elvish-mystic',
+      mana_cost: '{G}',
+      cmc: 1,
+      type_line: 'Creature — Elf Druid',
+      oracle_text: '{T}: Add {G}.',
+      colors: ['G'],
+      color_identity: ['G'],
+    },
+    {
+      ...MOCK_CARD_BASE,
+      id: '00000000-0000-0000-0000-000000000003',
+      name: 'Birds of Paradise',
+      uri: 'https://api.scryfall.com/cards/00000000-0000-0000-0000-000000000003',
+      scryfall_uri: 'https://scryfall.com/card/rav/245/birds-of-paradise',
+      mana_cost: '{G}',
+      cmc: 1,
+      type_line: 'Creature — Bird',
+      oracle_text: '{T}: Add one mana of any color.',
+      colors: ['G'],
+      color_identity: ['G'],
+    },
+  ],
+};
+
+export const MOCK_BOLT_SEARCH_RESPONSE = {
+  object: 'list' as const,
+  total_cards: 1,
+  has_more: false,
+  data: [
+    {
+      ...MOCK_CARD_BASE,
+      id: '00000000-0000-0000-0000-000000000010',
+      name: 'Lightning Bolt',
+      uri: 'https://api.scryfall.com/cards/00000000-0000-0000-0000-000000000010',
+      scryfall_uri: 'https://scryfall.com/card/lea/161/lightning-bolt',
+      mana_cost: '{R}',
+      cmc: 1,
+      type_line: 'Instant',
+      oracle_text: 'Lightning Bolt deals 3 damage to any target.',
+      colors: ['R'],
+      color_identity: ['R'],
+    },
+  ],
+};
