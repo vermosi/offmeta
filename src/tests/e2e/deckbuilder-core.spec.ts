@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { mockAuthAPIs } from './fixtures/mock-helpers';
 
 type DeckRecord = {
   id: string;
@@ -23,43 +24,19 @@ test.describe('Deckbuilder core flows', () => {
     const userId = 'user-1';
     const decks: DeckRecord[] = [];
 
-    await page.route('**/auth/v1/token?grant_type=password', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          access_token: 'access-token',
-          token_type: 'bearer',
-          expires_in: 3600,
-          refresh_token: 'refresh-token',
-          user: {
-            id: userId,
-            email: 'deck-user@example.com',
-            aud: 'authenticated',
-            role: 'authenticated',
-            app_metadata: {},
-            user_metadata: {},
-            created_at: now,
-          },
-        }),
-      });
+    // Auth mocks
+    await mockAuthAPIs(page, {
+      userId,
+      email: 'deck-user@example.com',
     });
 
-    await page.route('**/rest/v1/profiles**', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify([]),
-      });
-    });
-
+    // Deck CRUD mocks
     await page.route('**/rest/v1/decks**', async (route) => {
       const request = route.request();
       const method = request.method();
       const url = request.url();
 
       if (method === 'GET') {
-        // Check if single deck query (contains id=eq.)
         const singleDeckMatch = url.match(/id=eq\.([^&]+)/);
         if (singleDeckMatch) {
           const deckId = decodeURIComponent(singleDeckMatch[1]);
@@ -67,7 +44,6 @@ test.describe('Deckbuilder core flows', () => {
           await route.fulfill({
             status: 200,
             contentType: 'application/json',
-            // .single() expects a single object, not an array
             headers: {
               'Content-Range': '0-0/1',
               'Content-Type': 'application/json',
@@ -105,7 +81,6 @@ test.describe('Deckbuilder core flows', () => {
           updated_at: new Date().toISOString(),
         };
         decks.unshift(newDeck);
-        // Supabase .select().single() expects a single object (not array)
         await route.fulfill({
           status: 201,
           contentType: 'application/json',
@@ -143,31 +118,30 @@ test.describe('Deckbuilder core flows', () => {
       });
     });
 
-    await page.route('**/rest/v1/deck_cards**', async (route) => {
-      await route.fulfill({
+    await page.route('**/rest/v1/deck_cards**', (route) =>
+      route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify([]),
-      });
-    });
+      }),
+    );
 
-    await page.route('**/rest/v1/deck_tags**', async (route) => {
-      await route.fulfill({
+    await page.route('**/rest/v1/deck_tags**', (route) =>
+      route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify([]),
-      });
-    });
+      }),
+    );
 
     await page.goto('/deckbuilder');
 
+    // Sign in via the inline CTA
     await page.getByRole('button', { name: /sign in to get started/i }).click();
     const authDialog = page.getByRole('dialog').first();
     await authDialog.getByLabel('Email').fill('deck-user@example.com');
     await authDialog.getByLabel('Password').fill('password123');
     await authDialog.getByRole('button', { name: /^sign in$/i }).click();
-
-    // Wait for auth to complete
     await expect(authDialog).toBeHidden({ timeout: 5_000 });
 
     const createDeckButton = page
