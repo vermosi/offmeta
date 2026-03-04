@@ -104,12 +104,30 @@ export function ExplanationPanel({ card, isLoading: externalLoading }: Explanati
         )}
       </div>
 
-      {/* Explanation */}
+      {/* Explanation loading skeleton */}
       {loading && (
-        <div className="space-y-2 p-4">
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="h-4 w-5/6" />
+        <div className="space-y-4 animate-fade-in">
+          {/* Section heading skeleton */}
+          <div className="flex items-center gap-1.5">
+            <Skeleton className="h-4 w-4 rounded-full" />
+            <Skeleton className="h-4 w-48" />
+          </div>
+
+          {/* Rationale block skeleton */}
+          <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 space-y-2.5">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-[90%]" />
+            <Skeleton className="h-4 w-[75%]" />
+            <Skeleton className="h-4 w-[85%]" />
+            <Skeleton className="h-4 w-[60%]" />
+          </div>
+
+          {/* Archetype badges skeleton */}
+          <div className="flex flex-wrap gap-1.5">
+            <Skeleton className="h-6 w-20 rounded-full" />
+            <Skeleton className="h-6 w-24 rounded-full" />
+            <Skeleton className="h-6 w-16 rounded-full" />
+          </div>
         </div>
       )}
 
