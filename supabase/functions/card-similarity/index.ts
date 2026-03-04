@@ -47,7 +47,7 @@ function extractMechanics(oracleText: string): string[] {
     [/\bdraw\b/i, 'draw'],
     [/\bdestroy\b/i, 'destroy'],
     [/\bexile\b/i, 'exile'],
-    [/\bcounter\b/i, 'counter'],
+    [/\bcounter target\b/i, 'counter'],
     [/\bsearch your library\b/i, 'tutor'],
     [/\breturn.*from.*graveyard\b/i, 'recursion'],
     [/\bcreate.*token/i, 'tokens'],
@@ -58,7 +58,9 @@ function extractMechanics(oracleText: string): string[] {
     [/\btrample\b/i, 'trample'],
     [/\bhaste\b/i, 'haste'],
     [/\bflash\b/i, 'flash'],
-    [/\btap.*add\b/i, 'mana production'],
+    // Handle both "{T}: Add" and "tap: add" patterns for mana production
+    [/(?:\{T\}|tap).*add\b/i, 'mana production'],
+    [/\badd\s+\{[WUBRGC]\}/i, 'mana production'],
     [/\bmill\b/i, 'mill'],
     [/\bdiscard\b/i, 'discard'],
     [/\bsacrifice\b/i, 'sacrifice'],
@@ -70,6 +72,9 @@ function extractMechanics(oracleText: string): string[] {
     [/\bprotection from\b/i, 'protection'],
     [/\bindestructible\b/i, 'indestructible'],
     [/\bhexproof\b/i, 'hexproof'],
+    [/\bproliferate\b/i, 'proliferate'],
+    [/\bscry\b/i, 'scry'],
+    [/\buntap\b/i, 'untap'],
   ];
 
   for (const [regex, label] of patterns) {
@@ -77,7 +82,8 @@ function extractMechanics(oracleText: string): string[] {
       mechanics.push(label);
     }
   }
-  return mechanics.slice(0, 6);
+  // Deduplicate
+  return [...new Set(mechanics)].slice(0, 6);
 }
 
 /** Build a Scryfall query for similar cards */
@@ -111,6 +117,14 @@ function buildSimilarQuery(card: SimilarityRequest): string {
 
   // Keyword-based oracle text matching (pick most relevant 2)
   const mechanics = extractMechanics(card.oracleText || '');
+
+  // Also use Scryfall keywords if provided
+  const kwParts: string[] = [];
+  for (const kw of (card.keywords || []).slice(0, 2)) {
+    const normalized = kw.toLowerCase().replace(/\s+/g, '-');
+    kwParts.push(`kw:${normalized}`);
+  }
+
   for (const mech of mechanics.slice(0, 2)) {
     if (mech === 'ETB') {
       parts.push('o:"enters the battlefield"');
@@ -118,9 +132,16 @@ function buildSimilarQuery(card: SimilarityRequest): string {
       parts.push('o:"when" o:"dies"');
     } else if (mech === 'tutor') {
       parts.push('o:"search your library"');
+    } else if (mech === 'mana production') {
+      parts.push('o:"add" o:"{"');
     } else {
       parts.push(`o:"${mech}"`);
     }
+  }
+
+  // Add keyword matches if no mechanics were found from oracle text
+  if (mechanics.length === 0 && kwParts.length > 0) {
+    parts.push(...kwParts);
   }
 
   return parts.join(' ');
@@ -146,7 +167,16 @@ function buildBudgetQuery(card: SimilarityRequest): string {
   // Key mechanic matching
   const mechanics = extractMechanics(card.oracleText || '');
   if (mechanics.length > 0) {
-    parts.push(`o:"${mechanics[0]}"`);
+    const mech = mechanics[0];
+    if (mech === 'mana production') {
+      parts.push('o:"add" o:"{"');
+    } else if (mech === 'ETB') {
+      parts.push('o:"enters the battlefield"');
+    } else if (mech === 'tutor') {
+      parts.push('o:"search your library"');
+    } else {
+      parts.push(`o:"${mech}"`);
+    }
   }
 
   parts.push(`-!"${card.cardName}"`);
