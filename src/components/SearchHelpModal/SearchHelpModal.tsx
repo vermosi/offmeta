@@ -62,7 +62,7 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
           <span className="hidden sm:inline">{t('help.label')}</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[85vh] p-0 gap-0">
+      <DialogContent className="max-w-2xl max-h-[85vh] p-0 gap-0" aria-describedby={undefined}>
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="flex items-center gap-2 text-xl">
             <BookOpen className="h-5 w-5 text-primary" />

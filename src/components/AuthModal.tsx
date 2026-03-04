@@ -105,7 +105,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px]">
+      <DialogContent className="sm:max-w-[400px]" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>
             {view === 'signin' && 'Sign In'}
