@@ -131,7 +131,7 @@ export async function validateAuth(req: Request): Promise<AuthResult> {
 
   try {
     const { createClient } = await importSupabase();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-function-type
     const userClient: any = (createClient as Function)(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -226,7 +226,7 @@ export async function logAuthFailure(
     if (!supabaseUrl || !serviceKey) return;
 
     const { createClient } = await importSupabase();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-function-type
     const client: any = (createClient as Function)(supabaseUrl, serviceKey);
 
     const origin = req.headers.get('Origin') ?? 'unknown';
@@ -280,6 +280,7 @@ export async function requireAdmin(
     };
   }
   const { createClient } = await importSupabase();
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   const createFn = createClient as Function;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
