@@ -1,72 +1,14 @@
 import { expect, test } from '@playwright/test';
-import type { Page } from '@playwright/test';
-
-function mockAuthEndpoints() {
-  return async ({ page }: { page: Page }) => {
-    await page.route('**/auth/v1/signup', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          user: {
-            id: 'user-signup-1',
-            email: 'new-user@example.com',
-            aud: 'authenticated',
-            role: 'authenticated',
-            identities: [{ id: 'identity-1' }],
-            app_metadata: {},
-            user_metadata: {},
-            created_at: new Date().toISOString(),
-          },
-          session: null,
-        }),
-      });
-    });
-
-    await page.route('**/auth/v1/token?grant_type=password', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          access_token: 'access-token',
-          token_type: 'bearer',
-          expires_in: 3600,
-          refresh_token: 'refresh-token',
-          user: {
-            id: 'user-signin-1',
-            email: 'existing@example.com',
-            aud: 'authenticated',
-            role: 'authenticated',
-            app_metadata: {},
-            user_metadata: {},
-            created_at: new Date().toISOString(),
-          },
-        }),
-      });
-    });
-
-    await page.route('**/auth/v1/recover', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({}),
-      });
-    });
-
-    // Mock profile lookups triggered after auth state changes
-    await page.route('**/rest/v1/profiles**', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify([]),
-      });
-    });
-  };
-}
+import { mockAuthAPIs, signInViaDialog } from './fixtures/mock-helpers';
 
 test.describe('Auth modal flows', () => {
   test.beforeEach(async ({ page }) => {
-    await mockAuthEndpoints()({ page });
+    await mockAuthAPIs(page, {
+      userId: 'user-signin-1',
+      email: 'existing@example.com',
+      mockSignup: true,
+      mockRecover: true,
+    });
   });
 
   test('signup happy path (deterministic mocked equivalent)', async ({

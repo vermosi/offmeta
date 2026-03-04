@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { mockAuthAPIs, signInViaDialog } from './fixtures/mock-helpers';
 
 const analyticsFixture = {
   summary: {
@@ -24,83 +25,46 @@ test.describe('Admin analytics access control', () => {
   });
 
   test('seeded admin user can load analytics view', async ({ page }) => {
-    const userId = 'admin-user-1';
-
-    await page.route('**/auth/v1/token?grant_type=password', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          access_token: 'admin-access-token',
-          token_type: 'bearer',
-          expires_in: 3600,
-          refresh_token: 'admin-refresh-token',
-          user: {
-            id: userId,
-            email: 'admin@example.com',
-            aud: 'authenticated',
-            role: 'authenticated',
-            app_metadata: {},
-            user_metadata: {},
-            created_at: new Date().toISOString(),
-          },
-        }),
-      });
+    await mockAuthAPIs(page, {
+      userId: 'admin-user-1',
+      email: 'admin@example.com',
+      accessToken: 'admin-access-token',
     });
 
-    await page.route('**/rest/v1/profiles**', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify([]),
-      });
-    });
-
-    await page.route('**/rest/v1/user_roles**', async (route) => {
-      await route.fulfill({
+    await page.route('**/rest/v1/user_roles**', (route) =>
+      route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify([{ role: 'admin' }]),
-      });
-    });
+      }),
+    );
 
-    await page.route('**/rest/v1/search_feedback**', async (route) => {
-      await route.fulfill({
+    await page.route('**/rest/v1/search_feedback**', (route) =>
+      route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify([]),
-      });
-    });
+      }),
+    );
 
-    await page.route('**/rest/v1/translation_rules**', async (route) => {
-      await route.fulfill({
+    await page.route('**/rest/v1/translation_rules**', (route) =>
+      route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify([]),
-      });
-    });
+      }),
+    );
 
-    await page.route('**/functions/v1/admin-analytics**', async (route) => {
-      await route.fulfill({
+    await page.route('**/functions/v1/admin-analytics**', (route) =>
+      route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify(analyticsFixture),
-      });
-    });
+      }),
+    );
 
     await page.goto('/');
-    await page
-      .getByRole('button', { name: /sign in/i })
-      .first()
-      .click();
-
-    const authDialog = page.getByRole('dialog').first();
-    await authDialog.getByLabel('Email').fill('admin@example.com');
-    await authDialog.getByLabel('Password').fill('password123');
-    await authDialog.getByRole('button', { name: /^sign in$/i }).click();
-
-    // Wait for auth dialog to close (session established)
-    await expect(authDialog).toBeHidden({ timeout: 5_000 });
+    await signInViaDialog(page, { email: 'admin@example.com' });
 
     await page.goto('/admin/analytics');
 
