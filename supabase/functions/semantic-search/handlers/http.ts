@@ -4,6 +4,7 @@ import {
   resolveRateLimitKey,
 } from '../../_shared/rateLimit.ts';
 import { validateAuth } from '../../_shared/auth.ts';
+import { supabase } from '../client.ts';
 
 export interface RequestBudget {
   deadlineMs: number;
@@ -77,6 +78,24 @@ export async function enforceRequestGuards(
   const authResult = await validateAuth(req);
   if (!authResult.authorized) {
     logWarn('auth_failed', { error: authResult.error });
+
+    // Persist auth failure for admin monitoring
+    try {
+      const origin = req.headers.get('Origin') ?? 'unknown';
+      const ua = req.headers.get('User-Agent') ?? '';
+      await supabase.from('analytics_events').insert({
+        event_type: 'auth_failure',
+        event_data: {
+          error: authResult.error,
+          origin,
+          user_agent_prefix: ua.slice(0, 100),
+          function_name: 'semantic-search',
+        },
+      });
+    } catch {
+      // best-effort, don't block response
+    }
+
     return errorResponse(authResult.error || 'Unauthorized', 401, jsonHeaders);
   }
 
