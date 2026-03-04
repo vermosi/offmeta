@@ -24,6 +24,42 @@ type AuthResult =
   | { authorized: true; role: string }
   | { authorized: false; error: string };
 
+type JwtPayload = {
+  iss?: string;
+  ref?: string;
+  role?: string;
+  exp?: number;
+  [key: string]: unknown;
+};
+
+function decodeJwtPayload(token: string): JwtPayload | null {
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+
+  try {
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+    const decoded = globalThis.atob(padded);
+    const parsed = JSON.parse(decoded);
+    if (!parsed || typeof parsed !== 'object') return null;
+    return parsed as JwtPayload;
+  } catch {
+    return null;
+  }
+}
+
+function extractProjectRef(supabaseUrl?: string): string | null {
+  if (!supabaseUrl) return null;
+
+  try {
+    const hostname = new URL(supabaseUrl).hostname;
+    const projectRef = hostname.split('.')[0];
+    return projectRef || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function validateAuth(req: Request): Promise<AuthResult> {
   const authHeader = req.headers.get('Authorization');
 
@@ -53,9 +89,30 @@ export async function validateAuth(req: Request): Promise<AuthResult> {
     return { authorized: true, role: 'service' };
   }
 
-  // Allow explicit public anon key for unauthenticated end-user access.
-  // Check both SUPABASE_ANON_KEY and SUPABASE_PUBLISHABLE_KEY since
-  // Lovable Cloud may provision them separately.
+  // Allow valid project anon JWT used by browser clients.
+  // This avoids calling /auth/v1/user for anon tokens (which fails due no `sub` claim).
+  const apikeyHeader = req.headers.get('apikey')?.trim() ?? '';
+  const jwtPayload = decodeJwtPayload(token);
+  const projectRef = extractProjectRef(supabaseUrl);
+  const tokenExpMs =
+    typeof jwtPayload?.exp === 'number' ? jwtPayload.exp * 1000 : null;
+
+  const isProjectAnonJwt =
+    !!jwtPayload &&
+    jwtPayload.iss === 'supabase' &&
+    jwtPayload.role === 'anon' &&
+    typeof jwtPayload.ref === 'string' &&
+    (projectRef === null || jwtPayload.ref === projectRef) &&
+    tokenExpMs !== null &&
+    tokenExpMs > Date.now() &&
+    apikeyHeader.length > 0 &&
+    apikeyHeader === token;
+
+  if (isProjectAnonJwt) {
+    return { authorized: true, role: 'anon' };
+  }
+
+  // Allow explicit public anon/publishable key for unauthenticated access.
   if (
     (supabaseAnonKey && token === supabaseAnonKey) ||
     (supabasePublishableKey && token === supabasePublishableKey)
