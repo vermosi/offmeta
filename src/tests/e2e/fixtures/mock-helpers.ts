@@ -178,6 +178,87 @@ export async function mockAuthAPIs(
       }),
     );
   }
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Admin mocks                                                       */
+/* ------------------------------------------------------------------ */
+
+/** Default analytics fixture returned by the admin-analytics edge function. */
+export const MOCK_ANALYTICS_FIXTURE = {
+  summary: {
+    totalSearches: 42,
+    avgConfidence: 0.91,
+    avgResponseTime: 321,
+    fallbackRate: 4,
+    days: 7,
+  },
+  responsePercentiles: { p50: 240, p95: 720, p99: 1300 },
+  sourceBreakdown: { deterministic: 30, ai: 12 },
+  popularQueries: [],
+  dailyVolume: { '2026-01-01': 10, '2026-01-02': 32 },
+  deterministicCoverage: { '2026-01-01': 80, '2026-01-02': 76 },
+};
+
+export interface MockAdminOptions extends MockAuthOptions {
+  /** Override the analytics edge-function response. */
+  analyticsResponse?: Record<string, unknown>;
+  /** Override user_roles response. Defaults to `[{ role: 'admin' }]`. */
+  rolesResponse?: Record<string, unknown>[];
+  /** Override search_feedback response. */
+  feedbackResponse?: Record<string, unknown>[];
+  /** Override translation_rules response. */
+  rulesResponse?: Record<string, unknown>[];
+}
+
+/**
+ * Set up all mocks needed for an authenticated admin session:
+ * auth + user_roles + search_feedback + translation_rules + admin-analytics edge fn.
+ *
+ * MUST be called **before** `page.goto()`.
+ */
+export async function mockAdminAPIs(
+  page: Page,
+  opts: MockAdminOptions = {},
+) {
+  const {
+    analyticsResponse,
+    rolesResponse = [{ role: 'admin' }],
+    feedbackResponse = [],
+    rulesResponse = [],
+    ...authOpts
+  } = opts;
+
+  // Auth (defaults to admin-user-1)
+  await mockAuthAPIs(page, {
+    userId: 'admin-user-1',
+    email: 'admin@example.com',
+    accessToken: 'admin-access-token',
+    ...authOpts,
+  });
+
+  const emptyJson = (data: unknown) => ({
+    status: 200 as const,
+    contentType: 'application/json',
+    body: JSON.stringify(data),
+  });
+
+  await page.route('**/rest/v1/user_roles**', (route) =>
+    route.fulfill(emptyJson(rolesResponse)),
+  );
+
+  await page.route('**/rest/v1/search_feedback**', (route) =>
+    route.fulfill(emptyJson(feedbackResponse)),
+  );
+
+  await page.route('**/rest/v1/translation_rules**', (route) =>
+    route.fulfill(emptyJson(rulesResponse)),
+  );
+
+  await page.route('**/functions/v1/admin-analytics**', (route) =>
+    route.fulfill(emptyJson(analyticsResponse ?? MOCK_ANALYTICS_FIXTURE)),
+  );
 }
 
 /**
