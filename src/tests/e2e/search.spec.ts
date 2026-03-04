@@ -1,58 +1,12 @@
 import { test, expect } from '@playwright/test';
-import type { Page } from '@playwright/test';
 import {
-  MOCK_SEMANTIC_SEARCH_RESPONSE,
-  MOCK_LIGHTNING_BOLT_SEMANTIC_RESPONSE,
-  MOCK_SCRYFALL_SEARCH_RESPONSE,
-  MOCK_BOLT_SEARCH_RESPONSE,
-} from './fixtures/mock-responses';
+  mockSearchAPIs,
+  mockBoltSearchAPIs,
+  searchForCard,
+  SEARCH_INPUT_SELECTOR,
+} from './fixtures/mock-helpers';
 
-const SEARCH_INPUT_SELECTOR = '#search-input';
 const CARD_SELECTOR = '[data-testid="search-result-card"]';
-
-/**
- * Intercept semantic-search and Scryfall API calls with deterministic mocks.
- * This prevents E2E tests from depending on live network calls which fail in CI.
- */
-async function mockSearchAPIs(
-  page: Page,
-  opts: {
-    semanticResponse?: Record<string, unknown>;
-    scryfallResponse?: Record<string, unknown>;
-  } = {},
-) {
-  const semanticBody = opts.semanticResponse ?? MOCK_SEMANTIC_SEARCH_RESPONSE;
-  const scryfallBody = opts.scryfallResponse ?? MOCK_SCRYFALL_SEARCH_RESPONSE;
-
-  await page.route('**/functions/v1/semantic-search', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(semanticBody),
-    }),
-  );
-
-  await page.route('**/api.scryfall.com/cards/search**', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(scryfallBody),
-    }),
-  );
-}
-
-async function searchForCard(page: Page, query: string) {
-  const searchInput = page.locator(SEARCH_INPUT_SELECTOR).first();
-  await expect(searchInput).toBeVisible({ timeout: 15_000 });
-
-  await searchInput.fill(query);
-  await searchInput.press('Enter');
-
-  // Wait for card results to actually render
-  await expect(
-    page.locator(CARD_SELECTOR).first(),
-  ).toBeVisible({ timeout: 15_000 });
-}
 
 test.describe('Search Flow', () => {
   test('page loads and search input is visible', async ({ page }) => {
@@ -93,10 +47,7 @@ test.describe('Search Flow', () => {
   test('clicking the first card opens a modal with card details', async ({
     page,
   }) => {
-    await mockSearchAPIs(page, {
-      semanticResponse: MOCK_LIGHTNING_BOLT_SEMANTIC_RESPONSE,
-      scryfallResponse: MOCK_BOLT_SEARCH_RESPONSE,
-    });
+    await mockBoltSearchAPIs(page);
     await page.goto('/');
     await searchForCard(page, 'lightning bolt');
 
@@ -108,10 +59,7 @@ test.describe('Search Flow', () => {
   });
 
   test('pressing Escape closes the modal', async ({ page }) => {
-    await mockSearchAPIs(page, {
-      semanticResponse: MOCK_LIGHTNING_BOLT_SEMANTIC_RESPONSE,
-      scryfallResponse: MOCK_BOLT_SEARCH_RESPONSE,
-    });
+    await mockBoltSearchAPIs(page);
     await page.goto('/');
     await searchForCard(page, 'lightning bolt');
 

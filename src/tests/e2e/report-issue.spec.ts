@@ -1,9 +1,13 @@
 import { expect, test } from '@playwright/test';
+import { mockSearchAPIs, searchForCard } from './fixtures/mock-helpers';
 
 test.describe('Report issue dialog', () => {
   test('validation errors and successful submit confirmation state', async ({
     page,
   }) => {
+    // Mock search APIs so search results render in CI
+    await mockSearchAPIs(page);
+
     await page.route('**/rest/v1/search_feedback**', async (route) => {
       await route.fulfill({
         status: 201,
@@ -30,9 +34,7 @@ test.describe('Report issue dialog', () => {
 
     await page.goto('/');
 
-    const searchInput = page.locator('#search-input').first();
-    await searchInput.fill('counterspell');
-    await searchInput.press('Enter');
+    await searchForCard(page, 'counterspell');
 
     const reportTrigger = page
       .getByRole('button', { name: /report issue/i })

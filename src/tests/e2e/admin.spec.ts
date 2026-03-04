@@ -35,7 +35,15 @@ test.describe('Admin analytics access control', () => {
           token_type: 'bearer',
           expires_in: 3600,
           refresh_token: 'admin-refresh-token',
-          user: { id: userId, email: 'admin@example.com' },
+          user: {
+            id: userId,
+            email: 'admin@example.com',
+            aud: 'authenticated',
+            role: 'authenticated',
+            app_metadata: {},
+            user_metadata: {},
+            created_at: new Date().toISOString(),
+          },
         }),
       });
     });
@@ -91,11 +99,14 @@ test.describe('Admin analytics access control', () => {
     await authDialog.getByLabel('Password').fill('password123');
     await authDialog.getByRole('button', { name: /^sign in$/i }).click();
 
+    // Wait for auth dialog to close (session established)
+    await expect(authDialog).toBeHidden({ timeout: 5_000 });
+
     await page.goto('/admin/analytics');
 
     await expect(
       page.getByRole('heading', { name: /search analytics/i }),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText(/total searches/i)).toBeVisible();
     await expect(page.getByText('42')).toBeVisible();
   });

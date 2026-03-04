@@ -11,7 +11,12 @@ function mockAuthEndpoints() {
           user: {
             id: 'user-signup-1',
             email: 'new-user@example.com',
+            aud: 'authenticated',
+            role: 'authenticated',
             identities: [{ id: 'identity-1' }],
+            app_metadata: {},
+            user_metadata: {},
+            created_at: new Date().toISOString(),
           },
           session: null,
         }),
@@ -27,7 +32,15 @@ function mockAuthEndpoints() {
           token_type: 'bearer',
           expires_in: 3600,
           refresh_token: 'refresh-token',
-          user: { id: 'user-signin-1', email: 'existing@example.com' },
+          user: {
+            id: 'user-signin-1',
+            email: 'existing@example.com',
+            aud: 'authenticated',
+            role: 'authenticated',
+            app_metadata: {},
+            user_metadata: {},
+            created_at: new Date().toISOString(),
+          },
         }),
       });
     });
@@ -37,6 +50,15 @@ function mockAuthEndpoints() {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({}),
+      });
+    });
+
+    // Mock profile lookups triggered after auth state changes
+    await page.route('**/rest/v1/profiles**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([]),
       });
     });
   };
@@ -66,7 +88,7 @@ test.describe('Auth modal flows', () => {
 
     await expect(
       dialog.getByText(/check your email to confirm your account/i),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 5_000 });
   });
 
   test('signin happy path', async ({ page }) => {
@@ -82,7 +104,7 @@ test.describe('Auth modal flows', () => {
     await dialog.getByLabel('Password').fill('password123');
     await dialog.getByRole('button', { name: /^sign in$/i }).click();
 
-    await expect(dialog).toBeHidden();
+    await expect(dialog).toBeHidden({ timeout: 5_000 });
   });
 
   test('password reset request flow', async ({ page }) => {
@@ -100,6 +122,6 @@ test.describe('Auth modal flows', () => {
 
     await expect(
       dialog.getByText(/check your email for a password reset link/i),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 5_000 });
   });
 });

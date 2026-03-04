@@ -2,43 +2,10 @@ import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { runAxeAudit } from '@/tests/e2e/axe-helpers';
 import {
-  MOCK_LIGHTNING_BOLT_SEMANTIC_RESPONSE,
-  MOCK_BOLT_SEARCH_RESPONSE,
-} from './fixtures/mock-responses';
-
-const SEARCH_INPUT_SELECTOR = '#search-input';
-const SEARCH_RESULT_CARD_SELECTOR = '[data-testid="search-result-card"]';
-
-async function mockSearchAPIs(page: Page) {
-  await page.route('**/functions/v1/semantic-search', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_LIGHTNING_BOLT_SEMANTIC_RESPONSE),
-    }),
-  );
-
-  await page.route('**/api.scryfall.com/cards/search**', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_BOLT_SEARCH_RESPONSE),
-    }),
-  );
-}
-
-async function searchForCard(page: Page, query: string) {
-  const searchInput = page.locator(SEARCH_INPUT_SELECTOR).first();
-  await expect(searchInput).toBeVisible({ timeout: 15_000 });
-
-  await searchInput.fill(query);
-  await searchInput.press('Enter');
-
-  // Wait for card results to actually render (not just the API response)
-  await expect(
-    page.locator(SEARCH_RESULT_CARD_SELECTOR).first(),
-  ).toBeVisible({ timeout: 15_000 });
-}
+  mockBoltSearchAPIs,
+  searchForCard,
+  SEARCH_RESULT_CARD_SELECTOR,
+} from './fixtures/mock-helpers';
 
 test.describe('Accessibility Audits @a11y', () => {
   test('homepage has no critical or serious violations', async ({
@@ -57,7 +24,7 @@ test.describe('Accessibility Audits @a11y', () => {
   test('card modal has no critical or serious violations', async ({
     page,
   }, testInfo) => {
-    await mockSearchAPIs(page);
+    await mockBoltSearchAPIs(page);
 
     await page.goto('/');
     await searchForCard(page, 'lightning bolt');

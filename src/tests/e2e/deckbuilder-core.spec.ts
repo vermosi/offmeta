@@ -32,7 +32,15 @@ test.describe('Deckbuilder core flows', () => {
           token_type: 'bearer',
           expires_in: 3600,
           refresh_token: 'refresh-token',
-          user: { id: userId, email: 'deck-user@example.com' },
+          user: {
+            id: userId,
+            email: 'deck-user@example.com',
+            aud: 'authenticated',
+            role: 'authenticated',
+            app_metadata: {},
+            user_metadata: {},
+            created_at: now,
+          },
         }),
       });
     });
@@ -48,8 +56,26 @@ test.describe('Deckbuilder core flows', () => {
     await page.route('**/rest/v1/decks**', async (route) => {
       const request = route.request();
       const method = request.method();
+      const url = request.url();
 
       if (method === 'GET') {
+        // Check if single deck query (contains id=eq.)
+        const singleDeckMatch = url.match(/id=eq\.([^&]+)/);
+        if (singleDeckMatch) {
+          const deckId = decodeURIComponent(singleDeckMatch[1]);
+          const deck = decks.find((d) => d.id === deckId);
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            // .single() expects a single object, not an array
+            headers: {
+              'Content-Range': '0-0/1',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(deck ?? null),
+          });
+          return;
+        }
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -79,17 +105,22 @@ test.describe('Deckbuilder core flows', () => {
           updated_at: new Date().toISOString(),
         };
         decks.unshift(newDeck);
+        // Supabase .select().single() expects a single object (not array)
         await route.fulfill({
           status: 201,
           contentType: 'application/json',
-          body: JSON.stringify([newDeck]),
+          headers: {
+            'Content-Range': '*/1',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newDeck),
         });
         return;
       }
 
       if (method === 'PATCH') {
         const payload = request.postDataJSON() as Partial<DeckRecord>;
-        const deckIdMatch = request.url().match(/id=eq\.([^&]+)/);
+        const deckIdMatch = url.match(/id=eq\.([^&]+)/);
         const deckId = deckIdMatch?.[1] ?? '';
         const idx = decks.findIndex(
           (deck) => deck.id === decodeURIComponent(deckId),
@@ -120,6 +151,14 @@ test.describe('Deckbuilder core flows', () => {
       });
     });
 
+    await page.route('**/rest/v1/deck_tags**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([]),
+      });
+    });
+
     await page.goto('/deckbuilder');
 
     await page.getByRole('button', { name: /sign in to get started/i }).click();
@@ -128,15 +167,18 @@ test.describe('Deckbuilder core flows', () => {
     await authDialog.getByLabel('Password').fill('password123');
     await authDialog.getByRole('button', { name: /^sign in$/i }).click();
 
+    // Wait for auth to complete
+    await expect(authDialog).toBeHidden({ timeout: 5_000 });
+
     const createDeckButton = page
       .getByRole('button', { name: /new deck|create deck/i })
       .first();
-    await expect(createDeckButton).toBeVisible();
+    await expect(createDeckButton).toBeVisible({ timeout: 10_000 });
     await createDeckButton.click();
-    await page.waitForURL(/\/deckbuilder\/deck-1/);
+    await page.waitForURL(/\/deckbuilder\/deck-1/, { timeout: 10_000 });
 
     await page.getByRole('link', { name: /back/i }).click();
-    await page.waitForURL('**/deckbuilder');
+    await page.waitForURL('**/deckbuilder', { timeout: 10_000 });
 
     await page
       .getByRole('button', { name: /import/i })
@@ -150,7 +192,7 @@ test.describe('Deckbuilder core flows', () => {
       .last()
       .click();
 
-    await page.waitForURL(/\/deckbuilder\/deck-2/);
+    await page.waitForURL(/\/deckbuilder\/deck-2/, { timeout: 10_000 });
 
     const deckTitle = page.getByRole('heading', { level: 2 });
     await deckTitle.click();
@@ -168,6 +210,6 @@ test.describe('Deckbuilder core flows', () => {
         level: 2,
         name: 'Edited Deterministic Deck',
       }),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 10_000 });
   });
 });
