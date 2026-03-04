@@ -473,7 +473,7 @@ describe('Security: Forged JWT payload regression', () => {
     );
 
     expect(result.authorized).toBe(false);
-    expect(result.error).toBe('Invalid Authorization token');
+    if (!result.authorized) expect(result.error).toBe('Invalid Authorization token');
   });
 
   it('still allows explicit machine secret without JWT verification', async () => {
@@ -486,7 +486,7 @@ describe('Security: Forged JWT payload regression', () => {
     );
 
     expect(result.authorized).toBe(true);
-    expect(result.role).toBe('api');
+    if (result.authorized) expect(result.role).toBe('api');
   });
 
   it('allows explicit anon key for unauthenticated public usage', async () => {
@@ -499,6 +499,6 @@ describe('Security: Forged JWT payload regression', () => {
     );
 
     expect(result.authorized).toBe(true);
-    expect(result.role).toBe('anon');
+    if (result.authorized) expect(result.role).toBe('anon');
   });
 });
