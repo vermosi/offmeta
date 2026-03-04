@@ -43,6 +43,12 @@ describe('inferCategory', () => {
     expect(inferCategory(makeCard(''))).toBe(DEFAULT_CATEGORY);
   });
 
+  it('handles null/undefined type_line', () => {
+    expect(inferCategory({ type_line: undefined } as unknown as ScryfallCard)).toBe(DEFAULT_CATEGORY);
+    expect(inferCategory({ type_line: null } as unknown as ScryfallCard)).toBe(DEFAULT_CATEGORY);
+    expect(inferCategory({} as unknown as ScryfallCard)).toBe(DEFAULT_CATEGORY);
+  });
+
   it('is case-insensitive', () => {
     expect(inferCategory(makeCard('CREATURE — Dragon'))).toBe('Creatures');
   });
