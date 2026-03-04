@@ -17,8 +17,8 @@ import {
 } from '@/lib/scryfall/client';
 import { getCardPrintings, type CardPrinting } from '@/lib/scryfall/printings';
 
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Drawer, DrawerContent, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
