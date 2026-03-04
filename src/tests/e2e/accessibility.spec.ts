@@ -31,16 +31,13 @@ async function searchForCard(page: Page, query: string) {
   const searchInput = page.locator(SEARCH_INPUT_SELECTOR).first();
   await expect(searchInput).toBeVisible({ timeout: 15_000 });
 
-  const responsePromise = page.waitForResponse(
-    (res) =>
-      res.url().includes('semantic-search') ||
-      res.url().includes('api.scryfall.com'),
-    { timeout: 15_000 },
-  );
-
   await searchInput.fill(query);
   await searchInput.press('Enter');
-  await responsePromise;
+
+  // Wait for card results to actually render (not just the API response)
+  await expect(
+    page.locator(SEARCH_RESULT_CARD_SELECTOR).first(),
+  ).toBeVisible({ timeout: 15_000 });
 }
 
 test.describe('Accessibility Audits @a11y', () => {
@@ -63,12 +60,9 @@ test.describe('Accessibility Audits @a11y', () => {
     await mockSearchAPIs(page);
 
     await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
     await searchForCard(page, 'lightning bolt');
 
-    // Open the first card modal
     const firstCard = page.locator(SEARCH_RESULT_CARD_SELECTOR).first();
-    await expect(firstCard).toBeVisible({ timeout: 15_000 });
     await firstCard.click();
 
     const modal = page.locator('[role="dialog"]');
