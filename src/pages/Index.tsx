@@ -503,8 +503,8 @@ const Index = () => {
             {/* Explanation tab */}
             {activeTab === 'explanation' && (
               <ExplanationPanel
-                card={similarityData?.sourceCard}
-                isLoading={similarLoading}
+                card={similarityData?.sourceCard ?? (cards.length > 0 && cards.length <= 5 ? cards[0] : null)}
+                isLoading={isSearching}
               />
             )}
           </div>
