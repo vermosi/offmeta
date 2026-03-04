@@ -4,7 +4,7 @@
  * using the Commander Spellbook API.
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Textarea } from '@/components/ui/textarea';
