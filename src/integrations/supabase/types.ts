@@ -363,6 +363,8 @@ export type Database = {
           id: string
           model_used: string
           natural_language_query: string
+          pre_translation_attempted: boolean | null
+          pre_translation_skipped_reason: string | null
           quality_flags: string[] | null
           response_time_ms: number | null
           result_count: number | null
@@ -378,6 +380,8 @@ export type Database = {
           id?: string
           model_used?: string
           natural_language_query: string
+          pre_translation_attempted?: boolean | null
+          pre_translation_skipped_reason?: string | null
           quality_flags?: string[] | null
           response_time_ms?: number | null
           result_count?: number | null
@@ -393,6 +397,8 @@ export type Database = {
           id?: string
           model_used?: string
           natural_language_query?: string
+          pre_translation_attempted?: boolean | null
+          pre_translation_skipped_reason?: string | null
           quality_flags?: string[] | null
           response_time_ms?: number | null
           result_count?: number | null
