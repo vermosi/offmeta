@@ -533,3 +533,168 @@ describe('buildNestedObject', () => {
     expect(obj.nested).toBeDefined();
   });
 });
+
+// ── buildOversizedPayload ──────────────────────────────────────────────────
+
+describe('buildOversizedPayload', () => {
+  it('creates payload near target KB size', () => {
+    const payload = buildOversizedPayload(1);
+    expect(payload.query.length).toBeGreaterThanOrEqual(1024);
+  });
+
+  it('creates larger payloads', () => {
+    const payload = buildOversizedPayload(5);
+    expect(payload.query.length).toBeGreaterThanOrEqual(5 * 1024);
+  });
+});
+
+// ── buildCircularLikePayload ───────────────────────────────────────────────
+
+describe('buildCircularLikePayload', () => {
+  it('creates deeply nested object', () => {
+    const obj = buildCircularLikePayload();
+    expect(obj).toHaveProperty('next');
+    // Traverse a few levels
+    let current: Record<string, unknown> = obj;
+    for (let i = 0; i < 5; i++) {
+      expect(current.next).toBeDefined();
+      current = current.next as Record<string, unknown>;
+    }
+  });
+
+  it('can be serialized (no actual circular refs)', () => {
+    const obj = buildCircularLikePayload();
+    expect(() => JSON.stringify(obj)).not.toThrow();
+  });
+});
+
+// ── simulateConcurrentRequests ─────────────────────────────────────────────
+
+describe('simulateConcurrentRequests', () => {
+  it('runs all requests in parallel', async () => {
+    const fn = vi.fn(async () => 'result');
+    const results = await simulateConcurrentRequests(5, fn);
+    expect(results).toHaveLength(5);
+    expect(fn).toHaveBeenCalledTimes(5);
+    expect(results.every((r) => r === 'result')).toBe(true);
+  });
+
+  it('handles empty count', async () => {
+    const results = await simulateConcurrentRequests(0, async () => 'x');
+    expect(results).toEqual([]);
+  });
+});
+
+// ── measureTimingVariance ──────────────────────────────────────────────────
+
+describe('measureTimingVariance', () => {
+  it('returns stats with expected shape', () => {
+    const stats = measureTimingVariance(() => { /* noop */ }, 10);
+    expect(stats).toHaveProperty('mean');
+    expect(stats).toHaveProperty('stdDev');
+    expect(stats).toHaveProperty('min');
+    expect(stats).toHaveProperty('max');
+    expect(stats.mean).toBeGreaterThanOrEqual(0);
+    expect(stats.stdDev).toBeGreaterThanOrEqual(0);
+    expect(stats.min).toBeLessThanOrEqual(stats.max);
+  });
+
+  it('runs exact number of iterations', () => {
+    let count = 0;
+    measureTimingVariance(() => { count++; }, 7);
+    expect(count).toBe(7);
+  });
+});
+
+// ── testRegexPerformance ───────────────────────────────────────────────────
+
+describe('testRegexPerformance', () => {
+  it('uses default iterations=1', () => {
+    let count = 0;
+    const result = testRegexPerformance(() => { count++; });
+    expect(count).toBe(1);
+    expect(result.averageMs).toBe(result.duration);
+  });
+
+  it('runs multiple iterations', () => {
+    let count = 0;
+    const result = testRegexPerformance(() => { count++; }, 5);
+    expect(count).toBe(5);
+    expect(result.averageMs).toBeCloseTo(result.duration / 5, 5);
+  });
+});
+
+// ── setupFetchMock additional branches ─────────────────────────────────────
+
+describe('setupFetchMock additional', () => {
+  it('exposes text() method', async () => {
+    const responses = new Map([
+      ['https://api.example.com/data', { status: 200, body: { key: 'val' } }],
+    ]);
+    const mockFetch = setupFetchMock(responses);
+    const result = await mockFetch('https://api.example.com/data');
+    expect(await result.text()).toBe(JSON.stringify({ key: 'val' }));
+  });
+
+  it('returns response headers when provided', async () => {
+    const responses = new Map([
+      ['https://api.example.com/h', { status: 200, body: {}, headers: { 'x-custom': 'yes' } }],
+    ]);
+    const mockFetch = setupFetchMock(responses);
+    const result = await mockFetch('https://api.example.com/h');
+    expect(result.headers.get('x-custom')).toBe('yes');
+  });
+
+  it('returns ok=false for 4xx status', async () => {
+    const responses = new Map([
+      ['https://api.example.com/err', { status: 400, body: { error: 'bad' } }],
+    ]);
+    const mockFetch = setupFetchMock(responses);
+    const result = await mockFetch('https://api.example.com/err');
+    expect(result.ok).toBe(false);
+    expect(result.status).toBe(400);
+  });
+});
+
+// ── buildMockRequest json() ────────────────────────────────────────────────
+
+describe('buildMockRequest json()', () => {
+  it('returns body via json()', async () => {
+    const req = buildMockRequest({ body: { q: 'test' } });
+    expect(await req.json()).toEqual({ q: 'test' });
+  });
+
+  it('returns undefined when no body', async () => {
+    const req = buildMockRequest({});
+    expect(await req.json()).toBeUndefined();
+  });
+});
+
+// ── containsPrototypePollution edge cases ──────────────────────────────────
+
+describe('containsPrototypePollution edge cases', () => {
+  it('detects prototype keyword', () => {
+    expect(containsPrototypePollution('set prototype to null')).toBe(true);
+  });
+
+  it('is case-insensitive', () => {
+    expect(containsPrototypePollution('__PROTO__')).toBe(true);
+    expect(containsPrototypePollution('CONSTRUCTOR')).toBe(true);
+  });
+
+  it('returns false for safe strings', () => {
+    expect(containsPrototypePollution('just a normal string')).toBe(false);
+  });
+});
+
+// ── hasMinimumAlphanumeric boundary ────────────────────────────────────────
+
+describe('hasMinimumAlphanumeric boundary', () => {
+  it('returns true for exactly 10-char input (boundary)', () => {
+    expect(hasMinimumAlphanumeric('!@#$%^&*(!')).toBe(true); // length=10, skip
+  });
+
+  it('returns false for 11-char mostly-symbolic input', () => {
+    expect(hasMinimumAlphanumeric('!@#$%^&*(!a', 0.5)).toBe(false); // 1/11 < 0.5
+  });
+});
