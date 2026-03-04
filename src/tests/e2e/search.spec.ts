@@ -41,6 +41,19 @@ async function mockSearchAPIs(
   );
 }
 
+async function searchForCard(page: Page, query: string) {
+  const searchInput = page.locator(SEARCH_INPUT_SELECTOR).first();
+  await expect(searchInput).toBeVisible({ timeout: 15_000 });
+
+  await searchInput.fill(query);
+  await searchInput.press('Enter');
+
+  // Wait for card results to actually render
+  await expect(
+    page.locator(CARD_SELECTOR).first(),
+  ).toBeVisible({ timeout: 15_000 });
+}
+
 test.describe('Search Flow', () => {
   test('page loads and search input is visible', async ({ page }) => {
     await page.goto('/');
@@ -53,14 +66,7 @@ test.describe('Search Flow', () => {
   }) => {
     await mockSearchAPIs(page);
     await page.goto('/');
-    const searchInput = page.locator(SEARCH_INPUT_SELECTOR).first();
-    await expect(searchInput).toBeVisible({ timeout: 15_000 });
-
-    await searchInput.fill('cheap green ramp spells');
-    await searchInput.press('Enter');
-
-    const results = page.locator(CARD_SELECTOR);
-    await expect(results.first()).toBeVisible({ timeout: 15_000 });
+    await searchForCard(page, 'cheap green ramp spells');
   });
 
   test('submitting empty query shows inline error without network call', async ({
@@ -92,14 +98,9 @@ test.describe('Search Flow', () => {
       scryfallResponse: MOCK_BOLT_SEARCH_RESPONSE,
     });
     await page.goto('/');
-    const searchInput = page.locator(SEARCH_INPUT_SELECTOR).first();
-    await expect(searchInput).toBeVisible({ timeout: 15_000 });
-
-    await searchInput.fill('lightning bolt');
-    await searchInput.press('Enter');
+    await searchForCard(page, 'lightning bolt');
 
     const firstCard = page.locator(CARD_SELECTOR).first();
-    await expect(firstCard).toBeVisible({ timeout: 15_000 });
     await firstCard.click();
 
     const modal = page.locator('[role="dialog"]').first();
@@ -112,14 +113,9 @@ test.describe('Search Flow', () => {
       scryfallResponse: MOCK_BOLT_SEARCH_RESPONSE,
     });
     await page.goto('/');
-    const searchInput = page.locator(SEARCH_INPUT_SELECTOR).first();
-    await expect(searchInput).toBeVisible({ timeout: 15_000 });
-
-    await searchInput.fill('lightning bolt');
-    await searchInput.press('Enter');
+    await searchForCard(page, 'lightning bolt');
 
     const firstCard = page.locator(CARD_SELECTOR).first();
-    await expect(firstCard).toBeVisible({ timeout: 15_000 });
     await firstCard.click();
 
     const modal = page.locator('[role="dialog"]').first();
