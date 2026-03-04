@@ -1,4 +1,9 @@
 import { test, expect } from '@playwright/test';
+import {
+  mockBoltSearchAPIs,
+  mockSearchAPIs,
+  searchForCard,
+} from './fixtures/mock-helpers';
 
 const SEARCH_INPUT_SELECTOR = '#search-input';
 const CARD_SELECTOR = '[data-testid="search-result-card"]';
@@ -11,6 +16,7 @@ test.describe('User Flows', () => {
   test('clicking an example chip fills the input and triggers search', async ({
     page,
   }) => {
+    await mockSearchAPIs(page);
     await page.goto('/');
     const searchInput = page.locator(SEARCH_INPUT_SELECTOR).first();
     await expect(searchInput).toBeVisible({ timeout: 15_000 });
@@ -22,15 +28,7 @@ test.describe('User Flows', () => {
 
     const chipText = await firstChip.textContent();
 
-    const responsePromise = page.waitForResponse(
-      (res) =>
-        res.url().includes('semantic-search') ||
-        res.url().includes('api.scryfall.com'),
-      { timeout: 15_000 },
-    );
-
     await firstChip.click();
-    await responsePromise;
 
     // Input should now contain the chip text
     await expect(searchInput).toHaveValue(chipText?.trim() ?? '', {
@@ -63,10 +61,13 @@ test.describe('User Flows', () => {
     const searchInput = page.locator(SEARCH_INPUT_SELECTOR).first();
     await expect(searchInput).toBeVisible({ timeout: 15_000 });
 
-    // The search submit button should be present
+    // The search submit button should be present and visible
     const searchButton = page.getByTestId('search-submit-button');
     await expect(searchButton).toBeVisible();
-    await expect(searchButton).toBeEnabled();
+
+    // Button is disabled when input is empty; type something to enable it
+    await searchInput.fill('test');
+    await expect(searchButton).toBeEnabled({ timeout: 3_000 });
   });
 
   test('search help trigger opens the help modal', async ({ page }) => {
@@ -110,24 +111,10 @@ test.describe('User Flows', () => {
   });
 
   test('search results update the URL with query params', async ({ page }) => {
+    await mockBoltSearchAPIs(page);
     await page.goto('/');
-    const searchInput = page.locator(SEARCH_INPUT_SELECTOR).first();
-    await expect(searchInput).toBeVisible({ timeout: 15_000 });
 
-    const responsePromise = page.waitForResponse(
-      (res) =>
-        res.url().includes('semantic-search') ||
-        res.url().includes('api.scryfall.com'),
-      { timeout: 15_000 },
-    );
-
-    await searchInput.fill('lightning bolt');
-    await searchInput.press('Enter');
-    await responsePromise;
-
-    // Wait for results to render
-    const results = page.locator(CARD_SELECTOR);
-    await expect(results.first()).toBeVisible({ timeout: 15_000 });
+    await searchForCard(page, 'lightning bolt');
 
     // URL should contain query information (exact param depends on implementation)
     const url = page.url();
