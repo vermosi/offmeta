@@ -4,7 +4,7 @@
  * using the Commander Spellbook API.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Textarea } from '@/components/ui/textarea';
@@ -76,6 +76,16 @@ interface ComboResults {
 }
 
 type InputMode = 'url' | 'paste';
+type SortMode = 'popularity' | 'cards-asc' | 'cards-desc' | 'price-asc' | 'price-desc';
+type PriceCeiling = 'any' | '10' | '25' | '50' | '100';
+
+/** Pure helper – extract numeric price from a combo's tcgplayer field. */
+const getComboPrice = (combo: Combo): number | null => {
+  const raw = combo.prices?.tcgplayer;
+  if (!raw) return null;
+  const num = parseFloat(raw);
+  return isNaN(num) ? null : num;
+};
 
 function ComboItem({
   combo,
@@ -238,9 +248,9 @@ export default function FindMyCombos() {
   const [error, setError] = useState<string | null>(null);
   const [expandedCombo, setExpandedCombo] = useState<string | null>(null);
   const [filterColors, setFilterColors] = useState<string[]>([]);
-  const [filterCardCount, setFilterCardCount] = useState<string>('any');
-  const [filterPriceCeiling, setFilterPriceCeiling] = useState<string>('any');
-  const [sortBy, setSortBy] = useState<string>('popularity');
+  const [filterCardCount, setFilterCardCount] = useState<'any' | '2' | '3' | '4+'>('any');
+  const [filterPriceCeiling, setFilterPriceCeiling] = useState<PriceCeiling>('any');
+  const [sortBy, setSortBy] = useState<SortMode>('popularity');
 
   const hasActiveFilters = filterColors.length > 0 || filterCardCount !== 'any' || filterPriceCeiling !== 'any' || sortBy !== 'popularity';
 
@@ -255,13 +265,6 @@ export default function FindMyCombos() {
     setFilterColors((prev) =>
       prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c],
     );
-
-  const getComboPrice = (combo: Combo): number | null => {
-    const raw = combo.prices?.tcgplayer;
-    if (!raw) return null;
-    const num = parseFloat(raw);
-    return isNaN(num) ? null : num;
-  };
 
   const filterAndSortCombos = (combos: Combo[]): Combo[] => {
     let filtered = [...combos];
@@ -278,7 +281,8 @@ export default function FindMyCombos() {
       const ceiling = parseFloat(filterPriceCeiling);
       filtered = filtered.filter((c) => {
         const price = getComboPrice(c);
-        return price !== null && price <= ceiling;
+        // Include combos with unknown price so they aren't silently hidden
+        return price === null || price <= ceiling;
       });
     }
 
@@ -288,7 +292,7 @@ export default function FindMyCombos() {
     else if (sortBy === 'price-asc') {
       filtered.sort((a, b) => (getComboPrice(a) ?? Infinity) - (getComboPrice(b) ?? Infinity));
     } else if (sortBy === 'price-desc') {
-      filtered.sort((a, b) => (getComboPrice(b) ?? -1) - (getComboPrice(a) ?? -1));
+      filtered.sort((a, b) => (getComboPrice(b) ?? -Infinity) - (getComboPrice(a) ?? -Infinity));
     }
 
     return filtered;
@@ -532,6 +536,9 @@ export default function FindMyCombos() {
         {results && !loading && (() => {
           const filteredIncluded = filterAndSortCombos(results.included);
           const filteredAlmost = filterAndSortCombos(results.almostIncluded);
+          const nullPriceCount = filterPriceCeiling !== 'any'
+            ? [...results.included, ...results.almostIncluded].filter((c) => getComboPrice(c) === null).length
+            : 0;
           return (
           <div className="space-y-6">
             {/* Filter toolbar */}
@@ -598,7 +605,7 @@ export default function FindMyCombos() {
                 <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
+                  onChange={(e) => setSortBy(e.target.value as SortMode)}
                   className="text-xs bg-secondary/60 border-none rounded px-2 py-1 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 >
                   <option value="popularity">Popularity</option>
@@ -619,6 +626,12 @@ export default function FindMyCombos() {
                 </button>
               )}
             </div>
+
+            {nullPriceCount > 0 && (
+              <p className="text-xs text-muted-foreground italic">
+                {nullPriceCount} combo{nullPriceCount > 1 ? 's' : ''} included with unknown price data.
+              </p>
+            )}
 
             {/* Included combos */}
             <section className="space-y-3">
