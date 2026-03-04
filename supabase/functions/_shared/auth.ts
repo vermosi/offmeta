@@ -31,6 +31,8 @@ export async function validateAuth(req: Request): Promise<AuthResult> {
   const apiSecret = Deno.env.get('OFFMETA_API_SECRET');
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+  // Lovable Cloud may store the publishable key under a different name
+  const supabasePublishableKey = Deno.env.get('SUPABASE_PUBLISHABLE_KEY');
 
   // If no auth header is present, reject
   if (!authHeader) {
@@ -52,7 +54,12 @@ export async function validateAuth(req: Request): Promise<AuthResult> {
   }
 
   // Allow explicit public anon key for unauthenticated end-user access.
-  if (supabaseAnonKey && token === supabaseAnonKey) {
+  // Check both SUPABASE_ANON_KEY and SUPABASE_PUBLISHABLE_KEY since
+  // Lovable Cloud may provision them separately.
+  if (
+    (supabaseAnonKey && token === supabaseAnonKey) ||
+    (supabasePublishableKey && token === supabasePublishableKey)
+  ) {
     return { authorized: true, role: 'anon' };
   }
 
