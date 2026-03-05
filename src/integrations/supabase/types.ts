@@ -485,7 +485,6 @@ export type Database = {
           is_public: boolean | null
           name: string | null
           updated_at: string | null
-          user_id: string | null
         }
         Insert: {
           card_count?: number | null
@@ -499,7 +498,6 @@ export type Database = {
           is_public?: boolean | null
           name?: string | null
           updated_at?: string | null
-          user_id?: never
         }
         Update: {
           card_count?: number | null
@@ -513,7 +511,6 @@ export type Database = {
           is_public?: boolean | null
           name?: string | null
           updated_at?: string | null
-          user_id?: never
         }
         Relationships: []
       }
