@@ -19,7 +19,7 @@ import {
   buildMaliciousQuery,
   getAllMaliciousPayloads,
   buildInvalidToken,
-  createMockJWT as _createMockJWT,
+  createMockJWT as _createMockJWT, // eslint-disable-line @typescript-eslint/no-unused-vars
   buildOversizedPayload,
   buildNestedObject,
   buildCircularLikePayload,
@@ -38,7 +38,7 @@ import {
   expectRateLimited,
   createMockRateLimiter,
   setupFetchMock,
-  SECURITY_LIMITS as _SECURITY_LIMITS,
+  SECURITY_LIMITS as _SECURITY_LIMITS, // eslint-disable-line @typescript-eslint/no-unused-vars
 } from './index';
 
 // ── sanitizeErrorForClient ─────────────────────────────────────────────────
@@ -477,7 +477,7 @@ describe('countQueryParameters', () => {
 describe('simulateBurstRequests branches', () => {
   it('runs requests with delay between them', async () => {
     const fn = vi.fn(async (i: number) => i);
-    const { results, totalTimeMs: _totalTimeMs } = await simulateBurstRequests(3, fn, 10);
+    const { results, totalTimeMs: _totalTimeMs } = await simulateBurstRequests(3, fn, 10); // eslint-disable-line @typescript-eslint/no-unused-vars
     expect(results).toEqual([0, 1, 2]);
     expect(fn).toHaveBeenCalledTimes(3);
   });

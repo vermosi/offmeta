@@ -111,12 +111,14 @@ const Index = () => {
     handleRerunEditedQuery(scryfallQuery);
   }, [handleRerunEditedQuery]);
 
-  // Reset to cards tab on new search — derive from originalQuery via ref
+  // Reset to cards tab on new search
   const prevQueryRef = useRef(originalQuery);
-  if (prevQueryRef.current !== originalQuery) {
-    prevQueryRef.current = originalQuery;
-    if (activeTab !== 'cards') setActiveTab('cards');
-  }
+  useEffect(() => {
+    if (prevQueryRef.current !== originalQuery) {
+      prevQueryRef.current = originalQuery;
+      if (activeTab !== 'cards') setActiveTab('cards');
+    }
+  }, [originalQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Activate feature hooks when tab is selected
   const handleTabChange = useCallback((tab: ResultsTab) => {
