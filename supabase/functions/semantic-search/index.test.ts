@@ -40,6 +40,14 @@ interface TranslationResponse {
   responseTimeMs?: number;
 }
 
+interface BudgetedSearchOptions {
+  debug?: Record<string, unknown>;
+  expectedFallbackSource?: string;
+  filters?: Record<string, unknown>;
+  forceLowBudget?: boolean;
+  headers?: Record<string, string>;
+}
+
 async function callSemanticSearch(
   query: string,
   filters?: Record<string, unknown>,
@@ -63,6 +71,55 @@ async function callSemanticSearch(
   }
 
   return data as TranslationResponse;
+}
+
+async function callSemanticSearchWithBudget(
+  query: string,
+  options: BudgetedSearchOptions = {},
+): Promise<TranslationResponse> {
+  const {
+    debug,
+    expectedFallbackSource,
+    filters,
+    forceLowBudget = false,
+    headers = {},
+  } = options;
+  const now = Date.now();
+  const budgetHeaders = forceLowBudget
+    ? {
+        'x-request-start': String(now - 10_000),
+        'x-deadline-ms': String(now - 1),
+      }
+    : {
+        'x-request-start': String(now),
+        'x-deadline-ms': String(now + 30_000),
+      };
+
+  const response = await fetch(FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      ...budgetHeaders,
+      ...headers,
+    },
+    body: JSON.stringify({ query, filters, useCache: false, debug }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(`API error ${response.status}: ${JSON.stringify(data)}`);
+  }
+
+  const result = data as TranslationResponse;
+
+  if (expectedFallbackSource) {
+    assertEquals(result.fallback, true);
+    assertEquals(result.source, expectedFallbackSource);
+  }
+
+  return result;
 }
 
 Deno.test(
@@ -1041,67 +1098,42 @@ Deno.test('handles URL-like content in query', async () => {
 // AI Fallback Scenarios
 // ============================================================
 
-// Budget-based fallback tests require callSemanticSearchWithBudget helper
-// which is not yet implemented. Skipping until budget testing infra is added.
-// TODO: implement callSemanticSearchWithBudget and re-enable these tests.
+Deno.test('handles budget fallback when low budget is forced', async () => {
+  const data = await callSemanticSearchWithBudget(
+    'show me cards that make treasure whenever you cast an instant or sorcery',
+    {
+      expectedFallbackSource: 'budget_fallback',
+      forceLowBudget: true,
+    },
+  );
+
+  assertEquals(data.success, true);
+});
 
 Deno.test('handles forced fallback via debug flag', async () => {
-  const response = await fetch(FUNCTION_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-    },
-    body: JSON.stringify({
-      query: 'dragons that breathe fire',
-      useCache: false,
-      debug: { forceFallback: true },
-    }),
+  const data = await callSemanticSearchWithBudget('dragons that breathe fire', {
+    debug: { forceFallback: true },
+    expectedFallbackSource: 'forced_fallback',
   });
 
-  const data = await response.json();
-  assertEquals(response.ok, true);
   assertEquals(data.success, true);
-  assertEquals(data.fallback, true);
-  assertEquals(data.source, 'forced_fallback');
 });
 
 Deno.test('handles simulated AI failure via debug flag', async () => {
-  const response = await fetch(FUNCTION_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-    },
-    body: JSON.stringify({
-      query: 'complex multi-part query',
-      useCache: false,
-      debug: { simulateAiFailure: true },
-    }),
+  const data = await callSemanticSearchWithBudget('complex multi-part query', {
+    debug: { simulateAiFailure: true },
   });
 
-  const data = await response.json();
-  assertEquals(response.ok, true);
   assertEquals(data.success, true);
   assertEquals(data.fallback, true);
 });
 
 Deno.test('fallback still returns valid scryfall query', async () => {
-  const response = await fetch(FUNCTION_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-    },
-    body: JSON.stringify({
-      query: 'green elves',
-      useCache: false,
-      debug: { forceFallback: true },
-    }),
+  const data = await callSemanticSearchWithBudget('green elves', {
+    debug: { forceFallback: true },
+    expectedFallbackSource: 'forced_fallback',
   });
 
-  const data = await response.json();
-  assertEquals(response.ok, true);
   assertEquals(data.success, true);
   assertExists(data.scryfallQuery);
   assertEquals(
@@ -1112,21 +1144,11 @@ Deno.test('fallback still returns valid scryfall query', async () => {
 });
 
 Deno.test('fallback includes explanation with assumptions', async () => {
-  const response = await fetch(FUNCTION_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-    },
-    body: JSON.stringify({
-      query: 'card draw spells',
-      useCache: false,
-      debug: { forceFallback: true },
-    }),
+  const data = await callSemanticSearchWithBudget('card draw spells', {
+    debug: { forceFallback: true },
+    expectedFallbackSource: 'forced_fallback',
   });
 
-  const data = await response.json();
-  assertEquals(response.ok, true);
   assertExists(data.explanation);
   assertExists(data.explanation.assumptions);
   assertEquals(Array.isArray(data.explanation.assumptions), true);
@@ -1138,21 +1160,11 @@ Deno.test('fallback includes explanation with assumptions', async () => {
 });
 
 Deno.test('fallback has lower confidence score', async () => {
-  const response = await fetch(FUNCTION_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-    },
-    body: JSON.stringify({
-      query: 'ramp spells',
-      useCache: false,
-      debug: { forceFallback: true },
-    }),
+  const data = await callSemanticSearchWithBudget('ramp spells', {
+    debug: { forceFallback: true },
+    expectedFallbackSource: 'forced_fallback',
   });
 
-  const data = await response.json();
-  assertEquals(response.ok, true);
   assertExists(data.explanation.confidence);
   // Fallback should have reduced confidence (typically 0.6 or less)
   assertEquals(
