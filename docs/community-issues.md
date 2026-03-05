@@ -3,7 +3,11 @@
 This backlog captures community-friendly issues pulled from the project status notes.
 Each issue is formatted for direct entry into GitHub.
 
+Tracking format: `[Status: <planned|in progress|blocked>] [Priority: <P0-P3>] [Discussion: <GitHub issue|milestone|owner/status>]`
+
 ## 1) Add contract tests for Supabase Edge Functions (local)
+
+**Tracking:** `[Status: planned] [Priority: P1] [Discussion: GitHub issue #TBD (create on intake); milestone "near-term"]`
 
 **Labels:** `testing`, `help wanted`
 
@@ -24,6 +28,8 @@ Create contract tests that validate Supabase Edge Functions when running locally
 
 ## 2) Document deployment steps for Supabase + hosting provider
 
+**Tracking:** `[Status: planned] [Priority: P2] [Discussion: GitHub issue #TBD (create on intake); milestone "near-term"]`
+
 **Labels:** `documentation`, `help wanted`
 
 **Description**
@@ -42,6 +48,8 @@ Add a deployment guide for Supabase and the hosting provider used by the project
 - Environment variables and Supabase configuration are explicitly listed.
 
 ## 3) Improve accessibility audits and keyboard navigation
+
+**Tracking:** `[Status: planned] [Priority: P1] [Discussion: GitHub issue #TBD (create on intake); owner/status "@frontend-accessibility triage"]`
 
 **Labels:** `enhancement`, `accessibility`, `good first issue`
 
