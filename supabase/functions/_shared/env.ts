@@ -1,3 +1,4 @@
+// @ts-nocheck — Deno runtime types unavailable in Vite/TS checker
 /**
  * Validation utility for environment variables in Edge Functions.
  */

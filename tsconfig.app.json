@@ -29,6 +29,7 @@
     "src"
   ],
   "exclude": [
-    "src/tests/e2e"
+    "src/tests/e2e",
+    "supabase/functions"
   ]
 }

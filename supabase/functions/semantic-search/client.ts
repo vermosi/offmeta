@@ -1,3 +1,4 @@
+// @ts-nocheck — esm.sh imports resolve at Deno runtime, not in Vite checker
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { validateEnv } from '../_shared/env.ts';
 

@@ -1,4 +1,17 @@
 {
+  "compilerOptions": {
+    "allowJs": true,
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "skipLibCheck": true,
+    "strict": true
+  },
+  "exclude": [
+    "supabase/functions"
+  ],
   "files": [],
   "references": [
     {
@@ -7,14 +20,5 @@
     {
       "path": "./tsconfig.node.json"
     }
-  ],
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    },
-    "strict": true,
-    "skipLibCheck": true,
-    "allowJs": true
-  }
+  ]
 }
