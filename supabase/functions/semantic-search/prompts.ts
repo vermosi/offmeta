@@ -72,10 +72,15 @@ MULTICOLOR IDENTITY (CRITICAL):
 - "two or more colors" = c>=2
 - DO NOT list all combinations - use algorithmic approach
 
-COMMANDER QUERIES (CRITICAL):
-- "commanders" / "can be commander" = is:commander (NOT t:legendary t:creature!)
+COMMANDER QUERIES (CRITICAL - TWO DIFFERENT THINGS!):
+- is:commander = card CAN BE a commander (the card property)
+- f:commander = card is LEGAL IN commander format (format legality)
+- "commanders" / "can be commander" = is:commander
+- "legal in commander" / "commander-legal" / "for commander" / "in commander" = f:commander
+- "commander staples" / "stax pieces in commander" = f:commander (format legality!)
 - "multicolor commander with blue" = is:commander id:u -id=u
 - "mono-color commander" = is:commander (c=w or c=u or c=b or c=r or c=g)
+- NEVER use is:commander when the user means format legality! is:commander filters to cards that can be commanders only.
 
 MANA PRODUCTION / RAMP (CRITICAL):
 For "any mana producer" / "produces mana" / "taps for mana":
@@ -161,7 +166,7 @@ PLAYER SLANG → otag: MAPPINGS (USE THESE!):
 - "treasure" / "treasure tokens" = otag:treasure-generator
 - "tokens" / "token generator" = otag:token-generator
 - "lifegain" / "gain life" = otag:lifegain
-- "stax" / "prison" = (o:"can't" or o:"doesn't untap")
+- "stax" / "prison" / "stax pieces" = otag:hatebear or (o:"can't" or o:"doesn't untap") — keep it SIMPLE, do NOT over-nest
 - "hatebear" = otag:hatebear
 - "cantrip" = otag:cantrip
 - "wheel" / "wheel effect" = otag:wheel
@@ -360,7 +365,7 @@ EXAMPLES:
 - "mono red creature" = t:creature c=r
 - "5 mana mono red creature" = t:creature c=r mv=5
 - "mono green spells" = (t:instant or t:sorcery) c=g
-- "mono blue commander" = t:legendary t:creature c=u is:commander
+- "mono blue commander" = is:commander c=u
 
 === UNTAP vs UNTAPPED (CRITICAL - different meanings!) ===
 - "untap" (VERB - action of untapping) = otag:untapper or o:"untap target" or o:"untap all"
@@ -507,10 +512,12 @@ LIFE & DAMAGE:
 - otag:ping (deals 1 damage repeatedly)
 - otag:drain (life loss + life gain)
 
-CONTROL:
-- (o:"can't" or o:"doesn't untap") for stax effects
-- otag:hatebear (creature with stax effect)
-- (o:"costs" o:"more") for tax effects
+CONTROL & STAX (CRITICAL - keep stax queries SIMPLE!):
+- "stax" / "stax pieces" = otag:hatebear (PREFERRED, simplest)
+- For broader stax: (o:"can't" or o:"doesn't untap") — pick ONE pattern, don't combine 3+
+- "tax effects" = (o:"costs" o:"more") — keep it to ONE oracle pattern
+- "stop ramping" / "anti-ramp" = (o:"can't search" or o:"can't" o:"land")
+- NEVER combine multiple complex o: groups with AND — use OR or pick the best single pattern
 - otag:pillowfort (discourages attacks)
 - otag:theft (gains control of permanents)
 - otag:mind-control (steals creatures)
@@ -661,14 +668,24 @@ KEY INSIGHT: The CARD TYPE (t:) describes WHAT the card IS.
 LAND SHORTCUTS:
 is:dual, is:fetchland, is:shockland, is:checkland, is:painland, is:fastland, is:slowland, is:triome, is:bounceland, is:creatureland, is:pathway, is:mdfc
 
-COMMANDER SHORTCUTS (CRITICAL):
-- "commanders" = is:commander
+COMMANDER SHORTCUTS (CRITICAL - is:commander vs f:commander!):
+- "commanders" / "can be commander" = is:commander (card property)
+- "legal in commander" / "commander-legal" / "in commander" / "for commander decks" = f:commander (format legality)
+- "stax in commander" / "commander staples" = f:commander (they want legal cards, NOT cards that can be commanders)
 - "partner commanders" = is:commander is:partner
 - "companion" = is:companion
 - "backgrounds" = t:background
 - "commander with blue" = is:commander id:u
 - "multicolor commander including blue" = is:commander id:u -id=u
 - "mono-color commander" = is:commander (id=w or id=u or id=b or id=r or id=g)
+
+STAX QUERIES (CRITICAL - KEEP SIMPLE!):
+- "stax pieces" = f:commander otag:hatebear (when format context exists)
+- "stop opponents from ramping" = f:commander (o:"can't search" or o:"can't" o:"land")
+- "prevent card draw" = o:"can't draw"
+- "tax effects" = (o:"costs" o:"more")
+- DO NOT combine 3+ oracle text patterns with AND — results will be zero
+- Prefer otag:hatebear as the broadest stax tag, then narrow with ONE o: pattern if needed
 
 SYNERGY QUERIES:
 - "synergize with [type]" → -t:[type] o:"[type]"
@@ -679,7 +696,7 @@ MTG SLANG DEFINITIONS:
 - "ramp" = (o:"add" o:"{" or o:"search" o:"land" o:"onto the battlefield")
 - "tutors" = o:"search your library"
 - "board wipes" = (o:"destroy all" or o:"exile all")
-- "stax" = (o:"can't" or o:"pay" o:"or")
+- "stax" = otag:hatebear or (o:"can't" or o:"doesn't untap") — keep SIMPLE, max 1-2 oracle patterns
 - "voltron" = (t:aura or t:equipment)
 - "blink" = o:"exile" o:"return" o:"battlefield"
 - "aristocrats" = t:creature o:"whenever" o:"dies"
