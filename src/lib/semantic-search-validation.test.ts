@@ -1,4 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+// Mock the edge-function client to avoid https:// esm.sh import in Node
+vi.mock('../../supabase/functions/semantic-search/client.ts', () => ({
+  supabase: { from: () => ({ insert: vi.fn(), select: vi.fn() }) },
+  SUPABASE_URL: 'http://localhost',
+  SUPABASE_SERVICE_ROLE_KEY: 'test',
+  LOVABLE_API_KEY: 'test',
+}));
 import {
   validateQuery,
   normalizeOrGroups,
