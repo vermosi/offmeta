@@ -52,6 +52,7 @@ import { useCollectionLookup } from '@/hooks/useCollection';
 import { useAuth } from '@/hooks/useAuth';
 import { useSimilarCards } from '@/hooks/useSimilarCards';
 import { useDeckIdeas } from '@/hooks/useDeckIdeas';
+import { useQuerySuggestions } from '@/hooks/useQuerySuggestions';
 const CardModal = lazy(() => import('@/components/CardModal'));
 
 const Index = () => {
@@ -98,6 +99,17 @@ const Index = () => {
   // Similar cards & deck ideas hooks
   const { similarityData, isLoading: similarLoading, activate: activateSimilar } = useSimilarCards(originalQuery);
   const { deckIdea, isLoading: deckIdeasLoading, isDeckQuery, activate: activateDeckIdeas } = useDeckIdeas(originalQuery);
+
+  // "Did you mean?" suggestions when 0 results
+  const { suggestions: querySuggestions, isChecking: isCheckingSuggestions } = useQuerySuggestions(
+    searchQuery,
+    totalCards,
+    hasSearched && !isSearching,
+  );
+
+  const handleTrySuggestion = useCallback((scryfallQuery: string) => {
+    handleRerunEditedQuery(scryfallQuery);
+  }, [handleRerunEditedQuery]);
 
   // Reset to cards tab on new search
   useEffect(() => {
@@ -477,7 +489,13 @@ const Index = () => {
                 ) : isSearching ? (
                   <CardSkeletonGrid count={10} />
                 ) : hasSearched && totalCards === 0 ? (
-                  <EmptyState query={searchQuery} onTryExample={handleTryExample} />
+                  <EmptyState
+                    query={searchQuery}
+                    onTryExample={handleTryExample}
+                    suggestions={querySuggestions}
+                    isCheckingSuggestions={isCheckingSuggestions}
+                    onTrySuggestion={handleTrySuggestion}
+                  />
                 ) : null}
               </>
             )}
