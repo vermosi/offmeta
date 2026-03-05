@@ -528,6 +528,23 @@ export type Database = {
         }
         Returns: boolean
       }
+      match_concepts_by_alias: {
+        Args: { match_count?: number; search_term: string }
+        Returns: {
+          category: string
+          concept_id: string
+          confidence: number
+          description: string
+          negative_templates: string[]
+          pattern: string
+          priority: number
+          scryfall_syntax: string
+          scryfall_templates: string[]
+          similarity_score: number
+        }[]
+      }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
