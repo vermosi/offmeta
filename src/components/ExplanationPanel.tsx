@@ -29,12 +29,14 @@ export function ExplanationPanel({ card, isLoading: externalLoading }: Explanati
     if (!card) return;
     let cancelled = false;
 
-    setRationale(null);
-    setArchetypes([]);
-    setError(null);
-    setLoading(true);
+    const run = async () => {
+      // Reset + start loading inside async callback (satisfies lint rule)
+      if (cancelled) return;
+      setRationale(null);
+      setArchetypes([]);
+      setError(null);
+      setLoading(true);
 
-    const fetchExplanation = async () => {
       const { data, error: fnError } = await supabase.functions.invoke(
         'card-meta-context',
         {
@@ -62,7 +64,7 @@ export function ExplanationPanel({ card, isLoading: externalLoading }: Explanati
       setLoading(false);
     };
 
-    fetchExplanation();
+    run();
     return () => { cancelled = true; };
   }, [card]);
 

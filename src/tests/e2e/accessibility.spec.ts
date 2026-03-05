@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test';
-import type { Page } from '@playwright/test';
 import { runAxeAudit } from '@/tests/e2e/axe-helpers';
 import {
   mockBoltSearchAPIs,

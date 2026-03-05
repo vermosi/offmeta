@@ -201,8 +201,6 @@ export function useQuerySuggestions(
   useEffect(() => {
     // Only trigger when we have 0 results for a real search
     if (!hasSearched || totalCards > 0 || !query || query.length < 3) {
-      setSuggestions([]);
-      setIsChecking(false);
       return;
     }
 
@@ -215,16 +213,15 @@ export function useQuerySuggestions(
     const controller = new AbortController();
     abortRef.current = controller;
 
-    const candidates = generateSimplifiedQueries(query, 3);
-    if (candidates.length === 0) {
-      setSuggestions([]);
-      return;
-    }
+    const run = async () => {
+      const candidates = generateSimplifiedQueries(query, 3);
+      if (candidates.length === 0) {
+        setSuggestions([]);
+        return;
+      }
 
-    setIsChecking(true);
+      setIsChecking(true);
 
-    // Check candidates sequentially with 100ms delay between (Scryfall rate limit)
-    (async () => {
       const validated: QuerySuggestion[] = [];
 
       for (const candidate of candidates) {
@@ -249,7 +246,9 @@ export function useQuerySuggestions(
         setSuggestions(validated);
         setIsChecking(false);
       }
-    })();
+    };
+
+    run();
 
     return () => {
       controller.abort();

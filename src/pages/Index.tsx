@@ -5,7 +5,7 @@
  * All search state is managed via the `useSearch` hook.
  * @module pages/Index
  */
-import { lazy, Suspense, useEffect, useCallback, useState, useMemo } from 'react';
+import { lazy, Suspense, useEffect, useCallback, useState, useMemo, useRef } from 'react';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 import { EditableQueryBar } from '@/components/EditableQueryBar';
 import { SaveSearchButton } from '@/components/SaveSearchButton';
@@ -111,10 +111,12 @@ const Index = () => {
     handleRerunEditedQuery(scryfallQuery);
   }, [handleRerunEditedQuery]);
 
-  // Reset to cards tab on new search
-  useEffect(() => {
-    setActiveTab('cards');
-  }, [originalQuery]);
+  // Reset to cards tab on new search — derive from originalQuery via ref
+  const prevQueryRef = useRef(originalQuery);
+  if (prevQueryRef.current !== originalQuery) {
+    prevQueryRef.current = originalQuery;
+    if (activeTab !== 'cards') setActiveTab('cards');
+  }
 
   // Activate feature hooks when tab is selected
   const handleTabChange = useCallback((tab: ResultsTab) => {
