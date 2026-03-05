@@ -7,7 +7,7 @@ import { validateQuery } from './validation.ts';
  */
 export function buildFallbackQuery(
   query: string,
-  filters?: { format?: string; colorIdentity?: string[] },
+  filters?: { format?: string; colorIdentity?: string[] } | null,
 ): { sanitized: string; issues: string[] } {
   const { intent, deterministicQuery } = buildDeterministicIntent(query);
   let fallbackQuery = deterministicQuery;
@@ -441,7 +441,7 @@ export function buildFallbackQuery(
 
 export function applyFiltersToQuery(
   query: string,
-  filters?: { format?: string; colorIdentity?: string[] },
+  filters?: { format?: string; colorIdentity?: string[] } | null,
 ): string {
   let filteredQuery = query.trim();
 

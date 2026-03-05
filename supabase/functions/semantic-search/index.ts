@@ -259,8 +259,9 @@ serve(async (req) => {
   const requestBody = parsedBody.requestBody;
 
   try {
-    const { query, filters: rawFilters, debug, useCache, cacheSalt } = requestBody;
-    const filters = (rawFilters ?? undefined) as Record<string, unknown> | undefined;
+    const { query: rawQuery, filters: rawFilters, debug, useCache, cacheSalt } = requestBody;
+    const query = rawQuery as string;
+    const filters = (rawFilters ?? null) as Record<string, unknown> | null;
     const requestBudget = parseRequestBudget(
       req,
       requestStartTime,
@@ -772,7 +773,7 @@ serve(async (req) => {
     const hasAccentedLatin = /[àáâãäåæçèéêëìíîïðñòóôõöùúûüýþÿ]/i.test(
       remainingQuery,
     );
-    const deterministicConfidence = (deterministicResult.intent as Record<string, unknown>).confidence as number ?? 0;
+    const deterministicConfidence = (deterministicResult.intent as unknown as Record<string, unknown>).confidence as number ?? 0;
     const shouldPreTranslateAccentedLatin =
       hasAccentedLatin &&
       !hasNonLatin &&
@@ -855,16 +856,67 @@ serve(async (req) => {
       return createBudgetExceededResponse();
     }
 
+    // 7.5. Card Name Synergy Detection
+    // Detect queries like "cards that help trigger Blanka's ability" and fetch the card's oracle text
+    const synergyPatterns = [
+      /\b(?:cards?|spells?|permanents?)\s+(?:that\s+)?(?:help|synergize|work|combo|pair|go|interact)\s+(?:with\s+)?(.+?)(?:'s?\s+(?:ability|abilities|effect|trigger|activated|static)|\s+deck|\s+strategy)?$/i,
+      /\b(?:support|enable|trigger|activate)\s+(.+?)(?:'s?\s+(?:ability|abilities|effect|trigger))?$/i,
+      /\b(?:synergy|synergies|synergize)\s+(?:with|for)\s+(.+?)$/i,
+      /\b(?:build around|built around|around)\s+(.+?)$/i,
+      /\b(?:goes? well with|pairs? with|combos? with)\s+(.+?)$/i,
+    ];
+
+    let cardSynergyContext = '';
+    let detectedCardName: string | null = null;
+
+    for (const pattern of synergyPatterns) {
+      const match = queryForAI.match(pattern);
+      if (match && match[1]) {
+        const candidateName = match[1]
+          .replace(/['"]/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        // Skip if too short or looks like a generic type
+        if (candidateName.length >= 3 && !/^(creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries|spells?|planeswalkers?)$/i.test(candidateName)) {
+          try {
+            const cardLookup = await fetchWithTimeout(
+              `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(candidateName)}`,
+              {},
+              3000,
+            );
+            if (cardLookup.ok) {
+              const cardData = await cardLookup.json();
+              if (cardData.oracle_text && cardData.name) {
+                detectedCardName = cardData.name;
+                const colorId = cardData.color_identity?.join('').toLowerCase() || '';
+                cardSynergyContext = `\n\nCARD CONTEXT: The user is looking for cards that synergize with "${cardData.name}" (${cardData.type_line}). Its oracle text is: "${cardData.oracle_text}". Color identity: ${colorId || 'colorless'}. Generate a Scryfall query for cards that ENABLE or SYNERGIZE with this card's mechanics. Use id<=${colorId || 'c'} if the query implies commander format. Do NOT put the card name in o:"" — other cards don't mention this card by name.`;
+                logInfo('card_synergy_detected', {
+                  cardName: cardData.name,
+                  candidateName,
+                });
+              }
+            }
+          } catch {
+            // Card lookup failed, proceed without context
+          }
+          break;
+        }
+      }
+    }
+
     // 8. AI Translation (with tiered model selection)
     // Fetch dynamic rules in parallel with building context (non-blocking)
     const queryWordCount = query.trim().split(/\s+/).length;
     const isLikelyName =
       deterministicResult.intent.warnings.includes('likely_card_name');
+    // Use medium tier for synergy queries since they need more reasoning
     const tier: QueryTier =
+      cardSynergyContext ? 'medium' :
       queryWordCount > 8 ? 'complex' : queryWordCount > 4 ? 'medium' : 'simple';
 
-    // Use stronger model for card name queries (needs MTG knowledge for fuzzy matching)
-    const aiModel = isLikelyName
+    // Use stronger model for card name queries or synergy queries
+    const aiModel = isLikelyName || cardSynergyContext
       ? 'google/gemini-2.5-flash'
       : tier === 'simple'
         ? 'google/gemini-2.5-flash-lite'
@@ -887,7 +939,7 @@ serve(async (req) => {
     const cardNameHint = isLikelyName
       ? ' (IMPORTANT: This is likely a Magic: The Gathering card name, not a search description. Output ONLY the exact Scryfall name search like !"Gray Merchant of Asphodel" using the correct card name. Fix common misspellings: grey→gray, etc. If unsure of full name, use name: syntax like name:merchant.)'
       : '';
-    const userMessage = `Translate to Scryfall search syntax: "${queryForAI}"${cardNameHint} ${deterministicQuery ? `(must include: ${deterministicQuery})` : ''}`;
+    const userMessage = `Translate to Scryfall search syntax: "${queryForAI}"${cardNameHint}${cardSynergyContext} ${deterministicQuery ? `(must include: ${deterministicQuery})` : ''}`;
 
     // Deterministic fallback guard: never start the AI call unless there is
     // enough time budget remaining for it to complete.
@@ -948,11 +1000,17 @@ serve(async (req) => {
       );
       const validation = validateQuery(correctedQuery);
 
+      const readableExplanation = detectedCardName
+        ? `Finding cards that synergize with ${detectedCardName}`
+        : explanationText;
+
       const finalResult = {
         scryfallQuery: validation.sanitized,
         explanation: {
-          readable: explanationText,
-          assumptions: corrections,
+          readable: readableExplanation,
+          assumptions: detectedCardName
+            ? [`Detected card: ${detectedCardName}`, ...corrections]
+            : corrections,
           confidence: confidence,
         },
         showAffiliate: true,
@@ -1003,6 +1061,7 @@ serve(async (req) => {
         JSON.stringify({
           originalQuery: query,
           ...finalResult,
+          ...(detectedCardName ? { detectedCardName } : {}),
           validationIssues: validation.issues,
           responseTimeMs: responseTimeMs,
           success: true,
