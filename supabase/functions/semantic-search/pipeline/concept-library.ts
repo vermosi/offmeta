@@ -314,6 +314,20 @@ export const CONCEPT_LIBRARY: Record<
     category: 'sacrifice',
     priority: 85,
   },
+  edict: {
+    aliases: [
+      'edict',
+      'edict effect',
+      'force sacrifice',
+      'sacrifice their',
+      'opponents sacrifice',
+    ],
+    templates: ['o:"sacrifices" (o:"each opponent" or o:"target opponent" or o:"each player")'],
+    negativeTemplates: [],
+    description: 'Cards that force opponents to sacrifice creatures',
+    category: 'sacrifice',
+    priority: 85,
+  },
 
   // === TOKENS ===
   token_generator: {
