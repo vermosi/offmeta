@@ -14,6 +14,7 @@ import { buildClientFallbackQuery } from '@/lib/search/fallback';
 import { CLIENT_CONFIG } from '@/lib/config';
 import type { FilterState } from '@/types/filters';
 import type { SearchResult } from '@/components/UnifiedSearchBar';
+import { supabase } from '@/integrations/supabase/client';
 
 export type SearchPhase = 'idle' | 'translating' | 'fetching';
 
@@ -27,6 +28,38 @@ interface UseSearchHandlerOptions {
   ) => void;
   addToHistory: (query: string) => void;
   saveContext: (query: string, scryfall: string) => void;
+}
+
+/**
+ * Fire-and-forget analytics event for fallback tracking.
+ * Logs to analytics_events so admins can monitor fallback frequency in production.
+ */
+function trackFallbackEvent(
+  reason: 'timeout' | 'error' | 'rate_limit',
+  query: string,
+  details: Record<string, unknown>,
+): void {
+  const sessionId = typeof sessionStorage !== 'undefined'
+    ? sessionStorage.getItem('offmeta_session_id')
+    : null;
+
+  supabase
+    .from('analytics_events')
+    .insert({
+      event_type: 'search_fallback',
+      session_id: sessionId,
+      event_data: {
+        reason,
+        query: query.substring(0, 200),
+        ...details,
+        timestamp: new Date().toISOString(),
+      },
+    })
+    .then(({ error }) => {
+      if (error) {
+        logger.warn('[SearchDiag] Failed to track fallback event', { error: String(error) });
+      }
+    });
 }
 
 export function useSearchHandler({
@@ -186,8 +219,16 @@ export function useSearchHandler({
             endToEndElapsedMs: responseMs,
             fallbackQuery,
           });
+
+          // Track timeout fallback for production monitoring
+          trackFallbackEvent('timeout', queryToSearch, {
+            timeoutMs: CLIENT_CONFIG.SEARCH_TIMEOUT_MS,
+            elapsedMs: responseMs,
+            fallbackQuery,
+          });
+
           toast.error('Search took too long', {
-            description: 'Using simplified search instead',
+            description: `AI translation timed out after ${Math.round(responseMs / 1000)}s — using simplified search. Results may be less precise.`,
           });
           onSearch(
             fallbackQuery,
@@ -196,7 +237,7 @@ export function useSearchHandler({
               explanation: {
                 readable: `Searching for: ${queryToSearch}`,
                 assumptions: [
-                  'Search timed out — using simplified translation',
+                  `AI translation timed out after ${Math.round(responseMs / 1000)}s — using simplified keyword search`,
                 ],
                 confidence: 0.5,
               },
@@ -215,6 +256,12 @@ export function useSearchHandler({
             query: queryToSearch,
             error: errorMessage,
           });
+
+          trackFallbackEvent('rate_limit', queryToSearch, {
+            error: errorMessage,
+            elapsedMs: responseMs,
+          });
+
           setRateLimitedUntil(Date.now() + 30000);
           toast.error('Too many searches', {
             description: 'Please wait a moment before searching again',
@@ -227,8 +274,16 @@ export function useSearchHandler({
             endToEndElapsedMs: responseMs,
             fallbackQuery,
           });
+
+          // Track error fallback for production monitoring
+          trackFallbackEvent('error', queryToSearch, {
+            error: errorMessage.substring(0, 500),
+            elapsedMs: responseMs,
+            fallbackQuery,
+          });
+
           toast.error('Search issue', {
-            description: 'Using simplified search instead',
+            description: `AI translation failed — using simplified search. Try again or refine your query.`,
           });
           onSearch(
             fallbackQuery,
@@ -236,7 +291,9 @@ export function useSearchHandler({
               scryfallQuery: fallbackQuery,
               explanation: {
                 readable: `Searching for: ${queryToSearch}`,
-                assumptions: ['AI unavailable — using simplified translation'],
+                assumptions: [
+                  `AI translation error: ${errorMessage.substring(0, 100)} — using simplified keyword search`,
+                ],
                 confidence: 0.5,
               },
               showAffiliate: false,
