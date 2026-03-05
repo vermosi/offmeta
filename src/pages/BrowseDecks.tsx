@@ -23,15 +23,14 @@ import type { DeckTag } from '@/hooks/useDeckTags';
 const COLORS = ['W', 'U', 'B', 'R', 'G'] as const;
 const PAGE_SIZE = 25;
 
-/** Fetch public decks. */
+/** Fetch public decks via the decks_public view (excludes user_id). */
 function usePublicDecks() {
   return useQuery({
     queryKey: ['browse-decks'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('decks')
+        .from('decks_public')
         .select('*')
-        .eq('is_public', true)
         .order('updated_at', { ascending: false })
         .limit(500);
       if (error) throw error;

@@ -93,21 +93,37 @@ function useOpenGraphMeta(deck: Deck | undefined, cards: DeckCard[]) {
   }, [deck, cards]);
 }
 
-/** Fetch a public deck by ID (uses the decks_public view or direct query). */
+/** Fetch a public deck by ID via decks_public view (excludes user_id). */
 function usePublicDeck(deckId: string | undefined) {
   return useQuery({
     queryKey: ['public-deck', deckId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('decks')
+        .from('decks_public')
         .select('*')
         .eq('id', deckId!)
-        .eq('is_public', true)
         .single();
       if (error) throw error;
       return data as Deck;
     },
     enabled: !!deckId,
+  });
+}
+
+/** Check if the current user owns this deck (uses authenticated RLS policy). */
+function useIsOwner(deckId: string | undefined, userId: string | undefined) {
+  return useQuery({
+    queryKey: ['deck-ownership', deckId, userId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('decks')
+        .select('id')
+        .eq('id', deckId!)
+        .eq('user_id', userId!)
+        .maybeSingle();
+      return !!data;
+    },
+    enabled: !!deckId && !!userId,
   });
 }
 
@@ -178,6 +194,7 @@ export default function PublicDeckView() {
   const { data: deck, isLoading: deckLoading, error: deckError } = usePublicDeck(id);
   const { data: cards = [], isLoading: cardsLoading } = usePublicDeckCards(id);
   const { data: deckTags = [] } = useDeckTags(id);
+  const { data: isOwner = false } = useIsOwner(id, user?.id);
   const { scryfallMap, version } = useScryfallHydration(cards);
   const [copied, setCopied] = useState(false);
 
@@ -205,14 +222,11 @@ export default function PublicDeckView() {
   const totalMainboard = mainboardCards.reduce((s, c) => s + c.quantity, 0);
   const formatConfig = FORMATS.find((f) => f.value === deck?.format) ?? FORMATS[0];
 
-
   const handleCopyUrl = () => {
     navigator.clipboard.writeText(window.location.href);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
-  const isOwner = user && deck && user.id === deck.user_id;
 
   // Loading
   if (deckLoading) return (
