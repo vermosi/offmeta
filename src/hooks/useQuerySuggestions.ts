@@ -14,6 +14,32 @@ export interface QuerySuggestion {
 }
 
 /**
+ * Cleans up a query after token removal: strips orphaned boolean operators,
+ * collapses empty parenthetical groups, and normalizes whitespace.
+ */
+function cleanupQuery(q: string): string {
+  let result = q;
+  // Remove orphaned "or" / "and" left at start/end of paren groups: "( or ...", "... or )"
+  // Repeat to handle nested cleanup
+  for (let i = 0; i < 3; i++) {
+    result = result
+      // "( or" at group start
+      .replace(/\(\s+(or|and)\s+/gi, '( ')
+      // "or )" at group end
+      .replace(/\s+(or|and)\s+\)/gi, ' )')
+      // consecutive "or or", "and or", etc.
+      .replace(/\b(or|and)\s+(or|and)\b/gi, '$1')
+      // leading/trailing "or"/"and" adjacent to parens
+      .replace(/\(\s*(or|and)\b/gi, '(')
+      .replace(/\b(or|and)\s*\)/gi, ')')
+      // empty parens
+      .replace(/\(\s*\)/g, '');
+  }
+  // Collapse whitespace
+  return result.replace(/\s+/g, ' ').trim();
+}
+
+/**
  * Simplification strategies applied in order.
  * Each returns null if it can't simplify further.
  */
@@ -85,12 +111,11 @@ const SIMPLIFY_STRATEGIES: Array<{
   {
     label: 'Without oracle text filter',
     apply: (q) => {
-      const simplified = q
-        .replace(/\s*o:"[^"]*"/gi, '')
-        .replace(/\s*o:[^\s)]+/gi, '')
-        .replace(/\(\s*\)/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
+      const simplified = cleanupQuery(
+        q
+          .replace(/\s*-?o:"[^"]*"/gi, '')
+          .replace(/\s*-?o:[^\s)]+/gi, ''),
+      );
       return simplified !== q && simplified.length > 0 ? simplified : null;
     },
   },
@@ -122,12 +147,7 @@ function generateSimplifiedQueries(
     const simplified = strategy.apply(current);
     if (!simplified) continue;
 
-    // Clean up empty parens and extra whitespace
-    const cleaned = simplified
-      .replace(/\(\s*\)/g, '')
-      .replace(/\(\s*or\s*\)/gi, '')
-      .replace(/\s+/g, ' ')
-      .trim();
+    const cleaned = cleanupQuery(simplified);
 
     if (!cleaned || cleaned.length < 2) continue;
 
