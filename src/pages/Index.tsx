@@ -5,7 +5,14 @@
  * All search state is managed via the `useSearch` hook.
  * @module pages/Index
  */
-import { lazy, Suspense, useEffect, useCallback, useState, useMemo, useRef } from 'react';
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useCallback,
+  useState,
+  useMemo,
+} from 'react';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 import { EditableQueryBar } from '@/components/EditableQueryBar';
 import { SaveSearchButton } from '@/components/SaveSearchButton';
@@ -21,10 +28,18 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Footer } from '@/components/Footer';
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
-const HomeDiscoverySection = lazy(() => import('@/components/HomeDiscoverySection').then(m => ({ default: m.HomeDiscoverySection })));
+const HomeDiscoverySection = lazy(() =>
+  import('@/components/HomeDiscoverySection').then((m) => ({
+    default: m.HomeDiscoverySection,
+  })),
+);
 import { LoadMoreIndicator } from '@/components/LoadMoreIndicator';
 import { ScrollToTop } from '@/components/ScrollToTop';
-const SimilarSearches = lazy(() => import('@/components/SimilarSearches').then(m => ({ default: m.SimilarSearches })));
+const SimilarSearches = lazy(() =>
+  import('@/components/SimilarSearches').then((m) => ({
+    default: m.SimilarSearches,
+  })),
+);
 import { VirtualizedCardGrid } from '@/components/VirtualizedCardGrid';
 import { ExportResults } from '@/components/ExportResults';
 import { ShareSearchButton } from '@/components/ShareSearchButton';
@@ -35,10 +50,22 @@ import { ResultsTabs, type ResultsTab } from '@/components/ResultsTabs';
 import { SimilarCardsPanel } from '@/components/SimilarCardsPanel';
 import { DeckIdeasPanel } from '@/components/DeckIdeasPanel';
 import { ExplanationPanel } from '@/components/ExplanationPanel';
-const ArtLightbox = lazy(() => import('@/components/ArtLightbox').then(m => ({ default: m.ArtLightbox })));
-const CompareBar = lazy(() => import('@/components/CompareBar').then(m => ({ default: m.CompareBar })));
-const CompareModal = lazy(() => import('@/components/CompareModal').then(m => ({ default: m.CompareModal })));
-const PwaInstallBanner = lazy(() => import('@/components/PwaInstallBanner').then(m => ({ default: m.PwaInstallBanner })));
+const ArtLightbox = lazy(() =>
+  import('@/components/ArtLightbox').then((m) => ({ default: m.ArtLightbox })),
+);
+const CompareBar = lazy(() =>
+  import('@/components/CompareBar').then((m) => ({ default: m.CompareBar })),
+);
+const CompareModal = lazy(() =>
+  import('@/components/CompareModal').then((m) => ({
+    default: m.CompareModal,
+  })),
+);
+const PwaInstallBanner = lazy(() =>
+  import('@/components/PwaInstallBanner').then((m) => ({
+    default: m.PwaInstallBanner,
+  })),
+);
 import { SkipLinks } from '@/components/SkipLinks';
 
 import { GitCompareArrows } from 'lucide-react';
@@ -94,38 +121,47 @@ const Index = () => {
   const [viewMode, setViewMode] = useState<ViewMode>(getStoredViewMode);
 
   // Results tab state
-  const [activeTab, setActiveTab] = useState<ResultsTab>('cards');
+  const [tabState, setTabState] = useState<{ query: string; tab: ResultsTab }>(
+    () => ({
+      query: originalQuery,
+      tab: 'cards',
+    }),
+  );
+  const activeTab = tabState.query === originalQuery ? tabState.tab : 'cards';
 
   // Similar cards & deck ideas hooks
-  const { similarityData, isLoading: similarLoading, activate: activateSimilar } = useSimilarCards(originalQuery);
-  const { deckIdea, isLoading: deckIdeasLoading, isDeckQuery, activate: activateDeckIdeas } = useDeckIdeas(originalQuery);
+  const {
+    similarityData,
+    isLoading: similarLoading,
+    activate: activateSimilar,
+  } = useSimilarCards(originalQuery);
+  const {
+    deckIdea,
+    isLoading: deckIdeasLoading,
+    isDeckQuery,
+    activate: activateDeckIdeas,
+  } = useDeckIdeas(originalQuery);
 
   // "Did you mean?" suggestions when 0 results
-  const { suggestions: querySuggestions, isChecking: isCheckingSuggestions } = useQuerySuggestions(
-    searchQuery,
-    totalCards,
-    hasSearched && !isSearching,
+  const { suggestions: querySuggestions, isChecking: isCheckingSuggestions } =
+    useQuerySuggestions(searchQuery, totalCards, hasSearched && !isSearching);
+
+  const handleTrySuggestion = useCallback(
+    (scryfallQuery: string) => {
+      handleRerunEditedQuery(scryfallQuery);
+    },
+    [handleRerunEditedQuery],
   );
 
-  const handleTrySuggestion = useCallback((scryfallQuery: string) => {
-    handleRerunEditedQuery(scryfallQuery);
-  }, [handleRerunEditedQuery]);
-
-  // Reset to cards tab on new search
-  const prevQueryRef = useRef(originalQuery);
-  useEffect(() => {
-    if (prevQueryRef.current !== originalQuery) {
-      prevQueryRef.current = originalQuery;
-      if (activeTab !== 'cards') setActiveTab('cards');
-    }
-  }, [originalQuery]); // eslint-disable-line react-hooks/exhaustive-deps
-
   // Activate feature hooks when tab is selected
-  const handleTabChange = useCallback((tab: ResultsTab) => {
-    setActiveTab(tab);
-    if (tab === 'similar') activateSimilar();
-    if (tab === 'deck-ideas') activateDeckIdeas();
-  }, [activateSimilar, activateDeckIdeas]);
+  const handleTabChange = useCallback(
+    (tab: ResultsTab) => {
+      setTabState({ query: originalQuery, tab });
+      if (tab === 'similar') activateSimilar();
+      if (tab === 'deck-ideas') activateDeckIdeas();
+    },
+    [activateSimilar, activateDeckIdeas, originalQuery],
+  );
 
   // Card comparison
   const {
@@ -149,7 +185,10 @@ const Index = () => {
 
   // Art lightbox
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const openLightbox = useCallback((index: number) => setLightboxIndex(index), []);
+  const openLightbox = useCallback(
+    (index: number) => setLightboxIndex(index),
+    [],
+  );
   const closeLightbox = useCallback(() => setLightboxIndex(null), []);
 
   // Roving tabindex column count based on view mode
@@ -197,20 +236,37 @@ const Index = () => {
       <SkipLinks showSearchLink />
       <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background relative overflow-x-hidden">
         {/* Background layers */}
-        <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
-        <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
-        <div className="fixed inset-0 pointer-events-none bg-page-mesh" aria-hidden="true" />
+        <div
+          className="fixed inset-0 pointer-events-none bg-page-gradient"
+          aria-hidden="true"
+        />
+        <div
+          className="fixed inset-0 pointer-events-none bg-page-noise"
+          aria-hidden="true"
+        />
+        <div
+          className="fixed inset-0 pointer-events-none bg-page-mesh"
+          aria-hidden="true"
+        />
 
         <Header />
 
         {!hasSearched && <HeroSection />}
 
         {/* Screen reader search status announcements */}
-        <div className="sr-only" role="status" aria-live="assertive" aria-atomic="true">
+        <div
+          className="sr-only"
+          role="status"
+          aria-live="assertive"
+          aria-atomic="true"
+        >
           {isSearching
             ? t('a11y.searching')
             : hasSearched && totalCards > 0
-              ? t('a11y.foundCards').replace('{count}', totalCards.toLocaleString())
+              ? t('a11y.foundCards').replace(
+                  '{count}',
+                  totalCards.toLocaleString(),
+                )
               : hasSearched && totalCards === 0
                 ? t('a11y.noCardsFound')
                 : ''}
@@ -236,7 +292,9 @@ const Index = () => {
               <div className="animate-reveal flex items-start gap-2">
                 <div className="flex-1 min-w-0">
                   <EditableQueryBar
-                    scryfallQuery={(lastSearchResult?.scryfallQuery || searchQuery).trim()}
+                    scryfallQuery={(
+                      lastSearchResult?.scryfallQuery || searchQuery
+                    ).trim()}
                     confidence={lastSearchResult?.explanation?.confidence}
                     isLoading={isSearching}
                     originalQuery={originalQuery}
@@ -253,7 +311,9 @@ const Index = () => {
                 <div className="pt-[26px]">
                   <SaveSearchButton
                     naturalQuery={originalQuery}
-                    scryfallQuery={lastSearchResult?.scryfallQuery || searchQuery}
+                    scryfallQuery={
+                      lastSearchResult?.scryfallQuery || searchQuery
+                    }
                     filters={activeFilters}
                   />
                 </div>
@@ -324,7 +384,10 @@ const Index = () => {
                       role="status"
                       aria-live="polite"
                     >
-                      {t('a11y.cardsCount').replace('{count}', totalCards.toLocaleString())}
+                      {t('a11y.cardsCount').replace(
+                        '{count}',
+                        totalCards.toLocaleString(),
+                      )}
                     </span>
                   )}
                   <ShareSearchButton />
@@ -353,12 +416,16 @@ const Index = () => {
                 {cards.length > 0 ? (
                   <>
                     {displayCards.length > 0 ? (
-                      viewMode === 'grid' && displayCards.length > CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD ? (
+                      viewMode === 'grid' &&
+                      displayCards.length >
+                        CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD ? (
                         <VirtualizedCardGrid
                           cards={displayCards}
                           onCardClick={handleCardClick}
                           onLoadMore={
-                            hasNextPage && !isFetchingNextPage ? fetchNextPage : undefined
+                            hasNextPage && !isFetchingNextPage
+                              ? fetchNextPage
+                              : undefined
                           }
                           hasNextPage={hasNextPage}
                           isFetchingNextPage={isFetchingNextPage}
@@ -377,7 +444,9 @@ const Index = () => {
                                 key={card.id}
                                 className="animate-reveal"
                                 role="listitem"
-                                style={{ animationDelay: `${Math.min(index * 15, 200)}ms` }}
+                                style={{
+                                  animationDelay: `${Math.min(index * 15, 200)}ms`,
+                                }}
                                 ref={rovingProps.ref}
                                 onKeyDown={rovingProps.onKeyDown}
                                 onFocus={rovingProps.onFocus}
@@ -406,7 +475,9 @@ const Index = () => {
                                 key={card.id}
                                 className="animate-reveal"
                                 role="listitem"
-                                style={{ animationDelay: `${Math.min(index * 15, 200)}ms` }}
+                                style={{
+                                  animationDelay: `${Math.min(index * 15, 200)}ms`,
+                                }}
                                 ref={rovingProps.ref}
                                 onKeyDown={rovingProps.onKeyDown}
                                 onFocus={rovingProps.onFocus}
@@ -437,7 +508,12 @@ const Index = () => {
                                 role="listitem"
                                 style={{
                                   animationDelay: `${Math.min(index * 25, 300)}ms`,
-                                  ...(compareMode ? {} : { contentVisibility: 'auto', containIntrinsicSize: '0 200px' }),
+                                  ...(compareMode
+                                    ? {}
+                                    : {
+                                        contentVisibility: 'auto',
+                                        containIntrinsicSize: '0 200px',
+                                      }),
                                 }}
                                 ref={rovingProps.ref}
                                 onKeyDown={rovingProps.onKeyDown}
@@ -454,7 +530,11 @@ const Index = () => {
                                         ? 'bg-primary border-primary text-primary-foreground'
                                         : 'bg-card/80 border-border/60 text-muted-foreground hover:border-primary/50'
                                     }`}
-                                    aria-label={isCardSelected(card.id) ? t('compare.removeFrom') : t('compare.addTo')}
+                                    aria-label={
+                                      isCardSelected(card.id)
+                                        ? t('compare.removeFrom')
+                                        : t('compare.addTo')
+                                    }
                                     tabIndex={-1}
                                   >
                                     {isCardSelected(card.id) ? '✓' : '+'}
@@ -462,7 +542,11 @@ const Index = () => {
                                 )}
                                 <CardItem
                                   card={card}
-                                  onClick={() => compareMode ? toggleCompareCard(card) : handleCardClick(card, index)}
+                                  onClick={() =>
+                                    compareMode
+                                      ? toggleCompareCard(card)
+                                      : handleCardClick(card, index)
+                                  }
                                   tabIndex={rovingProps.tabIndex}
                                   isOwned={collectionLookup.has(card.name)}
                                 />
@@ -483,7 +567,12 @@ const Index = () => {
                     )}
 
                     <LoadMoreIndicator
-                      ref={displayCards.length <= CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD ? loadMoreRef : undefined}
+                      ref={
+                        displayCards.length <=
+                        CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD
+                          ? loadMoreRef
+                          : undefined
+                      }
                       isFetchingNextPage={isFetchingNextPage}
                       hasNextPage={hasNextPage}
                       totalCards={totalCards}
@@ -525,7 +614,10 @@ const Index = () => {
             {/* Explanation tab */}
             {activeTab === 'explanation' && (
               <ExplanationPanel
-                card={similarityData?.sourceCard ?? (cards.length > 0 && cards.length <= 5 ? cards[0] : null)}
+                card={
+                  similarityData?.sourceCard ??
+                  (cards.length > 0 && cards.length <= 5 ? cards[0] : null)
+                }
                 isLoading={isSearching}
               />
             )}
@@ -538,7 +630,13 @@ const Index = () => {
         <ScrollToTop threshold={800} />
 
         {selectedCard && (
-          <Suspense fallback={<div className="sr-only" role="status">Loading card details…</div>}>
+          <Suspense
+            fallback={
+              <div className="sr-only" role="status">
+                Loading card details…
+              </div>
+            }
+          >
             <CardModal
               card={selectedCard}
               open={true}
