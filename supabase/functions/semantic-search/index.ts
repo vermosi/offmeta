@@ -725,6 +725,87 @@ serve(async (req) => {
       );
     }
 
+    // 6c. Concept Matching (known MTG concepts — skip AI if high-confidence match)
+    const residualForConcepts = deterministicResult.intent.remainingQuery || query;
+    if (residualForConcepts.trim().length > 2) {
+      try {
+        const { findConceptMatches } = await import('./pipeline/concepts.ts');
+        const concepts = await findConceptMatches(residualForConcepts, 3, 0.7);
+
+        if (concepts.length > 0 && concepts[0].confidence >= 0.85) {
+          // Build query from concept templates, deduplicating by category
+          const seenCategories = new Set<string>();
+          const dedupedConcepts = concepts.filter((c) => {
+            if (seenCategories.has(c.category)) return false;
+            seenCategories.add(c.category);
+            return true;
+          });
+          const conceptParts = dedupedConcepts.map((c) => c.scryfallSyntax);
+          let conceptQuery = conceptParts.join(' ');
+          if (deterministicQuery) {
+            conceptQuery = `${deterministicQuery} ${conceptQuery}`;
+          }
+          conceptQuery = applyFiltersToQuery(conceptQuery, filters);
+          const validation = validateQuery(conceptQuery);
+          const responseTimeMs = Date.now() - requestStartTime;
+
+          logInfo('concept_match_hit', {
+            query: query.substring(0, 50),
+            concepts: dedupedConcepts.map((c) => c.conceptId),
+            responseTimeMs,
+          });
+          logInfo('request_completed', getPerfLogFields('pattern_match', responseTimeMs));
+
+          const readableDesc = dedupedConcepts.map((c) => c.description || c.conceptId).join(', ');
+          const conceptIds = dedupedConcepts.map((c) => c.conceptId).join(', ');
+
+          setCachedResult(query, filters, {
+            scryfallQuery: validation.sanitized,
+            explanation: {
+              readable: `Searching for: ${readableDesc}`,
+              assumptions: [`Matched concepts: ${conceptIds}`],
+              confidence: concepts[0].confidence,
+            },
+            showAffiliate: true,
+          }, cacheSalt);
+
+          logTranslation(
+            query,
+            validation.sanitized,
+            concepts[0].confidence,
+            responseTimeMs,
+            [],
+            [],
+            filters,
+            false,
+            'concept_match',
+          );
+          flushLogQueue();
+
+          return new Response(
+            JSON.stringify({
+              originalQuery: query,
+              scryfallQuery: validation.sanitized,
+              explanation: {
+                readable: `Searching for: ${concepts.map((c) => c.description || c.conceptId).join(', ')}`,
+                assumptions: [`Matched concepts: ${concepts.map((c) => c.conceptId).join(', ')}`],
+                confidence: concepts[0].confidence,
+              },
+              responseTimeMs,
+              success: true,
+              source: 'concept_match',
+            }),
+            { headers: jsonHeaders },
+          );
+        }
+      } catch (conceptErr) {
+        logWarn('concept_match_error', {
+          error: conceptErr instanceof Error ? conceptErr.message : String(conceptErr),
+        });
+        // Fall through to AI
+      }
+    }
+
     const buildBudgetExceededResponse = (
       stage: BudgetStage,
       confidence: number,
