@@ -65,7 +65,7 @@ export function normalizeQueryForMatching(query: string): string {
  */
 export async function checkPatternMatch(
   query: string,
-  _filters?: Record<string, unknown>,
+  _filters?: Record<string, unknown> | null,
 ): Promise<CacheEntry['result'] | null> {
   // Check hardcoded translations first (zero latency)
   const normalizedLower = query.toLowerCase().trim();

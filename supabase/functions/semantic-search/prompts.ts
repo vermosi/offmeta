@@ -708,6 +708,16 @@ SYNERGY QUERIES:
 - "support for [type] deck" → o:"[type]" (o:"you control" or o:"get" or o:"enters")
 - "lords for [type]" → t:creature o:"other" o:"[type]" o:"+"
 
+=== CARD NAME SYNERGY QUERIES (CRITICAL - DO NOT DUMP NAMES INTO o:"") ===
+When users ask "cards that help/synergize with/trigger [Card Name]'s ability":
+- DO NOT put the card name in oracle text like o:"blanka ferocious fiend"! Card names don't appear in other cards' oracle text.
+- Instead, identify WHAT the named card does (from its oracle text if provided) and search for cards that ENABLE or SYNERGIZE with those mechanics.
+- Example: "cards that help trigger Blanka Ferocious Fiend's activated ability" — Blanka discards cards and deals damage → search for discard enablers: otag:discard-outlet or o:"discard" o:"draw"
+- Example: "cards that work with Atraxa" — Atraxa has proliferate → search for: otag:counters-matter or otag:synergy-proliferate
+- Example: "support for Korvold" — Korvold cares about sacrifice → search for: otag:sacrifice-outlet or otag:synergy-sacrifice
+- If card oracle text is provided as context, extract the KEY MECHANIC and translate to appropriate Scryfall syntax.
+- Always include the card's color identity as id<= constraint if obvious.
+
 MTG SLANG DEFINITIONS:
 - "ramp" = (o:"add" o:"{" or o:"search" o:"land" o:"onto the battlefield")
 - "tutors" = o:"search your library"
