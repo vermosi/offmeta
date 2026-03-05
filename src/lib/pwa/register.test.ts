@@ -131,6 +131,7 @@ describe('registerSW callback handlers', () => {
     (registerSW as Mock)({
       onNeedRefresh() {},
       onOfflineReady() {
+        // eslint-disable-next-line no-console
         console.log('[PWA] App ready to work offline');
       },
       onRegistered() {},
@@ -155,6 +156,7 @@ describe('registerSW callback handlers', () => {
       onNeedRefresh() {},
       onOfflineReady() {},
       onRegistered(registration: { update: () => void } | undefined) {
+        // eslint-disable-next-line no-console
         console.log('[PWA] Service worker registered', registration);
         if (registration) {
           setInterval(() => { registration.update(); }, 60 * 60 * 1000);
@@ -186,6 +188,7 @@ describe('registerSW callback handlers', () => {
       onNeedRefresh() {},
       onOfflineReady() {},
       onRegistered(registration: unknown) {
+        // eslint-disable-next-line no-console
         console.log('[PWA] Service worker registered', registration);
         if (registration) {
           // Should NOT run
@@ -207,6 +210,7 @@ describe('registerSW callback handlers', () => {
       onOfflineReady() {},
       onRegistered() {},
       onRegisterError(error: unknown) {
+        // eslint-disable-next-line no-console
         console.error('[PWA] Service worker registration failed:', error);
       },
     });

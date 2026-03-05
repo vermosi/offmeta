@@ -52,7 +52,7 @@ function CardList({
   );
 }
 
-export function DeckIdeasPanel({ data, isLoading, query }: DeckIdeasPanelProps) {
+export function DeckIdeasPanel({ data, isLoading, query: _query }: DeckIdeasPanelProps) {
   if (isLoading) {
     return (
       <div className="space-y-4 py-4">

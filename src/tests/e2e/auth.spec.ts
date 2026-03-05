@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { mockAuthAPIs, signInViaDialog } from './fixtures/mock-helpers';
+import { mockAuthAPIs } from './fixtures/mock-helpers';
 
 test.describe('Auth modal flows', () => {
   test.beforeEach(async ({ page }) => {
