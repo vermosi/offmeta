@@ -163,6 +163,14 @@ export function getCorsHeaders(req: Request) {
     'https://www.offmeta.app',
     'https://offmeta.lovable.app',
   ];
+
+  // Also allow Lovable preview/development domains
+  const isLovablePreview =
+    !!origin &&
+    (origin.endsWith('.lovableproject.com') ||
+      origin.endsWith('.lovable.app') ||
+      origin.includes('localhost'));
+
   const sensitiveEndpoints = new Set([
     'admin-analytics',
     'cleanup-logs',
@@ -190,8 +198,13 @@ export function getCorsHeaders(req: Request) {
   const effectiveOrigins =
     allowedOrigins.length > 0 ? allowedOrigins : firstPartyOrigins;
 
+  // Allow Lovable preview domains for non-sensitive endpoints
   const corsOrigin =
-    origin && effectiveOrigins.includes(origin) ? origin : effectiveOrigins[0];
+    origin && effectiveOrigins.includes(origin)
+      ? origin
+      : isLovablePreview && !sensitiveEndpoints.has(endpoint ?? '')
+        ? origin!
+        : effectiveOrigins[0];
 
   return {
     'Access-Control-Allow-Origin': corsOrigin,
