@@ -1,10 +1,17 @@
-import { SearchX, Lightbulb, RefreshCw } from 'lucide-react';
+import { SearchX, Lightbulb, RefreshCw, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n';
+import type { QuerySuggestion } from '@/hooks/useQuerySuggestions';
 
 interface EmptyStateProps {
   query?: string;
   onTryExample?: (query: string) => void;
+  /** "Did you mean?" suggestions from useQuerySuggestions */
+  suggestions?: QuerySuggestion[];
+  /** Whether suggestions are still being checked */
+  isCheckingSuggestions?: boolean;
+  /** Callback when user clicks a suggestion (runs it as a raw Scryfall query) */
+  onTrySuggestion?: (scryfallQuery: string) => void;
 }
 
 const exampleQueries = [
@@ -14,15 +21,23 @@ const exampleQueries = [
   'artifact creatures with deathtouch',
 ];
 
-export const EmptyState = ({ query, onTryExample }: EmptyStateProps) => {
+export const EmptyState = ({
+  query,
+  onTryExample,
+  suggestions,
+  isCheckingSuggestions,
+  onTrySuggestion,
+}: EmptyStateProps) => {
   const { t } = useTranslation();
 
-  const suggestions = [
+  const tips = [
     t('empty.tip1'),
     t('empty.tip2'),
     t('empty.tip3'),
     t('empty.tip4'),
   ];
+
+  const hasSuggestions = suggestions && suggestions.length > 0;
 
   return (
     <div className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-center animate-reveal">
@@ -35,10 +50,58 @@ export const EmptyState = ({ query, onTryExample }: EmptyStateProps) => {
       </h3>
 
       {query && (
-        <p className="text-sm text-muted-foreground mb-8 max-w-sm">
+        <p className="text-sm text-muted-foreground mb-6 max-w-sm">
           {t('empty.noMatch')} "
           <span className="font-medium text-foreground">{query}</span>"
         </p>
+      )}
+
+      {/* Did you mean? suggestions */}
+      {(hasSuggestions || isCheckingSuggestions) && (
+        <div className="surface-elevated p-5 max-w-md w-full mb-6 text-left">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-foreground">
+              Did you mean?
+            </span>
+            {isCheckingSuggestions && !hasSuggestions && (
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground ml-auto" />
+            )}
+          </div>
+
+          {hasSuggestions && (
+            <div className="space-y-2">
+              {suggestions!.map((s) => (
+                <button
+                  key={s.query}
+                  type="button"
+                  onClick={() => onTrySuggestion?.(s.query)}
+                  className="w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg
+                    bg-primary/5 hover:bg-primary/10 border border-primary/10 hover:border-primary/20
+                    transition-colors text-left group"
+                >
+                  <div className="min-w-0">
+                    <code className="text-xs font-mono text-foreground break-all leading-relaxed">
+                      {s.query}
+                    </code>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {s.label}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-xs font-medium text-primary/70 group-hover:text-primary tabular-nums">
+                    {s.totalCards.toLocaleString()} cards
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {isCheckingSuggestions && !hasSuggestions && (
+            <p className="text-xs text-muted-foreground">
+              Checking simpler alternatives…
+            </p>
+          )}
+        </div>
       )}
 
       {/* Tips section */}
@@ -50,7 +113,7 @@ export const EmptyState = ({ query, onTryExample }: EmptyStateProps) => {
           </span>
         </div>
         <ul className="text-sm text-muted-foreground space-y-2 text-left">
-          {suggestions.map((tip, i) => (
+          {tips.map((tip, i) => (
             <li key={i} className="flex items-start gap-2">
               <span className="text-accent mt-0.5">•</span>
               <span>{tip}</span>
