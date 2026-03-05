@@ -13,6 +13,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { requireAdmin, getCorsHeaders } from '../_shared/auth.ts';
 import { validateEnv } from '../_shared/env.ts';
 import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
+import { createLogger } from '../_shared/logger.ts';
 
 const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = validateEnv([
   'SUPABASE_URL',
@@ -20,6 +21,7 @@ const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = validateEnv([
 ]);
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+const logger = createLogger('generate-patterns');
 
 const MIN_OCCURRENCES = 2;
 const MIN_CONFIDENCE = 0.8;
@@ -51,12 +53,25 @@ serve(async (req) => {
 
   // Rate limiting: 1 req/min (batch job)
   maybeCleanup();
-  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  const { allowed, retryAfter } = await checkRateLimit(clientIp, undefined, 1, 10);
+  const clientIp =
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const { allowed, retryAfter } = await checkRateLimit(
+    clientIp,
+    undefined,
+    1,
+    10,
+  );
   if (!allowed) {
     return new Response(
       JSON.stringify({ error: 'Rate limit exceeded', success: false }),
-      { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': String(retryAfter) } },
+      {
+        status: 429,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'Retry-After': String(retryAfter),
+        },
+      },
     );
   }
 
@@ -75,14 +90,16 @@ serve(async (req) => {
       (existingRules || []).map((r) => normalizePattern(r.pattern)),
     );
 
-    console.log(`Found ${existingPatterns.size} existing patterns`);
+    logger.info('existing_patterns_loaded', { count: existingPatterns.size });
 
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const { data: logs, error: logsError } = await supabase
       .from('translation_logs')
-      .select('natural_language_query, translated_query, confidence_score, result_count')
+      .select(
+        'natural_language_query, translated_query, confidence_score, result_count',
+      )
       .gte('created_at', thirtyDaysAgo.toISOString())
       .gte('confidence_score', MIN_CONFIDENCE)
       .gte('result_count', MIN_RESULT_COUNT)
@@ -108,7 +125,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Analyzing ${logs.length} translation logs`);
+    logger.info('translation_logs_analyzing', { count: logs.length });
 
     interface QueryData {
       count: number;
@@ -127,7 +144,10 @@ serve(async (req) => {
 
       if (existing) {
         existing.count++;
-        existing.minResultCount = Math.min(existing.minResultCount, resultCount);
+        existing.minResultCount = Math.min(
+          existing.minResultCount,
+          resultCount,
+        );
         if (log.confidence_score > existing.bestConfidence) {
           existing.bestTranslation = log.translated_query;
           existing.bestConfidence = log.confidence_score;
@@ -153,7 +173,7 @@ serve(async (req) => {
       .sort((a, b) => b[1].count - a[1].count)
       .slice(0, MAX_NEW_PATTERNS);
 
-    console.log(`Found ${candidates.length} candidates for new patterns`);
+    logger.info('pattern_candidates_found', { count: candidates.length });
 
     if (candidates.length === 0) {
       return new Response(
@@ -189,14 +209,11 @@ serve(async (req) => {
 
     const patternsCreated = inserted?.length || 0;
 
-    console.log(
-      JSON.stringify({
-        event: 'patterns_generated',
-        patternsCreated,
-        analyzed: logs.length,
-        timeMs: Date.now() - startTime,
-      }),
-    );
+    logger.info('patterns_generated', {
+      patternsCreated,
+      analyzed: logs.length,
+      timeMs: Date.now() - startTime,
+    });
 
     return new Response(
       JSON.stringify({
@@ -212,7 +229,9 @@ serve(async (req) => {
       },
     );
   } catch (error) {
-    console.error('Pattern generation error:', error);
+    logger.error('pattern_generation_error', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return new Response(
       JSON.stringify({
         success: false,

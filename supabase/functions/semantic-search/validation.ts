@@ -1,5 +1,8 @@
 import { KNOWN_OTAGS } from './tags.ts';
 import { VALID_SEARCH_KEYS } from './constants.ts';
+import { createLogger } from './logging.ts';
+
+const logger = createLogger('validation');
 
 export interface ValidationCase {
   name: string;
@@ -270,10 +273,10 @@ export function validateQuery(query: string): {
     }
     // Clean up orphaned boolean operators left after stripping tags
     sanitized = sanitized
-      .replace(/\bor(\s+or)+\b/gi, 'or')   // "or or" → "or"
-      .replace(/\(\s*or\b/g, '(')           // "( or …" → "( …"
-      .replace(/\bor\s*\)/g, ')')           // "… or )" → "… )"
-      .replace(/\(\s*\)/g, '')              // "()" → ""
+      .replace(/\bor(\s+or)+\b/gi, 'or') // "or or" → "or"
+      .replace(/\(\s*or\b/g, '(') // "( or …" → "( …"
+      .replace(/\bor\s*\)/g, ')') // "… or )" → "… )"
+      .replace(/\(\s*\)/g, '') // "()" → ""
       .replace(/\s+/g, ' ')
       .trim();
   }
@@ -298,8 +301,11 @@ export function validateQuery(query: string): {
   }
 
   // Count single quotes that are NOT apostrophes (word-internal like "Thassa's" or plural possessive like "Praetors'")
-  const strippedOfApostrophes = sanitized.replace(/\w'\w/g, '').replace(/\w'(?=\s|$)/g, '');
-  const nonApostropheSingleQuotes = (strippedOfApostrophes.match(/'/g) || []).length;
+  const strippedOfApostrophes = sanitized
+    .replace(/\w'\w/g, '')
+    .replace(/\w'(?=\s|$)/g, '');
+  const nonApostropheSingleQuotes = (strippedOfApostrophes.match(/'/g) || [])
+    .length;
   if (nonApostropheSingleQuotes % 2 !== 0) {
     sanitized = sanitized + "'";
     issues.push('Added missing closing quote');
@@ -508,8 +514,14 @@ export function applyAutoCorrections(
     );
     // Also remove is:commander when f:commander is more appropriate
     // (stax queries want format legality, not "can be commander")
-    if (/\bis:commander\b/i.test(correctedQuery) && !/\bf:commander\b/i.test(correctedQuery)) {
-      correctedQuery = correctedQuery.replace(/\bis:commander\b/gi, 'f:commander');
+    if (
+      /\bis:commander\b/i.test(correctedQuery) &&
+      !/\bf:commander\b/i.test(correctedQuery)
+    ) {
+      correctedQuery = correctedQuery.replace(
+        /\bis:commander\b/gi,
+        'f:commander',
+      );
     }
     correctedQuery = correctedQuery.replace(/\s+/g, ' ').trim();
     if (correctedQuery !== beforeFix) {
@@ -608,10 +620,8 @@ export function runValidationTables(): void {
   }
 
   if (failures.length > 0) {
-    console.warn(
-      JSON.stringify({ event: 'validation_table_failed', failures }),
-    );
+    logger.logWarn('validation_table_failed', { failures });
   } else {
-    console.log(JSON.stringify({ event: 'validation_table_passed' }));
+    logger.logInfo('validation_table_passed');
   }
 }

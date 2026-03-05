@@ -12,13 +12,19 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 import { checkRateLimit, resolveRateLimitKey } from '../_shared/rateLimit.ts';
-import { getCorsHeaders, validateAuth, logAuthFailure } from '../_shared/auth.ts';
+import {
+  getCorsHeaders,
+  validateAuth,
+  logAuthFailure,
+} from '../_shared/auth.ts';
 import { validateEnv } from '../_shared/env.ts';
+import { createLogger } from '../_shared/logger.ts';
 
 const { LOVABLE_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } =
   validateEnv(['LOVABLE_API_KEY', 'SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY']);
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+const logger = createLogger('process-feedback');
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -29,9 +35,16 @@ serve(async (req) => {
   // Authentication check - require valid token (anon key, service role, or JWT)
   const authResult = await validateAuth(req);
   if (!authResult.authorized) {
-    await logAuthFailure(req, authResult.error || 'Unauthorized', 'process-feedback');
+    await logAuthFailure(
+      req,
+      authResult.error || 'Unauthorized',
+      'process-feedback',
+    );
     return new Response(
-      JSON.stringify({ error: authResult.error || 'Unauthorized', success: false }),
+      JSON.stringify({
+        error: authResult.error || 'Unauthorized',
+        success: false,
+      }),
       {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -256,13 +269,15 @@ serve(async (req) => {
           processed_at: new Date().toISOString(),
         })
         .in('id', stuckIds);
-      console.log(`Reset ${stuckIds.length} stuck processing items to failed`);
+      logger.info('stuck_processing_items_reset', { count: stuckIds.length });
     }
 
     for (const feedback of pendingFeedback) {
       // Safety timeout: if processing takes > 25s, mark as failed
       const safetyTimeout = setTimeout(async () => {
-        console.error(`Safety timeout hit for feedback ${feedback.id}`);
+        logger.error('feedback_processing_safety_timeout', {
+          feedbackId: feedback.id,
+        });
         await supabase
           .from('search_feedback')
           .update({
@@ -365,14 +380,17 @@ IMPORTANT: Only output the JSON object, nothing else.`;
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error('AI API error:', response.status, errorText);
+          logger.error('ai_api_error', { status: response.status, errorText });
           throw new Error(`AI API error: ${response.status}`);
         }
 
         const aiData = await response.json();
         const aiResponse = aiData.choices?.[0]?.message?.content || '';
 
-        console.log('AI response for feedback', feedback.id, ':', aiResponse);
+        logger.info('ai_response_received', {
+          feedbackId: feedback.id,
+          aiResponse,
+        });
 
         // Parse the JSON response
         let ruleData;
@@ -382,7 +400,13 @@ IMPORTANT: Only output the JSON object, nothing else.`;
           if (!jsonMatch) throw new Error('No JSON found in response');
           ruleData = JSON.parse(jsonMatch[0]);
         } catch (parseError) {
-          console.error('Failed to parse AI response:', parseError);
+          logger.error('ai_response_parse_error', {
+            feedbackId: feedback.id,
+            error:
+              parseError instanceof Error
+                ? parseError.message
+                : String(parseError),
+          });
           await supabase
             .from('search_feedback')
             .update({
@@ -460,19 +484,21 @@ IMPORTANT: Only output the JSON object, nothing else.`;
         } catch (fetchErr) {
           // Network error — treat as inconclusive, allow the rule through
           // to avoid blocking rules on transient Scryfall downtime
-          console.warn(
-            `Scryfall validation network error for feedback ${feedback.id}:`,
-            fetchErr,
-          );
+          logger.warn('scryfall_validation_network_error', {
+            feedbackId: feedback.id,
+            error:
+              fetchErr instanceof Error ? fetchErr.message : String(fetchErr),
+          });
           scryfallOk = true; // fail-open on network errors
         }
 
         if (!scryfallOk) {
-          console.warn(
-            `Scryfall validation FAILED (attempt 1) for feedback ${feedback.id}:`,
-            scryfallError,
-            `| syntax: "${ruleData.scryfall_syntax}" — asking AI to self-correct`,
-          );
+          logger.warn('scryfall_validation_failed_attempt_1', {
+            feedbackId: feedback.id,
+            error: scryfallError,
+            scryfallSyntax: ruleData.scryfall_syntax,
+            nextStep: 'request_ai_self_correction',
+          });
 
           // ──────────────────────────────────────────────────────────────────
           // SELF-CORRECTION: give the AI one chance to fix the broken syntax.
@@ -541,17 +567,20 @@ Respond in this EXACT JSON format only (no other text):
                 correctedRuleData.scryfall_syntax = normalizeTagAliases(
                   correctedRuleData.scryfall_syntax,
                 );
-                console.log(
-                  `AI self-correction for feedback ${feedback.id}:`,
-                  correctedRuleData.scryfall_syntax,
-                );
+                logger.info('ai_self_correction_generated', {
+                  feedbackId: feedback.id,
+                  scryfallSyntax: correctedRuleData.scryfall_syntax,
+                });
               }
             }
           } catch (correctionErr) {
-            console.error(
-              `Self-correction AI call failed for feedback ${feedback.id}:`,
-              correctionErr,
-            );
+            logger.error('ai_self_correction_failed', {
+              feedbackId: feedback.id,
+              error:
+                correctionErr instanceof Error
+                  ? correctionErr.message
+                  : String(correctionErr),
+            });
           }
 
           // Validate the corrected syntax against Scryfall
@@ -575,33 +604,38 @@ Respond in this EXACT JSON format only (no other text):
                   correctionOk = true;
                   scryfallTotalCards = correctionCards;
                   ruleData = correctedRuleData;
-                  console.log(
-                    `Self-correction PASSED for feedback ${feedback.id}:`,
-                    `"${ruleData.scryfall_syntax}" returned ${scryfallTotalCards} cards`,
-                  );
+                  logger.info('self_correction_validation_passed', {
+                    feedbackId: feedback.id,
+                    scryfallSyntax: ruleData.scryfall_syntax,
+                    scryfallTotalCards,
+                  });
                 } else {
-                  console.error(
-                    `Self-correction also returned 0 results for feedback ${feedback.id}`,
-                  );
+                  logger.error('self_correction_zero_results', {
+                    feedbackId: feedback.id,
+                  });
                 }
               } else {
                 await correctionResp.text();
-                console.error(
-                  `Self-correction Scryfall returned ${correctionResp.status} for feedback ${feedback.id}`,
-                );
+                logger.error('self_correction_scryfall_http_error', {
+                  feedbackId: feedback.id,
+                  status: correctionResp.status,
+                });
               }
             } catch (correctionFetchErr) {
-              console.warn(
-                `Self-correction validation network error for feedback ${feedback.id}:`,
-                correctionFetchErr,
-              );
+              logger.warn('self_correction_validation_network_error', {
+                feedbackId: feedback.id,
+                error:
+                  correctionFetchErr instanceof Error
+                    ? correctionFetchErr.message
+                    : String(correctionFetchErr),
+              });
             }
           }
 
           if (!correctionOk) {
-            console.error(
-              `Both validation attempts FAILED for feedback ${feedback.id}. Marking as failed.`,
-            );
+            logger.error('validation_attempts_failed', {
+              feedbackId: feedback.id,
+            });
             await supabase
               .from('search_feedback')
               .update({
@@ -619,10 +653,11 @@ Respond in this EXACT JSON format only (no other text):
           scryfallOk = true;
         }
 
-        console.log(
-          `Scryfall validation PASSED for feedback ${feedback.id}:`,
-          `"${ruleData.scryfall_syntax}" returned ${scryfallTotalCards} cards`,
-        );
+        logger.info('scryfall_validation_passed', {
+          feedbackId: feedback.id,
+          scryfallSyntax: ruleData.scryfall_syntax,
+          scryfallTotalCards,
+        });
 
         // Persist the validated card count so admins can see rule breadth
         await supabase
@@ -669,12 +704,10 @@ Respond in this EXACT JSON format only (no other text):
               rule: `${ruleData.pattern} → ${ruleData.scryfall_syntax} (was: ${existingRule[0].scryfall_syntax})`,
             });
 
-            console.log(
-              'Updated existing rule from retry feedback:',
-              ruleData.pattern,
-              '→',
-              ruleData.scryfall_syntax,
-            );
+            logger.info('existing_rule_updated_from_retry_feedback', {
+              pattern: ruleData.pattern,
+              scryfallSyntax: ruleData.scryfall_syntax,
+            });
             continue;
           } else {
             // First time seeing this, but pattern exists - mark as duplicate
@@ -727,19 +760,18 @@ Respond in this EXACT JSON format only (no other text):
           rule: `${ruleData.pattern} → ${ruleData.scryfall_syntax}`,
         });
 
-        console.log(
-          'Generated rule from feedback:',
-          ruleData.pattern,
-          '→',
-          ruleData.scryfall_syntax,
-        );
+        logger.info('rule_generated_from_feedback', {
+          pattern: ruleData.pattern,
+          scryfallSyntax: ruleData.scryfall_syntax,
+        });
       } catch (processingError) {
-        console.error(
-          'Error processing feedback',
-          feedback.id,
-          ':',
-          processingError,
-        );
+        logger.error('feedback_processing_error', {
+          feedbackId: feedback.id,
+          error:
+            processingError instanceof Error
+              ? processingError.message
+              : String(processingError),
+        });
         await supabase
           .from('search_feedback')
           .update({
@@ -768,7 +800,9 @@ Respond in this EXACT JSON format only (no other text):
       },
     );
   } catch (error) {
-    console.error('Process feedback error:', error);
+    logger.error('process_feedback_error', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return new Response(
       JSON.stringify({
         error: 'Failed to process feedback',

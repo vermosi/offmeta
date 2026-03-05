@@ -14,6 +14,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { requireAdmin, getCorsHeaders } from '../_shared/auth.ts';
 import { validateEnv } from '../_shared/env.ts';
 import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
+import { createLogger } from '../_shared/logger.ts';
 
 const { SUPABASE_URL, SUPABASE_ANON_KEY } = validateEnv([
   'SUPABASE_URL',
@@ -21,6 +22,7 @@ const { SUPABASE_URL, SUPABASE_ANON_KEY } = validateEnv([
 ]);
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const logger = createLogger('warmup-cache');
 
 // Common MTG queries that should be pre-cached
 const COMMON_QUERIES = [
@@ -41,7 +43,7 @@ const COMMON_QUERIES = [
   'Gitaxian Probe',
   'Inquisition of Kozilek',
   'Mana Crypt',
-  'Nature\'s Lore',
+  "Nature's Lore",
   'Opt',
   'Serum Visions',
   'Skullclamp',
@@ -62,7 +64,7 @@ const COMMON_QUERIES = [
   'Wasteland',
   'Wooded Foothills',
   'Strip Mine',
-  'Thespian\'s Stage',
+  "Thespian's Stage",
   'Crop Rotation',
   'Exploration',
   'Life from the Loam',
@@ -73,7 +75,7 @@ const COMMON_QUERIES = [
   'Enlightened Tutor',
   'Worldly Tutor',
   'Chord of Calling',
-  'Green Sun\'s Zenith',
+  "Green Sun's Zenith",
   'Imperial Seal',
   'Wheel of Fortune',
   'Windfall',
@@ -85,7 +87,7 @@ const COMMON_QUERIES = [
   'Force of Negation',
   'Mana Drain',
   'Cyclonic Rift',
-  'Teferi\'s Protection',
+  "Teferi's Protection",
   'Smothering Tithe',
   'Dockside Extortionist',
   'Esper Sentinel',
@@ -93,7 +95,7 @@ const COMMON_QUERIES = [
   'Aura Shards',
   'Beast Within',
   'Generous Gift',
-  'Assassin\'s Trophy',
+  "Assassin's Trophy",
   'Anguished Unmaking',
   'Vandalblast',
   'Austere Command',
@@ -110,7 +112,7 @@ const COMMON_QUERIES = [
   'Collector Ouphe',
   'Stranglehold',
   'Rule of Law',
-  'Grafdigger\'s Cage',
+  "Grafdigger's Cage",
   'Rest in Peace',
   'Torpor Orb',
   'Cursed Totem',
@@ -119,13 +121,13 @@ const COMMON_QUERIES = [
   'Ravages of War',
   'Muldrotha, the Gravetide',
   'The Gitrog Monster',
-  'Yuriko, the Tiger\'s Shadow',
+  "Yuriko, the Tiger's Shadow",
   'Korvold, Fae-Cursed King',
   'Chulane, Teller of Tales',
   'Kenrith, the Returned King',
   'Urza, Lord High Artificer',
   'Golos, Tireless Pilgrim',
-  'Atraxa, Praetors\' Voice',
+  "Atraxa, Praetors' Voice",
   'Breya, Etherium Shaper',
   'Najeela, the Blade-Blossom',
   'Tayam, Luminous Enigma',
@@ -159,11 +161,11 @@ const COMMON_QUERIES = [
   'Otawara, Soaring City',
   'Sokenzan, Crucible of Defiance',
   'Eiganjo, Seat of the Empire',
-  'Minamo, School at Water\'s Edge',
+  "Minamo, School at Water's Edge",
   'Yargle and Multani',
   'Rocco, Cabaretti Caterer',
   'Jetmir, Nexus of Revels',
-  'Jinnie Fay, Jetmir\'s Second',
+  "Jinnie Fay, Jetmir's Second",
   'Henzie "Toolbox" Torre',
   'Prosper, Tome-Bound',
   'Sefris of the Hidden Ways',
@@ -183,7 +185,7 @@ const COMMON_QUERIES = [
   'Miirym, Sentinel Wyrm',
   'Scion of the Ur-Dragon',
   'Korlessa, Scale Singer',
-  'Kykar, Wind\'s Fury',
+  "Kykar, Wind's Fury",
   'Niv-Mizzet, Parun',
   'The Locust God',
   'Brudiclad, Telchor Engineer',
@@ -194,60 +196,138 @@ const COMMON_QUERIES = [
   'Torbran, Thane of Red Fell',
   'Purphoros, God of the Forge',
   'Emmara, Soul of the Accord',
-  'Trostani, Selesnya\'s Voice',
+  "Trostani, Selesnya's Voice",
   'Karametra, God of Harvests',
   'Qausali Ambusher',
   'Ramp & Mana',
-  'green ramp', 'mana dorks', 'mana rocks', 'land ramp', 'artifact ramp',
-  'cheap mana rocks', 'mana rocks under $5', 'two mana rocks', 'sol ring alternatives',
+  'green ramp',
+  'mana dorks',
+  'mana rocks',
+  'land ramp',
+  'artifact ramp',
+  'cheap mana rocks',
+  'mana rocks under $5',
+  'two mana rocks',
+  'sol ring alternatives',
   // Card Draw
-  'blue card draw', 'black card draw', 'green card draw', 'card draw engines',
-  'cantrips', 'wheel effects',
+  'blue card draw',
+  'black card draw',
+  'green card draw',
+  'card draw engines',
+  'cantrips',
+  'wheel effects',
   // Removal
-  'white removal', 'black removal', 'creature removal', 'artifact removal',
-  'enchantment removal', 'board wipes', 'cheap board wipes', 'single target removal',
+  'white removal',
+  'black removal',
+  'creature removal',
+  'artifact removal',
+  'enchantment removal',
+  'board wipes',
+  'cheap board wipes',
+  'single target removal',
   // Counterspells
-  'blue counterspells', 'cheap counterspells', 'two mana counterspells', 'free counterspells',
+  'blue counterspells',
+  'cheap counterspells',
+  'two mana counterspells',
+  'free counterspells',
   // Tutors
-  'black tutors', 'green tutors', 'creature tutors', 'land tutors',
-  'artifact tutors', 'enchantment tutors',
+  'black tutors',
+  'green tutors',
+  'creature tutors',
+  'land tutors',
+  'artifact tutors',
+  'enchantment tutors',
   // Tribal
-  'elf tribal', 'goblin tribal', 'zombie tribal', 'vampire tribal',
-  'dragon tribal', 'angel tribal', 'merfolk tribal', 'human tribal',
-  'sliver tribal', 'elf lords', 'goblin lords', 'zombie lords',
+  'elf tribal',
+  'goblin tribal',
+  'zombie tribal',
+  'vampire tribal',
+  'dragon tribal',
+  'angel tribal',
+  'merfolk tribal',
+  'human tribal',
+  'sliver tribal',
+  'elf lords',
+  'goblin lords',
+  'zombie lords',
   // Sacrifice
-  'sacrifice outlets', 'free sacrifice outlets', 'aristocrats',
-  'blood artist effects', 'death triggers', 'grave pact effects',
+  'sacrifice outlets',
+  'free sacrifice outlets',
+  'aristocrats',
+  'blood artist effects',
+  'death triggers',
+  'grave pact effects',
   // Graveyard
-  'reanimation spells', 'self mill', 'graveyard recursion',
-  'graveyard hate', 'flashback spells',
+  'reanimation spells',
+  'self mill',
+  'graveyard recursion',
+  'graveyard hate',
+  'flashback spells',
   // Tokens
-  'token generators', 'treasure token makers', 'token doublers', 'populate effects',
+  'token generators',
+  'treasure token makers',
+  'token doublers',
+  'populate effects',
   // Combat
-  'haste enablers', 'extra combat steps', 'double strike',
-  'unblockable creatures', 'trample enablers',
+  'haste enablers',
+  'extra combat steps',
+  'double strike',
+  'unblockable creatures',
+  'trample enablers',
   // Control
-  'stax pieces', 'hatebears', 'pillowfort', 'protection spells',
+  'stax pieces',
+  'hatebears',
+  'pillowfort',
+  'protection spells',
   // Blink
-  'blink effects', 'flicker effects', 'etb creatures',
+  'blink effects',
+  'flicker effects',
+  'etb creatures',
   // Commander Specific
-  'partner commanders', 'mono red commanders', 'mono green commanders',
-  'mono blue commanders', 'mono black commanders', 'mono white commanders',
-  'simic commanders', 'rakdos commanders', 'orzhov commanders',
+  'partner commanders',
+  'mono red commanders',
+  'mono green commanders',
+  'mono blue commanders',
+  'mono black commanders',
+  'mono white commanders',
+  'simic commanders',
+  'rakdos commanders',
+  'orzhov commanders',
   // Color Combinations
-  'rakdos sacrifice', 'simic ramp', 'orzhov lifegain', 'gruul creatures',
-  'azorius control', 'dimir mill', 'golgari graveyard', 'boros aggro',
-  'izzet spellslinger', 'selesnya tokens',
+  'rakdos sacrifice',
+  'simic ramp',
+  'orzhov lifegain',
+  'gruul creatures',
+  'azorius control',
+  'dimir mill',
+  'golgari graveyard',
+  'boros aggro',
+  'izzet spellslinger',
+  'selesnya tokens',
   // Budget
-  'cheap green creatures', 'budget removal', 'affordable tutors', 'budget mana rocks',
+  'cheap green creatures',
+  'budget removal',
+  'affordable tutors',
+  'budget mana rocks',
   // Lands
-  'fetch lands', 'shock lands', 'dual lands', 'pain lands',
-  'tri lands', 'modal lands', 'creature lands',
+  'fetch lands',
+  'shock lands',
+  'dual lands',
+  'pain lands',
+  'tri lands',
+  'modal lands',
+  'creature lands',
   // Special Effects
-  'extra turn spells', 'copy effects', 'theft effects',
-  'mind control', 'clone effects', 'polymorph effects',
+  'extra turn spells',
+  'copy effects',
+  'theft effects',
+  'mind control',
+  'clone effects',
+  'polymorph effects',
   // Recent/Popular
-  'new commanders', 'popular commander cards', 'staple cards',
+  'new commanders',
+  'popular commander cards',
+  'staple cards',
 ];
 
 serve(async (req) => {
@@ -264,12 +344,25 @@ serve(async (req) => {
 
   // Rate limiting: 1 req/min (batch job)
   maybeCleanup();
-  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  const { allowed, retryAfter } = await checkRateLimit(clientIp, undefined, 1, 10);
+  const clientIp =
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const { allowed, retryAfter } = await checkRateLimit(
+    clientIp,
+    undefined,
+    1,
+    10,
+  );
   if (!allowed) {
     return new Response(
       JSON.stringify({ error: 'Rate limit exceeded', success: false }),
-      { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': String(retryAfter) } },
+      {
+        status: 429,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'Retry-After': String(retryAfter),
+        },
+      },
     );
   }
 
@@ -292,13 +385,10 @@ serve(async (req) => {
     const queriesToWarm =
       customQueries.length > 0 ? customQueries : COMMON_QUERIES;
 
-    console.log(
-      JSON.stringify({
-        event: 'warmup_started',
-        queryCount: queriesToWarm.length,
-        custom: customQueries.length > 0,
-      }),
-    );
+    logger.info('warmup_started', {
+      queryCount: queriesToWarm.length,
+      custom: customQueries.length > 0,
+    });
 
     const results = {
       total: queriesToWarm.length,
@@ -325,26 +415,29 @@ serve(async (req) => {
           );
 
           if (error) {
-            console.error(`Warmup failed for "${query}":`, error.message);
+            logger.error('warmup_query_failed', {
+              query,
+              error: error.message,
+            });
             results.failed++;
             results.errors.push(`${query}: ${error.message}`);
           } else if (data?.cached) {
             results.skipped++;
           } else if (data?.success) {
             results.successful++;
-            console.log(
-              JSON.stringify({
-                event: 'query_warmed',
-                query: query.substring(0, 50),
-                confidence: data.explanation?.confidence,
-              }),
-            );
+            logger.info('query_warmed', {
+              query: query.substring(0, 50),
+              confidence: data.explanation?.confidence,
+            });
           } else {
             results.failed++;
             results.errors.push(`${query}: Unknown error`);
           }
         } catch (err) {
-          console.error(`Warmup exception for "${query}":`, err);
+          logger.error('warmup_query_exception', {
+            query,
+            error: err instanceof Error ? err.message : String(err),
+          });
           results.failed++;
           results.errors.push(`${query}: ${String(err)}`);
         }
@@ -362,13 +455,10 @@ serve(async (req) => {
 
     const duration = Date.now() - startTime;
 
-    console.log(
-      JSON.stringify({
-        event: 'warmup_complete',
-        ...results,
-        durationMs: duration,
-      }),
-    );
+    logger.info('warmup_complete', {
+      ...results,
+      durationMs: duration,
+    });
 
     return new Response(
       JSON.stringify({
@@ -395,7 +485,9 @@ serve(async (req) => {
       },
     );
   } catch (error) {
-    console.error('Warmup error:', error);
+    logger.error('warmup_error', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return new Response(
       JSON.stringify({
         success: false,

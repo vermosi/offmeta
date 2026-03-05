@@ -1,3 +1,7 @@
+import { createLogger } from './logging.ts';
+
+const logger = createLogger('circuit-breaker');
+
 // ============= CIRCUIT BREAKER =============
 const circuitBreaker = {
   failures: 0,
@@ -15,7 +19,7 @@ export function isCircuitOpen(): boolean {
   const now = Date.now();
   if (now - circuitBreaker.lastFailure > CIRCUIT_RESET_TIMEOUT) {
     // Reset to half-open
-    console.log('Circuit breaker entering half-open state');
+    logger.logInfo('circuit_breaker_half_open');
     return false;
   }
   return true;
@@ -27,7 +31,9 @@ export function recordCircuitFailure(): void {
 
   if (circuitBreaker.failures >= CIRCUIT_FAILURE_THRESHOLD) {
     if (!circuitBreaker.isOpen) {
-      console.warn('Circuit breaker OPENED - too many AI gateway failures');
+      logger.logWarn('circuit_breaker_opened', {
+        reason: 'too_many_ai_gateway_failures',
+      });
       circuitBreaker.isOpen = true;
     }
   }
@@ -35,7 +41,7 @@ export function recordCircuitFailure(): void {
 
 export function recordCircuitSuccess(): void {
   if (circuitBreaker.isOpen || circuitBreaker.failures > 0) {
-    console.log('Circuit breaker RESET');
+    logger.logInfo('circuit_breaker_reset');
     circuitBreaker.failures = 0;
     circuitBreaker.isOpen = false;
     circuitBreaker.halfOpenAttempts = 0;

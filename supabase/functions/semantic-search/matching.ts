@@ -1,6 +1,9 @@
 import { SYNONYM_MAP } from './shared-mappings.ts';
 import { supabase } from './client.ts';
 import { type CacheEntry } from './cache.ts';
+import { createLogger } from './logging.ts';
+
+const logger = createLogger('pattern-matching');
 
 /**
  * Hardcoded translations for warmup/prefetch queries.
@@ -8,7 +11,8 @@ import { type CacheEntry } from './cache.ts';
  */
 const HARDCODED_TRANSLATIONS: Record<string, CacheEntry['result']> = {
   'mana rocks': {
-    scryfallQuery: 't:artifact o:"add" (o:"{C}" or o:"{W}" or o:"{U}" or o:"{B}" or o:"{R}" or o:"{G}" or o:"any color" or o:"one mana")',
+    scryfallQuery:
+      't:artifact o:"add" (o:"{C}" or o:"{W}" or o:"{U}" or o:"{B}" or o:"{R}" or o:"{G}" or o:"any color" or o:"one mana")',
     explanation: {
       readable: 'Artifacts that produce mana (mana rocks)',
       assumptions: [],
@@ -66,7 +70,7 @@ export async function checkPatternMatch(
   // Check hardcoded translations first (zero latency)
   const normalizedLower = query.toLowerCase().trim();
   if (HARDCODED_TRANSLATIONS[normalizedLower]) {
-    console.log(`Hardcoded match: "${query}"`);
+    logger.logInfo('hardcoded_pattern_match', { query });
     return HARDCODED_TRANSLATIONS[normalizedLower];
   }
 
@@ -84,9 +88,10 @@ export async function checkPatternMatch(
     for (const rule of rules) {
       const normalizedPattern = normalizeQueryForMatching(rule.pattern);
       if (normalizedPattern === normalizedQuery) {
-        console.log(
-          `Pattern match found: "${query}" → "${rule.scryfall_syntax}"`,
-        );
+        logger.logInfo('translation_pattern_match_found', {
+          query,
+          translatedQuery: rule.scryfall_syntax,
+        });
 
         return {
           scryfallQuery: rule.scryfall_syntax,
@@ -101,7 +106,9 @@ export async function checkPatternMatch(
     }
     return null;
   } catch (e) {
-    console.error('Pattern match error:', e);
+    logger.logWarn('translation_pattern_match_error', {
+      error: e instanceof Error ? e.message : String(e),
+    });
     return null;
   }
 }
