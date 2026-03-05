@@ -28,3 +28,6 @@
 - name: area:infra
   color: fef2c0
   description: CI/CD or tooling
+- name: ci-failure
+  color: bfd4f2
+  description: Automated issue for CI failures on default branch
