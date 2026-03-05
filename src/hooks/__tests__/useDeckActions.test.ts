@@ -40,7 +40,7 @@ vi.mock('@/hooks/useAuth', () => ({
   useAuth: vi.fn(() => ({ user: { id: 'user-123' } })),
 }));
 
-const _mockCard: ScryfallCard = {
+const _mockCard: ScryfallCard = { // eslint-disable-line @typescript-eslint/no-unused-vars
   id: 'scry-1',
   name: 'Lightning Bolt',
   cmc: 1,
