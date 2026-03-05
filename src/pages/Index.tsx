@@ -127,6 +127,7 @@ const Index = () => {
       tab: 'cards',
     }),
   );
+  // Keep tab reset derived from query changes so we avoid setState inside effects.
   const activeTab = tabState.query === originalQuery ? tabState.tab : 'cards';
 
   // Similar cards & deck ideas hooks
@@ -156,11 +157,12 @@ const Index = () => {
   // Activate feature hooks when tab is selected
   const handleTabChange = useCallback(
     (tab: ResultsTab) => {
+      if (tab === activeTab) return;
       setTabState({ query: originalQuery, tab });
       if (tab === 'similar') activateSimilar();
       if (tab === 'deck-ideas') activateDeckIdeas();
     },
-    [activateSimilar, activateDeckIdeas, originalQuery],
+    [activateSimilar, activateDeckIdeas, activeTab, originalQuery],
   );
 
   // Card comparison
