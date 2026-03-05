@@ -166,7 +166,8 @@ PLAYER SLANG → otag: MAPPINGS (USE THESE!):
 - "treasure" / "treasure tokens" = otag:treasure-generator
 - "tokens" / "token generator" = otag:token-generator
 - "lifegain" / "gain life" = otag:lifegain
-- "stax" / "prison" / "stax pieces" = otag:hatebear or (o:"can't" or o:"doesn't untap") — keep it SIMPLE, do NOT over-nest
+- "stax" / "prison" / "stax pieces" = (otag:hatebear or otag:pillowfort) — KEEP IT BROAD! Do NOT chain multiple o:"can't" o:"doesn't" clauses; that returns 0 results. Add color/format filters ONLY if the user specifies them.
+- "stax that stops [X]" = otag:hatebear with a SINGLE focused o: clause at most (e.g., o:"can't search" for anti-tutor). NEVER combine 3+ oracle filters for stax — Scryfall intersects them and returns nothing.
 - "hatebear" = otag:hatebear
 - "cantrip" = otag:cantrip
 - "wheel" / "wheel effect" = otag:wheel
