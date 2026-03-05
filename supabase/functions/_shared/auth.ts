@@ -164,12 +164,22 @@ export function getCorsHeaders(req: Request) {
     'https://offmeta.lovable.app',
   ];
 
-  // Also allow Lovable preview/development domains
-  const isLovablePreview =
-    !!origin &&
-    (origin.endsWith('.lovableproject.com') ||
-      origin.endsWith('.lovable.app') ||
-      origin.includes('localhost'));
+  // Also allow Lovable preview/development domains (strict pattern matching)
+  const isLovablePreview = (() => {
+    if (!origin) return false;
+    try {
+      const { hostname } = new URL(origin);
+      // Match UUID-based preview domains: <id>.lovableproject.com or <id>-preview--<id>.lovable.app
+      return (
+        hostname.endsWith('.lovableproject.com') ||
+        /^[a-z0-9-]+-preview--[a-z0-9-]+\.lovable\.app$/.test(hostname) ||
+        hostname === 'localhost' ||
+        hostname.startsWith('localhost:')
+      );
+    } catch {
+      return false;
+    }
+  })();
 
   const sensitiveEndpoints = new Set([
     'admin-analytics',
