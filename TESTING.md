@@ -2,6 +2,27 @@
 
 OffMeta uses [Vitest](https://vitest.dev/) for unit/integration tests and [Playwright](https://playwright.dev/) for E2E and accessibility tests, with **1,560+ tests** across multiple categories.
 
+## Tooling convention
+
+- **Canonical runner:** `npm` (matches CI workflows and required checks).
+- **Optional equivalent:** `bun` for local execution.
+
+Canonical commands:
+
+```bash
+npm run test          # Run all unit/integration tests
+npm run test:watch    # Watch mode
+npm run test -- --coverage  # With coverage report
+```
+
+Optional Bun equivalents:
+
+```bash
+bun run test
+bun run test:watch
+bun run test -- --coverage
+```
+
 ---
 
 ## Quick Start

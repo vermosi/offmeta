@@ -75,6 +75,7 @@ Run security tests:
 
 ```bash
 npm run test -- src/lib/security
+# Optional equivalent: bun run test -- src/lib/security
 ```
 
 Run E2E and accessibility tests:

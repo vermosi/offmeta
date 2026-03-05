@@ -13,6 +13,10 @@ cp .env.example .env
 npm run dev
 ```
 
+## Tooling convention
+
+Use `npm` as the canonical task runner because CI and required checks run npm scripts. Bun is supported as an optional local equivalent for common test commands; see [`docs/testing.md`](./testing.md) for the canonical test command set.
+
 ## Project scripts
 
 - `npm run dev`: Start the Vite dev server

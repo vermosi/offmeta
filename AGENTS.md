@@ -21,14 +21,22 @@ See `docs/architecture.md` for full details. Key modules:
 ## Running Tests
 
 ```bash
-bun run test              # All tests
-bun run test -- --watch   # Watch mode
-bun run test -- src/lib/security  # Security suite only
+npm run test                    # All tests (canonical)
+npm run test:watch              # Watch mode (canonical)
+npm run test -- src/lib/security # Security suite only (canonical)
+```
+
+Optional Bun equivalents:
+
+```bash
+bun run test
+bun run test:watch
+bun run test -- src/lib/security
 ```
 
 ## PR Checklist
 
-- [ ] All tests pass (`bun run test`)
+- [ ] All tests pass (`npm run test`)
 - [ ] No `any` types introduced
 - [ ] RLS policies reviewed if DB changes
 - [ ] Semantic tokens used (no raw colors)
