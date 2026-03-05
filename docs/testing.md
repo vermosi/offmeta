@@ -2,6 +2,27 @@
 
 OffMeta uses [Vitest](https://vitest.dev/) as the primary testing framework with 1,560+ tests across multiple categories.
 
+## Tooling convention
+
+- **Canonical runner:** `npm` (matches CI and required status checks).
+- **Optional equivalent:** `bun` for local runs if preferred.
+
+Canonical commands:
+
+```bash
+npm run test
+npm run test:watch
+npm run test -- --coverage
+```
+
+Optional Bun equivalents:
+
+```bash
+bun run test
+bun run test:watch
+bun run test -- --coverage
+```
+
 ## Run tests
 
 ```bash
