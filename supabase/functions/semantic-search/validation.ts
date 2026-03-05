@@ -418,6 +418,19 @@ export function detectQualityFlags(translatedQuery: string): string[] {
     flags.push('unnecessary_quotes_single_word');
   }
 
+  // Detect overly complex stax queries: otag:hatebear/pillowfort present
+  // alongside multiple o:"can't"/o:"doesn't"/o:"unless" clauses
+  if (/otag:(hatebear|pillowfort)/i.test(translatedQuery)) {
+    const staxOracleClauses = (
+      translatedQuery.match(
+        /o:"(?:can't|doesn't|unless|additional|must|attack)[^"]*"/gi,
+      ) || []
+    ).length;
+    if (staxOracleClauses >= 1) {
+      flags.push('overly_complex_stax');
+    }
+  }
+
   return flags;
 }
 
@@ -476,6 +489,33 @@ export function applyAutoCorrections(
     );
     if (correctedQuery !== beforeFix) {
       corrections.push('Simplified "dies" syntax for broader results');
+    }
+  }
+
+  // Simplify overly complex stax queries: strip o:"can't"/o:"doesn't"/etc.
+  // groups when otag:hatebear or otag:pillowfort is present
+  if (qualityFlags.includes('overly_complex_stax')) {
+    const beforeFix = correctedQuery;
+    // Remove parenthesized groups containing stax oracle patterns
+    correctedQuery = correctedQuery.replace(
+      /\([^)]*o:"(?:can't|doesn't|unless|additional|must|attack)[^)]*\)/gi,
+      '',
+    );
+    // Remove standalone stax oracle clauses
+    correctedQuery = correctedQuery.replace(
+      /\bo:"(?:can't|doesn't|unless|additional|must|attack)[^"]*"/gi,
+      '',
+    );
+    // Also remove is:commander when f:commander is more appropriate
+    // (stax queries want format legality, not "can be commander")
+    if (/\bis:commander\b/i.test(correctedQuery) && !/\bf:commander\b/i.test(correctedQuery)) {
+      correctedQuery = correctedQuery.replace(/\bis:commander\b/gi, 'f:commander');
+    }
+    correctedQuery = correctedQuery.replace(/\s+/g, ' ').trim();
+    if (correctedQuery !== beforeFix) {
+      corrections.push(
+        'Simplified stax query — otag:hatebear/pillowfort is sufficient without oracle text restrictions',
+      );
     }
   }
 

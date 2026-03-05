@@ -15,6 +15,33 @@ const SCRYFALL_SEARCH_URL = 'https://api.scryfall.com/cards/search';
  */
 export function sanitizeQuerySyntax(query: string): string {
   let q = query;
+
+  // Simplify overly complex stax queries: when otag:hatebear or otag:pillowfort
+  // is present, strip large o:"can't"/"doesn't"/"unless" clause groups that
+  // cause zero-result intersections. Keep at most ONE simple o: clause.
+  if (/otag:(hatebear|pillowfort)/i.test(q)) {
+    // Remove complex parenthesized groups full of o:"can't"/o:"unless"/o:"doesn't"/o:"must" etc.
+    q = q.replace(
+      /\([^)]*o:"(?:can't|doesn't|unless|additional|must|attack)[^)]*\)/gi,
+      '',
+    );
+    // Also remove standalone o:"can't..." o:"doesn't..." chains (keep at most one)
+    const staxOraclePattern =
+      /\bo:"(?:can't|doesn't|unless|additional|must)[^"]*"/gi;
+    const staxMatches = q.match(staxOraclePattern);
+    if (staxMatches && staxMatches.length > 1) {
+      // Keep only the first one, remove the rest
+      let kept = false;
+      q = q.replace(staxOraclePattern, (match) => {
+        if (!kept) {
+          kept = true;
+          return match;
+        }
+        return '';
+      });
+    }
+  }
+
   // Collapse "or or" → "or"
   q = q.replace(/\bor(\s+or)+\b/gi, 'or');
   // Remove leading "or" inside parens: "( or …" → "( …"

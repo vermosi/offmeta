@@ -16,6 +16,7 @@ export const buildSystemPrompt = (
 CRITICAL RULES (MUST FOLLOW):
 1. Output ONLY the query - no explanations, no markdown, no card names
 2. ALWAYS USE otag: (Oracle Tags) as FIRST CHOICE for effect-based searches - they are MORE ACCURATE than o: searches
+3. STAX/PRISON QUERIES MUST BE SIMPLE: Use (otag:hatebear or otag:pillowfort) with color/format filters. Do NOT add o:"can't" or o:"unless" or o:"doesn't" clauses — Scryfall intersects them and returns ZERO results. For "stax that stops X", add AT MOST one focused o: clause like o:"can't search".
 3. For ETB use o:"enters" NOT o:"enters the battlefield"
 4. For LTB use o:"leaves" NOT o:"leaves the battlefield"
 5. "Spells" = (t:instant or t:sorcery)
@@ -166,8 +167,24 @@ PLAYER SLANG → otag: MAPPINGS (USE THESE!):
 - "treasure" / "treasure tokens" = otag:treasure-generator
 - "tokens" / "token generator" = otag:token-generator
 - "lifegain" / "gain life" = otag:lifegain
-- "stax" / "prison" / "stax pieces" = (otag:hatebear or otag:pillowfort) — KEEP IT BROAD! Do NOT chain multiple o:"can't" o:"doesn't" clauses; that returns 0 results. Add color/format filters ONLY if the user specifies them.
-- "stax that stops [X]" = otag:hatebear with a SINGLE focused o: clause at most (e.g., o:"can't search" for anti-tutor). NEVER combine 3+ oracle filters for stax — Scryfall intersects them and returns nothing.
+- "stax" / "prison" / "stax pieces" = (otag:hatebear or otag:pillowfort)
+- "stax that stops [X]" = otag:hatebear o:"can't [relevant word]" (ONE o: clause max!)
+
+=== STAX QUERIES (CRITICAL - #2 MOST COMMON MISTAKE!) ===
+Stax queries MUST be simple. Scryfall AND-intersects all clauses, so adding multiple o:"can't" patterns returns ZERO results.
+
+WRONG (NEVER DO THIS):
+- "stax pieces in Orzhov" → id<=wb (o:"can't" o:"unless" or o:"additional" o:"cost") is:commander otag:hatebear  ❌ TOO MANY CLAUSES = 0 RESULTS!
+- "stax that stops ramping" → o:"can't search" o:"can't play additional lands" o:"can't" otag:hatebear  ❌ OVER-INTERSECTED!
+
+CORRECT:
+- "stax pieces" → (otag:hatebear or otag:pillowfort)
+- "stax pieces in Orzhov commander" → (otag:hatebear or otag:pillowfort) id<=wb f:commander
+- "mono red stax" → (otag:hatebear or otag:pillowfort) c=r
+- "stax that stops ramping" → otag:hatebear o:"can't search"
+- "stax that stops drawing" → otag:hatebear o:"can't draw"
+
+RULE: For stax, use AT MOST one o: clause. Prefer otag:hatebear or otag:pillowfort alone with color/format filters.
 - "hatebear" = otag:hatebear
 - "cantrip" = otag:cantrip
 - "wheel" / "wheel effect" = otag:wheel
@@ -513,15 +530,13 @@ LIFE & DAMAGE:
 - otag:ping (deals 1 damage repeatedly)
 - otag:drain (life loss + life gain)
 
-CONTROL & STAX (CRITICAL - keep stax queries SIMPLE!):
-- "stax" / "stax pieces" = otag:hatebear (PREFERRED, simplest)
-- For broader stax: (o:"can't" or o:"doesn't untap") — pick ONE pattern, don't combine 3+
-- "tax effects" = (o:"costs" o:"more") — keep it to ONE oracle pattern
-- "stop ramping" / "anti-ramp" = (o:"can't search" or o:"can't" o:"land")
-- NEVER combine multiple complex o: groups with AND — use OR or pick the best single pattern
+CONTROL & STAX (CRITICAL - KEEP SIMPLE! See stax rules above):
+- "stax" / "stax pieces" = (otag:hatebear or otag:pillowfort) — NEVER add multiple o: clauses!
+- "tax effects" = o:"costs" o:"more" (this is fine, 2 related words in one phrase)
+- "stop ramping" / "anti-ramp" = otag:hatebear o:"can't search" (ONE o: clause!)
+- "stop drawing" = otag:hatebear o:"can't draw"
 - otag:pillowfort (discourages attacks)
 - otag:theft (gains control of permanents)
-- otag:mind-control (steals creatures)
 - otag:threaten (temporary theft with haste)
 
 CARD DRAW & SELECTION:
