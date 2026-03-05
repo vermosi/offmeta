@@ -76,23 +76,44 @@ export function parseKeywords(query: string, ir: SearchIR): string {
   const matchedKeywords = new Set<string>();
 
   for (const [keyword, scryfallSyntax] of Object.entries(KEYWORD_MAP)) {
-    const patterns = [
-      new RegExp(`\\b(?:with|has|have)\\s+${keyword}\\b`, 'gi'),
+    // Patterns that mention "creature(s)" — when matched, also inject t:creature
+    const creaturePatterns = [
       new RegExp(`\\b${keyword}\\s+(?:creature|creatures)\\b`, 'gi'),
       new RegExp(
         `\\b(?:creature|creatures)\\s+(?:with|that have)\\s+${keyword}\\b`,
         'gi',
       ),
     ];
+    const plainPatterns = [
+      new RegExp(`\\b(?:with|has|have)\\s+${keyword}\\b`, 'gi'),
+    ];
 
-    for (const pattern of patterns) {
+    let matched = false;
+    for (const pattern of creaturePatterns) {
       const match = remaining.match(pattern);
       if (match) {
         if (!matchedKeywords.has(keyword)) {
           ir.specials.push(scryfallSyntax);
           matchedKeywords.add(keyword);
+          // Preserve the creature type that was consumed by this pattern
+          if (!ir.types.includes('creature')) {
+            ir.types.push('creature');
+          }
         }
         remaining = remaining.replace(pattern, '').trim();
+        matched = true;
+      }
+    }
+    if (!matched) {
+      for (const pattern of plainPatterns) {
+        const match = remaining.match(pattern);
+        if (match) {
+          if (!matchedKeywords.has(keyword)) {
+            ir.specials.push(scryfallSyntax);
+            matchedKeywords.add(keyword);
+          }
+          remaining = remaining.replace(pattern, '').trim();
+        }
       }
     }
   }
@@ -112,9 +133,16 @@ export function parseKeywords(query: string, ir: SearchIR): string {
   }
 
   for (const [keyword, scryfallSyntax] of Object.entries(SPECIAL_KEYWORD_MAP)) {
+    const creaturePattern = new RegExp(`\\b${keyword}\\s+(?:creature|creatures)\\b`, 'gi');
+    if (creaturePattern.test(remaining)) {
+      ir.specials.push(scryfallSyntax);
+      if (!ir.types.includes('creature')) ir.types.push('creature');
+      remaining = remaining.replace(creaturePattern, '').trim();
+      continue;
+    }
+
     const patterns = [
       new RegExp(`\\b(?:with|has|have)\\s+${keyword}\\b`, 'gi'),
-      new RegExp(`\\b${keyword}\\s+(?:creature|creatures)\\b`, 'gi'),
       new RegExp(`\\b${keyword}\\b`, 'gi'),
     ];
 

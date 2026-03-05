@@ -200,4 +200,19 @@ describe('Deterministic MTG query translation', () => {
     const query = getQuery('cascade spells');
     expect(query).toContain('kw:cascade');
   });
+
+  // ── Phase 6: Keyword + creature type preservation ──
+
+  it('T28: cycling creatures in red preserves t:creature', () => {
+    const query = getQuery('cycling creatures in red');
+    expect(query).toContain('t:creature');
+    expect(query).toContain('kw:cycling');
+    expect(query).toContain('c:r');
+  });
+
+  it('T29: flying creatures preserves t:creature', () => {
+    const query = getQuery('flying creatures');
+    expect(query).toContain('t:creature');
+    expect(query).toContain('kw:flying');
+  });
 });
