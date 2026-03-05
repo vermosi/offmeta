@@ -133,4 +133,71 @@ describe('Deterministic MTG query translation', () => {
     expect(query).toContain('t:creature');
     expect(query).toContain('pow>=4');
   });
+
+  // ── Phase 6: New keyword tests ──
+
+  it('T17: creatures with cycling', () => {
+    const query = getQuery('creatures with cycling');
+    expect(query).toContain('t:creature');
+    expect(query).toContain('kw:cycling');
+  });
+
+  it('T18: creatures with toxic', () => {
+    const query = getQuery('creatures with toxic');
+    expect(query).toContain('t:creature');
+    expect(query).toContain('kw:toxic');
+  });
+
+  it('T19: adventure cards', () => {
+    const query = getQuery('cards with adventure');
+    expect(query).toContain('kw:adventure');
+  });
+
+  it('T20: foretell spells', () => {
+    const query = getQuery('spells with foretell');
+    expect(query).toContain('kw:foretell');
+  });
+
+  // ── Phase 6: New subtype tests ──
+
+  it('T21: frog creatures', () => {
+    const query = getQuery('frog creatures');
+    expect(query).toContain('t:frog');
+    expect(query).toContain('t:creature');
+  });
+
+  it('T22: otter creatures', () => {
+    const query = getQuery('otter creatures');
+    expect(query).toContain('t:otter');
+    expect(query).toContain('t:creature');
+  });
+
+  it('T23: mouse creatures', () => {
+    const query = getQuery('mouse creatures');
+    expect(query).toContain('t:mouse');
+    expect(query).toContain('t:creature');
+  });
+
+  // ── Phase 6: New slang pattern tests ──
+
+  it('T24: energy cards', () => {
+    const query = getQuery('energy cards');
+    expect(query).toContain('o:"{E}"');
+  });
+
+  it('T25: untapped lands', () => {
+    const query = getQuery('untapped lands');
+    expect(query).toContain('t:land');
+    expect(query).toContain('-o:"enters the battlefield tapped"');
+  });
+
+  it('T26: free spells', () => {
+    const query = getQuery('free spells');
+    expect(query).toContain('o:"without paying its mana cost"');
+  });
+
+  it('T27: cascade spells', () => {
+    const query = getQuery('cascade spells');
+    expect(query).toContain('kw:cascade');
+  });
 });

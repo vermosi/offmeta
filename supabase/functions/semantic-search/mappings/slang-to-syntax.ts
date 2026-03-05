@@ -76,22 +76,7 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     description: 'Most popular in EDHREC/commander',
   },
 
-  // Counter magic (use oracle text search for reliability)
-  {
-    pattern: /\bcounterspells?\b/gi,
-    syntax: 't:instant o:"counter target"',
-    description: 'Counter target spell effects',
-  },
-  {
-    pattern: /\bcounter ?magics?\b/gi,
-    syntax: 't:instant o:"counter target"',
-    description: 'Counter target spell effects',
-  },
-  {
-    pattern: /\bspell counters?\b/gi,
-    syntax: 't:instant o:"counter target"',
-    description: 'Counter target spell effects',
-  },
+  // Counter magic — handled by TAG_FIRST_MAP (otag:counter with fallback)
 
   // Aggro/Beatdown (NOT otag:aggro - that doesn't exist)
   {
@@ -366,24 +351,10 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
   },
   {
     pattern: /\bvalue\s+engines?\b/gi,
-    syntax: '(otag:card-draw or o:"whenever" o:"draw")',
+    syntax: '(otag:draw or o:"whenever" o:"draw")',
     description: 'Card advantage engines',
   },
-  {
-    pattern: /\bflicker(?:ing)?\s+(?:effect|spell)?s?\b/gi,
-    syntax: 'otag:flicker',
-    description: 'Exile and return effects',
-  },
-  {
-    pattern: /\bblink\s+(?:effect|spell)?s?\b/gi,
-    syntax: 'otag:flicker',
-    description: 'Exile and return effects',
-  },
-  {
-    pattern: /\bclones?\b/gi,
-    syntax: 'otag:clone',
-    description: 'Copy creature effects',
-  },
+  // flicker, blink, clones — handled by TAG_FIRST_MAP (with otag + fallback)
   {
     pattern: /\binfect\s+creatures?\b/gi,
     syntax: 'kw:infect t:creature',
@@ -395,27 +366,8 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     description: 'Poison-dealing creatures',
   },
 
-  // NEW: Common MTG slang terms
-  {
-    pattern: /\bcantrips?\b/gi,
-    syntax: 'otag:cantrip',
-    description: 'Spells that draw a card',
-  },
-  {
-    pattern: /\bfinishers?\b/gi,
-    syntax: 'otag:win-condition',
-    description: 'Game-ending threats',
-  },
-  {
-    pattern: /\bgame\s+enders?\b/gi,
-    syntax: 'otag:win-condition',
-    description: 'Game-ending cards',
-  },
-  {
-    pattern: /\balt(?:ernate)?\s+win(?:\s+con(?:dition)?s?)?\b/gi,
-    syntax: 'o:"you win the game"',
-    description: 'Alternate win conditions',
-  },
+  // cantrips — handled by TAG_FIRST_MAP (otag:cantrip with fallback)
+  // finishers, game enders, alt win — already defined above (lines ~196-209)
   {
     pattern: /\btech\s+cards?\b/gi,
     syntax: '(o:"can\'t" or o:"protection from" or o:"exile" o:"graveyard")',
@@ -506,11 +458,7 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     syntax: 'o:"whenever" (o:"dies" or o:"creature" o:"dies") o:"loses" o:"life"',
     description: 'Drain on death effects (like Blood Artist)',
   },
-  {
-    pattern: /\baristocrats?\b/gi,
-    syntax: 'o:"whenever" (o:"dies" or o:"sacrificed")',
-    description: 'Sacrifice synergy cards',
-  },
+  // aristocrats — handled by TAG_FIRST_MAP (with fallback)
   {
     pattern: /\bspellslinger\b/gi,
     syntax: 'o:"whenever" o:"cast" (o:"instant" or o:"sorcery")',
@@ -521,16 +469,7 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     syntax: 'o:"whenever" o:"cast" (o:"instant" or o:"sorcery")',
     description: 'Spell cast triggers',
   },
-  {
-    pattern: /\bselfmill\b/gi,
-    syntax: 'o:"mill" o:"cards"',
-    description: 'Self-mill effects',
-  },
-  {
-    pattern: /\bself\s+mill\b/gi,
-    syntax: 'o:"mill" o:"cards"',
-    description: 'Self-mill effects',
-  },
+  // selfmill, self mill — handled by TAG_FIRST_MAP (otag:self-mill with fallback)
   {
     pattern: /\blooters?\b/gi,
     syntax: 'o:"draw" o:"discard"',
@@ -581,11 +520,7 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     syntax: 'o:"each player" (o:"draws" or o:"gains" or o:"may")',
     description: 'Symmetric benefit effects',
   },
-  {
-    pattern: /\bpillowfort\b/gi,
-    syntax: '(o:"can\'t attack you" or o:"can\'t be attacked" or o:"protection" or o:"prevent" o:"damage")',
-    description: 'Defensive/deterrent effects',
-  },
+  // pillowfort — handled by TAG_FIRST_MAP (otag:pillowfort with fallback)
   {
     pattern: /\binfinity\s+combo\b/gi,
     syntax: '(o:"untap" o:"add" or o:"whenever" o:"add" o:"mana")',
@@ -613,11 +548,7 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     syntax: 'mana:X',
     description: 'Spells with X in their mana cost',
   },
-  {
-    pattern: /\blandfall\b/gi,
-    syntax: '(otag:landfall or otag:extra-land)',
-    description: 'Landfall triggers and extra land drops',
-  },
+  // landfall — handled by TAG_FIRST_MAP (otag:landfall)
   {
     pattern: /\bchaos\b/gi,
     syntax: '(o:"coin" or o:"random" or o:"chaos")',
@@ -630,11 +561,7 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
   },
 
   // NEW: High-frequency queries from analytics logs
-  {
-    pattern: /\bmana\s+dorks?\b/gi,
-    syntax: 'otag:mana-dork',
-    description: 'Creatures that tap for mana',
-  },
+  // mana dorks — handled by TAG_FIRST_MAP (otag:mana-dork with fallback)
   {
     pattern: /\butility\s+lands?\b/gi,
     syntax: 't:land -t:basic o:"{"',
@@ -645,11 +572,7 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     syntax: 'o:"if" (o:"create" or o:"token") o:"twice" (t:enchantment or t:creature or t:artifact)',
     description: 'Cards that double token creation',
   },
-  {
-    pattern: /\bcard\s+draw\b/gi,
-    syntax: 'otag:draw',
-    description: 'Card draw effects',
-  },
+  // card draw — handled by TAG_FIRST_MAP (otag:card-draw → otag:draw with fallback)
   // Enchantments that draw cards each turn / repeatedly
   {
     pattern: /\benchantments?\s+that\s+draw\s+(?:cards?\s+)?(?:each\s+turn|every\s+turn|repeatedly|per\s+turn)\b/gi,
@@ -676,45 +599,24 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     syntax: 't:land produces>=2',
     description: 'Lands that produce two or more colors',
   },
-  {
-    pattern: /\bwrath\s+(?:effect|of god)?s?\b/gi,
-    syntax: 'otag:board-wipe',
-    description: 'Board wipe effects',
-  },
-  {
-    pattern: /\bboard\s+wipes?\b/gi,
-    syntax: 'otag:board-wipe',
-    description: 'Board wipe effects',
-  },
-  {
-    pattern: /\btutors?\b/gi,
-    syntax: 'otag:tutor',
-    description: 'Search library effects',
-  },
+  // wrath, board wipes — handled by TAG_FIRST_MAP (otag:board-wipe with fallback)
+  // tutors — handled by TAG_FIRST_MAP (otag:tutor with fallback)
   {
     pattern: /\bramp\b/gi,
     syntax: 'otag:ramp',
     description: 'Mana ramp cards',
   },
-  {
-    pattern: /\bremoval\b/gi,
-    syntax: '(otag:spot-removal or otag:creature-removal)',
-    description: 'Removal spells',
-  },
+  // removal — handled by TAG_FIRST_MAP (otag:removal with fallback)
   {
     pattern: /\bprotection\s+spells?\b/gi,
     syntax: '(o:"hexproof" or o:"indestructible" or o:"protection from")',
     description: 'Protection effects',
   },
-  {
-    pattern: /\blife\s+gain\b/gi,
-    syntax: 'otag:lifegain',
-    description: 'Life gain effects',
-  },
+  // life gain — handled by TAG_FIRST_MAP (otag:lifegain with fallback)
   {
     pattern: /\bmill\s+cards?\b/gi,
-    syntax: 'otag:mill',
-    description: 'Mill effects',
+    syntax: 'o:"mill"',
+    description: 'Mill effects (otag:mill is NOT valid)',
   },
   {
     pattern: /\btreasure\s+(?:makers?|generators?|creators?|production)\b/gi,
@@ -794,24 +696,8 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     description: 'Aristocrats payoff cards',
   },
 
-  // Wheel effects
-  {
-    pattern: /\bwheel\s+effects?\b/gi,
-    syntax: 'otag:wheel',
-    description: 'Wheel of Fortune style effects',
-  },
-  {
-    pattern: /\bwheels?\b/gi,
-    syntax: 'otag:wheel',
-    description: 'Wheel effects',
-  },
-
-  // Mana rocks (common guide term)
-  {
-    pattern: /\bmana\s+rocks?\b/gi,
-    syntax: 'otag:mana-rock',
-    description: 'Artifacts that produce mana',
-  },
+  // wheels — handled by TAG_FIRST_MAP (otag:wheel with fallback)
+  // mana rocks — handled by TAG_FIRST_MAP (otag:manarock with fallback)
 
   // Populate / proliferate
   {
@@ -846,5 +732,85 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     pattern: /\btoken\s+generators?\b/gi,
     syntax: 'o:"create" o:"token"',
     description: 'Token generating cards',
+  },
+
+  // ── Phase 6: New common gap patterns ──
+
+  // Energy
+  {
+    pattern: /\benergy\s+(?:cards?|synerg(?:y|ies)|payoffs?)\b/gi,
+    syntax: 'o:"{E}"',
+    description: 'Energy counter cards',
+  },
+  {
+    pattern: /\benergy\s+counters?\b/gi,
+    syntax: 'o:"{E}"',
+    description: 'Energy counter cards',
+  },
+
+  // Enters tapped / untapped
+  {
+    pattern: /\b(?:enters?|come?s?\s+into\s+play)\s+tapped\b/gi,
+    syntax: 'o:"enters the battlefield tapped"',
+    description: 'Cards that enter tapped',
+  },
+  {
+    pattern: /\buntapped\s+lands?\b/gi,
+    syntax: 't:land -o:"enters the battlefield tapped"',
+    description: 'Lands that enter untapped',
+  },
+
+  // Mana fixing
+  {
+    pattern: /\bmana\s+fixing\b/gi,
+    syntax: 'produces>=2',
+    description: 'Cards that fix mana (produce multiple colors)',
+  },
+
+  // Topdeck manipulation
+  {
+    pattern: /\btop\s*deck\s+manipulation\b/gi,
+    syntax: '(kw:scry or kw:surveil or o:"look at the top")',
+    description: 'Topdeck manipulation effects',
+  },
+
+  // Partner / Background commanders
+  {
+    pattern: /\bpartner\s+commanders?\b/gi,
+    syntax: 'is:partner is:commander',
+    description: 'Partner commanders',
+  },
+  {
+    pattern: /\bbackground\s+commanders?\b/gi,
+    syntax: 't:background',
+    description: 'Background enchantments for commander',
+  },
+
+  // Experience counters
+  {
+    pattern: /\bexperience\s+counters?\b/gi,
+    syntax: 'o:"experience counter"',
+    description: 'Cards that use experience counters',
+  },
+
+  // Protection from [color]
+  {
+    pattern: /\bprotection\s+from\s+(white|blue|black|red|green)\b/gi,
+    syntax: 'o:"protection from $1"',
+    description: 'Protection from a specific color',
+  },
+
+  // Free spells
+  {
+    pattern: /\bfree\s+spells?\b/gi,
+    syntax: 'o:"without paying its mana cost"',
+    description: 'Cast spells for free',
+  },
+
+  // Cascade spells
+  {
+    pattern: /\bcascade\s+(?:spells?|cards?)\b/gi,
+    syntax: 'kw:cascade',
+    description: 'Cards with cascade',
   },
 ];

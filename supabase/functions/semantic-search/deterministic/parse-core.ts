@@ -308,6 +308,10 @@ const COMMON_SUBTYPES = [
   'treefolk', 'drake', 'sphinx', 'hydra', 'wurm', 'rat',
   'squirrel', 'construct', 'golem', 'horror', 'nightmare', 'shade',
   'skeleton', 'imp', 'wall',
+  // Phase 6: Added missing commonly-searched subtypes
+  'changeling', 'dwarf', 'giant', 'turtle', 'frog', 'otter',
+  'mouse', 'bat', 'fish', 'insect', 'spider', 'warlock',
+  'shaman', 'druid', 'monk', 'assassin', 'berserker',
 ];
 
 /**

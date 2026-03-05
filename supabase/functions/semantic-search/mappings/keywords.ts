@@ -79,6 +79,33 @@ export const KEYWORD_MAP: Record<string, string> = {
   connive: 'kw:connive',
   offspring: 'kw:offspring',
   backup: 'kw:backup',
+  // Phase 6: Added missing keyword abilities
+  cycling: 'kw:cycling',
+  overload: 'kw:overload',
+  bestow: 'kw:bestow',
+  dash: 'kw:dash',
+  surge: 'kw:surge',
+  foretell: 'kw:foretell',
+  disturb: 'kw:disturb',
+  cleave: 'kw:cleave',
+  training: 'kw:training',
+  toxic: 'kw:toxic',
+  bargain: 'kw:bargain',
+  craft: 'kw:craft',
+  discover: 'kw:discover',
+  adventure: 'kw:adventure',
+  channel: 'kw:channel',
+  populate: 'kw:populate',
+  fabricate: 'kw:fabricate',
+  crew: 'kw:crew',
+  investigate: 'kw:investigate',
+  surveil: 'kw:surveil',
+  escape: 'kw:escape',
+  boast: 'kw:boast',
+  learn: 'kw:learn',
+  decayed: 'kw:decayed',
+  affinity: 'kw:affinity',
+  proliferate: 'kw:proliferate',
 };
 
 /**
@@ -88,7 +115,6 @@ export const SPECIAL_KEYWORD_MAP: Record<string, string> = {
   unblockable: 'o:"can\'t be blocked"',
   evasion:
     '(kw:flying or kw:menace or kw:skulk or kw:shadow or kw:fear or kw:intimidate or kw:horsemanship)',
-  affinity: 'o:"affinity for"',
   annihilator: 'o:"annihilator"',
 };
 

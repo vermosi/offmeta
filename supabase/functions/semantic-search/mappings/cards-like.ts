@@ -10,11 +10,11 @@
  */
 export const CARDS_LIKE_MAP: Record<string, string> = {
   // Ramp
-  cultivate: 'otag:land-ramp o:"search your library" o:"basic land"',
-  kodama: 'otag:land-ramp o:"search your library" o:"basic land"',
-  'rampant growth': 'otag:land-ramp mv<=2',
-  "nature's lore": 'otag:land-ramp mv<=2 o:"forest"',
-  farseek: 'otag:land-ramp mv=2',
+  cultivate: 'otag:ramp o:"search your library" o:"basic land"',
+  kodama: 'otag:ramp o:"search your library" o:"basic land"',
+  'rampant growth': 'otag:ramp mv<=2',
+  "nature's lore": 'otag:ramp mv<=2 o:"forest"',
+  farseek: 'otag:ramp mv=2',
   'sol ring': 't:artifact mv<=2 o:"add" o:"{C}{C}"',
   'mana crypt': 't:artifact mv=0 o:"add"',
   'arcane signet': 't:artifact mv=2 o:"add" o:"color"',
@@ -28,26 +28,26 @@ export const CARDS_LIKE_MAP: Record<string, string> = {
   // Removal
   'swords to plowshares': 'o:"exile target creature" mv<=2',
   'path to exile': 'o:"exile target creature" mv<=2',
-  'wrath of god': 'otag:creature-board-wipe',
-  damnation: 'otag:creature-board-wipe',
-  'cyclonic rift': 'otag:mass-bounce',
+  'wrath of god': 'otag:board-wipe',
+  damnation: 'otag:board-wipe',
+  'cyclonic rift': 'o:"return all" o:"to their owners\' hands"',
 
   // Counters
-  counterspell: 'otag:hard-counter',
-  'mana drain': 'otag:hard-counter',
-  'force of will': 'otag:hard-counter o:"without paying"',
+  counterspell: 'otag:counter',
+  'mana drain': 'otag:counter',
+  'force of will': 'otag:counter o:"without paying"',
 
   // Aristocrats/Sacrifice
-  'blood artist': 'otag:blood-artist-effect',
-  'zulaport cutthroat': 'otag:blood-artist-effect',
+  'blood artist': 'o:"whenever" (o:"creature" o:"dies") o:"loses" o:"life"',
+  'zulaport cutthroat': 'o:"whenever" (o:"creature" o:"dies") o:"loses" o:"life"',
   'viscera seer': 'otag:free-sacrifice-outlet',
 
   // Tutors
   'demonic tutor': 'otag:tutor o:"search your library" o:"hand"',
   vampiric: 'otag:tutor o:"search your library" o:"top"',
-  'enlightened tutor': 'otag:artifact-tutor or otag:enchantment-tutor',
-  'mystical tutor': 'otag:instant-or-sorcery-tutor',
-  'worldly tutor': 'otag:creature-tutor',
+  'enlightened tutor': 'otag:tutor (o:"artifact" or o:"enchantment")',
+  'mystical tutor': 'otag:tutor (o:"instant" or o:"sorcery")',
+  'worldly tutor': 'otag:tutor o:"creature"',
 
   // Reanimation
   reanimate: 'otag:reanimate mv<=3',
@@ -59,7 +59,7 @@ export const CARDS_LIKE_MAP: Record<string, string> = {
   bob: 'o:"beginning of your upkeep" o:"draw" o:"life"',
 
   // Equipment
-  'lightning greaves': 't:equipment o:"haste" o:"shroud" or o:"hexproof"',
+  'lightning greaves': 't:equipment o:"haste" (o:"shroud" or o:"hexproof")',
   'swiftfoot boots': 't:equipment o:"haste" o:"hexproof"',
   skullclamp: 't:equipment o:"draw"',
 
