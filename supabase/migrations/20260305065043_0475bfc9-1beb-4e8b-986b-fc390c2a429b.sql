@@ -1,0 +1,1 @@
+DELETE FROM public.query_cache WHERE normalized_query ILIKE '%stax%';
