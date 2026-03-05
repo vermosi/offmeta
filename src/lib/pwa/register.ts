@@ -6,13 +6,27 @@
 
 import { registerSW } from 'virtual:pwa-register';
 
+const pwaDebugEnabled =
+  import.meta.env.DEV || import.meta.env.VITE_PWA_DEBUG === 'true';
+
+function logPwaInfo(message: string, metadata?: unknown): void {
+  if (!pwaDebugEnabled) return;
+
+  if (typeof metadata === 'undefined') {
+    console.log(message);
+    return;
+  }
+
+  console.log(message, metadata);
+}
+
 /**
  * Registers the service worker and sets up auto-update handling.
  * Called once on app initialization.
  */
 export function initPWA(): void {
   if (import.meta.env.DEV) {
-    console.log('[PWA] Skipping registration in development mode');
+    logPwaInfo('[PWA] Skipping registration in development mode');
     return;
   }
 
@@ -25,10 +39,10 @@ export function initPWA(): void {
         }
       },
       onOfflineReady() {
-        console.log('[PWA] App ready to work offline');
+        logPwaInfo('[PWA] App ready to work offline');
       },
       onRegistered(registration) {
-        console.log('[PWA] Service worker registered', registration);
+        logPwaInfo('[PWA] Service worker registered', registration);
 
         // Check for updates every hour
         if (registration) {

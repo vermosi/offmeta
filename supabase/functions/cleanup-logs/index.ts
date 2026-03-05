@@ -13,6 +13,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { requireAdmin, getCorsHeaders } from '../_shared/auth.ts';
 import { validateEnv } from '../_shared/env.ts';
 import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
+import { createLogger } from '../_shared/logger.ts';
 
 const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = validateEnv([
   'SUPABASE_URL',
@@ -20,6 +21,7 @@ const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = validateEnv([
 ]);
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+const logger = createLogger('cleanup-logs');
 
 const RETENTION_DAYS = 30;
 
@@ -37,12 +39,25 @@ serve(async (req) => {
 
   // Rate limiting: 1 req/min (batch job)
   maybeCleanup();
-  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  const { allowed, retryAfter } = await checkRateLimit(clientIp, undefined, 1, 10);
+  const clientIp =
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const { allowed, retryAfter } = await checkRateLimit(
+    clientIp,
+    undefined,
+    1,
+    10,
+  );
   if (!allowed) {
     return new Response(
       JSON.stringify({ error: 'Rate limit exceeded', success: false }),
-      { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': String(retryAfter) } },
+      {
+        status: 429,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'Retry-After': String(retryAfter),
+        },
+      },
     );
   }
 
@@ -53,9 +68,7 @@ serve(async (req) => {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - RETENTION_DAYS);
 
-    console.log(
-      `Starting log cleanup. Deleting logs older than ${cutoffDate.toISOString()}`,
-    );
+    logger.info('cleanup_started', { cutoffDate: cutoffDate.toISOString() });
 
     // Delete old translation logs
     const { error: logsError, count: logsCount } = await supabase
@@ -76,22 +89,19 @@ serve(async (req) => {
       .lt('created_at', cutoffDate.toISOString());
 
     if (analyticsError) {
-      console.warn(
-        `Failed to delete analytics_events: ${analyticsError.message}`,
-      );
+      logger.warn('cleanup_analytics_delete_failed', {
+        error: analyticsError.message,
+      });
     }
 
     const responseTimeMs = Date.now() - startTime;
 
-    console.log(
-      JSON.stringify({
-        event: 'cleanup_complete',
-        deletedLogs: logsCount || 0,
-        deletedAnalytics: analyticsCount || 0,
-        cutoffDate: cutoffDate.toISOString(),
-        responseTimeMs,
-      }),
-    );
+    logger.info('cleanup_complete', {
+      deletedLogs: logsCount || 0,
+      deletedAnalytics: analyticsCount || 0,
+      cutoffDate: cutoffDate.toISOString(),
+      responseTimeMs,
+    });
 
     return new Response(
       JSON.stringify({
@@ -108,13 +118,10 @@ serve(async (req) => {
     );
   } catch (error) {
     const responseTimeMs = Date.now() - startTime;
-    console.error(
-      JSON.stringify({
-        event: 'cleanup_error',
-        error: String(error),
-        responseTimeMs,
-      }),
-    );
+    logger.error('cleanup_error', {
+      error: String(error),
+      responseTimeMs,
+    });
 
     return new Response(
       JSON.stringify({
