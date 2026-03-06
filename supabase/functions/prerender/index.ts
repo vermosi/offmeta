@@ -1,5 +1,3 @@
-// @ts-nocheck — Deno edge function, not part of frontend build
-
 declare const Deno: { env: { get(key: string): string | undefined }; serve: (handler: (req: Request) => Promise<Response>) => void };
 
 /**
