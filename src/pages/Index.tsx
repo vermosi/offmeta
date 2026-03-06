@@ -14,6 +14,8 @@ import {
   useMemo,
   useRef,
 } from 'react';
+import { OnboardingWalkthrough } from '@/components/OnboardingWalkthrough';
+import { useOnboarding } from '@/hooks/useOnboarding';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 import { EditableQueryBar } from '@/components/EditableQueryBar';
 import { SaveSearchButton } from '@/components/SaveSearchButton';
@@ -92,6 +94,17 @@ const Index = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const collectionLookup = useCollectionLookup();
+  const { isActive: onboardingActive, step: onboardingStep, advance: onboardingAdvance, dismiss: onboardingDismiss } = useOnboarding();
+  const searchBarContainerRef = useRef<HTMLDivElement>(null);
+
+  const fillOnboardingExample = useCallback(() => {
+    const input = document.getElementById('search-input') as HTMLInputElement | null;
+    if (input) {
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+      nativeInputValueSetter?.call(input, 'creatures that make treasure tokens');
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  }, []);
   const {
     searchQuery,
     originalQuery,
@@ -344,13 +357,24 @@ const Index = () => {
           role="main"
         >
           <div className="container-main space-y-3 sm:space-y-6">
-            <UnifiedSearchBar
-              ref={searchBarRef}
-              onSearch={handleSearch}
-              isLoading={isSearching}
-              lastTranslatedQuery={lastSearchResult?.scryfallQuery}
-              filters={activeFilters}
-              isCardFetching={isSearching}
+            <div ref={searchBarContainerRef}>
+              <UnifiedSearchBar
+                ref={searchBarRef}
+                onSearch={handleSearch}
+                isLoading={isSearching}
+                lastTranslatedQuery={lastSearchResult?.scryfallQuery}
+                filters={activeFilters}
+                isCardFetching={isSearching}
+              />
+            </div>
+
+            <OnboardingWalkthrough
+              isActive={onboardingActive}
+              step={onboardingStep}
+              onAdvance={onboardingAdvance}
+              onDismiss={onboardingDismiss}
+              searchBarRef={searchBarContainerRef}
+              onFillExample={fillOnboardingExample}
             />
 
             {hasSearched && (
