@@ -6,9 +6,11 @@
 
 import { memo, useState } from 'react';
 import type { KeyboardEvent } from 'react';
+import { Link } from 'react-router-dom';
 import type { ScryfallCard } from '@/types/card';
 import { getCardImage } from '@/lib/scryfall/client';
 import { ManaCost } from '@/components/ManaSymbol';
+import { cardNameToSlug } from '@/lib/card-slug';
 import { getLocalizedName, getLocalizedTypeLine } from '@/lib/scryfall/localized';
 import { useTranslation } from '@/lib/i18n';
 
@@ -93,9 +95,14 @@ export const CardItem = memo(function CardItem({
       >
         <div className="flex items-end justify-between gap-1">
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] sm:text-[11px] leading-tight font-semibold text-white truncate">
+            <Link
+              to={`/cards/${cardNameToSlug(card.name)}`}
+              className="text-[10px] sm:text-[11px] leading-tight font-semibold text-white truncate hover:underline pointer-events-auto"
+              onClick={(e) => e.stopPropagation()}
+              title={`View ${displayName} off-meta alternatives`}
+            >
               {displayName}
-            </p>
+            </Link>
             <p className="text-[9px] sm:text-[10px] leading-tight text-white/70 truncate mt-0.5 hidden min-[480px]:block">
               {displayType}
             </p>

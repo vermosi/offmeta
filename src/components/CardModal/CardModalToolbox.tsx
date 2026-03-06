@@ -4,8 +4,10 @@
  * @module components/CardModal/CardModalToolbox
  */
 
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Sparkles } from 'lucide-react';
+import { cardNameToSlug } from '@/lib/card-slug';
 import type { CardModalToolboxProps } from './types';
 import { useTranslation } from '@/lib/i18n';
 
@@ -49,6 +51,17 @@ export function CardModalToolbox({
         {t('card.toolbox', 'Toolbox')}
       </h3>
       <div className="flex flex-wrap gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5 text-xs h-7 border-primary/30 text-primary hover:bg-primary/10"
+          asChild
+        >
+          <Link to={`/cards/${cardNameToSlug(cardName)}`}>
+            <Sparkles className="h-3 w-3" aria-hidden="true" />
+            {t('card.offMetaPage', 'Off-Meta Page')}
+          </Link>
+        </Button>
         {displayLinks.map((link) => (
           <Button
             key={link.name}

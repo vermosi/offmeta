@@ -5,8 +5,10 @@
 
 import { memo } from 'react';
 import type { KeyboardEvent } from 'react';
+import { Link } from 'react-router-dom';
 import type { ScryfallCard } from '@/types/card';
 import { ManaCost } from '@/components/ManaSymbol';
+import { cardNameToSlug } from '@/lib/card-slug';
 import {
   getLocalizedName,
   getLocalizedTypeLine,
@@ -70,9 +72,14 @@ export const CardListItem = memo(function CardListItem({
       )}
 
       {/* Name */}
-      <span className="flex-1 min-w-0 text-sm font-medium text-foreground truncate">
+      <Link
+        to={`/cards/${cardNameToSlug(card.name)}`}
+        className="flex-1 min-w-0 text-sm font-medium text-foreground truncate hover:text-primary transition-colors"
+        onClick={(e) => e.stopPropagation()}
+        title={`View ${displayName} off-meta alternatives`}
+      >
         {displayName}
-      </span>
+      </Link>
 
       {/* Mana cost */}
       {manaCost && (
