@@ -1,13 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
-const { mockInsert, mockSelect, mockSingle, mockInvoke, mockTrackFeedback } =
+const { mockInsert, mockSelect, mockSingle, mockInvoke, mockTrackFeedback, mockGetSession } =
   vi.hoisted(() => ({
     mockInsert: vi.fn(),
     mockSelect: vi.fn(),
     mockSingle: vi.fn(),
     mockInvoke: vi.fn(),
     mockTrackFeedback: vi.fn(),
+    mockGetSession: vi.fn(),
   }));
 
 vi.mock('@/integrations/supabase/client', () => ({
@@ -19,6 +20,9 @@ vi.mock('@/integrations/supabase/client', () => ({
     }),
     functions: {
       invoke: mockInvoke,
+    },
+    auth: {
+      getSession: mockGetSession,
     },
   },
 }));
@@ -55,6 +59,14 @@ describe('ReportIssueDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockInsert.mockResolvedValue({ error: null });
+    mockGetSession.mockResolvedValue({
+      data: {
+        session: {
+          user: { id: 'user-123' },
+          expires_at: Math.floor(Date.now() / 1000) + 3600,
+        },
+      },
+    });
     vi.spyOn(crypto, 'randomUUID').mockReturnValue(
       '11111111-1111-4111-8111-111111111111',
     );
