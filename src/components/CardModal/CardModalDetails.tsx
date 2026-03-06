@@ -4,10 +4,12 @@
  * @module components/CardModal/CardModalDetails
  */
 
+import { Link } from 'react-router-dom';
 import { ManaCost, OracleText } from '@/components/ManaSymbol';
 import { Badge, type BadgeProps } from '@/components/ui/badge';
 import { Palette, Shield } from 'lucide-react';
 import { cn } from '@/lib/core/utils';
+import { cardNameToSlug } from '@/lib/card-slug';
 import type { CardModalDetailsProps } from './types';
 import { useTranslation } from '@/lib/i18n';
 
@@ -64,7 +66,13 @@ export function CardModalDetails({
       {/* Name, Mana, Type */}
       <div className={cn('space-y-1.5', !isMobile && 'pr-8')}>
         <h2 className="text-lg font-semibold text-foreground tracking-tight">
-          {faceDetails.name}
+          <Link
+            to={`/cards/${cardNameToSlug(faceDetails.name)}`}
+            className="hover:text-primary transition-colors"
+            title={`View ${faceDetails.name} off-meta alternatives`}
+          >
+            {faceDetails.name}
+          </Link>
         </h2>
         {faceDetails.mana_cost && (
           <div className={isMobile ? 'flex justify-center' : undefined}>
