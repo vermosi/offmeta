@@ -32,7 +32,8 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Authentication check - require valid token (anon key, service role, or JWT)
+  // Authentication check - require authenticated user, service role, or API key
+  // Anonymous (anon key) access is explicitly rejected to prevent AI cost abuse
   const authResult = await validateAuth(req);
   if (!authResult.authorized) {
     await logAuthFailure(
@@ -47,6 +48,21 @@ serve(async (req) => {
       }),
       {
         status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
+    );
+  }
+
+  // Reject anonymous tokens — only authenticated users, service role, or API keys
+  // can trigger AI processing to prevent cost abuse
+  if (authResult.role === 'anon') {
+    return new Response(
+      JSON.stringify({
+        error: 'Authentication required to process feedback',
+        success: false,
+      }),
+      {
+        status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       },
     );
