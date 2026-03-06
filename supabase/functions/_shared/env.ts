@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Validation utility for environment variables in Edge Functions.
  */

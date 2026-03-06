@@ -81,6 +81,16 @@ const SLANG_MAP: Record<string, string> = {
   spellslinger: '(t:instant or t:sorcery)',
   tokens: 'o:"create" o:"token"',
   sacrifice: 'o:"sacrifice"',
+  // Mono-color deck phrasing
+  'mono white': 'id<=w',
+  'mono-blue': 'id<=u',
+  'mono blue': 'id<=u',
+  'mono-black': 'id<=b',
+  'mono black': 'id<=b',
+  'mono-red': 'id<=r',
+  'mono red': 'id<=r',
+  'mono-green': 'id<=g',
+  'mono green': 'id<=g',
 };
 
 const COLOR_WORDS: Record<string, string> = {
@@ -340,7 +350,7 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
   // 10. Clean up filler words from residual
   residual = residual
     .replace(
-      /\b(that|the|with|for|and|or|a|an|in|of|to|make|spells?|bonuses?|reward|casting|gives?|when|dies?|deal|drain|legal|cards?|pieces?)\b/gi,
+      /\b(that|the|with|for|and|or|a|an|in|of|to|make|spells?|bonuses?|reward|casting|gives?|when|dies?|deal|drain|legal|cards?|pieces?|fit|into|style|deck|is|mono)\b/gi,
       ' ',
     )
     .replace(/\s+/g, ' ')

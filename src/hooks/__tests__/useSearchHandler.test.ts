@@ -9,6 +9,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { createMockTranslation } from '@/test/factories';
 import type { SearchResult } from '@/components/UnifiedSearchBar';
+import { CLIENT_CONFIG } from '@/lib/config';
 
 // ── Mocks ──────────────────────────────────────────────────
 
@@ -156,9 +157,9 @@ describe('useSearchHandler', () => {
       searchPromise = result.current.handleSearch();
     });
 
-    // Advance past the fast search timeout (3.5s) outside of act
+    // Advance past the configured search timeout outside of act
     await act(async () => {
-      vi.advanceTimersByTime(4000);
+      vi.advanceTimersByTime(CLIENT_CONFIG.SEARCH_TIMEOUT_MS + 500);
     });
 
     await act(async () => {
@@ -188,7 +189,7 @@ describe('useSearchHandler', () => {
     });
 
     await act(async () => {
-      vi.advanceTimersByTime(4000);
+      vi.advanceTimersByTime(CLIENT_CONFIG.SEARCH_TIMEOUT_MS + 500);
       await searchPromise!;
     });
 
@@ -517,7 +518,7 @@ describe('useSearchHandler', () => {
     });
 
     await act(async () => {
-      vi.advanceTimersByTime(4000);
+      vi.advanceTimersByTime(CLIENT_CONFIG.SEARCH_TIMEOUT_MS + 500);
     });
 
     await act(async () => {
