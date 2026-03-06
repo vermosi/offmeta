@@ -166,8 +166,14 @@ export function ReportIssueDialog({
       // Only trigger AI processing if user is authenticated
       // Anonymous feedback is saved but processed later by admins
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
+      if (!session?.user?.id) {
         logger.info('Skipping auto-processing: user not authenticated');
+        return;
+      }
+      // Double-check the token is not expired before making the call
+      const expiresAt = session.expires_at;
+      if (expiresAt && expiresAt < Math.floor(Date.now() / 1000)) {
+        logger.info('Skipping auto-processing: session expired');
         return;
       }
       await supabase.functions.invoke('process-feedback', {

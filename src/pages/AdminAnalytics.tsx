@@ -113,6 +113,7 @@ export default function AdminAnalytics() {
   );
   const [ruleTogglingId, setRuleTogglingId] = useState<string | null>(null);
   const [retriggeringId, setRetriggeringId] = useState<string | null>(null);
+  const [processingAllPending, setProcessingAllPending] = useState(false);
 
   // Translation Rules panel state
   const [rules, setRules] = useState<TranslationRuleRow[]>([]);
@@ -538,6 +539,54 @@ export default function AdminAnalytics() {
     },
     [fetchFeedback],
   );
+
+  /** Process all pending feedback items in sequence. */
+  const processAllPending = useCallback(async () => {
+    const pendingItems = feedback.filter(
+      (f) => f.processing_status === 'pending' || f.processing_status == null,
+    );
+    if (pendingItems.length === 0) {
+      toast.info('No pending feedback to process');
+      return;
+    }
+    setProcessingAllPending(true);
+    let successCount = 0;
+    let failCount = 0;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        toast.error('Not authenticated');
+        return;
+      }
+      for (const item of pendingItems) {
+        try {
+          const res = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-feedback`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+                apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              },
+              body: JSON.stringify({ feedbackId: item.id }),
+            },
+          );
+          if (res.ok) successCount++;
+          else failCount++;
+        } catch {
+          failCount++;
+        }
+      }
+      toast.success(`Processed ${successCount} items${failCount > 0 ? `, ${failCount} failed` : ''}`);
+      await fetchFeedback();
+    } catch {
+      toast.error('Failed to process pending feedback');
+    } finally {
+      setProcessingAllPending(false);
+    }
+  }, [feedback, fetchFeedback]);
 
   useEffect(() => {
     if (isAdmin && user) {
@@ -1284,6 +1333,24 @@ export default function AdminAnalytics() {
                 )}
               </h2>
               <div className="flex items-center gap-2">
+                {feedback.filter(
+                  (f) => f.processing_status === 'pending' || f.processing_status == null,
+                ).length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={processAllPending}
+                    disabled={processingAllPending}
+                    className="h-8 text-xs gap-1"
+                  >
+                    {processingAllPending ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Zap className="h-3 w-3" />
+                    )}
+                    Process All Pending
+                  </Button>
+                )}
                 <Select
                   value={feedbackFilter}
                   onValueChange={(v) => setFeedbackFilter(v as FeedbackFilter)}
