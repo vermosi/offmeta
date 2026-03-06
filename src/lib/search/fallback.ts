@@ -204,6 +204,33 @@ const MANA_PRODUCTION_PATTERNS: Array<{ regex: RegExp; syntax: string | ((m: Reg
  * Build a best-effort Scryfall query from a natural language string.
  * Intended as a client-side fallback when the AI edge function is unreachable.
  */
+/**
+ * Detect if a query looks like a card name rather than a search description.
+ * Card names are typically 1-6 title-cased words without search keywords.
+ */
+function isLikelyCardName(query: string): boolean {
+  const trimmed = query.trim();
+  const words = trimmed.split(/\s+/);
+  if (words.length < 1 || words.length > 6) return false;
+
+  const hasSearchKeywords = /\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries|produce|generate|create|make|draw|destroy|exile|return|search|find|tap for)\b/i.test(trimmed);
+  if (hasSearchKeywords) return false;
+
+  // Check for possessives or title-cased words (typical card names)
+  const hasPossessive = /\w's\b/.test(trimmed);
+  const allCapitalized = words.every(w => /^[A-Z]/.test(w) || /^(of|the|and|to|in|for|a|an)$/i.test(w));
+
+  // Single-word MTG terms that are NOT card names
+  const singleWordMtgTerms = /^(flying|trample|haste|deathtouch|lifelink|vigilance|reach|menace|flash|hexproof|indestructible|ward|defender|infect|prowess|cascade|storm|ramp|removal|mill|blink|tokens?|sacrifice|voltron|aristocrats|reanimation|lifegain|tutor|counterspell|boardwipe|flicker)$/i;
+  if (words.length === 1 && singleWordMtgTerms.test(trimmed)) return false;
+
+  return hasPossessive || (allCapitalized && words.length >= 1);
+}
+
+/**
+ * Build a best-effort Scryfall query from a natural language string.
+ * Intended as a client-side fallback when the AI edge function is unreachable.
+ */
 export function buildClientFallbackQuery(naturalQuery: string): string {
   const lower = naturalQuery.toLowerCase().trim();
   if (!lower) return '';
@@ -211,6 +238,11 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
   // Check pre-translated queries first (exact match)
   if (PRETRANSLATED[lower]) {
     return PRETRANSLATED[lower];
+  }
+
+  // Check if this looks like a card name — use exact name search
+  if (isLikelyCardName(naturalQuery)) {
+    return `!"${naturalQuery.trim()}"`;
   }
 
   const parts: string[] = [];
@@ -321,7 +353,7 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
 
   // If nothing was extracted, return original as a name search
   if (parts.length === 0) {
-    return naturalQuery.trim();
+    return `!"${naturalQuery.trim()}"`;
   }
 
   return parts.join(' ');
