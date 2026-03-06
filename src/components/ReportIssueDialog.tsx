@@ -163,6 +163,13 @@ export function ReportIssueDialog({
 
   const triggerProcessing = useCallback(async (feedbackId: string) => {
     try {
+      // Only trigger AI processing if user is authenticated
+      // Anonymous feedback is saved but processed later by admins
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        logger.info('Skipping auto-processing: user not authenticated');
+        return;
+      }
       await supabase.functions.invoke('process-feedback', {
         body: { feedbackId },
       });
