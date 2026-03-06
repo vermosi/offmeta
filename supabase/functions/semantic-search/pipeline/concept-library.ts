@@ -210,7 +210,7 @@ export const CONCEPT_LIBRARY: Record<
     priority: 90,
   },
   land_tutor: {
-    aliases: ['land tutor', 'fetch land', 'land search'],
+    aliases: ['land tutor', 'land fetch', 'land search'],
     templates: ['otag:land-tutor'],
     negativeTemplates: [],
     description: 'Cards that search for lands',
@@ -232,7 +232,7 @@ export const CONCEPT_LIBRARY: Record<
       'reanimation',
       'reanimate',
       'raise dead',
-      'return from graveyard',
+      'return from graveyard to battlefield',
       'graveyard to battlefield',
     ],
     templates: ['otag:reanimate'],
@@ -253,7 +253,7 @@ export const CONCEPT_LIBRARY: Record<
     aliases: [
       'recursion',
       'graveyard recursion',
-      'return from graveyard',
+      'return from graveyard to hand',
       'recursive',
     ],
     templates: ['otag:graveyard-recursion'],

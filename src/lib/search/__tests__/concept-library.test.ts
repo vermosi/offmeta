@@ -65,18 +65,13 @@ describe('CONCEPT_LIBRARY', () => {
       }
     });
 
-    it('no unexpected duplicate aliases across concepts', () => {
-      // Known intentional duplicates across related concepts
-      const KNOWN_SHARED_ALIASES = new Set([
-        'return from graveyard', // reanimation + graveyard_recursion
-        'fetch land',            // fetchland + land_tutor
-      ]);
+    it('no duplicate aliases across concepts', () => {
       const aliasMap = new Map<string, string>();
       for (const [id, concept] of entries) {
         for (const alias of concept.aliases) {
-          const existing = aliasMap.get(alias);
-          if (existing && !KNOWN_SHARED_ALIASES.has(alias)) {
-            expect.soft(existing, `Alias "${alias}" is duplicated in "${id}" and "${existing}"`).toBe(id);
+          const prev = aliasMap.get(alias);
+          if (prev) {
+            expect.soft(prev, `Alias "${alias}" is duplicated in "${id}" and "${prev}"`).toBe(id);
           }
           aliasMap.set(alias, id);
         }
