@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { CardItem } from '../CardItem';
 import type { ScryfallCard } from '@/types/card';
 
@@ -22,59 +23,62 @@ const mockCard = {
   legalities: { standard: 'not_legal' },
 } as unknown as ScryfallCard;
 
+function renderWithRouter(ui: React.ReactElement) {
+  return render(<MemoryRouter>{ui}</MemoryRouter>);
+}
+
 describe('CardItem', () => {
   it('renders the card image with correct alt text', () => {
-    render(<CardItem card={mockCard} onClick={vi.fn()} />);
+    renderWithRouter(<CardItem card={mockCard} onClick={vi.fn()} />);
     const img = screen.getByAltText('Lightning Bolt');
     expect(img).toBeInTheDocument();
     expect(img).toHaveAttribute('src', 'https://example.com/card.jpg');
   });
 
   it('has correct aria-label', () => {
-    render(<CardItem card={mockCard} onClick={vi.fn()} />);
+    renderWithRouter(<CardItem card={mockCard} onClick={vi.fn()} />);
     expect(screen.getByLabelText('View details for Lightning Bolt')).toBeInTheDocument();
   });
 
   it('calls onClick when clicked', () => {
     const onClick = vi.fn();
-    render(<CardItem card={mockCard} onClick={onClick} />);
+    renderWithRouter(<CardItem card={mockCard} onClick={onClick} />);
     fireEvent.click(screen.getByRole('button'));
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
   it('calls onClick on Enter key', () => {
     const onClick = vi.fn();
-    render(<CardItem card={mockCard} onClick={onClick} />);
+    renderWithRouter(<CardItem card={mockCard} onClick={onClick} />);
     fireEvent.keyDown(screen.getByRole('button'), { key: 'Enter' });
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
   it('calls onClick on Space key', () => {
     const onClick = vi.fn();
-    render(<CardItem card={mockCard} onClick={onClick} />);
+    renderWithRouter(<CardItem card={mockCard} onClick={onClick} />);
     fireEvent.keyDown(screen.getByRole('button'), { key: ' ' });
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
   it('shows fallback text when image fails to load', () => {
-    render(<CardItem card={mockCard} onClick={vi.fn()} />);
+    renderWithRouter(<CardItem card={mockCard} onClick={vi.fn()} />);
     const img = screen.getByAltText('Lightning Bolt');
     fireEvent.error(img);
     expect(screen.queryByAltText('Lightning Bolt')).not.toBeInTheDocument();
-    // Fallback span + overlay both show the name
     const matches = screen.getAllByText('Lightning Bolt');
     expect(matches.length).toBeGreaterThanOrEqual(1);
     expect(matches[0]).toBeInTheDocument();
   });
 
   it('has lazy loading on the image', () => {
-    render(<CardItem card={mockCard} onClick={vi.fn()} />);
+    renderWithRouter(<CardItem card={mockCard} onClick={vi.fn()} />);
     const img = screen.getByAltText('Lightning Bolt');
     expect(img).toHaveAttribute('loading', 'lazy');
   });
 
   it('is focusable with tabIndex 0', () => {
-    render(<CardItem card={mockCard} onClick={vi.fn()} />);
+    renderWithRouter(<CardItem card={mockCard} onClick={vi.fn()} />);
     const button = screen.getByRole('button');
     expect(button).toHaveAttribute('tabindex', '0');
   });

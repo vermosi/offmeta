@@ -5,6 +5,7 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { render } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { CardModalDetails } from '../CardModalDetails';
 import type { CardModalDetailsProps } from '../types';
 
@@ -17,6 +18,10 @@ vi.mock('@/components/ManaSymbol', () => ({
     <span data-testid="oracle-text">{text}</span>
   ),
 }));
+
+function renderWithRouter(ui: React.ReactElement) {
+  return render(<MemoryRouter>{ui}</MemoryRouter>);
+}
 
 describe('CardModalDetails', () => {
   const defaultProps: CardModalDetailsProps = {
@@ -37,50 +42,50 @@ describe('CardModalDetails', () => {
   };
 
   it('renders card name', () => {
-    const { getByText } = render(<CardModalDetails {...defaultProps} />);
+    const { getByText } = renderWithRouter(<CardModalDetails {...defaultProps} />);
     expect(getByText('Lightning Bolt')).toBeInTheDocument();
   });
 
   it('renders mana cost', () => {
-    const { getByTestId } = render(<CardModalDetails {...defaultProps} />);
+    const { getByTestId } = renderWithRouter(<CardModalDetails {...defaultProps} />);
     expect(getByTestId('mana-cost')).toHaveTextContent('{R}');
   });
 
   it('renders type line', () => {
-    const { getByText } = render(<CardModalDetails {...defaultProps} />);
+    const { getByText } = renderWithRouter(<CardModalDetails {...defaultProps} />);
     expect(getByText('Instant')).toBeInTheDocument();
   });
 
   it('renders oracle text', () => {
-    const { getByTestId } = render(<CardModalDetails {...defaultProps} />);
+    const { getByTestId } = renderWithRouter(<CardModalDetails {...defaultProps} />);
     expect(getByTestId('oracle-text')).toHaveTextContent(
       'Lightning Bolt deals 3 damage to any target.',
     );
   });
 
   it('renders rarity badge', () => {
-    const { getByText } = render(<CardModalDetails {...defaultProps} />);
+    const { getByText } = renderWithRouter(<CardModalDetails {...defaultProps} />);
     expect(getByText('common')).toBeInTheDocument();
   });
 
   it('renders set name with collector number', () => {
-    const { getByText } = render(<CardModalDetails {...defaultProps} />);
+    const { getByText } = renderWithRouter(<CardModalDetails {...defaultProps} />);
     expect(getByText('Alpha #161')).toBeInTheDocument();
   });
 
   it('renders artist name', () => {
-    const { getByText } = render(<CardModalDetails {...defaultProps} />);
+    const { getByText } = renderWithRouter(<CardModalDetails {...defaultProps} />);
     expect(getByText('Christopher Rush')).toBeInTheDocument();
     expect(getByText('Illustrated by')).toBeInTheDocument();
   });
 
   it('shows Reserved badge when card is reserved', () => {
-    const { getByText } = render(<CardModalDetails {...defaultProps} isReserved={true} />);
+    const { getByText } = renderWithRouter(<CardModalDetails {...defaultProps} isReserved={true} />);
     expect(getByText(/Reserved/)).toBeInTheDocument();
   });
 
   it('does not show Reserved badge when card is not reserved', () => {
-    const { queryByText } = render(<CardModalDetails {...defaultProps} isReserved={false} />);
+    const { queryByText } = renderWithRouter(<CardModalDetails {...defaultProps} isReserved={false} />);
     expect(queryByText(/Reserved/)).not.toBeInTheDocument();
   });
 
@@ -97,7 +102,7 @@ describe('CardModalDetails', () => {
         lang: 'en',
       },
     ];
-    const { getByText } = render(
+    const { getByText } = renderWithRouter(
       <CardModalDetails
         {...defaultProps}
         englishPrintings={printings}
@@ -130,7 +135,7 @@ describe('CardModalDetails', () => {
         lang: 'en',
       },
     ];
-    const { getByText } = render(
+    const { getByText } = renderWithRouter(
       <CardModalDetails
         {...defaultProps}
         englishPrintings={printings}
@@ -152,8 +157,7 @@ describe('CardModalDetails', () => {
         toughness: '1',
       },
     };
-    const { getAllByText } = render(<CardModalDetails {...creatureProps} />);
-    // Power and toughness are rendered as separate elements
+    const { getAllByText } = renderWithRouter(<CardModalDetails {...creatureProps} />);
     const powerToughnessElements = getAllByText('1');
     expect(powerToughnessElements.length).toBeGreaterThanOrEqual(2);
   });
@@ -166,15 +170,14 @@ describe('CardModalDetails', () => {
         flavor_text: 'The spark that satisfies a need.',
       },
     };
-    const { getAllByTestId } = render(<CardModalDetails {...propsWithFlavor} />);
-    // Both oracle text and flavor text use OracleText component
+    const { getAllByTestId } = renderWithRouter(<CardModalDetails {...propsWithFlavor} />);
     const oracleTextElements = getAllByTestId('oracle-text');
     expect(oracleTextElements.length).toBe(2);
     expect(oracleTextElements[1]).toHaveTextContent('The spark that satisfies a need.');
   });
 
   it('applies mobile styling when isMobile is true', () => {
-    const { container } = render(
+    const { container } = renderWithRouter(
       <CardModalDetails {...defaultProps} isMobile={true} />,
     );
     expect(container.querySelector('.text-center')).toBeInTheDocument();
@@ -184,7 +187,7 @@ describe('CardModalDetails', () => {
     const rarities = ['mythic', 'rare', 'uncommon', 'common'];
     
     for (const rarity of rarities) {
-      const { getByText, unmount } = render(
+      const { getByText, unmount } = renderWithRouter(
         <CardModalDetails {...defaultProps} displayRarity={rarity} />,
       );
       expect(getByText(rarity)).toBeInTheDocument();

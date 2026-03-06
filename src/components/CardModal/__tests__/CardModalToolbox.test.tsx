@@ -5,7 +5,12 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { CardModalToolbox } from '../CardModalToolbox';
+
+function renderWithRouter(ui: React.ReactElement) {
+  return render(<MemoryRouter>{ui}</MemoryRouter>);
+}
 
 describe('CardModalToolbox', () => {
   const defaultProps = {
@@ -21,37 +26,37 @@ describe('CardModalToolbox', () => {
   });
 
   it('renders Toolbox header', () => {
-    const { getByText } = render(<CardModalToolbox {...defaultProps} />);
+    const { getByText } = renderWithRouter(<CardModalToolbox {...defaultProps} />);
     expect(getByText('Toolbox')).toBeInTheDocument();
   });
 
   it('renders EDHREC link', () => {
-    const { getByText } = render(<CardModalToolbox {...defaultProps} />);
+    const { getByText } = renderWithRouter(<CardModalToolbox {...defaultProps} />);
     expect(getByText('EDHREC')).toBeInTheDocument();
   });
 
   it('renders Moxfield link', () => {
-    const { getByText } = render(<CardModalToolbox {...defaultProps} />);
+    const { getByText } = renderWithRouter(<CardModalToolbox {...defaultProps} />);
     expect(getByText('Moxfield')).toBeInTheDocument();
   });
 
   it('renders MTGTop8 link', () => {
-    const { getByText } = render(<CardModalToolbox {...defaultProps} />);
+    const { getByText } = renderWithRouter(<CardModalToolbox {...defaultProps} />);
     expect(getByText('MTGTop8')).toBeInTheDocument();
   });
 
   it('renders Archidekt link', () => {
-    const { getByText } = render(<CardModalToolbox {...defaultProps} />);
+    const { getByText } = renderWithRouter(<CardModalToolbox {...defaultProps} />);
     expect(getByText('Archidekt')).toBeInTheDocument();
   });
 
   it('renders Scryfall link', () => {
-    const { getByText } = render(<CardModalToolbox {...defaultProps} />);
+    const { getByText } = renderWithRouter(<CardModalToolbox {...defaultProps} />);
     expect(getByText('Scryfall')).toBeInTheDocument();
   });
 
   it('opens EDHREC in new tab when clicked', () => {
-    const { getByText } = render(<CardModalToolbox {...defaultProps} />);
+    const { getByText } = renderWithRouter(<CardModalToolbox {...defaultProps} />);
     fireEvent.click(getByText('EDHREC'));
     
     expect(windowOpenSpy).toHaveBeenCalledWith(
@@ -62,7 +67,7 @@ describe('CardModalToolbox', () => {
   });
 
   it('opens Moxfield in new tab when clicked', () => {
-    const { getByText } = render(<CardModalToolbox {...defaultProps} />);
+    const { getByText } = renderWithRouter(<CardModalToolbox {...defaultProps} />);
     fireEvent.click(getByText('Moxfield'));
     
     expect(windowOpenSpy).toHaveBeenCalledWith(
@@ -73,7 +78,7 @@ describe('CardModalToolbox', () => {
   });
 
   it('opens Scryfall URI when Scryfall button is clicked', () => {
-    const { getByText } = render(<CardModalToolbox {...defaultProps} />);
+    const { getByText } = renderWithRouter(<CardModalToolbox {...defaultProps} />);
     fireEvent.click(getByText('Scryfall'));
     
     expect(windowOpenSpy).toHaveBeenCalledWith(
@@ -84,7 +89,7 @@ describe('CardModalToolbox', () => {
   });
 
   it('encodes card name in URLs', () => {
-    const { getByText } = render(
+    const { getByText } = renderWithRouter(
       <CardModalToolbox
         {...defaultProps}
         cardName="Korvold, Fae-Cursed King"
@@ -101,7 +106,7 @@ describe('CardModalToolbox', () => {
 
   describe('mobile view', () => {
     it('shows only first 4 links plus Scryfall on mobile', () => {
-      const { getByText, queryByText } = render(<CardModalToolbox {...defaultProps} isMobile={true} />);
+      const { getByText, queryByText } = renderWithRouter(<CardModalToolbox {...defaultProps} isMobile={true} />);
       
       expect(getByText('EDHREC')).toBeInTheDocument();
       expect(getByText('Moxfield')).toBeInTheDocument();
@@ -109,7 +114,6 @@ describe('CardModalToolbox', () => {
       expect(getByText('Archidekt')).toBeInTheDocument();
       expect(getByText('Scryfall')).toBeInTheDocument();
       
-      // MTGGoldfish and Gatherer should not be visible on mobile
       expect(queryByText('MTGGoldfish')).not.toBeInTheDocument();
       expect(queryByText('Gatherer')).not.toBeInTheDocument();
     });
@@ -117,7 +121,7 @@ describe('CardModalToolbox', () => {
 
   describe('desktop view', () => {
     it('shows all links on desktop', () => {
-      const { getByText } = render(<CardModalToolbox {...defaultProps} isMobile={false} />);
+      const { getByText } = renderWithRouter(<CardModalToolbox {...defaultProps} isMobile={false} />);
       
       expect(getByText('EDHREC')).toBeInTheDocument();
       expect(getByText('Moxfield')).toBeInTheDocument();
@@ -130,7 +134,7 @@ describe('CardModalToolbox', () => {
   });
 
   it('generates correct MTGGoldfish URL', () => {
-    const { getByText } = render(<CardModalToolbox {...defaultProps} isMobile={false} />);
+    const { getByText } = renderWithRouter(<CardModalToolbox {...defaultProps} isMobile={false} />);
     fireEvent.click(getByText('MTGGoldfish'));
     
     expect(windowOpenSpy).toHaveBeenCalledWith(
@@ -141,7 +145,7 @@ describe('CardModalToolbox', () => {
   });
 
   it('generates correct Gatherer URL', () => {
-    const { getByText } = render(<CardModalToolbox {...defaultProps} isMobile={false} />);
+    const { getByText } = renderWithRouter(<CardModalToolbox {...defaultProps} isMobile={false} />);
     fireEvent.click(getByText('Gatherer'));
     
     expect(windowOpenSpy).toHaveBeenCalledWith(
