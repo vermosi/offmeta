@@ -1,6 +1,49 @@
 # OffMeta - Natural Language Magic Card Search
 # https://offmeta.app
 
+# Block AI/LLM training crawlers (keeps site accessible for search/browsing agents)
+User-agent: GPTBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: Meta-ExternalAgent
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: cohere-ai
+Disallow: /
+
+User-agent: Omgilibot
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
+
+# PerplexityBot does both training + search; blocking stops both.
+# Remove this block if you want Perplexity search visibility.
+User-agent: PerplexityBot
+Disallow: /
+
+# Allow all other crawlers (Google, Bing, ChatGPT-User, OAI-SearchBot, etc.)
 User-agent: *
 Allow: /
 Allow: /cards/
