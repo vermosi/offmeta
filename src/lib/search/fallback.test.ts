@@ -130,6 +130,8 @@ describe('buildClientFallbackQuery', () => {
   it('translates archetype slang', () => {
     expect(buildClientFallbackQuery('voltron')).toContain('(t:equipment or t:aura)');
     expect(buildClientFallbackQuery('aristocrats')).toContain('o:"when" o:"dies"');
+    expect(buildClientFallbackQuery('cards that fit into an aristocrats style deck that is mono black'))
+      .toContain('id<=b');
   });
 
   // Mana production queries
