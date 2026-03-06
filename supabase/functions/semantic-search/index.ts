@@ -733,14 +733,30 @@ serve(async (req) => {
         const concepts = await findConceptMatches(residualForConcepts, 3, 0.7);
 
         if (concepts.length > 0 && concepts[0].confidence >= 0.85) {
-          // Build query from concept templates, deduplicating by category
+          // Build query from concept templates, deduplicating by normalized category
           const seenCategories = new Set<string>();
           const dedupedConcepts = concepts.filter((c) => {
-            if (seenCategories.has(c.category)) return false;
-            seenCategories.add(c.category);
+            // Normalize category to prevent near-duplicates
+            // e.g., "Mass removal", "Mass removal spells", "Cards that destroy all creatures"
+            const normCat = (c.category || '').toLowerCase()
+              .replace(/\b(cards?\s+that\s+|spells?\s*)/g, '')
+              .trim();
+            if (seenCategories.has(normCat)) return false;
+            seenCategories.add(normCat);
             return true;
           });
-          const conceptParts = dedupedConcepts.map((c) => c.scryfallSyntax);
+
+          // Strip color constraints from concept templates when user didn't
+          // specify a color (prevents "board whipe" → c:w from "white board wipes")
+          const userSpecifiedColor = deterministicQuery && /\b(c|ci)(:|<=|>=|=|<|>)\S+/i.test(deterministicQuery);
+          const conceptParts = dedupedConcepts.map((c) => {
+            let syntax = c.scryfallSyntax;
+            if (!userSpecifiedColor) {
+              syntax = syntax.replace(/\b(c|ci)(:|<=|>=|=|<|>)\S+/gi, '').replace(/\s+/g, ' ').trim();
+            }
+            return syntax;
+          }).filter(Boolean);
+
           let conceptQuery = conceptParts.join(' ');
           if (deterministicQuery) {
             conceptQuery = `${deterministicQuery} ${conceptQuery}`;
@@ -787,8 +803,8 @@ serve(async (req) => {
               originalQuery: query,
               scryfallQuery: validation.sanitized,
               explanation: {
-                readable: `Searching for: ${concepts.map((c) => c.description || c.conceptId).join(', ')}`,
-                assumptions: [`Matched concepts: ${concepts.map((c) => c.conceptId).join(', ')}`],
+                readable: `Searching for: ${readableDesc}`,
+                assumptions: [`Matched concepts: ${conceptIds}`],
                 confidence: concepts[0].confidence,
               },
               responseTimeMs,
