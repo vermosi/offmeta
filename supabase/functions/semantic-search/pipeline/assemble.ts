@@ -144,6 +144,12 @@ export function assembleQuery(
       includeOr: slots.types.includeOr || [],
     });
 
+    // Strip color constraints from concept templates when user didn't specify colors.
+    // This prevents leaks like "board whipe" → fuzzy match "white board wipes" → c:w
+    if (!slots.colors) {
+      template = stripColorConstraints(template);
+    }
+
     // Skip if template is empty after filtering
     if (!template.trim()) {
       warnings.push(
@@ -248,6 +254,18 @@ function buildColorQuery(
       }
       return `${prefix}:${joined}`;
   }
+}
+
+/**
+ * Strips color constraints (c:X, ci:X, ci<=X, etc.) from a concept template.
+ * Used when the user didn't specify any color, to prevent fuzzy-matched
+ * color-specific concepts (e.g., "white board wipes" → c:w) from leaking.
+ */
+function stripColorConstraints(template: string): string {
+  return template
+    .replace(/\b(c|ci)(:|<=|>=|=|<|>)\S+/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function removeDuplicateParts(query: string): string {

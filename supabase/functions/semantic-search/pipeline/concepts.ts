@@ -116,9 +116,38 @@ export async function findConceptMatches(
     return b.confidence - a.confidence;
   });
 
-  return matches
+  // Deduplicate by category: keep only the highest-ranked concept per category.
+  // This prevents color-specific variants (e.g., "white board wipes" with c:w)
+  // from leaking into queries when the user just typed "board wipe".
+  const deduped = deduplicateConceptsByCategory(matches);
+
+  return deduped
     .filter((m) => m.confidence >= minConfidence)
     .slice(0, maxMatches);
+}
+
+/**
+ * Keeps only the highest-priority/similarity concept per category.
+ * Prevents color leaks from specific variants (e.g., "white board wipes")
+ * when the user searched for the generic concept (e.g., "board wipe").
+ */
+export function deduplicateConceptsByCategory(
+  matches: ConceptMatch[],
+): ConceptMatch[] {
+  const bestByCategory = new Map<string, ConceptMatch>();
+
+  for (const match of matches) {
+    const existing = bestByCategory.get(match.category);
+    if (!existing) {
+      bestByCategory.set(match.category, match);
+      continue;
+    }
+    // Already sorted by similarity > priority > confidence, so first one wins
+    // (it's already the best)
+  }
+
+  // Preserve original order for the winners
+  return matches.filter((m) => bestByCategory.get(m.category) === m);
 }
 
 /**

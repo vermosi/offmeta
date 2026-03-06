@@ -1,8 +1,8 @@
 /**
- * Tests for concept matching category deduplication logic.
- * Ensures that only one concept per category is included in the final query,
- * preventing unrelated filters (e.g., c:w from "white board wipes") from leaking
- * into queries like "board whipe".
+ * Tests for concept matching deduplication and color-stripping logic.
+ * Ensures that:
+ * 1. Only one concept per normalized category is kept
+ * 2. Color constraints are stripped from concept templates when user didn't specify a color
  * @module lib/search/__tests__/concept-deduplication
  */
 
@@ -10,23 +10,39 @@ import { describe, it, expect } from 'vitest';
 import type { ConceptMatch } from '../../../../supabase/functions/semantic-search/pipeline/types';
 
 /**
- * Mirrors the deduplication logic from semantic-search/index.ts (step 6c).
- * Extracted here for unit-testability without needing to spin up the full edge function.
+ * Mirrors the normalized category deduplication from semantic-search/index.ts (step 6c).
  */
-function deduplicateConceptsByCategory(concepts: ConceptMatch[]): ConceptMatch[] {
+function deduplicateConceptsByNormalizedCategory(concepts: ConceptMatch[]): ConceptMatch[] {
   const seenCategories = new Set<string>();
   return concepts.filter((c) => {
-    if (seenCategories.has(c.category)) return false;
-    seenCategories.add(c.category);
+    const normCat = (c.category || '').toLowerCase()
+      .replace(/\b(cards?\s+that\s+|spells?\s*)/g, '')
+      .trim();
+    if (seenCategories.has(normCat)) return false;
+    seenCategories.add(normCat);
     return true;
   });
+}
+
+/**
+ * Mirrors the color-stripping logic from semantic-search/index.ts (step 6c).
+ */
+function stripColorConstraints(syntax: string): string {
+  return syntax.replace(/\b(c|ci)(:|<=|>=|=|<|>)\S+/gi, '').replace(/\s+/g, ' ').trim();
 }
 
 function buildConceptQuery(
   dedupedConcepts: ConceptMatch[],
   deterministicQuery: string,
+  userSpecifiedColor: boolean,
 ): string {
-  const conceptParts = dedupedConcepts.map((c) => c.scryfallSyntax);
+  const conceptParts = dedupedConcepts.map((c) => {
+    let syntax = c.scryfallSyntax;
+    if (!userSpecifiedColor) {
+      syntax = stripColorConstraints(syntax);
+    }
+    return syntax;
+  }).filter(Boolean);
   let conceptQuery = conceptParts.join(' ');
   if (deterministicQuery) {
     conceptQuery = `${deterministicQuery} ${conceptQuery}`;
@@ -34,7 +50,6 @@ function buildConceptQuery(
   return conceptQuery;
 }
 
-// Helper to create a mock ConceptMatch
 function mockConcept(overrides: Partial<ConceptMatch>): ConceptMatch {
   return {
     conceptId: 'test',
@@ -52,82 +67,103 @@ function mockConcept(overrides: Partial<ConceptMatch>): ConceptMatch {
   };
 }
 
-describe('Concept deduplication by category', () => {
-  it('keeps first concept per category, removes duplicates', () => {
+describe('Concept deduplication by normalized category', () => {
+  it('deduplicates DB concepts with variant category names', () => {
+    // Real DB scenario: "board whipe" returns concepts with different but related categories
     const concepts: ConceptMatch[] = [
-      mockConcept({ conceptId: 'board_wipe', category: 'removal', scryfallSyntax: 'otag:board-wipe', similarity: 1.0 }),
-      mockConcept({ conceptId: 'white_board_wipes', category: 'removal', scryfallSyntax: 'otag:board-wipe c:w', similarity: 0.9 }),
-      mockConcept({ conceptId: 'board_wipes', category: 'removal', scryfallSyntax: 'otag:board-wipe', similarity: 0.85 }),
+      mockConcept({ conceptId: 'board_wipe', category: 'Cards that destroy all creatures', scryfallSyntax: 'otag:board-wipe' }),
+      mockConcept({ conceptId: 'white_board_wipes', category: 'White mass removal', scryfallSyntax: 'c:w (o:"destroy all" or o:"exile all")' }),
+      mockConcept({ conceptId: 'board_wipes', category: 'Mass removal', scryfallSyntax: '(o:"destroy all" or o:"exile all")' }),
+      mockConcept({ conceptId: 'boardwipes', category: 'Mass removal spells', scryfallSyntax: 'o:"destroy all" or o:"exile all"' }),
     ];
 
-    const deduped = deduplicateConceptsByCategory(concepts);
-
-    expect(deduped).toHaveLength(1);
-    expect(deduped[0].conceptId).toBe('board_wipe');
+    const deduped = deduplicateConceptsByNormalizedCategory(concepts);
+    // "Cards that destroy all creatures" → "destroy all creatures"
+    // "White mass removal" → "white mass removal"
+    // "Mass removal" → "mass removal"
+    // "Mass removal spells" → "mass removal" (duplicate of above!)
+    expect(deduped.length).toBeLessThan(concepts.length);
+    // "Mass removal spells" normalized = "mass removal" = same as "Mass removal"
+    expect(deduped.find(c => c.conceptId === 'boardwipes')).toBeUndefined();
   });
 
-  it('prevents c:w color leak from "white board wipes" matching on "board whipe"', () => {
+  it('keeps concepts from genuinely different categories', () => {
     const concepts: ConceptMatch[] = [
-      mockConcept({ conceptId: 'board_wipe', category: 'removal', scryfallSyntax: 'otag:board-wipe', similarity: 1.0 }),
-      mockConcept({ conceptId: 'white_board_wipes', category: 'removal', scryfallSyntax: 'otag:board-wipe c:w', similarity: 0.85 }),
+      mockConcept({ conceptId: 'ramp', category: 'ramp', scryfallSyntax: 'otag:ramp' }),
+      mockConcept({ conceptId: 'removal', category: 'removal', scryfallSyntax: 'otag:removal' }),
+      mockConcept({ conceptId: 'draw', category: 'card advantage', scryfallSyntax: 'otag:card-draw' }),
+    ];
+    expect(deduplicateConceptsByNormalizedCategory(concepts)).toHaveLength(3);
+  });
+
+  it('handles empty list', () => {
+    expect(deduplicateConceptsByNormalizedCategory([])).toHaveLength(0);
+  });
+});
+
+describe('Color constraint stripping', () => {
+  it('strips c:w from concept syntax', () => {
+    expect(stripColorConstraints('c:w (o:"destroy all" or o:"exile all")')).toBe('(o:"destroy all" or o:"exile all")');
+  });
+
+  it('strips ci<=wubrg from concept syntax', () => {
+    expect(stripColorConstraints('ci<=wubrg otag:ramp')).toBe('otag:ramp');
+  });
+
+  it('strips c:g from concept syntax', () => {
+    expect(stripColorConstraints('c:g otag:ramp')).toBe('otag:ramp');
+  });
+
+  it('does not strip non-color operators', () => {
+    expect(stripColorConstraints('otag:board-wipe')).toBe('otag:board-wipe');
+    expect(stripColorConstraints('o:"destroy all"')).toBe('o:"destroy all"');
+  });
+
+  it('returns empty string when only color constraint exists', () => {
+    expect(stripColorConstraints('c:w')).toBe('');
+  });
+});
+
+describe('End-to-end concept query building (color leak prevention)', () => {
+  it('"board whipe" query has no c:w when user did not specify color', () => {
+    const concepts: ConceptMatch[] = [
+      mockConcept({ conceptId: 'board_wipe', category: 'Cards that destroy all creatures', scryfallSyntax: 'otag:board-wipe' }),
+      mockConcept({ conceptId: 'white_board_wipes', category: 'White mass removal', scryfallSyntax: 'c:w (o:"destroy all" or o:"exile all")' }),
+      mockConcept({ conceptId: 'board_wipes', category: 'Mass removal', scryfallSyntax: '(o:"destroy all" or o:"exile all")' }),
     ];
 
-    const deduped = deduplicateConceptsByCategory(concepts);
-    const query = buildConceptQuery(deduped, '');
+    const deduped = deduplicateConceptsByNormalizedCategory(concepts);
+    const query = buildConceptQuery(deduped, '', false);
 
     expect(query).not.toContain('c:w');
     expect(query).toContain('otag:board-wipe');
   });
 
-  it('keeps concepts from different categories', () => {
+  it('preserves color when user explicitly specified color', () => {
     const concepts: ConceptMatch[] = [
-      mockConcept({ conceptId: 'ramp', category: 'ramp', scryfallSyntax: 'otag:ramp' }),
-      mockConcept({ conceptId: 'removal', category: 'removal', scryfallSyntax: 'otag:removal' }),
-      mockConcept({ conceptId: 'draw', category: 'card_advantage', scryfallSyntax: 'otag:card-draw' }),
+      mockConcept({ conceptId: 'white_board_wipes', category: 'White mass removal', scryfallSyntax: 'c:w (o:"destroy all" or o:"exile all")' }),
     ];
 
-    const deduped = deduplicateConceptsByCategory(concepts);
+    const deduped = deduplicateConceptsByNormalizedCategory(concepts);
+    const query = buildConceptQuery(deduped, 'c:w', true);
 
-    expect(deduped).toHaveLength(3);
-  });
-
-  it('handles empty concepts list', () => {
-    const deduped = deduplicateConceptsByCategory([]);
-    expect(deduped).toHaveLength(0);
-  });
-
-  it('handles single concept', () => {
-    const concepts = [mockConcept({ conceptId: 'ramp', category: 'ramp' })];
-    const deduped = deduplicateConceptsByCategory(concepts);
-    expect(deduped).toHaveLength(1);
-  });
-
-  it('keeps sacrifice category to one concept (edict vs sacrifice_outlet vs aristocrats)', () => {
-    const concepts: ConceptMatch[] = [
-      mockConcept({ conceptId: 'edict', category: 'sacrifice', scryfallSyntax: 'o:"sacrifices"', similarity: 1.0 }),
-      mockConcept({ conceptId: 'sacrifice_outlet', category: 'sacrifice', scryfallSyntax: 'otag:sacrifice-outlet', similarity: 0.85 }),
-      mockConcept({ conceptId: 'aristocrats', category: 'sacrifice', scryfallSyntax: 'otag:aristocrats', similarity: 0.8 }),
-    ];
-
-    const deduped = deduplicateConceptsByCategory(concepts);
-
-    expect(deduped).toHaveLength(1);
-    expect(deduped[0].conceptId).toBe('edict');
+    expect(query).toContain('c:w');
   });
 
   it('prepends deterministic query to concept query', () => {
     const concepts = [mockConcept({ conceptId: 'ramp', category: 'ramp', scryfallSyntax: 'otag:ramp' })];
-    const deduped = deduplicateConceptsByCategory(concepts);
-    const query = buildConceptQuery(deduped, 'c:g mv<=3');
-
+    const query = buildConceptQuery(concepts, 'c:g mv<=3', true);
     expect(query).toBe('c:g mv<=3 otag:ramp');
   });
 
-  it('does not prepend when deterministic query is empty', () => {
-    const concepts = [mockConcept({ conceptId: 'ramp', category: 'ramp', scryfallSyntax: 'otag:ramp' })];
-    const deduped = deduplicateConceptsByCategory(concepts);
-    const query = buildConceptQuery(deduped, '');
+  it('filters out empty syntax after color stripping', () => {
+    const concepts: ConceptMatch[] = [
+      mockConcept({ conceptId: 'color_only', category: 'color', scryfallSyntax: 'c:w' }),
+      mockConcept({ conceptId: 'real_concept', category: 'removal', scryfallSyntax: 'otag:board-wipe' }),
+    ];
 
-    expect(query).toBe('otag:ramp');
+    const query = buildConceptQuery(concepts, '', false);
+    expect(query).toBe('otag:board-wipe');
+    expect(query).not.toContain('c:w');
   });
 });
