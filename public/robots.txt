@@ -47,8 +47,9 @@ Disallow: /
 User-agent: *
 Allow: /
 Allow: /cards/
+Allow: /search/
 Disallow: /api/
-# Block parameterised search URLs — they are dynamic SPA state, not indexable pages
+# Block legacy parameterised search URLs — redirected to /search/:slug
 Disallow: /?q=
 Disallow: /?*q=
 # Block admin routes from crawlers
