@@ -31,7 +31,9 @@ export function useOnboarding() {
     setStep((s) => {
       if (s >= 3) {
         setIsActive(false);
-        try { localStorage.setItem(STORAGE_KEY, '1'); } catch {}
+        try { localStorage.setItem(STORAGE_KEY, '1'); } catch {
+          // localStorage unavailable
+        }
         return s;
       }
       return (s + 1) as OnboardingStep;
@@ -40,7 +42,9 @@ export function useOnboarding() {
 
   const dismiss = useCallback(() => {
     setIsActive(false);
-    try { localStorage.setItem(STORAGE_KEY, '1'); } catch {}
+    try { localStorage.setItem(STORAGE_KEY, '1'); } catch {
+      // localStorage unavailable
+    }
   }, []);
 
   return { isActive, step, advance, dismiss };
