@@ -61,3 +61,126 @@ export function applySeoMeta(opts: SeoOptions): () => void {
     setCanonical('https://offmeta.app/');
   };
 }
+
+// ── JSON-LD Structured Data ───────────────────────────────────────────────────
+
+const JSON_LD_ID = 'offmeta-jsonld';
+
+/**
+ * Inject or update a JSON-LD script block in the document head.
+ * Call with any valid JSON-LD object (Product, ItemList, BreadcrumbList, etc.).
+ * Returns a cleanup function that removes the script element.
+ */
+export function injectJsonLd(data: Record<string, unknown>): () => void {
+  let el = document.getElementById(JSON_LD_ID) as HTMLScriptElement | null;
+  if (!el) {
+    el = document.createElement('script');
+    el.id = JSON_LD_ID;
+    el.type = 'application/ld+json';
+    document.head.appendChild(el);
+  }
+  el.textContent = JSON.stringify(data);
+
+  return () => {
+    el?.remove();
+  };
+}
+
+/**
+ * Remove any existing JSON-LD block injected by injectJsonLd.
+ */
+export function removeJsonLd(): void {
+  document.getElementById(JSON_LD_ID)?.remove();
+}
+
+// ── JSON-LD builders ──────────────────────────────────────────────────────────
+
+import type { ScryfallCard } from '@/types/card';
+
+/**
+ * Build Product JSON-LD for a single MTG card.
+ */
+export function buildCardJsonLd(card: ScryfallCard, pageUrl: string): Record<string, unknown> {
+  const image = card.image_uris?.normal ?? card.card_faces?.[0]?.image_uris?.normal;
+  const price = card.prices?.usd;
+
+  const product: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: card.name,
+    description: card.oracle_text ?? `${card.name} — ${card.type_line}`,
+    image,
+    url: pageUrl,
+    brand: { '@type': 'Brand', name: 'Magic: The Gathering' },
+    category: card.type_line,
+  };
+
+  if (price) {
+    product.offers = {
+      '@type': 'Offer',
+      price,
+      priceCurrency: 'USD',
+      availability: 'https://schema.org/InStock',
+      url: card.purchase_uris?.tcgplayer ?? pageUrl,
+    };
+  }
+
+  return product;
+}
+
+/**
+ * Build an ItemList JSON-LD for search results.
+ */
+export function buildSearchResultsJsonLd(
+  cards: ScryfallCard[],
+  queryDescription: string,
+): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: `MTG cards: ${queryDescription}`,
+    description: `Magic: The Gathering cards matching "${queryDescription}"`,
+    numberOfItems: cards.length,
+    itemListElement: cards.slice(0, 20).map((card, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': 'Product',
+        name: card.name,
+        description: card.oracle_text ?? card.type_line,
+        image: card.image_uris?.normal ?? card.card_faces?.[0]?.image_uris?.normal,
+        url: `https://offmeta.app/cards/${encodeURIComponent(
+          card.name.toLowerCase().replace(/['']/g, '').replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-'),
+        )}`,
+        ...(card.prices?.usd
+          ? {
+              offers: {
+                '@type': 'Offer',
+                price: card.prices.usd,
+                priceCurrency: 'USD',
+                availability: 'https://schema.org/InStock',
+              },
+            }
+          : {}),
+      },
+    })),
+  };
+}
+
+/**
+ * Build BreadcrumbList JSON-LD.
+ */
+export function buildBreadcrumbJsonLd(
+  items: Array<{ name: string; url: string }>,
+): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((item, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: item.name,
+      item: item.url,
+    })),
+  };
+}

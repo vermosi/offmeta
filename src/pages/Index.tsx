@@ -12,6 +12,7 @@ import {
   useCallback,
   useState,
   useMemo,
+  useRef,
 } from 'react';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 import { EditableQueryBar } from '@/components/EditableQueryBar';
@@ -70,6 +71,11 @@ import { SkipLinks } from '@/components/SkipLinks';
 
 import { GitCompareArrows } from 'lucide-react';
 import { CLIENT_CONFIG } from '@/lib/config';
+import {
+  applySeoMeta,
+  injectJsonLd,
+  buildSearchResultsJsonLd,
+} from '@/lib/seo';
 import { useSearch } from '@/hooks/useSearch';
 import { useTranslation } from '@/lib/i18n';
 import { useCompare } from '@/hooks/useCompare';
@@ -228,7 +234,64 @@ const Index = () => {
     return () => clearTimeout(timeout);
   }, []);
 
-  // Determine which tabs to show
+  // SEO: JSON-LD for search results + dynamic OG image + canonical dedup
+  const jsonLdCleanup = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    // Cleanup previous
+    jsonLdCleanup.current?.();
+    jsonLdCleanup.current = null;
+
+    if (!hasSearched || isSearching || displayCards.length === 0) return;
+
+    // Inject ItemList JSON-LD for AEO
+    jsonLdCleanup.current = injectJsonLd(
+      buildSearchResultsJsonLd(displayCards, originalQuery),
+    );
+
+    // Dynamic OG image: use first card's art crop
+    const firstArt =
+      displayCards[0]?.image_uris?.art_crop ??
+      displayCards[0]?.card_faces?.[0]?.image_uris?.art_crop;
+    if (firstArt) {
+      let ogImg = document.querySelector('meta[property="og:image"]') as HTMLMetaElement | null;
+      if (!ogImg) {
+        ogImg = document.createElement('meta');
+        ogImg.setAttribute('property', 'og:image');
+        document.head.appendChild(ogImg);
+      }
+      ogImg.content = firstArt;
+    }
+
+    // Canonical dedup: base canonical on compiled Scryfall query, not NL input
+    const compiledQuery = lastSearchResult?.scryfallQuery || searchQuery;
+    if (compiledQuery) {
+      const canonical = `https://offmeta.app/?q=${encodeURIComponent(compiledQuery)}`;
+      let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'canonical';
+        document.head.appendChild(link);
+      }
+      link.href = canonical;
+    }
+
+    // SEO title + description
+    const desc = `Find ${totalCards} Magic: The Gathering cards matching "${originalQuery}" — off-meta picks, alternatives & synergies.`;
+    applySeoMeta({
+      title: `${originalQuery} — MTG Card Search | OffMeta`,
+      description: desc.slice(0, 160),
+      url: `https://offmeta.app/?q=${encodeURIComponent(compiledQuery || originalQuery)}`,
+      type: 'website',
+      image: displayCards[0]?.image_uris?.art_crop,
+    });
+
+    return () => {
+      jsonLdCleanup.current?.();
+      jsonLdCleanup.current = null;
+    };
+  }, [hasSearched, isSearching, displayCards, originalQuery, searchQuery, lastSearchResult, totalCards]);
+
+
   const showSimilarTab = hasSearched && !isSearching;
   const showDeckIdeasTab = hasSearched && !isSearching && isDeckQuery;
   const showExplanationTab = hasSearched && !isSearching;

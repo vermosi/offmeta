@@ -3,6 +3,7 @@
 
 User-agent: *
 Allow: /
+Allow: /cards/
 Disallow: /api/
 # Block parameterised search URLs — they are dynamic SPA state, not indexable pages
 Disallow: /?q=
