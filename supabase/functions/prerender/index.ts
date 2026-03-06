@@ -1,5 +1,3 @@
-// @ts-nocheck — Deno edge function, not part of frontend build
-
 declare const Deno: { env: { get(key: string): string | undefined }; serve: (handler: (req: Request) => Promise<Response>) => void };
 
 /**
@@ -304,7 +302,7 @@ Deno.serve(async (req: Request) => {
       status: 404,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-  } catch (err) {
+  } catch (_err) {
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
