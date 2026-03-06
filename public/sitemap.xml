@@ -48,6 +48,8 @@
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
+  <!-- Search pages — popular searches discovered via /search/:slug URLs -->
+  <!-- Google discovers these via internal links; no exhaustive listing needed -->
   <!-- Guide pages -->
   <url>
     <loc>https://offmeta.app/guides/keyword-ability-search</loc>

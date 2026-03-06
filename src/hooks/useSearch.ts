@@ -12,7 +12,8 @@ import {
   useEffect,
 } from 'react';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
+import { queryToSlug, slugToQuery } from '@/lib/search-slug';
 import type { SearchResult, UnifiedSearchBarHandle } from '@/components/UnifiedSearchBar';
 import { searchCards } from '@/lib/scryfall/client';
 import type { ScryfallCard } from '@/types/card';
@@ -73,7 +74,11 @@ function encodeFiltersToUrl(params: URLSearchParams, filters: FilterState | null
 
 export function useSearch() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const params = useParams<{ slug?: string }>();
+  const navigate = useNavigate();
   const urlQuery = searchParams.get('q') || '';
+  const slugQuery = params.slug ? slugToQuery(params.slug) : '';
+  const effectiveUrlQuery = slugQuery || urlQuery;
   const queryClient = useQueryClient();
   const { locale } = useTranslation();
   const scryfallLang = LOCALE_TO_SCRYFALL_LANG[locale] ?? 'en';
@@ -84,7 +89,7 @@ export function useSearch() {
   // --- Core search state ---
   // Don't initialize searchQuery from URL — wait for translation
   const [searchQuery, setSearchQuery] = useState('');
-  const [originalQuery, setOriginalQuery] = useState(urlQuery);
+  const [originalQuery, setOriginalQuery] = useState(effectiveUrlQuery);
   const [selectedCard, setSelectedCard] = useState<ScryfallCard | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [lastSearchResult, setLastSearchResult] = useState<SearchResult | null>(null);
@@ -98,12 +103,21 @@ export function useSearch() {
 
   const searchBarRef = useRef<UnifiedSearchBarHandle>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  const lastUrlQueryRef = useRef(urlQuery);
-  const initialUrlQuery = useRef(urlQuery);
+  const lastUrlQueryRef = useRef(effectiveUrlQuery);
+  const initialUrlQuery = useRef(effectiveUrlQuery);
   const hasHandledInitialQuery = useRef(false);
+  const hasRedirectedLegacy = useRef(false);
   const { trackSearch, trackCardClick, trackEvent } = useAnalytics();
 
-  // --- Initial mount: trigger translation for ?q= parameter ---
+  // --- Redirect legacy ?q= URLs to /search/:slug ---
+  useEffect(() => {
+    if (urlQuery && !params.slug && !hasRedirectedLegacy.current) {
+      hasRedirectedLegacy.current = true;
+      navigate(`/search/${queryToSlug(urlQuery)}`, { replace: true });
+    }
+  }, [urlQuery, params.slug, navigate]);
+
+  // --- Initial mount: trigger translation for URL query ---
   useEffect(() => {
     if (initialUrlQuery.current && searchBarRef.current && !hasHandledInitialQuery.current) {
       hasHandledInitialQuery.current = true;
@@ -112,12 +126,12 @@ export function useSearch() {
     }
   }, []);
 
-  // --- URL sync (browser back/forward, manual edits) ---
-  const [prevUrlQuery, setPrevUrlQuery] = useState(urlQuery);
-  if (urlQuery !== prevUrlQuery) {
-    setPrevUrlQuery(urlQuery);
+  // --- URL sync (browser back/forward for slug changes) ---
+  const [prevSlugQuery, setPrevSlugQuery] = useState(slugQuery);
+  if (slugQuery !== prevSlugQuery) {
+    setPrevSlugQuery(slugQuery);
 
-    if (!urlQuery) {
+    if (!slugQuery) {
       setSearchQuery('');
       setOriginalQuery('');
       setHasSearched(false);
@@ -128,15 +142,15 @@ export function useSearch() {
     }
   }
 
-  // Trigger search bar for URL query changes (browser back/forward only, skip initial)
+  // Trigger search bar for slug changes (browser back/forward only, skip initial)
   useEffect(() => {
-    if (urlQuery && urlQuery !== lastUrlQueryRef.current) {
-      lastUrlQueryRef.current = urlQuery;
+    if (slugQuery && slugQuery !== lastUrlQueryRef.current) {
+      lastUrlQueryRef.current = slugQuery;
       if (searchBarRef.current) {
-        searchBarRef.current.triggerSearch(urlQuery);
+        searchBarRef.current.triggerSearch(slugQuery);
       }
     }
-  }, [urlQuery]);
+  }, [slugQuery]);
 
   // --- Validated query ---
   const validatedSearchQuery = useMemo(() => {
@@ -263,10 +277,10 @@ export function useSearch() {
       const urlValue = naturalQuery || query;
       if (urlValue) {
         lastUrlQueryRef.current = urlValue;
-        setSearchParams({ q: urlValue }, { replace: true });
+        navigate(`/search/${queryToSlug(urlValue)}`, { replace: true });
       } else {
         lastUrlQueryRef.current = '';
-        setSearchParams({}, { replace: true });
+        navigate('/', { replace: true });
       }
 
       if (result) {
@@ -277,7 +291,7 @@ export function useSearch() {
         });
       }
     },
-    [trackSearch, setSearchParams, queryClient, scryfallLang],
+    [trackSearch, navigate, queryClient, scryfallLang],
   );
 
   const handleRerunEditedQuery = useCallback(
