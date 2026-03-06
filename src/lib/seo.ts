@@ -62,6 +62,21 @@ export function applySeoMeta(opts: SeoOptions): () => void {
   };
 }
 
+// ── Search canonical helpers ──────────────────────────────────────────────────
+
+import { queryToSlug } from '@/lib/search-slug';
+
+/**
+ * Build a canonical URL for a search page.
+ * Uses the compiled Scryfall query (not the raw NL input) so that
+ * synonymous searches ("cheap green ramp" vs "budget green ramp spells")
+ * resolve to the same canonical when they compile to the same query.
+ */
+export function buildSearchCanonical(compiledQuery: string): string {
+  const slug = queryToSlug(compiledQuery);
+  return slug ? `https://offmeta.app/search/${slug}` : 'https://offmeta.app/';
+}
+
 // ── JSON-LD Structured Data ───────────────────────────────────────────────────
 
 const JSON_LD_ID = 'offmeta-jsonld';

@@ -75,6 +75,7 @@ import { GitCompareArrows } from 'lucide-react';
 import { CLIENT_CONFIG } from '@/lib/config';
 import {
   applySeoMeta,
+  buildSearchCanonical,
   injectJsonLd,
   buildSearchResultsJsonLd,
 } from '@/lib/seo';
@@ -275,25 +276,18 @@ const Index = () => {
       ogImg.content = firstArt;
     }
 
-    // Canonical dedup: base canonical on compiled Scryfall query, not NL input
+    // Canonical dedup: base canonical on compiled Scryfall query slug, not NL input
     const compiledQuery = lastSearchResult?.scryfallQuery || searchQuery;
-    if (compiledQuery) {
-      const canonical = `https://offmeta.app/?q=${encodeURIComponent(compiledQuery)}`;
-      let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
-      if (!link) {
-        link = document.createElement('link');
-        link.rel = 'canonical';
-        document.head.appendChild(link);
-      }
-      link.href = canonical;
-    }
+    const canonicalUrl = compiledQuery
+      ? buildSearchCanonical(compiledQuery)
+      : `https://offmeta.app/`;
 
     // SEO title + description
     const desc = `Find ${totalCards} Magic: The Gathering cards matching "${originalQuery}" — off-meta picks, alternatives & synergies.`;
     applySeoMeta({
       title: `${originalQuery} — MTG Card Search | OffMeta`,
       description: desc.slice(0, 160),
-      url: `https://offmeta.app/?q=${encodeURIComponent(compiledQuery || originalQuery)}`,
+      url: canonicalUrl,
       type: 'website',
       image: displayCards[0]?.image_uris?.art_crop,
     });
