@@ -162,7 +162,7 @@ const CardPage = () => {
 
   const oracleText = getOracleText(card);
   const cardImage = getCardImage(card, 'large');
-  const artCrop = getCardImage(card, 'art_crop');
+  
 
   return (
     <ErrorBoundary>
