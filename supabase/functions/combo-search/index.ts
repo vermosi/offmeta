@@ -293,9 +293,7 @@ serve(async (req) => {
       );
     }
     return json(
-      {
-        error: e instanceof Error ? e.message : 'Internal error',
-      },
+      { error: 'Internal server error' },
       500,
       corsHeaders,
     );
