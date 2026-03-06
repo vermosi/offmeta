@@ -384,6 +384,16 @@
     }
   }
 
+  /* Onboarding spotlight pulse */
+  .onboarding-pulse {
+    animation: onboardingPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes onboardingPulse {
+    0%, 100% { box-shadow: 0 0 0 0 hsl(var(--accent) / 0.4); }
+    50% { box-shadow: 0 0 0 8px hsl(var(--accent) / 0); }
+  }
+
   /* Pulse ring for voice */
   .animate-pulse-ring {
     animation: pulseRing 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
