@@ -194,8 +194,15 @@ describe('Index page integration', () => {
   });
 
   it('displays skeleton loaders while searching', async () => {
-    // Make translation hang to keep loading state
-    mockTranslateQueryWithDedup.mockImplementation(() => new Promise(() => {}));
+    let resolveTranslation: (() => void) | null = null;
+    mockTranslateQueryWithDedup.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveTranslation = () => {
+            resolve(createMockTranslation({ scryfallQuery: 'o:"treasure"' }));
+          };
+        }),
+    );
 
     renderIndex();
 
@@ -211,6 +218,8 @@ describe('Index page integration', () => {
     await waitFor(() => {
       expect(screen.getByLabelText('Searching...')).toBeInTheDocument();
     });
+
+    resolveTranslation?.();
   });
 
   it('renders card results after successful search flow', async () => {
