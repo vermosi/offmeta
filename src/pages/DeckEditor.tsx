@@ -322,6 +322,7 @@ export default function DeckEditor() {
     card: previewCard, suggestions, suggestionsAnalysis, suggestionsLoading,
     onSuggest: handleSuggest, onAddSuggestion: handleAddSuggestion,
     cardCount: cards.length, deckCards: cards, commanderName: deck.commander_name,
+    colorIdentity: deck.color_identity, format: deck.format,
   };
 
   // ── Deck Header ──
