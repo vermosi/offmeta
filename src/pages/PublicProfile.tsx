@@ -79,6 +79,8 @@ export default function PublicProfile() {
     });
   }, [profile]);
 
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SkipLinks />
