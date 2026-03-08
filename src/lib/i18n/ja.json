@@ -964,5 +964,27 @@
   "publicDeck.edit": "編集",
   "publicDeck.share": "共有",
   "publicDeck.copied": "コピーしました！",
-  "publicDeck.cards": "{count}枚"
+  "publicDeck.cards": "{count}枚",
+
+  "common.error": "エラー",
+
+  "deckEditor.categorizeTooltip": "AIで全カードを再分類",
+  "deckEditor.editNotes": "ノートを編集",
+  "deckEditor.addNotesButton": "+ ノートを追加",
+  "deckEditor.undoAction": "元に戻す: {label}",
+  "deckEditor.redoAction": "やり直す: {label}",
+  "deckEditor.undoTooltip": "元に戻す (Ctrl+Z)",
+  "deckEditor.redoTooltip": "やり直す (Ctrl+Shift+Z)",
+  "deckEditor.actionHistory": "操作履歴",
+  "deckEditor.currentState": "現在の状態",
+  "deckEditor.undidActions": "{count}件の操作を取り消しました",
+  "deckEditor.hidePreview": "プレビューを非表示",
+  "deckEditor.showPreview": "プレビューを表示",
+  "deckEditor.preview": "プレビュー",
+  "deckEditor.missingCount": "{count}枚不足（合計{total}枚）",
+  "deckEditor.mainDeck": "メインデッキ",
+  "deckEditor.maybe": "候補",
+  "deckEditor.shortcuts.adjustQuantity": "数量を調整",
+  "deckEditor.shortcuts.undo": "元に戻す",
+  "deckEditor.shortcuts.redo": "やり直す"
 }

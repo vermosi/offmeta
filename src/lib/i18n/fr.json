@@ -964,5 +964,27 @@
   "publicDeck.edit": "Modifier",
   "publicDeck.share": "Partager",
   "publicDeck.copied": "Copié !",
-  "publicDeck.cards": "{count} cartes"
+  "publicDeck.cards": "{count} cartes",
+
+  "common.error": "Erreur",
+
+  "deckEditor.categorizeTooltip": "Recatégoriser toutes les cartes par IA",
+  "deckEditor.editNotes": "Modifier les notes",
+  "deckEditor.addNotesButton": "+ Ajouter des notes",
+  "deckEditor.undoAction": "Annuler : {label}",
+  "deckEditor.redoAction": "Rétablir : {label}",
+  "deckEditor.undoTooltip": "Annuler (Ctrl+Z)",
+  "deckEditor.redoTooltip": "Rétablir (Ctrl+Maj+Z)",
+  "deckEditor.actionHistory": "Historique des actions",
+  "deckEditor.currentState": "État actuel",
+  "deckEditor.undidActions": "{count} action(s) annulée(s)",
+  "deckEditor.hidePreview": "Masquer l'aperçu",
+  "deckEditor.showPreview": "Afficher l'aperçu",
+  "deckEditor.preview": "Aperçu",
+  "deckEditor.missingCount": "{count} carte(s) ({total} au total)",
+  "deckEditor.mainDeck": "deck principal",
+  "deckEditor.maybe": "peut-être",
+  "deckEditor.shortcuts.adjustQuantity": "Ajuster la quantité",
+  "deckEditor.shortcuts.undo": "Annuler",
+  "deckEditor.shortcuts.redo": "Rétablir"
 }

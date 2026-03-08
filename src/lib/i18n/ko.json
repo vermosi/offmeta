@@ -972,5 +972,27 @@
   "publicDeck.edit": "편집",
   "publicDeck.share": "공유",
   "publicDeck.copied": "복사됨!",
-  "publicDeck.cards": "{count}장"
+  "publicDeck.cards": "{count}장",
+
+  "common.error": "오류",
+
+  "deckEditor.categorizeTooltip": "AI로 모든 카드 재분류",
+  "deckEditor.editNotes": "노트 편집",
+  "deckEditor.addNotesButton": "+ 노트 추가",
+  "deckEditor.undoAction": "실행 취소: {label}",
+  "deckEditor.redoAction": "다시 실행: {label}",
+  "deckEditor.undoTooltip": "실행 취소 (Ctrl+Z)",
+  "deckEditor.redoTooltip": "다시 실행 (Ctrl+Shift+Z)",
+  "deckEditor.actionHistory": "작업 기록",
+  "deckEditor.currentState": "현재 상태",
+  "deckEditor.undidActions": "{count}개 작업 취소됨",
+  "deckEditor.hidePreview": "미리보기 숨기기",
+  "deckEditor.showPreview": "미리보기 표시",
+  "deckEditor.preview": "미리보기",
+  "deckEditor.missingCount": "{count}장 부족 (총 {total}장)",
+  "deckEditor.mainDeck": "메인 덱",
+  "deckEditor.maybe": "후보",
+  "deckEditor.shortcuts.adjustQuantity": "수량 조정",
+  "deckEditor.shortcuts.undo": "실행 취소",
+  "deckEditor.shortcuts.redo": "다시 실행"
 }

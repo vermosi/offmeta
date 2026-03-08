@@ -972,5 +972,27 @@
   "publicDeck.edit": "Редактировать",
   "publicDeck.share": "Поделиться",
   "publicDeck.copied": "Скопировано!",
-  "publicDeck.cards": "{count} карт"
+  "publicDeck.cards": "{count} карт",
+
+  "common.error": "Ошибка",
+
+  "deckEditor.categorizeTooltip": "Перекатегоризировать все карты с помощью ИИ",
+  "deckEditor.editNotes": "Редактировать заметки",
+  "deckEditor.addNotesButton": "+ Добавить заметки",
+  "deckEditor.undoAction": "Отменить: {label}",
+  "deckEditor.redoAction": "Повторить: {label}",
+  "deckEditor.undoTooltip": "Отменить (Ctrl+Z)",
+  "deckEditor.redoTooltip": "Повторить (Ctrl+Shift+Z)",
+  "deckEditor.actionHistory": "История действий",
+  "deckEditor.currentState": "Текущее состояние",
+  "deckEditor.undidActions": "Отменено действий: {count}",
+  "deckEditor.hidePreview": "Скрыть предпросмотр",
+  "deckEditor.showPreview": "Показать предпросмотр",
+  "deckEditor.preview": "Предпросмотр",
+  "deckEditor.missingCount": "{count} карт(а) ({total} всего)",
+  "deckEditor.mainDeck": "основная колода",
+  "deckEditor.maybe": "возможно",
+  "deckEditor.shortcuts.adjustQuantity": "Изменить количество",
+  "deckEditor.shortcuts.undo": "Отменить",
+  "deckEditor.shortcuts.redo": "Повторить"
 }

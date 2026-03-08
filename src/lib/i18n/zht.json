@@ -953,5 +953,27 @@
   "publicDeck.edit": "編輯",
   "publicDeck.share": "分享",
   "publicDeck.copied": "已複製！",
-  "publicDeck.cards": "{count}張"
+  "publicDeck.cards": "{count}張",
+
+  "common.error": "錯誤",
+
+  "deckEditor.categorizeTooltip": "AI重新分類所有卡牌",
+  "deckEditor.editNotes": "編輯備註",
+  "deckEditor.addNotesButton": "+ 新增備註",
+  "deckEditor.undoAction": "復原：{label}",
+  "deckEditor.redoAction": "重做：{label}",
+  "deckEditor.undoTooltip": "復原 (Ctrl+Z)",
+  "deckEditor.redoTooltip": "重做 (Ctrl+Shift+Z)",
+  "deckEditor.actionHistory": "操作歷史",
+  "deckEditor.currentState": "目前狀態",
+  "deckEditor.undidActions": "已復原{count}個操作",
+  "deckEditor.hidePreview": "隱藏預覽",
+  "deckEditor.showPreview": "顯示預覽",
+  "deckEditor.preview": "預覽",
+  "deckEditor.missingCount": "缺少{count}張（共{total}張）",
+  "deckEditor.mainDeck": "主牌組",
+  "deckEditor.maybe": "候選",
+  "deckEditor.shortcuts.adjustQuantity": "調整數量",
+  "deckEditor.shortcuts.undo": "復原",
+  "deckEditor.shortcuts.redo": "重做"
 }
