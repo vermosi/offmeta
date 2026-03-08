@@ -74,12 +74,12 @@ describe('critique-cache', () => {
     it('produces the same key regardless of input order', () => {
       const deckId = 'deck-123';
       const cards: DeckCard[] = [
-        { card_name: 'Counterspell', quantity: 2, category: 'Control', board: 'main', is_commander: false, is_companion: false, scryfall_id: null },
-        { card_name: 'Island', quantity: 4, category: 'Land', board: 'main', is_commander: false, is_companion: false, scryfall_id: null },
+        createTestCard({ card_name: 'Counterspell', quantity: 2, category: 'Control' }),
+        createTestCard({ card_name: 'Island', quantity: 4, category: 'Land' }),
       ];
       const cardsReordered: DeckCard[] = [
-        { card_name: 'Island', quantity: 4, category: 'Land', board: 'main', is_commander: false, is_companion: false, scryfall_id: null },
-        { card_name: 'Counterspell', quantity: 2, category: 'Control', board: 'main', is_commander: false, is_companion: false, scryfall_id: null },
+        createTestCard({ card_name: 'Island', quantity: 4, category: 'Land' }),
+        createTestCard({ card_name: 'Counterspell', quantity: 2, category: 'Control' }),
       ];
 
       const key1 = buildCacheKey(deckId, cards);
