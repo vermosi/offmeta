@@ -35,6 +35,14 @@ import { useCollectionValue } from '@/hooks/useCollectionValue';
 
 type SortMode = 'name' | 'quantity' | 'newest';
 
+const DEMO_COLLECTION: CollectionCard[] = [
+  { id: 'demo-1', card_name: 'Lightning Bolt', quantity: 4, foil: false, scryfall_id: null, user_id: '', created_at: '2026-02-01T00:00:00Z', updated_at: '2026-02-01T00:00:00Z' },
+  { id: 'demo-2', card_name: 'Counterspell', quantity: 2, foil: true, scryfall_id: null, user_id: '', created_at: '2026-02-10T00:00:00Z', updated_at: '2026-02-10T00:00:00Z' },
+  { id: 'demo-3', card_name: 'Sol Ring', quantity: 3, foil: false, scryfall_id: null, user_id: '', created_at: '2026-01-15T00:00:00Z', updated_at: '2026-01-15T00:00:00Z' },
+  { id: 'demo-4', card_name: 'Swords to Plowshares', quantity: 2, foil: false, scryfall_id: null, user_id: '', created_at: '2026-03-01T00:00:00Z', updated_at: '2026-03-01T00:00:00Z' },
+  { id: 'demo-5', card_name: 'Birds of Paradise', quantity: 1, foil: true, scryfall_id: null, user_id: '', created_at: '2026-02-20T00:00:00Z', updated_at: '2026-02-20T00:00:00Z' },
+];
+
 export default function Collection() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -95,11 +103,37 @@ export default function Collection() {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
-        <div className="flex-1 flex items-center justify-center flex-col gap-4">
-          <Package className="h-12 w-12 text-muted-foreground/40" />
-          <h2 className="text-lg font-semibold">{t('collection.title', 'My Collection')}</h2>
-          <p className="text-muted-foreground text-sm">Sign in to track your card collection.</p>
-          <Button onClick={() => setAuthOpen(true)}>Sign In</Button>
+        <div className="flex-1 w-full max-w-4xl mx-auto px-4 py-6 space-y-4">
+          <div className="flex items-center justify-center flex-col gap-3 py-6">
+            <Package className="h-10 w-10 text-muted-foreground/40" />
+            <h2 className="text-lg font-semibold">{t('collection.title', 'My Collection')}</h2>
+            <p className="text-muted-foreground text-sm">Sign in to track your card collection.</p>
+            <Button onClick={() => setAuthOpen(true)}>Sign In</Button>
+          </div>
+
+          {/* Demo preview */}
+          <div className="space-y-2 opacity-70 pointer-events-none select-none">
+            <p className="text-xs text-muted-foreground text-center italic">Preview — demo data</p>
+            {DEMO_COLLECTION.map((card) => (
+              <div
+                key={card.id}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/50 bg-card/50"
+              >
+                <span className="flex-1 min-w-0 text-sm font-medium text-foreground truncate">
+                  {card.card_name}
+                </span>
+                {card.foil && (
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20">
+                    Foil
+                  </span>
+                )}
+                <PriceSparkline cardName={card.card_name} demo />
+                <span className="text-sm font-semibold tabular-nums min-w-[1.5rem] text-center">
+                  {card.quantity}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
         <Footer />
         <AuthModal open={authOpen} onOpenChange={setAuthOpen} />
