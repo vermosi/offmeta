@@ -33,12 +33,44 @@ interface CritiqueResult {
 }
 
 interface DeckCritiquePanelProps {
+  deckId: string;
   cards: DeckCard[];
   commanderName: string | null;
   colorIdentity: string[];
   format: string;
   onAddSuggestion: (name: string) => void;
   onRemoveByName?: (name: string) => void;
+}
+
+const CACHE_PREFIX = 'offmeta_critique_';
+
+function buildCacheKey(deckId: string, cards: DeckCard[]): string {
+  const cardFingerprint = cards
+    .map((c) => `${c.card_name}:${c.quantity}`)
+    .sort()
+    .join(',');
+  // Simple hash to keep the key short
+  let hash = 0;
+  for (let i = 0; i < cardFingerprint.length; i++) {
+    hash = ((hash << 5) - hash + cardFingerprint.charCodeAt(i)) | 0;
+  }
+  return `${CACHE_PREFIX}${deckId}_${hash >>> 0}`;
+}
+
+function loadCachedCritique(key: string): CritiqueResult | null {
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+    return JSON.parse(raw) as CritiqueResult;
+  } catch {
+    return null;
+  }
+}
+
+function saveCritique(key: string, data: CritiqueResult): void {
+  try {
+    sessionStorage.setItem(key, JSON.stringify(data));
+  } catch { /* quota exceeded — ignore */ }
 }
 
 const SEVERITY_CONFIG = {
