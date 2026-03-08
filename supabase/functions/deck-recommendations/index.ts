@@ -235,7 +235,7 @@ ${cardList}`;
                         properties: {
                           name: {
                             type: 'string',
-                            enum: ['High Synergy', 'Upgrades', 'Budget Picks'],
+                            enum: ['High Synergy', 'Upgrades', 'Budget Picks', 'Sideboard'],
                           },
                           cards: {
                             type: 'array',
