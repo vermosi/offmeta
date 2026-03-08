@@ -159,7 +159,7 @@ export function CompareModal({ cards, open, onClose }: CompareModalProps) {
             {/* Rarity */}
             <div className="grid gap-2" style={colStyle}>
               <span className="text-xs font-medium text-muted-foreground py-2 flex items-center">
-                Rarity
+                {t('compare.rarity')}
               </span>
               {cards.map((card) => (
                 <div key={card.id} className="py-2 flex justify-center">
