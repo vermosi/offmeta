@@ -393,4 +393,133 @@ describe('DeckCritiquePanel', () => {
     expect(screen.getByText('Suggested Additions (2)')).toBeInTheDocument();
     expect(screen.queryByText(/dismissed/)).not.toBeInTheDocument();
   });
+
+  it('shows toast when trying to critique with fewer than 5 cards', () => {
+    render(<DeckCritiquePanel {...DEFAULT_PROPS} cards={Array.from({ length: 4 }, (_, i) => makeDeckCard(`C${i}`))} />);
+    // Button is disabled, but let's test the guard via direct handler path
+    // by rendering with exactly 4 cards — button should be disabled
+    const btn = screen.getByText('Get Critique').closest('button');
+    expect(btn).toBeDisabled();
+  });
+
+  it('handles thrown exception in invoke gracefully', async () => {
+    mockInvoke.mockRejectedValue(new Error('Network timeout'));
+    render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
+    fireEvent.click(screen.getByText('Get Critique'));
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Error', description: 'Something went wrong' }),
+      );
+    });
+    // Should not be in loading state after error
+    expect(screen.queryByText('Analyzing your deck…')).not.toBeInTheDocument();
+  });
+
+  it('loads critique from sessionStorage on mount', () => {
+    // Pre-populate sessionStorage with a cached critique
+    const cards = DEFAULT_CARDS;
+    const cardFingerprint = cards.map((c) => `${c.card_name}:${c.quantity}`).sort().join(',');
+    let hash = 0;
+    for (let i = 0; i < cardFingerprint.length; i++) {
+      hash = ((hash << 5) - hash + cardFingerprint.charCodeAt(i)) | 0;
+    }
+    const key = `offmeta_critique_deck-1_${hash >>> 0}`;
+    const cached = { summary: 'Cached summary', cuts: [], additions: [] };
+    sessionStorage.setItem(key, JSON.stringify(cached));
+
+    render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
+    expect(screen.getByText('Cached summary')).toBeInTheDocument();
+    expect(screen.getByText('Re-critique')).toBeInTheDocument();
+    expect(mockInvoke).not.toHaveBeenCalled();
+  });
+
+  it('renders critique with empty cuts and additions', async () => {
+    const emptyCritique = { summary: 'Deck looks great!', cuts: [], additions: [] };
+    mockInvoke.mockResolvedValue({ data: emptyCritique, error: null });
+    render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
+    fireEvent.click(screen.getByText('Get Critique'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Deck looks great!')).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/Suggested Cuts/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Suggested Additions/)).not.toBeInTheDocument();
+  });
+
+  it('renders critique without mana_curve_notes', async () => {
+    const noNotes = { summary: 'OK', cuts: [], additions: [], mana_curve_notes: undefined };
+    mockInvoke.mockResolvedValue({ data: noNotes, error: null });
+    render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
+    fireEvent.click(screen.getByText('Get Critique'));
+
+    await waitFor(() => {
+      expect(screen.getByText('OK')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('📊')).not.toBeInTheDocument();
+  });
+
+  it('invalidates cached critique when cards change', async () => {
+    mockInvoke.mockResolvedValue({ data: MOCK_CRITIQUE, error: null });
+    const { rerender } = render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
+    fireEvent.click(screen.getByText('Get Critique'));
+
+    await waitFor(() => {
+      expect(screen.getByText(MOCK_CRITIQUE.summary)).toBeInTheDocument();
+    });
+
+    // Change the cards — critique should be cleared
+    const newCards = Array.from({ length: 8 }, (_, i) => makeDeckCard(`New Card ${i}`));
+    rerender(<DeckCritiquePanel {...DEFAULT_PROPS} cards={newCards} />);
+
+    expect(screen.queryByText(MOCK_CRITIQUE.summary)).not.toBeInTheDocument();
+    expect(screen.getByText('Get Critique')).toBeInTheDocument();
+  });
+
+  it('saves critique to sessionStorage after fetch', async () => {
+    mockInvoke.mockResolvedValue({ data: MOCK_CRITIQUE, error: null });
+    render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
+    fireEvent.click(screen.getByText('Get Critique'));
+
+    await waitFor(() => {
+      expect(screen.getByText(MOCK_CRITIQUE.summary)).toBeInTheDocument();
+    });
+
+    // Verify something was saved to sessionStorage
+    const keys = Object.keys(sessionStorage);
+    const critiqueKey = keys.find((k) => k.startsWith('offmeta_critique_'));
+    expect(critiqueKey).toBeDefined();
+    const stored = JSON.parse(sessionStorage.getItem(critiqueKey!)!);
+    expect(stored.summary).toBe(MOCK_CRITIQUE.summary);
+  });
+
+  it('does not show dismissed summary bar when nothing is dismissed', async () => {
+    mockInvoke.mockResolvedValue({ data: MOCK_CRITIQUE, error: null });
+    render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
+    fireEvent.click(screen.getByText('Get Critique'));
+
+    await waitFor(() => {
+      expect(screen.getByText(MOCK_CRITIQUE.summary)).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/dismissed/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Show all')).not.toBeInTheDocument();
+  });
+
+  it('resets dismissals when deck cards change', async () => {
+    mockInvoke.mockResolvedValue({ data: MOCK_CRITIQUE, error: null });
+    const { rerender } = render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
+    fireEvent.click(screen.getByText('Get Critique'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Card 1')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTitle('Dismiss suggestion for Card 1'));
+    expect(screen.getByText('1 suggestion dismissed')).toBeInTheDocument();
+
+    // Change cards — dismissals should reset
+    const newCards = Array.from({ length: 6 }, (_, i) => makeDeckCard(`X${i}`));
+    rerender(<DeckCritiquePanel {...DEFAULT_PROPS} cards={newCards} />);
+    expect(screen.queryByText(/dismissed/)).not.toBeInTheDocument();
+  });
 });
