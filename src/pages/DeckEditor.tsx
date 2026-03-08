@@ -65,7 +65,7 @@ export default function DeckEditor() {
   const { data: cards = [], isLoading: cardsLoading } = useDeckCards(id);
   const { updateDeck } = useDeckMutations();
   const undoRedo = useUndoRedo();
-  const collectionLookup = useCollectionLookup();
+  
   const {
     addCard, updateCard,
     handleAddCard: handleAddCardBase, handleRemoveCard, handleSetQuantity,
