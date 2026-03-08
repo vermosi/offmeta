@@ -29,25 +29,32 @@ interface DeckCritiquePanelProps {
   scryfallCache?: React.RefObject<Map<string, ScryfallCard>>;
 }
 
+const SEVERITY_KEYS: Record<string, string> = {
+  'off-strategy': 'critique.severityOffStrategy',
+  'underperforming': 'critique.severityUnderperforming',
+  'weak': 'critique.severityWeak',
+};
+
 const SEVERITY_CONFIG = {
-  'off-strategy': { label: 'Off-strategy', icon: Target, className: 'bg-destructive/10 text-destructive border-destructive/20' },
-  'underperforming': { label: 'Underperforming', icon: TrendingDown, className: 'bg-warning/10 text-warning border-warning/20' },
-  'weak': { label: 'Weak', icon: AlertTriangle, className: 'bg-muted text-muted-foreground border-border' },
+  'off-strategy': { icon: Target, className: 'bg-destructive/10 text-destructive border-destructive/20' },
+  'underperforming': { icon: TrendingDown, className: 'bg-warning/10 text-warning border-warning/20' },
+  'weak': { icon: AlertTriangle, className: 'bg-muted text-muted-foreground border-border' },
 } as const;
 
-function getConfidenceConfig(value: number) {
-  if (value >= 0.8) return { label: 'High', className: 'text-accent', barClass: 'bg-accent' };
-  if (value >= 0.5) return { label: 'Medium', className: 'text-warning', barClass: 'bg-warning' };
-  return { label: 'Low', className: 'text-destructive', barClass: 'bg-destructive' };
+function getConfidenceConfig(value: number, t: (k: string) => string) {
+  if (value >= 0.8) return { label: t('critique.confidenceHigh'), className: 'text-accent', barClass: 'bg-accent' };
+  if (value >= 0.5) return { label: t('critique.confidenceMedium'), className: 'text-warning', barClass: 'bg-warning' };
+  return { label: t('critique.confidenceLow'), className: 'text-destructive', barClass: 'bg-destructive' };
 }
 
 function ConfidenceIndicator({ value }: { value: number }) {
+  const { t } = useTranslation();
   const pct = Math.round(Math.min(1, Math.max(0, value)) * 100);
-  const config = getConfidenceConfig(value);
+  const config = getConfidenceConfig(value, t);
   return (
     <div className="flex items-center gap-2">
       <ShieldCheck className={cn('h-3 w-3 shrink-0', config.className)} />
-      <span className="text-[10px] text-muted-foreground whitespace-nowrap">Confidence:</span>
+      <span className="text-[10px] text-muted-foreground whitespace-nowrap">{t('critique.confidenceLabel')}</span>
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -56,12 +63,12 @@ function ConfidenceIndicator({ value }: { value: number }) {
             </div>
           </TooltipTrigger>
           <TooltipContent side="top" className="max-w-[220px] text-[10px] leading-relaxed">
-            <p className="font-medium mb-1">Confidence factors:</p>
+            <p className="font-medium mb-1">{t('critique.confidenceFactors')}</p>
             <ul className="list-disc pl-3 space-y-0.5">
-              <li>Deck size &amp; completeness</li>
-              <li>Archetype clarity</li>
-              <li>Card familiarity</li>
-              <li>Commander synergy fit</li>
+              <li>{t('critique.factorDeckSize')}</li>
+              <li>{t('critique.factorArchetype')}</li>
+              <li>{t('critique.factorFamiliarity')}</li>
+              <li>{t('critique.factorCommander')}</li>
             </ul>
           </TooltipContent>
         </Tooltip>
@@ -72,11 +79,12 @@ function ConfidenceIndicator({ value }: { value: number }) {
 }
 
 function LowConfidenceWarning() {
+  const { t } = useTranslation();
   return (
     <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/5 p-2.5">
       <Info className="h-3.5 w-3.5 text-warning shrink-0 mt-0.5" />
       <p className="text-[10px] text-warning leading-relaxed">
-        Confidence is low — try adding more cards, setting a commander, or building around a clearer archetype for better recommendations.
+        {t('critique.lowConfidenceWarning')}
       </p>
     </div>
   );
