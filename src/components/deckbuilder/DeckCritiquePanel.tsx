@@ -222,7 +222,10 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
               {critique.summary}
             </p>
             {critique.confidence != null && (
-              <ConfidenceIndicator value={critique.confidence} />
+              <>
+                <ConfidenceIndicator value={critique.confidence} />
+                {critique.confidence < 0.5 && <LowConfidenceWarning />}
+              </>
             )}
           </div>
 
