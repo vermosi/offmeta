@@ -192,6 +192,7 @@ function useScryfallHydration(cards: DeckCard[]) {
 export default function PublicDeckView() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { data: deck, isLoading: deckLoading, error: deckError } = usePublicDeck(id);
   const { data: cards = [], isLoading: cardsLoading } = usePublicDeckCards(id);
   const { data: deckTags = [] } = useDeckTags(id);
