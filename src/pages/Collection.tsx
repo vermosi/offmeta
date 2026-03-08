@@ -124,7 +124,7 @@ export default function Collection() {
                 </span>
                 {card.foil && (
                   <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20">
-                    Foil
+                    {t('collection.foil', 'Foil')}
                   </span>
                 )}
                 <PriceSparkline cardName={card.card_name} demo />
