@@ -298,7 +298,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
                         size="sm"
                         variant="ghost"
                         className="h-4 w-4 p-0 shrink-0 text-muted-foreground hover:text-destructive"
-                        onClick={() => setDismissedAdditions((prev) => new Set(prev).add(add.card_name))}
+                        onClick={() => dismissAddition(add.card_name)}
                         title={`Dismiss suggestion for ${add.card_name}`}
                       >
                         <X className="h-3 w-3" />
