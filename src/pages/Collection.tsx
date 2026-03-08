@@ -219,7 +219,7 @@ export default function Collection() {
             {collection.length === 0 && (
               <Button variant="secondary" size="sm" onClick={() => setImportOpen(true)} className="gap-1.5 mt-2">
                 <Upload className="h-3.5 w-3.5" />
-                Bulk Import
+                {t('collection.bulkImport', 'Bulk Import')}
               </Button>
             )}
           </div>
