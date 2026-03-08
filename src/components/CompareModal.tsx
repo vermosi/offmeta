@@ -68,6 +68,7 @@ function StatRow({
 
 export function CompareModal({ cards, open, onClose }: CompareModalProps) {
   const contentRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
   useFocusTrap(contentRef, open && cards.length >= 2);
 
   if (cards.length < 2) return null;
@@ -78,7 +79,7 @@ export function CompareModal({ cards, open, onClose }: CompareModalProps) {
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] p-0 overflow-hidden" aria-describedby={undefined}>
         <DialogHeader className="px-6 pt-6 pb-0">
-          <DialogTitle>Compare Cards</DialogTitle>
+          <DialogTitle>{t('compare.title')}</DialogTitle>
         </DialogHeader>
 
         <ScrollArea className="px-6 pb-6 max-h-[calc(90vh-4rem)]" ref={contentRef}>
@@ -105,7 +106,7 @@ export function CompareModal({ cards, open, onClose }: CompareModalProps) {
             {/* Mana Cost */}
             <div className="grid gap-2" style={colStyle}>
               <span className="text-xs font-medium text-muted-foreground py-2 flex items-center">
-                Mana Cost
+                {t('compare.manaCost')}
               </span>
               {cards.map((card) => {
                 const cost = card.mana_cost || card.card_faces?.[0]?.mana_cost || '';
