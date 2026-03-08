@@ -21,7 +21,7 @@ OffMeta is a natural-language search frontend for Magic: The Gathering cards. It
 
 ## Known gaps / TODO
 
-- Semantic-search budget fallback test helper debt: `callSemanticSearchWithBudget` is still unimplemented, so budget-based fallback scenarios remain skipped in `supabase/functions/semantic-search/index.test.ts`.
+- ~~Semantic-search budget fallback test helper debt~~ — resolved: `callSemanticSearchWithBudget` is now fully implemented with 6 active tests covering forced budget fallback, debug flags, AI failure simulation, confidence scoring, and explanation validation.
 - Roadmap near/mid-term work still open: combo finder filtering/sorting, deck recommendation sideboard suggestions, and collection management/tracking.
 - Community backlog still open: local Supabase Edge Function contract tests, deployment documentation for Supabase + hosting, and accessibility/keyboard-navigation audit improvements.
 
