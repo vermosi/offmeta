@@ -27,7 +27,7 @@ import { DeckStatsBar } from '@/components/deckbuilder/DeckStats';
 import { DeckExportMenu } from '@/components/deckbuilder/DeckExportMenu';
 import { useTranslation } from '@/lib/i18n';
 import { useDeckTags, useDeckTagMutations, usePopularTags } from '@/hooks/useDeckTags';
-import { useCollectionLookup } from '@/hooks/useCollection';
+
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
