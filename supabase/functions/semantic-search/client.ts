@@ -1,5 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
+// @ts-expect-error - Deno-specific module paths not resolvable in TypeScript
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { validateEnv } from '../_shared/env.ts';
 
