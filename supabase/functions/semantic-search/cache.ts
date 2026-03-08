@@ -191,7 +191,7 @@ export async function getPersistentCache(
  */
 export async function setPersistentCache(
   query: string,
-  filters: Record<string, unknown> | undefined,
+  filters: Record<string, unknown> | null | undefined,
   result: CacheEntry['result'],
   cacheSalt?: string,
 ): Promise<void> {
