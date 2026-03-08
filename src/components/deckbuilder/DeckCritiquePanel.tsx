@@ -11,30 +11,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/useToast';
 import { cn } from '@/lib/core/utils';
 import { CardHoverImage } from '@/components/deckbuilder/CardHoverImage';
+import { buildCacheKey, loadCachedCritique, saveCritique } from '@/components/deckbuilder/critique-cache';
+import type { CritiqueResult } from '@/components/deckbuilder/critique-cache';
 import type { DeckCard } from '@/hooks/useDeck';
 import type { ScryfallCard } from '@/types/card';
-
-
-
-interface CritiqueCut {
-  card_name: string;
-  reason: string;
-  severity: 'weak' | 'underperforming' | 'off-strategy';
-}
-
-interface CritiqueAddition {
-  card_name: string;
-  reason: string;
-  replaces?: string;
-  category: string;
-}
-
-interface CritiqueResult {
-  summary: string;
-  cuts: CritiqueCut[];
-  additions: CritiqueAddition[];
-  mana_curve_notes?: string;
-}
 
 interface DeckCritiquePanelProps {
   deckId: string;
@@ -45,37 +25,6 @@ interface DeckCritiquePanelProps {
   onAddSuggestion: (name: string) => void;
   onRemoveByName?: (name: string) => void;
   scryfallCache?: React.RefObject<Map<string, ScryfallCard>>;
-}
-
-const CACHE_PREFIX = 'offmeta_critique_';
-
-function buildCacheKey(deckId: string, cards: DeckCard[]): string {
-  const cardFingerprint = cards
-    .map((c) => `${c.card_name}:${c.quantity}`)
-    .sort()
-    .join(',');
-  // Simple hash to keep the key short
-  let hash = 0;
-  for (let i = 0; i < cardFingerprint.length; i++) {
-    hash = ((hash << 5) - hash + cardFingerprint.charCodeAt(i)) | 0;
-  }
-  return `${CACHE_PREFIX}${deckId}_${hash >>> 0}`;
-}
-
-function loadCachedCritique(key: string): CritiqueResult | null {
-  try {
-    const raw = sessionStorage.getItem(key);
-    if (!raw) return null;
-    return JSON.parse(raw) as CritiqueResult;
-  } catch {
-    return null;
-  }
-}
-
-function saveCritique(key: string, data: CritiqueResult): void {
-  try {
-    sessionStorage.setItem(key, JSON.stringify(data));
-  } catch { /* quota exceeded — ignore */ }
 }
 
 const SEVERITY_CONFIG = {
