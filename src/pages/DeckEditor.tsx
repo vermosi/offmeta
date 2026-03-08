@@ -231,7 +231,7 @@ export default function DeckEditor() {
         if (newCat && newCat !== card.category) updateCard.mutate({ id: card.id, category: newCat });
       }
       toast({ title: t('deckEditor.categorizeSuccess'), description: t('deckEditor.categorizeSuccessDesc').replace('{count}', String(cardNames.length)) });
-    } catch { toast({ title: 'Error', variant: 'destructive' }); }
+    } catch { toast({ title: t('common.error'), variant: 'destructive' }); }
     finally { setCategorizingAll(false); }
   }, [cards, updateCard, t]);
 
