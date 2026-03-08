@@ -137,7 +137,7 @@ export function CategorySection({
                 )}
 
                 {/* Missing from collection indicator */}
-                {collectionLookup && (() => {
+                {collectionLookup && collectionLookup.size > 0 && (() => {
                   const owned = collectionLookup.get(card.card_name) || 0;
                   const needed = card.quantity - owned;
                   return needed > 0 ? (
