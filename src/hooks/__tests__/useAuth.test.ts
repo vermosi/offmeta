@@ -91,7 +91,10 @@ describe('useAuthProvider', () => {
 
   it('signIn returns null error on success', async () => {
     const { result } = renderHook(() => useAuthProvider());
-    const res = await result.current.signIn('test@test.com', 'pass');
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+    const res = await act(() => result.current.signIn('test@test.com', 'pass'));
     expect(res.error).toBeNull();
   });
 
