@@ -255,7 +255,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
                         <span className="text-xs font-medium text-foreground cursor-default">{cut.card_name}</span>
                       </CardHoverImage>
                       <Badge variant="outline" className={cn('text-[9px] px-1 py-0 h-4', sev.className)}>
-                        {sev.label}
+                        {t(SEVERITY_KEYS[cut.severity] || 'critique.severityWeak')}
                       </Badge>
                       <Button
                         size="sm"
