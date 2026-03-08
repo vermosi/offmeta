@@ -301,7 +301,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
                           onClick={() => {
                             onRemoveByName(add.replaces!);
                             onAddSuggestion(add.card_name);
-                            toast({ title: 'Swapped', description: `${add.replaces} → ${add.card_name}` });
+                            toast({ title: t('critique.swapped'), description: `${add.replaces} → ${add.card_name}` });
                           }}
                           title={`Replace ${add.replaces} with ${add.card_name}`}
                         >
