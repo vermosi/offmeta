@@ -632,7 +632,7 @@ export default function DeckEditor() {
         <>
           <span className="text-border">/</span>
           <span className="font-semibold text-foreground">{maybeCount}</span>
-          <span>maybe</span>
+          <span>{t('deckEditor.maybe')}</span>
         </>
       )}
     </div>
