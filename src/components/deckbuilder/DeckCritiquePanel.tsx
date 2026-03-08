@@ -16,6 +16,7 @@ import { buildCacheKey, loadCachedCritique, saveCritique } from '@/components/de
 import type { CritiqueResult } from '@/components/deckbuilder/critique-cache';
 import type { DeckCard } from '@/hooks/useDeck';
 import type { ScryfallCard } from '@/types/card';
+import { useTranslation } from '@/lib/i18n';
 
 interface DeckCritiquePanelProps {
   deckId: string;
