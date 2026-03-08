@@ -230,9 +230,9 @@ describe('DeckCritiquePanel', () => {
     const critiqueWithAllSeverities = {
       ...MOCK_CRITIQUE,
       cuts: [
-        { card_name: 'Weak Card', reason: 'Weak', severity: 'weak' },
-        { card_name: 'Under Card', reason: 'Under', severity: 'underperforming' },
-        { card_name: 'Off Card', reason: 'Off', severity: 'off-strategy' },
+        { card_name: 'Weak Card', reason: 'This card is too weak', severity: 'weak' },
+        { card_name: 'Under Card', reason: 'This card underperforms', severity: 'underperforming' },
+        { card_name: 'Off Card', reason: 'This card is off-theme', severity: 'off-strategy' },
       ],
     };
     mockInvoke.mockResolvedValue({ data: critiqueWithAllSeverities, error: null });
@@ -240,7 +240,9 @@ describe('DeckCritiquePanel', () => {
     fireEvent.click(screen.getByText('Get Critique'));
 
     await waitFor(() => {
-      expect(screen.getByText('Weak')).toBeInTheDocument();
+      // Check severity badges exist
+      const badges = screen.getAllByText('Weak');
+      expect(badges.length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText('Underperforming')).toBeInTheDocument();
       expect(screen.getByText('Off-strategy')).toBeInTheDocument();
     });
