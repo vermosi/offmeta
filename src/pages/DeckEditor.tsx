@@ -420,7 +420,7 @@ export default function DeckEditor() {
           {!isReadOnly && (
             <button onClick={() => setDescriptionOpen((o) => !o)}
               className="text-[10px] text-muted-foreground hover:text-foreground transition-colors">
-              {descriptionInput ? 'Edit notes' : '+ Add notes'}
+              {descriptionInput ? t('deckEditor.editNotes') : t('deckEditor.addNotesButton')}
             </button>
           )}
         </div>
