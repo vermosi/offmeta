@@ -91,6 +91,7 @@ function LowConfidenceWarning() {
 }
 
 export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity, format, onAddSuggestion, onRemoveByName, scryfallCache }: DeckCritiquePanelProps) {
+  const { t } = useTranslation();
   const fallbackCacheRef = useRef<Map<string, ScryfallCard>>(new Map());
   const effectiveCache = scryfallCache ?? fallbackCacheRef;
   const cacheKey = useMemo(() => buildCacheKey(deckId, cards), [deckId, cards]);
