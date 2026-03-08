@@ -47,10 +47,36 @@ function ConfidenceIndicator({ value }: { value: number }) {
     <div className="flex items-center gap-2">
       <ShieldCheck className={cn('h-3 w-3 shrink-0', config.className)} />
       <span className="text-[10px] text-muted-foreground whitespace-nowrap">Confidence:</span>
-      <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-        <div className={cn('h-full rounded-full transition-all', config.barClass)} style={{ width: `${pct}%` }} />
-      </div>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden cursor-help">
+              <div className={cn('h-full rounded-full transition-all', config.barClass)} style={{ width: `${pct}%` }} />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-[220px] text-[10px] leading-relaxed">
+            <p className="font-medium mb-1">Confidence factors:</p>
+            <ul className="list-disc pl-3 space-y-0.5">
+              <li>Deck size &amp; completeness</li>
+              <li>Archetype clarity</li>
+              <li>Card familiarity</li>
+              <li>Commander synergy fit</li>
+            </ul>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <span className={cn('text-[10px] font-medium', config.className)}>{pct}%</span>
+    </div>
+  );
+}
+
+function LowConfidenceWarning() {
+  return (
+    <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/5 p-2.5">
+      <Info className="h-3.5 w-3.5 text-warning shrink-0 mt-0.5" />
+      <p className="text-[10px] text-warning leading-relaxed">
+        Confidence is low — try adding more cards, setting a commander, or building around a clearer archetype for better recommendations.
+      </p>
     </div>
   );
 }
