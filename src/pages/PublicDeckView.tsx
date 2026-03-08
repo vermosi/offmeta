@@ -273,7 +273,7 @@ export default function PublicDeckView() {
                   {FORMAT_LABELS[deck.format] || deck.format}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {totalMainboard} cards
+                  {t('publicDeck.cards').replace('{count}', String(totalMainboard))}
                 </span>
                 {deck.color_identity.length > 0 && (
                   <div className="flex items-center gap-0.5">
