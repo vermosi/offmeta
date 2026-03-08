@@ -48,10 +48,10 @@ describe('critique-cache', () => {
     it('produces different keys for different card lists', () => {
       const deckId = 'deck-123';
       const cards1: DeckCard[] = [
-        { card_name: 'Counterspell', quantity: 2, category: 'Control', board: 'main', is_commander: false, is_companion: false, scryfall_id: null },
+        createTestCard({ card_name: 'Counterspell', quantity: 2, category: 'Control' }),
       ];
       const cards2: DeckCard[] = [
-        { card_name: 'Lightning Bolt', quantity: 3, category: 'Removal', board: 'main', is_commander: false, is_companion: false, scryfall_id: null },
+        createTestCard({ card_name: 'Lightning Bolt', quantity: 3, category: 'Removal' }),
       ];
 
       const key1 = buildCacheKey(deckId, cards1);
