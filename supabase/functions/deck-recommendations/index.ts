@@ -185,11 +185,12 @@ serve(async (req) => {
       ? `\n\nCRITICAL COLOR IDENTITY RULE: The commander's color identity is [${ciColors.join(', ')}]. You MUST ONLY recommend cards whose color identity is a subset of [${ciColors.join(', ')}]. Do NOT recommend any card that has colors outside this identity. For example, if the identity is [W, U, B], do NOT recommend cards with R or G in their color identity.`
       : '';
 
-    const systemPrompt = `You are an expert Magic: The Gathering EDH/Commander deckbuilding advisor. Given a decklist and commander, suggest 15-20 card recommendations organized into exactly 3 categories:
+    const systemPrompt = `You are an expert Magic: The Gathering EDH/Commander deckbuilding advisor. Given a decklist and commander, suggest 20-25 card recommendations organized into exactly 4 categories:
 
 1. "High Synergy" – Cards that strongly synergize with the commander's strategy or key themes in the deck.
 2. "Upgrades" – Strictly better or more efficient replacements for weaker cards in the list.
 3. "Budget Picks" – Powerful cards under $5 that would improve the deck.
+4. "Sideboard" – 5-7 cards for a sideboard or flex slots: targeted hate, meta answers, and situational tech cards that shore up the deck's weaknesses against common strategies (e.g. graveyard hate, artifact/enchantment removal, board wipes, counterspells, or color-specific hosers).
 
 STRICT RULES:
 - Every recommended card MUST be legal in the Commander/EDH format. Do NOT suggest banned cards (e.g. Balance, Primeval Titan, Sylvan Primordial, Biorhythm, Coalition Victory, etc.).
