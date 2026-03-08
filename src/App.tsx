@@ -40,6 +40,7 @@ const BrowseDecks = lazy(() => import('./pages/BrowseDecks'));
 const About = lazy(() => import('./pages/About'));
 const Collection = lazy(() => import('./pages/Collection'));
 const CardPage = lazy(() => import('./pages/CardPage'));
+const PublicProfile = lazy(() => import('./pages/PublicProfile'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const queryClient = new QueryClient({
