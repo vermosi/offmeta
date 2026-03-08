@@ -1590,7 +1590,7 @@ describe('Translation Golden Tests - Multi-Constraint Queries', () => {
     },
     {
       input: 'artifacts that tap for any color of mana',
-      expectedContains: ['t:artifact', 'any color'],
+      expectedContains: ['t:artifact', 'o:any', 'o:color'],
       description: 'Rainbow mana rocks',
     },
   ];
