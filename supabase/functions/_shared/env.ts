@@ -1,4 +1,5 @@
-// @ts-expect-error - Deno-specific globals not resolvable in TypeScript
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
 /**
  * Validation utility for environment variables in Edge Functions.
  */

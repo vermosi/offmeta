@@ -5,7 +5,8 @@
  * @module functions/price-snapshot
  */
 
-// @ts-expect-error - Deno-specific module paths not resolvable in TypeScript
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders } from '../_shared/auth.ts';
