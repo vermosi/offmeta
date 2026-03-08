@@ -532,9 +532,9 @@ export default function DeckEditor() {
       {!isMobile && (
         <button onClick={() => setPreviewOpen((o) => !o)}
           className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-1 rounded hover:bg-secondary/50"
-          title={previewOpen ? 'Hide preview' : 'Show preview'}>
+          title={previewOpen ? t('deckEditor.hidePreview') : t('deckEditor.showPreview')}>
           {previewOpen ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-          <span className="hidden sm:inline">Preview</span>
+          <span className="hidden sm:inline">{t('deckEditor.preview')}</span>
         </button>
       )}
     </div>
