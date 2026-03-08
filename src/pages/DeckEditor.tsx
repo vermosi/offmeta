@@ -632,7 +632,6 @@ export default function DeckEditor() {
           </div>
         )}
       </div>
-      {missingCardsBar}
       {deckCountBar}
       {statsBar}
     </div>
