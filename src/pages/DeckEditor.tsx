@@ -510,7 +510,7 @@ export default function DeckEditor() {
                 ))}
                 <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium text-accent border-y border-border bg-accent/5">
                   <div className="h-1.5 w-1.5 rounded-full bg-accent shrink-0" />
-                  Current state
+                  {t('deckEditor.currentState')}
                 </div>
                 {[...undoRedo.undoLabels].reverse().map((label, i) => {
                   const stackIndex = undoRedo.undoLabels.length - 1 - i;
