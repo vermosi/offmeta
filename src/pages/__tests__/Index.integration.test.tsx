@@ -250,17 +250,15 @@ describe('Index page integration', () => {
       data: [],
     });
 
-    renderIndex();
+    await renderIndex();
 
-    await waitFor(() => {
-      expect(screen.getByRole('searchbox')).toBeInTheDocument();
-    });
     const input = screen.getByRole('searchbox');
-    fireEvent.change(input, { target: { value: 'nonexistent card xyz' } });
-    fireEvent.keyDown(input, { key: 'Enter' });
+    await act(async () => {
+      fireEvent.change(input, { target: { value: 'nonexistent card xyz' } });
+      fireEvent.keyDown(input, { key: 'Enter' });
+    });
 
     await waitFor(() => {
-      // EmptyState renders an h3 with "No cards found"
       const matches = screen.getAllByText(/no cards found/i);
       expect(matches.length).toBeGreaterThanOrEqual(1);
     });
