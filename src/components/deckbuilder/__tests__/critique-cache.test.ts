@@ -1,23 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { buildCacheKey, loadCachedCritique, saveCritique, type CritiqueResult } from '../critique-cache';
 import type { DeckCard } from '@/hooks/useDeck';
-
-/** Helper factory to create valid DeckCard objects for testing */
-function createTestCard(overrides: Partial<DeckCard> = {}): DeckCard {
-  return {
-    id: 'card-id-' + Math.random(),
-    deck_id: 'deck-123',
-    card_name: 'Test Card',
-    quantity: 1,
-    board: 'main',
-    category: null,
-    is_commander: false,
-    is_companion: false,
-    scryfall_id: null,
-    created_at: new Date().toISOString(),
-    ...overrides,
-  };
-}
+import { createTestCard, createMockCritiqueResult } from '@/test/factories';
 
 describe('critique-cache', () => {
   beforeEach(() => {
@@ -97,12 +81,11 @@ describe('critique-cache', () => {
   describe('saveCritique', () => {
     it('saves critique data to sessionStorage', () => {
       const key = 'test-key';
-      const critique: CritiqueResult = {
-        summary: 'Test summary',
+      const critique = createMockCritiqueResult({
         cuts: [{ card_name: 'Bad Card', reason: 'Off-strategy', severity: 'weak' }],
         additions: [{ card_name: 'Good Card', reason: 'Fits archetype', category: 'Ramp' }],
         confidence: 0.75,
-      };
+      });
 
       saveCritique(key, critique);
 
@@ -113,18 +96,8 @@ describe('critique-cache', () => {
 
     it('overwrites existing critiques with the same key', () => {
       const key = 'test-key';
-      const critique1: CritiqueResult = {
-        summary: 'First',
-        cuts: [],
-        additions: [],
-        confidence: 0.5,
-      };
-      const critique2: CritiqueResult = {
-        summary: 'Second',
-        cuts: [],
-        additions: [],
-        confidence: 0.8,
-      };
+      const critique1 = createMockCritiqueResult({ summary: 'First', confidence: 0.5 });
+      const critique2 = createMockCritiqueResult({ summary: 'Second', confidence: 0.8 });
 
       saveCritique(key, critique1);
       saveCritique(key, critique2);
@@ -136,11 +109,7 @@ describe('critique-cache', () => {
 
     it('gracefully handles sessionStorage quota exceeded', () => {
       const key = 'test-key';
-      const critique: CritiqueResult = {
-        summary: 'Test',
-        cuts: [],
-        additions: [],
-      };
+      const critique = createMockCritiqueResult();
 
       // Mock sessionStorage.setItem to throw
       const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
@@ -155,11 +124,7 @@ describe('critique-cache', () => {
 
     it('gracefully handles other sessionStorage errors', () => {
       const key = 'test-key';
-      const critique: CritiqueResult = {
-        summary: 'Test',
-        cuts: [],
-        additions: [],
-      };
+      const critique = createMockCritiqueResult();
 
       const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
         throw new Error('SecurityError');
@@ -174,8 +139,7 @@ describe('critique-cache', () => {
   describe('loadCachedCritique', () => {
     it('loads valid critique data from sessionStorage', () => {
       const key = 'test-key';
-      const critique: CritiqueResult = {
-        summary: 'Test summary',
+      const critique = createMockCritiqueResult({
         cuts: [{ card_name: 'Bad Card', reason: 'Off-strategy', severity: 'off-strategy' }],
         additions: [
           {
@@ -187,7 +151,7 @@ describe('critique-cache', () => {
         ],
         confidence: 0.65,
         mana_curve_notes: 'Heavy on 3-drops',
-      };
+      });
 
       sessionStorage.setItem(key, JSON.stringify(critique));
 
@@ -228,7 +192,7 @@ describe('critique-cache', () => {
       const key = buildCacheKey('deck-123', [
         createTestCard({ card_name: 'Card1', quantity: 1, category: 'Cat1' }),
       ]);
-      const original: CritiqueResult = {
+      const original = createMockCritiqueResult({
         summary: 'Comprehensive feedback',
         cuts: [
           { card_name: 'Weak Spell', reason: 'Does not advance win condition', severity: 'weak' },
@@ -244,7 +208,7 @@ describe('critique-cache', () => {
         ],
         confidence: 0.82,
         mana_curve_notes: 'Good distribution across curve',
-      };
+      });
 
       saveCritique(key, original);
       const loaded = loadCachedCritique(key);
@@ -254,8 +218,7 @@ describe('critique-cache', () => {
 
     it('preserves all critique fields after round-trip', () => {
       const key = 'test-key';
-      const critique: CritiqueResult = {
-        summary: 'Summary text',
+      const critique = createMockCritiqueResult({
         cuts: [
           { card_name: 'Cut1', reason: 'Reason1', severity: 'weak' },
           { card_name: 'Cut2', reason: 'Reason2', severity: 'underperforming' },
@@ -267,7 +230,7 @@ describe('critique-cache', () => {
         ],
         confidence: 0.42,
         mana_curve_notes: 'Curve is unbalanced',
-      };
+      });
 
       saveCritique(key, critique);
       const loaded = loadCachedCritique(key)!;
