@@ -82,7 +82,10 @@ describe('useAuthProvider', () => {
     } as never);
 
     const { result } = renderHook(() => useAuthProvider());
-    const res = await result.current.signIn('test@test.com', 'bad');
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+    const res = await act(() => result.current.signIn('test@test.com', 'bad'));
     expect(res.error).toBe('Invalid credentials');
   });
 
