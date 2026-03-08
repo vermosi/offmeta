@@ -226,7 +226,7 @@ describe('critique-cache', () => {
   describe('round-trip: save and load', () => {
     it('loads the same data that was saved', () => {
       const key = buildCacheKey('deck-123', [
-        { card_name: 'Card1', quantity: 1, category: 'Cat1', board: 'main', is_commander: false, is_companion: false, scryfall_id: null },
+        createTestCard({ card_name: 'Card1', quantity: 1, category: 'Cat1' }),
       ]);
       const original: CritiqueResult = {
         summary: 'Comprehensive feedback',
