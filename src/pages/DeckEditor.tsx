@@ -411,7 +411,7 @@ export default function DeckEditor() {
           )}
           {!isReadOnly && cards.length >= 3 && (
             <Button size="sm" variant="ghost" onClick={handleRecategorizeAll} disabled={categorizingAll}
-              className="h-6 text-[10px] gap-1 px-2" title="AI re-categorize all cards">
+              className="h-6 text-[10px] gap-1 px-2" title={t('deckEditor.categorizeTooltip')}>
               {categorizingAll ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
               {t('deckEditor.categorize')}
             </Button>
