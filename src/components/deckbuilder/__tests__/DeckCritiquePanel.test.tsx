@@ -249,4 +249,52 @@ describe('DeckCritiquePanel', () => {
       expect(screen.getByText('Off-strategy')).toBeInTheDocument();
     });
   });
+
+  it('dismisses a cut card when X is clicked', async () => {
+    mockInvoke.mockResolvedValue({ data: MOCK_CRITIQUE, error: null });
+    render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
+    fireEvent.click(screen.getByText('Get Critique'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Card 1')).toBeInTheDocument();
+    });
+
+    const dismissBtn = screen.getByTitle('Dismiss suggestion for Card 1');
+    fireEvent.click(dismissBtn);
+
+    expect(screen.queryByText('Card 1')).not.toBeInTheDocument();
+    expect(screen.getByText('Card 2')).toBeInTheDocument();
+    expect(screen.getByText('Suggested Cuts (1)')).toBeInTheDocument();
+  });
+
+  it('dismisses an addition card when X is clicked', async () => {
+    mockInvoke.mockResolvedValue({ data: MOCK_CRITIQUE, error: null });
+    render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
+    fireEvent.click(screen.getByText('Get Critique'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Rhystic Study')).toBeInTheDocument();
+    });
+
+    const dismissBtn = screen.getByTitle('Dismiss suggestion for Rhystic Study');
+    fireEvent.click(dismissBtn);
+
+    expect(screen.queryByText('Rhystic Study')).not.toBeInTheDocument();
+    expect(screen.getByText('Swords to Plowshares')).toBeInTheDocument();
+    expect(screen.getByText('Suggested Additions (1)')).toBeInTheDocument();
+  });
+
+  it('hides section header when all items are dismissed', async () => {
+    const singleCut = { ...MOCK_CRITIQUE, cuts: [MOCK_CRITIQUE.cuts[0]], additions: [] };
+    mockInvoke.mockResolvedValue({ data: singleCut, error: null });
+    render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
+    fireEvent.click(screen.getByText('Get Critique'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Suggested Cuts (1)')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTitle('Dismiss suggestion for Card 1'));
+    expect(screen.queryByText(/Suggested Cuts/)).not.toBeInTheDocument();
+  });
 });
