@@ -137,8 +137,8 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
   const dismissAddition = useCallback((cardName: string) => {
     setDismissedAdditions((prev) => new Set(prev).add(cardName));
     toast({
-      title: `Dismissed "${cardName}"`,
-      description: 'Suggestion hidden.',
+      title: t('critique.dismissed').replace('{name}', cardName),
+      description: t('critique.suggestionHidden'),
       action: (
         <Button
           size="sm"
