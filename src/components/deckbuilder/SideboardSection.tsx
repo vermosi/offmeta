@@ -55,7 +55,7 @@ export function SideboardSection({
                     <span className="truncate text-xs text-muted-foreground">{card.card_name}</span>
                     <SetBadge cardName={card.card_name} scryfallId={card.scryfall_id} scryfallCache={scryfallCache} cacheVersion={cacheVersion} />
                   </CardHoverImage>
-                  {collectionLookup && (() => {
+                  {collectionLookup && collectionLookup.size > 0 && (() => {
                     const owned = collectionLookup.get(card.card_name) || 0;
                     const needed = card.quantity - owned;
                     return needed > 0 ? (
