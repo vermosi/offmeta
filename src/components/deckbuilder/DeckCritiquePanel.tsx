@@ -213,7 +213,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
 
       {!critique && !loading && (
         <p className="text-[11px] text-muted-foreground">
-          Get AI-powered feedback on what to cut and add to sharpen your deck.
+          {t('critique.description')}
         </p>
       )}
 
