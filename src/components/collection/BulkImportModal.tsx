@@ -262,7 +262,7 @@ export function BulkImportModal({ open, onOpenChange }: BulkImportModalProps) {
           </button>
         </div>
 
-        {tab === 'text' ? (
+        {tab === 'text' && (
           <div className="space-y-3">
             <Textarea
               value={textInput}
@@ -275,7 +275,8 @@ export function BulkImportModal({ open, onOpenChange }: BulkImportModalProps) {
               Parse List
             </Button>
           </div>
-        ) : (
+        )}
+        {tab === 'csv' && (
           <div className="space-y-3">
             <input
               ref={fileRef}
@@ -296,6 +297,35 @@ export function BulkImportModal({ open, onOpenChange }: BulkImportModalProps) {
                 Columns: name, quantity, foil (max 5MB)
               </p>
             </button>
+          </div>
+        )}
+        {tab === 'moxfield' && (
+          <div className="space-y-3">
+            <Textarea
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value)}
+              placeholder={`Count,Name,Edition,Collector Number,Foil\n4,Lightning Bolt,2X2,117,\n1,Sol Ring,CMR,472,foil`}
+              className="min-h-[200px] font-mono text-xs"
+              maxLength={MAX_TEXT_LENGTH}
+            />
+            <p className="text-xs text-muted-foreground">
+              Paste your Moxfield collection export CSV (with headers). You can also upload a file via the CSV tab.
+            </p>
+            <Button
+              onClick={() => {
+                if (!textInput.trim()) return;
+                const entries = parseMoxfieldCsv(textInput.slice(0, MAX_TEXT_LENGTH));
+                setParsed(entries);
+                if (entries.length === 0) {
+                  toast.error('No valid entries found. Ensure the CSV has a "Name" column header.');
+                }
+              }}
+              variant="secondary"
+              className="w-full"
+              disabled={!textInput.trim()}
+            >
+              Parse Moxfield Export
+            </Button>
           </div>
         )}
 

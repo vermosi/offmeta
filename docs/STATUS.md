@@ -22,8 +22,11 @@ OffMeta is a natural-language search frontend for Magic: The Gathering cards. It
 ## Known gaps / TODO
 
 - ~~Semantic-search budget fallback test helper debt~~ — resolved: `callSemanticSearchWithBudget` is now fully implemented with 6 active tests covering forced budget fallback, debug flags, AI failure simulation, confidence scoring, and explanation validation.
-- Roadmap near/mid-term work still open: combo finder filtering/sorting, deck recommendation sideboard suggestions, and collection management/tracking.
+- ~~Combo finder filtering/sorting~~ — completed: filtering by color, price, and card count; sorting by relevance and price.
+- ~~Deck recommendation sideboard suggestions~~ — completed: Sideboard category added to AI recommendations.
+- ~~Collection management/tracking~~ — completed: bulk import (text/CSV/Moxfield), value estimates, set tracking, CSV export with prices.
 - Community backlog still open: local Supabase Edge Function contract tests, deployment documentation for Supabase + hosting, and accessibility/keyboard-navigation audit improvements.
+- Next priority: Phase 7 Meta Intelligence (card-meta-context in modal, AI deck critique).
 
 ## Recent additions
 
