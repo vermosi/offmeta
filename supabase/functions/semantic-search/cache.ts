@@ -42,7 +42,7 @@ async function hashCacheKey(key: string): Promise<string> {
 
 export async function getCachedResult(
   query: string,
-  filters?: Record<string, unknown>,
+  filters?: Record<string, unknown> | null,
   cacheSalt?: string,
 ): Promise<CacheEntry['result'] | null> {
   const key = getCacheKey(query, filters, cacheSalt);
