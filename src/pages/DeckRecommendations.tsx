@@ -310,63 +310,81 @@ export default function DeckRecommendations() {
                 {copiedAll ? t('deckRecs.copied') : t('deckRecs.copyAll')}
               </Button>
             </div>
-            {result.categories.map((cat) => (
-              <section key={cat.name} className="space-y-3">
-                <h3 className="text-lg font-semibold text-primary">{cat.name}</h3>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {cat.cards.map((card) => (
-                    <div
-                      key={card.name}
-                      className="rounded-xl border border-border bg-card overflow-hidden flex flex-col"
-                    >
-                      {(card.scryfall?.image_uris?.normal ?? card.scryfall?.card_faces?.[0]?.image_uris?.normal) ? (
-                        <img
-                          src={(card.scryfall?.image_uris?.normal ?? card.scryfall?.card_faces?.[0]?.image_uris?.normal)!}
-                          alt={card.name}
-                          className="w-full aspect-[488/680] object-cover"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="w-full aspect-[488/680] bg-muted flex items-center justify-center text-xs text-muted-foreground">
-                          {t('deckRecs.noImage')}
-                        </div>
-                      )}
-                      <div className="p-3 space-y-1.5 flex-1 flex flex-col">
-                        <p className="text-sm font-medium leading-tight">
-                          <OracleText text={card.name} size="sm" />
-                        </p>
-                        <p className="text-xs text-muted-foreground flex-1">
-                          <OracleText text={card.reason} size="sm" />
-                        </p>
-                        {card.scryfall?.prices?.usd && (
-                          <p className="text-xs font-medium text-primary">${card.scryfall.prices.usd}</p>
+            {result.categories.map((cat) => {
+              const isSideboard = cat.name === 'Sideboard';
+              return (
+                <section key={cat.name} className={`space-y-3 ${isSideboard ? 'border-t border-border pt-6' : ''}`}>
+                  <div className="flex items-center gap-2">
+                    {isSideboard && <Shield className="h-5 w-5 text-accent" />}
+                    <h3 className="text-lg font-semibold text-primary">{cat.name}</h3>
+                    {isSideboard && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent/10 text-accent font-medium">
+                        Meta Answers
+                      </span>
+                    )}
+                  </div>
+                  {isSideboard && (
+                    <p className="text-xs text-muted-foreground -mt-1">
+                      Targeted hate and tech cards to swap in against common strategies.
+                    </p>
+                  )}
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {cat.cards.map((card) => (
+                      <div
+                        key={card.name}
+                        className={`rounded-xl border overflow-hidden flex flex-col ${
+                          isSideboard ? 'border-accent/30 bg-accent/5' : 'border-border bg-card'
+                        }`}
+                      >
+                        {(card.scryfall?.image_uris?.normal ?? card.scryfall?.card_faces?.[0]?.image_uris?.normal) ? (
+                          <img
+                            src={(card.scryfall?.image_uris?.normal ?? card.scryfall?.card_faces?.[0]?.image_uris?.normal)!}
+                            alt={card.name}
+                            className="w-full aspect-[488/680] object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full aspect-[488/680] bg-muted flex items-center justify-center text-xs text-muted-foreground">
+                            {t('deckRecs.noImage')}
+                          </div>
                         )}
-                        <div className="flex gap-1.5 pt-1">
-                          <button
-                            onClick={() => copyName(card.name)}
-                            className="text-xs px-2 py-1 rounded bg-secondary hover:bg-secondary/80 transition-colors flex items-center gap-1"
-                          >
-                            {copiedCard === card.name ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                            {t('deckRecs.copy')}
-                          </button>
-                          {card.scryfall?.scryfall_uri && (
-                            <a
-                              href={card.scryfall.scryfall_uri}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                        <div className="p-3 space-y-1.5 flex-1 flex flex-col">
+                          <p className="text-sm font-medium leading-tight">
+                            <OracleText text={card.name} size="sm" />
+                          </p>
+                          <p className="text-xs text-muted-foreground flex-1">
+                            <OracleText text={card.reason} size="sm" />
+                          </p>
+                          {card.scryfall?.prices?.usd && (
+                            <p className="text-xs font-medium text-primary">${card.scryfall.prices.usd}</p>
+                          )}
+                          <div className="flex gap-1.5 pt-1">
+                            <button
+                              onClick={() => copyName(card.name)}
                               className="text-xs px-2 py-1 rounded bg-secondary hover:bg-secondary/80 transition-colors flex items-center gap-1"
                             >
-                              <ExternalLink className="h-3 w-3" />
-                              Scryfall
-                            </a>
-                          )}
+                              {copiedCard === card.name ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                              {t('deckRecs.copy')}
+                            </button>
+                            {card.scryfall?.scryfall_uri && (
+                              <a
+                                href={card.scryfall.scryfall_uri}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs px-2 py-1 rounded bg-secondary hover:bg-secondary/80 transition-colors flex items-center gap-1"
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                                Scryfall
+                              </a>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            ))}
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
           </div>
         )}
       </main>
