@@ -96,18 +96,8 @@ describe('critique-cache', () => {
 
     it('overwrites existing critiques with the same key', () => {
       const key = 'test-key';
-      const critique1: CritiqueResult = {
-        summary: 'First',
-        cuts: [],
-        additions: [],
-        confidence: 0.5,
-      };
-      const critique2: CritiqueResult = {
-        summary: 'Second',
-        cuts: [],
-        additions: [],
-        confidence: 0.8,
-      };
+      const critique1 = createMockCritiqueResult({ summary: 'First', confidence: 0.5 });
+      const critique2 = createMockCritiqueResult({ summary: 'Second', confidence: 0.8 });
 
       saveCritique(key, critique1);
       saveCritique(key, critique2);
