@@ -259,6 +259,11 @@ export default function DeckEditor() {
     } catch { addCard.mutate({ card_name: cardName }); toast({ title: t('deckEditor.added'), description: cardName }); }
   }, [handleAddCard, addCard, t]);
 
+  const handleRemoveByName = useCallback((cardName: string) => {
+    const card = cards.find((c) => c.card_name === cardName && c.board !== 'maybeboard');
+    if (card) handleRemoveCard(card.id);
+  }, [cards, handleRemoveCard]);
+
   const handleSetCommander = useCallback((cardId: string, isCommander: boolean) => {
     const card = cards.find((c) => c.id === cardId);
     if (!card) return;
@@ -323,6 +328,7 @@ export default function DeckEditor() {
     onSuggest: handleSuggest, onAddSuggestion: handleAddSuggestion,
     cardCount: cards.length, deckCards: cards, commanderName: deck.commander_name,
     colorIdentity: deck.color_identity, format: deck.format,
+    onRemoveByName: isReadOnly ? undefined : handleRemoveByName,
   };
 
   // ── Deck Header ──

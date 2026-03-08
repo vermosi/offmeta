@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { MessageSquareWarning, Loader2, Scissors, Plus, AlertTriangle, TrendingDown, Target } from 'lucide-react';
+import { MessageSquareWarning, Loader2, Scissors, Plus, AlertTriangle, TrendingDown, Target, ArrowRightLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,6 +38,7 @@ interface DeckCritiquePanelProps {
   colorIdentity: string[];
   format: string;
   onAddSuggestion: (name: string) => void;
+  onRemoveByName?: (name: string) => void;
 }
 
 const SEVERITY_CONFIG = {
@@ -46,7 +47,7 @@ const SEVERITY_CONFIG = {
   'weak': { label: 'Weak', icon: AlertTriangle, className: 'bg-muted text-muted-foreground border-border' },
 } as const;
 
-export function DeckCritiquePanel({ cards, commanderName, colorIdentity, format, onAddSuggestion }: DeckCritiquePanelProps) {
+export function DeckCritiquePanel({ cards, commanderName, colorIdentity, format, onAddSuggestion, onRemoveByName }: DeckCritiquePanelProps) {
   const [critique, setCritique] = useState<CritiqueResult | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -163,15 +164,33 @@ export function DeckCritiquePanel({ cards, commanderName, colorIdentity, format,
                         {add.category}
                       </Badge>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-5 w-5 p-0 shrink-0 text-accent hover:text-accent"
-                      onClick={() => onAddSuggestion(add.card_name)}
-                      title={`Add ${add.card_name}`}
-                    >
-                      <Plus className="h-3 w-3" />
-                    </Button>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {add.replaces && onRemoveByName && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-5 px-1.5 text-[9px] gap-0.5 text-primary hover:text-primary font-medium"
+                          onClick={() => {
+                            onRemoveByName(add.replaces!);
+                            onAddSuggestion(add.card_name);
+                            toast({ title: 'Swapped', description: `${add.replaces} → ${add.card_name}` });
+                          }}
+                          title={`Replace ${add.replaces} with ${add.card_name}`}
+                        >
+                          <ArrowRightLeft className="h-3 w-3" />
+                          Swap
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-5 w-5 p-0 shrink-0 text-accent hover:text-accent"
+                        onClick={() => onAddSuggestion(add.card_name)}
+                        title={`Add ${add.card_name}`}
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
                   <p className="text-[10px] text-muted-foreground leading-relaxed">{add.reason}</p>
                   {add.replaces && (
