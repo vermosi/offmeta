@@ -224,14 +224,13 @@ describe('Index page integration', () => {
   });
 
   it('renders card results after successful search flow', async () => {
-    renderIndex();
+    await renderIndex();
 
-    await waitFor(() => {
-      expect(screen.getByRole('searchbox')).toBeInTheDocument();
-    });
     const input = screen.getByRole('searchbox');
-    fireEvent.change(input, { target: { value: 'treasure makers' } });
-    fireEvent.keyDown(input, { key: 'Enter' });
+    await act(async () => {
+      fireEvent.change(input, { target: { value: 'treasure makers' } });
+      fireEvent.keyDown(input, { key: 'Enter' });
+    });
 
     await waitFor(() => {
       expect(mockTranslateQueryWithDedup).toHaveBeenCalledWith(
