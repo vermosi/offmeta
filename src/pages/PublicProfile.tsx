@@ -118,10 +118,10 @@ export default function PublicProfile() {
             )}
             <div>
               <h1 className="text-xl font-bold tracking-tight">
-                {profile.display_name || 'Anonymous Planeswalker'}
+                {profile.display_name || t('publicProfile.anonymousUser')}
               </h1>
               <p className="text-sm text-muted-foreground">
-                Member since {memberSince}
+                {t('publicProfile.memberSince').replace('{date}', memberSince || '')}
               </p>
             </div>
           </div>
