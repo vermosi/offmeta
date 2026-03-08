@@ -66,6 +66,7 @@ export function CardPreviewPanel({
       />
       <div className="border-t border-border" />
       <DeckCritiquePanel
+        deckId={deckId || ''}
         cards={deckCards}
         commanderName={commanderName}
         colorIdentity={colorIdentity}
