@@ -590,16 +590,6 @@ export default function DeckEditor() {
   const maybeCount = maybeboardCards.reduce((s, c) => s + c.quantity, 0);
 
 
-  const missingCardsBar = user && missingCards.length > 0 && (
-    <div className="flex items-center gap-2 px-4 py-1.5 border-t border-destructive/20 bg-destructive/5 text-xs">
-      <span className="text-destructive font-semibold shrink-0">
-        {t('collection.missingCards', 'Missing Cards')}:
-      </span>
-      <span className="text-destructive/80 truncate">
-        {t('deckEditor.missingCount').replace('{count}', String(missingCards.length)).replace('{total}', String(missingCards.reduce((s, m) => s + m.needed, 0)))}
-      </span>
-    </div>
-  );
 
   const deckCountBar = cards.length > 0 && (
     <div className="flex items-center gap-3 px-4 py-1.5 border-t border-border bg-card text-xs text-muted-foreground">
