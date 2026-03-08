@@ -38,6 +38,7 @@ interface DeckCritiquePanelProps {
   colorIdentity: string[];
   format: string;
   onAddSuggestion: (name: string) => void;
+  onRemoveByName?: (name: string) => void;
 }
 
 const SEVERITY_CONFIG = {
