@@ -318,9 +318,9 @@ const Index = () => {
       <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background relative overflow-x-hidden">
         {/* Background layers with parallax */}
         <div
-          className="fixed inset-0 pointer-events-none bg-page-gradient bg-parallax"
+          className="fixed inset-x-0 pointer-events-none bg-page-gradient bg-parallax"
           aria-hidden="true"
-          style={{ transform: 'translateY(calc(var(--scroll-y, 0) * -0.3))' }}
+          style={{ transform: 'translate3d(0, calc(var(--scroll-y, 0px) * -0.2), 0)' }}
         />
         <div
           className="fixed inset-0 pointer-events-none bg-page-noise"
@@ -329,7 +329,7 @@ const Index = () => {
         <div
           className="fixed inset-0 pointer-events-none bg-page-mesh bg-parallax"
           aria-hidden="true"
-          style={{ transform: 'translateY(calc(var(--scroll-y, 0) * -0.15))' }}
+          style={{ transform: 'translate3d(0, calc(var(--scroll-y, 0px) * -0.08), 0)' }}
         />
 
         <Header />
