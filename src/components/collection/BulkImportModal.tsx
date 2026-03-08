@@ -106,7 +106,36 @@ function parseCsvLine(line: string): string[] {
   return fields;
 }
 
-type ImportTab = 'text' | 'csv';
+/** Parse Moxfield export CSV format (has Count, Name, Edition, Collector Number, etc.) */
+function parseMoxfieldCsv(raw: string): ParsedEntry[] {
+  const lines = raw.split('\n').map((l) => l.trim()).filter(Boolean);
+  if (lines.length < 2) return [];
+
+  const header = lines[0].toLowerCase();
+  const cols = header.split(',').map((c) => c.replace(/"/g, '').trim());
+
+  const nameIdx = cols.findIndex((c) => c === 'name');
+  const countIdx = cols.findIndex((c) => c === 'count');
+  const foilIdx = cols.findIndex((c) => c === 'foil' || c === 'is foil');
+
+  if (nameIdx < 0) return [];
+
+  const entries: ParsedEntry[] = [];
+  for (const line of lines.slice(1, MAX_IMPORT_LINES + 1)) {
+    const fields = parseCsvLine(line);
+    const name = fields[nameIdx]?.trim();
+    if (!name || name.length > 200) continue;
+
+    const qty = countIdx >= 0 ? parseInt(fields[countIdx], 10) || 1 : 1;
+    const foil = foilIdx >= 0 ? ['true', 'yes', '1'].includes(fields[foilIdx]?.toLowerCase()) : false;
+
+    entries.push({ name, quantity: Math.min(qty, 999), foil });
+  }
+
+  return entries;
+}
+
+type ImportTab = 'text' | 'csv' | 'moxfield';
 
 export function BulkImportModal({ open, onOpenChange }: BulkImportModalProps) {
   const [tab, setTab] = useState<ImportTab>('text');
@@ -203,7 +232,7 @@ export function BulkImportModal({ open, onOpenChange }: BulkImportModalProps) {
         </DialogHeader>
 
         {/* Tab selector */}
-        <div className="flex gap-1 p-1 bg-secondary/50 rounded-lg w-fit">
+        <div className="flex gap-1 p-1 bg-secondary/50 rounded-lg w-fit flex-wrap">
           <button
             onClick={() => { setTab('text'); setParsed(null); }}
             className={`px-3 py-1.5 text-sm rounded-md transition-colors flex items-center gap-1.5 ${
@@ -222,9 +251,18 @@ export function BulkImportModal({ open, onOpenChange }: BulkImportModalProps) {
             <Upload className="h-3.5 w-3.5" />
             CSV File
           </button>
+          <button
+            onClick={() => { setTab('moxfield'); setParsed(null); }}
+            className={`px-3 py-1.5 text-sm rounded-md transition-colors flex items-center gap-1.5 ${
+              tab === 'moxfield' ? 'bg-background text-foreground shadow-sm font-medium' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <FileText className="h-3.5 w-3.5" />
+            Moxfield
+          </button>
         </div>
 
-        {tab === 'text' ? (
+        {tab === 'text' && (
           <div className="space-y-3">
             <Textarea
               value={textInput}
@@ -237,7 +275,8 @@ export function BulkImportModal({ open, onOpenChange }: BulkImportModalProps) {
               Parse List
             </Button>
           </div>
-        ) : (
+        )}
+        {tab === 'csv' && (
           <div className="space-y-3">
             <input
               ref={fileRef}
@@ -258,6 +297,35 @@ export function BulkImportModal({ open, onOpenChange }: BulkImportModalProps) {
                 Columns: name, quantity, foil (max 5MB)
               </p>
             </button>
+          </div>
+        )}
+        {tab === 'moxfield' && (
+          <div className="space-y-3">
+            <Textarea
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value)}
+              placeholder={`Count,Name,Edition,Collector Number,Foil\n4,Lightning Bolt,2X2,117,\n1,Sol Ring,CMR,472,foil`}
+              className="min-h-[200px] font-mono text-xs"
+              maxLength={MAX_TEXT_LENGTH}
+            />
+            <p className="text-xs text-muted-foreground">
+              Paste your Moxfield collection export CSV (with headers). You can also upload a file via the CSV tab.
+            </p>
+            <Button
+              onClick={() => {
+                if (!textInput.trim()) return;
+                const entries = parseMoxfieldCsv(textInput.slice(0, MAX_TEXT_LENGTH));
+                setParsed(entries);
+                if (entries.length === 0) {
+                  toast.error('No valid entries found. Ensure the CSV has a "Name" column header.');
+                }
+              }}
+              variant="secondary"
+              className="w-full"
+              disabled={!textInput.trim()}
+            >
+              Parse Moxfield Export
+            </Button>
           </div>
         )}
 

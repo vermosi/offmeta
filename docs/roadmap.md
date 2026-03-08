@@ -44,14 +44,19 @@ Tracking format: `[Status: <planned|in progress|blocked|completed>] [Priority: <
 - **Admin feedback queue panel**: Upgraded feedback section in the admin analytics dashboard with full pipeline status badges, inline AI-generated rule display (pattern + Scryfall syntax + confidence), and one-click approve/reject actions that toggle `translation_rules.is_active`. — [Status: completed] [Priority: P2] [Discussion: Milestone `shipped`; owner `@core-team`]
 - **Nightly log cleanup** (`cleanup-logs-nightly`): pg_cron job at 02:00 UTC deletes `translation_logs` and `analytics_events` older than 30 days, ensuring the pattern-promotion window is always clean when `generate-patterns` fires one hour later. — [Status: completed] [Priority: P2] [Discussion: Milestone `shipped`; owner `@core-team`]
 
+- **Combo finder filtering/sorting**: Filter by color, price, and card count; sort by relevance and price — [Status: completed] [Priority: P1] [Discussion: Milestone `shipped`; owner `@core-team`]
+- **Deck recommendation sideboard suggestions**: Sideboard category added to AI-powered recommendations — [Status: completed] [Priority: P2] [Discussion: Milestone `shipped`; owner `@core-team`]
+- **Collection management**: Bulk import (text/CSV/Moxfield), value estimates via Scryfall prices, set tracking, CSV export with prices — [Status: completed] [Priority: P2] [Discussion: Milestone `shipped`; owner `@core-team`]
+
 ## Near term
 
-- Expand combo finder with filtering and sorting options — [Status: planned] [Priority: P1] [Discussion: Milestone `near-term`; owner `@core-team`]
+- Wire card-meta-context edge function into card modal for "why this card matters" explanations — [Status: planned] [Priority: P1] [Discussion: Milestone `near-term`; owner `@core-team`]
+- AI deck critique edge function with cut/addition suggestions — [Status: planned] [Priority: P1] [Discussion: Milestone `near-term`; owner `@core-team`]
 
 ## Mid term
 
-- Enhance deck recommendations with sideboard suggestions — [Status: planned] [Priority: P2] [Discussion: Milestone `mid-term`; owner `@core-team`]
-- Add collection management and tracking — [Status: planned] [Priority: P2] [Discussion: Milestone `mid-term`; owner `@core-team`]
+- Card price tracking and alerts (daily snapshots, trend sparklines, price-drop notifications) — [Status: planned] [Priority: P2] [Discussion: Milestone `mid-term`; owner `@core-team`]
+- Public user profiles with published decks and collection stats — [Status: planned] [Priority: P2] [Discussion: Milestone `mid-term`; owner `@core-team`]
 
 ## Long term
 

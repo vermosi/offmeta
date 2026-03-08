@@ -30,6 +30,7 @@ import { useTranslation } from '@/lib/i18n';
 import { toast } from '@/hooks/useToast';
 import { BulkImportModal } from '@/components/collection/BulkImportModal';
 import { CollectionStats } from '@/components/collection/CollectionStats';
+import { useCollectionValue } from '@/hooks/useCollectionValue';
 
 type SortMode = 'name' | 'quantity' | 'newest';
 
@@ -44,6 +45,7 @@ export default function Collection() {
   const [sortBy, setSortBy] = useState<SortMode>('name');
   const [authOpen, setAuthOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const { data: valueData } = useCollectionValue();
 
   const filtered = useMemo(() => {
     let result = [...collection];
@@ -70,9 +72,13 @@ export default function Collection() {
   );
 
   const handleExportCsv = useCallback(() => {
-    const header = 'Card Name,Quantity,Foil,Date Added\n';
+    const header = 'Card Name,Quantity,Foil,Price (USD),Date Added\n';
     const rows = collection
-      .map((c) => `"${c.card_name}",${c.quantity},${c.foil},${c.created_at.split('T')[0]}`)
+      .map((c) => {
+        const price = valueData?.cardPrices.get(c.card_name);
+        const priceStr = price != null ? price.toFixed(2) : '';
+        return `"${c.card_name}",${c.quantity},${c.foil},${priceStr},${c.created_at.split('T')[0]}`;
+      })
       .join('\n');
     const blob = new Blob([header + rows], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -82,7 +88,7 @@ export default function Collection() {
     a.click();
     URL.revokeObjectURL(url);
     toast({ title: t('collection.exportCsv', 'Exported!'), description: `${collection.length} cards` });
-  }, [collection, t]);
+  }, [collection, t, valueData]);
 
   if (!user) {
     return (
