@@ -179,10 +179,8 @@ beforeEach(async () => {
 
 describe('Index page integration', () => {
   it('renders hero section and search bar on initial load', async () => {
-    renderIndex();
-    await waitFor(() => {
-      expect(screen.getByRole('search')).toBeInTheDocument();
-    });
+    await renderIndex();
+    expect(screen.getByRole('search')).toBeInTheDocument();
     expect(screen.getByRole('searchbox')).toBeInTheDocument();
   });
 
