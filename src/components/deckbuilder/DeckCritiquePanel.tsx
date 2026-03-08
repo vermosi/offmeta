@@ -236,7 +236,9 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
                 return (
                   <div key={cut.card_name} className="rounded-lg border border-border bg-card/50 p-2 space-y-1">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-medium text-foreground">{cut.card_name}</span>
+                      <CardHoverImage cardName={cut.card_name} scryfallCache={effectiveCache}>
+                        <span className="text-xs font-medium text-foreground cursor-default">{cut.card_name}</span>
+                      </CardHoverImage>
                       <Badge variant="outline" className={cn('text-[9px] px-1 py-0 h-4', sev.className)}>
                         {sev.label}
                       </Badge>
