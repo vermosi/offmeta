@@ -502,7 +502,7 @@ export default function DeckEditor() {
               <DropdownMenuContent align="start" className="w-56 max-h-72 overflow-y-auto bg-popover z-50">
                 {undoRedo.redoLabels.map((label, i) => (
                   <DropdownMenuItem key={`redo-${i}`}
-                    onClick={() => undoRedo.redo().then((a) => { if (a) toast({ title: `Redo: ${a.label}` }); })}
+                    onClick={() => undoRedo.redo().then((a) => { if (a) toast({ title: t('deckEditor.redoAction').replace('{label}', a.label) }); })}
                     className="text-xs text-muted-foreground/50 italic flex items-center gap-2">
                     <Redo2 className="h-3 w-3 shrink-0" />
                     <span className="truncate">{label}</span>
