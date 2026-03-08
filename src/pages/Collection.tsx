@@ -45,6 +45,7 @@ export default function Collection() {
   const [sortBy, setSortBy] = useState<SortMode>('name');
   const [authOpen, setAuthOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const { data: valueData } = useCollectionValue();
 
   const filtered = useMemo(() => {
     let result = [...collection];
