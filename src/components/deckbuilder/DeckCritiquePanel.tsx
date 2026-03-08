@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/useToast';
 import { cn } from '@/lib/core/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { CardHoverImage } from '@/components/deckbuilder/CardHoverImage';
 import { buildCacheKey, loadCachedCritique, saveCritique } from '@/components/deckbuilder/critique-cache';
 import type { CritiqueResult } from '@/components/deckbuilder/critique-cache';
