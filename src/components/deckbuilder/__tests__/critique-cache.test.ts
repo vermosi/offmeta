@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { buildCacheKey, loadCachedCritique, saveCritique } from '../critique-cache';
+import type { DeckCard } from '@/hooks/useDeck';
 import { createTestCard, createMockCritiqueResult } from '@/test/factories';
 
 describe('critique-cache', () => {
