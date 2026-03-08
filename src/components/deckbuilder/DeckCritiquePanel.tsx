@@ -10,7 +10,9 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/useToast';
 import { cn } from '@/lib/core/utils';
+import { CardHoverImage } from '@/components/deckbuilder/CardHoverImage';
 import type { DeckCard } from '@/hooks/useDeck';
+import type { ScryfallCard } from '@/types/card';
 
 const UNDO_TIMEOUT_MS = 5000;
 
@@ -42,6 +44,7 @@ interface DeckCritiquePanelProps {
   format: string;
   onAddSuggestion: (name: string) => void;
   onRemoveByName?: (name: string) => void;
+  scryfallCache?: React.RefObject<Map<string, ScryfallCard>>;
 }
 
 const CACHE_PREFIX = 'offmeta_critique_';
@@ -81,7 +84,9 @@ const SEVERITY_CONFIG = {
   'weak': { label: 'Weak', icon: AlertTriangle, className: 'bg-muted text-muted-foreground border-border' },
 } as const;
 
-export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity, format, onAddSuggestion, onRemoveByName }: DeckCritiquePanelProps) {
+export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity, format, onAddSuggestion, onRemoveByName, scryfallCache }: DeckCritiquePanelProps) {
+  const fallbackCacheRef = useRef<Map<string, ScryfallCard>>(new Map());
+  const effectiveCache = scryfallCache ?? fallbackCacheRef;
   const cacheKey = useMemo(() => buildCacheKey(deckId, cards), [deckId, cards]);
   const [critique, setCritique] = useState<CritiqueResult | null>(() => loadCachedCritique(cacheKey));
   const [loading, setLoading] = useState(false);
@@ -231,7 +236,9 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
                 return (
                   <div key={cut.card_name} className="rounded-lg border border-border bg-card/50 p-2 space-y-1">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-medium text-foreground">{cut.card_name}</span>
+                      <CardHoverImage cardName={cut.card_name} scryfallCache={effectiveCache}>
+                        <span className="text-xs font-medium text-foreground cursor-default">{cut.card_name}</span>
+                      </CardHoverImage>
                       <Badge variant="outline" className={cn('text-[9px] px-1 py-0 h-4', sev.className)}>
                         {sev.label}
                       </Badge>
@@ -263,7 +270,9 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
                 <div key={add.card_name} className="rounded-lg border border-border bg-card/50 p-2 space-y-1">
                   <div className="flex items-center justify-between gap-1">
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="text-xs font-medium text-foreground truncate">{add.card_name}</span>
+                      <CardHoverImage cardName={add.card_name} scryfallCache={effectiveCache}>
+                        <span className="text-xs font-medium text-foreground truncate cursor-default">{add.card_name}</span>
+                      </CardHoverImage>
                       <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 shrink-0">
                         {add.category}
                       </Badge>

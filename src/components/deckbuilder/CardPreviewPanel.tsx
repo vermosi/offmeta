@@ -26,12 +26,13 @@ interface CardPreviewPanelProps {
   format?: string;
   onRemoveByName?: (name: string) => void;
   deckId?: string;
+  scryfallCache?: React.RefObject<Map<string, ScryfallCard>>;
 }
 
 export function CardPreviewPanel({
   card, suggestions, suggestionsAnalysis, suggestionsLoading,
   onSuggest, onAddSuggestion, cardCount, deckCards, commanderName,
-  colorIdentity = [], format = 'commander', onRemoveByName, deckId,
+  colorIdentity = [], format = 'commander', onRemoveByName, deckId, scryfallCache,
 }: CardPreviewPanelProps) {
   const { t } = useTranslation();
   const imageUrl = card?.image_uris?.normal || card?.card_faces?.[0]?.image_uris?.normal;
@@ -73,6 +74,7 @@ export function CardPreviewPanel({
         format={format}
         onAddSuggestion={onAddSuggestion}
         onRemoveByName={onRemoveByName}
+        scryfallCache={scryfallCache}
       />
     </div>
   );
