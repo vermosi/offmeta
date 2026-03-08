@@ -34,8 +34,8 @@ describe('critique-cache', () => {
     it('generates a consistent key for the same input', () => {
       const deckId = 'deck-123';
       const cards: DeckCard[] = [
-        { card_name: 'Counterspell', quantity: 2, category: 'Control', board: 'main', is_commander: false, is_companion: false, scryfall_id: null },
-        { card_name: 'Island', quantity: 4, category: 'Land', board: 'main', is_commander: false, is_companion: false, scryfall_id: null },
+        createTestCard({ card_name: 'Counterspell', quantity: 2, category: 'Control' }),
+        createTestCard({ card_name: 'Island', quantity: 4, category: 'Land' }),
       ];
 
       const key1 = buildCacheKey(deckId, cards);
