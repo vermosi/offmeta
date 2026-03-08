@@ -157,8 +157,19 @@ describe('card printings helpers', () => {
 });
 
 describe('purchase URL helpers', () => {
+  const savedEnv = { ...import.meta.env };
+
+  beforeEach(() => {
+    // Clear affiliate base so fallback tests work without wrapping
+    delete (import.meta.env as Record<string, unknown>).NEXT_PUBLIC_TCGPLAYER_IMPACT_BASE;
+    if (typeof process !== 'undefined') {
+      delete process.env.NEXT_PUBLIC_TCGPLAYER_IMPACT_BASE;
+    }
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
+    Object.assign(import.meta.env, savedEnv);
   });
 
   it('builds a TCGPlayer URL with affiliate wrapping when configured', async () => {
