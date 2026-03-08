@@ -625,7 +625,7 @@ export default function DeckEditor() {
         <>
           <span className="text-border">/</span>
           <span className="font-semibold text-foreground">{sideCount}</span>
-          <span>sideboard</span>
+          <span>{t('deckEditor.sideboard')}</span>
         </>
       )}
       {maybeCount > 0 && (
