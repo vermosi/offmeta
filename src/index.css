@@ -184,7 +184,7 @@
   h4,
   h5,
   h6 {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
     @apply font-semibold tracking-tight;
     letter-spacing: -0.02em;
   }
