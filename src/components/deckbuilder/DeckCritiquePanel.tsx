@@ -186,7 +186,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
       setCritique(data);
       saveCritique(cacheKey, data);
     } catch {
-      toast({ title: 'Error', description: 'Something went wrong', variant: 'destructive' });
+      toast({ title: t('critique.error'), description: t('critique.errorDesc'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
