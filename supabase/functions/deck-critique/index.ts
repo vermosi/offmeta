@@ -147,8 +147,12 @@ Provide 3-5 cuts and 3-5 additions with reasoning.`;
                   type: 'string',
                   description: 'Brief note about mana curve health (1 sentence)',
                 },
+                confidence: {
+                  type: 'number',
+                  description: 'How confident you are in these recommendations on a scale from 0.0 to 1.0. Consider deck size, archetype clarity, and card familiarity.',
+                },
               },
-              required: ['summary', 'cuts', 'additions'],
+              required: ['summary', 'cuts', 'additions', 'confidence'],
               additionalProperties: false,
             },
           },

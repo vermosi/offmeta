@@ -10,6 +10,7 @@ export interface CritiqueResult {
   cuts: { card_name: string; reason: string; severity: 'weak' | 'underperforming' | 'off-strategy' }[];
   additions: { card_name: string; reason: string; replaces?: string; category: string }[];
   mana_curve_notes?: string;
+  confidence?: number;
 }
 
 const CACHE_PREFIX = 'offmeta_critique_';
