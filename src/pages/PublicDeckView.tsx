@@ -246,12 +246,12 @@ export default function PublicDeckView() {
       <Header />
       <div className="flex-1 flex items-center justify-center flex-col gap-4">
         <Users className="h-12 w-12 text-muted-foreground/40" />
-        <h2 className="text-lg font-semibold">Deck not found</h2>
+        <h2 className="text-lg font-semibold">{t('publicDeck.notFound')}</h2>
         <p className="text-muted-foreground text-sm max-w-sm text-center">
-          This deck doesn't exist or is set to private.
+          {t('publicDeck.notFoundDesc')}
         </p>
         <Button variant="outline" asChild>
-          <Link to="/"><ArrowLeft className="h-4 w-4 mr-2" />Back to Home</Link>
+          <Link to="/"><ArrowLeft className="h-4 w-4 mr-2" />{t('publicDeck.backHome')}</Link>
         </Button>
       </div>
       <Footer />
