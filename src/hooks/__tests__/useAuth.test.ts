@@ -106,7 +106,10 @@ describe('useAuthProvider', () => {
     } as never);
 
     const { result } = renderHook(() => useAuthProvider());
-    const res = await result.current.signUp('dup@test.com', 'pass');
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+    const res = await act(() => result.current.signUp('dup@test.com', 'pass'));
     expect(res.error).toContain('already exists');
     expect(res.needsConfirmation).toBe(false);
   });
