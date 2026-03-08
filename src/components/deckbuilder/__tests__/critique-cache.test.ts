@@ -109,11 +109,7 @@ describe('critique-cache', () => {
 
     it('gracefully handles sessionStorage quota exceeded', () => {
       const key = 'test-key';
-      const critique: CritiqueResult = {
-        summary: 'Test',
-        cuts: [],
-        additions: [],
-      };
+      const critique = createMockCritiqueResult();
 
       // Mock sessionStorage.setItem to throw
       const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
