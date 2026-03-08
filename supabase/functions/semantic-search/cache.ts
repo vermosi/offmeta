@@ -19,7 +19,7 @@ const CACHE_TTL = 30 * 60 * 1000; // 30 minutes for in-memory
 
 export function getCacheKey(
   query: string,
-  filters?: Record<string, unknown>,
+  filters?: Record<string, unknown> | null,
   cacheSalt?: string,
 ): string {
   // Apply synonym normalization for better cache hit rate
