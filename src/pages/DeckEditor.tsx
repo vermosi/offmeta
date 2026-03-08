@@ -516,7 +516,7 @@ export default function DeckEditor() {
                   const stackIndex = undoRedo.undoLabels.length - 1 - i;
                   return (
                     <DropdownMenuItem key={`undo-${i}`}
-                      onClick={() => undoRedo.undoTo(stackIndex).then((a) => { if (a) toast({ title: `Undid ${undoRedo.undoLabels.length - stackIndex} action(s)` }); })}
+                      onClick={() => undoRedo.undoTo(stackIndex).then((a) => { if (a) toast({ title: t('deckEditor.undidActions').replace('{count}', String(undoRedo.undoLabels.length - stackIndex)) }); })}
                       className="text-xs flex items-center gap-2">
                       <Undo2 className="h-3 w-3 shrink-0 text-muted-foreground" />
                       <span className="truncate">{label}</span>
