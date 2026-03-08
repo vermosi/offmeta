@@ -328,6 +328,7 @@ export default function DeckEditor() {
     onSuggest: handleSuggest, onAddSuggestion: handleAddSuggestion,
     cardCount: cards.length, deckCards: cards, commanderName: deck.commander_name,
     colorIdentity: deck.color_identity, format: deck.format,
+    onRemoveByName: isReadOnly ? undefined : handleRemoveByName,
   };
 
   // ── Deck Header ──
