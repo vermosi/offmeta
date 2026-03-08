@@ -646,7 +646,7 @@ export default function DeckEditor() {
         {viewSortToolbar}
         {deckListContent}
       </div>
-      {missingCardsBar}
+      
       {statsBar}
       {previewOpen && previewCard && isMobile && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm" onClick={() => setPreviewOpen(false)}>
