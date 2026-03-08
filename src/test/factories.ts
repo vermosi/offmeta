@@ -57,3 +57,41 @@ export function createMockTranslation(
     ...overrides,
   };
 }
+
+/**
+ * Create a valid DeckCard object for deckbuilder tests.
+ * Override any field via the `overrides` parameter.
+ */
+export function createTestCard(
+  overrides?: Partial<DeckCard>,
+): DeckCard {
+  return {
+    id: overrides?.id ?? `card-id-${Math.random()}`,
+    deck_id: 'deck-123',
+    card_name: 'Test Card',
+    quantity: 1,
+    board: 'main',
+    category: null,
+    is_commander: false,
+    is_companion: false,
+    scryfall_id: null,
+    created_at: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+/**
+ * Create a mock CritiqueResult for deck critique tests.
+ * Override any field via the `overrides` parameter.
+ */
+export function createMockCritiqueResult(
+  overrides?: Partial<CritiqueResult>,
+): CritiqueResult {
+  return {
+    summary: 'Test critique summary',
+    cuts: [],
+    additions: [],
+    confidence: 0.75,
+    ...overrides,
+  };
+}
