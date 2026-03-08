@@ -168,10 +168,15 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
 
       {critique && !loading && (
         <div className="space-y-4">
-          {/* Summary */}
-          <p className="text-[11px] text-muted-foreground leading-relaxed bg-secondary/30 rounded-lg p-2.5">
-            {critique.summary}
-          </p>
+          {/* Summary + confidence */}
+          <div className="bg-secondary/30 rounded-lg p-2.5 space-y-2">
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              {critique.summary}
+            </p>
+            {critique.confidence != null && (
+              <ConfidenceIndicator value={critique.confidence} />
+            )}
+          </div>
 
           {/* Cuts */}
           {visibleCuts.length > 0 && (
