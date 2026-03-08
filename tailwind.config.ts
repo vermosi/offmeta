@@ -33,6 +33,12 @@ export default {
           'Roboto',
           'sans-serif',
         ],
+        display: [
+          'Space Grotesk',
+          'Inter',
+          'system-ui',
+          'sans-serif',
+        ],
         mono: ['SF Mono', 'ui-monospace', 'Menlo', 'Monaco', 'monospace'],
       },
       fontSize: {
