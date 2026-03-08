@@ -106,7 +106,36 @@ function parseCsvLine(line: string): string[] {
   return fields;
 }
 
-type ImportTab = 'text' | 'csv';
+/** Parse Moxfield export CSV format (has Count, Name, Edition, Collector Number, etc.) */
+function parseMoxfieldCsv(raw: string): ParsedEntry[] {
+  const lines = raw.split('\n').map((l) => l.trim()).filter(Boolean);
+  if (lines.length < 2) return [];
+
+  const header = lines[0].toLowerCase();
+  const cols = header.split(',').map((c) => c.replace(/"/g, '').trim());
+
+  const nameIdx = cols.findIndex((c) => c === 'name');
+  const countIdx = cols.findIndex((c) => c === 'count');
+  const foilIdx = cols.findIndex((c) => c === 'foil' || c === 'is foil');
+
+  if (nameIdx < 0) return [];
+
+  const entries: ParsedEntry[] = [];
+  for (const line of lines.slice(1, MAX_IMPORT_LINES + 1)) {
+    const fields = parseCsvLine(line);
+    const name = fields[nameIdx]?.trim();
+    if (!name || name.length > 200) continue;
+
+    const qty = countIdx >= 0 ? parseInt(fields[countIdx], 10) || 1 : 1;
+    const foil = foilIdx >= 0 ? ['true', 'yes', '1'].includes(fields[foilIdx]?.toLowerCase()) : false;
+
+    entries.push({ name, quantity: Math.min(qty, 999), foil });
+  }
+
+  return entries;
+}
+
+type ImportTab = 'text' | 'csv' | 'moxfield';
 
 export function BulkImportModal({ open, onOpenChange }: BulkImportModalProps) {
   const [tab, setTab] = useState<ImportTab>('text');
