@@ -128,6 +128,7 @@ const App = () => (
                   <Route path="/about" element={<About />} />
                   <Route path="/collection" element={<Collection />} />
                   <Route path="/cards/:slug" element={<CardPage />} />
+                  <Route path="/user/:userId" element={<PublicProfile />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
