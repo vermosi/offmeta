@@ -185,12 +185,10 @@ describe('Index page integration', () => {
   });
 
   it('renders example query buttons when no search has been made', async () => {
-    renderIndex();
-    await waitFor(() => {
-      expect(
-        screen.getByRole('group', { name: /try searching for/i }),
-      ).toBeInTheDocument();
-    });
+    await renderIndex();
+    expect(
+      screen.getByRole('group', { name: /try searching for/i }),
+    ).toBeInTheDocument();
     expect(
       screen.getByText('creatures that make treasure tokens'),
     ).toBeInTheDocument();
