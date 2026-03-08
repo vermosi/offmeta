@@ -4,7 +4,7 @@
  * @module lib/scryfall/__tests__/printings-branches.test
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { getTCGPlayerUrl, getCardmarketUrl } from '../printings';
 import type { ScryfallCard } from '@/types/card';
 
