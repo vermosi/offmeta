@@ -83,12 +83,19 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
   const cacheKey = useMemo(() => buildCacheKey(deckId, cards), [deckId, cards]);
   const [critique, setCritique] = useState<CritiqueResult | null>(() => loadCachedCritique(cacheKey));
   const [loading, setLoading] = useState(false);
+  const [dismissedCuts, setDismissedCuts] = useState<Set<string>>(new Set());
+  const [dismissedAdditions, setDismissedAdditions] = useState<Set<string>>(new Set());
 
   // Invalidate cached critique when the deck changes
   useEffect(() => {
     const cached = loadCachedCritique(cacheKey);
     setCritique(cached);
+    setDismissedCuts(new Set());
+    setDismissedAdditions(new Set());
   }, [cacheKey]);
+
+  const visibleCuts = useMemo(() => critique?.cuts.filter((c) => !dismissedCuts.has(c.card_name)) ?? [], [critique, dismissedCuts]);
+  const visibleAdditions = useMemo(() => critique?.additions.filter((a) => !dismissedAdditions.has(a.card_name)) ?? [], [critique, dismissedAdditions]);
 
   const handleCritique = useCallback(async () => {
     if (cards.length < 5) {
