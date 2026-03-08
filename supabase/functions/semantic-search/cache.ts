@@ -126,7 +126,7 @@ export function logCacheEvent(
  */
 export async function getPersistentCache(
   query: string,
-  filters?: Record<string, unknown>,
+  filters?: Record<string, unknown> | null,
   cacheSalt?: string,
 ): Promise<CacheEntry['result'] | null> {
   const key = getCacheKey(query, filters, cacheSalt);
