@@ -108,7 +108,7 @@ export default function PublicProfile() {
             {profile.avatar_url ? (
               <img
                 src={profile.avatar_url}
-                alt={profile.display_name || 'User avatar'}
+                alt={profile.display_name || t('publicProfile.userAvatar')}
                 className="h-16 w-16 rounded-full object-cover border-2 border-border"
               />
             ) : (
