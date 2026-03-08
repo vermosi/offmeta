@@ -227,6 +227,7 @@ function CollectionRow({
           Foil
         </span>
       )}
+      <PriceSparkline cardName={card.card_name} />
       <div className="flex items-center gap-1 shrink-0">
         <button
           onClick={() => onUpdateQuantity(card.quantity - 1)}
