@@ -963,5 +963,27 @@
   "publicDeck.edit": "Edit",
   "publicDeck.share": "Share",
   "publicDeck.copied": "Copied!",
-  "publicDeck.cards": "{count} cards"
+  "publicDeck.cards": "{count} cards",
+
+  "common.error": "Error",
+
+  "deckEditor.categorizeTooltip": "AI re-categorize all cards",
+  "deckEditor.editNotes": "Edit notes",
+  "deckEditor.addNotesButton": "+ Add notes",
+  "deckEditor.undoAction": "Undo: {label}",
+  "deckEditor.redoAction": "Redo: {label}",
+  "deckEditor.undoTooltip": "Undo (Ctrl+Z)",
+  "deckEditor.redoTooltip": "Redo (Ctrl+Shift+Z)",
+  "deckEditor.actionHistory": "Action history",
+  "deckEditor.currentState": "Current state",
+  "deckEditor.undidActions": "Undid {count} action(s)",
+  "deckEditor.hidePreview": "Hide preview",
+  "deckEditor.showPreview": "Show preview",
+  "deckEditor.preview": "Preview",
+  "deckEditor.missingCount": "{count} card(s) ({total} total)",
+  "deckEditor.mainDeck": "main deck",
+  "deckEditor.maybe": "maybe",
+  "deckEditor.shortcuts.adjustQuantity": "Adjust quantity",
+  "deckEditor.shortcuts.undo": "Undo",
+  "deckEditor.shortcuts.redo": "Redo"
 }
