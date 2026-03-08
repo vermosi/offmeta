@@ -485,8 +485,8 @@ export default function DeckEditor() {
             className={cn('p-1.5 rounded transition-colors', undoRedo.canUndo ? 'text-muted-foreground hover:text-foreground hover:bg-secondary/50' : 'text-muted-foreground/30 cursor-not-allowed')}>
             <Undo2 className="h-3.5 w-3.5" />
           </button>
-          <button onClick={() => undoRedo.redo().then((a) => { if (a) toast({ title: `Redo: ${a.label}` }); })}
-            disabled={!undoRedo.canRedo} title="Redo (Ctrl+Shift+Z)"
+          <button onClick={() => undoRedo.redo().then((a) => { if (a) toast({ title: t('deckEditor.redoAction').replace('{label}', a.label) }); })}
+            disabled={!undoRedo.canRedo} title={t('deckEditor.redoTooltip')}
             className={cn('p-1.5 rounded transition-colors', undoRedo.canRedo ? 'text-muted-foreground hover:text-foreground hover:bg-secondary/50' : 'text-muted-foreground/30 cursor-not-allowed')}>
             <Redo2 className="h-3.5 w-3.5" />
           </button>
