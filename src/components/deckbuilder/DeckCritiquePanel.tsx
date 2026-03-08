@@ -14,7 +14,7 @@ import { CardHoverImage } from '@/components/deckbuilder/CardHoverImage';
 import type { DeckCard } from '@/hooks/useDeck';
 import type { ScryfallCard } from '@/types/card';
 
-const UNDO_TIMEOUT_MS = 5000;
+
 
 interface CritiqueCut {
   card_name: string;
