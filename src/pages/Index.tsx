@@ -237,6 +237,15 @@ const Index = () => {
     onActivate: rovingActivate,
   });
 
+  // Parallax scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      document.documentElement.style.setProperty('--scroll-y', `${window.scrollY}px`);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   // Handle hash-based scroll
   useEffect(() => {
     const hash = window.location.hash;
@@ -307,18 +316,20 @@ const Index = () => {
     <ErrorBoundary>
       <SkipLinks showSearchLink />
       <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background relative overflow-x-hidden">
-        {/* Background layers */}
+        {/* Background layers with parallax */}
         <div
-          className="fixed inset-0 pointer-events-none bg-page-gradient"
+          className="fixed inset-0 pointer-events-none bg-page-gradient bg-parallax"
           aria-hidden="true"
+          style={{ transform: 'translateY(calc(var(--scroll-y, 0) * -0.3))' }}
         />
         <div
           className="fixed inset-0 pointer-events-none bg-page-noise"
           aria-hidden="true"
         />
         <div
-          className="fixed inset-0 pointer-events-none bg-page-mesh"
+          className="fixed inset-0 pointer-events-none bg-page-mesh bg-parallax"
           aria-hidden="true"
+          style={{ transform: 'translateY(calc(var(--scroll-y, 0) * -0.15))' }}
         />
 
         <Header />
