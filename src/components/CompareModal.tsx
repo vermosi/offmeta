@@ -202,7 +202,7 @@ export function CompareModal({ cards, open, onClose }: CompareModalProps) {
             {/* Oracle text */}
             <div className="grid gap-2" style={colStyle}>
               <span className="text-xs font-medium text-muted-foreground py-2 flex items-start pt-3">
-                Card Text
+                {t('compare.cardText')}
               </span>
               {cards.map((card) => {
                 const text = card.oracle_text || card.card_faces?.[0]?.oracle_text || '';

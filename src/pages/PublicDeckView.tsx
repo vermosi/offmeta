@@ -296,7 +296,7 @@ export default function PublicDeckView() {
               )}
               <Button variant="secondary" size="sm" onClick={handleCopyUrl}>
                 {copied ? <Check className="h-3.5 w-3.5 mr-1.5" /> : <Copy className="h-3.5 w-3.5 mr-1.5" />}
-                {copied ? 'Copied!' : 'Share'}
+                {copied ? t('publicDeck.copied') : t('publicDeck.share')}
               </Button>
             </div>
           </div>
