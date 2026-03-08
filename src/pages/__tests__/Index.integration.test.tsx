@@ -175,6 +175,10 @@ beforeEach(async () => {
   IndexPage = mod.default;
 });
 
+afterEach(() => {
+  cleanup();
+});
+
 // ── Tests ──────────────────────────────────────────────────
 
 describe('Index page integration', () => {

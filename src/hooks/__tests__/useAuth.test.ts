@@ -116,7 +116,10 @@ describe('useAuthProvider', () => {
 
   it('signUp returns needsConfirmation on success', async () => {
     const { result } = renderHook(() => useAuthProvider());
-    const res = await result.current.signUp('new@test.com', 'pass');
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+    const res = await act(() => result.current.signUp('new@test.com', 'pass'));
     expect(res.error).toBeNull();
     expect(res.needsConfirmation).toBe(true);
   });
