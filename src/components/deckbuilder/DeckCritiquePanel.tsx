@@ -355,7 +355,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
                   setDismissedAdditions(new Set());
                 }}
               >
-                Show all
+                {t('critique.showAll')}
               </Button>
             </div>
           )}
