@@ -107,8 +107,8 @@ export default function Collection() {
           <div className="flex items-center justify-center flex-col gap-3 py-6">
             <Package className="h-10 w-10 text-muted-foreground/40" />
             <h2 className="text-lg font-semibold">{t('collection.title', 'My Collection')}</h2>
-            <p className="text-muted-foreground text-sm">Sign in to track your card collection.</p>
-            <Button onClick={() => setAuthOpen(true)}>Sign In</Button>
+            <p className="text-muted-foreground text-sm">{t('collection.signInPrompt')}</p>
+            <Button onClick={() => setAuthOpen(true)}>{t('collection.signIn')}</Button>
           </div>
 
           {/* Demo preview */}
