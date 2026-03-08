@@ -22,6 +22,7 @@ import { FORMAT_LABELS } from '@/data/formats';
 import { FORMATS } from '@/data/formats';
 import { getCardsByExactNames } from '@/lib/scryfall';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from '@/lib/i18n';
 import type { Deck, DeckCard } from '@/hooks/useDeck';
 import type { ScryfallCard } from '@/types/card';
 import { DEFAULT_CATEGORY } from '@/lib/deckbuilder/infer-category';
@@ -191,6 +192,7 @@ function useScryfallHydration(cards: DeckCard[]) {
 export default function PublicDeckView() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { data: deck, isLoading: deckLoading, error: deckError } = usePublicDeck(id);
   const { data: cards = [], isLoading: cardsLoading } = usePublicDeckCards(id);
   const { data: deckTags = [] } = useDeckTags(id);
@@ -244,12 +246,12 @@ export default function PublicDeckView() {
       <Header />
       <div className="flex-1 flex items-center justify-center flex-col gap-4">
         <Users className="h-12 w-12 text-muted-foreground/40" />
-        <h2 className="text-lg font-semibold">Deck not found</h2>
+        <h2 className="text-lg font-semibold">{t('publicDeck.notFound')}</h2>
         <p className="text-muted-foreground text-sm max-w-sm text-center">
-          This deck doesn't exist or is set to private.
+          {t('publicDeck.notFoundDesc')}
         </p>
         <Button variant="outline" asChild>
-          <Link to="/"><ArrowLeft className="h-4 w-4 mr-2" />Back to Home</Link>
+          <Link to="/"><ArrowLeft className="h-4 w-4 mr-2" />{t('publicDeck.backHome')}</Link>
         </Button>
       </div>
       <Footer />
@@ -271,7 +273,7 @@ export default function PublicDeckView() {
                   {FORMAT_LABELS[deck.format] || deck.format}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {totalMainboard} cards
+                  {t('publicDeck.cards').replace('{count}', String(totalMainboard))}
                 </span>
                 {deck.color_identity.length > 0 && (
                   <div className="flex items-center gap-0.5">
@@ -288,13 +290,13 @@ export default function PublicDeckView() {
               {isOwner && (
                 <Button variant="outline" size="sm" asChild>
                   <Link to={`/deckbuilder/${deck.id}`}>
-                    <ExternalLink className="h-3.5 w-3.5 mr-1.5" />Edit
+                    <ExternalLink className="h-3.5 w-3.5 mr-1.5" />{t('publicDeck.edit')}
                   </Link>
                 </Button>
               )}
               <Button variant="secondary" size="sm" onClick={handleCopyUrl}>
                 {copied ? <Check className="h-3.5 w-3.5 mr-1.5" /> : <Copy className="h-3.5 w-3.5 mr-1.5" />}
-                {copied ? 'Copied!' : 'Share'}
+                {copied ? t('publicDeck.copied') : t('publicDeck.share')}
               </Button>
             </div>
           </div>

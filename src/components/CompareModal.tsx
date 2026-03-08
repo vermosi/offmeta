@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { getCardImage } from '@/lib/scryfall/client';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { useTranslation } from '@/lib/i18n';
 import type { ScryfallCard } from '@/types/card';
 
 interface CompareModalProps {
@@ -67,6 +68,7 @@ function StatRow({
 
 export function CompareModal({ cards, open, onClose }: CompareModalProps) {
   const contentRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
   useFocusTrap(contentRef, open && cards.length >= 2);
 
   if (cards.length < 2) return null;
@@ -77,7 +79,7 @@ export function CompareModal({ cards, open, onClose }: CompareModalProps) {
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] p-0 overflow-hidden" aria-describedby={undefined}>
         <DialogHeader className="px-6 pt-6 pb-0">
-          <DialogTitle>Compare Cards</DialogTitle>
+          <DialogTitle>{t('compare.title')}</DialogTitle>
         </DialogHeader>
 
         <ScrollArea className="px-6 pb-6 max-h-[calc(90vh-4rem)]" ref={contentRef}>
@@ -104,7 +106,7 @@ export function CompareModal({ cards, open, onClose }: CompareModalProps) {
             {/* Mana Cost */}
             <div className="grid gap-2" style={colStyle}>
               <span className="text-xs font-medium text-muted-foreground py-2 flex items-center">
-                Mana Cost
+                {t('compare.manaCost')}
               </span>
               {cards.map((card) => {
                 const cost = card.mana_cost || card.card_faces?.[0]?.mana_cost || '';
@@ -118,17 +120,17 @@ export function CompareModal({ cards, open, onClose }: CompareModalProps) {
 
             {/* Stats */}
             <StatRow
-              label="Mana Value"
+              label={t('compare.manaValue')}
               values={cards.map((c) => c.cmc)}
               highlight="low"
             />
             <StatRow
-              label="Power"
+              label={t('compare.power')}
               values={cards.map((c) => c.power || c.card_faces?.[0]?.power || null)}
               highlight="high"
             />
             <StatRow
-              label="Toughness"
+              label={t('compare.toughness')}
               values={cards.map((c) => c.toughness || c.card_faces?.[0]?.toughness || null)}
               highlight="high"
             />
@@ -136,7 +138,7 @@ export function CompareModal({ cards, open, onClose }: CompareModalProps) {
             {/* Type line */}
             <div className="grid gap-2" style={colStyle}>
               <span className="text-xs font-medium text-muted-foreground py-2 flex items-center">
-                Type
+                {t('compare.type')}
               </span>
               {cards.map((card) => (
                 <div key={card.id} className="py-2 text-xs text-foreground text-center">
@@ -147,7 +149,7 @@ export function CompareModal({ cards, open, onClose }: CompareModalProps) {
 
             {/* Price */}
             <StatRow
-              label="Price (USD)"
+              label={t('compare.priceUsd')}
               values={cards.map((c) =>
                 c.prices?.usd ? `$${c.prices.usd}` : null,
               )}
@@ -157,7 +159,7 @@ export function CompareModal({ cards, open, onClose }: CompareModalProps) {
             {/* Rarity */}
             <div className="grid gap-2" style={colStyle}>
               <span className="text-xs font-medium text-muted-foreground py-2 flex items-center">
-                Rarity
+                {t('compare.rarity')}
               </span>
               {cards.map((card) => (
                 <div key={card.id} className="py-2 flex justify-center">
@@ -173,7 +175,7 @@ export function CompareModal({ cards, open, onClose }: CompareModalProps) {
             {/* Legalities */}
             <div className="grid gap-2" style={colStyle}>
               <span className="text-xs font-medium text-muted-foreground py-2 flex items-center">
-                Legalities
+                {t('compare.legalities')}
               </span>
               {cards.map((card) => (
                 <div key={card.id} className="py-2 flex flex-col items-center gap-1">
@@ -200,7 +202,7 @@ export function CompareModal({ cards, open, onClose }: CompareModalProps) {
             {/* Oracle text */}
             <div className="grid gap-2" style={colStyle}>
               <span className="text-xs font-medium text-muted-foreground py-2 flex items-start pt-3">
-                Card Text
+                {t('compare.cardText')}
               </span>
               {cards.map((card) => {
                 const text = card.oracle_text || card.card_faces?.[0]?.oracle_text || '';
