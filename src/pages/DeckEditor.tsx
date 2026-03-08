@@ -329,6 +329,7 @@ export default function DeckEditor() {
     cardCount: cards.length, deckCards: cards, commanderName: deck.commander_name,
     colorIdentity: deck.color_identity, format: deck.format,
     onRemoveByName: isReadOnly ? undefined : handleRemoveByName,
+    deckId: id,
   };
 
   // ── Deck Header ──
