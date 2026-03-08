@@ -251,6 +251,7 @@ function CollectionRow({
   onUpdateQuantity: (qty: number) => void;
   onRemove: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/50 bg-card/50 hover:bg-muted/50 transition-colors">
       <span className="flex-1 min-w-0 text-sm font-medium text-foreground truncate">
@@ -258,7 +259,7 @@ function CollectionRow({
       </span>
       {card.foil && (
         <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20">
-          Foil
+          {t('collection.foil', 'Foil')}
         </span>
       )}
       <PriceSparkline cardName={card.card_name} />
@@ -266,7 +267,7 @@ function CollectionRow({
         <button
           onClick={() => onUpdateQuantity(card.quantity - 1)}
           className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-          aria-label="Decrease quantity"
+          aria-label={t('collection.decreaseQuantity', 'Decrease quantity')}
         >
           <Minus className="h-3 w-3" />
         </button>
@@ -276,7 +277,7 @@ function CollectionRow({
         <button
           onClick={() => onUpdateQuantity(card.quantity + 1)}
           className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-          aria-label="Increase quantity"
+          aria-label={t('collection.increaseQuantity', 'Increase quantity')}
         >
           <Plus className="h-3 w-3" />
         </button>
@@ -284,7 +285,7 @@ function CollectionRow({
       <button
         onClick={onRemove}
         className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
-        aria-label="Remove from collection"
+        aria-label={t('collection.removeFromCollection', 'Remove from collection')}
       >
         <Trash2 className="h-3 w-3" />
       </button>
