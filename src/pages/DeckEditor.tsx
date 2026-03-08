@@ -612,7 +612,7 @@ export default function DeckEditor() {
         {t('collection.missingCards', 'Missing Cards')}:
       </span>
       <span className="text-destructive/80 truncate">
-        {missingCards.length} card{missingCards.length !== 1 ? 's' : ''} ({missingCards.reduce((s, m) => s + m.needed, 0)} total)
+        {t('deckEditor.missingCount').replace('{count}', String(missingCards.length)).replace('{total}', String(missingCards.reduce((s, m) => s + m.needed, 0)))}
       </span>
     </div>
   );
