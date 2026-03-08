@@ -61,8 +61,11 @@ describe('useAuthProvider', () => {
     });
   });
 
-  it('exposes all required auth methods', () => {
+  it('exposes all required auth methods', async () => {
     const { result } = renderHook(() => useAuthProvider());
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
     expect(typeof result.current.signIn).toBe('function');
     expect(typeof result.current.signUp).toBe('function');
     expect(typeof result.current.signOut).toBe('function');
