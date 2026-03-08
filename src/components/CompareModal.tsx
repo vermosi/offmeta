@@ -175,7 +175,7 @@ export function CompareModal({ cards, open, onClose }: CompareModalProps) {
             {/* Legalities */}
             <div className="grid gap-2" style={colStyle}>
               <span className="text-xs font-medium text-muted-foreground py-2 flex items-center">
-                Legalities
+                {t('compare.legalities')}
               </span>
               {cards.map((card) => (
                 <div key={card.id} className="py-2 flex flex-col items-center gap-1">
