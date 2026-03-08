@@ -139,8 +139,7 @@ describe('critique-cache', () => {
   describe('loadCachedCritique', () => {
     it('loads valid critique data from sessionStorage', () => {
       const key = 'test-key';
-      const critique: CritiqueResult = {
-        summary: 'Test summary',
+      const critique = createMockCritiqueResult({
         cuts: [{ card_name: 'Bad Card', reason: 'Off-strategy', severity: 'off-strategy' }],
         additions: [
           {
@@ -152,7 +151,7 @@ describe('critique-cache', () => {
         ],
         confidence: 0.65,
         mana_curve_notes: 'Heavy on 3-drops',
-      };
+      });
 
       sessionStorage.setItem(key, JSON.stringify(critique));
 
