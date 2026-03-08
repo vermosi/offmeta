@@ -466,7 +466,7 @@ export default function DeckEditor() {
         <DropdownMenuTrigger asChild>
           <button className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-1 rounded hover:bg-secondary/50">
             <SortAsc className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline capitalize">{deckSortMode}</span>
+            <span className="hidden sm:inline">{t(`deckEditor.sort.${deckSortMode}`)}</span>
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-36">
