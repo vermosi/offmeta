@@ -480,8 +480,8 @@ export default function DeckEditor() {
       </DropdownMenu>
       {!isReadOnly && (
         <div className="flex items-center gap-0.5">
-          <button onClick={() => undoRedo.undo().then((a) => { if (a) toast({ title: `Undo: ${a.label}` }); })}
-            disabled={!undoRedo.canUndo} title="Undo (Ctrl+Z)"
+          <button onClick={() => undoRedo.undo().then((a) => { if (a) toast({ title: t('deckEditor.undoAction').replace('{label}', a.label) }); })}
+            disabled={!undoRedo.canUndo} title={t('deckEditor.undoTooltip')}
             className={cn('p-1.5 rounded transition-colors', undoRedo.canUndo ? 'text-muted-foreground hover:text-foreground hover:bg-secondary/50' : 'text-muted-foreground/30 cursor-not-allowed')}>
             <Undo2 className="h-3.5 w-3.5" />
           </button>
