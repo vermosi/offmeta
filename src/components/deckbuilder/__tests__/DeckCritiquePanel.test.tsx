@@ -250,7 +250,7 @@ describe('DeckCritiquePanel', () => {
     });
   });
 
-  it('dismisses a cut card when X is clicked', async () => {
+  it('dismisses a cut card when X is clicked and shows undo toast', async () => {
     mockInvoke.mockResolvedValue({ data: MOCK_CRITIQUE, error: null });
     render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
     fireEvent.click(screen.getByText('Get Critique'));
@@ -259,15 +259,17 @@ describe('DeckCritiquePanel', () => {
       expect(screen.getByText('Card 1')).toBeInTheDocument();
     });
 
-    const dismissBtn = screen.getByTitle('Dismiss suggestion for Card 1');
-    fireEvent.click(dismissBtn);
+    fireEvent.click(screen.getByTitle('Dismiss suggestion for Card 1'));
 
     expect(screen.queryByText('Card 1')).not.toBeInTheDocument();
     expect(screen.getByText('Card 2')).toBeInTheDocument();
     expect(screen.getByText('Suggested Cuts (1)')).toBeInTheDocument();
+    expect(mockToast).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Dismissed "Card 1"' }),
+    );
   });
 
-  it('dismisses an addition card when X is clicked', async () => {
+  it('dismisses an addition card when X is clicked and shows undo toast', async () => {
     mockInvoke.mockResolvedValue({ data: MOCK_CRITIQUE, error: null });
     render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
     fireEvent.click(screen.getByText('Get Critique'));
@@ -276,12 +278,67 @@ describe('DeckCritiquePanel', () => {
       expect(screen.getByText('Rhystic Study')).toBeInTheDocument();
     });
 
-    const dismissBtn = screen.getByTitle('Dismiss suggestion for Rhystic Study');
-    fireEvent.click(dismissBtn);
+    fireEvent.click(screen.getByTitle('Dismiss suggestion for Rhystic Study'));
 
     expect(screen.queryByText('Rhystic Study')).not.toBeInTheDocument();
     expect(screen.getByText('Swords to Plowshares')).toBeInTheDocument();
     expect(screen.getByText('Suggested Additions (1)')).toBeInTheDocument();
+    expect(mockToast).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Dismissed "Rhystic Study"' }),
+    );
+  });
+
+  it('undo toast action restores dismissed cut', async () => {
+    mockInvoke.mockResolvedValue({ data: MOCK_CRITIQUE, error: null });
+    render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
+    fireEvent.click(screen.getByText('Get Critique'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Card 1')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTitle('Dismiss suggestion for Card 1'));
+    expect(screen.queryByText('Card 1')).not.toBeInTheDocument();
+
+    // Extract and trigger the undo action from the toast call
+    const toastCall = mockToast.mock.calls.find(
+      (args: unknown[]) => (args[0] as { title: string }).title === 'Dismissed "Card 1"',
+    );
+    expect(toastCall).toBeDefined();
+    const actionElement = (toastCall![0] as { action: React.ReactElement }).action;
+
+    // Render the action button and click it
+    const { container } = render(actionElement);
+    const undoBtn = container.querySelector('button');
+    expect(undoBtn).toBeTruthy();
+    fireEvent.click(undoBtn!);
+
+    // Card should reappear
+    expect(screen.getByText('Card 1')).toBeInTheDocument();
+    expect(screen.getByText('Suggested Cuts (2)')).toBeInTheDocument();
+  });
+
+  it('undo toast action restores dismissed addition', async () => {
+    mockInvoke.mockResolvedValue({ data: MOCK_CRITIQUE, error: null });
+    render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
+    fireEvent.click(screen.getByText('Get Critique'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Rhystic Study')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTitle('Dismiss suggestion for Rhystic Study'));
+    expect(screen.queryByText('Rhystic Study')).not.toBeInTheDocument();
+
+    const toastCall = mockToast.mock.calls.find(
+      (args: unknown[]) => (args[0] as { title: string }).title === 'Dismissed "Rhystic Study"',
+    );
+    const actionElement = (toastCall![0] as { action: React.ReactElement }).action;
+    const { container } = render(actionElement);
+    fireEvent.click(container.querySelector('button')!);
+
+    expect(screen.getByText('Rhystic Study')).toBeInTheDocument();
+    expect(screen.getByText('Suggested Additions (2)')).toBeInTheDocument();
   });
 
   it('hides section header when all items are dismissed', async () => {
