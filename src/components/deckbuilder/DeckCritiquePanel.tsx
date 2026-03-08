@@ -220,7 +220,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
       {loading && (
         <div className="flex items-center justify-center py-6">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          <span className="text-xs text-muted-foreground ml-2">Analyzing your deck…</span>
+          <span className="text-xs text-muted-foreground ml-2">{t('critique.analyzing')}</span>
         </div>
       )}
 
