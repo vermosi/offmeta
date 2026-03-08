@@ -81,12 +81,11 @@ describe('critique-cache', () => {
   describe('saveCritique', () => {
     it('saves critique data to sessionStorage', () => {
       const key = 'test-key';
-      const critique: CritiqueResult = {
-        summary: 'Test summary',
+      const critique = createMockCritiqueResult({
         cuts: [{ card_name: 'Bad Card', reason: 'Off-strategy', severity: 'weak' }],
         additions: [{ card_name: 'Good Card', reason: 'Fits archetype', category: 'Ramp' }],
         confidence: 0.75,
-      };
+      });
 
       saveCritique(key, critique);
 
