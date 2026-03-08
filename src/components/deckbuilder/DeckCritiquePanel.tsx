@@ -10,7 +10,9 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/useToast';
 import { cn } from '@/lib/core/utils';
+import { CardHoverImage } from '@/components/deckbuilder/CardHoverImage';
 import type { DeckCard } from '@/hooks/useDeck';
+import type { ScryfallCard } from '@/types/card';
 
 const UNDO_TIMEOUT_MS = 5000;
 
