@@ -279,7 +279,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
             <div className="space-y-2">
               <h5 className="text-[11px] font-semibold text-accent flex items-center gap-1">
                 <Plus className="h-3 w-3" />
-                Suggested Additions ({visibleAdditions.length})
+                {t('critique.suggestedAdditions')} ({visibleAdditions.length})
               </h5>
               {visibleAdditions.map((add) => (
                 <div key={add.card_name} className="rounded-lg border border-border bg-card/50 p-2 space-y-1">
