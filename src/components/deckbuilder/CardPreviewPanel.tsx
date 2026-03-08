@@ -29,6 +29,7 @@ interface CardPreviewPanelProps {
 export function CardPreviewPanel({
   card, suggestions, suggestionsAnalysis, suggestionsLoading,
   onSuggest, onAddSuggestion, cardCount, deckCards, commanderName,
+  colorIdentity = [], format = 'commander',
 }: CardPreviewPanelProps) {
   const { t } = useTranslation();
   const imageUrl = card?.image_uris?.normal || card?.card_faces?.[0]?.image_uris?.normal;
