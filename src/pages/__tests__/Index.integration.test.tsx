@@ -5,8 +5,8 @@
  * @module pages/__tests__/Index.integration.test
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor, act, cleanup } from '@testing-library/react';
 import { Suspense } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -128,24 +128,34 @@ const MOCK_CARDS: ScryfallCard[] = [
   }),
 ];
 
-function renderIndex(initialRoute = '/') {
+async function renderIndex(initialRoute = '/') {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false, gcTime: 0 },
     },
   });
 
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <MemoryRouter initialEntries={[initialRoute]}>
-          <Suspense fallback={<div>Loading…</div>}>
-            <IndexPage />
-          </Suspense>
-        </MemoryRouter>
-      </TooltipProvider>
-    </QueryClientProvider>,
-  );
+  let result: ReturnType<typeof render>;
+  await act(async () => {
+    result = render(
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <MemoryRouter initialEntries={[initialRoute]}>
+            <Suspense fallback={<div>Loading…</div>}>
+              <IndexPage />
+            </Suspense>
+          </MemoryRouter>
+        </TooltipProvider>
+      </QueryClientProvider>,
+    );
+  });
+
+  // Wait for Suspense to resolve the lazy-loaded component
+  await waitFor(() => {
+    expect(screen.getByRole('search')).toBeInTheDocument();
+  });
+
+  return result!;
 }
 
 // Lazy import after mocks
@@ -170,24 +180,24 @@ beforeEach(async () => {
   IndexPage = mod.default;
 });
 
+afterEach(() => {
+  cleanup();
+});
+
 // ── Tests ──────────────────────────────────────────────────
 
 describe('Index page integration', () => {
   it('renders hero section and search bar on initial load', async () => {
-    renderIndex();
-    await waitFor(() => {
-      expect(screen.getByRole('search')).toBeInTheDocument();
-    });
+    await renderIndex();
+    expect(screen.getByRole('search')).toBeInTheDocument();
     expect(screen.getByRole('searchbox')).toBeInTheDocument();
   });
 
   it('renders example query buttons when no search has been made', async () => {
-    renderIndex();
-    await waitFor(() => {
-      expect(
-        screen.getByRole('group', { name: /try searching for/i }),
-      ).toBeInTheDocument();
-    });
+    await renderIndex();
+    expect(
+      screen.getByRole('group', { name: /try searching for/i }),
+    ).toBeInTheDocument();
     expect(
       screen.getByText('creatures that make treasure tokens'),
     ).toBeInTheDocument();
@@ -204,33 +214,32 @@ describe('Index page integration', () => {
         }),
     );
 
-    renderIndex();
-
-    await waitFor(() => {
-      expect(screen.getByRole('searchbox')).toBeInTheDocument();
-    });
+    await renderIndex();
 
     const input = screen.getByRole('searchbox');
-    fireEvent.change(input, { target: { value: 'treasure makers' } });
-    fireEvent.keyDown(input, { key: 'Enter' });
+    await act(async () => {
+      fireEvent.change(input, { target: { value: 'treasure makers' } });
+      fireEvent.keyDown(input, { key: 'Enter' });
+    });
 
     // The search bar should enter a loading state
     await waitFor(() => {
       expect(screen.getByLabelText('Searching...')).toBeInTheDocument();
     });
 
-    if (resolveTranslation) (resolveTranslation as () => void)();
+    await act(async () => {
+      if (resolveTranslation) resolveTranslation();
+    });
   });
 
   it('renders card results after successful search flow', async () => {
-    renderIndex();
+    await renderIndex();
 
-    await waitFor(() => {
-      expect(screen.getByRole('searchbox')).toBeInTheDocument();
-    });
     const input = screen.getByRole('searchbox');
-    fireEvent.change(input, { target: { value: 'treasure makers' } });
-    fireEvent.keyDown(input, { key: 'Enter' });
+    await act(async () => {
+      fireEvent.change(input, { target: { value: 'treasure makers' } });
+      fireEvent.keyDown(input, { key: 'Enter' });
+    });
 
     await waitFor(() => {
       expect(mockTranslateQueryWithDedup).toHaveBeenCalledWith(
@@ -250,32 +259,27 @@ describe('Index page integration', () => {
       data: [],
     });
 
-    renderIndex();
+    await renderIndex();
 
-    await waitFor(() => {
-      expect(screen.getByRole('searchbox')).toBeInTheDocument();
-    });
     const input = screen.getByRole('searchbox');
-    fireEvent.change(input, { target: { value: 'nonexistent card xyz' } });
-    fireEvent.keyDown(input, { key: 'Enter' });
+    await act(async () => {
+      fireEvent.change(input, { target: { value: 'nonexistent card xyz' } });
+      fireEvent.keyDown(input, { key: 'Enter' });
+    });
 
     await waitFor(() => {
-      // EmptyState renders an h3 with "No cards found"
       const matches = screen.getAllByText(/no cards found/i);
       expect(matches.length).toBeGreaterThanOrEqual(1);
     });
   });
 
   it('clicking an example query triggers search', async () => {
-    renderIndex();
+    await renderIndex();
 
-    await waitFor(() => {
-      expect(
-        screen.getByText('creatures that make treasure tokens'),
-      ).toBeInTheDocument();
-    });
     const exampleBtn = screen.getByText('creatures that make treasure tokens');
-    fireEvent.click(exampleBtn);
+    await act(async () => {
+      fireEvent.click(exampleBtn);
+    });
 
     await waitFor(() => {
       expect(mockTranslateQueryWithDedup).toHaveBeenCalledWith(
@@ -287,14 +291,13 @@ describe('Index page integration', () => {
   });
 
   it('shows total cards count after search', async () => {
-    renderIndex();
+    await renderIndex();
 
-    await waitFor(() => {
-      expect(screen.getByRole('searchbox')).toBeInTheDocument();
-    });
     const input = screen.getByRole('searchbox');
-    fireEvent.change(input, { target: { value: 'treasure' } });
-    fireEvent.keyDown(input, { key: 'Enter' });
+    await act(async () => {
+      fireEvent.change(input, { target: { value: 'treasure' } });
+      fireEvent.keyDown(input, { key: 'Enter' });
+    });
 
     await waitFor(() => {
       expect(screen.getByText('3 cards')).toBeInTheDocument();

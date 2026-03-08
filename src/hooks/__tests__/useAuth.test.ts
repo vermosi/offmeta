@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { useAuth, useAuthProvider } from '@/hooks/useAuth';
 
 // Mock supabase client
@@ -48,16 +48,24 @@ describe('useAuthProvider', () => {
     vi.clearAllMocks();
   });
 
-  it('initializes with loading state', () => {
+  it('initializes with loading state', async () => {
     const { result } = renderHook(() => useAuthProvider());
     // Initially loading
     expect(result.current.isLoading).toBe(true);
     expect(result.current.user).toBeNull();
     expect(result.current.session).toBeNull();
+
+    // Wait for async effects to settle
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
   });
 
-  it('exposes all required auth methods', () => {
+  it('exposes all required auth methods', async () => {
     const { result } = renderHook(() => useAuthProvider());
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
     expect(typeof result.current.signIn).toBe('function');
     expect(typeof result.current.signUp).toBe('function');
     expect(typeof result.current.signOut).toBe('function');
@@ -74,13 +82,19 @@ describe('useAuthProvider', () => {
     } as never);
 
     const { result } = renderHook(() => useAuthProvider());
-    const res = await result.current.signIn('test@test.com', 'bad');
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+    const res = await act(() => result.current.signIn('test@test.com', 'bad'));
     expect(res.error).toBe('Invalid credentials');
   });
 
   it('signIn returns null error on success', async () => {
     const { result } = renderHook(() => useAuthProvider());
-    const res = await result.current.signIn('test@test.com', 'pass');
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+    const res = await act(() => result.current.signIn('test@test.com', 'pass'));
     expect(res.error).toBeNull();
   });
 
@@ -92,14 +106,20 @@ describe('useAuthProvider', () => {
     } as never);
 
     const { result } = renderHook(() => useAuthProvider());
-    const res = await result.current.signUp('dup@test.com', 'pass');
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+    const res = await act(() => result.current.signUp('dup@test.com', 'pass'));
     expect(res.error).toContain('already exists');
     expect(res.needsConfirmation).toBe(false);
   });
 
   it('signUp returns needsConfirmation on success', async () => {
     const { result } = renderHook(() => useAuthProvider());
-    const res = await result.current.signUp('new@test.com', 'pass');
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+    const res = await act(() => result.current.signUp('new@test.com', 'pass'));
     expect(res.error).toBeNull();
     expect(res.needsConfirmation).toBe(true);
   });
