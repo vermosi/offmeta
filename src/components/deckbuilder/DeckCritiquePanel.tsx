@@ -79,9 +79,16 @@ const SEVERITY_CONFIG = {
   'weak': { label: 'Weak', icon: AlertTriangle, className: 'bg-muted text-muted-foreground border-border' },
 } as const;
 
-export function DeckCritiquePanel({ cards, commanderName, colorIdentity, format, onAddSuggestion, onRemoveByName }: DeckCritiquePanelProps) {
-  const [critique, setCritique] = useState<CritiqueResult | null>(null);
+export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity, format, onAddSuggestion, onRemoveByName }: DeckCritiquePanelProps) {
+  const cacheKey = useMemo(() => buildCacheKey(deckId, cards), [deckId, cards]);
+  const [critique, setCritique] = useState<CritiqueResult | null>(() => loadCachedCritique(cacheKey));
   const [loading, setLoading] = useState(false);
+
+  // Invalidate cached critique when the deck changes
+  useEffect(() => {
+    const cached = loadCachedCritique(cacheKey);
+    setCritique(cached);
+  }, [cacheKey]);
 
   const handleCritique = useCallback(async () => {
     if (cards.length < 5) {
@@ -110,12 +117,13 @@ export function DeckCritiquePanel({ cards, commanderName, colorIdentity, format,
       }
 
       setCritique(data);
+      saveCritique(cacheKey, data);
     } catch {
       toast({ title: 'Error', description: 'Something went wrong', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
-  }, [cards, commanderName, colorIdentity, format]);
+  }, [cards, commanderName, colorIdentity, format, cacheKey]);
 
   return (
     <div className="space-y-3">
