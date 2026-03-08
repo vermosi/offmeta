@@ -32,7 +32,7 @@ describe('NotFound', () => {
         <NotFound />
       </MemoryRouter>,
     );
-    const link = screen.getByText(/return to home/i);
+    const link = screen.getByText(/back to home/i);
     expect(link).toBeInTheDocument();
     expect(link.getAttribute('href')).toBe('/');
   });
