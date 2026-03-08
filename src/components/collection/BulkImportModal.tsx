@@ -232,7 +232,7 @@ export function BulkImportModal({ open, onOpenChange }: BulkImportModalProps) {
         </DialogHeader>
 
         {/* Tab selector */}
-        <div className="flex gap-1 p-1 bg-secondary/50 rounded-lg w-fit">
+        <div className="flex gap-1 p-1 bg-secondary/50 rounded-lg w-fit flex-wrap">
           <button
             onClick={() => { setTab('text'); setParsed(null); }}
             className={`px-3 py-1.5 text-sm rounded-md transition-colors flex items-center gap-1.5 ${
@@ -250,6 +250,15 @@ export function BulkImportModal({ open, onOpenChange }: BulkImportModalProps) {
           >
             <Upload className="h-3.5 w-3.5" />
             CSV File
+          </button>
+          <button
+            onClick={() => { setTab('moxfield'); setParsed(null); }}
+            className={`px-3 py-1.5 text-sm rounded-md transition-colors flex items-center gap-1.5 ${
+              tab === 'moxfield' ? 'bg-background text-foreground shadow-sm font-medium' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <FileText className="h-3.5 w-3.5" />
+            Moxfield
           </button>
         </div>
 
