@@ -1,12 +1,12 @@
 /**
  * Collection management page.
- * Lists all owned cards with search, sort, quantity controls, and CSV export.
+ * Lists all owned cards with search, sort, quantity controls, bulk import, value stats, and CSV export.
  * @module pages/Collection
  */
 
 import { useState, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Package, Search, Download, Plus, Minus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Package, Search, Download, Plus, Minus, Trash2, Upload } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,8 @@ import {
 } from '@/hooks/useCollection';
 import { useTranslation } from '@/lib/i18n';
 import { toast } from '@/hooks/useToast';
+import { BulkImportModal } from '@/components/collection/BulkImportModal';
+import { CollectionStats } from '@/components/collection/CollectionStats';
 
 type SortMode = 'name' | 'quantity' | 'newest';
 
@@ -41,6 +43,7 @@ export default function Collection() {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<SortMode>('name');
   const [authOpen, setAuthOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const filtered = useMemo(() => {
     let result = [...collection];
@@ -117,13 +120,22 @@ export default function Collection() {
               {t('collection.subtitle', '{count} unique cards · {total} total').replace('{count}', String(collection.length)).replace('{total}', String(totalCards))}
             </p>
           </div>
-          {collection.length > 0 && (
-            <Button variant="outline" size="sm" onClick={handleExportCsv} className="gap-1.5">
-              <Download className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">CSV</span>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setImportOpen(true)} className="gap-1.5">
+              <Upload className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Import</span>
             </Button>
-          )}
+            {collection.length > 0 && (
+              <Button variant="outline" size="sm" onClick={handleExportCsv} className="gap-1.5">
+                <Download className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">CSV</span>
+              </Button>
+            )}
+          </div>
         </div>
+
+        {/* Collection Value Stats */}
+        {collection.length > 0 && <CollectionStats />}
 
         {/* Search + Sort */}
         <div className="flex items-center gap-2">
@@ -163,6 +175,12 @@ export default function Collection() {
                 ? t('collection.empty', 'Your collection is empty. Add cards from search results!')
                 : t('collection.noMatch', 'No cards match your search.')}
             </p>
+            {collection.length === 0 && (
+              <Button variant="secondary" size="sm" onClick={() => setImportOpen(true)} className="gap-1.5 mt-2">
+                <Upload className="h-3.5 w-3.5" />
+                Bulk Import
+              </Button>
+            )}
           </div>
         ) : (
           <div className="space-y-1">
@@ -178,6 +196,7 @@ export default function Collection() {
         )}
       </main>
       <Footer />
+      <BulkImportModal open={importOpen} onOpenChange={setImportOpen} />
     </div>
   );
 }
