@@ -149,7 +149,7 @@ export function CompareModal({ cards, open, onClose }: CompareModalProps) {
 
             {/* Price */}
             <StatRow
-              label="Price (USD)"
+              label={t('compare.priceUsd')}
               values={cards.map((c) =>
                 c.prices?.usd ? `$${c.prices.usd}` : null,
               )}
