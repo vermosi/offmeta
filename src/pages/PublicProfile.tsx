@@ -202,7 +202,7 @@ export default function PublicProfile() {
           <div className="text-center py-12">
             <Package className="h-10 w-10 mx-auto text-muted-foreground/30" />
             <p className="text-muted-foreground mt-2 text-sm">
-              No public decks yet.
+              {t('publicProfile.noPublicDecks')}
             </p>
           </div>
         ) : null}
