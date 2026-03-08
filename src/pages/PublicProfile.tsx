@@ -155,7 +155,7 @@ export default function PublicProfile() {
           <div className="space-y-3">
             <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
               <Package className="h-4 w-4" />
-              Published Decks
+              {t('publicProfile.publishedDecks')}
             </h2>
             {decks.map((deck) => (
               <Link
