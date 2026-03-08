@@ -244,7 +244,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
             <div className="space-y-2">
               <h5 className="text-[11px] font-semibold text-destructive flex items-center gap-1">
                 <Scissors className="h-3 w-3" />
-                Suggested Cuts ({visibleCuts.length})
+                {t('critique.suggestedCuts')} ({visibleCuts.length})
               </h5>
               {visibleCuts.map((cut) => {
                 const sev = SEVERITY_CONFIG[cut.severity] || SEVERITY_CONFIG.weak;
