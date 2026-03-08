@@ -354,4 +354,43 @@ describe('DeckCritiquePanel', () => {
     fireEvent.click(screen.getByTitle('Dismiss suggestion for Card 1'));
     expect(screen.queryByText(/Suggested Cuts/)).not.toBeInTheDocument();
   });
+
+  it('shows dismissed count summary after dismissing suggestions', async () => {
+    mockInvoke.mockResolvedValue({ data: MOCK_CRITIQUE, error: null });
+    render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
+    fireEvent.click(screen.getByText('Get Critique'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Card 1')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTitle('Dismiss suggestion for Card 1'));
+    expect(screen.getByText('1 suggestion dismissed')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTitle('Dismiss suggestion for Rhystic Study'));
+    expect(screen.getByText('2 suggestions dismissed')).toBeInTheDocument();
+  });
+
+  it('restores all dismissed suggestions when Show all is clicked', async () => {
+    mockInvoke.mockResolvedValue({ data: MOCK_CRITIQUE, error: null });
+    render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
+    fireEvent.click(screen.getByText('Get Critique'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Card 1')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTitle('Dismiss suggestion for Card 1'));
+    fireEvent.click(screen.getByTitle('Dismiss suggestion for Rhystic Study'));
+    expect(screen.queryByText('Card 1')).not.toBeInTheDocument();
+    expect(screen.queryByText('Rhystic Study')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Show all'));
+
+    expect(screen.getByText('Card 1')).toBeInTheDocument();
+    expect(screen.getByText('Rhystic Study')).toBeInTheDocument();
+    expect(screen.getByText('Suggested Cuts (2)')).toBeInTheDocument();
+    expect(screen.getByText('Suggested Additions (2)')).toBeInTheDocument();
+    expect(screen.queryByText(/dismissed/)).not.toBeInTheDocument();
+  });
 });

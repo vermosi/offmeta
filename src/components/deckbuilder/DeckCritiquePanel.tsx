@@ -314,6 +314,26 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
             </div>
           )}
 
+          {/* Dismissed summary */}
+          {(dismissedCuts.size > 0 || dismissedAdditions.size > 0) && (
+            <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-2.5 py-1.5">
+              <span className="text-[10px] text-muted-foreground">
+                {dismissedCuts.size + dismissedAdditions.size} suggestion{dismissedCuts.size + dismissedAdditions.size !== 1 ? 's' : ''} dismissed
+              </span>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-5 text-[10px] px-2 text-primary hover:text-primary"
+                onClick={() => {
+                  setDismissedCuts(new Set());
+                  setDismissedAdditions(new Set());
+                }}
+              >
+                Show all
+              </Button>
+            </div>
+          )}
+
           {/* Mana curve notes */}
           {critique.mana_curve_notes && (
             <p className="text-[10px] text-muted-foreground italic border-t border-border pt-2">
