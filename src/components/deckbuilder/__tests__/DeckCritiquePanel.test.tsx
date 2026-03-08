@@ -64,6 +64,7 @@ const MOCK_CRITIQUE = {
     { card_name: 'Rhystic Study', reason: 'Card advantage engine', category: 'Draw' },
   ],
   mana_curve_notes: 'Curve is slightly top-heavy at 5+ CMC.',
+  confidence: 0.85,
 };
 
 describe('DeckCritiquePanel', () => {
