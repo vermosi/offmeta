@@ -84,7 +84,9 @@ const SEVERITY_CONFIG = {
   'weak': { label: 'Weak', icon: AlertTriangle, className: 'bg-muted text-muted-foreground border-border' },
 } as const;
 
-export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity, format, onAddSuggestion, onRemoveByName }: DeckCritiquePanelProps) {
+export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity, format, onAddSuggestion, onRemoveByName, scryfallCache }: DeckCritiquePanelProps) {
+  const fallbackCacheRef = useRef<Map<string, ScryfallCard>>(new Map());
+  const effectiveCache = scryfallCache ?? fallbackCacheRef;
   const cacheKey = useMemo(() => buildCacheKey(deckId, cards), [deckId, cards]);
   const [critique, setCritique] = useState<CritiqueResult | null>(() => loadCachedCritique(cacheKey));
   const [loading, setLoading] = useState(false);
