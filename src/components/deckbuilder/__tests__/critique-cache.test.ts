@@ -1,23 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { buildCacheKey, loadCachedCritique, saveCritique, type CritiqueResult } from '../critique-cache';
 import type { DeckCard } from '@/hooks/useDeck';
-
-/** Helper factory to create valid DeckCard objects for testing */
-function createTestCard(overrides: Partial<DeckCard> = {}): DeckCard {
-  return {
-    id: 'card-id-' + Math.random(),
-    deck_id: 'deck-123',
-    card_name: 'Test Card',
-    quantity: 1,
-    board: 'main',
-    category: null,
-    is_commander: false,
-    is_companion: false,
-    scryfall_id: null,
-    created_at: new Date().toISOString(),
-    ...overrides,
-  };
-}
+import { createTestCard, createMockCritiqueResult } from '@/test/factories';
 
 describe('critique-cache', () => {
   beforeEach(() => {
