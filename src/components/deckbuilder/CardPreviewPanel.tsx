@@ -62,6 +62,14 @@ export function CardPreviewPanel({
         onAddSuggestion={onAddSuggestion}
         cardCount={cardCount}
       />
+      <div className="border-t border-border" />
+      <DeckCritiquePanel
+        cards={deckCards}
+        commanderName={commanderName}
+        colorIdentity={colorIdentity}
+        format={format}
+        onAddSuggestion={onAddSuggestion}
+      />
     </div>
   );
 }
