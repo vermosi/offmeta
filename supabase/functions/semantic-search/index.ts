@@ -148,16 +148,13 @@ async function seedTranslationRule(
     // Don't seed very short or very long queries
     if (normalized.length < 5 || normalized.length > 200) return;
 
-    await supabase.from('translation_rules').insert(
-      {
+    await supabase.from('translation_rules').insert({
         pattern: normalized,
         scryfall_syntax: scryfallQuery,
         confidence,
         description: `Auto-seeded from AI translation`,
         is_active: true,
-      },
-      { defaultToNull: false },
-    ).then(({ error }) => {
+      }).then(({ error }) => {
       // Silently ignore duplicate key conflicts — preserves admin-curated rules
       if (error && !error.message?.includes('duplicate key')) {
         console.warn('seedTranslationRule insert error:', error.message);

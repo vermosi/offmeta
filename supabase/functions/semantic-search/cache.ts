@@ -19,7 +19,7 @@ const CACHE_TTL = 30 * 60 * 1000; // 30 minutes for in-memory
 
 export function getCacheKey(
   query: string,
-  filters?: Record<string, unknown>,
+  filters?: Record<string, unknown> | null,
   cacheSalt?: string,
 ): string {
   // Apply synonym normalization for better cache hit rate
@@ -42,7 +42,7 @@ async function hashCacheKey(key: string): Promise<string> {
 
 export async function getCachedResult(
   query: string,
-  filters?: Record<string, unknown>,
+  filters?: Record<string, unknown> | null,
   cacheSalt?: string,
 ): Promise<CacheEntry['result'] | null> {
   const key = getCacheKey(query, filters, cacheSalt);
@@ -126,7 +126,7 @@ export function logCacheEvent(
  */
 export async function getPersistentCache(
   query: string,
-  filters?: Record<string, unknown>,
+  filters?: Record<string, unknown> | null,
   cacheSalt?: string,
 ): Promise<CacheEntry['result'] | null> {
   const key = getCacheKey(query, filters, cacheSalt);
@@ -191,7 +191,7 @@ export async function getPersistentCache(
  */
 export async function setPersistentCache(
   query: string,
-  filters: Record<string, unknown> | undefined,
+  filters: Record<string, unknown> | null | undefined,
   result: CacheEntry['result'],
   cacheSalt?: string,
 ): Promise<void> {
@@ -226,7 +226,7 @@ export async function setPersistentCache(
 
 export function setCachedResult(
   query: string,
-  filters: Record<string, unknown> | undefined,
+  filters: Record<string, unknown> | null | undefined,
   result: CacheEntry['result'],
   cacheSalt?: string,
 ): void {

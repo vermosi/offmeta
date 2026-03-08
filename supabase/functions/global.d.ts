@@ -1,17 +1,9 @@
-/* Minimal Deno type shim so the Vite/TS checker doesn't error on edge-function code. */
-declare namespace Deno {
-  interface Env {
-    get(key: string): string | undefined;
-    set(key: string, value: string): void;
-    toObject(): Record<string, string>;
-  }
-  const env: Env;
-  function serve(handler: (req: Request) => Response | Promise<Response>): void;
-}
+/* Minimal Deno type shim so the Vite/TS checker doesn't error on edge-function code.
+   In actual Deno runtime these are already provided natively. */
 
 // Allow bare https:// imports used by edge functions (esm.sh, etc.)
 declare module "https://*" {
-  const mod: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mod: any;
   export default mod;
-  export = mod;
 }
