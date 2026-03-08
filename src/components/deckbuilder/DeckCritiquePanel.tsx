@@ -159,7 +159,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
 
   const handleCritique = useCallback(async () => {
     if (cards.length < 5) {
-      toast({ title: 'Need at least 5 cards for a critique', variant: 'destructive' });
+      toast({ title: t('critique.minCards'), variant: 'destructive' });
       return;
     }
     setLoading(true);
