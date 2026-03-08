@@ -7,6 +7,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Package, Search, Download, Plus, Minus, Trash2, Upload } from 'lucide-react';
+import { PriceSparkline } from '@/components/collection/PriceSparkline';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
