@@ -218,8 +218,7 @@ describe('critique-cache', () => {
 
     it('preserves all critique fields after round-trip', () => {
       const key = 'test-key';
-      const critique: CritiqueResult = {
-        summary: 'Summary text',
+      const critique = createMockCritiqueResult({
         cuts: [
           { card_name: 'Cut1', reason: 'Reason1', severity: 'weak' },
           { card_name: 'Cut2', reason: 'Reason2', severity: 'underperforming' },
@@ -231,7 +230,7 @@ describe('critique-cache', () => {
         ],
         confidence: 0.42,
         mana_curve_notes: 'Curve is unbalanced',
-      };
+      });
 
       saveCritique(key, critique);
       const loaded = loadCachedCritique(key)!;
