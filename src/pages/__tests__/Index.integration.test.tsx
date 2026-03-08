@@ -282,14 +282,13 @@ describe('Index page integration', () => {
   });
 
   it('shows total cards count after search', async () => {
-    renderIndex();
+    await renderIndex();
 
-    await waitFor(() => {
-      expect(screen.getByRole('searchbox')).toBeInTheDocument();
-    });
     const input = screen.getByRole('searchbox');
-    fireEvent.change(input, { target: { value: 'treasure' } });
-    fireEvent.keyDown(input, { key: 'Enter' });
+    await act(async () => {
+      fireEvent.change(input, { target: { value: 'treasure' } });
+      fireEvent.keyDown(input, { key: 'Enter' });
+    });
 
     await waitFor(() => {
       expect(screen.getByText('3 cards')).toBeInTheDocument();
