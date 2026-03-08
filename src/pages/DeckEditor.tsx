@@ -708,7 +708,7 @@ export default function DeckEditor() {
               {([
                 { keys: ['/'], desc: t('deckEditor.shortcuts.focusSearch') },
                 { keys: ['Del', '/', 'Backspace'], desc: t('deckEditor.shortcuts.removeCard') },
-                { keys: ['+', '/', '-'], desc: 'Adjust quantity' },
+                { keys: ['+', '/', '-'], desc: t('deckEditor.shortcuts.adjustQuantity') },
                 { keys: ['Shift', 'S'], desc: t('deckEditor.shortcuts.toSideboard') },
                 { keys: ['Shift', 'M'], desc: t('deckEditor.shortcuts.toMaybeboard') },
                 { keys: ['?'], desc: t('deckEditor.shortcuts.toggleHelp') },
