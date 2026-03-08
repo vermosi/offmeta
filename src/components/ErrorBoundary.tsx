@@ -14,6 +14,17 @@ interface State {
   error?: Error;
 }
 
+// Note: Class components cannot use hooks, so we use a wrapper for i18n
+// The strings here are kept as fallback English since ErrorBoundary
+// must render even when context providers fail.
+
+const FALLBACK_STRINGS = {
+  title: 'Something went wrong',
+  description: 'We encountered an unexpected error. Please try again or refresh the page.',
+  tryAgain: 'Try again',
+  refresh: 'Refresh page',
+};
+
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -45,12 +56,11 @@ export class ErrorBoundary extends Component<Props, State> {
           </div>
 
           <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">
-            Something went wrong
+            {FALLBACK_STRINGS.title}
           </h3>
 
           <p className="text-sm text-muted-foreground mb-6 max-w-md">
-            We encountered an unexpected error. Please try again or refresh the
-            page.
+            {FALLBACK_STRINGS.description}
           </p>
 
           {this.state.error && import.meta.env.DEV && (
@@ -69,14 +79,14 @@ export class ErrorBoundary extends Component<Props, State> {
               className="gap-2"
             >
               <RefreshCw className="h-4 w-4" />
-              Try again
+              {FALLBACK_STRINGS.tryAgain}
             </Button>
             <Button
               variant="default"
               size="sm"
               onClick={() => window.location.reload()}
             >
-              Refresh page
+              {FALLBACK_STRINGS.refresh}
             </Button>
           </div>
         </div>
