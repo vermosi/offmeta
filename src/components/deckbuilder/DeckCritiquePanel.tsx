@@ -197,7 +197,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
       <div className="flex items-center justify-between">
         <h4 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
           <MessageSquareWarning className="h-3.5 w-3.5 text-accent" />
-          AI Critique
+          {t('critique.title')}
         </h4>
         <Button
           size="sm"
