@@ -493,7 +493,7 @@ export default function DeckEditor() {
           {(undoRedo.canUndo || undoRedo.canRedo) && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button title="Action history"
+                <button title={t('deckEditor.actionHistory')}
                   className="p-1.5 rounded transition-colors text-muted-foreground hover:text-foreground hover:bg-secondary/50 flex items-center gap-0.5">
                   <History className="h-3.5 w-3.5" />
                   <ChevronDown className="h-2.5 w-2.5" />
