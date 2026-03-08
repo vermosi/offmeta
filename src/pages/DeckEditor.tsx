@@ -202,7 +202,7 @@ export default function DeckEditor() {
 
   // ── Missing cards summary ──
   const missingCards = useMemo(() => {
-    if (!user || (collectionLookup.size === 0 && cards.length === 0)) return [];
+    if (!user || collectionLookup.size === 0) return [];
     const missing: { name: string; needed: number }[] = [];
     for (const card of cards) {
       if (card.board === 'maybeboard') continue;
