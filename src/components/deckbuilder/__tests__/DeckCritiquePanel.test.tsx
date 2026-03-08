@@ -69,6 +69,7 @@ const MOCK_CRITIQUE = {
 describe('DeckCritiquePanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    sessionStorage.clear();
   });
 
   it('renders initial state with Get Critique button', () => {
