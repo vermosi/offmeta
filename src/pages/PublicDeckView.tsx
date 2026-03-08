@@ -22,6 +22,7 @@ import { FORMAT_LABELS } from '@/data/formats';
 import { FORMATS } from '@/data/formats';
 import { getCardsByExactNames } from '@/lib/scryfall';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from '@/lib/i18n';
 import type { Deck, DeckCard } from '@/hooks/useDeck';
 import type { ScryfallCard } from '@/types/card';
 import { DEFAULT_CATEGORY } from '@/lib/deckbuilder/infer-category';
