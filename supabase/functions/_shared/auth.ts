@@ -130,16 +130,49 @@ export async function validateAuth(req: Request): Promise<AuthResult> {
   }
 
   try {
+    const userResponse = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      method: 'GET',
+      headers: {
+        Authorization: authHeader,
+        apikey: supabaseAnonKey,
+      },
+    });
+
+    if (userResponse.ok) {
+      const userData = await userResponse.json();
+      if (userData && typeof userData.id === 'string') {
+        return { authorized: true, role: 'authenticated' };
+      }
+    }
+  } catch {
+    // Continue to SDK fallback.
+  }
+
+  try {
     const { createClient } = await importSupabase();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-function-type
     const userClient: any = (createClient as Function)(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
 
+    // Prefer JWT claims verification for signing-keys based projects when available.
+    const getClaims = userClient?.auth?.getClaims;
+    if (typeof getClaims === 'function') {
+      const { data: claimsData, error: claimsError } = await getClaims(token);
+      if (!claimsError && claimsData?.claims && typeof claimsData.claims.sub === 'string') {
+        const role =
+          typeof claimsData.claims.role === 'string'
+            ? claimsData.claims.role
+            : 'authenticated';
+        return { authorized: true, role };
+      }
+    }
+
+    // Fallback for compatibility in case claims verification is unavailable.
     const {
       data: { user },
       error,
-    } = await userClient.auth.getUser(token);
+    } = await userClient.auth.getUser();
 
     if (error || !user) {
       return { authorized: false, error: 'Invalid Authorization token' };
