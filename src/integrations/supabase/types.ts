@@ -206,6 +206,33 @@ export type Database = {
         }
         Relationships: []
       }
+      price_snapshots: {
+        Row: {
+          card_name: string
+          id: string
+          price_usd: number | null
+          price_usd_foil: number | null
+          recorded_at: string
+          scryfall_id: string | null
+        }
+        Insert: {
+          card_name: string
+          id?: string
+          price_usd?: number | null
+          price_usd_foil?: number | null
+          recorded_at?: string
+          scryfall_id?: string | null
+        }
+        Update: {
+          card_name?: string
+          id?: string
+          price_usd?: number | null
+          price_usd_foil?: number | null
+          recorded_at?: string
+          scryfall_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

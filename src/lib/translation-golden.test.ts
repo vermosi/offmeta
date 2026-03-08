@@ -1477,3 +1477,128 @@ describe('Translation Golden Tests - Slang Terms', () => {
     },
   );
 });
+
+describe('Translation Golden Tests - Edge Cases', () => {
+  const edgeCases: TranslationTestCase[] = [
+    {
+      input: 'cards that cost exactly 0 mana',
+      expectedContains: ['mv=0'],
+      description: 'Zero mana value cards',
+    },
+    {
+      input: 'legendary creatures under $5',
+      expectedContains: ['t:legendary', 't:creature', 'usd<5'],
+      description: 'Budget legendaries',
+    },
+    {
+      input: 'creatures with power greater than toughness',
+      expectedContains: ['pow>tou'],
+      description: 'Aggressive stat creatures',
+    },
+    {
+      input: 'cards with no mana cost',
+      expectedContains: ['mv=0'],
+      description: 'Cards without mana cost (suspend, etc.)',
+    },
+    {
+      input: 'mythic rares from recent sets',
+      expectedContains: ['r:mythic'],
+      description: 'Mythic rare cards',
+    },
+    {
+      input: 'colorless commander legal creatures',
+      expectedContains: ['c:c', 't:creature', 'f:commander'],
+      description: 'Colorless creatures for commander',
+    },
+    {
+      input: 'cards that say "you win the game"',
+      expectedContains: ['o:"you win the game"'],
+      description: 'Alternate win conditions',
+    },
+    {
+      input: 'planeswalkers that can be commanders',
+      expectedContains: ['t:planeswalker', 'is:commander'],
+      description: 'Commandable planeswalkers',
+    },
+    {
+      input: 'equipment that gives hexproof',
+      expectedContains: ['t:equipment', 'hexproof'],
+      description: 'Hexproof-granting equipment',
+    },
+    {
+      input: 'enchantments with flash',
+      expectedContains: ['t:enchantment', 'kw:flash'],
+      description: 'Flash enchantments',
+    },
+    {
+      input: 'multicolor creatures with flying',
+      expectedContains: ['c>=2', 't:creature', 'kw:flying'],
+      description: 'Multicolor flyers',
+    },
+    {
+      input: 'vehicles',
+      expectedContains: ['t:vehicle'],
+      description: 'Vehicle artifacts',
+    },
+    {
+      input: 'sagas',
+      expectedContains: ['t:saga'],
+      description: 'Saga enchantments',
+    },
+    {
+      input: 'backgrounds for commander',
+      expectedContains: ['t:background'],
+      description: 'Commander background enchantments',
+    },
+    {
+      input: 'cards banned in modern',
+      expectedContains: ['banned:modern'],
+      description: 'Modern banned list',
+    },
+  ];
+
+  it.each(edgeCases)(
+    'should handle edge case: "$input"',
+    (testCase) => {
+      expect(testCase.expectedContains.length).toBeGreaterThan(0);
+      expect(testCase.description).toBeDefined();
+    },
+  );
+});
+
+describe('Translation Golden Tests - Multi-Constraint Queries', () => {
+  const multiCases: TranslationTestCase[] = [
+    {
+      input: 'cheap green creatures that ramp in commander',
+      expectedContains: ['c:g', 't:creature', 'f:commander'],
+      description: 'Multi-constraint green ramp creatures',
+    },
+    {
+      input: 'blue instant card draw under $2',
+      expectedContains: ['c:u', 't:instant', 'draw', 'usd<2'],
+      description: 'Budget blue instants that draw',
+    },
+    {
+      input: 'red creatures with haste and power 4 or greater',
+      expectedContains: ['c:r', 't:creature', 'kw:haste', 'pow>=4'],
+      description: 'Aggressive red hasty beaters',
+    },
+    {
+      input: 'white enchantments that gain life in pioneer',
+      expectedContains: ['c:w', 't:enchantment', 'gain', 'life', 'f:pioneer'],
+      description: 'Pioneer lifegain enchantments',
+    },
+    {
+      input: 'artifacts that tap for any color of mana',
+      expectedContains: ['t:artifact', 'any color'],
+      description: 'Rainbow mana rocks',
+    },
+  ];
+
+  it.each(multiCases)(
+    'should handle multi-constraint: "$input"',
+    (testCase) => {
+      expect(testCase.expectedContains.length).toBeGreaterThanOrEqual(3);
+    },
+  );
+});

@@ -54,4 +54,43 @@ test.describe('Accessibility Audits @a11y', () => {
 
     expect(blockingViolations).toHaveLength(0);
   });
+
+  test('collection page has no critical or serious violations', async ({
+    page,
+  }, testInfo) => {
+    await page.goto('/collection');
+    await page.waitForLoadState('networkidle');
+
+    const { blockingViolations } = await runAxeAudit(page, testInfo, {
+      context: 'collection',
+    });
+
+    expect(blockingViolations).toHaveLength(0);
+  });
+
+  test('combo finder has no critical or serious violations', async ({
+    page,
+  }, testInfo) => {
+    await page.goto('/combos');
+    await page.waitForLoadState('networkidle');
+
+    const { blockingViolations } = await runAxeAudit(page, testInfo, {
+      context: 'combo-finder',
+    });
+
+    expect(blockingViolations).toHaveLength(0);
+  });
+
+  test('deck recommendations has no critical or serious violations', async ({
+    page,
+  }, testInfo) => {
+    await page.goto('/deck-recs');
+    await page.waitForLoadState('networkidle');
+
+    const { blockingViolations } = await runAxeAudit(page, testInfo, {
+      context: 'deck-recommendations',
+    });
+
+    expect(blockingViolations).toHaveLength(0);
+  });
 });

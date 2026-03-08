@@ -40,6 +40,7 @@ const BrowseDecks = lazy(() => import('./pages/BrowseDecks'));
 const About = lazy(() => import('./pages/About'));
 const Collection = lazy(() => import('./pages/Collection'));
 const CardPage = lazy(() => import('./pages/CardPage'));
+const PublicProfile = lazy(() => import('./pages/PublicProfile'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const queryClient = new QueryClient({
@@ -127,6 +128,7 @@ const App = () => (
                   <Route path="/about" element={<About />} />
                   <Route path="/collection" element={<Collection />} />
                   <Route path="/cards/:slug" element={<CardPage />} />
+                  <Route path="/user/:userId" element={<PublicProfile />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
