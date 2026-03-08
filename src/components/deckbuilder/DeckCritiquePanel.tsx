@@ -44,6 +44,7 @@ interface DeckCritiquePanelProps {
   format: string;
   onAddSuggestion: (name: string) => void;
   onRemoveByName?: (name: string) => void;
+  scryfallCache?: React.RefObject<Map<string, ScryfallCard>>;
 }
 
 const CACHE_PREFIX = 'offmeta_critique_';
