@@ -33,6 +33,27 @@ const SEVERITY_CONFIG = {
   'weak': { label: 'Weak', icon: AlertTriangle, className: 'bg-muted text-muted-foreground border-border' },
 } as const;
 
+function getConfidenceConfig(value: number) {
+  if (value >= 0.8) return { label: 'High', className: 'text-accent', barClass: 'bg-accent' };
+  if (value >= 0.5) return { label: 'Medium', className: 'text-warning', barClass: 'bg-warning' };
+  return { label: 'Low', className: 'text-destructive', barClass: 'bg-destructive' };
+}
+
+function ConfidenceIndicator({ value }: { value: number }) {
+  const pct = Math.round(Math.min(1, Math.max(0, value)) * 100);
+  const config = getConfidenceConfig(value);
+  return (
+    <div className="flex items-center gap-2">
+      <ShieldCheck className={cn('h-3 w-3 shrink-0', config.className)} />
+      <span className="text-[10px] text-muted-foreground whitespace-nowrap">Confidence:</span>
+      <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+        <div className={cn('h-full rounded-full transition-all', config.barClass)} style={{ width: `${pct}%` }} />
+      </div>
+      <span className={cn('text-[10px] font-medium', config.className)}>{pct}%</span>
+    </div>
+  );
+}
+
 export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity, format, onAddSuggestion, onRemoveByName, scryfallCache }: DeckCritiquePanelProps) {
   const fallbackCacheRef = useRef<Map<string, ScryfallCard>>(new Map());
   const effectiveCache = scryfallCache ?? fallbackCacheRef;
