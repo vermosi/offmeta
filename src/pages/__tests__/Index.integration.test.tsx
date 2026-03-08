@@ -150,6 +150,11 @@ async function renderIndex(initialRoute = '/') {
     );
   });
 
+  // Wait for Suspense to resolve the lazy-loaded component
+  await waitFor(() => {
+    expect(screen.getByRole('search')).toBeInTheDocument();
+  });
+
   return result!;
 }
 
