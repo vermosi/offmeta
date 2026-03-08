@@ -523,4 +523,47 @@ describe('DeckCritiquePanel', () => {
     rerender(<DeckCritiquePanel {...DEFAULT_PROPS} cards={newCards} />);
     expect(screen.queryByText(/dismissed/)).not.toBeInTheDocument();
   });
+
+  it('displays high confidence indicator', async () => {
+    mockInvoke.mockResolvedValue({ data: { ...MOCK_CRITIQUE, confidence: 0.92 }, error: null });
+    render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
+    fireEvent.click(screen.getByText('Get Critique'));
+
+    await waitFor(() => {
+      expect(screen.getByText('92%')).toBeInTheDocument();
+      expect(screen.getByText('Confidence:')).toBeInTheDocument();
+    });
+  });
+
+  it('displays medium confidence indicator', async () => {
+    mockInvoke.mockResolvedValue({ data: { ...MOCK_CRITIQUE, confidence: 0.6 }, error: null });
+    render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
+    fireEvent.click(screen.getByText('Get Critique'));
+
+    await waitFor(() => {
+      expect(screen.getByText('60%')).toBeInTheDocument();
+    });
+  });
+
+  it('displays low confidence indicator', async () => {
+    mockInvoke.mockResolvedValue({ data: { ...MOCK_CRITIQUE, confidence: 0.3 }, error: null });
+    render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
+    fireEvent.click(screen.getByText('Get Critique'));
+
+    await waitFor(() => {
+      expect(screen.getByText('30%')).toBeInTheDocument();
+    });
+  });
+
+  it('hides confidence indicator when not provided', async () => {
+    const noConf = { ...MOCK_CRITIQUE, confidence: undefined };
+    mockInvoke.mockResolvedValue({ data: noConf, error: null });
+    render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
+    fireEvent.click(screen.getByText('Get Critique'));
+
+    await waitFor(() => {
+      expect(screen.getByText(MOCK_CRITIQUE.summary)).toBeInTheDocument();
+    });
+    expect(screen.queryByText('Confidence:')).not.toBeInTheDocument();
+  });
 });
