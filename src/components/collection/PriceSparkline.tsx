@@ -3,15 +3,34 @@
  * @module components/collection/PriceSparkline
  */
 
-import { usePriceHistory, computePriceTrend } from '@/hooks/usePriceHistory';
+import { usePriceHistory, computePriceTrend, type PriceSnapshot } from '@/hooks/usePriceHistory';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface PriceSparklineProps {
   cardName: string;
+  demo?: boolean;
 }
 
-export function PriceSparkline({ cardName }: PriceSparklineProps) {
-  const { data: snapshots } = usePriceHistory(cardName);
+/** Generate deterministic demo price data for a card name */
+function generateDemoSnapshots(cardName: string): PriceSnapshot[] {
+  const seed = cardName.split('').reduce((s, c) => s + c.charCodeAt(0), 0);
+  const base = 0.5 + (seed % 50);
+  const points = 14;
+  const snapshots: PriceSnapshot[] = [];
+  for (let i = 0; i < points; i++) {
+    const drift = Math.sin(seed + i * 0.7) * (base * 0.15);
+    snapshots.push({
+      recorded_at: new Date(Date.now() - (points - i) * 86400000).toISOString(),
+      price_usd: Math.round((base + drift) * 100) / 100,
+      price_usd_foil: null,
+    });
+  }
+  return snapshots;
+}
+
+export function PriceSparkline({ cardName, demo }: PriceSparklineProps) {
+  const { data: liveSnapshots } = usePriceHistory(demo ? undefined : cardName);
+  const snapshots = demo ? generateDemoSnapshots(cardName) : liveSnapshots;
 
   if (!snapshots || snapshots.length < 2) return null;
 
