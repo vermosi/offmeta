@@ -330,6 +330,7 @@ export default function DeckEditor() {
     colorIdentity: deck.color_identity, format: deck.format,
     onRemoveByName: isReadOnly ? undefined : handleRemoveByName,
     deckId: id,
+    scryfallCache: scryfallCacheRef,
   };
 
   // ── Deck Header ──

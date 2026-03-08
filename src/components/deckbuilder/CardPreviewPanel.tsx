@@ -74,6 +74,7 @@ export function CardPreviewPanel({
         format={format}
         onAddSuggestion={onAddSuggestion}
         onRemoveByName={onRemoveByName}
+        scryfallCache={scryfallCache}
       />
     </div>
   );
