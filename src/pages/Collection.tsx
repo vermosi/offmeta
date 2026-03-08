@@ -194,9 +194,9 @@ export default function Collection() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="name">A–Z</SelectItem>
-              <SelectItem value="quantity">Quantity</SelectItem>
-              <SelectItem value="newest">Newest</SelectItem>
+              <SelectItem value="name">{t('collection.sortAZ', 'A–Z')}</SelectItem>
+              <SelectItem value="quantity">{t('collection.sortQuantity', 'Quantity')}</SelectItem>
+              <SelectItem value="newest">{t('collection.sortNewest', 'Newest')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
