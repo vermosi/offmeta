@@ -6,6 +6,7 @@
 
 import { SuggestionsPanel } from '@/components/deckbuilder/SuggestionsPanel';
 import { DeckCombos } from '@/components/deckbuilder/DeckCombos';
+import { DeckCritiquePanel } from '@/components/deckbuilder/DeckCritiquePanel';
 import { useTranslation } from '@/lib/i18n';
 import type { ScryfallCard } from '@/types/card';
 import type { DeckCard } from '@/hooks/useDeck';
@@ -21,6 +22,8 @@ interface CardPreviewPanelProps {
   cardCount: number;
   deckCards: DeckCard[];
   commanderName: string | null;
+  colorIdentity?: string[];
+  format?: string;
 }
 
 export function CardPreviewPanel({
