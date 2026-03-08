@@ -207,7 +207,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
           className="h-6 text-[10px] gap-1 px-2"
         >
           {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <MessageSquareWarning className="h-3 w-3" />}
-          {critique ? 'Re-critique' : 'Get Critique'}
+          {critique ? t('critique.reCritique') : t('critique.getCritique')}
         </Button>
       </div>
 
