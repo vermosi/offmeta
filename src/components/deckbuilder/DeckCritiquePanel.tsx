@@ -331,7 +331,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
                   </div>
                   <p className="text-[10px] text-muted-foreground leading-relaxed">{add.reason}</p>
                   {add.replaces && (
-                    <p className="text-[10px] text-destructive/70 italic">Replaces: {add.replaces}</p>
+                    <p className="text-[10px] text-destructive/70 italic">{t('critique.replaces').replace('{name}', add.replaces)}</p>
                   )}
                 </div>
               ))}
