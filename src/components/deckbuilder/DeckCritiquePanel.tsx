@@ -99,6 +99,52 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
   const visibleCuts = useMemo(() => critique?.cuts.filter((c) => !dismissedCuts.has(c.card_name)) ?? [], [critique, dismissedCuts]);
   const visibleAdditions = useMemo(() => critique?.additions.filter((a) => !dismissedAdditions.has(a.card_name)) ?? [], [critique, dismissedAdditions]);
 
+  const dismissCut = useCallback((cardName: string) => {
+    setDismissedCuts((prev) => new Set(prev).add(cardName));
+    toast({
+      title: `Dismissed "${cardName}"`,
+      description: 'Suggestion hidden.',
+      action: (
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-6 text-[10px] gap-1 px-2 shrink-0"
+          onClick={() => setDismissedCuts((prev) => {
+            const next = new Set(prev);
+            next.delete(cardName);
+            return next;
+          })}
+        >
+          <Undo2 className="h-3 w-3" />
+          Undo
+        </Button>
+      ),
+    });
+  }, []);
+
+  const dismissAddition = useCallback((cardName: string) => {
+    setDismissedAdditions((prev) => new Set(prev).add(cardName));
+    toast({
+      title: `Dismissed "${cardName}"`,
+      description: 'Suggestion hidden.',
+      action: (
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-6 text-[10px] gap-1 px-2 shrink-0"
+          onClick={() => setDismissedAdditions((prev) => {
+            const next = new Set(prev);
+            next.delete(cardName);
+            return next;
+          })}
+        >
+          <Undo2 className="h-3 w-3" />
+          Undo
+        </Button>
+      ),
+    });
+  }, []);
+
   const handleCritique = useCallback(async () => {
     if (cards.length < 5) {
       toast({ title: 'Need at least 5 cards for a critique', variant: 'destructive' });
