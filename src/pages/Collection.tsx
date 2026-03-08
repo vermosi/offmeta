@@ -30,6 +30,7 @@ import { useTranslation } from '@/lib/i18n';
 import { toast } from '@/hooks/useToast';
 import { BulkImportModal } from '@/components/collection/BulkImportModal';
 import { CollectionStats } from '@/components/collection/CollectionStats';
+import { useCollectionValue } from '@/hooks/useCollectionValue';
 
 type SortMode = 'name' | 'quantity' | 'newest';
 
