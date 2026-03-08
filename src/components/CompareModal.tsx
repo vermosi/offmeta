@@ -120,17 +120,17 @@ export function CompareModal({ cards, open, onClose }: CompareModalProps) {
 
             {/* Stats */}
             <StatRow
-              label="Mana Value"
+              label={t('compare.manaValue')}
               values={cards.map((c) => c.cmc)}
               highlight="low"
             />
             <StatRow
-              label="Power"
+              label={t('compare.power')}
               values={cards.map((c) => c.power || c.card_faces?.[0]?.power || null)}
               highlight="high"
             />
             <StatRow
-              label="Toughness"
+              label={t('compare.toughness')}
               values={cards.map((c) => c.toughness || c.card_faces?.[0]?.toughness || null)}
               highlight="high"
             />
