@@ -128,7 +128,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
           })}
         >
           <Undo2 className="h-3 w-3" />
-          Undo
+          {t('critique.undo')}
         </Button>
       ),
     });
