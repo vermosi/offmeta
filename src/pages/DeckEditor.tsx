@@ -540,7 +540,7 @@ export default function DeckEditor() {
           scryfallCache={scryfallCacheRef}
           onChangePrinting={(cardId, p) => updateCard.mutate({ id: cardId, scryfall_id: p.id })}
           cacheVersion={scryfallCacheVersion}
-          collectionLookup={user ? collectionLookup : undefined} />
+           />
       ))}
       <SideboardSection cards={sideboardCards} isReadOnly={isReadOnly}
         onRemove={handleRemoveCard}
