@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.deck-ideas]
 verify_jwt = false
+
+[functions.deck-critique]
+verify_jwt = false
