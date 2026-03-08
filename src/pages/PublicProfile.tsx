@@ -128,7 +128,7 @@ export default function PublicProfile() {
         ) : (
           <div className="text-center py-16">
             <User className="h-12 w-12 mx-auto text-muted-foreground/30" />
-            <p className="text-muted-foreground mt-2">User not found</p>
+            <p className="text-muted-foreground mt-2">{t('publicProfile.userNotFound')}</p>
           </div>
         )}
 
