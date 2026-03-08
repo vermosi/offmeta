@@ -953,5 +953,27 @@
   "publicDeck.edit": "编辑",
   "publicDeck.share": "分享",
   "publicDeck.copied": "已复制！",
-  "publicDeck.cards": "{count}张"
+  "publicDeck.cards": "{count}张",
+
+  "common.error": "错误",
+
+  "deckEditor.categorizeTooltip": "AI重新分类所有卡牌",
+  "deckEditor.editNotes": "编辑备注",
+  "deckEditor.addNotesButton": "+ 添加备注",
+  "deckEditor.undoAction": "撤销：{label}",
+  "deckEditor.redoAction": "重做：{label}",
+  "deckEditor.undoTooltip": "撤销 (Ctrl+Z)",
+  "deckEditor.redoTooltip": "重做 (Ctrl+Shift+Z)",
+  "deckEditor.actionHistory": "操作历史",
+  "deckEditor.currentState": "当前状态",
+  "deckEditor.undidActions": "已撤销{count}个操作",
+  "deckEditor.hidePreview": "隐藏预览",
+  "deckEditor.showPreview": "显示预览",
+  "deckEditor.preview": "预览",
+  "deckEditor.missingCount": "缺少{count}张（共{total}张）",
+  "deckEditor.mainDeck": "主牌组",
+  "deckEditor.maybe": "候选",
+  "deckEditor.shortcuts.adjustQuantity": "调整数量",
+  "deckEditor.shortcuts.undo": "撤销",
+  "deckEditor.shortcuts.redo": "重做"
 }

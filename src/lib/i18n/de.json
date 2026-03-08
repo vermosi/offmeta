@@ -964,5 +964,27 @@
   "publicDeck.edit": "Bearbeiten",
   "publicDeck.share": "Teilen",
   "publicDeck.copied": "Kopiert!",
-  "publicDeck.cards": "{count} Karten"
+  "publicDeck.cards": "{count} Karten",
+
+  "common.error": "Fehler",
+
+  "deckEditor.categorizeTooltip": "Alle Karten per KI neu kategorisieren",
+  "deckEditor.editNotes": "Notizen bearbeiten",
+  "deckEditor.addNotesButton": "+ Notizen hinzufügen",
+  "deckEditor.undoAction": "Rückgängig: {label}",
+  "deckEditor.redoAction": "Wiederholen: {label}",
+  "deckEditor.undoTooltip": "Rückgängig (Strg+Z)",
+  "deckEditor.redoTooltip": "Wiederholen (Strg+Umschalt+Z)",
+  "deckEditor.actionHistory": "Aktionsverlauf",
+  "deckEditor.currentState": "Aktueller Zustand",
+  "deckEditor.undidActions": "{count} Aktion(en) rückgängig gemacht",
+  "deckEditor.hidePreview": "Vorschau ausblenden",
+  "deckEditor.showPreview": "Vorschau einblenden",
+  "deckEditor.preview": "Vorschau",
+  "deckEditor.missingCount": "{count} Karte(n) ({total} gesamt)",
+  "deckEditor.mainDeck": "Hauptdeck",
+  "deckEditor.maybe": "Vielleicht",
+  "deckEditor.shortcuts.adjustQuantity": "Anzahl anpassen",
+  "deckEditor.shortcuts.undo": "Rückgängig",
+  "deckEditor.shortcuts.redo": "Wiederholen"
 }

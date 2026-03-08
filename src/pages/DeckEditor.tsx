@@ -231,7 +231,7 @@ export default function DeckEditor() {
         if (newCat && newCat !== card.category) updateCard.mutate({ id: card.id, category: newCat });
       }
       toast({ title: t('deckEditor.categorizeSuccess'), description: t('deckEditor.categorizeSuccessDesc').replace('{count}', String(cardNames.length)) });
-    } catch { toast({ title: 'Error', variant: 'destructive' }); }
+    } catch { toast({ title: t('common.error'), variant: 'destructive' }); }
     finally { setCategorizingAll(false); }
   }, [cards, updateCard, t]);
 
@@ -246,7 +246,7 @@ export default function DeckEditor() {
       if (error || !data?.suggestions) { toast({ title: t('deckEditor.suggestions.failed'), variant: 'destructive' }); return; }
       setSuggestions(data.suggestions);
       setSuggestionsAnalysis(data.analysis || '');
-    } catch { toast({ title: 'Error', variant: 'destructive' }); }
+    } catch { toast({ title: t('common.error'), variant: 'destructive' }); }
     finally { setSuggestionsLoading(false); }
   }, [cards, deck, t]);
 
@@ -411,7 +411,7 @@ export default function DeckEditor() {
           )}
           {!isReadOnly && cards.length >= 3 && (
             <Button size="sm" variant="ghost" onClick={handleRecategorizeAll} disabled={categorizingAll}
-              className="h-6 text-[10px] gap-1 px-2" title="AI re-categorize all cards">
+              className="h-6 text-[10px] gap-1 px-2" title={t('deckEditor.categorizeTooltip')}>
               {categorizingAll ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
               {t('deckEditor.categorize')}
             </Button>
@@ -420,7 +420,7 @@ export default function DeckEditor() {
           {!isReadOnly && (
             <button onClick={() => setDescriptionOpen((o) => !o)}
               className="text-[10px] text-muted-foreground hover:text-foreground transition-colors">
-              {descriptionInput ? 'Edit notes' : '+ Add notes'}
+              {descriptionInput ? t('deckEditor.editNotes') : t('deckEditor.addNotesButton')}
             </button>
           )}
         </div>
@@ -466,7 +466,7 @@ export default function DeckEditor() {
         <DropdownMenuTrigger asChild>
           <button className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-1 rounded hover:bg-secondary/50">
             <SortAsc className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline capitalize">{deckSortMode}</span>
+            <span className="hidden sm:inline">{t(`deckEditor.sort.${deckSortMode}`)}</span>
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-36">
@@ -480,20 +480,20 @@ export default function DeckEditor() {
       </DropdownMenu>
       {!isReadOnly && (
         <div className="flex items-center gap-0.5">
-          <button onClick={() => undoRedo.undo().then((a) => { if (a) toast({ title: `Undo: ${a.label}` }); })}
-            disabled={!undoRedo.canUndo} title="Undo (Ctrl+Z)"
+          <button onClick={() => undoRedo.undo().then((a) => { if (a) toast({ title: t('deckEditor.undoAction').replace('{label}', a.label) }); })}
+            disabled={!undoRedo.canUndo} title={t('deckEditor.undoTooltip')}
             className={cn('p-1.5 rounded transition-colors', undoRedo.canUndo ? 'text-muted-foreground hover:text-foreground hover:bg-secondary/50' : 'text-muted-foreground/30 cursor-not-allowed')}>
             <Undo2 className="h-3.5 w-3.5" />
           </button>
-          <button onClick={() => undoRedo.redo().then((a) => { if (a) toast({ title: `Redo: ${a.label}` }); })}
-            disabled={!undoRedo.canRedo} title="Redo (Ctrl+Shift+Z)"
+          <button onClick={() => undoRedo.redo().then((a) => { if (a) toast({ title: t('deckEditor.redoAction').replace('{label}', a.label) }); })}
+            disabled={!undoRedo.canRedo} title={t('deckEditor.redoTooltip')}
             className={cn('p-1.5 rounded transition-colors', undoRedo.canRedo ? 'text-muted-foreground hover:text-foreground hover:bg-secondary/50' : 'text-muted-foreground/30 cursor-not-allowed')}>
             <Redo2 className="h-3.5 w-3.5" />
           </button>
           {(undoRedo.canUndo || undoRedo.canRedo) && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button title="Action history"
+                <button title={t('deckEditor.actionHistory')}
                   className="p-1.5 rounded transition-colors text-muted-foreground hover:text-foreground hover:bg-secondary/50 flex items-center gap-0.5">
                   <History className="h-3.5 w-3.5" />
                   <ChevronDown className="h-2.5 w-2.5" />
@@ -502,7 +502,7 @@ export default function DeckEditor() {
               <DropdownMenuContent align="start" className="w-56 max-h-72 overflow-y-auto bg-popover z-50">
                 {undoRedo.redoLabels.map((label, i) => (
                   <DropdownMenuItem key={`redo-${i}`}
-                    onClick={() => undoRedo.redo().then((a) => { if (a) toast({ title: `Redo: ${a.label}` }); })}
+                    onClick={() => undoRedo.redo().then((a) => { if (a) toast({ title: t('deckEditor.redoAction').replace('{label}', a.label) }); })}
                     className="text-xs text-muted-foreground/50 italic flex items-center gap-2">
                     <Redo2 className="h-3 w-3 shrink-0" />
                     <span className="truncate">{label}</span>
@@ -510,13 +510,13 @@ export default function DeckEditor() {
                 ))}
                 <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium text-accent border-y border-border bg-accent/5">
                   <div className="h-1.5 w-1.5 rounded-full bg-accent shrink-0" />
-                  Current state
+                  {t('deckEditor.currentState')}
                 </div>
                 {[...undoRedo.undoLabels].reverse().map((label, i) => {
                   const stackIndex = undoRedo.undoLabels.length - 1 - i;
                   return (
                     <DropdownMenuItem key={`undo-${i}`}
-                      onClick={() => undoRedo.undoTo(stackIndex).then((a) => { if (a) toast({ title: `Undid ${undoRedo.undoLabels.length - stackIndex} action(s)` }); })}
+                      onClick={() => undoRedo.undoTo(stackIndex).then((a) => { if (a) toast({ title: t('deckEditor.undidActions').replace('{count}', String(undoRedo.undoLabels.length - stackIndex)) }); })}
                       className="text-xs flex items-center gap-2">
                       <Undo2 className="h-3 w-3 shrink-0 text-muted-foreground" />
                       <span className="truncate">{label}</span>
@@ -532,9 +532,9 @@ export default function DeckEditor() {
       {!isMobile && (
         <button onClick={() => setPreviewOpen((o) => !o)}
           className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-1 rounded hover:bg-secondary/50"
-          title={previewOpen ? 'Hide preview' : 'Show preview'}>
+          title={previewOpen ? t('deckEditor.hidePreview') : t('deckEditor.showPreview')}>
           {previewOpen ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-          <span className="hidden sm:inline">Preview</span>
+          <span className="hidden sm:inline">{t('deckEditor.preview')}</span>
         </button>
       )}
     </div>
@@ -612,7 +612,7 @@ export default function DeckEditor() {
         {t('collection.missingCards', 'Missing Cards')}:
       </span>
       <span className="text-destructive/80 truncate">
-        {missingCards.length} card{missingCards.length !== 1 ? 's' : ''} ({missingCards.reduce((s, m) => s + m.needed, 0)} total)
+        {t('deckEditor.missingCount').replace('{count}', String(missingCards.length)).replace('{total}', String(missingCards.reduce((s, m) => s + m.needed, 0)))}
       </span>
     </div>
   );
@@ -620,19 +620,19 @@ export default function DeckEditor() {
   const deckCountBar = cards.length > 0 && (
     <div className="flex items-center gap-3 px-4 py-1.5 border-t border-border bg-card text-xs text-muted-foreground">
       <span className="font-semibold text-foreground">{mainCount}</span>
-      <span>main deck</span>
+      <span>{t('deckEditor.mainDeck')}</span>
       {sideCount > 0 && (
         <>
           <span className="text-border">/</span>
           <span className="font-semibold text-foreground">{sideCount}</span>
-          <span>sideboard</span>
+          <span>{t('deckEditor.sideboard')}</span>
         </>
       )}
       {maybeCount > 0 && (
         <>
           <span className="text-border">/</span>
           <span className="font-semibold text-foreground">{maybeCount}</span>
-          <span>maybe</span>
+          <span>{t('deckEditor.maybe')}</span>
         </>
       )}
     </div>
@@ -708,13 +708,13 @@ export default function DeckEditor() {
               {([
                 { keys: ['/'], desc: t('deckEditor.shortcuts.focusSearch') },
                 { keys: ['Del', '/', 'Backspace'], desc: t('deckEditor.shortcuts.removeCard') },
-                { keys: ['+', '/', '-'], desc: 'Adjust quantity' },
+                { keys: ['+', '/', '-'], desc: t('deckEditor.shortcuts.adjustQuantity') },
                 { keys: ['Shift', 'S'], desc: t('deckEditor.shortcuts.toSideboard') },
                 { keys: ['Shift', 'M'], desc: t('deckEditor.shortcuts.toMaybeboard') },
                 { keys: ['?'], desc: t('deckEditor.shortcuts.toggleHelp') },
                 { keys: ['Esc'], desc: t('deckEditor.shortcuts.deselectClose') },
-                { keys: ['Ctrl', 'Z'], desc: 'Undo' },
-                { keys: ['Ctrl', 'Shift', 'Z'], desc: 'Redo' },
+                { keys: ['Ctrl', 'Z'], desc: t('deckEditor.shortcuts.undo') },
+                { keys: ['Ctrl', 'Shift', 'Z'], desc: t('deckEditor.shortcuts.redo') },
               ] as const).map(({ keys, desc }) => (
                 <li key={desc} className="flex items-center justify-between gap-3">
                   <span className="text-muted-foreground">{desc}</span>
