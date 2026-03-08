@@ -3,14 +3,16 @@
  * @module components/deckbuilder/DeckCritiquePanel
  */
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
-import { MessageSquareWarning, Loader2, Scissors, Plus, AlertTriangle, TrendingDown, Target, ArrowRightLeft, X } from 'lucide-react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { MessageSquareWarning, Loader2, Scissors, Plus, AlertTriangle, TrendingDown, Target, ArrowRightLeft, X, Undo2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/useToast';
 import { cn } from '@/lib/core/utils';
 import type { DeckCard } from '@/hooks/useDeck';
+
+const UNDO_TIMEOUT_MS = 5000;
 
 interface CritiqueCut {
   card_name: string;
@@ -96,6 +98,52 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
 
   const visibleCuts = useMemo(() => critique?.cuts.filter((c) => !dismissedCuts.has(c.card_name)) ?? [], [critique, dismissedCuts]);
   const visibleAdditions = useMemo(() => critique?.additions.filter((a) => !dismissedAdditions.has(a.card_name)) ?? [], [critique, dismissedAdditions]);
+
+  const dismissCut = useCallback((cardName: string) => {
+    setDismissedCuts((prev) => new Set(prev).add(cardName));
+    toast({
+      title: `Dismissed "${cardName}"`,
+      description: 'Suggestion hidden.',
+      action: (
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-6 text-[10px] gap-1 px-2 shrink-0"
+          onClick={() => setDismissedCuts((prev) => {
+            const next = new Set(prev);
+            next.delete(cardName);
+            return next;
+          })}
+        >
+          <Undo2 className="h-3 w-3" />
+          Undo
+        </Button>
+      ),
+    });
+  }, []);
+
+  const dismissAddition = useCallback((cardName: string) => {
+    setDismissedAdditions((prev) => new Set(prev).add(cardName));
+    toast({
+      title: `Dismissed "${cardName}"`,
+      description: 'Suggestion hidden.',
+      action: (
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-6 text-[10px] gap-1 px-2 shrink-0"
+          onClick={() => setDismissedAdditions((prev) => {
+            const next = new Set(prev);
+            next.delete(cardName);
+            return next;
+          })}
+        >
+          <Undo2 className="h-3 w-3" />
+          Undo
+        </Button>
+      ),
+    });
+  }, []);
 
   const handleCritique = useCallback(async () => {
     if (cards.length < 5) {
@@ -191,7 +239,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
                         size="sm"
                         variant="ghost"
                         className="h-4 w-4 p-0 ml-auto shrink-0 text-muted-foreground hover:text-destructive"
-                        onClick={() => setDismissedCuts((prev) => new Set(prev).add(cut.card_name))}
+                        onClick={() => dismissCut(cut.card_name)}
                         title={`Dismiss suggestion for ${cut.card_name}`}
                       >
                         <X className="h-3 w-3" />
@@ -250,7 +298,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
                         size="sm"
                         variant="ghost"
                         className="h-4 w-4 p-0 shrink-0 text-muted-foreground hover:text-destructive"
-                        onClick={() => setDismissedAdditions((prev) => new Set(prev).add(add.card_name))}
+                        onClick={() => dismissAddition(add.card_name)}
                         title={`Dismiss suggestion for ${add.card_name}`}
                       >
                         <X className="h-3 w-3" />
