@@ -290,7 +290,7 @@ export default function PublicDeckView() {
               {isOwner && (
                 <Button variant="outline" size="sm" asChild>
                   <Link to={`/deckbuilder/${deck.id}`}>
-                    <ExternalLink className="h-3.5 w-3.5 mr-1.5" />Edit
+                    <ExternalLink className="h-3.5 w-3.5 mr-1.5" />{t('publicDeck.edit')}
                   </Link>
                 </Button>
               )}
