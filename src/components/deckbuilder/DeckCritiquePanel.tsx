@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { MessageSquareWarning, Loader2, Scissors, Plus, AlertTriangle, TrendingDown, Target, ArrowRightLeft } from 'lucide-react';
+import { MessageSquareWarning, Loader2, Scissors, Plus, AlertTriangle, TrendingDown, Target, ArrowRightLeft, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
@@ -83,12 +83,19 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
   const cacheKey = useMemo(() => buildCacheKey(deckId, cards), [deckId, cards]);
   const [critique, setCritique] = useState<CritiqueResult | null>(() => loadCachedCritique(cacheKey));
   const [loading, setLoading] = useState(false);
+  const [dismissedCuts, setDismissedCuts] = useState<Set<string>>(new Set());
+  const [dismissedAdditions, setDismissedAdditions] = useState<Set<string>>(new Set());
 
   // Invalidate cached critique when the deck changes
   useEffect(() => {
     const cached = loadCachedCritique(cacheKey);
     setCritique(cached);
+    setDismissedCuts(new Set());
+    setDismissedAdditions(new Set());
   }, [cacheKey]);
+
+  const visibleCuts = useMemo(() => critique?.cuts.filter((c) => !dismissedCuts.has(c.card_name)) ?? [], [critique, dismissedCuts]);
+  const visibleAdditions = useMemo(() => critique?.additions.filter((a) => !dismissedAdditions.has(a.card_name)) ?? [], [critique, dismissedAdditions]);
 
   const handleCritique = useCallback(async () => {
     if (cards.length < 5) {
@@ -165,13 +172,13 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
           </p>
 
           {/* Cuts */}
-          {critique.cuts.length > 0 && (
+          {visibleCuts.length > 0 && (
             <div className="space-y-2">
               <h5 className="text-[11px] font-semibold text-destructive flex items-center gap-1">
                 <Scissors className="h-3 w-3" />
-                Suggested Cuts ({critique.cuts.length})
+                Suggested Cuts ({visibleCuts.length})
               </h5>
-              {critique.cuts.map((cut) => {
+              {visibleCuts.map((cut) => {
                 const sev = SEVERITY_CONFIG[cut.severity] || SEVERITY_CONFIG.weak;
                 return (
                   <div key={cut.card_name} className="rounded-lg border border-border bg-card/50 p-2 space-y-1">
@@ -180,6 +187,15 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
                       <Badge variant="outline" className={cn('text-[9px] px-1 py-0 h-4', sev.className)}>
                         {sev.label}
                       </Badge>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-4 w-4 p-0 ml-auto shrink-0 text-muted-foreground hover:text-destructive"
+                        onClick={() => setDismissedCuts((prev) => new Set(prev).add(cut.card_name))}
+                        title={`Dismiss suggestion for ${cut.card_name}`}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
                     </div>
                     <p className="text-[10px] text-muted-foreground leading-relaxed">{cut.reason}</p>
                   </div>
@@ -189,13 +205,13 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
           )}
 
           {/* Additions */}
-          {critique.additions.length > 0 && (
+          {visibleAdditions.length > 0 && (
             <div className="space-y-2">
               <h5 className="text-[11px] font-semibold text-accent flex items-center gap-1">
                 <Plus className="h-3 w-3" />
-                Suggested Additions ({critique.additions.length})
+                Suggested Additions ({visibleAdditions.length})
               </h5>
-              {critique.additions.map((add) => (
+              {visibleAdditions.map((add) => (
                 <div key={add.card_name} className="rounded-lg border border-border bg-card/50 p-2 space-y-1">
                   <div className="flex items-center justify-between gap-1">
                     <div className="flex items-center gap-1.5 min-w-0">
@@ -229,6 +245,15 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
                         title={`Add ${add.card_name}`}
                       >
                         <Plus className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-4 w-4 p-0 shrink-0 text-muted-foreground hover:text-destructive"
+                        onClick={() => setDismissedAdditions((prev) => new Set(prev).add(add.card_name))}
+                        title={`Dismiss suggestion for ${add.card_name}`}
+                      >
+                        <X className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>
