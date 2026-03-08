@@ -25,12 +25,13 @@ interface CardPreviewPanelProps {
   colorIdentity?: string[];
   format?: string;
   onRemoveByName?: (name: string) => void;
+  deckId?: string;
 }
 
 export function CardPreviewPanel({
   card, suggestions, suggestionsAnalysis, suggestionsLoading,
   onSuggest, onAddSuggestion, cardCount, deckCards, commanderName,
-  colorIdentity = [], format = 'commander', onRemoveByName,
+  colorIdentity = [], format = 'commander', onRemoveByName, deckId,
 }: CardPreviewPanelProps) {
   const { t } = useTranslation();
   const imageUrl = card?.image_uris?.normal || card?.card_faces?.[0]?.image_uris?.normal;
@@ -65,6 +66,7 @@ export function CardPreviewPanel({
       />
       <div className="border-t border-border" />
       <DeckCritiquePanel
+        deckId={deckId || ''}
         cards={deckCards}
         commanderName={commanderName}
         colorIdentity={colorIdentity}

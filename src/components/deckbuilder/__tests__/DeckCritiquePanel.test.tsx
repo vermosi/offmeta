@@ -43,6 +43,7 @@ const DEFAULT_CARDS: DeckCard[] = Array.from({ length: 10 }, (_, i) =>
 );
 
 const DEFAULT_PROPS = {
+  deckId: 'deck-1',
   cards: DEFAULT_CARDS,
   commanderName: 'Test Commander',
   colorIdentity: ['W', 'U'],
@@ -68,6 +69,7 @@ const MOCK_CRITIQUE = {
 describe('DeckCritiquePanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    sessionStorage.clear();
   });
 
   it('renders initial state with Get Critique button', () => {

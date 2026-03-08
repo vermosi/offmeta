@@ -3,7 +3,7 @@
  * @module components/deckbuilder/DeckCritiquePanel
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { MessageSquareWarning, Loader2, Scissors, Plus, AlertTriangle, TrendingDown, Target, ArrowRightLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +33,7 @@ interface CritiqueResult {
 }
 
 interface DeckCritiquePanelProps {
+  deckId: string;
   cards: DeckCard[];
   commanderName: string | null;
   colorIdentity: string[];
@@ -41,15 +42,53 @@ interface DeckCritiquePanelProps {
   onRemoveByName?: (name: string) => void;
 }
 
+const CACHE_PREFIX = 'offmeta_critique_';
+
+function buildCacheKey(deckId: string, cards: DeckCard[]): string {
+  const cardFingerprint = cards
+    .map((c) => `${c.card_name}:${c.quantity}`)
+    .sort()
+    .join(',');
+  // Simple hash to keep the key short
+  let hash = 0;
+  for (let i = 0; i < cardFingerprint.length; i++) {
+    hash = ((hash << 5) - hash + cardFingerprint.charCodeAt(i)) | 0;
+  }
+  return `${CACHE_PREFIX}${deckId}_${hash >>> 0}`;
+}
+
+function loadCachedCritique(key: string): CritiqueResult | null {
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+    return JSON.parse(raw) as CritiqueResult;
+  } catch {
+    return null;
+  }
+}
+
+function saveCritique(key: string, data: CritiqueResult): void {
+  try {
+    sessionStorage.setItem(key, JSON.stringify(data));
+  } catch { /* quota exceeded — ignore */ }
+}
+
 const SEVERITY_CONFIG = {
   'off-strategy': { label: 'Off-strategy', icon: Target, className: 'bg-destructive/10 text-destructive border-destructive/20' },
   'underperforming': { label: 'Underperforming', icon: TrendingDown, className: 'bg-warning/10 text-warning border-warning/20' },
   'weak': { label: 'Weak', icon: AlertTriangle, className: 'bg-muted text-muted-foreground border-border' },
 } as const;
 
-export function DeckCritiquePanel({ cards, commanderName, colorIdentity, format, onAddSuggestion, onRemoveByName }: DeckCritiquePanelProps) {
-  const [critique, setCritique] = useState<CritiqueResult | null>(null);
+export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity, format, onAddSuggestion, onRemoveByName }: DeckCritiquePanelProps) {
+  const cacheKey = useMemo(() => buildCacheKey(deckId, cards), [deckId, cards]);
+  const [critique, setCritique] = useState<CritiqueResult | null>(() => loadCachedCritique(cacheKey));
   const [loading, setLoading] = useState(false);
+
+  // Invalidate cached critique when the deck changes
+  useEffect(() => {
+    const cached = loadCachedCritique(cacheKey);
+    setCritique(cached);
+  }, [cacheKey]);
 
   const handleCritique = useCallback(async () => {
     if (cards.length < 5) {
@@ -78,12 +117,13 @@ export function DeckCritiquePanel({ cards, commanderName, colorIdentity, format,
       }
 
       setCritique(data);
+      saveCritique(cacheKey, data);
     } catch {
       toast({ title: 'Error', description: 'Something went wrong', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
-  }, [cards, commanderName, colorIdentity, format]);
+  }, [cards, commanderName, colorIdentity, format, cacheKey]);
 
   return (
     <div className="space-y-3">
