@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { parseDecklist, type ParsedDecklist } from '@/lib/decklist-parser';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Sparkles, ExternalLink, Copy, Check, Link2, FileText, AlertTriangle } from 'lucide-react';
+import { Loader2, Sparkles, ExternalLink, Copy, Check, Link2, FileText, AlertTriangle, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { ManaSymbol, OracleText } from '@/components/ManaSymbol';
