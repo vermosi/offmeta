@@ -113,7 +113,7 @@ export default function Collection() {
 
           {/* Demo preview */}
           <div className="space-y-2 opacity-70 pointer-events-none select-none">
-            <p className="text-xs text-muted-foreground text-center italic">Preview — demo data</p>
+            <p className="text-xs text-muted-foreground text-center italic">{t('collection.demoPreview')}</p>
             {DEMO_COLLECTION.map((card) => (
               <div
                 key={card.id}
