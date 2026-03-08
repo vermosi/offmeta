@@ -265,15 +265,12 @@ describe('Index page integration', () => {
   });
 
   it('clicking an example query triggers search', async () => {
-    renderIndex();
+    await renderIndex();
 
-    await waitFor(() => {
-      expect(
-        screen.getByText('creatures that make treasure tokens'),
-      ).toBeInTheDocument();
-    });
     const exampleBtn = screen.getByText('creatures that make treasure tokens');
-    fireEvent.click(exampleBtn);
+    await act(async () => {
+      fireEvent.click(exampleBtn);
+    });
 
     await waitFor(() => {
       expect(mockTranslateQueryWithDedup).toHaveBeenCalledWith(
