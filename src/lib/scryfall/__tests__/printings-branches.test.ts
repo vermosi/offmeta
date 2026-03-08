@@ -4,7 +4,7 @@
  * @module lib/scryfall/__tests__/printings-branches.test
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { getTCGPlayerUrl, getCardmarketUrl } from '../printings';
 import type { ScryfallCard } from '@/types/card';
 
@@ -24,6 +24,21 @@ const buildCard = (overrides: Partial<ScryfallCard> = {}): ScryfallCard => ({
 });
 
 describe('getTCGPlayerUrl', () => {
+  const savedEnv = { ...import.meta.env };
+
+  beforeEach(() => {
+    // Clear affiliate base so tests exercise raw URL logic
+    delete (import.meta.env as Record<string, unknown>).NEXT_PUBLIC_TCGPLAYER_IMPACT_BASE;
+    if (typeof process !== 'undefined') {
+      delete process.env.NEXT_PUBLIC_TCGPLAYER_IMPACT_BASE;
+    }
+  });
+
+  afterEach(() => {
+    // Restore original env
+    Object.assign(import.meta.env, savedEnv);
+  });
+
   it('returns purchase_uris.tcgplayer when available', () => {
     const card = buildCard({
       purchase_uris: {
