@@ -246,7 +246,7 @@ export default function DeckEditor() {
       if (error || !data?.suggestions) { toast({ title: t('deckEditor.suggestions.failed'), variant: 'destructive' }); return; }
       setSuggestions(data.suggestions);
       setSuggestionsAnalysis(data.analysis || '');
-    } catch { toast({ title: 'Error', variant: 'destructive' }); }
+    } catch { toast({ title: t('common.error'), variant: 'destructive' }); }
     finally { setSuggestionsLoading(false); }
   }, [cards, deck, t]);
 
