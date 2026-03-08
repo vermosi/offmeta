@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { MessageSquareWarning, Loader2, Scissors, Plus, AlertTriangle, TrendingDown, Target } from 'lucide-react';
+import { MessageSquareWarning, Loader2, Scissors, Plus, AlertTriangle, TrendingDown, Target, ArrowRightLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
