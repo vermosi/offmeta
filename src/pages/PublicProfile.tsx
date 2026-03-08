@@ -6,6 +6,7 @@
  */
 
 import { useMemo } from 'react';
+import { useTranslation } from '@/lib/i18n';
 import { useParams, Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -78,6 +79,8 @@ export default function PublicProfile() {
     });
   }, [profile]);
 
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SkipLinks />
@@ -88,7 +91,7 @@ export default function PublicProfile() {
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back
+          {t('publicProfile.back')}
         </Link>
 
         {/* Profile Header */}
@@ -105,7 +108,7 @@ export default function PublicProfile() {
             {profile.avatar_url ? (
               <img
                 src={profile.avatar_url}
-                alt={profile.display_name || 'User avatar'}
+                alt={profile.display_name || t('publicProfile.userAvatar')}
                 className="h-16 w-16 rounded-full object-cover border-2 border-border"
               />
             ) : (
@@ -115,17 +118,17 @@ export default function PublicProfile() {
             )}
             <div>
               <h1 className="text-xl font-bold tracking-tight">
-                {profile.display_name || 'Anonymous Planeswalker'}
+                {profile.display_name || t('publicProfile.anonymousUser')}
               </h1>
               <p className="text-sm text-muted-foreground">
-                Member since {memberSince}
+                {t('publicProfile.memberSince').replace('{date}', memberSince || '')}
               </p>
             </div>
           </div>
         ) : (
           <div className="text-center py-16">
             <User className="h-12 w-12 mx-auto text-muted-foreground/30" />
-            <p className="text-muted-foreground mt-2">User not found</p>
+            <p className="text-muted-foreground mt-2">{t('publicProfile.userNotFound')}</p>
           </div>
         )}
 
@@ -134,7 +137,9 @@ export default function PublicProfile() {
           <div className="flex gap-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Layers className="h-4 w-4" />
-              {decks.length} public deck{decks.length !== 1 ? 's' : ''}
+              {decks.length === 1
+                ? t('publicProfile.publicDeckCount').replace('{count}', '1')
+                : t('publicProfile.publicDeckCountPlural').replace('{count}', String(decks.length))}
             </div>
           </div>
         )}
@@ -150,7 +155,7 @@ export default function PublicProfile() {
           <div className="space-y-3">
             <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
               <Package className="h-4 w-4" />
-              Published Decks
+              {t('publicProfile.publishedDecks')}
             </h2>
             {decks.map((deck) => (
               <Link
@@ -185,7 +190,7 @@ export default function PublicProfile() {
                       <ManaCost cost={deck.color_identity.map((c) => `{${c}}`).join('')} />
                     )}
                     <span className="text-xs text-muted-foreground">
-                      {deck.card_count} cards
+                      {deck.card_count} {t('deck.cards')}
                     </span>
                     <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
                   </div>
@@ -197,7 +202,7 @@ export default function PublicProfile() {
           <div className="text-center py-12">
             <Package className="h-10 w-10 mx-auto text-muted-foreground/30" />
             <p className="text-muted-foreground mt-2 text-sm">
-              No public decks yet.
+              {t('publicProfile.noPublicDecks')}
             </p>
           </div>
         ) : null}

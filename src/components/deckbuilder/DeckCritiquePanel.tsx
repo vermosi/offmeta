@@ -16,6 +16,7 @@ import { buildCacheKey, loadCachedCritique, saveCritique } from '@/components/de
 import type { CritiqueResult } from '@/components/deckbuilder/critique-cache';
 import type { DeckCard } from '@/hooks/useDeck';
 import type { ScryfallCard } from '@/types/card';
+import { useTranslation } from '@/lib/i18n';
 
 interface DeckCritiquePanelProps {
   deckId: string;
@@ -28,25 +29,32 @@ interface DeckCritiquePanelProps {
   scryfallCache?: React.RefObject<Map<string, ScryfallCard>>;
 }
 
+const SEVERITY_KEYS: Record<string, string> = {
+  'off-strategy': 'critique.severityOffStrategy',
+  'underperforming': 'critique.severityUnderperforming',
+  'weak': 'critique.severityWeak',
+};
+
 const SEVERITY_CONFIG = {
-  'off-strategy': { label: 'Off-strategy', icon: Target, className: 'bg-destructive/10 text-destructive border-destructive/20' },
-  'underperforming': { label: 'Underperforming', icon: TrendingDown, className: 'bg-warning/10 text-warning border-warning/20' },
-  'weak': { label: 'Weak', icon: AlertTriangle, className: 'bg-muted text-muted-foreground border-border' },
+  'off-strategy': { icon: Target, className: 'bg-destructive/10 text-destructive border-destructive/20' },
+  'underperforming': { icon: TrendingDown, className: 'bg-warning/10 text-warning border-warning/20' },
+  'weak': { icon: AlertTriangle, className: 'bg-muted text-muted-foreground border-border' },
 } as const;
 
-function getConfidenceConfig(value: number) {
-  if (value >= 0.8) return { label: 'High', className: 'text-accent', barClass: 'bg-accent' };
-  if (value >= 0.5) return { label: 'Medium', className: 'text-warning', barClass: 'bg-warning' };
-  return { label: 'Low', className: 'text-destructive', barClass: 'bg-destructive' };
+function getConfidenceConfig(value: number, t: (k: string) => string) {
+  if (value >= 0.8) return { label: t('critique.confidenceHigh'), className: 'text-accent', barClass: 'bg-accent' };
+  if (value >= 0.5) return { label: t('critique.confidenceMedium'), className: 'text-warning', barClass: 'bg-warning' };
+  return { label: t('critique.confidenceLow'), className: 'text-destructive', barClass: 'bg-destructive' };
 }
 
 function ConfidenceIndicator({ value }: { value: number }) {
+  const { t } = useTranslation();
   const pct = Math.round(Math.min(1, Math.max(0, value)) * 100);
-  const config = getConfidenceConfig(value);
+  const config = getConfidenceConfig(value, t);
   return (
     <div className="flex items-center gap-2">
       <ShieldCheck className={cn('h-3 w-3 shrink-0', config.className)} />
-      <span className="text-[10px] text-muted-foreground whitespace-nowrap">Confidence:</span>
+      <span className="text-[10px] text-muted-foreground whitespace-nowrap">{t('critique.confidenceLabel')}</span>
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -55,12 +63,12 @@ function ConfidenceIndicator({ value }: { value: number }) {
             </div>
           </TooltipTrigger>
           <TooltipContent side="top" className="max-w-[220px] text-[10px] leading-relaxed">
-            <p className="font-medium mb-1">Confidence factors:</p>
+            <p className="font-medium mb-1">{t('critique.confidenceFactors')}</p>
             <ul className="list-disc pl-3 space-y-0.5">
-              <li>Deck size &amp; completeness</li>
-              <li>Archetype clarity</li>
-              <li>Card familiarity</li>
-              <li>Commander synergy fit</li>
+              <li>{t('critique.factorDeckSize')}</li>
+              <li>{t('critique.factorArchetype')}</li>
+              <li>{t('critique.factorFamiliarity')}</li>
+              <li>{t('critique.factorCommander')}</li>
             </ul>
           </TooltipContent>
         </Tooltip>
@@ -71,17 +79,19 @@ function ConfidenceIndicator({ value }: { value: number }) {
 }
 
 function LowConfidenceWarning() {
+  const { t } = useTranslation();
   return (
     <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/5 p-2.5">
       <Info className="h-3.5 w-3.5 text-warning shrink-0 mt-0.5" />
       <p className="text-[10px] text-warning leading-relaxed">
-        Confidence is low — try adding more cards, setting a commander, or building around a clearer archetype for better recommendations.
+        {t('critique.lowConfidenceWarning')}
       </p>
     </div>
   );
 }
 
 export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity, format, onAddSuggestion, onRemoveByName, scryfallCache }: DeckCritiquePanelProps) {
+  const { t } = useTranslation();
   const fallbackCacheRef = useRef<Map<string, ScryfallCard>>(new Map());
   const effectiveCache = scryfallCache ?? fallbackCacheRef;
   const cacheKey = useMemo(() => buildCacheKey(deckId, cards), [deckId, cards]);
@@ -104,8 +114,8 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
   const dismissCut = useCallback((cardName: string) => {
     setDismissedCuts((prev) => new Set(prev).add(cardName));
     toast({
-      title: `Dismissed "${cardName}"`,
-      description: 'Suggestion hidden.',
+      title: t('critique.dismissed').replace('{name}', cardName),
+      description: t('critique.suggestionHidden'),
       action: (
         <Button
           size="sm"
@@ -118,7 +128,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
           })}
         >
           <Undo2 className="h-3 w-3" />
-          Undo
+          {t('critique.undo')}
         </Button>
       ),
     });
@@ -127,8 +137,8 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
   const dismissAddition = useCallback((cardName: string) => {
     setDismissedAdditions((prev) => new Set(prev).add(cardName));
     toast({
-      title: `Dismissed "${cardName}"`,
-      description: 'Suggestion hidden.',
+      title: t('critique.dismissed').replace('{name}', cardName),
+      description: t('critique.suggestionHidden'),
       action: (
         <Button
           size="sm"
@@ -141,7 +151,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
           })}
         >
           <Undo2 className="h-3 w-3" />
-          Undo
+          {t('critique.undo')}
         </Button>
       ),
     });
@@ -149,7 +159,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
 
   const handleCritique = useCallback(async () => {
     if (cards.length < 5) {
-      toast({ title: 'Need at least 5 cards for a critique', variant: 'destructive' });
+      toast({ title: t('critique.minCards'), variant: 'destructive' });
       return;
     }
     setLoading(true);
@@ -164,19 +174,19 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
       });
 
       if (error) {
-        toast({ title: 'Critique failed', description: 'Could not reach AI service', variant: 'destructive' });
+        toast({ title: t('critique.failed'), description: t('critique.failedDesc'), variant: 'destructive' });
         return;
       }
 
       if (data?.error) {
-        toast({ title: 'Critique failed', description: data.error, variant: 'destructive' });
+        toast({ title: t('critique.failed'), description: data.error, variant: 'destructive' });
         return;
       }
 
       setCritique(data);
       saveCritique(cacheKey, data);
     } catch {
-      toast({ title: 'Error', description: 'Something went wrong', variant: 'destructive' });
+      toast({ title: t('critique.error'), description: t('critique.errorDesc'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -187,7 +197,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
       <div className="flex items-center justify-between">
         <h4 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
           <MessageSquareWarning className="h-3.5 w-3.5 text-accent" />
-          AI Critique
+          {t('critique.title')}
         </h4>
         <Button
           size="sm"
@@ -197,20 +207,20 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
           className="h-6 text-[10px] gap-1 px-2"
         >
           {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <MessageSquareWarning className="h-3 w-3" />}
-          {critique ? 'Re-critique' : 'Get Critique'}
+          {critique ? t('critique.reCritique') : t('critique.getCritique')}
         </Button>
       </div>
 
       {!critique && !loading && (
         <p className="text-[11px] text-muted-foreground">
-          Get AI-powered feedback on what to cut and add to sharpen your deck.
+          {t('critique.description')}
         </p>
       )}
 
       {loading && (
         <div className="flex items-center justify-center py-6">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          <span className="text-xs text-muted-foreground ml-2">Analyzing your deck…</span>
+          <span className="text-xs text-muted-foreground ml-2">{t('critique.analyzing')}</span>
         </div>
       )}
 
@@ -234,7 +244,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
             <div className="space-y-2">
               <h5 className="text-[11px] font-semibold text-destructive flex items-center gap-1">
                 <Scissors className="h-3 w-3" />
-                Suggested Cuts ({visibleCuts.length})
+                {t('critique.suggestedCuts')} ({visibleCuts.length})
               </h5>
               {visibleCuts.map((cut) => {
                 const sev = SEVERITY_CONFIG[cut.severity] || SEVERITY_CONFIG.weak;
@@ -245,7 +255,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
                         <span className="text-xs font-medium text-foreground cursor-default">{cut.card_name}</span>
                       </CardHoverImage>
                       <Badge variant="outline" className={cn('text-[9px] px-1 py-0 h-4', sev.className)}>
-                        {sev.label}
+                        {t(SEVERITY_KEYS[cut.severity] || 'critique.severityWeak')}
                       </Badge>
                       <Button
                         size="sm"
@@ -269,7 +279,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
             <div className="space-y-2">
               <h5 className="text-[11px] font-semibold text-accent flex items-center gap-1">
                 <Plus className="h-3 w-3" />
-                Suggested Additions ({visibleAdditions.length})
+                {t('critique.suggestedAdditions')} ({visibleAdditions.length})
               </h5>
               {visibleAdditions.map((add) => (
                 <div key={add.card_name} className="rounded-lg border border-border bg-card/50 p-2 space-y-1">
@@ -291,12 +301,12 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
                           onClick={() => {
                             onRemoveByName(add.replaces!);
                             onAddSuggestion(add.card_name);
-                            toast({ title: 'Swapped', description: `${add.replaces} → ${add.card_name}` });
+                            toast({ title: t('critique.swapped'), description: `${add.replaces} → ${add.card_name}` });
                           }}
                           title={`Replace ${add.replaces} with ${add.card_name}`}
                         >
                           <ArrowRightLeft className="h-3 w-3" />
-                          Swap
+                          {t('critique.swap')}
                         </Button>
                       )}
                       <Button
@@ -321,7 +331,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
                   </div>
                   <p className="text-[10px] text-muted-foreground leading-relaxed">{add.reason}</p>
                   {add.replaces && (
-                    <p className="text-[10px] text-destructive/70 italic">Replaces: {add.replaces}</p>
+                    <p className="text-[10px] text-destructive/70 italic">{t('critique.replaces').replace('{name}', add.replaces)}</p>
                   )}
                 </div>
               ))}
@@ -332,7 +342,9 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
           {(dismissedCuts.size > 0 || dismissedAdditions.size > 0) && (
             <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-2.5 py-1.5">
               <span className="text-[10px] text-muted-foreground">
-                {dismissedCuts.size + dismissedAdditions.size} suggestion{dismissedCuts.size + dismissedAdditions.size !== 1 ? 's' : ''} dismissed
+                {(dismissedCuts.size + dismissedAdditions.size) === 1
+                  ? t('critique.dismissedCount').replace('{count}', '1')
+                  : t('critique.dismissedCountPlural').replace('{count}', String(dismissedCuts.size + dismissedAdditions.size))}
               </span>
               <Button
                 size="sm"
@@ -343,7 +355,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
                   setDismissedAdditions(new Set());
                 }}
               >
-                Show all
+                {t('critique.showAll')}
               </Button>
             </div>
           )}

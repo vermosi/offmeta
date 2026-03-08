@@ -12,8 +12,10 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { Lock, Loader2, CheckCircle2 } from 'lucide-react';
 import { SkipLinks } from '@/components/SkipLinks';
+import { useTranslation } from '@/lib/i18n';
 
 const ResetPassword = () => {
+  const { t } = useTranslation();
   const { updatePassword, session } = useAuth();
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
@@ -34,11 +36,11 @@ const ResetPassword = () => {
     e.preventDefault();
     setError(null);
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError(t('resetPassword.passwordMinLength'));
       return;
     }
     if (password !== confirm) {
-      setError('Passwords do not match');
+      setError(t('resetPassword.passwordMismatch'));
       return;
     }
     setLoading(true);
@@ -57,18 +59,18 @@ const ResetPassword = () => {
       <Header />
       <main id="main-content" className="flex-1 container-main py-12 flex items-center justify-center">
         <div className="w-full max-w-sm space-y-6">
-          <h1 className="text-2xl font-semibold tracking-tight text-center">Set New Password</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-center">{t('resetPassword.title')}</h1>
 
           {done ? (
             <div className="flex flex-col items-center gap-3 py-6 text-center">
               <CheckCircle2 className="h-10 w-10 text-green-500" />
-              <p className="text-sm text-muted-foreground">Password updated successfully.</p>
-              <Button onClick={() => navigate('/')}>Go Home</Button>
+              <p className="text-sm text-muted-foreground">{t('resetPassword.success')}</p>
+              <Button onClick={() => navigate('/')}>{t('resetPassword.goHome')}</Button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="new-pw">New Password</Label>
+                <Label htmlFor="new-pw">{t('resetPassword.newPassword')}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -76,7 +78,7 @@ const ResetPassword = () => {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Min 6 characters"
+                    placeholder={t('resetPassword.minChars')}
                     className="pl-9"
                     required
                     minLength={6}
@@ -84,7 +86,7 @@ const ResetPassword = () => {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirm-pw">Confirm Password</Label>
+                <Label htmlFor="confirm-pw">{t('resetPassword.confirmPassword')}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -92,7 +94,7 @@ const ResetPassword = () => {
                     type="password"
                     value={confirm}
                     onChange={(e) => setConfirm(e.target.value)}
-                    placeholder="Repeat password"
+                    placeholder={t('resetPassword.repeatPassword')}
                     className="pl-9"
                     required
                     minLength={6}
@@ -102,7 +104,7 @@ const ResetPassword = () => {
               {error && <p className="text-sm text-destructive">{error}</p>}
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Update Password
+                {t('resetPassword.update')}
               </Button>
             </form>
           )}
