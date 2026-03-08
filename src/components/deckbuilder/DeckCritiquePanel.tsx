@@ -306,7 +306,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
                           title={`Replace ${add.replaces} with ${add.card_name}`}
                         >
                           <ArrowRightLeft className="h-3 w-3" />
-                          Swap
+                          {t('critique.swap')}
                         </Button>
                       )}
                       <Button
