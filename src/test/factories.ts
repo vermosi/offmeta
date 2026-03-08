@@ -5,6 +5,8 @@
 
 import type { ScryfallCard } from '@/types/card';
 import type { TranslationResult } from '@/hooks/useSearchQuery';
+import type { DeckCard } from '@/hooks/useDeck';
+import type { CritiqueResult } from '@/components/deckbuilder/critique-cache';
 
 /**
  * Create a structurally valid ScryfallCard with sensible defaults.
