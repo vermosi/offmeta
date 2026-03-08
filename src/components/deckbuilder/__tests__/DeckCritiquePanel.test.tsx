@@ -64,6 +64,7 @@ const MOCK_CRITIQUE = {
     { card_name: 'Rhystic Study', reason: 'Card advantage engine', category: 'Draw' },
   ],
   mana_curve_notes: 'Curve is slightly top-heavy at 5+ CMC.',
+  confidence: 0.85,
 };
 
 describe('DeckCritiquePanel', () => {
@@ -521,5 +522,48 @@ describe('DeckCritiquePanel', () => {
     const newCards = Array.from({ length: 6 }, (_, i) => makeDeckCard(`X${i}`));
     rerender(<DeckCritiquePanel {...DEFAULT_PROPS} cards={newCards} />);
     expect(screen.queryByText(/dismissed/)).not.toBeInTheDocument();
+  });
+
+  it('displays high confidence indicator', async () => {
+    mockInvoke.mockResolvedValue({ data: { ...MOCK_CRITIQUE, confidence: 0.92 }, error: null });
+    render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
+    fireEvent.click(screen.getByText('Get Critique'));
+
+    await waitFor(() => {
+      expect(screen.getByText('92%')).toBeInTheDocument();
+      expect(screen.getByText('Confidence:')).toBeInTheDocument();
+    });
+  });
+
+  it('displays medium confidence indicator', async () => {
+    mockInvoke.mockResolvedValue({ data: { ...MOCK_CRITIQUE, confidence: 0.6 }, error: null });
+    render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
+    fireEvent.click(screen.getByText('Get Critique'));
+
+    await waitFor(() => {
+      expect(screen.getByText('60%')).toBeInTheDocument();
+    });
+  });
+
+  it('displays low confidence indicator', async () => {
+    mockInvoke.mockResolvedValue({ data: { ...MOCK_CRITIQUE, confidence: 0.3 }, error: null });
+    render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
+    fireEvent.click(screen.getByText('Get Critique'));
+
+    await waitFor(() => {
+      expect(screen.getByText('30%')).toBeInTheDocument();
+    });
+  });
+
+  it('hides confidence indicator when not provided', async () => {
+    const noConf = { ...MOCK_CRITIQUE, confidence: undefined };
+    mockInvoke.mockResolvedValue({ data: noConf, error: null });
+    render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
+    fireEvent.click(screen.getByText('Get Critique'));
+
+    await waitFor(() => {
+      expect(screen.getByText(MOCK_CRITIQUE.summary)).toBeInTheDocument();
+    });
+    expect(screen.queryByText('Confidence:')).not.toBeInTheDocument();
   });
 });
