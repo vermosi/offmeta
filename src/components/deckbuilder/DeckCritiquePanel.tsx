@@ -179,7 +179,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
       }
 
       if (data?.error) {
-        toast({ title: 'Critique failed', description: data.error, variant: 'destructive' });
+        toast({ title: t('critique.failed'), description: data.error, variant: 'destructive' });
         return;
       }
 
