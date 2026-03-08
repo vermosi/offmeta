@@ -545,14 +545,26 @@ describe('DeckCritiquePanel', () => {
     });
   });
 
-  it('displays low confidence indicator', async () => {
+  it('displays low confidence indicator with warning banner', async () => {
     mockInvoke.mockResolvedValue({ data: { ...MOCK_CRITIQUE, confidence: 0.3 }, error: null });
     render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
     fireEvent.click(screen.getByText('Get Critique'));
 
     await waitFor(() => {
       expect(screen.getByText('30%')).toBeInTheDocument();
+      expect(screen.getByText(/confidence is low/i)).toBeInTheDocument();
     });
+  });
+
+  it('does not show warning banner when confidence >= 50%', async () => {
+    mockInvoke.mockResolvedValue({ data: { ...MOCK_CRITIQUE, confidence: 0.6 }, error: null });
+    render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
+    fireEvent.click(screen.getByText('Get Critique'));
+
+    await waitFor(() => {
+      expect(screen.getByText('60%')).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/confidence is low/i)).not.toBeInTheDocument();
   });
 
   it('hides confidence indicator when not provided', async () => {
