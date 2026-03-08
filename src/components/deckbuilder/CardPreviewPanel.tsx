@@ -4,10 +4,12 @@
  * @module components/deckbuilder/CardPreviewPanel
  */
 
+import { useEffect, useRef, useState } from 'react';
 import { SuggestionsPanel } from '@/components/deckbuilder/SuggestionsPanel';
 import { DeckCombos } from '@/components/deckbuilder/DeckCombos';
 import { DeckCritiquePanel } from '@/components/deckbuilder/DeckCritiquePanel';
 import { useTranslation } from '@/lib/i18n';
+import { searchCards } from '@/lib/scryfall';
 import type { ScryfallCard } from '@/types/card';
 import type { DeckCard } from '@/hooks/useDeck';
 import type { CardSuggestion } from '@/components/deckbuilder/SuggestionsPanel';
@@ -35,23 +37,73 @@ export function CardPreviewPanel({
   colorIdentity = [], format = 'commander', onRemoveByName, deckId, scryfallCache,
 }: CardPreviewPanelProps) {
   const { t } = useTranslation();
-  const imageUrl = card?.image_uris?.normal || card?.card_faces?.[0]?.image_uris?.normal;
+  const [fallbackCommanderCard, setFallbackCommanderCard] = useState<ScryfallCard | null>(null);
+  const attemptedCommanderRef = useRef<string | null>(null);
+
+  const commanderCandidate = commanderName || deckCards.find((deckCard) => deckCard.is_commander)?.card_name || null;
+
+  useEffect(() => {
+    if (card) {
+      return;
+    }
+
+    if (!commanderCandidate) {
+      setFallbackCommanderCard(null);
+      attemptedCommanderRef.current = null;
+      return;
+    }
+
+    if (fallbackCommanderCard?.name === commanderCandidate) {
+      return;
+    }
+
+    const cachedCommander = scryfallCache?.current.get(commanderCandidate);
+    if (cachedCommander) {
+      setFallbackCommanderCard(cachedCommander);
+      return;
+    }
+
+    if (attemptedCommanderRef.current === commanderCandidate) {
+      return;
+    }
+    attemptedCommanderRef.current = commanderCandidate;
+
+    let cancelled = false;
+    searchCards(`!"${commanderCandidate}"`)
+      .then((response) => {
+        if (cancelled) return;
+        const resolvedCommander = response.data?.[0];
+        if (!resolvedCommander) return;
+        scryfallCache?.current.set(commanderCandidate, resolvedCommander);
+        setFallbackCommanderCard(resolvedCommander);
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [card, commanderCandidate, fallbackCommanderCard?.name, scryfallCache]);
+
+  const displayCard = card ?? fallbackCommanderCard;
+  const imageUrl = displayCard?.image_uris?.normal || displayCard?.card_faces?.[0]?.image_uris?.normal;
 
   return (
     <div className="p-3 space-y-4 overflow-y-auto h-full">
-      {card ? (
+      {displayCard ? (
         <div className="space-y-3">
-          {imageUrl && <img src={imageUrl} alt={card.name} className="w-full rounded-xl shadow-lg" loading="lazy" />}
+          {imageUrl && <img src={imageUrl} alt={displayCard.name} className="w-full rounded-xl shadow-lg" loading="lazy" />}
           <div>
-            <h3 className="font-semibold text-sm">{card.name}</h3>
-            <p className="text-xs text-muted-foreground">{card.type_line}</p>
-            {card.oracle_text && <p className="text-xs mt-2 whitespace-pre-line leading-relaxed">{card.oracle_text}</p>}
-            {card.prices?.usd && <p className="text-xs text-muted-foreground mt-2">${card.prices.usd}</p>}
+            <h3 className="font-semibold text-sm">{displayCard.name}</h3>
+            <p className="text-xs text-muted-foreground">{displayCard.type_line}</p>
+            {displayCard.oracle_text && <p className="text-xs mt-2 whitespace-pre-line leading-relaxed">{displayCard.oracle_text}</p>}
+            {displayCard.prices?.usd && <p className="text-xs text-muted-foreground mt-2">${displayCard.prices.usd}</p>}
           </div>
         </div>
       ) : (
-        <div className="text-center text-muted-foreground text-sm py-4">
-          <p>{t('deckEditor.preview.clickToPreview')}</p>
+        <div className="space-y-3" data-testid="card-preview-placeholder">
+          <div className="w-full aspect-[5/7] rounded-xl border border-border bg-secondary/30 shadow-sm flex items-center justify-center px-4">
+            <p className="text-center text-xs text-muted-foreground">{t('deckEditor.preview.clickToPreview')}</p>
+          </div>
         </div>
       )}
       <div className="border-t border-border" />

@@ -136,10 +136,21 @@ export async function validateAuth(req: Request): Promise<AuthResult> {
       global: { headers: { Authorization: authHeader } },
     });
 
+    // Prefer JWT claims verification for signing-keys based projects.
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (!claimsError && claimsData?.claims && typeof claimsData.claims.sub === 'string') {
+      const role =
+        typeof claimsData.claims.role === 'string'
+          ? claimsData.claims.role
+          : 'authenticated';
+      return { authorized: true, role };
+    }
+
+    // Fallback for compatibility in case claims verification is unavailable.
     const {
       data: { user },
       error,
-    } = await userClient.auth.getUser(token);
+    } = await userClient.auth.getUser();
 
     if (error || !user) {
       return { authorized: false, error: 'Invalid Authorization token' };
