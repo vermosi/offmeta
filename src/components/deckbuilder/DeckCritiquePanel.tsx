@@ -205,13 +205,13 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
           )}
 
           {/* Additions */}
-          {critique.additions.length > 0 && (
+          {visibleAdditions.length > 0 && (
             <div className="space-y-2">
               <h5 className="text-[11px] font-semibold text-accent flex items-center gap-1">
                 <Plus className="h-3 w-3" />
-                Suggested Additions ({critique.additions.length})
+                Suggested Additions ({visibleAdditions.length})
               </h5>
-              {critique.additions.map((add) => (
+              {visibleAdditions.map((add) => (
                 <div key={add.card_name} className="rounded-lg border border-border bg-card/50 p-2 space-y-1">
                   <div className="flex items-center justify-between gap-1">
                     <div className="flex items-center gap-1.5 min-w-0">
@@ -245,6 +245,15 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
                         title={`Add ${add.card_name}`}
                       >
                         <Plus className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-4 w-4 p-0 shrink-0 text-muted-foreground hover:text-destructive"
+                        onClick={() => setDismissedAdditions((prev) => new Set(prev).add(add.card_name))}
+                        title={`Dismiss suggestion for ${add.card_name}`}
+                      >
+                        <X className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>
