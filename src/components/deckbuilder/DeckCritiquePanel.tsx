@@ -174,7 +174,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
       });
 
       if (error) {
-        toast({ title: 'Critique failed', description: 'Could not reach AI service', variant: 'destructive' });
+        toast({ title: t('critique.failed'), description: t('critique.failedDesc'), variant: 'destructive' });
         return;
       }
 
