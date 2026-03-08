@@ -713,8 +713,8 @@ export default function DeckEditor() {
                 { keys: ['Shift', 'M'], desc: t('deckEditor.shortcuts.toMaybeboard') },
                 { keys: ['?'], desc: t('deckEditor.shortcuts.toggleHelp') },
                 { keys: ['Esc'], desc: t('deckEditor.shortcuts.deselectClose') },
-                { keys: ['Ctrl', 'Z'], desc: 'Undo' },
-                { keys: ['Ctrl', 'Shift', 'Z'], desc: 'Redo' },
+                { keys: ['Ctrl', 'Z'], desc: t('deckEditor.shortcuts.undo') },
+                { keys: ['Ctrl', 'Shift', 'Z'], desc: t('deckEditor.shortcuts.redo') },
               ] as const).map(({ keys, desc }) => (
                 <li key={desc} className="flex items-center justify-between gap-3">
                   <span className="text-muted-foreground">{desc}</span>
