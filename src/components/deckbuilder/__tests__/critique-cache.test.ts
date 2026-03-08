@@ -192,7 +192,7 @@ describe('critique-cache', () => {
       const key = buildCacheKey('deck-123', [
         createTestCard({ card_name: 'Card1', quantity: 1, category: 'Cat1' }),
       ]);
-      const original: CritiqueResult = {
+      const original = createMockCritiqueResult({
         summary: 'Comprehensive feedback',
         cuts: [
           { card_name: 'Weak Spell', reason: 'Does not advance win condition', severity: 'weak' },
@@ -208,7 +208,7 @@ describe('critique-cache', () => {
         ],
         confidence: 0.82,
         mana_curve_notes: 'Good distribution across curve',
-      };
+      });
 
       saveCritique(key, original);
       const loaded = loadCachedCritique(key);
