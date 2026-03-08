@@ -107,13 +107,13 @@ export default function Collection() {
           <div className="flex items-center justify-center flex-col gap-3 py-6">
             <Package className="h-10 w-10 text-muted-foreground/40" />
             <h2 className="text-lg font-semibold">{t('collection.title', 'My Collection')}</h2>
-            <p className="text-muted-foreground text-sm">Sign in to track your card collection.</p>
-            <Button onClick={() => setAuthOpen(true)}>Sign In</Button>
+            <p className="text-muted-foreground text-sm">{t('collection.signInPrompt')}</p>
+            <Button onClick={() => setAuthOpen(true)}>{t('collection.signIn')}</Button>
           </div>
 
           {/* Demo preview */}
           <div className="space-y-2 opacity-70 pointer-events-none select-none">
-            <p className="text-xs text-muted-foreground text-center italic">Preview — demo data</p>
+            <p className="text-xs text-muted-foreground text-center italic">{t('collection.demoPreview')}</p>
             {DEMO_COLLECTION.map((card) => (
               <div
                 key={card.id}
@@ -124,7 +124,7 @@ export default function Collection() {
                 </span>
                 {card.foil && (
                   <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20">
-                    Foil
+                    {t('collection.foil', 'Foil')}
                   </span>
                 )}
                 <PriceSparkline cardName={card.card_name} demo />
@@ -164,12 +164,12 @@ export default function Collection() {
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setImportOpen(true)} className="gap-1.5">
               <Upload className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Import</span>
+              <span className="hidden sm:inline">{t('collection.import', 'Import')}</span>
             </Button>
             {collection.length > 0 && (
               <Button variant="outline" size="sm" onClick={handleExportCsv} className="gap-1.5">
                 <Download className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">CSV</span>
+                <span className="hidden sm:inline">{t('collection.csv', 'CSV')}</span>
               </Button>
             )}
           </div>
@@ -194,9 +194,9 @@ export default function Collection() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="name">A–Z</SelectItem>
-              <SelectItem value="quantity">Quantity</SelectItem>
-              <SelectItem value="newest">Newest</SelectItem>
+              <SelectItem value="name">{t('collection.sortAZ', 'A–Z')}</SelectItem>
+              <SelectItem value="quantity">{t('collection.sortQuantity', 'Quantity')}</SelectItem>
+              <SelectItem value="newest">{t('collection.sortNewest', 'Newest')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -219,7 +219,7 @@ export default function Collection() {
             {collection.length === 0 && (
               <Button variant="secondary" size="sm" onClick={() => setImportOpen(true)} className="gap-1.5 mt-2">
                 <Upload className="h-3.5 w-3.5" />
-                Bulk Import
+                {t('collection.bulkImport', 'Bulk Import')}
               </Button>
             )}
           </div>
@@ -251,6 +251,7 @@ function CollectionRow({
   onUpdateQuantity: (qty: number) => void;
   onRemove: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/50 bg-card/50 hover:bg-muted/50 transition-colors">
       <span className="flex-1 min-w-0 text-sm font-medium text-foreground truncate">
@@ -258,7 +259,7 @@ function CollectionRow({
       </span>
       {card.foil && (
         <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20">
-          Foil
+          {t('collection.foil', 'Foil')}
         </span>
       )}
       <PriceSparkline cardName={card.card_name} />
@@ -266,7 +267,7 @@ function CollectionRow({
         <button
           onClick={() => onUpdateQuantity(card.quantity - 1)}
           className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-          aria-label="Decrease quantity"
+          aria-label={t('collection.decreaseQuantity', 'Decrease quantity')}
         >
           <Minus className="h-3 w-3" />
         </button>
@@ -276,7 +277,7 @@ function CollectionRow({
         <button
           onClick={() => onUpdateQuantity(card.quantity + 1)}
           className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-          aria-label="Increase quantity"
+          aria-label={t('collection.increaseQuantity', 'Increase quantity')}
         >
           <Plus className="h-3 w-3" />
         </button>
@@ -284,7 +285,7 @@ function CollectionRow({
       <button
         onClick={onRemove}
         className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
-        aria-label="Remove from collection"
+        aria-label={t('collection.removeFromCollection', 'Remove from collection')}
       >
         <Trash2 className="h-3 w-3" />
       </button>

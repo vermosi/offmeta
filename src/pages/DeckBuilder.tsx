@@ -213,12 +213,12 @@ export default function DeckBuilder() {
           <AlertDialogHeader>
             <AlertDialogTitle>{t('deck.deleteConfirm')}</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. The deck and all its cards will be permanently removed.
+              {t('deck.deleteDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete}>Delete</AlertDialogAction>
+            <AlertDialogCancel>{t('deck.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>{t('deck.delete')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
