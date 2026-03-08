@@ -190,7 +190,7 @@ export default function PublicProfile() {
                       <ManaCost cost={deck.color_identity.map((c) => `{${c}}`).join('')} />
                     )}
                     <span className="text-xs text-muted-foreground">
-                      {deck.card_count} cards
+                      {deck.card_count} {t('deck.cards')}
                     </span>
                     <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
                   </div>
