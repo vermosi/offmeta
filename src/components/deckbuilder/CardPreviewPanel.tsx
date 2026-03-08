@@ -6,6 +6,7 @@
 
 import { SuggestionsPanel } from '@/components/deckbuilder/SuggestionsPanel';
 import { DeckCombos } from '@/components/deckbuilder/DeckCombos';
+import { DeckCritiquePanel } from '@/components/deckbuilder/DeckCritiquePanel';
 import { useTranslation } from '@/lib/i18n';
 import type { ScryfallCard } from '@/types/card';
 import type { DeckCard } from '@/hooks/useDeck';
@@ -21,11 +22,14 @@ interface CardPreviewPanelProps {
   cardCount: number;
   deckCards: DeckCard[];
   commanderName: string | null;
+  colorIdentity?: string[];
+  format?: string;
 }
 
 export function CardPreviewPanel({
   card, suggestions, suggestionsAnalysis, suggestionsLoading,
   onSuggest, onAddSuggestion, cardCount, deckCards, commanderName,
+  colorIdentity = [], format = 'commander',
 }: CardPreviewPanelProps) {
   const { t } = useTranslation();
   const imageUrl = card?.image_uris?.normal || card?.card_faces?.[0]?.image_uris?.normal;
@@ -57,6 +61,14 @@ export function CardPreviewPanel({
         onSuggest={onSuggest}
         onAddSuggestion={onAddSuggestion}
         cardCount={cardCount}
+      />
+      <div className="border-t border-border" />
+      <DeckCritiquePanel
+        cards={deckCards}
+        commanderName={commanderName}
+        colorIdentity={colorIdentity}
+        format={format}
+        onAddSuggestion={onAddSuggestion}
       />
     </div>
   );
