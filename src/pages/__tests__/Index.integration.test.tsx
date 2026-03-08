@@ -219,7 +219,7 @@ describe('Index page integration', () => {
       expect(screen.getByLabelText('Searching...')).toBeInTheDocument();
     });
 
-    resolveTranslation?.();
+    if (resolveTranslation) (resolveTranslation as () => void)();
   });
 
   it('renders card results after successful search flow', async () => {

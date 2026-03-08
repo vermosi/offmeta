@@ -226,7 +226,7 @@ export async function setPersistentCache(
 
 export function setCachedResult(
   query: string,
-  filters: Record<string, unknown> | undefined,
+  filters: Record<string, unknown> | null | undefined,
   result: CacheEntry['result'],
   cacheSalt?: string,
 ): void {
