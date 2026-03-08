@@ -342,7 +342,9 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
           {(dismissedCuts.size > 0 || dismissedAdditions.size > 0) && (
             <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-2.5 py-1.5">
               <span className="text-[10px] text-muted-foreground">
-                {dismissedCuts.size + dismissedAdditions.size} suggestion{dismissedCuts.size + dismissedAdditions.size !== 1 ? 's' : ''} dismissed
+                {(dismissedCuts.size + dismissedAdditions.size) === 1
+                  ? t('critique.dismissedCount').replace('{count}', '1')
+                  : t('critique.dismissedCountPlural').replace('{count}', String(dismissedCuts.size + dismissedAdditions.size))}
               </span>
               <Button
                 size="sm"
