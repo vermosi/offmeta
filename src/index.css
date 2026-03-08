@@ -457,14 +457,18 @@
       0 8px 20px hsl(var(--gradient-start) / 0.2);
   }
 
-  /* Page background layers - extended height for parallax */
+  /* Page background layers */
   .bg-page-gradient {
-    top: -30vh;
-    bottom: -30vh;
     background:
       radial-gradient(ellipse 100% 50% at 50% 20%, hsl(var(--gradient-start) / 0.18) 0%, transparent 60%),
       radial-gradient(ellipse 80% 40% at 75% 50%, hsl(var(--gradient-end) / 0.12) 0%, transparent 55%),
       radial-gradient(ellipse 70% 35% at 25% 75%, hsl(var(--gradient-start) / 0.1) 0%, transparent 50%);
+  }
+
+  /* Only used on the Index page so parallax translation never reveals edges */
+  .bg-page-gradient-extended {
+    top: -30vh;
+    bottom: -30vh;
   }
 
   /* Parallax background layer - GPU accelerated */
@@ -485,13 +489,15 @@
     opacity: 0.04;
   }
 
+  /* Dotted mesh (avoids subpixel "giant line" artifacts that can happen with translated grids) */
   .bg-page-mesh {
-    background-image:
-      linear-gradient(hsl(var(--border) / 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(var(--border) / 0.04) 1px, transparent 1px);
-    background-size: 60px 60px;
+    background-image: radial-gradient(
+      hsl(var(--border) / 0.09) 1px,
+      transparent 1px
+    );
+    background-size: 44px 44px;
+    background-position: 0 0;
   }
-}
 
 /* ========================================
    SCROLLBAR
