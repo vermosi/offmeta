@@ -237,6 +237,15 @@ const Index = () => {
     onActivate: rovingActivate,
   });
 
+  // Parallax scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      document.documentElement.style.setProperty('--scroll-y', `${window.scrollY}px`);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   // Handle hash-based scroll
   useEffect(() => {
     const hash = window.location.hash;
