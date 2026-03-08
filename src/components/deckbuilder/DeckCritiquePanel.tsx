@@ -270,7 +270,9 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
                 <div key={add.card_name} className="rounded-lg border border-border bg-card/50 p-2 space-y-1">
                   <div className="flex items-center justify-between gap-1">
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="text-xs font-medium text-foreground truncate">{add.card_name}</span>
+                      <CardHoverImage cardName={add.card_name} scryfallCache={effectiveCache}>
+                        <span className="text-xs font-medium text-foreground truncate cursor-default">{add.card_name}</span>
+                      </CardHoverImage>
                       <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 shrink-0">
                         {add.category}
                       </Badge>
