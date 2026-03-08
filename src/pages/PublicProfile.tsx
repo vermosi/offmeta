@@ -10,7 +10,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -77,8 +77,6 @@ export default function PublicProfile() {
       month: 'long',
     });
   }, [profile]);
-
-  const isLoading = profileLoading || decksLoading;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
