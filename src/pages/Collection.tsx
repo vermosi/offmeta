@@ -164,12 +164,12 @@ export default function Collection() {
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setImportOpen(true)} className="gap-1.5">
               <Upload className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Import</span>
+              <span className="hidden sm:inline">{t('collection.import', 'Import')}</span>
             </Button>
             {collection.length > 0 && (
               <Button variant="outline" size="sm" onClick={handleExportCsv} className="gap-1.5">
                 <Download className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">CSV</span>
+                <span className="hidden sm:inline">{t('collection.csv', 'CSV')}</span>
               </Button>
             )}
           </div>
