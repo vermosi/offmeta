@@ -48,12 +48,17 @@ describe('useAuthProvider', () => {
     vi.clearAllMocks();
   });
 
-  it('initializes with loading state', () => {
+  it('initializes with loading state', async () => {
     const { result } = renderHook(() => useAuthProvider());
     // Initially loading
     expect(result.current.isLoading).toBe(true);
     expect(result.current.user).toBeNull();
     expect(result.current.session).toBeNull();
+
+    // Wait for async effects to settle
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
   });
 
   it('exposes all required auth methods', () => {
