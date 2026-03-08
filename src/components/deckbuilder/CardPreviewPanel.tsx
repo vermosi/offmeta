@@ -70,6 +70,7 @@ export function CardPreviewPanel({
         colorIdentity={colorIdentity}
         format={format}
         onAddSuggestion={onAddSuggestion}
+        onRemoveByName={onRemoveByName}
       />
     </div>
   );
