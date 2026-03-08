@@ -47,7 +47,7 @@ const SEVERITY_CONFIG = {
   'weak': { label: 'Weak', icon: AlertTriangle, className: 'bg-muted text-muted-foreground border-border' },
 } as const;
 
-export function DeckCritiquePanel({ cards, commanderName, colorIdentity, format, onAddSuggestion }: DeckCritiquePanelProps) {
+export function DeckCritiquePanel({ cards, commanderName, colorIdentity, format, onAddSuggestion, onRemoveByName }: DeckCritiquePanelProps) {
   const [critique, setCritique] = useState<CritiqueResult | null>(null);
   const [loading, setLoading] = useState(false);
 
