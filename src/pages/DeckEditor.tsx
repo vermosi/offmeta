@@ -200,22 +200,6 @@ export default function DeckEditor() {
     [mainboardCards, deckSortMode, scryfallCacheVersion],
   );
 
-  // ── Missing cards summary ──
-  const missingCards = useMemo(() => {
-    if (!user || collectionLookup.size === 0) return [];
-    const missing: { name: string; needed: number }[] = [];
-    for (const card of cards) {
-      if (card.board === 'maybeboard') continue;
-      const owned = collectionLookup.get(card.card_name) || 0;
-      const needed = card.quantity - owned;
-      if (needed > 0) {
-        const existing = missing.find((m) => m.name === card.card_name);
-        if (existing) existing.needed += needed;
-        else missing.push({ name: card.card_name, needed });
-      }
-    }
-    return missing;
-  }, [user, collectionLookup, cards]);
 
   // ── Handlers ──
   const handleRecategorizeAll = useCallback(async () => {
