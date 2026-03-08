@@ -128,24 +128,29 @@ const MOCK_CARDS: ScryfallCard[] = [
   }),
 ];
 
-function renderIndex(initialRoute = '/') {
+async function renderIndex(initialRoute = '/') {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false, gcTime: 0 },
     },
   });
 
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <MemoryRouter initialEntries={[initialRoute]}>
-          <Suspense fallback={<div>Loading…</div>}>
-            <IndexPage />
-          </Suspense>
-        </MemoryRouter>
-      </TooltipProvider>
-    </QueryClientProvider>,
-  );
+  let result: ReturnType<typeof render>;
+  await act(async () => {
+    result = render(
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <MemoryRouter initialEntries={[initialRoute]}>
+            <Suspense fallback={<div>Loading…</div>}>
+              <IndexPage />
+            </Suspense>
+          </MemoryRouter>
+        </TooltipProvider>
+      </QueryClientProvider>,
+    );
+  });
+
+  return result!;
 }
 
 // Lazy import after mocks
