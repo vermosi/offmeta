@@ -3,14 +3,16 @@
  * @module components/deckbuilder/DeckCritiquePanel
  */
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
-import { MessageSquareWarning, Loader2, Scissors, Plus, AlertTriangle, TrendingDown, Target, ArrowRightLeft, X } from 'lucide-react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { MessageSquareWarning, Loader2, Scissors, Plus, AlertTriangle, TrendingDown, Target, ArrowRightLeft, X, Undo2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/useToast';
 import { cn } from '@/lib/core/utils';
 import type { DeckCard } from '@/hooks/useDeck';
+
+const UNDO_TIMEOUT_MS = 5000;
 
 interface CritiqueCut {
   card_name: string;
