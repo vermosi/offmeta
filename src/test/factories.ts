@@ -5,8 +5,10 @@
 
 import type { ScryfallCard } from '@/types/card';
 import type { TranslationResult } from '@/hooks/useSearchQuery';
-import type { DeckCard } from '@/hooks/useDeck';
+import type { DeckCard, Deck } from '@/hooks/useDeck';
 import type { CritiqueResult } from '@/components/deckbuilder/critique-cache';
+import type { FilterState } from '@/types/filters';
+import type { SearchIntent } from '@/types/search';
 
 /**
  * Create a structurally valid ScryfallCard with sensible defaults.
@@ -92,6 +94,65 @@ export function createMockCritiqueResult(
     cuts: [],
     additions: [],
     confidence: 0.75,
+    ...overrides,
+  };
+}
+
+/**
+ * Create a valid Deck object for deck-related tests.
+ * Override any field via the `overrides` parameter.
+ */
+export function createMockDeck(overrides?: Partial<Deck>): Deck {
+  return {
+    id: overrides?.id ?? `deck-${Math.random().toString(36).slice(2, 9)}`,
+    user_id: 'user-123',
+    name: 'Test Deck',
+    format: 'commander',
+    commander_name: 'Sol Ring',
+    companion_name: null,
+    color_identity: ['W', 'U'],
+    description: 'A test deck for unit tests',
+    is_public: false,
+    card_count: 100,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+/**
+ * Create a valid FilterState object for filter tests.
+ * Override any field via the `overrides` parameter.
+ */
+export function createMockFilterState(
+  overrides?: Partial<FilterState>,
+): FilterState {
+  return {
+    colors: [],
+    types: [],
+    cmcRange: [0, 16],
+    sortBy: 'name-asc',
+    ownedOnly: false,
+    ...overrides,
+  };
+}
+
+/**
+ * Create a valid SearchIntent object for search translation tests.
+ * Override any field via the `overrides` parameter.
+ */
+export function createMockSearchIntent(
+  overrides?: Partial<SearchIntent>,
+): SearchIntent {
+  return {
+    colors: null,
+    types: [],
+    cmc: null,
+    power: null,
+    toughness: null,
+    tags: [],
+    oraclePatterns: [],
+    warnings: [],
     ...overrides,
   };
 }
