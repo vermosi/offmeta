@@ -137,7 +137,9 @@ export default function PublicProfile() {
           <div className="flex gap-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Layers className="h-4 w-4" />
-              {decks.length} public deck{decks.length !== 1 ? 's' : ''}
+              {decks.length === 1
+                ? t('publicProfile.publicDeckCount').replace('{count}', '1')
+                : t('publicProfile.publicDeckCountPlural').replace('{count}', String(decks.length))}
             </div>
           </div>
         )}
