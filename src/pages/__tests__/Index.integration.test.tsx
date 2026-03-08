@@ -205,22 +205,22 @@ describe('Index page integration', () => {
         }),
     );
 
-    renderIndex();
-
-    await waitFor(() => {
-      expect(screen.getByRole('searchbox')).toBeInTheDocument();
-    });
+    await renderIndex();
 
     const input = screen.getByRole('searchbox');
-    fireEvent.change(input, { target: { value: 'treasure makers' } });
-    fireEvent.keyDown(input, { key: 'Enter' });
+    await act(async () => {
+      fireEvent.change(input, { target: { value: 'treasure makers' } });
+      fireEvent.keyDown(input, { key: 'Enter' });
+    });
 
     // The search bar should enter a loading state
     await waitFor(() => {
       expect(screen.getByLabelText('Searching...')).toBeInTheDocument();
     });
 
-    if (resolveTranslation) (resolveTranslation as () => void)();
+    await act(async () => {
+      if (resolveTranslation) resolveTranslation();
+    });
   });
 
   it('renders card results after successful search flow', async () => {
