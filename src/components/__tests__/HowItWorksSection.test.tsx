@@ -42,21 +42,23 @@ describe('HowItWorksSection', () => {
     expect(section).toBeInTheDocument();
   });
 
-  it('uses animate-reveal class instead of animate-fade-in', () => {
+  it('uses scroll-reveal transitions instead of animate-fade-in', () => {
     const { container } = renderWithI18n(<HowItWorksSection />);
-    const cards = container.querySelectorAll('[class*="animate-reveal"]');
-    expect(cards.length).toBe(4);
+    const cards = container.querySelectorAll('[class*="transition-all"]');
+    expect(cards.length).toBeGreaterThanOrEqual(4);
     const fadeInCards = container.querySelectorAll('[class*="animate-fade-in"]');
     expect(fadeInCards.length).toBe(0);
   });
 
-  it('applies staggered animation delays', () => {
+  it('applies staggered transition delays', () => {
     const { container } = renderWithI18n(<HowItWorksSection />);
-    const cards = container.querySelectorAll('[class*="animate-reveal"]');
-    expect(cards[0]).toHaveStyle({ animationDelay: '0ms' });
-    expect(cards[1]).toHaveStyle({ animationDelay: '150ms' });
-    expect(cards[2]).toHaveStyle({ animationDelay: '300ms' });
-    expect(cards[3]).toHaveStyle({ animationDelay: '450ms' });
+    const cards = container.querySelectorAll('[class*="translate-y"]');
+    expect(cards.length).toBeGreaterThanOrEqual(4);
+    // Verify staggered delays exist via inline styles
+    expect(cards[0]).toHaveStyle({ transitionDelay: '0ms' });
+    expect(cards[1]).toHaveStyle({ transitionDelay: '120ms' });
+    expect(cards[2]).toHaveStyle({ transitionDelay: '240ms' });
+    expect(cards[3]).toHaveStyle({ transitionDelay: '360ms' });
   });
 
   it('has a 4-column grid layout class on large screens', () => {
