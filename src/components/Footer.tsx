@@ -59,7 +59,7 @@ export function Footer() {
         <div className="flex items-center justify-center sm:justify-start gap-2">
           <Logo variant="mono" className="h-5 w-5 sm:h-6 sm:w-6 text-foreground" />
           <span className="text-xs sm:text-sm font-medium text-foreground">
-            OffMeta
+            {t('footer.brand')}
           </span>
           <span className="text-xs text-muted-foreground">
             · © {new Date().getFullYear()}

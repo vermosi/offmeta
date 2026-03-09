@@ -214,21 +214,21 @@ export function SearchFeedback({
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Report Search Issue</DialogTitle>
+          <DialogTitle>{t('feedback.dialogTitle')}</DialogTitle>
           <DialogDescription>
-            Help us improve by describing what went wrong with your search.
+            {t('feedback.dialogDesc')}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 pt-2">
           <div className="text-sm space-y-1">
-            <p className="text-muted-foreground">Your search:</p>
+            <p className="text-muted-foreground">{t('feedback.yourSearch')}</p>
             <p className="font-medium text-foreground">
-              {originalQuery || 'No search yet'}
+              {originalQuery || t('feedback.noSearchYet')}
             </p>
           </div>
           {translatedQuery && (
             <div className="text-sm space-y-1">
-              <p className="text-muted-foreground">Translated to:</p>
+              <p className="text-muted-foreground">{t('feedback.translatedTo')}</p>
               <code className="text-xs bg-muted px-2 py-1 rounded block break-all">
                 {translatedQuery}
               </code>
@@ -236,11 +236,11 @@ export function SearchFeedback({
           )}
           <div className="space-y-2">
             <label htmlFor="issue" className="text-sm font-medium">
-              What went wrong?
+              {t('feedback.whatWentWrong')}
             </label>
             <Textarea
               id="issue"
-              placeholder="e.g., Didn't find cards that give haste like Agatha..."
+              placeholder={t('feedback.placeholder')}
               value={issue}
               onChange={(e) => handleIssueChange(e.target.value)}
               rows={3}
@@ -256,13 +256,12 @@ export function SearchFeedback({
           </div>
           {!rateLimitStatus.allowed && (
             <p className="text-xs text-destructive">
-              Rate limit reached. Please wait {rateLimitStatus.resetInMinutes}{' '}
-              minute(s).
+              {t('feedback.rateLimitReached').replace('{minutes}', String(rateLimitStatus.resetInMinutes))}
             </p>
           )}
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              {t('feedback.cancel')}
             </Button>
             <Button
               onClick={handleSubmit}
@@ -273,7 +272,7 @@ export function SearchFeedback({
               {isSubmitting && (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               )}
-              Submit
+              {t('feedback.submit')}
             </Button>
           </div>
         </div>

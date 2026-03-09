@@ -7,6 +7,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { ChevronDown } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 interface ExplainCompilationPanelProps {
   intent: SearchIntent | null;
@@ -22,6 +23,7 @@ export function ExplainCompilationPanel({
   defaultOpen = false,
 }: ExplainCompilationPanelProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const { t } = useTranslation();
 
   if (!intent) return null;
 
@@ -29,7 +31,6 @@ export function ExplainCompilationPanel({
     ? `${intent.colors.isIdentity ? 'ci' : 'c'}${intent.colors.isExact ? '=' : ':'}${intent.colors.values.join('')}`
     : null;
 
-  // Count how many fields have values for the summary
   const activeFields = [
     colorSummary,
     intent.types.length > 0,
@@ -46,10 +47,10 @@ export function ExplainCompilationPanel({
           aria-expanded={isOpen}
         >
           <span>
-            {isOpen ? 'Hide' : 'Show'} details
+            {isOpen ? t('explain.hideDetails') : t('explain.showDetails')}
             {!isOpen && activeFields > 0 && (
               <span className="ml-1 text-accent font-medium">
-                ({activeFields} detected)
+                ({t('explain.detected', `${activeFields} detected`).replace('{count}', String(activeFields))})
               </span>
             )}
           </span>
@@ -67,7 +68,7 @@ export function ExplainCompilationPanel({
           <div className="grid gap-3 sm:grid-cols-2 text-sm">
             <div className="space-y-0.5">
               <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                Colors
+                {t('explain.colors')}
               </p>
               <p className={cn(!colorSummary && 'text-muted-foreground')}>
                 {colorSummary || '—'}
@@ -76,7 +77,7 @@ export function ExplainCompilationPanel({
 
             <div className="space-y-0.5">
               <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                Types
+                {t('explain.types')}
               </p>
               <p
                 className={cn(
@@ -89,7 +90,7 @@ export function ExplainCompilationPanel({
 
             <div className="space-y-0.5">
               <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                Mana value
+                {t('explain.manaValue')}
               </p>
               <p className={cn(!intent.cmc && 'text-muted-foreground')}>
                 {intent.cmc
@@ -100,7 +101,7 @@ export function ExplainCompilationPanel({
 
             <div className="space-y-0.5">
               <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                Power / Toughness
+                {t('explain.powerToughness')}
               </p>
               <p
                 className={cn(
@@ -119,7 +120,7 @@ export function ExplainCompilationPanel({
             {intent.tags.length > 0 && (
               <div className="space-y-0.5 sm:col-span-2">
                 <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                  Tags
+                  {t('explain.tags')}
                 </p>
                 <p>{intent.tags.join(', ')}</p>
               </div>
@@ -128,7 +129,7 @@ export function ExplainCompilationPanel({
             {intent.oraclePatterns.length > 0 && (
               <div className="space-y-0.5 sm:col-span-2">
                 <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                  Oracle patterns
+                  {t('explain.oraclePatterns')}
                 </p>
                 <p className="font-mono text-xs break-words">
                   {intent.oraclePatterns.join(' ')}

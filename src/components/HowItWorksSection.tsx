@@ -67,7 +67,7 @@ export function HowItWorksSection() {
       <div className="container-main">
         <div className="text-center mb-10 sm:mb-14">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-accent/20 bg-accent/5 text-accent text-xs font-medium mb-4">
-            ✦ Dead simple
+            {t('howItWorks.badge')}
           </span>
           <h2
             id="how-it-works-heading"
@@ -76,7 +76,7 @@ export function HowItWorksSection() {
             {t('howItWorks.heading')}
           </h2>
           <p className="text-sm sm:text-base text-muted-foreground mt-2 max-w-md mx-auto">
-            From thought to results in under 3 seconds. No learning curve.
+            {t('howItWorks.subtitle')}
           </p>
         </div>
 

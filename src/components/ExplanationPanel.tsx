@@ -13,6 +13,7 @@ import { BookOpen, AlertTriangle, Zap } from 'lucide-react';
 import { logger } from '@/lib/core/logger';
 import { ManaSymbol } from '@/components/ManaSymbol';
 import { formatManaSymbols } from '@/lib/scryfall/client';
+import { useTranslation } from '@/lib/i18n';
 
 interface ExplanationPanelProps {
   card: ScryfallCard | null | undefined;
@@ -24,13 +25,13 @@ export function ExplanationPanel({ card, isLoading: externalLoading }: Explanati
   const [archetypes, setArchetypes] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!card) return;
     let cancelled = false;
 
     const run = async () => {
-      // Reset + start loading inside async callback (satisfies lint rule)
       if (cancelled) return;
       setRationale(null);
       setArchetypes([]);
@@ -54,7 +55,7 @@ export function ExplanationPanel({ card, isLoading: externalLoading }: Explanati
       if (cancelled) return;
       if (fnError || !data?.success) {
         logger.warn('Explanation fetch failed', fnError || data?.error);
-        setError('Could not generate explanation');
+        setError(t('explanation.errorGenerate'));
         setLoading(false);
         return;
       }
@@ -66,14 +67,14 @@ export function ExplanationPanel({ card, isLoading: externalLoading }: Explanati
 
     run();
     return () => { cancelled = true; };
-  }, [card]);
+  }, [card, t]);
 
   if (externalLoading || !card) {
     return (
       <div className="text-center py-12">
         <BookOpen className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
         <p className="text-sm text-muted-foreground">
-          Search for a specific card name to see an explanation
+          {t('explanation.searchPrompt')}
         </p>
       </div>
     );
@@ -109,13 +110,10 @@ export function ExplanationPanel({ card, isLoading: externalLoading }: Explanati
       {/* Explanation loading skeleton */}
       {loading && (
         <div className="space-y-4 animate-fade-in">
-          {/* Section heading skeleton */}
           <div className="flex items-center gap-1.5">
             <Skeleton className="h-4 w-4 rounded-full" />
             <Skeleton className="h-4 w-48" />
           </div>
-
-          {/* Rationale block skeleton */}
           <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 space-y-2.5">
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-[90%]" />
@@ -123,8 +121,6 @@ export function ExplanationPanel({ card, isLoading: externalLoading }: Explanati
             <Skeleton className="h-4 w-[85%]" />
             <Skeleton className="h-4 w-[60%]" />
           </div>
-
-          {/* Archetype badges skeleton */}
           <div className="flex flex-wrap gap-1.5">
             <Skeleton className="h-6 w-20 rounded-full" />
             <Skeleton className="h-6 w-24 rounded-full" />
@@ -144,7 +140,7 @@ export function ExplanationPanel({ card, isLoading: externalLoading }: Explanati
         <div className="space-y-3">
           <div className="flex items-center gap-1.5">
             <Zap className="h-4 w-4 text-primary" />
-            <h4 className="text-sm font-semibold text-foreground">Why Players Use This Card</h4>
+            <h4 className="text-sm font-semibold text-foreground">{t('explanation.whyPlayed')}</h4>
           </div>
           <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 text-sm leading-relaxed text-foreground/90">
             {rationale}
