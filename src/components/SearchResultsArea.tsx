@@ -58,12 +58,12 @@ interface SearchResultsAreaProps {
   openLightbox: (index: number) => void;
   closeLightbox: () => void;
   // Tab content data
-  similarityData: unknown;
+  similarityData: SimilarityData | null | undefined;
   similarLoading: boolean;
-  deckIdea: unknown;
+  deckIdea: DeckIdea | null | undefined;
   deckIdeasLoading: boolean;
   // Query suggestions for empty state
-  querySuggestions: Array<{ query: string; label: string }>;
+  querySuggestions: QuerySuggestion[];
   isCheckingSuggestions: boolean;
   onTrySuggestion: (scryfallQuery: string) => void;
 }
