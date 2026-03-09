@@ -326,6 +326,8 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
 
           <CardModalCombos cardName={card.name} />
 
+          <CardModalRecommendations oracleId={card.oracle_id} cardName={card.name} />
+
           <CardModalAddToDeck card={card} />
 
           <CardModalLegalities legalities={card.legalities} />
