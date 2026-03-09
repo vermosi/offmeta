@@ -16,8 +16,8 @@ interface Stat {
 const STATS: Stat[] = [
   { value: 30000, suffix: '+', label: 'Cards Indexed', prefix: '' },
   { value: 11, suffix: '', label: 'Languages Supported', prefix: '' },
-  { value: 5, suffix: '+', label: 'AI Tools Built', prefix: '' },
-  { value: 300, suffix: '+', label: 'Security Tests', prefix: '' },
+  { value: 20, suffix: '+', label: 'Features Shipped', prefix: '' },
+  { value: 7, suffix: '', label: 'Product Phases', prefix: '' },
 ];
 
 function useCountUp(target: number, duration: number, active: boolean) {
@@ -76,7 +76,7 @@ export function StatCounters() {
           observer.disconnect();
         }
       },
-      { threshold: 0, rootMargin: '0px 0px -20px 0px' }
+      { threshold: 0, rootMargin: '0px 0px -20px 0px' },
     );
     observer.observe(el);
     return () => observer.disconnect();

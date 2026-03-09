@@ -27,7 +27,8 @@ const PHASES: Phase[] = [
     name: 'Semantic Search Foundation',
     tagline: 'Natural language → Scryfall query',
     status: 'complete',
-    description: 'OffMeta began as a natural-language search engine for Magic players. The goal: let anyone find cards by describing what they want.',
+    description:
+      'OffMeta began as a natural-language search engine for Magic players. The goal: let anyone find cards by describing what they want.',
     shipped: [
       'Plain English → Scryfall query translation',
       'Deterministic parser (AI used only when needed)',
@@ -42,11 +43,11 @@ const PHASES: Phase[] = [
     name: 'Reliability & Cost Optimization',
     tagline: 'Stable, predictable, sustainable',
     status: 'complete',
-    description: 'Once search worked, the focus shifted to making it bulletproof without burning through AI credits.',
+    description:
+      'Once search worked, the focus shifted to making it bulletproof without burning through AI credits.',
     shipped: [
       'Request deduplication',
-      'Rate limiting',
-      'Query caching',
+      'Rate limiting & query caching',
       'Timeout + fallback logic',
       'AI call cost reduction',
       'Improved error handling + logging',
@@ -59,13 +60,14 @@ const PHASES: Phase[] = [
     name: 'UX & Daily-Use Polish',
     tagline: 'From prototype to product',
     status: 'complete',
-    description: 'The interface matured into something players could use every day without friction.',
+    description:
+      'The interface matured into something players could use every day without friction.',
     shipped: [
-      'Card detail modal',
+      'Card detail modal with full oracle text',
       'Hover image previews',
-      'Printing picker',
-      'Set badges',
+      'Printing picker + set badges',
       'Layout and empty-state improvements',
+      'Dedicated card pages with SEO',
     ],
     result: 'OffMeta started feeling like a real product — not a prototype.',
   },
@@ -75,15 +77,15 @@ const PHASES: Phase[] = [
     name: 'Deckbuilder Expansion',
     tagline: 'Beyond search',
     status: 'complete',
-    description: 'OffMeta expanded beyond finding cards into helping players build with them.',
+    description:
+      'OffMeta expanded beyond finding cards into helping players build with them.',
     shipped: [
-      'Deckbuilder MVP',
+      'Full deckbuilder with drag-and-drop',
       'Deck import / export',
-      'Sort + view modes',
-      'Maybeboard support',
-      'Companion support',
+      'Sort + view modes (grid, list, curve)',
+      'Maybeboard & companion support',
       'Legality enforcement',
-      'Deck recommendations',
+      'AI-powered deck recommendations',
     ],
     result: 'OffMeta evolved from search tool → deck construction platform.',
   },
@@ -92,54 +94,65 @@ const PHASES: Phase[] = [
     emoji: '🔴',
     name: 'Combos & Discovery Layer',
     tagline: 'Search became insight',
-    status: 'live',
-    description: 'The combo detection layer turned OffMeta into a discovery engine.',
+    status: 'complete',
+    description:
+      'The combo detection layer turned OffMeta into a discovery engine.',
     shipped: [
       'Combo detection UI',
-      'Dedicated Combos navigation',
+      'Dedicated Combos page',
       'Integration into deck workflow',
+      'Archetype browser & pages',
     ],
     result: 'OffMeta began functioning as a discovery engine, not just a filter.',
   },
   {
     number: 6,
-    emoji: '🚧',
-    name: 'Refinement & Intelligence',
-    tagline: 'Smarter than traditional search',
-    status: 'in-progress',
-    description: 'Making every interaction sharper, more accurate, and faster. Closing the gap between what players think and what Scryfall understands.',
+    emoji: '🚀',
+    name: 'Platform Expansion',
+    tagline: 'From tool to platform',
+    status: 'live',
+    description:
+      'OffMeta expanded into a full platform with social features, collections, market data, and internationalization.',
     shipped: [
-      'Semantic accuracy improvements',
-      'Recommendation tuning',
-      'Edge-case parsing fixes',
-      'Performance optimization',
+      'Card collection manager',
+      'Market trends & price tracking',
+      'Public deck sharing & browsing',
+      'Public user profiles',
+      'Saved searches',
+      '11-language internationalization',
+      'PWA support',
+      'Comprehensive docs & guides',
     ],
-    result: 'OffMeta feels smarter than traditional search.',
+    result: 'OffMeta became a complete MTG platform, not just a search tool.',
   },
   {
     number: 7,
     emoji: '🔮',
     name: 'Meta Intelligence Platform',
     tagline: 'The full vision',
-    status: 'upcoming',
-    description: 'The endgame: a living, breathing meta intelligence layer that understands the game as well as experienced players do.',
+    status: 'in-progress',
+    description:
+      'The endgame: a living, breathing meta intelligence layer that understands the game as well as experienced players do.',
     shipped: [
-      'Meta context layer',
-      'Pro tools & advanced filtering',
-      'Community & shared decks',
-      'Archetype clustering + AI critique',
+      'Semantic accuracy improvements',
+      'Recommendation tuning',
+      'Performance optimization',
     ],
-    result: 'OffMeta becomes the go-to intelligence layer for competitive and casual MTG players.',
+    result:
+      'OffMeta becomes the go-to intelligence layer for competitive and casual MTG players.',
   },
 ];
 
-const STATUS_CONFIG: Record<PhaseStatus, {
-  label: string;
-  icon: React.ReactNode;
-  dotClass: string;
-  borderClass: string;
-  badgeClass: string;
-}> = {
+const STATUS_CONFIG: Record<
+  PhaseStatus,
+  {
+    label: string;
+    icon: React.ReactNode;
+    dotClass: string;
+    borderClass: string;
+    badgeClass: string;
+  }
+> = {
   complete: {
     label: 'Complete',
     icon: <CheckCircle2 className="h-3.5 w-3.5" />,
@@ -185,7 +198,7 @@ function PhaseCard({ phase, index }: { phase: Phase; index: number }) {
           observer.disconnect();
         }
       },
-      { threshold: 0, rootMargin: '0px 0px -40px 0px' }
+      { threshold: 0, rootMargin: '0px 0px -40px 0px' },
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -199,17 +212,21 @@ function PhaseCard({ phase, index }: { phase: Phase; index: number }) {
         ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
       `}
     >
-      <div className={`
+      <div
+        className={`
         relative rounded-xl border bg-card/30 backdrop-blur-sm p-6
         hover:bg-card/50 transition-colors duration-300
         ${cfg.borderClass}
-      `}>
+      `}
+      >
         {/* Phase number + status badge */}
         <div className="flex items-center gap-3 mb-4">
           <span className="text-xs font-bold text-muted-foreground/60 tracking-widest uppercase">
             Phase {phase.number}
           </span>
-          <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${cfg.badgeClass}`}>
+          <span
+            className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${cfg.badgeClass}`}
+          >
             {cfg.icon}
             {cfg.label}
           </span>
@@ -234,7 +251,9 @@ function PhaseCard({ phase, index }: { phase: Phase; index: number }) {
           <ul className="space-y-1.5">
             {phase.shipped.map((item) => (
               <li key={item} className="flex items-start gap-2">
-                <span className={`mt-1 text-xs ${phase.status === 'upcoming' ? 'text-muted-foreground/30' : 'text-green-400/70'}`}>
+                <span
+                  className={`mt-1 text-xs ${phase.status === 'upcoming' ? 'text-muted-foreground/30' : 'text-green-400/70'}`}
+                >
                   ✓
                 </span>
                 <span className="text-sm text-muted-foreground">{item}</span>
@@ -244,7 +263,9 @@ function PhaseCard({ phase, index }: { phase: Phase; index: number }) {
         </div>
 
         {/* Result callout */}
-        <div className={`rounded-lg px-4 py-3 border-l-2 ${phase.status === 'upcoming' ? 'bg-muted/20 border-muted-foreground/20' : 'bg-primary/5 border-primary/30'}`}>
+        <div
+          className={`rounded-lg px-4 py-3 border-l-2 ${phase.status === 'upcoming' ? 'bg-muted/20 border-muted-foreground/20' : 'bg-primary/5 border-primary/30'}`}
+        >
           <p className="text-xs text-muted-foreground italic">
             <span className="font-semibold text-foreground/70 not-italic">Result: </span>
             {phase.result}
@@ -262,7 +283,8 @@ export function PhaseTimeline() {
         <div className="text-center mb-12">
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">The Journey</h2>
           <p className="text-muted-foreground text-sm max-w-lg mx-auto">
-            Seven phases. One mission: make finding the right Magic card feel like talking to an expert.
+            Seven phases. One mission: make finding the right Magic card feel like talking to an
+            expert.
           </p>
         </div>
 
