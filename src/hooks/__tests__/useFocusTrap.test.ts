@@ -39,7 +39,7 @@ describe('useFocusTrap', () => {
   it('does not trap when active is false', () => {
     const btn = makeButton('Only');
     const container = createContainer(btn);
-    const previousActive = document.activeElement;
+    const _previousActive = document.activeElement;
 
     renderHook(() => {
       const ref = useRef(container);
