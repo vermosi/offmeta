@@ -241,15 +241,15 @@
 
   "faq.heading": "Preguntas Frecuentes",
   "faq.q1": "¿Qué es OffMeta?",
-  "faq.a1": "OffMeta es una herramienta de búsqueda en lenguaje natural para cartas de Magic: The Gathering. En lugar de aprender la sintaxis compleja de Scryfall, puedes describir lo que buscas en español y OffMeta lo traduce a una consulta válida.",
+  "faq.a1": "OffMeta es una plataforma todo-en-uno para construir mazos de MTG. Busca cartas en español, construye y gestiona mazos, descubre combos ganadores, explora arquetipos del metagame en todos los formatos, rastrea tu colección y obtén recomendaciones de mejora con IA — todo sin aprender la sintaxis de Scryfall.",
   "faq.q2": "¿Cómo funciona la búsqueda de cartas MTG en lenguaje natural?",
   "faq.a2": "OffMeta usa IA para entender tu intención de búsqueda y la convierte en sintaxis de Scryfall. Por ejemplo, escribir 'hechizos verdes baratos de rampa' se convierte en una consulta que filtra por color, tipo de carta, coste de maná y texto de reglas para efectos que producen maná.",
   "faq.q3": "¿OffMeta es gratis?",
-  "faq.a3": "Sí, OffMeta es completamente gratuito. Las cuentas opcionales te permiten guardar búsquedas y acceder a funciones adicionales, pero no se requiere cuenta para buscar.",
+  "faq.a3": "Sí, OffMeta es completamente gratuito. Las cuentas opcionales desbloquean construcción de mazos, gestión de colección, búsquedas guardadas y perfiles públicos — pero no se requiere cuenta para buscar, explorar arquetipos o descubrir combos.",
   "faq.q4": "¿De dónde obtiene OffMeta los datos de las cartas?",
   "faq.a4": "OffMeta usa la API de Scryfall como fuente de datos. Scryfall mantiene una base de datos completa y actualizada de todas las cartas de Magic: The Gathering, incluyendo texto de reglas, precios, legalidades e imágenes.",
   "faq.q5": "¿Puedo usar OffMeta para buscar cartas de Commander/EDH?",
-  "faq.a5": "¡Sí! Puedes buscar cartas legales en cualquier formato incluyendo Commander, Standard, Modern, Legacy y más. Simplemente menciona el formato en tu búsqueda como 'limpiezas de mesa legales en commander por menos de $5' o usa los filtros de formato.",
+  "faq.a5": "¡Por supuesto! Además de buscar cartas legales en Commander, OffMeta tiene herramientas dedicadas para EDH: un buscador de combos para cualquier comandante, un explorador de arquetipos del metagame y recomendaciones de mejora con IA. También puedes usar los filtros de formato o simplemente escribir 'limpiezas legales en commander por menos de $5'.",
   "faq.q6": "¿Puedo buscar en mi propio idioma?",
   "faq.a6": "¡Sí! OffMeta soporta búsquedas en 11 idiomas incluyendo español, inglés, francés, alemán, italiano, portugués, japonés, coreano, ruso y chino. Solo escribe tu búsqueda en tu idioma preferido — OffMeta lo detecta y traduce automáticamente antes de generar la consulta Scryfall.",
 
