@@ -4,6 +4,8 @@
  */
 
 import {
+  lazy,
+  Suspense,
   useState,
   useRef,
   useEffect,
@@ -14,8 +16,16 @@ import { Button } from '@/components/ui/button';
 import { Search, Loader2, X, Clock, Sparkles, Database } from 'lucide-react';
 import { SearchHistoryDropdown } from '@/components/SearchHistoryDropdown';
 import { useIsMobile } from '@/hooks/useMobile';
-import { SearchFeedback } from '@/components/SearchFeedback';
-import { SearchHelpModal } from '@/components/SearchHelpModal';
+const SearchFeedback = lazy(() =>
+  import('@/components/SearchFeedback').then((m) => ({
+    default: m.SearchFeedback,
+  })),
+);
+const SearchHelpModal = lazy(() =>
+  import('@/components/SearchHelpModal').then((m) => ({
+    default: m.SearchHelpModal,
+  })),
+);
 import { VoiceSearchButton } from '@/components/VoiceSearchButton';
 import type { FilterState } from '@/types/filters';
 import { useTypingPlaceholder } from '@/hooks/useTypingPlaceholder';
