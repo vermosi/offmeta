@@ -85,6 +85,18 @@ vi.mock('@/lib/pwa', () => ({
   checkForUpdates: vi.fn(),
 }));
 
+vi.mock('@/lib/i18n', async () => {
+  const enDict = (await import('@/lib/i18n/en.json')).default as Record<string, string>;
+  return {
+    useTranslation: () => ({
+      t: (key: string, fallback?: string) => enDict[key] ?? fallback ?? key,
+      locale: 'en',
+      setLocale: vi.fn(),
+    }),
+    I18nProvider: ({ children }: { children: React.ReactNode }) => children,
+  };
+});
+
 vi.mock('@/hooks/useRealtimeCache', () => ({
   useRealtimeCache: () => {},
 }));
