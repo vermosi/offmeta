@@ -22,6 +22,7 @@ export default function ArchetypePage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const archetype = ARCHETYPES.find((a) => a.slug === slug);
+  const { data: deckCounts } = useArchetypeDeckCounts();
 
   // SEO meta tags
   useEffect(() => {
