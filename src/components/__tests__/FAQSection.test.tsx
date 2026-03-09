@@ -32,11 +32,20 @@ vi.mock('@/lib/i18n', () => ({
 
 // Mock IntersectionObserver
 beforeEach(() => {
-  const mockObserver = vi.fn().mockImplementation((callback) => {
-    callback([{ isIntersecting: true }]);
-    return { observe: vi.fn(), disconnect: vi.fn() };
-  });
-  vi.stubGlobal('IntersectionObserver', mockObserver);
+  class MockIntersectionObserver {
+    callback: IntersectionObserverCallback;
+    constructor(callback: IntersectionObserverCallback) {
+      this.callback = callback;
+      // Trigger immediately as if visible
+      setTimeout(() => {
+        this.callback([{ isIntersecting: true } as IntersectionObserverEntry], this as unknown as IntersectionObserver);
+      }, 0);
+    }
+    observe() {}
+    disconnect() {}
+    unobserve() {}
+  }
+  vi.stubGlobal('IntersectionObserver', MockIntersectionObserver);
 });
 
 describe('FAQSection', () => {

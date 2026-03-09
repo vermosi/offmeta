@@ -102,8 +102,8 @@ describe('CompareBar', () => {
     const { container } = render(
       <CompareBar {...defaultProps} cards={cards} />,
     );
-    // 4 max - 1 card = 3 empty slots
-    const emptySlots = container.querySelectorAll('[aria-hidden="true"]');
+    // 4 max - 1 card = 3 empty dashed-border slots
+    const emptySlots = container.querySelectorAll('.border-dashed');
     expect(emptySlots).toHaveLength(3);
   });
 });
