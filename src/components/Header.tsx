@@ -70,8 +70,8 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [savedCount, setSavedCount] = useState(0);
+  const [isScrolled, setIsScrolled] = useState(false);
   const navigate = useNavigate();
-  
 
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
@@ -107,6 +107,26 @@ export function Header() {
       .eq('user_id', user.id)
       .then(({ count }) => setSavedCount(count ?? 0));
   }, [user]);
+
+  // Header chrome: avoid a persistent "line"; only show border after scroll.
+  useEffect(() => {
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = window.requestAnimationFrame(() => {
+        raf = 0;
+        setIsScrolled((window.scrollY || 0) > 6);
+      });
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (raf) window.cancelAnimationFrame(raf);
+    };
+  }, []);
 
   useEffect(() => {
     if (!mobileMenuOpen) return;
@@ -303,7 +323,12 @@ export function Header() {
   return (
     <>
       <header
-        className="sticky top-0 z-50 safe-top border-b border-border/50 bg-background/80 backdrop-blur-xl"
+        className={cn(
+          'sticky top-0 z-50 safe-top backdrop-blur-xl transition-colors',
+          isScrolled
+            ? 'border-b border-border/50 bg-background/80'
+            : 'border-b border-transparent bg-background/40',
+        )}
         role="banner"
       >
         <div className="container-main py-3 sm:py-4 flex items-center justify-between">
