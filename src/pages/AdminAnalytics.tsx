@@ -1020,6 +1020,9 @@ export default function AdminAnalytics() {
                 </div>
               )}
 
+              {/* System Status */}
+              <SystemStatusPanel />
+
               {/* Auth Failures Panel */}
               <AuthFailuresPanel days={Number(days)} />
 
