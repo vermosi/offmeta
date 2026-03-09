@@ -27,7 +27,7 @@ export function HeroSection() {
 
   return (
     <section
-      className="relative pt-5 sm:pt-14 lg:pt-20 pb-2 sm:pb-8 overflow-hidden"
+      className="relative pt-5 sm:pt-14 lg:pt-20 pb-2 sm:pb-8 overflow-x-hidden"
       aria-labelledby="hero-heading"
     >
       {/* Floating mana orbs — hidden on mobile for cleaner feel */}
