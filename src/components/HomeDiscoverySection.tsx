@@ -35,6 +35,14 @@ export function HomeDiscoverySection({ onSearch }: HomeDiscoverySectionProps) {
       <div id="how-it-works">
         <HowItWorksSection />
       </div>
+      <SearchCTA onSearch={() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Focus the search bar after scroll
+        setTimeout(() => {
+          const searchInput = document.querySelector<HTMLInputElement>('[data-search-input]');
+          searchInput?.focus();
+        }, 400);
+      }} />
       <div id="faq">
         <FAQSection />
       </div>

@@ -112,7 +112,7 @@ export function CardModalRecommendations({
                 {rec.card_name}
               </span>
               {rec.mana_cost && (
-                <ManaCost cost={rec.mana_cost} size="xs" />
+                <ManaCost cost={rec.mana_cost} size="sm" />
               )}
             </button>
           ))}
