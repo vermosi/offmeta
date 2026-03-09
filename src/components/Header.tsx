@@ -70,8 +70,8 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [savedCount, setSavedCount] = useState(0);
+  const [isScrolled, setIsScrolled] = useState(false);
   const navigate = useNavigate();
-  
 
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
