@@ -50,7 +50,7 @@ function MoverRow({ mover, idx, direction, onSearch }: { mover: PriceMover; idx:
   );
 }
 
-export function TrendingCardsWidget() {
+export function TrendingCardsWidget({ onSearch }: { onSearch?: (query: string) => void }) {
   const [period, setPeriod] = useState<Period>('daily');
   const daysBack = period === 'daily' ? 1 : 7;
   const { gainers, losers, isLoading, isDemo } = useMarketTrends(daysBack);
