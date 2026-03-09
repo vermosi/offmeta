@@ -761,10 +761,14 @@ export type Database = {
         Returns: {
           card_name: string
           change_percent: number
+          colors: string[]
           current_price: number
           direction: string
+          legalities: Json
           previous_price: number
+          rarity: string
           scryfall_id: string
+          type_line: string
         }[]
       }
       get_search_analytics: {
