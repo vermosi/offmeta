@@ -11,6 +11,7 @@ vi.mock('@/lib/i18n', () => ({
   useTranslation: () => ({
     t: (key: string) => {
       const translations: Record<string, string> = {
+        'faq.badge': '💬 Got questions?',
         'faq.heading': 'Frequently Asked Questions',
         'faq.q1': 'What is OffMeta?',
         'faq.a1': 'OffMeta is a card search tool.',
