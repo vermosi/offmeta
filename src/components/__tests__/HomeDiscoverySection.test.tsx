@@ -6,6 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HomeDiscoverySection } from '../HomeDiscoverySection';
 
 // Mock child components to isolate the section's own behavior
@@ -21,12 +22,8 @@ vi.mock('../DailyPick', () => ({
   DailyPick: () => <div data-testid="daily-pick">DailyPick</div>,
 }));
 
-vi.mock('../StaplesSection', () => ({
-  StaplesSection: ({ onSearch }: { onSearch: (q: string) => void }) => (
-    <div data-testid="staples-section" onClick={() => onSearch('mock-staple')}>
-      StaplesSection
-    </div>
-  ),
+vi.mock('../FeaturesShowcase', () => ({
+  FeaturesShowcase: () => <div data-testid="features-showcase">Features</div>,
 }));
 
 vi.mock('../HowItWorksSection', () => ({
@@ -37,11 +34,28 @@ vi.mock('../FAQSection', () => ({
   FAQSection: () => <div data-testid="faq-section">FAQ</div>,
 }));
 
+vi.mock('../TrendingCardsWidget', () => ({
+  TrendingCardsWidget: ({ onSearch }: { onSearch: (q: string) => void }) => (
+    <div data-testid="trending-cards" onClick={() => onSearch('mock-trend')}>
+      Trending
+    </div>
+  ),
+}));
+
+vi.mock('../SearchCTA', () => ({
+  SearchCTA: () => <div data-testid="search-cta">CTA</div>,
+}));
+
 function renderSection(onSearch = vi.fn()) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   return render(
-    <MemoryRouter>
-      <HomeDiscoverySection onSearch={onSearch} />
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <HomeDiscoverySection onSearch={onSearch} />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 
@@ -55,9 +69,10 @@ describe('HomeDiscoverySection', () => {
 
     expect(screen.getByTestId('recent-searches')).toBeInTheDocument();
     expect(screen.getByTestId('daily-pick')).toBeInTheDocument();
-    expect(screen.getByTestId('staples-section')).toBeInTheDocument();
+    expect(screen.getByTestId('features-showcase')).toBeInTheDocument();
     expect(screen.getByTestId('how-it-works')).toBeInTheDocument();
     expect(screen.getByTestId('faq-section')).toBeInTheDocument();
+    expect(screen.getByTestId('trending-cards')).toBeInTheDocument();
   });
 
   it('renders sections in correct order', () => {
@@ -67,14 +82,14 @@ describe('HomeDiscoverySection', () => {
     );
 
     const recentIdx = testIds.indexOf('recent-searches');
+    const featuresIdx = testIds.indexOf('features-showcase');
     const dailyIdx = testIds.indexOf('daily-pick');
-    const staplesIdx = testIds.indexOf('staples-section');
     const howIdx = testIds.indexOf('how-it-works');
     const faqIdx = testIds.indexOf('faq-section');
 
-    expect(recentIdx).toBeLessThan(dailyIdx);
-    expect(dailyIdx).toBeLessThan(staplesIdx);
-    expect(staplesIdx).toBeLessThan(howIdx);
+    expect(recentIdx).toBeLessThan(featuresIdx);
+    expect(featuresIdx).toBeLessThan(dailyIdx);
+    expect(dailyIdx).toBeLessThan(howIdx);
     expect(howIdx).toBeLessThan(faqIdx);
   });
 
@@ -86,12 +101,12 @@ describe('HomeDiscoverySection', () => {
     expect(onSearch).toHaveBeenCalledWith('mock-search');
   });
 
-  it('forwards onSearch to StaplesSection', () => {
+  it('forwards onSearch to TrendingCardsWidget', () => {
     const onSearch = vi.fn();
     renderSection(onSearch);
 
-    screen.getByTestId('staples-section').click();
-    expect(onSearch).toHaveBeenCalledWith('mock-staple');
+    screen.getByTestId('trending-cards').click();
+    expect(onSearch).toHaveBeenCalledWith('mock-trend');
   });
 
   it('has anchor IDs for daily-pick, how-it-works, and faq', () => {
