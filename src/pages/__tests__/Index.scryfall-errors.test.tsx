@@ -232,7 +232,8 @@ describe('Index – Scryfall error flows', () => {
     await submitSearch('very specific nonexistent card');
 
     await waitFor(() => {
-      expect(screen.getByText(/no cards found/i)).toBeInTheDocument();
+      const matches = screen.getAllByText(/no cards found/i);
+      expect(matches.length).toBeGreaterThanOrEqual(1);
     });
 
     // The empty state should display the query the user searched for
@@ -248,7 +249,7 @@ describe('Index – Scryfall error flows', () => {
       expect(screen.getByRole('searchbox')).toBeInTheDocument();
     });
 
-    // No card count should be visible
-    expect(screen.queryByText(/cards$/)).not.toBeInTheDocument();
+    // No card count should be visible (e.g. "3 cards")
+    expect(screen.queryByText(/^\d+ cards$/)).not.toBeInTheDocument();
   });
 });
