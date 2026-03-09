@@ -44,7 +44,7 @@ export function FAQSection() {
       <div className="container-main">
         <div className="text-center mb-8 sm:mb-12">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-accent/20 bg-accent/5 text-accent text-xs font-medium mb-4">
-            💬 Got questions?
+            {t('faq.badge')}
           </span>
           <h2
             id="faq-heading"
