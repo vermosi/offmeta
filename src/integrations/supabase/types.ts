@@ -633,6 +633,16 @@ export type Database = {
       }
     }
     Views: {
+      archetype_stats: {
+        Row: {
+          all_colors: string[] | null
+          archetype: string | null
+          deck_count: number | null
+          format: string | null
+          primary_colors_str: string | null
+        }
+        Relationships: []
+      }
       decks_public: {
         Row: {
           card_count: number | null
@@ -737,6 +747,7 @@ export type Database = {
           similarity_score: number
         }[]
       }
+      refresh_archetype_stats: { Args: never; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
