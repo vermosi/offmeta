@@ -237,13 +237,35 @@ const Index = () => {
     onActivate: rovingActivate,
   });
 
-  // Parallax scroll effect
+  // Parallax scroll effect (background-position only, avoids translated-layer seams)
   useEffect(() => {
-    const handleScroll = () => {
-      document.documentElement.style.setProperty('--scroll-y', `${window.scrollY}px`);
+    const el = document.querySelector(
+      '[data-parallax="gradient"]',
+    ) as HTMLElement | null;
+
+    let rafId = 0;
+    const update = () => {
+      rafId = 0;
+      if (!el) return;
+      const y = window.scrollY || 0;
+      const p1 = 20 + y * 0.08;
+      const p2 = 50 + y * 0.04;
+      const p3 = 75 + y * 0.03;
+      el.style.backgroundPosition = `50% ${p1}px, 75% ${p2}px, 25% ${p3}px`;
     };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    const onScroll = () => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(update);
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    update();
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (rafId) window.cancelAnimationFrame(rafId);
+    };
   }, []);
 
   // Handle hash-based scroll
@@ -318,9 +340,9 @@ const Index = () => {
       <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background relative overflow-x-hidden">
         {/* Background layers with parallax */}
         <div
-          className="fixed inset-x-0 pointer-events-none bg-page-gradient bg-page-gradient-extended bg-parallax"
+          className="fixed inset-0 pointer-events-none bg-page-gradient"
           aria-hidden="true"
-          style={{ transform: 'translate3d(0, calc(var(--scroll-y, 0px) * -0.18), 0)' }}
+          data-parallax="gradient"
         />
         <div
           className="fixed inset-0 pointer-events-none bg-page-noise"
