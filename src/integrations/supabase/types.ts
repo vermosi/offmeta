@@ -683,8 +683,10 @@ export type Database = {
           all_colors: string[] | null
           archetype: string | null
           deck_count: number | null
+          deck_name: string | null
           format: string | null
-          primary_colors_str: string | null
+          macro_archetype: string | null
+          meta_percentage: number | null
         }
         Relationships: []
       }
