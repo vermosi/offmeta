@@ -12,7 +12,7 @@ import { Footer } from '@/components/Footer';
 import { ManaSymbol } from '@/components/ManaSymbol';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ARCHETYPES } from '@/data/archetypes';
+import { ARCHETYPES, getArchetypeForFormat } from '@/data/archetypes';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Compass,
