@@ -81,11 +81,12 @@ describe('Footer', () => {
     expect(screen.getByRole('contentinfo')).toBeInTheDocument();
   });
 
-  it('renders Data Sources section with Moxfield and Commander Spellbook', () => {
+  it('renders Data Sources section with Moxfield, Commander Spellbook, and Spicerack', () => {
     renderFooter();
     expect(screen.getByText('Data Sources')).toBeInTheDocument();
     expect(screen.getByText('Moxfield').closest('a')).toHaveAttribute('href', 'https://www.moxfield.com');
     expect(screen.getByText('Commander Spellbook').closest('a')).toHaveAttribute('href', 'https://commanderspellbook.com');
+    expect(screen.getByText('Spicerack').closest('a')).toHaveAttribute('href', 'https://spicerack.gg');
   });
 
   it('renders Built With section with tech stack links', () => {
@@ -95,6 +96,7 @@ describe('Footer', () => {
     expect(screen.getByText('TypeScript').closest('a')).toHaveAttribute('href', 'https://www.typescriptlang.org');
     expect(screen.getByText('Tailwind CSS').closest('a')).toHaveAttribute('href', 'https://tailwindcss.com');
     expect(screen.getByText('Vite').closest('a')).toHaveAttribute('href', 'https://vitejs.dev');
+    expect(screen.getByText('Supabase').closest('a')).toHaveAttribute('href', 'https://supabase.com');
     expect(screen.getByText('Lovable').closest('a')).toHaveAttribute('href', 'https://lovable.dev');
   });
 });

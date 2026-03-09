@@ -23,6 +23,7 @@ const DATA_SOURCES = [
   { name: 'Scryfall', href: 'https://scryfall.com' },
   { name: 'Moxfield', href: 'https://www.moxfield.com' },
   { name: 'Commander Spellbook', href: 'https://commanderspellbook.com' },
+  { name: 'Spicerack', href: 'https://spicerack.gg' },
 ] as const;
 
 const BUILT_WITH = [
@@ -30,6 +31,7 @@ const BUILT_WITH = [
   { name: 'TypeScript', href: 'https://www.typescriptlang.org' },
   { name: 'Tailwind CSS', href: 'https://tailwindcss.com' },
   { name: 'Vite', href: 'https://vitejs.dev' },
+  { name: 'Supabase', href: 'https://supabase.com' },
   { name: 'Lovable', href: 'https://lovable.dev' },
 ] as const;
 
