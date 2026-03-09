@@ -8,7 +8,7 @@
 // @ts-nocheck
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { getCorsHeaders } from '../_shared/auth.ts';
+import { getCorsHeaders, requireServiceRole } from '../_shared/auth.ts';
 import { createLogger } from '../_shared/logger.ts';
 
 const log = createLogger('card-sync');
@@ -23,6 +23,10 @@ serve(async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Auth guard: service role only
+  const auth = requireServiceRole(req, corsHeaders);
+  if (!auth.authorized) return auth.response;
+
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   if (!supabaseUrl || !serviceRoleKey) {
@@ -32,32 +36,38 @@ serve(async (req: Request): Promise<Response> => {
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
   try {
-    // Get oracle IDs that aren't yet in the cards table
-    const { data: missingCards, error: fetchErr } = await supabase
+    // Use the get_missing_oracle_ids RPC (created via migration)
+    const { data: missingCards, error: rpcErr } = await supabase
       .rpc('get_missing_oracle_ids')
       .limit(1000);
 
-    // Fallback: direct query if RPC doesn't exist
     let oracleIds: string[] = [];
-    if (fetchErr || !missingCards) {
-      const { data: deckCards } = await supabase
-        .from('community_deck_cards')
-        .select('scryfall_oracle_id')
-        .not('scryfall_oracle_id', 'is', null)
-        .limit(5000);
+    if (rpcErr || !missingCards) {
+      log.warn('get_missing_oracle_ids RPC failed, using fallback', { error: rpcErr?.message });
+      // Paginated fallback: fetch oracle IDs not yet in cards table
+      const allIds = new Set<string>();
+      let from = 0;
+      const PAGE = 1000;
+      while (true) {
+        const { data: chunk } = await supabase
+          .from('community_deck_cards')
+          .select('scryfall_oracle_id')
+          .not('scryfall_oracle_id', 'is', null)
+          .range(from, from + PAGE - 1);
+        if (!chunk || chunk.length === 0) break;
+        for (const c of chunk) {
+          if (c.scryfall_oracle_id) allIds.add(c.scryfall_oracle_id);
+        }
+        if (chunk.length < PAGE) break;
+        from += PAGE;
+      }
 
       const { data: existingCards } = await supabase
         .from('cards')
         .select('oracle_id');
 
       const existingSet = new Set((existingCards ?? []).map((c) => c.oracle_id));
-      const uniqueIds = new Set<string>();
-      for (const c of deckCards ?? []) {
-        if (c.scryfall_oracle_id && !existingSet.has(c.scryfall_oracle_id)) {
-          uniqueIds.add(c.scryfall_oracle_id);
-        }
-      }
-      oracleIds = Array.from(uniqueIds);
+      oracleIds = Array.from(allIds).filter((id) => !existingSet.has(id));
     } else {
       oracleIds = (missingCards as Array<{ oracle_id: string }>).map((r) => r.oracle_id);
     }
@@ -72,7 +82,6 @@ serve(async (req: Request): Promise<Response> => {
     log.info(`Syncing ${oracleIds.length} cards from Scryfall`);
     let synced = 0;
 
-    // Use Scryfall /cards/collection endpoint in batches
     for (let i = 0; i < oracleIds.length; i += SCRYFALL_BATCH_SIZE) {
       const batch = oracleIds.slice(i, i + SCRYFALL_BATCH_SIZE);
       const identifiers = batch.map((id) => ({ oracle_id: id }));

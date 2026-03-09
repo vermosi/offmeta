@@ -7,7 +7,7 @@
 // @ts-nocheck
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { getCorsHeaders } from '../_shared/auth.ts';
+import { getCorsHeaders, requireServiceRole } from '../_shared/auth.ts';
 import { createLogger } from '../_shared/logger.ts';
 
 const log = createLogger('detect-archetypes');
@@ -45,7 +45,6 @@ function detectArchetype(cardTexts: string[]): string | null {
 
   if (scores.size === 0) return null;
 
-  // Return the archetype with highest score
   return Array.from(scores.entries())
     .sort((a, b) => b[1] - a[1])[0][0];
 }
@@ -58,6 +57,10 @@ serve(async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Auth guard: service role only
+  const auth = requireServiceRole(req, corsHeaders);
+  if (!auth.authorized) return auth.response;
+
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   if (!supabaseUrl || !serviceRoleKey) {
@@ -67,7 +70,6 @@ serve(async (req: Request): Promise<Response> => {
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
   try {
-    // Get decks without archetypes
     const { data: decks, error: deckErr } = await supabase
       .from('community_decks')
       .select('id')
@@ -85,7 +87,6 @@ serve(async (req: Request): Promise<Response> => {
     let tagged = 0;
 
     for (const deck of decks) {
-      // Get oracle text for deck's cards
       const { data: deckCards } = await supabase
         .from('community_deck_cards')
         .select('scryfall_oracle_id')

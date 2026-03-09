@@ -302,6 +302,42 @@ export async function logAuthFailure(
   }
 }
 
+/**
+ * Verifies the caller is using the service role key.
+ * Use for internal pipeline functions that should not be publicly callable.
+ */
+export function requireServiceRole(
+  req: Request,
+  corsHeaders: Record<string, string>,
+): { authorized: true } | { authorized: false; response: Response } {
+  const headers = { ...corsHeaders, 'Content-Type': 'application/json' };
+  const authHeader = req.headers.get('Authorization');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+  if (!authHeader || !serviceRoleKey) {
+    return {
+      authorized: false,
+      response: new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers },
+      ),
+    };
+  }
+
+  const token = authHeader.replace('Bearer ', '').trim();
+  if (token !== serviceRoleKey) {
+    return {
+      authorized: false,
+      response: new Response(
+        JSON.stringify({ error: 'Forbidden: service role required' }),
+        { status: 403, headers },
+      ),
+    };
+  }
+
+  return { authorized: true };
+}
+
 export async function requireAdmin(
   req: Request,
   corsHeaders: Record<string, string>,
