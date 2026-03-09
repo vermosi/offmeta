@@ -233,7 +233,8 @@ serve(async (req: Request): Promise<Response> => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const numDays = body.num_days ?? 14;
+    const backfillUrls = body.backfill_urls === true;
+    const numDays = body.num_days ?? (backfillUrls ? 90 : 14);
     const eventFormat = body.event_format ?? null; // e.g. "MODERN", "COMMANDER2"
 
     // Build API URL with query params
@@ -273,6 +274,47 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
+    // ── Backfill source_url mode ──
+    if (backfillUrls) {
+      let updated = 0;
+      let checked = 0;
+
+      for (const tournament of tournaments) {
+        const tid = String(tournament.TID ?? '');
+        const standings = tournament.standings ?? [];
+        if (!Array.isArray(standings)) continue;
+
+        for (const standing of standings) {
+          const playerName = String(standing.name ?? 'Unknown');
+          const sourceId = `${tid}-${playerName}`.slice(0, 200);
+          const decklistUrl = standing.decklist ?? '';
+
+          // Only process if standing has a Moxfield URL
+          if (typeof decklistUrl !== 'string' || !decklistUrl.includes('moxfield.com/decks/')) continue;
+          checked++;
+
+          // Update existing deck that has no source_url
+          const { data: updatedRow } = await supabase
+            .from('community_decks')
+            .update({ source_url: decklistUrl })
+            .eq('source', 'spicerack')
+            .eq('source_id', sourceId)
+            .is('source_url', null)
+            .select('id')
+            .maybeSingle();
+
+          if (updatedRow) updated++;
+        }
+      }
+
+      log.info(`Backfill URLs: checked=${checked}, updated=${updated}`);
+      return new Response(
+        JSON.stringify({ success: true, mode: 'backfill_urls', checked, updated, tournaments: tournaments.length }),
+        { status: 200, headers },
+      );
+    }
+
+    // ── Normal import mode ──
     let imported = 0;
     let skipped = 0;
     let tournamentsProcessed = 0;
