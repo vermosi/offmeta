@@ -241,7 +241,7 @@ const Index = () => {
   return (
     <ErrorBoundary>
       <SkipLinks showSearchLink />
-      <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background relative overflow-x-hidden">
+      <div className="min-h-screen min-h-[100dvh] flex flex-col relative overflow-x-hidden">
         {/* Static premium gradient background */}
         <div
           className="fixed inset-0 pointer-events-none bg-page-gradient"
