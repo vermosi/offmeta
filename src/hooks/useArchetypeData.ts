@@ -1,5 +1,5 @@
 /**
- * Hook to fetch archetype data from community_decks, grouped by format.
+ * Hook to fetch pre-aggregated archetype stats from a materialized view.
  * Returns structured data for the data-driven archetypes UI.
  */
 
@@ -10,8 +10,7 @@ export interface ArchetypeEntry {
   archetype: string;
   format: string;
   deckCount: number;
-  colors: string[][]; // array of color arrays from decks
-  /** Most common color identity across decks of this archetype+format */
+  colors: string[][];
   primaryColors: string[];
 }
 
@@ -32,99 +31,66 @@ const FORMAT_LABELS: Record<string, string> = {
 
 const FORMAT_ORDER = ['commander', 'pauper', 'legacy', 'premodern', 'other'];
 
-function getMostCommonColors(colorArrays: string[][]): string[] {
-  if (colorArrays.length === 0) return [];
-
-  // Count frequency of each color combo (as sorted string)
-  const freq = new Map<string, { count: number; colors: string[] }>();
-  for (const colors of colorArrays) {
-    const key = [...colors].sort().join(',');
-    const existing = freq.get(key);
-    if (existing) {
-      existing.count++;
-    } else {
-      freq.set(key, { count: 1, colors });
-    }
-  }
-
-  // Return the most frequent
-  let best: { count: number; colors: string[] } = { count: 0, colors: [] };
-  for (const entry of freq.values()) {
-    if (entry.count > best.count) best = entry;
-  }
-
-  // If no dominant combo, return unique colors across all decks
-  if (best.count === 1 && colorArrays.length > 1) {
-    const allColors = new Set<string>();
-    for (const colors of colorArrays) {
-      for (const c of colors) allColors.add(c);
-    }
-    return ['W', 'U', 'B', 'R', 'G'].filter((c) => allColors.has(c));
-  }
-
-  return best.colors;
+interface ArchetypeStatsRow {
+  format: string;
+  archetype: string;
+  deck_count: number;
+  primary_colors_str: string | null;
+  all_colors: string[] | null;
 }
 
 export function useArchetypeData() {
   return useQuery({
     queryKey: ['archetype-data-by-format'],
     queryFn: async (): Promise<ArchetypesByFormat[]> => {
+      // Query the pre-aggregated materialized view (tiny result set)
       const { data, error } = await supabase
-        .from('community_decks')
-        .select('format, archetype, colors')
-        .not('archetype', 'is', null);
+        .from('archetype_stats' as 'community_decks')
+        .select('format, archetype, deck_count, primary_colors_str, all_colors');
 
       if (error) throw error;
       if (!data || data.length === 0) return [];
 
-      // Group by format → archetype
-      const grouped = new Map<string, Map<string, { count: number; colors: string[][] }>>();
+      const rows = data as unknown as ArchetypeStatsRow[];
 
-      for (const row of data) {
+      // Group by format
+      const grouped = new Map<string, ArchetypeEntry[]>();
+      const totals = new Map<string, number>();
+
+      for (const row of rows) {
         const format = row.format ?? 'other';
-        const archetype = row.archetype!;
-        const colors = (row.colors ?? []) as string[];
-
-        if (!grouped.has(format)) grouped.set(format, new Map());
-        const formatMap = grouped.get(format)!;
-
-        if (!formatMap.has(archetype)) {
-          formatMap.set(archetype, { count: 0, colors: [] });
+        if (!grouped.has(format)) {
+          grouped.set(format, []);
+          totals.set(format, 0);
         }
-        const entry = formatMap.get(archetype)!;
-        entry.count++;
-        if (colors.length > 0) entry.colors.push(colors);
+
+        const primaryColors = row.primary_colors_str
+          ? row.primary_colors_str.split(',').filter(Boolean)
+          : (row.all_colors ?? []);
+
+        grouped.get(format)!.push({
+          archetype: row.archetype,
+          format,
+          deckCount: Number(row.deck_count),
+          colors: [],
+          primaryColors,
+        });
+        totals.set(format, (totals.get(format) ?? 0) + Number(row.deck_count));
       }
 
-      // Build result
+      // Build ordered result
       const result: ArchetypesByFormat[] = [];
-
       for (const format of FORMAT_ORDER) {
-        const formatMap = grouped.get(format);
-        if (!formatMap || formatMap.size === 0) continue;
+        const archetypes = grouped.get(format);
+        if (!archetypes || archetypes.length === 0) continue;
 
-        const archetypes: ArchetypeEntry[] = [];
-        let totalDecks = 0;
-
-        for (const [archetype, entry] of formatMap.entries()) {
-          totalDecks += entry.count;
-          archetypes.push({
-            archetype,
-            format,
-            deckCount: entry.count,
-            colors: entry.colors,
-            primaryColors: getMostCommonColors(entry.colors),
-          });
-        }
-
-        // Sort by deck count desc
         archetypes.sort((a, b) => b.deckCount - a.deckCount);
 
         result.push({
           format,
           label: FORMAT_LABELS[format] ?? format,
           archetypes,
-          totalDecks,
+          totalDecks: totals.get(format) ?? 0,
         });
       }
 
@@ -134,23 +100,23 @@ export function useArchetypeData() {
   });
 }
 
-/** Simple flat map for backward compat: archetype → total deck count across all formats */
+/** Simple flat map: archetype → total deck count across all formats */
 export function useArchetypeDeckCounts() {
   return useQuery({
     queryKey: ['archetype-deck-counts'],
     queryFn: async (): Promise<Map<string, number>> => {
       const { data, error } = await supabase
-        .from('community_decks')
-        .select('archetype');
+        .from('archetype_stats' as 'community_decks')
+        .select('archetype, deck_count');
 
       if (error) throw error;
       if (!data || data.length === 0) return new Map();
 
+      const rows = data as unknown as Array<{ archetype: string; deck_count: number }>;
       const counts = new Map<string, number>();
-      for (const row of data) {
-        if (!row.archetype) continue;
+      for (const row of rows) {
         const key = row.archetype.toLowerCase().trim();
-        counts.set(key, (counts.get(key) ?? 0) + 1);
+        counts.set(key, (counts.get(key) ?? 0) + Number(row.deck_count));
       }
       return counts;
     },
