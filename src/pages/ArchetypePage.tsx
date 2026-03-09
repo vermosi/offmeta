@@ -16,6 +16,7 @@ import { ARCHETYPES } from '@/data/archetypes';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Compass,
+  ExternalLink,
   Lightbulb,
   Star,
   DollarSign,
