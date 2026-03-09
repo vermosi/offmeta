@@ -182,6 +182,7 @@ export type Database = {
           name: string
           source: string
           source_id: string | null
+          source_url: string | null
         }
         Insert: {
           archetype?: string | null
@@ -195,6 +196,7 @@ export type Database = {
           name: string
           source: string
           source_id?: string | null
+          source_url?: string | null
         }
         Update: {
           archetype?: string | null
@@ -208,6 +210,7 @@ export type Database = {
           name?: string
           source?: string
           source_id?: string | null
+          source_url?: string | null
         }
         Relationships: []
       }
