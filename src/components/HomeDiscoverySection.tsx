@@ -1,11 +1,10 @@
 /**
  * Discovery content shown on the home page before search:
- * Recent Searches, Daily Pick, Features Showcase, Staples, How It Works, FAQ.
+ * Recent Searches, Daily Pick, Features Showcase, How It Works, FAQ.
  */
 
 import { DailyPick } from '@/components/DailyPick';
 import { FeaturesShowcase } from '@/components/FeaturesShowcase';
-import { StaplesSection } from '@/components/StaplesSection';
 import { HowItWorksSection } from '@/components/HowItWorksSection';
 import { FAQSection } from '@/components/FAQSection';
 import { RecentSearches } from '@/components/RecentSearches';
@@ -28,9 +27,6 @@ export function HomeDiscoverySection({ onSearch }: HomeDiscoverySectionProps) {
           <DailyPick />
         </div>
         <TrendingCardsWidget onSearch={onSearch} />
-      </div>
-      <div className="container-main">
-        <StaplesSection onSearch={onSearch} />
       </div>
       <div id="how-it-works">
         <HowItWorksSection />
