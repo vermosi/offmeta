@@ -63,12 +63,14 @@ function encodeFiltersToUrl(params: URLSearchParams, filters: FilterState | null
   params.delete('sort');
   params.delete('cmc_min');
   params.delete('cmc_max');
+  params.delete('format');
 
   if (!filters) return;
 
   if (filters.colors.length > 0) params.set('colors', filters.colors.join(','));
   if (filters.types.length > 0) params.set('types', filters.types.join(','));
   if (filters.sortBy && filters.sortBy !== 'name-asc') params.set('sort', filters.sortBy);
+  if (filters.format) params.set('format', filters.format);
   if (filters.cmcRange[0] > 0) params.set('cmc_min', String(filters.cmcRange[0]));
   // Only encode cmcMax if it's not the default high value
   if (filters.cmcRange[1] < 16) params.set('cmc_max', String(filters.cmcRange[1]));
