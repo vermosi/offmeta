@@ -32,9 +32,9 @@ const FEATURES = [
   },
   {
     icon: Compass,
-    title: 'Commander Archetypes',
-    description: 'Explore Aristocrats, Voltron, Spellslinger, and 15+ more archetypes with curated staple lists.',
-    benefit: 'Build with confidence',
+    title: 'Metagame Archetypes',
+    description: 'Browse real deck archetypes across Commander, Standard, Modern, Pioneer, Legacy, and more — powered by community tournament data.',
+    benefit: 'See what\'s winning',
     href: '/archetypes',
   },
   {
