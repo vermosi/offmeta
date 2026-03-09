@@ -143,9 +143,12 @@ export function CardModalPurchaseLinks({
   // Desktop layout
   return (
     <div className="w-full mt-3 max-w-[220px]">
-      <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-        {buyLabel}
-      </h3>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          {buyLabel}
+        </h3>
+        <PriceSparkline cardName={card.name} />
+      </div>
       <div className="space-y-1.5">
         {displayPrices.usd && (
           <Button
