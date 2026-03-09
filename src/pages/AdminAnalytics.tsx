@@ -97,6 +97,7 @@ import {
 } from '@/pages/admin-analytics/components/AnalyticsPrimitives';
 import { PipelineHealthIndicator } from '@/pages/admin-analytics/components/PipelineHealthIndicator';
 import { AuthFailuresPanel } from '@/pages/admin-analytics/components/AuthFailuresPanel';
+import { SystemStatusPanel } from '@/pages/admin-analytics/components/SystemStatusPanel';
 
 export default function AdminAnalytics() {
   const { user, isLoading: authLoading } = useAuth();
