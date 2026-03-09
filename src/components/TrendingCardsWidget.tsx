@@ -1,31 +1,66 @@
 /**
- * Mini-widget showing top 3 price gainers with daily/weekly tabs.
+ * Mini-widget showing top 3 price gainers & losers with daily/weekly tabs.
  * Displayed on the homepage discovery section.
  */
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { TrendingUp, ArrowUpRight, Flame } from 'lucide-react';
+import { TrendingUp, TrendingDown, ArrowUpRight, Flame } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useMarketTrends } from '@/hooks/useMarketTrends';
+import { useMarketTrends, type PriceMover } from '@/hooks/useMarketTrends';
 
 type Period = 'daily' | 'weekly';
+
+function MoverRow({ mover, idx, direction }: { mover: PriceMover; idx: number; direction: 'up' | 'down' }) {
+  const isUp = direction === 'up';
+  return (
+    <div className="flex items-center justify-between px-5 py-2.5 hover:bg-muted/50 transition-colors">
+      <div className="flex items-center gap-3 min-w-0">
+        <span className="text-xs font-bold text-muted-foreground w-4 text-center">
+          {idx + 1}
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-foreground truncate">
+            {mover.card_name}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            ${mover.current_price.toFixed(2)}
+          </p>
+        </div>
+      </div>
+      <Badge
+        variant="secondary"
+        className={`border-0 font-mono text-xs shrink-0 ${
+          isUp ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'
+        }`}
+      >
+        {isUp ? (
+          <TrendingUp className="h-3 w-3 mr-1" />
+        ) : (
+          <TrendingDown className="h-3 w-3 mr-1" />
+        )}
+        {isUp ? '+' : ''}{mover.change_percent.toFixed(1)}%
+      </Badge>
+    </div>
+  );
+}
 
 export function TrendingCardsWidget() {
   const [period, setPeriod] = useState<Period>('daily');
   const daysBack = period === 'daily' ? 1 : 7;
-  const { gainers, isLoading, isDemo } = useMarketTrends(daysBack);
-  const top3 = gainers.slice(0, 3);
+  const { gainers, losers, isLoading, isDemo } = useMarketTrends(daysBack);
+  const topGainers = gainers.slice(0, 3);
+  const topLosers = losers.slice(0, 3);
 
   if (isLoading) {
     return (
       <Card className="bg-card border-border">
         <CardContent className="p-5 space-y-4">
           <Skeleton className="h-6 w-40" />
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-10 w-full" />
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton key={i} className="h-8 w-full" />
           ))}
         </CardContent>
       </Card>
@@ -76,34 +111,29 @@ export function TrendingCardsWidget() {
           ))}
         </div>
 
-        {/* Cards list */}
+        {/* Gainers */}
+        <div className="px-5 pt-1 pb-1.5">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+            <TrendingUp className="h-3 w-3 text-primary" />
+            Gainers
+          </p>
+        </div>
         <div className="divide-y divide-border">
-          {top3.map((mover, idx) => (
-            <div
-              key={mover.card_name}
-              className="flex items-center justify-between px-5 py-3 hover:bg-muted/50 transition-colors"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <span className="text-xs font-bold text-muted-foreground w-4 text-center">
-                  {idx + 1}
-                </span>
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {mover.card_name}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    ${mover.current_price.toFixed(2)}
-                  </p>
-                </div>
-              </div>
-              <Badge
-                variant="secondary"
-                className="bg-primary/10 text-primary border-0 font-mono text-xs shrink-0"
-              >
-                <TrendingUp className="h-3 w-3 mr-1" />
-                +{Math.abs(mover.change_percent).toFixed(1)}%
-              </Badge>
-            </div>
+          {topGainers.map((mover, idx) => (
+            <MoverRow key={mover.card_name} mover={mover} idx={idx} direction="up" />
+          ))}
+        </div>
+
+        {/* Losers */}
+        <div className="px-5 pt-3 pb-1.5">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+            <TrendingDown className="h-3 w-3 text-destructive" />
+            Losers
+          </p>
+        </div>
+        <div className="divide-y divide-border">
+          {topLosers.map((mover, idx) => (
+            <MoverRow key={mover.card_name} mover={mover} idx={idx} direction="down" />
           ))}
         </div>
       </CardContent>
