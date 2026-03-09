@@ -136,7 +136,7 @@ export function TrendingCardsWidget({ onSearch }: { onSearch?: (query: string) =
         </div>
         <div className="divide-y divide-border">
           {topLosers.map((mover, idx) => (
-            <MoverRow key={mover.card_name} mover={mover} idx={idx} direction="down" />
+            <MoverRow key={mover.card_name} mover={mover} idx={idx} direction="down" onSearch={onSearch} />
           ))}
         </div>
       </CardContent>
