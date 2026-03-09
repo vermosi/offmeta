@@ -714,6 +714,7 @@ export type Database = {
         Args: { max_low_confidence?: number; since_date: string }
         Returns: Json
       }
+      get_system_status: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
