@@ -229,10 +229,23 @@ serve(async (req: Request): Promise<Response> => {
         if (existing) { skipped++; continue; }
 
         // Parse the decklist text
-        const decklistText = standing.decklist_text ?? '';
+        const decklistText = standing.decklist_text ?? standing.decklist ?? '';
         const cards = parseDecklistText(decklistText);
 
-        if (cards.length === 0) { skipped++; continue; }
+        if (cards.length === 0) {
+          // Log first few empty decklists for debugging
+          if (skipped < 3) {
+            log.warn('Empty decklist', {
+              player: playerName,
+              hasText: !!standing.decklist_text,
+              hasDecklist: !!standing.decklist,
+              keys: Object.keys(standing).slice(0, 10),
+              sample: typeof decklistText === 'string' ? decklistText.slice(0, 100) : typeof decklistText,
+            });
+          }
+          skipped++;
+          continue;
+        }
 
         // Build deck name: "PlayerName — EventName (Format)"
         const deckName = `${playerName} — ${tournamentName}`.slice(0, 200);
