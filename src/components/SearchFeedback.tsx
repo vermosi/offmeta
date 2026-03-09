@@ -138,8 +138,8 @@ export function SearchFeedback({
   const handleSubmit = async () => {
     const rateLimitStatus = checkRateLimit();
     if (!rateLimitStatus.allowed) {
-      toast.error('Too many submissions', {
-        description: `Please wait ${rateLimitStatus.resetInMinutes} minute(s) before submitting more feedback.`,
+      toast.error(t('feedback.tooMany'), {
+        description: t('feedback.tooManyDesc').replace('{minutes}', String(rateLimitStatus.resetInMinutes)),
       });
       return;
     }
@@ -179,8 +179,10 @@ export function SearchFeedback({
       });
 
       const remaining = checkRateLimit().remainingSubmissions;
-      toast.success('Feedback submitted', {
-        description: `Thanks! We'll use this to improve searches.${remaining <= 2 ? ` (${remaining} submissions remaining)` : ''}`,
+      toast.success(t('feedback.submitted'), {
+        description: remaining <= 2
+          ? t('feedback.thanksRemaining').replace('{remaining}', String(remaining))
+          : t('feedback.thanks'),
       });
       setOpen(false);
       setIssue('');
@@ -189,7 +191,7 @@ export function SearchFeedback({
       triggerProcessing(feedbackId);
     } catch (error) {
       logger.error('Feedback submission failed', error);
-      toast.error('Failed to submit feedback');
+      toast.error(t('feedback.failed'));
     } finally {
       setIsSubmitting(false);
     }
