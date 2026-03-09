@@ -151,7 +151,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
         price_eur: marketplace.includes('cardmarket') ? price : undefined,
         price_tix: marketplace === 'cardhoarder' ? price : undefined,
       });
-      window.open(url, '_blank');
+      window.open(url, '_blank', 'noopener,noreferrer');
     },
     [card, trackAffiliateClick],
   );
