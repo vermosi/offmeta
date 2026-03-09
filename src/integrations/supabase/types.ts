@@ -771,6 +771,15 @@ export type Database = {
         Args: { max_low_confidence?: number; since_date: string }
         Returns: Json
       }
+      get_signature_cards: {
+        Args: { target_format?: string }
+        Returns: {
+          appearances: number
+          card_name: string
+          deck_name: string
+          image_url: string
+        }[]
+      }
       get_system_status: { Args: never; Returns: Json }
       has_role: {
         Args: {
