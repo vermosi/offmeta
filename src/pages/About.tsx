@@ -183,8 +183,8 @@ export default function About() {
             </div>
 
             <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed mb-12 max-w-2xl mx-auto">
-              OffMeta started as a simple question: <em>"What if you could find Magic cards just by describing what you want?"</em> 
-              Seven phases later, it's becoming something much bigger.
+              OffMeta started as a simple question: <em>&quot;What if you could find Magic cards just by describing what you want?&quot;</em>{' '}
+              Six phases shipped. Collections, market data, deck sharing, and 11 languages later — it&apos;s becoming a full intelligence platform.
             </p>
 
             <StatCounters />

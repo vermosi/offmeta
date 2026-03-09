@@ -4,7 +4,7 @@
  * @module about/NextPhaseCards
  */
 
-import { TrendingUp, Wrench, Users, Brain } from 'lucide-react';
+import { TrendingUp, Wrench, Brain, Sparkles } from 'lucide-react';
 
 interface PhaseCard {
   icon: React.ReactNode;
@@ -19,7 +19,7 @@ const PHASE_7_CARDS: PhaseCard[] = [
     title: 'Meta Context',
     subtitle: 'Trend-aware search',
     features: [
-      'Trend overlays',
+      'Metagame trend overlays',
       'Popularity indicators',
       '"Why this card?" explanations',
       'Format-aware weighting',
@@ -37,17 +37,6 @@ const PHASE_7_CARDS: PhaseCard[] = [
     ],
   },
   {
-    icon: <Users className="h-5 w-5" />,
-    title: 'Community',
-    subtitle: 'Shared discovery',
-    features: [
-      'Public shared decks',
-      'Search snapshots',
-      'Saved searches (URL-based)',
-      'Community archetypes',
-    ],
-  },
-  {
     icon: <Brain className="h-5 w-5" />,
     title: 'Intelligence',
     subtitle: 'AI-powered insight',
@@ -55,7 +44,18 @@ const PHASE_7_CARDS: PhaseCard[] = [
       'Archetype clustering',
       'Commander synergy scoring',
       'AI deck critique mode',
-      'Semantic card neighbors',
+      'Card substitution suggestions',
+    ],
+  },
+  {
+    icon: <Sparkles className="h-5 w-5" />,
+    title: 'Social & Discovery',
+    subtitle: 'Community-driven',
+    features: [
+      'Deck upvotes & comments',
+      'Follow other brewers',
+      'Community-curated lists',
+      'Weekly meta reports',
     ],
   },
 ];
@@ -66,11 +66,11 @@ export function NextPhaseCards() {
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
           <span className="inline-block text-xs font-semibold tracking-widest uppercase text-muted-foreground mb-3 border border-border/50 rounded-full px-3 py-1">
-            Phase 7 — Upcoming
+            Phase 7 — In Progress
           </span>
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">What's Next</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">What&apos;s Next</h2>
           <p className="text-muted-foreground text-sm max-w-xl mx-auto">
-            The roadmap ahead. OffMeta evolves from a search tool into a full meta-intelligence platform.
+            The roadmap ahead. OffMeta evolves from a platform into a full meta-intelligence engine.
           </p>
         </div>
 
