@@ -82,7 +82,7 @@ function useArchetypeDecks(archetype: string, format: string | null) {
     queryFn: async () => {
       let query = supabase
         .from('community_decks')
-        .select('id, name, format, commander, colors, created_at')
+        .select('id, name, format, commander, colors, created_at, source_url')
         .eq('archetype', archetype)
         .order('created_at', { ascending: false })
         .limit(50);

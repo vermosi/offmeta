@@ -309,11 +309,13 @@ serve(async (req: Request): Promise<Response> => {
         let cards = parseDecklistText(decklistText);
         let commander: string | null = null;
         let deckColors: string[] = [];
+        let sourceUrl: string | null = null;
 
         if (cards.length === 0) {
           // Check if decklist is a Moxfield URL
           const decklistUrl = standing.decklist ?? '';
           if (typeof decklistUrl === 'string' && decklistUrl.includes('moxfield.com/decks/')) {
+            sourceUrl = decklistUrl;
             const moxResult = await fetchMoxfieldDeck(decklistUrl);
             cards = moxResult.cards;
             commander = moxResult.commander;
