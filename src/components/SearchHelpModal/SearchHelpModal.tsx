@@ -221,7 +221,7 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
                   size="sm"
                   className="gap-2"
                   onClick={() =>
-                    window.open('https://scryfall.com/docs/syntax', '_blank')
+                    window.open('https://scryfall.com/docs/syntax', '_blank', 'noopener,noreferrer')
                   }
                 >
                   <ExternalLink className="h-4 w-4" />
