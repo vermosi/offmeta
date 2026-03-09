@@ -68,6 +68,7 @@ interface DeckRow {
   commander: string | null;
   colors: string[];
   created_at: string;
+  source_url: string | null;
 }
 
 interface TopCard {
