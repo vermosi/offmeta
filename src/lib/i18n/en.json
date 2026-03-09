@@ -263,7 +263,7 @@
   "faq.q4": "Where does OffMeta get its card data?",
   "faq.a4": "OffMeta uses the Scryfall API as its data source. Scryfall maintains a comprehensive, up-to-date database of all Magic: The Gathering cards including oracle text, prices, legalities, and card images.",
   "faq.q5": "Can I use OffMeta to search for Commander/EDH cards?",
-  "faq.a5": "Yes! You can search for cards legal in any format including Commander, Standard, Modern, Legacy, and more. Simply mention the format in your search like 'commander legal board wipes under $5' or use the format filter chips.",
+  "faq.a5": "Absolutely! Beyond searching for Commander-legal cards, OffMeta has dedicated tools for EDH: a combo finder for any commander, a metagame archetype browser, and AI-powered deck recommendations. You can also use format filter chips or just say 'commander legal board wipes under $5'.",
   "faq.q6": "Can I search in my own language?",
   "faq.a6": "Yes! OffMeta supports searching in 11 languages including English, Spanish, French, German, Italian, Portuguese, Japanese, Korean, Russian, and Chinese. Just type your search in your preferred language — OffMeta automatically detects and translates it before generating the Scryfall query.",
 
