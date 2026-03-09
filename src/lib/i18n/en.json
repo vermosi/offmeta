@@ -255,7 +255,7 @@
 
   "faq.heading": "Frequently Asked Questions",
   "faq.q1": "What is OffMeta?",
-  "faq.a1": "OffMeta is a natural language search tool for Magic: The Gathering cards. Instead of learning complex Scryfall syntax, you can describe what you're looking for in plain English and OffMeta translates it into a valid search query.",
+  "faq.a1": "OffMeta is an all-in-one MTG deckbuilding platform. Search cards in plain English, build and manage decks, discover game-winning combos, explore metagame archetypes across every format, track your collection, and get AI-powered deck upgrade recommendations — all without learning Scryfall syntax.",
   "faq.q2": "How does natural language MTG card search work?",
   "faq.a2": "OffMeta uses AI to understand your search intent and converts it into Scryfall search syntax. For example, typing 'cheap green ramp spells' becomes a proper query filtering by color, card type, mana cost, and oracle text for mana-producing effects.",
   "faq.q3": "Is OffMeta free to use?",
