@@ -87,7 +87,7 @@ export default function ArchetypesIndex() {
     });
   }, [totalArchetypes, totalDecks, formatData?.length]);
 
-  const activeData = formatData?.find((f) => f.format === activeFormat);
+  const activeData = formatData?.find((f) => f.format === effectiveFormat);
 
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
