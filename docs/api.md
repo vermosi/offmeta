@@ -438,6 +438,376 @@ Runs daily at **08:00 UTC** via `pg_cron` job `compute-cooccurrence-daily`.
 
 ---
 
+### Deck Critique
+
+**Endpoint**: `POST supabase/functions/deck-critique`
+
+AI-powered deck analysis that suggests cuts and additions with reasoning. Uses Gemini 3 Flash with structured tool output.
+
+**Auth**: Anon JWT accepted.
+
+**Rate limit**: 5 requests per 200 seconds per IP.
+
+#### Request body
+
+```json
+{
+  "commander": "Atraxa, Praetors' Voice",
+  "cards": [
+    { "name": "Sol Ring", "category": "Ramp", "quantity": 1 },
+    { "name": "Command Tower", "category": "Lands", "quantity": 1 }
+  ],
+  "color_identity": ["W", "U", "B", "G"],
+  "format": "commander"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `commander` | string | No | Commander name for context |
+| `cards` | array | Yes | Array of card objects (5–200 cards) |
+| `color_identity` | string[] | No | Color identity for legality checking |
+| `format` | string | No | Format context (default: `commander`) |
+
+#### Response body (success)
+
+```json
+{
+  "success": true,
+  "summary": "Your deck has a solid mana base but lacks sufficient card draw...",
+  "cuts": [
+    {
+      "card_name": "Temple of the False God",
+      "reason": "Inconsistent in early game without enough lands",
+      "severity": "underperforming"
+    }
+  ],
+  "additions": [
+    {
+      "card_name": "Rhystic Study",
+      "reason": "Provides consistent card advantage in multiplayer games",
+      "replaces": "Temple of the False God",
+      "category": "Draw"
+    }
+  ],
+  "mana_curve_notes": "Curve is slightly heavy at 4+ CMC",
+  "confidence": 0.85
+}
+```
+
+---
+
+### Price Snapshot
+
+**Endpoint**: `POST supabase/functions/price-snapshot`
+
+Captures daily price snapshots from Scryfall for tracked cards. Sources include user collections, popular community deck cards, and a curated staples watchlist (~90 high-value cards).
+
+**Auth**: Anon JWT accepted.
+
+#### Request body
+
+```json
+{}
+```
+
+No parameters required.
+
+#### Response body (success)
+
+```json
+{
+  "success": true,
+  "snapshotCount": 1250,
+  "sources": {
+    "collection": 800,
+    "community": 200,
+    "watchlist": 90,
+    "uniqueTracked": 950
+  }
+}
+```
+
+#### Cron schedule
+
+Runs daily at **01:00 UTC** via `pg_cron` job `price-snapshot-nightly`.
+
+#### Data retention
+
+Snapshots older than 90 days are automatically deleted during each run.
+
+---
+
+### Card Meta Context
+
+**Endpoint**: `POST supabase/functions/card-meta-context`
+
+AI-powered "Why This Card Is Played" rationale generator. Returns strategic reasoning and archetype tags for a card.
+
+**Auth**: Anon JWT accepted.
+
+**Rate limit**: 15 requests per 500 seconds per IP.
+
+#### Request body
+
+```json
+{
+  "cardName": "Rhystic Study",
+  "typeLine": "Enchantment",
+  "oracleText": "Whenever an opponent casts a spell...",
+  "colorIdentity": ["U"],
+  "edhrecRank": 5,
+  "legalities": { "commander": "legal", "modern": "not_legal" }
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `cardName` | string | Yes | Card name |
+| `typeLine` | string | Yes | Card type line |
+| `oracleText` | string | No | Oracle text for context |
+| `colorIdentity` | string[] | No | Color identity |
+| `edhrecRank` | number | No | EDHREC popularity rank |
+| `legalities` | object | No | Format legality map |
+
+#### Response body (success)
+
+```json
+{
+  "success": true,
+  "rationale": "Rhystic Study is a premier card advantage engine in Commander. It punishes opponents who don't pay the tax and provides consistent draw in multiplayer games.",
+  "archetypes": ["Control", "Draw-Go", "Enchantress"],
+  "cached": false
+}
+```
+
+Results are cached for 7 days.
+
+---
+
+### Card Similarity
+
+**Endpoint**: `POST supabase/functions/card-similarity`
+
+Generates Scryfall queries for similar cards and budget alternatives, plus AI-powered synergy suggestions.
+
+**Auth**: Anon JWT accepted.
+
+**Rate limit**: 15 requests per 500 seconds per IP.
+
+#### Request body
+
+```json
+{
+  "cardName": "Rhystic Study",
+  "typeLine": "Enchantment",
+  "oracleText": "Whenever an opponent casts a spell...",
+  "colorIdentity": ["U"],
+  "keywords": ["draw"],
+  "cmc": 3,
+  "prices": { "usd": "45.00" }
+}
+```
+
+#### Response body (success)
+
+```json
+{
+  "success": true,
+  "similarQuery": "t:enchantment id<=U mv>=2 mv<=4 o:\"draw\" -!\"Rhystic Study\"",
+  "budgetQuery": "t:enchantment id<=U o:\"draw\" -!\"Rhystic Study\" usd<22",
+  "synergyCards": [
+    { "name": "Mystic Remora", "reason": "Similar tax effect for early game card draw" },
+    { "name": "Consecrated Sphinx", "reason": "Powerful draw engine that scales with opponents" }
+  ],
+  "cached": false
+}
+```
+
+---
+
+### Card Recommendations
+
+**Endpoint**: `POST supabase/functions/card-recommendations`
+
+Returns cards commonly played alongside a given card, powered by the `card_cooccurrence` table built from tournament data.
+
+**Auth**: Anon JWT accepted.
+
+#### Request body
+
+```json
+{
+  "oracle_id": "abc123-def456",
+  "format": "all",
+  "limit": 20
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `oracle_id` | string | required | Scryfall oracle ID of the card |
+| `format` | string | `"all"` | Format filter |
+| `limit` | number | `20` | Max results (capped at 50) |
+
+#### Response body (success)
+
+```json
+{
+  "success": true,
+  "oracle_id": "abc123-def456",
+  "format": "all",
+  "recommendations": [
+    {
+      "oracle_id": "xyz789",
+      "card_name": "Sol Ring",
+      "cooccurrence_count": 450,
+      "mana_cost": "{1}",
+      "type_line": "Artifact",
+      "image_url": "https://..."
+    }
+  ]
+}
+```
+
+---
+
+### Deck Ideas
+
+**Endpoint**: `POST supabase/functions/deck-ideas`
+
+AI-powered deck concept generator. Returns archetype, strategy, key cards, synergy pieces, and budget options from a natural language query.
+
+**Auth**: Anon JWT accepted.
+
+**Rate limit**: 10 requests per 300 seconds per IP.
+
+#### Request body
+
+```json
+{
+  "query": "aristocrats deck with treasure tokens"
+}
+```
+
+#### Response body (success)
+
+```json
+{
+  "success": true,
+  "archetype": "Rakdos Treasure Aristocrats",
+  "strategy": "Sacrifice treasure tokens and creatures for value, draining opponents with blood artist effects while generating card advantage.",
+  "keyCards": ["Korvold, Fae-Cursed King", "Dockside Extortionist", "Pitiless Plunderer"],
+  "synergyPieces": ["Revel in Riches", "Marionette Master", "Xorn"],
+  "budgetOptions": ["Mayhem Devil", "Deadly Dispute", "Treasure Keeper"]
+}
+```
+
+---
+
+### Detect Archetypes
+
+**Endpoint**: `POST supabase/functions/detect-archetypes`
+
+Analyzes community decks and assigns archetype labels based on card text patterns. Processes up to 200 untagged decks per invocation.
+
+**Auth**: Service role key required.
+
+#### Request body
+
+```json
+{}
+```
+
+#### Response body (success)
+
+```json
+{
+  "success": true,
+  "tagged": 45,
+  "total": 200
+}
+```
+
+#### Detected archetypes
+
+`tokens`, `aristocrats`, `treasure`, `blink`, `graveyard`, `artifacts`, `spellslinger`, `ramp`, `aggro`, `control`, `voltron`, `tribal`, `combo`, `stax`
+
+---
+
+### Cleanup Logs
+
+**Endpoint**: `POST supabase/functions/cleanup-logs`
+
+Deletes `translation_logs` and `analytics_events` older than 30 days to prevent database bloat.
+
+**Auth**: Admin role required.
+
+**Rate limit**: 1 request per 10 seconds.
+
+#### Request body
+
+```json
+{}
+```
+
+#### Response body (success)
+
+```json
+{
+  "success": true,
+  "deletedLogs": 1250,
+  "deletedAnalytics": 340,
+  "cutoffDate": "2025-02-07T00:00:00.000Z",
+  "retentionDays": 30,
+  "responseTimeMs": 450
+}
+```
+
+#### Cron schedule
+
+Runs daily at **02:00 UTC** via `pg_cron` job `cleanup-logs-nightly`.
+
+---
+
+### Warmup Cache
+
+**Endpoint**: `POST supabase/functions/warmup-cache`
+
+Pre-populates the `query_cache` with common MTG search patterns (~330 queries including staples, archetypes, and tribal searches). Run after deployment to boost cache hit rate.
+
+**Auth**: Admin role required.
+
+**Rate limit**: 1 request per 10 seconds.
+
+#### Request body (optional)
+
+```json
+{
+  "queries": ["custom query 1", "simic landfall"]
+}
+```
+
+If `queries` is provided, only those queries are warmed. Otherwise, the built-in list of ~330 common queries is used.
+
+#### Response body (success)
+
+```json
+{
+  "success": true,
+  "message": "Cache warmup complete",
+  "results": {
+    "total": 330,
+    "newlyCached": 280,
+    "alreadyCached": 45,
+    "failed": 5
+  },
+  "durationMs": 45000
+}
+```
+
+---
+
 ## Client-Side Scryfall
 
 The frontend Scryfall client (`src/lib/scryfall/client.ts`) automatically appends `-is:rebalanced` to all queries to exclude Alchemy rebalanced cards from results.
