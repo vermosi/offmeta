@@ -116,6 +116,7 @@ export default defineConfig(({ mode }) => ({
           'vendor-forms': ['react-hook-form', 'zod', '@hookform/resolvers'],
           'vendor-misc': ['sonner', 'cmdk', 'vaul', 'next-themes'],
         },
+      },
     },
   },
   test: {
