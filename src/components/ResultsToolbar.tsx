@@ -19,11 +19,11 @@ interface ResultsToolbarProps {
   cards: ScryfallCard[];
   displayCards: ScryfallCard[];
   totalCards: number;
-  activeFilters: Record<string, string>;
+  activeFilters: FilterState | null;
   filtersResetKey: number;
-  initialUrlFilters: Record<string, string> | undefined;
+  initialUrlFilters: Partial<FilterState> | null | undefined;
   collectionLookup: Map<string, number> | undefined;
-  onFilteredCards: (cards: ScryfallCard[]) => void;
+  onFilteredCards: (cards: ScryfallCard[], hasActiveFilters: boolean, filters: FilterState) => void;
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
   compareMode: boolean;
