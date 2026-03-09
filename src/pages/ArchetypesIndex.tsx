@@ -1,6 +1,6 @@
 /**
- * Data-driven archetype discovery — shows archetypes from community_decks
- * grouped by format with live deck counts.
+ * Data-driven metagame browser — MTGTop8-style two-tier layout.
+ * Format → Macro Category (Aggro X%, Control Y%) → Specific Deck Names
  */
 
 import { useEffect, useState } from 'react';
@@ -10,82 +10,45 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { ManaSymbol } from '@/components/ManaSymbol';
 import { Badge } from '@/components/ui/badge';
-import { useArchetypeData } from '@/hooks/useArchetypeData';
-import { ArrowLeft, Compass, Layers, Loader2 } from 'lucide-react';
+import { useArchetypeData, useArchetypeTrends } from '@/hooks/useArchetypeData';
+import { ArrowLeft, Compass, Layers, Loader2, TrendingUp, TrendingDown, Minus, Sparkles } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { SkipLinks } from '@/components/SkipLinks';
 
-/** Capitalize first letter of archetype name */
-function formatArchetypeName(slug: string): string {
-  const names: Record<string, string> = {
-    aristocrats: 'Aristocrats',
-    artifacts: 'Artifacts',
-    aggro: 'Aggro',
-    blink: 'Blink / Flicker',
-    combo: 'Combo',
-    control: 'Control',
-    counters: '+1/+1 Counters',
-    enchantress: 'Enchantress',
-    graveyard: 'Graveyard',
-    landfall: 'Landfall',
-    lifegain: 'Lifegain',
-    ramp: 'Ramp',
-    spellslinger: 'Spellslinger',
-    stax: 'Stax',
-    tokens: 'Tokens',
-    treasure: 'Treasure',
-    tribal: 'Tribal',
-    voltron: 'Voltron',
-    wheels: 'Wheels',
-  };
-  return names[slug] ?? slug.charAt(0).toUpperCase() + slug.slice(1);
-}
+const MACRO_COLORS: Record<string, string> = {
+  Aggro: 'text-red-500',
+  Control: 'text-blue-500',
+  Combo: 'text-purple-500',
+  Midrange: 'text-emerald-500',
+};
 
-/** Short description for archetypes without curated data */
-function getArchetypeTagline(slug: string): string {
-  const taglines: Record<string, string> = {
-    aristocrats: 'Sacrifice creatures for incremental value',
-    artifacts: 'Synergize with artifact permanents',
-    aggro: 'Deal damage fast with aggressive creatures',
-    blink: 'Abuse enter-the-battlefield triggers',
-    combo: 'Assemble infinite or game-winning combos',
-    control: 'Answer threats and win on your terms',
-    counters: 'Grow creatures with +1/+1 counters',
-    enchantress: 'Draw cards from enchantment synergies',
-    graveyard: 'Use the graveyard as a second hand',
-    landfall: 'Trigger abilities from land drops',
-    lifegain: 'Gain life and convert it into power',
-    ramp: 'Accelerate mana to cast big spells early',
-    spellslinger: 'Chain instants and sorceries for value',
-    stax: 'Lock down opponents with taxing effects',
-    tokens: 'Go wide with an army of creature tokens',
-    treasure: 'Generate treasure tokens for explosive mana',
-    tribal: 'Build around a creature type',
-    voltron: 'Suit up one creature and swing for lethal',
-    wheels: 'Force everyone to discard and redraw',
-  };
-  return taglines[slug] ?? 'A community-discovered archetype';
-}
+const MACRO_BG: Record<string, string> = {
+  Aggro: 'border-red-500/20 bg-red-500/5',
+  Control: 'border-blue-500/20 bg-blue-500/5',
+  Combo: 'border-purple-500/20 bg-purple-500/5',
+  Midrange: 'border-emerald-500/20 bg-emerald-500/5',
+};
 
 export default function ArchetypesIndex() {
   const { t } = useTranslation();
   const { data: formatData, isLoading } = useArchetypeData();
   const [activeFormat, setActiveFormat] = useState<string | null>(null);
 
-  // Derive default format without setState-in-effect
   const effectiveFormat = activeFormat ?? (formatData && formatData.length > 0 ? formatData[0].format : null);
+  const { data: trends } = useArchetypeTrends(effectiveFormat);
 
   const totalDecks = formatData?.reduce((sum, f) => sum + f.totalDecks, 0) ?? 0;
-  const totalArchetypes = formatData?.reduce((sum, f) => sum + f.archetypes.length, 0) ?? 0;
+  const totalDeckNames = formatData?.reduce((sum, f) =>
+    sum + f.macroGroups.reduce((gs, g) => gs + g.decks.length, 0), 0) ?? 0;
 
   useEffect(() => {
     return applySeoMeta({
-      title: 'MTG Archetypes — Commander, Pauper, Legacy & More | OffMeta',
-      description: `Explore ${totalArchetypes} deck archetypes across ${formatData?.length ?? 0} formats, discovered from ${totalDecks} community decklists. Find your playstyle.`,
+      title: 'MTG Metagame — Deck Archetypes by Format | OffMeta',
+      description: `Explore ${totalDeckNames} deck archetypes across ${formatData?.length ?? 0} formats, discovered from ${totalDecks} community decklists. Metagame breakdown with trend data.`,
       url: 'https://offmeta.app/archetypes',
       type: 'website',
     });
-  }, [totalArchetypes, totalDecks, formatData?.length]);
+  }, [totalDeckNames, totalDecks, formatData?.length]);
 
   const activeData = formatData?.find((f) => f.format === effectiveFormat);
 
@@ -121,15 +84,15 @@ export default function ArchetypesIndex() {
           <div className="space-y-2 mb-8">
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
               <Compass className="h-7 w-7 text-primary" />
-              Deck Archetypes
+              Metagame Breakdown
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground max-w-2xl">
-              Archetypes discovered from community decklists across multiple formats.
-              Each archetype represents a distinct strategy based on actual deck compositions.
+              Deck archetypes discovered from tournament decklists across multiple formats.
+              Data sourced from Spicerack.gg community events.
             </p>
             {totalDecks > 0 && (
               <p className="text-xs text-muted-foreground">
-                {totalArchetypes} archetypes · {totalDecks.toLocaleString()} community decklists analyzed
+                {totalDeckNames} deck archetypes · {totalDecks.toLocaleString()} decklists analyzed
               </p>
             )}
           </div>
@@ -140,7 +103,7 @@ export default function ArchetypesIndex() {
             </div>
           ) : !formatData || formatData.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-sm text-muted-foreground">No archetype data available yet.</p>
+              <p className="text-sm text-muted-foreground">No metagame data available yet. Run the detect-archetypes function with backfill to populate.</p>
             </div>
           ) : (
             <>
@@ -164,40 +127,76 @@ export default function ArchetypesIndex() {
                 ))}
               </div>
 
-              {/* Archetype grid */}
+              {/* Two-tier metagame display */}
               {activeData && (
-                <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {activeData.archetypes.map((arch) => (
-                    <Link
-                      key={`${arch.format}-${arch.archetype}`}
-                      to={`/archetypes/${arch.archetype}?format=${arch.format}`}
-                      className="group rounded-xl border border-border/60 bg-card/50 p-5 hover:bg-card hover:border-border transition-all hover:shadow-sm"
+                <div className="space-y-6">
+                  {activeData.macroGroups.map((group) => (
+                    <section
+                      key={group.macro}
+                      className={`rounded-xl border p-5 sm:p-6 ${MACRO_BG[group.macro] ?? 'border-border/50 bg-card/50'}`}
                     >
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="inline-flex items-center gap-0.5">
-                          {arch.primaryColors.length > 0 ? (
-                            arch.primaryColors.map((c) => (
-                              <ManaSymbol key={c} symbol={c} size="sm" className="h-4 w-4" />
-                            ))
-                          ) : (
-                            <ManaSymbol symbol="C" size="sm" className="h-4 w-4" />
-                          )}
-                        </span>
-                        <h2 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors flex-1">
-                          {formatArchetypeName(arch.archetype)}
+                      {/* Macro category header */}
+                      <div className="flex items-center gap-2 mb-4">
+                        <h2 className={`text-lg font-bold ${MACRO_COLORS[group.macro] ?? 'text-foreground'}`}>
+                          {group.macro}
                         </h2>
-                        <Badge
-                          variant="secondary"
-                          className="text-[10px] px-1.5 py-0 h-5 gap-1 font-normal"
-                        >
-                          <Layers className="h-3 w-3" />
-                          {arch.deckCount}
+                        <Badge variant="secondary" className="text-xs font-semibold px-2">
+                          {group.metaPercentage}%
                         </Badge>
+                        <span className="text-xs text-muted-foreground ml-auto">
+                          {group.totalDecks} decks
+                        </span>
                       </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        {getArchetypeTagline(arch.archetype)}
-                      </p>
-                    </Link>
+
+                      {/* Deck name grid */}
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {group.decks.map((deck) => {
+                          const trend = trends?.get(deck.deckName);
+                          return (
+                            <Link
+                              key={`${deck.format}-${deck.deckName}`}
+                              to={`/archetypes/${deck.archetype}?format=${deck.format}`}
+                              className="group flex items-center gap-3 p-3 rounded-lg border border-border/40 bg-background/50 hover:bg-background hover:border-border transition-all hover:shadow-sm"
+                            >
+                              {/* Color pips */}
+                              <span className="inline-flex items-center gap-0.5 flex-shrink-0">
+                                {deck.primaryColors.length > 0 ? (
+                                  deck.primaryColors.map((c) => (
+                                    <ManaSymbol key={c} symbol={c} size="sm" className="h-4 w-4" />
+                                  ))
+                                ) : (
+                                  <ManaSymbol symbol="C" size="sm" className="h-4 w-4" />
+                                )}
+                              </span>
+
+                              {/* Deck name + meta % */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
+                                    {deck.deckName}
+                                  </span>
+                                  {/* Trend arrow */}
+                                  {trend && trend.direction === 'up' && (
+                                    <TrendingUp className="h-3 w-3 text-emerald-500 flex-shrink-0" />
+                                  )}
+                                  {trend && trend.direction === 'down' && (
+                                    <TrendingDown className="h-3 w-3 text-red-500 flex-shrink-0" />
+                                  )}
+                                  {trend && trend.direction === 'new' && (
+                                    <Sparkles className="h-3 w-3 text-amber-500 flex-shrink-0" />
+                                  )}
+                                </div>
+                                <span className="text-[10px] text-muted-foreground">
+                                  {deck.metaPercentage}% meta · {deck.deckCount} decks
+                                </span>
+                              </div>
+
+                              <Layers className="h-3.5 w-3.5 text-muted-foreground/50 flex-shrink-0" />
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </section>
                   ))}
                 </div>
               )}

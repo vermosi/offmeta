@@ -1,6 +1,7 @@
 /**
  * Hook to fetch pre-aggregated archetype stats from a materialized view.
- * Returns structured data for the data-driven archetypes UI.
+ * Returns structured data for the two-tier metagame display:
+ * Format → Macro Category → Specific Deck Names
  */
 
 import { useQuery } from '@tanstack/react-query';
@@ -8,16 +9,25 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface ArchetypeEntry {
   archetype: string;
+  deckName: string;
+  macroArchetype: string;
   format: string;
   deckCount: number;
-  colors: string[][];
+  metaPercentage: number;
   primaryColors: string[];
+}
+
+export interface MacroGroup {
+  macro: string;
+  decks: ArchetypeEntry[];
+  totalDecks: number;
+  metaPercentage: number;
 }
 
 export interface ArchetypesByFormat {
   format: string;
   label: string;
-  archetypes: ArchetypeEntry[];
+  macroGroups: MacroGroup[];
   totalDecks: number;
 }
 
@@ -30,12 +40,15 @@ const FORMAT_LABELS: Record<string, string> = {
 };
 
 const FORMAT_ORDER = ['commander', 'pauper', 'legacy', 'premodern', 'other'];
+const MACRO_ORDER = ['Aggro', 'Midrange', 'Control', 'Combo'];
 
 interface ArchetypeStatsRow {
   format: string;
-  archetype: string;
+  macro_archetype: string | null;
+  deck_name: string | null;
+  archetype: string | null;
   deck_count: number;
-  primary_colors_str: string | null;
+  meta_percentage: number | null;
   all_colors: string[] | null;
 }
 
@@ -43,54 +56,75 @@ export function useArchetypeData() {
   return useQuery({
     queryKey: ['archetype-data-by-format'],
     queryFn: async (): Promise<ArchetypesByFormat[]> => {
-      // Query the pre-aggregated materialized view (tiny result set)
       const { data, error } = await supabase
         .from('archetype_stats' as 'community_decks')
-        .select('format, archetype, deck_count, primary_colors_str, all_colors');
+        .select('format, macro_archetype, deck_name, archetype, deck_count, meta_percentage, all_colors');
 
       if (error) throw error;
       if (!data || data.length === 0) return [];
 
       const rows = data as unknown as ArchetypeStatsRow[];
 
-      // Group by format
-      const grouped = new Map<string, ArchetypeEntry[]>();
-      const totals = new Map<string, number>();
+      // Group by format → macro → decks
+      const formatMap = new Map<string, Map<string, ArchetypeEntry[]>>();
+      const formatTotals = new Map<string, number>();
 
       for (const row of rows) {
         const format = row.format ?? 'other';
-        if (!grouped.has(format)) {
-          grouped.set(format, []);
-          totals.set(format, 0);
+        const macro = row.macro_archetype ?? 'Midrange';
+        const deckName = row.deck_name ?? row.archetype ?? 'Unknown';
+
+        if (!formatMap.has(format)) {
+          formatMap.set(format, new Map());
+          formatTotals.set(format, 0);
         }
 
-        const primaryColors = row.primary_colors_str
-          ? row.primary_colors_str.split(',').filter(Boolean)
-          : (row.all_colors ?? []);
+        const macroMap = formatMap.get(format)!;
+        if (!macroMap.has(macro)) macroMap.set(macro, []);
 
-        grouped.get(format)!.push({
-          archetype: row.archetype,
+        macroMap.get(macro)!.push({
+          archetype: row.archetype ?? '',
+          deckName,
+          macroArchetype: macro,
           format,
           deckCount: Number(row.deck_count),
-          colors: [],
-          primaryColors,
+          metaPercentage: Number(row.meta_percentage ?? 0),
+          primaryColors: row.all_colors ?? [],
         });
-        totals.set(format, (totals.get(format) ?? 0) + Number(row.deck_count));
+
+        formatTotals.set(format, (formatTotals.get(format) ?? 0) + Number(row.deck_count));
       }
 
       // Build ordered result
       const result: ArchetypesByFormat[] = [];
       for (const format of FORMAT_ORDER) {
-        const archetypes = grouped.get(format);
-        if (!archetypes || archetypes.length === 0) continue;
+        const macroMap = formatMap.get(format);
+        if (!macroMap) continue;
 
-        archetypes.sort((a, b) => b.deckCount - a.deckCount);
+        const macroGroups: MacroGroup[] = [];
+        for (const macro of MACRO_ORDER) {
+          const decks = macroMap.get(macro);
+          if (!decks || decks.length === 0) continue;
+
+          decks.sort((a, b) => b.deckCount - a.deckCount);
+          const groupTotal = decks.reduce((sum, d) => sum + d.deckCount, 0);
+          const formatTotal = formatTotals.get(format) ?? 1;
+
+          macroGroups.push({
+            macro,
+            decks,
+            totalDecks: groupTotal,
+            metaPercentage: Math.round((groupTotal / formatTotal) * 100),
+          });
+        }
+
+        if (macroGroups.length === 0) continue;
 
         result.push({
           format,
           label: FORMAT_LABELS[format] ?? format,
-          archetypes,
-          totalDecks: totals.get(format) ?? 0,
+          macroGroups,
+          totalDecks: formatTotals.get(format) ?? 0,
         });
       }
 
@@ -121,5 +155,83 @@ export function useArchetypeDeckCounts() {
       return counts;
     },
     staleTime: 10 * 60 * 1000,
+  });
+}
+
+/** Fetch trend data: compare current counts to a prior snapshot */
+export interface TrendData {
+  deckName: string;
+  format: string;
+  currentCount: number;
+  previousCount: number;
+  change: number; // percentage point change
+  direction: 'up' | 'down' | 'stable' | 'new';
+}
+
+export function useArchetypeTrends(format: string | null) {
+  return useQuery({
+    queryKey: ['archetype-trends', format],
+    queryFn: async (): Promise<Map<string, TrendData>> => {
+      if (!format) return new Map();
+
+      const today = new Date();
+      const twoWeeksAgo = new Date(today);
+      twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+
+      // Get latest and 2-weeks-ago snapshots
+      const { data: latestSnaps } = await supabase
+        .from('archetype_snapshots')
+        .select('deck_name, deck_count, snapshot_date')
+        .eq('format', format)
+        .gte('snapshot_date', today.toISOString().split('T')[0])
+        .order('snapshot_date', { ascending: false });
+
+      const { data: priorSnaps } = await supabase
+        .from('archetype_snapshots')
+        .select('deck_name, deck_count, snapshot_date')
+        .eq('format', format)
+        .lte('snapshot_date', twoWeeksAgo.toISOString().split('T')[0])
+        .order('snapshot_date', { ascending: false });
+
+      const trends = new Map<string, TrendData>();
+
+      // Build current counts
+      const currentCounts = new Map<string, number>();
+      for (const snap of latestSnaps ?? []) {
+        if (!currentCounts.has(snap.deck_name)) {
+          currentCounts.set(snap.deck_name, snap.deck_count);
+        }
+      }
+
+      // Build prior counts
+      const priorCounts = new Map<string, number>();
+      for (const snap of priorSnaps ?? []) {
+        if (!priorCounts.has(snap.deck_name)) {
+          priorCounts.set(snap.deck_name, snap.deck_count);
+        }
+      }
+
+      // Calculate trends
+      for (const [name, current] of currentCounts) {
+        const previous = priorCounts.get(name);
+        if (previous === undefined) {
+          trends.set(name, { deckName: name, format, currentCount: current, previousCount: 0, change: 0, direction: 'new' });
+        } else {
+          const change = current - previous;
+          trends.set(name, {
+            deckName: name,
+            format,
+            currentCount: current,
+            previousCount: previous,
+            change,
+            direction: change > 0 ? 'up' : change < 0 ? 'down' : 'stable',
+          });
+        }
+      }
+
+      return trends;
+    },
+    staleTime: 10 * 60 * 1000,
+    enabled: !!format,
   });
 }

@@ -38,6 +38,36 @@ export type Database = {
         }
         Relationships: []
       }
+      archetype_snapshots: {
+        Row: {
+          created_at: string
+          deck_count: number
+          deck_name: string
+          format: string
+          id: string
+          macro_archetype: string
+          snapshot_date: string
+        }
+        Insert: {
+          created_at?: string
+          deck_count?: number
+          deck_name: string
+          format: string
+          id?: string
+          macro_archetype: string
+          snapshot_date?: string
+        }
+        Update: {
+          created_at?: string
+          deck_count?: number
+          deck_name?: string
+          format?: string
+          id?: string
+          macro_archetype?: string
+          snapshot_date?: string
+        }
+        Relationships: []
+      }
       card_cooccurrence: {
         Row: {
           card_a_oracle_id: string
@@ -175,10 +205,12 @@ export type Database = {
           colors: string[]
           commander: string | null
           created_at: string
+          deck_name: string | null
           event_date: string | null
           event_name: string | null
           format: string
           id: string
+          macro_archetype: string | null
           name: string
           source: string
           source_id: string | null
@@ -189,10 +221,12 @@ export type Database = {
           colors?: string[]
           commander?: string | null
           created_at?: string
+          deck_name?: string | null
           event_date?: string | null
           event_name?: string | null
           format?: string
           id?: string
+          macro_archetype?: string | null
           name: string
           source: string
           source_id?: string | null
@@ -203,10 +237,12 @@ export type Database = {
           colors?: string[]
           commander?: string | null
           created_at?: string
+          deck_name?: string | null
           event_date?: string | null
           event_name?: string | null
           format?: string
           id?: string
+          macro_archetype?: string | null
           name?: string
           source?: string
           source_id?: string | null
@@ -647,8 +683,10 @@ export type Database = {
           all_colors: string[] | null
           archetype: string | null
           deck_count: number | null
+          deck_name: string | null
           format: string | null
-          primary_colors_str: string | null
+          macro_archetype: string | null
+          meta_percentage: number | null
         }
         Relationships: []
       }
