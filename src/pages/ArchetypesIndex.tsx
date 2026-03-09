@@ -70,12 +70,10 @@ function getArchetypeTagline(slug: string): string {
 export default function ArchetypesIndex() {
   const { t } = useTranslation();
   const { data: formatData, isLoading } = useArchetypeData();
+  const [activeFormat, setActiveFormat] = useState<string | null>(null);
 
-  // Default to first format with data (derived, no effect needed)
-  const activeFormat = useMemo(
-    () => (formatData && formatData.length > 0 ? formatData[0].format : null),
-    [formatData],
-  );
+  // Derive default format without setState-in-effect
+  const effectiveFormat = activeFormat ?? (formatData && formatData.length > 0 ? formatData[0].format : null);
 
   const totalDecks = formatData?.reduce((sum, f) => sum + f.totalDecks, 0) ?? 0;
   const totalArchetypes = formatData?.reduce((sum, f) => sum + f.archetypes.length, 0) ?? 0;
