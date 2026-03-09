@@ -11,6 +11,7 @@ import { Footer } from '@/components/Footer';
 import { ManaSymbol } from '@/components/ManaSymbol';
 import { Badge } from '@/components/ui/badge';
 import { useArchetypeData, useArchetypeTrends } from '@/hooks/useArchetypeData';
+import { useSignatureCards } from '@/hooks/useSignatureCards';
 import { ArrowLeft, Compass, Layers, Loader2, TrendingUp, TrendingDown, Minus, Sparkles } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { SkipLinks } from '@/components/SkipLinks';
@@ -36,7 +37,7 @@ export default function ArchetypesIndex() {
 
   const effectiveFormat = activeFormat ?? (formatData && formatData.length > 0 ? formatData[0].format : null);
   const { data: trends } = useArchetypeTrends(effectiveFormat);
-
+  const { data: signatureCards } = useSignatureCards(effectiveFormat);
   const totalDecks = formatData?.reduce((sum, f) => sum + f.totalDecks, 0) ?? 0;
   const totalDeckNames = formatData?.reduce((sum, f) =>
     sum + f.macroGroups.reduce((gs, g) => gs + g.decks.length, 0), 0) ?? 0;
@@ -152,20 +153,41 @@ export default function ArchetypesIndex() {
                       <div className="grid gap-2 sm:grid-cols-2">
                         {group.decks.map((deck) => {
                           const trend = trends?.get(deck.deckName);
+                          const sig = signatureCards?.get(deck.deckName);
                           return (
                             <Link
                               key={`${deck.format}-${deck.deckName}`}
                               to={`/archetypes/${deck.archetype}?format=${deck.format}`}
-                              className="group flex items-center gap-3 p-3 rounded-lg border border-border/40 bg-background/50 hover:bg-background hover:border-border transition-all hover:shadow-sm"
+                              className="group flex items-center gap-3 p-2.5 sm:p-3 rounded-lg border border-border/40 bg-background/50 hover:bg-background hover:border-border transition-all hover:shadow-sm"
                             >
+                              {/* Card art thumbnail */}
+                              <div className="relative h-9 w-9 sm:h-10 sm:w-10 flex-shrink-0 rounded overflow-hidden bg-muted/50">
+                                {sig?.imageUrl ? (
+                                  <img
+                                    src={sig.imageUrl}
+                                    alt=""
+                                    loading="lazy"
+                                    className="absolute inset-0 h-full w-full object-cover object-top"
+                                  />
+                                ) : (
+                                  <span className="flex items-center justify-center h-full w-full">
+                                    {deck.primaryColors.length > 0 ? (
+                                      <ManaSymbol symbol={deck.primaryColors[0]} size="sm" className="h-4 w-4" />
+                                    ) : (
+                                      <Layers className="h-4 w-4 text-muted-foreground/40" />
+                                    )}
+                                  </span>
+                                )}
+                              </div>
+
                               {/* Color pips */}
                               <span className="inline-flex items-center gap-0.5 flex-shrink-0">
                                 {deck.primaryColors.length > 0 ? (
                                   deck.primaryColors.map((c) => (
-                                    <ManaSymbol key={c} symbol={c} size="sm" className="h-4 w-4" />
+                                    <ManaSymbol key={c} symbol={c} size="sm" className="h-3.5 w-3.5" />
                                   ))
                                 ) : (
-                                  <ManaSymbol symbol="C" size="sm" className="h-4 w-4" />
+                                  <ManaSymbol symbol="C" size="sm" className="h-3.5 w-3.5" />
                                 )}
                               </span>
 
@@ -175,7 +197,6 @@ export default function ArchetypesIndex() {
                                   <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
                                     {deck.deckName}
                                   </span>
-                                  {/* Trend arrow */}
                                   {trend && trend.direction === 'up' && (
                                     <TrendingUp className="h-3 w-3 text-emerald-500 flex-shrink-0" />
                                   )}
@@ -186,9 +207,16 @@ export default function ArchetypesIndex() {
                                     <Sparkles className="h-3 w-3 text-amber-500 flex-shrink-0" />
                                   )}
                                 </div>
-                                <span className="text-[10px] text-muted-foreground">
-                                  {deck.metaPercentage}% meta · {deck.deckCount} decks
-                                </span>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {deck.metaPercentage}% meta · {deck.deckCount} decks
+                                  </span>
+                                  {sig && (
+                                    <span className="text-[10px] text-muted-foreground/60 truncate hidden sm:inline">
+                                      · {sig.cardName}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
 
                               <Layers className="h-3.5 w-3.5 text-muted-foreground/50 flex-shrink-0" />
