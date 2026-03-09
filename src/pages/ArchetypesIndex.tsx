@@ -11,6 +11,7 @@ import { Footer } from '@/components/Footer';
 import { ManaSymbol } from '@/components/ManaSymbol';
 import { Badge } from '@/components/ui/badge';
 import { useArchetypeData, useArchetypeTrends } from '@/hooks/useArchetypeData';
+import { useSignatureCards } from '@/hooks/useSignatureCards';
 import { ArrowLeft, Compass, Layers, Loader2, TrendingUp, TrendingDown, Minus, Sparkles } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { SkipLinks } from '@/components/SkipLinks';
