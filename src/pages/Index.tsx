@@ -242,16 +242,14 @@ const Index = () => {
     <ErrorBoundary>
       <SkipLinks showSearchLink />
       <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background relative overflow-x-hidden">
-        {/* Background layers with parallax */}
+        {/* Static premium gradient background */}
         <div
           className="fixed inset-0 pointer-events-none bg-page-gradient"
           aria-hidden="true"
-          data-parallax="gradient"
         />
         <div
           className="fixed inset-0 pointer-events-none bg-page-noise"
           aria-hidden="true"
-          style={{ opacity: 0.035 }}
         />
 
         <Header />
