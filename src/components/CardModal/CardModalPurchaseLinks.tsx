@@ -1,6 +1,7 @@
 /**
  * Purchase links component for CardModal.
  * Displays buy buttons for TCGplayer, Cardmarket, Cardhoarder.
+ * Includes 30-day price trend sparkline when data is available.
  * @module components/CardModal/CardModalPurchaseLinks
  */
 
@@ -9,6 +10,7 @@ import { ShoppingCart, Loader2, Sparkles, Monitor } from 'lucide-react';
 import { getTCGPlayerUrl, getCardmarketUrl } from '@/lib/scryfall/printings';
 import type { CardModalPurchaseLinksProps } from './types';
 import { useTranslation } from '@/lib/i18n';
+import { PriceSparkline } from '@/components/collection/PriceSparkline';
 
 export function CardModalPurchaseLinks({
   card,
