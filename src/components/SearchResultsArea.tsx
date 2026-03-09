@@ -20,6 +20,9 @@ import { useTranslation } from '@/lib/i18n';
 import type { ScryfallCard } from '@/types/card';
 import type { ViewMode } from '@/lib/view-mode-storage';
 import type { ResultsTab } from '@/components/ResultsTabs';
+import type { SimilarityData } from '@/hooks/useSimilarCards';
+import type { DeckIdea } from '@/hooks/useDeckIdeas';
+import type { QuerySuggestion } from '@/hooks/useQuerySuggestions';
 
 const ArtLightbox = lazy(() =>
   import('@/components/ArtLightbox').then((m) => ({ default: m.ArtLightbox })),
