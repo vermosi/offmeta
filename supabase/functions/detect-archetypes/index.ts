@@ -453,15 +453,23 @@ serve(async (req: Request): Promise<Response> => {
 
   try {
     let backfill = false;
+    let batchLimit = 50;
+    let offset = 0;
     try {
       const body = await req.json();
       backfill = body?.backfill === true;
+      if (typeof body?.limit === 'number' && body.limit > 0 && body.limit <= 500) {
+        batchLimit = body.limit;
+      }
+      if (typeof body?.offset === 'number' && body.offset >= 0) {
+        offset = body.offset;
+      }
     } catch {
       // No body — default behavior
     }
 
     // Fetch decks to process
-    let query = supabase.from('community_decks').select('id, colors, format').limit(500);
+    let query = supabase.from('community_decks').select('id, colors, format').range(offset, offset + batchLimit - 1);
     if (!backfill) {
       query = query.is('deck_name', null);
     }
