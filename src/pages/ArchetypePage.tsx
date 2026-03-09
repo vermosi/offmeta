@@ -211,6 +211,10 @@ export default function ArchetypePage() {
 
   const displayName = formatArchetypeName(slug ?? '');
   const curated = ARCHETYPES.find((a) => a.slug === slug);
+  const formatContent = useMemo(
+    () => curated ? getArchetypeForFormat(curated, format) : null,
+    [curated, format],
+  );
 
   const { data: decks, isLoading: decksLoading } = useArchetypeDecks(slug ?? '', format);
   const { data: topCards } = useArchetypeTopCards(slug ?? '', format);
