@@ -74,18 +74,33 @@ serve(async (req: Request): Promise<Response> => {
       oracleIds = (missingCards as Array<{ oracle_id: string }>).map((r) => r.oracle_id);
     }
 
-    if (oracleIds.length === 0) {
+    // Also find cards missing rarity/legalities for backfill
+    let backfillIds: string[] = [];
+    {
+      const { data: incomplete } = await supabase
+        .from('cards')
+        .select('oracle_id')
+        .or('rarity.is.null,legalities.is.null')
+        .limit(500);
+      if (incomplete && incomplete.length > 0) {
+        backfillIds = incomplete.map((r) => r.oracle_id);
+      }
+    }
+
+    const allIds = [...new Set([...oracleIds, ...backfillIds])];
+
+    if (allIds.length === 0) {
       return new Response(
-        JSON.stringify({ success: true, synced: 0, message: 'All cards up to date' }),
+        JSON.stringify({ success: true, synced: 0, backfilled: 0, message: 'All cards up to date' }),
         { status: 200, headers }
       );
     }
 
-    log.info(`Syncing ${oracleIds.length} cards from Scryfall`);
+    log.info(`Syncing ${oracleIds.length} new + ${backfillIds.length} backfill cards from Scryfall`);
     let synced = 0;
 
-    for (let i = 0; i < oracleIds.length; i += SCRYFALL_BATCH_SIZE) {
-      const batch = oracleIds.slice(i, i + SCRYFALL_BATCH_SIZE);
+    for (let i = 0; i < allIds.length; i += SCRYFALL_BATCH_SIZE) {
+      const batch = allIds.slice(i, i + SCRYFALL_BATCH_SIZE);
       const identifiers = batch.map((id) => ({ oracle_id: id }));
 
       try {
@@ -106,6 +121,8 @@ serve(async (req: Request): Promise<Response> => {
             colors: card.colors ?? [],
             cmc: card.cmc ?? 0,
             image_url: card.image_uris?.normal ?? card.card_faces?.[0]?.image_uris?.normal ?? null,
+            rarity: card.rarity ?? null,
+            legalities: card.legalities ?? null,
             updated_at: new Date().toISOString(),
           }));
 
@@ -127,14 +144,16 @@ serve(async (req: Request): Promise<Response> => {
         log.warn('Scryfall batch error', { batch: i, error: String(e) });
       }
 
-      if (i + SCRYFALL_BATCH_SIZE < oracleIds.length) {
+      if (i + SCRYFALL_BATCH_SIZE < allIds.length) {
         await new Promise((r) => setTimeout(r, SCRYFALL_DELAY_MS));
       }
     }
 
-    log.info(`Card sync complete: synced=${synced}`);
+    const newCount = oracleIds.length;
+    const backfilledCount = synced > newCount ? synced - newCount : 0;
+    log.info(`Card sync complete: new=${Math.min(synced, newCount)}, backfilled=${backfilledCount}`);
     return new Response(
-      JSON.stringify({ success: true, synced, total: oracleIds.length }),
+      JSON.stringify({ success: true, synced, newCards: newCount, backfilled: backfillIds.length }),
       { status: 200, headers }
     );
   } catch (e) {
