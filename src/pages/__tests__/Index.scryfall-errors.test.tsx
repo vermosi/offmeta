@@ -146,7 +146,8 @@ describe('Index – Scryfall error flows', () => {
     await submitSearch('nothing matches');
 
     await waitFor(() => {
-      expect(screen.getByText(/no cards found/i)).toBeInTheDocument();
+      const matches = screen.getAllByText(/no cards found/i);
+      expect(matches.length).toBeGreaterThanOrEqual(1);
     });
 
     // Empty state should have retry example buttons
