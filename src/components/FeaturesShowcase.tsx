@@ -6,51 +6,15 @@
 import { useRef, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, BookOpen, Compass, Wand2, Swords, FileText, ArrowRight } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
-const FEATURES = [
-  {
-    icon: Search,
-    title: 'Smart Card Search',
-    description: 'Skip the syntax manual. Just say what you need in plain English and we translate it into perfect Scryfall queries.',
-    benefit: 'No more guessing operators',
-    href: '#how-it-works',
-    hash: true,
-  },
-  {
-    icon: Wand2,
-    title: 'Deck Recommendations',
-    description: 'Import your Moxfield deck and get AI-powered upgrades — categorized by synergy, budget, and strategy fit.',
-    benefit: 'Upgrade any deck in seconds',
-    href: '/deck-recs',
-  },
-  {
-    icon: Swords,
-    title: 'Combo Finder',
-    description: 'Discover game-winning combos for any commander. See steps, prerequisites, and prices at a glance.',
-    benefit: 'Never miss a wincon',
-    href: '/combos',
-  },
-  {
-    icon: Compass,
-    title: 'Metagame Archetypes',
-    description: 'Browse real deck archetypes across Commander, Standard, Modern, Pioneer, Legacy, and more — powered by community tournament data.',
-    benefit: 'See what\'s winning',
-    href: '/archetypes',
-  },
-  {
-    icon: BookOpen,
-    title: 'Search Guides',
-    description: '10 progressive guides from beginner to power-user — master natural language search without touching docs.',
-    benefit: 'Zero-to-hero in minutes',
-    href: '/guides',
-  },
-  {
-    icon: FileText,
-    title: 'Syntax Cheat Sheet',
-    description: 'A quick-reference for every Scryfall operator, filter, and shortcut. Bookmark it once, use it forever.',
-    benefit: 'Your pocket reference',
-    href: '/docs/syntax',
-  },
+const FEATURE_KEYS = [
+  { icon: Search, key: 'smartSearch', href: '#how-it-works', hash: true },
+  { icon: Wand2, key: 'deckRecs', href: '/deck-recs' },
+  { icon: Swords, key: 'comboFinder', href: '/combos' },
+  { icon: Compass, key: 'archetypes', href: '/archetypes' },
+  { icon: BookOpen, key: 'guides', href: '/guides' },
+  { icon: FileText, key: 'syntax', href: '/docs/syntax' },
 ] as const;
 
 interface FeaturesShowcaseProps {
@@ -58,6 +22,7 @@ interface FeaturesShowcaseProps {
 }
 
 export function FeaturesShowcase({ onScrollTo }: FeaturesShowcaseProps) {
+  const { t } = useTranslation();
   const sectionRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -76,20 +41,23 @@ export function FeaturesShowcase({ onScrollTo }: FeaturesShowcaseProps) {
     <section ref={sectionRef} className="container-main" aria-labelledby="features-heading">
       <div className="text-center mb-8">
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-accent/20 bg-accent/5 text-accent text-xs font-medium mb-4">
-          ⚡ Built for brewers
+          {t('features.badge')}
         </span>
         <h2 id="features-heading" className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
-          Everything You Need for MTG Deckbuilding
+          {t('features.heading')}
         </h2>
         <p className="text-xs sm:text-sm text-muted-foreground mt-2 max-w-lg mx-auto">
-          From card discovery to deck optimization — all powered by natural language and AI.{' '}
-          <span className="text-foreground font-medium">No other tool does this.</span>
+          {t('features.subtitle')}{' '}
+          <span className="text-foreground font-medium">{t('features.subtitleAccent')}</span>
         </p>
       </div>
 
       <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {FEATURES.map((feature, index) => {
+        {FEATURE_KEYS.map((feature, index) => {
           const Icon = feature.icon;
+          const title = t(`features.${feature.key}.title`);
+          const description = t(`features.${feature.key}.description`);
+          const benefit = t(`features.${feature.key}.benefit`);
           const content = (
             <div
               className={`group rounded-xl border border-border/50 bg-card/50 p-5 hover:bg-card hover:border-accent/20 hover:shadow-hover transition-all duration-300 flex flex-col gap-3 h-full ${
@@ -106,16 +74,16 @@ export function FeaturesShowcase({ onScrollTo }: FeaturesShowcaseProps) {
               </div>
               <div className="space-y-1.5 flex-1">
                 <h3 className="text-sm font-semibold group-hover:text-accent transition-colors flex items-center gap-1.5">
-                  {feature.title}
+                  {title}
                   <ArrowRight className="h-3 w-3 opacity-0 -translate-x-1 group-hover:opacity-70 group-hover:translate-x-0 transition-all duration-200" aria-hidden="true" />
                 </h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  {feature.description}
+                  {description}
                 </p>
               </div>
               <div className="pt-1 border-t border-border/30">
                 <span className="text-[10px] sm:text-[11px] font-medium text-accent/70 uppercase tracking-wider">
-                  {feature.benefit}
+                  {benefit}
                 </span>
               </div>
             </div>
@@ -124,7 +92,7 @@ export function FeaturesShowcase({ onScrollTo }: FeaturesShowcaseProps) {
           if ('hash' in feature && feature.hash) {
             return (
               <button
-                key={feature.title}
+                key={feature.key}
                 onClick={() => {
                   if (onScrollTo) {
                     onScrollTo(feature.href.slice(1));
@@ -141,7 +109,7 @@ export function FeaturesShowcase({ onScrollTo }: FeaturesShowcaseProps) {
           }
 
           return (
-            <Link key={feature.title} to={feature.href} className="block">
+            <Link key={feature.key} to={feature.href} className="block">
               {content}
             </Link>
           );
