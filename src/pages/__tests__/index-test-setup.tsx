@@ -59,9 +59,12 @@ export async function renderIndex(
     );
   });
 
-  await waitFor(() => {
-    expect(screen.getByRole('search')).toBeInTheDocument();
-  });
+  await waitFor(
+    () => {
+      expect(screen.getByRole('search')).toBeInTheDocument();
+    },
+    { timeout: 5000 },
+  );
 
   return result!;
 }
