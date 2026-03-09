@@ -46,7 +46,7 @@ interface SearchResultsAreaProps {
   compareMode: boolean;
   toggleCompareCard: (card: ScryfallCard) => void;
   isCardSelected: (id: string) => boolean;
-  collectionLookup: Set<string>;
+  collectionLookup: Map<string, number>;
   loadMoreRef: React.RefObject<HTMLDivElement | null>;
   getRovingProps: (index: number) => {
     ref: (el: HTMLDivElement | null) => void;
