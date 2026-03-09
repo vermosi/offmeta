@@ -5,7 +5,7 @@ Tracking format: `[Status: <planned|in progress|blocked|completed>] [Priority: <
 ## Completed
 
 - Mobile-first responsive design with standardized spacing system (progressive padding/margins across breakpoints) — [Status: completed] [Priority: P2] [Discussion: Milestone `shipped`; owner `@core-team`]
-- Home discovery section (Recent Searches, Daily Pick, Features Showcase, Staples, How It Works, FAQ) — [Status: completed] [Priority: P2] [Discussion: Milestone `shipped`; owner `@core-team`]
+- Home discovery section (Recent Searches, Daily Pick, Features Showcase, How It Works, FAQ) — [Status: completed] [Priority: P2] [Discussion: Milestone `shipped`; owner `@core-team`]
 - 10 progressive search guides (beginner → expert) with SEO optimization and JSON-LD — [Status: completed] [Priority: P2] [Discussion: Milestone `shipped`; owner `@core-team`]
 - Card comparison view (compare 2–4 cards side-by-side) — [Status: completed] [Priority: P2] [Discussion: Milestone `shipped`; owner `@core-team`]
 - Multiple view modes (grid, list, image-only) with persistent preference — [Status: completed] [Priority: P2] [Discussion: Milestone `shipped`; owner `@core-team`]
