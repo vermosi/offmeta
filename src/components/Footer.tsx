@@ -120,7 +120,7 @@ export function Footer() {
             {/* Data Sources column */}
             <div>
               <h3 className="text-xs font-semibold text-foreground mb-2">
-                Data Sources
+                {t('footer.dataSources')}
               </h3>
               <ul className="space-y-1.5">
                 {DATA_SOURCES.map((source) => (
@@ -134,7 +134,7 @@ export function Footer() {
             {/* Built With column */}
             <div>
               <h3 className="text-xs font-semibold text-foreground mb-2">
-                Built With
+                {t('footer.builtWith')}
               </h3>
               <ul className="space-y-1.5">
                 {BUILT_WITH.map((tech) => (
