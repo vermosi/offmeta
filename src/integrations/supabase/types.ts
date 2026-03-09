@@ -544,6 +544,17 @@ export type Database = {
     }
     Functions: {
       cleanup_expired_cache: { Args: never; Returns: undefined }
+      get_price_movers: {
+        Args: { days_back?: number; limit_count?: number }
+        Returns: {
+          card_name: string
+          change_percent: number
+          current_price: number
+          direction: string
+          previous_price: number
+          scryfall_id: string
+        }[]
+      }
       get_search_analytics: {
         Args: { max_low_confidence?: number; since_date: string }
         Returns: Json

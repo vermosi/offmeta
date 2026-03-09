@@ -85,6 +85,7 @@ export function Header() {
   const DISCOVER_LINKS = [
     { label: t('nav.archetypes'), href: '/archetypes' },
     { label: t('nav.combos'), href: '/combos' },
+    { label: t('nav.marketTrends', 'Market Trends'), href: '/market' },
   ];
 
   const LEARN_LINKS = [
