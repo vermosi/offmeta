@@ -155,7 +155,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
         </Button>
       ),
     });
-  }, []);
+  }, [t]);
 
   const handleCritique = useCallback(async () => {
     if (cards.length < 5) {
