@@ -37,7 +37,7 @@ export default function ArchetypesIndex() {
 
   const effectiveFormat = activeFormat ?? (formatData && formatData.length > 0 ? formatData[0].format : null);
   const { data: trends } = useArchetypeTrends(effectiveFormat);
-
+  const { data: signatureCards } = useSignatureCards(effectiveFormat);
   const totalDecks = formatData?.reduce((sum, f) => sum + f.totalDecks, 0) ?? 0;
   const totalDeckNames = formatData?.reduce((sum, f) =>
     sum + f.macroGroups.reduce((gs, g) => gs + g.decks.length, 0), 0) ?? 0;
