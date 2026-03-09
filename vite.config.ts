@@ -106,7 +106,6 @@ export default defineConfig(({ mode }) => ({
             '@radix-ui/react-collapsible',
             '@radix-ui/react-alert-dialog',
             '@radix-ui/react-label',
-            '@radix-ui/react-separator',
             '@radix-ui/react-slider',
             '@radix-ui/react-slot',
           ],
