@@ -21,7 +21,7 @@ interface ResultsToolbarProps {
   activeFilters: Record<string, string>;
   filtersResetKey: number;
   initialUrlFilters: Record<string, string> | undefined;
-  collectionLookup: Set<string> | undefined;
+  collectionLookup: Map<string, number> | undefined;
   onFilteredCards: (cards: ScryfallCard[]) => void;
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;

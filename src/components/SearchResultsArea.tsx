@@ -307,7 +307,7 @@ export function SearchResultsArea({
       {activeTab === 'explanation' && (
         <ExplanationPanel
           card={
-            (similarityData as any)?.sourceCard ??
+            similarityData?.sourceCard ??
             (cards.length > 0 && cards.length <= 5 ? cards[0] : null)
           }
           isLoading={isSearching}
