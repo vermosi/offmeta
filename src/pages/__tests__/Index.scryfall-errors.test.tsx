@@ -224,7 +224,7 @@ describe('Index – Scryfall error flows', () => {
     });
   });
 
-  it('shows the original query in empty state for context', async () => {
+  it('shows the translated query in empty state for context', async () => {
     mockSearchCards.mockResolvedValue({
       object: 'list', total_cards: 0, has_more: false, data: [],
     });
@@ -236,8 +236,9 @@ describe('Index – Scryfall error flows', () => {
       expect(matches.length).toBeGreaterThanOrEqual(1);
     });
 
-    // The empty state should display the query the user searched for
-    expect(screen.getByText('very specific nonexistent card')).toBeInTheDocument();
+    // The empty state displays the Scryfall query (searchQuery), not the natural-language input
+    // The translated query is 'o:"treasure"' per our mock
+    expect(screen.getByText('o:"treasure"')).toBeInTheDocument();
   });
 
   it('does not render card grid when search produces an error', async () => {
