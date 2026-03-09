@@ -37,13 +37,15 @@ function parseFiltersFromUrl(params: URLSearchParams): Partial<FilterState> | nu
   const sort = params.get('sort');
   const cmcMin = params.get('cmc_min');
   const cmcMax = params.get('cmc_max');
+  const format = params.get('format');
 
-  if (!colors && !types && !sort && !cmcMin && !cmcMax) return null;
+  if (!colors && !types && !sort && !cmcMin && !cmcMax && !format) return null;
 
   const result: Partial<FilterState> = {};
   if (colors) result.colors = colors.split(',').filter(Boolean);
   if (types) result.types = types.split(',').filter(Boolean);
   if (sort) result.sortBy = sort;
+  if (format) result.format = format;
   if (cmcMin || cmcMax) {
     result.cmcRange = [
       cmcMin ? parseInt(cmcMin, 10) : 0,

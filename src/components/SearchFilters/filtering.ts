@@ -13,6 +13,15 @@ export function applyCardFilters(
     result = result.filter((card) => collectionLookup.has(card.name));
   }
 
+  // Format legality filter
+  if (filters.format) {
+    const fmt = filters.format;
+    result = result.filter((card) => {
+      const legality = card.legalities?.[fmt];
+      return legality === 'legal' || legality === 'restricted';
+    });
+  }
+
   if (filters.colors.length > 0) {
     result = result.filter((card) => {
       const cardColors = card.colors || [];
@@ -97,7 +106,8 @@ export function countActiveFilters(
     filters.colors.length +
     filters.types.length +
     (filters.cmcRange[0] > 0 || filters.cmcRange[1] < defaultMaxCmc ? 1 : 0) +
-    (filters.ownedOnly ? 1 : 0)
+    (filters.ownedOnly ? 1 : 0) +
+    (filters.format ? 1 : 0)
   );
 }
 
