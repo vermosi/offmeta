@@ -103,36 +103,18 @@ export default function Collection() {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
-        <div className="flex-1 w-full max-w-4xl mx-auto px-4 py-6 space-y-4">
-          <div className="flex items-center justify-center flex-col gap-3 py-6">
-            <Package className="h-10 w-10 text-muted-foreground/40" />
-            <h2 className="text-lg font-semibold">{t('collection.title', 'My Collection')}</h2>
-            <p className="text-muted-foreground text-sm">{t('collection.signInPrompt')}</p>
-            <Button onClick={() => setAuthOpen(true)}>{t('collection.signIn')}</Button>
-          </div>
-
-          {/* Demo preview */}
-          <div className="space-y-2 opacity-70 pointer-events-none select-none">
-            <p className="text-xs text-muted-foreground text-center italic">{t('collection.demoPreview')}</p>
-            {DEMO_COLLECTION.map((card) => (
-              <div
-                key={card.id}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/50 bg-card/50"
-              >
-                <span className="flex-1 min-w-0 text-sm font-medium text-foreground truncate">
-                  {card.card_name}
-                </span>
-                {card.foil && (
-                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20">
-                    {t('collection.foil', 'Foil')}
-                  </span>
-                )}
-                <PriceSparkline cardName={card.card_name} demo />
-                <span className="text-sm font-semibold tabular-nums min-w-[1.5rem] text-center">
-                  {card.quantity}
-                </span>
-              </div>
-            ))}
+        <div className="flex-1 w-full max-w-4xl mx-auto px-4 py-16 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4 text-center max-w-sm">
+            <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <Package className="h-8 w-8 text-primary" />
+            </div>
+            <h2 className="text-xl font-bold text-foreground">{t('collection.title', 'My Collection')}</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {t('collection.signInDescription', 'Sign in to track your cards, monitor prices over time, and export your collection.')}
+            </p>
+            <Button onClick={() => setAuthOpen(true)} className="mt-2">
+              {t('collection.signInToStart', 'Sign In to Get Started')}
+            </Button>
           </div>
         </div>
         <Footer />

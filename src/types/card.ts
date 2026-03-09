@@ -12,6 +12,9 @@ export interface ScryfallCard {
   /** Unique Scryfall identifier for this card */
   id: string;
 
+  /** Oracle identifier shared across printings */
+  oracle_id?: string;
+
   /** The card's English name */
   name: string;
 

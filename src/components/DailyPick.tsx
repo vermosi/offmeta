@@ -2,6 +2,7 @@
  * Daily Off-Meta Pick — showcases a different hidden gem card each day.
  * Displayed as an always-visible card box (not collapsible).
  * Fetches localized card data based on the current i18n locale.
+ * Clicking the card opens CardModal for in-app details.
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -11,12 +12,16 @@ import { Button } from '@/components/ui/button';
 import { ManaCost, OracleText } from '@/components/ManaSymbol';
 import { useTranslation } from '@/lib/i18n';
 import { LOCALE_TO_SCRYFALL_LANG } from '@/lib/i18n/constants';
+import { CardModal } from '@/components/CardModal';
 import type { ScryfallCard } from '@/types/card';
+
+const CACHE_KEY_PREFIX = 'offmeta_daily_pick_';
 
 export function DailyPick() {
   const [card, setCard] = useState<ScryfallCard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const gem = getTodayPick();
   const { t, locale } = useTranslation();
 
@@ -24,6 +29,20 @@ export function DailyPick() {
     let cancelled = false;
 
     async function fetchCard() {
+      // Check sessionStorage cache first
+      const cacheKey = `${CACHE_KEY_PREFIX}${gem.name}_${locale}`;
+      try {
+        const cached = sessionStorage.getItem(cacheKey);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (!cancelled) {
+            setCard(parsed);
+            setLoading(false);
+          }
+          return;
+        }
+      } catch { /* ignore parse errors */ }
+
       const scryfallLang = LOCALE_TO_SCRYFALL_LANG[locale];
 
       try {
@@ -51,7 +70,10 @@ export function DailyPick() {
           data = await res.json();
         }
 
-        if (!cancelled && data) setCard(data);
+        if (!cancelled && data) {
+          setCard(data);
+          try { sessionStorage.setItem(cacheKey, JSON.stringify(data)); } catch { /* quota */ }
+        }
       } catch {
         if (!cancelled) setError(true);
       } finally {
@@ -68,6 +90,10 @@ export function DailyPick() {
     window.open(card.scryfall_uri, '_blank', 'noopener,noreferrer');
   }, [card]);
 
+  const handleCardClick = useCallback(() => {
+    if (card) setModalOpen(true);
+  }, [card]);
+
   if (error || (!loading && !card)) return null;
 
   const imageUri =
@@ -82,111 +108,127 @@ export function DailyPick() {
   const oracleText = card?.printed_text || card?.oracle_text || card?.card_faces?.[0]?.oracle_text || '';
 
   return (
-    <section
-      className="w-full max-w-2xl mx-auto"
-      aria-labelledby="daily-pick-heading"
-    >
-      <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden p-6">
-        {/* Header */}
-        <div className="flex items-center gap-2.5 mb-4">
-          <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-accent/10">
-            <Sparkles className="h-4 w-4 text-accent" aria-hidden="true" />
+    <>
+      <section
+        className="w-full max-w-2xl mx-auto"
+        aria-labelledby="daily-pick-heading"
+      >
+        <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden p-6">
+          {/* Header */}
+          <div className="flex items-center gap-2.5 mb-4">
+            <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-accent/10">
+              <Sparkles className="h-4 w-4 text-accent" aria-hidden="true" />
+            </div>
+            <div>
+              <h2
+                id="daily-pick-heading"
+                className="text-sm font-semibold text-foreground"
+              >
+                {t('dailyPick.heading')}
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                {loading ? t('dailyPick.loading') : cardName}
+              </p>
+            </div>
           </div>
-          <div>
-            <h2
-              id="daily-pick-heading"
-              className="text-sm font-semibold text-foreground"
-            >
-              {t('dailyPick.heading')}
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              {loading ? t('dailyPick.loading') : cardName}
-            </p>
-          </div>
-        </div>
 
-        {/* Content */}
-        {loading ? (
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-            <div className="flex-shrink-0 mx-auto sm:mx-0">
-              <div className="shimmer w-40 sm:w-56 aspect-[2.5/3.5] rounded-lg" />
-            </div>
-            <div className="flex-1 space-y-3 min-w-0">
-              <div className="shimmer h-6 w-40 rounded" />
-              <div className="shimmer h-4 w-24 rounded" />
-              <div className="shimmer h-20 w-full rounded-lg" />
-              <div className="shimmer h-4 w-full rounded" />
-              <div className="shimmer h-4 w-3/4 rounded" />
-            </div>
-          </div>
-        ) : card ? (
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-            {/* Card image */}
-            {imageUri && (
+          {/* Content */}
+          {loading ? (
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
               <div className="flex-shrink-0 mx-auto sm:mx-0">
-                <img
-                  src={imageUri}
-                  alt={`${cardName} card art`}
-                  className="w-48 sm:w-56 rounded-lg shadow-lg"
-                  loading="lazy"
-                />
+                <div className="shimmer w-40 sm:w-56 aspect-[2.5/3.5] rounded-lg" />
               </div>
-            )}
-
-            {/* Card info */}
-            <div className="flex-1 space-y-3 min-w-0">
-              <div>
-                <h3 className="text-lg font-semibold text-foreground">
-                  {cardName}
-                </h3>
-                <div className="flex items-center gap-2 mt-1">
-                  {manaCost && (
-                    <ManaCost cost={manaCost} size="sm" />
-                  )}
-                  <span className="text-xs text-muted-foreground">
-                    {typeLine}
-                  </span>
-                </div>
+              <div className="flex-1 space-y-3 min-w-0">
+                <div className="shimmer h-6 w-40 rounded" />
+                <div className="shimmer h-4 w-24 rounded" />
+                <div className="shimmer h-20 w-full rounded-lg" />
+                <div className="shimmer h-4 w-full rounded" />
+                <div className="shimmer h-4 w-3/4 rounded" />
               </div>
-
-              {/* Why it's a gem */}
-              <div className="rounded-lg bg-accent/5 border border-accent/10 p-3">
-                <p className="text-xs font-medium text-accent mb-1">
-                  {t('dailyPick.whyGem')}
-                </p>
-                <p className="text-sm text-foreground/85 leading-relaxed">
-                  {gem.reason}
-                </p>
-              </div>
-
-              {/* Oracle text preview */}
-              {oracleText && (
-                <div className="text-xs text-muted-foreground leading-relaxed line-clamp-4 italic">
-                  <OracleText text={oracleText} size="sm" />
+            </div>
+          ) : card ? (
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+              {/* Card image — clickable */}
+              {imageUri && (
+                <div className="flex-shrink-0 mx-auto sm:mx-0">
+                  <button
+                    type="button"
+                    onClick={handleCardClick}
+                    className="focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg transition-transform hover:scale-[1.02]"
+                    aria-label={`View details for ${cardName}`}
+                  >
+                    <img
+                      src={imageUri}
+                      alt={`${cardName} card art`}
+                      className="w-48 sm:w-56 rounded-lg shadow-lg cursor-pointer"
+                      loading="lazy"
+                    />
+                  </button>
                 </div>
               )}
 
-              {/* Price + link */}
-              <div className="flex items-center gap-3 pt-1">
-                {card.prices?.usd && (
-                  <span className="text-sm font-medium text-foreground">
-                    ${card.prices.usd}
-                  </span>
+              {/* Card info */}
+              <div className="flex-1 space-y-3 min-w-0">
+                <div>
+                  <button
+                    type="button"
+                    onClick={handleCardClick}
+                    className="text-lg font-semibold text-foreground hover:text-primary transition-colors text-left"
+                  >
+                    {cardName}
+                  </button>
+                  <div className="flex items-center gap-2 mt-1">
+                    {manaCost && (
+                      <ManaCost cost={manaCost} size="sm" />
+                    )}
+                    <span className="text-xs text-muted-foreground">
+                      {typeLine}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Why it's a gem */}
+                <div className="rounded-lg bg-accent/5 border border-accent/10 p-3">
+                  <p className="text-xs font-medium text-accent mb-1">
+                    {t('dailyPick.whyGem')}
+                  </p>
+                  <p className="text-sm text-foreground/85 leading-relaxed">
+                    {gem.reason}
+                  </p>
+                </div>
+
+                {/* Oracle text preview */}
+                {oracleText && (
+                  <div className="text-xs text-muted-foreground leading-relaxed line-clamp-4 italic">
+                    <OracleText text={oracleText} size="sm" />
+                  </div>
                 )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleScryfallOpen}
-                  className="h-8 text-xs gap-1.5"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  {t('dailyPick.viewOnScryfall')}
-                </Button>
+
+                {/* Price + link */}
+                <div className="flex items-center gap-3 pt-1">
+                  {card.prices?.usd && (
+                    <span className="text-sm font-medium text-foreground">
+                      ${card.prices.usd}
+                    </span>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleScryfallOpen}
+                    className="h-8 text-xs gap-1.5"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    {t('dailyPick.viewOnScryfall')}
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        ) : null}
-      </div>
-    </section>
+          ) : null}
+        </div>
+      </section>
+
+      {/* Card detail modal */}
+      <CardModal card={card} open={modalOpen} onClose={() => setModalOpen(false)} />
+    </>
   );
 }
