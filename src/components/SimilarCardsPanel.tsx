@@ -173,7 +173,6 @@ export function SimilarCardsPanel({ data, isLoading, onCardClick }: SimilarCards
 
       <SynergySection
         synergyCards={data.synergyCards}
-        sourceCardName={data.sourceCard.name}
         playedAlongsideLabel={t('similar.playedAlongside').replace('{name}', data.sourceCard.name)}
       />
     </div>
