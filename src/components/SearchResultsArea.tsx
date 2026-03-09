@@ -4,7 +4,7 @@
  * @module components/SearchResultsArea
  */
 
-import { lazy, Suspense, useCallback, useMemo } from 'react';
+import { lazy } from 'react';
 import { CardItem } from '@/components/CardItem';
 import { CardListItem } from '@/components/CardListItem';
 import { CardImageItem } from '@/components/CardImageItem';

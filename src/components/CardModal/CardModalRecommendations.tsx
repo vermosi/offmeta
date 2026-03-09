@@ -28,7 +28,7 @@ interface CardModalRecommendationsProps {
 
 export function CardModalRecommendations({
   oracleId,
-  cardName,
+  cardName: _cardName,
   onCardClick,
   isMobile,
 }: CardModalRecommendationsProps) {

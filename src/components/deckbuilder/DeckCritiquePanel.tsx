@@ -190,7 +190,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
     } finally {
       setLoading(false);
     }
-  }, [cards, commanderName, colorIdentity, format, cacheKey]);
+  }, [cards, commanderName, colorIdentity, format, cacheKey, t]);
 
   return (
     <div className="space-y-3">

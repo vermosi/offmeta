@@ -16,7 +16,7 @@ const FLUSH_THRESHOLD = 50_000; // Flush pairs to DB when map exceeds this size
 const UPSERT_BATCH = 500;
 
 async function flushPairs(
-  supabase: any,
+  supabase: SupabaseClient,
   pairCounts: Map<string, number>,
   targetFormat: string,
 ): Promise<number> {
