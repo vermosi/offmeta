@@ -222,8 +222,8 @@ export async function searchCards(
 ): Promise<SearchResult> {
   // When a non-English lang is requested, prepend lang filter
   const langQuery = lang && lang !== 'en' ? `lang:${lang} ${query}` : query;
-  // Exclude digital-only Alchemy rebalanced cards from all results
-  const finalQuery = `${langQuery} -is:rebalanced`;
+  // Exclude digital-only cards (Alchemy, rebalanced) — only show paper-legal cards
+  const finalQuery = `${langQuery} game:paper`;
 
   // ── Cache check (avoids API call + queue delay entirely) ───────────────────
   const cacheKey = makeSearchCacheKey(finalQuery, page, lang);

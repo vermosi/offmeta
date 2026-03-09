@@ -15,4 +15,6 @@ export interface FilterState {
   sortBy: string;
   /** When true, only show cards the user owns (client-side filter) */
   ownedOnly?: boolean;
+  /** Format legality filter (e.g., "commander", "modern", "pauper") */
+  format?: string;
 }
