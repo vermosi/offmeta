@@ -19,7 +19,7 @@ import { SkipLinks } from '@/components/SkipLinks';
 
 export default function ArchetypesIndex() {
   const { t } = useTranslation();
-  const { data: deckCounts, isLoading: countsLoading } = useArchetypeDeckCounts();
+  const { data: deckCounts } = useArchetypeDeckCounts();
 
   useEffect(() => {
     return applySeoMeta({

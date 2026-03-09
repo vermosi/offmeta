@@ -34,7 +34,6 @@ export function ResultsToolbar({
   cards,
   displayCards,
   totalCards,
-  activeFilters,
   filtersResetKey,
   initialUrlFilters,
   collectionLookup,

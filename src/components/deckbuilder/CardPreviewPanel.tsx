@@ -43,32 +43,51 @@ export function CardPreviewPanel({
   const commanderCandidate = commanderName || deckCards.find((deckCard) => deckCard.is_commander)?.card_name || null;
 
   useEffect(() => {
+    let cancelled = false;
+
+    // Avoid sync setState in effect body (lint rule: react-hooks/set-state-in-effect)
+    const setFallbackAsync = (next: ScryfallCard | null) => {
+      queueMicrotask(() => {
+        if (cancelled) return;
+        setFallbackCommanderCard(next);
+      });
+    };
+
     if (card) {
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
 
     if (!commanderCandidate) {
-      setFallbackCommanderCard(null);
+      setFallbackAsync(null);
       attemptedCommanderRef.current = null;
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
 
     if (fallbackCommanderCard?.name === commanderCandidate) {
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
 
     const cachedCommander = scryfallCache?.current.get(commanderCandidate);
     if (cachedCommander) {
-      setFallbackCommanderCard(cachedCommander);
-      return;
+      setFallbackAsync(cachedCommander);
+      return () => {
+        cancelled = true;
+      };
     }
 
     if (attemptedCommanderRef.current === commanderCandidate) {
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
     attemptedCommanderRef.current = commanderCandidate;
 
-    let cancelled = false;
     searchCards(`!"${commanderCandidate}"`)
       .then((response) => {
         if (cancelled) return;

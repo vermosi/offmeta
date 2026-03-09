@@ -35,13 +35,6 @@ import { useCollectionValue } from '@/hooks/useCollectionValue';
 
 type SortMode = 'name' | 'quantity' | 'newest';
 
-const DEMO_COLLECTION: CollectionCard[] = [
-  { id: 'demo-1', card_name: 'Lightning Bolt', quantity: 4, foil: false, scryfall_id: null, user_id: '', created_at: '2026-02-01T00:00:00Z', updated_at: '2026-02-01T00:00:00Z' },
-  { id: 'demo-2', card_name: 'Counterspell', quantity: 2, foil: true, scryfall_id: null, user_id: '', created_at: '2026-02-10T00:00:00Z', updated_at: '2026-02-10T00:00:00Z' },
-  { id: 'demo-3', card_name: 'Sol Ring', quantity: 3, foil: false, scryfall_id: null, user_id: '', created_at: '2026-01-15T00:00:00Z', updated_at: '2026-01-15T00:00:00Z' },
-  { id: 'demo-4', card_name: 'Swords to Plowshares', quantity: 2, foil: false, scryfall_id: null, user_id: '', created_at: '2026-03-01T00:00:00Z', updated_at: '2026-03-01T00:00:00Z' },
-  { id: 'demo-5', card_name: 'Birds of Paradise', quantity: 1, foil: true, scryfall_id: null, user_id: '', created_at: '2026-02-20T00:00:00Z', updated_at: '2026-02-20T00:00:00Z' },
-];
 
 export default function Collection() {
   const { t } = useTranslation();

@@ -132,7 +132,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
         </Button>
       ),
     });
-  }, []);
+  }, [t]);
 
   const dismissAddition = useCallback((cardName: string) => {
     setDismissedAdditions((prev) => new Set(prev).add(cardName));
@@ -155,7 +155,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
         </Button>
       ),
     });
-  }, []);
+  }, [t]);
 
   const handleCritique = useCallback(async () => {
     if (cards.length < 5) {
@@ -190,7 +190,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
     } finally {
       setLoading(false);
     }
-  }, [cards, commanderName, colorIdentity, format, cacheKey]);
+  }, [cards, commanderName, colorIdentity, format, cacheKey, t]);
 
   return (
     <div className="space-y-3">
