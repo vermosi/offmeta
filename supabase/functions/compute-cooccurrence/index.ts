@@ -8,7 +8,7 @@
 // @ts-nocheck
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { getCorsHeaders, requireServiceRole } from '../_shared/auth.ts';
+import { getCorsHeaders, validateAuth } from '../_shared/auth.ts';
 import { createLogger } from '../_shared/logger.ts';
 
 const log = createLogger('compute-cooccurrence');
@@ -56,9 +56,11 @@ serve(async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Auth guard: service role only
-  const auth = requireServiceRole(req, corsHeaders);
-  if (!auth.authorized) return auth.response;
+  // Auth guard: accept anon key (for pg_cron) or service role
+  const auth = await validateAuth(req);
+  if (!auth.authorized) {
+    return new Response(JSON.stringify({ error: auth.error }), { status: 401, headers });
+  }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;

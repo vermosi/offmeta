@@ -38,6 +38,10 @@ const FORMAT_MAP: Record<string, string> = {
   PAUPER_COMMANDER: 'paupercommander',
   OLDSCHOOL: 'oldschool',
   OTHER: 'other',
+  GLADIATOR: 'gladiator',
+  STANDARD_BRAWL: 'standardbrawl',
+  PREDH: 'predh',
+  TRIOS_CONSTRUCTED: 'other',
 };
 
 /**
@@ -74,6 +78,82 @@ function parseDecklistText(text: string): { name: string; quantity: number; boar
   }
 
   return cards;
+}
+
+const MOXFIELD_DELAY_MS = 150;
+
+/**
+ * Fetch a decklist from a Moxfield URL and return parsed card entries.
+ */
+async function fetchMoxfieldDeck(
+  url: string,
+): Promise<{ cards: { name: string; quantity: number; board: string }[]; commander: string | null; colors: string[] }> {
+  const match = url.match(/moxfield\.com\/decks\/([A-Za-z0-9_-]+)/);
+  if (!match) return { cards: [], commander: null, colors: [] };
+
+  const publicId = match[1];
+  try {
+    const resp = await fetch(`https://api2.moxfield.com/v3/decks/all/${publicId}`, {
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'OffMeta/1.0 (spicerack-import)',
+      },
+    });
+
+    if (!resp.ok) {
+      await resp.text();
+      return { cards: [], commander: null, colors: [] };
+    }
+
+    const deck = await resp.json();
+    const boards = deck.boards ?? deck;
+    const cards: { name: string; quantity: number; board: string }[] = [];
+    const commanders: string[] = [];
+
+    // Extract commanders
+    const cmdBoard = boards.commanders;
+    if (cmdBoard) {
+      const cmdCards = cmdBoard.cards ?? cmdBoard;
+      if (cmdCards && typeof cmdCards === 'object') {
+        for (const key of Object.keys(cmdCards)) {
+          const entry = cmdCards[key];
+          const name = entry?.card?.name ?? entry?.name;
+          const qty = entry?.quantity ?? 1;
+          if (name) {
+            commanders.push(name);
+            cards.push({ name, quantity: qty, board: 'commander' });
+          }
+        }
+      }
+    }
+
+    // Extract mainboard + sideboard + companions
+    for (const [boardName, boardKey] of [['mainboard', 'mainboard'], ['sideboard', 'sideboard'], ['companions', 'companion']] as const) {
+      const board = boards[boardName];
+      if (!board || typeof board !== 'object') continue;
+      const boardCards = board.cards ?? board;
+      if (!boardCards || typeof boardCards !== 'object') continue;
+      for (const key of Object.keys(boardCards)) {
+        const entry = boardCards[key];
+        if (!entry || typeof entry !== 'object') continue;
+        const name = entry?.card?.name ?? entry?.name;
+        const qty = entry?.quantity ?? 1;
+        if (name) cards.push({ name, quantity: qty, board: boardKey });
+      }
+    }
+
+    const colors: string[] = Array.isArray(deck.colorIdentity)
+      ? ['W', 'U', 'B', 'R', 'G'].filter((c) => deck.colorIdentity.includes(c))
+      : [];
+
+    return {
+      cards,
+      commander: commanders.length > 0 ? commanders.join(' // ') : null,
+      colors,
+    };
+  } catch {
+    return { cards: [], commander: null, colors: [] };
+  }
 }
 
 /**
@@ -224,21 +304,28 @@ serve(async (req: Request): Promise<Response> => {
 
         if (existing) { skipped++; continue; }
 
-        // Parse the decklist text
+        // Try plaintext first, then Moxfield URL
         const decklistText = standing.decklist_text ?? '';
-        const cards = parseDecklistText(decklistText);
+        let cards = parseDecklistText(decklistText);
+        let commander: string | null = null;
+        let deckColors: string[] = [];
+
+        if (cards.length === 0) {
+          // Check if decklist is a Moxfield URL
+          const decklistUrl = standing.decklist ?? '';
+          if (typeof decklistUrl === 'string' && decklistUrl.includes('moxfield.com/decks/')) {
+            const moxResult = await fetchMoxfieldDeck(decklistUrl);
+            cards = moxResult.cards;
+            commander = moxResult.commander;
+            deckColors = moxResult.colors;
+            await new Promise((r) => setTimeout(r, MOXFIELD_DELAY_MS));
+          }
+        }
 
         if (cards.length === 0) { skipped++; continue; }
 
-        // Build deck name: "PlayerName — EventName (Format)"
+        // Build deck name
         const deckName = `${playerName} — ${tournamentName}`.slice(0, 200);
-
-        // Determine record string
-        const record = [
-          standing.winsSwiss ?? 0,
-          standing.lossesSwiss ?? 0,
-          standing.draws ?? 0,
-        ].join('-');
 
         const { data: deckRow, error: deckErr } = await supabase
           .from('community_decks')
@@ -247,8 +334,8 @@ serve(async (req: Request): Promise<Response> => {
             format,
             source: 'spicerack',
             source_id: sourceId,
-            commander: null, // Spicerack doesn't separate commander
-            colors: [],
+            commander,
+            colors: deckColors,
             event_name: tournamentName,
             event_date: startDate,
           })
