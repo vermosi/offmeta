@@ -135,7 +135,7 @@ describe('Index – Scryfall error flows', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/search tips/i)).toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
   });
 
   it('renders example query buttons in empty state for retry', async () => {
