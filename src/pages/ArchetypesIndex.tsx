@@ -72,12 +72,8 @@ export default function ArchetypesIndex() {
   const { data: formatData, isLoading } = useArchetypeData();
   const [activeFormat, setActiveFormat] = useState<string | null>(null);
 
-  // Default to first format with data
-  useEffect(() => {
-    if (formatData && formatData.length > 0 && !activeFormat) {
-      setActiveFormat(formatData[0].format);
-    }
-  }, [formatData, activeFormat]);
+  // Derive default format without setState-in-effect
+  const effectiveFormat = activeFormat ?? (formatData && formatData.length > 0 ? formatData[0].format : null);
 
   const totalDecks = formatData?.reduce((sum, f) => sum + f.totalDecks, 0) ?? 0;
   const totalArchetypes = formatData?.reduce((sum, f) => sum + f.archetypes.length, 0) ?? 0;
@@ -91,7 +87,7 @@ export default function ArchetypesIndex() {
     });
   }, [totalArchetypes, totalDecks, formatData?.length]);
 
-  const activeData = formatData?.find((f) => f.format === activeFormat);
+  const activeData = formatData?.find((f) => f.format === effectiveFormat);
 
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
@@ -154,10 +150,10 @@ export default function ArchetypesIndex() {
                   <button
                     key={fd.format}
                     role="tab"
-                    aria-selected={activeFormat === fd.format}
+                    aria-selected={effectiveFormat === fd.format}
                     onClick={() => setActiveFormat(fd.format)}
                     className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                      activeFormat === fd.format
+                      effectiveFormat === fd.format
                         ? 'bg-primary text-primary-foreground'
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                     }`}

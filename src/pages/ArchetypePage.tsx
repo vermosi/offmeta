@@ -21,9 +21,7 @@ import {
   DollarSign,
   Search,
   Layers,
-  ExternalLink,
   Loader2,
-  ArrowLeft,
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { SkipLinks } from '@/components/SkipLinks';
