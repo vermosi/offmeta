@@ -10,7 +10,7 @@ Tracking format: `[Status: <planned|in progress|blocked|completed>] [Priority: <
 - Card comparison view (compare 2–4 cards side-by-side) — [Status: completed] [Priority: P2] [Discussion: Milestone `shipped`; owner `@core-team`]
 - Multiple view modes (grid, list, image-only) with persistent preference — [Status: completed] [Priority: P2] [Discussion: Milestone `shipped`; owner `@core-team`]
 - Export results (copy names, download CSV) — [Status: completed] [Priority: P2] [Discussion: Milestone `shipped`; owner `@core-team`]
-- Staples section with archetype-based quick searches — [Status: completed] [Priority: P2] [Discussion: Milestone `shipped`; owner `@core-team`]
+- Quick search chips with archetype-based suggestions — [Status: completed] [Priority: P2] [Discussion: Milestone `shipped`; owner `@core-team`]
 - Cross-page header navigation with hash-based scrolling — [Status: completed] [Priority: P2] [Discussion: Milestone `shipped`; owner `@core-team`]
 - Expanded deterministic translation with 30+ keyword patterns (ETB, LTB, myriad, blitz, connive, offspring, backup, goad) — [Status: completed] [Priority: P2] [Discussion: Milestone `shipped`; owner `@core-team`]
 - Comprehensive security testing suite (300+ tests) covering injection, CORS, ReDoS, prototype pollution, timing attacks — [Status: completed] [Priority: P2] [Discussion: Milestone `shipped`; owner `@core-team`]

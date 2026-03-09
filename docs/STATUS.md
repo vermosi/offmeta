@@ -50,7 +50,7 @@ OffMeta is a natural-language search frontend for Magic: The Gathering cards. It
 - **Card Comparison**: Side-by-side comparison of 2–4 cards.
 - **View Modes**: Grid, list, and image-only views with persistent preference.
 - **Export Results**: Copy card names or download CSV.
-- **Staples Section**: Archetype quick-search chips on home page.
+- **Quick Search Chips**: Archetype-based search suggestions via guides and similar searches.
 - **Cross-page Navigation**: Hash links work from any page (navigate home + scroll).
 - **Security Suite**: 300+ security tests covering injection, CORS, ReDoS, prototype pollution, and timing attacks.
 - **Regression Suite**: 70+ regression tests across caching, virtualization, and analytics.
