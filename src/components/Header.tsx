@@ -323,7 +323,12 @@ export function Header() {
   return (
     <>
       <header
-        className="sticky top-0 z-50 safe-top border-b border-border/50 bg-background/80 backdrop-blur-xl"
+        className={cn(
+          'sticky top-0 z-50 safe-top backdrop-blur-xl transition-colors',
+          isScrolled
+            ? 'border-b border-border/50 bg-background/80'
+            : 'border-b border-transparent bg-background/40',
+        )}
         role="banner"
       >
         <div className="container-main py-3 sm:py-4 flex items-center justify-between">
