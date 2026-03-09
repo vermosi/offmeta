@@ -369,16 +369,18 @@ export const UnifiedSearchBar = forwardRef<
 
         {/* Secondary row: Mobile-only auxiliary actions */}
         <div className="flex sm:hidden items-center justify-center gap-2 flex-wrap">
-          <SearchFeedback
-            originalQuery={query || history[0] || ''}
-            translatedQuery={lastTranslatedQuery}
-          />
-          <SearchHelpModal
-            onTryExample={(exampleQuery) => {
-              setQuery(exampleQuery);
-              handleSearch(exampleQuery);
-            }}
-          />
+          <Suspense fallback={null}>
+            <SearchFeedback
+              originalQuery={query || history[0] || ''}
+              translatedQuery={lastTranslatedQuery}
+            />
+            <SearchHelpModal
+              onTryExample={(exampleQuery) => {
+                setQuery(exampleQuery);
+                handleSearch(exampleQuery);
+              }}
+            />
+          </Suspense>
         </div>
 
         <p id="search-hint" className="sr-only">
