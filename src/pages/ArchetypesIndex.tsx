@@ -3,7 +3,7 @@
  * grouped by format with live deck counts.
  */
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { applySeoMeta } from '@/lib/seo';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
