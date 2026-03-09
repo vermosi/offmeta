@@ -26,7 +26,7 @@ export function HomeDiscoverySection({ onSearch }: HomeDiscoverySectionProps) {
         <div id="daily-pick">
           <DailyPick />
         </div>
-        <TrendingCardsWidget />
+        <TrendingCardsWidget onSearch={onSearch} />
       </div>
       <div className="container-main">
         <StaplesSection onSearch={onSearch} />
