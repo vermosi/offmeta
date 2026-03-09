@@ -33,13 +33,17 @@ export interface ArchetypesByFormat {
 
 const FORMAT_LABELS: Record<string, string> = {
   commander: 'Commander',
-  pauper: 'Pauper',
+  standard: 'Standard',
+  pioneer: 'Pioneer',
+  modern: 'Modern',
   legacy: 'Legacy',
+  vintage: 'Vintage',
+  pauper: 'Pauper',
   premodern: 'Premodern',
   other: 'Other',
 };
 
-const FORMAT_ORDER = ['commander', 'pauper', 'legacy', 'premodern', 'other'];
+const FORMAT_ORDER = ['commander', 'standard', 'pioneer', 'modern', 'legacy', 'vintage', 'pauper', 'premodern', 'other'];
 const MACRO_ORDER = ['Aggro', 'Midrange', 'Control', 'Combo'];
 
 interface ArchetypeStatsRow {
