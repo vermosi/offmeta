@@ -108,6 +108,26 @@ export function Header() {
       .then(({ count }) => setSavedCount(count ?? 0));
   }, [user]);
 
+  // Header chrome: avoid a persistent "line"; only show border after scroll.
+  useEffect(() => {
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = window.requestAnimationFrame(() => {
+        raf = 0;
+        setIsScrolled((window.scrollY || 0) > 6);
+      });
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (raf) window.cancelAnimationFrame(raf);
+    };
+  }, []);
+
   useEffect(() => {
     if (!mobileMenuOpen) return;
     const handleEscape = (e: KeyboardEvent) => {
