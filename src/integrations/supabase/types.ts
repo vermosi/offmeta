@@ -38,6 +38,63 @@ export type Database = {
         }
         Relationships: []
       }
+      card_cooccurrence: {
+        Row: {
+          card_a_oracle_id: string
+          card_b_oracle_id: string
+          cooccurrence_count: number
+          format: string
+        }
+        Insert: {
+          card_a_oracle_id: string
+          card_b_oracle_id: string
+          cooccurrence_count?: number
+          format?: string
+        }
+        Update: {
+          card_a_oracle_id?: string
+          card_b_oracle_id?: string
+          cooccurrence_count?: number
+          format?: string
+        }
+        Relationships: []
+      }
+      cards: {
+        Row: {
+          cmc: number
+          colors: string[]
+          image_url: string | null
+          mana_cost: string | null
+          name: string
+          oracle_id: string
+          oracle_text: string | null
+          type_line: string | null
+          updated_at: string
+        }
+        Insert: {
+          cmc?: number
+          colors?: string[]
+          image_url?: string | null
+          mana_cost?: string | null
+          name: string
+          oracle_id: string
+          oracle_text?: string | null
+          type_line?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cmc?: number
+          colors?: string[]
+          image_url?: string | null
+          mana_cost?: string | null
+          name?: string
+          oracle_id?: string
+          oracle_text?: string | null
+          type_line?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       collection_cards: {
         Row: {
           card_name: string
@@ -68,6 +125,83 @@ export type Database = {
           scryfall_id?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      community_deck_cards: {
+        Row: {
+          board: string
+          card_name: string
+          deck_id: string
+          id: string
+          quantity: number
+          scryfall_oracle_id: string | null
+        }
+        Insert: {
+          board?: string
+          card_name: string
+          deck_id: string
+          id?: string
+          quantity?: number
+          scryfall_oracle_id?: string | null
+        }
+        Update: {
+          board?: string
+          card_name?: string
+          deck_id?: string
+          id?: string
+          quantity?: number
+          scryfall_oracle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_deck_cards_deck_id_fkey"
+            columns: ["deck_id"]
+            isOneToOne: false
+            referencedRelation: "community_decks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_decks: {
+        Row: {
+          archetype: string | null
+          colors: string[]
+          commander: string | null
+          created_at: string
+          event_date: string | null
+          event_name: string | null
+          format: string
+          id: string
+          name: string
+          source: string
+          source_id: string | null
+        }
+        Insert: {
+          archetype?: string | null
+          colors?: string[]
+          commander?: string | null
+          created_at?: string
+          event_date?: string | null
+          event_name?: string | null
+          format?: string
+          id?: string
+          name: string
+          source: string
+          source_id?: string | null
+        }
+        Update: {
+          archetype?: string | null
+          colors?: string[]
+          commander?: string | null
+          created_at?: string
+          event_date?: string | null
+          event_name?: string | null
+          format?: string
+          id?: string
+          name?: string
+          source?: string
+          source_id?: string | null
         }
         Relationships: []
       }
@@ -544,6 +678,21 @@ export type Database = {
     }
     Functions: {
       cleanup_expired_cache: { Args: never; Returns: undefined }
+      get_card_recommendations: {
+        Args: {
+          result_limit?: number
+          target_format?: string
+          target_oracle_id: string
+        }
+        Returns: {
+          card_name: string
+          cooccurrence_count: number
+          image_url: string
+          mana_cost: string
+          oracle_id: string
+          type_line: string
+        }[]
+      }
       get_price_movers: {
         Args: { days_back?: number; limit_count?: number }
         Returns: {
