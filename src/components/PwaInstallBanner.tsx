@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { X, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/lib/i18n';
 
 const DISMISS_KEY = 'offmeta_pwa_dismissed';
 
@@ -25,6 +26,7 @@ export function PwaInstallBanner() {
       return false;
     }
   });
+  const { t } = useTranslation();
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -60,19 +62,19 @@ export function PwaInstallBanner() {
     <div className="fixed bottom-4 right-4 z-40 flex items-center gap-3 px-4 py-3 rounded-xl border border-border bg-card/95 backdrop-blur-lg shadow-lg animate-reveal max-w-xs">
       <Download className="h-5 w-5 text-primary flex-shrink-0" />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground">Install OffMeta</p>
+        <p className="text-sm font-medium text-foreground">{t('pwa.installTitle')}</p>
         <p className="text-xs text-muted-foreground">
-          Quick access from your home screen
+          {t('pwa.installDesc')}
         </p>
       </div>
       <div className="flex items-center gap-1">
         <Button size="sm" variant="accent" onClick={handleInstall} className="h-8 text-xs">
-          Install
+          {t('pwa.install')}
         </Button>
         <button
           onClick={handleDismiss}
           className="p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
-          aria-label="Dismiss"
+          aria-label={t('pwa.dismiss')}
         >
           <X className="h-4 w-4" />
         </button>

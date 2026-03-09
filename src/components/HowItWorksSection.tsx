@@ -34,25 +34,25 @@ export function HowItWorksSection() {
         icon: MessageSquareText,
         title: t('howItWorks.step1Title'),
         description: t('howItWorks.step1Desc'),
-        accent: 'Type naturally — no syntax memorization required.',
+        accent: t('howItWorks.step1Accent'),
       },
       {
         icon: Eye,
         title: t('howItWorks.step2Title'),
         description: t('howItWorks.step2Desc'),
-        accent: 'See exactly what we searched so you stay in control.',
+        accent: t('howItWorks.step2Accent'),
       },
       {
         icon: Grid3X3,
         title: t('howItWorks.step3Title'),
         description: t('howItWorks.step3Desc'),
-        accent: 'Rich card data, prices, and printings at a glance.',
+        accent: t('howItWorks.step3Accent'),
       },
       {
         icon: SlidersHorizontal,
         title: t('howItWorks.step4Title'),
         description: t('howItWorks.step4Desc'),
-        accent: 'Narrow results by color, type, price, and more.',
+        accent: t('howItWorks.step4Accent'),
       },
     ],
     [t],
@@ -67,7 +67,7 @@ export function HowItWorksSection() {
       <div className="container-main">
         <div className="text-center mb-10 sm:mb-14">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-accent/20 bg-accent/5 text-accent text-xs font-medium mb-4">
-            ✦ Dead simple
+            {t('howItWorks.badge')}
           </span>
           <h2
             id="how-it-works-heading"
@@ -76,7 +76,7 @@ export function HowItWorksSection() {
             {t('howItWorks.heading')}
           </h2>
           <p className="text-sm sm:text-base text-muted-foreground mt-2 max-w-md mx-auto">
-            From thought to results in under 3 seconds. No learning curve.
+            {t('howItWorks.subtitle')}
           </p>
         </div>
 

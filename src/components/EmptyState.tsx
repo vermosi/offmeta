@@ -6,20 +6,10 @@ import type { QuerySuggestion } from '@/hooks/useQuerySuggestions';
 interface EmptyStateProps {
   query?: string;
   onTryExample?: (query: string) => void;
-  /** "Did you mean?" suggestions from useQuerySuggestions */
   suggestions?: QuerySuggestion[];
-  /** Whether suggestions are still being checked */
   isCheckingSuggestions?: boolean;
-  /** Callback when user clicks a suggestion (runs it as a raw Scryfall query) */
   onTrySuggestion?: (scryfallQuery: string) => void;
 }
-
-const exampleQueries = [
-  'blue counterspells under $5',
-  'legendary creatures that draw cards',
-  'green ramp spells from modern',
-  'artifact creatures with deathtouch',
-];
 
 export const EmptyState = ({
   query,
@@ -35,6 +25,13 @@ export const EmptyState = ({
     t('empty.tip2'),
     t('empty.tip3'),
     t('empty.tip4'),
+  ];
+
+  const exampleQueries = [
+    t('empty.example1'),
+    t('empty.example2'),
+    t('empty.example3'),
+    t('empty.example4'),
   ];
 
   const hasSuggestions = suggestions && suggestions.length > 0;
@@ -62,7 +59,7 @@ export const EmptyState = ({
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-foreground">
-              Did you mean?
+              {t('empty.didYouMean')}
             </span>
             {isCheckingSuggestions && !hasSuggestions && (
               <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground ml-auto" />
@@ -89,7 +86,7 @@ export const EmptyState = ({
                     </p>
                   </div>
                   <span className="shrink-0 text-xs font-medium text-primary/70 group-hover:text-primary tabular-nums">
-                    {s.totalCards.toLocaleString()} cards
+                    {t('empty.cardCount').replace('{count}', s.totalCards.toLocaleString())}
                   </span>
                 </button>
               ))}
@@ -98,7 +95,7 @@ export const EmptyState = ({
 
           {isCheckingSuggestions && !hasSuggestions && (
             <p className="text-xs text-muted-foreground">
-              Checking simpler alternatives…
+              {t('empty.checkingAlternatives')}
             </p>
           )}
         </div>

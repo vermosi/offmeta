@@ -9,6 +9,7 @@ import { CardItem } from '@/components/CardItem';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Sparkles, DollarSign, Zap, ExternalLink } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 interface SimilarCardsPanelProps {
   data: SimilarityData | null | undefined;
@@ -60,23 +61,27 @@ function CardSection({
 function SynergySection({
   synergyCards,
   sourceCardName,
+  playedAlongsideLabel,
 }: {
   synergyCards: SynergyCard[];
   sourceCardName: string;
+  playedAlongsideLabel: string;
 }) {
+  const { t } = useTranslation();
+
   if (synergyCards.length === 0) return null;
 
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-1.5">
         <Zap className="h-4 w-4 text-primary" />
-        <h3 className="text-sm font-semibold text-foreground">Synergy Cards</h3>
+        <h3 className="text-sm font-semibold text-foreground">{t('similar.synergy')}</h3>
         <Badge variant="secondary" size="sm" className="ml-1">
           {synergyCards.length}
         </Badge>
       </div>
       <p className="text-xs text-muted-foreground">
-        Cards frequently played alongside {sourceCardName}
+        {playedAlongsideLabel}
       </p>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {synergyCards.map((card) => (
@@ -106,6 +111,8 @@ function SynergySection({
 }
 
 export function SimilarCardsPanel({ data, isLoading, onCardClick }: SimilarCardsPanelProps) {
+  const { t } = useTranslation();
+
   if (isLoading) {
     return (
       <div className="space-y-6 py-4">
@@ -128,10 +135,10 @@ export function SimilarCardsPanel({ data, isLoading, onCardClick }: SimilarCards
       <div className="text-center py-12">
         <Sparkles className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
         <p className="text-sm text-muted-foreground">
-          Search for a specific card name to see similar cards
+          {t('similar.searchPrompt')}
         </p>
         <p className="text-xs text-muted-foreground mt-1">
-          Try searching for &quot;Lightning Bolt&quot; or &quot;Sol Ring&quot;
+          {t('similar.searchHint')}
         </p>
       </div>
     );
@@ -146,29 +153,30 @@ export function SimilarCardsPanel({ data, isLoading, onCardClick }: SimilarCards
       <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10">
         <Sparkles className="h-4 w-4 text-primary" />
         <span className="text-sm">
-          Showing cards similar to <strong className="text-foreground">{data.sourceCard.name}</strong>
+          {t('similar.showingSimilarTo')}{' '}<strong className="text-foreground">{data.sourceCard.name}</strong>
         </span>
       </div>
 
       <CardSection
-        title="Similar Cards"
+        title={t('similar.title')}
         icon={Sparkles}
         cards={similarCards}
         onCardClick={onCardClick}
-        emptyMessage="No similar cards found"
+        emptyMessage={t('similar.noSimilar')}
       />
 
       <CardSection
-        title="Budget Alternatives"
+        title={t('similar.budget')}
         icon={DollarSign}
         cards={budgetCards}
         onCardClick={onCardClick}
-        emptyMessage="No budget alternatives found"
+        emptyMessage={t('similar.noBudget')}
       />
 
       <SynergySection
         synergyCards={data.synergyCards}
         sourceCardName={data.sourceCard.name}
+        playedAlongsideLabel={t('similar.playedAlongside').replace('{name}', data.sourceCard.name)}
       />
     </div>
   );

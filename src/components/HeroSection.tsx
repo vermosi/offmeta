@@ -16,9 +16,9 @@ const HERO_PHRASES = [
 ] as const;
 
 const UNIQUE_BENEFITS = [
-  { icon: Brain, label: 'AI-powered' },
-  { icon: Zap, label: 'Instant results' },
-  { icon: Sparkles, label: 'No syntax' },
+  { icon: Brain, labelKey: 'hero.benefitAi' },
+  { icon: Zap, labelKey: 'hero.benefitInstant' },
+  { icon: Sparkles, labelKey: 'hero.benefitNoSyntax' },
 ] as const;
 
 export function HeroSection() {
@@ -35,7 +35,7 @@ export function HeroSection() {
         {/* Pill badge — hidden on mobile */}
         <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-accent/20 bg-accent/5 text-accent text-xs font-medium mb-5 animate-fade-in">
           <Sparkles className="h-3 w-3" aria-hidden="true" />
-          <span>Search Magic cards like a human, not a robot</span>
+          <span>{t('hero.pillBadge')}</span>
         </div>
 
         {/* Main headline */}
@@ -49,11 +49,11 @@ export function HeroSection() {
 
         {/* Subtitle — shorter on mobile */}
         <p className="text-xs sm:text-base lg:text-lg text-muted-foreground max-w-lg mx-auto mb-3 sm:mb-6 animate-slide-up" style={{ animationDelay: '100ms' }}>
-          <span className="sm:hidden">Describe what you need — we find it instantly.</span>
+          <span className="sm:hidden">{t('hero.subtitleMobile')}</span>
           <span className="hidden sm:inline">
-            Forget cryptic Scryfall syntax. Just{' '}
-            <span className="text-foreground font-medium">describe what you need</span>{' '}
-            and we'll find it — instantly.
+            {t('hero.subtitleDesktop1')}{' '}
+            <span className="text-foreground font-medium">{t('hero.subtitleDesktop2')}</span>{' '}
+            {t('hero.subtitleDesktop3')}
           </span>
         </p>
 
@@ -74,13 +74,13 @@ export function HeroSection() {
 
         {/* Benefit chips — compact on mobile */}
         <div className="flex items-center justify-center gap-1.5 sm:gap-3 animate-slide-up" style={{ animationDelay: '200ms' }}>
-          {UNIQUE_BENEFITS.map(({ icon: Icon, label }) => (
+          {UNIQUE_BENEFITS.map(({ icon: Icon, labelKey }) => (
             <div
-              key={label}
+              key={labelKey}
               className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-secondary/60 border border-border/40 text-[10px] sm:text-xs text-muted-foreground"
             >
               <Icon className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-accent" aria-hidden="true" />
-              <span>{label}</span>
+              <span>{t(labelKey)}</span>
             </div>
           ))}
         </div>
