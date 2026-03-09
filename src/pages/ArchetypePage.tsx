@@ -8,8 +8,10 @@ import { useEffect, useCallback } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { ManaSymbol } from '@/components/ManaSymbol';
+import { Badge } from '@/components/ui/badge';
 import { ARCHETYPES } from '@/data/archetypes';
-import { Compass, Lightbulb, Star, DollarSign, Search } from 'lucide-react';
+import { useArchetypeDeckCounts } from '@/hooks/useArchetypeDeckCounts';
+import { Compass, Lightbulb, Star, DollarSign, Search, Layers, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { SkipLinks } from '@/components/SkipLinks';
@@ -20,6 +22,7 @@ export default function ArchetypePage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const archetype = ARCHETYPES.find((a) => a.slug === slug);
+  const { data: deckCounts } = useArchetypeDeckCounts();
 
   // SEO meta tags
   useEffect(() => {
@@ -186,8 +189,33 @@ export default function ArchetypePage() {
               {archetype.budgetTip}
             </p>
           </section>
+          {/* Community decks count */}
+          {(() => {
+            const count = deckCounts?.get(archetype.slug) ?? deckCounts?.get(archetype.name.toLowerCase()) ?? 0;
+            return count > 0 ? (
+              <section className="rounded-xl border border-border/50 bg-card/50 p-5 sm:p-6 mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <Layers className="h-4 w-4 text-primary" />
+                  <h2 className="text-sm font-semibold text-foreground">Community Decklists</h2>
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 font-normal ml-auto">
+                    {count.toLocaleString()} {count === 1 ? 'deck' : 'decks'}
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mb-3">
+                  {count.toLocaleString()} community {archetype.name} decklists have been tracked and analyzed.
+                </p>
+                <Link
+                  to={`/decks?archetype=${encodeURIComponent(archetype.slug)}`}
+                  className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+                >
+                  Browse {archetype.name} decks
+                  <ExternalLink className="h-3 w-3" />
+                </Link>
+              </section>
+            ) : null;
+          })()}
 
-          {/* Related archetypes */}
+
           {related.length > 0 && (
             <section className="rounded-xl border border-border/50 bg-card/50 p-5 sm:p-6">
               <div className="flex items-center gap-2 mb-3">
