@@ -323,13 +323,9 @@ const Index = () => {
           style={{ transform: 'translate3d(0, calc(var(--scroll-y, 0px) * -0.18), 0)' }}
         />
         <div
-          className="fixed inset-0 pointer-events-none bg-page-mesh"
-          aria-hidden="true"
-          style={{ opacity: 0.55 }}
-        />
-        <div
           className="fixed inset-0 pointer-events-none bg-page-noise"
           aria-hidden="true"
+          style={{ opacity: 0.035 }}
         />
 
         <Header />
