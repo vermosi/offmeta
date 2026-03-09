@@ -80,4 +80,21 @@ describe('Footer', () => {
     renderFooter();
     expect(screen.getByRole('contentinfo')).toBeInTheDocument();
   });
+
+  it('renders Data Sources section with Moxfield and Commander Spellbook', () => {
+    renderFooter();
+    expect(screen.getByText('Data Sources')).toBeInTheDocument();
+    expect(screen.getByText('Moxfield').closest('a')).toHaveAttribute('href', 'https://www.moxfield.com');
+    expect(screen.getByText('Commander Spellbook').closest('a')).toHaveAttribute('href', 'https://commanderspellbook.com');
+  });
+
+  it('renders Built With section with tech stack links', () => {
+    renderFooter();
+    expect(screen.getByText('Built With')).toBeInTheDocument();
+    expect(screen.getByText('React').closest('a')).toHaveAttribute('href', 'https://react.dev');
+    expect(screen.getByText('TypeScript').closest('a')).toHaveAttribute('href', 'https://www.typescriptlang.org');
+    expect(screen.getByText('Tailwind CSS').closest('a')).toHaveAttribute('href', 'https://tailwindcss.com');
+    expect(screen.getByText('Vite').closest('a')).toHaveAttribute('href', 'https://vitejs.dev');
+    expect(screen.getByText('Lovable').closest('a')).toHaveAttribute('href', 'https://lovable.dev');
+  });
 });
