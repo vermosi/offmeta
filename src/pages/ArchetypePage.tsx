@@ -127,20 +127,25 @@ function useArchetypeTopCards(archetype: string, format: string | null) {
       if (cardErr) throw cardErr;
       if (!cards || cards.length === 0) return [];
 
-      // For Pauper, filter to commons only using the cards table rarity
+      // Filter cards by format legality when a format is selected
       let allowedCards: Set<string> | null = null;
-      if (format === 'pauper') {
+      if (format) {
         const oracleIds = [...new Set(
           cards.map((c) => c.scryfall_oracle_id).filter(Boolean) as string[]
         )];
         if (oracleIds.length > 0) {
           const { data: cardRows } = await supabase
             .from('cards')
-            .select('name, rarity')
+            .select('name, legalities')
             .in('oracle_id', oracleIds.slice(0, 200));
           if (cardRows && cardRows.length > 0) {
             allowedCards = new Set(
-              cardRows.filter((r) => r.rarity === 'common').map((r) => r.name)
+              cardRows
+                .filter((r) => {
+                  const legalities = r.legalities as Record<string, string> | null;
+                  return legalities && legalities[format] === 'legal';
+                })
+                .map((r) => r.name)
             );
           }
         }
