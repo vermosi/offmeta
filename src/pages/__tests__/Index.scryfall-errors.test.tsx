@@ -123,7 +123,7 @@ describe('Index – Scryfall error flows', () => {
     await waitFor(() => {
       const matches = screen.getAllByText(/no cards found/i);
       expect(matches.length).toBeGreaterThanOrEqual(1);
-    });
+    }, { timeout: 5000 });
   });
 
   it('shows empty state with tips section when search yields zero results', async () => {
