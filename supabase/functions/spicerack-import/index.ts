@@ -340,6 +340,7 @@ serve(async (req: Request): Promise<Response> => {
             colors: deckColors,
             event_name: tournamentName,
             event_date: startDate,
+            source_url: sourceUrl,
           })
           .select('id')
           .single();
