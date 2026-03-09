@@ -1,0 +1,1 @@
+ALTER TABLE public.community_decks ADD COLUMN source_url text DEFAULT NULL;
