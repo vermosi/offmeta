@@ -38,6 +38,10 @@ const FORMAT_MAP: Record<string, string> = {
   PAUPER_COMMANDER: 'paupercommander',
   OLDSCHOOL: 'oldschool',
   OTHER: 'other',
+  GLADIATOR: 'gladiator',
+  STANDARD_BRAWL: 'standardbrawl',
+  PREDH: 'predh',
+  TRIOS_CONSTRUCTED: 'other',
 };
 
 /**
