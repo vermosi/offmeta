@@ -150,10 +150,10 @@ export default function ArchetypesIndex() {
                   <button
                     key={fd.format}
                     role="tab"
-                    aria-selected={activeFormat === fd.format}
+                    aria-selected={effectiveFormat === fd.format}
                     onClick={() => setActiveFormat(fd.format)}
                     className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                      activeFormat === fd.format
+                      effectiveFormat === fd.format
                         ? 'bg-primary text-primary-foreground'
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                     }`}
