@@ -448,31 +448,41 @@ export default function ArchetypePage() {
               </p>
             ) : (
               <div className="space-y-2">
-                {decks.slice(0, 15).map((deck) => (
-                  <div
-                    key={deck.id}
-                    className="flex items-center gap-3 p-3 rounded-lg border border-border/40 hover:bg-muted/20 transition-colors"
-                  >
-                    <span className="inline-flex items-center gap-0.5 flex-shrink-0">
-                      {(deck.colors ?? []).length > 0 ? (
-                        deck.colors.map((c) => (
-                          <ManaSymbol key={c} symbol={c} size="sm" className="h-3.5 w-3.5" />
-                        ))
-                      ) : (
-                        <ManaSymbol symbol="C" size="sm" className="h-3.5 w-3.5" />
+                {decks.slice(0, 15).map((deck) => {
+                  const Wrapper = deck.source_url ? 'a' : 'div';
+                  const wrapperProps = deck.source_url
+                    ? { href: deck.source_url, target: '_blank', rel: 'noopener noreferrer' }
+                    : {};
+                  return (
+                    <Wrapper
+                      key={deck.id}
+                      {...wrapperProps}
+                      className={`flex items-center gap-3 p-3 rounded-lg border border-border/40 hover:bg-muted/20 transition-colors ${deck.source_url ? 'cursor-pointer' : ''}`}
+                    >
+                      <span className="inline-flex items-center gap-0.5 flex-shrink-0">
+                        {(deck.colors ?? []).length > 0 ? (
+                          deck.colors.map((c) => (
+                            <ManaSymbol key={c} symbol={c} size="sm" className="h-3.5 w-3.5" />
+                          ))
+                        ) : (
+                          <ManaSymbol symbol="C" size="sm" className="h-3.5 w-3.5" />
+                        )}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-foreground truncate">{deck.name}</p>
+                        {deck.commander && (
+                          <p className="text-[10px] text-muted-foreground truncate">{deck.commander}</p>
+                        )}
+                      </div>
+                      {deck.source_url && (
+                        <ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                       )}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-foreground truncate">{deck.name}</p>
-                      {deck.commander && (
-                        <p className="text-[10px] text-muted-foreground truncate">{deck.commander}</p>
-                      )}
-                    </div>
-                    <Badge variant="outline" className="text-[10px] flex-shrink-0">
-                      {FORMAT_LABELS[deck.format] ?? deck.format}
-                    </Badge>
-                  </div>
-                ))}
+                      <Badge variant="outline" className="text-[10px] flex-shrink-0">
+                        {FORMAT_LABELS[deck.format] ?? deck.format}
+                      </Badge>
+                    </Wrapper>
+                  );
+                })}
                 {decks.length > 15 && (
                   <p className="text-[10px] text-muted-foreground text-center pt-2">
                     Showing 15 of {decks.length} decklists
