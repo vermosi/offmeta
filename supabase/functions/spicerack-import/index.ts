@@ -233,7 +233,8 @@ serve(async (req: Request): Promise<Response> => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const numDays = body.num_days ?? 14;
+    const backfillUrls = body.backfill_urls === true;
+    const numDays = body.num_days ?? (backfillUrls ? 90 : 14);
     const eventFormat = body.event_format ?? null; // e.g. "MODERN", "COMMANDER2"
 
     // Build API URL with query params
