@@ -9,6 +9,7 @@ import { StaplesSection } from '@/components/StaplesSection';
 import { HowItWorksSection } from '@/components/HowItWorksSection';
 import { FAQSection } from '@/components/FAQSection';
 import { RecentSearches } from '@/components/RecentSearches';
+import { TrendingCardsWidget } from '@/components/TrendingCardsWidget';
 
 interface HomeDiscoverySectionProps {
   onSearch: (query: string) => void;
@@ -21,8 +22,11 @@ export function HomeDiscoverySection({ onSearch }: HomeDiscoverySectionProps) {
         <RecentSearches onSearch={onSearch} />
       </div>
       <FeaturesShowcase />
-      <div id="daily-pick" className="container-main">
-        <DailyPick />
+      <div className="container-main grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div id="daily-pick">
+          <DailyPick />
+        </div>
+        <TrendingCardsWidget />
       </div>
       <div className="container-main">
         <StaplesSection onSearch={onSearch} />
