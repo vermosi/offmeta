@@ -1,7 +1,13 @@
 /**
- * price-snapshot — Nightly edge function to capture price snapshots
- * for all cards in users' collections.
+ * price-snapshot — Daily edge function to capture price snapshots
+ * for tracked cards (user collections + curated staples watchlist).
  * Triggered by pg_cron or manual invocation.
+ *
+ * Sources (deduplicated by card name):
+ *   1. collection_cards — user-owned cards
+ *   2. community_deck_cards — popular community deck cards
+ *   3. STAPLES_WATCHLIST — curated list of high-interest staples
+ *
  * @module functions/price-snapshot
  */
 
@@ -13,9 +19,104 @@ import { getCorsHeaders } from '../_shared/auth.ts';
 import { createLogger } from '../_shared/logger.ts';
 
 const BATCH_SIZE = 75;
-const SCRYFALL_DELAY_MS = 100;
+const SCRYFALL_DELAY_MS = 120; // Scryfall asks for 50-100ms between requests
 
 const log = createLogger('price-snapshot');
+
+/**
+ * Curated watchlist of popular Commander/Modern/Standard staples
+ * that should always have price tracking, regardless of user collections.
+ * Covers top value cards across formats for meaningful market trend data.
+ */
+const STAPLES_WATCHLIST: string[] = [
+  // Commander staples — high value
+  'Dockside Extortionist',
+  'Mana Crypt',
+  'Jeweled Lotus',
+  'The One Ring',
+  'Smothering Tithe',
+  'Rhystic Study',
+  'Cyclonic Rift',
+  'Fierce Guardianship',
+  'Deflecting Swat',
+  "Teferi's Protection",
+  'Esper Sentinel',
+  'Mana Drain',
+  'Force of Will',
+  'Chrome Mox',
+  'Mox Diamond',
+  'Ancient Tomb',
+  'Gaea\'s Cradle',
+  'Serra\'s Sanctum',
+  'Vampiric Tutor',
+  'Demonic Tutor',
+  'Sylvan Library',
+  'Doubling Season',
+  'Parallel Lives',
+  'Enlightened Tutor',
+  'Mystical Tutor',
+  'Worldly Tutor',
+  'Sensei\'s Divining Top',
+  'Urza\'s Saga',
+  'The Meathook Massacre',
+  'Boseiju, Who Endures',
+
+  // Modern staples
+  'Ragavan, Nimble Pilferer',
+  'Wrenn and Six',
+  'Orcish Bowmasters',
+  'Solitude',
+  'Subtlety',
+  'Fury',
+  'Endurance',
+  'Grief',
+  'Aether Vial',
+  'Cavern of Souls',
+  'Misty Rainforest',
+  'Scalding Tarn',
+  'Verdant Catacombs',
+  'Polluted Delta',
+  'Flooded Strand',
+  'Bloodstained Mire',
+  'Wooded Foothills',
+  'Windswept Heath',
+  'Arid Mesa',
+  'Marsh Flats',
+
+  // Standard / Pioneer crossovers
+  'Sheoldred, the Apocalypse',
+  'Atraxa, Grand Unifier',
+  'Fable of the Mirror-Breaker',
+  'Ledger Shredder',
+  'Raffine, Scheming Seer',
+  'Omnath, Locus of Creation',
+  'Wandering Emperor',
+  'Wedding Announcement',
+
+  // EDH / cEDH powerhouses
+  'Ad Nauseam',
+  'Thassa\'s Oracle',
+  'Underworld Breach',
+  'Tainted Pact',
+  'Dauthi Voidwalker',
+  'Opposition Agent',
+  'Drannith Magistrate',
+  'Grand Abolisher',
+  'Collector Ouphe',
+  'Null Rod',
+
+  // Lands with price movement
+  'Yavimaya, Cradle of Growth',
+  'Urborg, Tomb of Yawgmoth',
+  'Strip Mine',
+  'Wasteland',
+  'Command Tower',
+  'Arcane Signet',
+  'Sol Ring',
+  'Lightning Greaves',
+  'Swiftfoot Boots',
+  'Skullclamp',
+];
 
 serve(async (req: Request): Promise<Response> => {
   const corsHeaders = getCorsHeaders(req);
@@ -35,26 +136,59 @@ serve(async (req: Request): Promise<Response> => {
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
   try {
-    // Get distinct card names from all collections
-    const { data: cards, error: fetchErr } = await supabase
+    // ── Gather card names from all sources ──────────────────────────
+
+    const uniqueCards = new Map<string, string | null>(); // card_name → scryfall_id
+
+    // Source 1: User collection cards
+    const { data: collectionCards } = await supabase
       .from('collection_cards')
       .select('card_name, scryfall_id')
       .limit(5000);
 
-    if (fetchErr) throw fetchErr;
-    if (!cards || cards.length === 0) {
-      return new Response(JSON.stringify({ success: true, snapshotCount: 0 }), { status: 200, headers });
-    }
-
-    // Deduplicate by card_name
-    const uniqueCards = new Map<string, string | null>();
-    for (const c of cards) {
+    for (const c of collectionCards ?? []) {
       if (!uniqueCards.has(c.card_name)) {
         uniqueCards.set(c.card_name, c.scryfall_id);
       }
     }
 
+    // Source 2: Community deck cards (most popular by occurrence)
+    const { data: communityCards } = await supabase
+      .from('community_deck_cards')
+      .select('card_name')
+      .limit(2000);
+
+    // Count occurrences and take top 200 unique community cards
+    const communityFreq = new Map<string, number>();
+    for (const c of communityCards ?? []) {
+      communityFreq.set(c.card_name, (communityFreq.get(c.card_name) ?? 0) + 1);
+    }
+    const topCommunity = [...communityFreq.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 200);
+
+    for (const [name] of topCommunity) {
+      if (!uniqueCards.has(name)) {
+        uniqueCards.set(name, null);
+      }
+    }
+
+    // Source 3: Curated watchlist (always tracked)
+    for (const name of STAPLES_WATCHLIST) {
+      if (!uniqueCards.has(name)) {
+        uniqueCards.set(name, null);
+      }
+    }
+
     const cardList = Array.from(uniqueCards.entries());
+    log.info(`Tracking ${cardList.length} unique cards (${collectionCards?.length ?? 0} collection, ${topCommunity.length} community, ${STAPLES_WATCHLIST.length} watchlist)`);
+
+    if (cardList.length === 0) {
+      return new Response(JSON.stringify({ success: true, snapshotCount: 0 }), { status: 200, headers });
+    }
+
+    // ── Batch fetch prices from Scryfall ────────────────────────────
+
     const snapshots: Array<{
       card_name: string;
       scryfall_id: string | null;
@@ -62,7 +196,6 @@ serve(async (req: Request): Promise<Response> => {
       price_usd_foil: number | null;
     }> = [];
 
-    // Batch fetch prices from Scryfall
     for (let i = 0; i < cardList.length; i += BATCH_SIZE) {
       const batch = cardList.slice(i, i + BATCH_SIZE);
       const identifiers = batch.map(([name, id]) =>
@@ -86,29 +219,39 @@ serve(async (req: Request): Promise<Response> => {
               price_usd_foil: card.prices?.usd_foil ? parseFloat(card.prices.usd_foil) : null,
             });
           }
+        } else {
+          const errText = await resp.text();
+          log.warn(`Scryfall batch ${i} returned ${resp.status}`, { body: errText.slice(0, 200) });
         }
       } catch (e) {
         log.warn('Scryfall batch failed', { batch: i, error: String(e) });
       }
 
+      // Rate limit: wait between batches
       if (i + BATCH_SIZE < cardList.length) {
         await new Promise((r) => setTimeout(r, SCRYFALL_DELAY_MS));
       }
     }
 
-    // Insert snapshots
-    if (snapshots.length > 0) {
-      const { error: insertErr } = await supabase
-        .from('price_snapshots')
-        .insert(snapshots);
+    // ── Insert snapshots ────────────────────────────────────────────
 
-      if (insertErr) {
-        log.error('Failed to insert snapshots', insertErr);
-        throw insertErr;
+    if (snapshots.length > 0) {
+      // Insert in chunks of 500 to avoid payload limits
+      for (let i = 0; i < snapshots.length; i += 500) {
+        const chunk = snapshots.slice(i, i + 500);
+        const { error: insertErr } = await supabase
+          .from('price_snapshots')
+          .insert(chunk);
+
+        if (insertErr) {
+          log.error(`Failed to insert snapshot chunk ${i}`, insertErr);
+          throw insertErr;
+        }
       }
     }
 
-    // Clean up snapshots older than 90 days
+    // ── Cleanup old snapshots (>90 days) ────────────────────────────
+
     const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
     await supabase
       .from('price_snapshots')
@@ -118,7 +261,16 @@ serve(async (req: Request): Promise<Response> => {
     log.info(`Captured ${snapshots.length} price snapshots`);
 
     return new Response(
-      JSON.stringify({ success: true, snapshotCount: snapshots.length }),
+      JSON.stringify({
+        success: true,
+        snapshotCount: snapshots.length,
+        sources: {
+          collection: collectionCards?.length ?? 0,
+          community: topCommunity.length,
+          watchlist: STAPLES_WATCHLIST.length,
+          uniqueTracked: cardList.length,
+        },
+      }),
       { status: 200, headers },
     );
   } catch (e) {
