@@ -1,6 +1,10 @@
 /**
- * spicerack-import — Fetches tournament decklists from Spicerack API.
- * Maps cards to Scryfall oracle IDs and stores in community_decks.
+ * spicerack-import — Fetches tournament decklists from Spicerack's
+ * public decklist database API and stores them in community_decks.
+ *
+ * Documented endpoint: GET https://api.spicerack.gg/api/export-decklists/
+ * Auth: X-API-Key header
+ *
  * @module functions/spicerack-import
  */
 
@@ -13,6 +17,64 @@ import { createLogger } from '../_shared/logger.ts';
 const log = createLogger('spicerack-import');
 const SCRYFALL_DELAY_MS = 100;
 const SCRYFALL_BATCH_SIZE = 75;
+
+/** Map Spicerack format strings to our lowercase format names. */
+const FORMAT_MAP: Record<string, string> = {
+  STANDARD: 'standard',
+  MODERN: 'modern',
+  PIONEER: 'pioneer',
+  LEGACY: 'legacy',
+  VINTAGE: 'vintage',
+  COMMANDER2: 'commander',
+  PAUPER: 'pauper',
+  BOOSTER_DRAFT: 'draft',
+  SEALED_DECK: 'sealed',
+  HISTORIC: 'historic',
+  EXPLORER: 'explorer',
+  TIMELESS: 'timeless',
+  DUEL: 'duel',
+  OATHBREAKER: 'oathbreaker',
+  PREMODERN: 'premodern',
+  PAUPER_COMMANDER: 'paupercommander',
+  OLDSCHOOL: 'oldschool',
+  OTHER: 'other',
+};
+
+/**
+ * Parse a plaintext decklist (MTGO/Arena format) into card entries.
+ * Expected lines: "2 Lightning Bolt" or "1x Sol Ring"
+ */
+function parseDecklistText(text: string): { name: string; quantity: number; board: string }[] {
+  if (!text || typeof text !== 'string') return [];
+
+  const cards: { name: string; quantity: number; board: string }[] = [];
+  let currentBoard = 'mainboard';
+
+  for (const raw of text.split('\n')) {
+    const line = raw.trim();
+    if (!line) continue;
+
+    // Detect sideboard header
+    if (/^sideboard/i.test(line) || line === 'SB:') {
+      currentBoard = 'sideboard';
+      continue;
+    }
+
+    // Match "2 Card Name" or "2x Card Name" or "SB: 1 Card Name"
+    const sbPrefix = line.startsWith('SB:') ? 'sideboard' : null;
+    const cleaned = sbPrefix ? line.slice(3).trim() : line;
+    const match = cleaned.match(/^(\d+)x?\s+(.+)$/);
+    if (!match) continue;
+
+    const quantity = parseInt(match[1], 10);
+    const name = match[2].trim();
+    if (name && quantity > 0) {
+      cards.push({ name, quantity, board: sbPrefix ?? currentBoard });
+    }
+  }
+
+  return cards;
+}
 
 /**
  * Batch-resolve oracle IDs using Scryfall /cards/collection endpoint.
@@ -72,22 +134,41 @@ serve(async (req: Request): Promise<Response> => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const spicerackApiKey = Deno.env.get('SPICERACK_API_KEY');
+
   if (!supabaseUrl || !serviceRoleKey) {
     return new Response(JSON.stringify({ error: 'Not configured' }), { status: 500, headers });
+  }
+
+  if (!spicerackApiKey) {
+    return new Response(
+      JSON.stringify({ error: 'SPICERACK_API_KEY not configured' }),
+      { status: 500, headers },
+    );
   }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
   try {
     const body = await req.json().catch(() => ({}));
-    const page = body.page ?? 1;
-    const perPage = body.per_page ?? 50;
+    const numDays = body.num_days ?? 14;
+    const eventFormat = body.event_format ?? null; // e.g. "MODERN", "COMMANDER2"
 
-    const apiUrl = `https://api.spicerack.gg/public/decks?page=${page}&per_page=${perPage}`;
-    log.info(`Fetching Spicerack decks: ${apiUrl}`);
+    // Build API URL with query params
+    const apiUrl = new URL('https://api.spicerack.gg/api/export-decklists/');
+    apiUrl.searchParams.set('num_days', String(numDays));
+    apiUrl.searchParams.set('decklist_as_text', 'true');
+    if (eventFormat) {
+      apiUrl.searchParams.set('event_format', eventFormat);
+    }
 
-    const apiResp = await fetch(apiUrl, {
-      headers: { 'Accept': 'application/json' },
+    log.info(`Fetching Spicerack tournaments: ${apiUrl.toString()}`);
+
+    const apiResp = await fetch(apiUrl.toString(), {
+      headers: {
+        'Accept': 'application/json',
+        'X-API-Key': spicerackApiKey,
+      },
     });
 
     if (!apiResp.ok) {
@@ -95,110 +176,122 @@ serve(async (req: Request): Promise<Response> => {
       if (apiResp.status === 404) {
         return new Response(
           JSON.stringify({ success: true, message: 'Spicerack API not available', imported: 0 }),
-          { status: 200, headers }
+          { status: 200, headers },
         );
       }
       throw new Error(`Spicerack API error: ${apiResp.status} ${text.slice(0, 200)}`);
     }
 
-    const apiData = await apiResp.json();
-    const decks = apiData.data ?? apiData.decks ?? apiData ?? [];
+    const tournaments = await apiResp.json();
 
-    if (!Array.isArray(decks) || decks.length === 0) {
+    if (!Array.isArray(tournaments) || tournaments.length === 0) {
       return new Response(
-        JSON.stringify({ success: true, message: 'No decks returned', imported: 0 }),
-        { status: 200, headers }
+        JSON.stringify({ success: true, message: 'No tournaments returned', imported: 0, tournaments: 0 }),
+        { status: 200, headers },
       );
     }
 
     let imported = 0;
     let skipped = 0;
+    let tournamentsProcessed = 0;
 
-    for (const deck of decks) {
-      const sourceId = String(deck.id ?? deck.deck_id ?? '');
-      if (!sourceId) { skipped++; continue; }
+    for (const tournament of tournaments) {
+      const tid = String(tournament.TID ?? '');
+      const tournamentName = String(tournament.tournamentName ?? 'Unknown Event');
+      const format = FORMAT_MAP[tournament.format] ?? String(tournament.format ?? 'unknown').toLowerCase();
+      const startDate = tournament.startDate
+        ? new Date(tournament.startDate * 1000).toISOString().split('T')[0]
+        : null;
+      const standings = tournament.standings ?? [];
 
-      const { data: existing } = await supabase
-        .from('community_decks')
-        .select('id')
-        .eq('source', 'spicerack')
-        .eq('source_id', sourceId)
-        .maybeSingle();
+      if (!Array.isArray(standings)) continue;
+      tournamentsProcessed++;
 
-      if (existing) { skipped++; continue; }
+      for (const standing of standings) {
+        const playerName = String(standing.name ?? 'Unknown');
+        // Use TID + player name as unique source_id
+        const sourceId = `${tid}-${playerName}`.slice(0, 200);
 
-      const format = String(deck.format ?? 'unknown').toLowerCase();
-      const commander = deck.commander ?? deck.commander_name ?? null;
-      const colors: string[] = deck.colors ?? deck.color_identity ?? [];
+        // Skip if already imported
+        const { data: existing } = await supabase
+          .from('community_decks')
+          .select('id')
+          .eq('source', 'spicerack')
+          .eq('source_id', sourceId)
+          .maybeSingle();
 
-      const { data: deckRow, error: deckErr } = await supabase
-        .from('community_decks')
-        .insert({
-          name: String(deck.name ?? deck.title ?? 'Unnamed'),
-          format,
-          source: 'spicerack',
-          source_id: sourceId,
-          commander,
-          colors,
-          event_name: deck.event ?? deck.event_name ?? null,
-          event_date: deck.date ?? deck.event_date ?? null,
-        })
-        .select('id')
-        .single();
+        if (existing) { skipped++; continue; }
 
-      if (deckErr || !deckRow) {
-        log.warn('Deck insert failed', { sourceId, error: deckErr?.message });
-        skipped++;
-        continue;
+        // Parse the decklist text
+        const decklistText = standing.decklist_text ?? '';
+        const cards = parseDecklistText(decklistText);
+
+        if (cards.length === 0) { skipped++; continue; }
+
+        // Build deck name: "PlayerName — EventName (Format)"
+        const deckName = `${playerName} — ${tournamentName}`.slice(0, 200);
+
+        // Determine record string
+        const record = [
+          standing.winsSwiss ?? 0,
+          standing.lossesSwiss ?? 0,
+          standing.draws ?? 0,
+        ].join('-');
+
+        const { data: deckRow, error: deckErr } = await supabase
+          .from('community_decks')
+          .insert({
+            name: deckName,
+            format,
+            source: 'spicerack',
+            source_id: sourceId,
+            commander: null, // Spicerack doesn't separate commander
+            colors: [],
+            event_name: tournamentName,
+            event_date: startDate,
+          })
+          .select('id')
+          .single();
+
+        if (deckErr || !deckRow) {
+          log.warn('Deck insert failed', { sourceId, error: deckErr?.message });
+          skipped++;
+          continue;
+        }
+
+        // Batch resolve oracle IDs for all cards
+        const cardNames = cards.map((c) => c.name).filter(Boolean);
+        const oracleMap = await batchResolveOracleIds(cardNames);
+
+        const cardRows = cards
+          .filter((c) => c.name)
+          .map((card) => ({
+            deck_id: deckRow.id,
+            card_name: card.name,
+            scryfall_oracle_id: oracleMap.get(card.name) ?? null,
+            quantity: card.quantity,
+            board: card.board,
+          }));
+
+        if (cardRows.length > 0) {
+          await supabase.from('community_deck_cards').insert(cardRows);
+        }
+
+        imported++;
       }
-
-      // Batch resolve oracle IDs
-      const mainboard = deck.mainboard ?? deck.main ?? deck.cards ?? [];
-      const sideboard = deck.sideboard ?? deck.side ?? [];
-      const allCards = [
-        ...(Array.isArray(mainboard) ? mainboard : []).map((c: Record<string, unknown>) => ({
-          name: String(c.name ?? c.card_name ?? ''),
-          quantity: Number(c.quantity ?? c.count ?? 1),
-          board: 'mainboard',
-        })),
-        ...(Array.isArray(sideboard) ? sideboard : []).map((c: Record<string, unknown>) => ({
-          name: String(c.name ?? c.card_name ?? ''),
-          quantity: Number(c.quantity ?? c.count ?? 1),
-          board: 'sideboard',
-        })),
-      ];
-
-      const cardNames = allCards.map((c) => c.name).filter(Boolean);
-      const oracleMap = await batchResolveOracleIds(cardNames);
-
-      const cardRows = allCards
-        .filter((c) => c.name)
-        .map((card) => ({
-          deck_id: deckRow.id,
-          card_name: card.name,
-          scryfall_oracle_id: oracleMap.get(card.name) ?? null,
-          quantity: card.quantity,
-          board: card.board,
-        }));
-
-      if (cardRows.length > 0) {
-        await supabase.from('community_deck_cards').insert(cardRows);
-      }
-
-      imported++;
     }
 
-    log.info(`Spicerack import: imported=${imported}, skipped=${skipped}`);
+    log.info(`Spicerack import: tournaments=${tournamentsProcessed}, imported=${imported}, skipped=${skipped}`);
 
     return new Response(
-      JSON.stringify({ success: true, imported, skipped, page }),
-      { status: 200, headers }
+      JSON.stringify({ success: true, imported, skipped, tournaments: tournamentsProcessed }),
+      { status: 200, headers },
     );
   } catch (e) {
     log.error('spicerack-import error', e);
     return new Response(
       JSON.stringify({ error: 'Internal error' }),
-      { status: 500, headers }
+      { status: 500, headers },
     );
   }
 });
