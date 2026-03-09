@@ -1,6 +1,7 @@
 /**
  * Purchase links component for CardModal.
  * Displays buy buttons for TCGplayer, Cardmarket, Cardhoarder.
+ * Includes 30-day price trend sparkline when data is available.
  * @module components/CardModal/CardModalPurchaseLinks
  */
 
@@ -9,6 +10,7 @@ import { ShoppingCart, Loader2, Sparkles, Monitor } from 'lucide-react';
 import { getTCGPlayerUrl, getCardmarketUrl } from '@/lib/scryfall/printings';
 import type { CardModalPurchaseLinksProps } from './types';
 import { useTranslation } from '@/lib/i18n';
+import { PriceSparkline } from '@/components/collection/PriceSparkline';
 
 export function CardModalPurchaseLinks({
   card,
@@ -37,9 +39,12 @@ export function CardModalPurchaseLinks({
   if (isMobile) {
     return (
       <div className="space-y-2">
-        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          {buyLabel}
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            {buyLabel}
+          </h3>
+          <PriceSparkline cardName={card.name} />
+        </div>
         <div className="grid grid-cols-2 gap-2">
           {displayPrices.usd && (
             <Button
@@ -141,9 +146,12 @@ export function CardModalPurchaseLinks({
   // Desktop layout
   return (
     <div className="w-full mt-3 max-w-[220px]">
-      <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-        {buyLabel}
-      </h3>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          {buyLabel}
+        </h3>
+        <PriceSparkline cardName={card.name} />
+      </div>
       <div className="space-y-1.5">
         {displayPrices.usd && (
           <Button
