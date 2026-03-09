@@ -9,6 +9,7 @@ import { StaplesSection } from '@/components/StaplesSection';
 import { HowItWorksSection } from '@/components/HowItWorksSection';
 import { FAQSection } from '@/components/FAQSection';
 import { RecentSearches } from '@/components/RecentSearches';
+import { TrendingCardsWidget } from '@/components/TrendingCardsWidget';
 
 interface HomeDiscoverySectionProps {
   onSearch: (query: string) => void;
