@@ -121,15 +121,35 @@ function useArchetypeTopCards(archetype: string, format: string | null) {
       // Get most common cards across these decks
       const { data: cards, error: cardErr } = await supabase
         .from('community_deck_cards')
-        .select('card_name')
+        .select('card_name, scryfall_oracle_id')
         .in('deck_id', deckIds.slice(0, 100));
 
       if (cardErr) throw cardErr;
       if (!cards || cards.length === 0) return [];
 
+      // For Pauper, filter to commons only using the cards table rarity
+      let allowedCards: Set<string> | null = null;
+      if (format === 'pauper') {
+        const oracleIds = [...new Set(
+          cards.map((c) => c.scryfall_oracle_id).filter(Boolean) as string[]
+        )];
+        if (oracleIds.length > 0) {
+          const { data: cardRows } = await supabase
+            .from('cards')
+            .select('name, rarity')
+            .in('oracle_id', oracleIds.slice(0, 200));
+          if (cardRows && cardRows.length > 0) {
+            allowedCards = new Set(
+              cardRows.filter((r) => r.rarity === 'common').map((r) => r.name)
+            );
+          }
+        }
+      }
+
       // Count frequency
       const freq = new Map<string, number>();
       for (const c of cards) {
+        if (allowedCards && !allowedCards.has(c.card_name)) continue;
         freq.set(c.card_name, (freq.get(c.card_name) ?? 0) + 1);
       }
 

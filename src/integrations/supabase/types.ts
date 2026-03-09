@@ -68,6 +68,7 @@ export type Database = {
           name: string
           oracle_id: string
           oracle_text: string | null
+          rarity: string | null
           type_line: string | null
           updated_at: string
         }
@@ -79,6 +80,7 @@ export type Database = {
           name: string
           oracle_id: string
           oracle_text?: string | null
+          rarity?: string | null
           type_line?: string | null
           updated_at?: string
         }
@@ -90,6 +92,7 @@ export type Database = {
           name?: string
           oracle_id?: string
           oracle_text?: string | null
+          rarity?: string | null
           type_line?: string | null
           updated_at?: string
         }
