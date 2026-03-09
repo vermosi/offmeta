@@ -30,12 +30,6 @@ export function HeroSection() {
       className="relative pt-5 sm:pt-14 lg:pt-20 pb-2 sm:pb-8 overflow-x-hidden"
       aria-labelledby="hero-heading"
     >
-      {/* Floating mana orbs — hidden on mobile for cleaner feel */}
-      <div className="hidden sm:block absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        <div className="glow-orb absolute -top-40 left-1/4 opacity-60" />
-        <div className="glow-orb glow-orb-secondary absolute -bottom-32 right-1/4 opacity-50" />
-        <div className="glow-orb absolute top-20 right-10 w-[300px] h-[300px] opacity-30" style={{ animationDelay: '-2s' }} />
-      </div>
 
       <div className="container-main text-center relative z-10">
         {/* Pill badge — hidden on mobile */}
