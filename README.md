@@ -30,7 +30,7 @@
 | **200+ Deterministic Patterns**  | Fast, cached translations for common queries without AI calls                                    |
 | **Combo Finder**                 | Discover card combos for any commander via Commander Spellbook                                   |
 | **Deck Recommendations**         | AI-powered suggestions (High Synergy, Upgrades, Budget Picks) from Moxfield import or text paste |
-| **Commander Archetypes**         | Browse popular archetypes with curated card lists and quick-search                               |
+| **Archetypes**                   | Data-driven archetype browser across Commander, Pauper, Legacy & Premodern — backed by a materialized view |
 | **10 Progressive Search Guides** | Learn from basic type searches to expert multi-constraint queries                                |
 | **Voice Input**                  | Hands-free searching with speech recognition                                                     |
 | **Card Details**                 | Rulings, prices, printings, and legality in a clean modal                                        |

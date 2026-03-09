@@ -42,7 +42,7 @@ OffMeta is a natural-language search frontend for Magic: The Gathering cards. It
 - **Home Discovery Section**: Dedicated section with Recent Searches, Features Showcase, Daily Pick, How It Works, and FAQ.
 - **Deck Recommendations** (`/deck-recs`): AI-powered card suggestions via Moxfield import or text paste. Categorized by High Synergy, Upgrades, and Budget Picks with Commander legality enforcement.
 - **Combo Finder** (`/combos`): Discover card combos for any commander with prerequisites, steps, and pricing. Accessible from top navigation.
-- **Commander Archetypes** (`/archetypes`): Browse popular archetypes with curated card lists.
+- **Archetypes** (`/archetypes`): Data-driven archetype browser across multiple formats (Commander, Pauper, Legacy, Premodern). Uses `archetype_stats` materialized view for sub-second loading.
 - **Features Showcase**: Landing page section highlighting all core tools with direct navigation links.
 - **Alchemy Exclusion**: All Scryfall queries automatically exclude rebalanced digital-only cards (`-is:rebalanced`).
 - **Footer Attribution**: Powered by Scryfall, Moxfield, and Commander Spellbook with external links.
