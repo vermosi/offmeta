@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.deck-critique]
 verify_jwt = false
+
+[functions.price-snapshot]
+verify_jwt = false

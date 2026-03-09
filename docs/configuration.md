@@ -32,6 +32,7 @@ Cron jobs are registered in the database using `pg_cron` (enabled via migration)
 
 | Job name | Schedule | Function | Purpose |
 | --- | --- | --- | --- |
+| `price-snapshot-nightly` | `0 1 * * *` (01:00 UTC) | `price-snapshot` | Capture price snapshots from Scryfall for all collection cards; clean up snapshots older than 90 days |
 | `cleanup-logs-nightly` | `0 2 * * *` (02:00 UTC) | `cleanup-logs` | Delete `translation_logs` and `analytics_events` older than 30 days; runs one hour before pattern promotion |
 | `generate-patterns-nightly` | `0 3 * * *` (03:00 UTC) | `generate-patterns` | Promote high-confidence translation logs (≥3 occurrences, ≥0.8 confidence) into `translation_rules` |
 
