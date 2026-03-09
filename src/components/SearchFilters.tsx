@@ -1,6 +1,6 @@
 /**
  * Post-search filters and sort options for card results.
- * Provides color filters, type filters, CMC range, and sorting.
+ * Provides format legality, color filters, type filters, CMC range, and sorting.
  */
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
@@ -22,7 +22,7 @@ import {
 import type { ScryfallCard } from '@/types/card';
 import type { FilterState } from '@/types/filters';
 import { cn } from '@/lib/core/utils';
-import { Filter, ArrowUpDown, X, ChevronDown, Package } from 'lucide-react';
+import { Filter, ArrowUpDown, X, ChevronDown, Package, Shield } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { useAuth } from '@/hooks/useAuth';
 import { useSearchFilterState } from '@/components/SearchFilters/useSearchFilterState';
@@ -73,6 +73,26 @@ const CARD_TYPES = [
   'Planeswalker',
   'Land',
   'Battle',
+] as const;
+
+/** Format legality options — ordered by popularity */
+const FORMAT_OPTIONS = [
+  { value: 'commander', label: 'Commander' },
+  { value: 'modern', label: 'Modern' },
+  { value: 'standard', label: 'Standard' },
+  { value: 'pioneer', label: 'Pioneer' },
+  { value: 'pauper', label: 'Pauper' },
+  { value: 'legacy', label: 'Legacy' },
+  { value: 'vintage', label: 'Vintage' },
+  { value: 'premodern', label: 'Premodern' },
+  { value: 'historic', label: 'Historic' },
+  { value: 'explorer', label: 'Explorer' },
+  { value: 'timeless', label: 'Timeless' },
+  { value: 'duel', label: 'Duel Commander' },
+  { value: 'penny', label: 'Penny Dreadful' },
+  { value: 'oathbreaker', label: 'Oathbreaker' },
+  { value: 'paupercommander', label: 'Pauper Commander' },
+  { value: 'brawl', label: 'Brawl' },
 ] as const;
 
 // Sort options
@@ -173,14 +193,60 @@ export function SearchFilters({
     [setFilters],
   );
 
+  const setFormat = useCallback(
+    (format: string) => {
+      setFilters((prev) => ({
+        ...prev,
+        format: prev.format === format ? undefined : format,
+      }));
+    },
+    [setFilters],
+  );
+
   const clearFilters = useCallback(() => {
     setFilters(defaultFilters);
   }, [defaultFilters, setFilters]);
 
   const activeFilterCount = countActiveFilters(filters, defaultMaxCmc);
+  const activeFormatLabel = FORMAT_OPTIONS.find((f) => f.value === filters.format)?.label;
 
   return (
     <div className="contents">
+      {/* Format quick-select — always visible as a compact dropdown */}
+      <Select
+        value={filters.format ?? '__none__'}
+        onValueChange={(value) =>
+          setFilters((prev) => ({
+            ...prev,
+            format: value === '__none__' ? undefined : value,
+          }))
+        }
+      >
+        <SelectTrigger
+          className={cn(
+            'w-[110px] sm:w-[140px] h-8 sm:h-9 text-xs sm:text-sm',
+            filters.format && 'border-primary/50 bg-primary/5',
+          )}
+        >
+          <Shield className="h-3.5 w-3.5 mr-1 opacity-50 shrink-0" />
+          <SelectValue placeholder="Format" />
+        </SelectTrigger>
+        <SelectContent className="z-50 bg-popover border border-border shadow-lg">
+          <SelectItem value="__none__" className="text-xs sm:text-sm text-muted-foreground">
+            All Formats
+          </SelectItem>
+          {FORMAT_OPTIONS.map((fmt) => (
+            <SelectItem
+              key={fmt.value}
+              value={fmt.value}
+              className="text-xs sm:text-sm"
+            >
+              {fmt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
       {/* Filter Popover */}
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
@@ -211,6 +277,30 @@ export function SearchFilters({
           sideOffset={8}
         >
           <div className="space-y-4">
+            {/* Format Legality */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Format
+              </h4>
+              <div className="flex flex-wrap gap-1.5">
+                {FORMAT_OPTIONS.slice(0, 8).map((fmt) => (
+                  <button
+                    key={fmt.value}
+                    onClick={() => setFormat(fmt.value)}
+                    className={cn(
+                      'px-2.5 py-1 rounded-full text-xs font-medium transition-all border',
+                      filters.format === fmt.value
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-muted/50 text-muted-foreground border-border hover:bg-muted hover:text-foreground',
+                    )}
+                    aria-pressed={filters.format === fmt.value}
+                  >
+                    {fmt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -362,6 +452,26 @@ export function SearchFilters({
       {/* Active filter badges - hide on mobile to save space */}
       {hasActiveFilters && (
         <div className="hidden sm:flex flex-wrap gap-1.5">
+          {activeFormatLabel && (
+            <Badge
+              variant="secondary"
+              className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20 text-xs"
+              onClick={() => setFilters((prev) => ({ ...prev, format: undefined }))}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e: React.KeyboardEvent) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setFilters((prev) => ({ ...prev, format: undefined }));
+                }
+              }}
+              aria-label={`Remove ${activeFormatLabel} filter`}
+            >
+              <Shield className="h-3 w-3" />
+              {activeFormatLabel}
+              <X className="h-3 w-3" aria-hidden="true" />
+            </Badge>
+          )}
           {filters.colors.map((colorId) => {
             const color = COLORS.find((c) => c.id === colorId);
             return (
