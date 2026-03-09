@@ -457,25 +457,15 @@
       0 8px 20px hsl(var(--gradient-start) / 0.2);
   }
 
-  /* Page background layers */
+  /* Page background — single elegant gradient */
   .bg-page-gradient {
-    background:
-      radial-gradient(ellipse 100% 50% at 50% 20%, hsl(var(--gradient-start) / 0.18) 0%, transparent 60%),
-      radial-gradient(ellipse 80% 40% at 75% 50%, hsl(var(--gradient-end) / 0.12) 0%, transparent 55%),
-      radial-gradient(ellipse 70% 35% at 25% 75%, hsl(var(--gradient-start) / 0.1) 0%, transparent 50%);
-  }
-
-  /* Only used on the Index page so parallax translation never reveals edges */
-  .bg-page-gradient-extended {
-    top: -30vh;
-    bottom: -30vh;
-  }
-
-  /* Parallax background layer - GPU accelerated */
-  .bg-parallax {
-    will-change: transform;
-    backface-visibility: hidden;
-    transform: translate3d(0, 0, 0);
+    background: linear-gradient(
+      165deg,
+      hsl(var(--gradient-start) / 0.12) 0%,
+      hsl(var(--background)) 35%,
+      hsl(var(--background)) 65%,
+      hsl(var(--gradient-end) / 0.08) 100%
+    );
   }
 
   .bg-page-noise {

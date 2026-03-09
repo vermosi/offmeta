@@ -35,25 +35,21 @@ Cron jobs are registered in the database using `pg_cron` (enabled via migration)
 | `price-snapshot-nightly` | `0 1 * * *` (01:00 UTC) | `price-snapshot` | Capture price snapshots from Scryfall for all collection cards |
 | `cleanup-logs-nightly` | `0 2 * * *` (02:00 UTC) | `cleanup-logs` | Delete old translation logs and analytics events |
 | `generate-patterns-nightly` | `0 3 * * *` (03:00 UTC) | `generate-patterns` | Promote high-confidence translation logs into rules |
-| `spicerack-import-daily` | `0 4 * * *` (04:00 UTC) | `spicerack-import` | Import tournament decklists from Spicerack API |
-| `mtgjson-import-weekly` | `0 5 * * 0` (05:00 UTC Sun) | `mtgjson-import` | Import MTGJSON AllDecks dataset (chunked, 50 per run) |
-| `card-sync-daily` | `0 6 * * *` (06:00 UTC) | `card-sync` | Sync Scryfall card metadata for imported deck cards |
-| `cooccurrence-nightly` | `0 7 * * *` (07:00 UTC) | `compute-cooccurrence` | Recompute card co-occurrence synergy graph |
-| `detect-archetypes-daily` | `0 8 * * *` (08:00 UTC) | `detect-archetypes` | Tag unclassified community decks with archetype labels |
+| `spicerack-import-daily` | `0 6 * * *` (06:00 UTC) | `spicerack-import` | Import tournament decklists from Spicerack API |
+| `card-sync-daily` | `0 7 * * *` (07:00 UTC) | `card-sync` | Sync Scryfall card metadata for imported deck cards |
+| `compute-cooccurrence-daily` | `0 8 * * *` (08:00 UTC) | `compute-cooccurrence` | Recompute card co-occurrence synergy graph |
 
 ### Verifying job registration
 
 ```sql
--- Confirm both jobs are registered
-select jobname, schedule, active from cron.job
-where jobname in ('cleanup-logs-nightly', 'generate-patterns-nightly');
+-- Confirm jobs are registered
+SELECT jobname, schedule, active FROM cron.job;
 
 -- Check recent run results
-select jobname, status, return_message, start_time
-from cron.job_run_details
-where jobname in ('cleanup-logs-nightly', 'generate-patterns-nightly')
-order by start_time desc
-limit 10;
+SELECT jobname, status, return_message, start_time
+FROM cron.job_run_details
+ORDER BY start_time DESC
+LIMIT 20;
 ```
 
 ### Adding a new cron job
@@ -61,15 +57,17 @@ limit 10;
 Use `cron.schedule()` via `supabase--insert` (not a migration) since the call embeds live project credentials:
 
 ```sql
-select cron.schedule(
+SELECT cron.schedule(
   'my-job-name',
   '0 2 * * *',
   $$
-  select net.http_post(
+  SELECT net.http_post(
     url     := 'https://<project-ref>.supabase.co/functions/v1/<function-name>',
-    headers := '{"Content-Type": "application/json", "Authorization": "Bearer <anon-key>"}'::jsonb,
+    headers := '{"Content-Type": "application/json", "Authorization": "Bearer <anon-key>", "apikey": "<anon-key>"}'::jsonb,
     body    := '{}'::jsonb
-  ) as request_id;
+  ) AS request_id;
   $$
 );
 ```
+
+> **Note**: Replace `<project-ref>` and `<anon-key>` with your actual project values. Never commit actual keys to version control.

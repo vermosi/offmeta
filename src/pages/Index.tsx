@@ -221,36 +221,7 @@ const Index = () => {
     onActivate: rovingActivate,
   });
 
-  // Parallax scroll effect
-  useEffect(() => {
-    const el = document.querySelector(
-      '[data-parallax="gradient"]',
-    ) as HTMLElement | null;
-
-    let rafId = 0;
-    const update = () => {
-      rafId = 0;
-      if (!el) return;
-      const y = window.scrollY || 0;
-      const p1 = 20 + y * 0.08;
-      const p2 = 50 + y * 0.04;
-      const p3 = 75 + y * 0.03;
-      el.style.backgroundPosition = `50% ${p1}px, 75% ${p2}px, 25% ${p3}px`;
-    };
-
-    const onScroll = () => {
-      if (rafId) return;
-      rafId = window.requestAnimationFrame(update);
-    };
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-    update();
-
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      if (rafId) window.cancelAnimationFrame(rafId);
-    };
-  }, []);
+  // (parallax removed — static gradient background)
 
   // Handle hash-based scroll
   useEffect(() => {
@@ -271,16 +242,14 @@ const Index = () => {
     <ErrorBoundary>
       <SkipLinks showSearchLink />
       <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background relative overflow-x-hidden">
-        {/* Background layers with parallax */}
+        {/* Static premium gradient background */}
         <div
           className="fixed inset-0 pointer-events-none bg-page-gradient"
           aria-hidden="true"
-          data-parallax="gradient"
         />
         <div
           className="fixed inset-0 pointer-events-none bg-page-noise"
           aria-hidden="true"
-          style={{ opacity: 0.035 }}
         />
 
         <Header />
