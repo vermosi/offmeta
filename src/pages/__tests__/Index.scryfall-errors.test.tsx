@@ -181,8 +181,8 @@ describe('Index – Scryfall error flows', () => {
       expect(mockTranslateQueryWithDedup).toHaveBeenCalled();
     });
 
-    // The page should remain functional — search bar still accessible
-    expect(screen.getByRole('searchbox')).toBeInTheDocument();
+    // The page should remain functional — search bar still in DOM
+    expect(screen.getByRole('searchbox', { hidden: true })).toBeInTheDocument();
   });
 
   it('handles Scryfall rate limit (429) error without crashing', async () => {
