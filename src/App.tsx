@@ -105,6 +105,7 @@ const App = () => (
             <Sonner />
             <AppInitializer />
             <BrowserRouter>
+              <ScrollToTopOnNavigate />
               <ErrorBoundary>
               <Suspense fallback={<div className="min-h-screen bg-background" />}>
                 <Routes>
