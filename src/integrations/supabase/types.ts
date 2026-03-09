@@ -693,6 +693,12 @@ export type Database = {
           type_line: string
         }[]
       }
+      get_missing_oracle_ids: {
+        Args: never
+        Returns: {
+          oracle_id: string
+        }[]
+      }
       get_price_movers: {
         Args: { days_back?: number; limit_count?: number }
         Returns: {
