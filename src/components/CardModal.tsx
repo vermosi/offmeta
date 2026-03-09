@@ -326,7 +326,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
 
           <CardModalCombos cardName={card.name} />
 
-          <CardModalRecommendations oracleId={(card as Record<string, unknown>).oracle_id as string | undefined} cardName={card.name} />
+          <CardModalRecommendations oracleId={card.oracle_id} cardName={card.name} />
 
           <CardModalAddToDeck card={card} />
 
