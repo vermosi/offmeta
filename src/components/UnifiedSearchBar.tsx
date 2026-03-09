@@ -351,16 +351,18 @@ export const UnifiedSearchBar = forwardRef<
 
             {/* Desktop-only inline buttons */}
             <div className="hidden sm:flex items-center gap-1 flex-shrink-0">
-              <SearchFeedback
-                originalQuery={query || history[0] || ''}
-                translatedQuery={lastTranslatedQuery}
-              />
-              <SearchHelpModal
-                onTryExample={(exampleQuery) => {
-                  setQuery(exampleQuery);
-                  handleSearch(exampleQuery);
-                }}
-              />
+              <Suspense fallback={null}>
+                <SearchFeedback
+                  originalQuery={query || history[0] || ''}
+                  translatedQuery={lastTranslatedQuery}
+                />
+                <SearchHelpModal
+                  onTryExample={(exampleQuery) => {
+                    setQuery(exampleQuery);
+                    handleSearch(exampleQuery);
+                  }}
+                />
+              </Suspense>
             </div>
           </div>
         </SearchHistoryDropdown>
