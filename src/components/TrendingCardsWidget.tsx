@@ -13,7 +13,7 @@ import { useMarketTrends, type PriceMover } from '@/hooks/useMarketTrends';
 
 type Period = 'daily' | 'weekly';
 
-function MoverRow({ mover, idx, direction }: { mover: PriceMover; idx: number; direction: 'up' | 'down' }) {
+function MoverRow({ mover, idx, direction, onSearch }: { mover: PriceMover; idx: number; direction: 'up' | 'down'; onSearch?: (q: string) => void }) {
   const isUp = direction === 'up';
   return (
     <div className="flex items-center justify-between px-5 py-2.5 hover:bg-muted/50 transition-colors">
@@ -22,9 +22,12 @@ function MoverRow({ mover, idx, direction }: { mover: PriceMover; idx: number; d
           {idx + 1}
         </span>
         <div className="min-w-0">
-          <p className="text-sm font-medium text-foreground truncate">
+          <button
+            onClick={() => onSearch?.(mover.card_name)}
+            className="text-sm font-medium text-foreground truncate hover:text-primary transition-colors text-left"
+          >
             {mover.card_name}
-          </p>
+          </button>
           <p className="text-xs text-muted-foreground">
             ${mover.current_price.toFixed(2)}
           </p>
