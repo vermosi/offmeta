@@ -1,14 +1,14 @@
 /**
  * card-recommendations — Returns cards commonly played alongside a given card.
  * Powered by the card_cooccurrence table.
- * GET-style: pass oracle_id, format, limit in request body.
+ * Public endpoint with rate-limit-friendly design.
  * @module functions/card-recommendations
  */
 
 // @ts-nocheck
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { getCorsHeaders } from '../_shared/auth.ts';
+import { getCorsHeaders, validateAuth } from '../_shared/auth.ts';
 import { createLogger } from '../_shared/logger.ts';
 
 const log = createLogger('card-recommendations');
@@ -19,6 +19,15 @@ serve(async (req: Request): Promise<Response> => {
 
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Public but requires at least anon auth
+  const authResult = await validateAuth(req);
+  if (!authResult.authorized) {
+    return new Response(
+      JSON.stringify({ error: 'Unauthorized' }),
+      { status: 401, headers }
+    );
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -42,7 +51,6 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    // Use the RPC function
     const { data, error } = await supabase.rpc('get_card_recommendations', {
       target_oracle_id: oracleId,
       result_limit: limit,

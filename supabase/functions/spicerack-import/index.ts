@@ -7,31 +7,55 @@
 // @ts-nocheck
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { getCorsHeaders } from '../_shared/auth.ts';
+import { getCorsHeaders, requireServiceRole } from '../_shared/auth.ts';
 import { createLogger } from '../_shared/logger.ts';
 
 const log = createLogger('spicerack-import');
 const SCRYFALL_DELAY_MS = 100;
+const SCRYFALL_BATCH_SIZE = 75;
 
-const oracleCache = new Map<string, string | null>();
+/**
+ * Batch-resolve oracle IDs using Scryfall /cards/collection endpoint.
+ */
+async function batchResolveOracleIds(
+  cardNames: string[],
+): Promise<Map<string, string | null>> {
+  const result = new Map<string, string | null>();
+  const unique = [...new Set(cardNames)];
 
-async function resolveOracleId(cardName: string): Promise<string | null> {
-  if (oracleCache.has(cardName)) return oracleCache.get(cardName)!;
-  try {
-    const resp = await fetch(
-      `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(cardName)}`
-    );
-    if (resp.ok) {
-      const data = await resp.json();
-      oracleCache.set(cardName, data.oracle_id ?? null);
-      return data.oracle_id ?? null;
+  for (let i = 0; i < unique.length; i += SCRYFALL_BATCH_SIZE) {
+    const batch = unique.slice(i, i + SCRYFALL_BATCH_SIZE);
+    const identifiers = batch.map((name) => ({ name }));
+
+    try {
+      const resp = await fetch('https://api.scryfall.com/cards/collection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifiers }),
+      });
+
+      if (resp.ok) {
+        const data = await resp.json();
+        for (const card of data.data ?? []) {
+          result.set(card.name, card.oracle_id ?? null);
+        }
+        for (const name of batch) {
+          if (!result.has(name)) result.set(name, null);
+        }
+      } else {
+        await resp.text();
+        for (const name of batch) result.set(name, null);
+      }
+    } catch {
+      for (const name of batch) result.set(name, null);
     }
-    await resp.text();
-  } catch (e) {
-    log.warn('Oracle resolve failed', { cardName, error: String(e) });
+
+    if (i + SCRYFALL_BATCH_SIZE < unique.length) {
+      await new Promise((r) => setTimeout(r, SCRYFALL_DELAY_MS));
+    }
   }
-  oracleCache.set(cardName, null);
-  return null;
+
+  return result;
 }
 
 serve(async (req: Request): Promise<Response> => {
@@ -41,6 +65,10 @@ serve(async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // Auth guard: service role only
+  const auth = requireServiceRole(req, corsHeaders);
+  if (!auth.authorized) return auth.response;
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -55,7 +83,6 @@ serve(async (req: Request): Promise<Response> => {
     const page = body.page ?? 1;
     const perPage = body.per_page ?? 50;
 
-    // Fetch from Spicerack API
     const apiUrl = `https://api.spicerack.gg/public/decks?page=${page}&per_page=${perPage}`;
     log.info(`Fetching Spicerack decks: ${apiUrl}`);
 
@@ -65,7 +92,6 @@ serve(async (req: Request): Promise<Response> => {
 
     if (!apiResp.ok) {
       const text = await apiResp.text();
-      // If the API doesn't exist or is down, return gracefully
       if (apiResp.status === 404) {
         return new Response(
           JSON.stringify({ success: true, message: 'Spicerack API not available', imported: 0 }),
@@ -92,7 +118,6 @@ serve(async (req: Request): Promise<Response> => {
       const sourceId = String(deck.id ?? deck.deck_id ?? '');
       if (!sourceId) { skipped++; continue; }
 
-      // Check duplicate
       const { data: existing } = await supabase
         .from('community_decks')
         .select('id')
@@ -127,11 +152,9 @@ serve(async (req: Request): Promise<Response> => {
         continue;
       }
 
-      // Process cards
+      // Batch resolve oracle IDs
       const mainboard = deck.mainboard ?? deck.main ?? deck.cards ?? [];
       const sideboard = deck.sideboard ?? deck.side ?? [];
-      const cardRows = [];
-
       const allCards = [
         ...(Array.isArray(mainboard) ? mainboard : []).map((c: Record<string, unknown>) => ({
           name: String(c.name ?? c.card_name ?? ''),
@@ -145,18 +168,18 @@ serve(async (req: Request): Promise<Response> => {
         })),
       ];
 
-      for (const card of allCards) {
-        if (!card.name) continue;
-        const oracleId = await resolveOracleId(card.name);
-        cardRows.push({
+      const cardNames = allCards.map((c) => c.name).filter(Boolean);
+      const oracleMap = await batchResolveOracleIds(cardNames);
+
+      const cardRows = allCards
+        .filter((c) => c.name)
+        .map((card) => ({
           deck_id: deckRow.id,
           card_name: card.name,
-          scryfall_oracle_id: oracleId,
+          scryfall_oracle_id: oracleMap.get(card.name) ?? null,
           quantity: card.quantity,
           board: card.board,
-        });
-        await new Promise((r) => setTimeout(r, SCRYFALL_DELAY_MS));
-      }
+        }));
 
       if (cardRows.length > 0) {
         await supabase.from('community_deck_cards').insert(cardRows);
