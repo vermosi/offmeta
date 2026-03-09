@@ -10,6 +10,7 @@ import { HowItWorksSection } from '@/components/HowItWorksSection';
 import { FAQSection } from '@/components/FAQSection';
 import { RecentSearches } from '@/components/RecentSearches';
 import { TrendingCardsWidget } from '@/components/TrendingCardsWidget';
+import { SearchCTA } from '@/components/SearchCTA';
 
 interface HomeDiscoverySectionProps {
   onSearch: (query: string) => void;
