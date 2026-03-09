@@ -41,6 +41,7 @@ function mockFetchHang() {
 describe('DailyPick', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    sessionStorage.clear();
   });
 
   it('shows loading state initially', () => {

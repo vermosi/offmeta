@@ -5,6 +5,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, fireEvent } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { CardModalPurchaseLinks } from '../CardModalPurchaseLinks';
 import type { ScryfallCard } from '@/types/card';
 
@@ -13,6 +14,20 @@ vi.mock('@/lib/card-printings', () => ({
   getTCGPlayerUrl: () => 'https://tcgplayer.com/card/test',
   getCardmarketUrl: () => 'https://cardmarket.com/card/test',
 }));
+
+// Mock PriceSparkline to avoid needing real query client data
+vi.mock('@/components/collection/PriceSparkline', () => ({
+  PriceSparkline: () => <div data-testid="price-sparkline" />,
+}));
+
+function renderWithProviders(ui: React.ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return render(
+    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
+  );
+}
 
 describe('CardModalPurchaseLinks', () => {
   const mockCard: ScryfallCard = {
@@ -58,25 +73,25 @@ describe('CardModalPurchaseLinks', () => {
   });
 
   it('renders "Buy This Card" header', () => {
-    const { getByText } = render(<CardModalPurchaseLinks {...defaultProps} />);
+    const { getByText } = renderWithProviders(<CardModalPurchaseLinks {...defaultProps} />);
     expect(getByText('Buy This Card')).toBeInTheDocument();
   });
 
   it('renders TCGplayer button with USD price', () => {
-    const { getByText } = render(<CardModalPurchaseLinks {...defaultProps} />);
+    const { getByText } = renderWithProviders(<CardModalPurchaseLinks {...defaultProps} />);
     expect(getByText('TCGplayer')).toBeInTheDocument();
     expect(getByText('$5.00')).toBeInTheDocument();
   });
 
   it('renders Cardmarket button with EUR price', () => {
-    const { getByText } = render(<CardModalPurchaseLinks {...defaultProps} />);
+    const { getByText } = renderWithProviders(<CardModalPurchaseLinks {...defaultProps} />);
     expect(getByText('Cardmarket')).toBeInTheDocument();
     expect(getByText('€4.50')).toBeInTheDocument();
   });
 
   it('calls onAffiliateClick when TCGplayer button is clicked', () => {
     const onAffiliateClick = vi.fn();
-    const { getByText } = render(
+    const { getByText } = renderWithProviders(
       <CardModalPurchaseLinks
         {...defaultProps}
         onAffiliateClick={onAffiliateClick}
@@ -93,7 +108,7 @@ describe('CardModalPurchaseLinks', () => {
 
   it('calls onAffiliateClick when Cardmarket button is clicked', () => {
     const onAffiliateClick = vi.fn();
-    const { getByText } = render(
+    const { getByText } = renderWithProviders(
       <CardModalPurchaseLinks
         {...defaultProps}
         onAffiliateClick={onAffiliateClick}
@@ -109,7 +124,7 @@ describe('CardModalPurchaseLinks', () => {
   });
 
   it('renders foil buttons when foil prices exist', () => {
-    const { getAllByText, getByText } = render(
+    const { getAllByText, getByText } = renderWithProviders(
       <CardModalPurchaseLinks
         {...defaultProps}
         displayPrices={{
@@ -121,7 +136,6 @@ describe('CardModalPurchaseLinks', () => {
       />,
     );
     
-    // There should be multiple foil buttons/icons
     const foilElements = getAllByText(/Foil/);
     expect(foilElements.length).toBeGreaterThanOrEqual(2);
     expect(getByText('$15.00')).toBeInTheDocument();
@@ -129,7 +143,7 @@ describe('CardModalPurchaseLinks', () => {
   });
 
   it('renders Cardhoarder button when tix price exists', () => {
-    const { getByText } = render(
+    const { getByText } = renderWithProviders(
       <CardModalPurchaseLinks {...defaultProps} displayTix="0.02" />,
     );
     
@@ -138,7 +152,7 @@ describe('CardModalPurchaseLinks', () => {
   });
 
   it('shows loading spinner when loading and no prices', () => {
-    const { container } = render(
+    const { container } = renderWithProviders(
       <CardModalPurchaseLinks
         {...defaultProps}
         displayPrices={{}}
@@ -150,7 +164,7 @@ describe('CardModalPurchaseLinks', () => {
   });
 
   it('does not show loading spinner when prices exist', () => {
-    const { container } = render(
+    const { container } = renderWithProviders(
       <CardModalPurchaseLinks {...defaultProps} isLoadingPrintings={true} />,
     );
     
@@ -159,15 +173,16 @@ describe('CardModalPurchaseLinks', () => {
 
   describe('mobile view', () => {
     it('renders buttons in grid layout', () => {
-      const { container } = render(
+      const { container } = renderWithProviders(
         <CardModalPurchaseLinks {...defaultProps} isMobile={true} />,
       );
       expect(container.querySelector('.grid-cols-2')).toBeInTheDocument();
     });
 
     it('uses smaller button sizes', () => {
-      const { getAllByRole } = render(<CardModalPurchaseLinks {...defaultProps} isMobile={true} />);
-      // Mobile buttons have text-xs class
+      const { getAllByRole } = renderWithProviders(
+        <CardModalPurchaseLinks {...defaultProps} isMobile={true} />,
+      );
       const buttons = getAllByRole('button');
       expect(buttons.length).toBeGreaterThan(0);
     });
@@ -175,14 +190,15 @@ describe('CardModalPurchaseLinks', () => {
 
   describe('desktop view', () => {
     it('shows shopping cart icons', () => {
-      const { getAllByRole } = render(<CardModalPurchaseLinks {...defaultProps} isMobile={false} />);
-      // The component renders ShoppingCart icons on desktop
+      const { getAllByRole } = renderWithProviders(
+        <CardModalPurchaseLinks {...defaultProps} isMobile={false} />,
+      );
       const buttons = getAllByRole('button');
       expect(buttons.length).toBeGreaterThan(0);
     });
 
     it('renders full-width buttons', () => {
-      const { container } = render(
+      const { container } = renderWithProviders(
         <CardModalPurchaseLinks {...defaultProps} isMobile={false} />,
       );
       expect(container.querySelector('.w-full')).toBeInTheDocument();
@@ -206,7 +222,7 @@ describe('CardModalPurchaseLinks', () => {
     };
     
     const onAffiliateClick = vi.fn();
-    const { getByText } = render(
+    const { getByText } = renderWithProviders(
       <CardModalPurchaseLinks
         {...defaultProps}
         selectedPrinting={selectedPrinting}

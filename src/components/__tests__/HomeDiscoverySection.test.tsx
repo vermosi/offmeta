@@ -6,6 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HomeDiscoverySection } from '../HomeDiscoverySection';
 
 // Mock child components to isolate the section's own behavior
@@ -37,11 +38,24 @@ vi.mock('../FAQSection', () => ({
   FAQSection: () => <div data-testid="faq-section">FAQ</div>,
 }));
 
+vi.mock('../TrendingCardsWidget', () => ({
+  TrendingCardsWidget: () => <div data-testid="trending-cards">Trending</div>,
+}));
+
+vi.mock('../SearchCTA', () => ({
+  SearchCTA: () => <div data-testid="search-cta">CTA</div>,
+}));
+
 function renderSection(onSearch = vi.fn()) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   return render(
-    <MemoryRouter>
-      <HomeDiscoverySection onSearch={onSearch} />
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <HomeDiscoverySection onSearch={onSearch} />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 
