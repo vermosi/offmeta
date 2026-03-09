@@ -1,8 +1,9 @@
 /**
- * Mini-widget showing top 3 price gainers from Market Trends data.
+ * Mini-widget showing top 3 price gainers with daily/weekly tabs.
  * Displayed on the homepage discovery section.
  */
 
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { TrendingUp, ArrowUpRight, Flame } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,8 +11,12 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useMarketTrends } from '@/hooks/useMarketTrends';
 
+type Period = 'daily' | 'weekly';
+
 export function TrendingCardsWidget() {
-  const { gainers, isLoading, isDemo } = useMarketTrends(7);
+  const [period, setPeriod] = useState<Period>('daily');
+  const daysBack = period === 'daily' ? 1 : 7;
+  const { gainers, isLoading, isDemo } = useMarketTrends(daysBack);
   const top3 = gainers.slice(0, 3);
 
   if (isLoading) {
@@ -54,6 +59,23 @@ export function TrendingCardsWidget() {
           </Link>
         </div>
 
+        {/* Period tabs */}
+        <div className="flex gap-1 px-5 pb-3">
+          {(['daily', 'weekly'] as const).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPeriod(p)}
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                period === p
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {p === 'daily' ? '24h' : '7d'}
+            </button>
+          ))}
+        </div>
+
         {/* Cards list */}
         <div className="divide-y divide-border">
           {top3.map((mover, idx) => (
@@ -76,7 +98,7 @@ export function TrendingCardsWidget() {
               </div>
               <Badge
                 variant="secondary"
-                className="bg-emerald-500/10 text-emerald-500 border-0 font-mono text-xs shrink-0"
+                className="bg-primary/10 text-primary border-0 font-mono text-xs shrink-0"
               >
                 <TrendingUp className="h-3 w-3 mr-1" />
                 +{Math.abs(mover.change_percent).toFixed(1)}%
