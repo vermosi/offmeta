@@ -110,7 +110,7 @@ The deck editor is split into focused single-responsibility modules:
 | Deck Builder         | `src/pages/DeckEditor.tsx`                | Full-featured deck editor (≈650 lines, delegates to sub-components) |
 | Deck List            | `src/pages/DeckBuilder.tsx`               | User's deck library with create/import/delete |
 | Guides               | `src/pages/Guides*.tsx` + `src/data/guides.ts` | 10 progressive search tutorials       |
-| Archetypes           | `src/pages/Archetype*.tsx` + `src/data/archetypes.ts` | Commander archetype browser     |
+| Archetypes           | `src/pages/Archetype*.tsx` + `src/hooks/useArchetypeData.ts` | Data-driven archetype browser (multi-format, backed by `archetype_stats` materialized view) |
 | Combo Finder         | `src/pages/FindMyCombos.tsx`              | Commander combo discovery via Commander Spellbook |
 | Deck Recommendations | `src/pages/DeckRecommendations.tsx`       | AI-powered deck improvement suggestions    |
 | Scryfall Client      | `src/lib/scryfall/`                       | API calls, query validation, printings     |
