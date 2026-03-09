@@ -64,6 +64,7 @@ export type Database = {
           cmc: number
           colors: string[]
           image_url: string | null
+          legalities: Json | null
           mana_cost: string | null
           name: string
           oracle_id: string
@@ -76,6 +77,7 @@ export type Database = {
           cmc?: number
           colors?: string[]
           image_url?: string | null
+          legalities?: Json | null
           mana_cost?: string | null
           name: string
           oracle_id: string
@@ -88,6 +90,7 @@ export type Database = {
           cmc?: number
           colors?: string[]
           image_url?: string | null
+          legalities?: Json | null
           mana_cost?: string | null
           name?: string
           oracle_id?: string
