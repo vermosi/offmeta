@@ -322,6 +322,122 @@ Up to 50 rules are inserted per run. Once promoted, those patterns are picked up
 
 ---
 
+### Spicerack Import
+
+**Endpoint**: `POST supabase/functions/spicerack-import`
+
+Fetches tournament decklists from the Spicerack API and stores them in `community_decks`. Resolves Moxfield deck URLs via the Moxfield API and batch-resolves card oracle IDs via Scryfall.
+
+**Auth**: Anon JWT accepted. Requires `SPICERACK_API_KEY` secret to be configured.
+
+#### Request body
+
+```json
+{
+  "num_days": 7,
+  "event_format": "MODERN"
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `num_days` | number | `14` | Number of days of tournament data to fetch |
+| `event_format` | string | `null` | Optional filter: `STANDARD`, `MODERN`, `PIONEER`, `LEGACY`, `VINTAGE`, `COMMANDER2`, `PAUPER`, `HISTORIC`, `EXPLORER`, `TIMELESS`, `DUEL`, `OATHBREAKER`, `PREMODERN`, `GLADIATOR`, `STANDARD_BRAWL`, `PREDH` |
+
+#### Response body (success)
+
+```json
+{
+  "success": true,
+  "imported": 42,
+  "skipped": 108,
+  "tournaments": 12
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `imported` | Number of new decks inserted |
+| `skipped` | Decks skipped (already imported or empty decklist) |
+| `tournaments` | Number of tournaments processed |
+
+#### Cron schedule
+
+Runs daily at **06:00 UTC** via `pg_cron` job `spicerack-import-daily` with `{"num_days": 1}` to fetch the previous day's tournaments.
+
+---
+
+### Card Sync
+
+**Endpoint**: `POST supabase/functions/card-sync`
+
+Populates the `cards` table with Scryfall metadata for all unique oracle IDs found in `community_deck_cards` that don't yet have entries.
+
+**Auth**: Anon JWT accepted.
+
+#### Request body
+
+```json
+{}
+```
+
+No parameters required.
+
+#### Response body (success)
+
+```json
+{
+  "success": true,
+  "synced": 150,
+  "total": 200
+}
+```
+
+#### Cron schedule
+
+Runs daily at **07:00 UTC** via `pg_cron` job `card-sync-daily`.
+
+---
+
+### Compute Cooccurrence
+
+**Endpoint**: `POST supabase/functions/compute-cooccurrence`
+
+Computes card co-occurrence statistics from `community_decks` and stores pairwise relationships in `card_cooccurrence` for the recommendation engine.
+
+**Auth**: Anon JWT accepted.
+
+#### Request body
+
+```json
+{
+  "format": "all",
+  "full_rebuild": false
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `format` | string | `"all"` | Format to compute cooccurrence for (or `"all"`) |
+| `full_rebuild` | boolean | `false` | If true, deletes existing cooccurrence data for the format before computing |
+
+#### Response body (success)
+
+```json
+{
+  "success": true,
+  "decksProcessed": 500,
+  "upserted": 12500,
+  "format": "all"
+}
+```
+
+#### Cron schedule
+
+Runs daily at **08:00 UTC** via `pg_cron` job `compute-cooccurrence-daily`.
+
+---
+
 ## Client-Side Scryfall
 
 The frontend Scryfall client (`src/lib/scryfall/client.ts`) automatically appends `-is:rebalanced` to all queries to exclude Alchemy rebalanced cards from results.
