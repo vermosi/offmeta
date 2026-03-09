@@ -304,34 +304,28 @@ serve(async (req: Request): Promise<Response> => {
 
         if (existing) { skipped++; continue; }
 
-        // Parse the decklist text
-        const decklistText = standing.decklist_text ?? standing.decklist ?? '';
-        const cards = parseDecklistText(decklistText);
+        // Try plaintext first, then Moxfield URL
+        const decklistText = standing.decklist_text ?? '';
+        let cards = parseDecklistText(decklistText);
+        let commander: string | null = null;
+        let deckColors: string[] = [];
 
         if (cards.length === 0) {
-          // Log first few empty decklists for debugging
-          if (skipped < 3) {
-            log.warn('Empty decklist', {
-              player: playerName,
-              hasText: !!standing.decklist_text,
-              hasDecklist: !!standing.decklist,
-              keys: Object.keys(standing).slice(0, 10),
-              sample: typeof decklistText === 'string' ? decklistText.slice(0, 100) : typeof decklistText,
-            });
+          // Check if decklist is a Moxfield URL
+          const decklistUrl = standing.decklist ?? '';
+          if (typeof decklistUrl === 'string' && decklistUrl.includes('moxfield.com/decks/')) {
+            const moxResult = await fetchMoxfieldDeck(decklistUrl);
+            cards = moxResult.cards;
+            commander = moxResult.commander;
+            deckColors = moxResult.colors;
+            await new Promise((r) => setTimeout(r, MOXFIELD_DELAY_MS));
           }
-          skipped++;
-          continue;
         }
 
-        // Build deck name: "PlayerName — EventName (Format)"
-        const deckName = `${playerName} — ${tournamentName}`.slice(0, 200);
+        if (cards.length === 0) { skipped++; continue; }
 
-        // Determine record string
-        const record = [
-          standing.winsSwiss ?? 0,
-          standing.lossesSwiss ?? 0,
-          standing.draws ?? 0,
-        ].join('-');
+        // Build deck name
+        const deckName = `${playerName} — ${tournamentName}`.slice(0, 200);
 
         const { data: deckRow, error: deckErr } = await supabase
           .from('community_decks')
@@ -340,8 +334,8 @@ serve(async (req: Request): Promise<Response> => {
             format,
             source: 'spicerack',
             source_id: sourceId,
-            commander: null, // Spicerack doesn't separate commander
-            colors: [],
+            commander,
+            colors: deckColors,
             event_name: tournamentName,
             event_date: startDate,
           })
