@@ -268,7 +268,7 @@ describe('SearchFilters', () => {
     renderFilters();
 
     const filterButton = screen.getByRole('button', { name: /filter/i });
-    const sortTrigger = screen.getByRole('combobox');
+    const sortTrigger = screen.getAllByRole('combobox')[0];
 
     fireEvent.click(filterButton);
     const cardTypeButton = screen.getByRole('button', { name: 'Instant' });
