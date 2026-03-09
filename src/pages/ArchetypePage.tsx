@@ -12,7 +12,7 @@ import { Footer } from '@/components/Footer';
 import { ManaSymbol } from '@/components/ManaSymbol';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ARCHETYPES } from '@/data/archetypes';
+import { ARCHETYPES, getArchetypeForFormat } from '@/data/archetypes';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Compass,
@@ -211,6 +211,10 @@ export default function ArchetypePage() {
 
   const displayName = formatArchetypeName(slug ?? '');
   const curated = ARCHETYPES.find((a) => a.slug === slug);
+  const formatContent = useMemo(
+    () => curated ? getArchetypeForFormat(curated, format) : null,
+    [curated, format],
+  );
 
   const { data: decks, isLoading: decksLoading } = useArchetypeDecks(slug ?? '', format);
   const { data: topCards } = useArchetypeTopCards(slug ?? '', format);
@@ -349,14 +353,14 @@ export default function ArchetypePage() {
           )}
 
           {/* Strategy overview (from curated data) */}
-          {curated && (
+          {curated && formatContent && (
             <section className="rounded-xl border border-border/50 bg-card/50 p-5 sm:p-6 mb-6">
               <div className="flex items-center gap-2 mb-3">
                 <Compass className="h-4 w-4 text-primary" />
                 <h2 className="text-sm font-semibold text-foreground">{t('archetypes.strategyOverview')}</h2>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                {curated.description}
+                {formatContent.description}
               </p>
             </section>
           )}
@@ -390,22 +394,22 @@ export default function ArchetypePage() {
           )}
 
           {/* Search CTA */}
-          {curated && (
+          {curated && formatContent && (
             <section className="rounded-xl border border-primary/20 bg-primary/5 p-5 sm:p-6 mb-6">
               <div className="flex items-center gap-2 mb-3">
                 <Search className="h-4 w-4 text-primary" />
                 <h2 className="text-sm font-semibold text-foreground">
-                  Find {displayName} Cards
+                  Find {displayName} Cards{formatLabel ? ` (${formatLabel})` : ''}
                 </h2>
               </div>
               <p className="text-xs text-muted-foreground mb-3">
-                Pre-built search query for {displayName} staples:
+                Pre-built search query for {formatLabel ?? 'Commander'} {displayName} staples:
               </p>
               <div className="rounded-lg bg-muted/50 border border-border/50 px-4 py-2.5 mb-4">
-                <code className="text-xs text-foreground break-all">{curated.searchQuery}</code>
+                <code className="text-xs text-foreground break-all">{formatContent.searchQuery}</code>
               </div>
               <Button
-                onClick={() => handleSearch(curated.searchQuery)}
+                onClick={() => handleSearch(formatContent.searchQuery)}
                 className="gap-2"
                 size="sm"
               >
@@ -416,14 +420,14 @@ export default function ArchetypePage() {
           )}
 
           {/* Budget tips (curated) */}
-          {curated && (
+          {curated && formatContent && (
             <section className="rounded-xl border border-border/50 bg-card/50 p-5 sm:p-6 mb-6">
               <div className="flex items-center gap-2 mb-3">
                 <DollarSign className="h-4 w-4 text-emerald-500" />
                 <h2 className="text-sm font-semibold text-foreground">{t('archetypes.budgetAlternatives')}</h2>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                {curated.budgetTip}
+                {formatContent.budgetTip}
               </p>
             </section>
           )}
