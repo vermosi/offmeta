@@ -53,3 +53,21 @@ verify_jwt = false
 
 [functions.price-snapshot]
 verify_jwt = false
+
+[functions.mtgjson-import]
+verify_jwt = false
+
+[functions.spicerack-import]
+verify_jwt = false
+
+[functions.card-sync]
+verify_jwt = false
+
+[functions.compute-cooccurrence]
+verify_jwt = false
+
+[functions.card-recommendations]
+verify_jwt = false
+
+[functions.detect-archetypes]
+verify_jwt = false
