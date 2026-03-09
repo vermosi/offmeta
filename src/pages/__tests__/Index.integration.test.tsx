@@ -85,6 +85,15 @@ vi.mock('@/lib/pwa', () => ({
   checkForUpdates: vi.fn(),
 }));
 
+vi.mock('@/lib/i18n', () => ({
+  useTranslation: () => ({
+    t: (key: string, fallback?: string) => fallback ?? key,
+    locale: 'en',
+    setLocale: vi.fn(),
+  }),
+  I18nProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 vi.mock('@/hooks/useRealtimeCache', () => ({
   useRealtimeCache: () => {},
 }));
