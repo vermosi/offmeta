@@ -410,7 +410,15 @@ function detectDeck(cards: CardInfo[], colors: string[], format: string): Detect
     }
   }
 
-  if (scores.length === 0) return null;
+  if (scores.length === 0) {
+    // Fallback if no specific mechanical pattern meets the threshold
+    const deckName = colorName === 'Colorless' ? 'Midrange' : `${colorName} Midrange`;
+    return {
+      macro_archetype: 'Midrange',
+      deck_name: deckName,
+      archetype: 'midrange',
+    };
+  }
   scores.sort((a, b) => b.weightedRatio - a.weightedRatio);
 
   const mechArchetype = scores[0].archetype;
