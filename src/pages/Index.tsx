@@ -14,13 +14,33 @@ import {
   useMemo,
   useRef,
 } from 'react';
-import { OnboardingWalkthrough } from '@/components/OnboardingWalkthrough';
+const OnboardingWalkthrough = lazy(() =>
+  import('@/components/OnboardingWalkthrough').then((m) => ({
+    default: m.OnboardingWalkthrough,
+  })),
+);
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
-import { EditableQueryBar } from '@/components/EditableQueryBar';
-import { SaveSearchButton } from '@/components/SaveSearchButton';
-import { ExplainCompilationPanel } from '@/components/ExplainCompilationPanel';
-import { ReportIssueDialog } from '@/components/ReportIssueDialog';
+const EditableQueryBar = lazy(() =>
+  import('@/components/EditableQueryBar').then((m) => ({
+    default: m.EditableQueryBar,
+  })),
+);
+const SaveSearchButton = lazy(() =>
+  import('@/components/SaveSearchButton').then((m) => ({
+    default: m.SaveSearchButton,
+  })),
+);
+const ExplainCompilationPanel = lazy(() =>
+  import('@/components/ExplainCompilationPanel').then((m) => ({
+    default: m.ExplainCompilationPanel,
+  })),
+);
+const ReportIssueDialog = lazy(() =>
+  import('@/components/ReportIssueDialog').then((m) => ({
+    default: m.ReportIssueDialog,
+  })),
+);
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Footer } from '@/components/Footer';
 import { Header } from '@/components/Header';
