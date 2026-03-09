@@ -19,12 +19,40 @@ const EXPLORE_LINKS = [
   { to: '/about', labelKey: 'footer.about', fallback: 'About' },
 ] as const;
 
+const DATA_SOURCES = [
+  { name: 'Scryfall', href: 'https://scryfall.com' },
+  { name: 'Moxfield', href: 'https://www.moxfield.com' },
+  { name: 'Commander Spellbook', href: 'https://commanderspellbook.com' },
+] as const;
+
+const BUILT_WITH = [
+  { name: 'React', href: 'https://react.dev' },
+  { name: 'TypeScript', href: 'https://www.typescriptlang.org' },
+  { name: 'Tailwind CSS', href: 'https://tailwindcss.com' },
+  { name: 'Vite', href: 'https://vitejs.dev' },
+  { name: 'Lovable', href: 'https://lovable.dev' },
+] as const;
+
+function ExternalAnchor({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+    >
+      {children}
+      <ExternalLink className="h-2.5 w-2.5 opacity-40" aria-hidden="true" />
+    </a>
+  );
+}
+
 export function Footer() {
   const { t } = useTranslation();
 
   return (
     <footer className="border-t border-border mt-auto" role="contentinfo">
-      <div className="container-main py-6 sm:py-8 space-y-4">
+      <div className="container-main py-6 sm:py-8 space-y-5">
         {/* Brand row */}
         <div className="flex items-center justify-center sm:justify-start gap-2">
           <Logo variant="mono" className="h-5 w-5 sm:h-6 sm:w-6 text-foreground" />
@@ -36,9 +64,9 @@ export function Footer() {
           </span>
         </div>
 
-        {/* Links grid */}
+        {/* Links grid — 2 cols mobile, 4 cols desktop */}
         <div className="border-t border-border pt-4">
-          <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-5">
             {/* Explore column */}
             <div>
               <h3 className="text-xs font-semibold text-foreground mb-2">
@@ -86,65 +114,60 @@ export function Footer() {
                 )}
               </ul>
             </div>
+
+            {/* Data Sources column */}
+            <div>
+              <h3 className="text-xs font-semibold text-foreground mb-2">
+                Data Sources
+              </h3>
+              <ul className="space-y-1.5">
+                {DATA_SOURCES.map((source) => (
+                  <li key={source.name}>
+                    <ExternalAnchor href={source.href}>{source.name}</ExternalAnchor>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Built With column */}
+            <div>
+              <h3 className="text-xs font-semibold text-foreground mb-2">
+                Built With
+              </h3>
+              <ul className="space-y-1.5">
+                {BUILT_WITH.map((tech) => (
+                  <li key={tech.name}>
+                    <ExternalAnchor href={tech.href}>{tech.name}</ExternalAnchor>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
 
-        {/* Attributions */}
-        <div className="border-t border-border pt-4 flex flex-col items-center gap-2 sm:flex-row sm:justify-center sm:gap-4">
-          <span className="text-xs text-muted-foreground">{t('footer.poweredByLabel', 'Powered by')}</span>
-          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
-            <a
-              href="https://scryfall.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Scryfall
-              <ExternalLink className="h-2.5 w-2.5 opacity-50" aria-hidden="true" />
-            </a>
-            <span className="text-border">·</span>
-            <a
-              href="https://www.moxfield.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Moxfield
-              <ExternalLink className="h-2.5 w-2.5 opacity-50" aria-hidden="true" />
-            </a>
-            <span className="text-border">·</span>
-            <a
-              href="https://commanderspellbook.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Commander Spellbook
-              <ExternalLink className="h-2.5 w-2.5 opacity-50" aria-hidden="true" />
-            </a>
-            <span className="text-border">·</span>
-            <a
-              href="https://discord.gg/9UEv6vrTD4"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Join our Discord community (opens in new tab)"
-            >
-              <svg className="h-3.5 w-3.5" aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
-              <span className="hidden sm:inline">Discord</span>
-            </a>
-            <span className="text-border">·</span>
-            <a
-              href="https://github.com/vermosi/offmeta"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="View source on GitHub (opens in new tab)"
-            >
-              <Github className="h-3.5 w-3.5" aria-hidden="true" />
-              <span className="hidden sm:inline">{t('footer.source')}</span>
-            </a>
-          </div>
+        {/* Community row */}
+        <div className="border-t border-border pt-4 flex items-center justify-center gap-4">
+          <a
+            href="https://discord.gg/9UEv6vrTD4"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Join our Discord community (opens in new tab)"
+          >
+            <svg className="h-3.5 w-3.5" aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+            Discord
+          </a>
+          <span className="text-border">·</span>
+          <a
+            href="https://github.com/vermosi/offmeta"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="View source on GitHub (opens in new tab)"
+          >
+            <Github className="h-3.5 w-3.5" aria-hidden="true" />
+            {t('footer.source')}
+          </a>
         </div>
 
         {/* Legal */}
