@@ -38,6 +38,7 @@ import {
   CardModalAddToDeck,
   CardModalMetaContext,
   CardModalCollection,
+  CardModalRecommendations,
   type DisplayPrices,
 } from './CardModal/index';
 
