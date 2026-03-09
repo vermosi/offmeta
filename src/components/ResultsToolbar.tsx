@@ -12,6 +12,7 @@ import { ResultsStats } from '@/components/ResultsStats';
 import { GitCompareArrows } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import type { ScryfallCard } from '@/types/card';
+import type { FilterState } from '@/types/filters';
 import type { ViewMode } from '@/lib/view-mode-storage';
 
 interface ResultsToolbarProps {
