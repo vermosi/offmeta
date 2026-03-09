@@ -64,7 +64,7 @@ function SynergySection({
   playedAlongsideLabel,
 }: {
   synergyCards: SynergyCard[];
-  sourceCardName: string;
+  _sourceCardName: string;
   playedAlongsideLabel: string;
 }) {
   const { t } = useTranslation();
