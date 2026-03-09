@@ -132,7 +132,7 @@ export function DeckCritiquePanel({ deckId, cards, commanderName, colorIdentity,
         </Button>
       ),
     });
-  }, []);
+  }, [t]);
 
   const dismissAddition = useCallback((cardName: string) => {
     setDismissedAdditions((prev) => new Set(prev).add(cardName));

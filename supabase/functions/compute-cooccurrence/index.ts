@@ -5,9 +5,8 @@
  * @module functions/compute-cooccurrence
  */
 
-// @ts-nocheck
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, validateAuth } from '../_shared/auth.ts';
 import { createLogger } from '../_shared/logger.ts';
 
