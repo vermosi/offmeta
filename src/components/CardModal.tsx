@@ -21,7 +21,7 @@ import { getCardPrintings, type CardPrinting } from '@/lib/scryfall/printings';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
-import { X, ArrowLeft } from 'lucide-react';
+import { X, ArrowLeft, Loader2 } from 'lucide-react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { useIsMobile } from '@/hooks/useMobile';
 import { useAnalytics } from '@/hooks/useAnalytics';
@@ -77,12 +77,16 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
   }, [open, propCard]);
 
   // Navigate to a different card within the modal
+  const [isNavigating, setIsNavigating] = useState(false);
   const handleCardClick = useCallback(async (cardName: string) => {
+    setIsNavigating(true);
     try {
       const newCard = await getCardByName(cardName);
       setCardHistory((prev) => [...prev, newCard]);
     } catch {
       // Silently fail — card stays as-is
+    } finally {
+      setIsNavigating(false);
     }
   }, []);
 
@@ -224,7 +228,12 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
 
   // Mobile content
   const mobileContent = (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full relative">
+      {isNavigating && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-lg">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )}
       {/* Card Image */}
       <div className="bg-muted/30 p-4 flex flex-col items-center relative">
         {canGoBack && (
@@ -312,7 +321,12 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
 
   // Desktop content
   const desktopContent = (
-    <div className="grid md:grid-cols-[280px_1fr] max-h-[85vh]">
+    <div className="grid md:grid-cols-[280px_1fr] max-h-[85vh] relative">
+      {isNavigating && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-lg">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )}
       {/* Card Image Section */}
       <div className="bg-muted/30 flex flex-col items-center p-5 border-r border-border/50 relative">
         {canGoBack && (
