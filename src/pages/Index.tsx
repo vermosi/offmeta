@@ -23,7 +23,11 @@ import { useOnboarding } from '@/hooks/useOnboarding';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 import { EditableQueryBar } from '@/components/EditableQueryBar';
 import { SaveSearchButton } from '@/components/SaveSearchButton';
-import { ExplainCompilationPanel } from '@/components/ExplainCompilationPanel';
+const ExplainCompilationPanel = lazy(() =>
+  import('@/components/ExplainCompilationPanel').then((m) => ({
+    default: m.ExplainCompilationPanel,
+  })),
+);
 const ReportIssueDialog = lazy(() =>
   import('@/components/ReportIssueDialog').then((m) => ({
     default: m.ReportIssueDialog,
@@ -47,8 +51,16 @@ const SimilarSearches = lazy(() =>
 import { type ViewMode, getStoredViewMode } from '@/lib/view-mode-storage';
 import { ResultsTabs, type ResultsTab } from '@/components/ResultsTabs';
 import { SeoManager } from '@/components/SeoManager';
-import { ResultsToolbar } from '@/components/ResultsToolbar';
-import { SearchResultsArea } from '@/components/SearchResultsArea';
+const ResultsToolbar = lazy(() =>
+  import('@/components/ResultsToolbar').then((m) => ({
+    default: m.ResultsToolbar,
+  })),
+);
+const SearchResultsArea = lazy(() =>
+  import('@/components/SearchResultsArea').then((m) => ({
+    default: m.SearchResultsArea,
+  })),
+);
 const CompareBar = lazy(() =>
   import('@/components/CompareBar').then((m) => ({ default: m.CompareBar })),
 );
