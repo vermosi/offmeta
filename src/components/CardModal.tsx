@@ -11,6 +11,7 @@ import type { ScryfallCard } from '@/types/card';
 import {
   getCardImage,
   isDoubleFacedCard,
+  getCardByName,
   getCardFaceDetails,
   getCardRulings,
   type CardRuling,
