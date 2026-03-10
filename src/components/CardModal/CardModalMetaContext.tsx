@@ -147,6 +147,38 @@ export function CardModalMetaContext({ card, oracleId, onCardClick, isMobile }: 
     };
   }, [expanded, rationale, isLoading, card, oracleText, t]);
 
+  // Fetch synergy cards when expanded and format changes
+  useEffect(() => {
+    if (!expanded || !oracleId) return;
+    let cancelled = false;
+    setSynergyLoading(true);
+    setSynergyError(false);
+
+    (async () => {
+      try {
+        const { data, error: fnErr } = await supabase.functions.invoke(
+          'card-recommendations',
+          { body: { oracle_id: oracleId, format: selectedFormat, limit: 4 } },
+        );
+        if (fnErr) throw fnErr;
+        if (!cancelled && data?.recommendations) {
+          setSynergyCards(data.recommendations);
+        }
+      } catch {
+        if (!cancelled) setSynergyError(true);
+      } finally {
+        if (!cancelled) setSynergyLoading(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [expanded, oracleId, selectedFormat]);
+
+  const handleFormatChange = useCallback((format: string) => {
+    setSelectedFormat(format);
+    setSynergyCards([]);
+  }, []);
+
   // Don't render if card has no useful meta data
   if (!edhrecRank && legalFormats.length === 0 && matchedArchetypes.length === 0) {
     return null;
