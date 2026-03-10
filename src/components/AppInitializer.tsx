@@ -108,7 +108,7 @@ function usePrefetchSignatureCards() {
     prefetched.current = true;
 
     const id = setTimeout(() => {
-      for (const format of ['commander', 'modern', 'standard', 'pioneer']) {
+      for (const format of ['commander', 'modern', 'standard', 'pioneer', 'pauper', 'premodern']) {
         queryClient.prefetchQuery({
           queryKey: ['signature-cards', format],
           queryFn: async () => {
