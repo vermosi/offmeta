@@ -1,10 +1,11 @@
 /**
  * "Why It's Played" meta intelligence section for CardModal.
- * Shows EDHREC popularity, AI-generated rationale, format tags, and archetype chips.
+ * Shows EDHREC popularity, AI-generated rationale, format tags, archetype chips,
+ * and format-specific synergy cards.
  * @module components/CardModal/CardModalMetaContext
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import { getEdhrecPercentile, getEdhrecTier } from '@/lib/scryfall/edhrec';
@@ -19,11 +20,24 @@ import {
   Brain,
   TrendingUp,
   AlertTriangle,
+  Zap,
+  Loader2,
 } from 'lucide-react';
 import { logger } from '@/lib/core/logger';
 
+interface SynergyCard {
+  oracle_id: string;
+  card_name: string;
+  cooccurrence_count: number;
+  mana_cost: string | null;
+  type_line: string | null;
+  image_url: string | null;
+}
+
 export interface CardModalMetaContextProps {
   card: ScryfallCard;
+  oracleId?: string;
+  onCardClick?: (cardName: string) => void;
   isMobile?: boolean;
 }
 
