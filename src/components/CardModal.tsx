@@ -313,7 +313,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
             cardId={card.id}
           />
 
-          <CardModalMetaContext card={card} />
+          <CardModalMetaContext card={card} oracleId={card.oracle_id} />
 
           <CardModalCollection cardName={card.name} />
 
