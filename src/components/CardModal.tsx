@@ -90,6 +90,22 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
     }
   }, []);
 
+  // Keyboard shortcut: Backspace to go back in card history
+  useEffect(() => {
+    if (!open || !canGoBack) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't intercept if user is typing in an input/textarea
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (e.key === 'Backspace') {
+        e.preventDefault();
+        setCardHistory((prev) => prev.slice(0, -1));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open, canGoBack]);
+
 
   // Jump to a specific point in history
   const handleJumpTo = useCallback((index: number) => {
