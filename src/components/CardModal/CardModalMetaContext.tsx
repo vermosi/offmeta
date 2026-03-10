@@ -1,10 +1,11 @@
 /**
  * "Why It's Played" meta intelligence section for CardModal.
- * Shows EDHREC popularity, AI-generated rationale, format tags, and archetype chips.
+ * Shows EDHREC popularity, AI-generated rationale, format tags, archetype chips,
+ * and format-specific synergy cards.
  * @module components/CardModal/CardModalMetaContext
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import { getEdhrecPercentile, getEdhrecTier } from '@/lib/scryfall/edhrec';
@@ -19,11 +20,24 @@ import {
   Brain,
   TrendingUp,
   AlertTriangle,
+  Zap,
+  Loader2,
 } from 'lucide-react';
 import { logger } from '@/lib/core/logger';
 
+interface SynergyCard {
+  oracle_id: string;
+  card_name: string;
+  cooccurrence_count: number;
+  mana_cost: string | null;
+  type_line: string | null;
+  image_url: string | null;
+}
+
 export interface CardModalMetaContextProps {
   card: ScryfallCard;
+  oracleId?: string;
+  onCardClick?: (cardName: string) => void;
   isMobile?: boolean;
 }
 
@@ -46,13 +60,30 @@ const FORMAT_DISPLAY: Record<string, string> = {
   brawl: 'Brawl',
 };
 
-export function CardModalMetaContext({ card, isMobile }: CardModalMetaContextProps) {
+const SYNERGY_FORMATS = ['commander', 'modern', 'standard', 'pioneer', 'legacy', 'vintage', 'pauper'] as const;
+
+function getBestFormat(legalities: Record<string, string>): string {
+  // Prefer Commander, then first legal format from the list
+  if (legalities.commander === 'legal') return 'commander';
+  for (const f of SYNERGY_FORMATS) {
+    if (legalities[f] === 'legal') return f;
+  }
+  return 'all';
+}
+
+export function CardModalMetaContext({ card, oracleId, onCardClick, isMobile }: CardModalMetaContextProps) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(true);
   const [rationale, setRationale] = useState<string | null>(null);
   const [aiArchetypes, setAiArchetypes] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Synergy cards state
+  const [synergyCards, setSynergyCards] = useState<SynergyCard[]>([]);
+  const [synergyLoading, setSynergyLoading] = useState(false);
+  const [selectedFormat, setSelectedFormat] = useState(() => getBestFormat(card.legalities));
+  const [synergyError, setSynergyError] = useState(false);
 
   const edhrecRank = card.edhrec_rank;
   const tier = edhrecRank ? getEdhrecTier(edhrecRank) : null;
@@ -115,6 +146,38 @@ export function CardModalMetaContext({ card, isMobile }: CardModalMetaContextPro
       cancelled = true;
     };
   }, [expanded, rationale, isLoading, card, oracleText, t]);
+
+  // Fetch synergy cards when expanded and format changes
+  useEffect(() => {
+    if (!expanded || !oracleId) return;
+    let cancelled = false;
+    setSynergyLoading(true);
+    setSynergyError(false);
+
+    (async () => {
+      try {
+        const { data, error: fnErr } = await supabase.functions.invoke(
+          'card-recommendations',
+          { body: { oracle_id: oracleId, format: selectedFormat, limit: 4 } },
+        );
+        if (fnErr) throw fnErr;
+        if (!cancelled && data?.recommendations) {
+          setSynergyCards(data.recommendations);
+        }
+      } catch {
+        if (!cancelled) setSynergyError(true);
+      } finally {
+        if (!cancelled) setSynergyLoading(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [expanded, oracleId, selectedFormat]);
+
+  const handleFormatChange = useCallback((format: string) => {
+    setSelectedFormat(format);
+    setSynergyCards([]);
+  }, []);
 
   // Don't render if card has no useful meta data
   if (!edhrecRank && legalFormats.length === 0 && matchedArchetypes.length === 0) {
@@ -222,6 +285,79 @@ export function CardModalMetaContext({ card, isMobile }: CardModalMetaContextPro
                     ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Format-specific synergy cards */}
+          {oracleId && (
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Zap className="h-3.5 w-3.5 text-accent" />
+                <span className="text-xs font-medium text-muted-foreground">
+                  {t('card.synergizesWith', 'Synergizes With')}
+                </span>
+                {/* Format selector badges */}
+                <div className="flex flex-wrap gap-1">
+                  {SYNERGY_FORMATS
+                    .filter((f) => card.legalities[f] === 'legal')
+                    .slice(0, isMobile ? 4 : 6)
+                    .map((f) => (
+                      <Badge
+                        key={f}
+                        variant={selectedFormat === f ? 'default' : 'outline'}
+                        size="sm"
+                        className="cursor-pointer transition-colors"
+                        onClick={() => handleFormatChange(f)}
+                      >
+                        {FORMAT_DISPLAY[f] || f}
+                      </Badge>
+                    ))}
+                </div>
+              </div>
+
+              {synergyLoading ? (
+                <div className="flex items-center justify-center py-3">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                </div>
+              ) : synergyError ? (
+                <p className="text-xs text-muted-foreground italic">
+                  {t('card.synergyUnavailable', 'Synergy data unavailable')}
+                </p>
+              ) : synergyCards.length > 0 ? (
+                <div className={`grid gap-2 ${isMobile ? 'grid-cols-4' : 'grid-cols-4'}`}>
+                  {synergyCards.map((sc) => (
+                    <button
+                      key={sc.oracle_id}
+                      type="button"
+                      className="group flex flex-col items-center gap-1 rounded-lg p-1 hover:bg-secondary/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      onClick={() => onCardClick?.(sc.card_name)}
+                      title={sc.card_name}
+                    >
+                      {sc.image_url ? (
+                        <img
+                          src={sc.image_url}
+                          alt={sc.card_name}
+                          className="w-full aspect-[2.5/3.5] rounded object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full aspect-[2.5/3.5] rounded bg-secondary flex items-center justify-center">
+                          <span className="text-[8px] text-muted-foreground text-center line-clamp-2 px-0.5">
+                            {sc.card_name}
+                          </span>
+                        </div>
+                      )}
+                      <span className="text-[10px] text-muted-foreground leading-tight text-center line-clamp-1 w-full">
+                        {sc.card_name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ) : !synergyLoading ? (
+                <p className="text-xs text-muted-foreground italic">
+                  {t('card.noSynergyData', 'No synergy data for this format')}
+                </p>
+              ) : null}
             </div>
           )}
         </div>
