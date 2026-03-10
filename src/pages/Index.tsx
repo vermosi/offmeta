@@ -61,7 +61,12 @@ const SimilarSearches = lazy(() =>
   })),
 );
 import { type ViewMode, getStoredViewMode } from '@/lib/view-mode-storage';
-import { ResultsTabs, type ResultsTab } from '@/components/ResultsTabs';
+const ResultsTabs = lazy(() =>
+  import('@/components/ResultsTabs').then((m) => ({
+    default: m.ResultsTabs,
+  })),
+);
+import type { ResultsTab } from '@/components/ResultsTabs';
 import { SeoManager } from '@/components/SeoManager';
 const ResultsToolbar = lazy(() =>
   import('@/components/ResultsToolbar').then((m) => ({
