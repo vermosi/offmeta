@@ -42,7 +42,6 @@ function usePrefetchArchetypes() {
     if (prefetched.current) return;
     prefetched.current = true;
 
-    // Delay slightly to avoid competing with critical first-paint requests
     const id = setTimeout(() => {
       queryClient.prefetchQuery({
         queryKey: ['archetype-data-by-format'],
@@ -57,6 +56,40 @@ function usePrefetchArchetypes() {
         staleTime: 30 * 60 * 1000,
       });
     }, 3000);
+
+    return () => clearTimeout(id);
+  }, [queryClient]);
+}
+
+/**
+ * Prefetch market trend data (price movers) for both daily & weekly views
+ * so the /market page loads instantly.
+ */
+function usePrefetchMarketTrends() {
+  const queryClient = useQueryClient();
+  const prefetched = useRef(false);
+
+  useEffect(() => {
+    if (prefetched.current) return;
+    prefetched.current = true;
+
+    const id = setTimeout(() => {
+      // Prefetch both daily (1-day) and weekly (7-day) movers in parallel
+      for (const daysBack of [1, 7]) {
+        queryClient.prefetchQuery({
+          queryKey: ['market-trends', daysBack],
+          queryFn: async () => {
+            const { data, error } = await supabase.rpc('get_price_movers', {
+              days_back: daysBack,
+              limit_count: 50,
+            });
+            if (error) throw error;
+            return data ?? [];
+          },
+          staleTime: 30 * 60 * 1000,
+        });
+      }
+    }, 4000); // After archetypes to avoid request contention
 
     return () => clearTimeout(id);
   }, [queryClient]);
