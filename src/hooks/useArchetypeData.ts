@@ -134,7 +134,8 @@ export function useArchetypeData() {
 
       return result;
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 30 * 60 * 1000, // 30 min — materialized view refreshes daily
+    gcTime: 60 * 60 * 1000, // keep in cache 1 hour
   });
 }
 
@@ -158,7 +159,8 @@ export function useArchetypeDeckCounts() {
       }
       return counts;
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
   });
 }
 
@@ -235,7 +237,8 @@ export function useArchetypeTrends(format: string | null) {
 
       return trends;
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
     enabled: !!format,
   });
 }
