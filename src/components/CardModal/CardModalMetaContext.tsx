@@ -60,13 +60,30 @@ const FORMAT_DISPLAY: Record<string, string> = {
   brawl: 'Brawl',
 };
 
-export function CardModalMetaContext({ card, isMobile }: CardModalMetaContextProps) {
+const SYNERGY_FORMATS = ['commander', 'modern', 'standard', 'pioneer', 'legacy', 'vintage', 'pauper'] as const;
+
+function getBestFormat(legalities: Record<string, string>): string {
+  // Prefer Commander, then first legal format from the list
+  if (legalities.commander === 'legal') return 'commander';
+  for (const f of SYNERGY_FORMATS) {
+    if (legalities[f] === 'legal') return f;
+  }
+  return 'all';
+}
+
+export function CardModalMetaContext({ card, oracleId, onCardClick, isMobile }: CardModalMetaContextProps) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(true);
   const [rationale, setRationale] = useState<string | null>(null);
   const [aiArchetypes, setAiArchetypes] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Synergy cards state
+  const [synergyCards, setSynergyCards] = useState<SynergyCard[]>([]);
+  const [synergyLoading, setSynergyLoading] = useState(false);
+  const [selectedFormat, setSelectedFormat] = useState(() => getBestFormat(card.legalities));
+  const [synergyError, setSynergyError] = useState(false);
 
   const edhrecRank = card.edhrec_rank;
   const tier = edhrecRank ? getEdhrecTier(edhrecRank) : null;
