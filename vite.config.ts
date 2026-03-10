@@ -108,6 +108,7 @@ export default defineConfig(({ mode }) => ({
             '@radix-ui/react-label',
             '@radix-ui/react-slider',
             '@radix-ui/react-slot',
+            '@radix-ui/react-separator',
           ],
           'vendor-query': ['@tanstack/react-query', '@tanstack/react-virtual'],
           'vendor-supabase': ['@supabase/supabase-js'],
