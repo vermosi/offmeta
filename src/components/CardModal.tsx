@@ -90,10 +90,6 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
     }
   }, []);
 
-  // Go back to previous card
-  const handleGoBack = useCallback(() => {
-    setCardHistory((prev) => prev.slice(0, -1));
-  }, []);
 
   // Jump to a specific point in history
   const handleJumpTo = useCallback((index: number) => {
