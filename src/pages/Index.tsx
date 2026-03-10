@@ -23,7 +23,11 @@ import { useOnboarding } from '@/hooks/useOnboarding';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 import { EditableQueryBar } from '@/components/EditableQueryBar';
 import { SaveSearchButton } from '@/components/SaveSearchButton';
-import { ExplainCompilationPanel } from '@/components/ExplainCompilationPanel';
+const ExplainCompilationPanel = lazy(() =>
+  import('@/components/ExplainCompilationPanel').then((m) => ({
+    default: m.ExplainCompilationPanel,
+  })),
+);
 const ReportIssueDialog = lazy(() =>
   import('@/components/ReportIssueDialog').then((m) => ({
     default: m.ReportIssueDialog,
