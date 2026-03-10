@@ -245,7 +245,7 @@ export function getCorsHeaders(req: Request) {
   const corsOrigin =
     origin && effectiveOrigins.includes(origin)
       ? origin
-      : isLovablePreview && !sensitiveEndpoints.has(endpoint ?? '')
+      : isLovablePreview
         ? origin!
         : effectiveOrigins[0];
 
