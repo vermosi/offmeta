@@ -6,7 +6,7 @@
  * @module components/CardModal
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { ScryfallCard } from '@/types/card';
 import {
   getCardImage,
