@@ -16,7 +16,6 @@ import { ThemeProvider } from 'next-themes';
 import { I18nProvider } from '@/lib/i18n';
 import { AuthProvider } from '@/components/AuthProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { supabase } from '@/integrations/supabase/client';
 import { ScrollToTopOnNavigate } from '@/components/ScrollToTopOnNavigate';
 const Index = lazy(() => import('./pages/Index'));
 const GuidesIndex = lazy(() => import('./pages/GuidesIndex'));
