@@ -314,7 +314,18 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
   const desktopContent = (
     <div className="grid md:grid-cols-[280px_1fr] max-h-[85vh]">
       {/* Card Image Section */}
-      <div className="bg-muted/30 flex flex-col items-center p-5 border-r border-border/50">
+      <div className="bg-muted/30 flex flex-col items-center p-5 border-r border-border/50 relative">
+        {canGoBack && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 left-2 h-8 w-8 z-10"
+            onClick={handleGoBack}
+            aria-label="Go back to previous card"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        )}
         <CardModalImage
           displayImageUrl={displayImageUrl}
           cardName={faceDetails.name}
