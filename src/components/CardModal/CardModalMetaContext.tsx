@@ -48,7 +48,7 @@ const FORMAT_DISPLAY: Record<string, string> = {
 
 export function CardModalMetaContext({ card, isMobile }: CardModalMetaContextProps) {
   const { t } = useTranslation();
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const [rationale, setRationale] = useState<string | null>(null);
   const [aiArchetypes, setAiArchetypes] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
