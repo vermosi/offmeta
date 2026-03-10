@@ -21,7 +21,7 @@ import { getCardPrintings, type CardPrinting } from '@/lib/scryfall/printings';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { X, ArrowLeft } from 'lucide-react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { useIsMobile } from '@/hooks/useMobile';
 import { useAnalytics } from '@/hooks/useAnalytics';
