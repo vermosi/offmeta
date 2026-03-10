@@ -259,7 +259,7 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
 
         <CardModalCombos cardName={card.name} isMobile />
 
-        <CardModalRecommendations oracleId={card.oracle_id} cardName={card.name} isMobile />
+        <CardModalRecommendations oracleId={card.oracle_id} cardName={card.name} onCardClick={handleCardClick} isMobile />
 
         <CardModalAddToDeck card={card} isMobile />
 
