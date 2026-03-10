@@ -226,7 +226,18 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
   const mobileContent = (
     <div className="flex flex-col h-full">
       {/* Card Image */}
-      <div className="bg-muted/30 p-4 flex flex-col items-center">
+      <div className="bg-muted/30 p-4 flex flex-col items-center relative">
+        {canGoBack && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 left-2 h-8 w-8 z-10"
+            onClick={handleGoBack}
+            aria-label="Go back to previous card"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        )}
         <CardModalImage
           displayImageUrl={displayImageUrl}
           cardName={faceDetails.name}
