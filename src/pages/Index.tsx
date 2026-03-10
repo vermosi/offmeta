@@ -51,8 +51,16 @@ const SimilarSearches = lazy(() =>
 import { type ViewMode, getStoredViewMode } from '@/lib/view-mode-storage';
 import { ResultsTabs, type ResultsTab } from '@/components/ResultsTabs';
 import { SeoManager } from '@/components/SeoManager';
-import { ResultsToolbar } from '@/components/ResultsToolbar';
-import { SearchResultsArea } from '@/components/SearchResultsArea';
+const ResultsToolbar = lazy(() =>
+  import('@/components/ResultsToolbar').then((m) => ({
+    default: m.ResultsToolbar,
+  })),
+);
+const SearchResultsArea = lazy(() =>
+  import('@/components/SearchResultsArea').then((m) => ({
+    default: m.SearchResultsArea,
+  })),
+);
 const CompareBar = lazy(() =>
   import('@/components/CompareBar').then((m) => ({ default: m.CompareBar })),
 );
