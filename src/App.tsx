@@ -6,19 +6,16 @@
  * @module App
  */
 
-import { lazy, Suspense, useEffect, useRef } from 'react';
+import { lazy, Suspense } from 'react';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from 'next-themes';
-import { usePrefetchPopularQueries } from '@/hooks/useSearchQuery';
-import { useRealtimeCache } from '@/hooks/useRealtimeCache';
 import { I18nProvider } from '@/lib/i18n';
 import { AuthProvider } from '@/components/AuthProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { supabase } from '@/integrations/supabase/client';
 import { ScrollToTopOnNavigate } from '@/components/ScrollToTopOnNavigate';
 const Index = lazy(() => import('./pages/Index'));
 const GuidesIndex = lazy(() => import('./pages/GuidesIndex'));
@@ -57,43 +54,8 @@ const queryClient = new QueryClient({
   },
 });
 
-/**
- * Warms up the semantic-search edge function after a short idle period
- * to eliminate cold-start latency on the user's first real search.
- * The ping uses a cached, deterministic query so no AI is invoked.
- */
-function useEdgeFunctionWarmup() {
-  const warmedUp = useRef(false);
+const AppInitializer = lazy(() => import('@/components/AppInitializer'));
 
-  useEffect(() => {
-    if (warmedUp.current) return;
-
-    const id = setTimeout(() => {
-      if (warmedUp.current) return;
-      warmedUp.current = true;
-
-      // Fire-and-forget: a deterministic query that hits the cache layer
-      // immediately, costing zero AI tokens and returning sub-200ms.
-      supabase.functions
-        .invoke('semantic-search', {
-          body: { query: 'ping warmup', useCache: true },
-        })
-        .catch(() => {
-          // Silently ignore — warmup is best-effort
-        });
-    }, 2000); // 2s after mount — after first paint & hydration settle
-
-    return () => clearTimeout(id);
-  }, []);
-}
-
-// Component to trigger prefetching, realtime sync, and edge function warmup
-function AppInitializer() {
-  usePrefetchPopularQueries();
-  useRealtimeCache();
-  useEdgeFunctionWarmup();
-  return null;
-}
 
 const App = () => (
   <I18nProvider>
@@ -103,7 +65,7 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <AppInitializer />
+            <Suspense fallback={null}><AppInitializer /></Suspense>
             <BrowserRouter>
               <ScrollToTopOnNavigate />
               <ErrorBoundary>
