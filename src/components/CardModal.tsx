@@ -51,8 +51,9 @@ interface CardModalProps {
 
 export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
   const isMobile = useIsMobile();
-  const [overrideCard, setOverrideCard] = useState<ScryfallCard | null>(null);
-  const card = overrideCard ?? propCard;
+  const [cardHistory, setCardHistory] = useState<ScryfallCard[]>([]);
+  const card = cardHistory.length > 0 ? cardHistory[cardHistory.length - 1] : propCard;
+  const canGoBack = cardHistory.length > 0;
   const [printings, setPrintings] = useState<CardPrinting[]>([]);
   const [isLoadingPrintings, setIsLoadingPrintings] = useState(false);
   const [refreshedPrices, setRefreshedPrices] = useState<DisplayPrices | null>(
@@ -70,19 +71,24 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
 
   const isDoubleFaced = card ? isDoubleFacedCard(card) : false;
 
-  // Clear override when modal closes or prop card changes
+  // Clear history when modal closes or prop card changes
   useEffect(() => {
-    if (!open) setOverrideCard(null);
+    if (!open) setCardHistory([]);
   }, [open, propCard]);
 
   // Navigate to a different card within the modal
   const handleCardClick = useCallback(async (cardName: string) => {
     try {
       const newCard = await getCardByName(cardName);
-      setOverrideCard(newCard);
+      setCardHistory((prev) => [...prev, newCard]);
     } catch {
       // Silently fail — card stays as-is
     }
+  }, []);
+
+  // Go back to previous card
+  const handleGoBack = useCallback(() => {
+    setCardHistory((prev) => prev.slice(0, -1));
   }, []);
 
   // Reset state and init loading when card/open changes (render-phase adjustment)
