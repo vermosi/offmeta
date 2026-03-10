@@ -65,7 +65,7 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <AppInitializer />
+            <Suspense fallback={null}><AppInitializer /></Suspense>
             <BrowserRouter>
               <ScrollToTopOnNavigate />
               <ErrorBoundary>
