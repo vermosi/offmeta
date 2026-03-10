@@ -21,7 +21,7 @@ import { getCardPrintings, type CardPrinting } from '@/lib/scryfall/printings';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { X, ArrowLeft } from 'lucide-react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { useIsMobile } from '@/hooks/useMobile';
 import { useAnalytics } from '@/hooks/useAnalytics';
@@ -51,8 +51,9 @@ interface CardModalProps {
 
 export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
   const isMobile = useIsMobile();
-  const [overrideCard, setOverrideCard] = useState<ScryfallCard | null>(null);
-  const card = overrideCard ?? propCard;
+  const [cardHistory, setCardHistory] = useState<ScryfallCard[]>([]);
+  const card = cardHistory.length > 0 ? cardHistory[cardHistory.length - 1] : propCard;
+  const canGoBack = cardHistory.length > 0;
   const [printings, setPrintings] = useState<CardPrinting[]>([]);
   const [isLoadingPrintings, setIsLoadingPrintings] = useState(false);
   const [refreshedPrices, setRefreshedPrices] = useState<DisplayPrices | null>(
@@ -70,19 +71,24 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
 
   const isDoubleFaced = card ? isDoubleFacedCard(card) : false;
 
-  // Clear override when modal closes or prop card changes
+  // Clear history when modal closes or prop card changes
   useEffect(() => {
-    if (!open) setOverrideCard(null);
+    if (!open) setCardHistory([]);
   }, [open, propCard]);
 
   // Navigate to a different card within the modal
   const handleCardClick = useCallback(async (cardName: string) => {
     try {
       const newCard = await getCardByName(cardName);
-      setOverrideCard(newCard);
+      setCardHistory((prev) => [...prev, newCard]);
     } catch {
       // Silently fail — card stays as-is
     }
+  }, []);
+
+  // Go back to previous card
+  const handleGoBack = useCallback(() => {
+    setCardHistory((prev) => prev.slice(0, -1));
   }, []);
 
   // Reset state and init loading when card/open changes (render-phase adjustment)
@@ -220,7 +226,18 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
   const mobileContent = (
     <div className="flex flex-col h-full">
       {/* Card Image */}
-      <div className="bg-muted/30 p-4 flex flex-col items-center">
+      <div className="bg-muted/30 p-4 flex flex-col items-center relative">
+        {canGoBack && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 left-2 h-8 w-8 z-10"
+            onClick={handleGoBack}
+            aria-label="Go back to previous card"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        )}
         <CardModalImage
           displayImageUrl={displayImageUrl}
           cardName={faceDetails.name}
@@ -297,7 +314,18 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
   const desktopContent = (
     <div className="grid md:grid-cols-[280px_1fr] max-h-[85vh]">
       {/* Card Image Section */}
-      <div className="bg-muted/30 flex flex-col items-center p-5 border-r border-border/50">
+      <div className="bg-muted/30 flex flex-col items-center p-5 border-r border-border/50 relative">
+        {canGoBack && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 left-2 h-8 w-8 z-10"
+            onClick={handleGoBack}
+            aria-label="Go back to previous card"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        )}
         <CardModalImage
           displayImageUrl={displayImageUrl}
           cardName={faceDetails.name}
