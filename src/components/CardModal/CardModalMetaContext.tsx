@@ -287,6 +287,79 @@ export function CardModalMetaContext({ card, oracleId, onCardClick, isMobile }: 
               )}
             </div>
           )}
+
+          {/* Format-specific synergy cards */}
+          {oracleId && (
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Zap className="h-3.5 w-3.5 text-accent" />
+                <span className="text-xs font-medium text-muted-foreground">
+                  {t('card.synergizesWith', 'Synergizes With')}
+                </span>
+                {/* Format selector badges */}
+                <div className="flex flex-wrap gap-1">
+                  {SYNERGY_FORMATS
+                    .filter((f) => card.legalities[f] === 'legal')
+                    .slice(0, isMobile ? 4 : 6)
+                    .map((f) => (
+                      <Badge
+                        key={f}
+                        variant={selectedFormat === f ? 'default' : 'outline'}
+                        size="sm"
+                        className="cursor-pointer transition-colors"
+                        onClick={() => handleFormatChange(f)}
+                      >
+                        {FORMAT_DISPLAY[f] || f}
+                      </Badge>
+                    ))}
+                </div>
+              </div>
+
+              {synergyLoading ? (
+                <div className="flex items-center justify-center py-3">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                </div>
+              ) : synergyError ? (
+                <p className="text-xs text-muted-foreground italic">
+                  {t('card.synergyUnavailable', 'Synergy data unavailable')}
+                </p>
+              ) : synergyCards.length > 0 ? (
+                <div className={`grid gap-2 ${isMobile ? 'grid-cols-4' : 'grid-cols-4'}`}>
+                  {synergyCards.map((sc) => (
+                    <button
+                      key={sc.oracle_id}
+                      type="button"
+                      className="group flex flex-col items-center gap-1 rounded-lg p-1 hover:bg-secondary/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      onClick={() => onCardClick?.(sc.card_name)}
+                      title={sc.card_name}
+                    >
+                      {sc.image_url ? (
+                        <img
+                          src={sc.image_url}
+                          alt={sc.card_name}
+                          className="w-full aspect-[2.5/3.5] rounded object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full aspect-[2.5/3.5] rounded bg-secondary flex items-center justify-center">
+                          <span className="text-[8px] text-muted-foreground text-center line-clamp-2 px-0.5">
+                            {sc.card_name}
+                          </span>
+                        </div>
+                      )}
+                      <span className="text-[10px] text-muted-foreground leading-tight text-center line-clamp-1 w-full">
+                        {sc.card_name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ) : !synergyLoading ? (
+                <p className="text-xs text-muted-foreground italic">
+                  {t('card.noSynergyData', 'No synergy data for this format')}
+                </p>
+              ) : null}
+            </div>
+          )}
         </div>
       )}
     </div>
