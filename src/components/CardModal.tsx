@@ -321,7 +321,12 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
 
   // Desktop content
   const desktopContent = (
-    <div className="grid md:grid-cols-[280px_1fr] max-h-[85vh]">
+    <div className="grid md:grid-cols-[280px_1fr] max-h-[85vh] relative">
+      {isNavigating && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-lg">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )}
       {/* Card Image Section */}
       <div className="bg-muted/30 flex flex-col items-center p-5 border-r border-border/50 relative">
         {canGoBack && (
