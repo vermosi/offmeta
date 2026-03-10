@@ -95,11 +95,48 @@ function usePrefetchMarketTrends() {
   }, [queryClient]);
 }
 
+/**
+ * Prefetch signature cards for the most common formats so archetype detail
+ * views render card art instantly. Uses the same queryKey as useSignatureCards.
+ */
+function usePrefetchSignatureCards() {
+  const queryClient = useQueryClient();
+  const prefetched = useRef(false);
+
+  useEffect(() => {
+    if (prefetched.current) return;
+    prefetched.current = true;
+
+    const id = setTimeout(() => {
+      for (const format of ['commander', 'modern', 'standard', 'pioneer']) {
+        queryClient.prefetchQuery({
+          queryKey: ['signature-cards', format],
+          queryFn: async () => {
+            const { data, error } = await supabase.rpc('get_signature_cards', {
+              target_format: format,
+            });
+            if (error) throw error;
+            const map = new Map<string, { deckName: string; cardName: string; imageUrl: string }>();
+            for (const row of (data ?? []) as Array<{ deck_name: string; card_name: string; image_url: string }>) {
+              map.set(row.deck_name, { deckName: row.deck_name, cardName: row.card_name, imageUrl: row.image_url });
+            }
+            return map;
+          },
+          staleTime: 30 * 60 * 1000,
+        });
+      }
+    }, 5000); // After market trends to stagger requests
+
+    return () => clearTimeout(id);
+  }, [queryClient]);
+}
+
 export default function AppInitializer() {
   usePrefetchPopularQueries();
   useRealtimeCache();
   useEdgeFunctionWarmup();
   usePrefetchArchetypes();
   usePrefetchMarketTrends();
+  usePrefetchSignatureCards();
   return null;
 }
