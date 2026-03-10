@@ -55,43 +55,8 @@ const queryClient = new QueryClient({
   },
 });
 
-/**
- * Warms up the semantic-search edge function after a short idle period
- * to eliminate cold-start latency on the user's first real search.
- * The ping uses a cached, deterministic query so no AI is invoked.
- */
-function useEdgeFunctionWarmup() {
-  const warmedUp = useRef(false);
+const AppInitializer = lazy(() => import('@/components/AppInitializer'));
 
-  useEffect(() => {
-    if (warmedUp.current) return;
-
-    const id = setTimeout(() => {
-      if (warmedUp.current) return;
-      warmedUp.current = true;
-
-      // Fire-and-forget: a deterministic query that hits the cache layer
-      // immediately, costing zero AI tokens and returning sub-200ms.
-      supabase.functions
-        .invoke('semantic-search', {
-          body: { query: 'ping warmup', useCache: true },
-        })
-        .catch(() => {
-          // Silently ignore — warmup is best-effort
-        });
-    }, 2000); // 2s after mount — after first paint & hydration settle
-
-    return () => clearTimeout(id);
-  }, []);
-}
-
-// Component to trigger prefetching, realtime sync, and edge function warmup
-function AppInitializer() {
-  usePrefetchPopularQueries();
-  useRealtimeCache();
-  useEdgeFunctionWarmup();
-  return null;
-}
 
 const App = () => (
   <I18nProvider>
