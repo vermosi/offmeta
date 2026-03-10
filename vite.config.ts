@@ -113,7 +113,7 @@ export default defineConfig(({ mode }) => ({
           'vendor-supabase': ['@supabase/supabase-js'],
           'vendor-icons': ['lucide-react'],
           'vendor-forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
-          'vendor-misc': ['sonner', 'cmdk', 'vaul'],
+          'vendor-misc': ['sonner', 'cmdk', 'vaul', 'next-themes'],
         },
       },
     },
