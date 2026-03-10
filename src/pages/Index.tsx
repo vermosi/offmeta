@@ -21,8 +21,16 @@ const OnboardingWalkthrough = lazy(() =>
 );
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
-import { EditableQueryBar } from '@/components/EditableQueryBar';
-import { SaveSearchButton } from '@/components/SaveSearchButton';
+const EditableQueryBar = lazy(() =>
+  import('@/components/EditableQueryBar').then((m) => ({
+    default: m.EditableQueryBar,
+  })),
+);
+const SaveSearchButton = lazy(() =>
+  import('@/components/SaveSearchButton').then((m) => ({
+    default: m.SaveSearchButton,
+  })),
+);
 const ExplainCompilationPanel = lazy(() =>
   import('@/components/ExplainCompilationPanel').then((m) => ({
     default: m.ExplainCompilationPanel,
