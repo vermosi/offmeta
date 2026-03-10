@@ -100,5 +100,6 @@ export default function AppInitializer() {
   useRealtimeCache();
   useEdgeFunctionWarmup();
   usePrefetchArchetypes();
+  usePrefetchMarketTrends();
   return null;
 }
