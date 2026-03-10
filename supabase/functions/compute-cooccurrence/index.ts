@@ -7,7 +7,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { getCorsHeaders, validateAuth } from '../_shared/auth.ts';
+import { getCorsHeaders, requireServiceRole } from '../_shared/auth.ts';
 import { createLogger } from '../_shared/logger.ts';
 
 const log = createLogger('compute-cooccurrence');
