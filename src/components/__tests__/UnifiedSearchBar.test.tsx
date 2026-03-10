@@ -126,14 +126,14 @@ describe('UnifiedSearchBar', () => {
     expect(screen.getByLabelText('Search for cards')).toBeDisabled();
   });
 
-  it('renders search feedback component', () => {
+  it('renders search feedback component', async () => {
     render(<UnifiedSearchBar {...defaultProps} />);
-    expect(screen.getAllByTestId('search-feedback').length).toBeGreaterThan(0);
+    expect((await screen.findAllByTestId('search-feedback')).length).toBeGreaterThan(0);
   });
 
-  it('renders search help modal', () => {
+  it('renders search help modal', async () => {
     render(<UnifiedSearchBar {...defaultProps} />);
-    expect(screen.getAllByTestId('search-help').length).toBeGreaterThan(0);
+    expect((await screen.findAllByTestId('search-help')).length).toBeGreaterThan(0);
   });
 
   it('updates input value on change', () => {
