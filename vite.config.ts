@@ -112,6 +112,8 @@ export default defineConfig(({ mode }) => ({
           'vendor-query': ['@tanstack/react-query', '@tanstack/react-virtual'],
           'vendor-supabase': ['@supabase/supabase-js'],
           'vendor-icons': ['lucide-react'],
+          'vendor-forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
+          'vendor-misc': ['sonner', 'cmdk', 'vaul'],
         },
       },
     },

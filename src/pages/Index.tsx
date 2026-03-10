@@ -34,9 +34,13 @@ const ReportIssueDialog = lazy(() =>
   })),
 );
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { Footer } from '@/components/Footer';
+const Footer = lazy(() =>
+  import('@/components/Footer').then((m) => ({ default: m.Footer })),
+);
 import { Header } from '@/components/Header';
-import { HeroSection } from '@/components/HeroSection';
+const HeroSection = lazy(() =>
+  import('@/components/HeroSection').then((m) => ({ default: m.HeroSection })),
+);
 const HomeDiscoverySection = lazy(() =>
   import('@/components/HomeDiscoverySection').then((m) => ({
     default: m.HomeDiscoverySection,
