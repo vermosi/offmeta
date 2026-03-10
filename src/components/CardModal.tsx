@@ -228,7 +228,12 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
 
   // Mobile content
   const mobileContent = (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full relative">
+      {isNavigating && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-lg">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )}
       {/* Card Image */}
       <div className="bg-muted/30 p-4 flex flex-col items-center relative">
         {canGoBack && (
