@@ -49,8 +49,10 @@ interface CardModalProps {
   onClose: () => void;
 }
 
-export function CardModal({ card, open, onClose }: CardModalProps) {
+export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
   const isMobile = useIsMobile();
+  const [overrideCard, setOverrideCard] = useState<ScryfallCard | null>(null);
+  const card = overrideCard ?? propCard;
   const [printings, setPrintings] = useState<CardPrinting[]>([]);
   const [isLoadingPrintings, setIsLoadingPrintings] = useState(false);
   const [refreshedPrices, setRefreshedPrices] = useState<DisplayPrices | null>(
@@ -67,6 +69,21 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
   const { trackCardModalView, trackAffiliateClick } = useAnalytics();
 
   const isDoubleFaced = card ? isDoubleFacedCard(card) : false;
+
+  // Clear override when modal closes or prop card changes
+  useEffect(() => {
+    if (!open) setOverrideCard(null);
+  }, [open, propCard]);
+
+  // Navigate to a different card within the modal
+  const handleCardClick = useCallback(async (cardName: string) => {
+    try {
+      const newCard = await getCardByName(cardName);
+      setOverrideCard(newCard);
+    } catch {
+      // Silently fail — card stays as-is
+    }
+  }, []);
 
   // Reset state and init loading when card/open changes (render-phase adjustment)
   const [prevCardKey, setPrevCardKey] = useState<string | null>(null);
