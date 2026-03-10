@@ -95,6 +95,21 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
     setCardHistory((prev) => prev.slice(0, -1));
   }, []);
 
+  // Jump to a specific point in history
+  const handleJumpTo = useCallback((index: number) => {
+    // index -1 = propCard (root), 0 = first history entry, etc.
+    if (index < 0) {
+      setCardHistory([]);
+    } else {
+      setCardHistory((prev) => prev.slice(0, index + 1));
+    }
+  }, []);
+
+  // Build breadcrumb items: [propCard, ...history]
+  const breadcrumbItems = canGoBack && propCard
+    ? [propCard.name, ...cardHistory.map((c) => c.name)]
+    : [];
+
   // Reset state and init loading when card/open changes (render-phase adjustment)
   const [prevCardKey, setPrevCardKey] = useState<string | null>(null);
   const cardKey = card && open ? card.id : null;
