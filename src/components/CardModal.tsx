@@ -331,7 +331,7 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
             cardId={card.id}
           />
 
-          <CardModalMetaContext card={card} oracleId={card.oracle_id} />
+          <CardModalMetaContext card={card} oracleId={card.oracle_id} onCardClick={handleCardClick} />
 
           <CardModalCollection cardName={card.name} />
 
