@@ -77,12 +77,16 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
   }, [open, propCard]);
 
   // Navigate to a different card within the modal
+  const [isNavigating, setIsNavigating] = useState(false);
   const handleCardClick = useCallback(async (cardName: string) => {
+    setIsNavigating(true);
     try {
       const newCard = await getCardByName(cardName);
       setCardHistory((prev) => [...prev, newCard]);
     } catch {
       // Silently fail — card stays as-is
+    } finally {
+      setIsNavigating(false);
     }
   }, []);
 
