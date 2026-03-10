@@ -228,7 +228,7 @@ export function CardModal({ card, open, onClose }: CardModalProps) {
           isMobile
         />
 
-        <CardModalMetaContext card={card} isMobile />
+        <CardModalMetaContext card={card} oracleId={card.oracle_id} isMobile />
 
         <CardModalCollection cardName={card.name} isMobile />
 
