@@ -112,19 +112,23 @@ serve(async (req: Request): Promise<Response> => {
 
         if (resp.ok) {
           const data = await resp.json();
-          const cardRows = (data.data ?? []).map((card: Record<string, unknown>) => ({
-            oracle_id: card.oracle_id,
-            name: card.name,
-            mana_cost: card.mana_cost ?? null,
-            type_line: card.type_line ?? null,
-            oracle_text: card.oracle_text ?? null,
-            colors: card.colors ?? [],
-            cmc: card.cmc ?? 0,
-            image_url: card.image_uris?.normal ?? card.card_faces?.[0]?.image_uris?.normal ?? null,
-            rarity: card.rarity ?? null,
-            legalities: card.legalities ?? null,
-            updated_at: new Date().toISOString(),
-          }));
+          const cardRows = (data.data ?? []).map((card: Record<string, unknown>) => {
+            const imageUris = card.image_uris as Record<string, string> | undefined;
+            const cardFaces = card.card_faces as Array<{ image_uris?: Record<string, string> }> | undefined;
+            return {
+              oracle_id: card.oracle_id,
+              name: card.name,
+              mana_cost: card.mana_cost ?? null,
+              type_line: card.type_line ?? null,
+              oracle_text: card.oracle_text ?? null,
+              colors: card.colors ?? [],
+              cmc: card.cmc ?? 0,
+              image_url: imageUris?.normal ?? cardFaces?.[0]?.image_uris?.normal ?? null,
+              rarity: card.rarity ?? null,
+              legalities: card.legalities ?? null,
+              updated_at: new Date().toISOString(),
+            };
+          });
 
           if (cardRows.length > 0) {
             const { error: upsertErr } = await supabase
