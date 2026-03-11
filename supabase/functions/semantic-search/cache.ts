@@ -27,13 +27,23 @@ export function getCacheKey(
   return `${normalized}|${JSON.stringify(filters || {})}|${cacheSalt || ''}`;
 }
 
-// Cryptographic hash function for cache key using Web Crypto API
-async function hashCacheKey(key: string): Promise<string> {
+// Fast non-cryptographic hash for hot-path in-memory cache logging.
+function hashMemoryCacheKey(key: string): string {
+  let hash = 2166136261; // FNV-1a 32-bit offset basis
+  for (let i = 0; i < key.length; i++) {
+    hash ^= key.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
+
+// Cryptographic hash for persistent database cache key (query_hash column).
+async function hashPersistentCacheKey(key: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(key);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  // Return first 16 characters of hex string for reasonable key length
   return hashArray
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('')
@@ -46,7 +56,7 @@ export async function getCachedResult(
   cacheSalt?: string,
 ): Promise<CacheEntry['result'] | null> {
   const key = getCacheKey(query, filters, cacheSalt);
-  const hash = await hashCacheKey(key);
+  const hash = hashMemoryCacheKey(key);
   const cached = queryCache.get(key);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
     // LRU touch: delete + re-insert moves entry to end of Map iteration order
@@ -130,7 +140,7 @@ export async function getPersistentCache(
   cacheSalt?: string,
 ): Promise<CacheEntry['result'] | null> {
   const key = getCacheKey(query, filters, cacheSalt);
-  const hash = await hashCacheKey(key);
+  const hash = await hashPersistentCacheKey(key);
 
   try {
     const { data, error } = await supabase
@@ -198,7 +208,7 @@ export async function setPersistentCache(
   if (result.explanation.confidence < 0.65) return;
 
   const key = getCacheKey(query, filters, cacheSalt);
-  const hash = await hashCacheKey(key);
+  const hash = await hashPersistentCacheKey(key);
   const normalized = query.toLowerCase().trim().replace(/\s+/g, ' ');
 
   try {

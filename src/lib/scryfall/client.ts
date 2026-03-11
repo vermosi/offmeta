@@ -67,86 +67,44 @@ export function clearSearchCache(): void {
 // Rate limiting: Scryfall asks for 50-100ms between requests
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-let lastRequestTime = 0;
 const MIN_REQUEST_INTERVAL = 50; // Scryfall recommends ≥50ms; 100ms was overly conservative
 
-// Request queue for high-traffic scenarios
-interface QueuedRequest {
-  url: string;
-  resolve: (response: Response) => void;
-  reject: (error: Error) => void;
-  timestamp: number; // Added for timeout tracking
-}
-
-const requestQueue: QueuedRequest[] = [];
-let isProcessingQueue = false;
-const MAX_QUEUE_SIZE = 50;
-const QUEUE_ITEM_TIMEOUT_MS = 30000; // 30 second timeout for queued items
-
-/**
- * Process the request queue sequentially with rate limiting.
- * Automatically cleans up timed-out requests.
- */
-async function processQueue(): Promise<void> {
-  if (isProcessingQueue || requestQueue.length === 0) return;
-
-  isProcessingQueue = true;
-
-  while (requestQueue.length > 0) {
-    const request = requestQueue.shift();
-    if (!request) break;
-
-    // Check if request has timed out while waiting in queue
-    if (Date.now() - request.timestamp > QUEUE_ITEM_TIMEOUT_MS) {
-      request.reject(new Error('Request timed out while waiting in queue'));
-      continue;
-    }
-
-    try {
-      const now = Date.now();
-      const timeSinceLastRequest = now - lastRequestTime;
-
-      if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
-        await delay(MIN_REQUEST_INTERVAL - timeSinceLastRequest);
-      }
-
-      lastRequestTime = Date.now();
-      const response = await fetchWithRetry(request.url);
-      request.resolve(response);
-    } catch (error) {
-      request.reject(error instanceof Error ? error : new Error(String(error)));
-    }
-  }
-
-  isProcessingQueue = false;
-}
+const MAX_QUEUE_SIZE = 10;
+const QUEUE_ITEM_TIMEOUT_MS = FETCH_TIMEOUT_MS;
+let queuedRequests = 0;
+let nextRequestAllowedAt = 0;
 
 /**
  * Fetch wrapper that enforces Scryfall's rate limiting requirements.
- * Uses a queue to handle concurrent requests during high traffic.
+ * Uses token-bucket style scheduling so requests only delay when needed.
  * @param url - The URL to fetch
  * @returns The fetch Response
  */
 async function rateLimitedFetch(url: string): Promise<Response> {
-  // Clean up any stale timed-out requests before checking size
-  const now = Date.now();
-  while (
-    requestQueue.length > 0 &&
-    now - requestQueue[0].timestamp > QUEUE_ITEM_TIMEOUT_MS
-  ) {
-    const stale = requestQueue.shift();
-    stale?.reject(new Error('Request timed out while waiting in queue'));
-  }
-
-  // If queue is still too long, reject immediately
-  if (requestQueue.length >= MAX_QUEUE_SIZE) {
+  if (queuedRequests >= MAX_QUEUE_SIZE) {
     throw new Error('Too many pending requests. Please try again.');
   }
 
-  return new Promise((resolve, reject) => {
-    requestQueue.push({ url, resolve, reject, timestamp: Date.now() });
-    processQueue();
-  });
+  queuedRequests += 1;
+
+  try {
+    const now = Date.now();
+    const scheduledAt = Math.max(now, nextRequestAllowedAt);
+    const waitMs = scheduledAt - now;
+    nextRequestAllowedAt = scheduledAt + MIN_REQUEST_INTERVAL;
+
+    if (waitMs > QUEUE_ITEM_TIMEOUT_MS) {
+      throw new Error('Request timed out while waiting in queue');
+    }
+
+    if (waitMs > 0) {
+      await delay(waitMs);
+    }
+
+    return await fetchWithRetry(url);
+  } finally {
+    queuedRequests = Math.max(0, queuedRequests - 1);
+  }
 }
 
 async function fetchWithTimeoutWithInit(

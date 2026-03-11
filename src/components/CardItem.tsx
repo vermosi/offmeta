@@ -11,7 +11,10 @@ import type { ScryfallCard } from '@/types/card';
 import { getCardImage } from '@/lib/scryfall/client';
 import { ManaCost } from '@/components/ManaSymbol';
 import { cardNameToSlug } from '@/lib/card-slug';
-import { getLocalizedName, getLocalizedTypeLine } from '@/lib/scryfall/localized';
+import {
+  getLocalizedName,
+  getLocalizedTypeLine,
+} from '@/lib/scryfall/localized';
 import { useTranslation } from '@/lib/i18n';
 
 interface CardItemProps {
@@ -41,7 +44,7 @@ export const CardItem = memo(function CardItem({
   tabIndex = 0,
   isOwned,
 }: CardItemProps) {
-  const imageUrl = getCardImage(card, 'normal');
+  const imageUrl = getCardImage(card, 'small');
   const [imgError, setImgError] = useState(false);
   const { locale } = useTranslation();
   const displayName = getLocalizedName(card, locale);
@@ -68,10 +71,12 @@ export const CardItem = memo(function CardItem({
     >
       {imgError ? (
         <div className="w-full h-full flex items-center justify-center p-4 text-center">
-          <span className="text-sm text-muted-foreground font-medium">{displayName}</span>
+          <span className="text-sm text-muted-foreground font-medium">
+            {displayName}
+          </span>
         </div>
       ) : (
-          <img
+        <img
           src={imageUrl}
           alt={displayName}
           loading="lazy"
@@ -83,8 +88,21 @@ export const CardItem = memo(function CardItem({
 
       {/* Owned badge */}
       {isOwned && (
-        <div className="absolute top-1.5 left-1.5 z-10 h-5 w-5 rounded-full bg-emerald-500/90 flex items-center justify-center shadow-sm" aria-label="Owned">
-          <svg className="h-3 w-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+        <div
+          className="absolute top-1.5 left-1.5 z-10 h-5 w-5 rounded-full bg-emerald-500/90 flex items-center justify-center shadow-sm"
+          aria-label="Owned"
+        >
+          <svg
+            className="h-3 w-3 text-white"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
         </div>
       )}
 

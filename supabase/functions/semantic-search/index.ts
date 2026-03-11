@@ -148,18 +148,21 @@ async function seedTranslationRule(
     // Don't seed very short or very long queries
     if (normalized.length < 5 || normalized.length > 200) return;
 
-    await supabase.from('translation_rules').insert({
+    await supabase
+      .from('translation_rules')
+      .insert({
         pattern: normalized,
         scryfall_syntax: scryfallQuery,
         confidence,
         description: `Auto-seeded from AI translation`,
         is_active: true,
-      }).then(({ error }) => {
-      // Silently ignore duplicate key conflicts — preserves admin-curated rules
-      if (error && !error.message?.includes('duplicate key')) {
-        console.warn('seedTranslationRule insert error:', error.message);
-      }
-    });
+      })
+      .then(({ error }) => {
+        // Silently ignore duplicate key conflicts — preserves admin-curated rules
+        if (error && !error.message?.includes('duplicate key')) {
+          console.warn('seedTranslationRule insert error:', error.message);
+        }
+      });
   } catch {
     // Silently fail - this is an optimization, not critical
   }
@@ -194,6 +197,21 @@ type StageName =
   | 'fallback';
 
 const ACCENTED_LATIN_HIGH_CONFIDENCE_THRESHOLD = 0.9;
+
+interface EdgeRuntimeLike {
+  waitUntil: (promise: Promise<unknown>) => void;
+}
+
+function runInBackground(task: Promise<unknown>): void {
+  const maybeEdgeRuntime = (globalThis as { EdgeRuntime?: EdgeRuntimeLike })
+    .EdgeRuntime;
+  if (maybeEdgeRuntime?.waitUntil) {
+    maybeEdgeRuntime.waitUntil(task);
+    return;
+  }
+
+  task.catch(() => {});
+}
 
 /**
  * Main Edge Function Handler
@@ -261,7 +279,13 @@ serve(async (req) => {
   const requestBody = parsedBody.requestBody;
 
   try {
-    const { query: rawQuery, filters: rawFilters, debug, useCache, cacheSalt } = requestBody;
+    const {
+      query: rawQuery,
+      filters: rawFilters,
+      debug,
+      useCache,
+      cacheSalt,
+    } = requestBody;
     const query = rawQuery as string;
     const filters = (rawFilters ?? null) as Record<string, unknown> | null;
     const requestBudget = parseRequestBudget(
@@ -728,7 +752,8 @@ serve(async (req) => {
     }
 
     // 6c. Concept Matching (known MTG concepts — skip AI if high-confidence match)
-    const residualForConcepts = deterministicResult.intent.remainingQuery || query;
+    const residualForConcepts =
+      deterministicResult.intent.remainingQuery || query;
     if (residualForConcepts.trim().length > 2) {
       try {
         const { findConceptMatches } = await import('./pipeline/concepts.ts');
@@ -740,7 +765,8 @@ serve(async (req) => {
           const dedupedConcepts = concepts.filter((c) => {
             // Normalize category to prevent near-duplicates
             // e.g., "Mass removal", "Mass removal spells", "Cards that destroy all creatures"
-            const normCat = (c.category || '').toLowerCase()
+            const normCat = (c.category || '')
+              .toLowerCase()
               .replace(/\b(cards?\s+that\s+|spells?\s*)/g, '')
               .trim();
             if (seenCategories.has(normCat)) return false;
@@ -750,14 +776,21 @@ serve(async (req) => {
 
           // Strip color constraints from concept templates when user didn't
           // specify a color (prevents "board whipe" → c:w from "white board wipes")
-          const userSpecifiedColor = deterministicQuery && /\b(c|ci)(:|<=|>=|=|<|>)\S+/i.test(deterministicQuery);
-          const conceptParts = dedupedConcepts.map((c) => {
-            let syntax = c.scryfallSyntax;
-            if (!userSpecifiedColor) {
-              syntax = syntax.replace(/\b(c|ci)(:|<=|>=|=|<|>)\S+/gi, '').replace(/\s+/g, ' ').trim();
-            }
-            return syntax;
-          }).filter(Boolean);
+          const userSpecifiedColor =
+            deterministicQuery &&
+            /\b(c|ci)(:|<=|>=|=|<|>)\S+/i.test(deterministicQuery);
+          const conceptParts = dedupedConcepts
+            .map((c) => {
+              let syntax = c.scryfallSyntax;
+              if (!userSpecifiedColor) {
+                syntax = syntax
+                  .replace(/\b(c|ci)(:|<=|>=|=|<|>)\S+/gi, '')
+                  .replace(/\s+/g, ' ')
+                  .trim();
+              }
+              return syntax;
+            })
+            .filter(Boolean);
 
           let conceptQuery = conceptParts.join(' ');
           if (deterministicQuery) {
@@ -772,20 +805,30 @@ serve(async (req) => {
             concepts: dedupedConcepts.map((c) => c.conceptId),
             responseTimeMs,
           });
-          logInfo('request_completed', getPerfLogFields('pattern_match', responseTimeMs));
+          logInfo(
+            'request_completed',
+            getPerfLogFields('pattern_match', responseTimeMs),
+          );
 
-          const readableDesc = dedupedConcepts.map((c) => c.description || c.conceptId).join(', ');
+          const readableDesc = dedupedConcepts
+            .map((c) => c.description || c.conceptId)
+            .join(', ');
           const conceptIds = dedupedConcepts.map((c) => c.conceptId).join(', ');
 
-          setCachedResult(query, filters, {
-            scryfallQuery: validation.sanitized,
-            explanation: {
-              readable: `Searching for: ${readableDesc}`,
-              assumptions: [`Matched concepts: ${conceptIds}`],
-              confidence: concepts[0].confidence,
+          setCachedResult(
+            query,
+            filters,
+            {
+              scryfallQuery: validation.sanitized,
+              explanation: {
+                readable: `Searching for: ${readableDesc}`,
+                assumptions: [`Matched concepts: ${conceptIds}`],
+                confidence: concepts[0].confidence,
+              },
+              showAffiliate: true,
             },
-            showAffiliate: true,
-          }, cacheSalt);
+            cacheSalt,
+          );
 
           logTranslation(
             query,
@@ -818,7 +861,10 @@ serve(async (req) => {
         }
       } catch (conceptErr) {
         logWarn('concept_match_error', {
-          error: conceptErr instanceof Error ? conceptErr.message : String(conceptErr),
+          error:
+            conceptErr instanceof Error
+              ? conceptErr.message
+              : String(conceptErr),
         });
         // Fall through to AI
       }
@@ -872,7 +918,9 @@ serve(async (req) => {
     const hasAccentedLatin = /[àáâãäåæçèéêëìíîïðñòóôõöùúûüýþÿ]/i.test(
       remainingQuery,
     );
-    const deterministicConfidence = (deterministicResult.intent as unknown as Record<string, unknown>).confidence as number ?? 0;
+    const deterministicConfidence =
+      ((deterministicResult.intent as unknown as Record<string, unknown>)
+        .confidence as number) ?? 0;
     const shouldPreTranslateAccentedLatin =
       hasAccentedLatin &&
       !hasNonLatin &&
@@ -977,7 +1025,12 @@ serve(async (req) => {
           .trim();
 
         // Skip if too short or looks like a generic type
-        if (candidateName.length >= 3 && !/^(creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries|spells?|planeswalkers?)$/i.test(candidateName)) {
+        if (
+          candidateName.length >= 3 &&
+          !/^(creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries|spells?|planeswalkers?)$/i.test(
+            candidateName,
+          )
+        ) {
           try {
             const cardLookup = await fetchWithTimeout(
               `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(candidateName)}`,
@@ -988,7 +1041,8 @@ serve(async (req) => {
               const cardData = await cardLookup.json();
               if (cardData.oracle_text && cardData.name) {
                 detectedCardName = cardData.name;
-                const colorId = cardData.color_identity?.join('').toLowerCase() || '';
+                const colorId =
+                  cardData.color_identity?.join('').toLowerCase() || '';
                 cardSynergyContext = `\n\nCARD CONTEXT: The user is looking for cards that synergize with "${cardData.name}" (${cardData.type_line}). Its oracle text is: "${cardData.oracle_text}". Color identity: ${colorId || 'colorless'}. Generate a Scryfall query for cards that ENABLE or SYNERGIZE with this card's mechanics. Use id<=${colorId || 'c'} if the query implies commander format. Do NOT put the card name in o:"" — other cards don't mention this card by name.`;
                 logInfo('card_synergy_detected', {
                   cardName: cardData.name,
@@ -1010,16 +1064,21 @@ serve(async (req) => {
     const isLikelyName =
       deterministicResult.intent.warnings.includes('likely_card_name');
     // Use medium tier for synergy queries since they need more reasoning
-    const tier: QueryTier =
-      cardSynergyContext ? 'medium' :
-      queryWordCount > 8 ? 'complex' : queryWordCount > 4 ? 'medium' : 'simple';
+    const tier: QueryTier = cardSynergyContext
+      ? 'medium'
+      : queryWordCount > 8
+        ? 'complex'
+        : queryWordCount > 4
+          ? 'medium'
+          : 'simple';
 
     // Use stronger model for card name queries or synergy queries
-    const aiModel = isLikelyName || cardSynergyContext
-      ? 'google/gemini-2.5-flash'
-      : tier === 'simple'
-        ? 'google/gemini-2.5-flash-lite'
-        : 'google/gemini-3-flash-preview';
+    const aiModel =
+      isLikelyName || cardSynergyContext
+        ? 'google/gemini-2.5-flash'
+        : tier === 'simple'
+          ? 'google/gemini-2.5-flash-lite'
+          : 'google/gemini-3-flash-preview';
 
     // Deterministic fallback guard: skip optional dynamic rules if remaining budget
     // drops below the stage floor derived from REQUEST_BUDGET_MS.
@@ -1128,8 +1187,8 @@ serve(async (req) => {
 
       // Auto-seed high-confidence AI translations into translation_rules for future pattern matches
       if (confidence >= 0.8 && validation.sanitized.length > 0) {
-        seedTranslationRule(query, validation.sanitized, confidence).catch(
-          () => {},
+        runInBackground(
+          seedTranslationRule(query, validation.sanitized, confidence),
         );
       }
 

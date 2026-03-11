@@ -10,23 +10,55 @@ import { useRealtimeCache } from '@/hooks/useRealtimeCache';
 import { supabase } from '@/integrations/supabase/client';
 
 function useEdgeFunctionWarmup() {
-  const warmedUp = useRef(false);
+  const lastWarmupPath = useRef<string | null>(null);
 
   useEffect(() => {
-    if (warmedUp.current) return;
+    const warmEdgeFunction = () => {
+      const currentPath = `${window.location.pathname}${window.location.search}`;
+      if (lastWarmupPath.current === currentPath) return;
+      lastWarmupPath.current = currentPath;
 
-    const id = setTimeout(() => {
-      if (warmedUp.current) return;
-      warmedUp.current = true;
-
-      supabase.functions
+      void supabase.functions
         .invoke('semantic-search', {
           body: { query: 'ping warmup', useCache: true },
         })
         .catch(() => {});
-    }, 2000);
+    };
 
-    return () => clearTimeout(id);
+    const runWarmupOnReady = () => {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', warmEdgeFunction, {
+          once: true,
+        });
+        return;
+      }
+
+      warmEdgeFunction();
+    };
+
+    runWarmupOnReady();
+
+    const onNavigation = () => warmEdgeFunction();
+
+    window.addEventListener('popstate', onNavigation);
+
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+    history.pushState = (...args) => {
+      originalPushState.apply(history, args);
+      onNavigation();
+    };
+    history.replaceState = (...args) => {
+      originalReplaceState.apply(history, args);
+      onNavigation();
+    };
+
+    return () => {
+      document.removeEventListener('DOMContentLoaded', warmEdgeFunction);
+      window.removeEventListener('popstate', onNavigation);
+      history.pushState = originalPushState;
+      history.replaceState = originalReplaceState;
+    };
   }, []);
 }
 
@@ -48,7 +80,9 @@ function usePrefetchArchetypes() {
         queryFn: async () => {
           const { data, error } = await supabase
             .from('archetype_stats' as 'community_decks')
-            .select('format, macro_archetype, deck_name, archetype, deck_count, meta_percentage, all_colors');
+            .select(
+              'format, macro_archetype, deck_name, archetype, deck_count, meta_percentage, all_colors',
+            );
 
           if (error) throw error;
           return data ?? [];
@@ -108,7 +142,14 @@ function usePrefetchSignatureCards() {
     prefetched.current = true;
 
     const id = setTimeout(() => {
-      for (const format of ['commander', 'modern', 'standard', 'pioneer', 'pauper', 'premodern']) {
+      for (const format of [
+        'commander',
+        'modern',
+        'standard',
+        'pioneer',
+        'pauper',
+        'premodern',
+      ]) {
         queryClient.prefetchQuery({
           queryKey: ['signature-cards', format],
           queryFn: async () => {
@@ -116,9 +157,20 @@ function usePrefetchSignatureCards() {
               target_format: format,
             });
             if (error) throw error;
-            const map = new Map<string, { deckName: string; cardName: string; imageUrl: string }>();
-            for (const row of (data ?? []) as Array<{ deck_name: string; card_name: string; image_url: string }>) {
-              map.set(row.deck_name, { deckName: row.deck_name, cardName: row.card_name, imageUrl: row.image_url });
+            const map = new Map<
+              string,
+              { deckName: string; cardName: string; imageUrl: string }
+            >();
+            for (const row of (data ?? []) as Array<{
+              deck_name: string;
+              card_name: string;
+              image_url: string;
+            }>) {
+              map.set(row.deck_name, {
+                deckName: row.deck_name,
+                cardName: row.card_name,
+                imageUrl: row.image_url,
+              });
             }
             return map;
           },
