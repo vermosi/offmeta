@@ -29,13 +29,24 @@ export function logEvent(
   console.log(payload);
 }
 
+function coerceMetadata(metadata: StructuredLogData | unknown): StructuredLogData {
+  if (!metadata || typeof metadata !== 'object') {
+    return metadata !== undefined ? { detail: String(metadata) } : {};
+  }
+  if ('message' in (metadata as Record<string, unknown>)) {
+    const err = metadata as Record<string, unknown>;
+    return { message: String(err.message), ...(err.code ? { code: String(err.code) } : {}) };
+  }
+  return metadata as StructuredLogData;
+}
+
 export function createLogger(scope: string) {
   return {
     info: (event: string, metadata: StructuredLogData = {}) =>
       logEvent('info', event, { scope, ...metadata }),
     warn: (event: string, metadata: StructuredLogData = {}) =>
       logEvent('warn', event, { scope, ...metadata }),
-    error: (event: string, metadata: StructuredLogData = {}) =>
-      logEvent('error', event, { scope, ...metadata }),
+    error: (event: string, metadata?: StructuredLogData | unknown) =>
+      logEvent('error', event, { scope, ...coerceMetadata(metadata) }),
   };
 }
