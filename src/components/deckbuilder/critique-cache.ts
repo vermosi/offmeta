@@ -1,5 +1,5 @@
 /**
- * Session-storage caching utilities for AI deck critique results.
+ * Local-storage caching utilities for AI deck critique results.
  * @module components/deckbuilder/critique-cache
  */
 
@@ -7,13 +7,28 @@ import type { DeckCard } from '@/hooks/useDeck';
 
 export interface CritiqueResult {
   summary: string;
-  cuts: { card_name: string; reason: string; severity: 'weak' | 'underperforming' | 'off-strategy' }[];
-  additions: { card_name: string; reason: string; replaces?: string; category: string }[];
+  cuts: {
+    card_name: string;
+    reason: string;
+    severity: 'weak' | 'underperforming' | 'off-strategy';
+  }[];
+  additions: {
+    card_name: string;
+    reason: string;
+    replaces?: string;
+    category: string;
+  }[];
   mana_curve_notes?: string;
   confidence?: number;
 }
 
 const CACHE_PREFIX = 'offmeta_critique_';
+const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+interface CachedCritiqueEnvelope {
+  data: CritiqueResult;
+  expiresAt: number;
+}
 
 export function buildCacheKey(deckId: string, cards: DeckCard[]): string {
   const cardFingerprint = cards
@@ -29,9 +44,19 @@ export function buildCacheKey(deckId: string, cards: DeckCard[]): string {
 
 export function loadCachedCritique(key: string): CritiqueResult | null {
   try {
-    const raw = sessionStorage.getItem(key);
+    const raw = localStorage.getItem(key);
     if (!raw) return null;
-    return JSON.parse(raw) as CritiqueResult;
+    const parsed = JSON.parse(raw) as CachedCritiqueEnvelope | CritiqueResult;
+
+    if ('data' in parsed && 'expiresAt' in parsed) {
+      if (Date.now() > parsed.expiresAt) {
+        localStorage.removeItem(key);
+        return null;
+      }
+      return parsed.data;
+    }
+
+    return parsed as CritiqueResult;
   } catch {
     return null;
   }
@@ -39,6 +64,12 @@ export function loadCachedCritique(key: string): CritiqueResult | null {
 
 export function saveCritique(key: string, data: CritiqueResult): void {
   try {
-    sessionStorage.setItem(key, JSON.stringify(data));
-  } catch { /* quota exceeded — ignore */ }
+    const payload: CachedCritiqueEnvelope = {
+      data,
+      expiresAt: Date.now() + CACHE_TTL_MS,
+    };
+    localStorage.setItem(key, JSON.stringify(payload));
+  } catch {
+    /* quota exceeded — ignore */
+  }
 }

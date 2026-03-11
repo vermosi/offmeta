@@ -56,12 +56,25 @@ const MOCK_CRITIQUE = {
   success: true,
   summary: 'The deck has solid ramp but lacks removal.',
   cuts: [
-    { card_name: 'Card 1', reason: 'Too slow for the strategy', severity: 'underperforming' },
+    {
+      card_name: 'Card 1',
+      reason: 'Too slow for the strategy',
+      severity: 'underperforming',
+    },
     { card_name: 'Card 2', reason: 'Off-theme', severity: 'off-strategy' },
   ],
   additions: [
-    { card_name: 'Swords to Plowshares', reason: 'Premium removal', category: 'Removal', replaces: 'Card 1' },
-    { card_name: 'Rhystic Study', reason: 'Card advantage engine', category: 'Draw' },
+    {
+      card_name: 'Swords to Plowshares',
+      reason: 'Premium removal',
+      category: 'Removal',
+      replaces: 'Card 1',
+    },
+    {
+      card_name: 'Rhystic Study',
+      reason: 'Card advantage engine',
+      category: 'Draw',
+    },
   ],
   mana_curve_notes: 'Curve is slightly top-heavy at 5+ CMC.',
   confidence: 0.85,
@@ -70,7 +83,7 @@ const MOCK_CRITIQUE = {
 describe('DeckCritiquePanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    sessionStorage.clear();
+    localStorage.clear();
   });
 
   it('renders initial state with Get Critique button', () => {
@@ -81,7 +94,9 @@ describe('DeckCritiquePanel', () => {
   });
 
   it('disables button when fewer than 5 cards', () => {
-    render(<DeckCritiquePanel {...DEFAULT_PROPS} cards={[makeDeckCard('Solo')]} />);
+    render(
+      <DeckCritiquePanel {...DEFAULT_PROPS} cards={[makeDeckCard('Solo')]} />,
+    );
     const btn = screen.getByText('Get Critique').closest('button');
     expect(btn).toBeDisabled();
   });
@@ -99,7 +114,9 @@ describe('DeckCritiquePanel', () => {
     fireEvent.click(screen.getByText('Get Critique'));
 
     await waitFor(() => {
-      expect(screen.getByText('The deck has solid ramp but lacks removal.')).toBeInTheDocument();
+      expect(
+        screen.getByText('The deck has solid ramp but lacks removal.'),
+      ).toBeInTheDocument();
     });
 
     // Cuts
@@ -159,7 +176,13 @@ describe('DeckCritiquePanel', () => {
     mockInvoke.mockResolvedValue({ data: MOCK_CRITIQUE, error: null });
     const onRemove = vi.fn();
     const onAdd = vi.fn();
-    render(<DeckCritiquePanel {...DEFAULT_PROPS} onRemoveByName={onRemove} onAddSuggestion={onAdd} />);
+    render(
+      <DeckCritiquePanel
+        {...DEFAULT_PROPS}
+        onRemoveByName={onRemove}
+        onAddSuggestion={onAdd}
+      />,
+    );
     fireEvent.click(screen.getByText('Get Critique'));
 
     await waitFor(() => {
@@ -187,25 +210,37 @@ describe('DeckCritiquePanel', () => {
   });
 
   it('shows error toast on API error', async () => {
-    mockInvoke.mockResolvedValue({ data: null, error: new Error('Network error') });
+    mockInvoke.mockResolvedValue({
+      data: null,
+      error: new Error('Network error'),
+    });
     render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
     fireEvent.click(screen.getByText('Get Critique'));
 
     await waitFor(() => {
       expect(mockToast).toHaveBeenCalledWith(
-        expect.objectContaining({ title: 'Critique failed', variant: 'destructive' }),
+        expect.objectContaining({
+          title: 'Critique failed',
+          variant: 'destructive',
+        }),
       );
     });
   });
 
   it('shows error toast when data contains error field', async () => {
-    mockInvoke.mockResolvedValue({ data: { error: 'AI credits exhausted' }, error: null });
+    mockInvoke.mockResolvedValue({
+      data: { error: 'AI credits exhausted' },
+      error: null,
+    });
     render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
     fireEvent.click(screen.getByText('Get Critique'));
 
     await waitFor(() => {
       expect(mockToast).toHaveBeenCalledWith(
-        expect.objectContaining({ title: 'Critique failed', description: 'AI credits exhausted' }),
+        expect.objectContaining({
+          title: 'Critique failed',
+          description: 'AI credits exhausted',
+        }),
       );
     });
   });
@@ -233,12 +268,27 @@ describe('DeckCritiquePanel', () => {
     const critiqueWithAllSeverities = {
       ...MOCK_CRITIQUE,
       cuts: [
-        { card_name: 'Weak Card', reason: 'This card is too weak', severity: 'weak' },
-        { card_name: 'Under Card', reason: 'This card underperforms', severity: 'underperforming' },
-        { card_name: 'Off Card', reason: 'This card is off-theme', severity: 'off-strategy' },
+        {
+          card_name: 'Weak Card',
+          reason: 'This card is too weak',
+          severity: 'weak',
+        },
+        {
+          card_name: 'Under Card',
+          reason: 'This card underperforms',
+          severity: 'underperforming',
+        },
+        {
+          card_name: 'Off Card',
+          reason: 'This card is off-theme',
+          severity: 'off-strategy',
+        },
       ],
     };
-    mockInvoke.mockResolvedValue({ data: critiqueWithAllSeverities, error: null });
+    mockInvoke.mockResolvedValue({
+      data: critiqueWithAllSeverities,
+      error: null,
+    });
     render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
     fireEvent.click(screen.getByText('Get Critique'));
 
@@ -303,10 +353,12 @@ describe('DeckCritiquePanel', () => {
 
     // Extract and trigger the undo action from the toast call
     const toastCall = mockToast.mock.calls.find(
-      (args: unknown[]) => (args[0] as { title: string }).title === 'Dismissed "Card 1"',
+      (args: unknown[]) =>
+        (args[0] as { title: string }).title === 'Dismissed "Card 1"',
     );
     expect(toastCall).toBeDefined();
-    const actionElement = (toastCall![0] as { action: React.ReactElement }).action;
+    const actionElement = (toastCall![0] as { action: React.ReactElement })
+      .action;
 
     // Render the action button and click it
     const { container } = render(actionElement);
@@ -332,9 +384,11 @@ describe('DeckCritiquePanel', () => {
     expect(screen.queryByText('Rhystic Study')).not.toBeInTheDocument();
 
     const toastCall = mockToast.mock.calls.find(
-      (args: unknown[]) => (args[0] as { title: string }).title === 'Dismissed "Rhystic Study"',
+      (args: unknown[]) =>
+        (args[0] as { title: string }).title === 'Dismissed "Rhystic Study"',
     );
-    const actionElement = (toastCall![0] as { action: React.ReactElement }).action;
+    const actionElement = (toastCall![0] as { action: React.ReactElement })
+      .action;
     const { container } = render(actionElement);
     fireEvent.click(container.querySelector('button')!);
 
@@ -343,7 +397,11 @@ describe('DeckCritiquePanel', () => {
   });
 
   it('hides section header when all items are dismissed', async () => {
-    const singleCut = { ...MOCK_CRITIQUE, cuts: [MOCK_CRITIQUE.cuts[0]], additions: [] };
+    const singleCut = {
+      ...MOCK_CRITIQUE,
+      cuts: [MOCK_CRITIQUE.cuts[0]],
+      additions: [],
+    };
     mockInvoke.mockResolvedValue({ data: singleCut, error: null });
     render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
     fireEvent.click(screen.getByText('Get Critique'));
@@ -396,7 +454,12 @@ describe('DeckCritiquePanel', () => {
   });
 
   it('shows toast when trying to critique with fewer than 5 cards', () => {
-    render(<DeckCritiquePanel {...DEFAULT_PROPS} cards={Array.from({ length: 4 }, (_, i) => makeDeckCard(`C${i}`))} />);
+    render(
+      <DeckCritiquePanel
+        {...DEFAULT_PROPS}
+        cards={Array.from({ length: 4 }, (_, i) => makeDeckCard(`C${i}`))}
+      />,
+    );
     // Button is disabled, but let's test the guard via direct handler path
     // by rendering with exactly 4 cards — button should be disabled
     const btn = screen.getByText('Get Critique').closest('button');
@@ -410,24 +473,30 @@ describe('DeckCritiquePanel', () => {
 
     await waitFor(() => {
       expect(mockToast).toHaveBeenCalledWith(
-        expect.objectContaining({ title: 'Error', description: 'Something went wrong' }),
+        expect.objectContaining({
+          title: 'Error',
+          description: 'Something went wrong',
+        }),
       );
     });
     // Should not be in loading state after error
     expect(screen.queryByText('Analyzing your deck…')).not.toBeInTheDocument();
   });
 
-  it('loads critique from sessionStorage on mount', () => {
-    // Pre-populate sessionStorage with a cached critique
+  it('loads critique from localStorage on mount', () => {
+    // Pre-populate localStorage with a cached critique
     const cards = DEFAULT_CARDS;
-    const cardFingerprint = cards.map((c) => `${c.card_name}:${c.quantity}`).sort().join(',');
+    const cardFingerprint = cards
+      .map((c) => `${c.card_name}:${c.quantity}`)
+      .sort()
+      .join(',');
     let hash = 0;
     for (let i = 0; i < cardFingerprint.length; i++) {
       hash = ((hash << 5) - hash + cardFingerprint.charCodeAt(i)) | 0;
     }
     const key = `offmeta_critique_deck-1_${hash >>> 0}`;
     const cached = { summary: 'Cached summary', cuts: [], additions: [] };
-    sessionStorage.setItem(key, JSON.stringify(cached));
+    localStorage.setItem(key, JSON.stringify(cached));
 
     render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
     expect(screen.getByText('Cached summary')).toBeInTheDocument();
@@ -436,7 +505,11 @@ describe('DeckCritiquePanel', () => {
   });
 
   it('renders critique with empty cuts and additions', async () => {
-    const emptyCritique = { summary: 'Deck looks great!', cuts: [], additions: [] };
+    const emptyCritique = {
+      summary: 'Deck looks great!',
+      cuts: [],
+      additions: [],
+    };
     mockInvoke.mockResolvedValue({ data: emptyCritique, error: null });
     render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
     fireEvent.click(screen.getByText('Get Critique'));
@@ -449,7 +522,12 @@ describe('DeckCritiquePanel', () => {
   });
 
   it('renders critique without mana_curve_notes', async () => {
-    const noNotes = { summary: 'OK', cuts: [], additions: [], mana_curve_notes: undefined };
+    const noNotes = {
+      summary: 'OK',
+      cuts: [],
+      additions: [],
+      mana_curve_notes: undefined,
+    };
     mockInvoke.mockResolvedValue({ data: noNotes, error: null });
     render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
     fireEvent.click(screen.getByText('Get Critique'));
@@ -470,14 +548,16 @@ describe('DeckCritiquePanel', () => {
     });
 
     // Change the cards — critique should be cleared
-    const newCards = Array.from({ length: 8 }, (_, i) => makeDeckCard(`New Card ${i}`));
+    const newCards = Array.from({ length: 8 }, (_, i) =>
+      makeDeckCard(`New Card ${i}`),
+    );
     rerender(<DeckCritiquePanel {...DEFAULT_PROPS} cards={newCards} />);
 
     expect(screen.queryByText(MOCK_CRITIQUE.summary)).not.toBeInTheDocument();
     expect(screen.getByText('Get Critique')).toBeInTheDocument();
   });
 
-  it('saves critique to sessionStorage after fetch', async () => {
+  it('saves critique to localStorage after fetch', async () => {
     mockInvoke.mockResolvedValue({ data: MOCK_CRITIQUE, error: null });
     render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
     fireEvent.click(screen.getByText('Get Critique'));
@@ -486,12 +566,12 @@ describe('DeckCritiquePanel', () => {
       expect(screen.getByText(MOCK_CRITIQUE.summary)).toBeInTheDocument();
     });
 
-    // Verify something was saved to sessionStorage
-    const keys = Object.keys(sessionStorage);
+    // Verify something was saved to localStorage
+    const keys = Object.keys(localStorage);
     const critiqueKey = keys.find((k) => k.startsWith('offmeta_critique_'));
     expect(critiqueKey).toBeDefined();
-    const stored = JSON.parse(sessionStorage.getItem(critiqueKey!)!);
-    expect(stored.summary).toBe(MOCK_CRITIQUE.summary);
+    const stored = JSON.parse(localStorage.getItem(critiqueKey!)!);
+    expect(stored.data.summary).toBe(MOCK_CRITIQUE.summary);
   });
 
   it('does not show dismissed summary bar when nothing is dismissed', async () => {
@@ -525,7 +605,10 @@ describe('DeckCritiquePanel', () => {
   });
 
   it('displays high confidence indicator', async () => {
-    mockInvoke.mockResolvedValue({ data: { ...MOCK_CRITIQUE, confidence: 0.92 }, error: null });
+    mockInvoke.mockResolvedValue({
+      data: { ...MOCK_CRITIQUE, confidence: 0.92 },
+      error: null,
+    });
     render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
     fireEvent.click(screen.getByText('Get Critique'));
 
@@ -536,7 +619,10 @@ describe('DeckCritiquePanel', () => {
   });
 
   it('displays medium confidence indicator', async () => {
-    mockInvoke.mockResolvedValue({ data: { ...MOCK_CRITIQUE, confidence: 0.6 }, error: null });
+    mockInvoke.mockResolvedValue({
+      data: { ...MOCK_CRITIQUE, confidence: 0.6 },
+      error: null,
+    });
     render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
     fireEvent.click(screen.getByText('Get Critique'));
 
@@ -546,7 +632,10 @@ describe('DeckCritiquePanel', () => {
   });
 
   it('displays low confidence indicator with warning banner', async () => {
-    mockInvoke.mockResolvedValue({ data: { ...MOCK_CRITIQUE, confidence: 0.3 }, error: null });
+    mockInvoke.mockResolvedValue({
+      data: { ...MOCK_CRITIQUE, confidence: 0.3 },
+      error: null,
+    });
     render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
     fireEvent.click(screen.getByText('Get Critique'));
 
@@ -557,7 +646,10 @@ describe('DeckCritiquePanel', () => {
   });
 
   it('does not show warning banner when confidence >= 50%', async () => {
-    mockInvoke.mockResolvedValue({ data: { ...MOCK_CRITIQUE, confidence: 0.6 }, error: null });
+    mockInvoke.mockResolvedValue({
+      data: { ...MOCK_CRITIQUE, confidence: 0.6 },
+      error: null,
+    });
     render(<DeckCritiquePanel {...DEFAULT_PROPS} />);
     fireEvent.click(screen.getByText('Get Critique'));
 

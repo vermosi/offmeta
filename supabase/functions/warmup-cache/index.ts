@@ -24,8 +24,8 @@ const { SUPABASE_URL, SUPABASE_ANON_KEY } = validateEnv([
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const logger = createLogger('warmup-cache');
 
-// Common MTG queries that should be pre-cached
-const COMMON_QUERIES = [
+// Fallback natural-language queries (used only when logs are unavailable)
+const FALLBACK_NATURAL_LANGUAGE_QUERIES = [
   'Sol Ring',
   'Lightning Bolt',
   'Counterspell',
@@ -382,8 +382,32 @@ serve(async (req) => {
       // No body or invalid JSON - use defaults only
     }
 
+    const popularQueryLimit = 50;
+    const { data: popularLogs } = await supabase
+      .from('translation_logs')
+      .select('natural_language_query')
+      .gte('confidence_score', 0.7)
+      .order('created_at', { ascending: false })
+      .limit(5000);
+
+    const frequency = new Map<string, number>();
+    for (const row of popularLogs ?? []) {
+      const query = (row.natural_language_query || '').trim().toLowerCase();
+      if (!query || query.length < 3) continue;
+      frequency.set(query, (frequency.get(query) ?? 0) + 1);
+    }
+
+    const popularQueries = [...frequency.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, popularQueryLimit)
+      .map(([query]) => query);
+
     const queriesToWarm =
-      customQueries.length > 0 ? customQueries : COMMON_QUERIES;
+      customQueries.length > 0
+        ? customQueries
+        : popularQueries.length > 0
+          ? popularQueries
+          : FALLBACK_NATURAL_LANGUAGE_QUERIES.slice(0, popularQueryLimit);
 
     logger.info('warmup_started', {
       queryCount: queriesToWarm.length,

@@ -4,8 +4,16 @@
  * @module functions/card-similarity
  */
 
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
 import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
+
+const supabaseUrl = Deno.env.get('SUPABASE_URL');
+const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+const supabase =
+  supabaseUrl && supabaseServiceRoleKey
+    ? createClient(supabaseUrl, supabaseServiceRoleKey)
+    : null;
 
 declare const Deno: {
   env: { get(key: string): string | undefined };
@@ -17,6 +25,7 @@ const serve = (handler: (req: Request) => Promise<Response>) => {
 };
 
 interface SimilarityRequest {
+  cardId?: string;
   cardName: string;
   typeLine: string;
   oracleText?: string;
@@ -86,8 +95,41 @@ function extractMechanics(oracleText: string): string[] {
   return [...new Set(mechanics)].slice(0, 6);
 }
 
+async function getMechanicsForCard(card: SimilarityRequest): Promise<string[]> {
+  const cacheKey = card.cardId || card.cardName.toLowerCase();
+  if (!cacheKey) return extractMechanics(card.oracleText || '');
+
+  const mechanics = extractMechanics(card.oracleText || '');
+
+  if (supabase) {
+    const { data: cached } = await supabase
+      .from('card_mechanics_cache')
+      .select('mechanics, oracle_text')
+      .eq('card_id', cacheKey)
+      .maybeSingle();
+
+    if (cached?.mechanics && cached.oracle_text === (card.oracleText || '')) {
+      return cached.mechanics;
+    }
+  }
+
+  if (supabase) {
+    await supabase.from('card_mechanics_cache').upsert({
+      card_id: cacheKey,
+      oracle_text: card.oracleText || '',
+      mechanics,
+      updated_at: new Date().toISOString(),
+    });
+  }
+
+  return mechanics;
+}
+
 /** Build a Scryfall query for similar cards */
-function buildSimilarQuery(card: SimilarityRequest): string {
+function buildSimilarQuery(
+  card: SimilarityRequest,
+  mechanics: string[],
+): string {
   const parts: string[] = [];
 
   // Match by base type
@@ -116,7 +158,6 @@ function buildSimilarQuery(card: SimilarityRequest): string {
   parts.push(`-!"${card.cardName}"`);
 
   // Keyword-based oracle text matching (pick most relevant 2)
-  const mechanics = extractMechanics(card.oracleText || '');
 
   // Also use Scryfall keywords if provided
   const kwParts: string[] = [];
@@ -148,7 +189,10 @@ function buildSimilarQuery(card: SimilarityRequest): string {
 }
 
 /** Build a Scryfall query for budget alternatives */
-function buildBudgetQuery(card: SimilarityRequest): string {
+function buildBudgetQuery(
+  card: SimilarityRequest,
+  mechanics: string[],
+): string {
   const parts: string[] = [];
 
   const baseType = card.typeLine
@@ -165,7 +209,6 @@ function buildBudgetQuery(card: SimilarityRequest): string {
   }
 
   // Key mechanic matching
-  const mechanics = extractMechanics(card.oracleText || '');
   if (mechanics.length > 0) {
     const mech = mechanics[0];
     if (mech === 'mana production') {
@@ -213,11 +256,16 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   maybeCleanup();
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const ip =
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
   const rateCheck = await checkRateLimit(ip, undefined, 15, 500);
   if (!rateCheck.allowed) {
     return new Response(
-      JSON.stringify({ success: false, error: 'Rate limited', retryAfter: rateCheck.retryAfter }),
+      JSON.stringify({
+        success: false,
+        error: 'Rate limited',
+        retryAfter: rateCheck.retryAfter,
+      }),
       { status: 429, headers },
     );
   }
@@ -228,14 +276,18 @@ serve(async (req: Request): Promise<Response> => {
 
     if (!cardName || !typeLine) {
       return new Response(
-        JSON.stringify({ success: false, error: 'cardName and typeLine are required' }),
+        JSON.stringify({
+          success: false,
+          error: 'cardName and typeLine are required',
+        }),
         { status: 400, headers },
       );
     }
 
     // Build deterministic queries
-    const similarQuery = buildSimilarQuery(body);
-    const budgetQuery = buildBudgetQuery(body);
+    const mechanics = await getMechanicsForCard(body);
+    const similarQuery = buildSimilarQuery(body, mechanics);
+    const budgetQuery = buildBudgetQuery(body, mechanics);
 
     // Generate synergy suggestions via AI
     let synergyCards: SynergyCard[] = [];
@@ -256,7 +308,8 @@ serve(async (req: Request): Promise<Response> => {
               messages: [
                 {
                   role: 'system',
-                  content: 'You are an MTG deckbuilding expert. Given a card, suggest 6 real cards that synergize well with it. Only suggest cards that actually exist in Magic: The Gathering. Focus on practical synergies for Commander/EDH format.',
+                  content:
+                    'You are an MTG deckbuilding expert. Given a card, suggest 6 real cards that synergize well with it. Only suggest cards that actually exist in Magic: The Gathering. Focus on practical synergies for Commander/EDH format.',
                 },
                 {
                   role: 'user',
@@ -268,7 +321,8 @@ serve(async (req: Request): Promise<Response> => {
                   type: 'function',
                   function: {
                     name: 'suggest_synergy_cards',
-                    description: 'Suggest cards that synergize with the given card.',
+                    description:
+                      'Suggest cards that synergize with the given card.',
                     parameters: {
                       type: 'object',
                       properties: {
@@ -277,8 +331,15 @@ serve(async (req: Request): Promise<Response> => {
                           items: {
                             type: 'object',
                             properties: {
-                              name: { type: 'string', description: 'Exact card name' },
-                              reason: { type: 'string', description: 'One sentence explaining the synergy' },
+                              name: {
+                                type: 'string',
+                                description: 'Exact card name',
+                              },
+                              reason: {
+                                type: 'string',
+                                description:
+                                  'One sentence explaining the synergy',
+                              },
                             },
                             required: ['name', 'reason'],
                             additionalProperties: false,
@@ -291,7 +352,10 @@ serve(async (req: Request): Promise<Response> => {
                   },
                 },
               ],
-              tool_choice: { type: 'function', function: { name: 'suggest_synergy_cards' } },
+              tool_choice: {
+                type: 'function',
+                function: { name: 'suggest_synergy_cards' },
+              },
             }),
           },
         );
@@ -300,9 +364,10 @@ serve(async (req: Request): Promise<Response> => {
           const aiData = await aiResponse.json();
           const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
           if (toolCall?.function?.arguments) {
-            const args = typeof toolCall.function.arguments === 'string'
-              ? JSON.parse(toolCall.function.arguments)
-              : toolCall.function.arguments;
+            const args =
+              typeof toolCall.function.arguments === 'string'
+                ? JSON.parse(toolCall.function.arguments)
+                : toolCall.function.arguments;
             synergyCards = (args.cards || []).slice(0, 6);
           }
         } else {

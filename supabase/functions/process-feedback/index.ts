@@ -26,6 +26,9 @@ const { LOVABLE_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } =
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 const logger = createLogger('process-feedback');
 
+const AUTO_APPROVE_CONFIDENCE = 0.85;
+const AUTO_APPROVE_MIN_RESULTS = 5;
+
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
@@ -742,6 +745,14 @@ Respond in this EXACT JSON format only (no other text):
           }
         }
 
+        const normalizedConfidence = Math.min(
+          1,
+          Math.max(0, ruleData.confidence),
+        );
+        const autoApproved =
+          normalizedConfidence >= AUTO_APPROVE_CONFIDENCE &&
+          scryfallTotalCards >= AUTO_APPROVE_MIN_RESULTS;
+
         // Insert the new rule
         const { data: newRule, error: insertError } = await supabase
           .from('translation_rules')
@@ -750,8 +761,8 @@ Respond in this EXACT JSON format only (no other text):
             scryfall_syntax: ruleData.scryfall_syntax,
             description: ruleData.description,
             source_feedback_id: feedback.id,
-            confidence: Math.min(1, Math.max(0, ruleData.confidence)),
-            is_active: true,
+            confidence: normalizedConfidence,
+            is_active: autoApproved,
           })
           .select()
           .single();
@@ -764,7 +775,7 @@ Respond in this EXACT JSON format only (no other text):
         await supabase
           .from('search_feedback')
           .update({
-            processing_status: 'completed',
+            processing_status: autoApproved ? 'completed' : 'pending',
             processed_at: new Date().toISOString(),
             generated_rule_id: newRule.id,
           })
@@ -772,7 +783,9 @@ Respond in this EXACT JSON format only (no other text):
 
         results.push({
           feedbackId: feedback.id,
-          status: 'success',
+          status: autoApproved
+            ? 'success (auto-approved)'
+            : 'success (pending admin review)',
           rule: `${ruleData.pattern} → ${ruleData.scryfall_syntax}`,
         });
 
