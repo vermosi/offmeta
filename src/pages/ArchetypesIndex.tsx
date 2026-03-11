@@ -109,23 +109,30 @@ export default function ArchetypesIndex() {
           ) : (
             <>
               {/* Format tabs */}
-              <div className="flex items-center gap-1 mb-6 overflow-x-auto pb-1" role="tablist">
-                {formatData.map((fd) => (
-                  <button
-                    key={fd.format}
-                    role="tab"
-                    aria-selected={effectiveFormat === fd.format}
-                    onClick={() => setActiveFormat(fd.format)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                      effectiveFormat === fd.format
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                    }`}
-                  >
-                    {fd.label}
-                    <span className="ml-1.5 text-xs opacity-70">({fd.totalDecks})</span>
-                  </button>
-                ))}
+              <div className="relative mb-6">
+                <div
+                  className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none"
+                  role="tablist"
+                >
+                  {formatData.map((fd) => (
+                    <button
+                      key={fd.format}
+                      role="tab"
+                      aria-selected={effectiveFormat === fd.format}
+                      onClick={() => setActiveFormat(fd.format)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                        effectiveFormat === fd.format
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                      }`}
+                    >
+                      {fd.label}
+                      <span className="ml-1.5 text-xs opacity-70">({fd.totalDecks})</span>
+                    </button>
+                  ))}
+                </div>
+                {/* Fade hint for off-screen tabs on mobile */}
+                <div className="absolute right-0 top-0 bottom-1 w-8 bg-gradient-to-l from-background to-transparent pointer-events-none sm:hidden" aria-hidden="true" />
               </div>
 
               {/* Two-tier metagame display */}
