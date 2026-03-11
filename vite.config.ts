@@ -61,14 +61,13 @@ export default defineConfig(({ mode }) => ({
           },
           {
             urlPattern: /^https:\/\/api\.scryfall\.com\/.*/i,
-            handler: 'NetworkFirst',
+            handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'scryfall-api',
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 5, // 5 minutes
+                maxAgeSeconds: 60 * 15, // 15 minutes
               },
-              networkTimeoutSeconds: 10,
               cacheableResponse: {
                 statuses: [0, 200],
               },

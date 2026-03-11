@@ -44,6 +44,102 @@ interface TranslationParams {
 // Request deduplication map for in-flight requests
 const pendingTranslations = new Map<string, Promise<TranslationResult>>();
 
+const CROSS_TAB_RESULT_TTL_MS = 5000;
+
+interface TranslationChannelMessage {
+  type: 'translation_started' | 'translation_result';
+  key: string;
+  result?: TranslationResult;
+}
+
+const crossTabPendingKeys = new Set<string>();
+const crossTabResults = new Map<
+  string,
+  { result: TranslationResult; timestamp: number }
+>();
+const crossTabWaiters = new Map<
+  string,
+  Array<(result: TranslationResult) => void>
+>();
+
+const translationBroadcastChannel =
+  typeof window !== 'undefined' && 'BroadcastChannel' in window
+    ? new BroadcastChannel('offmeta-translation-dedup')
+    : null;
+
+translationBroadcastChannel?.addEventListener(
+  'message',
+  (event: MessageEvent<TranslationChannelMessage>) => {
+    const message = event.data;
+    if (!message?.key) return;
+
+    if (message.type === 'translation_started') {
+      crossTabPendingKeys.add(message.key);
+      return;
+    }
+
+    if (message.type === 'translation_result' && message.result) {
+      crossTabPendingKeys.delete(message.key);
+      crossTabResults.set(message.key, {
+        result: message.result,
+        timestamp: Date.now(),
+      });
+
+      const waiters = crossTabWaiters.get(message.key);
+      if (waiters) {
+        waiters.forEach((resolve) =>
+          resolve(message.result as TranslationResult),
+        );
+        crossTabWaiters.delete(message.key);
+      }
+    }
+  },
+);
+
+function getRecentCrossTabResult(key: string): TranslationResult | null {
+  const entry = crossTabResults.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.timestamp > CROSS_TAB_RESULT_TTL_MS) {
+    crossTabResults.delete(key);
+    return null;
+  }
+  return entry.result;
+}
+
+function waitForCrossTabResult(
+  key: string,
+  timeoutMs: number,
+): Promise<TranslationResult | null> {
+  return new Promise((resolve) => {
+    const timeoutId = setTimeout(() => {
+      const waiters = crossTabWaiters.get(key);
+      if (!waiters) {
+        resolve(null);
+        return;
+      }
+
+      const remaining = waiters.filter(
+        (waiter) => waiter !== resolveWithResult,
+      );
+      if (remaining.length > 0) {
+        crossTabWaiters.set(key, remaining);
+      } else {
+        crossTabWaiters.delete(key);
+      }
+      resolve(null);
+    }, timeoutMs);
+
+    const resolveWithResult = (result: TranslationResult) => {
+      clearTimeout(timeoutId);
+      resolve(result);
+    };
+
+    const existing = crossTabWaiters.get(key) ?? [];
+    existing.push(resolveWithResult);
+    crossTabWaiters.set(key, existing);
+  });
+}
+
 /**
  * Generate a cache key for translation requests
  */
@@ -133,6 +229,27 @@ export async function translateQueryWithDedup(
     return pendingTranslations.get(key)!;
   }
 
+  if (!bypassCache) {
+    const recentCrossTabResult = getRecentCrossTabResult(key);
+    if (recentCrossTabResult) {
+      logger.info('[SearchDiag] Cross-tab dedup hit', { query });
+      return recentCrossTabResult;
+    }
+
+    if (crossTabPendingKeys.has(key)) {
+      const sharedResult = await waitForCrossTabResult(key, 1500);
+      if (sharedResult) {
+        logger.info('[SearchDiag] Cross-tab shared result used', { query });
+        return sharedResult;
+      }
+    }
+
+    translationBroadcastChannel?.postMessage({
+      type: 'translation_started',
+      key,
+    } satisfies TranslationChannelMessage);
+  }
+
   const translationPromise = (async () => {
     try {
       // Get session ID for server-side rate limiting
@@ -187,7 +304,7 @@ export async function translateQueryWithDedup(
           edgeResponseTimeMs: data.responseTimeMs ?? null,
         });
 
-        return {
+        const result: TranslationResult = {
           scryfallQuery: data.scryfallQuery,
           explanation: data.explanation,
           showAffiliate: data.showAffiliate,
@@ -197,12 +314,22 @@ export async function translateQueryWithDedup(
           edgeSource,
           edgeResponseTimeMs: data.responseTimeMs,
         };
+
+        crossTabResults.set(key, { result, timestamp: Date.now() });
+        translationBroadcastChannel?.postMessage({
+          type: 'translation_result',
+          key,
+          result,
+        } satisfies TranslationChannelMessage);
+
+        return result;
       }
 
       throw new Error(data?.error || 'Translation failed');
     } finally {
       // Clean up pending request
       pendingTranslations.delete(key);
+      crossTabPendingKeys.delete(key);
     }
   })();
 
