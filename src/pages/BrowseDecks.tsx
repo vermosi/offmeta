@@ -12,7 +12,7 @@ import { Footer } from '@/components/Footer';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n';
@@ -25,17 +25,22 @@ const PAGE_SIZE = 25;
 
 /** Fetch public decks via the decks_public view (excludes user_id). */
 function usePublicDecks() {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ['browse-decks'],
-    queryFn: async () => {
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }) => {
+      const from = pageParam * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
       const { data, error } = await supabase
         .from('decks_public')
         .select('*')
         .order('updated_at', { ascending: false })
-        .limit(500);
+        .range(from, to);
       if (error) throw error;
       return data as Deck[];
     },
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length < PAGE_SIZE ? undefined : allPages.length,
   });
 }
 
@@ -44,9 +49,7 @@ function useAllPublicTags() {
   return useQuery({
     queryKey: ['browse-deck-tags'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('deck_tags')
-        .select('*');
+      const { data, error } = await supabase.from('deck_tags').select('*');
       if (error) throw error;
       return data as DeckTag[];
     },
@@ -60,15 +63,23 @@ export default function BrowseDecks() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTag = searchParams.get('tag');
 
-  const { data: decks = [], isLoading } = usePublicDecks();
+  const {
+    data: deckPages,
+    isLoading,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = usePublicDecks();
+  const decks = useMemo(() => deckPages?.pages.flat() ?? [], [deckPages]);
   const { data: allTags = [] } = useAllPublicTags();
 
   const [nameFilter, setNameFilter] = useState('');
   const [formatFilter, setFormatFilter] = useState('');
   const [colorFilter, setColorFilter] = useState<string[]>([]);
-  const [tagFilter, setTagFilter] = useState<string[]>(initialTag ? [initialTag] : []);
+  const [tagFilter, setTagFilter] = useState<string[]>(
+    initialTag ? [initialTag] : [],
+  );
   const [sortBy, setSortBy] = useState<SortMode>('newest');
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   // Build tag map: deckId -> tags[]
   const tagsByDeck = useMemo(() => {
@@ -84,7 +95,9 @@ export default function BrowseDecks() {
   const uniqueTags = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const t of allTags) counts[t.tag] = (counts[t.tag] || 0) + 1;
-    return Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([tag]) => tag);
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([tag]) => tag);
   }, [allTags]);
 
   // Filter & sort
@@ -93,9 +106,10 @@ export default function BrowseDecks() {
 
     if (nameFilter.trim()) {
       const q = nameFilter.trim().toLowerCase();
-      result = result.filter((d) =>
-        d.name.toLowerCase().includes(q) ||
-        (d.commander_name?.toLowerCase().includes(q)),
+      result = result.filter(
+        (d) =>
+          d.name.toLowerCase().includes(q) ||
+          d.commander_name?.toLowerCase().includes(q),
       );
     }
     if (formatFilter) result = result.filter((d) => d.format === formatFilter);
@@ -111,24 +125,40 @@ export default function BrowseDecks() {
       });
     }
 
-    if (sortBy === 'newest') result = [...result].sort((a, b) => b.updated_at.localeCompare(a.updated_at));
-    else if (sortBy === 'cards') result = [...result].sort((a, b) => b.card_count - a.card_count);
-    else if (sortBy === 'alpha') result = [...result].sort((a, b) => a.name.localeCompare(b.name));
+    if (sortBy === 'newest')
+      result = [...result].sort((a, b) =>
+        b.updated_at.localeCompare(a.updated_at),
+      );
+    else if (sortBy === 'cards')
+      result = [...result].sort((a, b) => b.card_count - a.card_count);
+    else if (sortBy === 'alpha')
+      result = [...result].sort((a, b) => a.name.localeCompare(b.name));
 
     return result;
-  }, [decks, nameFilter, formatFilter, colorFilter, tagFilter, sortBy, tagsByDeck]);
+  }, [
+    decks,
+    nameFilter,
+    formatFilter,
+    colorFilter,
+    tagFilter,
+    sortBy,
+    tagsByDeck,
+  ]);
 
-  const visible = filtered.slice(0, visibleCount);
-  const hasMore = visibleCount < filtered.length;
-
-  const toggleColor = (c: string) => setColorFilter((prev) =>
-    prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c],
-  );
+  const toggleColor = (c: string) =>
+    setColorFilter((prev) =>
+      prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c],
+    );
 
   const toggleTag = (tag: string) => {
     setTagFilter((prev) => {
-      const next = prev.includes(tag) ? prev.filter((x) => x !== tag) : [...prev, tag];
-      if (next.length === 0) { searchParams.delete('tag'); setSearchParams(searchParams); }
+      const next = prev.includes(tag)
+        ? prev.filter((x) => x !== tag)
+        : [...prev, tag];
+      if (next.length === 0) {
+        searchParams.delete('tag');
+        setSearchParams(searchParams);
+      }
       return next;
     });
   };
@@ -138,8 +168,12 @@ export default function BrowseDecks() {
       <Header />
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-6 space-y-6">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">{t('browse.title')}</h1>
-          <p className="text-sm text-muted-foreground">{t('browse.subtitle')}</p>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {t('browse.title')}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {t('browse.subtitle')}
+          </p>
         </div>
 
         {/* Filter Bar */}
@@ -161,7 +195,9 @@ export default function BrowseDecks() {
           >
             <option value="">{t('browse.allFormats', 'All Formats')}</option>
             {FORMATS.map((f) => (
-              <option key={f.value} value={f.value}>{f.label}</option>
+              <option key={f.value} value={f.value}>
+                {f.label}
+              </option>
             ))}
           </select>
 
@@ -177,7 +213,11 @@ export default function BrowseDecks() {
                     : 'border-border opacity-50 hover:opacity-100',
                 )}
               >
-                <img src={`https://svgs.scryfall.io/card-symbols/${c}.svg`} alt={c} className="h-4 w-4" />
+                <img
+                  src={`https://svgs.scryfall.io/card-symbols/${c}.svg`}
+                  alt={c}
+                  className="h-4 w-4"
+                />
               </button>
             ))}
           </div>
@@ -225,16 +265,29 @@ export default function BrowseDecks() {
           </div>
         ) : (
           <>
-            <p className="text-xs text-muted-foreground">{filtered.length} {filtered.length === 1 ? 'deck' : 'decks'}</p>
+            <p className="text-xs text-muted-foreground">
+              {filtered.length} {filtered.length === 1 ? 'deck' : 'decks'}
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {visible.map((deck) => (
-                <DeckCard key={deck.id} deck={deck} tags={tagsByDeck[deck.id] || []} onTagClick={toggleTag} />
+              {filtered.map((deck) => (
+                <DeckCard
+                  key={deck.id}
+                  deck={deck}
+                  tags={tagsByDeck[deck.id] || []}
+                  onTagClick={toggleTag}
+                />
               ))}
             </div>
-            {hasMore && (
+            {hasNextPage && (
               <div className="flex justify-center pt-4">
-                <Button variant="outline" onClick={() => setVisibleCount((v) => v + PAGE_SIZE)}>
-                  {t('browse.loadMore')}
+                <Button
+                  variant="outline"
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                >
+                  {isFetchingNextPage
+                    ? t('common.loading', 'Loading...')
+                    : t('browse.loadMore')}
                 </Button>
               </div>
             )}
@@ -246,14 +299,24 @@ export default function BrowseDecks() {
   );
 }
 
-function DeckCard({ deck, tags, onTagClick }: { deck: Deck; tags: string[]; onTagClick: (tag: string) => void }) {
+function DeckCard({
+  deck,
+  tags,
+  onTagClick,
+}: {
+  deck: Deck;
+  tags: string[];
+  onTagClick: (tag: string) => void;
+}) {
   return (
     <Link
       to={`/deck/${deck.id}`}
       className="block rounded-xl border border-border bg-card p-4 space-y-2.5 hover:border-muted-foreground/30 hover:shadow-md transition-all group"
     >
       <div className="flex items-start justify-between gap-2">
-        <h3 className="font-semibold text-sm truncate group-hover:text-accent transition-colors">{deck.name}</h3>
+        <h3 className="font-semibold text-sm truncate group-hover:text-accent transition-colors">
+          {deck.name}
+        </h3>
         <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground shrink-0">
           {FORMAT_LABELS[deck.format] || deck.format}
         </span>
@@ -270,22 +333,36 @@ function DeckCard({ deck, tags, onTagClick }: { deck: Deck; tags: string[]; onTa
         {deck.color_identity.length > 0 && (
           <div className="flex items-center gap-0.5">
             {deck.color_identity.map((c) => (
-              <img key={c} src={`https://svgs.scryfall.io/card-symbols/${c}.svg`} alt={c} className="h-3.5 w-3.5" />
+              <img
+                key={c}
+                src={`https://svgs.scryfall.io/card-symbols/${c}.svg`}
+                alt={c}
+                className="h-3.5 w-3.5"
+              />
             ))}
           </div>
         )}
-        <span className="text-xs text-muted-foreground">{deck.card_count} cards</span>
+        <span className="text-xs text-muted-foreground">
+          {deck.card_count} cards
+        </span>
       </div>
 
       {tags.length > 0 && (
-        <div className="flex flex-wrap gap-1" onClick={(e) => e.preventDefault()}>
+        <div
+          className="flex flex-wrap gap-1"
+          onClick={(e) => e.preventDefault()}
+        >
           {tags.map((tag) => (
             <Badge
               key={tag}
               variant="outline"
               size="sm"
               className="cursor-pointer hover:bg-accent/10 hover:text-accent transition-colors"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onTagClick(tag); }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onTagClick(tag);
+              }}
             >
               {tag}
             </Badge>
@@ -294,7 +371,9 @@ function DeckCard({ deck, tags, onTagClick }: { deck: Deck; tags: string[]; onTa
       )}
 
       {deck.description && (
-        <p className="text-xs text-muted-foreground line-clamp-2">{deck.description}</p>
+        <p className="text-xs text-muted-foreground line-clamp-2">
+          {deck.description}
+        </p>
       )}
     </Link>
   );

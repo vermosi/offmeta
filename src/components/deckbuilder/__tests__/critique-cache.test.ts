@@ -1,24 +1,32 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { buildCacheKey, loadCachedCritique, saveCritique } from '../critique-cache';
+import {
+  buildCacheKey,
+  loadCachedCritique,
+  saveCritique,
+} from '../critique-cache';
 import type { DeckCard } from '@/hooks/useDeck';
 import { createTestCard, createMockCritiqueResult } from '@/test/factories';
 
 describe('critique-cache', () => {
   beforeEach(() => {
-    // Clear sessionStorage before each test
-    sessionStorage.clear();
+    // Clear localStorage before each test
+    localStorage.clear();
     vi.clearAllMocks();
   });
 
   afterEach(() => {
-    sessionStorage.clear();
+    localStorage.clear();
   });
 
   describe('buildCacheKey', () => {
     it('generates a consistent key for the same input', () => {
       const deckId = 'deck-123';
       const cards: DeckCard[] = [
-        createTestCard({ card_name: 'Counterspell', quantity: 2, category: 'Control' }),
+        createTestCard({
+          card_name: 'Counterspell',
+          quantity: 2,
+          category: 'Control',
+        }),
         createTestCard({ card_name: 'Island', quantity: 4, category: 'Land' }),
       ];
 
@@ -32,10 +40,18 @@ describe('critique-cache', () => {
     it('produces different keys for different card lists', () => {
       const deckId = 'deck-123';
       const cards1: DeckCard[] = [
-        createTestCard({ card_name: 'Counterspell', quantity: 2, category: 'Control' }),
+        createTestCard({
+          card_name: 'Counterspell',
+          quantity: 2,
+          category: 'Control',
+        }),
       ];
       const cards2: DeckCard[] = [
-        createTestCard({ card_name: 'Lightning Bolt', quantity: 3, category: 'Removal' }),
+        createTestCard({
+          card_name: 'Lightning Bolt',
+          quantity: 3,
+          category: 'Removal',
+        }),
       ];
 
       const key1 = buildCacheKey(deckId, cards1);
@@ -46,7 +62,11 @@ describe('critique-cache', () => {
 
     it('produces different keys for different deck IDs', () => {
       const cards: DeckCard[] = [
-        createTestCard({ card_name: 'Counterspell', quantity: 2, category: 'Control' }),
+        createTestCard({
+          card_name: 'Counterspell',
+          quantity: 2,
+          category: 'Control',
+        }),
       ];
 
       const key1 = buildCacheKey('deck-1', cards);
@@ -58,12 +78,20 @@ describe('critique-cache', () => {
     it('produces the same key regardless of input order', () => {
       const deckId = 'deck-123';
       const cards: DeckCard[] = [
-        createTestCard({ card_name: 'Counterspell', quantity: 2, category: 'Control' }),
+        createTestCard({
+          card_name: 'Counterspell',
+          quantity: 2,
+          category: 'Control',
+        }),
         createTestCard({ card_name: 'Island', quantity: 4, category: 'Land' }),
       ];
       const cardsReordered: DeckCard[] = [
         createTestCard({ card_name: 'Island', quantity: 4, category: 'Land' }),
-        createTestCard({ card_name: 'Counterspell', quantity: 2, category: 'Control' }),
+        createTestCard({
+          card_name: 'Counterspell',
+          quantity: 2,
+          category: 'Control',
+        }),
       ];
 
       const key1 = buildCacheKey(deckId, cards);
@@ -79,42 +107,60 @@ describe('critique-cache', () => {
   });
 
   describe('saveCritique', () => {
-    it('saves critique data to sessionStorage', () => {
+    it('saves critique data to localStorage', () => {
       const key = 'test-key';
       const critique = createMockCritiqueResult({
-        cuts: [{ card_name: 'Bad Card', reason: 'Off-strategy', severity: 'weak' }],
-        additions: [{ card_name: 'Good Card', reason: 'Fits archetype', category: 'Ramp' }],
+        cuts: [
+          { card_name: 'Bad Card', reason: 'Off-strategy', severity: 'weak' },
+        ],
+        additions: [
+          {
+            card_name: 'Good Card',
+            reason: 'Fits archetype',
+            category: 'Ramp',
+          },
+        ],
         confidence: 0.75,
       });
 
       saveCritique(key, critique);
 
-      const stored = sessionStorage.getItem(key);
+      const stored = localStorage.getItem(key);
       expect(stored).toBeTruthy();
-      expect(JSON.parse(stored!)).toEqual(critique);
+      const parsed = JSON.parse(stored!);
+      expect(parsed.data).toEqual(critique);
+      expect(parsed.expiresAt).toBeTypeOf('number');
     });
 
     it('overwrites existing critiques with the same key', () => {
       const key = 'test-key';
-      const critique1 = createMockCritiqueResult({ summary: 'First', confidence: 0.5 });
-      const critique2 = createMockCritiqueResult({ summary: 'Second', confidence: 0.8 });
+      const critique1 = createMockCritiqueResult({
+        summary: 'First',
+        confidence: 0.5,
+      });
+      const critique2 = createMockCritiqueResult({
+        summary: 'Second',
+        confidence: 0.8,
+      });
 
       saveCritique(key, critique1);
       saveCritique(key, critique2);
 
-      const stored = JSON.parse(sessionStorage.getItem(key)!);
-      expect(stored.summary).toBe('Second');
-      expect(stored.confidence).toBe(0.8);
+      const stored = JSON.parse(localStorage.getItem(key)!);
+      expect(stored.data.summary).toBe('Second');
+      expect(stored.data.confidence).toBe(0.8);
     });
 
-    it('gracefully handles sessionStorage quota exceeded', () => {
+    it('gracefully handles localStorage quota exceeded', () => {
       const key = 'test-key';
       const critique = createMockCritiqueResult();
 
-      // Mock sessionStorage.setItem to throw
-      const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-        throw new Error('QuotaExceededError');
-      });
+      // Mock localStorage.setItem to throw
+      const setItemSpy = vi
+        .spyOn(Storage.prototype, 'setItem')
+        .mockImplementation(() => {
+          throw new Error('QuotaExceededError');
+        });
 
       // Should not throw
       expect(() => saveCritique(key, critique)).not.toThrow();
@@ -122,13 +168,15 @@ describe('critique-cache', () => {
       setItemSpy.mockRestore();
     });
 
-    it('gracefully handles other sessionStorage errors', () => {
+    it('gracefully handles other localStorage errors', () => {
       const key = 'test-key';
       const critique = createMockCritiqueResult();
 
-      const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-        throw new Error('SecurityError');
-      });
+      const setItemSpy = vi
+        .spyOn(Storage.prototype, 'setItem')
+        .mockImplementation(() => {
+          throw new Error('SecurityError');
+        });
 
       expect(() => saveCritique(key, critique)).not.toThrow();
 
@@ -137,10 +185,16 @@ describe('critique-cache', () => {
   });
 
   describe('loadCachedCritique', () => {
-    it('loads valid critique data from sessionStorage', () => {
+    it('loads valid critique data from localStorage', () => {
       const key = 'test-key';
       const critique = createMockCritiqueResult({
-        cuts: [{ card_name: 'Bad Card', reason: 'Off-strategy', severity: 'off-strategy' }],
+        cuts: [
+          {
+            card_name: 'Bad Card',
+            reason: 'Off-strategy',
+            severity: 'off-strategy',
+          },
+        ],
         additions: [
           {
             card_name: 'Good Card',
@@ -153,7 +207,7 @@ describe('critique-cache', () => {
         mana_curve_notes: 'Heavy on 3-drops',
       });
 
-      sessionStorage.setItem(key, JSON.stringify(critique));
+      localStorage.setItem(key, JSON.stringify(critique));
 
       const loaded = loadCachedCritique(key);
       expect(loaded).toEqual(critique);
@@ -166,19 +220,39 @@ describe('critique-cache', () => {
 
     it('returns null for invalid JSON', () => {
       const key = 'test-key';
-      sessionStorage.setItem(key, 'not valid json {{{');
+      localStorage.setItem(key, 'not valid json {{{');
 
       const loaded = loadCachedCritique(key);
       expect(loaded).toBeNull();
     });
 
-    it('returns null on sessionStorage read error', () => {
-      const key = 'test-key';
-      sessionStorage.setItem(key, JSON.stringify({ summary: 'test', cuts: [], additions: [] }));
+    it('returns null and clears expired cached entries', () => {
+      const key = 'expired-key';
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          data: createMockCritiqueResult({ summary: 'Old' }),
+          expiresAt: Date.now() - 1_000,
+        }),
+      );
 
-      const getItemSpy = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
-        throw new Error('SecurityError');
-      });
+      const loaded = loadCachedCritique(key);
+      expect(loaded).toBeNull();
+      expect(localStorage.getItem(key)).toBeNull();
+    });
+
+    it('returns null on localStorage read error', () => {
+      const key = 'test-key';
+      localStorage.setItem(
+        key,
+        JSON.stringify({ summary: 'test', cuts: [], additions: [] }),
+      );
+
+      const getItemSpy = vi
+        .spyOn(Storage.prototype, 'getItem')
+        .mockImplementation(() => {
+          throw new Error('SecurityError');
+        });
 
       const loaded = loadCachedCritique(key);
       expect(loaded).toBeNull();
@@ -195,8 +269,16 @@ describe('critique-cache', () => {
       const original = createMockCritiqueResult({
         summary: 'Comprehensive feedback',
         cuts: [
-          { card_name: 'Weak Spell', reason: 'Does not advance win condition', severity: 'weak' },
-          { card_name: 'Bad Ramp', reason: 'Too slow', severity: 'underperforming' },
+          {
+            card_name: 'Weak Spell',
+            reason: 'Does not advance win condition',
+            severity: 'weak',
+          },
+          {
+            card_name: 'Bad Ramp',
+            reason: 'Too slow',
+            severity: 'underperforming',
+          },
         ],
         additions: [
           {
@@ -226,7 +308,12 @@ describe('critique-cache', () => {
         ],
         additions: [
           { card_name: 'Add1', reason: 'Reason1', category: 'Cat1' },
-          { card_name: 'Add2', reason: 'Reason2', category: 'Cat2', replaces: 'Cut1' },
+          {
+            card_name: 'Add2',
+            reason: 'Reason2',
+            category: 'Cat2',
+            replaces: 'Cut1',
+          },
         ],
         confidence: 0.42,
         mana_curve_notes: 'Curve is unbalanced',

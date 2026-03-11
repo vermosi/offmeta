@@ -34,7 +34,9 @@ export interface SetCompletionEntry {
 
 const BATCH_SIZE = 75;
 
-async function fetchPrices(cards: CollectionCard[]): Promise<ScryfallCardPrice[]> {
+async function fetchPrices(
+  cards: CollectionCard[],
+): Promise<ScryfallCardPrice[]> {
   const all: ScryfallCardPrice[] = [];
 
   for (let i = 0; i < cards.length; i += BATCH_SIZE) {
@@ -66,7 +68,7 @@ async function fetchPrices(cards: CollectionCard[]): Promise<ScryfallCardPrice[]
 
       // Rate limit respect
       if (i + BATCH_SIZE < cards.length) {
-        await new Promise((r) => setTimeout(r, 100));
+        await new Promise((r) => setTimeout(r, 50));
       }
     } catch {
       // Continue on errors
@@ -88,7 +90,14 @@ export function useCollectionValue() {
   const { data: collection = [] } = useCollection();
 
   return useQuery<CollectionValueData>({
-    queryKey: ['collection-value', collection.length, collection.map((c) => c.id).join(',').slice(0, 100)],
+    queryKey: [
+      'collection-value',
+      collection.length,
+      collection
+        .map((c) => c.id)
+        .join(',')
+        .slice(0, 100),
+    ],
     queryFn: async () => {
       if (collection.length === 0) {
         return {
@@ -119,8 +128,8 @@ export function useCollectionValue() {
       for (const card of collection) {
         const resolved = priceMap.get(card.card_name.toLowerCase());
         const priceStr = card.foil
-          ? resolved?.prices?.usd_foil ?? resolved?.prices?.usd
-          : resolved?.prices?.usd ?? resolved?.prices?.usd_foil;
+          ? (resolved?.prices?.usd_foil ?? resolved?.prices?.usd)
+          : (resolved?.prices?.usd ?? resolved?.prices?.usd_foil);
         const price = priceStr ? parseFloat(priceStr) : 0;
 
         if (price > 0) {
@@ -140,7 +149,8 @@ export function useCollectionValue() {
         // Color breakdown
         const colors = resolved?.color_identity ?? [];
         if (colors.length === 0) {
-          if (!byColor['Colorless']) byColor['Colorless'] = { count: 0, value: 0 };
+          if (!byColor['Colorless'])
+            byColor['Colorless'] = { count: 0, value: 0 };
           byColor['Colorless'].count += card.quantity;
           byColor['Colorless'].value += price * card.quantity;
         } else {
@@ -158,7 +168,10 @@ export function useCollectionValue() {
           if (existing) {
             existing.count += card.quantity;
           } else {
-            setMap.set(resolved.set, { setName: resolved.set_name, count: card.quantity });
+            setMap.set(resolved.set, {
+              setName: resolved.set_name,
+              count: card.quantity,
+            });
           }
         }
       }
