@@ -22,18 +22,7 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   // Public but requires at least anon auth
-  const authHeader = req.headers.get('Authorization');
-  const apikeyHeader = req.headers.get('apikey');
-  console.log('[card-recs-debug] auth header present:', !!authHeader);
-  console.log('[card-recs-debug] auth header prefix:', authHeader?.slice(0, 20));
-  console.log('[card-recs-debug] apikey header present:', !!apikeyHeader);
-  console.log('[card-recs-debug] apikey header prefix:', apikeyHeader?.slice(0, 20));
-  console.log('[card-recs-debug] SUPABASE_URL set:', !!Deno.env.get('SUPABASE_URL'));
-  console.log('[card-recs-debug] SUPABASE_ANON_KEY set:', !!Deno.env.get('SUPABASE_ANON_KEY'));
-  console.log('[card-recs-debug] SUPABASE_PUBLISHABLE_KEY set:', !!Deno.env.get('SUPABASE_PUBLISHABLE_KEY'));
-
   const authResult = await validateAuth(req);
-  console.log('[card-recs-debug] auth result:', JSON.stringify(authResult));
   if (!authResult.authorized) {
     return new Response(
       JSON.stringify({ error: 'Unauthorized' }),

@@ -50,7 +50,7 @@ export async function getRelatedCards(
   const format = options?.format ?? 'all';
 
   // Race against a 3-second timeout to prevent indefinite loading
-  const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000));
+  const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000));
 
   const request = supabase.functions
     .invoke('card-recommendations', {
