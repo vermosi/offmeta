@@ -77,7 +77,7 @@ export async function getRelatedCards(
     return [];
   }
   if ('error' in result && result.error) {
-    console.error('[discovery] card-recommendations returned error:', result.error);
+    logger.error('[discovery] card-recommendations returned error:', result.error);
     return [];
   }
   if (!('data' in result) || !result.data?.recommendations) return [];
