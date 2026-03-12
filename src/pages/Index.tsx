@@ -467,6 +467,7 @@ const Index = () => {
             querySuggestions={querySuggestions}
             isCheckingSuggestions={isCheckingSuggestions}
             onTrySuggestion={handleTrySuggestion}
+            onRelatedCardClick={handleTryExample}
           />
         </main>
 

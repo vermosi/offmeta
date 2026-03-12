@@ -4,7 +4,7 @@
  * @module components/SearchResultsArea
  */
 
-import { lazy } from 'react';
+import { lazy, useMemo } from 'react';
 import { CardItem } from '@/components/CardItem';
 import { CardListItem } from '@/components/CardListItem';
 import { CardImageItem } from '@/components/CardImageItem';
@@ -12,6 +12,7 @@ import { CardSkeletonGrid } from '@/components/CardSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { LoadMoreIndicator } from '@/components/LoadMoreIndicator';
 import { VirtualizedCardGrid } from '@/components/VirtualizedCardGrid';
+import { RelatedCardsStrip } from '@/components/RelatedCardsStrip';
 import { SimilarCardsPanel } from '@/components/SimilarCardsPanel';
 import { DeckIdeasPanel } from '@/components/DeckIdeasPanel';
 import { ExplanationPanel } from '@/components/ExplanationPanel';
@@ -66,6 +67,7 @@ interface SearchResultsAreaProps {
   querySuggestions: QuerySuggestion[];
   isCheckingSuggestions: boolean;
   onTrySuggestion: (scryfallQuery: string) => void;
+  onRelatedCardClick?: (cardName: string) => void;
 }
 
 export function SearchResultsArea({
@@ -99,9 +101,15 @@ export function SearchResultsArea({
   querySuggestions,
   isCheckingSuggestions,
   onTrySuggestion,
+  onRelatedCardClick,
 }: SearchResultsAreaProps) {
   const { t } = useTranslation();
 
+  // Memoize the top source card for the related strip
+  const topSourceCard = useMemo(
+    () => (cards.length > 0 ? cards[0] : null),
+    [cards],
+  );
   return (
     <div className="mt-3 sm:mt-6 container-main">
       {/* Cards tab */}
@@ -269,6 +277,12 @@ export function SearchResultsArea({
                 hasNextPage={hasNextPage}
                 totalCards={totalCards}
                 showEndMessage={cards.length > 0}
+              />
+
+              {/* Related cards discovery strip */}
+              <RelatedCardsStrip
+                sourceCard={topSourceCard}
+                onCardClick={onRelatedCardClick}
               />
             </>
           ) : isSearching ? (
