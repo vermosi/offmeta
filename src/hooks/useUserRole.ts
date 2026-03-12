@@ -48,7 +48,7 @@ export function useUserRole(role: 'admin' | 'moderator' | 'user') {
           setState({ hasRole: !!data, isLoading: false });
         }
       } catch (err) {
-        console.error('[useUserRole] Failed to check role:', err);
+        logger.error('[useUserRole] Failed to check role:', err);
         if (!cancelled) {
           setState({ hasRole: false, isLoading: false });
         }

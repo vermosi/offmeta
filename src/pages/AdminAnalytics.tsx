@@ -200,7 +200,7 @@ export default function AdminAnalytics() {
       if (error) throw error;
       setFeedback((rows as unknown as FeedbackItem[]) ?? []);
     } catch (err) {
-      console.error('[AdminAnalytics] Failed to load feedback:', err);
+      logger.error('[AdminAnalytics] Failed to load feedback:', err);
       toast.error('Failed to load feedback');
     } finally {
       setFeedbackLoading(false);
