@@ -713,6 +713,9 @@ serve(async (req) => {
       );
     }
 
+    // Noise words that don't carry search intent — used for deterministic and concept matching
+    const RESIDUAL_NOISE_WORDS = /\b(in|that|the|a|an|and|or|for|with|of|to|from|are|is|be|my|your|its|cards?|spells?|good|best|great|nice|cool|top|find|some|any|also|really|very|most|all|every|each|other)\b/gi;
+
     // 6b. Deterministic Result check (can we skip AI?)
     // Skip Scryfall network validation — deterministic results are pre-validated, validation adds latency.
     // Strip noise words from remaining to avoid falling through for trivial residuals like "good", "best"
