@@ -359,7 +359,20 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
     }
   }
 
-  // 10. Clean up filler words from residual
+  // 10. Extract year constraints (e.g., "released after 2020", "before 2019", "since 2021")
+  const yearMatch = residual.match(/\b(?:released?\s+)?(?:after|since)\s+((?:19|20)\d{2})\b/i);
+  if (yearMatch) {
+    parts.push(`year>${yearMatch[1]}`);
+    residual = residual.replace(yearMatch[0], ' ').trim();
+  } else {
+    const yearBeforeMatch = residual.match(/\b(?:released?\s+)?(?:before|until)\s+((?:19|20)\d{2})\b/i);
+    if (yearBeforeMatch) {
+      parts.push(`year<${yearBeforeMatch[1]}`);
+      residual = residual.replace(yearBeforeMatch[0], ' ').trim();
+    }
+  }
+
+  // 11. Clean up filler words from residual
   residual = residual
     .replace(
       /\b(that|the|with|for|and|or|a|an|in|of|to|make|spells?|bonuses?|reward|casting|gives?|when|dies?|deal|drain|legal|cards?|pieces?|fit|into|style|deck|is|mono)\b/gi,
