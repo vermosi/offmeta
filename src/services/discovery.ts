@@ -56,7 +56,7 @@ export async function getRelatedCards(
         body: { oracle_id: oracleId, format, limit },
       })
       .catch((err) => {
-        console.error('[discovery] card-recommendations invoke failed:', err);
+        logger.error('[discovery] card-recommendations invoke failed:', err);
         return null;
       });
 
