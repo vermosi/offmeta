@@ -747,7 +747,9 @@ export type Database = {
           image_url: string
           mana_cost: string
           oracle_id: string
+          relationship_type: string
           type_line: string
+          weight: number
         }[]
       }
       get_missing_oracle_ids: {

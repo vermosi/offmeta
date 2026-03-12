@@ -1,6 +1,6 @@
 /**
  * compute-cooccurrence — Computes card co-occurrence from community decks.
- * Generates pairwise card relationships for the recommendation engine.
+ * Generates pairwise card relationships with PMI-style normalized scoring.
  * Memory-safe: processes and flushes in segments.
  * @module functions/compute-cooccurrence
  */
@@ -12,12 +12,28 @@ import { createLogger } from '../_shared/logger.ts';
 
 const log = createLogger('compute-cooccurrence');
 const DECK_BATCH_SIZE = 100;
-const FLUSH_THRESHOLD = 50_000; // Flush pairs to DB when map exceeds this size
+const FLUSH_THRESHOLD = 50_000;
 const UPSERT_BATCH = 500;
+
+/**
+ * PMI-style co-play score: decksBoth / sqrt(deckCountA * deckCountB)
+ * Prevents universally popular cards from dominating all relationships.
+ */
+function computeCoPlayScore(
+  decksBoth: number,
+  deckCountA: number,
+  deckCountB: number,
+): number {
+  if (decksBoth <= 0 || deckCountA <= 0 || deckCountB <= 0) return 0;
+  const denominator = Math.sqrt(deckCountA * deckCountB);
+  if (denominator === 0) return 0;
+  return Math.min(decksBoth / denominator, 1);
+}
 
 async function flushPairs(
   supabase: SupabaseClient,
   pairCounts: Map<string, number>,
+  cardDeckCounts: Map<string, number>,
   targetFormat: string,
 ): Promise<number> {
   const significantPairs = Array.from(pairCounts.entries())
@@ -28,11 +44,20 @@ async function flushPairs(
   for (let i = 0; i < significantPairs.length; i += UPSERT_BATCH) {
     const batch = significantPairs.slice(i, i + UPSERT_BATCH).map(([key, count]) => {
       const [a, b] = key.split('|');
+      const deckCountA = cardDeckCounts.get(a) ?? 1;
+      const deckCountB = cardDeckCounts.get(b) ?? 1;
+      const weight = computeCoPlayScore(count, deckCountA, deckCountB);
+
       return {
         card_a_oracle_id: a,
         card_b_oracle_id: b,
         cooccurrence_count: count,
+        relationship_type: 'co_played',
+        weight,
+        source: 'community_decks',
+        context: { deck_count_a: deckCountA, deck_count_b: deckCountB },
         format: targetFormat,
+        updated_at: new Date().toISOString(),
       };
     });
 
@@ -47,6 +72,31 @@ async function flushPairs(
   return upserted;
 }
 
+async function updateCardSignals(
+  supabase: SupabaseClient,
+  cardDeckCounts: Map<string, number>,
+): Promise<number> {
+  const entries = Array.from(cardDeckCounts.entries());
+  let upserted = 0;
+
+  for (let i = 0; i < entries.length; i += UPSERT_BATCH) {
+    const batch = entries.slice(i, i + UPSERT_BATCH).map(([cardId, deckCount]) => ({
+      card_id: cardId,
+      deck_count: deckCount,
+      updated_at: new Date().toISOString(),
+    }));
+
+    const { error } = await supabase
+      .from('card_signals')
+      .upsert(batch, { onConflict: 'card_id' });
+
+    if (!error) upserted += batch.length;
+    else log.warn('Card signals upsert failed', { batch: i, error: error.message });
+  }
+
+  return upserted;
+}
+
 serve(async (req: Request): Promise<Response> => {
   const corsHeaders = getCorsHeaders(req);
   const headers = { ...corsHeaders, 'Content-Type': 'application/json' };
@@ -55,7 +105,6 @@ serve(async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Auth guard: service role only (cron jobs use service role key)
   const authCheck = requireServiceRole(req, corsHeaders);
   if (!authCheck.authorized) {
     return authCheck.response;
@@ -103,6 +152,7 @@ serve(async (req: Request): Promise<Response> => {
     log.info(`Processing ${decks.length} decks for cooccurrence (format=${targetFormat})`);
 
     const pairCounts = new Map<string, number>();
+    const cardDeckCounts = new Map<string, number>();
     let decksProcessed = 0;
     let totalUpserted = 0;
 
@@ -128,8 +178,13 @@ serve(async (req: Request): Promise<Response> => {
       }
 
       for (const [, oracleIds] of deckCardMap) {
-        // Limit to top 60 cards per deck to reduce pair explosion
         const ids = oracleIds.slice(0, 60);
+
+        // Track per-card deck counts for PMI normalization
+        for (const id of ids) {
+          cardDeckCounts.set(id, (cardDeckCounts.get(id) ?? 0) + 1);
+        }
+
         for (let a = 0; a < ids.length; a++) {
           for (let b = a + 1; b < ids.length; b++) {
             const key = ids[a] < ids[b]
@@ -141,25 +196,28 @@ serve(async (req: Request): Promise<Response> => {
         decksProcessed++;
       }
 
-      // Memory safety: flush when map gets large
       if (pairCounts.size > FLUSH_THRESHOLD) {
         log.info(`Flushing ${pairCounts.size} pairs at deck batch ${i}`);
-        totalUpserted += await flushPairs(supabase, pairCounts, targetFormat);
+        totalUpserted += await flushPairs(supabase, pairCounts, cardDeckCounts, targetFormat);
         pairCounts.clear();
       }
     }
 
     // Final flush
     if (pairCounts.size > 0) {
-      totalUpserted += await flushPairs(supabase, pairCounts, targetFormat);
+      totalUpserted += await flushPairs(supabase, pairCounts, cardDeckCounts, targetFormat);
     }
 
-    log.info(`Cooccurrence complete: pairs=${totalUpserted}, decks=${decksProcessed}`);
+    // Update card_signals with deck counts
+    const signalsUpserted = await updateCardSignals(supabase, cardDeckCounts);
+
+    log.info(`Cooccurrence complete: pairs=${totalUpserted}, signals=${signalsUpserted}, decks=${decksProcessed}`);
     return new Response(
       JSON.stringify({
         success: true,
         decksProcessed,
         upserted: totalUpserted,
+        signalsUpserted,
         format: targetFormat,
       }),
       { status: 200, headers }
