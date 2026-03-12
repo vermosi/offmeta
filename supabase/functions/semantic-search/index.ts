@@ -819,7 +819,7 @@ serve(async (req) => {
         if (effectiveConcepts.length > 0 && effectiveConcepts[0].confidence >= 0.85 && coverageRatio >= 0.4) {
           // Build query from concept templates, deduplicating by normalized category
           const seenCategories = new Set<string>();
-          const dedupedConcepts = concepts.filter((c) => {
+          const dedupedConcepts = effectiveConcepts.filter((c) => {
             // Normalize category to prevent near-duplicates
             // e.g., "Mass removal", "Mass removal spells", "Cards that destroy all creatures"
             const normCat = (c.category || '')
