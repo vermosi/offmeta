@@ -73,7 +73,7 @@ export async function getRelatedCards(
   }
 
   if (!result) {
-    console.warn('[discovery] card-recommendations retry also failed for', oracleId);
+    logger.warn('[discovery] card-recommendations retry also failed for', oracleId);
     return [];
   }
   if ('error' in result && result.error) {
