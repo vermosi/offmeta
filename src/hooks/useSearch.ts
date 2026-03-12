@@ -342,7 +342,7 @@ export function useSearch() {
         incrementSearchesPerSession();
       }
     },
-    [trackSearch, navigate, queryClient, scryfallLang],
+    [trackSearch, trackEvent, shouldLogCacheEvent, navigate, queryClient, scryfallLang],
   );
 
   const handleRerunEditedQuery = useCallback(
