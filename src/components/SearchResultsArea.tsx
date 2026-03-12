@@ -67,6 +67,7 @@ interface SearchResultsAreaProps {
   querySuggestions: QuerySuggestion[];
   isCheckingSuggestions: boolean;
   onTrySuggestion: (scryfallQuery: string) => void;
+  onRelatedCardClick?: (cardName: string) => void;
 }
 
 export function SearchResultsArea({
