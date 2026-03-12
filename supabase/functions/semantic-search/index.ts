@@ -861,13 +861,6 @@ serve(async (req) => {
       .replace(FAST_PATH_NOISE_WORDS, '')
       .replace(/\s+/g, ' ')
       .trim();
-
-    // 6c. Concept Matching (known MTG concepts — skip AI if high-confidence match)
-    const residualForConcepts =
-      deterministicResult.intent.remainingQuery || query;
-    // Strip noise words to prevent garbage concept matches from trivial residuals like "in" or "that"
-    // (RESIDUAL_NOISE_WORDS defined above at deterministic check)
-    const meaningfulResidual = residualForConcepts.replace(RESIDUAL_NOISE_WORDS, '').replace(/\s+/g, ' ').trim();
     if (meaningfulResidual.length >= 3) {
       try {
         const { findConceptMatches } = await import('./pipeline/concepts.ts');
