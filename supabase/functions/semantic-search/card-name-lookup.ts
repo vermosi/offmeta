@@ -15,6 +15,17 @@ const REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
 const PAGE_SIZE = 5000;
 
 /**
+ * Eagerly start loading card names at module import time.
+ * This ensures cold starts pay the DB cost during boot, not on first search.
+ */
+const _eagerLoad = loadCardNames().then((names) => {
+  cardNamesSet = names;
+  lastLoadTime = Date.now();
+}).catch((err) => {
+  console.warn('[card-name-lookup] Eager load failed, will retry on first lookup:', err);
+});
+
+/**
  * Loads all card names from the card_names table into an in-memory Set.
  * Uses pagination to handle 30k+ rows.
  */
@@ -52,11 +63,18 @@ async function loadCardNames(): Promise<Set<string>> {
 
 /**
  * Returns the cached card names Set, loading from DB if needed.
+ * On cold start, awaits the eager load promise to avoid duplicate DB calls.
  */
 async function getCardNames(): Promise<Set<string>> {
   const now = Date.now();
   if (cardNamesSet && now - lastLoadTime < REFRESH_INTERVAL_MS) {
     return cardNamesSet;
+  }
+
+  // If eager load is still in progress, wait for it
+  if (!cardNamesSet && _eagerLoad) {
+    await _eagerLoad;
+    if (cardNamesSet) return cardNamesSet;
   }
 
   cardNamesSet = await loadCardNames();

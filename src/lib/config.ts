@@ -8,7 +8,7 @@ export const CLIENT_CONFIG = {
   VIRTUALIZATION_THRESHOLD: 50,
 
   // Search settings
-  SEARCH_TIMEOUT_MS: 8000, // 8 seconds — matches edge function budget
+  SEARCH_TIMEOUT_MS: 12000, // 12 seconds — accommodates edge function cold starts + 8s server budget
   SEARCH_DEBOUNCE_MS: 300,
 
   // Cache settings
