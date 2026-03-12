@@ -6,6 +6,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/core/logger';
 import { rankRelationships, filterByType } from '@/lib/relationships/ranking';
 import type { RankedRelationship } from '@/lib/relationships/ranking';
 import type { RelationshipType } from '@/lib/relationships/scoring';
