@@ -44,7 +44,7 @@ export const CardItem = memo(function CardItem({
   tabIndex = 0,
   isOwned,
 }: CardItemProps) {
-  const imageUrl = getCardImage(card, 'small');
+  const imageUrl = getCardImage(card, 'normal');
   const [imgError, setImgError] = useState(false);
   const { locale } = useTranslation();
   const displayName = getLocalizedName(card, locale);
