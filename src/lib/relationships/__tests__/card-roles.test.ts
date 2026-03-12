@@ -118,7 +118,8 @@ describe('extractRoles', () => {
   it('detects board wipe', () => {
     const roles = extractRoles('Destroy all creatures.');
     expect(roles).toContain('board_wipe');
-    expect(roles).toContain('removal'); // also matches "destroy target" pattern? No — "destroy all" doesn't contain "destroy target"
+    // "Destroy all" does NOT match "destroy target" — correct behavior
+    expect(roles).not.toContain('removal');
   });
 
   it('detects tutor', () => {
