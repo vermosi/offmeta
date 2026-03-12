@@ -1021,6 +1021,9 @@ export default function AdminAnalytics() {
                 </div>
               )}
 
+              {/* Engagement Metrics: searches/session + zero-result rate */}
+              <EngagementMetricsPanel days={Number(days)} />
+
               {/* System Status */}
               <SystemStatusPanel />
 
