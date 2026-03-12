@@ -24,10 +24,10 @@ serve(async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Only service role can trigger this
-  const auth = requireServiceRole(req, corsHeaders);
+  // Auth guard: accept anon key (for pg_cron) or service role
+  const auth = await validateAuth(req);
   if (!auth.authorized) {
-    return auth.response;
+    return new Response(JSON.stringify({ error: auth.error }), { status: 401, headers });
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
