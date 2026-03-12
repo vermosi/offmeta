@@ -49,13 +49,20 @@ export async function getRelatedCards(
   const limit = options?.limit ?? 20;
   const format = options?.format ?? 'all';
 
-  const { data, error } = await supabase.functions.invoke('card-recommendations', {
+  // Race against a 6-second timeout to prevent indefinite loading
+  const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 6000));
+
+  const request = supabase.functions.invoke('card-recommendations', {
     body: { oracle_id: oracleId, format, limit },
   });
 
-  if (error || !data?.recommendations) return [];
+  const result = await Promise.race([request, timeout]);
 
-  let results = (data.recommendations as RecommendationRow[]).map(mapRow);
+  // Timeout or no data
+  if (!result || 'error' in result && result.error) return [];
+  if (!('data' in result) || !result.data?.recommendations) return [];
+
+  let results = (result.data.recommendations as RecommendationRow[]).map(mapRow);
 
   if (options?.relationshipType) {
     results = filterByType(results, options.relationshipType);
