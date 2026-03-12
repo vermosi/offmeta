@@ -786,10 +786,40 @@ serve(async (req) => {
         const { findConceptMatches } = await import('./pipeline/concepts.ts');
         const concepts = await findConceptMatches(residualForConcepts, 3, 0.7);
 
-        if (concepts.length > 0 && concepts[0].confidence >= 0.85) {
+        // Coverage check: if concept patterns only match a small portion of
+        // the meaningful residual, the user likely has complex intent the
+        // concepts can't capture → fall through to AI instead.
+        const residualWords = meaningfulResidual.toLowerCase().split(/\s+/).filter(w => w.length >= 3);
+        const conceptPatternWords = new Set(
+          concepts.flatMap(c =>
+            (c.conceptId || '').toLowerCase().split(/\s+/).filter((w: string) => w.length >= 3)
+          )
+        );
+        const coveredWords = residualWords.filter(w => conceptPatternWords.has(w));
+        const coverageRatio = residualWords.length > 0
+          ? coveredWords.length / residualWords.length
+          : 0;
+
+        logInfo('concept_match_coverage_check', {
+          query: query.substring(0, 50),
+          residualWords: residualWords.length,
+          coveredCount: coveredWords.length,
+          coverageRatio: Math.round(coverageRatio * 100),
+          conceptIds: concepts.map(c => c.conceptId),
+        });
+
+        // For very short residuals (1-2 words), only accept exact matches
+        // and limit to 1 concept to prevent stuffing (e.g., "commanders" matching
+        // "commanders", "partner commanders", AND "commander staples")
+        const isShortResidual = residualWords.length <= 2;
+        const effectiveConcepts = isShortResidual
+          ? concepts.filter(c => c.confidence >= 0.95).slice(0, 1)
+          : concepts;
+
+        if (effectiveConcepts.length > 0 && effectiveConcepts[0].confidence >= 0.85 && coverageRatio >= 0.4) {
           // Build query from concept templates, deduplicating by normalized category
           const seenCategories = new Set<string>();
-          const dedupedConcepts = concepts.filter((c) => {
+          const dedupedConcepts = effectiveConcepts.filter((c) => {
             // Normalize category to prevent near-duplicates
             // e.g., "Mass removal", "Mass removal spells", "Cards that destroy all creatures"
             const normCat = (c.category || '')
@@ -885,6 +915,14 @@ serve(async (req) => {
             }),
             { headers: jsonHeaders },
           );
+        } else if (concepts.length > 0 && coverageRatio < 0.4) {
+          logInfo('concept_match_low_coverage', {
+            query: query.substring(0, 50),
+            coverageRatio: Math.round(coverageRatio * 100),
+            residualWords: residualWords.length,
+            coveredWords: coveredWords.length,
+          });
+          // Fall through to AI
         }
       } catch (conceptErr) {
         logWarn('concept_match_error', {
