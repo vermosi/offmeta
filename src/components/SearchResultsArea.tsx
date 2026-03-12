@@ -101,9 +101,15 @@ export function SearchResultsArea({
   querySuggestions,
   isCheckingSuggestions,
   onTrySuggestion,
+  onRelatedCardClick,
 }: SearchResultsAreaProps) {
   const { t } = useTranslation();
 
+  // Memoize the top source card for the related strip
+  const topSourceCard = useMemo(
+    () => (cards.length > 0 ? cards[0] : null),
+    [cards],
+  );
   return (
     <div className="mt-3 sm:mt-6 container-main">
       {/* Cards tab */}
