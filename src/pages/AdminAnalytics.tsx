@@ -99,6 +99,7 @@ import { PipelineHealthIndicator } from '@/pages/admin-analytics/components/Pipe
 import { AuthFailuresPanel } from '@/pages/admin-analytics/components/AuthFailuresPanel';
 import { SystemStatusPanel } from '@/pages/admin-analytics/components/SystemStatusPanel';
 import { EngagementMetricsPanel } from '@/pages/admin-analytics/components/EngagementMetricsPanel';
+import { logger } from '@/lib/core/logger';
 
 export default function AdminAnalytics() {
   const { user, isLoading: authLoading } = useAuth();
