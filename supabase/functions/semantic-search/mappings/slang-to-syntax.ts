@@ -833,7 +833,7 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
 
   // Catchup / catch-up ramp
   {
-    pattern: /\bcatch[-\s]?up\s+ramp\b/gi,
+    pattern: /\bcatch[-\s]?up\s+ramp\b|\bcatchup\s+ramp\b/gi,
     syntax: '(o:"fewer lands" or o:"controls more" or o:"each opponent who controls more")',
     description: 'Ramp that triggers when behind on lands',
   },
