@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/lib/core/logger';
 
 export function useUserRole(role: 'admin' | 'moderator' | 'user') {
   const { user, isLoading: authLoading } = useAuth();
@@ -47,7 +48,7 @@ export function useUserRole(role: 'admin' | 'moderator' | 'user') {
           setState({ hasRole: !!data, isLoading: false });
         }
       } catch (err) {
-        console.error('[useUserRole] Failed to check role:', err);
+        logger.error('[useUserRole] Failed to check role:', err);
         if (!cancelled) {
           setState({ hasRole: false, isLoading: false });
         }

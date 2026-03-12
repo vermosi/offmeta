@@ -99,6 +99,7 @@ import { PipelineHealthIndicator } from '@/pages/admin-analytics/components/Pipe
 import { AuthFailuresPanel } from '@/pages/admin-analytics/components/AuthFailuresPanel';
 import { SystemStatusPanel } from '@/pages/admin-analytics/components/SystemStatusPanel';
 import { EngagementMetricsPanel } from '@/pages/admin-analytics/components/EngagementMetricsPanel';
+import { logger } from '@/lib/core/logger';
 
 export default function AdminAnalytics() {
   const { user, isLoading: authLoading } = useAuth();
@@ -200,7 +201,7 @@ export default function AdminAnalytics() {
       if (error) throw error;
       setFeedback((rows as unknown as FeedbackItem[]) ?? []);
     } catch (err) {
-      console.error('[AdminAnalytics] Failed to load feedback:', err);
+      logger.error('[AdminAnalytics] Failed to load feedback:', err);
       toast.error('Failed to load feedback');
     } finally {
       setFeedbackLoading(false);
