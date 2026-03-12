@@ -111,7 +111,8 @@ export function useSearch() {
   const initialUrlQuery = useRef(effectiveUrlQuery);
   const hasHandledInitialQuery = useRef(false);
   const hasRedirectedLegacy = useRef(false);
-  const { trackSearch, trackCardClick, trackEvent } = useAnalytics();
+  const { trackSearch, trackSearchFailure, trackCardClick, trackPagination, trackEvent, shouldLogCacheEvent } = useAnalytics();
+  const paginationPageRef = useRef(1);
 
   // --- Redirect legacy ?q= URLs to /search/:slug ---
   useEffect(() => {
