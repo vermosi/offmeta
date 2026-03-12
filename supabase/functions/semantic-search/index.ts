@@ -901,6 +901,14 @@ serve(async (req) => {
             }),
             { headers: jsonHeaders },
           );
+        } else if (concepts.length > 0 && coverageRatio < 0.4) {
+          logInfo('concept_match_low_coverage', {
+            query: query.substring(0, 50),
+            coverageRatio: Math.round(coverageRatio * 100),
+            residualWords: residualWords.length,
+            coveredWords: coveredWords.length,
+          });
+          // Fall through to AI
         }
       } catch (conceptErr) {
         logWarn('concept_match_error', {
