@@ -244,12 +244,12 @@ function buildIR(query: string): SearchIR {
   return ir;
 }
 
-export function buildDeterministicIntent(query: string): {
+export function buildDeterministicIntent(query: string, options?: { isKnownCardName?: boolean }): {
   intent: ParsedIntent;
   deterministicQuery: string;
 } {
-  // Short-circuit: if the query looks like a card name, use name search
-  if (isLikelyCardName(query)) {
+  // Short-circuit: if the query is a known card name (DB lookup) OR heuristic match, use name search
+  if (options?.isKnownCardName || isLikelyCardName(query)) {
     const trimmed = query.trim();
     const wordCount = trimmed.split(/\s+/).length;
     // Single word → name:X, multi-word → name:"X Y"
