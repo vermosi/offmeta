@@ -63,7 +63,18 @@ function isLikelyCardName(query: string): boolean {
     const commonWords = /^(the|and|for|are|but|not|you|all|can|had|her|was|one|our|out|day|get|has|him|his|how|its|may|new|now|old|see|way|who|boy|did|any|big|few|got|let|say|she|too|use|why|try|ask|men|run|own|put|set|end|low|high|far|long|last|next|much|take|come|make|give|look|help|turn|play|move|live|find|work|tell|call|keep|hand|pick|part|free|full|open|show|hard|fast|real|good|best|great|cool|nice|cards?|lands?|spells?|creatures?|small|power)$/i;
     if (trimmed.length >= 4 && !commonWords.test(trimmed)) return true;
   }
-  return hasPossessive || (allCapitalized && words.length >= 2);
+  if (hasPossessive || (allCapitalized && words.length >= 2)) return true;
+
+  // For 2-3 word lowercase queries: if no word is a search keyword, MTG keyword,
+  // or common filler, it's likely a card name (e.g. "lightning bolt", "sol ring")
+  if (words.length >= 2 && words.length <= 3) {
+    const fillerWords = /^(the|and|for|are|but|not|you|all|can|had|her|was|one|our|out|day|get|has|him|his|how|its|may|new|now|old|see|way|who|any|big|few|got|let|say|she|too|use|why|try|ask|run|own|put|set|end|low|high|far|long|last|next|much|take|come|make|give|look|help|turn|play|move|live|find|work|tell|call|keep|hand|pick|part|free|full|open|show|hard|fast|real|good|best|great|cool|nice|small|power|my|your|its|some|every|each|other|most)$/i;
+    const noFiller = words.every(w => !fillerWords.test(w));
+    const noMtgKeyword = words.every(w => !singleWordMtgTerms.test(w));
+    if (noFiller && noMtgKeyword) return true;
+  }
+
+  return false;
 }
 
 function buildIR(query: string): SearchIR {
