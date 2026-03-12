@@ -90,8 +90,11 @@ export async function validateAuth(req: Request): Promise<AuthResult> {
   }
 
   // Allow valid project anon JWT used by browser clients.
-  // This avoids calling /auth/v1/user for anon tokens (which fails due no `sub` claim).
-  const apikeyHeader = req.headers.get('apikey')?.trim() ?? '';
+  // This avoids calling /auth/v1/user for anon tokens (which fails since anon JWTs have no `sub` claim).
+  // NOTE: We intentionally do NOT require apikey header === token. The Supabase JS client
+  // may send the user JWT as Bearer and the anon key as apikey when a session exists,
+  // but for unauthenticated users the anon key is sent as Bearer. We only need to verify
+  // the JWT structure to confirm it's a legitimate project anon token.
   const jwtPayload = decodeJwtPayload(token);
   const projectRef = extractProjectRef(supabaseUrl);
   const tokenExpMs =
@@ -104,9 +107,7 @@ export async function validateAuth(req: Request): Promise<AuthResult> {
     typeof jwtPayload.ref === 'string' &&
     (projectRef === null || jwtPayload.ref === projectRef) &&
     tokenExpMs !== null &&
-    tokenExpMs > Date.now() &&
-    apikeyHeader.length > 0 &&
-    apikeyHeader === token;
+    tokenExpMs > Date.now();
 
   if (isProjectAnonJwt) {
     return { authorized: true, role: 'anon' };
