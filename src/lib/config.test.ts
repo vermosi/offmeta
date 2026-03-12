@@ -12,7 +12,7 @@ describe('CLIENT_CONFIG', () => {
   });
 
   it('exports search settings', () => {
-    expect(CLIENT_CONFIG.SEARCH_TIMEOUT_MS).toBe(8000);
+    expect(CLIENT_CONFIG.SEARCH_TIMEOUT_MS).toBe(12000);
     expect(CLIENT_CONFIG.SEARCH_DEBOUNCE_MS).toBe(300);
   });
 
