@@ -49,23 +49,30 @@ export async function getRelatedCards(
   const limit = options?.limit ?? 20;
   const format = options?.format ?? 'all';
 
-  // Race against a 3-second timeout to prevent indefinite loading
-  const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000));
+  const invoke = () =>
+    supabase.functions
+      .invoke('card-recommendations', {
+        body: { oracle_id: oracleId, format, limit },
+      })
+      .catch((err) => {
+        console.error('[discovery] card-recommendations invoke failed:', err);
+        return null;
+      });
 
-  const request = supabase.functions
-    .invoke('card-recommendations', {
-      body: { oracle_id: oracleId, format, limit },
-    })
-    .catch((err) => {
-      console.error('[discovery] card-recommendations invoke failed:', err);
-      return null;
-    });
+  const withTimeout = (timeoutMs: number) => {
+    const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs));
+    return Promise.race([invoke(), timeout]);
+  };
 
-  const result = await Promise.race([request, timeout]);
-
-  // Timeout, error, or no data
+  // First attempt with 8s timeout; retry once on timeout (handles cold starts)
+  let result = await withTimeout(8000);
   if (!result) {
-    if (result === null) console.warn('[discovery] card-recommendations timed out or failed for', oracleId);
+    console.warn('[discovery] card-recommendations timed out, retrying once for', oracleId);
+    result = await withTimeout(10000);
+  }
+
+  if (!result) {
+    console.warn('[discovery] card-recommendations retry also failed for', oracleId);
     return [];
   }
   if ('error' in result && result.error) {
