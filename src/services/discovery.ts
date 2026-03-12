@@ -56,13 +56,22 @@ export async function getRelatedCards(
     .invoke('card-recommendations', {
       body: { oracle_id: oracleId, format, limit },
     })
-    .catch(() => null);
+    .catch((err) => {
+      console.error('[discovery] card-recommendations invoke failed:', err);
+      return null;
+    });
 
   const result = await Promise.race([request, timeout]);
 
   // Timeout, error, or no data
-  if (!result) return [];
-  if ('error' in result && result.error) return [];
+  if (!result) {
+    if (result === null) console.warn('[discovery] card-recommendations timed out or failed for', oracleId);
+    return [];
+  }
+  if ('error' in result && result.error) {
+    console.error('[discovery] card-recommendations returned error:', result.error);
+    return [];
+  }
   if (!('data' in result) || !result.data?.recommendations) return [];
 
   let results = (result.data.recommendations as RecommendationRow[]).map(mapRow);
