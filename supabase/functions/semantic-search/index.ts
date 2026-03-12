@@ -544,7 +544,7 @@ serve(async (req) => {
     // 3. Cache Lookups (In-Memory then Persistent) — run in parallel with deterministic build
     const [deterministicResult, cachedFromParallel] = await Promise.all([
       markStage('deterministic', () =>
-        Promise.resolve(buildDeterministicIntent(query)),
+        Promise.resolve(buildDeterministicIntent(query, { isKnownCardName: isKnownCard })),
       ),
       markStage('cache', () =>
         useCache
