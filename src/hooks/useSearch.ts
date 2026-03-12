@@ -233,17 +233,38 @@ export function useSearch() {
     };
   }, [hasSearched, originalQuery]);
 
-  // --- Track results count ---
+  // --- Track results count + zero-result failures ---
   useEffect(() => {
-    if (totalCards > 0 && lastSearchResult) {
+    if (!lastSearchResult || !hasSearched) return;
+
+    if (totalCards > 0) {
       trackEvent('search_results', {
         query: originalQuery,
         translated_query: lastSearchResult.scryfallQuery,
         results_count: totalCards,
         request_id: currentRequestId ?? undefined,
       });
+    } else if (totalCards === 0 && !isSearching && validatedSearchQuery) {
+      trackSearchFailure({
+        query: originalQuery,
+        translated_query: lastSearchResult.scryfallQuery,
+        error_type: 'zero_results',
+      });
     }
-  }, [totalCards, lastSearchResult, originalQuery, trackEvent, currentRequestId]);
+  }, [totalCards, lastSearchResult, originalQuery, trackEvent, trackSearchFailure, currentRequestId, hasSearched, isSearching, validatedSearchQuery]);
+
+  // --- Track pagination (load-more) ---
+  const currentPageCount = data?.pages.length ?? 0;
+  useEffect(() => {
+    if (currentPageCount > 1 && currentPageCount > paginationPageRef.current) {
+      trackPagination({
+        query: originalQuery,
+        from_page: paginationPageRef.current,
+        to_page: currentPageCount,
+      });
+    }
+    paginationPageRef.current = currentPageCount || 1;
+  }, [currentPageCount, originalQuery, trackPagination]);
 
   const hasSortOverride = activeFilters?.sortBy && activeFilters.sortBy !== 'name-asc';
   const displayCards = (hasActiveFilters || hasSortOverride) ? filteredCards : cards;
