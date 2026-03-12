@@ -105,9 +105,22 @@ serve(async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Accept service role key OR pipeline secret (for pg_cron which can't access vault)
   const authCheck = requireServiceRole(req, corsHeaders);
   if (!authCheck.authorized) {
-    return authCheck.response;
+    // Fallback: check for pipeline secret in body
+    const bodyText = await req.clone().text();
+    let pipelineKeyValid = false;
+    try {
+      const parsed = JSON.parse(bodyText);
+      const pipelineKey = Deno.env.get('OFFMETA_PIPELINE_KEY');
+      if (pipelineKey && parsed.pipeline_key === pipelineKey) {
+        pipelineKeyValid = true;
+      }
+    } catch { /* ignore */ }
+    if (!pipelineKeyValid) {
+      return authCheck.response;
+    }
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
