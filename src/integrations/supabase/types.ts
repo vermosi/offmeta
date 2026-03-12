@@ -104,6 +104,24 @@ export type Database = {
         }
         Relationships: []
       }
+      card_names: {
+        Row: {
+          name: string
+          name_lower: string
+          updated_at: string
+        }
+        Insert: {
+          name: string
+          name_lower: string
+          updated_at?: string
+        }
+        Update: {
+          name?: string
+          name_lower?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       card_signals: {
         Row: {
           card_id: string
