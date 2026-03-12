@@ -223,7 +223,7 @@ function isLikelyCardName(query: string): boolean {
   const words = trimmed.split(/\s+/);
   if (words.length < 1 || words.length > 6) return false;
 
-  const hasSearchKeywords = /\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries|produce|generate|create|make|draw|destroy|exile|return|search|find|tap for|best|good|great|top|payoffs?|synerg(?:y|ies))\b/i.test(trimmed);
+  const hasSearchKeywords = /\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries|produce|generate|create|make|draw|search|find|tap for|best|good|great|top|payoffs?|synerg(?:y|ies))\b/i.test(trimmed);
   if (hasSearchKeywords) return false;
 
   // Check for possessives or title-cased words (typical card names)
