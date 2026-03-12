@@ -132,9 +132,15 @@ export function buildFallbackQuery(
     // NOTE: otag:token-generator, food-generator, clue-generator, blood-generator are NOT valid
     [/\btoken generators?\b/gi, 'o:"create" o:"token"'],
     [/\bmakes? tokens?\b/gi, 'o:"create" o:"token"'],
+    [/\bfood\s+(?:payoffs?|synerg(?:y|ies)|matters?)\b/gi, 'o:"food" o:"you control"'],
     [/\bfood tokens?\b/gi, 'o:"create" o:"Food"'],
     [/\bclue tokens?\b/gi, 'o:"create" o:"Clue"'],
     [/\bblood tokens?\b/gi, 'o:"create" o:"Blood"'],
+    [/\bcatch[-\s]?up\s+ramp\b/gi, '(o:"fewer lands" or o:"controls more")'],
+    [/\btaps?\s+for\s+mana\b/gi, 'o:"{T}" o:"add"'],
+    [/\bmana\s+dorks?\b/gi, 't:creature o:"{T}" o:"add"'],
+    [/\bpingers?\b/gi, 't:creature o:"deals 1 damage"'],
+    [/\breskins?\b/gi, 'is:reskinned'],
 
     // Life and combat
     [/\blifegain\b/gi, 'otag:lifegain'],
