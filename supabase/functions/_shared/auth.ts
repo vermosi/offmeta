@@ -160,12 +160,14 @@ export async function validateAuth(req: Request): Promise<AuthResult> {
     const getClaims = userClient?.auth?.getClaims;
     if (typeof getClaims === 'function') {
       const { data: claimsData, error: claimsError } = await getClaims(token);
-      if (!claimsError && claimsData?.claims && typeof claimsData.claims.sub === 'string') {
-        const role =
-          typeof claimsData.claims.role === 'string'
-            ? claimsData.claims.role
-            : 'authenticated';
-        return { authorized: true, role };
+      if (!claimsError && claimsData?.claims) {
+        // Accept both authenticated users (with sub) and anon tokens (role=anon)
+        const claimRole = typeof claimsData.claims.role === 'string'
+          ? claimsData.claims.role
+          : 'authenticated';
+        if (typeof claimsData.claims.sub === 'string' || claimRole === 'anon') {
+          return { authorized: true, role: claimRole };
+        }
       }
     }
 
