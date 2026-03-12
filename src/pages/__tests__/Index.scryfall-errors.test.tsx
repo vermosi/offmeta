@@ -47,7 +47,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('@/hooks/useAnalytics', () => ({
-  useAnalytics: () => ({ trackSearch: vi.fn(), trackCardClick: vi.fn(), trackEvent: vi.fn(), trackSearchFailure: vi.fn() }),
+  useAnalytics: () => ({ trackSearch: vi.fn(), trackCardClick: vi.fn(), trackEvent: vi.fn(), trackSearchFailure: vi.fn(), trackPagination: vi.fn(), shouldLogCacheEvent: vi.fn() }),
 }));
 vi.mock('@/lib/scryfall/query', () => ({
   buildFilterQuery: () => '',
