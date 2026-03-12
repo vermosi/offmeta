@@ -59,6 +59,22 @@ export function normalizeQueryForMatching(query: string): string {
 }
 
 /**
+ * Returns a hardcoded translation hit when available.
+ * This is synchronous and zero-latency, so callers can short-circuit before
+ * any database/cache work.
+ */
+export function getHardcodedPatternMatch(
+  query: string,
+): CacheEntry['result'] | null {
+  const normalizedLower = query.toLowerCase().trim();
+  const hit = HARDCODED_TRANSLATIONS[normalizedLower];
+  if (!hit) return null;
+
+  logger.logInfo('hardcoded_pattern_match', { query });
+  return hit;
+}
+
+/**
  * Checks translation_rules for an exact pattern match to bypass AI entirely.
  * Also checks hardcoded translations for warmup queries.
  * Returns the cached result format if a match is found.
@@ -68,10 +84,9 @@ export async function checkPatternMatch(
   _filters?: Record<string, unknown> | null,
 ): Promise<CacheEntry['result'] | null> {
   // Check hardcoded translations first (zero latency)
-  const normalizedLower = query.toLowerCase().trim();
-  if (HARDCODED_TRANSLATIONS[normalizedLower]) {
-    logger.logInfo('hardcoded_pattern_match', { query });
-    return HARDCODED_TRANSLATIONS[normalizedLower];
+  const hardcodedHit = getHardcodedPatternMatch(query);
+  if (hardcodedHit) {
+    return hardcodedHit;
   }
 
   const normalizedQuery = normalizeQueryForMatching(query);
