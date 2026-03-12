@@ -30,6 +30,13 @@ function generateRequestId(): string {
   return `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }
 
+/** Increment the per-session search counter in sessionStorage */
+function incrementSearchesPerSession(): void {
+  const key = 'offmeta_searches_per_session';
+  const current = parseInt(sessionStorage.getItem(key) || '0', 10);
+  sessionStorage.setItem(key, String(current + 1));
+}
+
 /** Parse filter state from URL search params */
 function parseFiltersFromUrl(params: URLSearchParams): Partial<FilterState> | null {
   const colors = params.get('colors');
@@ -111,7 +118,8 @@ export function useSearch() {
   const initialUrlQuery = useRef(effectiveUrlQuery);
   const hasHandledInitialQuery = useRef(false);
   const hasRedirectedLegacy = useRef(false);
-  const { trackSearch, trackCardClick, trackEvent } = useAnalytics();
+  const { trackSearch, trackSearchFailure, trackCardClick, trackPagination, trackEvent, shouldLogCacheEvent } = useAnalytics();
+  const paginationPageRef = useRef(1);
 
   // --- Redirect legacy ?q= URLs to /search/:slug ---
   useEffect(() => {
@@ -232,17 +240,38 @@ export function useSearch() {
     };
   }, [hasSearched, originalQuery]);
 
-  // --- Track results count ---
+  // --- Track results count + zero-result failures ---
   useEffect(() => {
-    if (totalCards > 0 && lastSearchResult) {
+    if (!lastSearchResult || !hasSearched) return;
+
+    if (totalCards > 0) {
       trackEvent('search_results', {
         query: originalQuery,
         translated_query: lastSearchResult.scryfallQuery,
         results_count: totalCards,
         request_id: currentRequestId ?? undefined,
       });
+    } else if (totalCards === 0 && !isSearching && validatedSearchQuery) {
+      trackSearchFailure({
+        query: originalQuery,
+        translated_query: lastSearchResult.scryfallQuery,
+        error_type: 'zero_results',
+      });
     }
-  }, [totalCards, lastSearchResult, originalQuery, trackEvent, currentRequestId]);
+  }, [totalCards, lastSearchResult, originalQuery, trackEvent, trackSearchFailure, currentRequestId, hasSearched, isSearching, validatedSearchQuery]);
+
+  // --- Track pagination (load-more) ---
+  const currentPageCount = data?.pages.length ?? 0;
+  useEffect(() => {
+    if (currentPageCount > 1 && currentPageCount > paginationPageRef.current) {
+      trackPagination({
+        query: originalQuery,
+        from_page: paginationPageRef.current,
+        to_page: currentPageCount,
+      });
+    }
+    paginationPageRef.current = currentPageCount || 1;
+  }, [currentPageCount, originalQuery, trackPagination]);
 
   const hasSortOverride = activeFilters?.sortBy && activeFilters.sortBy !== 'name-asc';
   const displayCards = (hasActiveFilters || hasSortOverride) ? filteredCards : cards;
@@ -288,11 +317,29 @@ export function useSearch() {
       }
 
       if (result) {
-        trackSearch({
-          query: naturalQuery || query,
-          translated_query: result.scryfallQuery,
-          results_count: 0,
-        });
+        // Track cache hit/miss via shouldLogCacheEvent
+        const source = result.source || 'ai';
+        if (source === 'cache' || source === 'deterministic') {
+          const queryHash = executedQuery.substring(0, 100);
+          if (shouldLogCacheEvent(queryHash)) {
+            trackEvent('search', {
+              query: naturalQuery || query,
+              translated_query: result.scryfallQuery,
+              results_count: 0,
+              source,
+            });
+          }
+        } else {
+          trackSearch({
+            query: naturalQuery || query,
+            translated_query: result.scryfallQuery,
+            results_count: 0,
+            source,
+          });
+        }
+
+        // Increment searches_per_session counter
+        incrementSearchesPerSession();
       }
     },
     [trackSearch, navigate, queryClient, scryfallLang],

@@ -269,12 +269,13 @@ export function useAnalytics() {
         );
 
         // Fire and forget - don't await to avoid blocking
+        const searchCount = parseInt(sessionStorage.getItem('offmeta_searches_per_session') || '0', 10);
         supabase
           .from('analytics_events')
           .insert([
             {
               event_type: eventType,
-              event_data: sanitizedData,
+              event_data: { ...sanitizedData, searches_per_session: searchCount },
               session_id: sessionIdRef.current,
             },
           ])
