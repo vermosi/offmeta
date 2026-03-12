@@ -853,51 +853,14 @@ serve(async (req) => {
       );
     }
 
-    // Noise words that don't carry search intent — used for deterministic and concept matching
-    const RESIDUAL_NOISE_WORDS = /\b(in|that|the|a|an|and|or|for|with|of|to|from|are|is|be|my|your|its|cards?|spells?|good|best|great|nice|cool|top|find|some|any|also|really|very|most|all|every|each|other)\b/gi;
-
-    // 6b. Deterministic Result check (can we skip AI?)
-    // Skip Scryfall network validation — deterministic results are pre-validated, validation adds latency.
-    // Strip noise words from remaining to avoid falling through for trivial residuals like "good", "best"
-    const deterministicRemaining = (deterministicResult.intent.remainingQuery || '')
-      .replace(RESIDUAL_NOISE_WORDS, '')
+    // 6b. Concept Matching (known MTG concepts — skip AI if high-confidence match)
+    const residualForConcepts =
+      deterministicResult.intent.remainingQuery || query;
+    // Reuse fast-path noise stripping to avoid garbage concept matches.
+    const meaningfulResidual = residualForConcepts
+      .replace(FAST_PATH_NOISE_WORDS, '')
       .replace(/\s+/g, ' ')
       .trim();
-    if (deterministicQuery && deterministicRemaining.length < 3) {
-      const validation = validateQuery(deterministicQuery || query);
-      const responseTimeMs = Date.now() - requestStartTime;
-      logInfo(
-        'request_completed',
-        getPerfLogFields('deterministic', responseTimeMs),
-      );
-      logTranslation(
-        query,
-        validation.sanitized,
-        0.9,
-        responseTimeMs,
-        [],
-        [],
-        filters,
-        false,
-        'deterministic',
-      );
-      flushLogQueue(); // fire-and-forget
-
-      return new Response(
-        JSON.stringify({
-          originalQuery: query,
-          scryfallQuery: validation.sanitized,
-          explanation: {
-            readable: `Searching for: ${query}`,
-            assumptions: deterministicResult.intent.warnings,
-            confidence: 0.9,
-          },
-          success: true,
-          source: 'deterministic',
-        }),
-        { headers: jsonHeaders },
-      );
-    }
 
     // 6c. Concept Matching (known MTG concepts — skip AI if high-confidence match)
     const residualForConcepts =
