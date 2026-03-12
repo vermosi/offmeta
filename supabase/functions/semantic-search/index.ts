@@ -713,9 +713,17 @@ serve(async (req) => {
       );
     }
 
+    // Noise words that don't carry search intent — used for deterministic and concept matching
+    const RESIDUAL_NOISE_WORDS = /\b(in|that|the|a|an|and|or|for|with|of|to|from|are|is|be|my|your|its|cards?|spells?|good|best|great|nice|cool|top|find|some|any|also|really|very|most|all|every|each|other)\b/gi;
+
     // 6b. Deterministic Result check (can we skip AI?)
     // Skip Scryfall network validation — deterministic results are pre-validated, validation adds latency.
-    if (deterministicQuery && !deterministicResult.intent.remainingQuery) {
+    // Strip noise words from remaining to avoid falling through for trivial residuals like "good", "best"
+    const deterministicRemaining = (deterministicResult.intent.remainingQuery || '')
+      .replace(RESIDUAL_NOISE_WORDS, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (deterministicQuery && deterministicRemaining.length < 3) {
       const validation = validateQuery(deterministicQuery || query);
       const responseTimeMs = Date.now() - requestStartTime;
       logInfo(
@@ -755,7 +763,7 @@ serve(async (req) => {
     const residualForConcepts =
       deterministicResult.intent.remainingQuery || query;
     // Strip noise words to prevent garbage concept matches from trivial residuals like "in" or "that"
-    const RESIDUAL_NOISE_WORDS = /\b(in|that|the|a|an|and|or|for|with|of|to|from|are|is|be|my|your|its|cards?|spells?)\b/gi;
+    // (RESIDUAL_NOISE_WORDS defined above at deterministic check)
     const meaningfulResidual = residualForConcepts.replace(RESIDUAL_NOISE_WORDS, '').replace(/\s+/g, ' ').trim();
     if (meaningfulResidual.length >= 3) {
       try {

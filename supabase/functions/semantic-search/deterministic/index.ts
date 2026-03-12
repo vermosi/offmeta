@@ -48,15 +48,21 @@ function isLikelyCardName(query: string): boolean {
   const words = trimmed.split(/\s+/);
   // Must be 1-6 words
   if (words.length < 1 || words.length > 6) return false;
-  // Must contain a possessive or ALL words start with uppercase
+  // Must contain a possessive or ALL words start with uppercase (case-insensitive for mixed input)
   const hasPossessive = /\w's\b/.test(trimmed);
   const allCapitalized = words.every(w => /^[A-Z]/.test(w) || /^(of|the|and|to|in|for|a|an)$/i.test(w));
   // Must not contain search-like keywords
-  const hasSearchKeywords = /\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries)\b/i.test(trimmed);
+  const hasSearchKeywords = /\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries|best|good|great|top|find|payoffs?|synerg(?:y|ies))\b/i.test(trimmed);
   if (hasSearchKeywords) return false;
   // Single capitalized word that looks like a proper noun (not a common MTG keyword)
-  const singleWordMtgTerms = /^(flying|trample|haste|deathtouch|lifelink|vigilance|reach|menace|flash|hexproof|indestructible|ward|defender|first|double|strike|prowess|cascade|storm|affinity|convoke|delve|dredge|infect|wither|persist|undying|annihilator|protection|shroud|regenerate|morph|suspend|evoke|unearth|exalted|devour|bloodthirst|modular|sunburst|equip|ninjutsu|bushido|flanking|phasing|banding|rampage|cumulative|echo|fading|vanishing|kicker|buyback|flashback|madness|retrace|rebound|overload|bestow|dash|surge|emerge|escalate|improvise|aftermath|embalm|eternalize|explore|ascend|adapt|riot|spectacle|escape|mutate|companion|foretell|boast|learn|disturb|daybound|nightbound|cleave|training|blitz|casualty|connive|ravenous|enlist|prototype|toxic|backup|bargain|craft|discover|collect|adventure|channel|cycling|landfall|mill|scry|proliferate|populate|manifest|amass|food|treasure|blood|clue|map|powerstone|incubate|transform|meld|partner|eminence|encore|demonstrate|decayed|exploit|skulk|changeling|devoid|ingest|rally|cohort|support|investigate|fabricate|crew|revolt|improvise|afflict|exert|eternalize|surveil|undergrowth|spectacle|afterlife|jump|red|blue|green|white|black|colorless|multicolor|mono|tribal|removal|ramp|draw|tutor|counter|burn|mill|blink|bounce|copy|clone|theft|discard|sacrifice|token|anthem|lord|stax|hatebear|pillowfort|voltron|aristocrats|reanimator|control|aggro|combo|midrange|tempo|prison|taxes|storm|dredge|infect|aura|equipment)$/i;
-  if (words.length === 1 && allCapitalized && !singleWordMtgTerms.test(trimmed)) return true;
+  const singleWordMtgTerms = /^(flying|trample|haste|deathtouch|lifelink|vigilance|reach|menace|flash|hexproof|indestructible|ward|defender|first|double|strike|prowess|cascade|storm|affinity|convoke|delve|dredge|infect|wither|persist|undying|annihilator|protection|shroud|regenerate|morph|suspend|evoke|unearth|exalted|devour|bloodthirst|modular|sunburst|equip|ninjutsu|bushido|flanking|phasing|banding|rampage|cumulative|echo|fading|vanishing|kicker|buyback|flashback|madness|retrace|rebound|overload|bestow|dash|surge|emerge|escalate|improvise|aftermath|embalm|eternalize|explore|ascend|adapt|riot|spectacle|escape|mutate|companion|foretell|boast|learn|disturb|daybound|nightbound|cleave|training|blitz|casualty|connive|ravenous|enlist|prototype|toxic|backup|bargain|craft|discover|collect|adventure|channel|cycling|landfall|mill|scry|proliferate|populate|manifest|amass|food|treasure|blood|clue|map|powerstone|incubate|transform|meld|partner|eminence|encore|demonstrate|decayed|exploit|skulk|changeling|devoid|ingest|rally|cohort|support|investigate|fabricate|crew|revolt|improvise|afflict|exert|eternalize|surveil|undergrowth|spectacle|afterlife|jump|red|blue|green|white|black|colorless|multicolor|mono|tribal|removal|ramp|draw|tutor|counter|burn|mill|blink|bounce|copy|clone|theft|discard|sacrifice|token|anthem|lord|stax|hatebear|pillowfort|voltron|aristocrats|reanimator|control|aggro|combo|midrange|tempo|prison|taxes|storm|dredge|infect|aura|equipment|ping|reskins?)$/i;
+  if (words.length === 1 && !singleWordMtgTerms.test(trimmed)) {
+    // For single lowercase words, check if they're at least 4 chars and not a common English word
+    if (allCapitalized) return true;
+    // Allow lowercase single words that are 4+ chars and not in a common-word blocklist
+    const commonWords = /^(the|and|for|are|but|not|you|all|can|had|her|was|one|our|out|day|get|has|him|his|how|its|may|new|now|old|see|way|who|boy|did|any|big|few|got|let|say|she|too|use|why|try|ask|men|run|own|put|set|end|low|high|far|long|last|next|much|take|come|make|give|look|help|turn|play|move|live|find|work|tell|call|keep|hand|pick|part|free|full|open|show|hard|fast|real|good|best|great|cool|nice|cards?|lands?|spells?|creatures?|small|power)$/i;
+    if (trimmed.length >= 4 && !commonWords.test(trimmed)) return true;
+  }
   return hasPossessive || (allCapitalized && words.length >= 2);
 }
 
@@ -218,7 +224,7 @@ function buildIR(query: string): SearchIR {
   remaining = remaining
     .replace(/\s+/g, ' ')
     .replace(/^[\s,]+|[\s,]+$/g, '')
-    .replace(/\b(that|which|with|the|a|an|cards?|released|printed|utility|in|for|from|staples?|search|searches|tribal|payoffs?|synerg(?:y|ies)|token|tokens?|creature|creatures?|opponent|opponents?|takes?|action|when|whenever|graveyard|battlefield|abilities|ability)\b/gi, '')
+    .replace(/\b(that|which|with|the|a|an|cards?|released|printed|utility|in|for|from|staples?|search|searches|tribal|payoffs?|synerg(?:y|ies)|token|tokens?|creature|creatures?|opponent|opponents?|takes?|action|when|whenever|graveyard|battlefield|abilities|ability|good|best|great|nice|cool|awesome|strong|powerful|useful|top|find|give|gives|gives?|make|makes|let|lets|my|your|its|some|any|also|really|very|most|all|every|each|other|new|old|more|well|would|could|should|want|need|like|help|me|you|it|do|does|get|got|go|goes|there|their|here|these|those|being|been|have|has|had|will|can|may|might|must|shall|just|only|even|still|already|are|is|be|was|were|what|how|about|into|onto|upon|over|under|through|around|between|during)\b/gi, '')
     .replace(/\s+/g, ' ')
     .trim();
 

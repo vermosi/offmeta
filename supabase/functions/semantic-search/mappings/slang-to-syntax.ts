@@ -818,4 +818,61 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     syntax: 'kw:cascade',
     description: 'Cards with cascade',
   },
+
+  // Food synergy / payoff
+  {
+    pattern: /\bfood\s+(?:payoffs?|synerg(?:y|ies)|matters?)\b/gi,
+    syntax: 'o:"food" o:"you control"',
+    description: 'Cards that care about Food tokens',
+  },
+  {
+    pattern: /\bfood\s+(?:creators?|makers?|generators?)\b/gi,
+    syntax: 'o:"create" o:"Food"',
+    description: 'Cards that create Food tokens',
+  },
+
+  // Catchup / catch-up ramp
+  {
+    pattern: /\bcatch[-\s]?up\s+ramp\b|\bcatchup\s+ramp\b/gi,
+    syntax: '(o:"fewer lands" or o:"controls more" or o:"each opponent who controls more")',
+    description: 'Ramp that triggers when behind on lands',
+  },
+
+  // Tap for mana
+  {
+    pattern: /\btaps?\s+for\s+mana\b/gi,
+    syntax: 'o:"{T}" o:"add"',
+    description: 'Permanents that tap to add mana',
+  },
+
+  // Mana dorks (creatures that tap for mana)
+  {
+    pattern: /\bmana\s+dorks?\b/gi,
+    syntax: 't:creature o:"{T}" o:"add"',
+    description: 'Creatures that tap for mana',
+  },
+
+  // Reskins / reskinned cards
+  {
+    pattern: /\breskins?\b/gi,
+    syntax: 'is:reskinned',
+    description: 'Reskinned versions of cards',
+  },
+  {
+    pattern: /\breskinned\b/gi,
+    syntax: 'is:reskinned',
+    description: 'Reskinned versions of cards',
+  },
+
+  // Ping / pingers (creatures that deal 1 damage)
+  {
+    pattern: /\bpingers?\b/gi,
+    syntax: 't:creature o:"deals 1 damage"',
+    description: 'Creatures that deal 1 damage (pingers)',
+  },
+  {
+    pattern: /\bping\b/gi,
+    syntax: 'o:"deals 1 damage"',
+    description: 'Cards that deal 1 damage',
+  },
 ];
