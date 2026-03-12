@@ -6,6 +6,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/core/logger';
 import { rankRelationships, filterByType } from '@/lib/relationships/ranking';
 import type { RankedRelationship } from '@/lib/relationships/ranking';
 import type { RelationshipType } from '@/lib/relationships/scoring';
@@ -55,7 +56,7 @@ export async function getRelatedCards(
         body: { oracle_id: oracleId, format, limit },
       })
       .catch((err) => {
-        console.error('[discovery] card-recommendations invoke failed:', err);
+        logger.error('[discovery] card-recommendations invoke failed:', err);
         return null;
       });
 
@@ -67,16 +68,16 @@ export async function getRelatedCards(
   // First attempt with 8s timeout; retry once on timeout (handles cold starts)
   let result = await withTimeout(8000);
   if (!result) {
-    console.warn('[discovery] card-recommendations timed out, retrying once for', oracleId);
+    logger.warn('[discovery] card-recommendations timed out, retrying once for', oracleId);
     result = await withTimeout(10000);
   }
 
   if (!result) {
-    console.warn('[discovery] card-recommendations retry also failed for', oracleId);
+    logger.warn('[discovery] card-recommendations retry also failed for', oracleId);
     return [];
   }
   if ('error' in result && result.error) {
-    console.error('[discovery] card-recommendations returned error:', result.error);
+    logger.error('[discovery] card-recommendations returned error:', result.error);
     return [];
   }
   if (!('data' in result) || !result.data?.recommendations) return [];
