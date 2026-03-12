@@ -310,11 +310,29 @@ export function useSearch() {
       }
 
       if (result) {
-        trackSearch({
-          query: naturalQuery || query,
-          translated_query: result.scryfallQuery,
-          results_count: 0,
-        });
+        // Track cache hit/miss via shouldLogCacheEvent
+        const source = result.source || 'ai';
+        if (source === 'cache' || source === 'deterministic') {
+          const queryHash = executedQuery.substring(0, 100);
+          if (shouldLogCacheEvent(queryHash)) {
+            trackEvent('search', {
+              query: naturalQuery || query,
+              translated_query: result.scryfallQuery,
+              results_count: 0,
+              source,
+            });
+          }
+        } else {
+          trackSearch({
+            query: naturalQuery || query,
+            translated_query: result.scryfallQuery,
+            results_count: 0,
+            source,
+          });
+        }
+
+        // Increment searches_per_session counter
+        incrementSearchesPerSession();
       }
     },
     [trackSearch, navigate, queryClient, scryfallLang],
