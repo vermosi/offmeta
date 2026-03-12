@@ -21,7 +21,7 @@ export function parseExclusions(query: string, ir: SearchIR): string {
   const exclusionPatterns = [
     {
       pattern:
-        /\b(?:not|non|no|isn't|aren't|without|excluding)\s+(?:a\s+)?(creature|land|artifact|enchantment|instant|sorcery|planeswalker)s?\b/gi,
+        /\b(?:not|non|no|isn'?t|aren'?t|without|excluding)\s+(?:a\s+)?(creature|land|artifact|enchantment|instant|sorcery|planeswalker)s?\b/gi,
       extract: 1,
     },
     {
