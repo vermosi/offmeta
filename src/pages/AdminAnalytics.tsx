@@ -98,6 +98,7 @@ import {
 import { PipelineHealthIndicator } from '@/pages/admin-analytics/components/PipelineHealthIndicator';
 import { AuthFailuresPanel } from '@/pages/admin-analytics/components/AuthFailuresPanel';
 import { SystemStatusPanel } from '@/pages/admin-analytics/components/SystemStatusPanel';
+import { EngagementMetricsPanel } from '@/pages/admin-analytics/components/EngagementMetricsPanel';
 
 export default function AdminAnalytics() {
   const { user, isLoading: authLoading } = useAuth();
@@ -1019,6 +1020,9 @@ export default function AdminAnalytics() {
                   />
                 </div>
               )}
+
+              {/* Engagement Metrics: searches/session + zero-result rate */}
+              <EngagementMetricsPanel days={Number(days)} />
 
               {/* System Status */}
               <SystemStatusPanel />
