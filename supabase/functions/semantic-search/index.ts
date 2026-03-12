@@ -17,7 +17,7 @@ import {
   recordCircuitFailure,
   recordCircuitSuccess,
 } from './circuit-breaker.ts';
-import { checkPatternMatch } from './matching.ts';
+import { checkPatternMatch, getHardcodedPatternMatch } from './matching.ts';
 import { fetchDynamicRules } from './rules.ts';
 
 import { DEFAULT_OVERLY_BROAD_THRESHOLD } from './constants.ts';
