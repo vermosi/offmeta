@@ -223,7 +223,7 @@ function isLikelyCardName(query: string): boolean {
   const words = trimmed.split(/\s+/);
   if (words.length < 1 || words.length > 6) return false;
 
-  const hasSearchKeywords = /\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries|produce|generate|create|make|draw|destroy|exile|return|search|find|tap for)\b/i.test(trimmed);
+  const hasSearchKeywords = /\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries|produce|generate|create|make|draw|destroy|exile|return|search|find|tap for|best|good|great|top|payoffs?|synerg(?:y|ies))\b/i.test(trimmed);
   if (hasSearchKeywords) return false;
 
   // Check for possessives or title-cased words (typical card names)
@@ -231,10 +231,22 @@ function isLikelyCardName(query: string): boolean {
   const allCapitalized = words.every(w => /^[A-Z]/.test(w) || /^(of|the|and|to|in|for|a|an)$/i.test(w));
 
   // Single-word MTG terms that are NOT card names
-  const singleWordMtgTerms = /^(flying|trample|haste|deathtouch|lifelink|vigilance|reach|menace|flash|hexproof|indestructible|ward|defender|infect|prowess|cascade|storm|ramp|removal|mill|blink|tokens?|sacrifice|voltron|aristocrats|reanimation|lifegain|tutor|counterspell|boardwipe|flicker)$/i;
+  const singleWordMtgTerms = /^(flying|trample|haste|deathtouch|lifelink|vigilance|reach|menace|flash|hexproof|indestructible|ward|defender|infect|prowess|cascade|storm|ramp|removal|mill|blink|tokens?|sacrifice|voltron|aristocrats|reanimation|lifegain|tutor|counterspell|boardwipe|flicker|cycling|landfall|scry|proliferate|populate|red|blue|green|white|black|colorless|multicolor|mono|tribal|burn|bounce|copy|clone|theft|discard|anthem|lord|stax|hatebear|aggro|combo|midrange|tempo|control|prison|equipment|aura|ping)$/i;
   if (words.length === 1 && singleWordMtgTerms.test(trimmed)) return false;
+  if (words.length === 1 && !singleWordMtgTerms.test(trimmed) && allCapitalized) return true;
 
-  return hasPossessive || (allCapitalized && words.length >= 1);
+  if (hasPossessive || (allCapitalized && words.length >= 2)) return true;
+
+  // For 2-3 word lowercase queries: if no word is a search keyword, MTG keyword,
+  // or common filler, it's likely a card name (e.g., "sol ring", "dark ritual")
+  if (words.length >= 2 && words.length <= 3) {
+    const fillerWords = /^(the|and|for|are|but|not|you|all|can|had|her|was|one|our|out|day|get|has|him|his|how|its|may|new|now|old|see|way|who|any|big|few|got|let|say|she|too|use|why|try|ask|run|own|put|set|end|low|high|far|long|last|next|much|take|come|make|give|look|help|turn|play|move|live|find|work|tell|call|keep|hand|pick|part|free|full|open|show|hard|fast|real|good|best|great|cool|nice|small|power|my|your|its|some|every|each|other|most)$/i;
+    const noFiller = words.every(w => !fillerWords.test(w));
+    const noMtgKeyword = words.every(w => !singleWordMtgTerms.test(w));
+    if (noFiller && noMtgKeyword) return true;
+  }
+
+  return false;
 }
 
 /**
