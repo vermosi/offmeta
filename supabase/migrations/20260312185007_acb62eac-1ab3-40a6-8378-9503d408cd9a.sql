@@ -1,0 +1,1 @@
+DELETE FROM query_cache WHERE normalized_query ILIKE '%free discard outlets in esper%';

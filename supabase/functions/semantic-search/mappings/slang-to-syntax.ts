@@ -106,6 +106,11 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     syntax: 'otag:free-sacrifice-outlet',
     description: 'Free sacrifice outlets (no mana cost)',
   },
+  {
+    pattern: /\bfree\s+discard\s+outlets?\b/gi,
+    syntax: 'otag:discard-outlet mv=0',
+    description: 'Discard outlets with no mana cost',
+  },
 
   // Ramp variations (otag:land-ramp doesn't exist - use ramp or oracle text)
   {

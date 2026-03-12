@@ -86,9 +86,11 @@ export async function runPipeline(
   const deterministicResult = buildDeterministicIntent(query);
   const hasDeterministicQuery =
     deterministicResult.deterministicQuery.trim().length > 0;
-  const hasResidual =
-    slots.residual.trim().length > 0 ||
-    deterministicResult.intent.remainingQuery?.trim().length > 0;
+  // Strip noise words when determining if there's meaningful residual
+  const RESIDUAL_NOISE = /\b(in|that|the|a|an|and|or|for|with|of|to|from|are|is|be|my|your|its)\b/gi;
+  const cleanedSlotResidual = (slots.residual || '').replace(RESIDUAL_NOISE, '').replace(/\s+/g, ' ').trim();
+  const cleanedDetResidual = (deterministicResult.intent.remainingQuery || '').replace(RESIDUAL_NOISE, '').replace(/\s+/g, ' ').trim();
+  const hasResidual = cleanedSlotResidual.length >= 3 || cleanedDetResidual.length >= 3;
 
   // If we have a complete deterministic query with no residual, use it
   if (hasDeterministicQuery && !hasResidual) {
@@ -122,7 +124,10 @@ export async function runPipeline(
     slots.residual || deterministicResult.intent.remainingQuery || '';
   let concepts: ConceptMatch[] = [];
 
-  if (residualForConcepts.trim().length > 0) {
+  // Reuse noise-word filter from above
+  const meaningfulResidual = residualForConcepts.replace(RESIDUAL_NOISE, '').replace(/\s+/g, ' ').trim();
+
+  if (meaningfulResidual.length >= 3) {
     concepts = await findConceptMatches(
       residualForConcepts,
       maxConcepts,
