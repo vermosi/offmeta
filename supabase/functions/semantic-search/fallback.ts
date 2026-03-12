@@ -101,6 +101,7 @@ export function buildFallbackQuery(
     [/\bexplore\b/gi, 'o:explore'],
     [/\benchantress\b/gi, 'otag:enchantress'],
     [/\benchantress effects?\b/gi, 'otag:enchantress'],
+    [/\bfree\s+discard\s+outlets?\b/gi, 'otag:discard-outlet mv=0'],
     [/\bdiscard outlets?\b/gi, 'otag:discard-outlet'],
     [/\bcopy effects?\b/gi, 'otag:copy'],
     [/\bcopy permanents?\b/gi, 'otag:copy-permanent'],
