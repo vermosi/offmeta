@@ -7,39 +7,60 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
 export function useUserRole(role: 'admin' | 'moderator' | 'user') {
-  const { user } = useAuth();
-  const [state, setState] = useState<{ hasRole: boolean; isLoading: boolean; userId: string | null }>({
+  const { user, isLoading: authLoading } = useAuth();
+  const [state, setState] = useState<{ hasRole: boolean; isLoading: boolean }>({
     hasRole: false,
-    isLoading: !!user,
-    userId: user?.id ?? null,
+    isLoading: true,
   });
 
-  // Render-phase sync when user changes
-  const currentUserId = user?.id ?? null;
-  if (currentUserId !== state.userId) {
-    setState({ hasRole: false, isLoading: !!user, userId: currentUserId });
-  }
-
   useEffect(() => {
-    if (!user) return;
-
     let cancelled = false;
-    const checkRole = async () => {
-      const { data } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', role)
-        .maybeSingle();
 
-      if (!cancelled) {
-        setState((s) => ({ ...s, hasRole: !!data, isLoading: false }));
+    if (authLoading) {
+      setState({ hasRole: false, isLoading: true });
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    if (!user) {
+      setState({ hasRole: false, isLoading: false });
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    setState((prev) => ({ ...prev, isLoading: true }));
+
+    const checkRole = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('role', role)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (!cancelled) {
+          setState({ hasRole: !!data, isLoading: false });
+        }
+      } catch (err) {
+        console.error('[useUserRole] Failed to check role:', err);
+        if (!cancelled) {
+          setState({ hasRole: false, isLoading: false });
+        }
       }
     };
 
-    checkRole();
-    return () => { cancelled = true; };
-  }, [user, role]);
+    void checkRole();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, user, role]);
 
   return { hasRole: state.hasRole, isLoading: state.isLoading };
 }
+
