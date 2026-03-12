@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/lib/core/logger';
 
 export function useUserRole(role: 'admin' | 'moderator' | 'user') {
   const { user, isLoading: authLoading } = useAuth();
