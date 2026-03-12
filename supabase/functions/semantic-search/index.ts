@@ -800,6 +800,14 @@ serve(async (req) => {
           ? coveredWords.length / residualWords.length
           : 0;
 
+        logInfo('concept_match_coverage_check', {
+          query: query.substring(0, 50),
+          residualWords: residualWords.length,
+          coveredCount: coveredWords.length,
+          coverageRatio: Math.round(coverageRatio * 100),
+          conceptIds: concepts.map(c => c.conceptId),
+        });
+
         // If concepts cover less than 40% of the meaningful residual words,
         // the query is too complex for concept matching alone
         if (concepts.length > 0 && concepts[0].confidence >= 0.85 && coverageRatio >= 0.4) {
