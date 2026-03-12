@@ -12,6 +12,7 @@ import { CardSkeletonGrid } from '@/components/CardSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { LoadMoreIndicator } from '@/components/LoadMoreIndicator';
 import { VirtualizedCardGrid } from '@/components/VirtualizedCardGrid';
+import { RelatedCardsStrip } from '@/components/RelatedCardsStrip';
 import { SimilarCardsPanel } from '@/components/SimilarCardsPanel';
 import { DeckIdeasPanel } from '@/components/DeckIdeasPanel';
 import { ExplanationPanel } from '@/components/ExplanationPanel';
