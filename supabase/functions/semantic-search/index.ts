@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { buildDeterministicIntent } from './deterministic/index.ts';
+import { lookupCardName } from './card-name-lookup.ts';
 import { buildSystemPrompt, type QueryTier } from './prompts.ts';
 import { getCorsHeaders } from '../_shared/auth.ts';
 import { LOVABLE_API_KEY, supabase } from './client.ts';
@@ -429,23 +430,29 @@ serve(async (req) => {
       );
     }
 
-    // 2.5. Fast-path for short, likely card-name queries (skip cache/pattern/AI entirely)
-    // Card names are 1-6 title-cased words with no search keywords — deterministic is instant.
+    // 2.5. Fast-path for card-name queries (skip cache/pattern/AI entirely)
+    // First check DB for known card names, then fall back to heuristic for capitalized queries.
     const queryWords = query.trim().split(/\s+/);
-    const isFastNameCandidate =
+    const hasSearchKeywords = /\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries)\b/i.test(query);
+
+    // DB lookup: exact card name match (async, ~1ms from in-memory cache)
+    const isKnownCard = !hasSearchKeywords && queryWords.length <= 6
+      ? await markStage('card_name_lookup', () => lookupCardName(query))
+      : false;
+
+    // Heuristic fallback for capitalized queries not in DB
+    const isFastNameCandidate = !isKnownCard &&
       queryWords.length <= 6 &&
       queryWords.length >= 1 &&
       queryWords.every(
         (w: string) =>
           /^[A-Z]/.test(w) || /^(of|the|and|to|in|for|a|an)$/i.test(w),
       ) &&
-      !/\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries)\b/i.test(
-        query,
-      );
+      !hasSearchKeywords;
 
-    if (isFastNameCandidate) {
+    if (isKnownCard || isFastNameCandidate) {
       const fastResult = await markStage('deterministic', () =>
-        Promise.resolve(buildDeterministicIntent(query)),
+        Promise.resolve(buildDeterministicIntent(query, { isKnownCardName: isKnownCard })),
       );
       const fastQuery = applyFiltersToQuery(
         fastResult.deterministicQuery,
@@ -457,7 +464,7 @@ serve(async (req) => {
         logTranslation(
           query,
           validation.sanitized,
-          0.9,
+          isKnownCard ? 0.95 : 0.9,
           responseTimeMs,
           [],
           [],
@@ -474,7 +481,7 @@ serve(async (req) => {
             explanation: {
               readable: `Searching for: ${query}`,
               assumptions: fastResult.intent.warnings,
-              confidence: 0.9,
+              confidence: isKnownCard ? 0.95 : 0.9,
             },
             success: true,
             source: 'deterministic',
@@ -537,7 +544,7 @@ serve(async (req) => {
     // 3. Cache Lookups (In-Memory then Persistent) — run in parallel with deterministic build
     const [deterministicResult, cachedFromParallel] = await Promise.all([
       markStage('deterministic', () =>
-        Promise.resolve(buildDeterministicIntent(query)),
+        Promise.resolve(buildDeterministicIntent(query, { isKnownCardName: isKnownCard })),
       ),
       markStage('cache', () =>
         useCache
