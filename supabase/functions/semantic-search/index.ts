@@ -1,6 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { buildDeterministicIntent } from './deterministic/index.ts';
-import { lookupCardName } from './card-name-lookup.ts';
+import { lookupCardName, getCardNameDiagnostics } from './card-name-lookup.ts';
 import { buildSystemPrompt, type QueryTier } from './prompts.ts';
 import { getCorsHeaders } from '../_shared/auth.ts';
 import { LOVABLE_API_KEY, supabase } from './client.ts';
@@ -226,6 +226,15 @@ serve(async (req) => {
   const preflightResponse = handleCorsPreflight(req, corsHeaders);
   if (preflightResponse) {
     return preflightResponse;
+  }
+
+  // Diagnostic endpoint: GET ?diagnostics=card-names
+  const url = new URL(req.url);
+  if (req.method === 'GET' && url.searchParams.get('diagnostics') === 'card-names') {
+    return new Response(
+      JSON.stringify({ cardNameIndex: getCardNameDiagnostics(), serverTime: new Date().toISOString() }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
   }
 
   const requestStartTime = Date.now();
