@@ -715,7 +715,12 @@ serve(async (req) => {
 
     // 6b. Deterministic Result check (can we skip AI?)
     // Skip Scryfall network validation — deterministic results are pre-validated, validation adds latency.
-    if (deterministicQuery && !deterministicResult.intent.remainingQuery) {
+    // Strip noise words from remaining to avoid falling through for trivial residuals like "good", "best"
+    const deterministicRemaining = (deterministicResult.intent.remainingQuery || '')
+      .replace(RESIDUAL_NOISE_WORDS, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (deterministicQuery && deterministicRemaining.length < 3) {
       const validation = validateQuery(deterministicQuery || query);
       const responseTimeMs = Date.now() - requestStartTime;
       logInfo(
