@@ -808,9 +808,15 @@ serve(async (req) => {
           conceptIds: concepts.map(c => c.conceptId),
         });
 
-        // If concepts cover less than 40% of the meaningful residual words,
-        // the query is too complex for concept matching alone
-        if (concepts.length > 0 && concepts[0].confidence >= 0.85 && coverageRatio >= 0.4) {
+        // For very short residuals (1-2 words), only accept exact matches
+        // and limit to 1 concept to prevent stuffing (e.g., "commanders" matching
+        // "commanders", "partner commanders", AND "commander staples")
+        const isShortResidual = residualWords.length <= 2;
+        const effectiveConcepts = isShortResidual
+          ? concepts.filter(c => c.confidence >= 0.95).slice(0, 1)
+          : concepts;
+
+        if (effectiveConcepts.length > 0 && effectiveConcepts[0].confidence >= 0.85 && coverageRatio >= 0.4) {
           // Build query from concept templates, deduplicating by normalized category
           const seenCategories = new Set<string>();
           const dedupedConcepts = concepts.filter((c) => {
