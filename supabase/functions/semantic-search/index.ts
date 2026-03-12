@@ -786,7 +786,23 @@ serve(async (req) => {
         const { findConceptMatches } = await import('./pipeline/concepts.ts');
         const concepts = await findConceptMatches(residualForConcepts, 3, 0.7);
 
-        if (concepts.length > 0 && concepts[0].confidence >= 0.85) {
+        // Coverage check: if concept patterns only match a small portion of
+        // the meaningful residual, the user likely has complex intent the
+        // concepts can't capture → fall through to AI instead.
+        const residualWords = meaningfulResidual.toLowerCase().split(/\s+/).filter(w => w.length >= 3);
+        const conceptPatternWords = new Set(
+          concepts.flatMap(c =>
+            (c.conceptId || '').toLowerCase().split(/\s+/).filter((w: string) => w.length >= 3)
+          )
+        );
+        const coveredWords = residualWords.filter(w => conceptPatternWords.has(w));
+        const coverageRatio = residualWords.length > 0
+          ? coveredWords.length / residualWords.length
+          : 0;
+
+        // If concepts cover less than 40% of the meaningful residual words,
+        // the query is too complex for concept matching alone
+        if (concepts.length > 0 && concepts[0].confidence >= 0.85 && coverageRatio >= 0.4) {
           // Build query from concept templates, deduplicating by normalized category
           const seenCategories = new Set<string>();
           const dedupedConcepts = concepts.filter((c) => {
