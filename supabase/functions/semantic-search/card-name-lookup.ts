@@ -63,11 +63,18 @@ async function loadCardNames(): Promise<Set<string>> {
 
 /**
  * Returns the cached card names Set, loading from DB if needed.
+ * On cold start, awaits the eager load promise to avoid duplicate DB calls.
  */
 async function getCardNames(): Promise<Set<string>> {
   const now = Date.now();
   if (cardNamesSet && now - lastLoadTime < REFRESH_INTERVAL_MS) {
     return cardNamesSet;
+  }
+
+  // If eager load is still in progress, wait for it
+  if (!cardNamesSet && _eagerLoad) {
+    await _eagerLoad;
+    if (cardNamesSet) return cardNamesSet;
   }
 
   cardNamesSet = await loadCardNames();
