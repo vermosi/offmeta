@@ -218,7 +218,7 @@ function buildIR(query: string): SearchIR {
   remaining = remaining
     .replace(/\s+/g, ' ')
     .replace(/^[\s,]+|[\s,]+$/g, '')
-    .replace(/\b(that|which|with|the|a|an|cards?|released|printed|utility|in|for|from|staples?|search|searches|tribal|payoffs?|synerg(?:y|ies)|token|tokens?|creature|creatures?|opponent|opponents?|takes?|action|when|whenever|graveyard|battlefield|abilities|ability)\b/gi, '')
+    .replace(/\b(that|which|with|the|a|an|cards?|released|printed|utility|in|for|from|staples?|search|searches|tribal|payoffs?|synerg(?:y|ies)|token|tokens?|creature|creatures?|opponent|opponents?|takes?|action|when|whenever|graveyard|battlefield|abilities|ability|good|best|great|nice|cool|awesome|strong|powerful|useful|top|find|give|gives|gives?|make|makes|let|lets|my|your|its|some|any|also|really|very|most|all|every|each|other|new|old|more|well|would|could|should|want|need|like|help|me|you|it|do|does|get|got|go|goes|there|their|here|these|those|being|been|have|has|had|will|can|may|might|must|shall|just|only|even|still|already|are|is|be|was|were|what|how|about|into|onto|upon|over|under|through|around|between|during)\b/gi, '')
     .replace(/\s+/g, ' ')
     .trim();
 
