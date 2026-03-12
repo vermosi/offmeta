@@ -68,7 +68,7 @@ export async function getRelatedCards(
   // First attempt with 8s timeout; retry once on timeout (handles cold starts)
   let result = await withTimeout(8000);
   if (!result) {
-    console.warn('[discovery] card-recommendations timed out, retrying once for', oracleId);
+    logger.warn('[discovery] card-recommendations timed out, retrying once for', oracleId);
     result = await withTimeout(10000);
   }
 
