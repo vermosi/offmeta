@@ -124,9 +124,8 @@ export async function runPipeline(
     slots.residual || deterministicResult.intent.remainingQuery || '';
   let concepts: ConceptMatch[] = [];
 
-  // Strip noise words from residual before concept matching to prevent garbage matches
-  const NOISE_WORDS = /\b(in|that|the|a|an|and|or|for|with|of|to|from|are|is|be|my|your|its)\b/gi;
-  const meaningfulResidual = residualForConcepts.replace(NOISE_WORDS, '').replace(/\s+/g, ' ').trim();
+  // Reuse noise-word filter from above
+  const meaningfulResidual = residualForConcepts.replace(RESIDUAL_NOISE, '').replace(/\s+/g, ' ').trim();
 
   if (meaningfulResidual.length >= 3) {
     concepts = await findConceptMatches(
