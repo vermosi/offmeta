@@ -30,6 +30,13 @@ function generateRequestId(): string {
   return `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }
 
+/** Increment the per-session search counter in sessionStorage */
+function incrementSearchesPerSession(): void {
+  const key = 'offmeta_searches_per_session';
+  const current = parseInt(sessionStorage.getItem(key) || '0', 10);
+  sessionStorage.setItem(key, String(current + 1));
+}
+
 /** Parse filter state from URL search params */
 function parseFiltersFromUrl(params: URLSearchParams): Partial<FilterState> | null {
   const colors = params.get('colors');
