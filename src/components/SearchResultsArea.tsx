@@ -278,6 +278,12 @@ export function SearchResultsArea({
                 totalCards={totalCards}
                 showEndMessage={cards.length > 0}
               />
+
+              {/* Related cards discovery strip */}
+              <RelatedCardsStrip
+                sourceCard={topSourceCard}
+                onCardClick={onRelatedCardClick}
+              />
             </>
           ) : isSearching ? (
             <CardSkeletonGrid count={10} />
