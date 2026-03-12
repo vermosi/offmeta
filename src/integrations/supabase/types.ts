@@ -72,20 +72,68 @@ export type Database = {
         Row: {
           card_a_oracle_id: string
           card_b_oracle_id: string
+          context: Json
           cooccurrence_count: number
           format: string
+          relationship_type: string
+          source: string | null
+          updated_at: string
+          weight: number
         }
         Insert: {
           card_a_oracle_id: string
           card_b_oracle_id: string
+          context?: Json
           cooccurrence_count?: number
           format?: string
+          relationship_type?: string
+          source?: string | null
+          updated_at?: string
+          weight?: number
         }
         Update: {
           card_a_oracle_id?: string
           card_b_oracle_id?: string
+          context?: Json
           cooccurrence_count?: number
           format?: string
+          relationship_type?: string
+          source?: string | null
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: []
+      }
+      card_signals: {
+        Row: {
+          card_id: string
+          click_count: number
+          deck_count: number
+          save_count: number
+          search_count: number
+          synergy_score: number
+          trend_score: number
+          updated_at: string
+        }
+        Insert: {
+          card_id: string
+          click_count?: number
+          deck_count?: number
+          save_count?: number
+          search_count?: number
+          synergy_score?: number
+          trend_score?: number
+          updated_at?: string
+        }
+        Update: {
+          card_id?: string
+          click_count?: number
+          deck_count?: number
+          save_count?: number
+          search_count?: number
+          synergy_score?: number
+          trend_score?: number
+          updated_at?: string
         }
         Relationships: []
       }
