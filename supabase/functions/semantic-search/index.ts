@@ -760,7 +760,7 @@ serve(async (req) => {
     const residualForConcepts =
       deterministicResult.intent.remainingQuery || query;
     // Strip noise words to prevent garbage concept matches from trivial residuals like "in" or "that"
-    const RESIDUAL_NOISE_WORDS = /\b(in|that|the|a|an|and|or|for|with|of|to|from|are|is|be|my|your|its|cards?|spells?)\b/gi;
+    // (RESIDUAL_NOISE_WORDS defined above at deterministic check)
     const meaningfulResidual = residualForConcepts.replace(RESIDUAL_NOISE_WORDS, '').replace(/\s+/g, ' ').trim();
     if (meaningfulResidual.length >= 3) {
       try {
