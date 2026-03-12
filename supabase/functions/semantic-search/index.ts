@@ -228,6 +228,15 @@ serve(async (req) => {
     return preflightResponse;
   }
 
+  // Diagnostic endpoint: GET ?diagnostics=card-names
+  const url = new URL(req.url);
+  if (req.method === 'GET' && url.searchParams.get('diagnostics') === 'card-names') {
+    return new Response(
+      JSON.stringify({ cardNameIndex: getCardNameDiagnostics(), serverTime: new Date().toISOString() }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
+  }
+
   const requestStartTime = Date.now();
   const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
   const { logInfo, logWarn } = createLogger(requestId);

@@ -84,3 +84,27 @@ export async function lookupCardName(query: string): Promise<boolean> {
 export function getLoadedCount(): number {
   return cardNamesSet?.size ?? 0;
 }
+
+/**
+ * Returns diagnostic info about the card name index.
+ */
+export function getCardNameDiagnostics(): {
+  loadedCount: number;
+  lastLoadTime: number;
+  lastLoadTimeISO: string | null;
+  isLoaded: boolean;
+  refreshIntervalMs: number;
+  nextRefreshAt: string | null;
+} {
+  const loaded = cardNamesSet !== null;
+  return {
+    loadedCount: cardNamesSet?.size ?? 0,
+    lastLoadTime,
+    lastLoadTimeISO: lastLoadTime ? new Date(lastLoadTime).toISOString() : null,
+    isLoaded: loaded,
+    refreshIntervalMs: REFRESH_INTERVAL_MS,
+    nextRefreshAt: lastLoadTime
+      ? new Date(lastLoadTime + REFRESH_INTERVAL_MS).toISOString()
+      : null,
+  };
+}
