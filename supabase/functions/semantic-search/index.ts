@@ -574,29 +574,129 @@ serve(async (req) => {
       );
     }
 
-    // 3. Cache Lookups (In-Memory then Persistent) — run in parallel with deterministic build
-    const [deterministicResult, cachedFromParallel] = await Promise.all([
-      markStage('deterministic', () =>
-        Promise.resolve(buildDeterministicIntent(query, { isKnownCardName: isKnownCard })),
-      ),
-      markStage('cache', () =>
-        useCache
-          ? Promise.all([
-              getCachedResult(query, filters, cacheSalt),
-              getPersistentCache(query, filters, cacheSalt),
-            ]).then(([mem, persistent]) => mem || persistent)
-          : Promise.resolve(null),
-      ),
-    ]);
+    // 3. Start cache lookup in parallel, but do not block deterministic fast-paths on it.
+    const cacheLookupPromise = markStage('cache', () =>
+      useCache
+        ? Promise.all([
+            getCachedResult(query, filters, cacheSalt),
+            getPersistentCache(query, filters, cacheSalt),
+          ]).then(([mem, persistent]) => mem || persistent)
+        : Promise.resolve(null),
+    ).catch(() => null);
+
+    // 4. Deterministic build first (fast and CPU-only)
+    const deterministicResult = await markStage('deterministic', () =>
+      Promise.resolve(buildDeterministicIntent(query, { isKnownCardName: isKnownCard })),
+    );
 
     const deterministicQuery = applyFiltersToQuery(
       deterministicResult.deterministicQuery,
       filters,
     );
 
-    if (useCache) {
-      const cached = cachedFromParallel;
+    // Strip noise words from residual so deterministic queries don't fall through to slower stages.
+    const FAST_PATH_NOISE_WORDS =
+      /\b(in|that|the|a|an|and|or|for|with|of|to|from|are|is|be|my|your|its|cards?|spells?|good|best|great|nice|cool|top|find|some|any|also|really|very|most|all|every|each|other)\b/gi;
+    const deterministicRemaining =
+      (deterministicResult.intent.remainingQuery || '')
+        .replace(FAST_PATH_NOISE_WORDS, '')
+        .replace(/\s+/g, ' ')
+        .trim();
 
+    // Deterministic fast-path: never wait on cache/DB for this case.
+    if (deterministicQuery && deterministicRemaining.length < 3) {
+      const validation = validateQuery(deterministicQuery || query);
+      const responseTimeMs = Date.now() - requestStartTime;
+      logInfo(
+        'request_completed',
+        getPerfLogFields('deterministic', responseTimeMs),
+      );
+      logTranslation(
+        query,
+        validation.sanitized,
+        0.9,
+        responseTimeMs,
+        [],
+        [],
+        filters,
+        false,
+        'deterministic',
+      );
+      flushLogQueue(); // fire-and-forget
+
+      return new Response(
+        JSON.stringify({
+          originalQuery: query,
+          scryfallQuery: validation.sanitized,
+          explanation: {
+            readable: `Searching for: ${query}`,
+            assumptions: deterministicResult.intent.warnings,
+            confidence: 0.9,
+          },
+          success: true,
+          source: 'deterministic',
+        }),
+        { headers: jsonHeaders },
+      );
+    }
+
+    // Hardcoded pattern fast-path (e.g. "mana rocks", "board wipes")
+    const hardcodedPatternMatch = await markStage('pattern', () =>
+      Promise.resolve(getHardcodedPatternMatch(query)),
+    );
+    if (hardcodedPatternMatch) {
+      const responseTimeMs = Date.now() - requestStartTime;
+      logInfo('pattern_match_hit', {
+        query: query.substring(0, 50),
+        responseTimeMs,
+      });
+      logInfo(
+        'request_completed',
+        getPerfLogFields('pattern_match', responseTimeMs),
+      );
+
+      setCachedResult(query, filters, hardcodedPatternMatch, cacheSalt);
+      logTranslation(
+        query,
+        hardcodedPatternMatch.scryfallQuery,
+        hardcodedPatternMatch.explanation?.confidence ?? 0.95,
+        responseTimeMs,
+        [],
+        [],
+        filters,
+        false,
+        'pattern_match',
+      );
+      flushLogQueue();
+
+      return new Response(
+        JSON.stringify({
+          originalQuery: query,
+          ...hardcodedPatternMatch,
+          responseTimeMs,
+          success: true,
+          source: 'pattern_match',
+        }),
+        { headers: jsonHeaders },
+      );
+    }
+
+    if (useCache) {
+      const CACHE_LOOKUP_TIMEOUT_MS = 900;
+      const cacheLookupResult = await withTimeoutFallback(
+        cacheLookupPromise.then((value) => ({ value, timedOut: false })),
+        CACHE_LOOKUP_TIMEOUT_MS,
+        { value: null, timedOut: true },
+      );
+
+      if (cacheLookupResult.timedOut) {
+        logWarn('cache_lookup_timeout', {
+          query: query.substring(0, 50),
+          timeoutMs: CACHE_LOOKUP_TIMEOUT_MS,
+        });
+      }
+
+      const cached = cacheLookupResult.value;
       if (cached) {
         const responseTimeMs = Date.now() - requestStartTime;
         logInfo('cache_hit', { query: query.substring(0, 50), responseTimeMs });
@@ -628,7 +728,7 @@ serve(async (req) => {
       }
     }
 
-    // 4. Pattern Matching (Known queries)
+    // 5. Pattern Matching (Known queries)
     const patternMatch = await markStage('pattern', () =>
       checkPatternMatch(query, filters),
     );
