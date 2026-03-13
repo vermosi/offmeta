@@ -887,6 +887,7 @@ export type Database = {
           weight: number
         }[]
       }
+      get_conversion_funnel: { Args: { days_back?: number }; Returns: Json }
       get_missing_oracle_ids: {
         Args: never
         Returns: {
