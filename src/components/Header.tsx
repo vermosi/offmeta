@@ -18,6 +18,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { NotificationBell } from '@/components/NotificationBell';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { Logo } from '@/components/Logo';
 import { AuthModal } from '@/components/AuthModal';
