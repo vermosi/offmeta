@@ -19,6 +19,7 @@ import { User, Package, Layers, ArrowLeft, Crown, ExternalLink } from 'lucide-re
 import { ManaCost } from '@/components/ManaSymbol';
 import { FORMAT_LABELS } from '@/data/formats';
 import { SkipLinks } from '@/components/SkipLinks';
+import { PublicCollectionStats } from '@/components/profile/PublicCollectionStats';
 
 interface PublicProfile {
   id: string;
@@ -134,13 +135,16 @@ export default function PublicProfile() {
 
         {/* Stats */}
         {profile && (
-          <div className="flex gap-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Layers className="h-4 w-4" />
-              {decks.length === 1
-                ? t('publicProfile.publicDeckCount').replace('{count}', '1')
-                : t('publicProfile.publicDeckCountPlural').replace('{count}', String(decks.length))}
+          <div className="space-y-3">
+            <div className="flex gap-4">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Layers className="h-4 w-4" />
+                {decks.length === 1
+                  ? t('publicProfile.publicDeckCount').replace('{count}', '1')
+                  : t('publicProfile.publicDeckCountPlural').replace('{count}', String(decks.length))}
+              </div>
             </div>
+            <PublicCollectionStats userId={userId!} />
           </div>
         )}
 

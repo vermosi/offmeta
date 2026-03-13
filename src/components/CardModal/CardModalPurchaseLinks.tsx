@@ -11,6 +11,7 @@ import { getTCGPlayerUrl, getCardmarketUrl } from '@/lib/scryfall/printings';
 import type { CardModalPurchaseLinksProps } from './types';
 import { useTranslation } from '@/lib/i18n';
 import { PriceSparkline } from '@/components/collection/PriceSparkline';
+import { PriceAlertButton } from './PriceAlertButton';
 
 export function CardModalPurchaseLinks({
   card,
@@ -263,6 +264,11 @@ export function CardModalPurchaseLinks({
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           </div>
         )}
+        <PriceAlertButton
+          cardName={card.name}
+          currentPrice={displayPrices.usd}
+          scryfallId={card.id}
+        />
       </div>
     </div>
   );

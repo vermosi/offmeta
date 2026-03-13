@@ -451,6 +451,42 @@ export type Database = {
         }
         Relationships: []
       }
+      price_alerts: {
+        Row: {
+          card_name: string
+          created_at: string
+          direction: string
+          id: string
+          is_active: boolean
+          scryfall_id: string | null
+          target_price: number
+          triggered_at: string | null
+          user_id: string
+        }
+        Insert: {
+          card_name: string
+          created_at?: string
+          direction?: string
+          id?: string
+          is_active?: boolean
+          scryfall_id?: string | null
+          target_price: number
+          triggered_at?: string | null
+          user_id: string
+        }
+        Update: {
+          card_name?: string
+          created_at?: string
+          direction?: string
+          id?: string
+          is_active?: boolean
+          scryfall_id?: string | null
+          target_price?: number
+          triggered_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       price_snapshots: {
         Row: {
           card_name: string
@@ -724,6 +760,39 @@ export type Database = {
           },
         ]
       }
+      user_notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          read: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          read?: boolean
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          read?: boolean
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -838,6 +907,10 @@ export type Database = {
           scryfall_id: string
           type_line: string
         }[]
+      }
+      get_public_collection_stats: {
+        Args: { target_user_id: string }
+        Returns: Json
       }
       get_search_analytics: {
         Args: { max_low_confidence?: number; since_date: string }
