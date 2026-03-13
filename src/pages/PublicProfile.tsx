@@ -19,6 +19,7 @@ import { User, Package, Layers, ArrowLeft, Crown, ExternalLink } from 'lucide-re
 import { ManaCost } from '@/components/ManaSymbol';
 import { FORMAT_LABELS } from '@/data/formats';
 import { SkipLinks } from '@/components/SkipLinks';
+import { PublicCollectionStats } from '@/components/profile/PublicCollectionStats';
 
 interface PublicProfile {
   id: string;
