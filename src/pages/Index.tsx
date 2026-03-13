@@ -514,6 +514,7 @@ const Index = () => {
           onClose={closeCompare}
         />
 
+        <SearchNudge hasSearched={hasSearched} onTrySearch={handleTryExample} />
         <PwaInstallBanner />
       </div>
     </ErrorBoundary>
