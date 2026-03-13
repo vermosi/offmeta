@@ -273,6 +273,9 @@ export function getCorsHeaders(req: Request) {
 /**
  * Best-effort logging of auth failures to `analytics_events` for admin monitoring.
  * Uses the service role key so inserts bypass RLS.
+ *
+ * Skips logging for "Missing Authorization header" — these are noise from
+ * crawlers/bots hitting the endpoint directly and not a security concern.
  */
 export async function logAuthFailure(
   req: Request,
@@ -280,6 +283,9 @@ export async function logAuthFailure(
   functionName: string,
 ): Promise<void> {
   try {
+    // Skip noisy failures from bots/crawlers that hit the endpoint without any auth
+    if (error === 'Missing Authorization header') return;
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     if (!supabaseUrl || !serviceKey) return;
