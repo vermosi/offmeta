@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { GUIDES } from '@/data/guides';
-import { BookOpen, FileText, Sparkles, ChevronRight } from 'lucide-react';
+import { BookOpen, FileText, Sparkles, ChevronRight, TrendingUp } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { SkipLinks } from '@/components/SkipLinks';
 
@@ -66,6 +66,36 @@ export default function DocsIndex() {
       description: `${GUIDES.length} ${t('docs.guidesDesc')}`,
       href: '/guides',
       icon: BookOpen,
+    },
+    {
+      title: 'Archetypes & Metagame',
+      description: 'Browse MTG archetypes across formats with meta share percentages and signature cards.',
+      href: '/archetypes',
+      icon: BookOpen,
+    },
+    {
+      title: 'Market Trends',
+      description: 'Track daily and weekly MTG card price movers — biggest gainers and losers.',
+      href: '/market',
+      icon: TrendingUp,
+    },
+    {
+      title: 'Deck Builder',
+      description: 'Build, save, and share MTG decks with full format validation and card suggestions.',
+      href: '/deckbuilder',
+      icon: FileText,
+    },
+    {
+      title: 'Browse Community Decks',
+      description: 'Explore tournament and community-submitted decks across all formats.',
+      href: '/decks',
+      icon: BookOpen,
+    },
+    {
+      title: 'Combo Finder',
+      description: 'Discover card combos and synergy packages for your deck or commander.',
+      href: '/combos',
+      icon: Sparkles,
     },
     {
       title: t('docs.faqTitle'),
