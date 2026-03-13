@@ -7,6 +7,8 @@
 import { useMemo, useEffect, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Crown, Shield, ExternalLink, Copy, Check, Users } from 'lucide-react';
+import { DeckVoteButton } from '@/components/deck/DeckVoteButton';
+import { DeckCommentsSection } from '@/components/deck/DeckCommentsSection';
 import { Header } from '@/components/Header';
 import { Badge } from '@/components/ui/badge';
 import { useDeckTags } from '@/hooks/useDeckTags';
@@ -287,6 +289,7 @@ export default function PublicDeckView() {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
+              <DeckVoteButton deckId={deck.id!} />
               {isOwner && (
                 <Button variant="outline" size="sm" asChild>
                   <Link to={`/deckbuilder/${deck.id}`}>
@@ -364,6 +367,11 @@ export default function PublicDeckView() {
               )}
             </>
           )}
+        </div>
+
+        {/* ── Comments ── */}
+        <div className="rounded-xl border border-border p-4 sm:p-6">
+          <DeckCommentsSection deckId={deck.id!} />
         </div>
       </main>
 
