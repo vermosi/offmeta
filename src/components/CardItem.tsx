@@ -53,6 +53,8 @@ export const CardItem = memo(function CardItem({
   const { locale } = useTranslation();
   const displayName = getLocalizedName(card, locale);
   const displayType = getLocalizedTypeLine(card, locale);
+  const { trackAffiliateClick } = useAnalytics();
+  const { tcgplayerAffiliateBase } = useAffiliateConfig();
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -64,7 +66,27 @@ export const CardItem = memo(function CardItem({
   const manaCost = getManaCost(card);
   const price = formatPrice(card);
 
-  return (
+  const handleBuyClick = useCallback(
+    (e: MouseEvent) => {
+      e.stopPropagation();
+      const url = getTCGPlayerUrl(card);
+      const finalUrl = tcgplayerAffiliateBase
+        ? wrapAffiliateUrl(url, tcgplayerAffiliateBase)
+        : url;
+
+      trackAffiliateClick({
+        affiliate: 'tcgplayer',
+        card_name: card.name,
+        card_id: card.id,
+        set_code: card.set,
+        is_affiliate_link: !!tcgplayerAffiliateBase,
+        price_usd: card.prices?.usd || undefined,
+      });
+
+      window.open(finalUrl, '_blank', 'noopener,noreferrer');
+    },
+    [card, tcgplayerAffiliateBase, trackAffiliateClick],
+  );
     <div
       onClick={onClick}
       onKeyDown={handleKeyDown}
