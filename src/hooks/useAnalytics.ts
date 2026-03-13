@@ -320,7 +320,7 @@ export function useAnalytics() {
         // Fire and forget - don't await to avoid blocking
         const searchCount = parseInt(sessionStorage.getItem('offmeta_searches_per_session') || '0', 10);
         const utm = utmRef.current;
-        const eventPayload: Record<string, unknown> = {
+        const eventPayload: Record<string, string | number | boolean | null> = {
           ...sanitizedData,
           searches_per_session: searchCount,
           ...(utm.utm_source && { utm_source: utm.utm_source }),
