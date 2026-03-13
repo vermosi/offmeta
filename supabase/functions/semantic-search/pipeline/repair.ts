@@ -16,6 +16,29 @@ const SCRYFALL_SEARCH_URL = 'https://api.scryfall.com/cards/search';
 export function sanitizeQuerySyntax(query: string): string {
   let q = query;
 
+  // Fix literal negation words left by AI (e.g., "arent" or "aren't" before a type)
+  const CARD_TYPE_NAMES = ['creature', 'land', 'artifact', 'enchantment', 'instant', 'sorcery', 'planeswalker', 'battle'];
+  for (const type of CARD_TYPE_NAMES) {
+    // Pattern: negation word followed by type (possibly with quotes around negation)
+    const negLiteralPattern = new RegExp(
+      `"?(?:aren'?t|isn'?t|not|non)\\s*"?\\s*${type}s?`,
+      'gi',
+    );
+    if (negLiteralPattern.test(q)) {
+      // Remove the literal negation phrase
+      q = q.replace(negLiteralPattern, '').trim();
+      // Add -t:type if not already present
+      if (!new RegExp(`-t:${type}`, 'i').test(q)) {
+        q = `${q} -t:${type}`;
+      }
+      // Remove contradictory positive t:type
+      const posTypePattern = new RegExp(`(?<!-)\\bt:${type}\\b`, 'gi');
+      if (posTypePattern.test(q) && new RegExp(`-t:${type}`, 'i').test(q)) {
+        q = q.replace(posTypePattern, '').trim();
+      }
+    }
+  }
+
   // Simplify overly complex stax queries: when otag:hatebear or otag:pillowfort
   // is present, strip large o:"can't"/"doesn't"/"unless" clause groups that
   // cause zero-result intersections. Keep at most ONE simple o: clause.
