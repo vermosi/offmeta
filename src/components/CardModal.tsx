@@ -215,7 +215,7 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
       });
       window.open(finalUrl, '_blank', 'noopener,noreferrer');
     },
-    [card, trackAffiliateClick],
+    [card, trackAffiliateClick, affiliateConfig],
   );
 
   const handleSelectPrinting = useCallback((printing: CardPrinting) => {
