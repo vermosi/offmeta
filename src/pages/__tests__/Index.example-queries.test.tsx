@@ -105,13 +105,13 @@ describe('Index – example queries', () => {
       screen.getByRole('group', { name: /try searching for/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText('creatures that make treasure tokens'),
+      screen.getByRole('button', { name: /search for creatures that make treasure tokens/i }),
     ).toBeInTheDocument();
   });
 
   it('clicking an example query triggers search', async () => {
     await renderIndex(IndexPage);
-    const exampleBtn = screen.getByText('creatures that make treasure tokens');
+    const exampleBtn = screen.getByRole('button', { name: /search for creatures that make treasure tokens/i });
     await act(async () => {
       fireEvent.click(exampleBtn);
     });

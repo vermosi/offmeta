@@ -79,7 +79,7 @@ describe('UnifiedSearchBar', () => {
   it('renders example query buttons when input is empty', () => {
     render(<UnifiedSearchBar {...defaultProps} />);
     expect(screen.getByRole('group', { name: /try searching for/i })).toBeInTheDocument();
-    expect(screen.getByText('creatures that make treasure tokens')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /search for creatures that make treasure tokens/i })).toBeInTheDocument();
     expect(screen.getByText('cheap green ramp spells')).toBeInTheDocument();
   });
 
