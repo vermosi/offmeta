@@ -158,9 +158,15 @@ export const CardItem = memo(function CardItem({
               <ManaCost cost={manaCost} size="sm" className="drop-shadow" />
             )}
             {price && (
-              <span className="text-[9px] sm:text-[10px] font-medium text-emerald-300 tabular-nums">
+              <button
+                onClick={handleBuyClick}
+                className="flex items-center gap-0.5 text-[9px] sm:text-[10px] font-medium text-emerald-300 tabular-nums hover:text-emerald-200 transition-colors pointer-events-auto"
+                aria-label={`Buy ${displayName} for ${price}`}
+                title={`Buy on TCGplayer for ${price}`}
+              >
+                <ShoppingCart className="h-2.5 w-2.5" />
                 {price}
-              </span>
+              </button>
             )}
           </div>
         </div>
