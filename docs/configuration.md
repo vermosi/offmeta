@@ -38,6 +38,8 @@ Cron jobs are registered in the database using `pg_cron` (enabled via migration)
 | `spicerack-import-daily` | `0 6 * * *` (06:00 UTC) | `spicerack-import` | Import tournament decklists from Spicerack API |
 | `card-sync-daily` | `0 7 * * *` (07:00 UTC) | `card-sync` | Sync Scryfall card metadata for imported deck cards |
 | `compute-cooccurrence-daily` | `0 8 * * *` (08:00 UTC) | `compute-cooccurrence` | Recompute card co-occurrence synergy graph |
+| `mtgjson-import-weekly` | `0 4 * * 0` (04:00 UTC Sun) | `mtgjson-import` | Import MTGJSON preconstructed decklists |
+| `sync-card-names-weekly` | `0 5 * * 0` (05:00 UTC Sun) | `sync-card-names` | Refresh card name catalog from Scryfall |
 
 ### Verifying job registration
 
