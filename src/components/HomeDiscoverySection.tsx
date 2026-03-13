@@ -1,6 +1,6 @@
 /**
  * Discovery content shown on the home page before search:
- * Recent Searches, Daily Pick, Features Showcase, How It Works, FAQ.
+ * Trending Searches, Recent Searches, Daily Pick, Features Showcase, How It Works, FAQ.
  */
 
 import { DailyPick } from '@/components/DailyPick';
@@ -8,17 +8,28 @@ import { FeaturesShowcase } from '@/components/FeaturesShowcase';
 import { HowItWorksSection } from '@/components/HowItWorksSection';
 import { FAQSection } from '@/components/FAQSection';
 import { RecentSearches } from '@/components/RecentSearches';
+import { TrendingSearches } from '@/components/TrendingSearches';
 import { TrendingCardsWidget } from '@/components/TrendingCardsWidget';
 import { SearchCTA } from '@/components/SearchCTA';
+
+const SEARCH_HISTORY_KEY = 'offmeta_search_history';
 
 interface HomeDiscoverySectionProps {
   onSearch: (query: string) => void;
 }
 
 export function HomeDiscoverySection({ onSearch }: HomeDiscoverySectionProps) {
+  const hasHistory = (() => {
+    try {
+      const stored = localStorage.getItem(SEARCH_HISTORY_KEY);
+      return stored ? JSON.parse(stored).length > 0 : false;
+    } catch { return false; }
+  })();
+
   return (
     <div className="space-y-8 sm:space-y-10 lg:space-y-12">
-      <div className="container-main">
+      <div className="container-main space-y-6">
+        <TrendingSearches onSearch={onSearch} hasHistory={hasHistory} />
         <RecentSearches onSearch={onSearch} />
       </div>
       <FeaturesShowcase />
@@ -33,7 +44,6 @@ export function HomeDiscoverySection({ onSearch }: HomeDiscoverySectionProps) {
       </div>
       <SearchCTA onSearch={() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        // Focus the search bar after scroll
         setTimeout(() => {
           const searchInput = document.querySelector<HTMLInputElement>('[data-search-input]');
           searchInput?.focus();

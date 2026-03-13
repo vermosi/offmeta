@@ -28,6 +28,53 @@ const getSessionId = (): string => {
   return sessionId;
 };
 
+// UTM parameter capture — stores on first visit per session
+const UTM_PARAMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'] as const;
+const UTM_STORAGE_KEY = 'offmeta_utm';
+
+interface UtmData {
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_term?: string;
+  utm_content?: string;
+}
+
+function captureUtmParams(): UtmData {
+  // Return cached UTM data if already captured this session
+  const cached = sessionStorage.getItem(UTM_STORAGE_KEY);
+  if (cached) {
+    try { return JSON.parse(cached) as UtmData; } catch { /* fall through */ }
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const utm: UtmData = {};
+  let hasAny = false;
+
+  for (const key of UTM_PARAMS) {
+    const value = params.get(key);
+    if (value) {
+      utm[key] = sanitizeString(value);
+      hasAny = true;
+    }
+  }
+
+  if (hasAny) {
+    sessionStorage.setItem(UTM_STORAGE_KEY, JSON.stringify(utm));
+  }
+
+  return utm;
+}
+
+function getUtmData(): UtmData {
+  try {
+    const data = sessionStorage.getItem(UTM_STORAGE_KEY);
+    return data ? (JSON.parse(data) as UtmData) : {};
+  } catch {
+    return {};
+  }
+}
+
 interface RateLimitData {
   count: number;
   windowStart: number;
@@ -243,9 +290,11 @@ type EventData =
  */
 export function useAnalytics() {
   const sessionIdRef = useRef<string | null>(null);
+  const utmRef = useRef<UtmData>({});
 
   useEffect(() => {
     sessionIdRef.current = getSessionId();
+    utmRef.current = captureUtmParams();
   }, []);
 
   const trackEvent = useCallback(
@@ -270,12 +319,22 @@ export function useAnalytics() {
 
         // Fire and forget - don't await to avoid blocking
         const searchCount = parseInt(sessionStorage.getItem('offmeta_searches_per_session') || '0', 10);
+        const utm = utmRef.current;
+        const eventPayload: Record<string, string | number | boolean | null> = {
+          ...sanitizedData,
+          searches_per_session: searchCount,
+          ...(utm.utm_source && { utm_source: utm.utm_source }),
+          ...(utm.utm_medium && { utm_medium: utm.utm_medium }),
+          ...(utm.utm_campaign && { utm_campaign: utm.utm_campaign }),
+          ...(utm.utm_term && { utm_term: utm.utm_term }),
+          ...(utm.utm_content && { utm_content: utm.utm_content }),
+        };
         supabase
           .from('analytics_events')
           .insert([
             {
               event_type: eventType,
-              event_data: { ...sanitizedData, searches_per_session: searchCount },
+              event_data: eventPayload,
               session_id: sessionIdRef.current,
             },
           ])

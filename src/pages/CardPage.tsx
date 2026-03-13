@@ -45,6 +45,46 @@ function getOracleText(card: ScryfallCard): string {
   return card.oracle_text ?? card.card_faces?.map((f) => f.oracle_text).filter(Boolean).join('\n\n') ?? '';
 }
 
+/** Generate contextual search queries based on card properties for internal linking. */
+function getRelatedSearches(card: ScryfallCard): string[] {
+  const searches: string[] = [];
+  const typeLine = card.type_line ?? '';
+  const colors = card.colors ?? [];
+  const colorName = colors.length === 0 ? 'colorless'
+    : colors.length === 1 ? ({ W: 'white', U: 'blue', B: 'black', R: 'red', G: 'green' }[colors[0]] ?? '')
+    : '';
+
+  // Type-based searches
+  if (typeLine.includes('Creature')) {
+    searches.push(`best ${colorName} creatures`.trim());
+  }
+  if (typeLine.includes('Instant') || typeLine.includes('Sorcery')) {
+    searches.push(`${colorName} removal spells`.trim());
+  }
+  if (typeLine.includes('Artifact')) {
+    searches.push('best mana rocks');
+  }
+  if (typeLine.includes('Enchantment')) {
+    searches.push(`${colorName} enchantments`.trim());
+  }
+
+  // Keyword-based searches
+  const oracle = getOracleText(card).toLowerCase();
+  if (oracle.includes('draw')) searches.push('card draw engines');
+  if (oracle.includes('destroy') || oracle.includes('exile')) searches.push('board wipes');
+  if (oracle.includes('token')) searches.push('token generators');
+  if (oracle.includes('graveyard') || oracle.includes('return from')) searches.push('graveyard recursion');
+  if (oracle.includes('search your library')) searches.push('tutor effects');
+  if (oracle.includes('counter target')) searches.push('counterspells');
+
+  // Price-based
+  const price = parseFloat(card.prices?.usd ?? '0');
+  if (price > 20) searches.push(`budget alternatives to ${card.name}`);
+
+  // Dedupe and limit
+  return [...new Set(searches)].slice(0, 6);
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const CardPage = () => {
@@ -424,6 +464,29 @@ const CardPage = () => {
                 </div>
               </section>
             ) : null}
+
+            {/* Related Searches — SEO internal links */}
+            {card && (
+              <section className="space-y-3">
+                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <Search className="h-4 w-4 text-primary" />
+                  Related Searches
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {getRelatedSearches(card).map((q) => (
+                    <Link
+                      key={q}
+                      to={`/?q=${encodeURIComponent(q)}`}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full
+                        border border-border/40 bg-card/50 hover:bg-primary/10 hover:border-primary/30
+                        text-sm text-muted-foreground hover:text-foreground transition-all"
+                    >
+                      {q}
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
         </main>
 

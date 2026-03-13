@@ -99,6 +99,7 @@ import { PipelineHealthIndicator } from '@/pages/admin-analytics/components/Pipe
 import { AuthFailuresPanel } from '@/pages/admin-analytics/components/AuthFailuresPanel';
 import { SystemStatusPanel } from '@/pages/admin-analytics/components/SystemStatusPanel';
 import { EngagementMetricsPanel } from '@/pages/admin-analytics/components/EngagementMetricsPanel';
+import { ConversionFunnelPanel } from '@/pages/admin-analytics/components/ConversionFunnelPanel';
 import { logger } from '@/lib/core/logger';
 
 export default function AdminAnalytics() {
@@ -1025,6 +1026,9 @@ export default function AdminAnalytics() {
 
               {/* Engagement Metrics: searches/session + zero-result rate */}
               <EngagementMetricsPanel days={Number(days)} />
+
+              {/* Conversion Funnel */}
+              <ConversionFunnelPanel days={Number(days)} />
 
               {/* System Status */}
               <SystemStatusPanel />
