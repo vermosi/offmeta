@@ -5,7 +5,7 @@
 
 import { useTranslation } from '@/lib/i18n';
 import { useTypewriterCycle } from '@/hooks/useTypewriterCycle';
-import { Sparkles, Zap, Brain } from 'lucide-react';
+import { Sparkles, Zap, Brain, ChevronDown } from 'lucide-react';
 
 const HERO_PHRASES = [
   'creatures that make treasure tokens',
@@ -57,13 +57,13 @@ export function HeroSection() {
           </span>
         </p>
 
-        {/* Typewriter demo — hidden on mobile */}
+        {/* Typewriter demo — visible on ALL screens */}
         <div
-          className="hidden sm:block mx-auto max-w-md mb-6 animate-slide-up"
+          className="mx-auto max-w-md mb-4 sm:mb-6 animate-slide-up"
           style={{ animationDelay: '200ms' }}
           aria-hidden="true"
         >
-          <div className="rounded-xl border border-border/60 bg-card/60 backdrop-blur-sm px-4 py-3 text-sm text-muted-foreground font-mono flex items-center gap-2">
+          <div className="rounded-xl border border-border/60 bg-card/60 backdrop-blur-sm px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-muted-foreground font-mono flex items-center gap-2">
             <span className="text-accent">→</span>
             <span className="truncate">
               {typedPhrase}
@@ -83,6 +83,11 @@ export function HeroSection() {
               <span>{t(labelKey)}</span>
             </div>
           ))}
+        </div>
+
+        {/* Bounce arrow — mobile only, nudges toward search bar */}
+        <div className="sm:hidden flex justify-center mt-3 animate-bounce" aria-hidden="true">
+          <ChevronDown className="h-5 w-5 text-accent/60" />
         </div>
       </div>
     </section>
