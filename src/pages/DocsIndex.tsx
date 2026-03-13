@@ -68,6 +68,36 @@ export default function DocsIndex() {
       icon: BookOpen,
     },
     {
+      title: 'Archetypes & Metagame',
+      description: 'Browse MTG archetypes across formats with meta share percentages and signature cards.',
+      href: '/archetypes',
+      icon: BookOpen,
+    },
+    {
+      title: 'Market Trends',
+      description: 'Track daily and weekly MTG card price movers — biggest gainers and losers.',
+      href: '/market',
+      icon: TrendingUp,
+    },
+    {
+      title: 'Deck Builder',
+      description: 'Build, save, and share MTG decks with full format validation and card suggestions.',
+      href: '/deckbuilder',
+      icon: FileText,
+    },
+    {
+      title: 'Browse Community Decks',
+      description: 'Explore tournament and community-submitted decks across all formats.',
+      href: '/decks',
+      icon: BookOpen,
+    },
+    {
+      title: 'Combo Finder',
+      description: 'Discover card combos and synergy packages for your deck or commander.',
+      href: '/combos',
+      icon: Sparkles,
+    },
+    {
       title: t('docs.faqTitle'),
       description: t('docs.faqDesc'),
       href: '/#faq',
