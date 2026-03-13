@@ -394,15 +394,16 @@ export const UnifiedSearchBar = forwardRef<
       {/* Example queries - shown when no query typed */}
       {showExamples && (
         <div
-          className="flex flex-col items-center gap-2 animate-reveal"
+          className="flex flex-col items-center gap-2.5 animate-reveal"
           role="group"
           aria-label={t('search.trySearchingFor')}
         >
-          <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
+          <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium flex items-center gap-1.5">
+            <Sparkles className="h-3 w-3 text-accent" aria-hidden="true" />
             {t('search.trySearchingFor')}
           </span>
           <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
-            {EXAMPLE_QUERIES.slice(0, isMobile ? 2 : 3).map((example) => (
+            {EXAMPLE_QUERIES.slice(0, isMobile ? 3 : 3).map((example, i) => (
               <button
                 key={example}
                 type="button"
@@ -410,7 +411,13 @@ export const UnifiedSearchBar = forwardRef<
                   setQuery(example);
                   handleSearch(example);
                 }}
-                className="px-3.5 py-2 rounded-full text-xs text-muted-foreground hover:text-foreground border border-border/60 hover:border-primary/40 hover:bg-primary/5 transition-all duration-200 focus-ring"
+                className={`
+                  px-3.5 py-2 rounded-full text-xs font-medium border transition-all duration-200 focus-ring
+                  ${i === 0
+                    ? 'bg-accent/10 border-accent/30 text-accent hover:bg-accent/20 hover:border-accent/50'
+                    : 'text-muted-foreground hover:text-foreground border-border/60 hover:border-primary/40 hover:bg-primary/5'
+                  }
+                `}
                 aria-label={t('search.searchFor').replace('{query}', example)}
               >
                 {example}
