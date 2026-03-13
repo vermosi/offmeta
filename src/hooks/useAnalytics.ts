@@ -290,9 +290,11 @@ type EventData =
  */
 export function useAnalytics() {
   const sessionIdRef = useRef<string | null>(null);
+  const utmRef = useRef<UtmData>({});
 
   useEffect(() => {
     sessionIdRef.current = getSessionId();
+    utmRef.current = captureUtmParams();
   }, []);
 
   const trackEvent = useCallback(
