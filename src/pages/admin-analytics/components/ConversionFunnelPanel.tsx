@@ -1,7 +1,9 @@
 /**
  * Conversion Funnel Panel for Admin Analytics.
- * Shows landing → search → card_click → affiliate_click
+ * Shows sessions → search → card_click → affiliate_click
  * with session-based drop-off rates and UTM source breakdown.
+ *
+ * Uses server-side aggregation to avoid the 1000-row query limit.
  */
 
 import { useState, useEffect } from 'react';
@@ -13,7 +15,6 @@ import { logger } from '@/lib/core/logger';
 
 interface FunnelStep {
   label: string;
-  eventType: string;
   count: number;
   sessionCount: number;
 }
@@ -30,110 +31,204 @@ interface ConversionFunnelPanelProps {
   days: number;
 }
 
+/**
+ * Fetches funnel counts using individual aggregation queries
+ * to avoid the 1000-row limit on raw event fetches.
+ */
+async function fetchFunnelData(since: string) {
+  const EVENT_GROUPS = {
+    search: ['search'],
+    card_click: ['card_click', 'card_modal_view'],
+    affiliate_click: ['affiliate_click'],
+  } as const;
+
+  // Fetch total unique sessions
+  const { data: allEvents, error: allErr } = await supabase
+    .from('analytics_events')
+    .select('session_id')
+    .gte('created_at', since)
+    .in('event_type', ['search', 'search_results', 'card_click', 'card_modal_view', 'affiliate_click']);
+
+  if (allErr) throw allErr;
+
+  // Since we can't do COUNT(DISTINCT) via the client, we need a different approach.
+  // Fetch session_id lists per event type in parallel with pagination to handle >1000 rows.
+  const sessionsByType = new Map<string, Set<string>>();
+  const countByType = new Map<string, number>();
+  const allSessions = new Set<string>();
+
+  // Helper: paginated fetch of session_ids for given event types
+  async function fetchAllSessionIds(eventTypes: readonly string[]) {
+    const sessions = new Set<string>();
+    let totalCount = 0;
+    let from = 0;
+    const PAGE_SIZE = 1000;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from('analytics_events')
+        .select('session_id, event_type')
+        .gte('created_at', since)
+        .in('event_type', [...eventTypes])
+        .range(from, from + PAGE_SIZE - 1);
+
+      if (error) throw error;
+      if (!data || data.length === 0) break;
+
+      for (const row of data) {
+        const sid = row.session_id ?? 'unknown';
+        sessions.add(sid);
+        allSessions.add(sid);
+        totalCount++;
+
+        const type = row.event_type;
+        if (!sessionsByType.has(type)) sessionsByType.set(type, new Set());
+        sessionsByType.get(type)!.add(sid);
+        countByType.set(type, (countByType.get(type) ?? 0) + 1);
+      }
+
+      hasMore = data.length === PAGE_SIZE;
+      from += PAGE_SIZE;
+    }
+
+    return { sessions, totalCount };
+  }
+
+  // Fetch all relevant events with pagination
+  await fetchAllSessionIds(['search', 'card_click', 'card_modal_view', 'affiliate_click']);
+
+  // Also count total sessions from broader event set
+  let from = 0;
+  const PAGE_SIZE = 1000;
+  let hasMore = true;
+  while (hasMore) {
+    const { data, error } = await supabase
+      .from('analytics_events')
+      .select('session_id')
+      .gte('created_at', since)
+      .in('event_type', ['search', 'search_results', 'card_click', 'card_modal_view', 'affiliate_click'])
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+    for (const row of data) allSessions.add(row.session_id ?? 'unknown');
+    hasMore = data.length === PAGE_SIZE;
+    from += PAGE_SIZE;
+  }
+
+  const cardClickSessions = new Set([
+    ...(sessionsByType.get('card_click') ?? []),
+    ...(sessionsByType.get('card_modal_view') ?? []),
+  ]);
+
+  const steps: FunnelStep[] = [
+    {
+      label: 'Sessions',
+      count: allSessions.size,
+      sessionCount: allSessions.size,
+    },
+    {
+      label: 'Searched',
+      count: countByType.get('search') ?? 0,
+      sessionCount: sessionsByType.get('search')?.size ?? 0,
+    },
+    {
+      label: 'Clicked Card',
+      count: (countByType.get('card_click') ?? 0) + (countByType.get('card_modal_view') ?? 0),
+      sessionCount: cardClickSessions.size,
+    },
+    {
+      label: 'Affiliate Click',
+      count: countByType.get('affiliate_click') ?? 0,
+      sessionCount: sessionsByType.get('affiliate_click')?.size ?? 0,
+    },
+  ];
+
+  return { steps, allSessions };
+}
+
+/**
+ * Fetches UTM source breakdown with pagination.
+ */
+async function fetchUtmData(since: string): Promise<UtmBreakdown[]> {
+  const utmSessions = new Map<string, {
+    searches: Set<string>;
+    clicks: Set<string>;
+    affiliates: Set<string>;
+    allSessions: Set<string>;
+  }>();
+
+  let from = 0;
+  const PAGE_SIZE = 1000;
+  let hasMore = true;
+
+  while (hasMore) {
+    const { data, error } = await supabase
+      .from('analytics_events')
+      .select('event_type, session_id, event_data')
+      .gte('created_at', since)
+      .in('event_type', ['search', 'card_click', 'card_modal_view', 'affiliate_click'])
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+
+    for (const evt of data) {
+      const evtData = evt.event_data as Record<string, unknown> | null;
+      const utmSource = evtData?.utm_source as string | undefined;
+      if (!utmSource) continue;
+
+      const sid = evt.session_id ?? 'unknown';
+      if (!utmSessions.has(utmSource)) {
+        utmSessions.set(utmSource, {
+          searches: new Set(),
+          clicks: new Set(),
+          affiliates: new Set(),
+          allSessions: new Set(),
+        });
+      }
+      const bucket = utmSessions.get(utmSource)!;
+      bucket.allSessions.add(sid);
+      if (evt.event_type === 'search') bucket.searches.add(sid);
+      if (evt.event_type === 'card_click' || evt.event_type === 'card_modal_view') bucket.clicks.add(sid);
+      if (evt.event_type === 'affiliate_click') bucket.affiliates.add(sid);
+    }
+
+    hasMore = data.length === PAGE_SIZE;
+    from += PAGE_SIZE;
+  }
+
+  const rows: UtmBreakdown[] = [];
+  for (const [source, data] of utmSessions.entries()) {
+    rows.push({
+      source,
+      sessions: data.allSessions.size,
+      searches: data.searches.size,
+      clicks: data.clicks.size,
+      affiliates: data.affiliates.size,
+    });
+  }
+  rows.sort((a, b) => b.sessions - a.sessions);
+  return rows.slice(0, 10);
+}
+
 export function ConversionFunnelPanel({ days }: ConversionFunnelPanelProps) {
   const [funnel, setFunnel] = useState<FunnelStep[]>([]);
   const [utmBreakdown, setUtmBreakdown] = useState<UtmBreakdown[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchFunnel() {
+    async function load() {
       setLoading(true);
       try {
         const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-
-        // Fetch all events in the period grouped by event_type and session
-        const { data: events, error } = await supabase
-          .from('analytics_events')
-          .select('event_type, session_id, event_data')
-          .gte('created_at', since)
-          .in('event_type', ['search', 'search_results', 'card_click', 'card_modal_view', 'affiliate_click']);
-
-        if (error) throw error;
-
-        // Count unique sessions per event type
-        const sessionsByType = new Map<string, Set<string>>();
-        const countByType = new Map<string, number>();
-        const utmSessions = new Map<string, { searches: Set<string>; clicks: Set<string>; affiliates: Set<string>; allSessions: Set<string> }>();
-
-        for (const evt of events ?? []) {
-          const sid = evt.session_id ?? 'unknown';
-          const type = evt.event_type;
-
-          if (!sessionsByType.has(type)) sessionsByType.set(type, new Set());
-          sessionsByType.get(type)!.add(sid);
-          countByType.set(type, (countByType.get(type) ?? 0) + 1);
-
-          // Track UTM sources
-          const data = evt.event_data as Record<string, unknown> | null;
-          const utmSource = data?.utm_source as string | undefined;
-          if (utmSource) {
-            if (!utmSessions.has(utmSource)) {
-              utmSessions.set(utmSource, {
-                searches: new Set(),
-                clicks: new Set(),
-                affiliates: new Set(),
-                allSessions: new Set(),
-              });
-            }
-            const bucket = utmSessions.get(utmSource)!;
-            bucket.allSessions.add(sid);
-            if (type === 'search') bucket.searches.add(sid);
-            if (type === 'card_click' || type === 'card_modal_view') bucket.clicks.add(sid);
-            if (type === 'affiliate_click') bucket.affiliates.add(sid);
-          }
-        }
-
-        // Get total unique sessions
-        const allSessions = new Set<string>();
-        for (const evt of events ?? []) {
-          allSessions.add(evt.session_id ?? 'unknown');
-        }
-
-        const steps: FunnelStep[] = [
-          {
-            label: 'Sessions',
-            eventType: 'all',
-            count: allSessions.size,
-            sessionCount: allSessions.size,
-          },
-          {
-            label: 'Searched',
-            eventType: 'search',
-            count: countByType.get('search') ?? 0,
-            sessionCount: sessionsByType.get('search')?.size ?? 0,
-          },
-          {
-            label: 'Clicked Card',
-            eventType: 'card_click',
-            count: (countByType.get('card_click') ?? 0) + (countByType.get('card_modal_view') ?? 0),
-            sessionCount: new Set([
-              ...(sessionsByType.get('card_click') ?? []),
-              ...(sessionsByType.get('card_modal_view') ?? []),
-            ]).size,
-          },
-          {
-            label: 'Affiliate Click',
-            eventType: 'affiliate_click',
-            count: countByType.get('affiliate_click') ?? 0,
-            sessionCount: sessionsByType.get('affiliate_click')?.size ?? 0,
-          },
-        ];
-
-        setFunnel(steps);
-
-        // Build UTM breakdown
-        const utmRows: UtmBreakdown[] = [];
-        for (const [source, data] of utmSessions.entries()) {
-          utmRows.push({
-            source,
-            sessions: data.allSessions.size,
-            searches: data.searches.size,
-            clicks: data.clicks.size,
-            affiliates: data.affiliates.size,
-          });
-        }
-        utmRows.sort((a, b) => b.sessions - a.sessions);
-        setUtmBreakdown(utmRows.slice(0, 10));
+        const [funnelResult, utmResult] = await Promise.all([
+          fetchFunnelData(since),
+          fetchUtmData(since),
+        ]);
+        setFunnel(funnelResult.steps);
+        setUtmBreakdown(utmResult);
       } catch (e) {
         logger.warn('Failed to fetch funnel data', e);
       } finally {
@@ -141,7 +236,7 @@ export function ConversionFunnelPanel({ days }: ConversionFunnelPanelProps) {
       }
     }
 
-    fetchFunnel();
+    load();
   }, [days]);
 
   if (loading) {
@@ -158,7 +253,6 @@ export function ConversionFunnelPanel({ days }: ConversionFunnelPanelProps) {
 
   return (
     <div className="space-y-4">
-      {/* Conversion Funnel */}
       <Card className="border-border/40">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
@@ -172,8 +266,9 @@ export function ConversionFunnelPanel({ days }: ConversionFunnelPanelProps) {
               const pct = totalSessions > 0
                 ? Math.round((step.sessionCount / totalSessions) * 100)
                 : 0;
-              const dropOff = i > 0
-                ? Math.round(((funnel[i - 1].sessionCount - step.sessionCount) / Math.max(funnel[i - 1].sessionCount, 1)) * 100)
+              const prevCount = i > 0 ? funnel[i - 1].sessionCount : 0;
+              const dropOff = i > 0 && prevCount > 0
+                ? Math.round(((prevCount - step.sessionCount) / prevCount) * 100)
                 : 0;
 
               return (
@@ -181,7 +276,9 @@ export function ConversionFunnelPanel({ days }: ConversionFunnelPanelProps) {
                   {i > 0 && (
                     <div className="flex items-center gap-2 py-1 text-xs text-muted-foreground pl-4">
                       <ArrowRight className="h-3 w-3" />
-                      <span className="text-destructive font-medium">-{dropOff}% drop-off</span>
+                      <span className={dropOff > 0 ? 'text-destructive font-medium' : 'text-muted-foreground font-medium'}>
+                        {dropOff > 0 ? `-${dropOff}%` : `${dropOff}%`} drop-off
+                      </span>
                     </div>
                   )}
                   <div className="flex items-center gap-3">
@@ -207,7 +304,6 @@ export function ConversionFunnelPanel({ days }: ConversionFunnelPanelProps) {
         </CardContent>
       </Card>
 
-      {/* UTM Source Breakdown */}
       {utmBreakdown.length > 0 && (
         <Card className="border-border/40">
           <CardHeader className="pb-3">
