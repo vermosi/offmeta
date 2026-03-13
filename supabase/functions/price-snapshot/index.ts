@@ -336,6 +336,7 @@ serve(async (req: Request): Promise<Response> => {
       JSON.stringify({
         success: true,
         snapshotCount: snapshots.length,
+        alertsTriggered,
         sources: {
           collection: collectionCards?.length ?? 0,
           community: topCommunity.length,
