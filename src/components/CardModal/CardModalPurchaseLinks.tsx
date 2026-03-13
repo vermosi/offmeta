@@ -264,6 +264,11 @@ export function CardModalPurchaseLinks({
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           </div>
         )}
+        <PriceAlertButton
+          cardName={card.name}
+          currentPrice={displayPrices.usd}
+          scryfallId={card.id}
+        />
       </div>
     </div>
   );
