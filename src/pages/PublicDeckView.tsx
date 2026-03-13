@@ -289,6 +289,7 @@ export default function PublicDeckView() {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
+              <DeckVoteButton deckId={deck.id!} />
               {isOwner && (
                 <Button variant="outline" size="sm" asChild>
                   <Link to={`/deckbuilder/${deck.id}`}>
