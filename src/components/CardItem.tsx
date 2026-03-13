@@ -4,18 +4,22 @@
  * Shows card image with an info overlay on hover/focus for quick details.
  */
 
-import { memo, useState } from 'react';
-import type { KeyboardEvent } from 'react';
+import { memo, useState, useCallback } from 'react';
+import type { KeyboardEvent, MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import type { ScryfallCard } from '@/types/card';
 import { getCardImage } from '@/lib/scryfall/client';
+import { getTCGPlayerUrl } from '@/lib/scryfall/printings';
 import { ManaCost } from '@/components/ManaSymbol';
 import { cardNameToSlug } from '@/lib/card-slug';
+import { ShoppingCart } from 'lucide-react';
 import {
   getLocalizedName,
   getLocalizedTypeLine,
 } from '@/lib/scryfall/localized';
 import { useTranslation } from '@/lib/i18n';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { useAffiliateConfig, wrapAffiliateUrl } from '@/hooks/useAffiliateConfig';
 
 interface CardItemProps {
   card: ScryfallCard;
