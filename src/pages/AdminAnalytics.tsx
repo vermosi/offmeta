@@ -1027,6 +1027,9 @@ export default function AdminAnalytics() {
               {/* Engagement Metrics: searches/session + zero-result rate */}
               <EngagementMetricsPanel days={Number(days)} />
 
+              {/* Conversion Funnel */}
+              <ConversionFunnelPanel days={Number(days)} />
+
               {/* System Status */}
               <SystemStatusPanel />
 
