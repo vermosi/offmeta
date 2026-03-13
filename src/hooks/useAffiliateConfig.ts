@@ -46,20 +46,21 @@ async function fetchConfig(): Promise<AffiliateConfig> {
 
 export function useAffiliateConfig(): AffiliateConfig {
   const [config, setConfig] = useState<AffiliateConfig>(
-    globalConfig || { tcgplayerAffiliateBase: '' },
+    () => globalConfig || { tcgplayerAffiliateBase: '' },
   );
 
   useEffect(() => {
-    if (globalConfig) {
-      setConfig(globalConfig);
-      return;
-    }
+    if (globalConfig) return;
 
     if (!fetchPromise) {
       fetchPromise = fetchConfig();
     }
 
-    fetchPromise.then((c) => setConfig(c));
+    let cancelled = false;
+    fetchPromise.then((c) => {
+      if (!cancelled) setConfig(c);
+    });
+    return () => { cancelled = true; };
   }, []);
 
   return config;

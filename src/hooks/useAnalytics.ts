@@ -66,7 +66,8 @@ function captureUtmParams(): UtmData {
   return utm;
 }
 
-function getUtmData(): UtmData {
+/** Retrieve stored UTM data from session storage. */
+export function getUtmData(): UtmData {
   try {
     const data = sessionStorage.getItem(UTM_STORAGE_KEY);
     return data ? (JSON.parse(data) as UtmData) : {};
