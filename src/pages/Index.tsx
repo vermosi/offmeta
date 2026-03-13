@@ -55,6 +55,7 @@ const HomeDiscoverySection = lazy(() =>
   })),
 );
 import { ScrollToTop } from '@/components/ScrollToTop';
+import { SearchNudge } from '@/components/SearchNudge';
 const SimilarSearches = lazy(() =>
   import('@/components/SimilarSearches').then((m) => ({
     default: m.SimilarSearches,
