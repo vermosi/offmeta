@@ -342,7 +342,7 @@ serve(async (req: Request): Promise<Response> => {
         alertsTriggered,
         sources: {
           collection: collectionCards?.length ?? 0,
-          community: topCommunity.length,
+          community: communityNames.size,
           watchlist: STAPLES_WATCHLIST.length,
           uniqueTracked: cardList.length,
         },
