@@ -593,13 +593,26 @@ export default function AdminAnalytics() {
     }
   }, [feedback, fetchFeedback]);
 
+  // Initial load: fetch everything once
   useEffect(() => {
     if (isAdmin && user) {
       fetchAnalytics();
       fetchFeedback();
       fetchRules();
     }
-  }, [isAdmin, user, fetchAnalytics, fetchFeedback, fetchRules]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, user]);
+
+  // Re-fetch analytics only when days changes (skip initial mount)
+  const daysInitialized = useRef(false);
+  useEffect(() => {
+    if (!isAdmin || !user) return;
+    if (!daysInitialized.current) {
+      daysInitialized.current = true;
+      return;
+    }
+    fetchAnalytics();
+  }, [days, isAdmin, user, fetchAnalytics]);
 
   // Poll feedback & rules every 30s as a fallback for realtime RLS limitations
   useEffect(() => {
