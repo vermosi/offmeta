@@ -5,7 +5,6 @@
  * @module functions/mtgjson-import
  */
 
-
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, validateAuth } from '../_shared/auth.ts';
@@ -16,10 +15,7 @@ const SCRYFALL_DELAY_MS = 100;
 const SCRYFALL_BATCH_SIZE = 75;
 const DECK_BATCH_SIZE = 50;
 
-/**
- * Batch-resolve oracle IDs using Scryfall /cards/collection endpoint.
- * Returns a Map of cardName → oracleId.
- */
+/** Batch-resolve oracle IDs via Scryfall /cards/collection. */
 async function batchResolveOracleIds(
   cardNames: string[],
 ): Promise<Map<string, string | null>> {
@@ -42,7 +38,6 @@ async function batchResolveOracleIds(
         for (const card of data.data ?? []) {
           result.set(card.name, card.oracle_id ?? null);
         }
-        // Mark not-found cards
         for (const name of batch) {
           if (!result.has(name)) result.set(name, null);
         }
@@ -111,11 +106,11 @@ serve(async (req: Request): Promise<Response> => {
     const limit = body.limit ?? DECK_BATCH_SIZE;
 
     // Download the MTGJSON dataset index (deck list)
-    log.info(`Fetching MTGJSON AllDeckList for offset=${offset}, limit=${limit}`);
+    log.info(`Fetching MTGJSON DeckList for offset=${offset}, limit=${limit}`);
     const listResp = await fetch('https://mtgjson.com/api/v5/DeckList.json');
     if (!listResp.ok) {
       const text = await listResp.text();
-      throw new Error(`Failed to fetch DeckList: ${listResp.status} ${text}`);
+      throw new Error(`Failed to fetch DeckList: ${listResp.status} ${text.slice(0, 200)}`);
     }
     const deckListData = await listResp.json();
     const allDecks: Array<Record<string, unknown>> = deckListData.data ?? [];
@@ -123,62 +118,89 @@ serve(async (req: Request): Promise<Response> => {
     if (offset >= allDecks.length) {
       return new Response(
         JSON.stringify({ success: true, message: 'No more decks to process', total: allDecks.length }),
-        { status: 200, headers }
+        { status: 200, headers },
       );
     }
 
     const batch = allDecks.slice(offset, offset + limit);
     let imported = 0;
     let skipped = 0;
+    const errors: string[] = [];
 
     for (const deckMeta of batch) {
-      const deckCode = String(deckMeta.code ?? deckMeta.fileName ?? '');
-      if (!deckCode) { skipped++; continue; }
+      // fileName is the unique identifier (e.g. "TurtlePower_TMC")
+      const fileName = String(deckMeta.fileName ?? '');
+      if (!fileName) {
+        skipped++;
+        continue;
+      }
 
-      // Check if already imported
+      // Check if already imported using fileName as source_id
       const { data: existing } = await supabase
         .from('community_decks')
         .select('id')
         .eq('source', 'mtgjson')
-        .eq('source_id', deckCode)
+        .eq('source_id', fileName)
         .maybeSingle();
 
-      if (existing) { skipped++; continue; }
-
-      // Fetch individual deck
-      const deckResp = await fetch(`https://mtgjson.com/api/v5/decks/${deckCode}.json`);
-      if (!deckResp.ok) {
-        await deckResp.text();
+      if (existing) {
         skipped++;
         continue;
       }
+
+      // Fetch individual deck using fileName
+      const deckUrl = `https://mtgjson.com/api/v5/decks/${fileName}.json`;
+      let deckResp: Response;
+      try {
+        deckResp = await fetch(deckUrl);
+      } catch (e) {
+        log.warn('Deck fetch failed', { fileName, error: String(e) });
+        errors.push(`fetch:${fileName}`);
+        skipped++;
+        continue;
+      }
+
+      if (!deckResp.ok) {
+        await deckResp.text();
+        log.warn('Deck fetch non-200', { fileName, status: deckResp.status });
+        errors.push(`${deckResp.status}:${fileName}`);
+        skipped++;
+        continue;
+      }
+
       const deckJson = await deckResp.json();
       const deck = deckJson.data ?? deckJson;
 
       const format = inferFormat(deck);
+
+      // MTGJSON CardDeck model: { name, count, colors, ... }
       const mainboard: Array<{ name: string; count: number; colors?: string[] }> =
-        (deck.mainBoard ?? deck.mainboard ?? []).map((c: Record<string, unknown>) => ({
-          name: String(c.name ?? c.cardName ?? ''),
+        (deck.mainBoard ?? []).map((c: Record<string, unknown>) => ({
+          name: String(c.name ?? ''),
           count: Number(c.count ?? c.quantity ?? 1),
           colors: c.colors as string[] | undefined,
         }));
       const sideboard: Array<{ name: string; count: number }> =
-        (deck.sideBoard ?? deck.sideboard ?? []).map((c: Record<string, unknown>) => ({
-          name: String(c.name ?? c.cardName ?? ''),
+        (deck.sideBoard ?? []).map((c: Record<string, unknown>) => ({
+          name: String(c.name ?? ''),
           count: Number(c.count ?? c.quantity ?? 1),
         }));
-      const commander = deck.commander?.[0]?.name ?? null;
+      const commanderCards: Array<{ name: string }> =
+        (deck.commander ?? []).map((c: Record<string, unknown>) => ({
+          name: String(c.name ?? ''),
+        }));
+      const commanderName = commanderCards[0]?.name ?? null;
       const colors = extractColors(mainboard as Array<{ colors?: string[] }>);
 
       // Insert deck
       const { data: deckRow, error: deckErr } = await supabase
         .from('community_decks')
         .insert({
-          name: String(deck.name ?? deckCode),
+          name: String(deck.name ?? deckMeta.name ?? fileName),
           format,
           source: 'mtgjson',
-          source_id: deckCode,
-          commander,
+          source_id: fileName,
+          commander: commanderName,
           colors,
           event_name: deck.releaseDate ? `Release: ${deck.releaseDate}` : null,
         })
@@ -186,15 +208,17 @@ serve(async (req: Request): Promise<Response> => {
         .single();
 
       if (deckErr || !deckRow) {
-        log.warn('Deck insert failed', { deckCode, error: deckErr?.message });
+        log.warn('Deck insert failed', { fileName, error: deckErr?.message });
+        errors.push(`insert:${fileName}`);
         skipped++;
         continue;
       }
 
-      // Batch resolve oracle IDs
+      // Batch resolve oracle IDs for all cards
       const allCards = [
         ...mainboard.map((c) => ({ ...c, board: 'mainboard' })),
         ...sideboard.map((c) => ({ ...c, board: 'sideboard' })),
+        ...commanderCards.map((c) => ({ ...c, count: 1, board: 'mainboard' })),
       ];
       const cardNames = allCards.map((c) => c.name).filter(Boolean);
       const oracleMap = await batchResolveOracleIds(cardNames);
@@ -214,32 +238,39 @@ serve(async (req: Request): Promise<Response> => {
           .from('community_deck_cards')
           .insert(cardRows);
         if (cardsErr) {
-          log.warn('Card insert failed', { deckCode, error: cardsErr.message });
+          log.warn('Card insert failed', { fileName, error: cardsErr.message });
         }
       }
 
       imported++;
+
+      // Small delay between decks to respect Scryfall rate limits
+      if (imported % 5 === 0) {
+        await new Promise((r) => setTimeout(r, SCRYFALL_DELAY_MS));
+      }
     }
 
     const hasMore = offset + limit < allDecks.length;
-    log.info(`MTGJSON batch complete: imported=${imported}, skipped=${skipped}, hasMore=${hasMore}`);
+    log.info(`MTGJSON batch complete: imported=${imported}, skipped=${skipped}, errors=${errors.length}, hasMore=${hasMore}`);
 
     return new Response(
       JSON.stringify({
         success: true,
         imported,
         skipped,
+        errors: errors.length,
+        errorDetails: errors.slice(0, 10),
         total: allDecks.length,
         nextOffset: hasMore ? offset + limit : null,
         hasMore,
       }),
-      { status: 200, headers }
+      { status: 200, headers },
     );
   } catch (e) {
     log.error('mtgjson-import error', e);
     return new Response(
       JSON.stringify({ error: 'Internal error' }),
-      { status: 500, headers }
+      { status: 500, headers },
     );
   }
 });
