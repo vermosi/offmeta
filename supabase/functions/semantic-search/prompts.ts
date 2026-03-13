@@ -24,6 +24,16 @@ CRITICAL RULES (MUST FOLLOW):
 7. banned:FORMAT not is:banned, restricted:FORMAT not is:restricted
 8. MONO COLOR = EXACT match: "mono red" = c=r (NOT c:r)
 
+=== NEGATION / EXCLUSION (CRITICAL - COMMON MISTAKE!) ===
+When users say "not X", "aren't X", "without X", "non-X", "no X" about a card TYPE, use -t:X
+- "spells that aren't creatures" → (t:instant or t:sorcery) -t:creature
+- "non-creature spells" → -t:creature (t:instant or t:sorcery)
+- "artifacts that aren't creatures" → t:artifact -t:creature
+- "permanents without flying" → -o:"flying" (NOT -kw:flying which doesn't exist)
+- "cards that aren't lands" → -t:land
+- NEVER leave words like "arent", "aren't", "isnt", "isn't" as literal text in the query!
+- ALWAYS convert negation words to Scryfall -t: or -o: syntax
+
 === TARGETING vs TYPE (MOST CRITICAL - #1 MISTAKE!) ===
 When users say "cards that destroy/exile/counter X", they want cards that AFFECT X, NOT cards OF TYPE X!
 DO NOT add t:[target] when the user wants cards that TARGET that type!
