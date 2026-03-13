@@ -7,6 +7,8 @@
 import { useMemo, useEffect, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Crown, Shield, ExternalLink, Copy, Check, Users } from 'lucide-react';
+import { DeckVoteButton } from '@/components/deck/DeckVoteButton';
+import { DeckCommentsSection } from '@/components/deck/DeckCommentsSection';
 import { Header } from '@/components/Header';
 import { Badge } from '@/components/ui/badge';
 import { useDeckTags } from '@/hooks/useDeckTags';
