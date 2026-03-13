@@ -319,12 +319,22 @@ export function useAnalytics() {
 
         // Fire and forget - don't await to avoid blocking
         const searchCount = parseInt(sessionStorage.getItem('offmeta_searches_per_session') || '0', 10);
+        const utm = utmRef.current;
+        const eventPayload: Record<string, unknown> = {
+          ...sanitizedData,
+          searches_per_session: searchCount,
+          ...(utm.utm_source && { utm_source: utm.utm_source }),
+          ...(utm.utm_medium && { utm_medium: utm.utm_medium }),
+          ...(utm.utm_campaign && { utm_campaign: utm.utm_campaign }),
+          ...(utm.utm_term && { utm_term: utm.utm_term }),
+          ...(utm.utm_content && { utm_content: utm.utm_content }),
+        };
         supabase
           .from('analytics_events')
           .insert([
             {
               event_type: eventType,
-              event_data: { ...sanitizedData, searches_per_session: searchCount },
+              event_data: eventPayload,
               session_id: sessionIdRef.current,
             },
           ])
