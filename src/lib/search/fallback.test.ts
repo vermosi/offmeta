@@ -199,4 +199,32 @@ describe('buildClientFallbackQuery', () => {
     expect(q).toContain('o:"add"');
     expect(q).toContain('o:"any color"');
   });
+
+  // Year constraint fallback tests
+  it('translates "released after 2020" to year>2020', () => {
+    const q = buildClientFallbackQuery('released after 2020');
+    expect(q).toContain('year>2020');
+  });
+
+  it('translates "cards before 2019" to year<2019', () => {
+    const q = buildClientFallbackQuery('cards before 2019');
+    expect(q).toContain('year<2019');
+  });
+
+  it('translates "printed since 2022" to year>2022', () => {
+    const q = buildClientFallbackQuery('printed since 2022');
+    expect(q).toContain('year>2022');
+  });
+
+  it('combines year constraint with other terms', () => {
+    const q = buildClientFallbackQuery('red creatures released after 2021');
+    expect(q).toContain('c:r');
+    expect(q).toContain('t:creature');
+    expect(q).toContain('year>2021');
+  });
+
+  it('translates "cards until 2018" to year<2018', () => {
+    const q = buildClientFallbackQuery('cards until 2018');
+    expect(q).toContain('year<2018');
+  });
 });
