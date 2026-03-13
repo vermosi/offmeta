@@ -48,7 +48,9 @@ export function AuthFailuresPanel({ days }: { days: number }) {
         .order('created_at', { ascending: false })
         .limit(500);
 
-      const events = (allEvents ?? []) as unknown as AuthFailureEvent[];
+      const events = ((allEvents ?? []) as unknown as AuthFailureEvent[]).filter(
+        (e) => e.event_data?.error !== 'Missing Authorization header',
+      );
 
       const last24h = events.filter((e) => e.created_at >= since24h).length;
 
