@@ -69,6 +69,7 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
   const [isLoadingRulings, setIsLoadingRulings] = useState(false);
   const [showRulings, setShowRulings] = useState(false);
   const { trackCardModalView, trackAffiliateClick } = useAnalytics();
+  const affiliateConfig = useAffiliateConfig();
 
   const isDoubleFaced = card ? isDoubleFacedCard(card) : false;
 
