@@ -424,6 +424,29 @@ const CardPage = () => {
                 </div>
               </section>
             ) : null}
+
+            {/* Related Searches — SEO internal links */}
+            {card && (
+              <section className="space-y-3">
+                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <Search className="h-4 w-4 text-primary" />
+                  Related Searches
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {getRelatedSearches(card).map((q) => (
+                    <Link
+                      key={q}
+                      to={`/?q=${encodeURIComponent(q)}`}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full
+                        border border-border/40 bg-card/50 hover:bg-primary/10 hover:border-primary/30
+                        text-sm text-muted-foreground hover:text-foreground transition-all"
+                    >
+                      {q}
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
         </main>
 
