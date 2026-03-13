@@ -105,7 +105,7 @@ describe('Index – example queries', () => {
       screen.getByRole('group', { name: /try searching for/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText('creatures that make treasure tokens'),
+      screen.getByRole('button', { name: /search for creatures that make treasure tokens/i }),
     ).toBeInTheDocument();
   });
 
