@@ -368,6 +368,11 @@ export default function PublicDeckView() {
             </>
           )}
         </div>
+
+        {/* ── Comments ── */}
+        <div className="rounded-xl border border-border p-4 sm:p-6">
+          <DeckCommentsSection deckId={deck.id!} />
+        </div>
       </main>
 
       <Footer />
