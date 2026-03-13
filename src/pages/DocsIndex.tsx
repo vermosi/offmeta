@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { GUIDES } from '@/data/guides';
-import { BookOpen, FileText, Sparkles, ChevronRight } from 'lucide-react';
+import { BookOpen, FileText, Sparkles, ChevronRight, TrendingUp } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { SkipLinks } from '@/components/SkipLinks';
 
