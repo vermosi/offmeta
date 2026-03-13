@@ -1,6 +1,7 @@
 /**
  * Conversion Funnel Panel for Admin Analytics.
  * Uses the `get_conversion_funnel` RPC for server-side aggregation.
+ * Supports both sequential and independent (all-activity) funnel views.
  */
 
 import { useState, useEffect } from 'react';
@@ -9,6 +10,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, TrendingDown, ArrowRight, Globe } from 'lucide-react';
 import { logger } from '@/lib/core/logger';
+
+interface FunnelCounts {
+  totalSessions: number;
+  searchedSessions: number;
+  clickedSessions: number;
+  affiliateSessions: number;
+}
 
 interface FunnelStep {
   label: string;
@@ -24,14 +32,19 @@ interface UtmRow {
   affiliates: number;
 }
 
+type FunnelMode = 'sequential' | 'independent';
+
 interface ConversionFunnelPanelProps {
   days: number;
 }
 
 export function ConversionFunnelPanel({ days }: ConversionFunnelPanelProps) {
-  const [funnel, setFunnel] = useState<FunnelStep[]>([]);
+  const [sequential, setSequential] = useState<FunnelCounts | null>(null);
+  const [independent, setIndependent] = useState<FunnelCounts | null>(null);
+  const [eventTotals, setEventTotals] = useState<Record<string, number>>({});
   const [utmBreakdown, setUtmBreakdown] = useState<UtmRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mode, setMode] = useState<FunnelMode>('sequential');
 
   useEffect(() => {
     async function load() {
@@ -44,32 +57,15 @@ export function ConversionFunnelPanel({ days }: ConversionFunnelPanelProps) {
         if (error) throw error;
 
         const result = data as unknown as {
-          funnel: {
-            totalSessions: number;
-            searchedSessions: number;
-            clickedSessions: number;
-            affiliateSessions: number;
-            searchEvents: number;
-            clickEvents: number;
-            affiliateEvents: number;
-          };
-          utmSources: Array<{
-            source: string;
-            sessions: number;
-            searches: number;
-            clicks: number;
-            affiliates: number;
-          }>;
+          sequential: FunnelCounts;
+          independent: FunnelCounts;
+          eventTotals: Record<string, number> | null;
+          utmSources: UtmRow[];
         };
 
-        const f = result.funnel;
-        setFunnel([
-          { label: 'Sessions', sessionCount: f.totalSessions, totalEvents: f.totalSessions },
-          { label: 'Searched', sessionCount: f.searchedSessions, totalEvents: f.searchEvents },
-          { label: 'Clicked Card', sessionCount: f.clickedSessions, totalEvents: f.clickEvents },
-          { label: 'Affiliate Click', sessionCount: f.affiliateSessions, totalEvents: f.affiliateEvents },
-        ]);
-
+        setSequential(result.sequential);
+        setIndependent(result.independent);
+        setEventTotals(result.eventTotals ?? {});
         setUtmBreakdown(result.utmSources ?? []);
       } catch (e) {
         logger.warn('Failed to fetch funnel data', e);
@@ -91,16 +87,54 @@ export function ConversionFunnelPanel({ days }: ConversionFunnelPanelProps) {
     );
   }
 
+  const activeCounts = mode === 'sequential' ? sequential : independent;
+  if (!activeCounts) return null;
+
+  const searchEvents = (eventTotals['search'] ?? 0);
+  const clickEvents = (eventTotals['card_click'] ?? 0) + (eventTotals['card_modal_view'] ?? 0);
+  const affiliateEvents = (eventTotals['affiliate_click'] ?? 0);
+
+  const funnel: FunnelStep[] = [
+    { label: 'Sessions', sessionCount: activeCounts.totalSessions, totalEvents: activeCounts.totalSessions },
+    { label: 'Searched', sessionCount: activeCounts.searchedSessions, totalEvents: searchEvents },
+    { label: 'Clicked Card', sessionCount: activeCounts.clickedSessions, totalEvents: clickEvents },
+    { label: 'Affiliate Click', sessionCount: activeCounts.affiliateSessions, totalEvents: affiliateEvents },
+  ];
+
   const totalSessions = funnel[0]?.sessionCount ?? 1;
 
   return (
     <div className="space-y-4">
       <Card className="border-border/40">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <TrendingDown className="h-4 w-4 text-primary" />
-            Conversion Funnel ({days}d)
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <TrendingDown className="h-4 w-4 text-primary" />
+              Conversion Funnel ({days}d)
+            </CardTitle>
+            <div className="flex rounded-lg border border-border/50 overflow-hidden text-xs">
+              <button
+                onClick={() => setMode('sequential')}
+                className={`px-3 py-1 transition-colors ${
+                  mode === 'sequential'
+                    ? 'bg-primary/10 text-primary font-medium'
+                    : 'text-muted-foreground hover:bg-muted/50'
+                }`}
+              >
+                Sequential
+              </button>
+              <button
+                onClick={() => setMode('independent')}
+                className={`px-3 py-1 transition-colors border-l border-border/50 ${
+                  mode === 'independent'
+                    ? 'bg-primary/10 text-primary font-medium'
+                    : 'text-muted-foreground hover:bg-muted/50'
+                }`}
+              >
+                All Activity
+              </button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -144,7 +178,9 @@ export function ConversionFunnelPanel({ days }: ConversionFunnelPanelProps) {
             })}
           </div>
           <p className="text-xs text-muted-foreground mt-4">
-            Sequential funnel: each step only counts sessions that completed all previous steps.
+            {mode === 'sequential'
+              ? 'Sequential: each step only counts sessions that completed all previous steps.'
+              : 'All Activity: each step counts sessions independently (a card click doesn\'t require a search).'}
           </p>
         </CardContent>
       </Card>

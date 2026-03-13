@@ -47,7 +47,22 @@ export async function flushLogQueue(): Promise<void> {
 }
 
 /**
+ * Queries that should never be logged to translation_logs (warmup pings, spam).
+ */
+const SKIP_LOG_PATTERNS = [
+  /^ping\s+warmup$/i,
+  /^warmup$/i,
+  // Repeated type operator spam (e.g., "t:creature t: t: t: t:")
+  /(?:t:\s*){4,}/i,
+];
+
+function shouldSkipLog(query: string): boolean {
+  return SKIP_LOG_PATTERNS.some((p) => p.test(query.trim()));
+}
+
+/**
  * Queue translation log for batched async insert (non-blocking).
+ * Skips warmup pings and spam patterns to keep analytics clean.
  */
 export function logTranslation(
   naturalQuery: string,
@@ -62,6 +77,9 @@ export function logTranslation(
   resultCount: number | null = null,
   preTranslationTelemetry?: PreTranslationTelemetry,
 ): void {
+  // Skip warmup and spam queries
+  if (shouldSkipLog(naturalQuery) || shouldSkipLog(translatedQuery)) return;
+
   logQueue.push({
     natural_language_query: naturalQuery.substring(0, 500),
     translated_query: translatedQuery.substring(0, 1000),
