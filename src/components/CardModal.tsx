@@ -25,6 +25,7 @@ import { X, Loader2, ChevronRight } from 'lucide-react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { useIsMobile } from '@/hooks/useMobile';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useAffiliateConfig, wrapAffiliateUrl } from '@/hooks/useAffiliateConfig';
 import { useTranslation } from '@/lib/i18n';
 
 import {
@@ -68,6 +69,7 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
   const [isLoadingRulings, setIsLoadingRulings] = useState(false);
   const [showRulings, setShowRulings] = useState(false);
   const { trackCardModalView, trackAffiliateClick } = useAnalytics();
+  const affiliateConfig = useAffiliateConfig();
 
   const isDoubleFaced = card ? isDoubleFacedCard(card) : false;
 
@@ -192,9 +194,14 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
       url: string,
       price?: string,
     ) => {
-      const affiliateBase = import.meta.env.VITE_TCGPLAYER_IMPACT_BASE;
+      const { tcgplayerAffiliateBase } = affiliateConfig;
       const isAffiliateLink =
-        marketplace.includes('tcgplayer') && !!affiliateBase;
+        marketplace.includes('tcgplayer') && !!tcgplayerAffiliateBase;
+
+      // Wrap TCGPlayer URLs with affiliate tracking
+      const finalUrl = marketplace.includes('tcgplayer') && tcgplayerAffiliateBase
+        ? wrapAffiliateUrl(url, tcgplayerAffiliateBase)
+        : url;
 
       trackAffiliateClick({
         affiliate: marketplace,
@@ -206,9 +213,9 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
         price_eur: marketplace.includes('cardmarket') ? price : undefined,
         price_tix: marketplace === 'cardhoarder' ? price : undefined,
       });
-      window.open(url, '_blank', 'noopener,noreferrer');
+      window.open(finalUrl, '_blank', 'noopener,noreferrer');
     },
-    [card, trackAffiliateClick],
+    [card, trackAffiliateClick, affiliateConfig],
   );
 
   const handleSelectPrinting = useCallback((printing: CardPrinting) => {

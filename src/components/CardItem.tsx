@@ -4,18 +4,22 @@
  * Shows card image with an info overlay on hover/focus for quick details.
  */
 
-import { memo, useState } from 'react';
-import type { KeyboardEvent } from 'react';
+import { memo, useState, useCallback } from 'react';
+import type { KeyboardEvent, MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import type { ScryfallCard } from '@/types/card';
 import { getCardImage } from '@/lib/scryfall/client';
+import { getTCGPlayerUrl } from '@/lib/scryfall/printings';
 import { ManaCost } from '@/components/ManaSymbol';
 import { cardNameToSlug } from '@/lib/card-slug';
+import { ShoppingCart } from 'lucide-react';
 import {
   getLocalizedName,
   getLocalizedTypeLine,
 } from '@/lib/scryfall/localized';
 import { useTranslation } from '@/lib/i18n';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { useAffiliateConfig, wrapAffiliateUrl } from '@/hooks/useAffiliateConfig';
 
 interface CardItemProps {
   card: ScryfallCard;
@@ -49,6 +53,8 @@ export const CardItem = memo(function CardItem({
   const { locale } = useTranslation();
   const displayName = getLocalizedName(card, locale);
   const displayType = getLocalizedTypeLine(card, locale);
+  const { trackAffiliateClick } = useAnalytics();
+  const { tcgplayerAffiliateBase } = useAffiliateConfig();
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -59,6 +65,28 @@ export const CardItem = memo(function CardItem({
 
   const manaCost = getManaCost(card);
   const price = formatPrice(card);
+
+  const handleBuyClick = useCallback(
+    (e: MouseEvent) => {
+      e.stopPropagation();
+      const url = getTCGPlayerUrl(card);
+      const finalUrl = tcgplayerAffiliateBase
+        ? wrapAffiliateUrl(url, tcgplayerAffiliateBase)
+        : url;
+
+      trackAffiliateClick({
+        affiliate: 'tcgplayer',
+        card_name: card.name,
+        card_id: card.id,
+        set_code: card.set,
+        is_affiliate_link: !!tcgplayerAffiliateBase,
+        price_usd: card.prices?.usd || undefined,
+      });
+
+      window.open(finalUrl, '_blank', 'noopener,noreferrer');
+    },
+    [card, tcgplayerAffiliateBase, trackAffiliateClick],
+  );
 
   return (
     <div
@@ -130,9 +158,15 @@ export const CardItem = memo(function CardItem({
               <ManaCost cost={manaCost} size="sm" className="drop-shadow" />
             )}
             {price && (
-              <span className="text-[9px] sm:text-[10px] font-medium text-emerald-300 tabular-nums">
+              <button
+                onClick={handleBuyClick}
+                className="flex items-center gap-0.5 text-[9px] sm:text-[10px] font-medium text-emerald-300 tabular-nums hover:text-emerald-200 transition-colors pointer-events-auto"
+                aria-label={`Buy ${displayName} for ${price}`}
+                title={`Buy on TCGplayer for ${price}`}
+              >
+                <ShoppingCart className="h-2.5 w-2.5" />
                 {price}
-              </span>
+              </button>
             )}
           </div>
         </div>
