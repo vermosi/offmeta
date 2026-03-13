@@ -184,7 +184,7 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     const cardList = Array.from(uniqueCards.entries());
-    log.info(`Tracking ${cardList.length} unique cards (${collectionCards?.length ?? 0} collection, ${topCommunity.length} community, ${STAPLES_WATCHLIST.length} watchlist)`);
+    log.info(`Tracking ${cardList.length} unique cards (${collectionCards?.length ?? 0} collection, ${communityNames.size} community, ${STAPLES_WATCHLIST.length} watchlist)`);
 
     if (cardList.length === 0) {
       return new Response(JSON.stringify({ success: true, snapshotCount: 0 }), { status: 200, headers });
