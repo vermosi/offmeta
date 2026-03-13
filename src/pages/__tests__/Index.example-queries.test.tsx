@@ -111,7 +111,7 @@ describe('Index – example queries', () => {
 
   it('clicking an example query triggers search', async () => {
     await renderIndex(IndexPage);
-    const exampleBtn = screen.getByText('creatures that make treasure tokens');
+    const exampleBtn = screen.getByRole('button', { name: /search for creatures that make treasure tokens/i });
     await act(async () => {
       fireEvent.click(exampleBtn);
     });
