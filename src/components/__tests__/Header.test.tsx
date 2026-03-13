@@ -20,6 +20,11 @@ vi.mock('@/components/ThemeToggle', () => ({
   ThemeToggle: () => <button data-testid="theme-toggle">Toggle</button>,
 }));
 
+// Mock NotificationBell
+vi.mock('@/components/NotificationBell', () => ({
+  NotificationBell: () => null,
+}));
+
 // Mock useNavigate
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {

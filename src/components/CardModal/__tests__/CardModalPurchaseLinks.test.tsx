@@ -20,6 +20,11 @@ vi.mock('@/components/collection/PriceSparkline', () => ({
   PriceSparkline: () => <div data-testid="price-sparkline" />,
 }));
 
+// Mock PriceAlertButton
+vi.mock('../PriceAlertButton', () => ({
+  PriceAlertButton: () => null,
+}));
+
 function renderWithProviders(ui: React.ReactElement) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
