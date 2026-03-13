@@ -859,9 +859,34 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     description: 'Reskinned versions of cards',
   },
   {
+    pattern: /\breskins?\b/gi,
+    syntax: 'is:reskinned',
+    description: 'Reskinned versions of cards',
+  },
+  {
     pattern: /\breskinned\b/gi,
     syntax: 'is:reskinned',
     description: 'Reskinned versions of cards',
+  },
+  {
+    pattern: /\buniverses?\s+beyond\b/gi,
+    syntax: 'is:ub',
+    description: 'Universes Beyond cards',
+  },
+  {
+    pattern: /\b(?:board\s*wipes?|wraths?|sweepers?)\s+(?:that\s+)?(?:(?:also|and)\s+)?(?:create|make|generate|produce)s?\s+tokens?\b/gi,
+    syntax: 'otag:board-wipe o:"create" o:"token"',
+    description: 'Board wipes that also create tokens',
+  },
+  {
+    pattern: /\btoken\s+(?:board\s*wipes?|wraths?|sweepers?)\b/gi,
+    syntax: 'otag:board-wipe o:"create" o:"token"',
+    description: 'Board wipes that create tokens',
+  },
+  {
+    pattern: /\b(?:board\s*wipes?|wraths?|sweepers?)\s+(?:with|and)\s+tokens?\b/gi,
+    syntax: 'otag:board-wipe o:"create" o:"token"',
+    description: 'Board wipes with token creation',
   },
 
   // Ping / pingers (creatures that deal 1 damage)
