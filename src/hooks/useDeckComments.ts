@@ -2,11 +2,10 @@
  * Hook for deck comments — CRUD with optimistic inserts and realtime updates.
  * @module hooks/useDeckComments
  */
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useCallback, useEffect } from 'react';
 
 export interface DeckComment {
   id: string;
