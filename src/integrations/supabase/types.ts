@@ -839,6 +839,10 @@ export type Database = {
           type_line: string
         }[]
       }
+      get_public_collection_stats: {
+        Args: { target_user_id: string }
+        Returns: Json
+      }
       get_search_analytics: {
         Args: { max_low_confidence?: number; since_date: string }
         Returns: Json
