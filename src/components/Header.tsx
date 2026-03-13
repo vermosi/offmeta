@@ -387,6 +387,7 @@ export function Header() {
             </a>
             <LanguageSelector />
             <ThemeToggle />
+            <NotificationBell />
 
             {/* Auth controls */}
             {user ? (
