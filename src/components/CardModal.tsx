@@ -25,6 +25,7 @@ import { X, Loader2, ChevronRight } from 'lucide-react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { useIsMobile } from '@/hooks/useMobile';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useAffiliateConfig, wrapAffiliateUrl } from '@/hooks/useAffiliateConfig';
 import { useTranslation } from '@/lib/i18n';
 
 import {
