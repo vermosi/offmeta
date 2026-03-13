@@ -46,10 +46,10 @@ serve(async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Service role only — this is a heavy pipeline operation
-  const authCheck = requireServiceRole(req, corsHeaders);
-  if (!authCheck.authorized) {
-    return authCheck.response;
+  // Service role or admin only — this is a heavy pipeline operation
+  const auth = await validateAuth(req);
+  if (!auth.authorized) {
+    return new Response(JSON.stringify({ error: auth.error }), { status: 401, headers });
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
