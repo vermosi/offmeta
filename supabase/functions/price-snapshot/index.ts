@@ -152,22 +152,25 @@ serve(async (req: Request): Promise<Response> => {
       }
     }
 
-    // Source 2: Community deck cards (most popular by occurrence)
-    const { data: communityCards } = await supabase
-      .from('community_deck_cards')
-      .select('card_name')
-      .limit(2000);
-
-    // Count occurrences and take top 200 unique community cards
-    const communityFreq = new Map<string, number>();
-    for (const c of communityCards ?? []) {
-      communityFreq.set(c.card_name, (communityFreq.get(c.card_name) ?? 0) + 1);
+    // Source 2: All unique community deck cards (MTGJSON + Spicerack imports)
+    // Paginate to get all unique card names
+    const communityNames = new Set<string>();
+    let communityFrom = 0;
+    const PAGE = 1000;
+    while (communityNames.size < 5000) {
+      const { data: chunk } = await supabase
+        .from('community_deck_cards')
+        .select('card_name')
+        .range(communityFrom, communityFrom + PAGE - 1);
+      if (!chunk || chunk.length === 0) break;
+      for (const c of chunk) {
+        communityNames.add(c.card_name);
+      }
+      if (chunk.length < PAGE) break;
+      communityFrom += PAGE;
     }
-    const topCommunity = [...communityFreq.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 200);
 
-    for (const [name] of topCommunity) {
+    for (const name of communityNames) {
       if (!uniqueCards.has(name)) {
         uniqueCards.set(name, null);
       }
@@ -181,7 +184,7 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     const cardList = Array.from(uniqueCards.entries());
-    log.info(`Tracking ${cardList.length} unique cards (${collectionCards?.length ?? 0} collection, ${topCommunity.length} community, ${STAPLES_WATCHLIST.length} watchlist)`);
+    log.info(`Tracking ${cardList.length} unique cards (${collectionCards?.length ?? 0} collection, ${communityNames.size} community, ${STAPLES_WATCHLIST.length} watchlist)`);
 
     if (cardList.length === 0) {
       return new Response(JSON.stringify({ success: true, snapshotCount: 0 }), { status: 200, headers });
@@ -339,7 +342,7 @@ serve(async (req: Request): Promise<Response> => {
         alertsTriggered,
         sources: {
           collection: collectionCards?.length ?? 0,
-          community: topCommunity.length,
+          community: communityNames.size,
           watchlist: STAPLES_WATCHLIST.length,
           uniqueTracked: cardList.length,
         },
