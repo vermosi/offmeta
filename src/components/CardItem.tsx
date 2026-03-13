@@ -87,6 +87,8 @@ export const CardItem = memo(function CardItem({
     },
     [card, tcgplayerAffiliateBase, trackAffiliateClick],
   );
+
+  return (
     <div
       onClick={onClick}
       onKeyDown={handleKeyDown}
