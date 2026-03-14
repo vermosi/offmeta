@@ -21,6 +21,7 @@ interface CardListItemProps {
   onClick: () => void;
   tabIndex?: number;
   isOwned?: boolean;
+  sparklineData?: SparklinePoint[];
 }
 
 export const CardListItem = memo(function CardListItem({
