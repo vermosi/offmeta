@@ -246,6 +246,10 @@ export async function getCardsByExactNames(
     }
   }
 
+  if (localCards.size > 0) {
+    recordHit('local', 'cards_batch', localCards.size);
+  }
+
   // Fetch missing from Scryfall
   if (missingNames.length > 0) {
     logger.info(`Fetching ${missingNames.length}/${uniqueNames.length} cards from Scryfall (not in local DB)`);
