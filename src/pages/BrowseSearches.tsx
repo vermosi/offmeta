@@ -100,7 +100,13 @@ export default function BrowseSearches() {
                 <div key={i} className="h-24 rounded-lg bg-muted animate-pulse" />
               ))}
             </div>
-          ) : (
+          ) : error ? (
+            <div className="text-center py-12">
+              <p className="text-sm text-destructive mb-2">Failed to load curated searches</p>
+              <p className="text-xs text-muted-foreground">{(error as Error).message}</p>
+            </div>
+          ) : searches.length === 0 ? (
+            <p className="text-center text-muted-foreground py-12">No curated searches available yet.</p>
             <div className="space-y-10">
               {grouped.map(([category, items]) => {
                 const config = CATEGORY_CONFIG[category] ?? { label: category, icon: Search, order: 99 };
