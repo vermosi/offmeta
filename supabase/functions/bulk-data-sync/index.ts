@@ -1,13 +1,17 @@
 /**
- * bulk-data-sync — Uses Scryfall's bulk data (oracle_cards) to backfill
- * the cards table and capture price snapshots in a single pass.
+ * bulk-data-sync — Backfills the cards table and captures price snapshots
+ * using Scryfall's paginated search API.
  *
- * This replaces hundreds of individual API calls with one bulk download.
- * The oracle_cards file (~170MB) contains one entry per oracle ID with
- * prices, legalities, rarity, colors, etc.
+ * Edge functions have ~150MB memory — Scryfall's bulk JSON (~170MB) exceeds
+ * that even with streaming. Instead we paginate /cards/search (175 cards/page)
+ * and process in chunks.
  *
- * Designed to run weekly via pg_cron. Streams the JSON to stay within
- * edge function memory limits.
+ * Accepts optional `page` param (default 1). Each invocation processes up to
+ * `MAX_PAGES` pages, then returns a `nextPage` cursor so the caller (or cron)
+ * can continue.
+ *
+ * Weekly cron should call with page=1; the function will self-invoke for
+ * subsequent batches.
  *
  * @module functions/bulk-data-sync
  */
@@ -18,8 +22,9 @@ import { getCorsHeaders, validateAuth } from '../_shared/auth.ts';
 import { createLogger } from '../_shared/logger.ts';
 
 const log = createLogger('bulk-data-sync');
-const UPSERT_BATCH = 500;
-const PRICE_BATCH = 500;
+const UPSERT_BATCH = 200;
+const MAX_PAGES = 20; // Process 20 pages (~3,500 cards) per invocation
+const SCRYFALL_DELAY_MS = 100; // Respect rate limits
 
 interface ScryfallCard {
   oracle_id?: string;
@@ -34,8 +39,64 @@ interface ScryfallCard {
   prices?: Record<string, string | null>;
   image_uris?: Record<string, string>;
   card_faces?: Array<{ image_uris?: Record<string, string> }>;
-  id?: string; // scryfall card id
+  id?: string;
   layout?: string;
+}
+
+interface ScryfallSearchResponse {
+  data?: ScryfallCard[];
+  has_more?: boolean;
+  next_page?: string;
+  total_cards?: number;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function processCard(card: ScryfallCard): {
+  cardRow: Record<string, unknown> | null;
+  priceRow: Record<string, unknown> | null;
+} {
+  if (!card.oracle_id || !card.name) {
+    return { cardRow: null, priceRow: null };
+  }
+
+  const imageUrl =
+    card.image_uris?.normal ??
+    card.card_faces?.[0]?.image_uris?.normal ??
+    null;
+
+  const cardRow: Record<string, unknown> = {
+    oracle_id: card.oracle_id,
+    name: card.name,
+    mana_cost: card.mana_cost ?? null,
+    type_line: card.type_line ?? null,
+    oracle_text: card.oracle_text ?? null,
+    colors: card.colors ?? [],
+    cmc: card.cmc ?? 0,
+    image_url: imageUrl,
+    rarity: card.rarity ?? null,
+    legalities: card.legalities ?? null,
+    updated_at: new Date().toISOString(),
+  };
+
+  const priceUsd = card.prices?.usd ? parseFloat(card.prices.usd) : null;
+  const priceUsdFoil = card.prices?.usd_foil
+    ? parseFloat(card.prices.usd_foil)
+    : null;
+
+  let priceRow: Record<string, unknown> | null = null;
+  if (priceUsd !== null || priceUsdFoil !== null) {
+    priceRow = {
+      card_name: card.name,
+      scryfall_id: card.id ?? null,
+      price_usd: priceUsd,
+      price_usd_foil: priceUsdFoil,
+    };
+  }
+
+  return { cardRow, priceRow };
 }
 
 serve(async (req: Request): Promise<Response> => {
@@ -46,7 +107,6 @@ serve(async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Service role or admin only — this is a heavy pipeline operation
   const auth = await validateAuth(req);
   if (!auth.authorized) {
     return new Response(JSON.stringify({ error: auth.error }), { status: 401, headers });
@@ -61,174 +121,154 @@ serve(async (req: Request): Promise<Response> => {
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
   try {
-    // Step 1: Get the oracle_cards bulk data download URL
-    log.info('Fetching bulk data catalog');
-    const catalogResp = await fetch('https://api.scryfall.com/bulk-data', {
-      headers: { 'User-Agent': 'OffMeta/1.0' },
-    });
-
-    if (!catalogResp.ok) {
-      return new Response(
-        JSON.stringify({ error: 'Failed to fetch Scryfall bulk data catalog' }),
-        { status: 502, headers },
-      );
+    // Parse starting page from request body
+    let startPage = 1;
+    let cleanupOld = false;
+    try {
+      const body = await req.json();
+      if (body.page && typeof body.page === 'number') startPage = body.page;
+      if (body.cleanup === true) cleanupOld = true;
+    } catch {
+      // default page 1
     }
 
-    const catalog = await catalogResp.json();
-    const oracleEntry = catalog.data?.find(
-      (entry: { type: string }) => entry.type === 'oracle_cards',
-    );
+    log.info('Starting bulk-data-sync', { startPage, maxPages: MAX_PAGES });
 
-    if (!oracleEntry?.download_uri) {
-      return new Response(
-        JSON.stringify({ error: 'oracle_cards bulk data not found' }),
-        { status: 502, headers },
-      );
-    }
+    // Use Scryfall search with unique:prints to get all oracle cards
+    // q=* returns all cards; unique:cards deduplicates by oracle_id
+    let nextPageUrl: string | null =
+      `https://api.scryfall.com/cards/search?q=*&unique=cards&order=name&page=${startPage}`;
 
-    log.info('Downloading oracle_cards bulk data', {
-      size: oracleEntry.size,
-      updated_at: oracleEntry.updated_at,
-    });
-
-    // Step 2: Download and parse the bulk data
-    // We fetch the full JSON array — Deno handles gzip decompression automatically
-    const dataResp = await fetch(oracleEntry.download_uri, {
-      headers: { 'User-Agent': 'OffMeta/1.0' },
-    });
-
-    if (!dataResp.ok) {
-      return new Response(
-        JSON.stringify({ error: 'Failed to download bulk data' }),
-        { status: 502, headers },
-      );
-    }
-
-    // Parse into text first, then JSON — the file is large but edge functions
-    // can handle it since oracle_cards decompressed is ~170MB and Deno streams the body
-    const cards: ScryfallCard[] = await dataResp.json();
-    log.info('Parsed bulk data', { totalCards: cards.length });
-
-    // Step 3: Process cards into batches for cards table + price snapshots
-    const cardRows: Array<Record<string, unknown>> = [];
-    const priceRows: Array<Record<string, unknown>> = [];
-    let skipped = 0;
-
-    for (const card of cards) {
-      if (!card.oracle_id || !card.name) {
-        skipped++;
-        continue;
-      }
-
-      const imageUrl =
-        card.image_uris?.normal ??
-        card.card_faces?.[0]?.image_uris?.normal ??
-        null;
-
-      cardRows.push({
-        oracle_id: card.oracle_id,
-        name: card.name,
-        mana_cost: card.mana_cost ?? null,
-        type_line: card.type_line ?? null,
-        oracle_text: card.oracle_text ?? null,
-        colors: card.colors ?? [],
-        cmc: card.cmc ?? 0,
-        image_url: imageUrl,
-        rarity: card.rarity ?? null,
-        legalities: card.legalities ?? null,
-        updated_at: new Date().toISOString(),
-      });
-
-      // Capture price snapshot if price data exists
-      const priceUsd = card.prices?.usd ? parseFloat(card.prices.usd) : null;
-      const priceUsdFoil = card.prices?.usd_foil
-        ? parseFloat(card.prices.usd_foil)
-        : null;
-
-      if (priceUsd !== null || priceUsdFoil !== null) {
-        priceRows.push({
-          card_name: card.name,
-          scryfall_id: card.id ?? null,
-          price_usd: priceUsd,
-          price_usd_foil: priceUsdFoil,
-        });
-      }
-    }
-
-    log.info('Processed cards', {
-      cardRows: cardRows.length,
-      priceRows: priceRows.length,
-      skipped,
-    });
-
-    // Step 4: Upsert cards in batches
+    let pagesProcessed = 0;
     let cardsUpserted = 0;
     let cardErrors = 0;
-
-    for (let i = 0; i < cardRows.length; i += UPSERT_BATCH) {
-      const batch = cardRows.slice(i, i + UPSERT_BATCH);
-      const { error: upsertErr } = await supabase
-        .from('cards')
-        .upsert(batch, { onConflict: 'oracle_id' });
-
-      if (upsertErr) {
-        log.warn('Card upsert batch failed', {
-          batch: i / UPSERT_BATCH,
-          error: upsertErr.message,
-        });
-        cardErrors++;
-      } else {
-        cardsUpserted += batch.length;
-      }
-    }
-
-    // Step 5: Insert price snapshots in batches
     let pricesInserted = 0;
     let priceErrors = 0;
+    let skipped = 0;
+    let totalCards = 0;
+    let hasMore = false;
+    let currentPage = startPage;
 
-    for (let i = 0; i < priceRows.length; i += PRICE_BATCH) {
-      const batch = priceRows.slice(i, i + PRICE_BATCH);
-      const { error: insertErr } = await supabase
-        .from('price_snapshots')
-        .insert(batch);
+    while (nextPageUrl && pagesProcessed < MAX_PAGES) {
+      await sleep(SCRYFALL_DELAY_MS);
 
-      if (insertErr) {
-        log.warn('Price snapshot batch failed', {
-          batch: i / PRICE_BATCH,
-          error: insertErr.message,
-        });
-        priceErrors++;
-      } else {
-        pricesInserted += batch.length;
+      const resp = await fetch(nextPageUrl, {
+        headers: { 'User-Agent': 'OffMeta/1.0' },
+      });
+
+      if (!resp.ok) {
+        const errText = await resp.text();
+        log.warn('Scryfall search failed', { page: currentPage, status: resp.status, error: errText.slice(0, 200) });
+        break;
+      }
+
+      const result: ScryfallSearchResponse = await resp.json();
+      const cards = result.data ?? [];
+      totalCards += cards.length;
+
+      // Process cards into batches
+      const cardRows: Array<Record<string, unknown>> = [];
+      const priceRows: Array<Record<string, unknown>> = [];
+
+      for (const card of cards) {
+        const { cardRow, priceRow } = processCard(card);
+        if (cardRow) {
+          cardRows.push(cardRow);
+          if (priceRow) priceRows.push(priceRow);
+        } else {
+          skipped++;
+        }
+      }
+
+      // Upsert cards
+      for (let i = 0; i < cardRows.length; i += UPSERT_BATCH) {
+        const batch = cardRows.slice(i, i + UPSERT_BATCH);
+        const { error: upsertErr } = await supabase
+          .from('cards')
+          .upsert(batch, { onConflict: 'oracle_id' });
+        if (upsertErr) {
+          log.warn('Card upsert batch failed', { error: upsertErr.message });
+          cardErrors++;
+        } else {
+          cardsUpserted += batch.length;
+        }
+      }
+
+      // Insert price snapshots
+      for (let i = 0; i < priceRows.length; i += UPSERT_BATCH) {
+        const batch = priceRows.slice(i, i + UPSERT_BATCH);
+        const { error: insertErr } = await supabase
+          .from('price_snapshots')
+          .insert(batch);
+        if (insertErr) {
+          log.warn('Price snapshot batch failed', { error: insertErr.message });
+          priceErrors++;
+        } else {
+          pricesInserted += batch.length;
+        }
+      }
+
+      pagesProcessed++;
+      currentPage++;
+      hasMore = result.has_more === true;
+      nextPageUrl = hasMore ? result.next_page ?? null : null;
+
+      if (pagesProcessed % 5 === 0) {
+        log.info('Progress', { pagesProcessed, cardsUpserted, pricesInserted, currentPage });
       }
     }
 
-    // Step 6: Cleanup old price snapshots (>90 days)
-    const ninetyDaysAgo = new Date(
-      Date.now() - 90 * 24 * 60 * 60 * 1000,
-    ).toISOString();
-    await supabase
-      .from('price_snapshots')
-      .delete()
-      .lt('recorded_at', ninetyDaysAgo);
+    // Cleanup old price snapshots on first batch only
+    if (startPage === 1 || cleanupOld) {
+      const ninetyDaysAgo = new Date(
+        Date.now() - 90 * 24 * 60 * 60 * 1000,
+      ).toISOString();
+      await supabase
+        .from('price_snapshots')
+        .delete()
+        .lt('recorded_at', ninetyDaysAgo);
+    }
 
-    log.info('Bulk data sync complete', {
+    // Self-invoke for next batch if there are more pages
+    if (hasMore && nextPageUrl) {
+      log.info('Scheduling next batch', { nextPage: currentPage });
+      // Fire-and-forget the next batch
+      fetch(`${supabaseUrl}/functions/v1/bulk-data-sync`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${serviceRoleKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ page: currentPage }),
+      }).catch((err) => {
+        log.warn('Failed to self-invoke next batch', { error: String(err) });
+      });
+    }
+
+    log.info('Batch complete', {
+      startPage,
+      pagesProcessed,
       cardsUpserted,
       cardErrors,
       pricesInserted,
       priceErrors,
+      skipped,
+      hasMore,
     });
 
     return new Response(
       JSON.stringify({
         success: true,
-        totalInBulk: cards.length,
+        startPage,
+        pagesProcessed,
+        totalCardsInBatch: totalCards,
         cardsUpserted,
         cardErrors,
         pricesInserted,
         priceErrors,
         skipped,
-        bulkDataUpdatedAt: oracleEntry.updated_at,
+        hasMore,
+        nextPage: hasMore ? currentPage : null,
       }),
       { status: 200, headers },
     );
