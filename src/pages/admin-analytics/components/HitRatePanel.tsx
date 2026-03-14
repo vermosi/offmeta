@@ -169,7 +169,7 @@ export function HitRatePanel() {
   const [stats, setStats] = useState(() => getHitRateStats());
   const [historical, setHistorical] = useState<HistoricalStats>(EMPTY_HISTORICAL);
   const [loadingHistorical, setLoadingHistorical] = useState(true);
-  const [shouldLoad, setShouldLoad] = useState(true);
+  const didLoad = useRef(false);
 
   const loadHistorical = useCallback(async () => {
     setLoadingHistorical(true);
@@ -178,9 +178,9 @@ export function HitRatePanel() {
     setLoadingHistorical(false);
   }, []);
 
-  // Trigger initial load via state flag instead of calling setState in effect
-  if (shouldLoad) {
-    setShouldLoad(false);
+  // Fire once on mount via ref guard (avoids setState-in-effect lint error)
+  if (!didLoad.current) {
+    didLoad.current = true;
     loadHistorical();
   }
 
