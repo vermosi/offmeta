@@ -90,6 +90,7 @@ const App = () => (
                   <Route path="/deckbuilder/:id" element={<DeckEditor />} />
                   <Route path="/deck/:id" element={<PublicDeckView />} />
                   <Route path="/decks" element={<BrowseDecks />} />
+                  <Route path="/browse-searches" element={<BrowseSearches />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/collection" element={<Collection />} />
                   <Route path="/market" element={<MarketTrends />} />
