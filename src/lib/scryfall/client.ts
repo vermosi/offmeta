@@ -332,6 +332,14 @@ export async function getRandomCard(): Promise<ScryfallCard> {
  * @throws Error if card is not found
  */
 export async function getCardByName(name: string): Promise<ScryfallCard> {
+  // Try local DB first
+  try {
+    const local = await getLocalCardByName(name);
+    if (local) return localCardToScryfallShape(local) as ScryfallCard;
+  } catch {
+    // Fall through to Scryfall
+  }
+
   const encodedName = encodeURIComponent(name);
   const response = await rateLimitedFetch(
     `${BASE_URL}/cards/named?exact=${encodedName}`,
