@@ -71,8 +71,7 @@ serve(async (req: Request): Promise<Response> => {
       return new Response(JSON.stringify({ success: true, snapshotCount: 0 }), { status: 200, headers });
     }
 
-    // ── Batch fetch prices from Scryfall ────────────────────────────
-
+    // ── Try local cards table for prices first ────────────────────
     const snapshots: Array<{
       card_name: string;
       scryfall_id: string | null;
@@ -80,8 +79,48 @@ serve(async (req: Request): Promise<Response> => {
       price_usd_foil: number | null;
     }> = [];
 
-    for (let i = 0; i < cardList.length; i += BATCH_SIZE) {
-      const batch = cardList.slice(i, i + BATCH_SIZE);
+    // Check cards table for prices (from bulk-data-sync)
+    const cardNamesOnly = cardList.map(([name]) => name);
+    const localPriceMap = new Map<string, boolean>();
+
+    for (let i = 0; i < cardNamesOnly.length; i += 100) {
+      const batch = cardNamesOnly.slice(i, i + 100);
+      try {
+        // Get the most recent price snapshot for these cards
+        const { data } = await supabase
+          .from('price_snapshots')
+          .select('card_name, scryfall_id, price_usd, price_usd_foil, recorded_at')
+          .in('card_name', batch)
+          .gte('recorded_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+          .order('recorded_at', { ascending: false });
+
+        if (data) {
+          const seen = new Set<string>();
+          for (const row of data) {
+            if (seen.has(row.card_name)) continue;
+            seen.add(row.card_name);
+            // If we have a recent snapshot (< 24h), reuse it
+            if (row.price_usd !== null || row.price_usd_foil !== null) {
+              snapshots.push({
+                card_name: row.card_name,
+                scryfall_id: row.scryfall_id,
+                price_usd: row.price_usd ? Number(row.price_usd) : null,
+                price_usd_foil: row.price_usd_foil ? Number(row.price_usd_foil) : null,
+              });
+              localPriceMap.set(row.card_name, true);
+            }
+          }
+        }
+      } catch { /* continue */ }
+    }
+
+    // Find cards that still need Scryfall prices
+    const needScryfall = cardList.filter(([name]) => !localPriceMap.has(name));
+    log.info(`Local prices: ${localPriceMap.size}, need Scryfall: ${needScryfall.length}`);
+
+    // Batch fetch remaining prices from Scryfall
+    for (let i = 0; i < needScryfall.length; i += BATCH_SIZE) {
+      const batch = needScryfall.slice(i, i + BATCH_SIZE);
       const identifiers = batch.map(([name, id]) =>
         id ? { id } : { name },
       );
@@ -111,7 +150,7 @@ serve(async (req: Request): Promise<Response> => {
         log.warn('Scryfall batch failed', { batch: i, error: String(e) });
       }
 
-      if (i + BATCH_SIZE < cardList.length) {
+      if (i + BATCH_SIZE < needScryfall.length) {
         await new Promise((r) => setTimeout(r, SCRYFALL_DELAY_MS));
       }
     }

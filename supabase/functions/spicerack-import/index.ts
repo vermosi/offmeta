@@ -422,7 +422,7 @@ serve(async (req: Request): Promise<Response> => {
 
         // Batch resolve oracle IDs for all cards
         const cardNames = cards.map((c) => c.name).filter(Boolean);
-        const oracleMap = await batchResolveOracleIds(cardNames);
+        const oracleMap = await batchResolveOracleIds(cardNames, supabase);
 
         const cardRows = cards
           .filter((c) => c.name)
