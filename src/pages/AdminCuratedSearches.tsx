@@ -401,7 +401,7 @@ export default function AdminCuratedSearches() {
                           title={s.is_active ? 'Click to deactivate' : 'Click to activate'}
                         >
                           {s.is_active ? (
-                            <Eye className="h-3.5 w-3.5 text-green-500" />
+                            <Eye className="h-3.5 w-3.5 text-primary" />
                           ) : (
                             <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
                           )}
