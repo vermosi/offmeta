@@ -6,6 +6,7 @@
 
 import type { ScryfallCard } from '@/types/card';
 import { logger } from '@/lib/core/logger';
+import { rateLimitedFetch } from './fetch-utils';
 
 const BASE_URL = 'https://api.scryfall.com';
 
