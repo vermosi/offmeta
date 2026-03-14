@@ -15,6 +15,12 @@ vi.mock('@/services/local-cards', () => ({
   getLocalPrices: vi.fn().mockResolvedValue(new Map()),
 }));
 
+// Mock scryfall client
+const mockGetCardsByExactNames = vi.fn().mockResolvedValue([]);
+vi.mock('@/lib/scryfall/client', () => ({
+  getCardsByExactNames: (...args: unknown[]) => mockGetCardsByExactNames(...args),
+}));
+
 const makeDeckCard = (name: string, qty: number): DeckCard => ({
   id: `dc-${name}`,
   deck_id: 'deck-1',
