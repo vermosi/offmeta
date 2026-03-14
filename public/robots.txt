@@ -59,4 +59,4 @@ Disallow: /saved/
 Disallow: /reset-password/
 
 # Sitemap location
-Sitemap: https://offmeta.app/sitemap.xml
+Sitemap: https://offmeta.lovable.app/sitemap.xml
