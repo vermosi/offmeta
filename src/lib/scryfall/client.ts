@@ -284,6 +284,14 @@ export async function getCardsByExactNames(
 export async function autocomplete(query: string): Promise<string[]> {
   if (query.length < 2) return [];
 
+  // Try local card_names table first
+  try {
+    const localResults = await localAutocomplete(query);
+    if (localResults.length > 0) return localResults;
+  } catch {
+    // Fall through to Scryfall
+  }
+
   const encodedQuery = encodeURIComponent(query);
   const response = await rateLimitedFetch(
     `${BASE_URL}/cards/autocomplete?q=${encodedQuery}`,
