@@ -27,6 +27,7 @@ interface CardItemProps {
   onClick: () => void;
   tabIndex?: number;
   isOwned?: boolean;
+  sparklineData?: SparklinePoint[];
 }
 
 /** Format a price string to a compact display. */
