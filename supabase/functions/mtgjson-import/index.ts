@@ -248,7 +248,7 @@ serve(async (req: Request): Promise<Response> => {
         ...commanderCards.map((c) => ({ ...c, count: 1, board: 'mainboard' })),
       ];
       const cardNames = allCards.map((c) => c.name).filter(Boolean);
-      const oracleMap = await batchResolveOracleIds(cardNames);
+      const oracleMap = await batchResolveOracleIds(cardNames, supabase);
 
       const cardRows = allCards
         .filter((c) => c.name)
