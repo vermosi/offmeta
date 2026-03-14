@@ -366,6 +366,7 @@ export async function getCardByName(name: string): Promise<ScryfallCard> {
     throw new Error(`Card not found: ${name}`);
   }
 
+  recordHit('scryfall', 'card_by_name');
   return response.json();
 }
 
