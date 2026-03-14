@@ -32,6 +32,7 @@ export function HomeDiscoverySection({ onSearch }: HomeDiscoverySectionProps) {
       <div className="container-main space-y-6">
         <TrendingSearches onSearch={onSearch} hasHistory={hasHistory} />
         <RecentSearches onSearch={onSearch} />
+        <CuratedSearchesWidget />
       </div>
       <FeaturesShowcase />
       <div className="container-main grid grid-cols-1 md:grid-cols-2 gap-6">
