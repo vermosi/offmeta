@@ -2,12 +2,10 @@
  * bulk-data-sync — Uses Scryfall's bulk data (oracle_cards) to backfill
  * the cards table and capture price snapshots in a single pass.
  *
- * This replaces hundreds of individual API calls with one bulk download.
- * The oracle_cards file (~170MB) contains one entry per oracle ID with
- * prices, legalities, rarity, colors, etc.
+ * Streams the JSON array to stay within edge function memory limits
+ * by parsing one card object at a time using bracket-counting.
  *
- * Designed to run weekly via pg_cron. Streams the JSON to stay within
- * edge function memory limits.
+ * Designed to run weekly via pg_cron.
  *
  * @module functions/bulk-data-sync
  */
@@ -34,8 +32,136 @@ interface ScryfallCard {
   prices?: Record<string, string | null>;
   image_uris?: Record<string, string>;
   card_faces?: Array<{ image_uris?: Record<string, string> }>;
-  id?: string; // scryfall card id
+  id?: string;
   layout?: string;
+}
+
+/** Process a single Scryfall card into card + price row objects */
+function processCard(card: ScryfallCard): {
+  cardRow: Record<string, unknown> | null;
+  priceRow: Record<string, unknown> | null;
+} {
+  if (!card.oracle_id || !card.name) {
+    return { cardRow: null, priceRow: null };
+  }
+
+  const imageUrl =
+    card.image_uris?.normal ??
+    card.card_faces?.[0]?.image_uris?.normal ??
+    null;
+
+  const cardRow: Record<string, unknown> = {
+    oracle_id: card.oracle_id,
+    name: card.name,
+    mana_cost: card.mana_cost ?? null,
+    type_line: card.type_line ?? null,
+    oracle_text: card.oracle_text ?? null,
+    colors: card.colors ?? [],
+    cmc: card.cmc ?? 0,
+    image_url: imageUrl,
+    rarity: card.rarity ?? null,
+    legalities: card.legalities ?? null,
+    updated_at: new Date().toISOString(),
+  };
+
+  const priceUsd = card.prices?.usd ? parseFloat(card.prices.usd) : null;
+  const priceUsdFoil = card.prices?.usd_foil
+    ? parseFloat(card.prices.usd_foil)
+    : null;
+
+  let priceRow: Record<string, unknown> | null = null;
+  if (priceUsd !== null || priceUsdFoil !== null) {
+    priceRow = {
+      card_name: card.name,
+      scryfall_id: card.id ?? null,
+      price_usd: priceUsd,
+      price_usd_foil: priceUsdFoil,
+    };
+  }
+
+  return { cardRow, priceRow };
+}
+
+/**
+ * Streaming JSON array parser.
+ * Reads a ReadableStream of bytes representing a top-level JSON array
+ * and yields each element (object) as a parsed value.
+ * Uses bracket counting — no need to load the full array into memory.
+ */
+async function* streamJsonArray(
+  body: ReadableStream<Uint8Array>,
+): AsyncGenerator<ScryfallCard> {
+  const decoder = new TextDecoder();
+  const reader = body.getReader();
+
+  let buffer = '';
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  let objectStart = -1;
+  let started = false; // have we passed the opening '['?
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+
+    for (let i = 0; i < buffer.length; i++) {
+      const ch = buffer[i];
+
+      if (escape) {
+        escape = false;
+        continue;
+      }
+
+      if (ch === '\\' && inString) {
+        escape = true;
+        continue;
+      }
+
+      if (ch === '"') {
+        inString = !inString;
+        continue;
+      }
+
+      if (inString) continue;
+
+      if (!started) {
+        if (ch === '[') {
+          started = true;
+        }
+        continue;
+      }
+
+      if (ch === '{') {
+        if (depth === 0) {
+          objectStart = i;
+        }
+        depth++;
+      } else if (ch === '}') {
+        depth--;
+        if (depth === 0 && objectStart !== -1) {
+          const jsonStr = buffer.slice(objectStart, i + 1);
+          objectStart = -1;
+          try {
+            yield JSON.parse(jsonStr) as ScryfallCard;
+          } catch {
+            // skip malformed objects
+          }
+        }
+      }
+    }
+
+    // Keep only unprocessed remainder in buffer
+    if (objectStart !== -1) {
+      buffer = buffer.slice(objectStart);
+      objectStart = 0;
+    } else {
+      buffer = '';
+    }
+  }
 }
 
 serve(async (req: Request): Promise<Response> => {
@@ -46,7 +172,6 @@ serve(async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Service role or admin only — this is a heavy pipeline operation
   const auth = await validateAuth(req);
   if (!auth.authorized) {
     return new Response(JSON.stringify({ error: auth.error }), { status: 401, headers });
@@ -86,124 +211,88 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    log.info('Downloading oracle_cards bulk data', {
+    log.info('Downloading oracle_cards bulk data (streaming)', {
       size: oracleEntry.size,
       updated_at: oracleEntry.updated_at,
     });
 
-    // Step 2: Download and parse the bulk data
-    // We fetch the full JSON array — Deno handles gzip decompression automatically
+    // Step 2: Stream and process the bulk data
     const dataResp = await fetch(oracleEntry.download_uri, {
       headers: { 'User-Agent': 'OffMeta/1.0' },
     });
 
-    if (!dataResp.ok) {
+    if (!dataResp.ok || !dataResp.body) {
       return new Response(
         JSON.stringify({ error: 'Failed to download bulk data' }),
         { status: 502, headers },
       );
     }
 
-    // Parse into text first, then JSON — the file is large but edge functions
-    // can handle it since oracle_cards decompressed is ~170MB and Deno streams the body
-    const cards: ScryfallCard[] = await dataResp.json();
-    log.info('Parsed bulk data', { totalCards: cards.length });
-
-    // Step 3: Process cards into batches for cards table + price snapshots
-    const cardRows: Array<Record<string, unknown>> = [];
-    const priceRows: Array<Record<string, unknown>> = [];
+    // Process cards via streaming — batches are flushed as we go
+    const cardBatch: Array<Record<string, unknown>> = [];
+    const priceBatch: Array<Record<string, unknown>> = [];
+    let totalCards = 0;
     let skipped = 0;
-
-    for (const card of cards) {
-      if (!card.oracle_id || !card.name) {
-        skipped++;
-        continue;
-      }
-
-      const imageUrl =
-        card.image_uris?.normal ??
-        card.card_faces?.[0]?.image_uris?.normal ??
-        null;
-
-      cardRows.push({
-        oracle_id: card.oracle_id,
-        name: card.name,
-        mana_cost: card.mana_cost ?? null,
-        type_line: card.type_line ?? null,
-        oracle_text: card.oracle_text ?? null,
-        colors: card.colors ?? [],
-        cmc: card.cmc ?? 0,
-        image_url: imageUrl,
-        rarity: card.rarity ?? null,
-        legalities: card.legalities ?? null,
-        updated_at: new Date().toISOString(),
-      });
-
-      // Capture price snapshot if price data exists
-      const priceUsd = card.prices?.usd ? parseFloat(card.prices.usd) : null;
-      const priceUsdFoil = card.prices?.usd_foil
-        ? parseFloat(card.prices.usd_foil)
-        : null;
-
-      if (priceUsd !== null || priceUsdFoil !== null) {
-        priceRows.push({
-          card_name: card.name,
-          scryfall_id: card.id ?? null,
-          price_usd: priceUsd,
-          price_usd_foil: priceUsdFoil,
-        });
-      }
-    }
-
-    log.info('Processed cards', {
-      cardRows: cardRows.length,
-      priceRows: priceRows.length,
-      skipped,
-    });
-
-    // Step 4: Upsert cards in batches
     let cardsUpserted = 0;
     let cardErrors = 0;
+    let pricesInserted = 0;
+    let priceErrors = 0;
 
-    for (let i = 0; i < cardRows.length; i += UPSERT_BATCH) {
-      const batch = cardRows.slice(i, i + UPSERT_BATCH);
+    const flushCards = async () => {
+      if (cardBatch.length === 0) return;
+      const batch = cardBatch.splice(0, cardBatch.length);
       const { error: upsertErr } = await supabase
         .from('cards')
         .upsert(batch, { onConflict: 'oracle_id' });
-
       if (upsertErr) {
-        log.warn('Card upsert batch failed', {
-          batch: i / UPSERT_BATCH,
-          error: upsertErr.message,
-        });
+        log.warn('Card upsert batch failed', { error: upsertErr.message });
         cardErrors++;
       } else {
         cardsUpserted += batch.length;
       }
-    }
+    };
 
-    // Step 5: Insert price snapshots in batches
-    let pricesInserted = 0;
-    let priceErrors = 0;
-
-    for (let i = 0; i < priceRows.length; i += PRICE_BATCH) {
-      const batch = priceRows.slice(i, i + PRICE_BATCH);
+    const flushPrices = async () => {
+      if (priceBatch.length === 0) return;
+      const batch = priceBatch.splice(0, priceBatch.length);
       const { error: insertErr } = await supabase
         .from('price_snapshots')
         .insert(batch);
-
       if (insertErr) {
-        log.warn('Price snapshot batch failed', {
-          batch: i / PRICE_BATCH,
-          error: insertErr.message,
-        });
+        log.warn('Price snapshot batch failed', { error: insertErr.message });
         priceErrors++;
       } else {
         pricesInserted += batch.length;
       }
+    };
+
+    for await (const card of streamJsonArray(dataResp.body)) {
+      totalCards++;
+      const { cardRow, priceRow } = processCard(card);
+
+      if (!cardRow) {
+        skipped++;
+        continue;
+      }
+
+      cardBatch.push(cardRow);
+      if (priceRow) priceBatch.push(priceRow);
+
+      // Flush when batch size reached
+      if (cardBatch.length >= UPSERT_BATCH) await flushCards();
+      if (priceBatch.length >= PRICE_BATCH) await flushPrices();
+
+      // Log progress every 5000 cards
+      if (totalCards % 5000 === 0) {
+        log.info('Processing progress', { totalCards, cardsUpserted, pricesInserted });
+      }
     }
 
-    // Step 6: Cleanup old price snapshots (>90 days)
+    // Flush remaining
+    await flushCards();
+    await flushPrices();
+
+    // Step 3: Cleanup old price snapshots (>90 days)
     const ninetyDaysAgo = new Date(
       Date.now() - 90 * 24 * 60 * 60 * 1000,
     ).toISOString();
@@ -213,16 +302,18 @@ serve(async (req: Request): Promise<Response> => {
       .lt('recorded_at', ninetyDaysAgo);
 
     log.info('Bulk data sync complete', {
+      totalCards,
       cardsUpserted,
       cardErrors,
       pricesInserted,
       priceErrors,
+      skipped,
     });
 
     return new Response(
       JSON.stringify({
         success: true,
-        totalInBulk: cards.length,
+        totalInBulk: totalCards,
         cardsUpserted,
         cardErrors,
         pricesInserted,
