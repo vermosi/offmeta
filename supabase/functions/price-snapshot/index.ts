@@ -1,122 +1,24 @@
 /**
- * price-snapshot — Daily edge function to capture price snapshots
- * for tracked cards (user collections + curated staples watchlist).
- * Triggered by pg_cron or manual invocation.
+ * price-snapshot — Daily incremental price capture for user collections
+ * and active price alerts only. Full-catalog price backfill is handled
+ * weekly by bulk-data-sync.
  *
  * Sources (deduplicated by card name):
- *   1. collection_cards — user-owned cards
- *   2. community_deck_cards — popular community deck cards
- *   3. STAPLES_WATCHLIST — curated list of high-interest staples
+ *   1. collection_cards — user-owned cards (need fresh daily prices)
+ *   2. price_alerts — active alert targets (must stay current)
  *
  * @module functions/price-snapshot
  */
 
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders } from '../_shared/auth.ts';
 import { createLogger } from '../_shared/logger.ts';
 
 const BATCH_SIZE = 75;
-const SCRYFALL_DELAY_MS = 120; // Scryfall asks for 50-100ms between requests
+const SCRYFALL_DELAY_MS = 120;
 
 const log = createLogger('price-snapshot');
-
-/**
- * Curated watchlist of popular Commander/Modern/Standard staples
- * that should always have price tracking, regardless of user collections.
- * Covers top value cards across formats for meaningful market trend data.
- */
-const STAPLES_WATCHLIST: string[] = [
-  // Commander staples — high value
-  'Dockside Extortionist',
-  'Mana Crypt',
-  'Jeweled Lotus',
-  'The One Ring',
-  'Smothering Tithe',
-  'Rhystic Study',
-  'Cyclonic Rift',
-  'Fierce Guardianship',
-  'Deflecting Swat',
-  "Teferi's Protection",
-  'Esper Sentinel',
-  'Mana Drain',
-  'Force of Will',
-  'Chrome Mox',
-  'Mox Diamond',
-  'Ancient Tomb',
-  'Gaea\'s Cradle',
-  'Serra\'s Sanctum',
-  'Vampiric Tutor',
-  'Demonic Tutor',
-  'Sylvan Library',
-  'Doubling Season',
-  'Parallel Lives',
-  'Enlightened Tutor',
-  'Mystical Tutor',
-  'Worldly Tutor',
-  'Sensei\'s Divining Top',
-  'Urza\'s Saga',
-  'The Meathook Massacre',
-  'Boseiju, Who Endures',
-
-  // Modern staples
-  'Ragavan, Nimble Pilferer',
-  'Wrenn and Six',
-  'Orcish Bowmasters',
-  'Solitude',
-  'Subtlety',
-  'Fury',
-  'Endurance',
-  'Grief',
-  'Aether Vial',
-  'Cavern of Souls',
-  'Misty Rainforest',
-  'Scalding Tarn',
-  'Verdant Catacombs',
-  'Polluted Delta',
-  'Flooded Strand',
-  'Bloodstained Mire',
-  'Wooded Foothills',
-  'Windswept Heath',
-  'Arid Mesa',
-  'Marsh Flats',
-
-  // Standard / Pioneer crossovers
-  'Sheoldred, the Apocalypse',
-  'Atraxa, Grand Unifier',
-  'Fable of the Mirror-Breaker',
-  'Ledger Shredder',
-  'Raffine, Scheming Seer',
-  'Omnath, Locus of Creation',
-  'Wandering Emperor',
-  'Wedding Announcement',
-
-  // EDH / cEDH powerhouses
-  'Ad Nauseam',
-  'Thassa\'s Oracle',
-  'Underworld Breach',
-  'Tainted Pact',
-  'Dauthi Voidwalker',
-  'Opposition Agent',
-  'Drannith Magistrate',
-  'Grand Abolisher',
-  'Collector Ouphe',
-  'Null Rod',
-
-  // Lands with price movement
-  'Yavimaya, Cradle of Growth',
-  'Urborg, Tomb of Yawgmoth',
-  'Strip Mine',
-  'Wasteland',
-  'Command Tower',
-  'Arcane Signet',
-  'Sol Ring',
-  'Lightning Greaves',
-  'Swiftfoot Boots',
-  'Skullclamp',
-];
 
 serve(async (req: Request): Promise<Response> => {
   const corsHeaders = getCorsHeaders(req);
@@ -136,11 +38,9 @@ serve(async (req: Request): Promise<Response> => {
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
   try {
-    // ── Gather card names from all sources ──────────────────────────
-
     const uniqueCards = new Map<string, string | null>(); // card_name → scryfall_id
 
-    // Source 1: User collection cards
+    // Source 1: User collection cards (need daily prices for portfolio value)
     const { data: collectionCards } = await supabase
       .from('collection_cards')
       .select('card_name, scryfall_id')
@@ -152,39 +52,20 @@ serve(async (req: Request): Promise<Response> => {
       }
     }
 
-    // Source 2: All unique community deck cards (MTGJSON + Spicerack imports)
-    // Paginate to get all unique card names
-    const communityNames = new Set<string>();
-    let communityFrom = 0;
-    const PAGE = 1000;
-    while (communityNames.size < 5000) {
-      const { data: chunk } = await supabase
-        .from('community_deck_cards')
-        .select('card_name')
-        .range(communityFrom, communityFrom + PAGE - 1);
-      if (!chunk || chunk.length === 0) break;
-      for (const c of chunk) {
-        communityNames.add(c.card_name);
-      }
-      if (chunk.length < PAGE) break;
-      communityFrom += PAGE;
-    }
+    // Source 2: Active price alert targets (must stay current for triggers)
+    const { data: alertCards } = await supabase
+      .from('price_alerts')
+      .select('card_name, scryfall_id')
+      .eq('is_active', true);
 
-    for (const name of communityNames) {
-      if (!uniqueCards.has(name)) {
-        uniqueCards.set(name, null);
-      }
-    }
-
-    // Source 3: Curated watchlist (always tracked)
-    for (const name of STAPLES_WATCHLIST) {
-      if (!uniqueCards.has(name)) {
-        uniqueCards.set(name, null);
+    for (const a of alertCards ?? []) {
+      if (!uniqueCards.has(a.card_name)) {
+        uniqueCards.set(a.card_name, a.scryfall_id);
       }
     }
 
     const cardList = Array.from(uniqueCards.entries());
-    log.info(`Tracking ${cardList.length} unique cards (${collectionCards?.length ?? 0} collection, ${communityNames.size} community, ${STAPLES_WATCHLIST.length} watchlist)`);
+    log.info(`Tracking ${cardList.length} cards (${collectionCards?.length ?? 0} collection, ${alertCards?.length ?? 0} alerts)`);
 
     if (cardList.length === 0) {
       return new Response(JSON.stringify({ success: true, snapshotCount: 0 }), { status: 200, headers });
@@ -230,7 +111,6 @@ serve(async (req: Request): Promise<Response> => {
         log.warn('Scryfall batch failed', { batch: i, error: String(e) });
       }
 
-      // Rate limit: wait between batches
       if (i + BATCH_SIZE < cardList.length) {
         await new Promise((r) => setTimeout(r, SCRYFALL_DELAY_MS));
       }
@@ -239,7 +119,6 @@ serve(async (req: Request): Promise<Response> => {
     // ── Insert snapshots ────────────────────────────────────────────
 
     if (snapshots.length > 0) {
-      // Insert in chunks of 500 to avoid payload limits
       for (let i = 0; i < snapshots.length; i += 500) {
         const chunk = snapshots.slice(i, i + 500);
         const { error: insertErr } = await supabase
@@ -254,6 +133,7 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     // ── Check price alerts ────────────────────────────────────────
+
     let alertsTriggered = 0;
     try {
       const { data: activeAlerts } = await supabase
@@ -262,7 +142,6 @@ serve(async (req: Request): Promise<Response> => {
         .eq('is_active', true);
 
       if (activeAlerts && activeAlerts.length > 0) {
-        // Build a price lookup from freshly inserted snapshots
         const priceMap = new Map<string, number>();
         for (const s of snapshots) {
           if (s.price_usd) priceMap.set(s.card_name, s.price_usd);
@@ -304,13 +183,11 @@ serve(async (req: Request): Promise<Response> => {
         }
 
         if (triggeredIds.length > 0) {
-          // Mark alerts as triggered and inactive
           await supabase
             .from('price_alerts')
             .update({ is_active: false, triggered_at: new Date().toISOString() })
             .in('id', triggeredIds);
 
-          // Insert notifications
           for (let i = 0; i < notifications.length; i += 100) {
             await supabase
               .from('user_notifications')
@@ -342,8 +219,7 @@ serve(async (req: Request): Promise<Response> => {
         alertsTriggered,
         sources: {
           collection: collectionCards?.length ?? 0,
-          community: communityNames.size,
-          watchlist: STAPLES_WATCHLIST.length,
+          alerts: alertCards?.length ?? 0,
           uniqueTracked: cardList.length,
         },
       }),

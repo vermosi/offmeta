@@ -1,10 +1,10 @@
 /**
- * card-sync — Populates the cards table with Scryfall metadata
- * for all unique oracle IDs found in community_deck_cards.
- * Processes in batches using Scryfall collection endpoint.
+ * card-sync — Incremental sync for cards missing from the cards table.
+ * Only processes NEW oracle IDs found in community_deck_cards that aren't
+ * yet in the cards table. Full catalog backfill is handled weekly by
+ * bulk-data-sync.
  * @module functions/card-sync
  */
-
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -23,7 +23,6 @@ serve(async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Auth guard: accept anon key (for pg_cron) or service role
   const auth = await validateAuth(req);
   if (!auth.authorized) {
     return new Response(JSON.stringify({ error: auth.error }), { status: 401, headers });
@@ -38,15 +37,15 @@ serve(async (req: Request): Promise<Response> => {
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
   try {
-    // Use the get_missing_oracle_ids RPC (created via migration)
+    // Only fetch oracle IDs that are missing from cards table
     const { data: missingCards, error: rpcErr } = await supabase
       .rpc('get_missing_oracle_ids')
-      .limit(1000);
+      .limit(500);
 
     let oracleIds: string[] = [];
     if (rpcErr || !missingCards) {
       log.warn('get_missing_oracle_ids RPC failed, using fallback', { error: rpcErr?.message });
-      // Paginated fallback: fetch oracle IDs not yet in cards table
+      // Fallback: manual lookup
       const allIds = new Set<string>();
       let from = 0;
       const PAGE = 1000;
@@ -74,33 +73,18 @@ serve(async (req: Request): Promise<Response> => {
       oracleIds = (missingCards as Array<{ oracle_id: string }>).map((r) => r.oracle_id);
     }
 
-    // Also find cards missing rarity/legalities for backfill
-    let backfillIds: string[] = [];
-    {
-      const { data: incomplete } = await supabase
-        .from('cards')
-        .select('oracle_id')
-        .or('rarity.is.null,legalities.is.null')
-        .limit(500);
-      if (incomplete && incomplete.length > 0) {
-        backfillIds = incomplete.map((r) => r.oracle_id);
-      }
-    }
-
-    const allIds = [...new Set([...oracleIds, ...backfillIds])];
-
-    if (allIds.length === 0) {
+    if (oracleIds.length === 0) {
       return new Response(
-        JSON.stringify({ success: true, synced: 0, backfilled: 0, message: 'All cards up to date' }),
-        { status: 200, headers }
+        JSON.stringify({ success: true, synced: 0, message: 'All cards up to date' }),
+        { status: 200, headers },
       );
     }
 
-    log.info(`Syncing ${oracleIds.length} new + ${backfillIds.length} backfill cards from Scryfall`);
+    log.info(`Syncing ${oracleIds.length} missing cards from Scryfall`);
     let synced = 0;
 
-    for (let i = 0; i < allIds.length; i += SCRYFALL_BATCH_SIZE) {
-      const batch = allIds.slice(i, i + SCRYFALL_BATCH_SIZE);
+    for (let i = 0; i < oracleIds.length; i += SCRYFALL_BATCH_SIZE) {
+      const batch = oracleIds.slice(i, i + SCRYFALL_BATCH_SIZE);
       const identifiers = batch.map((id) => ({ oracle_id: id }));
 
       try {
@@ -148,23 +132,21 @@ serve(async (req: Request): Promise<Response> => {
         log.warn('Scryfall batch error', { batch: i, error: String(e) });
       }
 
-      if (i + SCRYFALL_BATCH_SIZE < allIds.length) {
+      if (i + SCRYFALL_BATCH_SIZE < oracleIds.length) {
         await new Promise((r) => setTimeout(r, SCRYFALL_DELAY_MS));
       }
     }
 
-    const newCount = oracleIds.length;
-    const backfilledCount = synced > newCount ? synced - newCount : 0;
-    log.info(`Card sync complete: new=${Math.min(synced, newCount)}, backfilled=${backfilledCount}`);
+    log.info(`Card sync complete: ${synced} new cards added`);
     return new Response(
-      JSON.stringify({ success: true, synced, newCards: newCount, backfilled: backfillIds.length }),
-      { status: 200, headers }
+      JSON.stringify({ success: true, synced }),
+      { status: 200, headers },
     );
   } catch (e) {
     log.error('card-sync error', e);
     return new Response(
       JSON.stringify({ error: 'Internal error' }),
-      { status: 500, headers }
+      { status: 500, headers },
     );
   }
 });
