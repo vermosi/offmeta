@@ -309,6 +309,7 @@ export async function autocomplete(query: string): Promise<string[]> {
   if (!response.ok) return [];
 
   const data: AutocompleteResult = await response.json();
+  recordHit('scryfall', 'autocomplete', data.data.length);
   return data.data;
 }
 
