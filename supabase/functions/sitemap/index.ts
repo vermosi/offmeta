@@ -2,6 +2,7 @@
  * Sitemap Edge Function
  * Generates a dynamic XML sitemap including:
  * - Static pages (home, combos, about, etc.)
+ * - Curated SEO search pages
  * - Top card pages from the cards table
  *
  * @module sitemap
@@ -13,6 +14,7 @@ const BASE_URL = 'https://offmeta.lovable.app';
 
 const STATIC_PAGES = [
   { loc: '/', priority: '1.0', changefreq: 'daily' },
+  { loc: '/browse-searches', priority: '0.8', changefreq: 'weekly' },
   { loc: '/combos', priority: '0.8', changefreq: 'weekly' },
   { loc: '/market-trends', priority: '0.7', changefreq: 'daily' },
   { loc: '/about', priority: '0.5', changefreq: 'monthly' },
@@ -43,6 +45,13 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Fetch curated search pages
+    const { data: curatedSearches } = await supabase
+      .from('curated_searches')
+      .select('slug, priority, updated_at')
+      .eq('is_active', true)
+      .order('priority', { ascending: false });
+
     // Fetch top cards (most relevant ones with images)
     const { data: cards } = await supabase
       .from('cards')
@@ -66,6 +75,22 @@ serve(async (req) => {
     <priority>${page.priority}</priority>
   </url>
 `;
+    }
+
+    // Curated search pages (high-value SEO targets)
+    if (curatedSearches) {
+      for (const search of curatedSearches) {
+        const lastmod = search.updated_at
+          ? new Date(search.updated_at).toISOString().split('T')[0]
+          : today;
+        xml += `  <url>
+    <loc>${BASE_URL}/search/${search.slug}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>${Math.min(Number(search.priority) || 0.7, 0.9)}</priority>
+  </url>
+`;
+      }
     }
 
     // Card pages

@@ -5,13 +5,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 /**
  * Prerender edge function — returns SEO-enriched HTML for /cards/:slug and /search/:slug.
  *
- * Instead of serving an empty SPA shell, this function:
- * 1. Parses the requested path
- * 2. Fetches card/search data from Scryfall
- * 3. Returns complete HTML with <title>, OG tags, JSON-LD, and visible content
- *
- * This is proxied via _redirects for /cards/* and /search/* paths.
- * The HTML includes the SPA entry point so the app hydrates normally for interactive users.
+ * For curated search pages, uses editorial title/description from the curated_searches table.
+ * Otherwise falls back to the natural language query derived from the slug.
  */
 
 const SITE_URL = 'https://offmeta.app';
@@ -58,13 +53,18 @@ interface ScryfallSearchResult {
   data: ScryfallCard[];
 }
 
+function getSupabaseClient() {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!supabaseUrl || !serviceRoleKey) return null;
+  return createClient(supabaseUrl, serviceRoleKey);
+}
+
 async function fetchCardByName(name: string): Promise<ScryfallCard | null> {
   // Try local DB first
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    if (supabaseUrl && serviceRoleKey) {
-      const supabase = createClient(supabaseUrl, serviceRoleKey);
+    const supabase = getSupabaseClient();
+    if (supabase) {
       const { data } = await supabase
         .from('cards')
         .select('name, mana_cost, type_line, oracle_text, colors, image_url, rarity, legalities')
@@ -86,7 +86,6 @@ async function fetchCardByName(name: string): Promise<ScryfallCard | null> {
     }
   } catch { /* fall through to Scryfall */ }
 
-  // Fall back to Scryfall
   try {
     const res = await fetch(`${SCRYFALL_API}/cards/named?fuzzy=${encodeURIComponent(name)}`);
     if (!res.ok) return null;
@@ -101,8 +100,30 @@ async function fetchSearchResults(query: string, limit = 6): Promise<ScryfallSea
     const res = await fetch(`${SCRYFALL_API}/cards/search?q=${encodeURIComponent(query)}&page=1`);
     if (!res.ok) return null;
     const data = await res.json() as ScryfallSearchResult;
-    // Limit to first N for the preview
     data.data = data.data.slice(0, limit);
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+interface CuratedSearch {
+  title: string;
+  description: string;
+  scryfall_query: string;
+  category: string;
+}
+
+async function fetchCuratedSearch(slug: string): Promise<CuratedSearch | null> {
+  try {
+    const supabase = getSupabaseClient();
+    if (!supabase) return null;
+    const { data } = await supabase
+      .from('curated_searches')
+      .select('title, description, scryfall_query, category')
+      .eq('slug', slug)
+      .eq('is_active', true)
+      .maybeSingle();
     return data;
   } catch {
     return null;
@@ -166,12 +187,23 @@ function buildCardPageHtml(card: ScryfallCard, slug: string): string {
   });
 }
 
-function buildSearchPageHtml(query: string, slug: string, results: ScryfallSearchResult | null): string {
-  const titleQuery = query.length > 40 ? query.slice(0, 40) + '…' : query;
-  const title = `${titleQuery} — MTG Card Search | OffMeta`;
-  const desc = results
-    ? `Found ${results.total_cards} Magic: The Gathering cards matching "${query}". Browse results with natural language search on OffMeta.`
-    : `Search Magic: The Gathering cards for "${query}" using natural language on OffMeta.`;
+function buildSearchPageHtml(
+  query: string,
+  slug: string,
+  results: ScryfallSearchResult | null,
+  curated?: CuratedSearch | null,
+): string {
+  // Use curated editorial title/description if available
+  const title = curated
+    ? `${curated.title} | OffMeta`
+    : `${query.length > 40 ? query.slice(0, 40) + '…' : query} — MTG Card Search | OffMeta`;
+
+  const desc = curated
+    ? curated.description
+    : results
+      ? `Found ${results.total_cards} Magic: The Gathering cards matching "${query}". Browse results with natural language search on OffMeta.`
+      : `Search Magic: The Gathering cards for "${query}" using natural language on OffMeta.`;
+
   const canonicalUrl = `${SITE_URL}/search/${slug}`;
 
   const itemListElements = results?.data.map((card, i) => ({
@@ -184,7 +216,8 @@ function buildSearchPageHtml(query: string, slug: string, results: ScryfallSearc
   const jsonLd = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: `MTG cards: ${query}`,
+    name: curated ? curated.title : `MTG cards: ${query}`,
+    description: desc,
     numberOfItems: results?.total_cards ?? 0,
     itemListElement: itemListElements,
   });
@@ -197,6 +230,8 @@ function buildSearchPageHtml(query: string, slug: string, results: ScryfallSearc
     </li>
   `).join('') ?? '';
 
+  const heading = curated ? curated.title : `MTG Card Search: ${query}`;
+
   return buildFullHtml({
     title,
     description: desc,
@@ -204,9 +239,11 @@ function buildSearchPageHtml(query: string, slug: string, results: ScryfallSearc
     image: OG_IMAGE_DEFAULT,
     jsonLd,
     bodyContent: `
-      <h1>MTG Card Search: ${escapeHtml(query)}</h1>
+      <h1>${escapeHtml(heading)}</h1>
+      ${curated ? `<p>${escapeHtml(curated.description)}</p>` : ''}
       ${results ? `<p>Found ${results.total_cards} cards matching this search.</p>` : '<p>Search for Magic: The Gathering cards using natural language.</p>'}
       ${cardListHtml ? `<ol>${cardListHtml}</ol>` : ''}
+      <p><a href="${SITE_URL}/browse-searches">Browse more curated searches</a></p>
       <p><a href="${SITE_URL}">Search more cards on OffMeta</a></p>
     `,
   });
@@ -230,7 +267,6 @@ function buildFullHtml(opts: FullHtmlOptions): string {
   <title>${escapeHtml(opts.title)}</title>
   <meta name="description" content="${escapeHtml(opts.description)}" />
   <link rel="canonical" href="${escapeHtml(opts.canonicalUrl)}" />
-  <meta name="robots" content="noindex, follow" />
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
@@ -273,7 +309,6 @@ function buildFullHtml(opts: FullHtmlOptions): string {
 // ── Request handler ──────────────────────────────────────────────────────────
 
 Deno.serve(async (req: Request) => {
-  // CORS preflight
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -319,12 +354,20 @@ Deno.serve(async (req: Request) => {
     const searchMatch = path.match(/^\/search\/([a-z0-9-]+)$/);
     if (searchMatch) {
       const slug = searchMatch[1];
-      const query = slugToQuery(slug);
-      const results = await fetchSearchResults(query);
 
-      return new Response(buildSearchPageHtml(query, slug, results), {
+      // Check if this is a curated search page
+      const curated = await fetchCuratedSearch(slug);
+      const searchQuery = curated ? curated.scryfall_query : slugToQuery(slug);
+      const results = await fetchSearchResults(searchQuery);
+
+      // Curated pages get longer cache (content is editorial)
+      const cacheControl = curated
+        ? 'public, max-age=3600, s-maxage=86400'
+        : 'public, max-age=1800, s-maxage=3600';
+
+      return new Response(buildSearchPageHtml(curated?.title ?? slugToQuery(slug), slug, results, curated), {
         status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=1800, s-maxage=3600' },
+        headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': cacheControl },
       });
     }
 

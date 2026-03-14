@@ -87,6 +87,7 @@ export function Header() {
     { label: t('nav.archetypes'), href: '/archetypes' },
     { label: t('nav.combos'), href: '/combos' },
     { label: t('nav.marketTrends', 'Market Trends'), href: '/market' },
+    { label: 'Browse Searches', href: '/browse-searches' },
   ];
 
   const LEARN_LINKS = [
