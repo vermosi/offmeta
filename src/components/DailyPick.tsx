@@ -12,7 +12,7 @@ import { useTranslation } from '@/lib/i18n';
 import { LOCALE_TO_SCRYFALL_LANG } from '@/lib/i18n/constants';
 import { CardModal } from '@/components/CardModal';
 import type { ScryfallCard } from '@/types/card';
-import { getLocalCardByName, localCardToScryfallShape } from '@/services/local-cards';
+import { getCardByName } from '@/lib/scryfall/client';
 
 const CACHE_KEY_PREFIX = 'offmeta_daily_pick_';
 
