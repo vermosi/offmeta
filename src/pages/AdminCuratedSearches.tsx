@@ -405,7 +405,7 @@ export default function AdminCuratedSearches() {
                           ) : (
                             <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
                           )}
-                          <span className={s.is_active ? 'text-green-500' : 'text-muted-foreground'}>
+                          <span className={s.is_active ? 'text-primary' : 'text-muted-foreground'}>
                             {s.is_active ? 'Active' : 'Inactive'}
                           </span>
                         </button>
