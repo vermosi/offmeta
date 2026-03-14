@@ -69,3 +69,6 @@ verify_jwt = false
 
 [functions.sync-card-names]
 verify_jwt = false
+
+[functions.promote-searches]
+verify_jwt = false

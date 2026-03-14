@@ -1002,6 +1002,20 @@ export type Database = {
           type_line: string
         }[]
       }
+      get_promotion_candidates: {
+        Args: {
+          max_results?: number
+          min_confidence?: number
+          min_frequency?: number
+          since_date: string
+        }
+        Returns: {
+          avg_confidence: number
+          frequency: number
+          query: string
+          top_translation: string
+        }[]
+      }
       get_public_collection_stats: {
         Args: { target_user_id: string }
         Returns: Json
