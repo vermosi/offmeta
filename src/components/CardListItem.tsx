@@ -8,6 +8,7 @@ import type { KeyboardEvent } from 'react';
 import { Link } from 'react-router-dom';
 import type { ScryfallCard } from '@/types/card';
 import { ManaCost } from '@/components/ManaSymbol';
+import { PriceSparkline, type SparklinePoint } from '@/components/PriceSparkline';
 import { cardNameToSlug } from '@/lib/card-slug';
 import {
   getLocalizedName,
