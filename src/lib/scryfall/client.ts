@@ -308,6 +308,14 @@ export async function autocomplete(query: string): Promise<string[]> {
  * @returns A random ScryfallCard
  */
 export async function getRandomCard(): Promise<ScryfallCard> {
+  // Try local DB first (avoids API call entirely)
+  try {
+    const local = await getLocalRandomCard();
+    if (local) return localCardToScryfallShape(local) as ScryfallCard;
+  } catch {
+    // Fall through to Scryfall
+  }
+
   const response = await rateLimitedFetch(`${BASE_URL}/cards/random`);
 
   if (!response.ok) {
