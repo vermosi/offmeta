@@ -77,6 +77,7 @@ import {
   X,
   Save,
   AlertCircle,
+  FileText,
 } from 'lucide-react';
 
 import { Link } from 'react-router-dom';
