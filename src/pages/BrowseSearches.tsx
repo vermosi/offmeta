@@ -107,6 +107,7 @@ export default function BrowseSearches() {
             </div>
           ) : searches.length === 0 ? (
             <p className="text-center text-muted-foreground py-12">No curated searches available yet.</p>
+          ) : (
             <div className="space-y-10">
               {grouped.map(([category, items]) => {
                 const config = CATEGORY_CONFIG[category] ?? { label: category, icon: Search, order: 99 };
