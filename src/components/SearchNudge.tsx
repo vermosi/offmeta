@@ -54,7 +54,7 @@ export function SearchNudge({ hasSearched, onTrySearch }: SearchNudgeProps) {
     handleDismiss();
   }, [onTrySearch, handleDismiss]);
 
-  if (!visible) return null;
+  if (!effectiveVisible) return null;
 
   return (
     <div

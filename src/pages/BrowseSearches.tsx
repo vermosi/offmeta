@@ -47,10 +47,10 @@ export default function BrowseSearches() {
 
         if (cancelled) return;
         if (err) {
-          console.error('[BrowseSearches] fetch error:', err.message, err.code);
+          logger.error('[BrowseSearches] fetch error:', err.message, err.code);
           setError(new Error(err.message));
         } else {
-          console.log('[BrowseSearches] fetched', data?.length, 'curated searches');
+          logger.info('[BrowseSearches] fetched', data?.length, 'curated searches');
           setSearches((data ?? []) as CuratedSearch[]);
         }
       } catch (e) {
