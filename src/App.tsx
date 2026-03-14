@@ -83,6 +83,7 @@ const App = () => (
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/profile" element={<ProfileSettings />} />
                   <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                  <Route path="/admin/curated-searches" element={<AdminCuratedSearches />} />
                   <Route path="/deck-recs" element={<DeckRecommendations />} />
                   <Route path="/combos" element={<FindMyCombos />} />
                   <Route path="/archetypes" element={<ArchetypesIndex />} />
