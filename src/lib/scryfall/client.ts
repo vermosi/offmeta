@@ -253,6 +253,7 @@ export async function getCardsByExactNames(
   // Fetch missing from Scryfall
   if (missingNames.length > 0) {
     logger.info(`Fetching ${missingNames.length}/${uniqueNames.length} cards from Scryfall (not in local DB)`);
+    recordHit('scryfall', 'cards_batch', missingNames.length);
     const chunks: string[][] = [];
     for (let i = 0; i < missingNames.length; i += 75) {
       chunks.push(missingNames.slice(i, i + 75));
