@@ -46,7 +46,7 @@ async function fetchCuratedSearches(): Promise<CuratedSearch[]> {
 }
 
 export default function BrowseSearches() {
-  const { data: searches = [], isLoading } = useQuery({
+  const { data: searches = [], isLoading, error } = useQuery({
     queryKey: ['curated-searches'],
     queryFn: fetchCuratedSearches,
     staleTime: 30 * 60 * 1000,
