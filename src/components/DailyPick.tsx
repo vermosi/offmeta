@@ -1,8 +1,6 @@
 /**
  * Daily Off-Meta Pick — showcases a different hidden gem card each day.
- * Displayed as an always-visible card box (not collapsible).
- * Fetches localized card data based on the current i18n locale.
- * Clicking the card opens CardModal for in-app details.
+ * Uses local database first, falling back to Scryfall for localized data.
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -14,6 +12,7 @@ import { useTranslation } from '@/lib/i18n';
 import { LOCALE_TO_SCRYFALL_LANG } from '@/lib/i18n/constants';
 import { CardModal } from '@/components/CardModal';
 import type { ScryfallCard } from '@/types/card';
+import { getLocalCardByName, localCardToScryfallShape } from '@/services/local-cards';
 
 const CACHE_KEY_PREFIX = 'offmeta_daily_pick_';
 
@@ -48,7 +47,7 @@ export function DailyPick() {
       try {
         let data: ScryfallCard | null = null;
 
-        // Try fetching localized version first (for non-English locales)
+        // For non-English, try Scryfall for localized version
         if (scryfallLang !== 'en') {
           const localizedRes = await fetch(
             `https://api.scryfall.com/cards/search?q=!"${encodeURIComponent(gem.name)}"+lang:${scryfallLang}&unique=prints`,
@@ -61,7 +60,15 @@ export function DailyPick() {
           }
         }
 
-        // Fallback to English
+        // For English, try local DB first
+        if (!data) {
+          const localCard = await getLocalCardByName(gem.name);
+          if (localCard) {
+            data = localCardToScryfallShape(localCard) as ScryfallCard;
+          }
+        }
+
+        // Final fallback: Scryfall API
         if (!data) {
           const res = await fetch(
             `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(gem.name)}`,

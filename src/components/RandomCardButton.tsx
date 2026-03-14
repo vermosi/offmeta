@@ -19,9 +19,9 @@ export function RandomCardButton() {
     if (loading) return;
     setLoading(true);
     try {
-      const res = await fetch('https://api.scryfall.com/cards/random');
-      if (!res.ok) throw new Error('Failed to fetch');
-      const data: ScryfallCard = await res.json();
+      // Uses local-first via the updated scryfall client
+      const { getRandomCard } = await import('@/lib/scryfall/client');
+      const data = await getRandomCard();
       setCard(data);
     } catch {
       // Silently fail — button stays clickable
