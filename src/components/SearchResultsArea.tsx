@@ -112,6 +112,13 @@ export function SearchResultsArea({
     () => (cards.length > 0 ? cards[0] : null),
     [cards],
   );
+
+  // Batch-fetch sparkline data for visible cards
+  const sparklineNames = useMemo(
+    () => displayCards.map((c) => c.name).slice(0, 200),
+    [displayCards],
+  );
+  const { data: sparklineMap } = useBatchPriceHistory(sparklineNames);
   return (
     <div className="mt-3 sm:mt-6 container-main">
       {/* Cards tab */}
