@@ -26,6 +26,7 @@ const SavedSearches = lazy(() => import('./pages/SavedSearches'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
 const AdminAnalytics = lazy(() => import('./pages/AdminAnalytics'));
+const AdminCuratedSearches = lazy(() => import('./pages/AdminCuratedSearches'));
 const DeckRecommendations = lazy(() => import('./pages/DeckRecommendations'));
 const FindMyCombos = lazy(() => import('./pages/FindMyCombos'));
 const ArchetypesIndex = lazy(() => import('./pages/ArchetypesIndex'));
