@@ -29,6 +29,7 @@ export const CardListItem = memo(function CardListItem({
   onClick,
   tabIndex = 0,
   isOwned,
+  sparklineData,
 }: CardListItemProps) {
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
