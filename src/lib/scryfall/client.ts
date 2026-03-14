@@ -335,6 +335,7 @@ export async function getRandomCard(): Promise<ScryfallCard> {
     throw new Error(`Failed to get random card: ${response.statusText}`);
   }
 
+  recordHit('scryfall', 'random_card');
   return response.json();
 }
 
