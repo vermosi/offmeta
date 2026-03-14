@@ -11,6 +11,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { ScryfallCard } from '@/types/card';
 import { logger } from '@/lib/core/logger';
+import { recordHit } from '@/services/hit-rate-tracker';
 
 // ── In-memory caches ────────────────────────────────────────────────────────
 
