@@ -101,14 +101,9 @@ describe('useDeckPrice', () => {
     (cache as { current: Map<string, ScryfallCard> }).current = new Map();
     const onUpdate = vi.fn();
 
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          data: [{ name: 'Sol Ring', prices: { usd: '3.00' } }],
-        }),
-        { status: 200 },
-      ),
-    );
+    mockGetCardsByExactNames.mockResolvedValueOnce([
+      { name: 'Sol Ring', prices: { usd: '3.00' } },
+    ]);
 
     const { result } = renderHook(() =>
       useDeckPrice([makeDeckCard('Sol Ring', 1)], cache, onUpdate),
@@ -118,10 +113,7 @@ describe('useDeckPrice', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    expect(fetchSpy).toHaveBeenCalledWith(
-      'https://api.scryfall.com/cards/collection',
-      expect.objectContaining({ method: 'POST' }),
-    );
+    expect(mockGetCardsByExactNames).toHaveBeenCalledWith(['Sol Ring']);
     expect(result.current.total).toBe(3.0);
   });
 
