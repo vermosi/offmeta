@@ -101,6 +101,13 @@ export const CardListItem = memo(function CardListItem({
         {card.rarity}
       </span>
 
+      {/* Sparkline */}
+      {sparklineData && sparklineData.length >= 2 && (
+        <span className="hidden sm:flex flex-shrink-0">
+          <PriceSparkline data={sparklineData} width={48} height={16} />
+        </span>
+      )}
+
       {/* Price */}
       {price && (
         <span className="text-xs font-medium text-foreground flex-shrink-0 w-14 text-right">
