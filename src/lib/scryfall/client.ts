@@ -321,7 +321,10 @@ export async function getRandomCard(): Promise<ScryfallCard> {
   // Try local DB first (avoids API call entirely)
   try {
     const local = await getLocalRandomCard();
-    if (local) return localCardToScryfallShape(local) as ScryfallCard;
+    if (local) {
+      recordHit('local', 'random_card');
+      return localCardToScryfallShape(local) as ScryfallCard;
+    }
   } catch {
     // Fall through to Scryfall
   }
