@@ -257,6 +257,10 @@ export async function getLocalPrices(
         }
       }
     }
+
+    if (result.size > 0) {
+      recordHit('local', 'price_lookup', result.size);
+    }
   } catch (err) {
     logger.error('Local price lookup failed', err);
   }
