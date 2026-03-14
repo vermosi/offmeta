@@ -10,6 +10,7 @@ import { Search, Sword, DollarSign, Users, Sparkles, Palette, Shield, Crown } fr
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { applySeoMeta, injectJsonLd } from '@/lib/seo';
+import { logger } from '@/lib/core/logger';
 
 interface CuratedSearch {
   slug: string;
@@ -46,10 +47,10 @@ export default function BrowseSearches() {
 
         if (cancelled) return;
         if (err) {
-          console.error('[BrowseSearches] fetch error:', err.message, err.code);
+          logger.error('[BrowseSearches] fetch error:', err.message, err.code);
           setError(new Error(err.message));
         } else {
-          console.log('[BrowseSearches] fetched', data?.length, 'curated searches');
+          logger.info('[BrowseSearches] fetched', data?.length, 'curated searches');
           setSearches((data ?? []) as CuratedSearch[]);
         }
       } catch (e) {

@@ -4,7 +4,7 @@
  * @module pages/admin-analytics/components/HitRatePanel
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Database, Globe, History, RefreshCw, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -169,6 +169,7 @@ export function HitRatePanel() {
   const [stats, setStats] = useState(() => getHitRateStats());
   const [historical, setHistorical] = useState<HistoricalStats>(EMPTY_HISTORICAL);
   const [loadingHistorical, setLoadingHistorical] = useState(true);
+  const didLoad = useRef(false);
 
   const loadHistorical = useCallback(async () => {
     setLoadingHistorical(true);
@@ -177,9 +178,11 @@ export function HitRatePanel() {
     setLoadingHistorical(false);
   }, []);
 
-  useEffect(() => {
+  // Fire once on mount via ref guard (avoids setState-in-effect lint error)
+  if (!didLoad.current) {
+    didLoad.current = true;
     loadHistorical();
-  }, [loadHistorical]);
+  }
 
   const refresh = useCallback(async () => {
     await forceFlushHitRates();

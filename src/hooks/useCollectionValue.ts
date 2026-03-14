@@ -5,8 +5,8 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { useCollection, type CollectionCard } from '@/hooks/useCollection';
-import { getLocalPrices, getLocalCardsByNames, type LocalCard } from '@/services/local-cards';
+import { useCollection } from '@/hooks/useCollection';
+import { getLocalPrices, getLocalCardsByNames } from '@/services/local-cards';
 import { getCardsByExactNames } from '@/lib/scryfall/client';
 
 interface CardMeta {

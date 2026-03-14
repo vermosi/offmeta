@@ -39,12 +39,8 @@ export function SearchNudge({ hasSearched, onTrySearch }: SearchNudgeProps) {
     return () => clearTimeout(timer);
   }, [hasSearched, dismissed]);
 
-  // Auto-hide when user searches
-  useEffect(() => {
-    if (hasSearched) {
-      setVisible((prev) => prev ? false : prev);
-    }
-  }, [hasSearched]);
+  // Auto-hide when user searches — derive from hasSearched instead of effect
+  const effectiveVisible = visible && !hasSearched;
 
   const handleDismiss = useCallback(() => {
     setVisible(false);
@@ -58,7 +54,7 @@ export function SearchNudge({ hasSearched, onTrySearch }: SearchNudgeProps) {
     handleDismiss();
   }, [onTrySearch, handleDismiss]);
 
-  if (!visible) return null;
+  if (!effectiveVisible) return null;
 
   return (
     <div

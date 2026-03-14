@@ -6,7 +6,7 @@
 
 import { lazy, useMemo } from 'react';
 import { useBatchPriceHistory } from '@/hooks/useBatchPriceHistory';
-import type { SparklinePoint } from '@/components/PriceSparkline';
+
 import { CardItem } from '@/components/CardItem';
 import { CardListItem } from '@/components/CardListItem';
 import { CardImageItem } from '@/components/CardImageItem';

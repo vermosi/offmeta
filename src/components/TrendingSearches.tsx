@@ -4,7 +4,7 @@
  * Shown on homepage before search for users without search history.
  */
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { TrendingUp, Search } from 'lucide-react';
 
 // Curated popular searches based on analytics data — rotate periodically
@@ -32,18 +32,18 @@ export function TrendingSearches({ onSearch, hasHistory }: TrendingSearchesProps
   // Show fewer if user already has history (they know the app)
   const count = hasHistory ? 4 : 8;
 
-  // Rotate based on day of year so it feels fresh — memoised to avoid impure call during render
+  // Rotate based on day of year so it feels fresh
+  const [dayOfYear] = useState(() => Math.floor(
+    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000,
+  ));
   const displayed = useMemo(() => {
-    const dayOfYear = Math.floor(
-      (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000,
-    );
     const startIdx = dayOfYear % TRENDING_SEARCHES.length;
     const items: string[] = [];
     for (let i = 0; i < count; i++) {
       items.push(TRENDING_SEARCHES[(startIdx + i) % TRENDING_SEARCHES.length]);
     }
     return items;
-  }, [count]);
+  }, [count, dayOfYear]);
 
   return (
     <section className="animate-fade-in">
