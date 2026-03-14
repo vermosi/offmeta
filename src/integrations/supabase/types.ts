@@ -316,6 +316,51 @@ export type Database = {
         }
         Relationships: []
       }
+      curated_searches: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          natural_query: string
+          priority: number
+          scryfall_query: string
+          slug: string
+          source: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description: string
+          id?: string
+          is_active?: boolean
+          natural_query: string
+          priority?: number
+          scryfall_query: string
+          slug: string
+          source?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          natural_query?: string
+          priority?: number
+          scryfall_query?: string
+          slug?: string
+          source?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       deck_cards: {
         Row: {
           board: string
