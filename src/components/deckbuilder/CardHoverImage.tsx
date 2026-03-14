@@ -8,7 +8,7 @@
 import { useState, useRef, useCallback } from 'react';
 import type { ScryfallCard } from '@/types/card';
 import { cardImageFetchCache } from './constants';
-import { getLocalCardImage } from '@/services/local-cards';
+import { getCardByName, getCardImage } from '@/lib/scryfall/client';
 
 interface CardHoverImageProps {
   cardName: string;
