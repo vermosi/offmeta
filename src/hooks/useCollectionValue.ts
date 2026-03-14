@@ -1,11 +1,12 @@
 /**
  * Hook for collection value estimation and set tracking.
- * Resolves prices via Scryfall /cards/collection endpoint.
+ * Uses local price_snapshots table first, falls back to Scryfall.
  * @module hooks/useCollectionValue
  */
 
 import { useQuery } from '@tanstack/react-query';
 import { useCollection, type CollectionCard } from '@/hooks/useCollection';
+import { getLocalPrices, getLocalCardsByNames, type LocalCard } from '@/services/local-cards';
 
 interface ScryfallCardPrice {
   name: string;
@@ -29,12 +30,11 @@ export interface SetCompletionEntry {
   setCode: string;
   setName: string;
   ownedCount: number;
-  /** We don't know set totals client-side, so we just show owned count */
 }
 
 const BATCH_SIZE = 75;
 
-async function fetchPrices(
+async function fetchPricesFromScryfall(
   cards: CollectionCard[],
 ): Promise<ScryfallCardPrice[]> {
   const all: ScryfallCardPrice[] = [];
@@ -66,7 +66,6 @@ async function fetchPrices(
         }
       }
 
-      // Rate limit respect
       if (i + BATCH_SIZE < cards.length) {
         await new Promise((r) => setTimeout(r, 50));
       }
@@ -110,12 +109,59 @@ export function useCollectionValue() {
         };
       }
 
-      const priceData = await fetchPrices(collection);
+      const cardNames = collection.map((c) => c.card_name);
 
-      // Build a name → price+metadata lookup
-      const priceMap = new Map<string, ScryfallCardPrice>();
-      for (const p of priceData) {
-        priceMap.set(p.name.toLowerCase(), p);
+      // Try local prices + card metadata first
+      const [localPrices, localCards] = await Promise.all([
+        getLocalPrices(cardNames),
+        getLocalCardsByNames(cardNames),
+      ]);
+
+      // Find cards with no local price data — only fetch those from Scryfall
+      const missingPriceCards = collection.filter(
+        (c) => !localPrices.has(c.card_name),
+      );
+
+      let scryfallData: ScryfallCardPrice[] = [];
+      if (missingPriceCards.length > 0) {
+        scryfallData = await fetchPricesFromScryfall(missingPriceCards);
+      }
+
+      // Build unified price + metadata lookup
+      const priceMap = new Map<string, { usd: number | null; usd_foil: number | null }>();
+      const metaMap = new Map<string, { rarity: string; colors: string[] }>();
+
+      // Local prices
+      for (const [name, lp] of localPrices) {
+        priceMap.set(name.toLowerCase(), {
+          usd: lp.price_usd,
+          usd_foil: lp.price_usd_foil,
+        });
+      }
+
+      // Local card metadata
+      for (const [name, lc] of localCards) {
+        metaMap.set(name.toLowerCase(), {
+          rarity: lc.rarity ?? 'common',
+          colors: lc.colors,
+        });
+      }
+
+      // Scryfall fallback prices
+      for (const s of scryfallData) {
+        const key = s.name.toLowerCase();
+        if (!priceMap.has(key)) {
+          priceMap.set(key, {
+            usd: s.prices.usd ? parseFloat(s.prices.usd) : null,
+            usd_foil: s.prices.usd_foil ? parseFloat(s.prices.usd_foil) : null,
+          });
+        }
+        if (!metaMap.has(key)) {
+          metaMap.set(key, {
+            rarity: s.rarity,
+            colors: s.color_identity,
+          });
+        }
       }
 
       let totalValue = 0;
@@ -123,14 +169,14 @@ export function useCollectionValue() {
       const cardPrices = new Map<string, number>();
       const byRarity: Record<string, { count: number; value: number }> = {};
       const byColor: Record<string, { count: number; value: number }> = {};
-      const setMap = new Map<string, { setName: string; count: number }>();
 
       for (const card of collection) {
-        const resolved = priceMap.get(card.card_name.toLowerCase());
-        const priceStr = card.foil
-          ? (resolved?.prices?.usd_foil ?? resolved?.prices?.usd)
-          : (resolved?.prices?.usd ?? resolved?.prices?.usd_foil);
-        const price = priceStr ? parseFloat(priceStr) : 0;
+        const key = card.card_name.toLowerCase();
+        const prices = priceMap.get(key);
+        const priceVal = card.foil
+          ? (prices?.usd_foil ?? prices?.usd ?? null)
+          : (prices?.usd ?? prices?.usd_foil ?? null);
+        const price = priceVal ?? 0;
 
         if (price > 0) {
           const lineValue = price * card.quantity;
@@ -141,13 +187,14 @@ export function useCollectionValue() {
         }
 
         // Rarity breakdown
-        const rarity = resolved?.rarity ?? 'unknown';
+        const meta = metaMap.get(key);
+        const rarity = meta?.rarity ?? 'unknown';
         if (!byRarity[rarity]) byRarity[rarity] = { count: 0, value: 0 };
         byRarity[rarity].count += card.quantity;
         byRarity[rarity].value += price * card.quantity;
 
         // Color breakdown
-        const colors = resolved?.color_identity ?? [];
+        const colors = meta?.colors ?? [];
         if (colors.length === 0) {
           if (!byColor['Colorless'])
             byColor['Colorless'] = { count: 0, value: 0 };
@@ -161,40 +208,19 @@ export function useCollectionValue() {
             byColor[label].value += price * card.quantity;
           }
         }
-
-        // Set tracking
-        if (resolved?.set) {
-          const existing = setMap.get(resolved.set);
-          if (existing) {
-            existing.count += card.quantity;
-          } else {
-            setMap.set(resolved.set, {
-              setName: resolved.set_name,
-              count: card.quantity,
-            });
-          }
-        }
       }
-
-      const setCompletion = Array.from(setMap.entries())
-        .map(([setCode, data]) => ({
-          setCode,
-          setName: data.setName,
-          ownedCount: data.count,
-        }))
-        .sort((a, b) => b.ownedCount - a.ownedCount);
 
       return {
         totalValue: Math.round(totalValue * 100) / 100,
         cardPrices,
         byRarity,
         byColor,
-        setCompletion,
+        setCompletion: [], // Set completion requires Scryfall set data we don't store
         missingPriceCount,
       };
     },
     enabled: collection.length > 0,
-    staleTime: 30 * 60 * 1000, // 30 min (prices don't change fast)
+    staleTime: 30 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
   });
 }

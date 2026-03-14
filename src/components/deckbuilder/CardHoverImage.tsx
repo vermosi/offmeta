@@ -1,10 +1,6 @@
 /**
  * Wraps children in a hover-triggered floating card image preview.
- * Fetches card images lazily via Scryfall named endpoint and caches the result
- * in a module-level Map so subsequent hovers are free.
- *
- * The cache is exposed so DeckEditor can clear it on unmount to prevent stale
- * data leaking between deck sessions in the same tab.
+ * Uses local database for card images first, falling back to Scryfall.
  *
  * @module components/deckbuilder/CardHoverImage
  */
@@ -12,6 +8,7 @@
 import { useState, useRef, useCallback } from 'react';
 import type { ScryfallCard } from '@/types/card';
 import { cardImageFetchCache } from './constants';
+import { getLocalCardImage } from '@/services/local-cards';
 
 interface CardHoverImageProps {
   cardName: string;
@@ -38,6 +35,19 @@ export function CardHoverImage({ cardName, scryfallCache, children }: CardHoverI
         setImgUrl(url);
         return;
       }
+
+      // Try local DB first
+      try {
+        const localUrl = await getLocalCardImage(cardName);
+        if (localUrl) {
+          cardImageFetchCache.set(cardName, localUrl);
+          setImgUrl(localUrl);
+          return;
+        }
+      } catch {
+        // Fall through to Scryfall
+      }
+
       try {
         const res = await fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(cardName)}`);
         if (res.ok) {

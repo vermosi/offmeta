@@ -10,6 +10,11 @@ import type { DeckCard } from '@/hooks/useDeck';
 import type { ScryfallCard } from '@/types/card';
 import { createRef } from 'react';
 
+// Mock local-cards service to avoid supabase dependency in tests
+vi.mock('@/services/local-cards', () => ({
+  getLocalPrices: vi.fn().mockResolvedValue(new Map()),
+}));
+
 const makeDeckCard = (name: string, qty: number): DeckCard => ({
   id: `dc-${name}`,
   deck_id: 'deck-1',

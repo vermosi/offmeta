@@ -9,6 +9,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { ScryfallCard } from '@/types/card';
 
+// Mock local-cards service to avoid supabase dependency in tests
+vi.mock('@/services/local-cards', () => ({
+  getLocalCardByName: vi.fn().mockResolvedValue(null),
+  getLocalCardsByNames: vi.fn().mockResolvedValue(new Map()),
+  getLocalRandomCard: vi.fn().mockResolvedValue(null),
+  localAutocomplete: vi.fn().mockResolvedValue([]),
+  localCardToScryfallShape: vi.fn().mockReturnValue({}),
+}));
+
 const mockResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
