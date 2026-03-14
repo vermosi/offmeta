@@ -10,7 +10,7 @@ import type {
   AutocompleteResult,
 } from '@/types/card';
 import { logger } from '@/lib/core/logger';
-import {
+import { rateLimitedFetch, fetchWithRetry } from './fetch-utils';
   getLocalCardByName,
   getLocalCardsByNames,
   getLocalRandomCard,
