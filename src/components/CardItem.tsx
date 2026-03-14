@@ -11,6 +11,7 @@ import type { ScryfallCard } from '@/types/card';
 import { getCardImage } from '@/lib/scryfall/client';
 import { getTCGPlayerUrl } from '@/lib/scryfall/printings';
 import { ManaCost } from '@/components/ManaSymbol';
+import { PriceSparkline, type SparklinePoint } from '@/components/PriceSparkline';
 import { cardNameToSlug } from '@/lib/card-slug';
 import { ShoppingCart } from 'lucide-react';
 import {
@@ -26,6 +27,7 @@ interface CardItemProps {
   onClick: () => void;
   tabIndex?: number;
   isOwned?: boolean;
+  sparklineData?: SparklinePoint[];
 }
 
 /** Format a price string to a compact display. */
@@ -47,6 +49,7 @@ export const CardItem = memo(function CardItem({
   onClick,
   tabIndex = 0,
   isOwned,
+  sparklineData,
 }: CardItemProps) {
   const imageUrl = getCardImage(card, 'normal');
   const [imgError, setImgError] = useState(false);
@@ -158,15 +161,20 @@ export const CardItem = memo(function CardItem({
               <ManaCost cost={manaCost} size="sm" className="drop-shadow" />
             )}
             {price && (
-              <button
-                onClick={handleBuyClick}
-                className="flex items-center gap-0.5 text-[9px] sm:text-[10px] font-medium text-emerald-300 tabular-nums hover:text-emerald-200 transition-colors pointer-events-auto"
-                aria-label={`Buy ${displayName} for ${price}`}
-                title={`Buy on TCGplayer for ${price}`}
-              >
-                <ShoppingCart className="h-2.5 w-2.5" />
-                {price}
-              </button>
+              <div className="flex items-center gap-1">
+                {sparklineData && sparklineData.length >= 2 && (
+                  <PriceSparkline data={sparklineData} width={36} height={14} />
+                )}
+                <button
+                  onClick={handleBuyClick}
+                  className="flex items-center gap-0.5 text-[9px] sm:text-[10px] font-medium text-emerald-300 tabular-nums hover:text-emerald-200 transition-colors pointer-events-auto"
+                  aria-label={`Buy ${displayName} for ${price}`}
+                  title={`Buy on TCGplayer for ${price}`}
+                >
+                  <ShoppingCart className="h-2.5 w-2.5" />
+                  {price}
+                </button>
+              </div>
             )}
           </div>
         </div>

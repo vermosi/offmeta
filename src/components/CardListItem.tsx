@@ -8,6 +8,7 @@ import type { KeyboardEvent } from 'react';
 import { Link } from 'react-router-dom';
 import type { ScryfallCard } from '@/types/card';
 import { ManaCost } from '@/components/ManaSymbol';
+import { PriceSparkline, type SparklinePoint } from '@/components/PriceSparkline';
 import { cardNameToSlug } from '@/lib/card-slug';
 import {
   getLocalizedName,
@@ -20,6 +21,7 @@ interface CardListItemProps {
   onClick: () => void;
   tabIndex?: number;
   isOwned?: boolean;
+  sparklineData?: SparklinePoint[];
 }
 
 export const CardListItem = memo(function CardListItem({
@@ -27,6 +29,7 @@ export const CardListItem = memo(function CardListItem({
   onClick,
   tabIndex = 0,
   isOwned,
+  sparklineData,
 }: CardListItemProps) {
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -97,6 +100,13 @@ export const CardListItem = memo(function CardListItem({
       <span className="hidden lg:block text-xs text-muted-foreground capitalize flex-shrink-0 w-16 text-center">
         {card.rarity}
       </span>
+
+      {/* Sparkline */}
+      {sparklineData && sparklineData.length >= 2 && (
+        <span className="hidden sm:flex flex-shrink-0">
+          <PriceSparkline data={sparklineData} width={48} height={16} />
+        </span>
+      )}
 
       {/* Price */}
       {price && (

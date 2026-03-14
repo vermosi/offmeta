@@ -5,6 +5,8 @@
  */
 
 import { lazy, useMemo } from 'react';
+import { useBatchPriceHistory } from '@/hooks/useBatchPriceHistory';
+import type { SparklinePoint } from '@/components/PriceSparkline';
 import { CardItem } from '@/components/CardItem';
 import { CardListItem } from '@/components/CardListItem';
 import { CardImageItem } from '@/components/CardImageItem';
@@ -110,6 +112,13 @@ export function SearchResultsArea({
     () => (cards.length > 0 ? cards[0] : null),
     [cards],
   );
+
+  // Batch-fetch sparkline data for visible cards
+  const sparklineNames = useMemo(
+    () => displayCards.map((c) => c.name).slice(0, 200),
+    [displayCards],
+  );
+  const { data: sparklineMap } = useBatchPriceHistory(sparklineNames);
   return (
     <div className="mt-3 sm:mt-6 container-main">
       {/* Cards tab */}
@@ -157,6 +166,7 @@ export function SearchResultsArea({
                             onClick={() => handleCardClick(card, index)}
                             tabIndex={rovingProps.tabIndex}
                             isOwned={collectionLookup.has(card.name)}
+                            sparklineData={sparklineMap?.get(card.name)}
                           />
                         </div>
                       );
@@ -250,6 +260,7 @@ export function SearchResultsArea({
                             }
                             tabIndex={rovingProps.tabIndex}
                             isOwned={collectionLookup.has(card.name)}
+                            sparklineData={sparklineMap?.get(card.name)}
                           />
                         </div>
                       );
