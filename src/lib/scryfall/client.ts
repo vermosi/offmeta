@@ -293,7 +293,10 @@ export async function autocomplete(query: string): Promise<string[]> {
   // Try local card_names table first
   try {
     const localResults = await localAutocomplete(query);
-    if (localResults.length > 0) return localResults;
+    if (localResults.length > 0) {
+      recordHit('local', 'autocomplete', localResults.length);
+      return localResults;
+    }
   } catch {
     // Fall through to Scryfall
   }
