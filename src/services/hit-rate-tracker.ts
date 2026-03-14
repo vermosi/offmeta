@@ -1,8 +1,11 @@
 /**
  * Tracks local DB vs Scryfall API hit rates for monitoring.
- * Lightweight in-memory counters with session persistence.
+ * Lightweight in-memory counters with session persistence
+ * and periodic flush to analytics_events table.
  * @module services/hit-rate-tracker
  */
+
+import { supabase } from '@/integrations/supabase/client';
 
 export type HitSource = 'local' | 'scryfall' | 'cache';
 export type HitOperation =
@@ -15,7 +18,7 @@ export type HitOperation =
 interface HitEvent {
   source: HitSource;
   operation: HitOperation;
-  count: number; // number of cards resolved in this event
+  count: number;
   timestamp: number;
 }
 
@@ -31,8 +34,12 @@ interface HitRateStats {
 
 const SESSION_KEY = 'offmeta_hit_rate';
 const MAX_EVENTS = 200;
+const FLUSH_INTERVAL_MS = 30_000;
+const FLUSH_BATCH_SIZE = 50;
 
 let events: HitEvent[] = [];
+let pendingFlush: HitEvent[] = [];
+let flushTimer: ReturnType<typeof setTimeout> | null = null;
 
 // Restore from session on load
 try {
@@ -42,9 +49,16 @@ try {
   // ignore
 }
 
+function getSessionId(): string | null {
+  try {
+    return sessionStorage.getItem('offmeta_session_id');
+  } catch {
+    return null;
+  }
+}
+
 function persist(): void {
   try {
-    // Keep only recent events to avoid bloating sessionStorage
     if (events.length > MAX_EVENTS) {
       events = events.slice(-MAX_EVENTS);
     }
@@ -52,6 +66,76 @@ function persist(): void {
   } catch {
     // ignore quota errors
   }
+}
+
+/**
+ * Flush pending hit events to analytics_events table.
+ * Aggregates by source+operation to reduce row count.
+ */
+async function flushToDb(): Promise<void> {
+  if (pendingFlush.length === 0) return;
+
+  const batch = pendingFlush.splice(0, FLUSH_BATCH_SIZE);
+  const sessionId = getSessionId();
+
+  // Aggregate by source+operation for compact storage
+  const aggregated = new Map<
+    string,
+    { source: HitSource; operation: HitOperation; count: number; firstTs: number; lastTs: number }
+  >();
+
+  for (const e of batch) {
+    const key = `${e.source}::${e.operation}`;
+    const existing = aggregated.get(key);
+    if (existing) {
+      existing.count += e.count;
+      existing.lastTs = Math.max(existing.lastTs, e.timestamp);
+    } else {
+      aggregated.set(key, {
+        source: e.source,
+        operation: e.operation,
+        count: e.count,
+        firstTs: e.timestamp,
+        lastTs: e.timestamp,
+      });
+    }
+  }
+
+  const rows = Array.from(aggregated.values()).map((a) => ({
+    event_type: 'hit_rate',
+    session_id: sessionId,
+    event_data: {
+      source: a.source,
+      operation: a.operation,
+      count: a.count,
+      first_ts: a.firstTs,
+      last_ts: a.lastTs,
+    },
+  }));
+
+  try {
+    await supabase.from('analytics_events').insert(rows);
+  } catch {
+    // Re-queue on failure so we don't lose data
+    pendingFlush.unshift(...batch);
+  }
+}
+
+function scheduleFlush(): void {
+  if (flushTimer) return;
+  flushTimer = setTimeout(() => {
+    flushTimer = null;
+    flushToDb();
+  }, FLUSH_INTERVAL_MS);
+}
+
+// Flush remaining events before page unload
+if (typeof window !== 'undefined') {
+  window.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && pendingFlush.length > 0) {
+      flushToDb();
+    }
+  });
 }
 
 /**
@@ -65,13 +149,16 @@ export function recordHit(
   operation: HitOperation,
   count = 1,
 ): void {
-  events.push({
+  const event: HitEvent = {
     source,
     operation,
     count,
     timestamp: Date.now(),
-  });
+  };
+  events.push(event);
+  pendingFlush.push(event);
   persist();
+  scheduleFlush();
 }
 
 /**
@@ -131,9 +218,15 @@ export function getHitRateStats(): HitRateStats {
 /** Clear all tracked events. */
 export function clearHitRateStats(): void {
   events = [];
+  pendingFlush = [];
   try {
     sessionStorage.removeItem(SESSION_KEY);
   } catch {
     // ignore
   }
+}
+
+/** Force flush pending events to DB immediately. */
+export function forceFlushHitRates(): Promise<void> {
+  return flushToDb();
 }
