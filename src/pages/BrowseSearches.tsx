@@ -4,9 +4,8 @@
  * @module pages/BrowseSearches
  */
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import { Search, Sword, DollarSign, Users, Sparkles, Palette, Shield, Crown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
@@ -30,27 +29,38 @@ const CATEGORY_CONFIG: Record<string, { label: string; icon: typeof Search; orde
   general: { label: 'General', icon: Sword, order: 7 },
 };
 
-async function fetchCuratedSearches(): Promise<CuratedSearch[]> {
-  const { data, error } = await supabase
-    .from('curated_searches')
-    .select('slug, title, description, category, natural_query')
-    .eq('is_active', true)
-    .order('priority', { ascending: false });
-
-  if (error) {
-    console.error('[BrowseSearches] fetch error:', error.message, error.code);
-    throw error;
-  }
-  console.log('[BrowseSearches] fetched', data?.length, 'curated searches');
-  return (data ?? []) as CuratedSearch[];
-}
-
 export default function BrowseSearches() {
-  const { data: searches = [], isLoading, error } = useQuery({
-    queryKey: ['curated-searches'],
-    queryFn: fetchCuratedSearches,
-    staleTime: 30 * 60 * 1000,
-  });
+  const [searches, setSearches] = useState<CuratedSearch[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const { data, error: err } = await supabase
+          .from('curated_searches')
+          .select('slug, title, description, category, natural_query')
+          .eq('is_active', true)
+          .order('priority', { ascending: false });
+
+        if (cancelled) return;
+        if (err) {
+          console.error('[BrowseSearches] fetch error:', err.message, err.code);
+          setError(new Error(err.message));
+        } else {
+          console.log('[BrowseSearches] fetched', data?.length, 'curated searches');
+          setSearches((data ?? []) as CuratedSearch[]);
+        }
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e : new Error('Unknown error'));
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
 
   const grouped = useMemo(() => {
     const groups = new Map<string, CuratedSearch[]>();
