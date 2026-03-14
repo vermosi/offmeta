@@ -34,6 +34,7 @@ const DeckBuilder = lazy(() => import('./pages/DeckBuilder'));
 const DeckEditor = lazy(() => import('./pages/DeckEditor'));
 const PublicDeckView = lazy(() => import('./pages/PublicDeckView'));
 const BrowseDecks = lazy(() => import('./pages/BrowseDecks'));
+const BrowseSearches = lazy(() => import('./pages/BrowseSearches'));
 const About = lazy(() => import('./pages/About'));
 const Collection = lazy(() => import('./pages/Collection'));
 const MarketTrends = lazy(() => import('./pages/MarketTrends'));
