@@ -37,7 +37,11 @@ async function fetchCuratedSearches(): Promise<CuratedSearch[]> {
     .eq('is_active', true)
     .order('priority', { ascending: false });
 
-  if (error) throw error;
+  if (error) {
+    console.error('[BrowseSearches] fetch error:', error.message, error.code);
+    throw error;
+  }
+  console.log('[BrowseSearches] fetched', data?.length, 'curated searches');
   return (data ?? []) as CuratedSearch[];
 }
 
