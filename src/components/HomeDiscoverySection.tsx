@@ -11,6 +11,7 @@ import { RecentSearches } from '@/components/RecentSearches';
 import { TrendingSearches } from '@/components/TrendingSearches';
 import { TrendingCardsWidget } from '@/components/TrendingCardsWidget';
 import { SearchCTA } from '@/components/SearchCTA';
+import { CuratedSearchesWidget } from '@/components/CuratedSearchesWidget';
 
 const SEARCH_HISTORY_KEY = 'offmeta_search_history';
 
