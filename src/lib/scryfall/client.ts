@@ -17,6 +17,7 @@ import {
   localAutocomplete,
   localCardToScryfallShape,
 } from '@/services/local-cards';
+import { recordHit } from '@/services/hit-rate-tracker';
 
 const BASE_URL = 'https://api.scryfall.com';
 const FETCH_TIMEOUT_MS = 8000;
