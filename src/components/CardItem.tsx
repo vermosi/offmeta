@@ -49,6 +49,7 @@ export const CardItem = memo(function CardItem({
   onClick,
   tabIndex = 0,
   isOwned,
+  sparklineData,
 }: CardItemProps) {
   const imageUrl = getCardImage(card, 'normal');
   const [imgError, setImgError] = useState(false);
