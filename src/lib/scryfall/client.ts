@@ -1,6 +1,6 @@
 /**
  * Scryfall API client for Magic: The Gathering card data.
- * Handles rate limiting, search, and card image retrieval.
+ * Uses local database first, falls back to Scryfall API when data is missing.
  * @module lib/scryfall/client
  */
 
@@ -10,6 +10,13 @@ import type {
   AutocompleteResult,
 } from '@/types/card';
 import { logger } from '@/lib/core/logger';
+import {
+  getLocalCardByName,
+  getLocalCardsByNames,
+  getLocalRandomCard,
+  localAutocomplete,
+  localCardToScryfallShape,
+} from '@/services/local-cards';
 
 const BASE_URL = 'https://api.scryfall.com';
 const FETCH_TIMEOUT_MS = 8000;
