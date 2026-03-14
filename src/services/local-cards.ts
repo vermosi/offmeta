@@ -11,6 +11,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { ScryfallCard } from '@/types/card';
 import { logger } from '@/lib/core/logger';
+import { recordHit } from '@/services/hit-rate-tracker';
 
 // ── In-memory caches ────────────────────────────────────────────────────────
 
@@ -255,6 +256,10 @@ export async function getLocalPrices(
           });
         }
       }
+    }
+
+    if (result.size > 0) {
+      recordHit('local', 'price_lookup', result.size);
     }
   } catch (err) {
     logger.error('Local price lookup failed', err);

@@ -17,6 +17,7 @@ import {
   localAutocomplete,
   localCardToScryfallShape,
 } from '@/services/local-cards';
+import { recordHit } from '@/services/hit-rate-tracker';
 
 const BASE_URL = 'https://api.scryfall.com';
 const FETCH_TIMEOUT_MS = 8000;
@@ -245,9 +246,14 @@ export async function getCardsByExactNames(
     }
   }
 
+  if (localCards.size > 0) {
+    recordHit('local', 'cards_batch', localCards.size);
+  }
+
   // Fetch missing from Scryfall
   if (missingNames.length > 0) {
     logger.info(`Fetching ${missingNames.length}/${uniqueNames.length} cards from Scryfall (not in local DB)`);
+    recordHit('scryfall', 'cards_batch', missingNames.length);
     const chunks: string[][] = [];
     for (let i = 0; i < missingNames.length; i += 75) {
       chunks.push(missingNames.slice(i, i + 75));
@@ -287,7 +293,10 @@ export async function autocomplete(query: string): Promise<string[]> {
   // Try local card_names table first
   try {
     const localResults = await localAutocomplete(query);
-    if (localResults.length > 0) return localResults;
+    if (localResults.length > 0) {
+      recordHit('local', 'autocomplete', localResults.length);
+      return localResults;
+    }
   } catch {
     // Fall through to Scryfall
   }
@@ -300,6 +309,7 @@ export async function autocomplete(query: string): Promise<string[]> {
   if (!response.ok) return [];
 
   const data: AutocompleteResult = await response.json();
+  recordHit('scryfall', 'autocomplete', data.data.length);
   return data.data;
 }
 
@@ -311,7 +321,10 @@ export async function getRandomCard(): Promise<ScryfallCard> {
   // Try local DB first (avoids API call entirely)
   try {
     const local = await getLocalRandomCard();
-    if (local) return localCardToScryfallShape(local) as ScryfallCard;
+    if (local) {
+      recordHit('local', 'random_card');
+      return localCardToScryfallShape(local) as ScryfallCard;
+    }
   } catch {
     // Fall through to Scryfall
   }
@@ -322,6 +335,7 @@ export async function getRandomCard(): Promise<ScryfallCard> {
     throw new Error(`Failed to get random card: ${response.statusText}`);
   }
 
+  recordHit('scryfall', 'random_card');
   return response.json();
 }
 
@@ -335,7 +349,10 @@ export async function getCardByName(name: string): Promise<ScryfallCard> {
   // Try local DB first
   try {
     const local = await getLocalCardByName(name);
-    if (local) return localCardToScryfallShape(local) as ScryfallCard;
+    if (local) {
+      recordHit('local', 'card_by_name');
+      return localCardToScryfallShape(local) as ScryfallCard;
+    }
   } catch {
     // Fall through to Scryfall
   }
@@ -349,6 +366,7 @@ export async function getCardByName(name: string): Promise<ScryfallCard> {
     throw new Error(`Card not found: ${name}`);
   }
 
+  recordHit('scryfall', 'card_by_name');
   return response.json();
 }
 
