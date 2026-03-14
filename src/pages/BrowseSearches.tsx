@@ -11,11 +11,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { applySeoMeta, injectJsonLd } from '@/lib/seo';
 import { logger } from '@/lib/core/logger';
-import { Link } from 'react-router-dom';
-import { Search, Sword, DollarSign, Users, Sparkles, Palette, Shield, Crown } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { Header } from '@/components/Header';
-import { applySeoMeta, injectJsonLd } from '@/lib/seo';
 
 interface CuratedSearch {
   slug: string;

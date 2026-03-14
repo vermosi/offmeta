@@ -4,7 +4,7 @@
  * Shown on homepage before search for users without search history.
  */
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { TrendingUp, Search } from 'lucide-react';
 
 // Curated popular searches based on analytics data — rotate periodically
