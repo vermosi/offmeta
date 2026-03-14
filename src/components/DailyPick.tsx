@@ -12,7 +12,7 @@ import { useTranslation } from '@/lib/i18n';
 import { LOCALE_TO_SCRYFALL_LANG } from '@/lib/i18n/constants';
 import { CardModal } from '@/components/CardModal';
 import type { ScryfallCard } from '@/types/card';
-import { getLocalCardByName, localCardToScryfallShape } from '@/services/local-cards';
+import { getCardByName } from '@/lib/scryfall/client';
 
 const CACHE_KEY_PREFIX = 'offmeta_daily_pick_';
 
@@ -60,21 +60,13 @@ export function DailyPick() {
           }
         }
 
-        // For English, try local DB first
+        // Use shared local-first client (checks DB, then Scryfall)
         if (!data) {
-          const localCard = await getLocalCardByName(gem.name);
-          if (localCard) {
-            data = localCardToScryfallShape(localCard) as ScryfallCard;
+          try {
+            data = await getCardByName(gem.name) as ScryfallCard;
+          } catch {
+            throw new Error('Card not found');
           }
-        }
-
-        // Final fallback: Scryfall API
-        if (!data) {
-          const res = await fetch(
-            `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(gem.name)}`,
-          );
-          if (!res.ok) throw new Error('Card not found');
-          data = await res.json();
         }
 
         if (!cancelled && data) {

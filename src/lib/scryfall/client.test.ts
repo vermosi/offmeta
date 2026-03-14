@@ -1,6 +1,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { ScryfallCard } from '@/types/card';
 
+// Mock local-cards to prevent DB calls in unit tests
+vi.mock('@/services/local-cards', () => ({
+  getLocalCardByName: vi.fn().mockResolvedValue(null),
+  getLocalCardsByNames: vi.fn().mockResolvedValue(new Map()),
+  getLocalRandomCard: vi.fn().mockResolvedValue(null),
+  localAutocomplete: vi.fn().mockResolvedValue([]),
+  localCardToScryfallShape: vi.fn(),
+}));
+
+vi.mock('@/services/hit-rate-tracker', () => ({
+  recordHit: vi.fn(),
+}));
+
 const mockResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,

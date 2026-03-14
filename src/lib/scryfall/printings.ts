@@ -6,6 +6,7 @@
 
 import type { ScryfallCard } from '@/types/card';
 import { logger } from '@/lib/core/logger';
+import { rateLimitedFetch } from './fetch-utils';
 
 const BASE_URL = 'https://api.scryfall.com';
 
@@ -44,85 +45,12 @@ export interface PrintingsResult {
   data: ScryfallCard[];
 }
 
-// Rate limiting
-let lastRequestTime = 0;
-const MIN_REQUEST_INTERVAL = 100;
-
 // Cache for printings to avoid redundant API calls
 const printingsCache = new Map<
   string,
   { data: CardPrinting[]; timestamp: number }
 >();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-const FETCH_TIMEOUT_MS = 8000;
-const MAX_RETRIES = 2;
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-async function fetchWithTimeout(
-  url: string,
-  timeoutMs: number,
-): Promise<Response> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    return await fetch(url, {
-      signal: controller.signal,
-      credentials: 'omit',
-    });
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
-async function fetchWithRetry(
-  url: string,
-  retries = MAX_RETRIES,
-): Promise<Response> {
-  let attempt = 0;
-  let lastError: Error | undefined;
-
-  while (attempt <= retries) {
-    try {
-      const response = await fetchWithTimeout(url, FETCH_TIMEOUT_MS);
-      if (
-        !response.ok &&
-        (response.status === 429 || response.status >= 500) &&
-        attempt < retries
-      ) {
-        await sleep(300 * (attempt + 1));
-        attempt += 1;
-        continue;
-      }
-      return response;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      if (attempt >= retries) {
-        throw lastError;
-      }
-      await sleep(300 * (attempt + 1));
-      attempt += 1;
-    }
-  }
-
-  throw lastError ?? new Error('Request failed');
-}
-
-async function rateLimitedFetch(url: string): Promise<Response> {
-  const now = Date.now();
-  const timeSinceLastRequest = now - lastRequestTime;
-
-  if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
-    await new Promise((resolve) =>
-      setTimeout(resolve, MIN_REQUEST_INTERVAL - timeSinceLastRequest),
-    );
-  }
-
-  lastRequestTime = Date.now();
-  return fetchWithRetry(url);
-}
 
 /**
  * Fetch all printings of a card from Scryfall.

@@ -157,16 +157,43 @@ async function fetchMoxfieldDeck(
 }
 
 /**
- * Batch-resolve oracle IDs using Scryfall /cards/collection endpoint.
+ * Batch-resolve oracle IDs — checks local cards table first, falls back to Scryfall.
  */
 async function batchResolveOracleIds(
   cardNames: string[],
+  supabase: ReturnType<typeof createClient>,
 ): Promise<Map<string, string | null>> {
   const result = new Map<string, string | null>();
   const unique = [...new Set(cardNames)];
 
-  for (let i = 0; i < unique.length; i += SCRYFALL_BATCH_SIZE) {
-    const batch = unique.slice(i, i + SCRYFALL_BATCH_SIZE);
+  // 1. Check local cards table first
+  const missing: string[] = [];
+  for (let i = 0; i < unique.length; i += 100) {
+    const batch = unique.slice(i, i + 100);
+    try {
+      const { data } = await supabase
+        .from('cards')
+        .select('name, oracle_id')
+        .in('name', batch);
+
+      if (data) {
+        for (const row of data) {
+          result.set(row.name, row.oracle_id);
+        }
+      }
+    } catch { /* continue */ }
+
+    for (const name of batch) {
+      if (!result.has(name)) missing.push(name);
+    }
+  }
+
+  if (missing.length === 0) return result;
+
+  // 2. Fall back to Scryfall for missing cards
+  log.info(`Resolving ${missing.length}/${unique.length} oracle IDs from Scryfall (not in local DB)`);
+  for (let i = 0; i < missing.length; i += SCRYFALL_BATCH_SIZE) {
+    const batch = missing.slice(i, i + SCRYFALL_BATCH_SIZE);
     const identifiers = batch.map((name) => ({ name }));
 
     try {
@@ -192,7 +219,7 @@ async function batchResolveOracleIds(
       for (const name of batch) result.set(name, null);
     }
 
-    if (i + SCRYFALL_BATCH_SIZE < unique.length) {
+    if (i + SCRYFALL_BATCH_SIZE < missing.length) {
       await new Promise((r) => setTimeout(r, SCRYFALL_DELAY_MS));
     }
   }
@@ -395,7 +422,7 @@ serve(async (req: Request): Promise<Response> => {
 
         // Batch resolve oracle IDs for all cards
         const cardNames = cards.map((c) => c.name).filter(Boolean);
-        const oracleMap = await batchResolveOracleIds(cardNames);
+        const oracleMap = await batchResolveOracleIds(cardNames, supabase);
 
         const cardRows = cards
           .filter((c) => c.name)

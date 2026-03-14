@@ -1,5 +1,7 @@
 declare const Deno: { env: { get(key: string): string | undefined }; serve: (handler: (req: Request) => Promise<Response>) => void };
 
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
 /**
  * Prerender edge function — returns SEO-enriched HTML for /cards/:slug and /search/:slug.
  *
@@ -57,6 +59,34 @@ interface ScryfallSearchResult {
 }
 
 async function fetchCardByName(name: string): Promise<ScryfallCard | null> {
+  // Try local DB first
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (supabaseUrl && serviceRoleKey) {
+      const supabase = createClient(supabaseUrl, serviceRoleKey);
+      const { data } = await supabase
+        .from('cards')
+        .select('name, mana_cost, type_line, oracle_text, colors, image_url, rarity, legalities')
+        .ilike('name', name)
+        .limit(1)
+        .maybeSingle();
+
+      if (data) {
+        return {
+          name: data.name,
+          mana_cost: data.mana_cost ?? undefined,
+          type_line: data.type_line ?? undefined,
+          oracle_text: data.oracle_text ?? undefined,
+          image_uris: data.image_url ? { normal: data.image_url, art_crop: data.image_url } : undefined,
+          rarity: data.rarity ?? undefined,
+          legalities: data.legalities as Record<string, string> | undefined,
+        };
+      }
+    }
+  } catch { /* fall through to Scryfall */ }
+
+  // Fall back to Scryfall
   try {
     const res = await fetch(`${SCRYFALL_API}/cards/named?fuzzy=${encodeURIComponent(name)}`);
     if (!res.ok) return null;

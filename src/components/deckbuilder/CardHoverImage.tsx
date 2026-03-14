@@ -8,7 +8,7 @@
 import { useState, useRef, useCallback } from 'react';
 import type { ScryfallCard } from '@/types/card';
 import { cardImageFetchCache } from './constants';
-import { getLocalCardImage } from '@/services/local-cards';
+import { getCardByName, getCardImage } from '@/lib/scryfall/client';
 
 interface CardHoverImageProps {
   cardName: string;
@@ -36,30 +36,14 @@ export function CardHoverImage({ cardName, scryfallCache, children }: CardHoverI
         return;
       }
 
-      // Try local DB first
+      // Use shared local-first client (checks DB, then falls back to Scryfall)
       try {
-        const localUrl = await getLocalCardImage(cardName);
-        if (localUrl) {
-          cardImageFetchCache.set(cardName, localUrl);
-          setImgUrl(localUrl);
-          return;
-        }
-      } catch {
-        // Fall through to Scryfall
-      }
-
-      try {
-        const res = await fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(cardName)}`);
-        if (res.ok) {
-          const data = await res.json();
-          scryfallCache.current?.set(cardName, data);
-          const url = data.image_uris?.normal ?? data.card_faces?.[0]?.image_uris?.normal ?? null;
-          cardImageFetchCache.set(cardName, url);
-          setImgUrl(url);
-        } else {
-          cardImageFetchCache.set(cardName, null);
-          setImgUrl(null);
-        }
+        const card = await getCardByName(cardName);
+        scryfallCache.current?.set(cardName, card);
+        const url = getCardImage(card, 'normal');
+        const finalUrl = url === '/placeholder.svg' ? null : url;
+        cardImageFetchCache.set(cardName, finalUrl);
+        setImgUrl(finalUrl);
       } catch {
         cardImageFetchCache.set(cardName, null);
         setImgUrl(null);
