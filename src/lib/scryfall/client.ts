@@ -219,8 +219,8 @@ interface ScryfallCollectionResponse {
 }
 
 /**
- * Fetch many cards by exact name using Scryfall's collection endpoint.
- * Uses chunking to respect Scryfall's 75 identifiers/request limit.
+ * Fetch many cards by exact name. Checks local database first,
+ * then falls back to Scryfall's collection endpoint for missing cards.
  */
 export async function getCardsByExactNames(
   names: string[],
@@ -230,31 +230,47 @@ export async function getCardsByExactNames(
   const uniqueNames = [
     ...new Set(names.map((name) => name.trim()).filter(Boolean)),
   ];
-  const chunks: string[][] = [];
 
-  for (let i = 0; i < uniqueNames.length; i += 75) {
-    chunks.push(uniqueNames.slice(i, i + 75));
+  // Try local DB first
+  const localCards = await getLocalCardsByNames(uniqueNames);
+  const cards: ScryfallCard[] = [];
+  const missingNames: string[] = [];
+
+  for (const name of uniqueNames) {
+    const local = localCards.get(name);
+    if (local) {
+      cards.push(localCardToScryfallShape(local) as ScryfallCard);
+    } else {
+      missingNames.push(name);
+    }
   }
 
-  const cards: ScryfallCard[] = [];
-
-  for (const chunk of chunks) {
-    const response = await fetchWithRetry(`${BASE_URL}/cards/collection`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'omit',
-      body: JSON.stringify({
-        identifiers: chunk.map((name) => ({ name })),
-      }),
-    });
-
-    if (!response.ok) {
-      if (response.status === 404) continue;
-      throw new Error(`Collection fetch failed: ${response.statusText}`);
+  // Fetch missing from Scryfall
+  if (missingNames.length > 0) {
+    logger.info(`Fetching ${missingNames.length}/${uniqueNames.length} cards from Scryfall (not in local DB)`);
+    const chunks: string[][] = [];
+    for (let i = 0; i < missingNames.length; i += 75) {
+      chunks.push(missingNames.slice(i, i + 75));
     }
 
-    const result = (await response.json()) as ScryfallCollectionResponse;
-    cards.push(...result.data);
+    for (const chunk of chunks) {
+      const response = await fetchWithRetry(`${BASE_URL}/cards/collection`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'omit',
+        body: JSON.stringify({
+          identifiers: chunk.map((name) => ({ name })),
+        }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) continue;
+        throw new Error(`Collection fetch failed: ${response.statusText}`);
+      }
+
+      const result = (await response.json()) as ScryfallCollectionResponse;
+      cards.push(...result.data);
+    }
   }
 
   return cards;
