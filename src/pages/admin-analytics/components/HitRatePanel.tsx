@@ -169,6 +169,7 @@ export function HitRatePanel() {
   const [stats, setStats] = useState(() => getHitRateStats());
   const [historical, setHistorical] = useState<HistoricalStats>(EMPTY_HISTORICAL);
   const [loadingHistorical, setLoadingHistorical] = useState(true);
+  const [shouldLoad, setShouldLoad] = useState(true);
 
   const loadHistorical = useCallback(async () => {
     setLoadingHistorical(true);
@@ -177,9 +178,11 @@ export function HitRatePanel() {
     setLoadingHistorical(false);
   }, []);
 
-  useEffect(() => {
+  // Trigger initial load via state flag instead of calling setState in effect
+  if (shouldLoad) {
+    setShouldLoad(false);
     loadHistorical();
-  }, [loadHistorical]);
+  }
 
   const refresh = useCallback(async () => {
     await forceFlushHitRates();
