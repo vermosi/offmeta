@@ -1,6 +1,6 @@
 /**
  * Fetches estimated USD prices for mainboard cards.
- * Uses local price_snapshots first, falls back to Scryfall collection endpoint.
+ * Uses local price_snapshots first, falls back to shared scryfall client.
  *
  * @module hooks/useDeckPrice
  */
@@ -9,6 +9,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import type { DeckCard } from '@/hooks/useDeck';
 import type { ScryfallCard } from '@/types/card';
 import { getLocalPrices } from '@/services/local-cards';
+import { getCardsByExactNames } from '@/lib/scryfall/client';
 
 export function useDeckPrice(
   mainboardCards: DeckCard[],
@@ -41,21 +42,11 @@ export function useDeckPrice(
           (name) => !localPrices.has(name) && !scryfallCache.current?.has(name),
         );
 
-        // Fetch missing from Scryfall
+        // Fetch missing via shared local-first client
         if (uncached.length > 0) {
-          const chunks: string[][] = [];
-          for (let i = 0; i < uncached.length; i += 75) chunks.push(uncached.slice(i, i + 75));
-          for (const chunk of chunks) {
-            const res = await fetch('https://api.scryfall.com/cards/collection', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ identifiers: chunk.map((name) => ({ name })) }),
-            });
-            if (!res.ok) continue;
-            const json = await res.json();
-            for (const card of (json.data ?? [])) {
-              scryfallCache.current?.set(card.name, card);
-            }
+          const cards = await getCardsByExactNames(uncached);
+          for (const card of cards) {
+            scryfallCache.current?.set(card.name, card);
           }
           if (!cancelled) onCacheUpdatedRef.current();
         }
