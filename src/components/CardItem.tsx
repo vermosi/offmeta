@@ -11,6 +11,7 @@ import type { ScryfallCard } from '@/types/card';
 import { getCardImage } from '@/lib/scryfall/client';
 import { getTCGPlayerUrl } from '@/lib/scryfall/printings';
 import { ManaCost } from '@/components/ManaSymbol';
+import { PriceSparkline, type SparklinePoint } from '@/components/PriceSparkline';
 import { cardNameToSlug } from '@/lib/card-slug';
 import { ShoppingCart } from 'lucide-react';
 import {
