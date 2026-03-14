@@ -11,6 +11,7 @@ import type {
 } from '@/types/card';
 import { logger } from '@/lib/core/logger';
 import { rateLimitedFetch, fetchWithRetry } from './fetch-utils';
+import {
   getLocalCardByName,
   getLocalCardsByNames,
   getLocalRandomCard,
@@ -20,8 +21,6 @@ import { rateLimitedFetch, fetchWithRetry } from './fetch-utils';
 import { recordHit } from '@/services/hit-rate-tracker';
 
 const BASE_URL = 'https://api.scryfall.com';
-const FETCH_TIMEOUT_MS = 8000;
-const MAX_RETRIES = 2;
 
 // ── In-memory search result cache ─────────────────────────────────────────────
 // Keyed by "lang::page::query" so page-2 results are cached independently.
