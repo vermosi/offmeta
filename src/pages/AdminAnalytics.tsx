@@ -1047,6 +1047,9 @@ export default function AdminAnalytics() {
               {/* System Status */}
               <SystemStatusPanel />
 
+              {/* Local DB vs Scryfall Hit Rate */}
+              <HitRatePanel />
+
               {/* Auth Failures Panel */}
               <AuthFailuresPanel days={Number(days)} />
 
