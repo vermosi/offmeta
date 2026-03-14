@@ -913,6 +913,13 @@ export default function AdminAnalytics() {
                 Translation pipeline performance and query insights
               </p>
               <PipelineHealthIndicator />
+              <Link
+                to="/admin/curated-searches"
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors mt-1"
+              >
+                <FileText className="h-3.5 w-3.5" />
+                Manage Curated Searches →
+              </Link>
             </div>
 
             <div className="flex items-center gap-2">
