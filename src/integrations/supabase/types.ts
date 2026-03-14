@@ -962,6 +962,7 @@ export type Database = {
       }
     }
     Functions: {
+      check_price_alerts: { Args: never; Returns: undefined }
       cleanup_expired_cache: { Args: never; Returns: undefined }
       get_card_recommendations: {
         Args: {
@@ -1053,6 +1054,7 @@ export type Database = {
           similarity_score: number
         }[]
       }
+      prune_old_price_snapshots: { Args: never; Returns: undefined }
       refresh_archetype_stats: { Args: never; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
