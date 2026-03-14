@@ -349,7 +349,10 @@ export async function getCardByName(name: string): Promise<ScryfallCard> {
   // Try local DB first
   try {
     const local = await getLocalCardByName(name);
-    if (local) return localCardToScryfallShape(local) as ScryfallCard;
+    if (local) {
+      recordHit('local', 'card_by_name');
+      return localCardToScryfallShape(local) as ScryfallCard;
+    }
   } catch {
     // Fall through to Scryfall
   }
