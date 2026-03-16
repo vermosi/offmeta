@@ -137,6 +137,38 @@ const TYPE_WORDS: Record<string, string> = {
   auras: 't:aura',
 };
 
+/** Common creature/card subtypes */
+const SUBTYPE_WORDS: Record<string, string> = {
+  angel: 't:angel', angels: 't:angel',
+  dragon: 't:dragon', dragons: 't:dragon',
+  elf: 't:elf', elves: 't:elf',
+  goblin: 't:goblin', goblins: 't:goblin',
+  zombie: 't:zombie', zombies: 't:zombie',
+  vampire: 't:vampire', vampires: 't:vampire',
+  demon: 't:demon', demons: 't:demon',
+  spirit: 't:spirit', spirits: 't:spirit',
+  human: 't:human', humans: 't:human',
+  wizard: 't:wizard', wizards: 't:wizard',
+  warrior: 't:warrior', warriors: 't:warrior',
+  soldier: 't:soldier', soldiers: 't:soldier',
+  merfolk: 't:merfolk',
+  elemental: 't:elemental', elementals: 't:elemental',
+  sliver: 't:sliver', slivers: 't:sliver',
+  dinosaur: 't:dinosaur', dinosaurs: 't:dinosaur',
+  knight: 't:knight', knights: 't:knight',
+  cleric: 't:cleric', clerics: 't:cleric',
+  rogue: 't:rogue', rogues: 't:rogue',
+  pirate: 't:pirate', pirates: 't:pirate',
+  cat: 't:cat', cats: 't:cat',
+  dog: 't:dog', dogs: 't:dog',
+  bird: 't:bird', birds: 't:bird',
+  beast: 't:beast', beasts: 't:beast',
+  faerie: 't:faerie', faeries: 't:faerie',
+  phyrexian: 't:phyrexian',
+  fungus: 't:fungus',
+  saproling: 't:saproling',
+};
+
 const COST_WORDS: Record<string, string> = {
   cheap: 'mv<=3',
   low: 'mv<=2',
