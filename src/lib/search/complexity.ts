@@ -159,7 +159,7 @@ export function estimateQueryComplexity(query: string): ComplexityEstimate {
  * all filler while dropping constraint words.
  */
 function simplifyQuery(original: string, meaningfulWords: string[]): string {
-  if (meaningfulWords.length <= 8) return original;
+  if (meaningfulWords.length <= 12) return original;
 
   // Priority: type > color > format > keyword > cost numbers > ability > uncovered
   const prioritized: { word: string; priority: number }[] = meaningfulWords.map(w => {
