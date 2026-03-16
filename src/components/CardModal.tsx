@@ -245,10 +245,10 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
   const displayArtist = selectedPrinting?.artist || card.artist;
 
   const displayPrices: DisplayPrices = refreshedPrices || {
-    usd: card.prices.usd,
-    usd_foil: card.prices.usd_foil,
-    eur: card.prices.eur,
-    eur_foil: card.prices.eur_foil,
+    usd: card.prices?.usd,
+    usd_foil: card.prices?.usd_foil,
+    eur: card.prices?.eur,
+    eur_foil: card.prices?.eur_foil,
   };
 
   const displayTix = selectedPrinting?.prices?.tix || card.prices.tix;
