@@ -363,6 +363,25 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
     }
   }
 
+  // 6b. Extract subtypes (angel, dragon, elf, etc.)
+  for (const [word, syntax] of Object.entries(SUBTYPE_WORDS)) {
+    const re = new RegExp(`\\b${word}\\b`, 'i');
+    if (re.test(residual)) {
+      if (!parts.includes(syntax)) {
+        parts.push(syntax);
+      }
+      residual = residual.replace(re, ' ').trim();
+    }
+  }
+
+  // 6c. Extract "search for X from library" patterns (tutor patterns)
+  const searchForMatch = residual.match(/\b(?:search|find|tutor|look)\s+(?:for\s+)?(?:an?\s+)?(artifact|creature|enchantment|instant|sorcery|land|equipment)\s*(?:from|in)?\s*(?:my|your|the)?\s*(?:library|deck)?\b/i);
+  if (searchForMatch) {
+    const targetType = searchForMatch[1].toLowerCase();
+    parts.push(`o:"search your library" o:"${targetType}"`);
+    residual = residual.replace(searchForMatch[0], ' ').trim();
+  }
+
   // 7. Extract formats
   for (const [word, syntax] of Object.entries(FORMAT_WORDS)) {
     const re = new RegExp(`\\b${word}\\b`, 'i');
