@@ -11,6 +11,7 @@ import {
   type TranslationResult,
 } from '@/hooks/useSearchQuery';
 import { buildClientFallbackQuery } from '@/lib/search/fallback';
+import { estimateQueryComplexity } from '@/lib/search/complexity';
 import { CLIENT_CONFIG } from '@/lib/config';
 import type { FilterState } from '@/types/filters';
 import type { SearchResult } from '@/components/UnifiedSearchBar';
@@ -113,10 +114,10 @@ export function useSearchHandler({
       searchQuery?: string,
       options?: { bypassCache?: boolean; cacheSalt?: string },
     ) => {
-      const queryToSearch = (searchQuery || query).trim();
+      const rawQuery = (searchQuery || query).trim();
 
       // Prevent empty or rate-limited searches
-      if (!queryToSearch) return;
+      if (!rawQuery) return;
       if (rateLimitedUntil && Date.now() < rateLimitedUntil) {
         toast.error('Please wait', {
           description: `Rate limited. Try again in ${rateLimitCountdownRef.current}s`,
@@ -124,8 +125,32 @@ export function useSearchHandler({
         return;
       }
 
+      // Estimate query complexity and auto-simplify if very complex
+      const complexity = estimateQueryComplexity(rawQuery);
+      let queryToSearch = rawQuery;
+
+      if (complexity.shouldSimplify && complexity.simplifiedQuery) {
+        queryToSearch = complexity.simplifiedQuery;
+        logger.info('[SearchDiag] Query auto-simplified', {
+          original: rawQuery,
+          simplified: queryToSearch,
+          score: complexity.score,
+          level: complexity.level,
+          droppedWords: complexity.uncoveredWords,
+        });
+        toast.warning('Query simplified', {
+          description: `Your query was very complex (${complexity.meaningfulWordCount} terms, ${complexity.constraintCount} filters). Simplified for faster, more reliable results.`,
+          duration: 6000,
+        });
+      } else if (complexity.level === 'complex') {
+        toast.info('Complex query', {
+          description: 'This search has many constraints — it may take a few extra seconds.',
+          duration: 4000,
+        });
+      }
+
       lastSearchRef.current = queryToSearch;
-      addToHistory(queryToSearch);
+      addToHistory(rawQuery); // Always store the original in history
 
       const currentToken = ++requestTokenRef.current;
       const cacheSalt = options?.cacheSalt;
@@ -142,6 +167,8 @@ export function useSearchHandler({
       const searchStartTime = Date.now();
       logger.info('[SearchDiag] Search started', {
         query: queryToSearch,
+        originalQuery: rawQuery !== queryToSearch ? rawQuery : undefined,
+        complexity: complexity.level,
         hasFilters: !!filters,
         bypassCache: !!options?.bypassCache,
       });
@@ -186,17 +213,28 @@ export function useSearchHandler({
         // Translation done — now card fetch begins
         setSearchPhase('fetching');
 
+        // Add simplification note to explanation if query was auto-simplified
+        const explanation = complexity.shouldSimplify && result.explanation
+          ? {
+              ...result.explanation,
+              assumptions: [
+                ...(result.explanation.assumptions || []),
+                `Query was auto-simplified from "${rawQuery}" to "${queryToSearch}"`,
+              ],
+            }
+          : result.explanation;
+
         onSearch(
           result.scryfallQuery,
           {
             scryfallQuery: result.scryfallQuery,
-            explanation: result.explanation,
+            explanation,
             showAffiliate: result.showAffiliate,
             validationIssues: result.validationIssues,
             intent: result.intent,
             source,
           },
-          queryToSearch,
+          rawQuery, // Always pass original query as naturalQuery
         );
 
         // No success toast — results appearing is sufficient feedback
