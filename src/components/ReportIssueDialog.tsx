@@ -20,10 +20,14 @@ import {
 } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { logger } from '@/lib/core/logger';
 import type { FilterState } from '@/types/filters';
+
+import { checkRateLimit, recordSubmission } from '@/lib/feedback/rate-limit';
+import { validateIssue, extractErrorDetail } from '@/lib/feedback/validate';
+import { ReportContextPanel } from '@/components/report/ReportContextPanel';
 
 interface ReportIssueDialogProps {
   open: boolean;
@@ -32,90 +36,6 @@ interface ReportIssueDialogProps {
   compiledQuery: string;
   filters?: FilterState | null;
   requestId?: string;
-}
-
-// Rate limiting configuration
-const RATE_LIMIT_KEY = 'search_feedback_submissions';
-const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
-const MAX_SUBMISSIONS_PER_WINDOW = 5;
-
-// Input validation (native — no zod dependency)
-function validateIssue(
-  issueDescription: string,
-):
-  | { success: true; data: { issueDescription: string } }
-  | { success: false; message: string } {
-  const desc = issueDescription.trim();
-  if (desc.length < 10)
-    return {
-      success: false,
-      message: 'Please provide more details (at least 10 characters)',
-    };
-  if (desc.length > 1000)
-    return {
-      success: false,
-      message: 'Description too long (max 1000 characters)',
-    };
-  return { success: true, data: { issueDescription: desc } };
-}
-
-interface RateLimitData {
-  submissions: number[];
-}
-
-function getRateLimitData(): RateLimitData {
-  try {
-    const data = localStorage.getItem(RATE_LIMIT_KEY);
-    if (!data) return { submissions: [] };
-    return JSON.parse(data) as RateLimitData;
-  } catch {
-    return { submissions: [] };
-  }
-}
-
-function setRateLimitData(data: RateLimitData): void {
-  try {
-    localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(data));
-  } catch {
-    // Ignore localStorage errors (private browsing, quota exceeded)
-  }
-}
-
-function cleanExpiredSubmissions(submissions: number[]): number[] {
-  const cutoff = Date.now() - RATE_LIMIT_WINDOW_MS;
-  return submissions.filter((timestamp) => timestamp > cutoff);
-}
-
-function checkRateLimit(): {
-  allowed: boolean;
-  remainingSubmissions: number;
-  resetInMinutes: number;
-} {
-  const data = getRateLimitData();
-  const validSubmissions = cleanExpiredSubmissions(data.submissions);
-  setRateLimitData({ submissions: validSubmissions });
-
-  const remainingSubmissions =
-    MAX_SUBMISSIONS_PER_WINDOW - validSubmissions.length;
-  const oldestSubmission = validSubmissions[0] || Date.now();
-  const resetInMs = Math.max(
-    0,
-    oldestSubmission + RATE_LIMIT_WINDOW_MS - Date.now(),
-  );
-  const resetInMinutes = Math.ceil(resetInMs / 60000);
-
-  return {
-    allowed: validSubmissions.length < MAX_SUBMISSIONS_PER_WINDOW,
-    remainingSubmissions: Math.max(0, remainingSubmissions),
-    resetInMinutes,
-  };
-}
-
-function recordSubmission(): void {
-  const data = getRateLimitData();
-  const validSubmissions = cleanExpiredSubmissions(data.submissions);
-  validSubmissions.push(Date.now());
-  setRateLimitData({ submissions: validSubmissions });
 }
 
 export function ReportIssueDialog({
@@ -130,8 +50,6 @@ export function ReportIssueDialog({
   const [issue, setIssue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [showContext, setShowContext] = useState(false);
-  const [copiedContext, setCopiedContext] = useState(false);
   const { trackFeedback } = useAnalytics();
 
   const timestamp = new Date().toISOString();
@@ -140,43 +58,31 @@ export function ReportIssueDialog({
     if (open) {
       setIssue('');
       setValidationError(null);
-      setShowContext(false);
     }
   }, [open]);
 
-  const contextData = {
-    originalQuery,
-    compiledQuery,
-    filters: filters || {},
-    timestamp,
-    requestId: requestId || 'N/A',
-  };
-
-  const contextText = JSON.stringify(contextData, null, 2);
-
-  const handleCopyContext = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(contextText);
-      setCopiedContext(true);
-      toast.success('Context copied!');
-      setTimeout(() => setCopiedContext(false), 2000);
-    } catch {
-      toast.error('Failed to copy');
-    }
-  }, [contextText]);
+  const contextText = JSON.stringify(
+    {
+      originalQuery,
+      compiledQuery,
+      filters: filters || {},
+      timestamp,
+      requestId: requestId || 'N/A',
+    },
+    null,
+    2,
+  );
 
   const triggerProcessing = useCallback(async (feedbackId: string) => {
     try {
-      // Only trigger AI processing if user is authenticated
-      // Anonymous feedback is saved but processed later by admins
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.user?.id) {
         logger.info('Skipping auto-processing: user not authenticated');
         return;
       }
-      // Double-check the token is not expired before making the call
-      const expiresAt = session.expires_at;
-      if (expiresAt && expiresAt < Math.floor(Date.now() / 1000)) {
+      if (session.expires_at && session.expires_at < Math.floor(Date.now() / 1000)) {
         logger.info('Skipping auto-processing: session expired');
         return;
       }
@@ -201,7 +107,6 @@ export function ReportIssueDialog({
     }
 
     const validationResult = validateIssue(issue);
-
     if (!validationResult.success) {
       setValidationError(validationResult.message);
       toast.error(validationResult.message);
@@ -211,7 +116,6 @@ export function ReportIssueDialog({
     setIsSubmitting(true);
     try {
       const fullDescription = `${validationResult.data.issueDescription}\n\n---\nContext:\n- Request ID: ${requestId || 'N/A'}\n- Timestamp: ${timestamp}\n- Filters: ${JSON.stringify(filters || {})}`;
-
       const feedbackId = crypto.randomUUID();
 
       const { error } = await supabase.from('search_feedback').insert({
@@ -222,11 +126,14 @@ export function ReportIssueDialog({
       });
 
       if (error !== null) {
-        logger.error('Feedback insert error', { code: error.code, message: error.message, details: error.details });
+        logger.error('Feedback insert error', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+        });
         throw error;
       }
 
-      // Non-critical post-submit actions — don't let them break the success flow
       try { recordSubmission(); } catch { /* ignore */ }
       try {
         trackFeedback({
@@ -243,14 +150,8 @@ export function ReportIssueDialog({
       triggerProcessing(feedbackId);
     } catch (error: unknown) {
       logger.error('Feedback submission failed', error);
-      const detail =
-        error instanceof Error
-          ? error.message
-          : typeof error === 'object' && error !== null && 'message' in error
-            ? String((error as { message: unknown }).message)
-            : 'Unknown error';
       toast.error(t('report.failed', 'Failed to submit feedback'), {
-        description: detail,
+        description: extractErrorDetail(error),
         duration: 8000,
       });
     } finally {
@@ -273,74 +174,12 @@ export function ReportIssueDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 pt-2">
-          {/* Auto-included context summary */}
-          <div className="p-3 rounded-lg border border-border bg-secondary/50 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                {t('report.autoContext', 'Auto-included context')}
-              </span>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleCopyContext}
-                  className="h-6 px-2 text-xs gap-1"
-                >
-                  {copiedContext ? (
-                    <Check className="h-3 w-3" />
-                  ) : (
-                    <Copy className="h-3 w-3" />
-                  )}
-                  {t('report.copy', 'Copy')}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowContext(!showContext)}
-                  className="h-6 px-2 text-xs gap-1"
-                  aria-expanded={showContext}
-                >
-                  {showContext ? (
-                    <ChevronUp className="h-3 w-3" />
-                  ) : (
-                    <ChevronDown className="h-3 w-3" />
-                  )}
-                  {showContext
-                    ? t('report.hide', 'Hide')
-                    : t('report.show', 'Show')}
-                </Button>
-              </div>
-            </div>
+          <ReportContextPanel
+            originalQuery={originalQuery}
+            compiledQuery={compiledQuery}
+            contextText={contextText}
+          />
 
-            {!showContext && (
-              <div className="text-xs text-muted-foreground space-y-1">
-                <p>
-                  <span className="font-medium">
-                    {t('report.prompt', 'Prompt:')}
-                  </span>{' '}
-                  "{originalQuery.substring(0, 50)}
-                  {originalQuery.length > 50 ? '...' : ''}"
-                </p>
-                <p>
-                  <span className="font-medium">
-                    {t('report.query', 'Query:')}
-                  </span>{' '}
-                  <code className="bg-muted px-1 rounded">
-                    {compiledQuery.substring(0, 40)}
-                    {compiledQuery.length > 40 ? '...' : ''}
-                  </code>
-                </p>
-              </div>
-            )}
-
-            {showContext && (
-              <pre className="text-[10px] bg-muted p-2 rounded overflow-auto max-h-32 font-mono">
-                {contextText}
-              </pre>
-            )}
-          </div>
-
-          {/* Issue description */}
           <div className="space-y-2">
             <label htmlFor="issue" className="text-sm font-medium">
               {t('report.label', 'What went wrong?')}
