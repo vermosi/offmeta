@@ -39,7 +39,7 @@ export const CONCEPT_LIBRARY: Record<
     aliases: [
       'mana dork',
       'mana dorks',
-      'dorks',
+      'mana dorks for',
       'mana creature',
       'creature that taps for mana',
     ],
