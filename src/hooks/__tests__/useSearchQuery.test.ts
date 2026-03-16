@@ -38,7 +38,6 @@ import {
   translateQueryWithDedup,
   useTranslateQuery,
   usePrefetchPopularQueries,
-  useSubmitFeedback,
 } from '@/hooks/useSearchQuery';
 
 function createWrapper(existingClient?: QueryClient) {
