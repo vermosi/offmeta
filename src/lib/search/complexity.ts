@@ -188,11 +188,11 @@ function simplifyQuery(original: string, meaningfulWords: string[]): string {
     return { word: w, priority };
   });
 
-  // Keep top 8 by priority, preserving original word order
+  // Keep top 12 by priority, preserving original word order
   const topWords = new Set(
     prioritized
       .sort((a, b) => b.priority - a.priority)
-      .slice(0, 8)
+      .slice(0, 12)
       .map(p => p.word),
   );
 
