@@ -214,16 +214,13 @@ describe('usePrefetchPopularQueries', () => {
       wrapper: createWrapper(queryClient),
     });
 
-    // Advance past the 2s delay
-    await act(async () => {
-      vi.advanceTimersByTime(2100);
-      // Allow async work to complete
-      await vi.runAllTimersAsync();
+    // Advance past the 2s delay and flush microtasks
+    vi.advanceTimersByTime(2100);
+    // Wait for the async DB fetch + setQueryData to complete
+    await waitFor(() => {
+      const cached = queryClient.getQueryData(['translation', 'mana rocks', null, undefined]);
+      expect(cached).toBeDefined();
     });
-
-    // Should have seeded the cache directly
-    const cached = queryClient.getQueryData(['translation', 'mana rocks', null, undefined]);
-    expect(cached).toBeDefined();
   });
 
   it('falls back to edge function on DB error', async () => {
