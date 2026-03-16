@@ -229,7 +229,6 @@ describe('usePrefetchPopularQueries', () => {
     // Restore fake timers for remaining tests
     vi.useFakeTimers();
   });
-  });
 
   it('falls back to edge function on DB error', async () => {
     mockFromResult = Promise.resolve({ data: null, error: { message: 'DB error' } });
