@@ -861,24 +861,45 @@ serve(async (req) => {
       .replace(FAST_PATH_NOISE_WORDS, '')
       .replace(/\s+/g, ' ')
       .trim();
+
+    // Also strip words that the deterministic layer already handled
+    // (e.g., "legendary", "creatures", color words) to avoid penalizing coverage
+    const deterministicHandledWords = new Set(
+      (deterministicQuery || '')
+        .toLowerCase()
+        .replace(/[^a-z\s]/g, ' ')
+        .split(/\s+/)
+        .filter(w => w.length >= 3)
+    );
+
     if (meaningfulResidual.length >= 3) {
       try {
         const { findConceptMatches } = await import('./pipeline/concepts.ts');
-        const concepts = await findConceptMatches(residualForConcepts, 3, 0.7);
+        const concepts = await findConceptMatches(residualForConcepts, 5, 0.7);
 
-        // Coverage check: if concept patterns only match a small portion of
-        // the meaningful residual, the user likely has complex intent the
-        // concepts can't capture → fall through to AI instead.
-        const residualWords = meaningfulResidual.toLowerCase().split(/\s+/).filter(w => w.length >= 3);
-        const conceptPatternWords = new Set(
-          concepts.flatMap(c =>
-            (c.conceptId || '').toLowerCase().split(/\s+/).filter((w: string) => w.length >= 3)
-          )
-        );
-        const coveredWords = residualWords.filter(w => conceptPatternWords.has(w));
+        // Coverage check: compare residual words against concept alias words
+        // (not just conceptId). Also exclude words already handled by deterministic.
+        const allResidualWords = meaningfulResidual.toLowerCase().split(/\s+/).filter(w => w.length >= 3);
+        // Remove words already captured by deterministic layer
+        const residualWords = allResidualWords.filter(w => !deterministicHandledWords.has(w));
+
+        // Build coverage set from ALL alias words across matched concepts
+        const conceptCoveredWords = new Set<string>();
+        for (const c of concepts) {
+          // Add conceptId words
+          for (const w of (c.conceptId || '').toLowerCase().split(/[_\s]+/)) {
+            if (w.length >= 3) conceptCoveredWords.add(w);
+          }
+          // Add all alias words for matched concepts
+          for (const alias of (c.pattern || '').toLowerCase().split(/\s+/)) {
+            if (alias.length >= 3) conceptCoveredWords.add(alias);
+          }
+        }
+
+        const coveredWords = residualWords.filter(w => conceptCoveredWords.has(w));
         const coverageRatio = residualWords.length > 0
           ? coveredWords.length / residualWords.length
-          : 0;
+          : (concepts.length > 0 ? 1 : 0); // All words handled by deterministic = full coverage
 
         logInfo('concept_match_coverage_check', {
           query: query.substring(0, 50),
