@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -9,14 +9,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { MessageSquarePlus, Loader2 } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { logger } from '@/lib/core/logger';
 import { useTranslation } from '@/lib/i18n';
-import { checkRateLimit, recordSubmission } from '@/lib/feedback/rate-limit';
+import { checkRateLimit } from '@/lib/feedback/rate-limit';
 import { validateIssue, extractErrorDetail } from '@/lib/feedback/validate';
+import { submitFeedback } from '@/lib/feedback/submit';
 
 interface SearchFeedbackProps {
   originalQuery: string;
@@ -33,21 +32,6 @@ export function SearchFeedback({
   const [validationError, setValidationError] = useState<string | null>(null);
   const { trackFeedback } = useAnalytics();
   const { t } = useTranslation();
-
-  const triggerProcessing = useCallback(async (feedbackId: string) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
-        logger.info('Skipping auto-processing: user not authenticated');
-        return;
-      }
-      await supabase.functions.invoke('process-feedback', {
-        body: { feedbackId },
-      });
-    } catch (error) {
-      logger.info('Background processing triggered', error);
-    }
-  }, []);
 
   const handleSubmit = async () => {
     const rateLimitStatus = checkRateLimit();
@@ -67,21 +51,12 @@ export function SearchFeedback({
 
     setIsSubmitting(true);
     try {
-      const feedbackId = crypto.randomUUID();
-
-      const { error } = await supabase.from('search_feedback').insert({
-        id: feedbackId,
-        original_query: originalQuery.substring(0, 500),
-        translated_query: (translatedQuery || null)?.substring(0, 1000) ?? null,
-        issue_description: validationResult.data.issueDescription,
+      await submitFeedback({
+        originalQuery,
+        translatedQuery: translatedQuery ?? null,
+        issueDescription: validationResult.data.issueDescription,
       });
 
-      if (error) {
-        logger.error('Feedback insert error', { code: error.code, message: error.message, details: error.details });
-        throw error;
-      }
-
-      try { recordSubmission(); } catch { /* ignore */ }
       try {
         trackFeedback({
           query: originalQuery,
@@ -98,10 +73,7 @@ export function SearchFeedback({
       setOpen(false);
       setIssue('');
       setValidationError(null);
-
-      triggerProcessing(feedbackId);
     } catch (error: unknown) {
-      logger.error('Feedback submission failed', error);
       toast.error(t('feedback.failed'), {
         description: extractErrorDetail(error),
         duration: 8000,

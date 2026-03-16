@@ -7,7 +7,7 @@
  * - Request ID
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,15 +18,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { logger } from '@/lib/core/logger';
 import type { FilterState } from '@/types/filters';
 
-import { checkRateLimit, recordSubmission } from '@/lib/feedback/rate-limit';
+import { checkRateLimit } from '@/lib/feedback/rate-limit';
 import { validateIssue, extractErrorDetail } from '@/lib/feedback/validate';
+import { submitFeedback } from '@/lib/feedback/submit';
 import { ReportContextPanel } from '@/components/report/ReportContextPanel';
 
 interface ReportIssueDialogProps {
@@ -73,27 +72,6 @@ export function ReportIssueDialog({
     2,
   );
 
-  const triggerProcessing = useCallback(async (feedbackId: string) => {
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session?.user?.id) {
-        logger.info('Skipping auto-processing: user not authenticated');
-        return;
-      }
-      if (session.expires_at && session.expires_at < Math.floor(Date.now() / 1000)) {
-        logger.info('Skipping auto-processing: session expired');
-        return;
-      }
-      await supabase.functions.invoke('process-feedback', {
-        body: { feedbackId },
-      });
-    } catch (error) {
-      logger.info('Background processing triggered', error);
-    }
-  }, []);
-
   const handleSubmit = async () => {
     const rateLimitStatus = checkRateLimit();
     if (!rateLimitStatus.allowed) {
@@ -116,25 +94,13 @@ export function ReportIssueDialog({
     setIsSubmitting(true);
     try {
       const fullDescription = `${validationResult.data.issueDescription}\n\n---\nContext:\n- Request ID: ${requestId || 'N/A'}\n- Timestamp: ${timestamp}\n- Filters: ${JSON.stringify(filters || {})}`;
-      const feedbackId = crypto.randomUUID();
 
-      const { error } = await supabase.from('search_feedback').insert({
-        id: feedbackId,
-        original_query: originalQuery.substring(0, 500),
-        translated_query: compiledQuery.substring(0, 1000),
-        issue_description: fullDescription.substring(0, 2000),
+      await submitFeedback({
+        originalQuery,
+        translatedQuery: compiledQuery,
+        issueDescription: fullDescription,
       });
 
-      if (error !== null) {
-        logger.error('Feedback insert error', {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-        });
-        throw error;
-      }
-
-      try { recordSubmission(); } catch { /* ignore */ }
       try {
         trackFeedback({
           query: originalQuery,
@@ -147,9 +113,7 @@ export function ReportIssueDialog({
         description: `${t('report.thanks', "Thanks! We'll use this to improve searches.")}${remaining <= 2 ? ` (${remaining} submissions remaining)` : ''}`,
       });
       onOpenChange(false);
-      triggerProcessing(feedbackId);
     } catch (error: unknown) {
-      logger.error('Feedback submission failed', error);
       toast.error(t('report.failed', 'Failed to submit feedback'), {
         description: extractErrorDetail(error),
         duration: 8000,
