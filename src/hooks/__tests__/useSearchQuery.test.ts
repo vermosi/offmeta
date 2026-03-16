@@ -196,6 +196,9 @@ describe('usePrefetchPopularQueries', () => {
   });
 
   it('seeds client cache from query_cache table', async () => {
+    // Use real timers for this test since it involves async DB + setQueryData
+    vi.useRealTimers();
+
     mockFromResult = Promise.resolve({
       data: [
         {
@@ -214,13 +217,18 @@ describe('usePrefetchPopularQueries', () => {
       wrapper: createWrapper(queryClient),
     });
 
-    // Advance past the 2s delay and flush microtasks
-    vi.advanceTimersByTime(2100);
-    // Wait for the async DB fetch + setQueryData to complete
-    await waitFor(() => {
-      const cached = queryClient.getQueryData(['translation', 'mana rocks', null, undefined]);
-      expect(cached).toBeDefined();
-    });
+    // Wait for the 2s setTimeout + async DB fetch to complete
+    await waitFor(
+      () => {
+        const cached = queryClient.getQueryData(['translation', 'mana rocks', null, undefined]);
+        expect(cached).toBeDefined();
+      },
+      { timeout: 4000 },
+    );
+
+    // Restore fake timers for remaining tests
+    vi.useFakeTimers();
+  });
   });
 
   it('falls back to edge function on DB error', async () => {
