@@ -265,7 +265,7 @@ export async function translateQueryWithDedup(
       const edgeCallStartedAt = performance.now();
       logger.info('[SearchDiag] Edge function call', { query });
       const requestStart = Date.now();
-      const requestDeadline = requestStart + 8000;
+      const requestDeadline = requestStart + 6000;
       const { data, error } = await supabase.functions.invoke(
         'semantic-search',
         {
