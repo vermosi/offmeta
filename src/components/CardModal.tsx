@@ -163,10 +163,10 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
         const currentPrinting = data.find((p) => p.id === card.id);
         if (currentPrinting) {
           setRefreshedPrices({
-            usd: currentPrinting.prices.usd,
-            usd_foil: currentPrinting.prices.usd_foil,
-            eur: currentPrinting.prices.eur,
-            eur_foil: currentPrinting.prices.eur_foil,
+            usd: currentPrinting.prices?.usd,
+            usd_foil: currentPrinting.prices?.usd_foil,
+            eur: currentPrinting.prices?.eur,
+            eur_foil: currentPrinting.prices?.eur_foil,
           });
         }
         setIsLoadingPrintings(false);
@@ -221,10 +221,10 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
   const handleSelectPrinting = useCallback((printing: CardPrinting) => {
     setSelectedPrinting(printing);
     setRefreshedPrices({
-      usd: printing.prices.usd,
-      usd_foil: printing.prices.usd_foil,
-      eur: printing.prices.eur,
-      eur_foil: printing.prices.eur_foil,
+      usd: printing.prices?.usd,
+      usd_foil: printing.prices?.usd_foil,
+      eur: printing.prices?.eur,
+      eur_foil: printing.prices?.eur_foil,
     });
   }, []);
 
@@ -245,13 +245,13 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
   const displayArtist = selectedPrinting?.artist || card.artist;
 
   const displayPrices: DisplayPrices = refreshedPrices || {
-    usd: card.prices.usd,
-    usd_foil: card.prices.usd_foil,
-    eur: card.prices.eur,
-    eur_foil: card.prices.eur_foil,
+    usd: card.prices?.usd,
+    usd_foil: card.prices?.usd_foil,
+    eur: card.prices?.eur,
+    eur_foil: card.prices?.eur_foil,
   };
 
-  const displayTix = selectedPrinting?.prices?.tix || card.prices.tix;
+  const displayTix = selectedPrinting?.prices?.tix || card.prices?.tix;
 
   const englishPrintings = printings
     .filter((p) => p.lang === 'en')
