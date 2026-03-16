@@ -221,14 +221,19 @@ export function ReportIssueDialog({
         issue_description: fullDescription.substring(0, 2000),
       });
 
-      if (error !== null) throw error;
+      if (error !== null) {
+        logger.error('Feedback insert error', { code: error.code, message: error.message, details: error.details });
+        throw error;
+      }
 
-      recordSubmission();
-
-      trackFeedback({
-        query: originalQuery,
-        issue_description: validationResult.data.issueDescription,
-      });
+      // Non-critical post-submit actions — don't let them break the success flow
+      try { recordSubmission(); } catch { /* ignore */ }
+      try {
+        trackFeedback({
+          query: originalQuery,
+          issue_description: validationResult.data.issueDescription,
+        });
+      } catch { /* ignore */ }
 
       const remaining = checkRateLimit().remainingSubmissions;
       toast.success(t('report.success', 'Issue reported'), {
