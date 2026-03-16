@@ -387,6 +387,22 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
     residual = residual.replace(searchForMatch[0], ' ').trim();
   }
 
+  // 5c. Extract negated types BEFORE positive types
+  // "aren't creatures" / "not creatures" / "non-creature" → -t:creature
+  const negatedTypes = ['creature', 'artifact', 'enchantment', 'instant', 'sorcery', 'land', 'planeswalker'];
+  for (const type of negatedTypes) {
+    const negPatterns = [
+      new RegExp(`\\b(?:aren'?t|isn'?t|not|non[-\\s]?)${type}s?\\b`, 'gi'),
+      new RegExp(`\\b(?:no|without)\\s+${type}s?\\b`, 'gi'),
+    ];
+    for (const negPattern of negPatterns) {
+      if (negPattern.test(residual)) {
+        parts.push(`-t:${type}`);
+        residual = residual.replace(negPattern, ' ').trim();
+      }
+    }
+  }
+
   // 6. Extract types
   for (const [word, syntax] of Object.entries(TYPE_WORDS)) {
     const re = new RegExp(`\\b${word}\\b`, 'i');
