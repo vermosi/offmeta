@@ -447,7 +447,7 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
   // 11. Clean up filler words from residual
   residual = residual
     .replace(
-      /\b(that|the|with|for|and|or|a|an|in|of|to|make|spells?|bonuses?|reward|casting|gives?|when|dies?|deal|drain|legal|cards?|pieces?|fit|into|style|deck|is|mono)\b/gi,
+      /\b(that|the|with|for|and|or|a|an|in|of|to|make|spells?|bonuses?|reward|casting|gives?|when|dies?|deal|drain|legal|cards?|pieces?|fit|into|style|deck|is|mono|theme|build|strategy|let|me|my|your|from|library)\b/gi,
       ' ',
     )
     .replace(/\s+/g, ' ')
