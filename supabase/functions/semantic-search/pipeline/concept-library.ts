@@ -377,8 +377,8 @@ export const CONCEPT_LIBRARY: Record<
 
   // === LIFEGAIN ===
   lifegain: {
-    aliases: ['lifegain', 'life gain', 'gain life', 'healing'],
-    templates: ['otag:lifegain'],
+    aliases: ['lifegain', 'life gain', 'gain life', 'healing', 'lifegain theme'],
+    templates: ['(otag:lifegain or o:"gain" o:"life")'],
     negativeTemplates: [],
     description: 'Cards that gain life',
     category: 'lifegain',
@@ -391,6 +391,23 @@ export const CONCEPT_LIBRARY: Record<
     description: 'Cards that gain life when creatures enter',
     category: 'lifegain',
     priority: 80,
+  },
+
+  // === LANDFALL ===
+  landfall: {
+    aliases: [
+      'landfall',
+      'landfall triggers',
+      'landfall synergies',
+      'landfall build',
+      'landfall deck',
+      'when a land enters',
+    ],
+    templates: ['otag:landfall'],
+    negativeTemplates: [],
+    description: 'Cards with landfall triggers',
+    category: 'trigger',
+    priority: 85,
   },
 
   // === SPECIAL ===
