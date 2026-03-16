@@ -16,6 +16,7 @@ export async function findConceptMatches(
   residualQuery: string,
   maxMatches: number = 5,
   minConfidence: number = 0.7,
+  skipLLM: boolean = false,
 ): Promise<ConceptMatch[]> {
   const matches: ConceptMatch[] = [];
   const normalizedQuery = residualQuery.toLowerCase().trim();
