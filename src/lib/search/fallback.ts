@@ -75,6 +75,17 @@ const SLANG_MAP: Record<string, string> = {
   'treasure tokens': 'o:"create" o:"treasure"',
   'treasure token': 'o:"create" o:"treasure"',
   treasure: 'o:"treasure"',
+  'discard outlets': 'o:"discard a card"',
+  'discard outlet': 'o:"discard a card"',
+  'protection spells': '(kw:hexproof or kw:indestructible or o:"protection from")',
+  'protection spell': '(kw:hexproof or kw:indestructible or o:"protection from")',
+  'sacrifice outlets': 'o:"sacrifice" -o:"opponent"',
+  'sacrifice outlet': 'o:"sacrifice" -o:"opponent"',
+  'sac outlets': 'o:"sacrifice" -o:"opponent"',
+  'sac outlet': 'o:"sacrifice" -o:"opponent"',
+  'graveyard hate': 'o:"exile" o:"graveyard"',
+  'extra turns': 'o:"extra turn"',
+  'extra turn': 'o:"extra turn"',
   // Archetype slang
   aristocrats: 'o:"when" o:"dies"',
   voltron: '(t:equipment or t:aura)',
@@ -104,6 +115,7 @@ const COLOR_WORDS: Record<string, string> = {
 
 /** Guild / shard color identity pairs */
 const GUILD_WORDS: Record<string, string> = {
+  // Guilds (2-color)
   azorius: 'id<=wu',
   dimir: 'id<=ub',
   rakdos: 'id<=br',
@@ -114,6 +126,18 @@ const GUILD_WORDS: Record<string, string> = {
   golgari: 'id<=bg',
   boros: 'id<=rw',
   simic: 'id<=gu',
+  // Shards (3-color)
+  esper: 'id<=wub',
+  grixis: 'id<=ubr',
+  jund: 'id<=brg',
+  naya: 'id<=rgw',
+  bant: 'id<=gwu',
+  // Wedges (3-color)
+  mardu: 'id<=rwb',
+  temur: 'id<=gur',
+  abzan: 'id<=wbg',
+  jeskai: 'id<=urw',
+  sultai: 'id<=bgu',
 };
 
 const TYPE_WORDS: Record<string, string> = {
@@ -361,6 +385,23 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
     const targetType = searchForMatch[1].toLowerCase();
     parts.push(`o:"search your library" o:"${targetType}"`);
     residual = residual.replace(searchForMatch[0], ' ').trim();
+  }
+
+  // 5c. Extract negated types BEFORE positive types
+  // "aren't creatures" / "not creatures" / "non-creature" → -t:creature
+  const negatedTypes = ['creature', 'artifact', 'enchantment', 'instant', 'sorcery', 'land', 'planeswalker'];
+  for (const type of negatedTypes) {
+    const negPatterns = [
+      new RegExp(`\\b(?:aren'?t|isn'?t|not)\\s+${type}s?\\b`, 'gi'),
+      new RegExp(`\\bnon[-\\s]?${type}s?\\b`, 'gi'),
+      new RegExp(`\\b(?:no|without)\\s+${type}s?\\b`, 'gi'),
+    ];
+    for (const negPattern of negPatterns) {
+      if (negPattern.test(residual)) {
+        parts.push(`-t:${type}`);
+        residual = residual.replace(negPattern, ' ').trim();
+      }
+    }
   }
 
   // 6. Extract types
