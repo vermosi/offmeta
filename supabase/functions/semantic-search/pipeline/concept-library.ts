@@ -225,6 +225,20 @@ export const CONCEPT_LIBRARY: Record<
     category: 'tutor',
     priority: 80,
   },
+  artifact_tutor: {
+    aliases: [
+      'artifact tutor',
+      'search for an artifact',
+      'find an artifact',
+      'artifact search',
+      'search for artifact',
+    ],
+    templates: ['o:"search your library" o:"artifact"'],
+    negativeTemplates: [],
+    description: 'Cards that search for artifacts',
+    category: 'tutor',
+    priority: 80,
+  },
 
   // === GRAVEYARD ===
   reanimation: {
