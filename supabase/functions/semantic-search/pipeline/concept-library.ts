@@ -342,6 +342,20 @@ export const CONCEPT_LIBRARY: Record<
     category: 'sacrifice',
     priority: 85,
   },
+  discard_outlet: {
+    aliases: [
+      'discard outlet',
+      'discard outlets',
+      'free discard',
+      'discard for free',
+      'discard a card',
+    ],
+    templates: ['o:"discard a card" -o:"opponent discards"'],
+    negativeTemplates: [],
+    description: 'Cards that let you discard cards as a cost or effect',
+    category: 'sacrifice',
+    priority: 80,
+  },
 
   // === TOKENS ===
   token_generator: {
@@ -362,7 +376,9 @@ export const CONCEPT_LIBRARY: Record<
       'treasure',
       'treasure tokens',
       'makes treasure',
+      'make treasure tokens',
       'treasure generator',
+      'create treasure',
     ],
     templates: ['o:"create" o:"Treasure"'],
     negativeTemplates: [],
