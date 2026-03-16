@@ -392,7 +392,8 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
   const negatedTypes = ['creature', 'artifact', 'enchantment', 'instant', 'sorcery', 'land', 'planeswalker'];
   for (const type of negatedTypes) {
     const negPatterns = [
-      new RegExp(`\\b(?:aren'?t|isn'?t|not|non[-\\s]?)${type}s?\\b`, 'gi'),
+      new RegExp(`\\b(?:aren'?t|isn'?t|not)\\s+${type}s?\\b`, 'gi'),
+      new RegExp(`\\bnon[-\\s]?${type}s?\\b`, 'gi'),
       new RegExp(`\\b(?:no|without)\\s+${type}s?\\b`, 'gi'),
     ];
     for (const negPattern of negPatterns) {
