@@ -23,10 +23,14 @@ export async function findConceptMatches(
 
   if (!normalizedQuery) return [];
 
-  // === Tier 1: Exact alias matching (fastest, ~0ms) ===
+  // === Tier 1: Exact alias matching with word boundaries (fastest, ~0ms) ===
   for (const [conceptId, concept] of Object.entries(CONCEPT_LIBRARY)) {
     for (const alias of concept.aliases) {
-      if (normalizedQuery.includes(alias)) {
+      // Use word-boundary regex to prevent partial matches
+      // e.g., "rocks" should not match inside "maelstrom rocks" → it should,
+      // but "mana" should not match "mana rock" when query is about mana value
+      const aliasRegex = new RegExp(`\\b${alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      if (aliasRegex.test(normalizedQuery)) {
         matches.push({
           conceptId,
           pattern: alias,
