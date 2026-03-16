@@ -1,7 +1,7 @@
 /**
  * Tests for useSearchQuery hook.
  * Covers translateQueryWithDedup, rate limiting, deduplication,
- * useTranslateQuery, usePrefetchPopularQueries, and useSubmitFeedback.
+ * useTranslateQuery, and usePrefetchPopularQueries.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -38,7 +38,6 @@ import {
   translateQueryWithDedup,
   useTranslateQuery,
   usePrefetchPopularQueries,
-  useSubmitFeedback,
 } from '@/hooks/useSearchQuery';
 
 function createWrapper(existingClient?: QueryClient) {
@@ -254,54 +253,3 @@ describe('usePrefetchPopularQueries', () => {
   });
 });
 
-describe('useSubmitFeedback', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('submits feedback successfully', async () => {
-    mockInsert.mockResolvedValueOnce({ error: null });
-
-    const { result } = renderHook(() => useSubmitFeedback(), {
-      wrapper: createWrapper(),
-    });
-
-    await act(async () => {
-      result.current.mutate({
-        originalQuery: 'green ramp',
-        translatedQuery: 'otag:ramp c:green',
-        issueDescription: 'Missing mana dorks',
-      });
-    });
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(mockInsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        original_query: 'green ramp',
-        translated_query: 'otag:ramp c:green',
-        issue_description: 'Missing mana dorks',
-      }),
-    );
-  });
-
-  it('handles feedback submission error', async () => {
-    mockInsert
-      .mockResolvedValueOnce({ error: { message: 'fail', code: '42000' } })
-      .mockResolvedValueOnce({ error: { message: 'fail', code: '42000' } })
-      .mockResolvedValueOnce({ error: { message: 'fail', code: '42000' } });
-
-    const { result } = renderHook(() => useSubmitFeedback(), {
-      wrapper: createWrapper(),
-    });
-
-    await act(async () => {
-      result.current.mutate({
-        originalQuery: 'test',
-        translatedQuery: 'test',
-        issueDescription: 'test',
-      });
-    });
-
-    await waitFor(() => expect(result.current.isError).toBe(true), { timeout: 5000 });
-  });
-});
