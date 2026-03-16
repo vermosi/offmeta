@@ -883,6 +883,34 @@ serve(async (req) => {
           residualForConcepts, 5, 0.7, skipLLMClassification,
         );
 
+        // Filter out concepts that conflict with the deterministic query.
+        // E.g., if deterministic produced t:creature, reject concepts that inject t:artifact.
+        const relevantConcepts = concepts.filter(c => {
+          // Check if concept's Scryfall syntax has a type constraint that conflicts
+          const conceptTypes = (c.scryfallSyntax.match(/\bt:(\w+)/g) || []).map(t => t.replace('t:', ''));
+          const deterministicTypes = ((deterministicQuery || '').match(/\bt:(\w+)/g) || []).map(t => t.replace('t:', ''));
+          
+          if (conceptTypes.length > 0 && deterministicTypes.length > 0) {
+            // If concept adds a type that conflicts with the deterministic type, reject it
+            const hasConflict = conceptTypes.some(ct => 
+              deterministicTypes.length > 0 && !deterministicTypes.includes(ct)
+            );
+            if (hasConflict) return false;
+          }
+          
+          // Also reject concepts matched via fuzzy/alias that only partially overlap
+          // with the residual (e.g., "mana" matching "mana rock" when query is about mana value)
+          if (c.matchType === 'alias' && c.similarity < 0.9) {
+            const aliasWords = (c.pattern || '').toLowerCase().split(/\s+/);
+            const queryWords = new Set(residualForConcepts.toLowerCase().split(/\s+/));
+            const aliasWordsCovered = aliasWords.filter(w => queryWords.has(w));
+            // Require ALL words of the alias to appear in the query
+            if (aliasWordsCovered.length < aliasWords.length) return false;
+          }
+          
+          return true;
+        });
+
         // Coverage check: compare residual words against concept alias words
         // (not just conceptId). Also exclude words already handled by deterministic.
         const allResidualWords = meaningfulResidual.toLowerCase().split(/\s+/).filter(w => w.length >= 3);
@@ -891,7 +919,7 @@ serve(async (req) => {
 
         // Build coverage set from ALL alias words across matched concepts
         const conceptCoveredWords = new Set<string>();
-        for (const c of concepts) {
+        for (const c of relevantConcepts) {
           // Add conceptId words
           for (const w of (c.conceptId || '').toLowerCase().split(/[_\s]+/)) {
             if (w.length >= 3) conceptCoveredWords.add(w);
@@ -905,14 +933,14 @@ serve(async (req) => {
         const coveredWords = residualWords.filter(w => conceptCoveredWords.has(w));
         const coverageRatio = residualWords.length > 0
           ? coveredWords.length / residualWords.length
-          : (concepts.length > 0 ? 1 : 0); // All words handled by deterministic = full coverage
+          : (relevantConcepts.length > 0 ? 1 : 0); // All words handled by deterministic = full coverage
 
         logInfo('concept_match_coverage_check', {
           query: query.substring(0, 50),
           residualWords: residualWords.length,
           coveredCount: coveredWords.length,
           coverageRatio: Math.round(coverageRatio * 100),
-          conceptIds: concepts.map(c => c.conceptId),
+          conceptIds: relevantConcepts.map(c => c.conceptId),
         });
 
         // For very short residuals (1-2 words), only accept exact matches
@@ -920,8 +948,8 @@ serve(async (req) => {
         // "commanders", "partner commanders", AND "commander staples")
         const isShortResidual = residualWords.length <= 2;
         const effectiveConcepts = isShortResidual
-          ? concepts.filter(c => c.confidence >= 0.95).slice(0, 1)
-          : concepts;
+          ? relevantConcepts.filter(c => c.confidence >= 0.95).slice(0, 1)
+          : relevantConcepts;
 
         if (effectiveConcepts.length > 0 && effectiveConcepts[0].confidence >= 0.85 && coverageRatio >= 0.4) {
           // Build query from concept templates, deduplicating by normalized category

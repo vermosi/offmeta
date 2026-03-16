@@ -25,7 +25,7 @@ export const CONCEPT_LIBRARY: Record<
     priority: 90,
   },
   mana_rock: {
-    aliases: ['mana rock', 'mana rocks', 'rocks', 'manarock', 'artifact ramp'],
+    aliases: ['mana rock', 'mana rocks', 'mana rocks for', 'manarock', 'artifact ramp'],
     templates: [
       'otag:mana-rock',
       't:artifact (produces:w or produces:u or produces:b or produces:r or produces:g or produces:c) -t:creature',
@@ -39,7 +39,7 @@ export const CONCEPT_LIBRARY: Record<
     aliases: [
       'mana dork',
       'mana dorks',
-      'dorks',
+      'mana dorks for',
       'mana creature',
       'creature that taps for mana',
     ],
