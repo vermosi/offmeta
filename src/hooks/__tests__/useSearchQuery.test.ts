@@ -1,7 +1,7 @@
 /**
  * Tests for useSearchQuery hook.
  * Covers translateQueryWithDedup, rate limiting, deduplication,
- * useTranslateQuery, usePrefetchPopularQueries, and useSubmitFeedback.
+ * useTranslateQuery, and usePrefetchPopularQueries.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
