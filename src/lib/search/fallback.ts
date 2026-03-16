@@ -115,6 +115,7 @@ const COLOR_WORDS: Record<string, string> = {
 
 /** Guild / shard color identity pairs */
 const GUILD_WORDS: Record<string, string> = {
+  // Guilds (2-color)
   azorius: 'id<=wu',
   dimir: 'id<=ub',
   rakdos: 'id<=br',
@@ -125,6 +126,18 @@ const GUILD_WORDS: Record<string, string> = {
   golgari: 'id<=bg',
   boros: 'id<=rw',
   simic: 'id<=gu',
+  // Shards (3-color)
+  esper: 'id<=wub',
+  grixis: 'id<=ubr',
+  jund: 'id<=brg',
+  naya: 'id<=rgw',
+  bant: 'id<=gwu',
+  // Wedges (3-color)
+  mardu: 'id<=rwb',
+  temur: 'id<=gur',
+  abzan: 'id<=wbg',
+  jeskai: 'id<=urw',
+  sultai: 'id<=bgu',
 };
 
 const TYPE_WORDS: Record<string, string> = {
