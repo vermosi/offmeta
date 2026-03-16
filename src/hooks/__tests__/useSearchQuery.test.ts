@@ -37,8 +37,8 @@ import {
   useSubmitFeedback,
 } from '@/hooks/useSearchQuery';
 
-function createWrapper() {
-  const qc = new QueryClient({
+function createWrapper(existingClient?: QueryClient) {
+  const qc = existingClient ?? new QueryClient({
     defaultOptions: {
       queries: { retry: false, gcTime: 0 },
       mutations: { retry: false },
