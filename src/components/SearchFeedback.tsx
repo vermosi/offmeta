@@ -15,91 +15,12 @@ import { MessageSquarePlus, Loader2 } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { logger } from '@/lib/core/logger';
 import { useTranslation } from '@/lib/i18n';
+import { checkRateLimit, recordSubmission } from '@/lib/feedback/rate-limit';
+import { validateIssue, extractErrorDetail } from '@/lib/feedback/validate';
 
 interface SearchFeedbackProps {
   originalQuery: string;
   translatedQuery?: string;
-}
-
-// Rate limiting configuration
-const RATE_LIMIT_KEY = 'search_feedback_submissions';
-const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
-const MAX_SUBMISSIONS_PER_WINDOW = 5;
-
-// Input validation (native — no zod dependency)
-function validateFeedback(data: {
-  originalQuery: string;
-  translatedQuery: string | null;
-  issueDescription: string;
-}):
-  | { success: true; data: { originalQuery: string; translatedQuery: string | null; issueDescription: string } }
-  | { success: false; message: string } {
-  const desc = data.issueDescription.trim();
-  if (desc.length < 10)
-    return { success: false, message: 'Please provide more details (at least 10 characters)' };
-  if (desc.length > 1000)
-    return { success: false, message: 'Description too long (max 1000 characters)' };
-  if (data.originalQuery.length > 500)
-    return { success: false, message: 'Query too long' };
-  if (data.translatedQuery && data.translatedQuery.length > 1000)
-    return { success: false, message: 'Translated query too long' };
-  return { success: true, data: { ...data, issueDescription: desc } };
-}
-
-interface RateLimitData {
-  submissions: number[];
-}
-
-function getRateLimitData(): RateLimitData {
-  try {
-    const data = localStorage.getItem(RATE_LIMIT_KEY);
-    if (!data) return { submissions: [] };
-    return JSON.parse(data) as RateLimitData;
-  } catch {
-    return { submissions: [] };
-  }
-}
-
-function setRateLimitData(data: RateLimitData): void {
-  localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(data));
-}
-
-function cleanExpiredSubmissions(submissions: number[]): number[] {
-  const cutoff = Date.now() - RATE_LIMIT_WINDOW_MS;
-  return submissions.filter((timestamp) => timestamp > cutoff);
-}
-
-function checkRateLimit(): {
-  allowed: boolean;
-  remainingSubmissions: number;
-  resetInMinutes: number;
-} {
-  const data = getRateLimitData();
-  const validSubmissions = cleanExpiredSubmissions(data.submissions);
-
-  setRateLimitData({ submissions: validSubmissions });
-
-  const remainingSubmissions =
-    MAX_SUBMISSIONS_PER_WINDOW - validSubmissions.length;
-  const oldestSubmission = validSubmissions[0] || Date.now();
-  const resetInMs = Math.max(
-    0,
-    oldestSubmission + RATE_LIMIT_WINDOW_MS - Date.now(),
-  );
-  const resetInMinutes = Math.ceil(resetInMs / 60000);
-
-  return {
-    allowed: validSubmissions.length < MAX_SUBMISSIONS_PER_WINDOW,
-    remainingSubmissions: Math.max(0, remainingSubmissions),
-    resetInMinutes,
-  };
-}
-
-function recordSubmission(): void {
-  const data = getRateLimitData();
-  const validSubmissions = cleanExpiredSubmissions(data.submissions);
-  validSubmissions.push(Date.now());
-  setRateLimitData({ submissions: validSubmissions });
 }
 
 export function SearchFeedback({
@@ -115,8 +36,6 @@ export function SearchFeedback({
 
   const triggerProcessing = useCallback(async (feedbackId: string) => {
     try {
-      // Only trigger AI processing if user is authenticated
-      // Anonymous feedback is saved but processed later by admins
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
         logger.info('Skipping auto-processing: user not authenticated');
@@ -130,11 +49,6 @@ export function SearchFeedback({
     }
   }, []);
 
-  const handleIssueChange = (value: string) => {
-    setIssue(value);
-    setValidationError(null);
-  };
-
   const handleSubmit = async () => {
     const rateLimitStatus = checkRateLimit();
     if (!rateLimitStatus.allowed) {
@@ -144,12 +58,7 @@ export function SearchFeedback({
       return;
     }
 
-    const validationResult = validateFeedback({
-      originalQuery,
-      translatedQuery: translatedQuery || null,
-      issueDescription: issue,
-    });
-
+    const validationResult = validateIssue(issue);
     if (!validationResult.success) {
       setValidationError(validationResult.message);
       toast.error(validationResult.message);
@@ -160,23 +69,25 @@ export function SearchFeedback({
     try {
       const feedbackId = crypto.randomUUID();
 
-      const { error } = await supabase
-        .from('search_feedback')
-        .insert({
-          id: feedbackId,
-          original_query: validationResult.data.originalQuery,
-          translated_query: validationResult.data.translatedQuery,
-          issue_description: validationResult.data.issueDescription,
-        });
-
-      if (error) throw error;
-
-      recordSubmission();
-
-      trackFeedback({
-        query: originalQuery,
+      const { error } = await supabase.from('search_feedback').insert({
+        id: feedbackId,
+        original_query: originalQuery.substring(0, 500),
+        translated_query: (translatedQuery || null)?.substring(0, 1000) ?? null,
         issue_description: validationResult.data.issueDescription,
       });
+
+      if (error) {
+        logger.error('Feedback insert error', { code: error.code, message: error.message, details: error.details });
+        throw error;
+      }
+
+      try { recordSubmission(); } catch { /* ignore */ }
+      try {
+        trackFeedback({
+          query: originalQuery,
+          issue_description: validationResult.data.issueDescription,
+        });
+      } catch { /* ignore */ }
 
       const remaining = checkRateLimit().remainingSubmissions;
       toast.success(t('feedback.submitted'), {
@@ -189,9 +100,12 @@ export function SearchFeedback({
       setValidationError(null);
 
       triggerProcessing(feedbackId);
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Feedback submission failed', error);
-      toast.error(t('feedback.failed'));
+      toast.error(t('feedback.failed'), {
+        description: extractErrorDetail(error),
+        duration: 8000,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -242,7 +156,10 @@ export function SearchFeedback({
               id="issue"
               placeholder={t('feedback.placeholder')}
               value={issue}
-              onChange={(e) => handleIssueChange(e.target.value)}
+              onChange={(e) => {
+                setIssue(e.target.value);
+                setValidationError(null);
+              }}
               rows={3}
               maxLength={1000}
               className={validationError ? 'border-destructive' : ''}
