@@ -227,4 +227,30 @@ describe('buildClientFallbackQuery', () => {
     const q = buildClientFallbackQuery('cards until 2018');
     expect(q).toContain('year<2018');
   });
+
+  // Subtypes
+  it('translates subtypes like angel, dragon, elf', () => {
+    const q = buildClientFallbackQuery('lifegain angel theme');
+    expect(q).toContain('otag:lifegain');
+    expect(q).toContain('t:angel');
+    expect(q).not.toContain('o:"angel');
+  });
+
+  it('extracts elf subtype', () => {
+    expect(buildClientFallbackQuery('green elves')).toContain('t:elf');
+  });
+
+  // Search-for-X tutor patterns
+  it('translates "search for an artifact from my library"', () => {
+    const q = buildClientFallbackQuery('cards that let me search for an artifact from my library');
+    expect(q).toContain('o:"search your library"');
+    expect(q).toContain('o:"artifact"');
+    expect(q).not.toContain('t:artifact');
+  });
+
+  it('translates "find a creature from library"', () => {
+    const q = buildClientFallbackQuery('find a creature from library');
+    expect(q).toContain('o:"search your library"');
+    expect(q).toContain('o:"creature"');
+  });
 });
