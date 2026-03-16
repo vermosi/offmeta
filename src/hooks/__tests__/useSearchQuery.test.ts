@@ -227,9 +227,7 @@ describe('usePrefetchPopularQueries', () => {
   });
 
   it('falls back to edge function on DB error', async () => {
-    mockSelect.mockReturnValue(
-      Promise.resolve({ data: null, error: { message: 'DB error' } }),
-    );
+    mockFromResult = Promise.resolve({ data: null, error: { message: 'DB error' } });
     mockInvoke.mockResolvedValue({
       data: { success: true, scryfallQuery: 'test' },
       error: null,
