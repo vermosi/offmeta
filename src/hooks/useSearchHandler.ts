@@ -213,17 +213,28 @@ export function useSearchHandler({
         // Translation done — now card fetch begins
         setSearchPhase('fetching');
 
+        // Add simplification note to explanation if query was auto-simplified
+        const explanation = complexity.shouldSimplify && result.explanation
+          ? {
+              ...result.explanation,
+              assumptions: [
+                ...(result.explanation.assumptions || []),
+                `Query was auto-simplified from "${rawQuery}" to "${queryToSearch}"`,
+              ],
+            }
+          : result.explanation;
+
         onSearch(
           result.scryfallQuery,
           {
             scryfallQuery: result.scryfallQuery,
-            explanation: result.explanation,
+            explanation,
             showAffiliate: result.showAffiliate,
             validationIssues: result.validationIssues,
             intent: result.intent,
             source,
           },
-          queryToSearch,
+          rawQuery, // Always pass original query as naturalQuery
         );
 
         // No success toast — results appearing is sufficient feedback
