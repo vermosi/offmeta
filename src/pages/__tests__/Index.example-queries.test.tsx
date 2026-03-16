@@ -15,7 +15,6 @@ vi.mock('@/hooks/useSearchQuery', () => ({
   translateQueryWithDedup: (...args: unknown[]) => mockTranslateQueryWithDedup(...args),
   usePrefetchPopularQueries: () => {},
   useTranslateQuery: () => ({ data: null, isLoading: false }),
-  useSubmitFeedback: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
 const mockSearchCards = vi.fn();
