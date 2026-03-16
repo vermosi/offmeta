@@ -74,7 +74,11 @@ function getRateLimitData(): RateLimitData {
 }
 
 function setRateLimitData(data: RateLimitData): void {
-  localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(data));
+  try {
+    localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(data));
+  } catch {
+    // Ignore localStorage errors (private browsing, quota exceeded)
+  }
 }
 
 function cleanExpiredSubmissions(submissions: number[]): number[] {
