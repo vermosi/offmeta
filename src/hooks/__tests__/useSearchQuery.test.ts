@@ -12,10 +12,20 @@ import React from 'react';
 // Mock Supabase client
 const mockInvoke = vi.fn();
 const mockInsert = vi.fn();
+const mockSelect = vi.fn();
+
+const chainable = () => ({
+  select: (...args: unknown[]) => { mockSelect(...args); return chainable(); },
+  gte: () => chainable(),
+  order: () => chainable(),
+  limit: () => mockSelect.mock.results?.[0]?.value ?? Promise.resolve({ data: [], error: null }),
+  insert: (...args: unknown[]) => mockInsert(...args),
+});
+
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     functions: { invoke: (...args: unknown[]) => mockInvoke(...args) },
-    from: () => ({ insert: (...args: unknown[]) => mockInsert(...args) }),
+    from: () => chainable(),
   },
 }));
 
