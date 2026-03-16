@@ -34,6 +34,25 @@ describe('estimateQueryComplexity', () => {
     }
   });
 
+  it('preserves meaningful words and drops filler in simplification', () => {
+    const result = estimateQueryComplexity(
+      'legendary creatures that are commander legal in blue black and green with flying hexproof or ward that cost less than 5 mana and have card draw ability and enter the battlefield triggers in modern format under 10 dollars'
+    );
+    expect(result.shouldSimplify).toBe(true);
+    expect(result.simplifiedQuery).toBeTruthy();
+    const simplified = result.simplifiedQuery!;
+
+    // Meaningful constraint words MUST be preserved
+    const mustKeep = ['legendary', 'creatures', 'commander', 'blue', 'black', 'green', 'flying', 'hexproof'];
+    for (const word of mustKeep) {
+      expect(simplified, `simplified query should contain "${word}"`).toContain(word);
+    }
+
+    // The simplified query should be significantly shorter than the original
+    const originalWordCount = 'legendary creatures that are commander legal in blue black and green with flying hexproof or ward that cost less than 5 mana and have card draw ability and enter the battlefield triggers in modern format under 10 dollars'.split(/\s+/).length;
+    expect(simplified.split(/\s+/).length).toBeLessThan(originalWordCount);
+  });
+
   it('tracks uncovered words', () => {
     const result = estimateQueryComplexity('creatures that synergize with aristocrats combo');
     expect(result.uncoveredWords).toContain('synergize');
