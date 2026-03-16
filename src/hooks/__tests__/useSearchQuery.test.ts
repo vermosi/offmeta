@@ -191,7 +191,43 @@ describe('usePrefetchPopularQueries', () => {
     vi.useRealTimers();
   });
 
-  it('schedules prefetch after delay', () => {
+  it('seeds client cache from query_cache table', async () => {
+    mockSelect.mockReturnValue(
+      Promise.resolve({
+        data: [
+          {
+            normalized_query: 'mana rocks',
+            scryfall_query: 't:artifact o:"add"',
+            explanation: { readable: 'Mana rocks', assumptions: [], confidence: 0.9 },
+            confidence: 0.9,
+            show_affiliate: false,
+          },
+        ],
+        error: null,
+      }),
+    );
+
+    const queryClient = new QueryClient();
+    renderHook(() => usePrefetchPopularQueries(), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    // Advance past the 2s delay
+    await act(async () => {
+      vi.advanceTimersByTime(2100);
+      // Allow async work to complete
+      await vi.runAllTimersAsync();
+    });
+
+    // Should have seeded the cache directly
+    const cached = queryClient.getQueryData(['translation', 'mana rocks', null, undefined]);
+    expect(cached).toBeDefined();
+  });
+
+  it('falls back to edge function on DB error', async () => {
+    mockSelect.mockReturnValue(
+      Promise.resolve({ data: null, error: { message: 'DB error' } }),
+    );
     mockInvoke.mockResolvedValue({
       data: { success: true, scryfallQuery: 'test' },
       error: null,
@@ -201,16 +237,16 @@ describe('usePrefetchPopularQueries', () => {
       wrapper: createWrapper(),
     });
 
-    // Before 8s: no calls yet (first fires at 8000ms)
-    expect(mockInvoke).not.toHaveBeenCalled();
+    await act(async () => {
+      vi.advanceTimersByTime(2100);
+      await vi.runAllTimersAsync();
+    });
 
-    // After 8s: first prefetch fires
-    vi.advanceTimersByTime(8100);
-    expect(mockInvoke).toHaveBeenCalledTimes(1);
-
-    // After 3s more: second prefetch fires (8000 + 1*3000 = 11000ms total)
-    vi.advanceTimersByTime(3000);
-    expect(mockInvoke).toHaveBeenCalledTimes(2);
+    // Should fall back to edge function calls for hardcoded queries
+    await act(async () => {
+      vi.advanceTimersByTime(5000);
+    });
+    expect(mockInvoke).toHaveBeenCalled();
   });
 });
 
