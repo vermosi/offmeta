@@ -873,9 +873,15 @@ serve(async (req) => {
     );
 
     if (meaningfulResidual.length >= 3) {
+      // Budget guard: ensure we have at least 3s left for concept matching + AI
+      const budgetBeforeConcepts = requestBudget.remainingMs();
+      const skipLLMClassification = budgetBeforeConcepts < 4000; // Skip Tier 3 if <4s left
+
       try {
         const { findConceptMatches } = await import('./pipeline/concepts.ts');
-        const concepts = await findConceptMatches(residualForConcepts, 5, 0.7);
+        const concepts = await findConceptMatches(
+          residualForConcepts, 5, 0.7, skipLLMClassification,
+        );
 
         // Coverage check: compare residual words against concept alias words
         // (not just conceptId). Also exclude words already handled by deterministic.

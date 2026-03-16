@@ -98,7 +98,7 @@ export async function findConceptMatches(
   }
 
   // === Tier 3: LLM concept classification (handles novel phrasings, ~50-100ms) ===
-  if (matches.length < 2 && normalizedQuery.split(' ').length >= 3) {
+  if (!skipLLM && matches.length < 2 && normalizedQuery.split(' ').length >= 3) {
     try {
       const llmMatches = await classifyConceptsWithLLM(normalizedQuery);
       for (const llmMatch of llmMatches) {
