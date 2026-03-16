@@ -429,29 +429,3 @@ export function usePrefetchPopularQueries() {
   }, [queryClient]);
 }
 
-/**
- * Hook for submitting search feedback.
- * Uses TanStack Query mutation with optimistic updates.
- */
-export function useSubmitFeedback() {
-  return useMutation({
-    mutationFn: async (feedback: {
-      originalQuery: string;
-      translatedQuery: string;
-      issueDescription: string;
-    }) => {
-      const { error } = await supabase.from('search_feedback').insert({
-        original_query: feedback.originalQuery,
-        translated_query: feedback.translatedQuery,
-        issue_description: feedback.issueDescription,
-      });
-
-      if (error) throw error;
-      return { success: true };
-    },
-    onSuccess: () => {
-      // Could invalidate related queries if needed
-    },
-    retry: 2,
-  });
-}
