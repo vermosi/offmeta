@@ -11,8 +11,8 @@ import type { SearchIntent } from '@/types/search';
 import { CLIENT_CONFIG } from '@/lib/config';
 import { logger } from '@/lib/core/logger';
 
-// Popular queries to prefetch for faster UX (kept small to avoid cold-start flooding)
-const POPULAR_QUERIES_TO_PREFETCH = ['mana rocks', 'board wipes'];
+// Hardcoded fallback queries if DB fetch fails
+const FALLBACK_POPULAR_QUERIES = ['mana rocks', 'board wipes'];
 
 // Track recent searches for rate limiting
 const recentSearches = new Map<string, number>(); // query -> timestamp
@@ -359,7 +359,8 @@ export function useTranslateQuery(params: TranslationParams | null) {
 
 /**
  * Hook to prefetch popular queries on app load.
- * Improves UX by pre-warming the cache.
+ * Fetches the top 20 cached translations from the database and seeds
+ * the client-side TanStack Query cache — no edge function calls needed.
  */
 export function usePrefetchPopularQueries() {
   const queryClient = useQueryClient();
@@ -369,28 +370,62 @@ export function usePrefetchPopularQueries() {
     if (hasPrefetched.current) return;
     hasPrefetched.current = true;
 
-    // Stagger prefetch requests to avoid competing with user's first search
-    const timeoutIds: ReturnType<typeof setTimeout>[] = [];
-    POPULAR_QUERIES_TO_PREFETCH.forEach((query, index) => {
-      const id = setTimeout(
-        () => {
-          queryClient.prefetchQuery({
-            queryKey: ['translation', query, null, undefined],
-            queryFn: () =>
-              translateQueryWithDedup({
-                query,
-                filters: null,
-                bypassCache: false,
-              }),
-            staleTime: CLIENT_CONFIG.TRANSLATION_STALE_TIME_MS,
-          });
-        },
-        8000 + index * 3000,
-      ); // Start after 8s (after first interaction window), space 3s apart
-      timeoutIds.push(id);
-    });
+    const id = setTimeout(async () => {
+      try {
+        // Fetch top 20 cached translations ordered by hit_count
+        const { data, error } = await supabase
+          .from('query_cache')
+          .select('normalized_query, scryfall_query, explanation, confidence, show_affiliate')
+          .gte('expires_at', new Date().toISOString())
+          .gte('confidence', 0.65)
+          .order('hit_count', { ascending: false })
+          .limit(20);
 
-    return () => timeoutIds.forEach(clearTimeout);
+        if (error || !data?.length) {
+          // Fall back to edge function calls for hardcoded queries
+          FALLBACK_POPULAR_QUERIES.forEach((query, index) => {
+            setTimeout(() => {
+              queryClient.prefetchQuery({
+                queryKey: ['translation', query, null, undefined],
+                queryFn: () =>
+                  translateQueryWithDedup({ query, filters: null, bypassCache: false }),
+                staleTime: CLIENT_CONFIG.TRANSLATION_STALE_TIME_MS,
+              });
+            }, index * 3000);
+          });
+          return;
+        }
+
+        // Seed client cache directly from DB — zero edge function overhead
+        for (const row of data) {
+          const result: TranslationResult = {
+            scryfallQuery: row.scryfall_query,
+            explanation: (row.explanation as TranslationResult['explanation']) ?? {
+              readable: `Translated: ${row.normalized_query}`,
+              assumptions: [],
+              confidence: row.confidence,
+            },
+            showAffiliate: row.show_affiliate,
+            source: 'cache',
+            edgeSource: 'cache',
+          };
+
+          queryClient.setQueryData(
+            ['translation', row.normalized_query, null, undefined],
+            result,
+            { updatedAt: Date.now() },
+          );
+        }
+
+        logger.info('[Prefetch] Seeded client cache with top queries', {
+          count: data.length,
+        });
+      } catch {
+        logger.warn('[Prefetch] Failed to fetch popular queries from cache');
+      }
+    }, 2000); // Start after 2s — before user's likely first search
+
+    return () => clearTimeout(id);
   }, [queryClient]);
 }
 

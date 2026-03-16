@@ -12,10 +12,24 @@ import React from 'react';
 // Mock Supabase client
 const mockInvoke = vi.fn();
 const mockInsert = vi.fn();
+let mockFromResult: Promise<{ data: unknown; error: unknown }> = Promise.resolve({ data: [], error: null });
+
+const makeChain = (): Record<string, unknown> => {
+  const chain: Record<string, unknown> = {};
+  for (const method of ['select', 'gte', 'order', 'limit', 'eq', 'ilike']) {
+    chain[method] = (..._args: unknown[]) => {
+      if (method === 'limit') return mockFromResult;
+      return chain;
+    };
+  }
+  chain.insert = (...args: unknown[]) => mockInsert(...args);
+  return chain;
+};
+
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     functions: { invoke: (...args: unknown[]) => mockInvoke(...args) },
-    from: () => ({ insert: (...args: unknown[]) => mockInsert(...args) }),
+    from: () => makeChain(),
   },
 }));
 
@@ -27,8 +41,8 @@ import {
   useSubmitFeedback,
 } from '@/hooks/useSearchQuery';
 
-function createWrapper() {
-  const qc = new QueryClient({
+function createWrapper(existingClient?: QueryClient) {
+  const qc = existingClient ?? new QueryClient({
     defaultOptions: {
       queries: { retry: false, gcTime: 0 },
       mutations: { retry: false },
@@ -181,7 +195,43 @@ describe('usePrefetchPopularQueries', () => {
     vi.useRealTimers();
   });
 
-  it('schedules prefetch after delay', () => {
+  it('seeds client cache from query_cache table', async () => {
+    // Use real timers for this test since it involves async DB + setQueryData
+    vi.useRealTimers();
+
+    mockFromResult = Promise.resolve({
+      data: [
+        {
+          normalized_query: 'mana rocks',
+          scryfall_query: 't:artifact o:"add"',
+          explanation: { readable: 'Mana rocks', assumptions: [], confidence: 0.9 },
+          confidence: 0.9,
+          show_affiliate: false,
+        },
+      ],
+      error: null,
+    });
+
+    const queryClient = new QueryClient();
+    renderHook(() => usePrefetchPopularQueries(), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    // Wait for the 2s setTimeout + async DB fetch to complete
+    await waitFor(
+      () => {
+        const cached = queryClient.getQueryData(['translation', 'mana rocks', null, undefined]);
+        expect(cached).toBeDefined();
+      },
+      { timeout: 4000 },
+    );
+
+    // Restore fake timers for remaining tests
+    vi.useFakeTimers();
+  });
+
+  it('falls back to edge function on DB error', async () => {
+    mockFromResult = Promise.resolve({ data: null, error: { message: 'DB error' } });
     mockInvoke.mockResolvedValue({
       data: { success: true, scryfallQuery: 'test' },
       error: null,
@@ -191,16 +241,16 @@ describe('usePrefetchPopularQueries', () => {
       wrapper: createWrapper(),
     });
 
-    // Before 8s: no calls yet (first fires at 8000ms)
-    expect(mockInvoke).not.toHaveBeenCalled();
+    await act(async () => {
+      vi.advanceTimersByTime(2100);
+      await vi.runAllTimersAsync();
+    });
 
-    // After 8s: first prefetch fires
-    vi.advanceTimersByTime(8100);
-    expect(mockInvoke).toHaveBeenCalledTimes(1);
-
-    // After 3s more: second prefetch fires (8000 + 1*3000 = 11000ms total)
-    vi.advanceTimersByTime(3000);
-    expect(mockInvoke).toHaveBeenCalledTimes(2);
+    // Should fall back to edge function calls for hardcoded queries
+    await act(async () => {
+      vi.advanceTimersByTime(5000);
+    });
+    expect(mockInvoke).toHaveBeenCalled();
   });
 });
 
