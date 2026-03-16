@@ -11,6 +11,7 @@ import {
   type TranslationResult,
 } from '@/hooks/useSearchQuery';
 import { buildClientFallbackQuery } from '@/lib/search/fallback';
+import { estimateQueryComplexity } from '@/lib/search/complexity';
 import { CLIENT_CONFIG } from '@/lib/config';
 import type { FilterState } from '@/types/filters';
 import type { SearchResult } from '@/components/UnifiedSearchBar';
