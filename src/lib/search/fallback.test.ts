@@ -253,4 +253,38 @@ describe('buildClientFallbackQuery', () => {
     expect(q).toContain('o:"search your library"');
     expect(q).toContain('o:"creature"');
   });
+
+  // Shard colors
+  it('translates shard color names', () => {
+    expect(buildClientFallbackQuery('esper creatures')).toContain('id<=wub');
+    expect(buildClientFallbackQuery('jund creatures')).toContain('id<=brg');
+    expect(buildClientFallbackQuery('naya creatures')).toContain('id<=rgw');
+  });
+
+  // Discard outlets
+  it('translates "discard outlets"', () => {
+    const q = buildClientFallbackQuery('free discard outlets in esper colors');
+    expect(q).toContain('o:"discard a card"');
+    expect(q).toContain('id<=wub');
+  });
+
+  // Negation
+  it('handles "arent creatures" negation', () => {
+    const q = buildClientFallbackQuery('green protection spells that arent creatures');
+    expect(q).toContain('c:g');
+    expect(q).toContain('-t:creature');
+    expect(q).not.toContain('t:creature '); // should not have positive t:creature
+  });
+
+  it('handles "non-creature" negation', () => {
+    const q = buildClientFallbackQuery('non-creature artifacts');
+    expect(q).toContain('-t:creature');
+    expect(q).toContain('t:artifact');
+  });
+
+  // Protection spells slang
+  it('translates "protection spells"', () => {
+    const q = buildClientFallbackQuery('protection spells');
+    expect(q).toContain('kw:hexproof');
+  });
 });
