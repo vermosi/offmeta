@@ -221,10 +221,10 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
   const handleSelectPrinting = useCallback((printing: CardPrinting) => {
     setSelectedPrinting(printing);
     setRefreshedPrices({
-      usd: printing.prices.usd,
-      usd_foil: printing.prices.usd_foil,
-      eur: printing.prices.eur,
-      eur_foil: printing.prices.eur_foil,
+      usd: printing.prices?.usd,
+      usd_foil: printing.prices?.usd_foil,
+      eur: printing.prices?.eur,
+      eur_foil: printing.prices?.eur_foil,
     });
   }, []);
 
