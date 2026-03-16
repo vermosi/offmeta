@@ -902,7 +902,7 @@ serve(async (req) => {
           // with the residual (e.g., "mana" matching "mana rock" when query is about mana value)
           if (c.matchType === 'alias' && c.similarity < 0.9) {
             const aliasWords = (c.pattern || '').toLowerCase().split(/\s+/);
-            const queryWords = new Set(normalizedResidual.split(/\s+/));
+            const queryWords = new Set(residualForConcepts.toLowerCase().split(/\s+/));
             const aliasWordsCovered = aliasWords.filter(w => queryWords.has(w));
             // Require ALL words of the alias to appear in the query
             if (aliasWordsCovered.length < aliasWords.length) return false;
