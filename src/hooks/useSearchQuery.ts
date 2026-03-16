@@ -11,8 +11,8 @@ import type { SearchIntent } from '@/types/search';
 import { CLIENT_CONFIG } from '@/lib/config';
 import { logger } from '@/lib/core/logger';
 
-// Popular queries to prefetch for faster UX (kept small to avoid cold-start flooding)
-const POPULAR_QUERIES_TO_PREFETCH = ['mana rocks', 'board wipes'];
+// Hardcoded fallback queries if DB fetch fails
+const FALLBACK_POPULAR_QUERIES = ['mana rocks', 'board wipes'];
 
 // Track recent searches for rate limiting
 const recentSearches = new Map<string, number>(); // query -> timestamp
