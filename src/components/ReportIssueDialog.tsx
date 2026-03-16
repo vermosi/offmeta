@@ -241,9 +241,18 @@ export function ReportIssueDialog({
       });
       onOpenChange(false);
       triggerProcessing(feedbackId);
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Feedback submission failed', error);
-      toast.error(t('report.failed', 'Failed to submit feedback'));
+      const detail =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'object' && error !== null && 'message' in error
+            ? String((error as { message: unknown }).message)
+            : 'Unknown error';
+      toast.error(t('report.failed', 'Failed to submit feedback'), {
+        description: detail,
+        duration: 8000,
+      });
     } finally {
       setIsSubmitting(false);
     }
