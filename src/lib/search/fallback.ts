@@ -350,7 +350,28 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
     }
   }
 
-  // 9. Extract cost modifiers
+  // 9a. Extract "under/less than/below N mana" → mv<N (before generic cost words)
+  const manaValueMatch = residual.match(/\b(?:under|less than|below)\s+(\d+)\s+mana\b/i);
+  if (manaValueMatch) {
+    parts.push(`mv<${manaValueMatch[1]}`);
+    residual = residual.replace(manaValueMatch[0], ' ').trim();
+  } else {
+    // "costs N or less" / "N mana or less"
+    const mvOrLessMatch = residual.match(/\b(?:costs?\s+)?(\d+)\s+(?:mana\s+)?or\s+less\b/i);
+    if (mvOrLessMatch) {
+      parts.push(`mv<=${mvOrLessMatch[1]}`);
+      residual = residual.replace(mvOrLessMatch[0], ' ').trim();
+    }
+  }
+
+  // 9b. Extract "under $N" / "under N dollars" → usd<N (price)
+  const priceMatch = residual.match(/\b(?:under|less than|below)\s+\$?\s*(\d+(?:\.\d+)?)\s*(?:dollars?)?\b/i);
+  if (priceMatch) {
+    parts.push(`usd<${priceMatch[1]}`);
+    residual = residual.replace(priceMatch[0], ' ').trim();
+  }
+
+  // 9c. Extract generic cost modifiers (cheap, expensive, etc.)
   for (const [word, syntax] of Object.entries(COST_WORDS)) {
     const re = new RegExp(`\\b${word}\\b`, 'i');
     if (re.test(residual)) {
