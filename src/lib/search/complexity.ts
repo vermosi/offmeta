@@ -152,11 +152,16 @@ export function estimateQueryComplexity(query: string): ComplexityEstimate {
 /**
  * Simplifies a query by keeping the most important constraints
  * and dropping low-value filler. Targets ~8 meaningful words.
+ * 
+ * Strategy: Keep the top 8 meaningful words by priority, then
+ * only retain noise words that appear *between* two kept meaningful
+ * words (as natural connectors). This avoids the old bug of keeping
+ * all filler while dropping constraint words.
  */
 function simplifyQuery(original: string, meaningfulWords: string[]): string {
   if (meaningfulWords.length <= 8) return original;
 
-  // Priority: type > color > format > keyword > ability > cost > uncovered
+  // Priority: type > color > format > keyword > cost numbers > ability > uncovered
   const prioritized: { word: string; priority: number }[] = meaningfulWords.map(w => {
     let priority = 0;
     if (['creature', 'creatures', 'instant', 'instants', 'sorcery', 'sorceries',
@@ -171,6 +176,12 @@ function simplifyQuery(original: string, meaningfulWords: string[]): string {
       priority = 80;
     } else if (DETERMINISTIC_WORDS.has(w)) {
       priority = 70;
+    } else if (/^\d+$/.test(w)) {
+      // Numbers (mana costs, prices) are important constraints
+      priority = 65;
+    } else if (['dollars', 'dollar', 'triggers', 'format', 'price'].includes(w)) {
+      // Context words that clarify adjacent constraints
+      priority = 60;
     } else {
       priority = 50;
     }
@@ -185,9 +196,27 @@ function simplifyQuery(original: string, meaningfulWords: string[]): string {
       .map(p => p.word),
   );
 
-  // Rebuild from original words preserving order and connectors
+  // Rebuild: keep meaningful words that made the cut, plus only noise
+  // words that sit between two kept meaningful words (as connectors)
   const words = original.toLowerCase().trim().split(/\s+/);
-  const kept = words.filter(w => topWords.has(w) || NOISE_WORDS.has(w));
+  const kept: string[] = [];
+  let lastKeptMeaningful = -1;
+  const pendingNoise: string[] = [];
+
+  for (const w of words) {
+    if (topWords.has(w)) {
+      // Flush pending noise as connectors
+      if (lastKeptMeaningful >= 0 && pendingNoise.length <= 2) {
+        kept.push(...pendingNoise);
+      }
+      pendingNoise.length = 0;
+      kept.push(w);
+      lastKeptMeaningful = kept.length - 1;
+    } else if (NOISE_WORDS.has(w)) {
+      pendingNoise.push(w);
+    }
+    // Non-top, non-noise words are dropped entirely
+  }
 
   // Remove trailing noise
   while (kept.length > 0 && NOISE_WORDS.has(kept[kept.length - 1])) {
