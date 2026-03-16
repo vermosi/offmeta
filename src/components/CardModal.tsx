@@ -251,7 +251,7 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
     eur_foil: card.prices?.eur_foil,
   };
 
-  const displayTix = selectedPrinting?.prices?.tix || card.prices.tix;
+  const displayTix = selectedPrinting?.prices?.tix || card.prices?.tix;
 
   const englishPrintings = printings
     .filter((p) => p.lang === 'en')
