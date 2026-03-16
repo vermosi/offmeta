@@ -49,8 +49,8 @@ export const CONFIG = {
   AI_TEMPERATURE: 0.1,
   AI_SIMPLE_QUERY_MAX_WORDS: 4,
   // Single request budget used by all stages. Stage minima are derived from this value.
-  REQUEST_BUDGET_MS: 8000,
-  AI_FETCH_TIMEOUT_MS: 3500,
+  REQUEST_BUDGET_MS: 6000,
+  AI_FETCH_TIMEOUT_MS: 2500,
   AI_MAX_RETRIES: 1,
 
   // Cache confidence thresholds
