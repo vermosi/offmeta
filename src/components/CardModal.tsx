@@ -163,10 +163,10 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
         const currentPrinting = data.find((p) => p.id === card.id);
         if (currentPrinting) {
           setRefreshedPrices({
-            usd: currentPrinting.prices.usd,
-            usd_foil: currentPrinting.prices.usd_foil,
-            eur: currentPrinting.prices.eur,
-            eur_foil: currentPrinting.prices.eur_foil,
+            usd: currentPrinting.prices?.usd,
+            usd_foil: currentPrinting.prices?.usd_foil,
+            eur: currentPrinting.prices?.eur,
+            eur_foil: currentPrinting.prices?.eur_foil,
           });
         }
         setIsLoadingPrintings(false);
