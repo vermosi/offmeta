@@ -225,6 +225,20 @@ export const CONCEPT_LIBRARY: Record<
     category: 'tutor',
     priority: 80,
   },
+  artifact_tutor: {
+    aliases: [
+      'artifact tutor',
+      'search for an artifact',
+      'find an artifact',
+      'artifact search',
+      'search for artifact',
+    ],
+    templates: ['o:"search your library" o:"artifact"'],
+    negativeTemplates: [],
+    description: 'Cards that search for artifacts',
+    category: 'tutor',
+    priority: 80,
+  },
 
   // === GRAVEYARD ===
   reanimation: {
@@ -328,6 +342,20 @@ export const CONCEPT_LIBRARY: Record<
     category: 'sacrifice',
     priority: 85,
   },
+  discard_outlet: {
+    aliases: [
+      'discard outlet',
+      'discard outlets',
+      'free discard',
+      'discard for free',
+      'discard a card',
+    ],
+    templates: ['o:"discard a card" -o:"opponent discards"'],
+    negativeTemplates: [],
+    description: 'Cards that let you discard cards as a cost or effect',
+    category: 'sacrifice',
+    priority: 80,
+  },
 
   // === TOKENS ===
   token_generator: {
@@ -348,7 +376,9 @@ export const CONCEPT_LIBRARY: Record<
       'treasure',
       'treasure tokens',
       'makes treasure',
+      'make treasure tokens',
       'treasure generator',
+      'create treasure',
     ],
     templates: ['o:"create" o:"Treasure"'],
     negativeTemplates: [],
@@ -377,8 +407,8 @@ export const CONCEPT_LIBRARY: Record<
 
   // === LIFEGAIN ===
   lifegain: {
-    aliases: ['lifegain', 'life gain', 'gain life', 'healing'],
-    templates: ['otag:lifegain'],
+    aliases: ['lifegain', 'life gain', 'gain life', 'healing', 'lifegain theme'],
+    templates: ['(otag:lifegain or o:"gain" o:"life")'],
     negativeTemplates: [],
     description: 'Cards that gain life',
     category: 'lifegain',
@@ -391,6 +421,23 @@ export const CONCEPT_LIBRARY: Record<
     description: 'Cards that gain life when creatures enter',
     category: 'lifegain',
     priority: 80,
+  },
+
+  // === LANDFALL ===
+  landfall: {
+    aliases: [
+      'landfall',
+      'landfall triggers',
+      'landfall synergies',
+      'landfall build',
+      'landfall deck',
+      'when a land enters',
+    ],
+    templates: ['otag:landfall'],
+    negativeTemplates: [],
+    description: 'Cards with landfall triggers',
+    category: 'trigger',
+    priority: 85,
   },
 
   // === SPECIAL ===
@@ -469,7 +516,7 @@ export const CONCEPT_LIBRARY: Record<
   // === KEYWORDS & ABILITIES ===
   flying: {
     aliases: ['flying', 'flyers', 'flier', 'fliers', 'has flying'],
-    templates: ['o:flying'],
+    templates: ['kw:flying'],
     negativeTemplates: [],
     description: 'Cards with flying',
     category: 'keyword',
@@ -477,7 +524,7 @@ export const CONCEPT_LIBRARY: Record<
   },
   hexproof: {
     aliases: ['hexproof', 'has hexproof', 'hexproof creatures'],
-    templates: ['o:hexproof'],
+    templates: ['kw:hexproof'],
     negativeTemplates: [],
     description: 'Cards with hexproof',
     category: 'keyword',
@@ -485,7 +532,7 @@ export const CONCEPT_LIBRARY: Record<
   },
   trample: {
     aliases: ['trample', 'has trample', 'tramplers'],
-    templates: ['o:trample'],
+    templates: ['kw:trample'],
     negativeTemplates: [],
     description: 'Cards with trample',
     category: 'keyword',
@@ -493,7 +540,7 @@ export const CONCEPT_LIBRARY: Record<
   },
   deathtouch: {
     aliases: ['deathtouch', 'has deathtouch', 'deathtouch creatures'],
-    templates: ['o:deathtouch'],
+    templates: ['kw:deathtouch'],
     negativeTemplates: [],
     description: 'Cards with deathtouch',
     category: 'keyword',
@@ -501,7 +548,7 @@ export const CONCEPT_LIBRARY: Record<
   },
   lifelink: {
     aliases: ['lifelink', 'has lifelink', 'lifelink creatures'],
-    templates: ['o:lifelink'],
+    templates: ['kw:lifelink'],
     negativeTemplates: [],
     description: 'Cards with lifelink',
     category: 'keyword',
@@ -509,7 +556,7 @@ export const CONCEPT_LIBRARY: Record<
   },
   indestructible: {
     aliases: ['indestructible', 'has indestructible', 'indestructible creatures'],
-    templates: ['o:indestructible'],
+    templates: ['kw:indestructible'],
     negativeTemplates: [],
     description: 'Cards with indestructible',
     category: 'keyword',
@@ -517,7 +564,7 @@ export const CONCEPT_LIBRARY: Record<
   },
   haste: {
     aliases: ['haste', 'has haste', 'haste creatures'],
-    templates: ['o:haste'],
+    templates: ['kw:haste'],
     negativeTemplates: [],
     description: 'Cards with haste',
     category: 'keyword',
@@ -525,7 +572,7 @@ export const CONCEPT_LIBRARY: Record<
   },
   vigilance: {
     aliases: ['vigilance', 'has vigilance'],
-    templates: ['o:vigilance'],
+    templates: ['kw:vigilance'],
     negativeTemplates: [],
     description: 'Cards with vigilance',
     category: 'keyword',
@@ -533,7 +580,7 @@ export const CONCEPT_LIBRARY: Record<
   },
   first_strike: {
     aliases: ['first strike', 'has first strike', 'first strikers'],
-    templates: ['o:"first strike"'],
+    templates: ['kw:"first strike"'],
     negativeTemplates: [],
     description: 'Cards with first strike',
     category: 'keyword',
@@ -541,7 +588,7 @@ export const CONCEPT_LIBRARY: Record<
   },
   double_strike: {
     aliases: ['double strike', 'has double strike'],
-    templates: ['o:"double strike"'],
+    templates: ['kw:"double strike"'],
     negativeTemplates: [],
     description: 'Cards with double strike',
     category: 'keyword',
@@ -549,7 +596,7 @@ export const CONCEPT_LIBRARY: Record<
   },
   flash: {
     aliases: ['flash', 'has flash', 'flash creatures'],
-    templates: ['o:flash'],
+    templates: ['kw:flash'],
     negativeTemplates: [],
     description: 'Cards with flash',
     category: 'keyword',
@@ -557,7 +604,7 @@ export const CONCEPT_LIBRARY: Record<
   },
   menace: {
     aliases: ['menace', 'has menace'],
-    templates: ['o:menace'],
+    templates: ['kw:menace'],
     negativeTemplates: [],
     description: 'Cards with menace',
     category: 'keyword',
@@ -565,7 +612,7 @@ export const CONCEPT_LIBRARY: Record<
   },
   ward: {
     aliases: ['ward', 'has ward'],
-    templates: ['o:ward'],
+    templates: ['kw:ward'],
     negativeTemplates: [],
     description: 'Cards with ward',
     category: 'keyword',
@@ -573,11 +620,26 @@ export const CONCEPT_LIBRARY: Record<
   },
   reach: {
     aliases: ['reach', 'has reach'],
-    templates: ['o:reach'],
+    templates: ['kw:reach'],
     negativeTemplates: [],
     description: 'Cards with reach',
     category: 'keyword',
     priority: 70,
+  },
+
+  // === PROTECTION SPELLS ===
+  protection_spell: {
+    aliases: [
+      'protection spell',
+      'protection spells',
+      'protect my creatures',
+      'protect creatures',
+    ],
+    templates: ['(kw:hexproof or kw:indestructible or o:"protection from")'],
+    negativeTemplates: [],
+    description: 'Spells that protect your permanents',
+    category: 'protection',
+    priority: 75,
   },
 
   // === FORMAT LEGALITY ===
