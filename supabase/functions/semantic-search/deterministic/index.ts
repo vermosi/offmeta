@@ -132,13 +132,31 @@ function buildIR(query: string): SearchIR {
     remaining = remaining.replace(/\binexpensive\b/gi, '').trim();
   }
 
-  // Handle price constraints with $ sign
+  // Handle "under N mana" / "less than N mana" / "below N mana" → mv constraint (BEFORE price)
+  const manaValueMatch = remaining.match(
+    /\b(?:under|below|less\s+than)\s+(\d+)\s+(?:mana|mv|cmc|mana\s+value)\b/i,
+  );
+  if (manaValueMatch) {
+    ir.numeric.push({ field: 'mv', op: '<', value: Number(manaValueMatch[1]) });
+    remaining = remaining.replace(manaValueMatch[0], '').trim();
+  }
+
+  // Handle price constraints: require $ sign OR "dollars" to distinguish from mana
   const priceMatch = remaining.match(
-    /\b(?:under|below|less than)\s*\$?(\d+(?:\.\d+)?)\b/i,
+    /\b(?:under|below|less\s+than)\s+\$\s*(\d+(?:\.\d+)?)\b/i,
   );
   if (priceMatch) {
     ir.numeric.push({ field: 'usd', op: '<', value: Number(priceMatch[1]) });
     remaining = remaining.replace(priceMatch[0], '').trim();
+  } else {
+    // "under 10 dollars" pattern (no $ sign but has "dollars")
+    const priceDollarsMatch = remaining.match(
+      /\b(?:under|below|less\s+than)\s+(\d+(?:\.\d+)?)\s+dollars?\b/i,
+    );
+    if (priceDollarsMatch) {
+      ir.numeric.push({ field: 'usd', op: '<', value: Number(priceDollarsMatch[1]) });
+      remaining = remaining.replace(priceDollarsMatch[0], '').trim();
+    }
   }
 
   const costMatch = remaining.match(
