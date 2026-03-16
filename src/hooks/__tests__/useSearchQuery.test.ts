@@ -196,20 +196,18 @@ describe('usePrefetchPopularQueries', () => {
   });
 
   it('seeds client cache from query_cache table', async () => {
-    mockSelect.mockReturnValue(
-      Promise.resolve({
-        data: [
-          {
-            normalized_query: 'mana rocks',
-            scryfall_query: 't:artifact o:"add"',
-            explanation: { readable: 'Mana rocks', assumptions: [], confidence: 0.9 },
-            confidence: 0.9,
-            show_affiliate: false,
-          },
-        ],
-        error: null,
-      }),
-    );
+    mockFromResult = Promise.resolve({
+      data: [
+        {
+          normalized_query: 'mana rocks',
+          scryfall_query: 't:artifact o:"add"',
+          explanation: { readable: 'Mana rocks', assumptions: [], confidence: 0.9 },
+          confidence: 0.9,
+          show_affiliate: false,
+        },
+      ],
+      error: null,
+    });
 
     const queryClient = new QueryClient();
     renderHook(() => usePrefetchPopularQueries(), {
