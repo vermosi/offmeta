@@ -3,8 +3,7 @@
  * @module functions/deck-ideas
  */
 
-import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
-import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
+import { runRequestGuard } from '../_shared/requestGuard.ts';
 import { callAIWithTools, aiErrorResponse } from '../_shared/aiClient.ts';
 
 declare const Deno: {
@@ -27,31 +26,9 @@ interface DeckIdeaResponse {
 }
 
 serve(async (req: Request): Promise<Response> => {
-  const corsHeaders = getCorsHeaders(req);
-  const headers = { ...corsHeaders, 'Content-Type': 'application/json' };
-
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ success: false, error: 'Method not allowed' }), { status: 405, headers });
-  }
-
-  const auth = await validateAuth(req);
-  if (!auth.authorized) {
-    return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), { status: 401, headers });
-  }
-
-  maybeCleanup();
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  const rateCheck = await checkRateLimit(ip, undefined, 10, 300);
-  if (!rateCheck.allowed) {
-    return new Response(
-      JSON.stringify({ success: false, error: 'Rate limited', retryAfter: rateCheck.retryAfter }),
-      { status: 429, headers },
-    );
-  }
+  const guard = await runRequestGuard(req, { method: 'POST', rateLimit: 10, globalLimit: 300 });
+  if (!guard.ok) return guard.response;
+  const { corsHeaders, headers, apiKey } = guard.ctx;
 
   try {
     const { query } = await req.json();
@@ -60,18 +37,13 @@ serve(async (req: Request): Promise<Response> => {
       return new Response(JSON.stringify({ success: false, error: 'Query too short' }), { status: 400, headers });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ success: false, error: 'AI service not configured' }), { status: 500, headers });
-    }
-
     const args = await callAIWithTools<{
       archetype: string;
       strategy: string;
       key_cards: string[];
       synergy_pieces: string[];
       budget_options: string[];
-    }>(LOVABLE_API_KEY, {
+    }>(apiKey, {
       model: 'google/gemini-2.5-flash',
       messages: [
         {
