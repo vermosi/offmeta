@@ -102,6 +102,7 @@ import { SystemStatusPanel } from '@/pages/admin-analytics/components/SystemStat
 import { EngagementMetricsPanel } from '@/pages/admin-analytics/components/EngagementMetricsPanel';
 import { ConversionFunnelPanel } from '@/pages/admin-analytics/components/ConversionFunnelPanel';
 import { HitRatePanel } from '@/pages/admin-analytics/components/HitRatePanel';
+import { AICostPanel } from '@/pages/admin-analytics/components/AICostPanel';
 import { logger } from '@/lib/core/logger';
 
 export default function AdminAnalytics() {
