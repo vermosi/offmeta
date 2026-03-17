@@ -1,9 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
-import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
+import { runRequestGuard } from '../_shared/requestGuard.ts';
 import { callAIWithTools, aiErrorResponse } from '../_shared/aiClient.ts';
-
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
 const SYSTEM_PROMPT = `Classify each MTG card into ONE category by functional role (not card type).
 
@@ -14,30 +11,9 @@ Priority examples: Sol Ring→Ramp, Swords to Plowshares→Removal, Rhystic Stud
 Return JSON: {cardName: category}. No explanation.`;
 
 serve(async (req) => {
-  const corsHeaders = getCorsHeaders(req);
-  const headers = { ...corsHeaders, 'Content-Type': 'application/json' };
-
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  const authResult = await validateAuth(req);
-  if (!authResult.authorized) {
-    return new Response(
-      JSON.stringify({ error: authResult.error || 'Unauthorized' }),
-      { status: 401, headers },
-    );
-  }
-
-  maybeCleanup();
-  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  const { allowed, retryAfter } = await checkRateLimit(clientIp, undefined, 10, 200);
-  if (!allowed) {
-    return new Response(
-      JSON.stringify({ error: 'Too many AI requests. Please slow down.', retryAfter }),
-      { status: 429, headers: { ...headers, 'Retry-After': String(retryAfter) } },
-    );
-  }
+  const guard = await runRequestGuard(req, { rateLimit: 10, globalLimit: 200 });
+  if (!guard.ok) return guard.response;
+  const { corsHeaders, headers, apiKey } = guard.ctx;
 
   try {
     const { cards } = await req.json();
@@ -53,12 +29,9 @@ serve(async (req) => {
         return new Response(JSON.stringify({ error: 'Card name exceeds 200 character limit' }), { status: 400, headers });
       }
     }
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: 'AI not configured' }), { status: 500, headers });
-    }
 
     const parsed = await callAIWithTools<{ categories: Record<string, string> }>(
-      LOVABLE_API_KEY,
+      apiKey,
       {
         model: 'google/gemini-2.5-flash-lite',
         messages: [
