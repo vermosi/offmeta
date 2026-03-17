@@ -169,7 +169,7 @@ export function HitRatePanel() {
   const [stats, setStats] = useState(() => getHitRateStats());
   const [historical, setHistorical] = useState<HistoricalStats>(EMPTY_HISTORICAL);
   const [loadingHistorical, setLoadingHistorical] = useState(true);
-  const didLoad = useRef(false);
+  const didLoad = useRef<boolean | null>(null);
 
   const loadHistorical = useCallback(async () => {
     setLoadingHistorical(true);
@@ -178,8 +178,8 @@ export function HitRatePanel() {
     setLoadingHistorical(false);
   }, []);
 
-  // Fire once on mount via ref guard (avoids setState-in-effect lint error)
-  if (!didLoad.current) {
+  // Fire once on mount via ref guard (uses null-check pattern per react-hooks/refs)
+  if (didLoad.current == null) {
     didLoad.current = true;
     loadHistorical();
   }
