@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_usage_logs: {
+        Row: {
+          completion_tokens: number
+          created_at: string
+          duration_ms: number
+          function_name: string
+          id: string
+          model: string
+          prompt_tokens: number
+          retries: number
+          total_tokens: number
+        }
+        Insert: {
+          completion_tokens?: number
+          created_at?: string
+          duration_ms?: number
+          function_name: string
+          id?: string
+          model: string
+          prompt_tokens?: number
+          retries?: number
+          total_tokens?: number
+        }
+        Update: {
+          completion_tokens?: number
+          created_at?: string
+          duration_ms?: number
+          function_name?: string
+          id?: string
+          model?: string
+          prompt_tokens?: number
+          retries?: number
+          total_tokens?: number
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           created_at: string
@@ -1083,6 +1119,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_ai_usage_stats: { Args: { days_back?: number }; Returns: Json }
       get_card_recommendations: {
         Args: {
           result_limit?: number
