@@ -10,6 +10,8 @@
  */
 
 import { logEvent } from './logger.ts';
+// @ts-expect-error: esm.sh import for Deno runtime
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const AI_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 const TIMEOUT_MS = 30_000;
@@ -188,6 +190,17 @@ export async function callAIWithToolsTracked<T = Record<string, unknown>>(
         attempt,
       });
 
+      // Persist usage to DB (fire-and-forget, don't block response)
+      persistUsage({
+        model: request.model,
+        functionName: request.toolChoice,
+        promptTokens: usage?.promptTokens ?? 0,
+        completionTokens: usage?.completionTokens ?? 0,
+        totalTokens: usage?.totalTokens ?? 0,
+        durationMs,
+        retries: attempt,
+      });
+
       if (!toolCall?.function?.arguments) {
         throw new AIGatewayError('AI returned no structured response', 500);
       }
@@ -252,4 +265,41 @@ export function aiErrorResponse(
     JSON.stringify({ error: fallbackMessage }),
     { status: 500, headers },
   );
+}
+
+/**
+ * Fire-and-forget insert of usage metrics into ai_usage_logs.
+ * Uses a service-role client to bypass RLS.
+ */
+function persistUsage(record: {
+  model: string;
+  functionName: string;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  durationMs: number;
+  retries: number;
+}): void {
+  try {
+    const url = Deno.env.get('SUPABASE_URL');
+    const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!url || !key) return;
+
+    const sb = createClient(url, key);
+    sb.from('ai_usage_logs')
+      .insert({
+        model: record.model,
+        function_name: record.functionName,
+        prompt_tokens: record.promptTokens,
+        completion_tokens: record.completionTokens,
+        total_tokens: record.totalTokens,
+        duration_ms: record.durationMs,
+        retries: record.retries,
+      })
+      .then(({ error }: { error: { message: string } | null }) => {
+        if (error) logEvent('warn', 'ai_usage_persist_failed', { message: error.message });
+      });
+  } catch {
+    // Silently fail — usage tracking must never break AI calls
+  }
 }
