@@ -68,19 +68,7 @@ serve(async (req) => {
         `${c.quantity && c.quantity > 1 ? c.quantity + 'x ' : ''}${c.name}${c.category ? ` [${c.category}]` : ''}`)
       .join('\n');
 
-    const systemPrompt = `You are an expert Magic: The Gathering deck analyst and coach. Your job is to critically review a decklist and provide actionable feedback.
-
-For each card you suggest CUTTING, explain why it underperforms or doesn't fit the strategy.
-For each card you suggest ADDING, explain what gap it fills and why it's better than what's currently in the deck.
-
-Be specific, honest, and constructive. Reference actual card interactions and strategy. Only suggest real Magic cards.
-Focus on:
-- Cards that don't align with the deck's strategy or commander synergy
-- Suboptimal choices where strictly better options exist
-- Mana curve problems
-- Missing key categories (removal, ramp, draw, protection)
-- Win condition density
-- Color identity compliance (${colorStr})`;
+    const systemPrompt = `Expert MTG deck analyst. Critically review decklists with actionable cut/add suggestions. Reference real card interactions. Focus on: strategy alignment, strictly-better swaps, mana curve, missing categories (removal/ramp/draw/protection), win conditions. Color identity: ${colorStr}. Real cards only.`;
 
     const userPrompt = `Critique this ${format || 'commander'} deck:
 Commander: ${commander || 'None specified'}
