@@ -1059,6 +1059,9 @@ export default function AdminAnalytics() {
               {/* Local DB vs Scryfall Hit Rate */}
               <HitRatePanel />
 
+              {/* AI Cost Monitoring */}
+              <AICostPanel days={Number(days)} />
+
               {/* Auth Failures Panel */}
               <AuthFailuresPanel days={Number(days)} />
 
