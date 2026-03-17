@@ -17,6 +17,25 @@ const MAX_RETRIES = 1;
 const RETRY_DELAY_MS = 1_000;
 const ERROR_BODY_MAX_CHARS = 200;
 
+/** Supported Lovable AI gateway models. */
+const SUPPORTED_MODELS = new Set([
+  'google/gemini-2.5-pro',
+  'google/gemini-3.1-pro-preview',
+  'google/gemini-3-flash-preview',
+  'google/gemini-2.5-flash',
+  'google/gemini-2.5-flash-lite',
+  'google/gemini-3-pro-image-preview',
+  'google/gemini-3.1-flash-image-preview',
+  'openai/gpt-5',
+  'openai/gpt-5-mini',
+  'openai/gpt-5-nano',
+  'openai/gpt-5.2',
+]);
+
+export function isValidModel(model: string): boolean {
+  return SUPPORTED_MODELS.has(model);
+}
+
 export interface AIMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
@@ -109,6 +128,10 @@ export async function callAIWithToolsTracked<T = Record<string, unknown>>(
   apiKey: string,
   request: AIToolCallRequest,
 ): Promise<AIToolCallResult<T>> {
+  if (!isValidModel(request.model)) {
+    throw new AIGatewayError(`Unsupported model: ${request.model}`, 400);
+  }
+
   const startTime = Date.now();
 
   const body = JSON.stringify({
