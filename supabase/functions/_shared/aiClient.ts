@@ -128,6 +128,10 @@ export async function callAIWithToolsTracked<T = Record<string, unknown>>(
   apiKey: string,
   request: AIToolCallRequest,
 ): Promise<AIToolCallResult<T>> {
+  if (!isValidModel(request.model)) {
+    throw new AIGatewayError(`Unsupported model: ${request.model}`, 400);
+  }
+
   const startTime = Date.now();
 
   const body = JSON.stringify({
