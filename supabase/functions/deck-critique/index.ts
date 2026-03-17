@@ -1,11 +1,13 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
 import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
+import { callAIWithTools, aiErrorResponse } from '../_shared/aiClient.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
+  const headers = { ...corsHeaders, 'Content-Type': 'application/json' };
 
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -13,10 +15,7 @@ serve(async (req) => {
 
   const authResult = await validateAuth(req);
   if (!authResult.authorized) {
-    return new Response(
-      JSON.stringify({ error: authResult.error || 'Unauthorized' }),
-      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    );
+    return new Response(JSON.stringify({ error: authResult.error || 'Unauthorized' }), { status: 401, headers });
   }
 
   maybeCleanup();
@@ -25,7 +24,7 @@ serve(async (req) => {
   if (!allowed) {
     return new Response(
       JSON.stringify({ error: 'Too many requests. Please slow down.', retryAfter }),
-      { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': String(retryAfter) } },
+      { status: 429, headers: { ...headers, 'Retry-After': String(retryAfter) } },
     );
   }
 
@@ -33,33 +32,18 @@ serve(async (req) => {
     const { commander, cards, color_identity, format } = await req.json();
 
     if (!Array.isArray(cards) || cards.length < 5) {
-      return new Response(
-        JSON.stringify({ error: 'At least 5 cards required for critique' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
+      return new Response(JSON.stringify({ error: 'At least 5 cards required for critique' }), { status: 400, headers });
     }
-
     if (cards.length > 200) {
-      return new Response(
-        JSON.stringify({ error: 'Too many cards (max 200)' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
+      return new Response(JSON.stringify({ error: 'Too many cards (max 200)' }), { status: 400, headers });
     }
-
     for (const c of cards) {
       if (typeof c?.name === 'string' && c.name.length > 200) {
-        return new Response(
-          JSON.stringify({ error: 'Card name exceeds 200 character limit' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-        );
+        return new Response(JSON.stringify({ error: 'Card name exceeds 200 character limit' }), { status: 400, headers });
       }
     }
-
     if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: 'AI not configured' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return new Response(JSON.stringify({ error: 'AI not configured' }), { status: 500, headers });
     }
 
     const colorStr = (color_identity || []).join('') || 'colorless';
@@ -68,126 +52,67 @@ serve(async (req) => {
         `${c.quantity && c.quantity > 1 ? c.quantity + 'x ' : ''}${c.name}${c.category ? ` [${c.category}]` : ''}`)
       .join('\n');
 
-    const systemPrompt = `Expert MTG deck analyst. Critically review decklists with actionable cut/add suggestions. Reference real card interactions. Focus on: strategy alignment, strictly-better swaps, mana curve, missing categories (removal/ramp/draw/protection), win conditions. Color identity: ${colorStr}. Real cards only.`;
-
-    const userPrompt = `Critique this ${format || 'commander'} deck:
-Commander: ${commander || 'None specified'}
-Color Identity: ${colorStr}
-Card count: ${cards.length}
-
-Decklist:
-${cardList}
-
-Provide 3-5 cuts and 3-5 additions with reasoning.`;
-
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        tools: [{
-          type: 'function',
-          function: {
-            name: 'deck_critique',
-            description: 'Return structured deck critique with cuts and additions',
-            parameters: {
-              type: 'object',
-              properties: {
-                summary: {
-                  type: 'string',
-                  description: 'Brief overall assessment of the deck (2-3 sentences)',
-                },
-                cuts: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      card_name: { type: 'string', description: 'Exact name of the card to cut' },
-                      reason: { type: 'string', description: 'Why this card should be cut (1-2 sentences)' },
-                      severity: { type: 'string', enum: ['weak', 'underperforming', 'off-strategy'] },
-                    },
-                    required: ['card_name', 'reason', 'severity'],
-                    additionalProperties: false,
+    const parsed = await callAIWithTools(LOVABLE_API_KEY, {
+      model: 'google/gemini-3-flash-preview',
+      messages: [
+        {
+          role: 'system',
+          content: `Expert MTG deck analyst. Critically review decklists with actionable cut/add suggestions. Reference real card interactions. Focus on: strategy alignment, strictly-better swaps, mana curve, missing categories (removal/ramp/draw/protection), win conditions. Color identity: ${colorStr}. Real cards only.`,
+        },
+        {
+          role: 'user',
+          content: `Critique this ${format || 'commander'} deck:\nCommander: ${commander || 'None specified'}\nColor Identity: ${colorStr}\nCard count: ${cards.length}\n\nDecklist:\n${cardList}\n\nProvide 3-5 cuts and 3-5 additions with reasoning.`,
+        },
+      ],
+      tools: [{
+        type: 'function',
+        function: {
+          name: 'deck_critique',
+          description: 'Return structured deck critique with cuts and additions',
+          parameters: {
+            type: 'object',
+            properties: {
+              summary: { type: 'string', description: 'Brief overall assessment (2-3 sentences)' },
+              cuts: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    card_name: { type: 'string' },
+                    reason: { type: 'string' },
+                    severity: { type: 'string', enum: ['weak', 'underperforming', 'off-strategy'] },
                   },
-                },
-                additions: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      card_name: { type: 'string', description: 'Exact name of the card to add' },
-                      reason: { type: 'string', description: 'Why this card improves the deck (1-2 sentences)' },
-                      replaces: { type: 'string', description: 'Which cut this would replace, if applicable' },
-                      category: { type: 'string', description: 'Functional category: Ramp, Removal, Draw, Protection, Combo, Utility, Finisher, Recursion' },
-                    },
-                    required: ['card_name', 'reason', 'category'],
-                    additionalProperties: false,
-                  },
-                },
-                mana_curve_notes: {
-                  type: 'string',
-                  description: 'Brief note about mana curve health (1 sentence)',
-                },
-                confidence: {
-                  type: 'number',
-                  description: 'How confident you are in these recommendations on a scale from 0.0 to 1.0. Consider deck size, archetype clarity, and card familiarity.',
+                  required: ['card_name', 'reason', 'severity'],
+                  additionalProperties: false,
                 },
               },
-              required: ['summary', 'cuts', 'additions', 'confidence'],
-              additionalProperties: false,
+              additions: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    card_name: { type: 'string' },
+                    reason: { type: 'string' },
+                    replaces: { type: 'string' },
+                    category: { type: 'string' },
+                  },
+                  required: ['card_name', 'reason', 'category'],
+                  additionalProperties: false,
+                },
+              },
+              mana_curve_notes: { type: 'string' },
+              confidence: { type: 'number' },
             },
+            required: ['summary', 'cuts', 'additions', 'confidence'],
+            additionalProperties: false,
           },
-        }],
-        tool_choice: { type: 'function', function: { name: 'deck_critique' } },
-      }),
+        },
+      }],
+      toolChoice: 'deck_critique',
     });
 
-    if (!response.ok) {
-      const status = response.status;
-      const text = await response.text();
-      console.error('AI gateway error:', status, text);
-
-      if (status === 429) {
-        return new Response(JSON.stringify({ error: 'Rate limit exceeded, try again later' }), {
-          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      if (status === 402) {
-        return new Response(JSON.stringify({ error: 'AI credits exhausted' }), {
-          status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      return new Response(JSON.stringify({ error: 'AI critique failed' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const data = await response.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-
-    if (!toolCall) {
-      return new Response(JSON.stringify({ error: 'AI returned no critique' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const parsed = JSON.parse(toolCall.function.arguments);
-
-    return new Response(JSON.stringify({ ...parsed, success: true }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(JSON.stringify({ ...parsed, success: true }), { headers });
   } catch (e) {
-    console.error('deck-critique error:', e);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return aiErrorResponse(e, corsHeaders, 'AI critique failed');
   }
 });

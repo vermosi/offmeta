@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
 import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
+import { callAIWithTools, aiErrorResponse } from '../_shared/aiClient.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
@@ -14,47 +15,27 @@ Return JSON: {cardName: category}. No explanation.`;
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
+  const headers = { ...corsHeaders, 'Content-Type': 'application/json' };
 
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Require valid auth token
   const authResult = await validateAuth(req);
   if (!authResult.authorized) {
     return new Response(
       JSON.stringify({ error: authResult.error || 'Unauthorized' }),
-      {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      },
+      { status: 401, headers },
     );
   }
 
-  // Rate limiting: 10 AI requests per minute per IP
   maybeCleanup();
-  const clientIp =
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  const { allowed, retryAfter } = await checkRateLimit(
-    clientIp,
-    undefined,
-    10,
-    200,
-  );
+  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const { allowed, retryAfter } = await checkRateLimit(clientIp, undefined, 10, 200);
   if (!allowed) {
     return new Response(
-      JSON.stringify({
-        error: 'Too many AI requests. Please slow down.',
-        retryAfter,
-      }),
-      {
-        status: 429,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-          'Retry-After': String(retryAfter),
-        },
-      },
+      JSON.stringify({ error: 'Too many AI requests. Please slow down.', retryAfter }),
+      { status: 429, headers: { ...headers, 'Retry-After': String(retryAfter) } },
     );
   }
 
@@ -62,147 +43,56 @@ serve(async (req) => {
     const { cards } = await req.json();
 
     if (!Array.isArray(cards) || cards.length === 0) {
-      return new Response(
-        JSON.stringify({ error: 'cards array is required' }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        },
-      );
+      return new Response(JSON.stringify({ error: 'cards array is required' }), { status: 400, headers });
     }
-
     if (cards.length > 100) {
-      return new Response(
-        JSON.stringify({ error: 'Max 100 cards per request' }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        },
-      );
+      return new Response(JSON.stringify({ error: 'Max 100 cards per request' }), { status: 400, headers });
     }
-
-    // Validate card name lengths to prevent payload bloat
     for (const name of cards) {
       if (typeof name === 'string' && name.length > 200) {
-        return new Response(
-          JSON.stringify({ error: 'Card name exceeds 200 character limit' }),
-          {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          },
-        );
+        return new Response(JSON.stringify({ error: 'Card name exceeds 200 character limit' }), { status: 400, headers });
       }
     }
-
     if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: 'AI not configured' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return new Response(JSON.stringify({ error: 'AI not configured' }), { status: 500, headers });
     }
 
-    const response = await fetch(
-      'https://ai.gateway.lovable.dev/v1/chat/completions',
+    const parsed = await callAIWithTools<{ categories: Record<string, string> }>(
+      LOVABLE_API_KEY,
       {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'google/gemini-2.5-flash-lite',
-          messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
-            {
-              role: 'user',
-              content: `Categorize these cards:\n${cards.join('\n')}`,
-            },
-          ],
-          tools: [
-            {
-              type: 'function',
-              function: {
-                name: 'categorize_cards',
-                description: 'Return the category for each card',
-                parameters: {
+        model: 'google/gemini-2.5-flash-lite',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: `Categorize these cards:\n${cards.join('\n')}` },
+        ],
+        tools: [{
+          type: 'function',
+          function: {
+            name: 'categorize_cards',
+            description: 'Return the category for each card',
+            parameters: {
+              type: 'object',
+              properties: {
+                categories: {
                   type: 'object',
-                  properties: {
-                    categories: {
-                      type: 'object',
-                      additionalProperties: { type: 'string' },
-                      description: 'Map of card name to category',
-                    },
-                  },
-                  required: ['categories'],
-                  additionalProperties: false,
+                  additionalProperties: { type: 'string' },
+                  description: 'Map of card name to category',
                 },
               },
+              required: ['categories'],
+              additionalProperties: false,
             },
-          ],
-          tool_choice: {
-            type: 'function',
-            function: { name: 'categorize_cards' },
           },
-        }),
+        }],
+        toolChoice: 'categorize_cards',
       },
     );
-
-    if (!response.ok) {
-      const status = response.status;
-      const text = await response.text();
-      console.error('AI gateway error:', status, text);
-
-      if (status === 429) {
-        return new Response(
-          JSON.stringify({ error: 'Rate limit exceeded, try again later' }),
-          {
-            status: 429,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          },
-        );
-      }
-      if (status === 402) {
-        return new Response(JSON.stringify({ error: 'AI credits exhausted' }), {
-          status: 402,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      return new Response(
-        JSON.stringify({ error: 'AI categorization failed' }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        },
-      );
-    }
-
-    const data = await response.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-
-    if (!toolCall) {
-      return new Response(
-        JSON.stringify({ error: 'AI returned no categories' }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        },
-      );
-    }
-
-    const parsed = JSON.parse(toolCall.function.arguments);
 
     return new Response(
       JSON.stringify({ categories: parsed.categories, success: true }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      },
+      { headers },
     );
   } catch (e) {
-    console.error('deck-categorize error:', e);
-    return new Response(JSON.stringify({ error: 'Internal error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return aiErrorResponse(e, corsHeaders, 'AI categorization failed');
   }
 });
