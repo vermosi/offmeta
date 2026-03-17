@@ -39,6 +39,19 @@ export interface AIToolCallRequest {
   temperature?: number;
 }
 
+export interface AIUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+}
+
+export interface AIToolCallResult<T> {
+  data: T;
+  usage: AIUsage | null;
+  model: string;
+  durationMs: number;
+}
+
 export class AIGatewayError extends Error {
   constructor(
     message: string,
@@ -85,6 +98,19 @@ export async function callAIWithTools<T = Record<string, unknown>>(
   apiKey: string,
   request: AIToolCallRequest,
 ): Promise<T> {
+  const result = await callAIWithToolsTracked<T>(apiKey, request);
+  return result.data;
+}
+
+/**
+ * Same as callAIWithTools but returns usage metrics alongside the parsed data.
+ */
+export async function callAIWithToolsTracked<T = Record<string, unknown>>(
+  apiKey: string,
+  request: AIToolCallRequest,
+): Promise<AIToolCallResult<T>> {
+  const startTime = Date.now();
+
   const body = JSON.stringify({
     model: request.model,
     messages: request.messages,
@@ -114,8 +140,30 @@ export async function callAIWithTools<T = Record<string, unknown>>(
     const response = await fetchWithTimeout(AI_GATEWAY_URL, fetchInit, TIMEOUT_MS);
 
     if (response.ok) {
+      const durationMs = Date.now() - startTime;
       const data = await response.json();
       const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+
+      // Extract usage metrics
+      const rawUsage = data.usage;
+      const usage: AIUsage | null = rawUsage
+        ? {
+            promptTokens: rawUsage.prompt_tokens ?? 0,
+            completionTokens: rawUsage.completion_tokens ?? 0,
+            totalTokens: rawUsage.total_tokens ?? 0,
+          }
+        : null;
+
+      // Log usage for cost monitoring
+      logEvent('info', 'ai_usage', {
+        model: request.model,
+        toolChoice: request.toolChoice,
+        promptTokens: usage?.promptTokens ?? 0,
+        completionTokens: usage?.completionTokens ?? 0,
+        totalTokens: usage?.totalTokens ?? 0,
+        durationMs,
+        attempt,
+      });
 
       if (!toolCall?.function?.arguments) {
         throw new AIGatewayError('AI returned no structured response', 500);
@@ -132,7 +180,7 @@ export async function callAIWithTools<T = Record<string, unknown>>(
         throw new AIGatewayError('AI returned malformed tool output', 500);
       }
 
-      return parsed as T;
+      return { data: parsed as T, usage, model: request.model, durationMs };
     }
 
     // Non-OK response
