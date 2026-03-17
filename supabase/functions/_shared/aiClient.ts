@@ -190,6 +190,17 @@ export async function callAIWithToolsTracked<T = Record<string, unknown>>(
         attempt,
       });
 
+      // Persist usage to DB (fire-and-forget, don't block response)
+      persistUsage({
+        model: request.model,
+        functionName: request.toolChoice,
+        promptTokens: usage?.promptTokens ?? 0,
+        completionTokens: usage?.completionTokens ?? 0,
+        totalTokens: usage?.totalTokens ?? 0,
+        durationMs,
+        retries: attempt,
+      });
+
       if (!toolCall?.function?.arguments) {
         throw new AIGatewayError('AI returned no structured response', 500);
       }
