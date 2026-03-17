@@ -266,3 +266,40 @@ export function aiErrorResponse(
     { status: 500, headers },
   );
 }
+
+/**
+ * Fire-and-forget insert of usage metrics into ai_usage_logs.
+ * Uses a service-role client to bypass RLS.
+ */
+function persistUsage(record: {
+  model: string;
+  functionName: string;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  durationMs: number;
+  retries: number;
+}): void {
+  try {
+    const url = Deno.env.get('SUPABASE_URL');
+    const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!url || !key) return;
+
+    const sb = createClient(url, key);
+    sb.from('ai_usage_logs')
+      .insert({
+        model: record.model,
+        function_name: record.functionName,
+        prompt_tokens: record.promptTokens,
+        completion_tokens: record.completionTokens,
+        total_tokens: record.totalTokens,
+        duration_ms: record.durationMs,
+        retries: record.retries,
+      })
+      .then(({ error }: { error: { message: string } | null }) => {
+        if (error) logEvent('warn', 'ai_usage_persist_failed', { message: error.message });
+      });
+  } catch {
+    // Silently fail — usage tracking must never break AI calls
+  }
+}
