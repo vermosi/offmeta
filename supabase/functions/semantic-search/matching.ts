@@ -96,6 +96,7 @@ export async function checkPatternMatch(
       .from('translation_rules')
       .select('pattern, scryfall_syntax, confidence, description')
       .eq('is_active', true)
+      .is('archived_at', null)
       .gte('confidence', 0.8);
 
     if (error || !rules || rules.length === 0) return null;

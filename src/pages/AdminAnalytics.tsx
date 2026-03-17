@@ -560,7 +560,9 @@ export default function AdminAnalytics() {
     let successCount = 0;
     let failCount = 0;
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const token = session?.access_token;
       if (!token) {
         toast.error('Not authenticated');
@@ -586,7 +588,9 @@ export default function AdminAnalytics() {
           failCount++;
         }
       }
-      toast.success(`Processed ${successCount} items${failCount > 0 ? `, ${failCount} failed` : ''}`);
+      toast.success(
+        `Processed ${successCount} items${failCount > 0 ? `, ${failCount} failed` : ''}`,
+      );
       await fetchFeedback();
     } catch {
       toast.error('Failed to process pending feedback');
@@ -1056,7 +1060,7 @@ export default function AdminAnalytics() {
               <SystemStatusPanel />
 
               {/* Local DB vs Scryfall Hit Rate */}
-              <HitRatePanel />
+              <HitRatePanel days={Number(days)} />
 
               {/* Auth Failures Panel */}
               <AuthFailuresPanel days={Number(days)} />
@@ -1373,7 +1377,9 @@ export default function AdminAnalytics() {
               </h2>
               <div className="flex items-center gap-2">
                 {feedback.filter(
-                  (f) => f.processing_status === 'pending' || f.processing_status == null,
+                  (f) =>
+                    f.processing_status === 'pending' ||
+                    f.processing_status == null,
                 ).length > 0 && (
                   <Button
                     variant="outline"

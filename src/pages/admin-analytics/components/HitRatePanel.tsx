@@ -30,12 +30,20 @@ interface HistoricalStats {
   cache: number;
   total: number;
   localPercent: number;
-  byOperation: Record<HitOperation, { local: number; scryfall: number; cache: number }>;
+  byOperation: Record<
+    HitOperation,
+    { local: number; scryfall: number; cache: number }
+  >;
   sessionCount: number;
 }
 
 const EMPTY_HISTORICAL: HistoricalStats = {
-  local: 0, scryfall: 0, cache: 0, total: 0, localPercent: 0, sessionCount: 0,
+  local: 0,
+  scryfall: 0,
+  cache: 0,
+  total: 0,
+  localPercent: 0,
+  sessionCount: 0,
   byOperation: {
     card_by_name: { local: 0, scryfall: 0, cache: 0 },
     cards_batch: { local: 0, scryfall: 0, cache: 0 },
@@ -45,8 +53,8 @@ const EMPTY_HISTORICAL: HistoricalStats = {
   },
 };
 
-async function fetchHistoricalStats(): Promise<HistoricalStats> {
-  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+async function fetchHistoricalStats(days: number): Promise<HistoricalStats> {
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
   const { data, error } = await supabase
     .from('analytics_events')
     .select('event_data, session_id')
@@ -55,7 +63,10 @@ async function fetchHistoricalStats(): Promise<HistoricalStats> {
 
   if (error || !data) return EMPTY_HISTORICAL;
 
-  const stats = { ...EMPTY_HISTORICAL, byOperation: { ...EMPTY_HISTORICAL.byOperation } };
+  const stats = {
+    ...EMPTY_HISTORICAL,
+    byOperation: { ...EMPTY_HISTORICAL.byOperation },
+  };
   // Deep-copy byOperation
   for (const op of Object.keys(stats.byOperation) as HitOperation[]) {
     stats.byOperation[op] = { local: 0, scryfall: 0, cache: 0 };
@@ -64,7 +75,11 @@ async function fetchHistoricalStats(): Promise<HistoricalStats> {
   const sessions = new Set<string>();
 
   for (const row of data) {
-    const d = row.event_data as { source?: string; operation?: string; count?: number } | null;
+    const d = row.event_data as {
+      source?: string;
+      operation?: string;
+      count?: number;
+    } | null;
     if (!d || !d.source || !d.operation) continue;
 
     const source = d.source as HitSource;
@@ -83,32 +98,63 @@ async function fetchHistoricalStats(): Promise<HistoricalStats> {
   }
 
   stats.total = stats.local + stats.scryfall + stats.cache;
-  stats.localPercent = stats.total > 0 ? Math.round((stats.local / stats.total) * 100) : 0;
+  stats.localPercent =
+    stats.total > 0 ? Math.round((stats.local / stats.total) * 100) : 0;
   stats.sessionCount = sessions.size;
 
   return stats;
 }
 
-function HitBar({ local, cache, scryfall, total }: { local: number; cache: number; scryfall: number; total: number }) {
+function HitBar({
+  local,
+  cache,
+  scryfall,
+  total,
+}: {
+  local: number;
+  cache: number;
+  scryfall: number;
+  total: number;
+}) {
   const barWidth = (value: number) =>
     total > 0 ? `${Math.max((value / total) * 100, 0.5)}%` : '0%';
 
   return (
     <div className="h-3 rounded-full overflow-hidden bg-muted flex">
       {local > 0 && (
-        <div className="bg-emerald-500 transition-all" style={{ width: barWidth(local) }} title={`Local: ${local}`} />
+        <div
+          className="bg-emerald-500 transition-all"
+          style={{ width: barWidth(local) }}
+          title={`Local: ${local}`}
+        />
       )}
       {cache > 0 && (
-        <div className="bg-sky-500 transition-all" style={{ width: barWidth(cache) }} title={`Cache: ${cache}`} />
+        <div
+          className="bg-sky-500 transition-all"
+          style={{ width: barWidth(cache) }}
+          title={`Cache: ${cache}`}
+        />
       )}
       {scryfall > 0 && (
-        <div className="bg-amber-500 transition-all" style={{ width: barWidth(scryfall) }} title={`Scryfall: ${scryfall}`} />
+        <div
+          className="bg-amber-500 transition-all"
+          style={{ width: barWidth(scryfall) }}
+          title={`Scryfall: ${scryfall}`}
+        />
       )}
     </div>
   );
 }
 
-function HitLegend({ local, cache, scryfall }: { local: number; cache: number; scryfall: number }) {
+function HitLegend({
+  local,
+  cache,
+  scryfall,
+}: {
+  local: number;
+  cache: number;
+  scryfall: number;
+}) {
   return (
     <div className="flex gap-4 mt-1.5 text-[10px] text-muted-foreground">
       <span className="flex items-center gap-1">
@@ -130,13 +176,20 @@ function HitLegend({ local, cache, scryfall }: { local: number; cache: number; s
 function OperationBreakdown({
   byOperation,
 }: {
-  byOperation: Record<HitOperation, { local: number; scryfall: number; cache: number }>;
+  byOperation: Record<
+    HitOperation,
+    { local: number; scryfall: number; cache: number }
+  >;
 }) {
   const barWidth = (value: number, total: number) =>
     total > 0 ? `${Math.max((value / total) * 100, 0.5)}%` : '0%';
 
-  const entries = (Object.entries(byOperation) as [HitOperation, { local: number; scryfall: number; cache: number }][])
-    .filter(([, v]) => v.local + v.scryfall + v.cache > 0);
+  const entries = (
+    Object.entries(byOperation) as [
+      HitOperation,
+      { local: number; scryfall: number; cache: number },
+    ][]
+  ).filter(([, v]) => v.local + v.scryfall + v.cache > 0);
 
   if (entries.length === 0) return null;
 
@@ -151,13 +204,32 @@ function OperationBreakdown({
         const pct = Math.round((v.local / opTotal) * 100);
         return (
           <div key={op} className="flex items-center gap-2">
-            <span className="text-xs text-foreground w-28 truncate">{OP_LABELS[op]}</span>
+            <span className="text-xs text-foreground w-28 truncate">
+              {OP_LABELS[op]}
+            </span>
             <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden flex">
-              {v.local > 0 && <div className="bg-emerald-500" style={{ width: barWidth(v.local, opTotal) }} />}
-              {v.cache > 0 && <div className="bg-sky-500" style={{ width: barWidth(v.cache, opTotal) }} />}
-              {v.scryfall > 0 && <div className="bg-amber-500" style={{ width: barWidth(v.scryfall, opTotal) }} />}
+              {v.local > 0 && (
+                <div
+                  className="bg-emerald-500"
+                  style={{ width: barWidth(v.local, opTotal) }}
+                />
+              )}
+              {v.cache > 0 && (
+                <div
+                  className="bg-sky-500"
+                  style={{ width: barWidth(v.cache, opTotal) }}
+                />
+              )}
+              {v.scryfall > 0 && (
+                <div
+                  className="bg-amber-500"
+                  style={{ width: barWidth(v.scryfall, opTotal) }}
+                />
+              )}
             </div>
-            <span className="text-[10px] text-muted-foreground w-12 text-right tabular-nums">{pct}% local</span>
+            <span className="text-[10px] text-muted-foreground w-12 text-right tabular-nums">
+              {pct}% local
+            </span>
           </div>
         );
       })}
@@ -165,18 +237,19 @@ function OperationBreakdown({
   );
 }
 
-export function HitRatePanel() {
+export function HitRatePanel({ days }: { days: number }) {
   const [stats, setStats] = useState(() => getHitRateStats());
-  const [historical, setHistorical] = useState<HistoricalStats>(EMPTY_HISTORICAL);
+  const [historical, setHistorical] =
+    useState<HistoricalStats>(EMPTY_HISTORICAL);
   const [loadingHistorical, setLoadingHistorical] = useState(true);
   const didLoad = useRef<boolean | null>(null);
 
   const loadHistorical = useCallback(async () => {
     setLoadingHistorical(true);
-    const data = await fetchHistoricalStats();
+    const data = await fetchHistoricalStats(days);
     setHistorical(data);
     setLoadingHistorical(false);
-  }, []);
+  }, [days]);
 
   // Fire once on mount via ref guard (uses null-check pattern per react-hooks/refs)
   if (didLoad.current == null) {
@@ -203,10 +276,20 @@ export function HitRatePanel() {
           Local DB vs Scryfall Hit Rate
         </h2>
         <div className="flex gap-1.5">
-          <Button variant="ghost" size="sm" onClick={refresh} className="h-7 px-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={refresh}
+            className="h-7 px-2"
+          >
             <RefreshCw className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={clear} className="h-7 px-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clear}
+            className="h-7 px-2"
+          >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>
@@ -224,38 +307,62 @@ export function HitRatePanel() {
               <span className="text-muted-foreground">
                 {stats.total.toLocaleString()} session lookups
               </span>
-              <span className="font-semibold text-foreground">{stats.localPercent}% local</span>
+              <span className="font-semibold text-foreground">
+                {stats.localPercent}% local
+              </span>
             </div>
-            <HitBar local={stats.local} cache={stats.cache} scryfall={stats.scryfall} total={stats.total} />
-            <HitLegend local={stats.local} cache={stats.cache} scryfall={stats.scryfall} />
+            <HitBar
+              local={stats.local}
+              cache={stats.cache}
+              scryfall={stats.scryfall}
+              total={stats.total}
+            />
+            <HitLegend
+              local={stats.local}
+              cache={stats.cache}
+              scryfall={stats.scryfall}
+            />
           </div>
           <OperationBreakdown byOperation={stats.byOperation} />
         </div>
       )}
 
-      {/* Historical (all sessions, last 30 days) */}
+      {/* Historical (all sessions, selected time window) */}
       <div className="mt-5 pt-4 border-t border-border">
         <h3 className="text-xs font-semibold text-foreground flex items-center gap-1.5 mb-3">
           <History className="h-3.5 w-3.5" />
-          Historical (30 days, all sessions)
+          Historical ({days} days, all sessions)
         </h3>
         {loadingHistorical ? (
           <p className="text-xs text-muted-foreground">Loading…</p>
         ) : historical.total === 0 ? (
           <p className="text-xs text-muted-foreground">
-            No historical data yet. Hit rate events are flushed to the database every 30 seconds.
+            No historical data yet. Hit rate events are flushed to the database
+            every 30 seconds.
           </p>
         ) : (
           <div className="space-y-4">
             <div>
               <div className="flex items-center justify-between text-xs mb-1.5">
                 <span className="text-muted-foreground">
-                  {historical.total.toLocaleString()} lookups across {historical.sessionCount} sessions
+                  {historical.total.toLocaleString()} lookups across{' '}
+                  {historical.sessionCount} sessions
                 </span>
-                <span className="font-semibold text-foreground">{historical.localPercent}% local</span>
+                <span className="font-semibold text-foreground">
+                  {historical.localPercent}% local
+                </span>
               </div>
-              <HitBar local={historical.local} cache={historical.cache} scryfall={historical.scryfall} total={historical.total} />
-              <HitLegend local={historical.local} cache={historical.cache} scryfall={historical.scryfall} />
+              <HitBar
+                local={historical.local}
+                cache={historical.cache}
+                scryfall={historical.scryfall}
+                total={historical.total}
+              />
+              <HitLegend
+                local={historical.local}
+                cache={historical.cache}
+                scryfall={historical.scryfall}
+              />
             </div>
             <OperationBreakdown byOperation={historical.byOperation} />
           </div>

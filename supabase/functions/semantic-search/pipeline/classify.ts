@@ -306,7 +306,7 @@ export function detectAmbiguity(query: string): {
     if (query.trim().split(/\s+/).length <= 2) {
       suggestions.push(
         { label: 'Counterspell (the card)', query: '!"Counterspell"' },
-        { label: 'Counterspells (the category)', query: 'otag:counterspell' },
+        { label: 'Counterspells (the category)', query: 'otag:counter' },
       );
     }
   }

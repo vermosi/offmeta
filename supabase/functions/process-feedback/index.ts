@@ -56,21 +56,6 @@ serve(async (req) => {
     );
   }
 
-  // Reject anonymous tokens — only authenticated users, service role, or API keys
-  // can trigger AI processing to prevent cost abuse
-  if (authResult.role === 'anon') {
-    return new Response(
-      JSON.stringify({
-        error: 'Authentication required to process feedback',
-        success: false,
-      }),
-      {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      },
-    );
-  }
-
   // Rate limiting to prevent AI cost abuse
   const rateLimitKey = await resolveRateLimitKey(req);
   const { allowed, retryAfter, statusCode } = await checkRateLimit(
@@ -145,13 +130,15 @@ serve(async (req) => {
       );
     }
 
-    // Get the specific pending feedback item
-    const { data: feedback, error: fetchError } = await supabase
+    // Allow initial processing plus explicit retries for failed/skipped items.
+    const { data: feedbackRows, error: fetchError } = await supabase
       .from('search_feedback')
       .select('*')
       .eq('id', feedbackId)
-      .eq('processing_status', 'pending')
-      .single();
+      .in('processing_status', ['pending', 'failed', 'skipped'])
+      .limit(1);
+
+    const feedback = feedbackRows?.[0] ?? null;
 
     if (fetchError || !feedback) {
       return new Response(
@@ -775,7 +762,7 @@ Respond in this EXACT JSON format only (no other text):
         await supabase
           .from('search_feedback')
           .update({
-            processing_status: autoApproved ? 'completed' : 'pending',
+            processing_status: 'completed',
             processed_at: new Date().toISOString(),
             generated_rule_id: newRule.id,
           })
@@ -785,7 +772,7 @@ Respond in this EXACT JSON format only (no other text):
           feedbackId: feedback.id,
           status: autoApproved
             ? 'success (auto-approved)'
-            : 'success (pending admin review)',
+            : 'success (completed, awaiting admin activation)',
           rule: `${ruleData.pattern} → ${ruleData.scryfall_syntax}`,
         });
 

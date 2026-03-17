@@ -25,7 +25,13 @@ export const CONCEPT_LIBRARY: Record<
     priority: 90,
   },
   mana_rock: {
-    aliases: ['mana rock', 'mana rocks', 'mana rocks for', 'manarock', 'artifact ramp'],
+    aliases: [
+      'mana rock',
+      'mana rocks',
+      'mana rocks for',
+      'manarock',
+      'artifact ramp',
+    ],
     templates: [
       'otag:mana-rock',
       't:artifact (produces:w or produces:u or produces:b or produces:r or produces:g or produces:c) -t:creature',
@@ -80,9 +86,7 @@ export const CONCEPT_LIBRARY: Record<
       'adds 2 colorless',
       'produces 2 mana',
     ],
-    templates: [
-      't:artifact o:"{C}{C}" o:"add"',
-    ],
+    templates: ['t:artifact o:"{C}{C}" o:"add"'],
     negativeTemplates: ['-t:land'],
     description: 'Artifacts that add 2+ mana like Sol Ring',
     category: 'ramp',
@@ -92,7 +96,7 @@ export const CONCEPT_LIBRARY: Record<
   // === CARD DRAW ===
   card_draw: {
     aliases: ['card draw', 'draw cards', 'draw engine', 'card advantage'],
-    templates: ['otag:card-draw'],
+    templates: ['otag:draw'],
     negativeTemplates: [],
     description: 'Cards that draw cards',
     category: 'draw',
@@ -122,7 +126,7 @@ export const CONCEPT_LIBRARY: Record<
   },
   looting: {
     aliases: ['looting', 'loot', 'loot effect', 'draw then discard'],
-    templates: ['otag:looting'],
+    templates: ['otag:loot'],
     negativeTemplates: [],
     description: 'Draw then discard effects',
     category: 'draw',
@@ -167,7 +171,7 @@ export const CONCEPT_LIBRARY: Record<
       'counter spell',
       'negate',
     ],
-    templates: ['otag:counterspell'],
+    templates: ['otag:counter'],
     negativeTemplates: [],
     description: 'Cards that counter spells',
     category: 'removal',
@@ -211,7 +215,7 @@ export const CONCEPT_LIBRARY: Record<
   },
   land_tutor: {
     aliases: ['land tutor', 'land fetch', 'land search'],
-    templates: ['otag:land-tutor'],
+    templates: ['o:"search your library" o:"land"'],
     negativeTemplates: [],
     description: 'Cards that search for lands',
     category: 'tutor',
@@ -219,7 +223,7 @@ export const CONCEPT_LIBRARY: Record<
   },
   creature_tutor: {
     aliases: ['creature tutor', 'find creature', 'creature search'],
-    templates: ['otag:creature-tutor'],
+    templates: ['o:"search your library" o:"creature"'],
     negativeTemplates: [],
     description: 'Cards that search for creatures',
     category: 'tutor',
@@ -270,7 +274,7 @@ export const CONCEPT_LIBRARY: Record<
       'return from graveyard to hand',
       'recursive',
     ],
-    templates: ['otag:graveyard-recursion'],
+    templates: ['otag:recursion'],
     negativeTemplates: [],
     description: 'Cards that return things from graveyard',
     category: 'graveyard',
@@ -322,7 +326,7 @@ export const CONCEPT_LIBRARY: Record<
       'dies payoff',
       'blood artist effect',
     ],
-    templates: ['otag:aristocrats', 'otag:synergy-sacrifice'],
+    templates: ['(otag:synergy-sacrifice or (o:"whenever" o:"dies"))'],
     negativeTemplates: [],
     description: 'Cards that benefit from creatures dying',
     category: 'sacrifice',
@@ -336,7 +340,9 @@ export const CONCEPT_LIBRARY: Record<
       'sacrifice their',
       'opponents sacrifice',
     ],
-    templates: ['o:"sacrifices" (o:"each opponent" or o:"target opponent" or o:"each player")'],
+    templates: [
+      'o:"sacrifices" (o:"each opponent" or o:"target opponent" or o:"each player")',
+    ],
     negativeTemplates: [],
     description: 'Cards that force opponents to sacrifice creatures',
     category: 'sacrifice',
@@ -365,7 +371,7 @@ export const CONCEPT_LIBRARY: Record<
       'creates tokens',
       'make tokens',
     ],
-    templates: ['otag:token-generator'],
+    templates: ['o:"create" o:"token"'],
     negativeTemplates: [],
     description: 'Cards that create creature tokens',
     category: 'tokens',
@@ -407,7 +413,13 @@ export const CONCEPT_LIBRARY: Record<
 
   // === LIFEGAIN ===
   lifegain: {
-    aliases: ['lifegain', 'life gain', 'gain life', 'healing', 'lifegain theme'],
+    aliases: [
+      'lifegain',
+      'life gain',
+      'gain life',
+      'healing',
+      'lifegain theme',
+    ],
     templates: ['(otag:lifegain or o:"gain" o:"life")'],
     negativeTemplates: [],
     description: 'Cards that gain life',
@@ -555,7 +567,11 @@ export const CONCEPT_LIBRARY: Record<
     priority: 70,
   },
   indestructible: {
-    aliases: ['indestructible', 'has indestructible', 'indestructible creatures'],
+    aliases: [
+      'indestructible',
+      'has indestructible',
+      'indestructible creatures',
+    ],
     templates: ['kw:indestructible'],
     negativeTemplates: [],
     description: 'Cards with indestructible',
@@ -644,7 +660,13 @@ export const CONCEPT_LIBRARY: Record<
 
   // === FORMAT LEGALITY ===
   commander_legal: {
-    aliases: ['commander legal', 'edh legal', 'legal in commander', 'legal in edh', 'commander format'],
+    aliases: [
+      'commander legal',
+      'edh legal',
+      'legal in commander',
+      'legal in edh',
+      'commander format',
+    ],
     templates: ['f:commander'],
     negativeTemplates: [],
     description: 'Cards legal in Commander/EDH format',
@@ -686,7 +708,12 @@ export const CONCEPT_LIBRARY: Record<
 
   // === TYPE-BASED ===
   legendary: {
-    aliases: ['legendary', 'legends', 'legendary creatures', 'legendary permanents'],
+    aliases: [
+      'legendary',
+      'legends',
+      'legendary creatures',
+      'legendary permanents',
+    ],
     templates: ['t:legendary'],
     negativeTemplates: [],
     description: 'Legendary cards',
@@ -694,7 +721,14 @@ export const CONCEPT_LIBRARY: Record<
     priority: 65,
   },
   etb: {
-    aliases: ['etb', 'enters the battlefield', 'etb effect', 'etb trigger', 'etb creatures', 'enter the battlefield'],
+    aliases: [
+      'etb',
+      'enters the battlefield',
+      'etb effect',
+      'etb trigger',
+      'etb creatures',
+      'enter the battlefield',
+    ],
     templates: ['o:"enters the battlefield"'],
     negativeTemplates: [],
     description: 'Cards with enters-the-battlefield effects',

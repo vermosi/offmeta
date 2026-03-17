@@ -155,27 +155,27 @@ UNTAP vs UNTAPPED (CRITICAL - different meanings):
 
 === ORACLE TAGS (otag:) - ALWAYS USE THESE FIRST! ===
 otag: is the PREFERRED method for effect-based searches. It is MORE ACCURATE than o: searches.
-NEVER use quotes with otag! Use otag:card-draw NOT otag:"card-draw"
+NEVER use quotes with otag! Use otag:draw NOT otag:"draw"
 
 PLAYER SLANG → otag: MAPPINGS (USE THESE!):
 - "ramp" / "mana acceleration" = otag:ramp
-- "card draw" / "draw cards" = otag:card-draw
+- "card draw" / "draw cards" = otag:draw
 - "removal" = otag:removal
 - "board wipe" / "wrath" = otag:board-wipe
 - "tutor" / "search library" = otag:tutor
-- "counterspell" / "counter" = otag:counterspell
+- "counterspell" / "counter" = otag:counter
 - "self-mill" / "mill myself" = otag:self-mill
 - "mill" / "mill opponent" = o:"mill"
 - "soul sisters" / "soul warden effect" / "gain life when creatures enter" = otag:soul-warden-ability
 - "sacrifice outlet" / "sac outlet" = otag:sacrifice-outlet
-- "aristocrats" / "death triggers" = otag:aristocrats
+- "aristocrats" / "death triggers" = (otag:synergy-sacrifice or (o:"whenever" o:"dies"))
 - "blink" / "flicker" = otag:blink
 - "reanimation" / "reanimate" = otag:reanimate
-- "graveyard recursion" = otag:graveyard-recursion
+- "graveyard recursion" = otag:recursion
 - "mana rock" / "rocks" = otag:mana-rock
 - "mana dork" / "dorks" = otag:mana-dork
-- "treasure" / "treasure tokens" = otag:treasure-generator
-- "tokens" / "token generator" = otag:token-generator
+- "treasure" / "treasure tokens" = o:"create" o:"Treasure"
+- "tokens" / "token generator" = o:"create" o:"token"
 - "lifegain" / "gain life" = otag:lifegain
 - "stax" / "prison" / "stax pieces" = (otag:hatebear or otag:pillowfort)
 - "stax that stops [X]" = otag:hatebear o:"can't [relevant word]" (ONE o: clause max!)
@@ -208,10 +208,10 @@ RULE: For stax, use AT MOST one o: clause. Prefer otag:hatebear or otag:pillowfo
 
 MORE OTAGS:
 - otag:mana-dork, otag:mana-rock (mana producers)
-- otag:sacrifice-outlet, otag:aristocrats (sacrifice synergy)
+- otag:sacrifice-outlet, otag:synergy-sacrifice (sacrifice synergy)
 - otag:blink, otag:flicker (exile and return)
-- otag:token-generator (create tokens)
-- otag:treasure-generator (create treasure)
+- o:"create" o:"token" (create tokens)
+- o:"create" o:"Treasure" (create treasure)
 - otag:discard-outlet (discard effects)
 - otag:wheel (draw 7, discard hand)
 - otag:fog (prevent combat damage)
@@ -291,15 +291,15 @@ Return ONLY the Scryfall query.`;
 
 COMPREHENSIVE OTAGS (prefer these for accuracy):
 Mana: otag:ramp, otag:mana-dork, otag:mana-rock, otag:land-ramp, otag:ritual
-Draw: otag:card-draw, otag:cantrip, otag:looting, otag:rummaging, otag:wheel
-Search: otag:tutor, otag:land-tutor, otag:creature-tutor
+Draw: otag:draw, otag:cantrip, otag:loot, otag:rummage, otag:wheel
+Search: otag:tutor, o:"search your library" o:"land", o:"search your library" o:"creature"
 Removal: otag:removal, otag:creature-removal, otag:artifact-removal, otag:enchantment-removal, otag:board-wipe
-Counter: otag:counterspell, otag:soft-counter, otag:hard-counter
-Graveyard: otag:self-mill, o:"mill", otag:graveyard-recursion, otag:reanimate, otag:graveyard-hate
+Counter: otag:counter, o:"counter target"
+Graveyard: otag:self-mill, o:"mill", otag:recursion, otag:reanimate, otag:graveyard-hate
 Combat: otag:pump, otag:combat-trick, otag:fog, otag:gives-menace
-Tokens: otag:token-generator, otag:treasure-generator, otag:food-generator, otag:clue-generator
+Tokens: o:"create" o:"token", o:"create" o:"Treasure", o:"create" o:"Food", o:"create" o:"Clue"
 Blink: otag:blink, otag:flicker, otag:bounce
-Sacrifice: otag:sacrifice-outlet, otag:aristocrats, otag:death-trigger, otag:synergy-sacrifice
+Sacrifice: otag:sacrifice-outlet, otag:death-trigger, otag:synergy-sacrifice, (o:"whenever" o:"dies")
 Life: otag:lifegain, otag:soul-warden-ability (gain life when creatures enter), otag:gives-lifelink
 Special: otag:extra-turn, otag:hatebear, otag:voltron, otag:gives-flash, otag:untapper
 
@@ -311,7 +311,7 @@ TRIBALS: Use t:[type] for creature types (t:elf, t:goblin, t:zombie, etc.)
 
 TARGETING vs TYPE (CRITICAL - DON'T CONFUSE!):
 - "spells that destroy artifacts" ≠ t:artifact! Use: (t:instant or t:sorcery) otag:artifact-removal
-- "cards that counter spells" ≠ t:instant! Use: otag:counterspell
+- "cards that counter spells" ≠ t:instant! Use: otag:counter
 - "green cards that destroy enchantments" ≠ t:enchantment! Use: c:g otag:enchantment-removal
 - The type (t:) is WHAT the card IS. Oracle text/tags are WHAT the card DOES.
 
@@ -438,9 +438,9 @@ RAMP & MANA:
 - otag:cost-reducer (reduces spell costs)
 
 CARD ADVANTAGE:
-- otag:card-draw (draws cards)
+- otag:draw (draws cards)
 - otag:cantrip (cheap spell that replaces itself)
-- otag:looting (draw then discard)
+- otag:loot (draw then discard)
 - otag:rummaging (discard then draw)
 - otag:wheel (everyone discards and draws 7)
 - otag:impulse-draw (exile top, cast this turn)
@@ -448,8 +448,8 @@ CARD ADVANTAGE:
 
 TUTORING:
 - otag:tutor (search library for any card)
-- otag:land-tutor (search for lands)
-- otag:creature-tutor (search for creatures)
+- o:"search your library" o:"land" (search for lands)
+- o:"search your library" o:"creature" (search for creatures)
 - otag:artifact-tutor (search for artifacts)
 - otag:enchantment-tutor (search for enchantments)
 - otag:instant-or-sorcery-tutor (search for spells)
@@ -466,23 +466,23 @@ REMOVAL:
 - otag:creature-board-wipe (destroys all creatures)
 
 COUNTERSPELLS:
-- otag:counterspell (any counter)
-- otag:hard-counter (unconditional counter)
-- otag:soft-counter (conditional counter like Mana Leak)
+- otag:counter (any counter)
+- o:"counter target" (unconditional counter when needed)
+- o:"unless" o:"pay" (conditional counter like Mana Leak)
 
 GRAVEYARD:
 - otag:self-mill (mills yourself)
 - o:"mill" (mills opponents)
-- otag:graveyard-recursion (returns cards from graveyard)
+- otag:recursion (returns cards from graveyard)
 - otag:reanimate (puts creatures from graveyard to battlefield)
 - otag:graveyard-hate (exiles graveyards)
 
 TOKENS:
-- otag:token-generator (creates any tokens)
-- otag:treasure-generator (creates Treasure tokens)
-- otag:food-generator (creates Food tokens)
-- otag:clue-generator (creates Clue tokens)
-- otag:blood-generator (creates Blood tokens)
+- o:"create" o:"token" (creates any tokens)
+- o:"create" o:"Treasure" (creates Treasure tokens)
+- o:"create" o:"Food" (creates Food tokens)
+- o:"create" o:"Clue" (creates Clue tokens)
+- o:"create" o:"Blood" (creates Blood tokens)
 - otag:token-doubler (doubles token creation)
 - otag:populate (copies tokens)
 
@@ -509,7 +509,7 @@ COUNTERS:
 - otag:counters-matter (cards that care about counters)
 - otag:counter-doubler (doubles counters placed)
 - otag:counter-movement (moves counters between permanents)
-- otag:synergy-proliferate (works well with proliferate)
+- otag:counters-matter (works well with proliferate)
 
 BLINK & BOUNCE:
 - otag:blink (exile and return immediately)
@@ -520,7 +520,7 @@ BLINK & BOUNCE:
 SACRIFICE:
 - otag:sacrifice-outlet (lets you sacrifice permanents)
 - otag:free-sacrifice-outlet (sacrifice for no mana cost)
-- otag:aristocrats (benefits from deaths)
+- (otag:synergy-sacrifice or (o:"whenever" o:"dies")) (benefits from deaths)
 - otag:death-trigger (triggers when creatures die)
 - otag:blood-artist-effect (drain on death)
 - otag:grave-pact-effect (opponents sacrifice when yours die)
@@ -530,7 +530,7 @@ SYNERGY PAYOFFS:
 - otag:synergy-sacrifice (payoffs for sacrificing)
 - otag:synergy-discard (payoffs for discarding)
 - otag:synergy-equipment (payoffs for equipment)
-- otag:synergy-proliferate (payoffs for proliferate)
+- otag:counters-matter (payoffs for proliferate)
 
 LIFE & DAMAGE:
 - otag:lifegain (gains life)
@@ -551,7 +551,7 @@ CONTROL & STAX (CRITICAL - KEEP SIMPLE! See stax rules above):
 
 CARD DRAW & SELECTION:
 - otag:draw (draws cards)
-- otag:card-draw (draws cards - alias)
+- otag:draw (draws cards)
 - otag:cantrip (draws 1 card as bonus)
 - otag:loot (draw then discard)
 - otag:wheel (discard hand draw new hand)
@@ -661,7 +661,7 @@ WRONG PATTERNS (DO NOT DO THIS):
 
 CORRECT PATTERNS:
 - "white spells that destroy artifacts" → (t:instant or t:sorcery) c:w otag:artifact-removal
-- "blue cards that counter spells" → c:u otag:counterspell
+- "blue cards that counter spells" → c:u otag:counter
 - "green cards that destroy enchantments" → c:g otag:enchantment-removal
 - "red cards that deal damage to creatures" → c:r otag:creature-removal
 - "black spells that destroy creatures" → (t:instant or t:sorcery) c:b otag:creature-removal
@@ -670,7 +670,7 @@ TARGETING PATTERNS use o: or otag: to find WHAT THE CARD DOES:
 - "destroy [target]" → otag:[target]-removal OR o:"destroy" o:"[target]"
 - "exile [target]" → o:"exile" o:"[target]"
 - "deal damage to [target]" → o:"damage" o:"[target]" or otag:removal
-- "counter [target]" → otag:counterspell (for spells) or o:"counter" o:"[target]"
+- "counter [target]" → otag:counter (for spells) or o:"counter" o:"[target]"
 - "sacrifice [target]" → o:"sacrifice" o:"[target]" (forces opponent sacrifice)
 
 EXAMPLES:
@@ -723,7 +723,7 @@ When users ask "cards that help/synergize with/trigger [Card Name]'s ability":
 - DO NOT put the card name in oracle text like o:"blanka ferocious fiend"! Card names don't appear in other cards' oracle text.
 - Instead, identify WHAT the named card does (from its oracle text if provided) and search for cards that ENABLE or SYNERGIZE with those mechanics.
 - Example: "cards that help trigger Blanka Ferocious Fiend's activated ability" — Blanka discards cards and deals damage → search for discard enablers: otag:discard-outlet or o:"discard" o:"draw"
-- Example: "cards that work with Atraxa" — Atraxa has proliferate → search for: otag:counters-matter or otag:synergy-proliferate
+- Example: "cards that work with Atraxa" — Atraxa has proliferate → search for: otag:counters-matter
 - Example: "support for Korvold" — Korvold cares about sacrifice → search for: otag:sacrifice-outlet or otag:synergy-sacrifice
 - If card oracle text is provided as context, extract the KEY MECHANIC and translate to appropriate Scryfall syntax.
 - Always include the card's color identity as id<= constraint if obvious.

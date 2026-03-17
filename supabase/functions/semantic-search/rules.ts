@@ -44,7 +44,7 @@ const STATIC_RULES_TEXT = formatRules(STATIC_DYNAMIC_RULES);
 
 // In-memory cache for dynamic rules
 let dynamicRulesCache: { rules: string; timestamp: number } | null = null;
-const DYNAMIC_RULES_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+const DYNAMIC_RULES_CACHE_TTL = 60 * 1000; // 1 minute
 
 /**
  * Fetches active dynamic translation rules from the database.
@@ -70,6 +70,7 @@ export async function fetchDynamicRules(): Promise<string> {
       .from('translation_rules')
       .select('pattern, scryfall_syntax, description')
       .eq('is_active', true)
+      .is('archived_at', null)
       .gte('confidence', 0.6)
       .order('created_at', { ascending: false })
       .limit(50); // Increased from 20 to include more auto-generated patterns

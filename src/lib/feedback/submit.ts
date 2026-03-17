@@ -18,7 +18,9 @@ export interface FeedbackPayload {
  * Insert feedback into search_feedback and trigger background processing.
  * Returns the generated feedback ID on success.
  */
-export async function submitFeedback(payload: FeedbackPayload): Promise<string> {
+export async function submitFeedback(
+  payload: FeedbackPayload,
+): Promise<string> {
   const feedbackId = crypto.randomUUID();
 
   const { error } = await supabase.from('search_feedback').insert({
@@ -38,7 +40,11 @@ export async function submitFeedback(payload: FeedbackPayload): Promise<string> 
   }
 
   // Non-critical side effects — isolated so they never break the success path
-  try { recordSubmission(); } catch { /* ignore localStorage errors */ }
+  try {
+    recordSubmission();
+  } catch {
+    /* ignore localStorage errors */
+  }
 
   // Fire-and-forget background processing
   triggerProcessing(feedbackId);
@@ -51,19 +57,16 @@ export async function submitFeedback(payload: FeedbackPayload): Promise<string> 
  */
 async function triggerProcessing(feedbackId: string): Promise<void> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) {
-      logger.info('Skipping auto-processing: user not authenticated');
-      return;
-    }
-    if (session.expires_at && session.expires_at < Math.floor(Date.now() / 1000)) {
-      logger.info('Skipping auto-processing: session expired');
-      return;
-    }
-    await supabase.functions.invoke('process-feedback', {
+    const { error } = await supabase.functions.invoke('process-feedback', {
       body: { feedbackId },
     });
+    if (error) {
+      logger.error('Background processing failed', {
+        feedbackId,
+        message: error.message,
+      });
+    }
   } catch (error) {
-    logger.info('Background processing triggered', error);
+    logger.error('Background processing threw', { feedbackId, error });
   }
 }
