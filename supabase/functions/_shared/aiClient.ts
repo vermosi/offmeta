@@ -39,6 +39,19 @@ export interface AIToolCallRequest {
   temperature?: number;
 }
 
+export interface AIUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+}
+
+export interface AIToolCallResult<T> {
+  data: T;
+  usage: AIUsage | null;
+  model: string;
+  durationMs: number;
+}
+
 export class AIGatewayError extends Error {
   constructor(
     message: string,
