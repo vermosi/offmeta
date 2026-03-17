@@ -95,7 +95,7 @@ serve(async (req: Request): Promise<Response> => {
           messages: [
             {
               role: 'system',
-              content: 'You are an expert Magic: The Gathering deckbuilder. Given a user query about a deck concept, generate a structured deck idea with archetype name, strategy description, key cards (6-8 real card names), synergy pieces (4-6 cards), and budget alternatives (4-6 cheaper cards). Only suggest cards that actually exist. Focus on Commander/EDH unless the user specifies another format.',
+              content: 'Expert MTG deckbuilder. Generate structured deck ideas with archetype, strategy, 6-8 key cards, 4-6 synergy pieces, 4-6 budget alternatives. Real cards only. Default to Commander/EDH.',
             },
             {
               role: 'user',

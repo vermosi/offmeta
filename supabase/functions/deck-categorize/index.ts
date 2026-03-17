@@ -4,32 +4,13 @@ import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
-const SYSTEM_PROMPT = `You are a Magic: The Gathering card categorization expert. Given a list of card names, classify each into exactly ONE functional category.
+const SYSTEM_PROMPT = `Classify each MTG card into ONE category by functional role (not card type).
 
-Categories (use these exact names):
-- Ramp: Cards that accelerate mana production (mana dorks, mana rocks, land ramp spells)
-- Removal: Cards that destroy, exile, bounce, or neutralize permanents/spells
-- Draw: Cards that draw cards or provide card advantage/selection
-- Lands: Land cards
-- Creatures: Creature cards that don't fit other functional categories
-- Instants: Non-removal, non-draw instant spells
-- Sorceries: Non-removal, non-draw, non-ramp sorcery spells
-- Artifacts: Non-ramp artifact cards
-- Enchantments: Enchantment cards that don't fit other categories
-- Planeswalkers: Planeswalker cards
-- Protection: Cards that protect your permanents or give hexproof/indestructible/counterspells
-- Combo: Known combo pieces (e.g., Thassa's Oracle, Demonic Consultation)
-- Recursion: Cards that return things from graveyard or provide recursion
-- Utility: Cards that don't fit neatly elsewhere (tutors, utility creatures, etc.)
-- Finisher: Win conditions, big threats, game-ending cards
+Categories: Ramp, Removal, Draw, Lands, Creatures, Instants, Sorceries, Artifacts, Enchantments, Planeswalkers, Protection, Combo, Recursion, Utility, Finisher
 
-Prioritize functional role over card type. For example:
-- Sol Ring → Ramp (not Artifacts)
-- Swords to Plowshares → Removal (not Instants)
-- Rhystic Study → Draw (not Enchantments)
-- Counterspell → Protection (not Instants)
+Priority examples: Sol Ring→Ramp, Swords to Plowshares→Removal, Rhystic Study→Draw, Counterspell→Protection.
 
-Return ONLY a JSON object mapping card name to category. No explanation.`;
+Return JSON: {cardName: category}. No explanation.`;
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
