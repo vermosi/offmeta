@@ -70,7 +70,7 @@ Deno.serve(async (req: Request) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${serviceKey}`,
+          'Authorization': `Bearer ${svcKey}`,
         },
         body: JSON.stringify({ query, publish }),
       });
