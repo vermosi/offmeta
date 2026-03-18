@@ -101,7 +101,9 @@ const App = () => (
                   <Route path="/market" element={<MarketTrends />} />
                   <Route path="/cards/:slug" element={<CardPage />} />
                   <Route path="/user/:userId" element={<PublicProfile />} />
+                  <Route path="/ai" element={<AiIndex />} />
                   <Route path="/ai/:slug" element={<AiPage />} />
+                  <Route path="/admin/seo-pages" element={<AdminSeoPages />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
