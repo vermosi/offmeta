@@ -383,7 +383,7 @@ Deno.serve(async (req: Request) => {
       const card = await fetchCardByName(cardName);
 
       if (!card) {
-        return new Response(buildSearchPageHtml(cardName, slug, null), {
+        return new Response(buildSearchPageHtml(cardName, slug, null, null, true), {
           status: 404,
           headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300' },
         });
