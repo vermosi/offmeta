@@ -72,6 +72,8 @@ export async function findConceptMatches(
 
         if (!error && dbMatches) {
           for (const match of dbMatches) {
+            // Skip low-similarity matches to prevent garbage concept pollution
+            if ((match.similarity_score || 0) < 0.45) continue;
             if (matches.some((m) => m.conceptId === match.concept_id)) continue;
             if (
               matches.some(
