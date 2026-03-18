@@ -145,7 +145,7 @@ export const UnifiedSearchBar = forwardRef<
     isAnimating: isTyping,
     stop: stopTyping,
   } = useTypingPlaceholder(
-    isMobile ? t('search.placeholderMobile') : t('search.placeholder'),
+    '',
     !query && !isFocused,
   );
   const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
