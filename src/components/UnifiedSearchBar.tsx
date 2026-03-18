@@ -150,12 +150,7 @@ export const UnifiedSearchBar = forwardRef<
   const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-focus on desktop to reduce friction for first-time visitors
-  useEffect(() => {
-    if (isMobile || !inputRef.current) return;
-    const timer = setTimeout(() => inputRef.current?.focus(), 400);
-    return () => clearTimeout(timer);
-  }, [isMobile]);
+  // No auto-focus — let the typewriter placeholder play to draw attention
 
   const { saveContext } = useSearchContext();
   const { history, addToHistory, removeFromHistory, clearHistory } =
