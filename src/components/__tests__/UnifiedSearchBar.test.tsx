@@ -143,8 +143,9 @@ describe('UnifiedSearchBar', () => {
     expect(input).toHaveValue('dragon');
   });
 
-  it('has proper placeholder text for desktop', () => {
+  it('renders input with empty placeholder for typewriter effect', () => {
     render(<UnifiedSearchBar {...defaultProps} />);
-    expect(screen.getByPlaceholderText("Describe what you're looking for...")).toBeInTheDocument();
+    const input = screen.getByRole('searchbox');
+    expect(input).toHaveAttribute('placeholder', '');
   });
 });

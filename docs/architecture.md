@@ -220,9 +220,9 @@ Admin UPDATE access allows admins to flip `is_active` and set/clear `archived_at
 
 The app follows a mobile-first approach with a standardized spacing system:
 
-- **Sections** (How It Works, FAQ): `py-10 sm:py-14 lg:py-16`
+- **Sections** (FAQ): `py-10 sm:py-14 lg:py-16`
 - **Main content areas**: `py-8 sm:py-10 lg:py-12`
-- **Discovery spacing**: `space-y-8 sm:space-y-10 lg:space-y-12`
+- **Discovery spacing** (Recent Searches, Curated Searches, FAQ): `space-y-8 sm:space-y-10 lg:space-y-12`
 - **Footer**: `py-6 sm:py-8`
 - **Deck editor**: three-tab mobile interface (`search | list | preview/AI`)
 
