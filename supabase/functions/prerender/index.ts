@@ -283,6 +283,7 @@ function buildSearchPageHtml(
     canonicalUrl,
     image: OG_IMAGE_DEFAULT,
     jsonLd,
+    noindex: shouldNoindex,
     bodyContent: `
       <h1>${escapeHtml(heading)}</h1>
       ${curated ? `<p>${escapeHtml(curated.description)}</p>` : ''}
