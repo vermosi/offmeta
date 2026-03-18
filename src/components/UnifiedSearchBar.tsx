@@ -8,7 +8,6 @@ import {
   Suspense,
   useState,
   useRef,
-  useEffect,
   useImperativeHandle,
   forwardRef,
 } from 'react';
