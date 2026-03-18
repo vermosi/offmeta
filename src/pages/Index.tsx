@@ -12,7 +12,6 @@ import {
   useCallback,
   useState,
   useMemo,
-  useRef,
 } from 'react';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 const EditableQueryBar = lazy(() =>
