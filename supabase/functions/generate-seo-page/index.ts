@@ -1,7 +1,7 @@
 /**
  * Generate SEO Page edge function.
  * Takes a seed query, uses AI to generate an AI-optimized landing page,
- * validates cards against Scryfall, and stores in the seo_pages table.
+ * validates cards against local cards table, and stores in the seo_pages table.
  */
 
 declare const Deno: { env: { get(key: string): string | undefined }; serve: (handler: (req: Request) => Promise<Response>) => void };
@@ -207,7 +207,7 @@ Include:
       durationMs: result.durationMs,
     });
 
-    // Validate cards against Scryfall
+    // Validate cards against local DB
     const validatedCards = await validateCards(result.data.cards ?? [], supabase);
 
     const content: SeoPageContent = {
