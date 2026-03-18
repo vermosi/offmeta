@@ -68,7 +68,7 @@ Deno.serve(async (req: Request) => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${serviceKey}`,
         },
-        body: JSON.stringify({ query, publish }),
+        body: JSON.stringify({ query, publish, regenerate }),
       });
 
       const data = await res.json();
