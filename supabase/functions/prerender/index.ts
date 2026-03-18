@@ -150,7 +150,6 @@ function buildCardPageHtml(card: ScryfallCard, slug: string): string {
   const image = getCardImage(card) ?? OG_IMAGE_DEFAULT;
   const canonicalUrl = `${SITE_URL}/cards/${slug}`;
   const price = card.prices?.usd ? `$${card.prices.usd}` : null;
-
   const usdPrice = card.prices?.usd;
   const foilPrice = card.prices?.usd_foil;
   const offers: Record<string, unknown>[] = [];
