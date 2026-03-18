@@ -151,15 +151,59 @@ function buildCardPageHtml(card: ScryfallCard, slug: string): string {
   const canonicalUrl = `${SITE_URL}/cards/${slug}`;
   const price = card.prices?.usd ? `$${card.prices.usd}` : null;
 
+  const usdPrice = card.prices?.usd;
+  const foilPrice = card.prices?.usd_foil;
+  const offers: Record<string, unknown>[] = [];
+  if (usdPrice) {
+    offers.push({
+      '@type': 'Offer',
+      price: usdPrice,
+      priceCurrency: 'USD',
+      availability: 'https://schema.org/InStock',
+      itemCondition: 'https://schema.org/NewCondition',
+      url: card.purchase_uris?.tcgplayer ?? canonicalUrl,
+      seller: { '@type': 'Organization', name: 'TCGplayer' },
+      name: `${card.name} (Regular)`,
+    });
+  }
+  if (foilPrice) {
+    offers.push({
+      '@type': 'Offer',
+      price: foilPrice,
+      priceCurrency: 'USD',
+      availability: 'https://schema.org/InStock',
+      itemCondition: 'https://schema.org/NewCondition',
+      url: card.purchase_uris?.tcgplayer ?? canonicalUrl,
+      seller: { '@type': 'Organization', name: 'TCGplayer' },
+      name: `${card.name} (Foil)`,
+    });
+  }
+
+  const oracleSnippet = card.oracle_text
+    ? (card.oracle_text.length > 200 ? card.oracle_text.slice(0, 200) + '…' : card.oracle_text)
+    : '';
+  const richDesc = oracleSnippet
+    ? `${card.name} is a ${card.type_line ?? 'card'}. ${oracleSnippet}`
+    : `${card.name} — ${card.type_line ?? 'Magic: The Gathering card'}`;
+
+  const additionalProperty: Record<string, unknown>[] = [];
+  if (card.rarity) additionalProperty.push({ '@type': 'PropertyValue', name: 'Rarity', value: card.rarity });
+  if (card.set_name) additionalProperty.push({ '@type': 'PropertyValue', name: 'Set', value: card.set_name });
+  if (card.mana_cost) additionalProperty.push({ '@type': 'PropertyValue', name: 'Mana Cost', value: card.mana_cost });
+
   const jsonLd = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: card.name,
-    description: card.oracle_text ?? card.type_line ?? '',
+    description: richDesc,
     image,
     url: canonicalUrl,
     brand: { '@type': 'Brand', name: 'Magic: The Gathering' },
-    ...(price ? { offers: { '@type': 'Offer', price: card.prices?.usd, priceCurrency: 'USD', availability: 'https://schema.org/InStock' } } : {}),
+    category: card.type_line ?? '',
+    sku: card.id,
+    ...(additionalProperty.length > 0 && { additionalProperty }),
+    ...(offers.length === 1 && { offers: offers[0] }),
+    ...(offers.length > 1 && { offers: { '@type': 'AggregateOffer', lowPrice: usdPrice, highPrice: foilPrice, priceCurrency: 'USD', offerCount: offers.length, offers } }),
   });
 
   const legalFormats = card.legalities

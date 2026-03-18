@@ -113,32 +113,86 @@ export function removeJsonLd(): void {
 import type { ScryfallCard } from '@/types/card';
 
 /**
- * Build Product JSON-LD for a single MTG card.
+ * Build enriched Product JSON-LD for a single MTG card.
+ * Includes multiple offers (regular + foil), game-specific attributes,
+ * seller info, and item condition to maximize rich-result CTR.
  */
 export function buildCardJsonLd(card: ScryfallCard, pageUrl: string): Record<string, unknown> {
   const image = card.image_uris?.normal ?? card.card_faces?.[0]?.image_uris?.normal;
-  const price = card.prices?.usd;
+  const usd = card.prices?.usd;
+  const foil = card.prices?.usd_foil;
+
+  // Build offers array (regular + foil)
+  const offers: Record<string, unknown>[] = [];
+  if (usd) {
+    offers.push({
+      '@type': 'Offer',
+      price: usd,
+      priceCurrency: 'USD',
+      availability: 'https://schema.org/InStock',
+      itemCondition: 'https://schema.org/NewCondition',
+      url: card.purchase_uris?.tcgplayer ?? pageUrl,
+      seller: { '@type': 'Organization', name: 'TCGplayer' },
+      name: `${card.name} (Regular)`,
+    });
+  }
+  if (foil) {
+    offers.push({
+      '@type': 'Offer',
+      price: foil,
+      priceCurrency: 'USD',
+      availability: 'https://schema.org/InStock',
+      itemCondition: 'https://schema.org/NewCondition',
+      url: card.purchase_uris?.tcgplayer ?? pageUrl,
+      seller: { '@type': 'Organization', name: 'TCGplayer' },
+      name: `${card.name} (Foil)`,
+    });
+  }
+
+  // Build richer description
+  const oracleSnippet = card.oracle_text
+    ? card.oracle_text.length > 200 ? card.oracle_text.slice(0, 200) + '…' : card.oracle_text
+    : '';
+  const description = oracleSnippet
+    ? `${card.name} is a ${card.type_line}. ${oracleSnippet}`
+    : `${card.name} — ${card.type_line}`;
+
+  // Game-specific properties
+  const additionalProperty: Record<string, unknown>[] = [];
+  if (card.rarity) {
+    additionalProperty.push({ '@type': 'PropertyValue', name: 'Rarity', value: card.rarity });
+  }
+  if (card.set_name) {
+    additionalProperty.push({ '@type': 'PropertyValue', name: 'Set', value: card.set_name });
+  }
+  if (card.mana_cost) {
+    additionalProperty.push({ '@type': 'PropertyValue', name: 'Mana Cost', value: card.mana_cost });
+  }
+  if (card.cmc != null) {
+    additionalProperty.push({ '@type': 'PropertyValue', name: 'Mana Value', value: String(card.cmc) });
+  }
+  if (card.colors?.length) {
+    additionalProperty.push({ '@type': 'PropertyValue', name: 'Colors', value: card.colors.join(', ') });
+  }
+  if (card.power != null && card.toughness != null) {
+    additionalProperty.push({ '@type': 'PropertyValue', name: 'Power/Toughness', value: `${card.power}/${card.toughness}` });
+  }
 
   const product: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: card.name,
-    description: card.oracle_text ?? `${card.name} — ${card.type_line}`,
+    description,
     image,
     url: pageUrl,
     brand: { '@type': 'Brand', name: 'Magic: The Gathering' },
     category: card.type_line,
+    sku: card.id,
+    mpn: card.collector_number ?? undefined,
+    ...(additionalProperty.length > 0 && { additionalProperty }),
+    ...(offers.length === 1 && { offers: offers[0] }),
+    ...(offers.length > 1 && { offers: { '@type': 'AggregateOffer', lowPrice: usd, highPrice: foil, priceCurrency: 'USD', offerCount: offers.length, offers } }),
   };
-
-  if (price) {
-    product.offers = {
-      '@type': 'Offer',
-      price,
-      priceCurrency: 'USD',
-      availability: 'https://schema.org/InStock',
-      url: card.purchase_uris?.tcgplayer ?? pageUrl,
-    };
-  }
 
   return product;
 }
