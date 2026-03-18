@@ -39,7 +39,7 @@ export function CuratedSearchesWidget() {
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
           <Sparkles className="h-4 w-4 text-primary" />
-          Popular Searches
+          Browse by Topic
         </h2>
         <Link
           to="/browse-searches"
