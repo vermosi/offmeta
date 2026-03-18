@@ -41,13 +41,16 @@ Deno.serve(async (req: Request) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Require service role key (admin-only)
+  // Require service role key, anon key, or pipeline key (admin-only)
   const authHeader = req.headers.get('Authorization') ?? '';
   const token = authHeader.replace('Bearer ', '');
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   const pipelineKey = Deno.env.get('OFFMETA_PIPELINE_KEY');
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
+  const publishableKey = Deno.env.get('SUPABASE_PUBLISHABLE_KEY');
   
-  if (!serviceKey || (token !== serviceKey && token !== pipelineKey)) {
+  const validKeys = [serviceKey, pipelineKey, anonKey, publishableKey].filter(Boolean);
+  if (!token || !validKeys.includes(token)) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers });
   }
 
