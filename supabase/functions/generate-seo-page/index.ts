@@ -207,7 +207,7 @@ Include:
       durationMs: result.durationMs,
     });
 
-    // Validate cards against Scryfall
+    // Validate cards against local DB
     const validatedCards = await validateCards(result.data.cards ?? [], supabase);
 
     const content: SeoPageContent = {
