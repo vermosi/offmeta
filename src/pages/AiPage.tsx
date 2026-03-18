@@ -7,7 +7,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { applySeoMeta, injectJsonLd } from '@/lib/seo';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -67,10 +67,36 @@ function CopyAnswerButton({ text }: { text: string }) {
 
 function CardEntity({ card }: { card: SeoPageContent['cards'][0] }) {
   const slug = cardNameToSlug(card.name);
+  const [imgUrl, setImgUrl] = useState<string | null>(null);
+  const [hovered, setHovered] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const onEnter = useCallback(async () => {
+    timerRef.current = setTimeout(async () => {
+      setHovered(true);
+      if (imgUrl !== null) return;
+      try {
+        const { data } = await supabase
+          .from('cards')
+          .select('image_url')
+          .eq('name', card.name)
+          .maybeSingle();
+        setImgUrl(data?.image_url ?? '');
+      } catch {
+        setImgUrl('');
+      }
+    }, 300);
+  }, [card.name, imgUrl]);
+
+  const onLeave = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setHovered(false);
+  }, []);
+
   return (
     <li className="py-3 border-b border-border/30 last:border-0">
       <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 relative" onMouseEnter={onEnter} onMouseLeave={onLeave}>
           <Link
             to={`/cards/${slug}`}
             className="font-semibold text-foreground hover:text-accent transition-colors"
@@ -82,6 +108,15 @@ function CardEntity({ card }: { card: SeoPageContent['cards'][0] }) {
           </span>
           <p className="text-sm text-muted-foreground mt-0.5">{card.typeLine}</p>
           <p className="text-sm mt-1">{card.description}</p>
+          {/* Card image hover preview */}
+          {hovered && imgUrl && (
+            <span
+              className="pointer-events-none absolute right-0 top-0 z-50 rounded-xl shadow-2xl border border-border overflow-hidden"
+              style={{ width: 146, height: 204 }}
+            >
+              <img src={imgUrl} alt={card.name} width={146} height={204} className="block object-cover w-full h-full" loading="lazy" />
+            </span>
+          )}
         </div>
         <Link
           to={`/cards/${slug}`}

@@ -81,3 +81,6 @@ verify_jwt = false
 
 [functions.batch-generate-seo-pages]
 verify_jwt = false
+
+[functions.auto-generate-seo-pages]
+verify_jwt = false

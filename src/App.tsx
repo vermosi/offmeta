@@ -41,7 +41,9 @@ const Collection = lazy(() => import('./pages/Collection'));
 const MarketTrends = lazy(() => import('./pages/MarketTrends'));
 const CardPage = lazy(() => import('./pages/CardPage'));
 const PublicProfile = lazy(() => import('./pages/PublicProfile'));
+const AiIndex = lazy(() => import('./pages/AiIndex'));
 const AiPage = lazy(() => import('./pages/AiPage'));
+const AdminSeoPages = lazy(() => import('./pages/AdminSeoPages'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const queryClient = new QueryClient({
@@ -99,7 +101,9 @@ const App = () => (
                   <Route path="/market" element={<MarketTrends />} />
                   <Route path="/cards/:slug" element={<CardPage />} />
                   <Route path="/user/:userId" element={<PublicProfile />} />
+                  <Route path="/ai" element={<AiIndex />} />
                   <Route path="/ai/:slug" element={<AiPage />} />
+                  <Route path="/admin/seo-pages" element={<AdminSeoPages />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
