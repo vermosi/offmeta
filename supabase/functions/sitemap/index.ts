@@ -84,7 +84,7 @@ serve(async (req) => {
     const curatedSearches = curatedResult.data;
     const cards = cardsResult.data;
     const decks = decksResult.data;
-
+    const seoPages = seoResult.data;
     const today = new Date().toISOString().split('T')[0];
 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
