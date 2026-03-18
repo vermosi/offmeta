@@ -11,8 +11,6 @@ import { callAIWithToolsTracked, aiErrorResponse } from '../_shared/aiClient.ts'
 import { logEvent } from '../_shared/logger.ts';
 import { runRequestGuard } from '../_shared/requestGuard.ts';
 
-const SCRYFALL_API = 'https://api.scryfall.com';
-
 interface SeoPageContent {
   tldr: string;
   explanation: string;
@@ -39,30 +37,54 @@ function slugify(query: string): string {
     .replace(/-$/, '');
 }
 
-/** Validate cards exist in Scryfall. Remove hallucinated ones. */
+/** Validate cards against local cards table. Remove hallucinated ones. */
 async function validateCards(
   cards: SeoPageContent['cards'],
+  supabase: ReturnType<typeof createClient>,
 ): Promise<SeoPageContent['cards']> {
+  if (!cards.length) return [];
+
+  // Batch lookup: fetch all candidate names in one query using ilike for fuzzy match
+  const names = cards.slice(0, 15).map((c) => c.name);
+
+  const { data: dbCards } = await supabase
+    .from('cards')
+    .select('name, mana_cost, type_line')
+    .in('name', names);
+
+  // Build a lookup map (exact match first)
+  const exactMap = new Map<string, { name: string; mana_cost: string | null; type_line: string | null }>();
+  for (const c of dbCards ?? []) {
+    exactMap.set(c.name.toLowerCase(), c);
+  }
+
   const validated: SeoPageContent['cards'] = [];
 
   for (const card of cards.slice(0, 15)) {
-    try {
-      const res = await fetch(
-        `${SCRYFALL_API}/cards/named?fuzzy=${encodeURIComponent(card.name)}`,
-      );
-      if (res.ok) {
-        const data = await res.json();
+    const match = exactMap.get(card.name.toLowerCase());
+    if (match) {
+      validated.push({
+        name: match.name,
+        manaCost: match.mana_cost ?? card.manaCost,
+        typeLine: match.type_line ?? card.typeLine,
+        description: card.description,
+      });
+    } else {
+      // Fuzzy fallback: search by trigram similarity via card_names table
+      const { data: fuzzy } = await supabase
+        .from('cards')
+        .select('name, mana_cost, type_line')
+        .ilike('name', `%${card.name.replace(/[%_]/g, '')}%`)
+        .limit(1);
+
+      if (fuzzy?.length) {
         validated.push({
-          name: data.name,
-          manaCost: data.mana_cost ?? card.manaCost,
-          typeLine: data.type_line ?? card.typeLine,
+          name: fuzzy[0].name,
+          manaCost: fuzzy[0].mana_cost ?? card.manaCost,
+          typeLine: fuzzy[0].type_line ?? card.typeLine,
           description: card.description,
         });
       }
-      // Respect Scryfall rate limits
-      await new Promise((r) => setTimeout(r, 100));
-    } catch {
-      // Skip cards that fail validation
     }
   }
 
