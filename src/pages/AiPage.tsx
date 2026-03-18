@@ -59,7 +59,7 @@ function CopyAnswerButton({ text }: { text: string }) {
       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border/50 bg-card/50 text-xs text-muted-foreground hover:text-foreground hover:border-accent/30 transition-colors"
       aria-label="Copy answer"
     >
-      {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+      {copied ? <Check className="h-3.5 w-3.5 text-accent" /> : <Copy className="h-3.5 w-3.5" />}
       {copied ? 'Copied' : 'Copy Answer'}
     </button>
   );
