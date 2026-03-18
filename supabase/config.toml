@@ -75,3 +75,6 @@ verify_jwt = false
 
 [functions.process-email-queue]
 verify_jwt = true
+
+[functions.generate-seo-page]
+verify_jwt = false
