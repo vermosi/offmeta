@@ -140,7 +140,8 @@ export const UnifiedSearchBar = forwardRef<
   const [isFocused, setIsFocused] = useState(false);
 
   const {
-    placeholder: animatedPlaceholder,
+    placeholder,
+    typingText,
     isAnimating: isTyping,
     stop: stopTyping,
   } = useTypingPlaceholder(
@@ -149,8 +150,6 @@ export const UnifiedSearchBar = forwardRef<
   );
   const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // No auto-focus — let the typewriter placeholder play to draw attention
 
   const { saveContext } = useSearchContext();
   const { history, addToHistory, removeFromHistory, clearHistory } =
@@ -246,44 +245,58 @@ export const UnifiedSearchBar = forwardRef<
               <Search className="h-4 w-4" />
             </div>
 
-            <input
-              ref={inputRef}
-              id="search-input"
-              type="search"
-              placeholder={animatedPlaceholder}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  setShowHistoryDropdown(false);
-                  handleSearch();
-                } else if (e.key === 'Escape') {
-                  setShowHistoryDropdown(false);
-                }
-              }}
-              onFocus={() => {
-                stopTyping();
-                setIsFocused(true);
-                if (history.length > 0) {
-                  setShowHistoryDropdown(true);
-                }
-              }}
-              onBlur={(e) => {
-                setIsFocused(false);
-                const relatedTarget = e.relatedTarget as HTMLElement | null;
-                const isDropdownClick = relatedTarget?.closest(
-                  '[data-search-history-dropdown="true"]',
-                );
-                if (!isDropdownClick) {
-                  setTimeout(() => setShowHistoryDropdown(false), 200);
-                }
-              }}
-              className={`flex-1 min-w-0 bg-transparent text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none py-2 px-2 sm:px-1 ${isTyping ? 'placeholder:text-foreground/70' : ''}`}
-              autoComplete="off"
-              autoCorrect="off"
-              spellCheck="false"
-              aria-describedby="search-hint"
-            />
+            <div className="relative flex-1 min-w-0">
+              <input
+                ref={inputRef}
+                id="search-input"
+                type="search"
+                placeholder={placeholder}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setShowHistoryDropdown(false);
+                    handleSearch();
+                  } else if (e.key === 'Escape') {
+                    setShowHistoryDropdown(false);
+                  }
+                }}
+                onFocus={() => {
+                  stopTyping();
+                  setIsFocused(true);
+                  if (history.length > 0) {
+                    setShowHistoryDropdown(true);
+                  }
+                }}
+                onBlur={(e) => {
+                  setIsFocused(false);
+                  const relatedTarget = e.relatedTarget as HTMLElement | null;
+                  const isDropdownClick = relatedTarget?.closest(
+                    '[data-search-history-dropdown="true"]',
+                  );
+                  if (!isDropdownClick) {
+                    setTimeout(() => setShowHistoryDropdown(false), 200);
+                  }
+                }}
+                className="flex-1 min-w-0 w-full bg-transparent text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none py-2 px-2 sm:px-1"
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck="false"
+                aria-describedby="search-hint"
+              />
+
+              {!query && !isFocused && isTyping && (
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-y-0 left-2 sm:left-1 right-2 flex items-center text-sm sm:text-base text-muted-foreground"
+                >
+                  <span className="truncate">
+                    {typingText || '\u200B'}
+                    <span className="inline-block w-[2px] h-4 bg-accent/70 ml-0.5 align-middle animate-pulse" />
+                  </span>
+                </div>
+              )}
+            </div>
 
             {query && (
               <button
