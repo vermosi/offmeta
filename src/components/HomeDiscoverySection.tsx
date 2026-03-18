@@ -1,19 +1,14 @@
 /**
  * Discovery content shown on the home page before search:
- * Recent Searches, Curated Searches, Features Showcase, Daily Pick,
- * Trending Cards, How It Works, FAQ.
+ * Recent Searches, Curated Searches (SEO links), FAQ.
  *
- * NOTE: TrendingSearches is shown above the fold in Index.tsx,
- * so it is intentionally NOT included here to avoid duplication.
+ * Stripped to essentials based on analytics — only components
+ * with demonstrated engagement or SEO value are retained.
  */
 
-import { DailyPick } from '@/components/DailyPick';
-import { FeaturesShowcase } from '@/components/FeaturesShowcase';
-import { HowItWorksSection } from '@/components/HowItWorksSection';
-import { FAQSection } from '@/components/FAQSection';
 import { RecentSearches } from '@/components/RecentSearches';
-import { TrendingCardsWidget } from '@/components/TrendingCardsWidget';
 import { CuratedSearchesWidget } from '@/components/CuratedSearchesWidget';
+import { FAQSection } from '@/components/FAQSection';
 
 interface HomeDiscoverySectionProps {
   onSearch: (query: string) => void;
@@ -25,16 +20,6 @@ export function HomeDiscoverySection({ onSearch }: HomeDiscoverySectionProps) {
       <div className="container-main space-y-6">
         <RecentSearches onSearch={onSearch} />
         <CuratedSearchesWidget />
-      </div>
-      <FeaturesShowcase />
-      <div className="container-main grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div id="daily-pick">
-          <DailyPick />
-        </div>
-        <TrendingCardsWidget onSearch={onSearch} />
-      </div>
-      <div id="how-it-works">
-        <HowItWorksSection />
       </div>
       <div id="faq">
         <FAQSection />

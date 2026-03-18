@@ -12,14 +12,7 @@ import {
   useCallback,
   useState,
   useMemo,
-  useRef,
 } from 'react';
-const OnboardingWalkthrough = lazy(() =>
-  import('@/components/OnboardingWalkthrough').then((m) => ({
-    default: m.OnboardingWalkthrough,
-  })),
-);
-import { useOnboarding } from '@/hooks/useOnboarding';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 const EditableQueryBar = lazy(() =>
   import('@/components/EditableQueryBar').then((m) => ({
@@ -52,16 +45,6 @@ const HeroSection = lazy(() =>
 const HomeDiscoverySection = lazy(() =>
   import('@/components/HomeDiscoverySection').then((m) => ({
     default: m.HomeDiscoverySection,
-  })),
-);
-const PopularCardsStrip = lazy(() =>
-  import('@/components/PopularCardsStrip').then((m) => ({
-    default: m.PopularCardsStrip,
-  })),
-);
-const TrendingSearches = lazy(() =>
-  import('@/components/TrendingSearches').then((m) => ({
-    default: m.TrendingSearches,
   })),
 );
 import { ScrollToTop } from '@/components/ScrollToTop';
@@ -120,17 +103,6 @@ const Index = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const collectionLookup = useCollectionLookup();
-  const { isActive: onboardingActive, step: onboardingStep, advance: onboardingAdvance, dismiss: onboardingDismiss } = useOnboarding();
-  const searchBarContainerRef = useRef<HTMLDivElement>(null);
-
-  const fillOnboardingExample = useCallback(() => {
-    const input = document.getElementById('search-input') as HTMLInputElement | null;
-    if (input) {
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
-      nativeInputValueSetter?.call(input, 'creatures that make treasure tokens');
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-  }, []);
 
   const {
     searchQuery,
@@ -344,7 +316,7 @@ const Index = () => {
           role="main"
         >
           <div className="container-main space-y-3 sm:space-y-6">
-            <div ref={searchBarContainerRef}>
+            <div>
               <UnifiedSearchBar
                 ref={searchBarRef}
                 onSearch={handleSearch}
@@ -354,25 +326,6 @@ const Index = () => {
                 isCardFetching={isSearching}
               />
             </div>
-
-            {/* Above-the-fold engagement — popular cards + trending searches */}
-            {!hasSearched && (
-              <Suspense fallback={null}>
-                <div className="space-y-5 animate-fade-in">
-                  <PopularCardsStrip />
-                  <TrendingSearches onSearch={handleTryExample} hasHistory={false} />
-                </div>
-              </Suspense>
-            )}
-
-            <OnboardingWalkthrough
-              isActive={onboardingActive}
-              step={onboardingStep}
-              onAdvance={onboardingAdvance}
-              onDismiss={onboardingDismiss}
-              searchBarRef={searchBarContainerRef}
-              onFillExample={fillOnboardingExample}
-            />
 
             {hasSearched && (
               <div className="animate-reveal flex items-start gap-2">
