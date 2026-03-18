@@ -299,6 +299,7 @@ interface FullHtmlOptions {
   image: string;
   jsonLd: string;
   bodyContent: string;
+  noindex?: boolean;
 }
 
 function buildFullHtml(opts: FullHtmlOptions): string {
@@ -309,6 +310,7 @@ function buildFullHtml(opts: FullHtmlOptions): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>${escapeHtml(opts.title)}</title>
   <meta name="description" content="${escapeHtml(opts.description)}" />
+  ${opts.noindex ? '<meta name="robots" content="noindex, follow" />' : ''}
   <link rel="canonical" href="${escapeHtml(opts.canonicalUrl)}" />
 
   <!-- Open Graph -->
