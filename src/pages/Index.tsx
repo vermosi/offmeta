@@ -114,6 +114,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSimilarCards } from '@/hooks/useSimilarCards';
 import { useDeckIdeas } from '@/hooks/useDeckIdeas';
 import { useQuerySuggestions } from '@/hooks/useQuerySuggestions';
+import { useNoIndex } from '@/hooks/useNoIndex';
 const CardModal = lazy(() => import('@/components/CardModal'));
 
 const Index = () => {
