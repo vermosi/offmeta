@@ -130,6 +130,37 @@ async function fetchCuratedSearch(slug: string): Promise<CuratedSearch | null> {
   }
 }
 
+interface SeoPageRow {
+  query: string;
+  slug: string;
+  content_json: {
+    tldr: string;
+    explanation: string;
+    cards: Array<{ name: string; manaCost: string; typeLine: string; description: string }>;
+    whyTheseWork: string;
+    relatedQueries: string[];
+    faqs: Array<{ question: string; answer: string }>;
+  };
+  published_at: string | null;
+  updated_at: string;
+}
+
+async function fetchSeoPage(slug: string): Promise<SeoPageRow | null> {
+  try {
+    const supabase = getSupabaseClient();
+    if (!supabase) return null;
+    const { data } = await supabase
+      .from('seo_pages')
+      .select('query, slug, content_json, published_at, updated_at')
+      .eq('slug', slug)
+      .eq('status', 'published')
+      .maybeSingle();
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 // ── Image helper ─────────────────────────────────────────────────────────────
 
 function getCardImage(card: ScryfallCard): string | null {
