@@ -65,7 +65,7 @@ const TrendingSearches = lazy(() =>
   })),
 );
 import { ScrollToTop } from '@/components/ScrollToTop';
-import { SearchNudge } from '@/components/SearchNudge';
+import { ScrollToTop } from '@/components/ScrollToTop';
 const SimilarSearches = lazy(() =>
   import('@/components/SimilarSearches').then((m) => ({
     default: m.SimilarSearches,
