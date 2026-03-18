@@ -193,6 +193,9 @@ const Index = () => {
   const { suggestions: querySuggestions, isChecking: isCheckingSuggestions } =
     useQuerySuggestions(searchQuery, totalCards, hasSearched && !isSearching);
 
+  // Prevent indexing of zero-result search pages
+  useNoIndex(hasSearched && !isSearching && totalCards === 0);
+
   const handleTrySuggestion = useCallback(
     (scryfallQuery: string) => {
       handleRerunEditedQuery(scryfallQuery);
