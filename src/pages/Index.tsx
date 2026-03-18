@@ -347,6 +347,16 @@ const Index = () => {
               />
             </div>
 
+            {/* Above-the-fold engagement — popular cards + trending searches */}
+            {!hasSearched && (
+              <Suspense fallback={null}>
+                <div className="space-y-5 animate-fade-in">
+                  <PopularCardsStrip />
+                  <TrendingSearchesInline onSearch={handleTryExample} />
+                </div>
+              </Suspense>
+            )}
+
             <OnboardingWalkthrough
               isActive={onboardingActive}
               step={onboardingStep}
