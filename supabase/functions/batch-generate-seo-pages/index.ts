@@ -47,8 +47,7 @@ Deno.serve(async (req: Request) => {
     return new Response(JSON.stringify({ error: 'Not configured' }), { status: 500, headers });
   }
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const svcKey = serviceKey!;
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 
   let body: { queries?: string[]; publish?: boolean } = {};
   try {
