@@ -361,7 +361,7 @@ const Index = () => {
               <Suspense fallback={null}>
                 <div className="space-y-5 animate-fade-in">
                   <PopularCardsStrip />
-                  <TrendingSearchesInline onSearch={handleTryExample} />
+                  <TrendingSearches onSearch={handleTryExample} hasHistory={false} />
                 </div>
               </Suspense>
             )}
