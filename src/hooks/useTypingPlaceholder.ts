@@ -19,12 +19,6 @@ const PAUSE_BETWEEN = 400; // ms pause between delete and next phrase
 
 export function useTypingPlaceholder(fallback: string, enabled: boolean) {
   const [text, setText] = useState('');
-  const [isAnimating, setIsAnimating] = useState(() => {
-    if (!enabled) return false;
-    if (typeof window === 'undefined') return false;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
-    return true;
-  });
   const cancelledRef = useRef(false);
 
   const shouldAnimate = useCallback(() => {
@@ -34,6 +28,8 @@ export function useTypingPlaceholder(fallback: string, enabled: boolean) {
     return true;
   }, [enabled]);
 
+  const isAnimating = shouldAnimate();
+
   useEffect(() => {
     if (!shouldAnimate()) {
       cancelledRef.current = true;
@@ -41,7 +37,6 @@ export function useTypingPlaceholder(fallback: string, enabled: boolean) {
     }
 
     cancelledRef.current = false;
-    setIsAnimating(true);
 
     let timeout: ReturnType<typeof setTimeout>;
 
@@ -83,7 +78,6 @@ export function useTypingPlaceholder(fallback: string, enabled: boolean) {
     return () => {
       cancelledRef.current = true;
       clearTimeout(timeout);
-      setIsAnimating(false);
       setText('');
     };
   }, [shouldAnimate]);
@@ -91,7 +85,6 @@ export function useTypingPlaceholder(fallback: string, enabled: boolean) {
   const stop = useCallback(() => {
     cancelledRef.current = true;
     setText('');
-    setIsAnimating(false);
   }, []);
 
   return {
