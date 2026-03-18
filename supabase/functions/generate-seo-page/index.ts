@@ -102,7 +102,7 @@ Deno.serve(async (req: Request) => {
   const { ctx } = guard;
 
   try {
-    const { query, publish = false } = await req.json();
+    const { query, publish = false, regenerate = false } = await req.json();
 
     if (!query || typeof query !== 'string' || query.length < 3 || query.length > 200) {
       return new Response(
@@ -124,11 +124,16 @@ Deno.serve(async (req: Request) => {
       .eq('slug', slug)
       .maybeSingle();
 
-    if (existing) {
+    if (existing && !regenerate) {
       return new Response(
         JSON.stringify({ error: 'Page already exists for this query', slug }),
         { status: 409, headers: ctx.headers },
       );
+    }
+
+    // If regenerating, delete the old page first
+    if (existing && regenerate) {
+      await supabase.from('seo_pages').delete().eq('id', existing.id);
     }
 
     // Generate content via AI

@@ -49,13 +49,14 @@ Deno.serve(async (req: Request) => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 
-  let body: { queries?: string[]; publish?: boolean } = {};
+  let body: { queries?: string[]; publish?: boolean; regenerate?: boolean } = {};
   try {
     body = await req.json();
   } catch { /* use defaults */ }
 
   const queries = body.queries ?? SEED_QUERIES;
   const publish = body.publish ?? true;
+  const regenerate = body.regenerate ?? false;
 
   const results: Array<{ query: string; status: string; slug?: string; error?: string }> = [];
 
@@ -67,7 +68,7 @@ Deno.serve(async (req: Request) => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${serviceKey}`,
         },
-        body: JSON.stringify({ query, publish }),
+        body: JSON.stringify({ query, publish, regenerate }),
       });
 
       const data = await res.json();
