@@ -54,6 +54,16 @@ const HomeDiscoverySection = lazy(() =>
     default: m.HomeDiscoverySection,
   })),
 );
+const PopularCardsStrip = lazy(() =>
+  import('@/components/PopularCardsStrip').then((m) => ({
+    default: m.PopularCardsStrip,
+  })),
+);
+const TrendingSearchesInline = lazy(() =>
+  import('@/components/TrendingSearchesInline').then((m) => ({
+    default: m.TrendingSearchesInline,
+  })),
+);
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { SearchNudge } from '@/components/SearchNudge';
 const SimilarSearches = lazy(() =>
@@ -341,6 +351,16 @@ const Index = () => {
                 isCardFetching={isSearching}
               />
             </div>
+
+            {/* Above-the-fold engagement — popular cards + trending searches */}
+            {!hasSearched && (
+              <Suspense fallback={null}>
+                <div className="space-y-5 animate-fade-in">
+                  <PopularCardsStrip />
+                  <TrendingSearchesInline onSearch={handleTryExample} />
+                </div>
+              </Suspense>
+            )}
 
             <OnboardingWalkthrough
               isActive={onboardingActive}
