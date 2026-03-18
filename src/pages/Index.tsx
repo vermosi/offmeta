@@ -104,17 +104,6 @@ const Index = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const collectionLookup = useCollectionLookup();
-  const { isActive: onboardingActive, step: onboardingStep, advance: onboardingAdvance, dismiss: onboardingDismiss } = useOnboarding();
-  const searchBarContainerRef = useRef<HTMLDivElement>(null);
-
-  const fillOnboardingExample = useCallback(() => {
-    const input = document.getElementById('search-input') as HTMLInputElement | null;
-    if (input) {
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
-      nativeInputValueSetter?.call(input, 'creatures that make treasure tokens');
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-  }, []);
 
   const {
     searchQuery,
