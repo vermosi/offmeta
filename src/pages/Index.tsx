@@ -54,6 +54,11 @@ const HomeDiscoverySection = lazy(() =>
     default: m.HomeDiscoverySection,
   })),
 );
+const PopularCardsStrip = lazy(() =>
+  import('@/components/PopularCardsStrip').then((m) => ({
+    default: m.PopularCardsStrip,
+  })),
+);
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { SearchNudge } from '@/components/SearchNudge';
 const SimilarSearches = lazy(() =>
