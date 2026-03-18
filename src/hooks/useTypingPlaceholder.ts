@@ -1,6 +1,6 @@
 /**
  * Hook that produces a typewriter effect cycling through demo phrases.
- * Only runs once per session (first visit) and respects reduced motion.
+ * Runs whenever enabled and respects reduced motion.
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -12,9 +12,9 @@ const DEMO_PHRASES = [
   'legendary dragons with flying',
 ];
 
-const TYPE_SPEED = 45;    // ms per character
+const TYPE_SPEED = 45; // ms per character
 const PAUSE_AFTER = 1800; // ms to hold completed phrase
-const DELETE_SPEED = 25;  // ms per character when deleting
+const DELETE_SPEED = 25; // ms per character when deleting
 const PAUSE_BETWEEN = 400; // ms pause between delete and next phrase
 
 export function useTypingPlaceholder(fallback: string, enabled: boolean) {
@@ -96,7 +96,8 @@ export function useTypingPlaceholder(fallback: string, enabled: boolean) {
   }, []);
 
   return {
-    placeholder: isAnimating ? (text || '\u200B') : fallback,
+    placeholder: fallback,
+    typingText: isAnimating ? text : '',
     isAnimating,
     stop,
   };
