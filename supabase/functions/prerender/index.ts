@@ -130,6 +130,37 @@ async function fetchCuratedSearch(slug: string): Promise<CuratedSearch | null> {
   }
 }
 
+interface SeoPageRow {
+  query: string;
+  slug: string;
+  content_json: {
+    tldr: string;
+    explanation: string;
+    cards: Array<{ name: string; manaCost: string; typeLine: string; description: string }>;
+    whyTheseWork: string;
+    relatedQueries: string[];
+    faqs: Array<{ question: string; answer: string }>;
+  };
+  published_at: string | null;
+  updated_at: string;
+}
+
+async function fetchSeoPage(slug: string): Promise<SeoPageRow | null> {
+  try {
+    const supabase = getSupabaseClient();
+    if (!supabase) return null;
+    const { data } = await supabase
+      .from('seo_pages')
+      .select('query, slug, content_json, published_at, updated_at')
+      .eq('slug', slug)
+      .eq('status', 'published')
+      .maybeSingle();
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 // ── Image helper ─────────────────────────────────────────────────────────────
 
 function getCardImage(card: ScryfallCard): string | null {
@@ -416,6 +447,111 @@ Deno.serve(async (req: Request) => {
       return new Response(buildSearchPageHtml(curated?.title ?? slugToQuery(slug), slug, results, curated), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': cacheControl },
+      });
+    }
+
+    // Match /ai/:slug
+    const aiMatch = path.match(/^\/ai\/([a-z0-9-]+)$/);
+    if (aiMatch) {
+      const slug = aiMatch[1];
+      const seoPage = await fetchSeoPage(slug);
+
+      if (!seoPage) {
+        return new Response(buildSearchPageHtml('Page not found', slug, null, null, true), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300' },
+        });
+      }
+
+      const content = seoPage.content_json;
+      const canonicalUrl = `${SITE_URL}/ai/${slug}`;
+      const title = `${seoPage.query} — MTG Card Guide | OffMeta`;
+      const desc = content.tldr.slice(0, 160);
+
+      const cardListHtml = content.cards.map(card => `
+        <li>
+          <strong>${escapeHtml(card.name)}</strong> <small>${escapeHtml(card.manaCost)}</small>
+          — ${escapeHtml(card.typeLine)}
+          <br><small>${escapeHtml(card.description)}</small>
+        </li>
+      `).join('');
+
+      const faqHtml = content.faqs.map(faq => `
+        <details>
+          <summary><strong>${escapeHtml(faq.question)}</strong></summary>
+          <p>${escapeHtml(faq.answer)}</p>
+        </details>
+      `).join('');
+
+      const relatedHtml = content.relatedQueries.map(rq => {
+        const rqSlug = rq.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').slice(0, 80);
+        return `<a href="${SITE_URL}/search/${rqSlug}">${escapeHtml(rq)}</a>`;
+      }).join(' · ');
+
+      const jsonLd = JSON.stringify({
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'Article',
+            headline: seoPage.query,
+            description: desc,
+            url: canonicalUrl,
+            author: { '@type': 'Organization', name: 'OffMeta' },
+            publisher: { '@type': 'Organization', name: 'OffMeta', url: SITE_URL },
+            datePublished: seoPage.published_at,
+            dateModified: seoPage.updated_at,
+          },
+          {
+            '@type': 'FAQPage',
+            mainEntity: content.faqs.map(faq => ({
+              '@type': 'Question',
+              name: faq.question,
+              acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+            })),
+          },
+          {
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'OffMeta', item: SITE_URL },
+              { '@type': 'ListItem', position: 2, name: 'AI Guides', item: `${SITE_URL}/ai` },
+              { '@type': 'ListItem', position: 3, name: seoPage.query, item: canonicalUrl },
+            ],
+          },
+        ],
+      });
+
+      const bodyContent = `
+        <nav aria-label="Breadcrumb"><a href="${SITE_URL}">OffMeta</a> / <span>${escapeHtml(seoPage.query)}</span></nav>
+        <h1>${escapeHtml(seoPage.query)}</h1>
+        <section aria-label="Quick answer">
+          <p><strong>TL;DR:</strong> ${escapeHtml(content.tldr)}</p>
+        </section>
+        <section>
+          ${content.explanation.split('\n\n').map(p => `<p>${escapeHtml(p)}</p>`).join('')}
+        </section>
+        <h2>Top Cards</h2>
+        <ul>${cardListHtml}</ul>
+        <h2>Why These Cards Work</h2>
+        <p>${escapeHtml(content.whyTheseWork)}</p>
+        <h2>Related Searches</h2>
+        <p>${relatedHtml}</p>
+        <h2>FAQ</h2>
+        ${faqHtml}
+        <footer>
+          <p>Source: <a href="${SITE_URL}">OffMeta</a> — AI-powered MTG card search and discovery.</p>
+        </footer>
+      `;
+
+      return new Response(buildFullHtml({
+        title,
+        description: desc,
+        canonicalUrl,
+        image: OG_IMAGE_DEFAULT,
+        jsonLd,
+        bodyContent,
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600, s-maxage=86400' },
       });
     }
 

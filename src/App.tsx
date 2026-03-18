@@ -41,6 +41,7 @@ const Collection = lazy(() => import('./pages/Collection'));
 const MarketTrends = lazy(() => import('./pages/MarketTrends'));
 const CardPage = lazy(() => import('./pages/CardPage'));
 const PublicProfile = lazy(() => import('./pages/PublicProfile'));
+const AiPage = lazy(() => import('./pages/AiPage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const queryClient = new QueryClient({
@@ -98,6 +99,7 @@ const App = () => (
                   <Route path="/market" element={<MarketTrends />} />
                   <Route path="/cards/:slug" element={<CardPage />} />
                   <Route path="/user/:userId" element={<PublicProfile />} />
+                  <Route path="/ai/:slug" element={<AiPage />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>

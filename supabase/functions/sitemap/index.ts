@@ -55,8 +55,8 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch curated search pages, top cards, and public decks in parallel
-    const [curatedResult, cardsResult, decksResult] = await Promise.all([
+    // Fetch curated search pages, top cards, public decks, and SEO pages in parallel
+    const [curatedResult, cardsResult, decksResult, seoResult] = await Promise.all([
       supabase
         .from('curated_searches')
         .select('slug, priority, updated_at')
@@ -74,12 +74,17 @@ serve(async (req) => {
         .eq('is_public', true)
         .order('updated_at', { ascending: false })
         .limit(200),
+      supabase
+        .from('seo_pages')
+        .select('slug, updated_at')
+        .eq('status', 'published')
+        .order('updated_at', { ascending: false }),
     ]);
 
     const curatedSearches = curatedResult.data;
     const cards = cardsResult.data;
     const decks = decksResult.data;
-
+    const seoPages = seoResult.data;
     const today = new Date().toISOString().split('T')[0];
 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -141,6 +146,22 @@ serve(async (req) => {
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
+  </url>
+`;
+      }
+    }
+
+    // AI SEO pages (high priority — AI-optimized content)
+    if (seoPages) {
+      for (const page of seoPages) {
+        const lastmod = page.updated_at
+          ? new Date(page.updated_at).toISOString().split('T')[0]
+          : today;
+        xml += `  <url>
+    <loc>${BASE_URL}/ai/${escapeXml(page.slug)}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
   </url>
 `;
       }

@@ -878,6 +878,39 @@ export type Database = {
           },
         ]
       }
+      seo_pages: {
+        Row: {
+          content_json: Json
+          created_at: string
+          id: string
+          published_at: string | null
+          query: string
+          slug: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          content_json?: Json
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          query: string
+          slug: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          content_json?: Json
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          query?: string
+          slug?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
