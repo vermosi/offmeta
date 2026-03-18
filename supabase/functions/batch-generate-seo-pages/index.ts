@@ -84,8 +84,8 @@ Deno.serve(async (req: Request) => {
       results.push({ query, status: 'error', error: msg });
     }
 
-    // Delay between generations to respect AI rate limits
-    await new Promise((r) => setTimeout(r, 3000));
+    // Delay between generations (1s — no Scryfall rate limits, local DB validation)
+    await new Promise((r) => setTimeout(r, 1000));
   }
 
   const succeeded = results.filter((r) => r.status === 'success').length;
