@@ -151,6 +151,22 @@ serve(async (req) => {
       }
     }
 
+    // AI SEO pages (high priority — AI-optimized content)
+    if (seoPages) {
+      for (const page of seoPages) {
+        const lastmod = page.updated_at
+          ? new Date(page.updated_at).toISOString().split('T')[0]
+          : today;
+        xml += `  <url>
+    <loc>${BASE_URL}/ai/${escapeXml(page.slug)}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+`;
+      }
+    }
+
     xml += `</urlset>`;
 
     return new Response(xml, {
