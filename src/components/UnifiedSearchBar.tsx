@@ -198,7 +198,7 @@ export const UnifiedSearchBar = forwardRef<
     <div
       className="space-y-4 sm:space-y-6 w-full mx-auto px-0 animate-fade-in"
       style={{
-        maxWidth: 'clamp(320px, 90vw, 672px)',
+        maxWidth: 'clamp(320px, 90vw, 840px)',
         animationDuration: '0.5s',
         animationDelay: '0.15s',
         animationFillMode: 'backwards',
