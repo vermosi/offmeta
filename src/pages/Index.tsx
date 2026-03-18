@@ -59,9 +59,9 @@ const PopularCardsStrip = lazy(() =>
     default: m.PopularCardsStrip,
   })),
 );
-const TrendingSearchesInline = lazy(() =>
-  import('@/components/TrendingSearchesInline').then((m) => ({
-    default: m.TrendingSearchesInline,
+const TrendingSearches = lazy(() =>
+  import('@/components/TrendingSearches').then((m) => ({
+    default: m.TrendingSearches,
   })),
 );
 import { ScrollToTop } from '@/components/ScrollToTop';
