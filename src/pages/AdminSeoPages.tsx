@@ -134,7 +134,7 @@ export default function AdminSeoPages() {
     );
   }
 
-  if (!user || role !== 'admin') {
+  if (!user || !isAdmin) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
