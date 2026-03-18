@@ -47,7 +47,7 @@ interface SeoPage {
 export default function AdminSeoPages() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { role, isLoading: roleLoading } = useUserRole();
+  const { hasRole: isAdmin, isLoading: roleLoading } = useUserRole('admin');
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [newQuery, setNewQuery] = useState('');
