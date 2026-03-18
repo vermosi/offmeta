@@ -926,6 +926,13 @@ export default function AdminAnalytics() {
                 <FileText className="h-3.5 w-3.5" />
                 Manage Curated Searches →
               </Link>
+              <Link
+                to="/admin/seo-pages"
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors mt-1"
+              >
+                <FileText className="h-3.5 w-3.5" />
+                AI SEO Pages →
+              </Link>
             </div>
 
             <div className="flex items-center gap-2">
