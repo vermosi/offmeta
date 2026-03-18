@@ -59,13 +59,12 @@ const PopularCardsStrip = lazy(() =>
     default: m.PopularCardsStrip,
   })),
 );
-const TrendingSearchesInline = lazy(() =>
-  import('@/components/TrendingSearchesInline').then((m) => ({
-    default: m.TrendingSearchesInline,
+const TrendingSearches = lazy(() =>
+  import('@/components/TrendingSearches').then((m) => ({
+    default: m.TrendingSearches,
   })),
 );
 import { ScrollToTop } from '@/components/ScrollToTop';
-import { SearchNudge } from '@/components/SearchNudge';
 const SimilarSearches = lazy(() =>
   import('@/components/SimilarSearches').then((m) => ({
     default: m.SimilarSearches,
@@ -361,7 +360,7 @@ const Index = () => {
               <Suspense fallback={null}>
                 <div className="space-y-5 animate-fade-in">
                   <PopularCardsStrip />
-                  <TrendingSearchesInline onSearch={handleTryExample} />
+                  <TrendingSearches onSearch={handleTryExample} hasHistory={false} />
                 </div>
               </Suspense>
             )}
@@ -538,7 +537,6 @@ const Index = () => {
           onClose={closeCompare}
         />
 
-        <SearchNudge hasSearched={hasSearched} onTrySearch={handleTryExample} />
         <PwaInstallBanner />
       </div>
     </ErrorBoundary>
