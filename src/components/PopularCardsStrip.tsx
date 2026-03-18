@@ -4,7 +4,7 @@
  * Rotates daily from a curated list of popular Commander/MTG staples.
  */
 
-import { useMemo } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { cardNameToSlug } from '@/lib/card-slug';
@@ -67,7 +67,7 @@ async function fetchPopularCards(names: string[]): Promise<CardPreview[]> {
 
 export function PopularCardsStrip() {
   // Pick cards based on day-of-year for daily rotation
-  const selectedNames = useMemo(() => {
+  const [selectedNames] = useState(() => {
     const dayOfYear = Math.floor(
       (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000,
     );
@@ -77,7 +77,7 @@ export function PopularCardsStrip() {
       names.push(POPULAR_CARDS[(start + i) % POPULAR_CARDS.length]);
     }
     return names;
-  }, []);
+  });
 
   const { data: cards = [], isLoading } = useQuery({
     queryKey: ['popular-cards-strip', selectedNames.join(',')],
