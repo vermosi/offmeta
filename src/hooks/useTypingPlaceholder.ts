@@ -78,7 +78,6 @@ export function useTypingPlaceholder(fallback: string, enabled: boolean) {
     return () => {
       cancelledRef.current = true;
       clearTimeout(timeout);
-      setIsAnimating(false);
       setText('');
     };
   }, [shouldAnimate]);
@@ -86,7 +85,6 @@ export function useTypingPlaceholder(fallback: string, enabled: boolean) {
   const stop = useCallback(() => {
     cancelledRef.current = true;
     setText('');
-    setIsAnimating(false);
   }, []);
 
   return {
