@@ -63,7 +63,7 @@ export default function AdminSeoPages() {
       if (error) throw error;
       return (data ?? []) as unknown as SeoPage[];
     },
-    enabled: role === 'admin',
+    enabled: isAdmin,
   });
 
   const toggleStatus = useMutation({
