@@ -235,7 +235,9 @@ function buildSearchPageHtml(
   slug: string,
   results: ScryfallSearchResult | null,
   curated?: CuratedSearch | null,
+  forceNoindex = false,
 ): string {
+  const shouldNoindex = forceNoindex || (results !== null && results.total_cards === 0);
   // Use curated editorial title/description if available
   const title = curated
     ? `${curated.title} | OffMeta`
