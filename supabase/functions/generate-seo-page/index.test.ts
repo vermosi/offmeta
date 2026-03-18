@@ -24,7 +24,8 @@ const TEST_CARDS = [
 Deno.test("Benchmark: Local DB card validation (batch)", async () => {
   const start = performance.now();
 
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/cards?name=in.(${TEST_CARDS.map((n) => `"${n}"`).join(",")})&select=name,mana_cost,type_line`, {
+  const url = `${SUPABASE_URL}/rest/v1/cards?name=in.(${TEST_CARDS.map((n) => `"${n}"`).join(",")})&select=name,mana_cost,type_line`;
+  const res = await fetch(url, {
     headers: {
       apikey: SERVICE_KEY,
       Authorization: `Bearer ${SERVICE_KEY}`,
@@ -33,16 +34,16 @@ Deno.test("Benchmark: Local DB card validation (batch)", async () => {
 
   const data = await res.json();
   const elapsed = performance.now() - start;
+  const items = Array.isArray(data) ? data : [];
 
-  console.log(`\n📊 LOCAL DB (batch): ${elapsed.toFixed(0)}ms — found ${data.length}/${TEST_CARDS.length} cards`);
-  for (const c of data) {
+  console.log(`\n📊 LOCAL DB (batch): ${elapsed.toFixed(0)}ms — found ${items.length}/${TEST_CARDS.length} cards`);
+  for (const c of items) {
     console.log(`  ✅ ${c.name} | ${c.mana_cost} | ${c.type_line}`);
   }
 
   assertEquals(res.status, 200);
-  // We expect most cards to exist in our local DB
-  if (data.length < TEST_CARDS.length) {
-    console.log(`  ⚠️ Missing: ${TEST_CARDS.filter((n: string) => !data.find((d: { name: string }) => d.name === n)).join(", ")}`);
+  if (items.length < TEST_CARDS.length) {
+    console.log(`  ⚠️ Missing: ${TEST_CARDS.filter((n: string) => !items.find((d: { name: string }) => d.name === n)).join(", ")}`);
   }
 });
 
