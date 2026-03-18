@@ -238,12 +238,6 @@ export const UnifiedSearchBar = forwardRef<
               {t('search.inputLabel')}
             </label>
 
-            <div
-              className="hidden sm:flex items-center justify-center w-10 h-10 rounded-lg bg-secondary text-muted-foreground flex-shrink-0"
-              aria-hidden="true"
-            >
-              <Search className="h-4 w-4" />
-            </div>
 
             <div className="relative flex-1 min-w-0">
               <input

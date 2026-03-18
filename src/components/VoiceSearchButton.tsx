@@ -24,26 +24,7 @@ export function VoiceSearchButton({
   className,
 }: VoiceSearchButtonProps) {
   if (!isSupported) {
-    return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              disabled
-              aria-label="Voice input not supported"
-              className={cn('h-12 w-12 rounded-full opacity-50', className)}
-            >
-              <MicOff className="h-5 w-5 text-muted-foreground" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Voice input not supported in this browser</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
+    return null;
   }
 
   return (
