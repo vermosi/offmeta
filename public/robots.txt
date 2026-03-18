@@ -48,6 +48,7 @@ User-agent: *
 Allow: /
 Allow: /cards/
 Allow: /search/
+Allow: /ai/
 Disallow: /api/
 # Block legacy parameterised search URLs — redirected to /search/:slug
 Disallow: /?q=
@@ -57,6 +58,16 @@ Disallow: /admin/
 Disallow: /profile/
 Disallow: /saved/
 Disallow: /reset-password/
+
+# Allow AI crawlers specifically on /ai/ pages for AEO
+User-agent: GPTBot
+Allow: /ai/
+
+User-agent: Google-Extended
+Allow: /ai/
+
+User-agent: PerplexityBot
+Allow: /ai/
 
 # Sitemap location
 Sitemap: https://offmeta.lovable.app/sitemap.xml

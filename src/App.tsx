@@ -99,6 +99,7 @@ const App = () => (
                   <Route path="/market" element={<MarketTrends />} />
                   <Route path="/cards/:slug" element={<CardPage />} />
                   <Route path="/user/:userId" element={<PublicProfile />} />
+                  <Route path="/ai/:slug" element={<AiPage />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
