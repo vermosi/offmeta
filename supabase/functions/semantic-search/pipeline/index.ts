@@ -386,6 +386,13 @@ function emptySlots(): ExtractedSlots {
 
 /**
  * Calculates confidence score based on pipeline stages
+ *
+ * Scoring breakdown:
+ *   Base:          0.5
+ *   Deterministic: +0.25  (query was fully resolved by rules)
+ *   Concepts:      +0.1 per concept (max +0.2)
+ *   Validation:    +0.1   (Scryfall accepted the query)
+ *   Repair:        +0.05  (auto-repair succeeded if needed)
  */
 function calculateConfidence(
   hasDeterministic: boolean,
@@ -395,9 +402,10 @@ function calculateConfidence(
 ): number {
   let confidence = 0.5;
 
-  if (hasDeterministic) confidence += 0.3;
-  if (conceptCount > 0) confidence += 0.1;
-  if (isValid) confidence += 0.05;
+  if (hasDeterministic) confidence += 0.25;
+  // Each concept adds 0.1, capped at 0.2
+  confidence += Math.min(conceptCount * 0.1, 0.2);
+  if (isValid) confidence += 0.1;
   if (repairSucceeded) confidence += 0.05;
 
   return Math.min(confidence, 1.0);
