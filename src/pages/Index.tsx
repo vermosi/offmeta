@@ -14,12 +14,6 @@ import {
   useMemo,
   useRef,
 } from 'react';
-const OnboardingWalkthrough = lazy(() =>
-  import('@/components/OnboardingWalkthrough').then((m) => ({
-    default: m.OnboardingWalkthrough,
-  })),
-);
-import { useOnboarding } from '@/hooks/useOnboarding';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 const EditableQueryBar = lazy(() =>
   import('@/components/EditableQueryBar').then((m) => ({
@@ -52,16 +46,6 @@ const HeroSection = lazy(() =>
 const HomeDiscoverySection = lazy(() =>
   import('@/components/HomeDiscoverySection').then((m) => ({
     default: m.HomeDiscoverySection,
-  })),
-);
-const PopularCardsStrip = lazy(() =>
-  import('@/components/PopularCardsStrip').then((m) => ({
-    default: m.PopularCardsStrip,
-  })),
-);
-const TrendingSearches = lazy(() =>
-  import('@/components/TrendingSearches').then((m) => ({
-    default: m.TrendingSearches,
   })),
 );
 import { ScrollToTop } from '@/components/ScrollToTop';
