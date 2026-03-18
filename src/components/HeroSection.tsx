@@ -1,19 +1,9 @@
 /**
- * Hero section — immersive magical gateway that hooks users instantly.
- * Mobile-first: compact on small screens, expands with orbs + typewriter on desktop.
+ * Hero section — compact headline that drives users straight to the search bar.
  */
 
 import { useTranslation } from '@/lib/i18n';
-import { useTypewriterCycle } from '@/hooks/useTypewriterCycle';
 import { Sparkles, Zap, Brain, ChevronDown } from 'lucide-react';
-
-const HERO_PHRASES = [
-  'creatures that make treasure tokens',
-  'board wipes under $5',
-  'legendary dragons with flying',
-  'sacrifice outlets in Rakdos',
-  'cantrips for storm decks',
-] as const;
 
 const UNIQUE_BENEFITS = [
   { icon: Brain, labelKey: 'hero.benefitAi' },
@@ -23,7 +13,6 @@ const UNIQUE_BENEFITS = [
 
 export function HeroSection() {
   const { t } = useTranslation();
-  const typedPhrase = useTypewriterCycle(HERO_PHRASES);
 
   return (
     <section
@@ -56,21 +45,6 @@ export function HeroSection() {
             {t('hero.subtitleDesktop3')}
           </span>
         </p>
-
-        {/* Typewriter demo — visible on ALL screens */}
-        <div
-          className="mx-auto max-w-md mb-4 sm:mb-6 animate-slide-up"
-          style={{ animationDelay: '200ms' }}
-          aria-hidden="true"
-        >
-          <div className="rounded-xl border border-border/60 bg-card/60 backdrop-blur-sm px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-muted-foreground font-mono flex items-center gap-2">
-            <span className="text-accent">→</span>
-            <span className="truncate">
-              {typedPhrase}
-              <span className="inline-block w-[2px] h-4 bg-accent/70 ml-0.5 align-middle animate-pulse" />
-            </span>
-          </div>
-        </div>
 
         {/* Benefit chips — compact on mobile */}
         <div className="flex items-center justify-center gap-1.5 sm:gap-3 animate-slide-up" style={{ animationDelay: '200ms' }}>
