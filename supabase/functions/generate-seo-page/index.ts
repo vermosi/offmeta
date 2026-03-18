@@ -208,7 +208,7 @@ Include:
     });
 
     // Validate cards against Scryfall
-    const validatedCards = await validateCards(result.data.cards ?? []);
+    const validatedCards = await validateCards(result.data.cards ?? [], supabase);
 
     const content: SeoPageContent = {
       ...result.data,
