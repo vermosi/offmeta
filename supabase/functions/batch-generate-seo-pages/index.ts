@@ -7,7 +7,7 @@
 declare const Deno: { env: { get(key: string): string | undefined }; serve: (handler: (req: Request) => Promise<Response>) => void };
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
+import { getCorsHeaders } from '../_shared/auth.ts';
 import { logEvent } from '../_shared/logger.ts';
 
 const SEED_QUERIES = [
