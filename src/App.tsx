@@ -41,6 +41,7 @@ const Collection = lazy(() => import('./pages/Collection'));
 const MarketTrends = lazy(() => import('./pages/MarketTrends'));
 const CardPage = lazy(() => import('./pages/CardPage'));
 const PublicProfile = lazy(() => import('./pages/PublicProfile'));
+const AiPage = lazy(() => import('./pages/AiPage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const queryClient = new QueryClient({
