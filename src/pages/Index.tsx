@@ -317,7 +317,7 @@ const Index = () => {
           role="main"
         >
           <div className="container-main space-y-3 sm:space-y-6">
-            <div ref={searchBarContainerRef}>
+            <div>
               <UnifiedSearchBar
                 ref={searchBarRef}
                 onSearch={handleSearch}
@@ -327,25 +327,6 @@ const Index = () => {
                 isCardFetching={isSearching}
               />
             </div>
-
-            {/* Above-the-fold engagement — popular cards + trending searches */}
-            {!hasSearched && (
-              <Suspense fallback={null}>
-                <div className="space-y-5 animate-fade-in">
-                  <PopularCardsStrip />
-                  <TrendingSearches onSearch={handleTryExample} hasHistory={false} />
-                </div>
-              </Suspense>
-            )}
-
-            <OnboardingWalkthrough
-              isActive={onboardingActive}
-              step={onboardingStep}
-              onAdvance={onboardingAdvance}
-              onDismiss={onboardingDismiss}
-              searchBarRef={searchBarContainerRef}
-              onFillExample={fillOnboardingExample}
-            />
 
             {hasSearched && (
               <div className="animate-reveal flex items-start gap-2">
