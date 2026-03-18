@@ -36,8 +36,7 @@ export function useTypingPlaceholder(fallback: string, enabled: boolean) {
 
   useEffect(() => {
     if (!shouldAnimate()) {
-      setText('');
-      setIsAnimating(false);
+      cancelledRef.current = true;
       return;
     }
 
