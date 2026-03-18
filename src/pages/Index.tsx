@@ -114,6 +114,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSimilarCards } from '@/hooks/useSimilarCards';
 import { useDeckIdeas } from '@/hooks/useDeckIdeas';
 import { useQuerySuggestions } from '@/hooks/useQuerySuggestions';
+import { useNoIndex } from '@/hooks/useNoIndex';
 const CardModal = lazy(() => import('@/components/CardModal'));
 
 const Index = () => {
@@ -191,6 +192,9 @@ const Index = () => {
   // "Did you mean?" suggestions when 0 results
   const { suggestions: querySuggestions, isChecking: isCheckingSuggestions } =
     useQuerySuggestions(searchQuery, totalCards, hasSearched && !isSearching);
+
+  // Prevent indexing of zero-result search pages
+  useNoIndex(hasSearched && !isSearching && totalCards === 0);
 
   const handleTrySuggestion = useCallback(
     (scryfallQuery: string) => {

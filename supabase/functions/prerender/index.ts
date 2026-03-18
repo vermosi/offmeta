@@ -235,7 +235,9 @@ function buildSearchPageHtml(
   slug: string,
   results: ScryfallSearchResult | null,
   curated?: CuratedSearch | null,
+  forceNoindex = false,
 ): string {
+  const shouldNoindex = forceNoindex || (results !== null && results.total_cards === 0);
   // Use curated editorial title/description if available
   const title = curated
     ? `${curated.title} | OffMeta`
@@ -281,6 +283,7 @@ function buildSearchPageHtml(
     canonicalUrl,
     image: OG_IMAGE_DEFAULT,
     jsonLd,
+    noindex: shouldNoindex,
     bodyContent: `
       <h1>${escapeHtml(heading)}</h1>
       ${curated ? `<p>${escapeHtml(curated.description)}</p>` : ''}
@@ -299,6 +302,7 @@ interface FullHtmlOptions {
   image: string;
   jsonLd: string;
   bodyContent: string;
+  noindex?: boolean;
 }
 
 function buildFullHtml(opts: FullHtmlOptions): string {
@@ -309,6 +313,7 @@ function buildFullHtml(opts: FullHtmlOptions): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>${escapeHtml(opts.title)}</title>
   <meta name="description" content="${escapeHtml(opts.description)}" />
+  ${opts.noindex ? '<meta name="robots" content="noindex, follow" />' : ''}
   <link rel="canonical" href="${escapeHtml(opts.canonicalUrl)}" />
 
   <!-- Open Graph -->
@@ -381,7 +386,7 @@ Deno.serve(async (req: Request) => {
       const card = await fetchCardByName(cardName);
 
       if (!card) {
-        return new Response(buildSearchPageHtml(cardName, slug, null), {
+        return new Response(buildSearchPageHtml(cardName, slug, null, null, true), {
           status: 404,
           headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300' },
         });
