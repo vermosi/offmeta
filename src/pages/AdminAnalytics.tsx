@@ -196,7 +196,7 @@ export default function AdminAnalytics() {
           id, original_query, translated_query, issue_description,
           processing_status, created_at, processed_at, generated_rule_id,
           scryfall_validation_count,
-          translation_rules ( pattern, scryfall_syntax, confidence, is_active, description )
+          translation_rules!fk_search_feedback_generated_rule ( pattern, scryfall_syntax, confidence, is_active, description )
         `,
         )
         .order('created_at', { ascending: false })
