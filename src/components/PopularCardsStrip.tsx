@@ -4,7 +4,7 @@
  * Rotates daily from a curated list of popular Commander/MTG staples.
  */
 
-import { useMemo } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { cardNameToSlug } from '@/lib/card-slug';
