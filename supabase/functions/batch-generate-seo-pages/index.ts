@@ -4,9 +4,11 @@
  * Admin-only endpoint.
  */
 
-declare const Deno: { env: { get(key: string): string | undefined }; serve: (handler: (req: Request) => Promise<Response>) => void };
+declare const Deno: {
+  env: { get(key: string): string | undefined };
+  serve: (handler: (req: Request) => Promise<Response>) => void;
+};
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders } from '../_shared/auth.ts';
 import { logEvent } from '../_shared/logger.ts';
 
@@ -44,21 +46,32 @@ Deno.serve(async (req: Request) => {
   // This function requires the service role key for inner calls anyway
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   if (!serviceKey) {
-    return new Response(JSON.stringify({ error: 'Not configured' }), { status: 500, headers });
+    return new Response(JSON.stringify({ error: 'Not configured' }), {
+      status: 500,
+      headers,
+    });
   }
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 
-  let body: { queries?: string[]; publish?: boolean; regenerate?: boolean } = {};
+  let body: { queries?: string[]; publish?: boolean; regenerate?: boolean } =
+    {};
   try {
     body = await req.json();
-  } catch { /* use defaults */ }
+  } catch {
+    /* use defaults */
+  }
 
   const queries = body.queries ?? SEED_QUERIES;
   const publish = body.publish ?? true;
   const regenerate = body.regenerate ?? false;
 
-  const results: Array<{ query: string; status: string; slug?: string; error?: string }> = [];
+  const results: Array<{
+    query: string;
+    status: string;
+    slug?: string;
+    error?: string;
+  }> = [];
 
   for (const query of queries) {
     try {
@@ -66,7 +79,7 @@ Deno.serve(async (req: Request) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${serviceKey}`,
+          Authorization: `Bearer ${serviceKey}`,
         },
         body: JSON.stringify({ query, publish, regenerate }),
       });
@@ -77,7 +90,11 @@ Deno.serve(async (req: Request) => {
         results.push({ query, status: 'success', slug: data.slug });
         logEvent('info', 'batch_seo_page_created', { query, slug: data.slug });
       } else {
-        results.push({ query, status: 'error', error: data.error ?? `HTTP ${res.status}` });
+        results.push({
+          query,
+          status: 'error',
+          error: data.error ?? `HTTP ${res.status}`,
+        });
         logEvent('warn', 'batch_seo_page_failed', { query, error: data.error });
       }
     } catch (err) {
@@ -92,7 +109,11 @@ Deno.serve(async (req: Request) => {
   const succeeded = results.filter((r) => r.status === 'success').length;
   const failed = results.filter((r) => r.status === 'error').length;
 
-  logEvent('info', 'batch_seo_complete', { total: queries.length, succeeded, failed });
+  logEvent('info', 'batch_seo_complete', {
+    total: queries.length,
+    succeeded,
+    failed,
+  });
 
   return new Response(
     JSON.stringify({ total: queries.length, succeeded, failed, results }),
