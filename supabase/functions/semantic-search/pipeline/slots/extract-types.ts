@@ -92,6 +92,20 @@ export function extractTypes(query: string): {
         remaining = remaining.replace(pattern, '').trim();
         continue;
       }
+
+      // Don't extract a type when it appears as the OBJECT of a verb phrase,
+      // e.g. "search for an artifact", "find a creature", "tutor for an enchantment".
+      // In these cases the type describes oracle text intent, not a card-type filter.
+      const objectPattern = new RegExp(
+        `\\b(?:search|find|tutor|get|put|fetch|look)\\s+(?:for\\s+)?(?:an?\\s+)?${type}s?\\b`,
+        'i',
+      );
+      if (objectPattern.test(query)) {
+        // Don't consume as type — leave for concept matching
+        remaining = remaining.replace(pattern, '').trim();
+        continue;
+      }
+
       include.push(type);
       remaining = remaining.replace(pattern, '').trim();
     }
