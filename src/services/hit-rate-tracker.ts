@@ -28,7 +28,10 @@ interface HitRateStats {
   cache: number;
   total: number;
   localPercent: number;
-  byOperation: Record<HitOperation, { local: number; scryfall: number; cache: number }>;
+  byOperation: Record<
+    HitOperation,
+    { local: number; scryfall: number; cache: number }
+  >;
   recentEvents: HitEvent[];
 }
 
@@ -40,6 +43,7 @@ const FLUSH_BATCH_SIZE = 50;
 let events: HitEvent[] = [];
 let pendingFlush: HitEvent[] = [];
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
+let visibilityListenerRegistered = false;
 
 // Restore from session on load
 try {
@@ -81,7 +85,13 @@ async function flushToDb(): Promise<void> {
   // Aggregate by source+operation for compact storage
   const aggregated = new Map<
     string,
-    { source: HitSource; operation: HitOperation; count: number; firstTs: number; lastTs: number }
+    {
+      source: HitSource;
+      operation: HitOperation;
+      count: number;
+      firstTs: number;
+      lastTs: number;
+    }
   >();
 
   for (const e of batch) {
@@ -125,18 +135,26 @@ function scheduleFlush(): void {
   if (flushTimer) return;
   flushTimer = setTimeout(() => {
     flushTimer = null;
-    flushToDb();
+    void flushToDb();
   }, FLUSH_INTERVAL_MS);
 }
 
-// Flush remaining events before page unload
-if (typeof window !== 'undefined') {
-  window.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden' && pendingFlush.length > 0) {
-      flushToDb();
-    }
-  });
+function handleVisibilityChange(): void {
+  if (document.visibilityState === 'hidden' && pendingFlush.length > 0) {
+    void flushToDb();
+  }
 }
+
+function registerVisibilityFlush(): void {
+  if (typeof document === 'undefined' || visibilityListenerRegistered) {
+    return;
+  }
+
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  visibilityListenerRegistered = true;
+}
+
+registerVisibilityFlush();
 
 /**
  * Record a data source hit.
