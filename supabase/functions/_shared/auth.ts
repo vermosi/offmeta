@@ -9,8 +9,12 @@ declare const Deno: {
 };
 
 // Dynamic ESM import helper that satisfies both Deno and frontend type-checkers
-const importSupabase = (): Promise<{ createClient: (...args: unknown[]) => unknown }> =>
-  import(/* @vite-ignore */ 'https://esm.sh/@supabase/supabase-js@2' as string) as Promise<{ createClient: (...args: unknown[]) => unknown }>;
+const importSupabase = (): Promise<{
+  createClient: (...args: unknown[]) => unknown;
+}> =>
+  import(
+    /* @vite-ignore */ 'https://esm.sh/@supabase/supabase-js@2' as string
+  ) as Promise<{ createClient: (...args: unknown[]) => unknown }>;
 
 /**
  * Validates that the request has a valid authorization header.
@@ -152,9 +156,13 @@ export async function validateAuth(req: Request): Promise<AuthResult> {
   try {
     const { createClient } = await importSupabase();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-function-type
-    const userClient: any = (createClient as Function)(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    const userClient: any = (createClient as Function)(
+      supabaseUrl,
+      supabaseAnonKey,
+      {
+        global: { headers: { Authorization: authHeader } },
+      },
+    );
 
     // Prefer JWT claims verification for signing-keys based projects when available.
     const getClaims = userClient?.auth?.getClaims;
@@ -162,9 +170,10 @@ export async function validateAuth(req: Request): Promise<AuthResult> {
       const { data: claimsData, error: claimsError } = await getClaims(token);
       if (!claimsError && claimsData?.claims) {
         // Accept both authenticated users (with sub) and anon tokens (role=anon)
-        const claimRole = typeof claimsData.claims.role === 'string'
-          ? claimsData.claims.role
-          : 'authenticated';
+        const claimRole =
+          typeof claimsData.claims.role === 'string'
+            ? claimsData.claims.role
+            : 'authenticated';
         if (typeof claimsData.claims.sub === 'string' || claimRole === 'anon') {
           return { authorized: true, role: claimRole };
         }
@@ -245,10 +254,13 @@ export function getCorsHeaders(req: Request) {
     allowedOrigins.length > 0 ? allowedOrigins : firstPartyOrigins;
 
   // Allow Lovable preview domains for non-sensitive endpoints
+  const allowPreviewOrigin =
+    isLovablePreview && !sensitiveEndpoints.has(endpoint ?? '');
+
   const corsOrigin =
     origin && effectiveOrigins.includes(origin)
       ? origin
-      : isLovablePreview
+      : allowPreviewOrigin
         ? origin!
         : effectiveOrigins[0];
 
@@ -326,10 +338,10 @@ export function requireServiceRole(
   if (!authHeader || !serviceRoleKey) {
     return {
       authorized: false,
-      response: new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers },
-      ),
+      response: new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers,
+      }),
     };
   }
 

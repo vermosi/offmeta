@@ -208,7 +208,6 @@
   p {
     line-height: 1.6;
   }
-
 }
 
 /* ========================================
@@ -216,6 +215,69 @@
    ======================================== */
 
 @layer utilities {
+  .overlay-backdrop {
+    background-color: hsl(var(--background) / 0.9);
+  }
+
+  .overlay-control {
+    background-color: hsl(var(--background) / 0.55);
+    color: hsl(var(--foreground));
+  }
+
+  .overlay-control:hover {
+    background-color: hsl(var(--background) / 0.72);
+  }
+
+  .overlay-counter {
+    color: hsl(var(--foreground) / 0.7);
+  }
+
+  .overlay-caption {
+    color: hsl(var(--foreground));
+  }
+
+  .overlay-caption-muted {
+    color: hsl(var(--foreground) / 0.65);
+  }
+
+  .brand-discord-surface {
+    background-color: hsl(var(--brand) / 0.12);
+    color: hsl(var(--brand));
+  }
+
+  .brand-discord-button {
+    background-color: hsl(var(--brand));
+    color: hsl(var(--brand-foreground));
+  }
+
+  .brand-discord-button:hover {
+    background-color: hsl(var(--brand) / 0.88);
+  }
+
+  .mtg-chip-white {
+    @apply bg-secondary text-secondary-foreground border-border;
+  }
+
+  .mtg-chip-blue {
+    @apply bg-primary/10 text-primary border-primary/20;
+  }
+
+  .mtg-chip-black {
+    @apply bg-foreground/10 text-foreground border-foreground/15;
+  }
+
+  .mtg-chip-red {
+    @apply bg-destructive/10 text-destructive border-destructive/20;
+  }
+
+  .mtg-chip-green {
+    @apply bg-success/10 text-success border-success/20;
+  }
+
+  .mtg-chip-colorless {
+    @apply bg-muted text-muted-foreground border-border;
+  }
+
   /* Container - mobile-first with tighter padding */
   .container-main {
     @apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8;
@@ -390,8 +452,13 @@
   }
 
   @keyframes onboardingPulse {
-    0%, 100% { box-shadow: 0 0 0 0 hsl(var(--accent) / 0.4); }
-    50% { box-shadow: 0 0 0 8px hsl(var(--accent) / 0); }
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 hsl(var(--accent) / 0.4);
+    }
+    50% {
+      box-shadow: 0 0 0 8px hsl(var(--accent) / 0);
+    }
   }
 
   /* Pulse ring for voice */
@@ -490,7 +557,6 @@
     background-size: 44px 44px;
     background-position: 0 0;
   }
-
 }
 
 /* ========================================
@@ -590,5 +656,7 @@
   color: hsl(var(--primary-foreground)) !important;
   border-radius: 0.5rem;
   font-weight: 500;
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1);
 }

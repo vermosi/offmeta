@@ -4,17 +4,14 @@
  * Extracted from Index.tsx to keep the page component focused on rendering.
  */
 
-import {
-  useState,
-  useCallback,
-  useRef,
-  useMemo,
-  useEffect,
-} from 'react';
+import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
 import { queryToSlug, slugToQuery } from '@/lib/search-slug';
-import type { SearchResult, UnifiedSearchBarHandle } from '@/components/UnifiedSearchBar';
+import type {
+  SearchResult,
+  UnifiedSearchBarHandle,
+} from '@/components/UnifiedSearchBar';
 import { searchCards } from '@/lib/scryfall/client';
 import type { ScryfallCard } from '@/types/card';
 import type { FilterState } from '@/types/filters';
@@ -38,7 +35,9 @@ function incrementSearchesPerSession(): void {
 }
 
 /** Parse filter state from URL search params */
-function parseFiltersFromUrl(params: URLSearchParams): Partial<FilterState> | null {
+function parseFiltersFromUrl(
+  params: URLSearchParams,
+): Partial<FilterState> | null {
   const colors = params.get('colors');
   const types = params.get('types');
   const sort = params.get('sort');
@@ -63,7 +62,10 @@ function parseFiltersFromUrl(params: URLSearchParams): Partial<FilterState> | nu
 }
 
 /** Encode filter state into URL search params (mutates params) */
-function encodeFiltersToUrl(params: URLSearchParams, filters: FilterState | null) {
+function encodeFiltersToUrl(
+  params: URLSearchParams,
+  filters: FilterState | null,
+) {
   // Remove all filter keys first
   params.delete('colors');
   params.delete('types');
@@ -76,11 +78,14 @@ function encodeFiltersToUrl(params: URLSearchParams, filters: FilterState | null
 
   if (filters.colors.length > 0) params.set('colors', filters.colors.join(','));
   if (filters.types.length > 0) params.set('types', filters.types.join(','));
-  if (filters.sortBy && filters.sortBy !== 'name-asc') params.set('sort', filters.sortBy);
+  if (filters.sortBy && filters.sortBy !== 'name-asc')
+    params.set('sort', filters.sortBy);
   if (filters.format) params.set('format', filters.format);
-  if (filters.cmcRange[0] > 0) params.set('cmc_min', String(filters.cmcRange[0]));
+  if (filters.cmcRange[0] > 0)
+    params.set('cmc_min', String(filters.cmcRange[0]));
   // Only encode cmcMax if it's not the default high value
-  if (filters.cmcRange[1] < 16) params.set('cmc_max', String(filters.cmcRange[1]));
+  if (filters.cmcRange[1] < 16)
+    params.set('cmc_max', String(filters.cmcRange[1]));
 }
 
 export function useSearch() {
@@ -103,7 +108,9 @@ export function useSearch() {
   const [originalQuery, setOriginalQuery] = useState(effectiveUrlQuery);
   const [selectedCard, setSelectedCard] = useState<ScryfallCard | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
-  const [lastSearchResult, setLastSearchResult] = useState<SearchResult | null>(null);
+  const [lastSearchResult, setLastSearchResult] = useState<SearchResult | null>(
+    null,
+  );
   const [filteredCards, setFilteredCards] = useState<ScryfallCard[]>([]);
   const [hasActiveFilters, setHasActiveFilters] = useState(false);
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
@@ -118,7 +125,14 @@ export function useSearch() {
   const initialUrlQuery = useRef(effectiveUrlQuery);
   const hasHandledInitialQuery = useRef(false);
   const hasRedirectedLegacy = useRef(false);
-  const { trackSearch, trackSearchFailure, trackCardClick, trackPagination, trackEvent, shouldLogCacheEvent } = useAnalytics();
+  const {
+    trackSearch,
+    trackSearchFailure,
+    trackCardClick,
+    trackPagination,
+    trackEvent,
+    shouldLogCacheEvent,
+  } = useAnalytics();
   const paginationPageRef = useRef(1);
 
   // --- Redirect legacy ?q= URLs to /search/:slug ---
@@ -131,7 +145,11 @@ export function useSearch() {
 
   // --- Initial mount: trigger translation for URL query ---
   useEffect(() => {
-    if (initialUrlQuery.current && searchBarRef.current && !hasHandledInitialQuery.current) {
+    if (
+      initialUrlQuery.current &&
+      searchBarRef.current &&
+      !hasHandledInitialQuery.current
+    ) {
       hasHandledInitialQuery.current = true;
       lastUrlQueryRef.current = initialUrlQuery.current;
       searchBarRef.current.triggerSearch(initialUrlQuery.current);
@@ -139,20 +157,34 @@ export function useSearch() {
   }, []);
 
   // --- URL sync (browser back/forward for slug changes) ---
-  const [prevSlugQuery, setPrevSlugQuery] = useState(slugQuery);
-  if (slugQuery !== prevSlugQuery) {
-    setPrevSlugQuery(slugQuery);
+  const prevSlugQueryRef = useRef(slugQuery);
+
+  useEffect(() => {
+    if (slugQuery === prevSlugQueryRef.current) return;
+
+    prevSlugQueryRef.current = slugQuery;
 
     if (!slugQuery) {
-      setSearchQuery('');
-      setOriginalQuery('');
-      setHasSearched(false);
-      setLastSearchResult(null);
-      setFilteredCards([]);
-      setHasActiveFilters(false);
-      setCurrentRequestId(null);
+      let cancelled = false;
+
+      queueMicrotask(() => {
+        if (cancelled) return;
+
+        setSearchQuery('');
+        setOriginalQuery('');
+        setHasSearched(false);
+        setLastSearchResult(null);
+        setFilteredCards([]);
+        setHasActiveFilters(false);
+        setActiveFilters(null);
+        setCurrentRequestId(null);
+      });
+
+      return () => {
+        cancelled = true;
+      };
     }
-  }
+  }, [slugQuery]);
 
   // Trigger search bar for slug changes (browser back/forward only, skip initial)
   useEffect(() => {
@@ -179,7 +211,8 @@ export function useSearch() {
     isFetchingNextPage,
   } = useInfiniteQuery({
     queryKey: ['cards', validatedSearchQuery, scryfallLang],
-    queryFn: ({ pageParam = 1 }) => searchCards(validatedSearchQuery, pageParam, scryfallLang),
+    queryFn: ({ pageParam = 1 }) =>
+      searchCards(validatedSearchQuery, pageParam, scryfallLang),
     getNextPageParam: (lastPage, allPages) =>
       lastPage.has_more ? allPages.length + 1 : undefined,
     initialPageParam: 1,
@@ -258,7 +291,17 @@ export function useSearch() {
         error_type: 'zero_results',
       });
     }
-  }, [totalCards, lastSearchResult, originalQuery, trackEvent, trackSearchFailure, currentRequestId, hasSearched, isSearching, validatedSearchQuery]);
+  }, [
+    totalCards,
+    lastSearchResult,
+    originalQuery,
+    trackEvent,
+    trackSearchFailure,
+    currentRequestId,
+    hasSearched,
+    isSearching,
+    validatedSearchQuery,
+  ]);
 
   // --- Track pagination (load-more) ---
   const currentPageCount = data?.pages.length ?? 0;
@@ -273,8 +316,10 @@ export function useSearch() {
     paginationPageRef.current = currentPageCount || 1;
   }, [currentPageCount, originalQuery, trackPagination]);
 
-  const hasSortOverride = activeFilters?.sortBy && activeFilters.sortBy !== 'name-asc';
-  const displayCards = (hasActiveFilters || hasSortOverride) ? filteredCards : cards;
+  const hasSortOverride =
+    activeFilters?.sortBy && activeFilters.sortBy !== 'name-asc';
+  const displayCards =
+    hasActiveFilters || hasSortOverride ? filteredCards : cards;
 
   // --- Callbacks ---
 
@@ -305,7 +350,9 @@ export function useSearch() {
         setLastIntent(null);
       }
 
-      queryClient.invalidateQueries({ queryKey: ['cards', executedQuery, scryfallLang] });
+      queryClient.invalidateQueries({
+        queryKey: ['cards', executedQuery, scryfallLang],
+      });
 
       const urlValue = naturalQuery || query;
       if (urlValue) {
@@ -342,7 +389,14 @@ export function useSearch() {
         incrementSearchesPerSession();
       }
     },
-    [trackSearch, trackEvent, shouldLogCacheEvent, navigate, queryClient, scryfallLang],
+    [
+      trackSearch,
+      trackEvent,
+      shouldLogCacheEvent,
+      navigate,
+      queryClient,
+      scryfallLang,
+    ],
   );
 
   const handleRerunEditedQuery = useCallback(
@@ -363,8 +417,17 @@ export function useSearch() {
       if (!validation.valid) {
         setLastSearchResult((prev) =>
           prev
-            ? { ...prev, scryfallQuery: validation.sanitized, validationIssues: validation.issues }
-            : { scryfallQuery: validation.sanitized, validationIssues: validation.issues, explanation: undefined, showAffiliate: false },
+            ? {
+                ...prev,
+                scryfallQuery: validation.sanitized,
+                validationIssues: validation.issues,
+              }
+            : {
+                scryfallQuery: validation.sanitized,
+                validationIssues: validation.issues,
+                explanation: undefined,
+                showAffiliate: false,
+              },
         );
         return;
       }
@@ -374,11 +437,22 @@ export function useSearch() {
 
       setLastSearchResult((prev) =>
         prev
-          ? { ...prev, scryfallQuery: validation.sanitized, validationIssues: [] }
-          : { scryfallQuery: validation.sanitized, explanation: undefined, showAffiliate: false, validationIssues: [] },
+          ? {
+              ...prev,
+              scryfallQuery: validation.sanitized,
+              validationIssues: [],
+            }
+          : {
+              scryfallQuery: validation.sanitized,
+              explanation: undefined,
+              showAffiliate: false,
+              validationIssues: [],
+            },
       );
 
-      queryClient.invalidateQueries({ queryKey: ['cards', validation.sanitized, scryfallLang] });
+      queryClient.invalidateQueries({
+        queryKey: ['cards', validation.sanitized, scryfallLang],
+      });
 
       trackEvent('rerun_edited_query', {
         original_query: originalQuery,
@@ -416,21 +490,28 @@ export function useSearch() {
   }, [originalQuery]);
 
   const handleFilteredCards = useCallback(
-    (filtered: ScryfallCard[], filtersActive: boolean, filters: FilterState) => {
+    (
+      filtered: ScryfallCard[],
+      filtersActive: boolean,
+      filters: FilterState,
+    ) => {
       setFilteredCards(filtered);
       setHasActiveFilters(filtersActive);
       setActiveFilters(filters);
 
       // Sync filters to URL
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        if (filtersActive) {
-          encodeFiltersToUrl(next, filters);
-        } else {
-          encodeFiltersToUrl(next, null);
-        }
-        return next;
-      }, { replace: true });
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (filtersActive) {
+            encodeFiltersToUrl(next, filters);
+          } else {
+            encodeFiltersToUrl(next, null);
+          }
+          return next;
+        },
+        { replace: true },
+      );
     },
     [setSearchParams],
   );
