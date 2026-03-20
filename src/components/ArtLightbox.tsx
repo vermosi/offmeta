@@ -16,7 +16,11 @@ interface ArtLightboxProps {
   onClose: () => void;
 }
 
-export function ArtLightbox({ cards, initialIndex, onClose }: ArtLightboxProps) {
+export function ArtLightbox({
+  cards,
+  initialIndex,
+  onClose,
+}: ArtLightboxProps) {
   const [index, setIndex] = useState(initialIndex);
   const [loaded, setLoaded] = useState(false);
   const touchStart = useRef<number | null>(null);
@@ -52,7 +56,9 @@ export function ArtLightbox({ cards, initialIndex, onClose }: ArtLightboxProps) 
   // Lock body scroll
   useEffect(() => {
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, []);
 
   // Touch swipe
@@ -63,7 +69,8 @@ export function ArtLightbox({ cards, initialIndex, onClose }: ArtLightboxProps) 
     if (touchStart.current === null) return;
     const diff = e.changedTouches[0].clientX - touchStart.current;
     if (Math.abs(diff) > 50) {
-      if (diff < 0) goNext(); else goPrev();
+      if (diff < 0) goNext();
+      else goPrev();
     }
     touchStart.current = null;
   };
@@ -73,7 +80,7 @@ export function ArtLightbox({ cards, initialIndex, onClose }: ArtLightboxProps) 
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm"
+      className="overlay-backdrop fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-sm"
       onClick={onClose}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
@@ -84,26 +91,37 @@ export function ArtLightbox({ cards, initialIndex, onClose }: ArtLightboxProps) 
       {/* Close */}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+        className="overlay-control absolute top-4 right-4 z-10 rounded-full p-2 transition-colors"
         aria-label="Close"
       >
         <X className="h-5 w-5" />
       </button>
 
       {/* Card counter (visual) */}
-      <span className="absolute top-4 left-4 text-xs text-white/60 tabular-nums" aria-hidden="true">
+      <span
+        className="overlay-counter absolute top-4 left-4 text-xs tabular-nums"
+        aria-hidden="true"
+      >
         {index + 1} / {cards.length}
       </span>
       {/* Screen reader card position */}
-      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+      <div
+        className="sr-only"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         Card {index + 1} of {cards.length}: {card.name}
       </div>
 
       {/* Prev */}
       {cards.length > 1 && (
         <button
-          onClick={(e) => { e.stopPropagation(); goPrev(); }}
-          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            goPrev();
+          }}
+          className="overlay-control absolute left-2 top-1/2 -translate-y-1/2 rounded-full p-2 transition-colors sm:left-4"
           aria-label="Previous card"
         >
           <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -133,8 +151,11 @@ export function ArtLightbox({ cards, initialIndex, onClose }: ArtLightboxProps) 
       {/* Next */}
       {cards.length > 1 && (
         <button
-          onClick={(e) => { e.stopPropagation(); goNext(); }}
-          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            goNext();
+          }}
+          className="overlay-control absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-2 transition-colors sm:right-4"
           aria-label="Next card"
         >
           <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -143,11 +164,11 @@ export function ArtLightbox({ cards, initialIndex, onClose }: ArtLightboxProps) 
 
       {/* Card name */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center">
-        <p className="text-sm sm:text-base text-white font-medium drop-shadow-lg">
+        <p className="overlay-caption text-sm sm:text-base font-medium drop-shadow-lg">
           {card.name}
         </p>
         {card.artist && (
-          <p className="text-[11px] text-white/50 mt-0.5">
+          <p className="overlay-caption-muted mt-0.5 text-[11px]">
             Art by {card.artist}
           </p>
         )}
