@@ -18,9 +18,9 @@ describe('clientInput validation', () => {
     expect(validatePasswordInput('123').success).toBe(false);
   });
 
-  it('rejects malformed search input', () => {
+  it('sanitizes search input without blocking long queries', () => {
     expect(validateSearchInput('   ').success).toBe(false);
-    expect(validateSearchInput('aaaaaaaaaaaaaaaa').success).toBe(false);
+    expect(validateSearchInput('a'.repeat(500)).success).toBe(true);
     expect(validateSearchInput('best mana rocks').success).toBe(true);
   });
 

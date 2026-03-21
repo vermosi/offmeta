@@ -9,7 +9,6 @@ export type ClientValidationResult<T> =
   | { success: false; message: string };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MAX_SEARCH_QUERY_LENGTH = 300;
 const MAX_ADMIN_QUERY_LENGTH = 200;
 
 export function validateEmailAddress(
@@ -51,23 +50,6 @@ export function validateSearchInput(
 
   if (!sanitized) {
     return { success: false, message: 'Enter a search query.' };
-  }
-
-  if (sanitized.length > MAX_SEARCH_QUERY_LENGTH) {
-    return {
-      success: false,
-      message: 'Search queries must be 300 characters or fewer.',
-    };
-  }
-
-  if (
-    hasRepetitiveChars(sanitized, 8) ||
-    !hasMinimumAlphanumeric(sanitized, 0.2)
-  ) {
-    return {
-      success: false,
-      message: 'Search query looks invalid. Please revise it and try again.',
-    };
   }
 
   return { success: true, data: { query: sanitized } };
