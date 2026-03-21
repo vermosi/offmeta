@@ -9,7 +9,7 @@ declare const Deno: {
   serve: (handler: (req: Request) => Promise<Response>) => void;
 };
 
-import { getCorsHeaders } from '../_shared/auth.ts';
+import { getCorsHeaders, requireServiceRole } from '../_shared/auth.ts';
 import { logEvent } from '../_shared/logger.ts';
 
 const SEED_QUERIES = [
@@ -41,6 +41,11 @@ Deno.serve(async (req: Request) => {
 
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  const authz = requireServiceRole(req, corsHeaders);
+  if (!authz.authorized) {
+    return authz.response;
   }
 
   // This function requires the service role key for inner calls anyway

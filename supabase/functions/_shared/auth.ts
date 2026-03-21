@@ -439,3 +439,23 @@ export async function requireAdmin(
 
   return { authorized: true, userId: user.id };
 }
+
+export async function requireAdminOrService(
+  req: Request,
+  corsHeaders: Record<string, string>,
+): Promise<
+  | { authorized: true; mode: 'service' | 'admin'; userId?: string }
+  | { authorized: false; response: Response }
+> {
+  const serviceCheck = requireServiceRole(req, corsHeaders);
+  if (serviceCheck.authorized) {
+    return { authorized: true, mode: 'service' };
+  }
+
+  const adminCheck = await requireAdmin(req, corsHeaders);
+  if (!adminCheck.authorized) {
+    return adminCheck;
+  }
+
+  return { authorized: true, mode: 'admin', userId: adminCheck.userId };
+}
