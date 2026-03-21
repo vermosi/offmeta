@@ -16,6 +16,7 @@ import { CLIENT_CONFIG } from '@/lib/config';
 import type { FilterState } from '@/types/filters';
 import type { SearchResult } from '@/components/UnifiedSearchBar';
 import { supabase } from '@/integrations/supabase/client';
+import { validateSearchInput } from '@/lib/validation/clientInput';
 
 export type SearchPhase = 'idle' | 'translating' | 'fetching';
 
@@ -40,9 +41,10 @@ function trackFallbackEvent(
   query: string,
   details: Record<string, unknown>,
 ): void {
-  const sessionId = typeof sessionStorage !== 'undefined'
-    ? sessionStorage.getItem('offmeta_session_id')
-    : null;
+  const sessionId =
+    typeof sessionStorage !== 'undefined'
+      ? sessionStorage.getItem('offmeta_session_id')
+      : null;
 
   supabase
     .from('analytics_events')
@@ -58,7 +60,9 @@ function trackFallbackEvent(
     })
     .then(({ error }) => {
       if (error) {
-        logger.warn('[SearchDiag] Failed to track fallback event', { error: String(error) });
+        logger.warn('[SearchDiag] Failed to track fallback event', {
+          error: String(error),
+        });
       }
     });
 }
@@ -114,10 +118,20 @@ export function useSearchHandler({
       searchQuery?: string,
       options?: { bypassCache?: boolean; cacheSalt?: string },
     ) => {
-      const rawQuery = (searchQuery || query).trim();
+      const rawQuery = searchQuery || query;
+      const validatedInput = validateSearchInput(rawQuery);
 
       // Prevent empty or rate-limited searches
-      if (!rawQuery) return;
+      if (!validatedInput.success) {
+        if (rawQuery.trim()) {
+          toast.error('Search unavailable', {
+            description: validatedInput.message,
+          });
+        }
+        return;
+      }
+
+      const sanitizedQuery = validatedInput.data.query;
       if (rateLimitedUntil && Date.now() < rateLimitedUntil) {
         toast.error('Please wait', {
           description: `Rate limited. Try again in ${rateLimitCountdownRef.current}s`,
@@ -126,13 +140,13 @@ export function useSearchHandler({
       }
 
       // Estimate query complexity and auto-simplify if very complex
-      const complexity = estimateQueryComplexity(rawQuery);
-      let queryToSearch = rawQuery;
+      const complexity = estimateQueryComplexity(sanitizedQuery);
+      let queryToSearch = sanitizedQuery;
 
       if (complexity.shouldSimplify && complexity.simplifiedQuery) {
         queryToSearch = complexity.simplifiedQuery;
         logger.info('[SearchDiag] Query auto-simplified', {
-          original: rawQuery,
+          original: sanitizedQuery,
           simplified: queryToSearch,
           score: complexity.score,
           level: complexity.level,
@@ -144,13 +158,14 @@ export function useSearchHandler({
         });
       } else if (complexity.level === 'complex') {
         toast.info('Complex query', {
-          description: 'This search has many constraints — it may take a few extra seconds.',
+          description:
+            'This search has many constraints — it may take a few extra seconds.',
           duration: 4000,
         });
       }
 
       lastSearchRef.current = queryToSearch;
-      addToHistory(rawQuery); // Always store the original in history
+      addToHistory(sanitizedQuery);
 
       const currentToken = ++requestTokenRef.current;
       const cacheSalt = options?.cacheSalt;
@@ -167,7 +182,8 @@ export function useSearchHandler({
       const searchStartTime = Date.now();
       logger.info('[SearchDiag] Search started', {
         query: queryToSearch,
-        originalQuery: rawQuery !== queryToSearch ? rawQuery : undefined,
+        originalQuery:
+          sanitizedQuery !== queryToSearch ? sanitizedQuery : undefined,
         complexity: complexity.level,
         hasFilters: !!filters,
         bypassCache: !!options?.bypassCache,
@@ -214,15 +230,16 @@ export function useSearchHandler({
         setSearchPhase('fetching');
 
         // Add simplification note to explanation if query was auto-simplified
-        const explanation = complexity.shouldSimplify && result.explanation
-          ? {
-              ...result.explanation,
-              assumptions: [
-                ...(result.explanation.assumptions || []),
-                `Query was auto-simplified from "${rawQuery}" to "${queryToSearch}"`,
-              ],
-            }
-          : result.explanation;
+        const explanation =
+          complexity.shouldSimplify && result.explanation
+            ? {
+                ...result.explanation,
+                assumptions: [
+                  ...(result.explanation.assumptions || []),
+                  `Query was auto-simplified from "${rawQuery}" to "${queryToSearch}"`,
+                ],
+              }
+            : result.explanation;
 
         onSearch(
           result.scryfallQuery,

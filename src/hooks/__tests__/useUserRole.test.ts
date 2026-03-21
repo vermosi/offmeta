@@ -9,7 +9,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 // Mock useAuth
 const mockUser = vi.fn();
 vi.mock('@/hooks/useAuth', () => ({
-  useAuth: () => ({ user: mockUser() }),
+  useAuth: () => ({ user: mockUser(), isLoading: false }),
 }));
 
 // Mock supabase
@@ -43,12 +43,23 @@ describe('useUserRole', () => {
     expect(result.current.isLoading).toBe(false);
   });
 
-  it('returns isLoading true initially when user exists', () => {
+  it('returns isLoading true initially when user exists', async () => {
     mockUser.mockReturnValue({ id: 'user-1' });
-    mockMaybeSingle.mockResolvedValue({ data: null });
+    let resolvePromise: ((value: { data: null }) => void) | null = null;
+    mockMaybeSingle.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolvePromise = resolve;
+        }),
+    );
 
     const { result } = renderHook(() => useUserRole('admin'));
     expect(result.current.isLoading).toBe(true);
+
+    resolvePromise?.({ data: null });
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
   });
 
   it('resolves hasRole true when role exists', async () => {

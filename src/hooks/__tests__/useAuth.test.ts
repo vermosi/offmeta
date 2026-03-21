@@ -14,12 +14,17 @@ vi.mock('@/integrations/supabase/client', () => {
     supabase: {
       auth: {
         getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
-        onAuthStateChange: vi.fn((_cb: (event: string, session: unknown) => void) => {
-          authListeners.push(_cb);
-          return { data: { subscription: { unsubscribe: vi.fn() } } };
-        }),
+        onAuthStateChange: vi.fn(
+          (_cb: (event: string, session: unknown) => void) => {
+            authListeners.push(_cb);
+            return { data: { subscription: { unsubscribe: vi.fn() } } };
+          },
+        ),
         signInWithPassword: vi.fn().mockResolvedValue({ error: null }),
-        signUp: vi.fn().mockResolvedValue({ data: { user: { identities: [{}] } }, error: null }),
+        signUp: vi.fn().mockResolvedValue({
+          data: { user: { identities: [{}] } },
+          error: null,
+        }),
         signOut: vi.fn().mockResolvedValue({ error: null }),
         resetPasswordForEmail: vi.fn().mockResolvedValue({ error: null }),
         updateUser: vi.fn().mockResolvedValue({ error: null }),
@@ -85,8 +90,21 @@ describe('useAuthProvider', () => {
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
-    const res = await act(() => result.current.signIn('test@test.com', 'bad'));
-    expect(res.error).toBe('Invalid credentials');
+    const res = await act(() =>
+      result.current.signIn('test@test.com', 'badpass'),
+    );
+    expect(res.error).toBe('Invalid email or password.');
+  });
+
+  it('validates email format before sign-in requests', async () => {
+    const { result } = renderHook(() => useAuthProvider());
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+    const res = await act(() =>
+      result.current.signIn('bad-email', 'password123'),
+    );
+    expect(res.error).toBe('Enter a valid email address.');
   });
 
   it('signIn returns null error on success', async () => {
@@ -94,7 +112,9 @@ describe('useAuthProvider', () => {
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
-    const res = await act(() => result.current.signIn('test@test.com', 'pass'));
+    const res = await act(() =>
+      result.current.signIn('test@test.com', 'pass123'),
+    );
     expect(res.error).toBeNull();
   });
 
@@ -109,8 +129,10 @@ describe('useAuthProvider', () => {
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
-    const res = await act(() => result.current.signUp('dup@test.com', 'pass'));
-    expect(res.error).toContain('already exists');
+    const res = await act(() =>
+      result.current.signUp('dup@test.com', 'pass123'),
+    );
+    expect(res.error).toContain('try signing in or resetting your password');
     expect(res.needsConfirmation).toBe(false);
   });
 
@@ -119,7 +141,9 @@ describe('useAuthProvider', () => {
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
-    const res = await act(() => result.current.signUp('new@test.com', 'pass'));
+    const res = await act(() =>
+      result.current.signUp('new@test.com', 'pass123'),
+    );
     expect(res.error).toBeNull();
     expect(res.needsConfirmation).toBe(true);
   });

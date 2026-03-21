@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { validateAdminSeoQuery } from '@/lib/validation/clientInput';
 
 interface SeoPage {
   id: string;
@@ -115,11 +116,13 @@ export default function AdminSeoPages() {
   });
 
   const generateNew = useCallback(async () => {
-    if (!newQuery.trim() || newQuery.length < 3) {
-      toast.error('Query must be at least 3 characters');
+    const validation = validateAdminSeoQuery(newQuery);
+    if (!validation.success) {
+      toast.error(validation.message);
       return;
     }
-    regeneratePage.mutate(newQuery.trim());
+
+    regeneratePage.mutate(validation.data.query);
     setNewQuery('');
   }, [newQuery, regeneratePage]);
 
@@ -258,9 +261,7 @@ export default function AdminSeoPages() {
                       publish: page.status !== 'published',
                     })
                   }
-                  title={
-                    page.status === 'published' ? 'Unpublish' : 'Publish'
-                  }
+                  title={page.status === 'published' ? 'Unpublish' : 'Publish'}
                 >
                   {page.status === 'published' ? (
                     <EyeOff className="h-3.5 w-3.5" />

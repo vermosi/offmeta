@@ -4,12 +4,19 @@
  * validates cards against local cards table, and stores in the seo_pages table.
  */
 
-declare const Deno: { env: { get(key: string): string | undefined }; serve: (handler: (req: Request) => Promise<Response>) => void };
+declare const Deno: {
+  env: { get(key: string): string | undefined };
+  serve: (handler: (req: Request) => Promise<Response>) => void;
+};
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { callAIWithToolsTracked, aiErrorResponse } from '../_shared/aiClient.ts';
+import {
+  callAIWithToolsTracked,
+  aiErrorResponse,
+} from '../_shared/aiClient.ts';
 import { logEvent } from '../_shared/logger.ts';
 import { runRequestGuard } from '../_shared/requestGuard.ts';
+import { requireAdminOrService } from '../_shared/auth.ts';
 
 interface SeoPageContent {
   tldr: string;
@@ -53,7 +60,10 @@ async function validateCards(
     .in('name', names);
 
   // Build a lookup map (exact match first)
-  const exactMap = new Map<string, { name: string; mana_cost: string | null; type_line: string | null }>();
+  const exactMap = new Map<
+    string,
+    { name: string; mana_cost: string | null; type_line: string | null }
+  >();
   for (const c of dbCards ?? []) {
     exactMap.set(c.name.toLowerCase(), c);
   }
@@ -101,10 +111,18 @@ Deno.serve(async (req: Request) => {
   if (!guard.ok) return guard.response;
   const { ctx } = guard;
 
+  const authz = await requireAdminOrService(req, ctx.corsHeaders);
+  if (!authz.authorized) return authz.response;
+
   try {
     const { query, publish = false, regenerate = false } = await req.json();
 
-    if (!query || typeof query !== 'string' || query.length < 3 || query.length > 200) {
+    if (
+      !query ||
+      typeof query !== 'string' ||
+      query.length < 3 ||
+      query.length > 200
+    ) {
       return new Response(
         JSON.stringify({ error: 'Query must be 3-200 characters' }),
         { status: 400, headers: ctx.headers },
@@ -160,12 +178,19 @@ Include:
           type: 'function',
           function: {
             name: 'generate_seo_page',
-            description: 'Generate structured SEO page content for an MTG query',
+            description:
+              'Generate structured SEO page content for an MTG query',
             parameters: {
               type: 'object',
               properties: {
-                tldr: { type: 'string', description: 'TL;DR answer (2-3 sentences)' },
-                explanation: { type: 'string', description: 'Expanded explanation (2-3 paragraphs)' },
+                tldr: {
+                  type: 'string',
+                  description: 'TL;DR answer (2-3 sentences)',
+                },
+                explanation: {
+                  type: 'string',
+                  description: 'Expanded explanation (2-3 paragraphs)',
+                },
                 cards: {
                   type: 'array',
                   items: {
@@ -195,7 +220,14 @@ Include:
                   },
                 },
               },
-              required: ['tldr', 'explanation', 'cards', 'whyTheseWork', 'relatedQueries', 'faqs'],
+              required: [
+                'tldr',
+                'explanation',
+                'cards',
+                'whyTheseWork',
+                'relatedQueries',
+                'faqs',
+              ],
               additionalProperties: false,
             },
           },
@@ -213,7 +245,10 @@ Include:
     });
 
     // Validate cards against local DB
-    const validatedCards = await validateCards(result.data.cards ?? [], supabase);
+    const validatedCards = await validateCards(
+      result.data.cards ?? [],
+      supabase,
+    );
 
     const content: SeoPageContent = {
       ...result.data,
@@ -231,11 +266,13 @@ Include:
     });
 
     if (insertError) {
-      logEvent('error', 'seo_page_insert_failed', { error: insertError.message });
-      return new Response(
-        JSON.stringify({ error: 'Failed to store page' }),
-        { status: 500, headers: ctx.headers },
-      );
+      logEvent('error', 'seo_page_insert_failed', {
+        error: insertError.message,
+      });
+      return new Response(JSON.stringify({ error: 'Failed to store page' }), {
+        status: 500,
+        headers: ctx.headers,
+      });
     }
 
     return new Response(
