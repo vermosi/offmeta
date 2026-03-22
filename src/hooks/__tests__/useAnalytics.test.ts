@@ -7,11 +7,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 
 // Mock Supabase
-const mockInsertThen = vi.fn().mockReturnValue({ then: vi.fn((cb) => cb({ error: null })) });
+const mockInsertThen = vi
+  .fn()
+  .mockReturnValue({ then: vi.fn((cb) => cb({ error: null })) });
 const mockInsert = vi.fn().mockReturnValue(mockInsertThen);
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: () => ({ insert: (...args: unknown[]) => { mockInsert(...args); return { then: vi.fn((cb) => cb({ error: null })) }; } }),
+    from: () => ({
+      insert: (...args: unknown[]) => {
+        mockInsert(...args);
+        return { then: vi.fn((cb) => cb({ error: null })) };
+      },
+    }),
   },
 }));
 
@@ -36,6 +43,14 @@ describe('useAnalytics', () => {
     expect(result.current.trackAffiliateClick).toBeTypeOf('function');
     expect(result.current.trackPagination).toBeTypeOf('function');
     expect(result.current.trackFeedback).toBeTypeOf('function');
+    expect(result.current.trackLandingPageView).toBeTypeOf('function');
+    expect(result.current.trackRouteView).toBeTypeOf('function');
+    expect(result.current.trackExampleQueryImpression).toBeTypeOf('function');
+    expect(result.current.trackExampleQueryClick).toBeTypeOf('function');
+    expect(result.current.trackExampleQuerySearchSuccess).toBeTypeOf(
+      'function',
+    );
+    expect(result.current.trackExampleQueryResultClick).toBeTypeOf('function');
     expect(result.current.trackEvent).toBeTypeOf('function');
     expect(result.current.shouldLogCacheEvent).toBeTypeOf('function');
   });
@@ -91,6 +106,20 @@ describe('useAnalytics', () => {
     ]);
   });
 
+  it('trackLandingPageView sends landing_page_view event', async () => {
+    const { result } = renderHook(() => useAnalytics());
+
+    await act(async () => {
+      result.current.trackLandingPageView({
+        path: '/',
+      });
+    });
+
+    expect(mockInsert).toHaveBeenCalledWith([
+      expect.objectContaining({ event_type: 'landing_page_view' }),
+    ]);
+  });
+
   it('shouldLogCacheEvent deduplicates within window', () => {
     const { result } = renderHook(() => useAnalytics());
 
@@ -116,7 +145,9 @@ describe('useAnalytics', () => {
   it('reuses existing session ID', () => {
     sessionStorage.setItem('offmeta_session_id', 'existing-session');
     renderHook(() => useAnalytics());
-    expect(sessionStorage.getItem('offmeta_session_id')).toBe('existing-session');
+    expect(sessionStorage.getItem('offmeta_session_id')).toBe(
+      'existing-session',
+    );
   });
 
   it('rate limits after max events per window', async () => {

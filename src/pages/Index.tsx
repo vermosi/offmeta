@@ -12,7 +12,9 @@ import {
   useCallback,
   useState,
   useMemo,
+  useRef,
 } from 'react';
+import { useLocation } from 'react-router-dom';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 const EditableQueryBar = lazy(() =>
   import('@/components/EditableQueryBar').then((m) => ({
@@ -45,6 +47,11 @@ const HeroSection = lazy(() =>
 const HomeDiscoverySection = lazy(() =>
   import('@/components/HomeDiscoverySection').then((m) => ({
     default: m.HomeDiscoverySection,
+  })),
+);
+const SearchMicroDemo = lazy(() =>
+  import('@/components/SearchMicroDemo').then((m) => ({
+    default: m.SearchMicroDemo,
   })),
 );
 import { ScrollToTop } from '@/components/ScrollToTop';
@@ -97,12 +104,16 @@ import { useSimilarCards } from '@/hooks/useSimilarCards';
 import { useDeckIdeas } from '@/hooks/useDeckIdeas';
 import { useQuerySuggestions } from '@/hooks/useQuerySuggestions';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import { useAnalytics } from '@/hooks/useAnalytics';
 const CardModal = lazy(() => import('@/components/CardModal'));
 
 const Index = () => {
   const { t } = useTranslation();
+  const location = useLocation();
+  const { trackLandingPageView, trackRouteView } = useAnalytics();
   const { user } = useAuth();
   const collectionLookup = useCollectionLookup();
+  const lastTrackedRouteRef = useRef<string | null>(null);
 
   const {
     searchQuery,
@@ -257,6 +268,31 @@ const Index = () => {
     return () => clearTimeout(timeout);
   }, []);
 
+  useEffect(() => {
+    const routeKey = `${location.pathname}${location.search}${location.hash}`;
+    if (lastTrackedRouteRef.current === routeKey) return;
+    lastTrackedRouteRef.current = routeKey;
+
+    const routeData = {
+      path: location.pathname,
+      search: location.search || undefined,
+      referrer: document.referrer || undefined,
+    };
+
+    trackRouteView(routeData);
+
+    if (location.pathname === '/' && !location.search && !hasSearched) {
+      trackLandingPageView(routeData);
+    }
+  }, [
+    hasSearched,
+    location.hash,
+    location.pathname,
+    location.search,
+    trackLandingPageView,
+    trackRouteView,
+  ]);
+
   const showSimilarTab = hasSearched && !isSearching;
   const showDeckIdeasTab = hasSearched && !isSearching && isDeckQuery;
   const showExplanationTab = hasSearched && !isSearching;
@@ -326,6 +362,12 @@ const Index = () => {
                 isCardFetching={isSearching}
               />
             </div>
+
+            {!hasSearched && (
+              <div className="animate-reveal">
+                <SearchMicroDemo />
+              </div>
+            )}
 
             {hasSearched && (
               <div className="animate-reveal flex items-start gap-2">

@@ -63,8 +63,8 @@ describe('HomeDiscoverySection', () => {
     const curatedIdx = testIds.indexOf('curated-searches');
     const faqIdx = testIds.indexOf('faq-section');
 
-    expect(recentIdx).toBeLessThan(curatedIdx);
-    expect(curatedIdx).toBeLessThan(faqIdx);
+    expect(curatedIdx).toBeLessThan(recentIdx);
+    expect(recentIdx).toBeLessThan(faqIdx);
   });
 
   it('forwards onSearch to RecentSearches', () => {

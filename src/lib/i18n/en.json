@@ -8,8 +8,6 @@
   "header.about": "About",
   "header.openMenu": "Open menu",
   "header.closeMenu": "Close menu",
-
-
   "search.placeholder": "Describe what you're looking for...",
   "search.placeholderMobile": "Describe a card...",
   "search.button": "Search",
@@ -24,13 +22,11 @@
   "search.searchFor": "Search for {query}",
   "search.waitSeconds": "Wait {seconds}s",
   "search.searchForCards": "Search for cards",
-
-  "hero.title": "Find Magic Cards",
-  "hero.titleAccent": "Like You Think",
+  "hero.title": "Search Magic cards in",
+  "hero.titleAccent": "plain English",
   "hero.subtitle": "Skip Scryfall syntax. Just describe what you need —",
   "hero.subtitleAccent": "OffMeta translates it instantly.",
   "hero.orStartTyping": "or start typing below ↓",
-
   "filters.colors": "Colors",
   "filters.mustHaveAll": "Must have all",
   "filters.cardType": "Card Type",
@@ -54,7 +50,6 @@
   "filters.colorRed": "Filter by Red",
   "filters.colorGreen": "Filter by Green",
   "filters.colorColorless": "Filter by Colorless",
-
   "results.cards": "cards",
   "results.noMatch": "No cards match your filters.",
   "results.adjustFilters": "Try adjusting your filter criteria.",
@@ -62,7 +57,6 @@
   "results.loadingMore": "Loading more cards...",
   "results.endMessage": "You've reached the end · {count} cards total",
   "results.cardsTotal": "{count} cards total",
-
   "empty.noCards": "No cards found",
   "empty.noMatch": "We couldn't find any cards matching",
   "empty.tips": "Search tips",
@@ -71,12 +65,10 @@
   "empty.tip2": "Check spelling or use simpler keywords",
   "empty.tip3": "Search by card type: 'legendary dragons'",
   "empty.tip4": "Search by mechanic: 'cards with flying'",
-
   "view.grid": "Grid view",
   "view.list": "List view",
   "view.images": "Images only",
   "view.label": "View mode",
-
   "export.label": "Export results",
   "export.copyNames": "Copy card names",
   "export.downloadCsv": "Download CSV",
@@ -85,18 +77,15 @@
   "export.downloaded": "Downloaded!",
   "export.downloadedDesc": "cards exported as CSV",
   "export.copyFailed": "Failed to copy to clipboard",
-
   "compare.label": "Compare",
   "compare.title": "Compare Cards",
   "compare.selected": "selected",
   "compare.clear": "Clear",
   "compare.addTo": "Add to comparison",
   "compare.removeFrom": "Remove from comparison",
-
   "theme.switchToLight": "Switch to light theme",
   "theme.switchToDark": "Switch to dark theme",
   "theme.toggle": "Toggle theme",
-
   "footer.source": "Source",
   "footer.poweredBy": "Powered by Scryfall",
   "footer.poweredByLabel": "Powered by",
@@ -111,14 +100,12 @@
   "footer.about": "About",
   "footer.deckRecs": "Deck Recs",
   "footer.deckBuilder": "Deck Builder",
-
   "a11y.skipToContent": "Skip to main content",
   "a11y.skipToSearch": "Skip to search",
   "a11y.searchResults": "Search results",
   "a11y.previousCard": "Previous card",
   "a11y.nextCard": "Next card",
   "a11y.close": "Close",
-
   "onboarding.title": "Welcome to OffMeta",
   "onboarding.step1Title": "Search in plain English",
   "onboarding.step1Desc": "Just type what you're looking for — no special syntax needed. Try something like 'cheap green ramp spells' or 'creatures that make treasure'.",
@@ -134,7 +121,6 @@
   "a11y.foundCards": "Found {count} cards",
   "a11y.noCardsFound": "No cards found",
   "a11y.cardsCount": "{count} cards",
-
   "nav.archetypes": "Archetypes",
   "nav.combos": "Combos",
   "nav.deckRecs": "Deck Recs",
@@ -145,11 +131,9 @@
   "nav.signIn": "Sign In",
   "nav.signOut": "Sign Out",
   "nav.userMenu": "User menu",
-
   "language.label": "Language",
   "language.en": "English",
   "language.es": "Español",
-
   "results.fallbackLangNotice": "Showing English results — not all cards are available in this language.",
   "card.oracleTextEnglish": "Oracle text (English)",
   "card.reservedList": "Reserved List",
@@ -188,23 +172,19 @@
   "card.combosSteps": "Steps",
   "card.combosPrerequisites": "Prerequisites",
   "card.combosCost": "Combo cost: ~${price}",
-
   "card.whyPlayed": "Why It's Played",
   "card.edhrecRank": "EDHREC Rank",
   "card.metaLoading": "Analyzing card strategy…",
   "card.metaError": "Could not load meta context",
-
   "queryBar.copied": "Query copied!",
   "queryBar.copyFailed": "Failed to copy",
   "queryBar.linkCopied": "Link copied!",
   "queryBar.emptyError": "Query cannot be empty",
-
   "filters.removeColor": "Remove {name} filter",
   "filters.removeType": "Remove {type} filter",
   "filters.removeCmc": "Remove CMC {range} filter",
   "filters.filterByColor": "Filter by {name}",
   "filters.cmcRange": "CMC {min}-{max}",
-
   "queryBar.label": "Scryfall query · click to edit",
   "queryBar.lowConfidence": "Low confidence",
   "queryBar.edited": "edited",
@@ -222,7 +202,6 @@
   "queryBar.share": "Share",
   "queryBar.openInScryfall": "Open in Scryfall",
   "queryBar.scryfall": "Scryfall",
-
   "report.title": "Report Search Issue",
   "report.description": "Help us improve by describing what went wrong. Context is auto-included.",
   "report.autoContext": "Auto-included context",
@@ -241,7 +220,6 @@
   "report.success": "Issue reported",
   "report.thanks": "Thanks! We'll use this to improve searches.",
   "report.failed": "Failed to submit feedback",
-
   "howItWorks.heading": "How It Works",
   "howItWorks.step": "Step",
   "howItWorks.step1Title": "Describe what you're looking for",
@@ -252,7 +230,6 @@
   "howItWorks.step3Desc": "Scroll through the matching cards. Click any card to see full details including oracle text, prices, legalities, and all printings.",
   "howItWorks.step4Title": "Refine with filters",
   "howItWorks.step4Desc": "Use the filter chips to narrow results by color, format, card type, mana cost, price, or rarity without rewriting your search.",
-
   "features.badge": "⚡ Built for brewers",
   "features.heading": "Everything You Need for MTG Deckbuilding",
   "features.subtitle": "From card discovery to deck optimization — all powered by natural language and AI.",
@@ -275,7 +252,6 @@
   "features.syntax.title": "Syntax Cheat Sheet",
   "features.syntax.description": "A quick-reference for every Scryfall operator, filter, and shortcut. Bookmark it once, use it forever.",
   "features.syntax.benefit": "Your pocket reference",
-
   "faq.badge": "💬 Got questions?",
   "faq.heading": "Frequently Asked Questions",
   "faq.q1": "What is OffMeta?",
@@ -290,11 +266,9 @@
   "faq.a5": "Absolutely! Beyond searching for Commander-legal cards, OffMeta has dedicated tools for EDH: a combo finder for any commander, a metagame archetype browser, and AI-powered deck recommendations. You can also use format filter chips or just say 'commander legal board wipes under $5'.",
   "faq.q6": "Can I search in my own language?",
   "faq.a6": "Yes! OffMeta supports searching in 11 languages including English, Spanish, French, German, Italian, Portuguese, Japanese, Korean, Russian, and Chinese. Just type your search in your preferred language — OffMeta automatically detects and translates it before generating the Scryfall query.",
-
   "nav.home": "Home",
   "nav.guides": "Guides",
   "nav.backToSearch": "← Back to search",
-
   "guides.pageTitle": "Search Guides",
   "guides.pageSubtitle": "Learn how to search for Magic cards with OffMeta — from simple type searches to complex multi-constraint queries.",
   "guides.count": "10 guides • Beginner → Expert",
@@ -308,7 +282,6 @@
   "guides.levelAdvanced": "Advanced",
   "guides.levelExpert": "Expert",
   "guides.level": "Level",
-
   "guide.notFound": "Guide not found",
   "guide.searchInstantly": "Search these cards instantly on OffMeta:",
   "guide.search": "Search",
@@ -320,7 +293,6 @@
   "guide.relatedGuides": "Related Guides",
   "guide.readyToFind": "Ready to find your cards?",
   "guide.readyToFindDesc": "Search for any Magic cards using natural language — no syntax needed.",
-
   "docs.title": "Documentation",
   "docs.subtitle": "Everything you need to get the most out of OffMeta search.",
   "docs.syntaxTitle": "Search Syntax Cheat Sheet",
@@ -329,7 +301,6 @@
   "docs.faqTitle": "FAQ",
   "docs.faqDesc": "Answers to frequently asked questions about OffMeta.",
   "docs.allGuides": "All Guides",
-
   "syntax.title": "Search Syntax Cheat Sheet",
   "syntax.subtitle": "OffMeta translates natural language to Scryfall syntax automatically. Here's a reference of what you can say and what it maps to.",
   "syntax.backToDocs": "Back to Docs",
@@ -345,7 +316,6 @@
   "syntax.cat.price": "Price & Rarity",
   "syntax.cat.sorting": "Sorting & Ordering",
   "syntax.cat.slang": "Slang & Shortcuts",
-
   "guide.title.search-by-creature-type": "Search by Creature Type",
   "guide.sub.search-by-creature-type": "The easiest way to start: just name a tribe",
   "guide.title.filter-by-color": "Filter by Color",
@@ -366,7 +336,6 @@
   "guide.sub.etb-and-flicker-combos": "Enter-the-battlefield triggers and blink synergies",
   "guide.title.multi-constraint-complex-search": "Multi-Constraint Complex Search",
   "guide.sub.multi-constraint-complex-search": "Combine type, color, format, price, and function in one search",
-
   "guide.intro.search-by-creature-type": "The simplest search you can do on OffMeta is typing a creature type. Want Dragons? Type \"dragons.\" Looking for Elves? Type \"elves.\" OffMeta understands plural forms, common nicknames, and tribal slang, so no special syntax is needed. If you're new to MTG card search, start here.",
   "guide.howHelps.search-by-creature-type": "When you type \"dragons,\" OffMeta recognizes it as a creature type search and converts your plain English into Scryfall's type filter syntax (t:dragon), handling the plural-to-singular conversion. You don't need to know that Scryfall uses \"t:\" for type searches. OffMeta figures that out for you.",
   "guide.tip1.search-by-creature-type": "You can type the plural (\"goblins\") or singular (\"goblin\"). Both work.",
@@ -377,7 +346,6 @@
   "guide.faq1a.search-by-creature-type": "OffMeta recognizes all official MTG creature types, over 270 of them. From common ones like Human, Elf, and Dragon to obscure ones like Brushwagg, Beeble, and Azra.",
   "guide.faq2q.search-by-creature-type": "Can I search for non-creature types?",
   "guide.faq2a.search-by-creature-type": "Yes. Try \"equipment,\" \"auras,\" \"planeswalkers,\" or \"enchantments.\" OffMeta handles all card types, not just creatures.",
-
   "guide.intro.filter-by-color": "Color is fundamental to Magic deckbuilding. OffMeta lets you filter by color using everyday language. Say \"red creatures,\" \"mono blue spells,\" or even guild names like \"Simic\" or \"Rakdos.\" You can also specify color identity for Commander, where it matters most.",
   "guide.howHelps.filter-by-color": "OffMeta interprets \"mono red\" as a color identity constraint (id=r), not just color. This matters because color identity determines what cards you can play in Commander. It also maps \"creatures\" to the type filter (t:creature) and combines them. Guild names like \"Dimir\" are mapped to their color pairs (U+B) automatically.",
   "guide.tip1.filter-by-color": "Use guild names for two-color combos: Azorius (W/U), Dimir (U/B), Rakdos (B/R), Gruul (R/G), Selesnya (G/W).",
@@ -388,7 +356,6 @@
   "guide.faq1a.filter-by-color": "Color is what appears in the mana cost. Color identity includes the mana cost PLUS any mana symbols in the rules text. In Commander, you can only include cards whose color identity is within your commander's color identity.",
   "guide.faq2q.filter-by-color": "How do I search for exactly two colors?",
   "guide.faq2a.filter-by-color": "Use the guild name: \"Izzet creatures\" finds creatures that are exactly blue and red. Or say \"blue red creatures\" and OffMeta will figure out the correct identity filter.",
-
   "guide.intro.budget-price-filters": "Building on a budget? OffMeta understands price-related language like \"cheap,\" \"budget,\" \"under $5,\" and \"affordable.\" You can combine price filters with any other search to find what you need without overspending. Commander players especially use this one a lot.",
   "guide.howHelps.budget-price-filters": "OffMeta understands \"budget\" and \"under $5\" both refer to price and picks the more specific one ($5). It translates \"board wipes\" into Scryfall's tag system (otag:boardwipe), which is more accurate than searching oracle text. Then it applies the price filter (usd<5).",
   "guide.tip1.budget-price-filters": "\"Cheap\" defaults to under $1, \"budget\" to under $5, but you can say \"under $3\" for any custom threshold.",
@@ -399,7 +366,6 @@
   "guide.faq1a.budget-price-filters": "Scryfall updates prices daily from TCGplayer. Prices reflect the most recent market data available, though they may lag actual prices by a few hours.",
   "guide.faq2q.budget-price-filters": "Can I search in other currencies?",
   "guide.faq2a.budget-price-filters": "Currently OffMeta uses USD pricing from Scryfall. Euro pricing (eur<) is available via Scryfall syntax, which you can use in the editable query bar.",
-
   "guide.intro.format-legality-search": "Different formats have different card pools. OffMeta understands format names and legality constraints. Just mention the format in your search and it gets applied automatically. Say \"pauper legal removal\" or \"modern counterspells\" and OffMeta filters to only cards legal in that format.",
   "guide.howHelps.format-legality-search": "OffMeta recognizes \"commander\" as a format, even if you say \"EDH\" or \"CMDR\" instead. It applies the format legality filter (f:commander) and combines it with the price constraint. The word \"staples\" signals high-utility cards, which OffMeta can sort by EDHREC rank for the most relevant results.",
   "guide.tip1.format-legality-search": "OffMeta knows format aliases: \"EDH\" = \"CMDR\" = \"Commander,\" \"T2\" = \"Standard.\"",
@@ -410,7 +376,6 @@
   "guide.faq1a.format-legality-search": "All formats Scryfall tracks: Standard, Pioneer, Modern, Legacy, Vintage, Pauper, Commander, Brawl, Historic, Alchemy, Explorer, and more. Just mention the format name.",
   "guide.faq2q.format-legality-search": "Can I search for banned cards?",
   "guide.faq2a.format-legality-search": "Yes. Try \"banned in commander\" or \"banned in modern\" to see cards that are banned in specific formats.",
-
   "guide.intro.keyword-ability-search": "Magic has over 100 keyword abilities, from evergreen staples like Flying and Haste to set-specific mechanics like Connive and Offspring. OffMeta maps these to Scryfall's dedicated keyword operator for precise results, which is much better than searching oracle text (that often produces false positives).",
   "guide.howHelps.keyword-ability-search": "Instead of searching oracle text for the word \"flying\" (which would also match \"flying carpet\" or references to flight), OffMeta uses Scryfall's kw: operator. This targets the actual keyword abilities a card has. It also knows that \"deathtouch\" and \"flying\" are separate keywords and applies them as AND filters.",
   "guide.tip1.keyword-ability-search": "OffMeta knows 80+ keyword abilities: haste, trample, lifelink, vigilance, menace, flash, hexproof, and many more.",
@@ -421,7 +386,6 @@
   "guide.faq1a.keyword-ability-search": "The kw: operator checks a card's actual keyword abilities, not just text. Searching oracle text for \"flying\" might match cards that mention flying but don't have it. kw:flying only returns cards that actually have flying.",
   "guide.faq2q.keyword-ability-search": "Can I search for cards that GRANT keywords to others?",
   "guide.faq2a.keyword-ability-search": "Yes. Try \"cards that give haste\" or \"haste enablers.\" OffMeta searches for oracle text that grants the ability to other creatures.",
-
   "guide.intro.ramp-and-card-draw": "Instead of guessing what oracle text to search, you can describe card functions: \"ramp spells,\" \"mana dorks,\" \"card draw,\" \"cantrips.\" OffMeta understands these gameplay concepts and translates them into the right combination of type, tag, and oracle text filters.",
   "guide.howHelps.ramp-and-card-draw": "OffMeta breaks down your intent: \"green\" becomes a color filter, \"ramp spells\" maps to Scryfall's curated mana-ramp tag, and \"search for lands\" becomes oracle text for library searching. It uses Scryfall's otag: system (community-curated functional tags) when available, which tends to be more accurate than raw text search.",
   "guide.tip1.ramp-and-card-draw": "MTG slang works: \"rocks\" = mana artifacts, \"dorks\" = mana creatures, \"cantrips\" = cheap draw spells.",
@@ -432,7 +396,6 @@
   "guide.faq1a.ramp-and-card-draw": "\"Ramp\" broadly means any mana acceleration. \"Mana rocks\" specifically means artifacts that produce mana (Sol Ring, Arcane Signet). \"Mana dorks\" are creatures that tap for mana (Llanowar Elves). OffMeta translates each correctly.",
   "guide.faq2q.ramp-and-card-draw": "How does OffMeta know what \"card draw\" means?",
   "guide.faq2a.ramp-and-card-draw": "OffMeta maps strategy concepts to Scryfall tags and oracle text patterns. \"Card draw\" uses oracle text search for \"draw\" + \"card,\" while specific terms like \"cantrip\" or \"wheel\" use their own curated mappings.",
-
   "guide.intro.tribal-synergies-for-commander": "Tribal decks are a Commander favorite, but finding the right synergy pieces can be tricky. OffMeta lets you search for tribal payoffs by combining creature types, format legality, and functional descriptions. Go beyond just finding Elves: find Elf lords, Elf token generators, and cards that care about Elf tribal.",
   "guide.howHelps.tribal-synergies-for-commander": "OffMeta understands \"tribal payoffs\" as cards that reward you for playing a specific type. For \"elf tribal payoffs,\" it searches for cards that reference Elves in their rules text combined with typical tribal payoff patterns like \"you control\" or buff effects. Adding \"for commander\" applies the format filter.",
   "guide.tip1.tribal-synergies-for-commander": "Try \"[type] lords\" to find creatures that buff others of the same type.",
@@ -443,7 +406,6 @@
   "guide.faq1a.tribal-synergies-for-commander": "A lord is a creature that gives +1/+1 or other bonuses to all creatures of a certain type. Classic examples: Elvish Archdruid for Elves, Lord of the Undead for Zombies, Goblin Chieftain for Goblins.",
   "guide.faq2q.tribal-synergies-for-commander": "Can I find cards that work with multiple tribes?",
   "guide.faq2a.tribal-synergies-for-commander": "Yes. Try \"cards that work with any creature type\" or search for Changelings, which have every creature type. You can also search for \"choose a creature type\" effects.",
-
   "guide.intro.token-and-sacrifice-synergies": "Aristocrats-style decks are among the most popular archetypes in Commander. They combine token generation, free sacrifice outlets, and death triggers for powerful synergy engines. OffMeta understands the full vocabulary of this archetype, from \"sac outlets\" to \"blood artist effects\" to \"death triggers.\"",
   "guide.howHelps.token-and-sacrifice-synergies": "This is a descriptive query that would be hard to write in manual syntax. OffMeta breaks it down: \"creatures\" becomes a type filter, \"make token creatures\" becomes oracle text for token creation, and \"when an opponent takes an action\" becomes opponent-triggered abilities. It assembles these into a multi-clause oracle text search.",
   "guide.tip1.token-and-sacrifice-synergies": "\"Sac outlets\" or \"sacrifice outlets\" finds cards with free sacrifice abilities.",
@@ -454,7 +416,6 @@
   "guide.faq1a.token-and-sacrifice-synergies": "An Aristocrats deck sacrifices its own creatures for value. The core pieces are: token generators for fuel, free sacrifice outlets, and death trigger payoffs like Blood Artist that drain opponents when creatures die.",
   "guide.faq2q.token-and-sacrifice-synergies": "What are the best colors for sacrifice strategies?",
   "guide.faq2a.token-and-sacrifice-synergies": "Black is essential for death triggers and drain effects. Red adds token generation and Goblin Bombardment effects. White has some powerful pieces too (Teysa Karlov, Elenda). Rakdos (B/R) and Mardu (W/B/R) are the most common Aristocrats color combos.",
-
   "guide.intro.etb-and-flicker-combos": "ETB (enter-the-battlefield) effects are the backbone of many combo decks. Pair them with flicker/blink effects to re-trigger them over and over, or use ETB doublers like Panharmonicon to multiply the value. OffMeta understands all of this vocabulary: \"ETB,\" \"blink,\" \"flicker,\" \"enters effects.\"",
   "guide.howHelps.etb-and-flicker-combos": "\"ETB effects\" is translated to \"enters the battlefield\" oracle text. \"Double\" is mapped to the Scryfall phrasing \"triggers an additional time,\" not the word \"double\" or \"twice\" which would give wrong results. This kind of mapping is why OffMeta works better than a simple text search.",
   "guide.tip1.etb-and-flicker-combos": "\"ETB creatures\" finds creatures with enter-the-battlefield triggers.",
@@ -465,7 +426,6 @@
   "guide.faq1a.etb-and-flicker-combos": "They're the same thing: exiling a permanent and returning it to the battlefield to re-trigger ETB effects. \"Blink\" usually refers to instant-speed effects (like Ephemerate), while \"flicker\" is sometimes used for sorcery-speed or delayed returns.",
   "guide.faq2q.etb-and-flicker-combos": "What are the best ETB doublers?",
   "guide.faq2a.etb-and-flicker-combos": "Panharmonicon (artifacts/creatures ETB), Yarok the Desecrated (all permanents ETB), Elesh Norn, Mother of Machines (your permanents ETB), and Virtue of Loyalty. Search \"double ETB effects\" on OffMeta to find them all.",
-
   "guide.intro.multi-constraint-complex-search": "You can describe exactly what you need in a single sentence, combining color identity, card type, format legality, price, function, and more. \"Utility lands for commander in Esper under $5\" or \"Vampires with death triggers in white and black that cost 3 or less.\" OffMeta handles them all.",
   "guide.howHelps.multi-constraint-complex-search": "This query has FIVE distinct constraints, and OffMeta handles each one: \"utility lands\" becomes non-basic lands (t:land -t:basic), \"for commander\" becomes format legality (f:commander), \"in Esper\" becomes color identity within white-blue-black (id<=wub), and \"under $5\" becomes a price filter (usd<5). The word \"utility\" is interpreted as non-basic, because basic lands aren't \"utility.\"",
   "guide.tip1.multi-constraint-complex-search": "Stack as many constraints as you want. OffMeta handles 5+ filters in a single query.",
@@ -476,20 +436,16 @@
   "guide.faq1a.multi-constraint-complex-search": "OffMeta can handle very complex queries, but extremely long sentences may lose precision. If results aren't what you expected, try simplifying slightly or use the editable query bar to tweak the translation.",
   "guide.faq2q.multi-constraint-complex-search": "What if OffMeta translates my query wrong?",
   "guide.faq2a.multi-constraint-complex-search": "You can always edit the translated query directly in the editable query bar. You can also report issues with the feedback button. Your reports help improve translations over time.",
-
   "dailyPick.heading": "Daily Off-Meta Pick",
   "dailyPick.loading": "Loading today's gem...",
   "dailyPick.whyGem": "Why it's a hidden gem",
   "dailyPick.viewOnScryfall": "View on Scryfall",
-
   "staples.heading": "Staples For...",
   "staples.subtitle": "Quick searches by archetype",
-
   "surpriseMe": "Surprise Me",
   "feedback.label": "Feedback",
   "help.label": "Help",
   "help.title": "Search Help",
-
   "syntax.ex.redCreatures": "red creatures",
   "syntax.ex.blueWhiteInstants": "blue and white instants",
   "syntax.ex.monoGreen": "mono green cards",
@@ -528,7 +484,6 @@
   "syntax.ex.boardWipes": "board wipes",
   "syntax.ex.manaRocks": "mana rocks",
   "syntax.ex.counterspells": "counterspells",
-
   "combos.title": "Find My Combos",
   "combos.subtitle": "Import a deck from Moxfield or paste a decklist to discover all combos your deck can assemble.",
   "combos.poweredBy": "Powered by",
@@ -557,7 +512,6 @@
   "combos.prerequisites": "Prerequisites",
   "combos.comboCost": "Combo cost",
   "combos.dataBy": "Data provided by",
-
   "deckRecs.title": "Deck Recommendations",
   "deckRecs.subtitle": "Import a deck from Moxfield or paste a decklist to get AI-powered card suggestions.",
   "deckRecs.moxfieldUrl": "Moxfield URL",
@@ -586,7 +540,6 @@
   "deckRecs.noImage": "No image",
   "deckRecs.allCopied": "All recommendations copied to clipboard",
   "deckRecs.errorFetch": "Failed to fetch recommendations",
-
   "archetypes.backToSearch": "Back to Search",
   "archetypes.title": "Commander Archetypes",
   "archetypes.subtitle": "Explore the most popular Commander deck strategies. Each archetype includes curated searches, key cards, and budget suggestions.",
@@ -601,7 +554,6 @@
   "archetypes.keyCards": "Key Cards",
   "archetypes.budgetAlternatives": "Budget Alternatives",
   "archetypes.relatedArchetypes": "Related Archetypes",
-
   "profile.back": "Back",
   "profile.title": "Profile Settings",
   "profile.avatar": "Avatar",
@@ -623,7 +575,6 @@
   "profile.errorType": "Please upload a JPEG, PNG, WebP or GIF image",
   "profile.errorSize": "Image must be less than 2 MB",
   "profile.errorNameLength": "Display name must be less than 100 characters",
-
   "savedSearches.title": "Saved Searches",
   "savedSearches.saved": "Saved",
   "savedSearches.search": "Search",
@@ -659,7 +610,6 @@
   "savedSearches.labelPlaceholder": "Name this search (optional)",
   "savedSearches.dialogTitle": "Save Search",
   "savedSearches.dialogDesc": "Give your search a name to easily find it later.",
-
   "auth.signIn": "Sign In",
   "auth.signUp": "Sign Up",
   "auth.signOut": "Sign Out",
@@ -686,7 +636,6 @@
   "auth.google": "Continue with Google",
   "auth.github": "Continue with GitHub",
   "auth.discord": "Continue with Discord",
-
   "deckEditor.notFound": "Deck not found",
   "deckEditor.backToDecks": "Back to Decks",
   "deckEditor.cardsImported": "Cards imported",
@@ -807,7 +756,6 @@
   "deckExport.nowPublicDesc": "Anyone with the link can view your deck",
   "deckExport.nowPrivate": "Deck is now private",
   "deckExport.nowPrivateDesc": "Only you can view this deck",
-
   "admin.dashboard": "Admin Dashboard",
   "admin.analytics": "Analytics",
   "admin.users": "Users",
@@ -830,17 +778,14 @@
   "admin.down": "Down",
   "admin.lastUpdated": "Last updated",
   "admin.refresh": "Refresh",
-
   "notFound.title": "Page Not Found",
   "notFound.description": "The page you're looking for doesn't exist or has been moved.",
   "notFound.backHome": "Back to Home",
-
   "error.generic": "Something went wrong",
   "error.reload": "Reload page",
   "error.network": "Network error. Please check your connection.",
   "error.scryfall": "Scryfall API is currently unavailable.",
   "error.rateLimit": "Too many requests. Please try again later.",
-
   "loading": "Loading...",
   "success": "Success",
   "saved": "Saved",
@@ -849,7 +794,6 @@
   "disabled": "Disabled",
   "on": "On",
   "off": "Off",
-
   "deck.title": "My Decks",
   "deck.subtitle": "Build, tweak, and manage your MTG decklists.",
   "deck.import": "Import",
@@ -867,9 +811,7 @@
   "deck.addTag": "Add tag",
   "deck.tagPlaceholder": "Add a tag...",
   "deck.maxTags": "Maximum 5 tags",
-
   "nav.browseDecks": "Browse Decks",
-
   "browse.title": "Browse Decks",
   "browse.subtitle": "Discover shared decklists from the community.",
   "browse.noResults": "No decks match your filters.",
@@ -879,9 +821,7 @@
   "browse.sortNewest": "Newest",
   "browse.sortCards": "Most Cards",
   "browse.sortAlpha": "A-Z",
-
   "nav.collection": "My Collection",
-
   "collection.title": "My Collection",
   "collection.subtitle": "{count} unique cards · {total} total",
   "collection.empty": "Your collection is empty. Add cards from search results!",
@@ -903,11 +843,9 @@
   "collection.decreaseQuantity": "Decrease quantity",
   "collection.increaseQuantity": "Increase quantity",
   "collection.removeFromCollection": "Remove from collection",
-
   "card.addToCollection": "Add to collection",
   "card.removeFromCollection": "Remove from collection",
   "card.ownedQuantity": "Owned",
-
   "critique.title": "AI Critique",
   "critique.getCritique": "Get Critique",
   "critique.reCritique": "Re-critique",
@@ -942,8 +880,6 @@
   "critique.severityOffStrategy": "Off-strategy",
   "critique.severityUnderperforming": "Underperforming",
   "critique.severityWeak": "Weak",
-
-  "compare.title": "Compare Cards",
   "compare.manaCost": "Mana Cost",
   "compare.manaValue": "Mana Value",
   "compare.power": "Power",
@@ -953,7 +889,6 @@
   "compare.rarity": "Rarity",
   "compare.legalities": "Legalities",
   "compare.cardText": "Card Text",
-
   "resetPassword.title": "Set New Password",
   "resetPassword.newPassword": "New Password",
   "resetPassword.confirmPassword": "Confirm Password",
@@ -964,12 +899,10 @@
   "resetPassword.success": "Password updated successfully.",
   "resetPassword.goHome": "Go Home",
   "resetPassword.update": "Update Password",
-
   "errorBoundary.title": "Something went wrong",
   "errorBoundary.description": "We encountered an unexpected error. Please try again or refresh the page.",
   "errorBoundary.tryAgain": "Try again",
   "errorBoundary.refresh": "Refresh page",
-
   "publicProfile.back": "Back",
   "publicProfile.userAvatar": "User avatar",
   "publicProfile.anonymousUser": "Anonymous Planeswalker",
@@ -980,7 +913,6 @@
   "publicProfile.publishedDecks": "Published Decks",
   "publicProfile.noPublicDecks": "No public decks yet.",
   "publicProfile.cards": "{count} cards",
-
   "publicDeck.notFound": "Deck not found",
   "publicDeck.notFoundDesc": "This deck doesn't exist or is set to private.",
   "publicDeck.backHome": "Back to Home",
@@ -988,9 +920,7 @@
   "publicDeck.share": "Share",
   "publicDeck.copied": "Copied!",
   "publicDeck.cards": "{count} cards",
-
   "common.error": "Error",
-
   "deckEditor.categorizeTooltip": "AI re-categorize all cards",
   "deckEditor.editNotes": "Edit notes",
   "deckEditor.addNotesButton": "+ Add notes",
@@ -1010,23 +940,20 @@
   "deckEditor.shortcuts.adjustQuantity": "Adjust quantity",
   "deckEditor.shortcuts.undo": "Undo",
   "deckEditor.shortcuts.redo": "Redo",
-
-  "hero.pillBadge": "Search Magic cards like a human, not a robot",
-  "hero.subtitleMobile": "Describe what you need — we find it instantly.",
-  "hero.subtitleDesktop1": "Forget cryptic Scryfall syntax. Just",
-  "hero.subtitleDesktop2": "describe what you need",
-  "hero.subtitleDesktop3": "and we'll find it — instantly.",
+  "hero.pillBadge": "OffMeta translates plain-English MTG searches into Scryfall-ready results",
+  "hero.subtitleMobile": "For Commander players, brewers, and deckbuilders who want useful MTG results without learning Scryfall syntax.",
+  "hero.subtitleDesktop1": "OffMeta is for Commander players, brewers, and deckbuilders who want to",
+  "hero.subtitleDesktop2": "search MTG cards in plain English",
+  "hero.subtitleDesktop3": "and get instant translated results without learning Scryfall syntax.",
   "hero.benefitAi": "AI-powered",
-  "hero.benefitInstant": "Instant results",
-  "hero.benefitNoSyntax": "No syntax",
-
+  "hero.benefitInstant": "Instant translated results",
+  "hero.benefitNoSyntax": "No Scryfall syntax needed",
   "howItWorks.badge": "✦ Dead simple",
   "howItWorks.subtitle": "From thought to results in under 3 seconds. No learning curve.",
   "howItWorks.step1Accent": "Type naturally — no syntax memorization required.",
   "howItWorks.step2Accent": "See exactly what we searched so you stay in control.",
   "howItWorks.step3Accent": "Rich card data, prices, and printings at a glance.",
   "howItWorks.step4Accent": "Narrow results by color, type, price, and more.",
-
   "explain.hideDetails": "Hide details",
   "explain.showDetails": "Show details",
   "explain.detected": "{count} detected",
@@ -1036,11 +963,9 @@
   "explain.powerToughness": "Power / Toughness",
   "explain.tags": "Tags",
   "explain.oraclePatterns": "Oracle patterns",
-
   "explanation.searchPrompt": "Search for a specific card name to see an explanation",
   "explanation.errorGenerate": "Could not generate explanation",
   "explanation.whyPlayed": "Why Players Use This Card",
-
   "similar.title": "Similar Cards",
   "similar.budget": "Budget Alternatives",
   "similar.synergy": "Synergy Cards",
@@ -1050,7 +975,6 @@
   "similar.searchPrompt": "Search for a specific card name to see similar cards",
   "similar.searchHint": "Try searching for \"Lightning Bolt\" or \"Sol Ring\"",
   "similar.showingSimilarTo": "Showing cards similar to",
-
   "empty.didYouMean": "Did you mean?",
   "empty.checkingAlternatives": "Checking simpler alternatives…",
   "empty.cardCount": "{count} cards",
@@ -1058,7 +982,6 @@
   "empty.example2": "legendary creatures that draw cards",
   "empty.example3": "green ramp spells from modern",
   "empty.example4": "artifact creatures with deathtouch",
-
   "feedback.dialogTitle": "Report Search Issue",
   "feedback.dialogDesc": "Help us improve by describing what went wrong with your search.",
   "feedback.yourSearch": "Your search:",
@@ -1079,14 +1002,14 @@
   "feedback.validationMaxChars": "Description too long (max 1000 characters)",
   "feedback.validationQueryLong": "Query too long",
   "feedback.validationTranslatedLong": "Translated query too long",
-
   "pwa.installTitle": "Install OffMeta",
   "pwa.installDesc": "Quick access from your home screen",
   "pwa.install": "Install",
   "pwa.dismiss": "Dismiss",
-
   "footer.dataSources": "Data Sources",
   "footer.builtWith": "Built With",
   "footer.discord": "Discord",
-  "footer.brand": "OffMeta"
+  "footer.brand": "OffMeta",
+  "hero.benefitPlainEnglish": "Plain-English MTG search",
+  "hero.supportCopy": "Type what you want, like “budget board wipes under $5” or “cards that protect my commander,” and OffMeta turns it into a real card search instantly."
 }

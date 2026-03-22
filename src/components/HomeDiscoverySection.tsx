@@ -1,9 +1,7 @@
 /**
- * Discovery content shown on the home page before search:
- * Recent Searches, Curated Searches (SEO links), FAQ.
- *
- * Stripped to essentials based on analytics — only components
- * with demonstrated engagement or SEO value are retained.
+ * Discovery content shown on the home page after the primary hero/search flow.
+ * Curated searches stay closest to activation, while recent searches and FAQ
+ * move lower so the search CTA stays dominant for first-time visitors.
  */
 
 import { RecentSearches } from '@/components/RecentSearches';
@@ -16,10 +14,10 @@ interface HomeDiscoverySectionProps {
 
 export function HomeDiscoverySection({ onSearch }: HomeDiscoverySectionProps) {
   return (
-    <div className="space-y-8 sm:space-y-10 lg:space-y-12">
-      <div className="container-main space-y-6">
-        <RecentSearches onSearch={onSearch} />
+    <div className="space-y-10 sm:space-y-12 lg:space-y-14 pt-4 sm:pt-6">
+      <div className="container-main space-y-8">
         <CuratedSearchesWidget />
+        <RecentSearches onSearch={onSearch} />
       </div>
       <div id="faq">
         <FAQSection />

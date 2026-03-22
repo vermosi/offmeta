@@ -6,13 +6,25 @@
 import {
   lazy,
   Suspense,
+  useEffect,
+  useMemo,
   useState,
   useRef,
   useImperativeHandle,
   forwardRef,
 } from 'react';
 import { Button } from '@/components/ui/button';
-import { Search, Loader2, X, Clock, Sparkles, Database } from 'lucide-react';
+import {
+  Search,
+  Loader2,
+  X,
+  Clock,
+  Sparkles,
+  Database,
+  ShieldCheck,
+  Globe,
+  BadgeDollarSign,
+} from 'lucide-react';
 import { SearchHistoryDropdown } from '@/components/SearchHistoryDropdown';
 import { useIsMobile } from '@/hooks/useMobile';
 const SearchFeedback = lazy(() =>
@@ -33,6 +45,7 @@ import { useSearchContext } from '@/hooks/useSearchContext';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { useSearchHandler, type SearchPhase } from '@/hooks/useSearchHandler';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { useTranslation } from '@/lib/i18n';
 
 export interface SearchResult {
@@ -120,11 +133,40 @@ export interface UnifiedSearchBarHandle {
   ) => void;
 }
 
-const EXAMPLE_QUERIES = [
-  'creatures that make treasure tokens',
-  'cheap green ramp spells',
-  'artifacts that produce 2 mana',
-];
+const EXAMPLE_QUERY_GROUPS = [
+  {
+    category: 'Budget',
+    queries: [
+      'find budget board wipes under $5',
+      'cheap white protection spells',
+    ],
+  },
+  {
+    category: 'Commander',
+    queries: [
+      'cards that protect my commander',
+      'cheap graveyard hate for EDH',
+    ],
+  },
+  {
+    category: 'Staples',
+    queries: ['mana rocks that cost 2', 'best black removal for commander'],
+  },
+  {
+    category: 'Synergy',
+    queries: [
+      'cards that double ETB triggers',
+      'one-card combos in Simic colors',
+    ],
+  },
+] as const;
+
+const TRUST_SIGNALS = [
+  { icon: BadgeDollarSign, label: 'Free to use' },
+  { icon: Database, label: 'Powered by Scryfall' },
+  { icon: ShieldCheck, label: 'No account required' },
+  { icon: Globe, label: '11-language support' },
+] as const;
 
 export const UnifiedSearchBar = forwardRef<
   UnifiedSearchBarHandle,
@@ -135,6 +177,8 @@ export const UnifiedSearchBar = forwardRef<
 ) {
   const isMobile = useIsMobile();
   const { t } = useTranslation();
+  const { trackExampleQueryImpression, trackExampleQueryClick } =
+    useAnalytics();
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
 
@@ -143,10 +187,7 @@ export const UnifiedSearchBar = forwardRef<
     typingText,
     isAnimating: isTyping,
     stop: stopTyping,
-  } = useTypingPlaceholder(
-    '',
-    !query && !isFocused,
-  );
+  } = useTypingPlaceholder('', !query && !isFocused);
   const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -192,6 +233,68 @@ export const UnifiedSearchBar = forwardRef<
   );
 
   const showExamples = !query;
+  const visibleExamples = useMemo(() => {
+    const maxExamples = isMobile ? 5 : Number.POSITIVE_INFINITY;
+
+    return EXAMPLE_QUERY_GROUPS.reduce<
+      Array<{ category: string; queries: readonly string[] }>
+    >((groups, { category, queries }) => {
+      const shownCount = groups.reduce(
+        (count, group) => count + group.queries.length,
+        0,
+      );
+
+      if (shownCount >= maxExamples) {
+        return groups;
+      }
+
+      const remainingSlots = maxExamples - shownCount;
+      const visibleQueries = queries.slice(0, remainingSlots);
+
+      if (visibleQueries.length === 0) {
+        return groups;
+      }
+
+      return [...groups, { category, queries: visibleQueries }];
+    }, []);
+  }, [isMobile]);
+
+  const flattenedVisibleExamples = useMemo(
+    () =>
+      visibleExamples.flatMap(({ category, queries }) =>
+        queries.map((example, position) => ({
+          category,
+          query: example,
+          position,
+        })),
+      ),
+    [visibleExamples],
+  );
+
+  useEffect(() => {
+    if (!showExamples) return;
+
+    flattenedVisibleExamples.forEach(
+      ({ query: example, category, position }) => {
+        const impressionKey = `offmeta_example_impression:${category}:${example}:${isMobile ? 'mobile' : 'desktop'}`;
+        if (sessionStorage.getItem(impressionKey)) return;
+
+        sessionStorage.setItem(impressionKey, '1');
+        trackExampleQueryImpression({
+          query: example,
+          category,
+          position,
+          visible_count: flattenedVisibleExamples.length,
+          is_mobile: isMobile,
+        });
+      },
+    );
+  }, [
+    flattenedVisibleExamples,
+    isMobile,
+    showExamples,
+    trackExampleQueryImpression,
+  ]);
 
   return (
     <div
@@ -236,7 +339,6 @@ export const UnifiedSearchBar = forwardRef<
             <label htmlFor="search-input" className="sr-only">
               {t('search.inputLabel')}
             </label>
-
 
             <div className="relative flex-1 min-w-0">
               <input
@@ -389,6 +491,27 @@ export const UnifiedSearchBar = forwardRef<
         </p>
       </div>
 
+      <div className="space-y-2 text-center">
+        <p className="text-sm text-muted-foreground">
+          Search MTG cards in plain English — OffMeta handles the Scryfall
+          syntax and returns useful results instantly.
+        </p>
+        <div
+          className="flex flex-wrap items-center justify-center gap-2"
+          aria-label="Trust signals"
+        >
+          {TRUST_SIGNALS.map(({ icon: Icon, label }) => (
+            <div
+              key={label}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/70 px-3 py-1.5 text-xs text-muted-foreground"
+            >
+              <Icon className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
+              <span>{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Progressive loading phase indicator */}
       <PhaseIndicator phase={searchPhase} isCardFetching={isCardFetching} />
 
@@ -403,26 +526,49 @@ export const UnifiedSearchBar = forwardRef<
             <Sparkles className="h-3 w-3 text-accent" aria-hidden="true" />
             {t('search.trySearchingFor')}
           </span>
-          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
-            {EXAMPLE_QUERIES.slice(0, isMobile ? 3 : 3).map((example, i) => (
-              <button
-                key={example}
-                type="button"
-                onClick={() => {
-                  setQuery(example);
-                  handleSearch(example);
-                }}
-                className={`
-                  px-3.5 py-2 rounded-full text-xs font-medium border transition-all duration-200 focus-ring
-                  ${i === 0
-                    ? 'bg-accent/10 border-accent/30 text-accent hover:bg-accent/20 hover:border-accent/50'
-                    : 'text-muted-foreground hover:text-foreground border-border/60 hover:border-primary/40 hover:bg-primary/5'
-                  }
-                `}
-                aria-label={t('search.searchFor').replace('{query}', example)}
+          <div className="flex w-full flex-col gap-3">
+            {visibleExamples.map(({ category, queries }) => (
+              <div
+                key={category}
+                className="flex flex-col items-center gap-1.5"
               >
-                {example}
-              </button>
+                <span className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                  {category}
+                </span>
+                <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+                  {queries.map((example, i) => (
+                    <button
+                      key={`${category}-${example}`}
+                      type="button"
+                      onClick={() => {
+                        trackExampleQueryClick({
+                          query: example,
+                          category,
+                          position: i,
+                          visible_count: flattenedVisibleExamples.length,
+                          is_mobile: isMobile,
+                        });
+                        setQuery(example);
+                        handleSearch(example);
+                      }}
+                      className={`
+                        px-3.5 py-2 rounded-full text-xs font-medium border transition-all duration-200 focus-ring
+                        ${
+                          i === 0
+                            ? 'bg-accent/10 border-accent/30 text-accent hover:bg-accent/20 hover:border-accent/50'
+                            : 'text-muted-foreground hover:text-foreground border-border/60 hover:border-primary/40 hover:bg-primary/5'
+                        }
+                      `}
+                      aria-label={t('search.searchFor').replace(
+                        '{query}',
+                        example,
+                      )}
+                    >
+                      {example}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </div>
