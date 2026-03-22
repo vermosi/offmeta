@@ -1058,5 +1058,7 @@
   "view.grid": "網格檢視",
   "view.images": "僅圖片",
   "view.label": "顯示模式",
-  "view.list": "清單檢視"
+  "view.list": "清單檢視",
+  "hero.benefitPlainEnglish": "自然語言 MTG 搜尋",
+  "hero.supportCopy": "直接輸入你想找的內容，例如「5 美元以下的便宜清場」或「保護我指揮官的牌」，OffMeta 會立刻把它轉成真正的卡牌搜尋。"
 }

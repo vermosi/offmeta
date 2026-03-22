@@ -1058,5 +1058,7 @@
   "view.grid": "网格视图",
   "view.images": "仅图片",
   "view.label": "显示模式",
-  "view.list": "列表视图"
+  "view.list": "列表视图",
+  "hero.benefitPlainEnglish": "自然语言 MTG 搜索",
+  "hero.supportCopy": "直接输入你想要的内容，比如“5 美元以下的廉价清场”或“保护我指挥官的牌”，OffMeta 会立刻把它转换成真正的卡牌搜索。"
 }

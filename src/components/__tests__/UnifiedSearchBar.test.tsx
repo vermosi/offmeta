@@ -68,7 +68,9 @@ describe('UnifiedSearchBar', () => {
 
   it('has accessible label', () => {
     render(<UnifiedSearchBar {...defaultProps} />);
-    expect(screen.getByLabelText(/search for magic cards/i)).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/search for magic cards/i),
+    ).toBeInTheDocument();
   });
 
   it('has sr-only hint text', () => {
@@ -78,20 +80,37 @@ describe('UnifiedSearchBar', () => {
 
   it('renders example query buttons when input is empty', () => {
     render(<UnifiedSearchBar {...defaultProps} />);
-    expect(screen.getByRole('group', { name: /try searching for/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /search for creatures that make treasure tokens/i })).toBeInTheDocument();
-    expect(screen.getByText('cheap green ramp spells')).toBeInTheDocument();
+    expect(
+      screen.getByRole('group', { name: /try searching for/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', {
+        name: /search for find budget board wipes under \$5/i,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('cards that protect my commander'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('one-card combos in Simic colors'),
+    ).toBeInTheDocument();
   });
 
   it('hides examples when query is typed', () => {
     render(<UnifiedSearchBar {...defaultProps} />);
-    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'test' } });
-    expect(screen.queryByRole('group', { name: /try searching for/i })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByRole('searchbox'), {
+      target: { value: 'test' },
+    });
+    expect(
+      screen.queryByRole('group', { name: /try searching for/i }),
+    ).not.toBeInTheDocument();
   });
 
   it('shows clear button when query has text', () => {
     render(<UnifiedSearchBar {...defaultProps} />);
-    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'test' } });
+    fireEvent.change(screen.getByRole('searchbox'), {
+      target: { value: 'test' },
+    });
     expect(screen.getByLabelText('Clear search')).toBeInTheDocument();
   });
 
@@ -116,24 +135,32 @@ describe('UnifiedSearchBar', () => {
 
   it('enables search button when query is entered', () => {
     render(<UnifiedSearchBar {...defaultProps} />);
-    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'goblins' } });
+    fireEvent.change(screen.getByRole('searchbox'), {
+      target: { value: 'goblins' },
+    });
     expect(screen.getByLabelText('Search for cards')).not.toBeDisabled();
   });
 
   it('disables search button when isLoading is true', () => {
     render(<UnifiedSearchBar {...defaultProps} isLoading={true} />);
-    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'goblins' } });
+    fireEvent.change(screen.getByRole('searchbox'), {
+      target: { value: 'goblins' },
+    });
     expect(screen.getByLabelText('Search for cards')).toBeDisabled();
   });
 
   it('renders search feedback component', async () => {
     render(<UnifiedSearchBar {...defaultProps} />);
-    expect((await screen.findAllByTestId('search-feedback')).length).toBeGreaterThan(0);
+    expect(
+      (await screen.findAllByTestId('search-feedback')).length,
+    ).toBeGreaterThan(0);
   });
 
   it('renders search help modal', async () => {
     render(<UnifiedSearchBar {...defaultProps} />);
-    expect((await screen.findAllByTestId('search-help')).length).toBeGreaterThan(0);
+    expect(
+      (await screen.findAllByTestId('search-help')).length,
+    ).toBeGreaterThan(0);
   });
 
   it('updates input value on change', () => {

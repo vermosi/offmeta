@@ -1009,5 +1009,7 @@
   "view.grid": "グリッド表示",
   "view.images": "画像のみ",
   "view.label": "表示モード",
-  "view.list": "リスト表示"
+  "view.list": "リスト表示",
+  "hero.benefitPlainEnglish": "自然文のMTG検索",
+  "hero.supportCopy": "「5ドル以下の安い全体除去」や「統率者を守るカード」のように欲しいものを入力するだけで、OffMeta がすぐに本物のカード検索に変換します。"
 }

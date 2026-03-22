@@ -33,6 +33,12 @@ vi.mock('@/hooks/useAnalytics', () => ({
     trackPagination: vi.fn(),
     trackFeedback: vi.fn(),
     shouldLogCacheEvent: vi.fn(),
+    trackLandingPageView: vi.fn(),
+    trackRouteView: vi.fn(),
+    trackExampleQueryImpression: vi.fn(),
+    trackExampleQueryClick: vi.fn(),
+    trackExampleQuerySearchSuccess: vi.fn(),
+    trackExampleQueryResultClick: vi.fn(),
   }),
 }));
 
@@ -89,7 +95,9 @@ describe('useSearch', () => {
 
   it('parses filter state from URL', () => {
     const { result } = renderHook(() => useSearch(), {
-      wrapper: createWrapper('/?q=test&colors=W,U&types=creature&sort=price-asc&cmc_min=2&cmc_max=5'),
+      wrapper: createWrapper(
+        '/?q=test&colors=W,U&types=creature&sort=price-asc&cmc_min=2&cmc_max=5',
+      ),
     });
 
     expect(result.current.initialUrlFilters).toEqual({
@@ -106,7 +114,11 @@ describe('useSearch', () => {
     });
 
     act(() => {
-      result.current.handleSearch('t:creature c:green', undefined, 'green creatures');
+      result.current.handleSearch(
+        't:creature c:green',
+        undefined,
+        'green creatures',
+      );
     });
 
     expect(result.current.searchQuery).toBe('t:creature c:green');
@@ -126,7 +138,11 @@ describe('useSearch', () => {
     };
 
     act(() => {
-      result.current.handleSearch('otag:ramp c:green', searchResult, 'green ramp');
+      result.current.handleSearch(
+        'otag:ramp c:green',
+        searchResult,
+        'green ramp',
+      );
     });
 
     expect(result.current.lastSearchResult).toEqual(

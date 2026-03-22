@@ -124,7 +124,7 @@ export function SearchResultsArea({
       {/* Cards tab */}
       {activeTab === 'cards' && (
         <>
-          {cards.length > 0 ? (
+          {totalCards > 0 && cards.length > 0 ? (
             <>
               {displayCards.length > 0 ? (
                 viewMode === 'grid' &&

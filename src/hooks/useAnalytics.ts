@@ -29,7 +29,13 @@ const getSessionId = (): string => {
 };
 
 // UTM parameter capture — stores on first visit per session
-const UTM_PARAMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'] as const;
+const UTM_PARAMS = [
+  'utm_source',
+  'utm_medium',
+  'utm_campaign',
+  'utm_term',
+  'utm_content',
+] as const;
 const UTM_STORAGE_KEY = 'offmeta_utm';
 
 interface UtmData {
@@ -44,7 +50,11 @@ function captureUtmParams(): UtmData {
   // Return cached UTM data if already captured this session
   const cached = sessionStorage.getItem(UTM_STORAGE_KEY);
   if (cached) {
-    try { return JSON.parse(cached) as UtmData; } catch { /* fall through */ }
+    try {
+      return JSON.parse(cached) as UtmData;
+    } catch {
+      /* fall through */
+    }
   }
 
   const params = new URLSearchParams(window.location.search);
@@ -176,6 +186,12 @@ const ALLOWED_EVENT_TYPES = [
   'affiliate_click',
   'pagination',
   'feedback_submitted',
+  'landing_page_view',
+  'route_view',
+  'example_query_impression',
+  'example_query_click',
+  'example_query_search_success',
+  'example_query_result_click',
 ] as const;
 
 type EventType = (typeof ALLOWED_EVENT_TYPES)[number];
@@ -274,6 +290,23 @@ interface RerunEditedQueryEventData {
   request_id?: string;
 }
 
+interface RouteViewEventData {
+  path: string;
+  search?: string;
+  referrer?: string;
+}
+
+interface ExampleQueryEventData {
+  query: string;
+  category?: string;
+  position?: number;
+  visible_count?: number;
+  results_count?: number;
+  card_id?: string;
+  card_name?: string;
+  is_mobile?: boolean;
+}
+
 type EventData =
   | SearchEventData
   | SearchFailureEventData
@@ -282,7 +315,9 @@ type EventData =
   | AffiliateClickEventData
   | PaginationEventData
   | FeedbackEventData
-  | RerunEditedQueryEventData;
+  | RerunEditedQueryEventData
+  | RouteViewEventData
+  | ExampleQueryEventData;
 
 /**
  * Hook for tracking analytics events.
@@ -319,7 +354,10 @@ export function useAnalytics() {
         );
 
         // Fire and forget - don't await to avoid blocking
-        const searchCount = parseInt(sessionStorage.getItem('offmeta_searches_per_session') || '0', 10);
+        const searchCount = parseInt(
+          sessionStorage.getItem('offmeta_searches_per_session') || '0',
+          10,
+        );
         const utm = utmRef.current;
         const eventPayload: Record<string, string | number | boolean | null> = {
           ...sanitizedData,
@@ -400,6 +438,48 @@ export function useAnalytics() {
     [trackEvent],
   );
 
+  const trackLandingPageView = useCallback(
+    (data: RouteViewEventData) => {
+      trackEvent('landing_page_view', data);
+    },
+    [trackEvent],
+  );
+
+  const trackRouteView = useCallback(
+    (data: RouteViewEventData) => {
+      trackEvent('route_view', data);
+    },
+    [trackEvent],
+  );
+
+  const trackExampleQueryImpression = useCallback(
+    (data: ExampleQueryEventData) => {
+      trackEvent('example_query_impression', data);
+    },
+    [trackEvent],
+  );
+
+  const trackExampleQueryClick = useCallback(
+    (data: ExampleQueryEventData) => {
+      trackEvent('example_query_click', data);
+    },
+    [trackEvent],
+  );
+
+  const trackExampleQuerySearchSuccess = useCallback(
+    (data: ExampleQueryEventData) => {
+      trackEvent('example_query_search_success', data);
+    },
+    [trackEvent],
+  );
+
+  const trackExampleQueryResultClick = useCallback(
+    (data: ExampleQueryEventData) => {
+      trackEvent('example_query_result_click', data);
+    },
+    [trackEvent],
+  );
+
   return {
     trackSearch,
     trackSearchFailure,
@@ -408,6 +488,12 @@ export function useAnalytics() {
     trackAffiliateClick,
     trackPagination,
     trackFeedback,
+    trackLandingPageView,
+    trackRouteView,
+    trackExampleQueryImpression,
+    trackExampleQueryClick,
+    trackExampleQuerySearchSuccess,
+    trackExampleQueryResultClick,
     trackEvent,
     shouldLogCacheEvent,
   };
