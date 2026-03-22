@@ -1009,5 +1009,7 @@
   "view.grid": "Vista griglia",
   "view.images": "Solo immagini",
   "view.label": "Modalità di visualizzazione",
-  "view.list": "Vista elenco"
+  "view.list": "Vista elenco",
+  "hero.benefitPlainEnglish": "Ricerca MTG in linguaggio naturale",
+  "hero.supportCopy": "Scrivi quello che vuoi, come “mass removal economici sotto i 5 $” o “carte che proteggono il mio comandante”, e OffMeta lo trasforma subito in una vera ricerca di carte."
 }

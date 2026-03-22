@@ -1009,5 +1009,7 @@
   "view.grid": "Rasteransicht",
   "view.images": "Nur Bilder",
   "view.label": "Anzeigemodus",
-  "view.list": "Listenansicht"
+  "view.list": "Listenansicht",
+  "hero.benefitPlainEnglish": "MTG-Suche in natürlicher Sprache",
+  "hero.supportCopy": "Beschreibe einfach, was du suchst, zum Beispiel „günstige Board Wipes unter 5 $“ oder „Karten, die meinen Commander schützen“, und OffMeta macht sofort eine echte Kartensuche daraus."
 }

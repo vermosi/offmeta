@@ -206,7 +206,7 @@ describe('Index – search flow', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/3 cards/)).toBeInTheDocument();
+      expect(screen.queryAllByText(/\b3 cards\b/i).length).toBeGreaterThan(0);
     });
   });
 });

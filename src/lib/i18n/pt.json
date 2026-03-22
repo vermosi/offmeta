@@ -1009,5 +1009,7 @@
   "view.grid": "Visualização em grade",
   "view.images": "Apenas imagens",
   "view.label": "Modo de visualização",
-  "view.list": "Visualização em lista"
+  "view.list": "Visualização em lista",
+  "hero.benefitPlainEnglish": "Busca de MTG em linguagem natural",
+  "hero.supportCopy": "Digite o que você quer, como “remoções em massa baratas por menos de US$ 5” ou “cartas que protegem meu comandante”, e o OffMeta transforma isso instantaneamente em uma busca real de cartas."
 }

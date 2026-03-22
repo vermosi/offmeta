@@ -1058,5 +1058,7 @@
   "view.grid": "그리드 보기",
   "view.images": "이미지만",
   "view.label": "보기 모드",
-  "view.list": "목록 보기"
+  "view.list": "목록 보기",
+  "hero.benefitPlainEnglish": "자연어 MTG 검색",
+  "hero.supportCopy": "예를 들어 “5달러 이하의 저렴한 광역 제거”나 “내 커맨더를 보호하는 카드”처럼 원하는 내용을 입력하면, OffMeta가 즉시 실제 카드 검색으로 바꿔줍니다."
 }

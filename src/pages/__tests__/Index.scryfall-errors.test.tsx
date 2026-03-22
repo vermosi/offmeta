@@ -224,7 +224,7 @@ describe('Index – Scryfall error flows', () => {
     });
 
     // Should not show cards
-    expect(screen.queryByText('3 cards')).not.toBeInTheDocument();
+    expect(screen.queryByText(/3 cards total/i)).not.toBeInTheDocument();
   });
 
   it('handles translation failure gracefully and does not call Scryfall', async () => {
@@ -255,7 +255,7 @@ describe('Index – Scryfall error flows', () => {
     });
 
     // Should not show results
-    expect(screen.queryByText('3 cards')).not.toBeInTheDocument();
+    expect(screen.queryByText(/3 cards total/i)).not.toBeInTheDocument();
   });
 
   it('recovers from Scryfall error when user searches again successfully', async () => {
@@ -283,7 +283,7 @@ describe('Index – Scryfall error flows', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('3 cards')).toBeInTheDocument();
+      expect(screen.getByText(/3 cards total/i)).toBeInTheDocument();
     });
   });
 
