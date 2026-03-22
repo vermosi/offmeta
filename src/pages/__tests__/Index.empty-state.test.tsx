@@ -156,8 +156,8 @@ describe('Index – empty state', () => {
     });
 
     await waitFor(() => {
-      const matches = screen.getAllByText(/no cards found/i);
-      expect(matches.length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText(/search tips/i)).toBeInTheDocument();
+      expect(screen.getByText('o:"treasure"')).toBeInTheDocument();
     });
   });
 });
