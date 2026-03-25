@@ -38,6 +38,15 @@ const HARDCODED_TRANSLATIONS: Record<string, CacheEntry['result']> = {
     },
     showAffiliate: true,
   },
+  'mana rocks that cost 2': {
+    scryfallQuery: 't:artifact mv=2 (o:"add" o:"{")',
+    explanation: {
+      readable: 'Two-mana artifacts that produce mana',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
   'board wipes': {
     scryfallQuery: 'otag:board-wipe',
     explanation: {

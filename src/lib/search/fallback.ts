@@ -29,6 +29,7 @@ const PRETRANSLATED: Record<string, string> = {
   'green ramp spells that search for lands': 'c:g otag:mana-ramp o:"search your library" o:"basic land"',
   'elf tribal payoffs for commander': 't:elf f:commander (o:"elf" o:"you control" or o:"elf" o:"+1/+1")',
   'creatures that make token creatures when an opponent takes an action': 't:creature o:"whenever" o:"opponent" o:"create" o:"token"',
+  'mana rocks that cost 2': 't:artifact mv=2 (o:"add" o:"{")',
   'cards that double etb effects': 'o:"enters the battlefield" o:"triggers an additional time"',
   'utility lands for commander in esper under $5': 't:land -t:basic id<=wub f:commander usd<5',
   // Archetypes
