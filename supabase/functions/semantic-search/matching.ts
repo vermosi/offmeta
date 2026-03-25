@@ -137,6 +137,69 @@ const HARDCODED_TRANSLATIONS: Record<string, CacheEntry['result']> = {
     },
     showAffiliate: true,
   },
+  'elf lords': {
+    scryfallQuery: 't:elf (otag:lord or otag:anthem)',
+    explanation: {
+      readable: 'Elf creatures that buff other elves',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'elf lords that buff other elves': {
+    scryfallQuery: 't:elf (otag:lord or otag:anthem)',
+    explanation: {
+      readable: 'Elf creatures that buff other elves',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'zombie tribal payoffs': {
+    scryfallQuery: 't:zombie (otag:lord or otag:anthem or o:"whenever" o:"zombie")',
+    explanation: {
+      readable: 'Zombie cards that reward tribal synergy',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'best zombie tribal payoffs': {
+    scryfallQuery: 't:zombie (otag:lord or otag:anthem or o:"whenever" o:"zombie")',
+    explanation: {
+      readable: 'Zombie cards that reward tribal synergy',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'infinite mana combos in green': {
+    scryfallQuery: 'ci:g o:"untap" o:"add" t:creature',
+    explanation: {
+      readable: 'Green creatures that can untap and produce mana (infinite mana combo pieces)',
+      assumptions: [],
+      confidence: 0.9,
+    },
+    showAffiliate: true,
+  },
+  'cards that go infinite with sacrifice': {
+    scryfallQuery: '(o:"whenever" o:"dies" (o:"create" or o:"return" or o:"add"))',
+    explanation: {
+      readable: 'Cards that trigger on death with recursion or value (sacrifice combo pieces)',
+      assumptions: [],
+      confidence: 0.9,
+    },
+    showAffiliate: true,
+  },
+  'cards that double etb triggers': {
+    scryfallQuery: '(o:"enters the battlefield" (o:"twice" or o:"additional time" or o:"copy" o:"trigger"))',
+    explanation: {
+      readable: 'Cards that double enter-the-battlefield triggers',
+      assumptions: [],
+      confidence: 0.9,
+    },
+    showAffiliate: true,
+  },
 };
 
 /**
