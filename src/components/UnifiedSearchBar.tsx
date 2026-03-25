@@ -516,26 +516,14 @@ export const UnifiedSearchBar = forwardRef<
         </p>
       </div>
 
-      <div className="space-y-2 text-center">
-        <p className="text-sm text-muted-foreground">
-          Search MTG cards in plain English — OffMeta handles the Scryfall
-          syntax and returns useful results instantly.
-        </p>
-        <div
-          className="flex flex-wrap items-center justify-center gap-2"
-          aria-label="Trust signals"
-        >
-          {TRUST_SIGNALS.map(({ icon: Icon, label }) => (
-            <div
-              key={label}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/70 px-3 py-1.5 text-xs text-muted-foreground"
-            >
-              <Icon className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
-              <span>{label}</span>
-            </div>
-          ))}
+      {/* Trust signals — compact single line, only on landing */}
+      {showExamples && (
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground/70">
+          <span>✦ Free to use</span>
+          <span>✦ Powered by Scryfall</span>
+          <span>✦ No account required</span>
         </div>
-      </div>
+      )}
 
       {/* Progressive loading phase indicator */}
       <PhaseIndicator phase={searchPhase} isCardFetching={isCardFetching} />
