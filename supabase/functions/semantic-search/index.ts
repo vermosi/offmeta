@@ -603,6 +603,46 @@ serve(async (req) => {
         .replace(/\s+/g, ' ')
         .trim();
 
+    // Check hardcoded patterns BEFORE deterministic early return
+    // (hardcoded otag translations are more accurate than the deterministic parser for multi-concept queries)
+    const earlyHardcodedMatch = getHardcodedPatternMatch(query);
+    if (earlyHardcodedMatch) {
+      const responseTimeMs = Date.now() - requestStartTime;
+      logInfo('pattern_match_hit', {
+        query: query.substring(0, 50),
+        responseTimeMs,
+      });
+      logInfo(
+        'request_completed',
+        getPerfLogFields('pattern_match', responseTimeMs),
+      );
+
+      setCachedResult(query, filters, earlyHardcodedMatch, cacheSalt);
+      logTranslation(
+        query,
+        earlyHardcodedMatch.scryfallQuery,
+        earlyHardcodedMatch.explanation?.confidence ?? 0.95,
+        responseTimeMs,
+        [],
+        [],
+        filters,
+        false,
+        'pattern_match',
+      );
+      flushLogQueue();
+
+      return new Response(
+        JSON.stringify({
+          originalQuery: query,
+          ...earlyHardcodedMatch,
+          responseTimeMs,
+          success: true,
+          source: 'pattern_match',
+        }),
+        { headers: jsonHeaders },
+      );
+    }
+
     // Deterministic fast-path: never wait on cache/DB for this case.
     if (deterministicQuery && deterministicRemaining.length < 3) {
       const validation = validateQuery(deterministicQuery || query);
