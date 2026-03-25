@@ -171,10 +171,6 @@ export function LivePreviewStrip({
           ))}
         </div>
 
-        <p className="text-xs text-center text-muted-foreground">
-          OffMeta translates your plain-English queries into Scryfall syntax and
-          returns real card results instantly.
-        </p>
       </div>
     </section>
   );
