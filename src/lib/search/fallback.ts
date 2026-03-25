@@ -14,7 +14,9 @@ const PRETRANSLATED: Record<string, string> = {
   'dragons': 't:dragon',
   'mono red creatures': 'id=r t:creature',
   'budget board wipes under $5': 'otag:boardwipe usd<5',
+  'budget board wipes under 5': 'otag:boardwipe usd<5',
   'find budget board wipes under $5': 'otag:boardwipe usd<5',
+  'find budget board wipes under 5': 'otag:boardwipe usd<5',
   // Tribal lords
   'elf lords': 't:elf (otag:lord or otag:anthem)',
   'goblin lords': 't:goblin (otag:lord or otag:anthem)',
