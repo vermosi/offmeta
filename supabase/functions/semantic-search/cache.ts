@@ -1,3 +1,4 @@
+// supabase import kept for cache CRUD — analytics inserts removed
 import { supabase } from './client.ts';
 
 export interface CacheEntry {
