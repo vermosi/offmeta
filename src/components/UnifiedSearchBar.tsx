@@ -299,16 +299,21 @@ export const UnifiedSearchBar = forwardRef<
   useEffect(() => {
     if (!showExamples) return;
 
-    // Only fire impression once per session (batch all examples into one event)
-    const sessionImpressionKey = 'offmeta_example_impressions_sent';
-    if (sessionStorage.getItem(sessionImpressionKey)) return;
+    flattenedVisibleExamples.forEach(
+      ({ query: example, category, position }) => {
+        const impressionKey = `offmeta_example_impression:${category}:${example}:${isMobile ? 'mobile' : 'desktop'}`;
+        if (sessionStorage.getItem(impressionKey)) return;
 
-    sessionStorage.setItem(sessionImpressionKey, '1');
-    trackExampleQueryImpression({
-      query: flattenedVisibleExamples.map((e) => e.query).join('|'),
-      visible_count: flattenedVisibleExamples.length,
-      is_mobile: isMobile,
-    });
+        sessionStorage.setItem(impressionKey, '1');
+        trackExampleQueryImpression({
+          query: example,
+          category,
+          position,
+          visible_count: flattenedVisibleExamples.length,
+          is_mobile: isMobile,
+        });
+      },
+    );
   }, [
     flattenedVisibleExamples,
     isMobile,
