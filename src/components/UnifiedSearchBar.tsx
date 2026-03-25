@@ -553,14 +553,14 @@ export const UnifiedSearchBar = forwardRef<
                         setQuery(example);
                         handleSearch(example);
                       }}
-                      className="group text-left px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 focus-ring text-muted-foreground hover:text-foreground border border-transparent hover:border-accent/30 hover:bg-accent/10"
+                      className="group flex items-start gap-2 text-left px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 focus-ring text-muted-foreground hover:text-foreground border border-transparent hover:border-accent/30 hover:bg-accent/10 hover:translate-x-0.5 active:scale-[0.98]"
                       aria-label={t('search.searchFor').replace(
                         '{query}',
                         example,
                       )}
                     >
-                      <span className="inline-block mr-1.5 text-accent/60 group-hover:text-accent transition-colors">→</span>
-                      {example}
+                      <Search className="h-3 w-3 mt-0.5 flex-shrink-0 text-accent/40 group-hover:text-accent transition-colors duration-200" aria-hidden="true" />
+                      <span className="group-hover:text-foreground transition-colors duration-200">{example}</span>
                     </button>
                   ))}
                 </div>
