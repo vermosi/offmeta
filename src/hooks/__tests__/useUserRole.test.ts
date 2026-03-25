@@ -45,18 +45,18 @@ describe('useUserRole', () => {
 
   it('returns isLoading true initially when user exists', async () => {
     mockUser.mockReturnValue({ id: 'user-1' });
-    let resolvePromise: ((value: { data: null }) => void) | null = null;
+    const promiseRef: { resolve: ((value: { data: null }) => void) | null } = { resolve: null };
     mockMaybeSingle.mockImplementation(
       () =>
         new Promise((resolve) => {
-          resolvePromise = resolve;
+          promiseRef.resolve = resolve;
         }),
     );
 
     const { result } = renderHook(() => useUserRole('admin'));
     expect(result.current.isLoading).toBe(true);
 
-    resolvePromise?.({ data: null });
+    promiseRef.resolve?.({ data: null });
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
