@@ -69,66 +69,24 @@ export async function getCachedResult(
   return null;
 }
 
-// Deduplication for cache events (only log once per query per minute)
-const recentCacheLogEvents = new Map<string, number>();
-const CACHE_LOG_DEDUP_WINDOW_MS = 60000;
-
 /**
- * Check if we should log a cache event (deduplication)
- */
-function shouldLogCacheEvent(hash: string, eventType: string): boolean {
-  const key = `${eventType}:${hash}`;
-  const now = Date.now();
-  const lastLogged = recentCacheLogEvents.get(key);
-
-  if (lastLogged && now - lastLogged < CACHE_LOG_DEDUP_WINDOW_MS) {
-    return false;
-  }
-
-  recentCacheLogEvents.set(key, now);
-
-  // Cleanup old entries periodically
-  if (recentCacheLogEvents.size > 200) {
-    const cutoff = now - CACHE_LOG_DEDUP_WINDOW_MS;
-    for (const [k, time] of recentCacheLogEvents.entries()) {
-      if (time < cutoff) recentCacheLogEvents.delete(k);
-    }
-  }
-
-  return true;
-}
-
-/**
- * Log cache events to analytics_events table for performance tracking.
- * Includes deduplication to prevent event spam.
+ * Cache event logging — intentionally a no-op.
+ *
+ * Previously inserted cache_hit / cache_miss / cache_set / memory_cache_hit
+ * rows into analytics_events.  Those operational events were flooding the
+ * table (hundreds/day) and polluting user-behaviour analytics.
+ *
+ * Cache performance can be monitored via the hit_count column on query_cache
+ * and the existing translation_logs source breakdown instead.
  */
 export function logCacheEvent(
-  eventType: 'cache_hit' | 'cache_miss' | 'cache_set' | 'memory_cache_hit',
-  query: string,
-  hash: string,
-  hitCount: number | null,
+  _eventType: 'cache_hit' | 'cache_miss' | 'cache_set' | 'memory_cache_hit',
+  _query: string,
+  _hash: string,
+  _hitCount: number | null,
 ): void {
-  // Skip duplicate cache events within the dedup window
-  if (!shouldLogCacheEvent(hash, eventType)) {
-    return;
-  }
-
-  // Fire and forget - don't block on analytics
-  (async () => {
-    try {
-      await supabase.from('analytics_events').insert({
-        event_type: eventType,
-        event_data: {
-          query: query.substring(0, 200),
-          hash: hash.substring(0, 8),
-          hit_count: hitCount,
-          timestamp: new Date().toISOString(),
-        },
-      });
-    } catch {
-      // Ignore analytics errors
-    }
-  })();
+  // no-op — see JSDoc above
+}
 }
 
 /**
