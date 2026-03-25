@@ -26,6 +26,7 @@ import { Footer } from '@/components/Footer';
 import { ManaSymbol } from '@/components/ManaSymbol';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Skeleton } from '@/components/ui/skeleton';
+import { FeatureCrossLinks } from '@/components/FeatureCrossLinks';
 import { Badge } from '@/components/ui/badge';
 import {
   ExternalLink,
@@ -512,6 +513,9 @@ const CardPage = () => {
                 </div>
               </section>
             )}
+
+            {/* Cross-links to other tools */}
+            <FeatureCrossLinks cardName={card.name} />
           </div>
         </main>
 
