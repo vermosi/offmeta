@@ -29,6 +29,114 @@ const HARDCODED_TRANSLATIONS: Record<string, CacheEntry['result']> = {
     },
     showAffiliate: true,
   },
+  'artifact removal': {
+    scryfallQuery: 'otag:removal-artifact',
+    explanation: {
+      readable: 'Cards that remove artifacts',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'graveyard hate': {
+    scryfallQuery: 'otag:graveyard-hate',
+    explanation: {
+      readable: 'Cards that disrupt graveyard strategies',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'lifegain': {
+    scryfallQuery: 'otag:lifegain',
+    explanation: {
+      readable: 'Cards that gain life',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'sacrifice outlets': {
+    scryfallQuery: 'otag:sacrifice-outlet',
+    explanation: {
+      readable: 'Cards that let you sacrifice permanents',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'sac outlets': {
+    scryfallQuery: 'otag:sacrifice-outlet',
+    explanation: {
+      readable: 'Cards that let you sacrifice permanents',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'counterspells': {
+    scryfallQuery: 'otag:counter',
+    explanation: {
+      readable: 'Cards that counter spells',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'spot removal': {
+    scryfallQuery: 'otag:spot-removal',
+    explanation: {
+      readable: 'Targeted removal spells',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'mana dorks': {
+    scryfallQuery: 'otag:mana-dork',
+    explanation: {
+      readable: 'Creatures that produce mana',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'card draw': {
+    scryfallQuery: 'otag:draw',
+    explanation: {
+      readable: 'Cards that draw cards',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'ramp': {
+    scryfallQuery: 'otag:ramp',
+    explanation: {
+      readable: 'Cards that accelerate mana production',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'tutors': {
+    scryfallQuery: 'otag:tutor',
+    explanation: {
+      readable: 'Cards that search your library',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'cantrips': {
+    scryfallQuery: 'otag:cantrip',
+    explanation: {
+      readable: 'Cheap spells that draw a card',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
 };
 
 /**
