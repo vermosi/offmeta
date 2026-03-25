@@ -151,14 +151,14 @@ const EXAMPLE_QUERY_GROUPS = [
   {
     category: 'Tribal',
     queries: [
-      'elf lords that buff other elves',
+      'elf lords',
       'best zombie tribal payoffs',
     ],
   },
   {
     category: 'Combo',
     queries: [
-      'infinite mana combos in green',
+      'sacrifice outlets',
       'cards that go infinite with sacrifice',
     ],
   },
@@ -170,7 +170,7 @@ const EXAMPLE_QUERY_GROUPS = [
     category: 'Synergy',
     queries: [
       'cards that double ETB triggers',
-      'one-card combos in Simic colors',
+      'ramp spells in green',
     ],
   },
 ] as const;
