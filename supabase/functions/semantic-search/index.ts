@@ -463,7 +463,47 @@ serve(async (req) => {
       );
     }
 
-    // 2.5. Fast-path for card-name queries (skip cache/pattern/AI entirely)
+    // 2.5a. Check hardcoded patterns FIRST (before card name detection)
+    // Hardcoded otag translations like "elf lords" must take priority over card name heuristics
+    const earlyHardcodedMatch0 = getHardcodedPatternMatch(query);
+    if (earlyHardcodedMatch0) {
+      const responseTimeMs = Date.now() - requestStartTime;
+      logInfo('pattern_match_hit', {
+        query: query.substring(0, 50),
+        responseTimeMs,
+      });
+      logInfo(
+        'request_completed',
+        getPerfLogFields('pattern_match', responseTimeMs),
+      );
+
+      setCachedResult(query, filters, earlyHardcodedMatch0, cacheSalt);
+      logTranslation(
+        query,
+        earlyHardcodedMatch0.scryfallQuery,
+        earlyHardcodedMatch0.explanation?.confidence ?? 0.95,
+        responseTimeMs,
+        [],
+        [],
+        filters,
+        false,
+        'pattern_match',
+      );
+      flushLogQueue();
+
+      return new Response(
+        JSON.stringify({
+          originalQuery: query,
+          ...earlyHardcodedMatch0,
+          responseTimeMs,
+          success: true,
+          source: 'pattern_match',
+        }),
+        { headers: jsonHeaders },
+      );
+    }
+
+    // 2.5b. Fast-path for card-name queries (skip cache/pattern/AI entirely)
     // First check DB for known card names, then fall back to heuristic for capitalized queries.
     const queryWords = query.trim().split(/\s+/);
     const hasSearchKeywords = /\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries)\b/i.test(query);
@@ -603,45 +643,7 @@ serve(async (req) => {
         .replace(/\s+/g, ' ')
         .trim();
 
-    // Check hardcoded patterns BEFORE deterministic early return
-    // (hardcoded otag translations are more accurate than the deterministic parser for multi-concept queries)
-    const earlyHardcodedMatch = getHardcodedPatternMatch(query);
-    if (earlyHardcodedMatch) {
-      const responseTimeMs = Date.now() - requestStartTime;
-      logInfo('pattern_match_hit', {
-        query: query.substring(0, 50),
-        responseTimeMs,
-      });
-      logInfo(
-        'request_completed',
-        getPerfLogFields('pattern_match', responseTimeMs),
-      );
-
-      setCachedResult(query, filters, earlyHardcodedMatch, cacheSalt);
-      logTranslation(
-        query,
-        earlyHardcodedMatch.scryfallQuery,
-        earlyHardcodedMatch.explanation?.confidence ?? 0.95,
-        responseTimeMs,
-        [],
-        [],
-        filters,
-        false,
-        'pattern_match',
-      );
-      flushLogQueue();
-
-      return new Response(
-        JSON.stringify({
-          originalQuery: query,
-          ...earlyHardcodedMatch,
-          responseTimeMs,
-          success: true,
-          source: 'pattern_match',
-        }),
-        { headers: jsonHeaders },
-      );
-    }
+    // Hardcoded patterns already checked at step 2.5a above
 
     // Deterministic fast-path: never wait on cache/DB for this case.
     if (deterministicQuery && deterministicRemaining.length < 3) {
@@ -680,46 +682,7 @@ serve(async (req) => {
       );
     }
 
-    // Hardcoded pattern fast-path (e.g. "mana rocks", "board wipes")
-    const hardcodedPatternMatch = await markStage('pattern', () =>
-      Promise.resolve(getHardcodedPatternMatch(query)),
-    );
-    if (hardcodedPatternMatch) {
-      const responseTimeMs = Date.now() - requestStartTime;
-      logInfo('pattern_match_hit', {
-        query: query.substring(0, 50),
-        responseTimeMs,
-      });
-      logInfo(
-        'request_completed',
-        getPerfLogFields('pattern_match', responseTimeMs),
-      );
-
-      setCachedResult(query, filters, hardcodedPatternMatch, cacheSalt);
-      logTranslation(
-        query,
-        hardcodedPatternMatch.scryfallQuery,
-        hardcodedPatternMatch.explanation?.confidence ?? 0.95,
-        responseTimeMs,
-        [],
-        [],
-        filters,
-        false,
-        'pattern_match',
-      );
-      flushLogQueue();
-
-      return new Response(
-        JSON.stringify({
-          originalQuery: query,
-          ...hardcodedPatternMatch,
-          responseTimeMs,
-          success: true,
-          source: 'pattern_match',
-        }),
-        { headers: jsonHeaders },
-      );
-    }
+    // Hardcoded patterns already checked at step 2.5a above
 
     if (useCache) {
       const CACHE_LOOKUP_TIMEOUT_MS = 900;
