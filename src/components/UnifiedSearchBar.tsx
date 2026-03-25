@@ -518,24 +518,26 @@ export const UnifiedSearchBar = forwardRef<
       {/* Example queries - shown when no query typed */}
       {showExamples && (
         <div
-          className="flex flex-col items-center gap-2.5 animate-reveal"
+          className="animate-reveal rounded-2xl border border-border/60 bg-card/50 p-4 sm:p-5"
           role="group"
           aria-label={t('search.trySearchingFor')}
         >
-          <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium flex items-center gap-1.5">
-            <Sparkles className="h-3 w-3 text-accent" aria-hidden="true" />
-            {t('search.trySearchingFor')}
-          </span>
-          <div className="flex w-full flex-col gap-3">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Sparkles className="h-4 w-4 text-accent" aria-hidden="true" />
+            <span className="text-sm font-semibold text-foreground tracking-wide">
+              {t('search.trySearchingFor')}
+            </span>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {visibleExamples.map(({ category, queries }) => (
               <div
                 key={category}
-                className="flex flex-col items-center gap-1.5"
+                className="flex flex-col gap-2"
               >
-                <span className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-accent">
                   {category}
                 </span>
-                <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+                <div className="flex flex-col gap-1.5">
                   {queries.map((example, i) => (
                     <button
                       key={`${category}-${example}`}
@@ -551,19 +553,13 @@ export const UnifiedSearchBar = forwardRef<
                         setQuery(example);
                         handleSearch(example);
                       }}
-                      className={`
-                        px-3.5 py-2 rounded-full text-xs font-medium border transition-all duration-200 focus-ring
-                        ${
-                          i === 0
-                            ? 'bg-accent/10 border-accent/30 text-accent hover:bg-accent/20 hover:border-accent/50'
-                            : 'text-muted-foreground hover:text-foreground border-border/60 hover:border-primary/40 hover:bg-primary/5'
-                        }
-                      `}
+                      className="group text-left px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 focus-ring text-muted-foreground hover:text-foreground border border-transparent hover:border-accent/30 hover:bg-accent/10"
                       aria-label={t('search.searchFor').replace(
                         '{query}',
                         example,
                       )}
                     >
+                      <span className="inline-block mr-1.5 text-accent/60 group-hover:text-accent transition-colors">→</span>
                       {example}
                     </button>
                   ))}
