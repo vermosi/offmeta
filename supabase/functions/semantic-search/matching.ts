@@ -164,6 +164,87 @@ const HARDCODED_TRANSLATIONS: Record<string, CacheEntry['result']> = {
     },
     showAffiliate: true,
   },
+  'goblin lords': {
+    scryfallQuery: 't:goblin (otag:lord or otag:anthem)',
+    explanation: {
+      readable: 'Goblin creatures that buff other goblins',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'goblin tribal': {
+    scryfallQuery: 't:goblin (otag:lord or otag:anthem or o:"whenever" o:"goblin")',
+    explanation: {
+      readable: 'Goblin tribal payoffs and lords',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'merfolk lords': {
+    scryfallQuery: 't:merfolk (otag:lord or otag:anthem)',
+    explanation: {
+      readable: 'Merfolk creatures that buff other merfolk',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'merfolk tribal': {
+    scryfallQuery: 't:merfolk (otag:lord or otag:anthem or o:"whenever" o:"merfolk")',
+    explanation: {
+      readable: 'Merfolk tribal payoffs and lords',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'dragon lords': {
+    scryfallQuery: 't:dragon (otag:lord or otag:anthem)',
+    explanation: {
+      readable: 'Dragon creatures that buff other dragons',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'dragon tribal': {
+    scryfallQuery: 't:dragon (otag:lord or otag:anthem or o:"whenever" o:"dragon")',
+    explanation: {
+      readable: 'Dragon tribal payoffs and lords',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'vampire lords': {
+    scryfallQuery: 't:vampire (otag:lord or otag:anthem)',
+    explanation: {
+      readable: 'Vampire creatures that buff other vampires',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'vampire tribal': {
+    scryfallQuery: 't:vampire (otag:lord or otag:anthem or o:"whenever" o:"vampire")',
+    explanation: {
+      readable: 'Vampire tribal payoffs and lords',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'vampire tribal payoffs': {
+    scryfallQuery: 't:vampire (otag:lord or otag:anthem or o:"whenever" o:"vampire")',
+    explanation: {
+      readable: 'Vampire cards that reward tribal synergy',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
   'best zombie tribal payoffs': {
     scryfallQuery: 't:zombie (otag:lord or otag:anthem or o:"whenever" o:"zombie")',
     explanation: {
