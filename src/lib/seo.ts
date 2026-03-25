@@ -9,6 +9,9 @@ interface SeoOptions {
   url: string;
   type?: string;
   image?: string;
+  twitterCard?: 'summary' | 'summary_large_image';
+  /** Additional meta tags to set */
+  extraMeta?: Record<string, string>;
 }
 
 /** Set or update a <meta> element in the document head. */
@@ -48,10 +51,17 @@ export function applySeoMeta(opts: SeoOptions): () => void {
   setMeta('og:type', opts.type ?? 'article', 'property');
   setMeta('twitter:title', opts.title);
   setMeta('twitter:description', opts.description);
+  setMeta('twitter:card', opts.twitterCard ?? 'summary');
 
   if (opts.image) {
     setMeta('og:image', opts.image, 'property');
     setMeta('twitter:image', opts.image);
+  }
+
+  if (opts.extraMeta) {
+    for (const [key, value] of Object.entries(opts.extraMeta)) {
+      setMeta(key, value);
+    }
   }
 
   setCanonical(opts.url);
