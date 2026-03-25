@@ -160,7 +160,7 @@ export function useSearch() {
   const prevSlugQueryRef = useRef(slugQuery);
 
   useEffect(() => {
-    if (slugQuery === prevSlugQueryRef.current) return;
+    if (slugQuery === prevSlugQueryRef.current) return undefined;
 
     prevSlugQueryRef.current = slugQuery;
 
@@ -184,6 +184,8 @@ export function useSearch() {
         cancelled = true;
       };
     }
+
+    return undefined;
   }, [slugQuery]);
 
   // Trigger search bar for slug changes (browser back/forward only, skip initial)

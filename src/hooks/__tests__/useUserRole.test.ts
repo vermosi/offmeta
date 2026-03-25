@@ -45,7 +45,7 @@ describe('useUserRole', () => {
 
   it('returns isLoading true initially when user exists', async () => {
     mockUser.mockReturnValue({ id: 'user-1' });
-    let resolvePromise: ((value: { data: null }) => void) | null = null;
+    let resolvePromise: ((value: { data: null }) => void) | null = null as ((value: { data: null }) => void) | null;
     mockMaybeSingle.mockImplementation(
       () =>
         new Promise((resolve) => {
