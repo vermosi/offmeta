@@ -682,46 +682,7 @@ serve(async (req) => {
       );
     }
 
-    // Hardcoded pattern fast-path (e.g. "mana rocks", "board wipes")
-    const hardcodedPatternMatch = await markStage('pattern', () =>
-      Promise.resolve(getHardcodedPatternMatch(query)),
-    );
-    if (hardcodedPatternMatch) {
-      const responseTimeMs = Date.now() - requestStartTime;
-      logInfo('pattern_match_hit', {
-        query: query.substring(0, 50),
-        responseTimeMs,
-      });
-      logInfo(
-        'request_completed',
-        getPerfLogFields('pattern_match', responseTimeMs),
-      );
-
-      setCachedResult(query, filters, hardcodedPatternMatch, cacheSalt);
-      logTranslation(
-        query,
-        hardcodedPatternMatch.scryfallQuery,
-        hardcodedPatternMatch.explanation?.confidence ?? 0.95,
-        responseTimeMs,
-        [],
-        [],
-        filters,
-        false,
-        'pattern_match',
-      );
-      flushLogQueue();
-
-      return new Response(
-        JSON.stringify({
-          originalQuery: query,
-          ...hardcodedPatternMatch,
-          responseTimeMs,
-          success: true,
-          source: 'pattern_match',
-        }),
-        { headers: jsonHeaders },
-      );
-    }
+    // Hardcoded patterns already checked at step 2.5a above
 
     if (useCache) {
       const CACHE_LOOKUP_TIMEOUT_MS = 900;
