@@ -149,6 +149,20 @@ const EXAMPLE_QUERY_GROUPS = [
     ],
   },
   {
+    category: 'Tribal',
+    queries: [
+      'elf lords that buff other elves',
+      'best zombie tribal payoffs',
+    ],
+  },
+  {
+    category: 'Combo',
+    queries: [
+      'infinite mana combos in green',
+      'cards that go infinite with sacrifice',
+    ],
+  },
+  {
     category: 'Staples',
     queries: ['mana rocks that cost 2', 'best black removal for commander'],
   },
@@ -528,7 +542,7 @@ export const UnifiedSearchBar = forwardRef<
               {t('search.trySearchingFor')}
             </span>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             {visibleExamples.map(({ category, queries }) => (
               <div
                 key={category}
