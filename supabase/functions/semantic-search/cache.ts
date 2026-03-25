@@ -87,7 +87,6 @@ export function logCacheEvent(
 ): void {
   // no-op — see JSDoc above
 }
-}
 
 /**
  * Check persistent database cache for a query.
