@@ -348,7 +348,7 @@ const Index = () => {
         {/* Main content */}
         <main
           id="main-content"
-          className={`relative flex-1 ${hasSearched ? 'pt-4 sm:pt-6' : 'pt-2 sm:pt-3'} pb-4 sm:pb-8 safe-bottom`}
+          className={`relative ${hasSearched ? 'pt-4 sm:pt-6' : 'pt-2 sm:pt-3'} pb-4 sm:pb-8 safe-bottom`}
           role="main"
         >
           <div className="container-main space-y-3 sm:space-y-6">
