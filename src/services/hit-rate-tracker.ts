@@ -5,7 +5,7 @@
  * @module services/hit-rate-tracker
  */
 
-import { supabase } from '@/integrations/supabase/client';
+// supabase import removed — flushToDb is now a no-op
 
 export type HitSource = 'local' | 'scryfall' | 'cache';
 export type HitOperation =

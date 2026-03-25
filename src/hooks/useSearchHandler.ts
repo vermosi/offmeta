@@ -15,7 +15,7 @@ import { estimateQueryComplexity } from '@/lib/search/complexity';
 import { CLIENT_CONFIG } from '@/lib/config';
 import type { FilterState } from '@/types/filters';
 import type { SearchResult } from '@/components/UnifiedSearchBar';
-import { supabase } from '@/integrations/supabase/client';
+
 import { validateSearchInput } from '@/lib/validation/clientInput';
 
 export type SearchPhase = 'idle' | 'translating' | 'fetching';
