@@ -15,6 +15,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { LoadMoreIndicator } from '@/components/LoadMoreIndicator';
 import { VirtualizedCardGrid } from '@/components/VirtualizedCardGrid';
 import { RelatedCardsStrip } from '@/components/RelatedCardsStrip';
+import { FeatureCrossLinks } from '@/components/FeatureCrossLinks';
 import { SimilarCardsPanel } from '@/components/SimilarCardsPanel';
 import { DeckIdeasPanel } from '@/components/DeckIdeasPanel';
 import { ExplanationPanel } from '@/components/ExplanationPanel';
@@ -307,6 +308,13 @@ export function SearchResultsArea({
               onTrySuggestion={onTrySuggestion}
             />
           ) : null}
+
+          {/* Cross-links to other tools — show after results loaded */}
+          {hasSearched && !isSearching && totalCards > 0 && (
+            <div className="container-main mt-6">
+              <FeatureCrossLinks />
+            </div>
+          )}
         </>
       )}
 
