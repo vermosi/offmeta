@@ -17,6 +17,8 @@ import {
   injectJsonLd,
   buildCardJsonLd,
   buildBreadcrumbJsonLd,
+  buildFaqJsonLd,
+  buildCardFaqs,
 } from '@/lib/seo';
 import { useSimilarCards } from '@/hooks/useSimilarCards';
 import { Header } from '@/components/Header';
@@ -122,15 +124,37 @@ const CardPage = () => {
     if (!card) return;
 
     const typeShort = card.type_line.split('—')[0].trim().toLowerCase();
-    const description = `${card.name}: Explore off-meta ${typeShort} alternatives and synergy picks for your next deck.`;
+    const colorNames = (card.colors ?? []).map(
+      (c) => ({ W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green' }[c] ?? c),
+    );
+    const colorLabel = colorNames.length > 0 ? colorNames.join('/') + ' ' : '';
+    const priceSnippet = card.prices?.usd ? ` From $${card.prices.usd}.` : '';
+    const legalFormats = Object.entries(card.legalities)
+      .filter(([, v]) => v === 'legal')
+      .map(([f]) => f);
+    const formatSnippet = legalFormats.includes('commander')
+      ? ' Commander legal.'
+      : legalFormats.length > 0
+        ? ` Legal in ${legalFormats[0]}.`
+        : '';
+
+    const description = `${card.name} — ${colorLabel}${typeShort}. Find off-meta alternatives, synergies, and budget picks.${priceSnippet}${formatSnippet}`;
 
     const cleanupSeo = applySeoMeta({
-      title: `${card.name} — Off-Meta Alternatives & Synergies | OffMeta MTG`,
-      description,
+      title: `${card.name} — MTG Off-Meta Alternatives, Price & Synergies | OffMeta`,
+      description: description.slice(0, 160),
       url: pageUrl,
       type: 'website',
       image: getCardImage(card, 'art_crop'),
+      twitterCard: 'summary_large_image',
+      extraMeta: {
+        'robots': 'index, follow',
+        'og:site_name': 'OffMeta',
+      },
     });
+
+    // Build FAQ structured data
+    const cardFaqs = buildCardFaqs(card);
 
     const cleanupJsonLd = injectJsonLd({
       '@graph': [
@@ -140,6 +164,7 @@ const CardPage = () => {
           { name: 'Cards', url: 'https://offmeta.app/cards' },
           { name: card.name, url: pageUrl },
         ]),
+        ...(cardFaqs.length > 0 ? [buildFaqJsonLd(cardFaqs)] : []),
       ],
     });
 
