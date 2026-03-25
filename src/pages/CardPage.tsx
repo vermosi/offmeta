@@ -513,6 +513,9 @@ const CardPage = () => {
                 </div>
               </section>
             )}
+
+            {/* Cross-links to other tools */}
+            <FeatureCrossLinks cardName={card.name} />
           </div>
         </main>
 
