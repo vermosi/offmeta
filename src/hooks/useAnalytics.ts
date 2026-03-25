@@ -1,12 +1,46 @@
 /**
  * Analytics tracking hook for capturing user interactions.
  * Tracks searches, card clicks, modal views, affiliate clicks, and pagination.
- * Includes rate limiting and input validation to prevent abuse.
+ * Includes rate limiting, input validation, and internal traffic filtering.
  */
 
 import { useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/core/logger';
+
+// ---------------------------------------------------------------------------
+// Internal traffic detection
+// ---------------------------------------------------------------------------
+
+/**
+ * Detect whether the current session is internal (dev/founder).
+ * Checks hostname and a manual localStorage flag.
+ * Synchronous — no async overhead.
+ */
+function isInternalTraffic(): boolean {
+  const host = window.location.hostname;
+  // Localhost / IP
+  if (host === 'localhost' || host === '127.0.0.1') return true;
+  // Lovable preview domains (NOT the published offmeta.lovable.app)
+  if (host.includes('-preview--') && host.endsWith('.lovable.app')) return true;
+  // Manual founder flag: localStorage.setItem('offmeta_internal', 'true')
+  try {
+    if (localStorage.getItem('offmeta_internal') === 'true') return true;
+  } catch {
+    /* private browsing may throw */
+  }
+  return false;
+}
+
+/** Whether to skip the DB insert entirely (localhost / preview). */
+function shouldSuppressInsert(): boolean {
+  const host = window.location.hostname;
+  return (
+    host === 'localhost' ||
+    host === '127.0.0.1' ||
+    (host.includes('-preview--') && host.endsWith('.lovable.app'))
+  );
+}
 
 // Rate limiting configuration
 const RATE_LIMIT_KEY = 'analytics_events_rate';
@@ -353,6 +387,13 @@ export function useAnalytics() {
           eventData as unknown as Record<string, unknown>,
         );
 
+        // Internal traffic handling
+        const internal = isInternalTraffic();
+        if (internal && shouldSuppressInsert()) {
+          logger.debug('Analytics suppressed (internal/preview)');
+          return;
+        }
+
         // Fire and forget - don't await to avoid blocking
         const searchCount = parseInt(
           sessionStorage.getItem('offmeta_searches_per_session') || '0',
@@ -362,6 +403,7 @@ export function useAnalytics() {
         const eventPayload: Record<string, string | number | boolean | null> = {
           ...sanitizedData,
           searches_per_session: searchCount,
+          ...(internal && { is_internal: true }),
           ...(utm.utm_source && { utm_source: utm.utm_source }),
           ...(utm.utm_medium && { utm_medium: utm.utm_medium }),
           ...(utm.utm_campaign && { utm_campaign: utm.utm_campaign }),
