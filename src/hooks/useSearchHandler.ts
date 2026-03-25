@@ -33,38 +33,15 @@ interface UseSearchHandlerOptions {
 }
 
 /**
- * Fire-and-forget analytics event for fallback tracking.
- * Logs to analytics_events so admins can monitor fallback frequency in production.
+ * Log fallback events for debugging only — no longer writes to analytics_events.
+ * Operational noise was polluting user-behaviour analytics (~2,800 rows/30 days).
  */
 function trackFallbackEvent(
   reason: 'timeout' | 'error' | 'rate_limit',
   query: string,
   details: Record<string, unknown>,
 ): void {
-  const sessionId =
-    typeof sessionStorage !== 'undefined'
-      ? sessionStorage.getItem('offmeta_session_id')
-      : null;
-
-  supabase
-    .from('analytics_events')
-    .insert({
-      event_type: 'search_fallback',
-      session_id: sessionId,
-      event_data: {
-        reason,
-        query: query.substring(0, 200),
-        ...details,
-        timestamp: new Date().toISOString(),
-      },
-    })
-    .then(({ error }) => {
-      if (error) {
-        logger.warn('[SearchDiag] Failed to track fallback event', {
-          error: String(error),
-        });
-      }
-    });
+  logger.debug('[SearchDiag] Fallback', { reason, query: query.substring(0, 80), ...details });
 }
 
 export function useSearchHandler({
