@@ -137,7 +137,7 @@ const EXAMPLE_QUERY_GROUPS = [
   {
     category: 'Budget',
     queries: [
-      'find budget board wipes under $5',
+      'budget board wipes under $5',
       'cheap white protection spells',
     ],
   },
