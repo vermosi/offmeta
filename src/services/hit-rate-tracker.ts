@@ -5,7 +5,7 @@
  * @module services/hit-rate-tracker
  */
 
-import { supabase } from '@/integrations/supabase/client';
+// supabase import removed — flushToDb is now a no-op
 
 export type HitSource = 'local' | 'scryfall' | 'cache';
 export type HitOperation =
@@ -73,62 +73,15 @@ function persist(): void {
 }
 
 /**
- * Flush pending hit events to analytics_events table.
- * Aggregates by source+operation to reduce row count.
+ * Flush pending hit events — intentionally a no-op.
+ *
+ * Previously wrote aggregated hit_rate rows to analytics_events.
+ * Removed to eliminate operational noise (~235 rows/30 days).
+ * In-memory stats via getHitRateStats() remain functional.
  */
 async function flushToDb(): Promise<void> {
-  if (pendingFlush.length === 0) return;
-
-  const batch = pendingFlush.splice(0, FLUSH_BATCH_SIZE);
-  const sessionId = getSessionId();
-
-  // Aggregate by source+operation for compact storage
-  const aggregated = new Map<
-    string,
-    {
-      source: HitSource;
-      operation: HitOperation;
-      count: number;
-      firstTs: number;
-      lastTs: number;
-    }
-  >();
-
-  for (const e of batch) {
-    const key = `${e.source}::${e.operation}`;
-    const existing = aggregated.get(key);
-    if (existing) {
-      existing.count += e.count;
-      existing.lastTs = Math.max(existing.lastTs, e.timestamp);
-    } else {
-      aggregated.set(key, {
-        source: e.source,
-        operation: e.operation,
-        count: e.count,
-        firstTs: e.timestamp,
-        lastTs: e.timestamp,
-      });
-    }
-  }
-
-  const rows = Array.from(aggregated.values()).map((a) => ({
-    event_type: 'hit_rate',
-    session_id: sessionId,
-    event_data: {
-      source: a.source,
-      operation: a.operation,
-      count: a.count,
-      first_ts: a.firstTs,
-      last_ts: a.lastTs,
-    },
-  }));
-
-  try {
-    await supabase.from('analytics_events').insert(rows);
-  } catch {
-    // Re-queue on failure so we don't lose data
-    pendingFlush.unshift(...batch);
-  }
+  // no-op — clear pending to prevent unbounded growth
+  pendingFlush = [];
 }
 
 function scheduleFlush(): void {
