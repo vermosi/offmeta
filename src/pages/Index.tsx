@@ -49,9 +49,9 @@ const HomeDiscoverySection = lazy(() =>
     default: m.HomeDiscoverySection,
   })),
 );
-const SearchMicroDemo = lazy(() =>
-  import('@/components/SearchMicroDemo').then((m) => ({
-    default: m.SearchMicroDemo,
+const LivePreviewStrip = lazy(() =>
+  import('@/components/LivePreviewStrip').then((m) => ({
+    default: m.LivePreviewStrip,
   })),
 );
 import { ScrollToTop } from '@/components/ScrollToTop';
@@ -365,7 +365,7 @@ const Index = () => {
 
             {!hasSearched && (
               <div className="animate-reveal">
-                <SearchMicroDemo />
+                <LivePreviewStrip onTrySearch={handleTryExample} />
               </div>
             )}
 

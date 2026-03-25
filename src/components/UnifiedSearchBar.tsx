@@ -196,6 +196,17 @@ export const UnifiedSearchBar = forwardRef<
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
 
+  // Auto-focus search input on desktop to encourage immediate search
+  useEffect(() => {
+    if (!isMobile && inputRef.current) {
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const {
     placeholder,
     typingText,
