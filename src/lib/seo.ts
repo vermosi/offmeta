@@ -263,3 +263,75 @@ export function buildBreadcrumbJsonLd(
     })),
   };
 }
+
+/**
+ * Build FAQPage JSON-LD from question/answer pairs.
+ * Enables rich FAQ snippets in Google search results.
+ */
+export function buildFaqJsonLd(
+  faqs: Array<{ question: string; answer: string }>,
+): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer,
+      },
+    })),
+  };
+}
+
+/**
+ * Build card-specific FAQ entries from card data for rich snippets.
+ */
+export function buildCardFaqs(card: ScryfallCard): Array<{ question: string; answer: string }> {
+  const faqs: Array<{ question: string; answer: string }> = [];
+  const oracle = card.oracle_text ?? card.card_faces?.map((f) => f.oracle_text).filter(Boolean).join(' ') ?? '';
+
+  // Price FAQ
+  const usd = card.prices?.usd;
+  const foil = card.prices?.usd_foil;
+  if (usd) {
+    faqs.push({
+      question: `How much does ${card.name} cost?`,
+      answer: `${card.name} is currently priced at $${usd} USD for a regular copy${foil ? ` and $${foil} USD for a foil version` : ''}. Prices are sourced from TCGplayer and may vary.`,
+    });
+  }
+
+  // Format legality FAQ
+  const legalFormats = Object.entries(card.legalities)
+    .filter(([, v]) => v === 'legal')
+    .map(([f]) => f);
+  if (legalFormats.length > 0) {
+    const isCommanderLegal = legalFormats.includes('commander');
+    faqs.push({
+      question: `Is ${card.name} legal in Commander?`,
+      answer: isCommanderLegal
+        ? `Yes, ${card.name} is legal in Commander (EDH). It is also legal in: ${legalFormats.slice(0, 8).join(', ')}.`
+        : `No, ${card.name} is not legal in Commander. It is currently legal in: ${legalFormats.slice(0, 8).join(', ')}.`,
+    });
+  }
+
+  // What does it do FAQ
+  if (oracle) {
+    const truncated = oracle.length > 300 ? oracle.slice(0, 300) + '…' : oracle;
+    faqs.push({
+      question: `What does ${card.name} do?`,
+      answer: `${card.name} is a ${card.type_line}${card.mana_cost ? ` that costs ${card.mana_cost}` : ''}. ${truncated}`,
+    });
+  }
+
+  // Power/toughness for creatures
+  if (card.power != null && card.toughness != null) {
+    faqs.push({
+      question: `What are ${card.name}'s stats?`,
+      answer: `${card.name} is a ${card.power}/${card.toughness} ${card.type_line} with a mana value of ${card.cmc}.${card.rarity ? ` It is ${card.rarity} rarity.` : ''}`,
+    });
+  }
+
+  return faqs;
+}
