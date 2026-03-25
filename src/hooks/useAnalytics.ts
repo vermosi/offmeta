@@ -387,6 +387,13 @@ export function useAnalytics() {
           eventData as unknown as Record<string, unknown>,
         );
 
+        // Internal traffic handling
+        const internal = isInternalTraffic();
+        if (internal && shouldSuppressInsert()) {
+          logger.debug('Analytics suppressed (internal/preview)');
+          return;
+        }
+
         // Fire and forget - don't await to avoid blocking
         const searchCount = parseInt(
           sessionStorage.getItem('offmeta_searches_per_session') || '0',
@@ -396,6 +403,7 @@ export function useAnalytics() {
         const eventPayload: Record<string, string | number | boolean | null> = {
           ...sanitizedData,
           searches_per_session: searchCount,
+          ...(internal && { is_internal: true }),
           ...(utm.utm_source && { utm_source: utm.utm_source }),
           ...(utm.utm_medium && { utm_medium: utm.utm_medium }),
           ...(utm.utm_campaign && { utm_campaign: utm.utm_campaign }),
