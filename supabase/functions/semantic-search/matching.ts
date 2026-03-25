@@ -10,6 +10,24 @@ const logger = createLogger('pattern-matching');
  * These MUST never hit AI - they are stable, well-known translations.
  */
 const HARDCODED_TRANSLATIONS: Record<string, CacheEntry['result']> = {
+  'budget board wipes under $5': {
+    scryfallQuery: 'otag:boardwipe usd<5',
+    explanation: {
+      readable: 'Board wipes under $5',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'budget board wipes under 5': {
+    scryfallQuery: 'otag:boardwipe usd<5',
+    explanation: {
+      readable: 'Board wipes under $5',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
   'mana rocks': {
     scryfallQuery:
       't:artifact o:"add" (o:"{C}" or o:"{W}" or o:"{U}" or o:"{B}" or o:"{R}" or o:"{G}" or o:"any color" or o:"one mana")',
