@@ -18,19 +18,19 @@ export function HeroSection() {
           id="hero-heading"
           className="mb-2 sm:mb-3 text-foreground text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-semibold tracking-tight animate-slide-up"
         >
-          {t('hero.title', 'Search Magic cards in')}{' '}
+          {t('hero.title', 'Natural language MTG search that generates real')}{' '}
           <span className="text-gradient">
-            {t('hero.titleAccent', 'plain English')}
+            {t('hero.titleAccent', 'Scryfall queries')}
           </span>
         </h1>
 
         <p
-          className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto animate-slide-up"
+          className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto animate-slide-up"
           style={{ animationDelay: '80ms' }}
         >
           {t(
             'hero.subtitleCompact',
-            'Type what you want — OffMeta translates it into a real Scryfall search instantly.',
+            'Describe the Magic cards you need in plain English. OffMeta translates, shows the query, and lets you refine it before you continue.',
           )}
         </p>
       </div>

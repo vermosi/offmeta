@@ -49,6 +49,7 @@ const HomeDiscoverySection = lazy(() =>
     default: m.HomeDiscoverySection,
   })),
 );
+import { HomepageLandingContent } from '@/components/HomepageLandingContent';
 const LivePreviewStrip = lazy(() =>
   import('@/components/LivePreviewStrip').then((m) => ({
     default: m.LivePreviewStrip,
@@ -364,6 +365,21 @@ const Index = () => {
             </div>
 
             {!hasSearched && (
+              <p className="text-center text-xs sm:text-sm text-muted-foreground animate-reveal">
+                Example prompt:{' '}
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleTryExample('commander board wipes under $5')
+                  }
+                  className="underline decoration-dotted underline-offset-4 hover:text-foreground transition-colors"
+                >
+                  "commander board wipes under $5"
+                </button>
+              </p>
+            )}
+
+            {!hasSearched && (
               <div className="animate-reveal">
                 <LivePreviewStrip onTrySearch={handleTryExample} />
               </div>
@@ -490,7 +506,12 @@ const Index = () => {
           />
         </main>
 
-        {!hasSearched && <HomeDiscoverySection onSearch={handleTryExample} />}
+        {!hasSearched && (
+          <>
+            <HomepageLandingContent onTrySearch={handleTryExample} />
+            <HomeDiscoverySection onSearch={handleTryExample} />
+          </>
+        )}
 
         <Footer />
         <ScrollToTop threshold={800} />
