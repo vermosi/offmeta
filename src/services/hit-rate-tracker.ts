@@ -38,7 +38,6 @@ interface HitRateStats {
 const SESSION_KEY = 'offmeta_hit_rate';
 const MAX_EVENTS = 200;
 const FLUSH_INTERVAL_MS = 30_000;
-const FLUSH_BATCH_SIZE = 50;
 
 let events: HitEvent[] = [];
 let pendingFlush: HitEvent[] = [];
@@ -51,14 +50,6 @@ try {
   if (stored) events = JSON.parse(stored);
 } catch {
   // ignore
-}
-
-function getSessionId(): string | null {
-  try {
-    return sessionStorage.getItem('offmeta_session_id');
-  } catch {
-    return null;
-  }
 }
 
 function persist(): void {
