@@ -89,7 +89,10 @@ export function LivePreviewStrip({
   }, [activeQuery.scryfall]);
 
   useEffect(() => {
-    fetchPreview();
+    const timer = window.setTimeout(() => {
+      void fetchPreview();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [fetchPreview]);
 
   if (cards.length === 0) return null;
@@ -148,9 +151,7 @@ export function LivePreviewStrip({
               className="relative rounded-xl overflow-hidden shadow-md border border-border/40 transition-all duration-500 hover:scale-105 hover:shadow-lg hover:z-10"
               style={{
                 opacity: isLoaded ? 1 : 0,
-                transform: isLoaded
-                  ? 'translateY(0)'
-                  : 'translateY(16px)',
+                transform: isLoaded ? 'translateY(0)' : 'translateY(16px)',
                 transitionDelay: `${i * 100}ms`,
                 transitionProperty: 'opacity, transform',
                 transitionDuration: '500ms',
@@ -170,7 +171,6 @@ export function LivePreviewStrip({
             </div>
           ))}
         </div>
-
       </div>
     </section>
   );

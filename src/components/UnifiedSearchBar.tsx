@@ -14,17 +14,7 @@ import {
   forwardRef,
 } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-  Search,
-  Loader2,
-  X,
-  Clock,
-  Sparkles,
-  Database,
-  ShieldCheck,
-  Globe,
-  BadgeDollarSign,
-} from 'lucide-react';
+import { Search, Loader2, X, Clock, Sparkles, Database } from 'lucide-react';
 import { SearchHistoryDropdown } from '@/components/SearchHistoryDropdown';
 import { useIsMobile } from '@/hooks/useMobile';
 const SearchFeedback = lazy(() =>
@@ -136,10 +126,7 @@ export interface UnifiedSearchBarHandle {
 const EXAMPLE_QUERY_GROUPS = [
   {
     category: 'Budget',
-    queries: [
-      'budget board wipes under $5',
-      'cheap white protection spells',
-    ],
+    queries: ['budget board wipes under $5', 'cheap white protection spells'],
   },
   {
     category: 'Commander',
@@ -150,17 +137,11 @@ const EXAMPLE_QUERY_GROUPS = [
   },
   {
     category: 'Tribal',
-    queries: [
-      'elf lords',
-      'best zombie tribal payoffs',
-    ],
+    queries: ['elf lords', 'best zombie tribal payoffs'],
   },
   {
     category: 'Combo',
-    queries: [
-      'sacrifice outlets',
-      'cards that go infinite with sacrifice',
-    ],
+    queries: ['sacrifice outlets', 'cards that go infinite with sacrifice'],
   },
   {
     category: 'Staples',
@@ -168,18 +149,8 @@ const EXAMPLE_QUERY_GROUPS = [
   },
   {
     category: 'Synergy',
-    queries: [
-      'cards that double ETB triggers',
-      'ramp spells in green',
-    ],
+    queries: ['cards that double ETB triggers', 'ramp spells in green'],
   },
-] as const;
-
-const TRUST_SIGNALS = [
-  { icon: BadgeDollarSign, label: 'Free to use' },
-  { icon: Database, label: 'Powered by Scryfall' },
-  { icon: ShieldCheck, label: 'No account required' },
-  { icon: Globe, label: '11-language support' },
 ] as const;
 
 export const UnifiedSearchBar = forwardRef<
@@ -543,10 +514,7 @@ export const UnifiedSearchBar = forwardRef<
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             {visibleExamples.map(({ category, queries }) => (
-              <div
-                key={category}
-                className="flex flex-col gap-2"
-              >
+              <div key={category} className="flex flex-col gap-2">
                 <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-accent">
                   {category}
                 </span>
@@ -572,8 +540,13 @@ export const UnifiedSearchBar = forwardRef<
                         example,
                       )}
                     >
-                      <Search className="h-3 w-3 mt-0.5 flex-shrink-0 text-accent/40 group-hover:text-accent transition-colors duration-200" aria-hidden="true" />
-                      <span className="group-hover:text-foreground transition-colors duration-200">{example}</span>
+                      <Search
+                        className="h-3 w-3 mt-0.5 flex-shrink-0 text-accent/40 group-hover:text-accent transition-colors duration-200"
+                        aria-hidden="true"
+                      />
+                      <span className="group-hover:text-foreground transition-colors duration-200">
+                        {example}
+                      </span>
                     </button>
                   ))}
                 </div>
