@@ -534,6 +534,20 @@ export function applyAutoCorrections(
   correctedQuery = correctedQuery.replace(/\s+/g, ' ').trim();
   correctedQuery = correctedQuery.replace(/\(\s*\)/g, '').trim();
 
+  // Deduplicate identical parenthesized groups (e.g. (o:"destroy all" or o:"exile all") repeated)
+  const parenGroups = correctedQuery.match(/\([^)]+\)/g);
+  if (parenGroups) {
+    const seen = new Set<string>();
+    for (const group of parenGroups) {
+      if (seen.has(group)) {
+        correctedQuery = correctedQuery.replace(group, '').trim();
+        corrections.push('Removed duplicate clause');
+      }
+      seen.add(group);
+    }
+    correctedQuery = correctedQuery.replace(/\s+/g, ' ').trim();
+  }
+
   return { correctedQuery, corrections };
 }
 
