@@ -22,7 +22,12 @@ export function normalizeQuery(query: string): string {
   normalized = normalized
     .replace(/\bgrey\b/gi, 'gray')
     .replace(/\baether\b/gi, 'aether') // already correct but normalize æther
-    .replace(/\bcolour\b/gi, 'color');
+    .replace(/\bcolour\b/gi, 'color')
+    .replace(/\bazorious\b/gi, 'azorius')
+    .replace(/\bazourus\b/gi, 'azorius')
+    .replace(/\bboard\s*whipe\b/gi, 'board wipe')
+    .replace(/\bboardwhipe\b/gi, 'board wipe')
+    .replace(/\bwhipe\b/gi, 'wipe');
 
   // Apply slang mappings
   for (const [slang, formal] of Object.entries(SLANG_MAP)) {
