@@ -10,7 +10,6 @@
  */
 
 import { logEvent } from './logger.ts';
-// @ts-expect-error: esm.sh import for Deno runtime
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const AI_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
