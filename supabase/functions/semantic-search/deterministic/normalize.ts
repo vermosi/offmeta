@@ -15,6 +15,9 @@ export function normalizeQuery(query: string): string {
     .replace(/['']/g, "'")
     .trim();
 
+  // Strip trailing quantity/multiplier suffixes (e.g. "2×", "1x", "3×")
+  normalized = normalized.replace(/\d+[×x]\s*$/gi, '').trim();
+
   // Common MTG card name spelling corrections (before slang)
   normalized = normalized
     .replace(/\bgrey\b/gi, 'gray')
