@@ -143,6 +143,17 @@ export function parseSpecialPatterns(query: string, ir: SearchIR): string {
     remaining = remaining.replace(commanderFormatPattern, '').trim();
   }
 
+  // "best/top commander [concept]" = format legality, not card property
+  // e.g. "best commander board wipes", "commander card draw", "commander ramp"
+  const commanderConceptPattern =
+    /\b(?:best|top|good|great)?\s*commander\s+(?:board\s*wipes?|boardwipes?|card\s*draw|ramp|removal|counterspells?|tutors?|protection|sacrifice|sac\s*outlets?|stax|hate|graveyard|reanimation|mill|tokens?|wrath|wraths|sweepers?|finishers?|win\s*cons?|combos?|lands?|mana\s*(?:base|rocks?|dorks?|fixing)|recursion)\b/gi;
+  if (!ir.specials.includes('f:commander') && commanderConceptPattern.test(remaining)) {
+    ir.specials.push('f:commander');
+    commanderConceptPattern.lastIndex = 0;
+    // Only strip "commander" from the match, keep the concept keyword
+    remaining = remaining.replace(/\bcommander\b/gi, '').trim();
+  }
+
   if (
     /\bcommander\b|\bis:commander\b|\bas commander\b|\bcommanders\b/i.test(
       remaining,
