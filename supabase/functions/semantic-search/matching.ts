@@ -308,6 +308,150 @@ const HARDCODED_TRANSLATIONS: Record<string, CacheEntry['result']> = {
     },
     showAffiliate: true,
   },
+  'creatures that make treasure tokens': {
+    scryfallQuery: 't:creature o:"create" o:"Treasure"',
+    explanation: {
+      readable: 'Creatures that create Treasure tokens',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'creatures that make treasure': {
+    scryfallQuery: 't:creature o:"create" o:"Treasure"',
+    explanation: {
+      readable: 'Creatures that create Treasure tokens',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'creatures that make tokens': {
+    scryfallQuery: 't:creature o:"create" o:"token"',
+    explanation: {
+      readable: 'Creatures that create tokens',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'lifegain angel theme': {
+    scryfallQuery: 't:angel otag:lifegain',
+    explanation: {
+      readable: 'Angels with lifegain synergies',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'lifegain angels': {
+    scryfallQuery: 't:angel otag:lifegain',
+    explanation: {
+      readable: 'Angels with lifegain synergies',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'cheap green ramp spells': {
+    scryfallQuery: 'otag:ramp c:g mv<=3',
+    explanation: {
+      readable: 'Green ramp spells costing 3 or less mana',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'cheap green ramp': {
+    scryfallQuery: 'otag:ramp c:g mv<=3',
+    explanation: {
+      readable: 'Green ramp cards costing 3 or less mana',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'cards that protect my commander': {
+    scryfallQuery: '(o:"hexproof" or o:"indestructible" or o:"protection" or o:"shroud" or o:"phase out" or o:"can\'t be the target")',
+    explanation: {
+      readable: 'Cards that protect creatures from removal',
+      assumptions: [],
+      confidence: 0.9,
+    },
+    showAffiliate: true,
+  },
+  'best mill cards': {
+    scryfallQuery: 'otag:mill',
+    explanation: {
+      readable: 'Cards that mill opponents',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'best mana dorks': {
+    scryfallQuery: 'otag:mana-dork',
+    explanation: {
+      readable: 'Creatures that produce mana',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'best commander board wipes': {
+    scryfallQuery: 'otag:board-wipe f:commander',
+    explanation: {
+      readable: 'Board wipes legal in Commander',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'best commander card draw': {
+    scryfallQuery: 'otag:draw f:commander',
+    explanation: {
+      readable: 'Card draw spells legal in Commander',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'commander board wipes': {
+    scryfallQuery: 'otag:board-wipe f:commander',
+    explanation: {
+      readable: 'Board wipes legal in Commander',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'commander card draw': {
+    scryfallQuery: 'otag:draw f:commander',
+    explanation: {
+      readable: 'Card draw spells legal in Commander',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'sacrifice an artifact to draw a card': {
+    scryfallQuery: 'o:"sacrifice" o:"artifact" o:"draw a card"',
+    explanation: {
+      readable: 'Cards that sacrifice an artifact to draw',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  '2 or less cmc creatures that tap for mana': {
+    scryfallQuery: 't:creature mv<=2 o:"{T}" o:"add"',
+    explanation: {
+      readable: 'Creatures with mana value 2 or less that tap for mana',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
 };
 
 /**
