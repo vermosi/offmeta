@@ -154,12 +154,30 @@ export function parseSpecialPatterns(query: string, ir: SearchIR): string {
     remaining = remaining.replace(/\bcommander\b/gi, '').trim();
   }
 
+  // If "commander" is still in the remaining text AND concept tags/oracle were
+  // already consumed by earlier parsers (tag mappings, slang, etc.), treat it
+  // as format intent rather than card property.
+  // e.g. "best commander board wipes" → tag mappings consume "board wipes" first,
+  // leaving "best commander" → should be f:commander, not is:commander.
+  const CONCEPT_TAGS = ['otag:board-wipe', 'otag:draw', 'otag:ramp', 'otag:removal',
+    'otag:counter', 'otag:tutor', 'otag:sacrifice-outlet', 'otag:reanimate',
+    'otag:lifegain', 'otag:manarock', 'otag:mana-rock', 'otag:mana-dork',
+    'otag:stax', 'otag:mill', 'otag:token-maker', 'otag:mass-removal',
+    'otag:spot-removal', 'otag:graveyard-hate', 'otag:protection'];
+  const hasConceptInIR = ir.tags.some(t => CONCEPT_TAGS.includes(t)) ||
+    ir.oracle.length > 0;
+
   if (
     /\bcommander\b|\bis:commander\b|\bas commander\b|\bcommanders\b/i.test(
       remaining,
     )
   ) {
-    ir.specials.push('is:commander');
+    if (!ir.specials.includes('f:commander') && hasConceptInIR) {
+      // Concept already parsed — "commander" means format, not card property
+      ir.specials.push('f:commander');
+    } else {
+      ir.specials.push('is:commander');
+    }
     remaining = remaining.replace(/\b(?:as )?commander\b/gi, '').trim();
   }
 
