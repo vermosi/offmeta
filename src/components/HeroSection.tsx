@@ -25,7 +25,7 @@ export function HeroSection() {
         </h1>
 
         <p
-          className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto animate-slide-up text-center whitespace-pre-line"
+          className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto animate-slide-up text-center"
           style={{ animationDelay: '80ms' }}
         >
           {t(
