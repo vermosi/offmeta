@@ -25,12 +25,12 @@ export function HeroSection() {
         </h1>
 
         <p
-          className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto animate-slide-up"
+          className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto animate-slide-up text-center whitespace-pre-line"
           style={{ animationDelay: '80ms' }}
         >
           {t(
             'hero.subtitleCompact',
-            'Describe the Magic cards you need in plain English. OffMeta translates, shows the query, and lets you refine it before you continue.',
+            `Describe the Magic cards you need in plain English.\nOffMeta translates, shows the query, and lets you refine it before you continue.`,
           )}
         </p>
       </div>
