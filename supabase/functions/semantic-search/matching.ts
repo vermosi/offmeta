@@ -452,6 +452,42 @@ const HARDCODED_TRANSLATIONS: Record<string, CacheEntry['result']> = {
     },
     showAffiliate: true,
   },
+  'damage doubler': {
+    scryfallQuery: 'o:"double" o:"damage"',
+    explanation: {
+      readable: 'Cards that double damage',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'damage doublers': {
+    scryfallQuery: 'o:"double" o:"damage"',
+    explanation: {
+      readable: 'Cards that double damage',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'landfall titania synergies': {
+    scryfallQuery: 'otag:landfall c:g',
+    explanation: {
+      readable: 'Green landfall cards for Titania synergy',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'cards that draw when creatures die': {
+    scryfallQuery: 'o:"whenever" o:"dies" o:"draw"',
+    explanation: {
+      readable: 'Cards that draw when creatures die',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
 };
 
 /**
