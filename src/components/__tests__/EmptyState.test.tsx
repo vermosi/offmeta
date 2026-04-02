@@ -122,9 +122,9 @@ describe('EmptyState', () => {
 
   it('renders multiple suggestions in order', () => {
     const suggestions = [
-      { query: 'query-a', label: 'Label A', totalCards: 10 },
-      { query: 'query-b', label: 'Label B', totalCards: 20 },
-      { query: 'query-c', label: 'Label C', totalCards: 30 },
+      { query: 'query-a', label: 'Label A', totalCards: 10, score: 0.9 },
+      { query: 'query-b', label: 'Label B', totalCards: 20, score: 0.8 },
+      { query: 'query-c', label: 'Label C', totalCards: 30, score: 0.7 },
     ];
     render(<EmptyState query="xyz" suggestions={suggestions} />);
     const buttons = screen.getAllByRole('button');
