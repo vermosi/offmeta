@@ -11,16 +11,24 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { FilterState } from '@/types/filters';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface SaveSearchButtonProps {
   naturalQuery: string;
   scryfallQuery?: string;
   /** Current active filters to persist with the saved search */
   filters?: FilterState | null;
+  onSaved?: () => void;
 }
 
-export function SaveSearchButton({ naturalQuery, scryfallQuery, filters }: SaveSearchButtonProps) {
+export function SaveSearchButton({
+  naturalQuery,
+  scryfallQuery,
+  filters,
+  onSaved,
+}: SaveSearchButtonProps) {
   const { user } = useAuth();
+  const { trackEvent } = useAnalytics();
   const [savedId, setSavedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -51,6 +59,10 @@ export function SaveSearchButton({ naturalQuery, scryfallQuery, filters }: SaveS
         await supabase.from('saved_searches').delete().eq('id', savedId);
         setSavedId(null);
         toast.success('Search removed');
+        trackEvent('saved_search_updated', {
+          query: naturalQuery.trim(),
+          action: 'removed',
+        });
       } else {
         // Build filters snapshot — only store if non-default
         const hasActiveFilters = filters && (
@@ -74,13 +86,39 @@ export function SaveSearchButton({ naturalQuery, scryfallQuery, filters }: SaveS
         if (error) throw error;
         setSavedId(data.id);
         toast.success('Search saved!');
+        const dedupeWindowStart = new Date().toISOString().slice(0, 10);
+        const payloadHashBase = `${user.id}|saved_search_updated|${naturalQuery.trim().toLowerCase()}|${dedupeWindowStart}`;
+        await supabase.from('retention_triggers').insert({
+          user_id: user.id,
+          trigger_type: 'saved_search_updated',
+          payload: {
+            natural_query: naturalQuery.trim(),
+            scryfall_query: scryfallQuery ?? null,
+          },
+          payload_hash: payloadHashBase,
+          dedupe_window_start: dedupeWindowStart,
+        });
+        trackEvent('saved_search_updated', {
+          query: naturalQuery.trim(),
+          action: 'saved',
+        });
+        onSaved?.();
       }
     } catch {
       toast.error(savedId ? 'Failed to remove' : 'Failed to save');
     } finally {
       setLoading(false);
     }
-  }, [user, savedId, naturalQuery, scryfallQuery, filters, loading]);
+  }, [
+    user,
+    savedId,
+    naturalQuery,
+    scryfallQuery,
+    filters,
+    loading,
+    onSaved,
+    trackEvent,
+  ]);
 
   if (!user) return null;
 

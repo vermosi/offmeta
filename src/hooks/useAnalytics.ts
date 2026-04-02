@@ -50,6 +50,7 @@ const MAX_EVENTS_PER_WINDOW = 60; // 60 events per minute max
 // Input validation limits
 const MAX_STRING_LENGTH = 500;
 const MAX_EVENT_DATA_SIZE = 2000; // bytes
+const INSERT_WARN_LATENCY_MS = 250;
 
 // Generate or retrieve a session ID for anonymous tracking
 const getSessionId = (): string => {
@@ -214,6 +215,24 @@ const ALLOWED_EVENT_TYPES = [
   'search',
   'search_results',
   'search_failure', // NEW: Track 0-result and error searches
+  'first_search_start',
+  'first_search_success',
+  'first_result_click',
+  'first_refinement',
+  'first_save',
+  'first_return_visit',
+  'search_no_result_shown',
+  'search_recovery_clicked',
+  'search_recovery_success',
+  'search_quality_computed',
+  'guided_suggestion_shown',
+  'narrow_results_prompt_shown',
+  'fast_click_detected',
+  'saved_search_updated',
+  'price_change_detected',
+  'new_card_match',
+  'deck_gap_detected',
+  'pro_upgrade_impression',
   'rerun_edited_query',
   'card_click',
   'card_modal_view',
@@ -341,6 +360,21 @@ interface ExampleQueryEventData {
   is_mobile?: boolean;
 }
 
+interface LifecycleEventData {
+  query?: string;
+  request_id?: string;
+  source?: string;
+  card_id?: string;
+  elapsed_hours?: number;
+  suggestion_query?: string;
+  search_quality_score?: number;
+  refinement_count?: number;
+  struggle_count?: number;
+  time_to_click_ms?: number;
+  action?: string;
+  placement?: string;
+}
+
 type EventData =
   | SearchEventData
   | SearchFailureEventData
@@ -351,7 +385,15 @@ type EventData =
   | FeedbackEventData
   | RerunEditedQueryEventData
   | RouteViewEventData
-  | ExampleQueryEventData;
+  | ExampleQueryEventData
+  | LifecycleEventData;
+
+function shouldTrackOnce(key: string): boolean {
+  const storageKey = `offmeta_once:${key}`;
+  if (sessionStorage.getItem(storageKey) === '1') return false;
+  sessionStorage.setItem(storageKey, '1');
+  return true;
+}
 
 /**
  * Hook for tracking analytics events.
@@ -365,6 +407,14 @@ export function useAnalytics() {
   useEffect(() => {
     sessionIdRef.current = getSessionId();
     utmRef.current = captureUtmParams();
+
+    const firstVisitKey = 'offmeta_first_visit_at';
+    const now = Date.now();
+    const firstVisitRaw = localStorage.getItem(firstVisitKey);
+
+    if (!firstVisitRaw) {
+      localStorage.setItem(firstVisitKey, String(now));
+    }
   }, []);
 
   const trackEvent = useCallback(
@@ -410,6 +460,7 @@ export function useAnalytics() {
           ...(utm.utm_term && { utm_term: utm.utm_term }),
           ...(utm.utm_content && { utm_content: utm.utm_content }),
         };
+        const startedAt = performance.now();
         supabase
           .from('analytics_events')
           .insert([
@@ -420,8 +471,19 @@ export function useAnalytics() {
             },
           ])
           .then(({ error }) => {
+            const durationMs = performance.now() - startedAt;
+            if (durationMs > INSERT_WARN_LATENCY_MS) {
+              logger.warn('Analytics insert latency high', {
+                eventType,
+                durationMs: Math.round(durationMs),
+              });
+            }
             if (error) {
-              logger.warn('Analytics tracking failed');
+              logger.warn('Analytics tracking failed', {
+                eventType,
+                durationMs: Math.round(durationMs),
+                code: error.code,
+              });
             }
           });
       } catch {
@@ -522,6 +584,61 @@ export function useAnalytics() {
     [trackEvent],
   );
 
+  const trackFirstSearchStart = useCallback(
+    (data: LifecycleEventData) => {
+      if (!shouldTrackOnce('first_search_start')) return;
+      trackEvent('first_search_start', data);
+    },
+    [trackEvent],
+  );
+
+  const trackFirstSearchSuccess = useCallback(
+    (data: LifecycleEventData) => {
+      if (!shouldTrackOnce('first_search_success')) return;
+      trackEvent('first_search_success', data);
+    },
+    [trackEvent],
+  );
+
+  const trackFirstResultClick = useCallback(
+    (data: LifecycleEventData) => {
+      if (!shouldTrackOnce('first_result_click')) return;
+      trackEvent('first_result_click', data);
+    },
+    [trackEvent],
+  );
+
+  const trackFirstRefinement = useCallback(
+    (data: LifecycleEventData) => {
+      if (!shouldTrackOnce('first_refinement')) return;
+      trackEvent('first_refinement', data);
+    },
+    [trackEvent],
+  );
+
+  const trackFirstSave = useCallback(
+    (data: LifecycleEventData) => {
+      if (!shouldTrackOnce('first_save')) return;
+      trackEvent('first_save', data);
+    },
+    [trackEvent],
+  );
+
+  const trackFirstReturnVisit = useCallback(() => {
+    const firstVisitRaw = localStorage.getItem('offmeta_first_visit_at');
+    if (!firstVisitRaw) return;
+    const firstVisitTs = parseInt(firstVisitRaw, 10);
+    const now = Date.now();
+    const twelveHoursMs = 12 * 60 * 60 * 1000;
+    if (!Number.isFinite(firstVisitTs) || now - firstVisitTs < twelveHoursMs) {
+      return;
+    }
+    if (!shouldTrackOnce('first_return_visit')) return;
+    trackEvent('first_return_visit', {
+      elapsed_hours: Math.floor((now - firstVisitTs) / (60 * 60 * 1000)),
+    });
+  }, [trackEvent]);
+
   return {
     trackSearch,
     trackSearchFailure,
@@ -536,6 +653,12 @@ export function useAnalytics() {
     trackExampleQueryClick,
     trackExampleQuerySearchSuccess,
     trackExampleQueryResultClick,
+    trackFirstSearchStart,
+    trackFirstSearchSuccess,
+    trackFirstResultClick,
+    trackFirstRefinement,
+    trackFirstSave,
+    trackFirstReturnVisit,
     trackEvent,
     shouldLogCacheEvent,
   };

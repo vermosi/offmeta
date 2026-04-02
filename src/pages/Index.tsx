@@ -44,23 +44,8 @@ import { Header } from '@/components/Header';
 const HeroSection = lazy(() =>
   import('@/components/HeroSection').then((m) => ({ default: m.HeroSection })),
 );
-const HomeDiscoverySection = lazy(() =>
-  import('@/components/HomeDiscoverySection').then((m) => ({
-    default: m.HomeDiscoverySection,
-  })),
-);
 import { HomepageLandingContent } from '@/components/HomepageLandingContent';
-const LivePreviewStrip = lazy(() =>
-  import('@/components/LivePreviewStrip').then((m) => ({
-    default: m.LivePreviewStrip,
-  })),
-);
 import { ScrollToTop } from '@/components/ScrollToTop';
-const SimilarSearches = lazy(() =>
-  import('@/components/SimilarSearches').then((m) => ({
-    default: m.SimilarSearches,
-  })),
-);
 import { type ViewMode, getStoredViewMode } from '@/lib/view-mode-storage';
 const ResultsTabs = lazy(() =>
   import('@/components/ResultsTabs').then((m) => ({
@@ -111,7 +96,13 @@ const CardModal = lazy(() => import('@/components/CardModal'));
 const Index = () => {
   const { t } = useTranslation();
   const location = useLocation();
-  const { trackLandingPageView, trackRouteView } = useAnalytics();
+  const {
+    trackLandingPageView,
+    trackRouteView,
+    trackFirstSave,
+    trackFirstReturnVisit,
+    trackEvent,
+  } = useAnalytics();
   const { user } = useAuth();
   const collectionLookup = useCollectionLookup();
   const lastTrackedRouteRef = useRef<string | null>(null);
@@ -129,6 +120,12 @@ const Index = () => {
     reportDialogOpen,
     setReportDialogOpen,
     currentRequestId,
+    lastClickLatencyMs,
+    refinementCount,
+    struggleCount,
+    queryQualityScore,
+    queryQualityConfidence,
+    queryQualitySampleSize,
     cards,
     displayCards,
     totalCards,
@@ -181,9 +178,14 @@ const Index = () => {
 
   const handleTrySuggestion = useCallback(
     (scryfallQuery: string) => {
+      sessionStorage.setItem('offmeta_recovery_in_progress', '1');
+      trackEvent('search_recovery_clicked', {
+        query: originalQuery,
+        suggestion_query: scryfallQuery,
+      });
       handleRerunEditedQuery(scryfallQuery);
     },
-    [handleRerunEditedQuery],
+    [handleRerunEditedQuery, originalQuery, trackEvent],
   );
 
   // Activate feature hooks when tab is selected
@@ -258,6 +260,44 @@ const Index = () => {
 
   // (parallax removed — static gradient background)
 
+  const shouldShowProUpsell = useMemo(() => {
+    const readSessionValue = (key: string): string | null => {
+      try {
+        return sessionStorage.getItem(key);
+      } catch {
+        return null;
+      }
+    };
+    const readLocalValue = (key: string): string | null => {
+      try {
+        return localStorage.getItem(key);
+      } catch {
+        return null;
+      }
+    };
+    const searchesThisSession = parseInt(
+      readSessionValue('offmeta_searches_per_session') || '0',
+      10,
+    );
+    const hasSaved = readSessionValue('offmeta_once:first_save') === '1';
+    const hasSuccess = readSessionValue('offmeta_once:first_search_success') === '1';
+    const cooldownUntil = parseInt(
+      readLocalValue('offmeta_pro_upsell_cooldown_until') || '0',
+      10,
+    );
+    const inCooldown = Number.isFinite(cooldownUntil) && Date.now() < cooldownUntil;
+
+    return (
+      hasSearched &&
+      !isSearching &&
+      queryQualityScore < 0.55 &&
+      searchesThisSession >= 3 &&
+      hasSuccess &&
+      !hasSaved &&
+      !inCooldown
+    );
+  }, [hasSearched, isSearching, queryQualityScore]);
+
   // Handle hash-based scroll
   useEffect(() => {
     const hash = window.location.hash;
@@ -268,6 +308,32 @@ const Index = () => {
     }, 300);
     return () => clearTimeout(timeout);
   }, []);
+
+  useEffect(() => {
+    trackFirstReturnVisit();
+  }, [trackFirstReturnVisit]);
+
+  useEffect(() => {
+    if (!shouldShowProUpsell) return;
+    trackEvent('pro_upgrade_impression', {
+      query: originalQuery,
+      search_quality_score: queryQualityScore,
+      placement: 'search_feedback_loop',
+    });
+    try {
+      localStorage.setItem(
+        'offmeta_pro_upsell_cooldown_until',
+        String(Date.now() + 24 * 60 * 60 * 1000),
+      );
+    } catch {
+      // ignore storage failures; no upsell blocking can be persisted
+    }
+  }, [
+    originalQuery,
+    queryQualityScore,
+    shouldShowProUpsell,
+    trackEvent,
+  ]);
 
   useEffect(() => {
     const routeKey = `${location.pathname}${location.search}${location.hash}`;
@@ -365,8 +431,8 @@ const Index = () => {
             </div>
 
             {!hasSearched && (
-              <p className="text-center text-xs sm:text-sm text-muted-foreground animate-reveal">
-                Example prompt:{' '}
+              <p className="text-center text-sm text-muted-foreground animate-reveal">
+                Describe your deck need in plain English. Example:{' '}
                 <button
                   type="button"
                   onClick={() =>
@@ -377,12 +443,6 @@ const Index = () => {
                   "commander board wipes under $5"
                 </button>
               </p>
-            )}
-
-            {!hasSearched && (
-              <div className="animate-reveal">
-                <LivePreviewStrip onTrySearch={handleTryExample} />
-              </div>
             )}
 
             {hasSearched && (
@@ -412,6 +472,12 @@ const Index = () => {
                       lastSearchResult?.scryfallQuery || searchQuery
                     }
                     filters={activeFilters}
+                    onSaved={() =>
+                      trackFirstSave({
+                        query: originalQuery,
+                        request_id: currentRequestId ?? undefined,
+                      })
+                    }
                   />
                 </div>
               </div>
@@ -441,6 +507,38 @@ const Index = () => {
               </div>
             )}
 
+            {hasSearched && !isSearching && (
+              <div className="space-y-2">
+                {refinementCount > 0 && (
+                  <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-foreground">
+                    Narrow results like this? Save this refinement as a reusable workflow.
+                  </div>
+                )}
+                {lastClickLatencyMs !== null && lastClickLatencyMs < 1200 && (
+                  <button
+                    type="button"
+                    onClick={() => setTabState({ query: originalQuery, tab: 'similar' })}
+                    className="w-full text-left rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-xs text-foreground hover:bg-accent/15 transition-colors"
+                  >
+                    Fast pick detected ({lastClickLatencyMs}ms). See boosted similar cards →
+                  </button>
+                )}
+                {struggleCount >= 2 && (
+                  <div className="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-foreground">
+                    Looks like this search is struggling. Try guided suggestions below to recover quickly.
+                  </div>
+                )}
+                <div className="text-[11px] text-muted-foreground">
+                  Search quality score: {Math.round(queryQualityScore * 100)}%
+                </div>
+                {shouldShowProUpsell && (
+                  <div className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-foreground">
+                    Better results with Pro: advanced explainability + priority ranking.
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Toolbar row — only show for Cards tab */}
             {cards.length > 0 && !isSearching && activeTab === 'cards' && (
               <ResultsToolbar
@@ -459,15 +557,6 @@ const Index = () => {
               />
             )}
 
-            {/* Similar searches — hidden on mobile */}
-            {hasSearched && !isSearching && activeTab === 'cards' && (
-              <div className="hidden sm:block">
-                <SimilarSearches
-                  originalQuery={originalQuery}
-                  onSuggestionClick={handleTryExample}
-                />
-              </div>
-            )}
           </div>
 
           {/* Tab content area */}
@@ -481,6 +570,9 @@ const Index = () => {
             hasSearched={hasSearched}
             searchQuery={searchQuery}
             originalQuery={originalQuery}
+            queryQualityScore={queryQualityScore}
+            queryConfidence={queryQualityConfidence}
+            querySampleSize={queryQualitySampleSize}
             hasNextPage={hasNextPage}
             isFetchingNextPage={isFetchingNextPage}
             fetchNextPage={fetchNextPage}
@@ -506,12 +598,7 @@ const Index = () => {
           />
         </main>
 
-        {!hasSearched && (
-          <>
-            <HomepageLandingContent onTrySearch={handleTryExample} />
-            <HomeDiscoverySection onSearch={handleTryExample} />
-          </>
-        )}
+        {!hasSearched && <HomepageLandingContent onTrySearch={handleTryExample} />}
 
         <Footer />
         <ScrollToTop threshold={800} />

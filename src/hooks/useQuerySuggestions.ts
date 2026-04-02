@@ -11,6 +11,7 @@ export interface QuerySuggestion {
   query: string;
   label: string;
   totalCards: number;
+  score: number;
 }
 
 /**
@@ -184,6 +185,21 @@ async function checkQueryResults(query: string): Promise<number | null> {
   }
 }
 
+function scoreSuggestion(
+  originalQuery: string,
+  suggestionQuery: string,
+  totalCards: number,
+): number {
+  const originalTokens = originalQuery.trim().split(/\s+/).length;
+  const suggestionTokens = suggestionQuery.trim().split(/\s+/).length;
+  const tokenRetention =
+    originalTokens > 0 ? suggestionTokens / originalTokens : 0;
+  const countScore = Math.min(Math.log10(totalCards + 1) / 3, 1); // 0..1
+  const retentionScore = Math.max(Math.min(tokenRetention, 1), 0); // 0..1
+
+  return Number((countScore * 0.65 + retentionScore * 0.35).toFixed(4));
+}
+
 /**
  * Hook that generates and validates simpler query alternatives
  * when the current search returns 0 results.
@@ -197,6 +213,7 @@ export function useQuerySuggestions(
   const [isChecking, setIsChecking] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const lastQueryRef = useRef('');
+  const suggestionsCacheRef = useRef<Map<string, QuerySuggestion[]>>(new Map());
 
   useEffect(() => {
     // Only trigger when we have 0 results for a real search
@@ -214,6 +231,12 @@ export function useQuerySuggestions(
     abortRef.current = controller;
 
     const run = async () => {
+      const cached = suggestionsCacheRef.current.get(query);
+      if (cached) {
+        setSuggestions(cached);
+        return;
+      }
+
       const candidates = generateSimplifiedQueries(query, 3);
       if (candidates.length === 0) {
         setSuggestions([]);
@@ -235,6 +258,7 @@ export function useQuerySuggestions(
             query: candidate.query,
             label: candidate.label,
             totalCards: count,
+            score: scoreSuggestion(query, candidate.query, count),
           });
         }
 
@@ -243,7 +267,9 @@ export function useQuerySuggestions(
       }
 
       if (!controller.signal.aborted) {
-        setSuggestions(validated);
+        const ranked = [...validated].sort((a, b) => b.score - a.score);
+        suggestionsCacheRef.current.set(query, ranked);
+        setSuggestions(ranked);
         setIsChecking(false);
       }
     };
