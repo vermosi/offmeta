@@ -87,3 +87,6 @@ verify_jwt = false
 
 [functions.generate-retention-triggers]
 verify_jwt = false
+
+[functions.fix-zero-results]
+verify_jwt = false
