@@ -136,7 +136,7 @@ describe('EmptyState', () => {
 
   it('renders both suggestions and example queries simultaneously', () => {
     const suggestions = [
-      { query: 'o:treasure', label: 'Simplified', totalCards: 10 },
+      { query: 'o:treasure', label: 'Simplified', totalCards: 10, score: 0.9 },
     ];
     const exampleHandler = vi.fn();
     render(
