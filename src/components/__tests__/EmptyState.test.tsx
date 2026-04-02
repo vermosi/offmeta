@@ -108,7 +108,7 @@ describe('EmptyState', () => {
 
   it('hides checking text once suggestions arrive', () => {
     const suggestions = [
-      { query: 'o:treasure', label: 'Simplified', totalCards: 10 },
+      { query: 'o:treasure', label: 'Simplified', totalCards: 10, score: 0.9 },
     ];
     render(
       <EmptyState query="xyz" isCheckingSuggestions suggestions={suggestions} />,
