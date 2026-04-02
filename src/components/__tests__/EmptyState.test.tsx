@@ -52,8 +52,8 @@ describe('EmptyState', () => {
 
   it('renders "Did you mean?" section with suggestions', () => {
     const suggestions = [
-      { query: 'o:treasure t:creature', label: 'Removed price filter', totalCards: 42 },
-      { query: 'o:treasure', label: 'Simplified query', totalCards: 150 },
+      { query: 'o:treasure t:creature', label: 'Removed price filter', totalCards: 42, score: 0.9 },
+      { query: 'o:treasure', label: 'Simplified query', totalCards: 150, score: 0.8 },
     ];
     render(<EmptyState query="xyz" suggestions={suggestions} />);
     expect(screen.getByText('empty.didYouMean')).toBeInTheDocument();
@@ -65,7 +65,7 @@ describe('EmptyState', () => {
 
   it('displays card counts for each suggestion', () => {
     const suggestions = [
-      { query: 'o:treasure', label: 'Simplified', totalCards: 1234 },
+      { query: 'o:treasure', label: 'Simplified', totalCards: 1234, score: 0.9 },
     ];
     render(<EmptyState query="xyz" suggestions={suggestions} />);
     // Mock t() returns raw key 'empty.cardCount'; .replace('{count}', '1,234') has no match
@@ -79,7 +79,7 @@ describe('EmptyState', () => {
   it('calls onTrySuggestion when clicking a suggestion', () => {
     const handler = vi.fn();
     const suggestions = [
-      { query: 'o:treasure t:creature', label: 'Removed price filter', totalCards: 42 },
+      { query: 'o:treasure t:creature', label: 'Removed price filter', totalCards: 42, score: 0.9 },
     ];
     render(
       <EmptyState query="xyz" suggestions={suggestions} onTrySuggestion={handler} />,
@@ -108,7 +108,7 @@ describe('EmptyState', () => {
 
   it('hides checking text once suggestions arrive', () => {
     const suggestions = [
-      { query: 'o:treasure', label: 'Simplified', totalCards: 10 },
+      { query: 'o:treasure', label: 'Simplified', totalCards: 10, score: 0.9 },
     ];
     render(
       <EmptyState query="xyz" isCheckingSuggestions suggestions={suggestions} />,
@@ -122,9 +122,9 @@ describe('EmptyState', () => {
 
   it('renders multiple suggestions in order', () => {
     const suggestions = [
-      { query: 'query-a', label: 'Label A', totalCards: 10 },
-      { query: 'query-b', label: 'Label B', totalCards: 20 },
-      { query: 'query-c', label: 'Label C', totalCards: 30 },
+      { query: 'query-a', label: 'Label A', totalCards: 10, score: 0.9 },
+      { query: 'query-b', label: 'Label B', totalCards: 20, score: 0.8 },
+      { query: 'query-c', label: 'Label C', totalCards: 30, score: 0.7 },
     ];
     render(<EmptyState query="xyz" suggestions={suggestions} />);
     const buttons = screen.getAllByRole('button');
@@ -136,7 +136,7 @@ describe('EmptyState', () => {
 
   it('renders both suggestions and example queries simultaneously', () => {
     const suggestions = [
-      { query: 'o:treasure', label: 'Simplified', totalCards: 10 },
+      { query: 'o:treasure', label: 'Simplified', totalCards: 10, score: 0.9 },
     ];
     const exampleHandler = vi.fn();
     render(
@@ -154,7 +154,7 @@ describe('EmptyState', () => {
 
   it('does not call onTrySuggestion when handler is not provided', () => {
     const suggestions = [
-      { query: 'o:treasure', label: 'Test', totalCards: 5 },
+      { query: 'o:treasure', label: 'Test', totalCards: 5, score: 0.9 },
     ];
     // Should not throw
     render(<EmptyState query="xyz" suggestions={suggestions} />);
