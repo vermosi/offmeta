@@ -39,7 +39,36 @@ vi.mock('@/hooks/useAnalytics', () => ({
     trackExampleQueryClick: vi.fn(),
     trackExampleQuerySearchSuccess: vi.fn(),
     trackExampleQueryResultClick: vi.fn(),
+    trackFirstSearchStart: vi.fn(),
+    trackFirstSearchSuccess: vi.fn(),
+    trackFirstResultClick: vi.fn(),
+    trackFirstRefinement: vi.fn(),
   }),
+}));
+
+vi.mock('@/lib/i18n', () => ({
+  useTranslation: () => ({ t: (key: string, fallback?: string) => fallback ?? key, locale: 'en' }),
+}));
+
+vi.mock('@/hooks/useQueryIntelligence', () => ({
+  useQueryIntelligence: () => ({ data: null }),
+}));
+
+vi.mock('@/lib/search/quality-model', () => ({
+  getQueryQuality: vi.fn().mockReturnValue(0),
+  updateQueryQuality: vi.fn(),
+}));
+
+vi.mock('@/lib/config', () => ({
+  CLIENT_CONFIG: {
+    DEBOUNCE_MS: 300,
+    MAX_QUERY_LENGTH: 500,
+    MAX_SCRYFALL_QUERY_LENGTH: 700,
+  },
+}));
+
+vi.mock('@/lib/i18n/constants', () => ({
+  LOCALE_TO_SCRYFALL_LANG: { en: 'en' },
 }));
 
 import { useSearch } from '@/hooks/useSearch';
