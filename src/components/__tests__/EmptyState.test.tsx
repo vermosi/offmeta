@@ -79,7 +79,7 @@ describe('EmptyState', () => {
   it('calls onTrySuggestion when clicking a suggestion', () => {
     const handler = vi.fn();
     const suggestions = [
-      { query: 'o:treasure t:creature', label: 'Removed price filter', totalCards: 42 },
+      { query: 'o:treasure t:creature', label: 'Removed price filter', totalCards: 42, score: 0.9 },
     ];
     render(
       <EmptyState query="xyz" suggestions={suggestions} onTrySuggestion={handler} />,
