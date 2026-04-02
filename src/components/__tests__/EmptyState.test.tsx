@@ -154,7 +154,7 @@ describe('EmptyState', () => {
 
   it('does not call onTrySuggestion when handler is not provided', () => {
     const suggestions = [
-      { query: 'o:treasure', label: 'Test', totalCards: 5 },
+      { query: 'o:treasure', label: 'Test', totalCards: 5, score: 0.9 },
     ];
     // Should not throw
     render(<EmptyState query="xyz" suggestions={suggestions} />);

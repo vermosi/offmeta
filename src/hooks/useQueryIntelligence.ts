@@ -24,11 +24,11 @@ export function useQueryIntelligence(query: string) {
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_query_intelligence', {
+      const { data, error } = await supabase.rpc('get_query_intelligence' as never, {
         p_query: normalized,
-      });
+      } as never);
       if (error) throw error;
-      const row = (data?.[0] ?? null) as QueryIntelligence | null;
+      const row = ((data as unknown as QueryIntelligence[]) ?? [])[0] ?? null;
       return row;
     },
   });

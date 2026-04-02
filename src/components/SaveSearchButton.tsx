@@ -86,18 +86,23 @@ export function SaveSearchButton({
         if (error) throw error;
         setSavedId(data.id);
         toast.success('Search saved!');
-        const dedupeWindowStart = new Date().toISOString().slice(0, 10);
-        const payloadHashBase = `${user.id}|saved_search_updated|${naturalQuery.trim().toLowerCase()}|${dedupeWindowStart}`;
-        await supabase.from('retention_triggers').insert({
-          user_id: user.id,
-          trigger_type: 'saved_search_updated',
-          payload: {
-            natural_query: naturalQuery.trim(),
-            scryfall_query: scryfallQuery ?? null,
-          },
-          payload_hash: payloadHashBase,
-          dedupe_window_start: dedupeWindowStart,
-        });
+        // Fire-and-forget retention tracking (table may not exist yet)
+        try {
+          const dedupeWindowStart = new Date().toISOString().slice(0, 10);
+          const payloadHashBase = `${user.id}|saved_search_updated|${naturalQuery.trim().toLowerCase()}|${dedupeWindowStart}`;
+          await (supabase.from('retention_triggers' as never) as any).insert({
+            user_id: user.id,
+            trigger_type: 'saved_search_updated',
+            payload: {
+              natural_query: naturalQuery.trim(),
+              scryfall_query: scryfallQuery ?? null,
+            },
+            payload_hash: payloadHashBase,
+            dedupe_window_start: dedupeWindowStart,
+          });
+        } catch {
+          // Retention tracking is non-critical
+        }
         trackEvent('saved_search_updated', {
           query: naturalQuery.trim(),
           action: 'saved',
