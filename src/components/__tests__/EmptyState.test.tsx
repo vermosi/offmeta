@@ -52,8 +52,8 @@ describe('EmptyState', () => {
 
   it('renders "Did you mean?" section with suggestions', () => {
     const suggestions = [
-      { query: 'o:treasure t:creature', label: 'Removed price filter', totalCards: 42 },
-      { query: 'o:treasure', label: 'Simplified query', totalCards: 150 },
+      { query: 'o:treasure t:creature', label: 'Removed price filter', totalCards: 42, score: 0.9 },
+      { query: 'o:treasure', label: 'Simplified query', totalCards: 150, score: 0.8 },
     ];
     render(<EmptyState query="xyz" suggestions={suggestions} />);
     expect(screen.getByText('empty.didYouMean')).toBeInTheDocument();
