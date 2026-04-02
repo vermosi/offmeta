@@ -65,7 +65,7 @@ describe('EmptyState', () => {
 
   it('displays card counts for each suggestion', () => {
     const suggestions = [
-      { query: 'o:treasure', label: 'Simplified', totalCards: 1234 },
+      { query: 'o:treasure', label: 'Simplified', totalCards: 1234, score: 0.9 },
     ];
     render(<EmptyState query="xyz" suggestions={suggestions} />);
     // Mock t() returns raw key 'empty.cardCount'; .replace('{count}', '1,234') has no match
