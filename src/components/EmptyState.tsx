@@ -83,6 +83,7 @@ export const EmptyState = ({
                     </code>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
                       {s.label}
+                      {s === suggestions![0] ? ' • Best match' : ''}
                     </p>
                   </div>
                   <span className="shrink-0 text-xs font-medium text-primary/70 group-hover:text-primary tabular-nums">

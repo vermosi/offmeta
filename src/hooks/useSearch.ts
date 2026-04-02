@@ -21,6 +21,11 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 import { CLIENT_CONFIG } from '@/lib/config';
 import { useTranslation } from '@/lib/i18n';
 import { LOCALE_TO_SCRYFALL_LANG } from '@/lib/i18n/constants';
+import {
+  getQueryQuality,
+  updateQueryQuality,
+} from '@/lib/search/quality-model';
+import { useQueryIntelligence } from '@/hooks/useQueryIntelligence';
 
 /** Generate unique request ID */
 function generateRequestId(): string {
@@ -130,10 +135,28 @@ export function useSearch() {
     trackSearchFailure,
     trackCardClick,
     trackPagination,
+    trackFirstSearchStart,
+    trackFirstSearchSuccess,
+    trackFirstResultClick,
+    trackFirstRefinement,
     trackEvent,
     shouldLogCacheEvent,
   } = useAnalytics();
   const paginationPageRef = useRef(1);
+  const searchStartMsRef = useRef<number | null>(null);
+  const [lastClickLatencyMs, setLastClickLatencyMs] = useState<number | null>(
+    null,
+  );
+  const [refinementCount, setRefinementCount] = useState(0);
+  const [struggleCount, setStruggleCount] = useState(0);
+  const [queryQualityScore, setQueryQualityScore] = useState(0);
+  const { data: serverIntelligence } = useQueryIntelligence(originalQuery);
+  const serverConfidence = serverIntelligence?.confidence ?? 0;
+  const serverSampleSize = serverIntelligence?.total_searches ?? 0;
+  const shouldUseServerQuality = serverConfidence >= 0.3 && serverSampleSize >= 20;
+  const effectiveQueryQualityScore = shouldUseServerQuality
+    ? serverIntelligence?.search_quality_score ?? 0
+    : queryQualityScore;
 
   // --- Redirect legacy ?q= URLs to /search/:slug ---
   useEffect(() => {
@@ -286,11 +309,40 @@ export function useSearch() {
         results_count: totalCards,
         request_id: currentRequestId ?? undefined,
       });
+      trackFirstSearchSuccess({
+        query: originalQuery,
+        request_id: currentRequestId ?? undefined,
+      });
+      if (sessionStorage.getItem('offmeta_recovery_in_progress') === '1') {
+        trackEvent('search_recovery_success', {
+          query: originalQuery,
+          request_id: currentRequestId ?? undefined,
+        });
+        updateQueryQuality(originalQuery, { recoveries: 1 });
+        sessionStorage.removeItem('offmeta_recovery_in_progress');
+      }
+      const quality = getQueryQuality(originalQuery);
+      if (quality) {
+        setQueryQualityScore(quality.score);
+        trackEvent('search_quality_computed', {
+          query: originalQuery,
+          search_quality_score: quality.score,
+        });
+      }
     } else if (totalCards === 0 && !isSearching && validatedSearchQuery) {
       trackSearchFailure({
         query: originalQuery,
         translated_query: lastSearchResult.scryfallQuery,
         error_type: 'zero_results',
+      });
+      trackEvent('search_no_result_shown', {
+        query: originalQuery,
+        request_id: currentRequestId ?? undefined,
+      });
+      setStruggleCount((count) => count + 1);
+      trackEvent('guided_suggestion_shown', {
+        query: originalQuery,
+        struggle_count: struggleCount + 1,
       });
     }
   }, [
@@ -298,7 +350,9 @@ export function useSearch() {
     lastSearchResult,
     originalQuery,
     trackEvent,
+    trackFirstSearchSuccess,
     trackSearchFailure,
+    struggleCount,
     currentRequestId,
     hasSearched,
     isSearching,
@@ -329,6 +383,12 @@ export function useSearch() {
     (query: string, result?: SearchResult, naturalQuery?: string) => {
       const requestId = generateRequestId();
       setCurrentRequestId(requestId);
+      trackFirstSearchStart({
+        query: naturalQuery || query,
+        request_id: requestId,
+      });
+      searchStartMsRef.current = Date.now();
+      updateQueryQuality(naturalQuery || query, { searches: 1 });
 
       setFilteredCards([]);
       setHasActiveFilters(false);
@@ -390,9 +450,15 @@ export function useSearch() {
         // Increment searches_per_session counter
         incrementSearchesPerSession();
       }
+
+      const quality = getQueryQuality(naturalQuery || query);
+      if (quality) {
+        setQueryQualityScore(quality.score);
+      }
     },
     [
       trackSearch,
+      trackFirstSearchStart,
       trackEvent,
       shouldLogCacheEvent,
       navigate,
@@ -461,8 +527,25 @@ export function useSearch() {
         edited_query: editedQuery,
         request_id: requestId,
       });
+      trackFirstRefinement({
+        query: originalQuery,
+        request_id: requestId,
+      });
+      setRefinementCount((count) => count + 1);
+      updateQueryQuality(originalQuery, { refinements: 1 });
+      trackEvent('narrow_results_prompt_shown', {
+        query: originalQuery,
+        refinement_count: refinementCount + 1,
+      });
     },
-    [queryClient, originalQuery, trackEvent, activeFilters, scryfallLang],
+    [
+      queryClient,
+      originalQuery,
+      trackEvent,
+      trackFirstRefinement,
+      activeFilters,
+      scryfallLang,
+    ],
   );
 
   const handleCardClick = useCallback(
@@ -474,9 +557,28 @@ export function useSearch() {
         rarity: card.rarity,
         position_in_results: index,
       });
+      trackFirstResultClick({
+        query: originalQuery,
+        card_id: card.id,
+      });
+      if (searchStartMsRef.current) {
+        const latencyMs = Date.now() - searchStartMsRef.current;
+        setLastClickLatencyMs(latencyMs);
+        updateQueryQuality(originalQuery, {
+          clicks: 1,
+          avgTimeToClickMs: latencyMs,
+        });
+        if (latencyMs < 1200) {
+          sessionStorage.setItem('offmeta_fast_click_query', originalQuery);
+          trackEvent('fast_click_detected', {
+            query: originalQuery,
+            time_to_click_ms: latencyMs,
+          });
+        }
+      }
       setSelectedCard(card);
     },
-    [trackCardClick],
+    [originalQuery, trackCardClick, trackFirstResultClick],
   );
 
   const handleTryExample = useCallback((query: string) => {
@@ -533,6 +635,12 @@ export function useSearch() {
     reportDialogOpen,
     setReportDialogOpen,
     currentRequestId,
+    lastClickLatencyMs,
+    refinementCount,
+    struggleCount,
+    queryQualityScore: effectiveQueryQualityScore,
+    queryQualityConfidence: shouldUseServerQuality ? serverConfidence : 0,
+    queryQualitySampleSize: shouldUseServerQuality ? serverSampleSize : 0,
 
     // Data
     cards,

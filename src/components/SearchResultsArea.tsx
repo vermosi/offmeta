@@ -21,6 +21,8 @@ import { DeckIdeasPanel } from '@/components/DeckIdeasPanel';
 import { ExplanationPanel } from '@/components/ExplanationPanel';
 import { CLIENT_CONFIG } from '@/lib/config';
 import { useTranslation } from '@/lib/i18n';
+import { rerankCardsWithIntelligence } from '@/lib/search/intelligence-ranking';
+import { useAuth } from '@/hooks/useAuth';
 import type { ScryfallCard } from '@/types/card';
 import type { ViewMode } from '@/lib/view-mode-storage';
 import type { ResultsTab } from '@/components/ResultsTabs';
@@ -42,6 +44,9 @@ interface SearchResultsAreaProps {
   hasSearched: boolean;
   searchQuery: string;
   originalQuery: string;
+  queryQualityScore: number;
+  queryConfidence: number;
+  querySampleSize: number;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
   fetchNextPage: () => void;
@@ -83,6 +88,9 @@ export function SearchResultsArea({
   hasSearched,
   searchQuery,
   originalQuery,
+  queryQualityScore,
+  queryConfidence,
+  querySampleSize,
   hasNextPage,
   isFetchingNextPage,
   fetchNextPage,
@@ -120,6 +128,32 @@ export function SearchResultsArea({
     [displayCards],
   );
   const { data: sparklineMap } = useBatchPriceHistory(sparklineNames);
+  const { user } = useAuth();
+  const hadFastClick =
+    sessionStorage.getItem('offmeta_fast_click_query') === originalQuery;
+  const hadRefinement = sessionStorage.getItem('offmeta_once:first_refinement') === '1';
+  const rankedCards = useMemo(
+    () =>
+      rerankCardsWithIntelligence(displayCards, {
+        queryQualityScore,
+        queryConfidence,
+        querySampleSize,
+        ownedCards: collectionLookup,
+        hadFastClick,
+        hadRefinement,
+        isAuthenticated: !!user,
+      }),
+    [
+      displayCards,
+      queryQualityScore,
+      queryConfidence,
+      querySampleSize,
+      collectionLookup,
+      hadFastClick,
+      hadRefinement,
+      user,
+    ],
+  );
   return (
     <div className="mt-3 sm:mt-6 container-main">
       {/* Cards tab */}
@@ -131,7 +165,7 @@ export function SearchResultsArea({
                 viewMode === 'grid' &&
                 displayCards.length > CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD ? (
                   <VirtualizedCardGrid
-                    cards={displayCards}
+                    cards={rankedCards}
                     onCardClick={handleCardClick}
                     onLoadMore={
                       hasNextPage && !isFetchingNextPage
@@ -148,7 +182,7 @@ export function SearchResultsArea({
                     aria-label="Search results"
                     data-testid="list-view"
                   >
-                    {displayCards.map((card, index) => {
+                    {rankedCards.map((card, index) => {
                       const rovingProps = getRovingProps(index);
                       return (
                         <div
@@ -180,7 +214,7 @@ export function SearchResultsArea({
                     aria-label="Search results"
                     data-testid="images-view"
                   >
-                    {displayCards.map((card, index) => {
+                    {rankedCards.map((card, index) => {
                       const rovingProps = getRovingProps(index);
                       return (
                         <div
@@ -211,7 +245,7 @@ export function SearchResultsArea({
                     aria-label="Search results"
                     data-testid="standard-grid"
                   >
-                    {displayCards.map((card, index) => {
+                    {rankedCards.map((card, index) => {
                       const rovingProps = getRovingProps(index);
                       return (
                         <div

@@ -26,7 +26,7 @@ verify_jwt = false
 
 
 [functions.admin-analytics]
-verify_jwt = false
+verify_jwt = true
 
 [functions.combo-search]
 verify_jwt = false
@@ -83,4 +83,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.auto-generate-seo-pages]
+verify_jwt = false
+
+[functions.generate-retention-triggers]
 verify_jwt = false
