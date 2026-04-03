@@ -264,7 +264,10 @@ const Index = () => {
   );
 
   useEffect(() => {
-    setUpsellEvaluationNowMs(Date.now());
+    const timer = window.setTimeout(() => {
+      setUpsellEvaluationNowMs(Date.now());
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [hasSearched, isSearching, queryQualityScore]);
 
   const shouldShowProUpsell = useMemo(() => {
@@ -287,14 +290,14 @@ const Index = () => {
       10,
     );
     const hasSaved = readSessionValue('offmeta_once:first_save') === '1';
-    const hasSuccess = readSessionValue('offmeta_once:first_search_success') === '1';
+    const hasSuccess =
+      readSessionValue('offmeta_once:first_search_success') === '1';
     const cooldownUntil = parseInt(
       readLocalValue('offmeta_pro_upsell_cooldown_until') || '0',
       10,
     );
     const inCooldown =
-      Number.isFinite(cooldownUntil) &&
-      upsellEvaluationNowMs < cooldownUntil;
+      Number.isFinite(cooldownUntil) && upsellEvaluationNowMs < cooldownUntil;
 
     return (
       hasSearched &&
@@ -337,12 +340,7 @@ const Index = () => {
     } catch {
       // ignore storage failures; no upsell blocking can be persisted
     }
-  }, [
-    originalQuery,
-    queryQualityScore,
-    shouldShowProUpsell,
-    trackEvent,
-  ]);
+  }, [originalQuery, queryQualityScore, shouldShowProUpsell, trackEvent]);
 
   useEffect(() => {
     const routeKey = `${location.pathname}${location.search}${location.hash}`;
@@ -520,21 +518,26 @@ const Index = () => {
               <div className="space-y-2">
                 {refinementCount > 0 && (
                   <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-foreground">
-                    Narrow results like this? Save this refinement as a reusable workflow.
+                    Narrow results like this? Save this refinement as a reusable
+                    workflow.
                   </div>
                 )}
                 {lastClickLatencyMs !== null && lastClickLatencyMs < 1200 && (
                   <button
                     type="button"
-                    onClick={() => setTabState({ query: originalQuery, tab: 'similar' })}
+                    onClick={() =>
+                      setTabState({ query: originalQuery, tab: 'similar' })
+                    }
                     className="w-full text-left rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-xs text-foreground hover:bg-accent/15 transition-colors"
                   >
-                    Fast pick detected ({lastClickLatencyMs}ms). See boosted similar cards →
+                    Fast pick detected ({lastClickLatencyMs}ms). See boosted
+                    similar cards →
                   </button>
                 )}
                 {struggleCount >= 2 && (
                   <div className="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-foreground">
-                    Looks like this search is struggling. Try guided suggestions below to recover quickly.
+                    Looks like this search is struggling. Try guided suggestions
+                    below to recover quickly.
                   </div>
                 )}
                 <div className="text-[11px] text-muted-foreground">
@@ -542,7 +545,8 @@ const Index = () => {
                 </div>
                 {shouldShowProUpsell && (
                   <div className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-foreground">
-                    Better results with Pro: advanced explainability + priority ranking.
+                    Better results with Pro: advanced explainability + priority
+                    ranking.
                   </div>
                 )}
               </div>
@@ -565,7 +569,6 @@ const Index = () => {
                 onToggleCompareMode={handleToggleCompareMode}
               />
             )}
-
           </div>
 
           {/* Tab content area */}
@@ -607,7 +610,9 @@ const Index = () => {
           />
         </main>
 
-        {!hasSearched && <HomepageLandingContent onTrySearch={handleTryExample} />}
+        {!hasSearched && (
+          <HomepageLandingContent onTrySearch={handleTryExample} />
+        )}
 
         <Footer />
         <ScrollToTop threshold={800} />
