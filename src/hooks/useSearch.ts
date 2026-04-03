@@ -151,14 +151,15 @@ export function useSearch() {
   const [struggleCount, setStruggleCount] = useState(0);
   const localQueryQualityScore = useMemo(
     () => getQueryQuality(originalQuery)?.score ?? 0,
-    [originalQuery, lastClickLatencyMs, refinementCount, struggleCount],
+    [originalQuery],
   );
   const { data: serverIntelligence } = useQueryIntelligence(originalQuery);
   const serverConfidence = serverIntelligence?.confidence ?? 0;
   const serverSampleSize = serverIntelligence?.total_searches ?? 0;
-  const shouldUseServerQuality = serverConfidence >= 0.3 && serverSampleSize >= 20;
+  const shouldUseServerQuality =
+    serverConfidence >= 0.3 && serverSampleSize >= 20;
   const effectiveQueryQualityScore = shouldUseServerQuality
-    ? serverIntelligence?.search_quality_score ?? 0
+    ? (serverIntelligence?.search_quality_score ?? 0)
     : localQueryQualityScore;
 
   // --- Redirect legacy ?q= URLs to /search/:slug ---
@@ -341,10 +342,15 @@ export function useSearch() {
         query: originalQuery,
         request_id: currentRequestId ?? undefined,
       });
-      setStruggleCount((count) => count + 1);
-      trackEvent('guided_suggestion_shown', {
-        query: originalQuery,
-        struggle_count: struggleCount + 1,
+      queueMicrotask(() => {
+        setStruggleCount((count) => {
+          const nextCount = count + 1;
+          trackEvent('guided_suggestion_shown', {
+            query: originalQuery,
+            struggle_count: nextCount,
+          });
+          return nextCount;
+        });
       });
     }
   }, [
@@ -354,7 +360,6 @@ export function useSearch() {
     trackEvent,
     trackFirstSearchSuccess,
     trackSearchFailure,
-    struggleCount,
     currentRequestId,
     hasSearched,
     isSearching,
@@ -452,7 +457,6 @@ export function useSearch() {
         // Increment searches_per_session counter
         incrementSearchesPerSession();
       }
-
     },
     [
       trackSearch,
@@ -529,12 +533,15 @@ export function useSearch() {
         query: originalQuery,
         request_id: requestId,
       });
-      setRefinementCount((count) => count + 1);
-      updateQueryQuality(originalQuery, { refinements: 1 });
-      trackEvent('narrow_results_prompt_shown', {
-        query: originalQuery,
-        refinement_count: refinementCount + 1,
+      setRefinementCount((count) => {
+        const nextCount = count + 1;
+        trackEvent('narrow_results_prompt_shown', {
+          query: originalQuery,
+          refinement_count: nextCount,
+        });
+        return nextCount;
       });
+      updateQueryQuality(originalQuery, { refinements: 1 });
     },
     [
       queryClient,
@@ -543,7 +550,6 @@ export function useSearch() {
       trackFirstRefinement,
       activeFilters,
       scryfallLang,
-      refinementCount,
     ],
   );
 
