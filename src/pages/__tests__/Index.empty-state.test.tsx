@@ -14,6 +14,12 @@ import {
 import { createMockTranslation } from '@/test/factories';
 import { renderIndex, MOCK_CARDS } from './index-test-setup';
 
+vi.mock('@/components/SearchHistoryDropdown', () => ({
+  SearchHistoryDropdown: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="history-dropdown">{children}</div>
+  ),
+}));
+
 // ── Mocks ──────────────────────────────────────────────────
 
 const mockTranslateQueryWithDedup = vi.fn();
@@ -69,6 +75,12 @@ vi.mock('@/hooks/useAnalytics', () => ({
     trackExampleQueryClick: vi.fn(),
     trackExampleQuerySearchSuccess: vi.fn(),
     trackExampleQueryResultClick: vi.fn(),
+    trackFirstSave: vi.fn(),
+    trackFirstReturnVisit: vi.fn(),
+    trackFirstSearchStart: vi.fn(),
+    trackFirstSearchSuccess: vi.fn(),
+    trackFirstResultClick: vi.fn(),
+    trackFirstRefinement: vi.fn(),
   }),
 }));
 vi.mock('@/lib/scryfall/query', () => ({
@@ -156,8 +168,8 @@ describe('Index – empty state', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/search tips/i)).toBeInTheDocument();
-      expect(screen.getByText('o:"treasure"')).toBeInTheDocument();
+      expect(mockSearchCards).toHaveBeenCalledTimes(1);
+      expect(document.title).toContain('nonexistent card xyz');
     });
   });
 });

@@ -14,6 +14,12 @@ import {
 import { createMockTranslation } from '@/test/factories';
 import { renderIndex, MOCK_CARDS } from './index-test-setup';
 
+vi.mock('@/components/SearchHistoryDropdown', () => ({
+  SearchHistoryDropdown: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="history-dropdown">{children}</div>
+  ),
+}));
+
 // ── Mocks ──────────────────────────────────────────────────
 
 const mockTranslateQueryWithDedup = vi.fn();
@@ -71,6 +77,12 @@ vi.mock('@/hooks/useAnalytics', () => ({
     trackExampleQueryClick: mockTrackExampleQueryClick,
     trackExampleQuerySearchSuccess: vi.fn(),
     trackExampleQueryResultClick: vi.fn(),
+    trackFirstSave: vi.fn(),
+    trackFirstReturnVisit: vi.fn(),
+    trackFirstSearchStart: vi.fn(),
+    trackFirstSearchSuccess: vi.fn(),
+    trackFirstResultClick: vi.fn(),
+    trackFirstRefinement: vi.fn(),
   }),
 }));
 vi.mock('@/lib/scryfall/query', () => ({
@@ -151,14 +163,14 @@ describe('Index – example queries', () => {
     expect(screen.getByText('Commander')).toBeInTheDocument();
     expect(
       screen.getByRole('button', {
-        name: /search for find budget board wipes under \$5/i,
+        name: /search for budget board wipes under \$5/i,
       }),
     ).toBeInTheDocument();
     await waitFor(() => {
       expect(mockTrackExampleQueryImpression).toHaveBeenCalled();
       expect(mockTrackExampleQueryImpression).toHaveBeenCalledWith(
         expect.objectContaining({
-          query: 'find budget board wipes under $5',
+          query: 'budget board wipes under $5',
           category: 'Budget',
         }),
       );
