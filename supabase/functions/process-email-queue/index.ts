@@ -7,6 +7,14 @@ const DEFAULT_SEND_DELAY_MS = 200
 const DEFAULT_AUTH_TTL_MINUTES = 15
 const DEFAULT_TRANSACTIONAL_TTL_MINUTES = 60
 
+interface QueueMessagePayload {
+  message_id?: string
+}
+
+interface QueueMessageRow {
+  message?: QueueMessagePayload | null
+}
+
 // Check if an error is a rate-limit (429) response.
 // Uses EmailAPIError.status when available (email-js >=0.x with structured errors),
 // falls back to parsing the error message for older versions.
@@ -120,9 +128,9 @@ Deno.serve(async (req) => {
     // read_ct increments for every message in a claimed batch, including
     // messages not attempted when a 429 stops processing early.
     const messageIds = Array.from(
-      new Set(
-        messages
-          .map((msg: any) =>
+        new Set(
+          messages
+          .map((msg: QueueMessageRow) =>
             msg?.message?.message_id && typeof msg.message.message_id === 'string'
               ? msg.message.message_id
               : null

@@ -13,6 +13,14 @@ import { toast } from 'sonner';
 import type { FilterState } from '@/types/filters';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
+interface RetentionTriggerInsertClient {
+  from: (
+    table: string,
+  ) => {
+    insert: (payload: Record<string, unknown>) => Promise<unknown>;
+  };
+}
+
 interface SaveSearchButtonProps {
   naturalQuery: string;
   scryfallQuery?: string;
@@ -90,7 +98,8 @@ export function SaveSearchButton({
         try {
           const dedupeWindowStart = new Date().toISOString().slice(0, 10);
           const payloadHashBase = `${user.id}|saved_search_updated|${naturalQuery.trim().toLowerCase()}|${dedupeWindowStart}`;
-          await (supabase.from('retention_triggers' as never) as any).insert({
+          const retentionInsertClient = supabase as unknown as RetentionTriggerInsertClient;
+          await retentionInsertClient.from('retention_triggers').insert({
             user_id: user.id,
             trigger_type: 'saved_search_updated',
             payload: {
