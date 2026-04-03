@@ -259,6 +259,13 @@ const Index = () => {
   });
 
   // (parallax removed — static gradient background)
+  const [upsellEvaluationNowMs, setUpsellEvaluationNowMs] = useState(() =>
+    Date.now(),
+  );
+
+  useEffect(() => {
+    setUpsellEvaluationNowMs(Date.now());
+  }, [hasSearched, isSearching, queryQualityScore]);
 
   const shouldShowProUpsell = useMemo(() => {
     const readSessionValue = (key: string): string | null => {
@@ -285,7 +292,9 @@ const Index = () => {
       readLocalValue('offmeta_pro_upsell_cooldown_until') || '0',
       10,
     );
-    const inCooldown = Number.isFinite(cooldownUntil) && Date.now() < cooldownUntil;
+    const inCooldown =
+      Number.isFinite(cooldownUntil) &&
+      upsellEvaluationNowMs < cooldownUntil;
 
     return (
       hasSearched &&
@@ -296,7 +305,7 @@ const Index = () => {
       !hasSaved &&
       !inCooldown
     );
-  }, [hasSearched, isSearching, queryQualityScore]);
+  }, [hasSearched, isSearching, queryQualityScore, upsellEvaluationNowMs]);
 
   // Handle hash-based scroll
   useEffect(() => {

@@ -18,7 +18,7 @@ const DECK_BATCH_SIZE = 50;
 /** Batch-resolve oracle IDs — checks local cards table first, falls back to Scryfall. */
 async function batchResolveOracleIds(
   cardNames: string[],
-  supabase: ReturnType<typeof createClient<any>>,
+  supabase: ReturnType<typeof createClient>,
 ): Promise<Map<string, string | null>> {
   const result = new Map<string, string | null>();
   const unique = [...new Set(cardNames)];

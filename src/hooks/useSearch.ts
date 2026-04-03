@@ -149,14 +149,17 @@ export function useSearch() {
   );
   const [refinementCount, setRefinementCount] = useState(0);
   const [struggleCount, setStruggleCount] = useState(0);
-  const [queryQualityScore, setQueryQualityScore] = useState(0);
+  const localQueryQualityScore = useMemo(
+    () => getQueryQuality(originalQuery)?.score ?? 0,
+    [originalQuery, lastClickLatencyMs, refinementCount, struggleCount],
+  );
   const { data: serverIntelligence } = useQueryIntelligence(originalQuery);
   const serverConfidence = serverIntelligence?.confidence ?? 0;
   const serverSampleSize = serverIntelligence?.total_searches ?? 0;
   const shouldUseServerQuality = serverConfidence >= 0.3 && serverSampleSize >= 20;
   const effectiveQueryQualityScore = shouldUseServerQuality
     ? serverIntelligence?.search_quality_score ?? 0
-    : queryQualityScore;
+    : localQueryQualityScore;
 
   // --- Redirect legacy ?q= URLs to /search/:slug ---
   useEffect(() => {
@@ -323,7 +326,6 @@ export function useSearch() {
       }
       const quality = getQueryQuality(originalQuery);
       if (quality) {
-        setQueryQualityScore(quality.score);
         trackEvent('search_quality_computed', {
           query: originalQuery,
           search_quality_score: quality.score,
@@ -451,10 +453,6 @@ export function useSearch() {
         incrementSearchesPerSession();
       }
 
-      const quality = getQueryQuality(naturalQuery || query);
-      if (quality) {
-        setQueryQualityScore(quality.score);
-      }
     },
     [
       trackSearch,
@@ -545,6 +543,7 @@ export function useSearch() {
       trackFirstRefinement,
       activeFilters,
       scryfallLang,
+      refinementCount,
     ],
   );
 
@@ -578,7 +577,7 @@ export function useSearch() {
       }
       setSelectedCard(card);
     },
-    [originalQuery, trackCardClick, trackFirstResultClick],
+    [originalQuery, trackCardClick, trackFirstResultClick, trackEvent],
   );
 
   const handleTryExample = useCallback((query: string) => {
