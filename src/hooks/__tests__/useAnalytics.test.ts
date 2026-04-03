@@ -11,14 +11,15 @@ const mockInsertThen = vi
   .fn()
   .mockReturnValue({ then: vi.fn((cb) => cb({ error: null })) });
 const mockInsert = vi.fn().mockReturnValue(mockInsertThen);
+const mockFrom = vi.fn(() => ({
+  insert: (...args: unknown[]) => {
+    mockInsert(...args);
+    return { then: vi.fn((cb) => cb({ error: null })) };
+  },
+}));
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: () => ({
-      insert: (...args: unknown[]) => {
-        mockInsert(...args);
-        return { then: vi.fn((cb) => cb({ error: null })) };
-      },
-    }),
+    from: (...args: unknown[]) => mockFrom(...args),
   },
 }));
 
@@ -31,6 +32,10 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 describe('useAnalytics', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubGlobal(
+      'location',
+      new URL('https://offmeta.app/?utm_source=test&utm_campaign=spring'),
+    );
     sessionStorage.clear();
   });
 
@@ -52,6 +57,8 @@ describe('useAnalytics', () => {
     );
     expect(result.current.trackExampleQueryResultClick).toBeTypeOf('function');
     expect(result.current.trackEvent).toBeTypeOf('function');
+    expect(result.current.trackFirstSave).toBeTypeOf('function');
+    expect(result.current.trackFirstReturnVisit).toBeTypeOf('function');
     expect(result.current.shouldLogCacheEvent).toBeTypeOf('function');
   });
 
@@ -71,6 +78,7 @@ describe('useAnalytics', () => {
         event_type: 'search',
       }),
     ]);
+    expect(mockFrom).toHaveBeenCalledWith('analytics_events');
   });
 
   it('trackCardClick calls insert with card_click event type', async () => {

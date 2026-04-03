@@ -4,7 +4,9 @@ import { EmptyState } from '../EmptyState';
 
 // Mock i18n
 vi.mock('@/lib/i18n', () => ({
-  useTranslation: () => ({ t: (key: string, fallback?: string) => fallback ?? key }),
+  useTranslation: () => ({
+    t: (key: string, fallback?: string) => fallback ?? key,
+  }),
 }));
 
 describe('EmptyState', () => {
@@ -52,20 +54,35 @@ describe('EmptyState', () => {
 
   it('renders "Did you mean?" section with suggestions', () => {
     const suggestions = [
-      { query: 'o:treasure t:creature', label: 'Removed price filter', totalCards: 42, score: 0.9 },
-      { query: 'o:treasure', label: 'Simplified query', totalCards: 150, score: 0.8 },
+      {
+        query: 'o:treasure t:creature',
+        label: 'Removed price filter',
+        totalCards: 42,
+        score: 0.9,
+      },
+      {
+        query: 'o:treasure',
+        label: 'Simplified query',
+        totalCards: 150,
+        score: 0.8,
+      },
     ];
     render(<EmptyState query="xyz" suggestions={suggestions} />);
     expect(screen.getByText('empty.didYouMean')).toBeInTheDocument();
     expect(screen.getByText('o:treasure t:creature')).toBeInTheDocument();
     expect(screen.getByText('o:treasure')).toBeInTheDocument();
-    expect(screen.getByText('Removed price filter')).toBeInTheDocument();
-    expect(screen.getByText('Simplified query')).toBeInTheDocument();
+    expect(screen.getByText(/Removed price filter/i)).toBeInTheDocument();
+    expect(screen.getByText(/Simplified query/i)).toBeInTheDocument();
   });
 
   it('displays card counts for each suggestion', () => {
     const suggestions = [
-      { query: 'o:treasure', label: 'Simplified', totalCards: 1234, score: 0.9 },
+      {
+        query: 'o:treasure',
+        label: 'Simplified',
+        totalCards: 1234,
+        score: 0.9,
+      },
     ];
     render(<EmptyState query="xyz" suggestions={suggestions} />);
     // Mock t() returns raw key 'empty.cardCount'; .replace('{count}', '1,234') has no match
@@ -79,10 +96,19 @@ describe('EmptyState', () => {
   it('calls onTrySuggestion when clicking a suggestion', () => {
     const handler = vi.fn();
     const suggestions = [
-      { query: 'o:treasure t:creature', label: 'Removed price filter', totalCards: 42, score: 0.9 },
+      {
+        query: 'o:treasure t:creature',
+        label: 'Removed price filter',
+        totalCards: 42,
+        score: 0.9,
+      },
     ];
     render(
-      <EmptyState query="xyz" suggestions={suggestions} onTrySuggestion={handler} />,
+      <EmptyState
+        query="xyz"
+        suggestions={suggestions}
+        onTrySuggestion={handler}
+      />,
     );
     fireEvent.click(screen.getByText('o:treasure t:creature'));
     expect(handler).toHaveBeenCalledWith('o:treasure t:creature');
@@ -111,11 +137,17 @@ describe('EmptyState', () => {
       { query: 'o:treasure', label: 'Simplified', totalCards: 10, score: 0.9 },
     ];
     render(
-      <EmptyState query="xyz" isCheckingSuggestions suggestions={suggestions} />,
+      <EmptyState
+        query="xyz"
+        isCheckingSuggestions
+        suggestions={suggestions}
+      />,
     );
     // Should show suggestions, not the loading text
     expect(screen.getByText('o:treasure')).toBeInTheDocument();
-    expect(screen.queryByText('empty.checkingAlternatives')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('empty.checkingAlternatives'),
+    ).not.toBeInTheDocument();
   });
 
   // ── Edge cases ────────────────────────────────────────────

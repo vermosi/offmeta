@@ -39,6 +39,8 @@ vi.mock('@/hooks/useAnalytics', () => ({
     trackExampleQueryClick: vi.fn(),
     trackExampleQuerySearchSuccess: vi.fn(),
     trackExampleQueryResultClick: vi.fn(),
+    trackFirstSave: vi.fn(),
+    trackFirstReturnVisit: vi.fn(),
     trackFirstSearchStart: vi.fn(),
     trackFirstSearchSuccess: vi.fn(),
     trackFirstResultClick: vi.fn(),
@@ -47,7 +49,10 @@ vi.mock('@/hooks/useAnalytics', () => ({
 }));
 
 vi.mock('@/lib/i18n', () => ({
-  useTranslation: () => ({ t: (key: string, fallback?: string) => fallback ?? key, locale: 'en' }),
+  useTranslation: () => ({
+    t: (key: string, fallback?: string) => fallback ?? key,
+    locale: 'en',
+  }),
 }));
 
 vi.mock('@/hooks/useQueryIntelligence', () => ({

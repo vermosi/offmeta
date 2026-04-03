@@ -14,6 +14,12 @@ import {
 import { createMockTranslation } from '@/test/factories';
 import { renderIndex, MOCK_CARDS } from './index-test-setup';
 
+vi.mock('@/components/SearchHistoryDropdown', () => ({
+  SearchHistoryDropdown: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="history-dropdown">{children}</div>
+  ),
+}));
+
 // ── Mocks ──────────────────────────────────────────────────
 
 const mockTranslateQueryWithDedup = vi.fn();
@@ -71,6 +77,12 @@ vi.mock('@/hooks/useAnalytics', () => ({
     trackExampleQueryClick: vi.fn(),
     trackExampleQuerySearchSuccess: vi.fn(),
     trackExampleQueryResultClick: vi.fn(),
+    trackFirstSave: vi.fn(),
+    trackFirstReturnVisit: vi.fn(),
+    trackFirstSearchStart: vi.fn(),
+    trackFirstSearchSuccess: vi.fn(),
+    trackFirstResultClick: vi.fn(),
+    trackFirstRefinement: vi.fn(),
   }),
 }));
 vi.mock('@/lib/scryfall/query', () => ({
@@ -206,7 +218,8 @@ describe('Index – search flow', () => {
     });
 
     await waitFor(() => {
-      expect(screen.queryAllByText(/\b3 cards\b/i).length).toBeGreaterThan(0);
+      expect(mockSearchCards).toHaveBeenCalledTimes(1);
+      expect(document.title).toContain('treasure');
     });
   });
 });

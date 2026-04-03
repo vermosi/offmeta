@@ -85,15 +85,13 @@ describe('UnifiedSearchBar', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole('button', {
-        name: /search for find budget board wipes under \$5/i,
+        name: /search for budget board wipes under \$5/i,
       }),
     ).toBeInTheDocument();
     expect(
       screen.getByText('cards that protect my commander'),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText('one-card combos in Simic colors'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('mana rocks that cost 2')).toBeInTheDocument();
   });
 
   it('hides examples when query is typed', () => {
