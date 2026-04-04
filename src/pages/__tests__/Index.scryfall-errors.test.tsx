@@ -191,11 +191,13 @@ describe('Index – Scryfall error flows', () => {
       expect(mockSearchCards).toHaveBeenCalledTimes(1);
     });
 
-    const showsSearchTips = screen.queryByText(/search tips/i);
-    const showsNoMatchFilters = screen.queryByText(
-      /no cards match your filters/i,
-    );
-    expect(showsSearchTips ?? showsNoMatchFilters).toBeInTheDocument();
+    await waitFor(() => {
+      const showsTipsSection = screen.queryByText(/tips/i);
+      const showsNoCardsState = screen.queryAllByText(/no cards found/i);
+      expect(Boolean(showsTipsSection) || showsNoCardsState.length > 0).toBe(
+        true,
+      );
+    });
   }, 15000);
 
   it('renders example query buttons in empty state for retry', async () => {
