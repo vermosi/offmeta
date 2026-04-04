@@ -151,7 +151,7 @@ OffMeta includes 10 progressive guides that teach natural language card search f
 | 9     | ETB & Flicker Combos    | `"cards that double ETB effects"`                 |
 | 10    | Multi-Constraint        | `"utility lands for commander in Esper under $5"` |
 
-Browse all guides at [`/guides`](https://offmeta.lovable.app/guides).
+Browse all guides at [`/guides`](https://offmeta.app/guides).
 
 ---
 
