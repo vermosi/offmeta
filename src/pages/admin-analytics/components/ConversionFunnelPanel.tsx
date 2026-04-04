@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, TrendingDown, ArrowRight, Globe } from 'lucide-react';
 import { logger } from '@/lib/core/logger';
+import { parseConversionFunnelData } from '@/lib/supabase/parsers';
 
 interface FunnelCounts {
   totalSessions: number;
@@ -50,23 +51,32 @@ export function ConversionFunnelPanel({ days }: ConversionFunnelPanelProps) {
     async function load() {
       setLoading(true);
       try {
-        const { data, error } = await supabase.rpc('get_conversion_funnel' as 'get_search_analytics', {
-          days_back: days,
-        } as never);
+        const { data, error } = await supabase.rpc(
+          'get_conversion_funnel' as 'get_search_analytics',
+          {
+            days_back: days,
+          } as never,
+        );
 
         if (error) throw error;
 
-        const result = data as unknown as {
-          sequential: FunnelCounts;
-          independent: FunnelCounts;
-          eventTotals: Record<string, number> | null;
-          utmSources: UtmRow[];
-        };
+        const result = parseConversionFunnelData(data);
+        if (!result) {
+          logger.error('[ConversionFunnelPanel] Invalid RPC payload shape', {
+            days,
+            payload: data,
+          });
+          setSequential(null);
+          setIndependent(null);
+          setEventTotals({});
+          setUtmBreakdown([]);
+          return;
+        }
 
         setSequential(result.sequential);
         setIndependent(result.independent);
-        setEventTotals(result.eventTotals ?? {});
-        setUtmBreakdown(result.utmSources ?? []);
+        setEventTotals(result.eventTotals);
+        setUtmBreakdown(result.utmSources);
       } catch (e) {
         logger.warn('Failed to fetch funnel data', e);
       } finally {
@@ -90,15 +100,32 @@ export function ConversionFunnelPanel({ days }: ConversionFunnelPanelProps) {
   const activeCounts = mode === 'sequential' ? sequential : independent;
   if (!activeCounts) return null;
 
-  const searchEvents = (eventTotals['search'] ?? 0);
-  const clickEvents = (eventTotals['card_click'] ?? 0) + (eventTotals['card_modal_view'] ?? 0);
-  const affiliateEvents = (eventTotals['affiliate_click'] ?? 0);
+  const searchEvents = eventTotals['search'] ?? 0;
+  const clickEvents =
+    (eventTotals['card_click'] ?? 0) + (eventTotals['card_modal_view'] ?? 0);
+  const affiliateEvents = eventTotals['affiliate_click'] ?? 0;
 
   const funnel: FunnelStep[] = [
-    { label: 'Sessions', sessionCount: activeCounts.totalSessions, totalEvents: activeCounts.totalSessions },
-    { label: 'Searched', sessionCount: activeCounts.searchedSessions, totalEvents: searchEvents },
-    { label: 'Clicked Card', sessionCount: activeCounts.clickedSessions, totalEvents: clickEvents },
-    { label: 'Affiliate Click', sessionCount: activeCounts.affiliateSessions, totalEvents: affiliateEvents },
+    {
+      label: 'Sessions',
+      sessionCount: activeCounts.totalSessions,
+      totalEvents: activeCounts.totalSessions,
+    },
+    {
+      label: 'Searched',
+      sessionCount: activeCounts.searchedSessions,
+      totalEvents: searchEvents,
+    },
+    {
+      label: 'Clicked Card',
+      sessionCount: activeCounts.clickedSessions,
+      totalEvents: clickEvents,
+    },
+    {
+      label: 'Affiliate Click',
+      sessionCount: activeCounts.affiliateSessions,
+      totalEvents: affiliateEvents,
+    },
   ];
 
   const totalSessions = funnel[0]?.sessionCount ?? 1;
@@ -139,37 +166,56 @@ export function ConversionFunnelPanel({ days }: ConversionFunnelPanelProps) {
         <CardContent>
           <div className="space-y-2">
             {funnel.map((step, i) => {
-              const pct = totalSessions > 0
-                ? Math.round((step.sessionCount / totalSessions) * 100)
-                : 0;
+              const pct =
+                totalSessions > 0
+                  ? Math.round((step.sessionCount / totalSessions) * 100)
+                  : 0;
               const prevCount = i > 0 ? funnel[i - 1].sessionCount : 0;
-              const dropOff = i > 0 && prevCount > 0
-                ? Math.round(((prevCount - step.sessionCount) / prevCount) * 100)
-                : 0;
+              const dropOff =
+                i > 0 && prevCount > 0
+                  ? Math.round(
+                      ((prevCount - step.sessionCount) / prevCount) * 100,
+                    )
+                  : 0;
 
               return (
                 <div key={step.label}>
                   {i > 0 && (
                     <div className="flex items-center gap-2 py-1 text-xs text-muted-foreground pl-4">
                       <ArrowRight className="h-3 w-3" />
-                      <span className={dropOff > 0 ? 'text-destructive font-medium' : 'text-muted-foreground font-medium'}>
+                      <span
+                        className={
+                          dropOff > 0
+                            ? 'text-destructive font-medium'
+                            : 'text-muted-foreground font-medium'
+                        }
+                      >
                         -{dropOff}% drop-off
                       </span>
                     </div>
                   )}
                   <div className="flex items-center gap-3">
-                    <div className="w-28 text-sm font-medium text-foreground">{step.label}</div>
+                    <div className="w-28 text-sm font-medium text-foreground">
+                      {step.label}
+                    </div>
                     <div className="flex-1 relative h-7 rounded bg-muted/50 overflow-hidden">
                       <div
                         className="absolute inset-y-0 left-0 rounded bg-primary/20 transition-all"
                         style={{ width: `${Math.max(pct, 2)}%` }}
                       />
                       <div className="absolute inset-0 flex items-center px-2 text-xs font-mono">
-                        <span className="text-foreground">{step.sessionCount.toLocaleString()} sessions</span>
-                        <span className="ml-auto text-muted-foreground">{pct}%</span>
+                        <span className="text-foreground">
+                          {step.sessionCount.toLocaleString()} sessions
+                        </span>
+                        <span className="ml-auto text-muted-foreground">
+                          {pct}%
+                        </span>
                       </div>
                     </div>
-                    <Badge variant="outline" className="text-xs tabular-nums w-16 justify-center">
+                    <Badge
+                      variant="outline"
+                      className="text-xs tabular-nums w-16 justify-center"
+                    >
                       {step.totalEvents.toLocaleString()}
                     </Badge>
                   </div>
@@ -180,7 +226,7 @@ export function ConversionFunnelPanel({ days }: ConversionFunnelPanelProps) {
           <p className="text-xs text-muted-foreground mt-4">
             {mode === 'sequential'
               ? 'Sequential: each step only counts sessions that completed all previous steps.'
-              : 'All Activity: each step counts sessions independently (a card click doesn\'t require a search).'}
+              : "All Activity: each step counts sessions independently (a card click doesn't require a search)."}
           </p>
         </CardContent>
       </Card>
@@ -208,11 +254,21 @@ export function ConversionFunnelPanel({ days }: ConversionFunnelPanelProps) {
                 <tbody>
                   {utmBreakdown.map((row) => (
                     <tr key={row.source} className="border-b border-border/20">
-                      <td className="py-1.5 font-medium text-foreground">{row.source}</td>
-                      <td className="py-1.5 text-right tabular-nums">{row.sessions}</td>
-                      <td className="py-1.5 text-right tabular-nums">{row.searches}</td>
-                      <td className="py-1.5 text-right tabular-nums">{row.clicks}</td>
-                      <td className="py-1.5 text-right tabular-nums">{row.affiliates}</td>
+                      <td className="py-1.5 font-medium text-foreground">
+                        {row.source}
+                      </td>
+                      <td className="py-1.5 text-right tabular-nums">
+                        {row.sessions}
+                      </td>
+                      <td className="py-1.5 text-right tabular-nums">
+                        {row.searches}
+                      </td>
+                      <td className="py-1.5 text-right tabular-nums">
+                        {row.clicks}
+                      </td>
+                      <td className="py-1.5 text-right tabular-nums">
+                        {row.affiliates}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

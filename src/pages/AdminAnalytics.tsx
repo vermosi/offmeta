@@ -105,6 +105,12 @@ import { HitRatePanel } from '@/pages/admin-analytics/components/HitRatePanel';
 import { AICostPanel } from '@/pages/admin-analytics/components/AICostPanel';
 import { logger } from '@/lib/core/logger';
 import { useAdminAnalyticsFilters } from '@/hooks/useAdminAnalyticsFilters';
+import {
+  parseFeedbackItem,
+  parseFeedbackItems,
+  parseTranslationRuleRow,
+  parseTranslationRuleRows,
+} from '@/lib/supabase/parsers';
 
 export default function AdminAnalytics() {
   const { user, isLoading: authLoading } = useAuth();
@@ -220,7 +226,14 @@ export default function AdminAnalytics() {
         .limit(100);
 
       if (error) throw error;
-      setFeedback((rows as unknown as FeedbackItem[]) ?? []);
+      const parsed = parseFeedbackItems(rows);
+      if ((rows?.length ?? 0) !== parsed.length) {
+        logger.error('[AdminAnalytics] Invalid feedback payload shape', {
+          totalRows: rows?.length ?? 0,
+          parsedRows: parsed.length,
+        });
+      }
+      setFeedback(parsed);
     } catch (err) {
       logger.error('[AdminAnalytics] Failed to load feedback:', err);
       toast.error('Failed to load feedback');
@@ -248,7 +261,17 @@ export default function AdminAnalytics() {
 
         const { data: rows, error } = await query;
         if (error) throw error;
-        setRules((rows as TranslationRuleRow[]) ?? []);
+        const parsed = parseTranslationRuleRows(rows);
+        if ((rows?.length ?? 0) !== parsed.length) {
+          logger.error(
+            '[AdminAnalytics] Invalid translation_rules payload shape',
+            {
+              totalRows: rows?.length ?? 0,
+              parsedRows: parsed.length,
+            },
+          );
+        }
+        setRules(parsed);
       } catch {
         toast.error('Failed to load translation rules');
       } finally {
@@ -761,7 +784,14 @@ export default function AdminAnalytics() {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'search_feedback' },
         (payload) => {
-          const row = payload.new as FeedbackItem;
+          const row = parseFeedbackItem(payload.new);
+          if (!row) {
+            logger.error(
+              '[AdminAnalytics] Invalid realtime feedback INSERT payload',
+              payload.new,
+            );
+            return;
+          }
           setFeedback((prev) => {
             // Avoid duplicates if fetchFeedback already picked it up
             if (prev.some((f) => f.id === row.id)) return prev;
@@ -782,7 +812,14 @@ export default function AdminAnalytics() {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'search_feedback' },
         (payload) => {
-          const row = payload.new as FeedbackItem;
+          const row = parseFeedbackItem(payload.new);
+          if (!row) {
+            logger.error(
+              '[AdminAnalytics] Invalid realtime feedback UPDATE payload',
+              payload.new,
+            );
+            return;
+          }
           setFeedback((prev) => {
             const exists = prev.some((f) => f.id === row.id);
             if (!exists) return prev;
@@ -805,10 +842,18 @@ export default function AdminAnalytics() {
                 .single()
                 .then(({ data }) => {
                   if (!data) return;
+                  const parsed = parseFeedbackItem(data);
+                  if (!parsed) {
+                    logger.error(
+                      '[AdminAnalytics] Invalid single feedback row payload',
+                      {
+                        feedbackId: row.id,
+                      },
+                    );
+                    return;
+                  }
                   setFeedback((cur) =>
-                    cur.map((f) =>
-                      f.id === row.id ? (data as unknown as FeedbackItem) : f,
-                    ),
+                    cur.map((f) => (f.id === row.id ? parsed : f)),
                   );
                 });
             } else {
@@ -837,7 +882,14 @@ export default function AdminAnalytics() {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'translation_rules' },
         (payload) => {
-          const row = payload.new as TranslationRuleRow;
+          const row = parseTranslationRuleRow(payload.new);
+          if (!row) {
+            logger.error(
+              '[AdminAnalytics] Invalid realtime translation_rules INSERT payload',
+              payload.new,
+            );
+            return;
+          }
           setRules((prev) => {
             if (prev.some((r) => r.id === row.id)) return prev;
             return [row, ...prev].slice(0, 200);
@@ -849,7 +901,14 @@ export default function AdminAnalytics() {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'translation_rules' },
         (payload) => {
-          const row = payload.new as TranslationRuleRow;
+          const row = parseTranslationRuleRow(payload.new);
+          if (!row) {
+            logger.error(
+              '[AdminAnalytics] Invalid realtime translation_rules UPDATE payload',
+              payload.new,
+            );
+            return;
+          }
           setRules((prev) =>
             prev.map((r) => (r.id === row.id ? { ...r, ...row } : r)),
           );

@@ -6,16 +6,10 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import {
-  RefreshCw,
-  Brain,
-  Cpu,
-  Zap,
-  Clock,
-  BarChart3,
-} from 'lucide-react';
+import { RefreshCw, Brain, Cpu, Zap, Clock, BarChart3 } from 'lucide-react';
 import { StatCard, BarRow } from './AnalyticsPrimitives';
 import { logger } from '@/lib/core/logger';
+import { parseAIUsageStatsData } from '@/lib/supabase/parsers';
 
 interface UsageSummary {
   total_requests: number;
@@ -73,7 +67,16 @@ export function AICostPanel({ days }: { days: number }) {
         days_back: days,
       });
       if (error) throw error;
-      setStats(data as unknown as AIUsageStats);
+      const parsed = parseAIUsageStatsData(data);
+      if (!parsed) {
+        logger.error('[AICostPanel] Invalid RPC payload shape', {
+          days,
+          payload: data,
+        });
+        setStats(null);
+        return;
+      }
+      setStats(parsed);
     } catch (err) {
       logger.error('[AICostPanel] Failed to load AI usage stats:', err);
     } finally {
@@ -191,7 +194,9 @@ export function AICostPanel({ days }: { days: number }) {
                 </div>
               ))}
               {(!stats.byFunction || stats.byFunction.length === 0) && (
-                <p className="text-xs text-muted-foreground">No function data</p>
+                <p className="text-xs text-muted-foreground">
+                  No function data
+                </p>
               )}
             </div>
           </div>
@@ -206,9 +211,15 @@ export function AICostPanel({ days }: { days: number }) {
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left py-1 text-muted-foreground font-medium">Date</th>
-                      <th className="text-right py-1 text-muted-foreground font-medium">Requests</th>
-                      <th className="text-right py-1 text-muted-foreground font-medium">Tokens</th>
+                      <th className="text-left py-1 text-muted-foreground font-medium">
+                        Date
+                      </th>
+                      <th className="text-right py-1 text-muted-foreground font-medium">
+                        Requests
+                      </th>
+                      <th className="text-right py-1 text-muted-foreground font-medium">
+                        Tokens
+                      </th>
                     </tr>
                   </thead>
                   <tbody>

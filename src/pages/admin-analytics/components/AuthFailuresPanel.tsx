@@ -8,17 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { ShieldAlert, RefreshCw, AlertTriangle } from 'lucide-react';
 import { StatCard, BarRow } from './AnalyticsPrimitives';
-
-interface AuthFailureEvent {
-  id: string;
-  created_at: string;
-  event_data: {
-    error?: string;
-    origin?: string;
-    user_agent_prefix?: string;
-    function_name?: string;
-  };
-}
+import { logger } from '@/lib/core/logger';
+import { parseAuthFailureEvents } from '@/lib/supabase/parsers';
 
 interface AuthFailureStats {
   total: number;
@@ -48,7 +39,18 @@ export function AuthFailuresPanel({ days }: { days: number }) {
         .order('created_at', { ascending: false })
         .limit(500);
 
-      const events = ((allEvents ?? []) as unknown as AuthFailureEvent[]).filter(
+      const parsedEvents = parseAuthFailureEvents(allEvents);
+      if ((allEvents?.length ?? 0) !== parsedEvents.length) {
+        logger.error(
+          '[AuthFailuresPanel] Invalid analytics_events payload shape',
+          {
+            totalRows: allEvents?.length ?? 0,
+            parsedRows: parsedEvents.length,
+          },
+        );
+      }
+
+      const events = parsedEvents.filter(
         (e) => e.event_data?.error !== 'Missing Authorization header',
       );
 
@@ -69,8 +71,11 @@ export function AuthFailuresPanel({ days }: { days: number }) {
         lastErrorTime: lastEvent?.created_at ?? null,
         errorBreakdown,
       });
-    } catch {
-      // fail silently
+    } catch (err) {
+      logger.error(
+        '[AuthFailuresPanel] Failed to load auth failure analytics',
+        err,
+      );
     } finally {
       setIsLoading(false);
     }
@@ -121,19 +126,33 @@ export function AuthFailuresPanel({ days }: { days: number }) {
               label="Total Failures"
               value={stats.total}
               subtext={`Last ${days} days`}
-              variant={stats.total > 50 ? 'danger' : stats.total > 10 ? 'warning' : 'default'}
+              variant={
+                stats.total > 50
+                  ? 'danger'
+                  : stats.total > 10
+                    ? 'warning'
+                    : 'default'
+              }
             />
             <StatCard
               icon={AlertTriangle}
               label="Last 24h"
               value={stats.last24h}
-              variant={stats.last24h > 20 ? 'danger' : stats.last24h > 5 ? 'warning' : 'default'}
+              variant={
+                stats.last24h > 20
+                  ? 'danger'
+                  : stats.last24h > 5
+                    ? 'warning'
+                    : 'default'
+              }
             />
           </div>
 
           {stats.lastError && (
             <div className="text-xs space-y-1">
-              <span className="text-muted-foreground font-medium">Last error:</span>
+              <span className="text-muted-foreground font-medium">
+                Last error:
+              </span>
               <p className="text-foreground font-mono bg-muted px-2 py-1 rounded text-[11px] break-all">
                 {stats.lastError}
               </p>

@@ -15,6 +15,8 @@ import {
   AlertTriangle,
   Activity,
 } from 'lucide-react';
+import { logger } from '@/lib/core/logger';
+import { parseSystemStatusData } from '@/lib/supabase/parsers';
 
 interface CronJob {
   jobid: number;
@@ -92,7 +94,16 @@ export function SystemStatusPanel() {
     try {
       const { data, error: rpcError } = await supabase.rpc('get_system_status');
       if (rpcError) throw rpcError;
-      setStatus(data as unknown as SystemStatus);
+      const parsed = parseSystemStatusData(data);
+      if (!parsed) {
+        logger.error('[SystemStatusPanel] Invalid RPC payload shape', {
+          payload: data,
+        });
+        setStatus(null);
+        setError('Invalid status payload from server');
+        return;
+      }
+      setStatus(parsed);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load status');
     } finally {
@@ -119,9 +130,7 @@ export function SystemStatusPanel() {
         </Button>
       </div>
 
-      {error && (
-        <p className="text-xs text-destructive">{error}</p>
-      )}
+      {error && <p className="text-xs text-destructive">{error}</p>}
 
       {status && (
         <div className="space-y-6">
@@ -136,10 +145,16 @@ export function SystemStatusPanel() {
                 <thead>
                   <tr className="border-b border-border text-muted-foreground">
                     <th className="text-left pb-2 pr-3 font-medium">Job</th>
-                    <th className="text-left pb-2 pr-3 font-medium">Schedule</th>
-                    <th className="text-left pb-2 pr-3 font-medium">Last Run</th>
+                    <th className="text-left pb-2 pr-3 font-medium">
+                      Schedule
+                    </th>
+                    <th className="text-left pb-2 pr-3 font-medium">
+                      Last Run
+                    </th>
                     <th className="text-left pb-2 pr-3 font-medium">Status</th>
-                    <th className="text-right pb-2 pr-3 font-medium">Duration</th>
+                    <th className="text-right pb-2 pr-3 font-medium">
+                      Duration
+                    </th>
                     <th className="text-right pb-2 font-medium">24h</th>
                   </tr>
                 </thead>
@@ -174,7 +189,9 @@ export function SystemStatusPanel() {
                           )}
                         </td>
                         <td className="py-2 pr-3 text-right text-muted-foreground tabular-nums">
-                          {job.last_duration_s != null ? `${job.last_duration_s}s` : '—'}
+                          {job.last_duration_s != null
+                            ? `${job.last_duration_s}s`
+                            : '—'}
                         </td>
                         <td className="py-2 text-right whitespace-nowrap">
                           <span className="tabular-nums text-muted-foreground">

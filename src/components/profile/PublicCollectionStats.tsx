@@ -9,12 +9,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Package, DollarSign, Layers } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTranslation } from '@/lib/i18n';
-
-interface CollectionStatsData {
-  unique_cards: number;
-  total_cards: number;
-  estimated_value: number;
-}
+import { logger } from '@/lib/core/logger';
+import {
+  EMPTY_COLLECTION_STATS,
+  parseCollectionStatsData,
+} from '@/lib/supabase/parsers';
 
 interface PublicCollectionStatsProps {
   userId: string;
@@ -26,11 +25,22 @@ export function PublicCollectionStats({ userId }: PublicCollectionStatsProps) {
   const { data, isLoading } = useQuery({
     queryKey: ['public-collection-stats', userId],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_public_collection_stats', {
-        target_user_id: userId,
-      });
+      const { data, error } = await supabase.rpc(
+        'get_public_collection_stats',
+        {
+          target_user_id: userId,
+        },
+      );
       if (error) throw error;
-      return data as unknown as CollectionStatsData;
+      const parsed = parseCollectionStatsData(data);
+      if (!parsed) {
+        logger.error('[PublicCollectionStats] Invalid RPC payload shape', {
+          userId,
+          payload: data,
+        });
+        return EMPTY_COLLECTION_STATS;
+      }
+      return parsed;
     },
     enabled: !!userId,
     staleTime: 5 * 60 * 1000,
