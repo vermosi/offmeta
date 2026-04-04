@@ -63,6 +63,8 @@ This repo uses Husky + lint-staged. After `npm install`, hooks will run automati
 
 ## Testing guidelines
 
+For the complete testing matrix and command reference, see [`docs/testing.md`](docs/testing.md).
+
 - Add unit tests in `src/**/*.test.ts`.
 - Favor table-driven tests for query translation.
 - Add regression tests for any bug fix.
