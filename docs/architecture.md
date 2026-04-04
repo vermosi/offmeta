@@ -128,6 +128,15 @@ The deck editor is split into focused single-responsibility modules:
 
 ## Design system
 
+## Component size & refactor strategy
+
+- Keep page/components focused. As a guideline, once a file grows beyond ~400 lines, extract:
+  1. **Stateful logic** into hooks under `src/hooks/` (fetching, filter state, transforms).
+  2. **Presentational blocks** into feature folders under `src/components/<feature>/` with strict typed props.
+  3. **Pure data transforms** into `lib/` or hook-local helpers so they can be unit tested independently.
+- During refactors, preserve behavior by adding targeted tests for extracted hooks/components first, then removing inline legacy code.
+- Prefer incremental extraction (one domain panel/section at a time) over broad rewrites to reduce regressions and simplify reviews.
+
 ### Semantic color tokens
 
 All state-based colors use semantic HSL CSS variables defined in `src/index.css` and registered in `tailwind.config.ts`. Never use raw Tailwind palette classes (e.g. `text-green-600`) in components — always use the semantic token.

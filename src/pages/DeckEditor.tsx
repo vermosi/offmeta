@@ -4,7 +4,7 @@
  * @module pages/DeckEditor
  */
 
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -32,7 +32,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useDeck, useDeckCards, useDeckMutations } from '@/hooks/useDeck';
-import type { DeckCard } from '@/hooks/useDeck';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/core/utils';
 import { useIsMobile } from '@/hooks/useMobile';
@@ -74,10 +73,10 @@ import { useDeckPrice } from '@/hooks/useDeckPrice';
 import { useUndoRedo } from '@/hooks/useUndoRedo';
 import { useDeckActions } from '@/hooks/useDeckActions';
 import { useDeckKeyboardShortcuts } from '@/hooks/useDeckKeyboardShortcuts';
-import { sortDeckCards } from '@/lib/deckbuilder/sort-deck-cards';
 import type { DeckSortMode } from '@/lib/deckbuilder/sort-deck-cards';
 import { DEFAULT_CATEGORY } from '@/lib/deckbuilder/infer-category';
 import { FORMAT_LABELS } from '@/data/formats';
+import { useDeckEditorDerivedState } from '@/hooks/useDeckEditorDerivedState';
 
 type DeckViewMode = 'list' | 'visual' | 'pile';
 
