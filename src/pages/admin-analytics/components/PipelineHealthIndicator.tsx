@@ -4,9 +4,9 @@
  */
 
 import { useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
 import { Sparkles, Cpu, AlertCircle, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 
 type HealthStatus = 'idle' | 'checking' | 'ai' | 'deterministic' | 'error';
 
@@ -70,8 +70,7 @@ export function PipelineHealthIndicator() {
     error: {
       icon: AlertCircle,
       label: 'Pipeline Error',
-      classes:
-        'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30',
+      classes: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30',
     },
   };
 
@@ -90,21 +89,23 @@ export function PipelineHealthIndicator() {
         {status === 'checking' ? 'Pinging…' : 'Check Pipeline'}
       </Button>
 
-      {status !== 'idle' && status !== 'checking' && (() => {
-        const c = config[status];
-        const Icon = c.icon;
-        return (
-          <span
-            className={`inline-flex items-center gap-1.5 text-xs font-medium rounded-full border px-2.5 py-1 ${c.classes}`}
-          >
-            <Icon className="h-3 w-3" />
-            {c.label}
-            {latency !== null && (
-              <span className="text-[10px] opacity-70">{latency}ms</span>
-            )}
-          </span>
-        );
-      })()}
+      {status !== 'idle' &&
+        status !== 'checking' &&
+        (() => {
+          const c = config[status];
+          const Icon = c.icon;
+          return (
+            <span
+              className={`inline-flex items-center gap-1.5 text-xs font-medium rounded-full border px-2.5 py-1 ${c.classes}`}
+            >
+              <Icon className="h-3 w-3" />
+              {c.label}
+              {latency !== null && (
+                <span className="text-[10px] opacity-70">{latency}ms</span>
+              )}
+            </span>
+          );
+        })()}
 
       {detail && status === 'error' && (
         <span className="text-[10px] text-muted-foreground truncate max-w-[200px]">

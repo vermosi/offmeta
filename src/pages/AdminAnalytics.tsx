@@ -31,21 +31,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useAuth } from '@/hooks/useAuth';
-import { useUserRole } from '@/hooks/useUserRole';
-import { supabase } from '@/integrations/supabase/client';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Loader2,
   ArrowLeft,
@@ -79,10 +65,35 @@ import {
   AlertCircle,
   FileText,
 } from 'lucide-react';
-
-import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Footer } from '@/components/Footer';
+import { Header } from '@/components/Header';
 import { SkipLinks } from '@/components/SkipLinks';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useAuth } from '@/hooks/useAuth';
+import { useAdminAnalyticsFilters } from '@/hooks/useAdminAnalyticsFilters';
+import { useUserRole } from '@/hooks/useUserRole';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  BarRow,
+  StatCard,
+  StatusBadge,
+} from '@/pages/admin-analytics/components/AnalyticsPrimitives';
+import { AICostPanel } from '@/pages/admin-analytics/components/AICostPanel';
+import { AuthFailuresPanel } from '@/pages/admin-analytics/components/AuthFailuresPanel';
+import { ConversionFunnelPanel } from '@/pages/admin-analytics/components/ConversionFunnelPanel';
+import { EngagementMetricsPanel } from '@/pages/admin-analytics/components/EngagementMetricsPanel';
+import { HitRatePanel } from '@/pages/admin-analytics/components/HitRatePanel';
+import { PipelineHealthIndicator } from '@/pages/admin-analytics/components/PipelineHealthIndicator';
+import { SystemStatusPanel } from '@/pages/admin-analytics/components/SystemStatusPanel';
 import type {
   AnalyticsData,
   FeedbackFilter,
@@ -91,20 +102,7 @@ import type {
   TranslationRuleRow,
 } from '@/pages/admin-analytics/types';
 import { exportToCsv } from '@/pages/admin-analytics/utils/exportCsv';
-import {
-  BarRow,
-  StatCard,
-  StatusBadge,
-} from '@/pages/admin-analytics/components/AnalyticsPrimitives';
-import { PipelineHealthIndicator } from '@/pages/admin-analytics/components/PipelineHealthIndicator';
-import { AuthFailuresPanel } from '@/pages/admin-analytics/components/AuthFailuresPanel';
-import { SystemStatusPanel } from '@/pages/admin-analytics/components/SystemStatusPanel';
-import { EngagementMetricsPanel } from '@/pages/admin-analytics/components/EngagementMetricsPanel';
-import { ConversionFunnelPanel } from '@/pages/admin-analytics/components/ConversionFunnelPanel';
-import { HitRatePanel } from '@/pages/admin-analytics/components/HitRatePanel';
-import { AICostPanel } from '@/pages/admin-analytics/components/AICostPanel';
 import { logger } from '@/lib/core/logger';
-import { useAdminAnalyticsFilters } from '@/hooks/useAdminAnalyticsFilters';
 
 export default function AdminAnalytics() {
   const { user, isLoading: authLoading } = useAuth();

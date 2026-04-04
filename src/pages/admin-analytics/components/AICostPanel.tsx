@@ -4,18 +4,11 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { RefreshCw, Brain, Cpu, Zap, Clock, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  RefreshCw,
-  Brain,
-  Cpu,
-  Zap,
-  Clock,
-  BarChart3,
-} from 'lucide-react';
-import { StatCard, BarRow } from './AnalyticsPrimitives';
+import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/core/logger';
+import { BarRow, StatCard } from './AnalyticsPrimitives';
 
 interface UsageSummary {
   total_requests: number;
@@ -191,7 +184,9 @@ export function AICostPanel({ days }: { days: number }) {
                 </div>
               ))}
               {(!stats.byFunction || stats.byFunction.length === 0) && (
-                <p className="text-xs text-muted-foreground">No function data</p>
+                <p className="text-xs text-muted-foreground">
+                  No function data
+                </p>
               )}
             </div>
           </div>
@@ -206,9 +201,15 @@ export function AICostPanel({ days }: { days: number }) {
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left py-1 text-muted-foreground font-medium">Date</th>
-                      <th className="text-right py-1 text-muted-foreground font-medium">Requests</th>
-                      <th className="text-right py-1 text-muted-foreground font-medium">Tokens</th>
+                      <th className="text-left py-1 text-muted-foreground font-medium">
+                        Date
+                      </th>
+                      <th className="text-right py-1 text-muted-foreground font-medium">
+                        Requests
+                      </th>
+                      <th className="text-right py-1 text-muted-foreground font-medium">
+                        Tokens
+                      </th>
                     </tr>
                   </thead>
                   <tbody>

@@ -4,10 +4,10 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
 import { ShieldAlert, RefreshCw, AlertTriangle } from 'lucide-react';
-import { StatCard, BarRow } from './AnalyticsPrimitives';
+import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { BarRow, StatCard } from './AnalyticsPrimitives';
 
 interface AuthFailureEvent {
   id: string;
@@ -48,9 +48,9 @@ export function AuthFailuresPanel({ days }: { days: number }) {
         .order('created_at', { ascending: false })
         .limit(500);
 
-      const events = ((allEvents ?? []) as unknown as AuthFailureEvent[]).filter(
-        (e) => e.event_data?.error !== 'Missing Authorization header',
-      );
+      const events = (
+        (allEvents ?? []) as unknown as AuthFailureEvent[]
+      ).filter((e) => e.event_data?.error !== 'Missing Authorization header');
 
       const last24h = events.filter((e) => e.created_at >= since24h).length;
 
@@ -121,19 +121,33 @@ export function AuthFailuresPanel({ days }: { days: number }) {
               label="Total Failures"
               value={stats.total}
               subtext={`Last ${days} days`}
-              variant={stats.total > 50 ? 'danger' : stats.total > 10 ? 'warning' : 'default'}
+              variant={
+                stats.total > 50
+                  ? 'danger'
+                  : stats.total > 10
+                    ? 'warning'
+                    : 'default'
+              }
             />
             <StatCard
               icon={AlertTriangle}
               label="Last 24h"
               value={stats.last24h}
-              variant={stats.last24h > 20 ? 'danger' : stats.last24h > 5 ? 'warning' : 'default'}
+              variant={
+                stats.last24h > 20
+                  ? 'danger'
+                  : stats.last24h > 5
+                    ? 'warning'
+                    : 'default'
+              }
             />
           </div>
 
           {stats.lastError && (
             <div className="text-xs space-y-1">
-              <span className="text-muted-foreground font-medium">Last error:</span>
+              <span className="text-muted-foreground font-medium">
+                Last error:
+              </span>
               <p className="text-foreground font-mono bg-muted px-2 py-1 rounded text-[11px] break-all">
                 {stats.lastError}
               </p>

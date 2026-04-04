@@ -5,10 +5,10 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Users, SearchX, BarChart3, TrendingDown } from 'lucide-react';
-import { StatCard, BarRow } from './AnalyticsPrimitives';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { BarRow, StatCard } from './AnalyticsPrimitives';
 
 interface SessionBucket {
   label: string;
@@ -67,12 +67,14 @@ export function EngagementMetricsPanel({ days }: { days: number }) {
 
       const counts = Array.from(sessionCounts.values()).sort((a, b) => a - b);
       const totalSessions = counts.length;
-      const avgSearches = totalSessions > 0
-        ? Math.round((counts.reduce((a, b) => a + b, 0) / totalSessions) * 10) / 10
-        : 0;
-      const medianSearches = totalSessions > 0
-        ? counts[Math.floor(totalSessions / 2)]
-        : 0;
+      const avgSearches =
+        totalSessions > 0
+          ? Math.round(
+              (counts.reduce((a, b) => a + b, 0) / totalSessions) * 10,
+            ) / 10
+          : 0;
+      const medianSearches =
+        totalSessions > 0 ? counts[Math.floor(totalSessions / 2)] : 0;
 
       // Build distribution buckets
       const bucketDefs = [
@@ -128,16 +130,19 @@ export function EngagementMetricsPanel({ days }: { days: number }) {
     return (
       <div className="surface-elevated border border-border p-6 flex items-center justify-center gap-2">
         <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">Loading engagement metrics…</span>
+        <span className="text-sm text-muted-foreground">
+          Loading engagement metrics…
+        </span>
       </div>
     );
   }
 
   if (!data) return null;
 
-  const zeroResultRate = data.totalSearchEvents > 0
-    ? Math.round((data.zeroResultCount / data.totalSearchEvents) * 100)
-    : 0;
+  const zeroResultRate =
+    data.totalSearchEvents > 0
+      ? Math.round((data.zeroResultCount / data.totalSearchEvents) * 100)
+      : 0;
 
   return (
     <div className="space-y-4">
@@ -159,21 +164,39 @@ export function EngagementMetricsPanel({ days }: { days: number }) {
           label="Avg Searches/Session"
           value={data.avgSearchesPerSession.toString()}
           subtext={`Median: ${data.medianSearchesPerSession}`}
-          variant={data.avgSearchesPerSession >= 3 ? 'success' : data.avgSearchesPerSession >= 1.5 ? 'warning' : 'danger'}
+          variant={
+            data.avgSearchesPerSession >= 3
+              ? 'success'
+              : data.avgSearchesPerSession >= 1.5
+                ? 'warning'
+                : 'danger'
+          }
         />
         <StatCard
           icon={SearchX}
           label="Zero-Result Searches"
           value={data.zeroResultCount.toLocaleString()}
           subtext={`${zeroResultRate}% of all searches`}
-          variant={zeroResultRate <= 5 ? 'success' : zeroResultRate <= 15 ? 'warning' : 'danger'}
+          variant={
+            zeroResultRate <= 5
+              ? 'success'
+              : zeroResultRate <= 15
+                ? 'warning'
+                : 'danger'
+          }
         />
         <StatCard
           icon={TrendingDown}
           label="Zero-Result Rate"
           value={`${zeroResultRate}%`}
           subtext={`${data.totalSearchEvents} total searches`}
-          variant={zeroResultRate <= 5 ? 'success' : zeroResultRate <= 15 ? 'warning' : 'danger'}
+          variant={
+            zeroResultRate <= 5
+              ? 'success'
+              : zeroResultRate <= 15
+                ? 'warning'
+                : 'danger'
+          }
         />
       </div>
 
@@ -196,7 +219,9 @@ export function EngagementMetricsPanel({ days }: { days: number }) {
             ))}
           </div>
           {data.totalSessions === 0 && (
-            <p className="text-xs text-muted-foreground text-center py-4">No session data available</p>
+            <p className="text-xs text-muted-foreground text-center py-4">
+              No session data available
+            </p>
           )}
         </div>
 
