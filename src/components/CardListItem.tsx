@@ -8,7 +8,10 @@ import type { KeyboardEvent } from 'react';
 import { Link } from 'react-router-dom';
 import type { ScryfallCard } from '@/types/card';
 import { ManaCost } from '@/components/ManaSymbol';
-import { PriceSparkline, type SparklinePoint } from '@/components/PriceSparkline';
+import {
+  PriceSparkline,
+  type SparklinePoint,
+} from '@/components/PriceSparkline';
 import { cardNameToSlug } from '@/lib/card-slug';
 import {
   getLocalizedName,
@@ -57,11 +60,11 @@ export const CardListItem = memo(function CardListItem({
       {/* Owned indicator */}
       {isOwned && (
         <span
-          className="h-4 w-4 rounded-full bg-emerald-500/90 flex items-center justify-center shrink-0"
+          className="h-4 w-4 rounded-full bg-success/90 flex items-center justify-center shrink-0"
           aria-label="Owned"
         >
           <svg
-            className="h-2.5 w-2.5 text-white"
+            className="h-2.5 w-2.5 text-success-foreground"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"

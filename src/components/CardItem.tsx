@@ -11,7 +11,10 @@ import type { ScryfallCard } from '@/types/card';
 import { getCardImage } from '@/lib/scryfall/client';
 import { getTCGPlayerUrl } from '@/lib/scryfall/printings';
 import { ManaCost } from '@/components/ManaSymbol';
-import { PriceSparkline, type SparklinePoint } from '@/components/PriceSparkline';
+import {
+  PriceSparkline,
+  type SparklinePoint,
+} from '@/components/PriceSparkline';
 import { cardNameToSlug } from '@/lib/card-slug';
 import { ShoppingCart } from 'lucide-react';
 import {
@@ -20,7 +23,10 @@ import {
 } from '@/lib/scryfall/localized';
 import { useTranslation } from '@/lib/i18n';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { useAffiliateConfig, wrapAffiliateUrl } from '@/hooks/useAffiliateConfig';
+import {
+  useAffiliateConfig,
+  wrapAffiliateUrl,
+} from '@/hooks/useAffiliateConfig';
 
 interface CardItemProps {
   card: ScryfallCard;
@@ -120,11 +126,11 @@ export const CardItem = memo(function CardItem({
       {/* Owned badge */}
       {isOwned && (
         <div
-          className="absolute top-1.5 left-1.5 z-10 h-5 w-5 rounded-full bg-emerald-500/90 flex items-center justify-center shadow-sm"
+          className="absolute top-1.5 left-1.5 z-10 h-5 w-5 rounded-full bg-success/90 flex items-center justify-center shadow-sm"
           aria-label="Owned"
         >
           <svg
-            className="h-3 w-3 text-white"
+            className="h-3 w-3 text-success-foreground"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -139,20 +145,20 @@ export const CardItem = memo(function CardItem({
 
       {/* Info overlay — always visible on mobile, hover on desktop */}
       <div
-        className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent pt-6 sm:pt-8 pb-1.5 sm:pb-2 px-2 sm:px-2.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100 transition-opacity duration-200 pointer-events-none"
+        className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-overlay/85 via-overlay/50 to-transparent pt-6 sm:pt-8 pb-1.5 sm:pb-2 px-2 sm:px-2.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100 transition-opacity duration-200 pointer-events-none"
         aria-hidden="true"
       >
         <div className="flex items-end justify-between gap-1">
           <div className="min-w-0 flex-1">
             <Link
               to={`/cards/${cardNameToSlug(card.name)}`}
-              className="text-[10px] sm:text-[11px] leading-tight font-semibold text-white truncate hover:underline pointer-events-auto"
+              className="text-[10px] sm:text-[11px] leading-tight font-semibold text-contrast truncate hover:underline pointer-events-auto"
               onClick={(e) => e.stopPropagation()}
               title={`View ${displayName} off-meta alternatives`}
             >
               {displayName}
             </Link>
-            <p className="text-[9px] sm:text-[10px] leading-tight text-white/70 truncate mt-0.5 hidden min-[480px]:block">
+            <p className="text-[9px] sm:text-[10px] leading-tight text-contrast/70 truncate mt-0.5 hidden min-[480px]:block">
               {displayType}
             </p>
           </div>
@@ -167,7 +173,7 @@ export const CardItem = memo(function CardItem({
                 )}
                 <button
                   onClick={handleBuyClick}
-                  className="flex items-center gap-0.5 text-[9px] sm:text-[10px] font-medium text-emerald-300 tabular-nums hover:text-emerald-200 transition-colors pointer-events-auto"
+                  className="flex items-center gap-0.5 text-[9px] sm:text-[10px] font-medium text-success tabular-nums hover:text-success/80 transition-colors pointer-events-auto"
                   aria-label={`Buy ${displayName} for ${price}`}
                   title={`Buy on TCGplayer for ${price}`}
                 >

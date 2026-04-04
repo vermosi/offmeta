@@ -3,7 +3,11 @@
  * @module components/collection/PriceSparkline
  */
 
-import { usePriceHistory, computePriceTrend, type PriceSnapshot } from '@/hooks/usePriceHistory';
+import {
+  usePriceHistory,
+  computePriceTrend,
+  type PriceSnapshot,
+} from '@/hooks/usePriceHistory';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface PriceSparklineProps {
@@ -58,9 +62,9 @@ export function PriceSparkline({ cardName, demo }: PriceSparklineProps) {
 
   const trendColor =
     trend.direction === 'up'
-      ? 'text-green-500'
+      ? 'text-success'
       : trend.direction === 'down'
-        ? 'text-red-500'
+        ? 'text-destructive'
         : 'text-muted-foreground';
 
   const TrendIcon =
@@ -71,7 +75,10 @@ export function PriceSparkline({ cardName, demo }: PriceSparklineProps) {
         : Minus;
 
   return (
-    <div className="flex items-center gap-1 shrink-0" title={`${trend.changePercent > 0 ? '+' : ''}${trend.changePercent}% (30d)`}>
+    <div
+      className="flex items-center gap-1 shrink-0"
+      title={`${trend.changePercent > 0 ? '+' : ''}${trend.changePercent}% (30d)`}
+    >
       <svg
         width={width}
         height={height}

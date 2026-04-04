@@ -57,15 +57,24 @@ const ResetPassword = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <SkipLinks />
       <Header />
-      <main id="main-content" className="flex-1 container-main py-12 flex items-center justify-center">
+      <main
+        id="main-content"
+        className="flex-1 container-main py-12 flex items-center justify-center"
+      >
         <div className="w-full max-w-sm space-y-6">
-          <h1 className="text-2xl font-semibold tracking-tight text-center">{t('resetPassword.title')}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-center">
+            {t('resetPassword.title')}
+          </h1>
 
           {done ? (
             <div className="flex flex-col items-center gap-3 py-6 text-center">
-              <CheckCircle2 className="h-10 w-10 text-green-500" />
-              <p className="text-sm text-muted-foreground">{t('resetPassword.success')}</p>
-              <Button onClick={() => navigate('/')}>{t('resetPassword.goHome')}</Button>
+              <CheckCircle2 className="h-10 w-10 text-success" />
+              <p className="text-sm text-muted-foreground">
+                {t('resetPassword.success')}
+              </p>
+              <Button onClick={() => navigate('/')}>
+                {t('resetPassword.goHome')}
+              </Button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -86,7 +95,9 @@ const ResetPassword = () => {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirm-pw">{t('resetPassword.confirmPassword')}</Label>
+                <Label htmlFor="confirm-pw">
+                  {t('resetPassword.confirmPassword')}
+                </Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
