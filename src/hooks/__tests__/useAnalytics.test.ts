@@ -19,7 +19,7 @@ const mockFrom = vi.fn(() => ({
 }));
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: (...args: unknown[]) => mockFrom(...(args as [unknown])),
+    from: (...args: unknown[]) => (mockFrom as (...a: unknown[]) => unknown)(...args),
   },
 }));
 
