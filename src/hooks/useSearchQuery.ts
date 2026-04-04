@@ -429,4 +429,3 @@ export function usePrefetchPopularQueries() {
     return () => clearTimeout(id);
   }, [queryClient]);
 }
-import { PRETRANSLATED } from '@/lib/search/fallback';
