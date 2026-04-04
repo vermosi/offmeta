@@ -1,6 +1,6 @@
 # Testing
 
-OffMeta uses [Vitest](https://vitest.dev/) as the primary testing framework with 1,560+ tests across multiple categories.
+OffMeta uses [Vitest](https://vitest.dev/) as the primary testing framework, with Playwright for E2E and accessibility coverage.
 
 ## Tooling convention
 
@@ -23,29 +23,17 @@ bun run test:watch
 bun run test -- --coverage
 ```
 
-## Run tests
+## Quick start
 
 ```bash
 npm run test
-```
-
-## Watch mode
-
-```bash
 npm run test:watch
-```
-
-## Coverage
-
-Coverage thresholds are enforced in `vite.config.ts`. Generate coverage locally with:
-
-```bash
 npm run test -- --coverage
 ```
 
-## Test Categories
+## Test categories
 
-### Golden Translation Tests (~200 tests)
+### Golden translation tests
 
 Located in `src/lib/translation-golden.test.ts` and related files. These verify natural language → Scryfall syntax translation accuracy.
 
@@ -53,7 +41,15 @@ Located in `src/lib/translation-golden.test.ts` and related files. These verify 
 npm run test -- translation-golden
 ```
 
-### Security Tests (300+ tests)
+### Property-based tests (fast-check)
+
+Located in `src/lib/query-translator.property.test.ts`. These verify core invariants across arbitrary inputs.
+
+```bash
+npm run test -- query-translator.property
+```
+
+### Security tests
 
 Located in `src/lib/security/`. Comprehensive security coverage including:
 
@@ -76,7 +72,15 @@ Run security tests only:
 npm run test -- src/lib/security
 ```
 
-### Edge Function Tests (~70 tests)
+### HTTP edge-function security tests
+
+Located in `src/tests/api/edge-function.test.ts`. These are gated behind an env var.
+
+```bash
+RUN_API_TESTS=1 npm run test -- src/tests/api/
+```
+
+### Edge function tests
 
 Located in `supabase/functions/semantic-search/`. Tests for the backend translation pipeline.
 
@@ -84,46 +88,39 @@ Located in `supabase/functions/semantic-search/`. Tests for the backend translat
 npm run test -- supabase/functions
 ```
 
-### Component Tests
+### Component tests
 
-Behavioral unit tests for UI components in `src/components/*/__tests__/`. Tests verify rendered content, user interactions, and data flow without relying on snapshot comparisons.
+Behavioral unit tests for UI components in `src/components/*/__tests__/`.
 
 ```bash
 npm run test -- src/components
 ```
 
-### Page Tests
+### Page tests
 
-Tests for page-level components in `src/pages/__tests__/`. Covers:
-
-| Page                | File                           | Coverage                                  |
-| ------------------- | ------------------------------ | ----------------------------------------- |
-| GuidesIndex         | `GuidesIndex.test.tsx`         | Rendering, navigation, SEO                |
-| GuidePage           | `GuidePage.test.tsx`           | Rendering, structured data, error states  |
-| FindMyCombos        | `FindMyCombos.test.tsx`        | Input modes, parsing, combo search flow   |
-| DeckRecommendations | `DeckRecommendations.test.tsx` | Input modes, parsing, recommendation flow |
+Tests for page-level components in `src/pages/__tests__/`.
 
 ```bash
 npm run test -- src/pages
 ```
 
-### Decklist Parser Tests
+### Decklist parser tests
 
-Unit tests for the client-side decklist parser in `src/lib/__tests__/decklist-parser.test.ts`. Covers standard formats, commander detection, Moxfield export format, foil markers, section headers, and edge cases.
+Unit tests for `src/lib/__tests__/decklist-parser.test.ts`.
 
 ```bash
 npm run test -- src/lib/__tests__/decklist-parser
 ```
 
-### Guides Data Tests
+### Guides data tests
 
-Structural and content quality tests for the guides data in `src/data/__tests__/guides.test.ts`. Verify data integrity, SEO metadata quality, cross-references, and difficulty progression.
+Structural and content quality tests for `src/data/__tests__/guides.test.ts`.
 
 ```bash
 npm run test -- src/data/__tests__/guides
 ```
 
-### Regression Tests
+### Regression tests
 
 Located in `src/lib/regression/`. Integration tests for caching, virtualization, and analytics.
 
@@ -131,56 +128,48 @@ Located in `src/lib/regression/`. Integration tests for caching, virtualization,
 npm run test -- src/lib/regression
 ```
 
-### Live Scryfall Validation (opt-in)
+### E2E tests (Playwright)
+
+Located in `src/tests/e2e/search.spec.ts`.
+
+```bash
+npx playwright install --with-deps chromium
+npx playwright test
+```
+
+### Accessibility tests (Playwright + axe-core)
+
+Located in `src/tests/e2e/accessibility.spec.ts`.
+
+```bash
+npx playwright test --grep @a11y
+```
+
+### Live Scryfall validation (opt-in)
 
 Two suites validate queries and tags against the live Scryfall API:
 
-- `src/lib/scryfall-syntax-validation.test.ts` — 100+ syntax queries
-- `src/lib/scryfall-otag-validation.test.ts` — 170+ oracle/art tags
+- `src/lib/scryfall-syntax-validation.test.ts`
+- `src/lib/scryfall-otag-validation.test.ts`
 
-These are **skipped by default** to keep CI deterministic. Enable with:
+These are skipped by default to keep CI deterministic. Enable with:
 
 ```bash
 RUN_SCRYFALL_LIVE_TESTS=1 npm run test -- src/lib/scryfall-syntax-validation.test.ts src/lib/scryfall-otag-validation.test.ts
 ```
 
-A dedicated CI job runs these weekly (see `.github/workflows/ci.yml`).
+A dedicated CI job runs these weekly.
 
-## Security Testing Utilities
+## Coverage
 
-The security module exports reusable utilities for custom tests:
-
-```typescript
-import {
-  containsPrototypePollution,
-  sanitizeObjectKeys,
-  safeJsonParse,
-  sanitizeErrorForClient,
-  safeTimingCompare,
-  isRegexSafe,
-  SECURITY_LIMITS,
-} from '@/lib/security';
-```
-
-## Semantic Search Performance SLOs
-
-The edge translation pipeline has explicit latency SLOs measured by the benchmark suite in `supabase/functions/semantic-search/benchmark.test.ts`:
-
-- Deterministic path: **< 300ms**
-- Cache path: **< 300ms**
-- Pattern-match path: **< 800ms**
-- AI path: **< 5000ms** (budget target range 3–5s)
-
-These SLO assertions are enforced in CI via benchmark tests and will fail the build if thresholds are exceeded.
-
-Run the benchmark suite locally with:
+Coverage thresholds are enforced in `vite.config.ts`. Generate coverage locally with:
 
 ```bash
-deno test --allow-env --allow-net supabase/functions/semantic-search/benchmark.test.ts
+npm run test -- --coverage
 ```
 
-## CI Integration
+## CI integration
 
-All tests run automatically on pull requests via GitHub Actions (`.github/workflows/ci.yml`). Pull requests always run lightweight `e2e-smoke` and `a11y-smoke` jobs (critical navigation/search/dialog + one axe suite), while full `e2e` and `a11y` coverage remains on push/nightly/manual runs and can be opted into on PRs with `ci:e2e` / `ci:a11y` labels. Security tests are included in the regression suite exported from `src/lib/regression/index.ts`. Live Scryfall validation runs in a separate job on a weekly schedule to avoid flaky builds from external API dependencies.
+All tests run automatically on pull requests via GitHub Actions (`.github/workflows/ci.yml`). Pull requests always run lightweight `e2e-smoke` and `a11y-smoke` jobs (critical navigation/search/dialog + one axe suite), while full `e2e` and `a11y` coverage remains on push/nightly/manual runs and can be opted into on PRs with `ci:e2e` / `ci:a11y` labels.
 
 For branch protection, require: `lint`, `typecheck`, `test`, `build`, `bundle-size`, `e2e-smoke`, and `a11y-smoke`.
