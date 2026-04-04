@@ -42,6 +42,24 @@ interface SystemStatus {
   serverTime: string;
 }
 
+type StatusTone = 'success' | 'danger' | 'warning' | 'muted';
+
+const STATUS_TEXT_CLASS: Record<StatusTone, string> = {
+  success: 'text-success',
+  danger: 'text-destructive',
+  warning: 'text-warning',
+  muted: 'text-muted-foreground',
+};
+
+function getCronStatusTone(lastStatus: string | null): StatusTone {
+  if (lastStatus == null) return 'muted';
+  return lastStatus === 'succeeded' ? 'success' : 'danger';
+}
+
+function getFailureBadgeTone(failures24h: number): StatusTone {
+  return failures24h > 0 ? 'danger' : 'muted';
+}
+
 function timeAgo(dateStr: string | null | undefined): string {
   if (!dateStr) return 'never';
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -119,9 +137,7 @@ export function SystemStatusPanel() {
         </Button>
       </div>
 
-      {error && (
-        <p className="text-xs text-destructive">{error}</p>
-      )}
+      {error && <p className="text-xs text-destructive">{error}</p>}
 
       {status && (
         <div className="space-y-6">
@@ -136,10 +152,16 @@ export function SystemStatusPanel() {
                 <thead>
                   <tr className="border-b border-border text-muted-foreground">
                     <th className="text-left pb-2 pr-3 font-medium">Job</th>
-                    <th className="text-left pb-2 pr-3 font-medium">Schedule</th>
-                    <th className="text-left pb-2 pr-3 font-medium">Last Run</th>
+                    <th className="text-left pb-2 pr-3 font-medium">
+                      Schedule
+                    </th>
+                    <th className="text-left pb-2 pr-3 font-medium">
+                      Last Run
+                    </th>
                     <th className="text-left pb-2 pr-3 font-medium">Status</th>
-                    <th className="text-right pb-2 pr-3 font-medium">Duration</th>
+                    <th className="text-right pb-2 pr-3 font-medium">
+                      Duration
+                    </th>
                     <th className="text-right pb-2 font-medium">24h</th>
                   </tr>
                 </thead>
@@ -147,6 +169,8 @@ export function SystemStatusPanel() {
                   {status.cronJobs.map((job) => {
                     const hasFails = job.failures_24h > 0;
                     const isSucceeded = job.last_status === 'succeeded';
+                    const statusTone = getCronStatusTone(job.last_status);
+                    const failuresTone = getFailureBadgeTone(job.failures_24h);
                     return (
                       <tr key={job.jobid} className="group">
                         <td className="py-2 pr-3 font-medium text-foreground whitespace-nowrap">
@@ -162,26 +186,34 @@ export function SystemStatusPanel() {
                           {job.last_status == null ? (
                             <span className="text-muted-foreground">—</span>
                           ) : isSucceeded ? (
-                            <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                            <span
+                              className={`inline-flex items-center gap-1 ${STATUS_TEXT_CLASS[statusTone]}`}
+                            >
                               <CheckCircle2 className="h-3 w-3" />
                               OK
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 text-red-600 dark:text-red-400">
+                            <span
+                              className={`inline-flex items-center gap-1 ${STATUS_TEXT_CLASS[statusTone]}`}
+                            >
                               <XCircle className="h-3 w-3" />
                               {job.last_status}
                             </span>
                           )}
                         </td>
                         <td className="py-2 pr-3 text-right text-muted-foreground tabular-nums">
-                          {job.last_duration_s != null ? `${job.last_duration_s}s` : '—'}
+                          {job.last_duration_s != null
+                            ? `${job.last_duration_s}s`
+                            : '—'}
                         </td>
                         <td className="py-2 text-right whitespace-nowrap">
                           <span className="tabular-nums text-muted-foreground">
                             {job.runs_24h} runs
                           </span>
                           {hasFails && (
-                            <span className="ml-1.5 inline-flex items-center gap-0.5 text-red-600 dark:text-red-400">
+                            <span
+                              className={`ml-1.5 inline-flex items-center gap-0.5 ${STATUS_TEXT_CLASS[failuresTone]}`}
+                            >
                               <AlertTriangle className="h-3 w-3" />
                               {job.failures_24h} fail
                             </span>
@@ -223,12 +255,12 @@ export function SystemStatusPanel() {
                         </p>
                       )}
                       {entry.active != null && (
-                        <p className="text-[10px] text-emerald-600 dark:text-emerald-400">
+                        <p className="text-[10px] text-success">
                           {entry.active} active
                         </p>
                       )}
                       {entry.pending != null && entry.pending > 0 && (
-                        <p className="text-[10px] text-amber-600 dark:text-amber-400">
+                        <p className="text-[10px] text-warning">
                           {entry.pending} pending
                         </p>
                       )}
@@ -238,10 +270,6 @@ export function SystemStatusPanel() {
               })}
             </div>
           </div>
-
-          <p className="text-[10px] text-muted-foreground text-right">
-            Server time: {new Date(status.serverTime).toLocaleString()}
-          </p>
         </div>
       )}
     </div>
