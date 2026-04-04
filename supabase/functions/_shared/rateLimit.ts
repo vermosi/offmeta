@@ -7,8 +7,41 @@ type SupabaseClientLike = {
     data: { blocked?: boolean; retry_after?: number } | null;
     error: unknown;
   }>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  from: (table: string) => any;
+  from: (table: 'rate_limits') => RateLimitTableQueryBuilder;
+};
+
+type QueryResult<TData> = PromiseLike<{
+  data: TData | null;
+  error: unknown;
+}>;
+
+type RateLimitRow = {
+  count: number;
+  window_start: string;
+};
+
+type RateLimitFilterQueryBuilder = {
+  eq: (column: 'ip', value: string) => QueryResult<RateLimitRow>;
+};
+
+type RateLimitTableQueryBuilder = {
+  select: (columns: 'count, window_start') => {
+    eq: (
+      column: 'ip',
+      value: string,
+    ) => {
+      single: () => QueryResult<RateLimitRow>;
+    };
+  };
+  update: (values: {
+    count: number;
+    window_start?: string;
+  }) => RateLimitFilterQueryBuilder;
+  insert: (values: {
+    ip: string;
+    count: number;
+    window_start: string;
+  }) => PromiseLike<unknown>;
 };
 
 interface RateLimitEntry {

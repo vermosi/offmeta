@@ -9,13 +9,21 @@ import { cn } from '@/lib/core/utils';
 import { formatFormatName, type CardModalLegalitiesProps } from './types';
 import { useTranslation } from '@/lib/i18n';
 
-function localizeStatus(status: string, t: (key: string, fallback?: string) => string): string {
+function localizeStatus(
+  status: string,
+  t: (key: string, fallback?: string) => string,
+): string {
   switch (status) {
-    case 'legal': return t('card.statusLegal', 'legal');
-    case 'not_legal': return t('card.statusNotLegal', 'not legal');
-    case 'banned': return t('card.statusBanned', 'banned');
-    case 'restricted': return t('card.statusRestricted', 'restricted');
-    default: return status.replace('_', ' ');
+    case 'legal':
+      return t('card.statusLegal', 'legal');
+    case 'not_legal':
+      return t('card.statusNotLegal', 'not legal');
+    case 'banned':
+      return t('card.statusBanned', 'banned');
+    case 'restricted':
+      return t('card.statusRestricted', 'restricted');
+    default:
+      return status.replace('_', ' ');
   }
 }
 
@@ -39,7 +47,7 @@ export function CardModalLegalities({
             <Badge
               key={format}
               variant="outline"
-              className="text-xs bg-emerald-500/10 text-emerald-500 border-emerald-500/30"
+              className="text-xs bg-success/10 text-success border-success/30"
             >
               {formatFormatName(format)}
             </Badge>
@@ -74,13 +82,13 @@ export function CardModalLegalities({
               className={cn(
                 'text-[10px] capitalize h-5',
                 status === 'legal' &&
-                  'bg-emerald-500/10 text-emerald-500 border-emerald-500/30',
+                  'bg-success/10 text-success border-success/30',
                 status === 'not_legal' &&
                   'bg-muted text-muted-foreground border-border',
                 status === 'banned' &&
-                  'bg-red-500/10 text-red-500 border-red-500/30',
+                  'bg-destructive/10 text-destructive border-destructive/30',
                 status === 'restricted' &&
-                  'bg-amber-500/10 text-amber-500 border-amber-500/30',
+                  'bg-warning/10 text-warning border-warning/30',
               )}
             >
               {localizeStatus(status, t)}

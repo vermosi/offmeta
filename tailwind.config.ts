@@ -33,12 +33,7 @@ export default {
           'Roboto',
           'sans-serif',
         ],
-        display: [
-          'Space Grotesk',
-          'Inter',
-          'system-ui',
-          'sans-serif',
-        ],
+        display: ['Space Grotesk', 'Inter', 'system-ui', 'sans-serif'],
         mono: ['SF Mono', 'ui-monospace', 'Menlo', 'Monaco', 'monospace'],
       },
       fontSize: {
@@ -88,6 +83,11 @@ export default {
         warning: {
           DEFAULT: 'hsl(var(--warning))',
           foreground: 'hsl(var(--warning-foreground))',
+        },
+        overlay: 'hsl(var(--overlay))',
+        contrast: {
+          DEFAULT: 'hsl(var(--contrast))',
+          foreground: 'hsl(var(--contrast-foreground))',
         },
         muted: {
           DEFAULT: 'hsl(var(--muted))',

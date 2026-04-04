@@ -12,22 +12,30 @@ import { ManaSymbol } from '@/components/ManaSymbol';
 import { Badge } from '@/components/ui/badge';
 import { useArchetypeData, useArchetypeTrends } from '@/hooks/useArchetypeData';
 import { useSignatureCards } from '@/hooks/useSignatureCards';
-import { ArrowLeft, Compass, Layers, Loader2, TrendingUp, TrendingDown, Sparkles } from 'lucide-react';
+import {
+  ArrowLeft,
+  Compass,
+  Layers,
+  Loader2,
+  TrendingUp,
+  TrendingDown,
+  Sparkles,
+} from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { SkipLinks } from '@/components/SkipLinks';
 
 const MACRO_COLORS: Record<string, string> = {
-  Aggro: 'text-red-500',
-  Control: 'text-blue-500',
-  Combo: 'text-purple-500',
-  Midrange: 'text-emerald-500',
+  Aggro: 'text-destructive',
+  Control: 'text-primary',
+  Combo: 'text-accent',
+  Midrange: 'text-success',
 };
 
 const MACRO_BG: Record<string, string> = {
-  Aggro: 'border-red-500/20 bg-red-500/5',
-  Control: 'border-blue-500/20 bg-blue-500/5',
-  Combo: 'border-purple-500/20 bg-purple-500/5',
-  Midrange: 'border-emerald-500/20 bg-emerald-500/5',
+  Aggro: 'border-destructive/20 bg-destructive/5',
+  Control: 'border-primary/20 bg-primary/5',
+  Combo: 'border-accent/20 bg-accent/5',
+  Midrange: 'border-success/20 bg-success/5',
 };
 
 export default function ArchetypesIndex() {
@@ -35,12 +43,17 @@ export default function ArchetypesIndex() {
   const { data: formatData, isLoading } = useArchetypeData();
   const [activeFormat, setActiveFormat] = useState<string | null>(null);
 
-  const effectiveFormat = activeFormat ?? (formatData && formatData.length > 0 ? formatData[0].format : null);
+  const effectiveFormat =
+    activeFormat ??
+    (formatData && formatData.length > 0 ? formatData[0].format : null);
   const { data: trends } = useArchetypeTrends(effectiveFormat);
   const { data: signatureCards } = useSignatureCards(effectiveFormat);
   const totalDecks = formatData?.reduce((sum, f) => sum + f.totalDecks, 0) ?? 0;
-  const totalDeckNames = formatData?.reduce((sum, f) =>
-    sum + f.macroGroups.reduce((gs, g) => gs + g.decks.length, 0), 0) ?? 0;
+  const totalDeckNames =
+    formatData?.reduce(
+      (sum, f) => sum + f.macroGroups.reduce((gs, g) => gs + g.decks.length, 0),
+      0,
+    ) ?? 0;
 
   useEffect(() => {
     return applySeoMeta({
@@ -57,17 +70,36 @@ export default function ArchetypesIndex() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'OffMeta', item: 'https://offmeta.app/' },
-      { '@type': 'ListItem', position: 2, name: 'Archetypes', item: 'https://offmeta.app/archetypes' },
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'OffMeta',
+        item: 'https://offmeta.app/',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Archetypes',
+        item: 'https://offmeta.app/archetypes',
+      },
     ],
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-background relative">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
 
-      <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
-      <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
+      <div
+        className="fixed inset-0 pointer-events-none bg-page-gradient"
+        aria-hidden="true"
+      />
+      <div
+        className="fixed inset-0 pointer-events-none bg-page-noise"
+        aria-hidden="true"
+      />
 
       <SkipLinks />
       <Header />
@@ -88,12 +120,13 @@ export default function ArchetypesIndex() {
               Metagame Breakdown
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground max-w-2xl">
-              Deck archetypes discovered from tournament decklists across multiple formats.
-              Data sourced from Spicerack.gg community events.
+              Deck archetypes discovered from tournament decklists across
+              multiple formats. Data sourced from Spicerack.gg community events.
             </p>
             {totalDecks > 0 && (
               <p className="text-xs text-muted-foreground">
-                {totalDeckNames} deck archetypes · {totalDecks.toLocaleString()} decklists analyzed
+                {totalDeckNames} deck archetypes · {totalDecks.toLocaleString()}{' '}
+                decklists analyzed
               </p>
             )}
           </div>
@@ -104,7 +137,10 @@ export default function ArchetypesIndex() {
             </div>
           ) : !formatData || formatData.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-sm text-muted-foreground">No metagame data available yet. Run the detect-archetypes function with backfill to populate.</p>
+              <p className="text-sm text-muted-foreground">
+                No metagame data available yet. Run the detect-archetypes
+                function with backfill to populate.
+              </p>
             </div>
           ) : (
             <>
@@ -127,12 +163,17 @@ export default function ArchetypesIndex() {
                       }`}
                     >
                       {fd.label}
-                      <span className="ml-1.5 text-xs opacity-70">({fd.totalDecks})</span>
+                      <span className="ml-1.5 text-xs opacity-70">
+                        ({fd.totalDecks})
+                      </span>
                     </button>
                   ))}
                 </div>
                 {/* Fade hint for off-screen tabs on mobile */}
-                <div className="absolute right-0 top-0 bottom-1 w-8 bg-gradient-to-l from-background to-transparent pointer-events-none sm:hidden" aria-hidden="true" />
+                <div
+                  className="absolute right-0 top-0 bottom-1 w-8 bg-gradient-to-l from-background to-transparent pointer-events-none sm:hidden"
+                  aria-hidden="true"
+                />
               </div>
 
               {/* Two-tier metagame display */}
@@ -145,10 +186,15 @@ export default function ArchetypesIndex() {
                     >
                       {/* Macro category header */}
                       <div className="flex items-center gap-2 mb-4">
-                        <h2 className={`text-lg font-bold ${MACRO_COLORS[group.macro] ?? 'text-foreground'}`}>
+                        <h2
+                          className={`text-lg font-bold ${MACRO_COLORS[group.macro] ?? 'text-foreground'}`}
+                        >
                           {group.macro}
                         </h2>
-                        <Badge variant="secondary" className="text-xs font-semibold px-2">
+                        <Badge
+                          variant="secondary"
+                          className="text-xs font-semibold px-2"
+                        >
                           {group.metaPercentage}%
                         </Badge>
                         <span className="text-xs text-muted-foreground ml-auto">
@@ -179,7 +225,11 @@ export default function ArchetypesIndex() {
                                 ) : (
                                   <span className="flex items-center justify-center h-full w-full">
                                     {deck.primaryColors.length > 0 ? (
-                                      <ManaSymbol symbol={deck.primaryColors[0]} size="sm" className="h-4 w-4" />
+                                      <ManaSymbol
+                                        symbol={deck.primaryColors[0]}
+                                        size="sm"
+                                        className="h-4 w-4"
+                                      />
                                     ) : (
                                       <Layers className="h-4 w-4 text-muted-foreground/40" />
                                     )}
@@ -191,10 +241,19 @@ export default function ArchetypesIndex() {
                               <span className="inline-flex items-center gap-0.5 flex-shrink-0">
                                 {deck.primaryColors.length > 0 ? (
                                   deck.primaryColors.map((c) => (
-                                    <ManaSymbol key={c} symbol={c} size="sm" className="h-3.5 w-3.5" />
+                                    <ManaSymbol
+                                      key={c}
+                                      symbol={c}
+                                      size="sm"
+                                      className="h-3.5 w-3.5"
+                                    />
                                   ))
                                 ) : (
-                                  <ManaSymbol symbol="C" size="sm" className="h-3.5 w-3.5" />
+                                  <ManaSymbol
+                                    symbol="C"
+                                    size="sm"
+                                    className="h-3.5 w-3.5"
+                                  />
                                 )}
                               </span>
 
@@ -205,18 +264,19 @@ export default function ArchetypesIndex() {
                                     {deck.deckName}
                                   </span>
                                   {trend && trend.direction === 'up' && (
-                                    <TrendingUp className="h-3 w-3 text-emerald-500 flex-shrink-0" />
+                                    <TrendingUp className="h-3 w-3 text-success flex-shrink-0" />
                                   )}
                                   {trend && trend.direction === 'down' && (
-                                    <TrendingDown className="h-3 w-3 text-red-500 flex-shrink-0" />
+                                    <TrendingDown className="h-3 w-3 text-destructive flex-shrink-0" />
                                   )}
                                   {trend && trend.direction === 'new' && (
-                                    <Sparkles className="h-3 w-3 text-amber-500 flex-shrink-0" />
+                                    <Sparkles className="h-3 w-3 text-warning flex-shrink-0" />
                                   )}
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                   <span className="text-[10px] text-muted-foreground">
-                                    {deck.metaPercentage}% meta · {deck.deckCount} decks
+                                    {deck.metaPercentage}% meta ·{' '}
+                                    {deck.deckCount} decks
                                   </span>
                                   {sig && (
                                     <span className="text-[10px] text-muted-foreground/60 truncate hidden sm:inline">

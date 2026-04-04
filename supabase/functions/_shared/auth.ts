@@ -9,12 +9,78 @@ declare const Deno: {
 };
 
 // Dynamic ESM import helper that satisfies both Deno and frontend type-checkers
+type SupabaseAuthUser = {
+  id: string;
+};
+
+type SupabaseClaimsData = {
+  claims?: {
+    sub?: string;
+    role?: string;
+  };
+};
+
+type AuthResponse<TData> = {
+  data: TData;
+  error: unknown;
+};
+
+type SupabaseUserClient = {
+  auth: {
+    getUser: () => Promise<AuthResponse<{ user: SupabaseAuthUser | null }>>;
+    getClaims?: (jwt: string) => Promise<AuthResponse<SupabaseClaimsData>>;
+  };
+};
+
+type UserRoleQueryBuilder = {
+  select: (columns: string) => {
+    eq: (
+      column: string,
+      value: string,
+    ) => {
+      eq: (
+        secondColumn: string,
+        secondValue: string,
+      ) => {
+        maybeSingle: () => Promise<AuthResponse<{ role: string } | null>>;
+      };
+    };
+  };
+};
+
+type AnalyticsEventsInsertBuilder = {
+  insert: (values: {
+    event_type: string;
+    event_data: Record<string, unknown>;
+  }) => Promise<unknown>;
+};
+
+type SupabaseAdminClient = {
+  from: (table: 'user_roles') => UserRoleQueryBuilder;
+};
+
+type SupabaseLoggingClient = {
+  from: (table: 'analytics_events') => AnalyticsEventsInsertBuilder;
+};
+
+type CreateClientOptions = {
+  global?: {
+    headers?: Record<string, string>;
+  };
+};
+
+type SupabaseClientFactory = (
+  url: string,
+  key: string,
+  options?: CreateClientOptions,
+) => unknown;
+
 const importSupabase = (): Promise<{
-  createClient: (...args: unknown[]) => unknown;
+  createClient: SupabaseClientFactory;
 }> =>
   import(
     /* @vite-ignore */ 'https://esm.sh/@supabase/supabase-js@2' as string
-  ) as Promise<{ createClient: (...args: unknown[]) => unknown }>;
+  ) as Promise<{ createClient: SupabaseClientFactory }>;
 
 /**
  * Validates that the request has a valid authorization header.
@@ -62,6 +128,24 @@ function extractProjectRef(supabaseUrl?: string): string | null {
   } catch {
     return null;
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isUserClient(client: unknown): client is SupabaseUserClient {
+  if (!isRecord(client) || !isRecord(client.auth)) return false;
+  const getUser = client.auth.getUser;
+  return typeof getUser === 'function';
+}
+
+function isAdminClient(client: unknown): client is SupabaseAdminClient {
+  return isRecord(client) && typeof client.from === 'function';
+}
+
+function isLoggingClient(client: unknown): client is SupabaseLoggingClient {
+  return isRecord(client) && typeof client.from === 'function';
 }
 
 export async function validateAuth(req: Request): Promise<AuthResult> {
@@ -155,14 +239,13 @@ export async function validateAuth(req: Request): Promise<AuthResult> {
 
   try {
     const { createClient } = await importSupabase();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-function-type
-    const userClient: any = (createClient as Function)(
-      supabaseUrl,
-      supabaseAnonKey,
-      {
-        global: { headers: { Authorization: authHeader } },
-      },
-    );
+    const createdClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    if (!isUserClient(createdClient)) {
+      return { authorized: false, error: 'Invalid Authorization token' };
+    }
+    const userClient = createdClient;
 
     // Prefer JWT claims verification for signing-keys based projects when available.
     const getClaims = userClient?.auth?.getClaims;
@@ -303,8 +386,9 @@ export async function logAuthFailure(
     if (!supabaseUrl || !serviceKey) return;
 
     const { createClient } = await importSupabase();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-function-type
-    const client: any = (createClient as Function)(supabaseUrl, serviceKey);
+    const createdClient = createClient(supabaseUrl, serviceKey);
+    if (!isLoggingClient(createdClient)) return;
+    const client = createdClient;
 
     const origin = req.headers.get('Origin') ?? 'unknown';
     const ua = req.headers.get('User-Agent') ?? '';
@@ -393,13 +477,19 @@ export async function requireAdmin(
     };
   }
   const { createClient } = await importSupabase();
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-  const createFn = createClient as Function;
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const userClient: any = createFn(supabaseUrl, supabaseAnonKey, {
+  const createdUserClient = createClient(supabaseUrl, supabaseAnonKey, {
     global: { headers: { Authorization: authHeader } },
   });
+  if (!isUserClient(createdUserClient)) {
+    return {
+      authorized: false,
+      response: new Response(
+        JSON.stringify({ error: 'Unauthorized', success: false }),
+        { status: 401, headers },
+      ),
+    };
+  }
+  const userClient = createdUserClient;
 
   const {
     data: { user },
@@ -415,8 +505,17 @@ export async function requireAdmin(
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adminClient: any = createFn(supabaseUrl, supabaseServiceKey);
+  const createdAdminClient = createClient(supabaseUrl, supabaseServiceKey);
+  if (!isAdminClient(createdAdminClient)) {
+    return {
+      authorized: false,
+      response: new Response(
+        JSON.stringify({ error: 'Server misconfigured', success: false }),
+        { status: 500, headers },
+      ),
+    };
+  }
+  const adminClient = createdAdminClient;
   const { data: roleData } = await adminClient
     .from('user_roles')
     .select('role')

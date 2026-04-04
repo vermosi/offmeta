@@ -163,8 +163,8 @@ export function LivePreviewStrip({
                 loading="lazy"
                 className="w-full h-auto aspect-[488/680] object-cover bg-secondary/40"
               />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5">
-                <p className="text-[10px] sm:text-xs font-medium text-white truncate">
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-overlay/70 to-transparent px-2 py-1.5">
+                <p className="text-[10px] sm:text-xs font-medium text-contrast truncate">
                   {card.name}
                 </p>
               </div>

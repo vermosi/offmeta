@@ -19,12 +19,19 @@ function ManaCurve({ distribution }: { distribution: number[] }) {
     <div className="flex items-end gap-1 h-16">
       {distribution.map((count, i) => (
         <div key={i} className="flex flex-col items-center gap-0.5 flex-1">
-          <span className="text-[9px] text-muted-foreground">{count || ''}</span>
+          <span className="text-[9px] text-muted-foreground">
+            {count || ''}
+          </span>
           <div
             className="w-full bg-accent/70 rounded-t-sm transition-all min-w-[8px]"
-            style={{ height: `${(count / max) * 100}%`, minHeight: count > 0 ? 4 : 0 }}
+            style={{
+              height: `${(count / max) * 100}%`,
+              minHeight: count > 0 ? 4 : 0,
+            }}
           />
-          <span className="text-[9px] text-muted-foreground">{CURVE_LABELS[i]}</span>
+          <span className="text-[9px] text-muted-foreground">
+            {CURVE_LABELS[i]}
+          </span>
         </div>
       ))}
     </div>
@@ -43,7 +50,11 @@ const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
   Battle: { label: 'Battles', color: 'bg-orange-400' },
 };
 
-function TypeDistribution({ typeCounts }: { typeCounts: Record<string, number> }) {
+function TypeDistribution({
+  typeCounts,
+}: {
+  typeCounts: Record<string, number>;
+}) {
   const entries = Object.entries(typeCounts).filter(([, v]) => v > 0);
   if (entries.length === 0) return null;
   const total = entries.reduce((s, [, v]) => s + v, 0) || 1;
@@ -54,7 +65,11 @@ function TypeDistribution({ typeCounts }: { typeCounts: Record<string, number> }
         const info = TYPE_CONFIG[t] || { label: t, color: 'bg-muted' };
         const pct = Math.round((count / total) * 100);
         return (
-          <div key={t} className="flex items-center gap-1" title={`${info.label}: ${count} (${pct}%)`}>
+          <div
+            key={t}
+            className="flex items-center gap-1"
+            title={`${info.label}: ${count} (${pct}%)`}
+          >
             <div className={cn('h-2.5 w-2.5 rounded-sm', info.color)} />
             <span className="text-[9px] text-muted-foreground">{count}</span>
             <span className="text-[8px] text-muted-foreground/60">{pct}%</span>
@@ -85,7 +100,11 @@ function ColorPie({ colorCounts }: { colorCounts: Record<string, number> }) {
         const info = COLOR_MAP[c] || { label: c, color: 'bg-muted' };
         const pct = Math.round((count / total) * 100);
         return (
-          <div key={c} className="flex items-center gap-1" title={`${info.label}: ${count} (${pct}%)`}>
+          <div
+            key={c}
+            className="flex items-center gap-1"
+            title={`${info.label}: ${count} (${pct}%)`}
+          >
             <div className={cn('h-3 w-3 rounded-full', info.color)} />
             <span className="text-[9px] text-muted-foreground">{pct}%</span>
           </div>
@@ -104,9 +123,15 @@ export interface DeckStatsData {
   cacheVersion?: number;
 }
 
-export function DeckStatsBar({ cards, scryfallCache, formatMax, cacheVersion }: DeckStatsData) {
+export function DeckStatsBar({
+  cards,
+  scryfallCache,
+  formatMax,
+  cacheVersion,
+}: DeckStatsData) {
   const { t } = useTranslation();
   const stats = useMemo(() => {
+    void cacheVersion;
     const curve = new Array(8).fill(0);
     const colorCounts: Record<string, number> = {};
     const typeCounts: Record<string, number> = {};
@@ -120,7 +145,9 @@ export function DeckStatsBar({ cards, scryfallCache, formatMax, cacheVersion }: 
       const qty = dc.quantity;
 
       // CMC distribution (skip lands)
-      const isLand = dc.category === 'Lands' || sc?.type_line?.toLowerCase().includes('land');
+      const isLand =
+        dc.category === 'Lands' ||
+        sc?.type_line?.toLowerCase().includes('land');
       if (!isLand) {
         const cmc = sc?.cmc ?? 0;
         const bucket = Math.min(Math.floor(cmc), 7);
@@ -161,10 +188,18 @@ export function DeckStatsBar({ cards, scryfallCache, formatMax, cacheVersion }: 
     }
 
     const totalCards = cards.reduce((s, c) => s + c.quantity, 0);
-    const avgCmc = nonLandCount > 0 ? (totalCmc / nonLandCount).toFixed(2) : '0.00';
+    const avgCmc =
+      nonLandCount > 0 ? (totalCmc / nonLandCount).toFixed(2) : '0.00';
 
-    return { curve, colorCounts, typeCounts, totalCards, avgCmc, totalPrice, priceCount };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return {
+      curve,
+      colorCounts,
+      typeCounts,
+      totalCards,
+      avgCmc,
+      totalPrice,
+      priceCount,
+    };
   }, [cards, scryfallCache, cacheVersion]);
 
   return (
@@ -172,24 +207,32 @@ export function DeckStatsBar({ cards, scryfallCache, formatMax, cacheVersion }: 
       <div className="flex items-center gap-6 overflow-x-auto">
         {/* Card count */}
         <div className="shrink-0">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{t('deckEditor.stats.cards')}</div>
-          <div className={cn(
-            'text-sm font-semibold',
-            stats.totalCards >= formatMax ? 'text-accent' : 'text-foreground',
-          )}>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+            {t('deckEditor.stats.cards')}
+          </div>
+          <div
+            className={cn(
+              'text-sm font-semibold',
+              stats.totalCards >= formatMax ? 'text-accent' : 'text-foreground',
+            )}
+          >
             {stats.totalCards}/{formatMax}
           </div>
         </div>
 
         {/* Avg CMC */}
         <div className="shrink-0">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{t('deckEditor.stats.avgCmc')}</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+            {t('deckEditor.stats.avgCmc')}
+          </div>
           <div className="text-sm font-semibold">{stats.avgCmc}</div>
         </div>
 
         {/* Price */}
         <div className="shrink-0">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{t('deckEditor.stats.estPrice')}</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+            {t('deckEditor.stats.estPrice')}
+          </div>
           <div className="text-sm font-semibold">
             {stats.priceCount > 0 ? `$${stats.totalPrice.toFixed(2)}` : '—'}
           </div>
@@ -197,19 +240,25 @@ export function DeckStatsBar({ cards, scryfallCache, formatMax, cacheVersion }: 
 
         {/* Color Pie */}
         <div className="shrink-0">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{t('deckEditor.stats.colors')}</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">
+            {t('deckEditor.stats.colors')}
+          </div>
           <ColorPie colorCounts={stats.colorCounts} />
         </div>
 
         {/* Type Distribution */}
         <div className="shrink-0">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{t('deckEditor.stats.types')}</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">
+            {t('deckEditor.stats.types')}
+          </div>
           <TypeDistribution typeCounts={stats.typeCounts} />
         </div>
 
         {/* Mana Curve */}
         <div className="flex-1 min-w-[140px]">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{t('deckEditor.stats.manaCurve')}</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">
+            {t('deckEditor.stats.manaCurve')}
+          </div>
           <ManaCurve distribution={stats.curve} />
         </div>
       </div>

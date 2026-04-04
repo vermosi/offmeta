@@ -73,7 +73,7 @@ supabase/
     ├── combo-search/         # Commander Spellbook combo search (in-deck + almost-there)
     ├── deck-recommendations/ # AI-powered full deck recommendations via Moxfield import
     ├── fetch-moxfield-deck/  # Moxfield deck import proxy (CORS bypass)
-    ├── process-feedback/     # Feedback → AI rule generation (per-submission; verify_jwt = false)
+    ├── process-feedback/     # Feedback → AI rule generation (per-submission; user JWT required)
     ├── admin-analytics/      # Admin analytics aggregation (requires admin role)
     ├── cleanup-logs/         # Log rotation (scheduled; companion to generate-patterns)
     ├── generate-patterns/    # Nightly batch: promote high-frequency logs → rules (pg_cron 03:00 UTC)
@@ -191,6 +191,47 @@ Edge functions use a shared `validateAuth` helper in `supabase/functions/_shared
 - **Supabase JWTs** — both anon JWTs (`iss: 'supabase'`) and authenticated user JWTs (`iss: 'https://<project>.supabase.co/auth/v1'`) are accepted
 
 > **Note**: Authenticated user tokens use a full URL issuer, not just `'supabase'`. The validator checks `payload.iss.includes('supabase')` to handle both forms.
+
+## Edge function auth matrix
+
+`supabase/config.toml` now defaults edge functions to `verify_jwt = true`. Only explicitly public endpoints opt out with `verify_jwt = false`.
+
+| Function                      | Auth level         |
+| ----------------------------- | ------------------ |
+| `admin-analytics`             | service/admin-only |
+| `auto-generate-seo-pages`     | service/admin-only |
+| `batch-generate-seo-pages`    | service/admin-only |
+| `bulk-data-sync`              | anon-authenticated |
+| `card-meta-context`           | anon-authenticated |
+| `card-recommendations`        | anon-authenticated |
+| `card-similarity`             | anon-authenticated |
+| `card-sync`                   | anon-authenticated |
+| `cleanup-logs`                | service/admin-only |
+| `combo-search`                | anon-authenticated |
+| `compute-cooccurrence`        | service/admin-only |
+| `deck-categorize`             | anon-authenticated |
+| `deck-critique`               | anon-authenticated |
+| `deck-ideas`                  | anon-authenticated |
+| `deck-recommendations`        | anon-authenticated |
+| `deck-suggest`                | anon-authenticated |
+| `detect-archetypes`           | anon-authenticated |
+| `fetch-moxfield-deck`         | anon-authenticated |
+| `fix-zero-results`            | anon-authenticated |
+| `generate-patterns`           | service/admin-only |
+| `generate-retention-triggers` | service/admin-only |
+| `generate-seo-page`           | service/admin-only |
+| `get-affiliate-config`        | public             |
+| `mtgjson-import`              | anon-authenticated |
+| `prerender`                   | public             |
+| `price-snapshot`              | service/admin-only |
+| `process-email-queue`         | service/admin-only |
+| `process-feedback`            | user-authenticated |
+| `promote-searches`            | anon-authenticated |
+| `semantic-search`             | anon-authenticated |
+| `sitemap`                     | public             |
+| `spicerack-import`            | service/admin-only |
+| `sync-card-names`             | anon-authenticated |
+| `warmup-cache`                | service/admin-only |
 
 ## Row-level security
 

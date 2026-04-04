@@ -617,16 +617,6 @@ export default function AdminAnalytics() {
     }
   }, [feedback, fetchFeedback]);
 
-  // Initial load: fetch everything once
-  useEffect(() => {
-    if (isAdmin && user) {
-      fetchAnalytics();
-      fetchFeedback();
-      fetchRules();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdmin, user]);
-
   // Re-fetch analytics only when days changes (skip initial mount)
   const daysInitialized = useRef(false);
   useEffect(() => {
@@ -651,10 +641,19 @@ export default function AdminAnalytics() {
   // Real-time subscriptions for live updates
   const [isLive, setIsLive] = useState(false);
   const liveCountRef = useRef(0);
+  const initialLoadDoneRef = useRef(false);
+
+  // Initial load: fetch everything once per authenticated admin session.
+  useEffect(() => {
+    if (!isAdmin || !user || initialLoadDoneRef.current) return;
+    initialLoadDoneRef.current = true;
+    fetchAnalytics();
+    fetchFeedback();
+    fetchRules();
+  }, [isAdmin, user, fetchAnalytics, fetchFeedback, fetchRules]);
 
   useEffect(() => {
     if (!isAdmin || !user) return;
-
     const channel = supabase
       .channel('admin-analytics-realtime')
       .on(

@@ -176,7 +176,7 @@ export const UnifiedSearchBar = forwardRef<
       return () => clearTimeout(timer);
     }
     return undefined;
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isMobile]);
 
   const {
     placeholder,
