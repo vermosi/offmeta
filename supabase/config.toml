@@ -1,92 +1,17 @@
 project_id = "chojxtvzspqqzsmwcbul"
 
-[functions.process-feedback]
-verify_jwt = false
-
-[functions.deck-recommendations]
-verify_jwt = false
-
-[functions.fetch-moxfield-deck]
-verify_jwt = false
-
-[functions.deck-categorize]
-verify_jwt = false
-
-[functions.deck-suggest]
-verify_jwt = false
-
-[functions.cleanup-logs]
-verify_jwt = false
-
-[functions.warmup-cache]
-verify_jwt = false
-
-[functions.generate-patterns]
-verify_jwt = false
-
-
-[functions.admin-analytics]
+[functions]
 verify_jwt = true
 
-[functions.combo-search]
+# Public SEO/document endpoints are intentionally open so crawlers and
+# unauthenticated clients can fetch them directly.
+[functions.get-affiliate-config]
 verify_jwt = false
 
-[functions.semantic-search]
+# Public HTML prerender endpoint used by social/SEO bots.
+[functions.prerender]
 verify_jwt = false
 
-[functions.card-meta-context]
-verify_jwt = false
-
-[functions.card-similarity]
-verify_jwt = false
-
-[functions.deck-ideas]
-verify_jwt = false
-
-[functions.deck-critique]
-verify_jwt = false
-
-[functions.price-snapshot]
-verify_jwt = false
-
-[functions.mtgjson-import]
-verify_jwt = false
-
-[functions.spicerack-import]
-verify_jwt = false
-
-[functions.card-sync]
-verify_jwt = false
-
-[functions.compute-cooccurrence]
-verify_jwt = false
-
-[functions.card-recommendations]
-verify_jwt = false
-
-[functions.detect-archetypes]
-verify_jwt = false
-
-[functions.sync-card-names]
-verify_jwt = false
-
-[functions.promote-searches]
-verify_jwt = false
-
-[functions.process-email-queue]
-verify_jwt = true
-
-[functions.generate-seo-page]
-verify_jwt = false
-
-[functions.batch-generate-seo-pages]
-verify_jwt = false
-
-[functions.auto-generate-seo-pages]
-verify_jwt = false
-
-[functions.generate-retention-triggers]
-verify_jwt = false
-
-[functions.fix-zero-results]
+# Public XML sitemap endpoint consumed by search engines.
+[functions.sitemap]
 verify_jwt = false
