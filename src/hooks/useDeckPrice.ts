@@ -22,12 +22,19 @@ export function useDeckPrice(
   onCacheUpdatedRef.current = onCacheUpdated;
 
   const cacheKey = useMemo(
-    () => mainboardCards.map((c) => `${c.card_name}:${c.quantity}`).sort().join('|'),
+    () =>
+      mainboardCards
+        .map((c) => `${c.card_name}:${c.quantity}`)
+        .sort()
+        .join('|'),
     [mainboardCards],
   );
 
   useEffect(() => {
-    if (mainboardCards.length === 0) { setTotal(null); return; }
+    if (mainboardCards.length === 0) {
+      setTotal(null);
+      return;
+    }
     let cancelled = false;
     const run = async () => {
       setLoading(true);
@@ -75,9 +82,10 @@ export function useDeckPrice(
       }
     };
     run();
-    return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cacheKey]);
+    return () => {
+      cancelled = true;
+    };
+  }, [cacheKey, mainboardCards, scryfallCache]);
 
   return { total, loading };
 }

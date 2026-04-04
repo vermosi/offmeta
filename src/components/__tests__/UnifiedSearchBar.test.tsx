@@ -4,12 +4,13 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { UnifiedSearchBar } from '../UnifiedSearchBar';
 
 // Mock dependencies
+let mockIsMobile = false;
 vi.mock('@/hooks/useMobile', () => ({
-  useIsMobile: () => false,
+  useIsMobile: () => mockIsMobile,
 }));
 
 vi.mock('@/components/SearchHistoryDropdown', () => ({
@@ -54,6 +55,21 @@ describe('UnifiedSearchBar', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockIsMobile = false;
+  });
+
+  it('auto-focuses desktop input after mount delay', () => {
+    vi.useFakeTimers();
+    const focusSpy = vi.spyOn(HTMLInputElement.prototype, 'focus');
+    render(<UnifiedSearchBar {...defaultProps} />);
+
+    act(() => {
+      vi.advanceTimersByTime(650);
+    });
+    expect(focusSpy).toHaveBeenCalled();
+
+    focusSpy.mockRestore();
+    vi.useRealTimers();
   });
 
   it('renders search input', () => {

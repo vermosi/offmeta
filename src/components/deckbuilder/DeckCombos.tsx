@@ -4,12 +4,15 @@
  * @module components/deckbuilder/DeckCombos
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Zap, Plus, Loader2, ChevronDown, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
 import type { DeckCard } from '@/hooks/useDeck';
 
@@ -32,19 +35,28 @@ interface DeckCombosProps {
   onAddCard: (name: string) => void;
 }
 
-export function DeckCombos({ cards, commanderName, onAddCard }: DeckCombosProps) {
+export function DeckCombos({
+  cards,
+  commanderName,
+  onAddCard,
+}: DeckCombosProps) {
   const [included, setIncluded] = useState<Combo[]>([]);
   const [almostIncluded, setAlmostIncluded] = useState<Combo[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
   const lastCardCountRef = useRef<number>(0);
 
-  const cardNames = cards.map((c) => c.card_name);
-  const commanders = commanderName ? [commanderName] : cards.filter((c) => c.is_commander).map((c) => c.card_name);
-
-  const cardNamesKey = cardNames.join(',');
-  const commandersKey = commanders.join(',');
+  const cardNames = useMemo(() => cards.map((c) => c.card_name), [cards]);
+  const commanders = useMemo(
+    () =>
+      commanderName
+        ? [commanderName]
+        : cards.filter((c) => c.is_commander).map((c) => c.card_name),
+    [cards, commanderName],
+  );
 
   const fetchCombos = useCallback(async () => {
     if (cardNames.length < 10) return;
@@ -67,8 +79,7 @@ export function DeckCombos({ cards, commanderName, onAddCard }: DeckCombosProps)
     } finally {
       setLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cardNamesKey, commandersKey]);
+  }, [cardNames, commanders]);
 
   // Auto-detect when deck changes significantly (every 5 cards added)
   useEffect(() => {
@@ -95,7 +106,9 @@ export function DeckCombos({ cards, commanderName, onAddCard }: DeckCombosProps)
           <Zap className="h-3.5 w-3.5 text-accent" />
           Combos
         </h3>
-        <p className="text-[10px] text-muted-foreground">Add 10+ cards to auto-detect combos.</p>
+        <p className="text-[10px] text-muted-foreground">
+          Add 10+ cards to auto-detect combos.
+        </p>
       </div>
     );
   }
@@ -114,7 +127,11 @@ export function DeckCombos({ cards, commanderName, onAddCard }: DeckCombosProps)
           disabled={loading || cards.length < 10}
           className="h-7 text-[11px] gap-1"
         >
-          {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Zap className="h-3 w-3" />}
+          {loading ? (
+            <Loader2 className="h-3 w-3 animate-spin" />
+          ) : (
+            <Zap className="h-3 w-3" />
+          )}
           {loading ? 'Scanning...' : 'Scan'}
         </Button>
       </div>
@@ -126,9 +143,14 @@ export function DeckCombos({ cards, commanderName, onAddCard }: DeckCombosProps)
         </div>
       )}
 
-      {searched && included.length === 0 && almostIncluded.length === 0 && !loading && (
-        <p className="text-[10px] text-muted-foreground">No combos detected yet. Keep building!</p>
-      )}
+      {searched &&
+        included.length === 0 &&
+        almostIncluded.length === 0 &&
+        !loading && (
+          <p className="text-[10px] text-muted-foreground">
+            No combos detected yet. Keep building!
+          </p>
+        )}
 
       {/* In deck */}
       {included.length > 0 && (
@@ -137,7 +159,12 @@ export function DeckCombos({ cards, commanderName, onAddCard }: DeckCombosProps)
             In Your Deck ({included.length})
           </div>
           {included.slice(0, 10).map((combo) => (
-            <ComboItem key={combo.id} combo={combo} deckCardSet={deckCardSet} onAddCard={onAddCard} />
+            <ComboItem
+              key={combo.id}
+              combo={combo}
+              deckCardSet={deckCardSet}
+              onAddCard={onAddCard}
+            />
           ))}
         </div>
       )}
@@ -149,7 +176,12 @@ export function DeckCombos({ cards, commanderName, onAddCard }: DeckCombosProps)
             Almost There ({almostIncluded.length})
           </div>
           {almostIncluded.slice(0, 8).map((combo) => (
-            <ComboItem key={combo.id} combo={combo} deckCardSet={deckCardSet} onAddCard={onAddCard} />
+            <ComboItem
+              key={combo.id}
+              combo={combo}
+              deckCardSet={deckCardSet}
+              onAddCard={onAddCard}
+            />
           ))}
         </div>
       )}
@@ -168,13 +200,19 @@ function ComboItem({
 }) {
   const [open, setOpen] = useState(false);
 
-  const missingCards = combo.cards
-    .filter((c) => !c.name.startsWith('[Any]') && !deckCardSet.has(c.name.toLowerCase()));
+  const missingCards = combo.cards.filter(
+    (c) =>
+      !c.name.startsWith('[Any]') && !deckCardSet.has(c.name.toLowerCase()),
+  );
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger className="flex items-start gap-1.5 w-full text-left p-1.5 rounded-lg hover:bg-secondary/30 transition-colors">
-        {open ? <ChevronDown className="h-3 w-3 mt-0.5 text-muted-foreground shrink-0" /> : <ChevronRight className="h-3 w-3 mt-0.5 text-muted-foreground shrink-0" />}
+        {open ? (
+          <ChevronDown className="h-3 w-3 mt-0.5 text-muted-foreground shrink-0" />
+        ) : (
+          <ChevronRight className="h-3 w-3 mt-0.5 text-muted-foreground shrink-0" />
+        )}
         <div className="flex-1 min-w-0">
           <p className="text-[11px] font-medium leading-tight">
             {combo.cards.map((c) => c.name).join(' + ')}
@@ -189,11 +227,15 @@ function ComboItem({
       <CollapsibleContent>
         <div className="ml-5 pl-2 border-l border-border/50 mb-2 space-y-1.5">
           {combo.description && (
-            <p className="text-[10px] text-muted-foreground whitespace-pre-line">{combo.description}</p>
+            <p className="text-[10px] text-muted-foreground whitespace-pre-line">
+              {combo.description}
+            </p>
           )}
           {missingCards.length > 0 && (
             <div className="space-y-1">
-              <p className="text-[9px] font-semibold text-accent">Missing cards:</p>
+              <p className="text-[9px] font-semibold text-accent">
+                Missing cards:
+              </p>
               {missingCards.map((card) => (
                 <button
                   key={card.name}

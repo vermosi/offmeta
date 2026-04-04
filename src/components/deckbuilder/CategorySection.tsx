@@ -6,16 +6,35 @@
 
 import { useState, useMemo } from 'react';
 import {
-  ChevronDown, ChevronRight, Minus, Plus, Trash2,
-  Crown, Shield, ArrowRightLeft, List, MoreVertical,
+  ChevronDown,
+  ChevronRight,
+  Minus,
+  Plus,
+  Trash2,
+  Crown,
+  Shield,
+  ArrowRightLeft,
+  List,
+  MoreVertical,
 } from 'lucide-react';
 import { cn } from '@/lib/core/utils';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { CardHoverImage } from '@/components/deckbuilder/CardHoverImage';
-import { SetBadge, PrintingPickerPopover } from '@/components/deckbuilder/PrintingPickerPopover';
+import {
+  SetBadge,
+  PrintingPickerPopover,
+} from '@/components/deckbuilder/PrintingPickerPopover';
 import { ManaCost } from '@/components/ManaSymbol';
 import { useTranslation } from '@/lib/i18n';
 import type { DeckCard } from '@/hooks/useDeck';
@@ -45,9 +64,22 @@ interface CategorySectionProps {
 }
 
 export function CategorySection({
-  category, cards, onRemove, onSetQuantity, onSetCommander, onSetCompanion,
-  onSetCategory, onMoveToSideboard, onMoveToMaybeboard, isReadOnly,
-  selectedCardId, onSelectCard, scryfallCache, onChangePrinting, cacheVersion, collectionLookup,
+  category,
+  cards,
+  onRemove,
+  onSetQuantity,
+  onSetCommander,
+  onSetCompanion,
+  onSetCategory,
+  onMoveToSideboard,
+  onMoveToMaybeboard,
+  isReadOnly,
+  selectedCardId,
+  onSelectCard,
+  scryfallCache,
+  onChangePrinting,
+  cacheVersion,
+  collectionLookup,
 }: CategorySectionProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(true);
@@ -55,6 +87,7 @@ export function CategorySection({
 
   // Calculate subtotal price for category
   const categoryPrice = useMemo(() => {
+    void cacheVersion;
     let total = 0;
     for (const card of cards) {
       const cached = scryfallCache.current?.get(card.card_name);
@@ -62,20 +95,25 @@ export function CategorySection({
       total += price * card.quantity;
     }
     return total;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cards, cacheVersion]);
+  }, [cards, cacheVersion, scryfallCache]);
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       {/* ── Category Header (Moxfield-style: bold name + count + price) ── */}
       <CollapsibleTrigger className="flex items-center gap-2 w-full px-3 py-2.5 hover:bg-secondary/30 transition-colors rounded-lg text-left border-b border-border/30">
-        {open ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+        {open ? (
+          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        ) : (
+          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        )}
         <span className="text-sm font-bold text-foreground">{category}</span>
         <span className="text-xs text-muted-foreground">({totalQty})</span>
         {categoryPrice > 0 && (
           <>
             <span className="text-xs text-muted-foreground">–</span>
-            <span className="text-xs text-muted-foreground font-medium">${categoryPrice.toFixed(2)}</span>
+            <span className="text-xs text-muted-foreground font-medium">
+              ${categoryPrice.toFixed(2)}
+            </span>
           </>
         )}
       </CollapsibleTrigger>
@@ -84,7 +122,8 @@ export function CategorySection({
         <ul>
           {cards.map((card) => {
             const cached = scryfallCache.current?.get(card.card_name);
-            const manaCost = cached?.mana_cost || cached?.card_faces?.[0]?.mana_cost;
+            const manaCost =
+              cached?.mana_cost || cached?.card_faces?.[0]?.mana_cost;
             const price = cached?.prices?.usd;
 
             return (
@@ -101,24 +140,40 @@ export function CategorySection({
                 {/* Quantity + dot indicator for commander/companion */}
                 <span className="flex items-center gap-1 shrink-0 w-6">
                   {(card.is_commander || card.is_companion) && (
-                    <span className={cn(
-                      'w-1.5 h-1.5 rounded-full shrink-0',
-                      card.is_commander ? 'bg-accent' : 'bg-primary',
-                    )} />
+                    <span
+                      className={cn(
+                        'w-1.5 h-1.5 rounded-full shrink-0',
+                        card.is_commander ? 'bg-accent' : 'bg-primary',
+                      )}
+                    />
                   )}
-                  <span className="text-xs text-muted-foreground">{card.quantity}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {card.quantity}
+                  </span>
                 </span>
 
                 {/* Card name with hover image */}
-                <CardHoverImage cardName={card.card_name} scryfallCache={scryfallCache}>
-                  <span className={cn(
-                    'truncate text-sm',
-                    card.is_commander && 'font-semibold text-foreground',
-                    card.is_companion && !card.is_commander && 'font-semibold text-foreground',
-                  )}>
+                <CardHoverImage
+                  cardName={card.card_name}
+                  scryfallCache={scryfallCache}
+                >
+                  <span
+                    className={cn(
+                      'truncate text-sm',
+                      card.is_commander && 'font-semibold text-foreground',
+                      card.is_companion &&
+                        !card.is_commander &&
+                        'font-semibold text-foreground',
+                    )}
+                  >
                     {card.card_name}
                   </span>
-                  <SetBadge cardName={card.card_name} scryfallId={card.scryfall_id} scryfallCache={scryfallCache} cacheVersion={cacheVersion} />
+                  <SetBadge
+                    cardName={card.card_name}
+                    scryfallId={card.scryfall_id}
+                    scryfallCache={scryfallCache}
+                    cacheVersion={cacheVersion}
+                  />
                 </CardHoverImage>
 
                 {/* Spacer */}
@@ -137,15 +192,17 @@ export function CategorySection({
                 )}
 
                 {/* Missing from collection indicator */}
-                {collectionLookup && collectionLookup.size > 0 && (() => {
-                  const owned = collectionLookup.get(card.card_name) || 0;
-                  const needed = card.quantity - owned;
-                  return needed > 0 ? (
-                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20 shrink-0 whitespace-nowrap">
-                      Need {needed}
-                    </span>
-                  ) : null;
-                })()}
+                {collectionLookup &&
+                  collectionLookup.size > 0 &&
+                  (() => {
+                    const owned = collectionLookup.get(card.card_name) || 0;
+                    const needed = card.quantity - owned;
+                    return needed > 0 ? (
+                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20 shrink-0 whitespace-nowrap">
+                        Need {needed}
+                      </span>
+                    ) : null;
+                  })()}
 
                 {/* Context menu dropdown (replaces inline button cluster) */}
                 {!isReadOnly && (
@@ -155,74 +212,136 @@ export function CategorySection({
                       currentScryfallId={card.scryfall_id}
                       onSelect={(p) => onChangePrinting(card.id, p)}
                     />
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        onClick={(e) => e.stopPropagation()}
-                        className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors shrink-0 sm:opacity-0 sm:group-hover:opacity-100"
-                      >
-                        <MoreVertical className="h-3.5 w-3.5" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      {/* Quantity controls */}
-                      <div className="flex items-center justify-between px-2 py-1.5">
-                        <span className="text-xs text-muted-foreground">Quantity</span>
-                        <div className="flex items-center gap-1">
-                          <button onClick={() => onSetQuantity(card.id, card.quantity - 1)}
-                            className="p-1 rounded hover:bg-secondary transition-colors">
-                            <Minus className="h-3 w-3" />
-                          </button>
-                          <span className="text-xs font-medium w-5 text-center">{card.quantity}</span>
-                          <button onClick={() => onSetQuantity(card.id, card.quantity + 1)}
-                            className="p-1 rounded hover:bg-secondary transition-colors">
-                            <Plus className="h-3 w-3" />
-                          </button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors shrink-0 sm:opacity-0 sm:group-hover:opacity-100"
+                        >
+                          <MoreVertical className="h-3.5 w-3.5" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        {/* Quantity controls */}
+                        <div className="flex items-center justify-between px-2 py-1.5">
+                          <span className="text-xs text-muted-foreground">
+                            Quantity
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() =>
+                                onSetQuantity(card.id, card.quantity - 1)
+                              }
+                              className="p-1 rounded hover:bg-secondary transition-colors"
+                            >
+                              <Minus className="h-3 w-3" />
+                            </button>
+                            <span className="text-xs font-medium w-5 text-center">
+                              {card.quantity}
+                            </span>
+                            <button
+                              onClick={() =>
+                                onSetQuantity(card.id, card.quantity + 1)
+                              }
+                              className="p-1 rounded hover:bg-secondary transition-colors"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                      <DropdownMenuSeparator />
+                        <DropdownMenuSeparator />
 
-                      {/* Commander / Companion toggles */}
-                      <DropdownMenuItem onClick={() => onSetCommander(card.id, !card.is_commander)}>
-                        <Crown className={cn('h-3.5 w-3.5 mr-2', card.is_commander && 'text-accent')} />
-                        <span className="text-xs">{card.is_commander ? 'Remove Commander' : 'Set as Commander'}</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onSetCompanion(card.id, !card.is_companion)}>
-                        <Shield className={cn('h-3.5 w-3.5 mr-2', card.is_companion && 'text-primary')} />
-                        <span className="text-xs">{card.is_companion ? 'Remove Companion' : 'Set as Companion'}</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-
-                      {/* Move actions */}
-                      <DropdownMenuItem onClick={() => onMoveToSideboard(card.id, true)}>
-                        <ArrowRightLeft className="h-3.5 w-3.5 mr-2" />
-                        <span className="text-xs">{t('deckEditor.moveToSideboard')}</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onMoveToMaybeboard(card.id)}>
-                        <List className="h-3.5 w-3.5 mr-2" />
-                        <span className="text-xs">{t('deckEditor.moveToMaybeboard')}</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-
-                      {/* Category submenu */}
-                      <div className="px-2 py-1">
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Category</span>
-                      </div>
-                      {CATEGORIES.filter((c) => c !== 'Commander').map((cat) => (
-                        <DropdownMenuItem key={cat} onClick={() => onSetCategory(card.id, cat)}
-                          className={cn('text-xs pl-4', card.category === cat && 'text-accent font-medium')}>
-                          {cat}
+                        {/* Commander / Companion toggles */}
+                        <DropdownMenuItem
+                          onClick={() =>
+                            onSetCommander(card.id, !card.is_commander)
+                          }
+                        >
+                          <Crown
+                            className={cn(
+                              'h-3.5 w-3.5 mr-2',
+                              card.is_commander && 'text-accent',
+                            )}
+                          />
+                          <span className="text-xs">
+                            {card.is_commander
+                              ? 'Remove Commander'
+                              : 'Set as Commander'}
+                          </span>
                         </DropdownMenuItem>
-                      ))}
-                      <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() =>
+                            onSetCompanion(card.id, !card.is_companion)
+                          }
+                        >
+                          <Shield
+                            className={cn(
+                              'h-3.5 w-3.5 mr-2',
+                              card.is_companion && 'text-primary',
+                            )}
+                          />
+                          <span className="text-xs">
+                            {card.is_companion
+                              ? 'Remove Companion'
+                              : 'Set as Companion'}
+                          </span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
 
-                      {/* Delete */}
-                      <DropdownMenuItem onClick={() => onRemove(card.id)} className="text-destructive focus:text-destructive">
-                        <Trash2 className="h-3.5 w-3.5 mr-2" />
-                        <span className="text-xs">{t('deckEditor.removeCard')}</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                        {/* Move actions */}
+                        <DropdownMenuItem
+                          onClick={() => onMoveToSideboard(card.id, true)}
+                        >
+                          <ArrowRightLeft className="h-3.5 w-3.5 mr-2" />
+                          <span className="text-xs">
+                            {t('deckEditor.moveToSideboard')}
+                          </span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => onMoveToMaybeboard(card.id)}
+                        >
+                          <List className="h-3.5 w-3.5 mr-2" />
+                          <span className="text-xs">
+                            {t('deckEditor.moveToMaybeboard')}
+                          </span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+
+                        {/* Category submenu */}
+                        <div className="px-2 py-1">
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
+                            Category
+                          </span>
+                        </div>
+                        {CATEGORIES.filter((c) => c !== 'Commander').map(
+                          (cat) => (
+                            <DropdownMenuItem
+                              key={cat}
+                              onClick={() => onSetCategory(card.id, cat)}
+                              className={cn(
+                                'text-xs pl-4',
+                                card.category === cat &&
+                                  'text-accent font-medium',
+                              )}
+                            >
+                              {cat}
+                            </DropdownMenuItem>
+                          ),
+                        )}
+                        <DropdownMenuSeparator />
+
+                        {/* Delete */}
+                        <DropdownMenuItem
+                          onClick={() => onRemove(card.id)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="h-3.5 w-3.5 mr-2" />
+                          <span className="text-xs">
+                            {t('deckEditor.removeCard')}
+                          </span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 )}
               </li>
