@@ -195,7 +195,8 @@ type StageName =
   | 'pattern'
   | 'preTranslate'
   | 'ai'
-  | 'fallback';
+  | 'fallback'
+  | 'card_name_lookup';
 
 const ACCENTED_LATIN_HIGH_CONFIDENCE_THRESHOLD = 0.9;
 
