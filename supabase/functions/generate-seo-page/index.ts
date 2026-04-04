@@ -47,7 +47,7 @@ function slugify(query: string): string {
 /** Validate cards against local cards table. Remove hallucinated ones. */
 async function validateCards(
   cards: SeoPageContent['cards'],
-  supabase: ReturnType<typeof createClient>,
+  supabase: ReturnType<typeof createClient<any>>,
 ): Promise<SeoPageContent['cards']> {
   if (!cards.length) return [];
 

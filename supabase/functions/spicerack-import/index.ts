@@ -161,7 +161,7 @@ async function fetchMoxfieldDeck(
  */
 async function batchResolveOracleIds(
   cardNames: string[],
-  supabase: ReturnType<typeof createClient>,
+  supabase: ReturnType<typeof createClient<any>>,
 ): Promise<Map<string, string | null>> {
   const result = new Map<string, string | null>();
   const unique = [...new Set(cardNames)];

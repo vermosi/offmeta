@@ -13,13 +13,13 @@ const mockInsertThen = vi
 const mockInsert = vi.fn().mockReturnValue(mockInsertThen);
 const mockFrom = vi.fn(() => ({
   insert: (...args: unknown[]) => {
-    mockInsert(...args);
-    return { then: vi.fn((cb) => cb({ error: null })) };
+    mockInsert(...(args as [unknown]));
+    return { then: vi.fn((cb: (v: { error: null }) => void) => cb({ error: null })) };
   },
 }));
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: (...args: unknown[]) => mockFrom(...args),
+    from: (...args: unknown[]) => (mockFrom as (...a: unknown[]) => unknown)(...args),
   },
 }));
 
