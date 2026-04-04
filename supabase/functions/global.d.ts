@@ -2,8 +2,7 @@
    In actual Deno runtime these are already provided natively. */
 
 // Allow bare https:// imports used by edge functions (esm.sh, etc.)
-declare module "https://*" {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const mod: any;
+declare module 'https://*' {
+  const mod: unknown;
   export default mod;
 }
