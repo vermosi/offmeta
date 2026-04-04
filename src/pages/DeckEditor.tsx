@@ -76,7 +76,6 @@ import { useDeckKeyboardShortcuts } from '@/hooks/useDeckKeyboardShortcuts';
 import type { DeckSortMode } from '@/lib/deckbuilder/sort-deck-cards';
 import { DEFAULT_CATEGORY } from '@/lib/deckbuilder/infer-category';
 import { FORMAT_LABELS } from '@/data/formats';
-import { useDeckEditorDerivedState } from '@/hooks/useDeckEditorDerivedState';
 
 type DeckViewMode = 'list' | 'visual' | 'pile';
 
