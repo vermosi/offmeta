@@ -6,7 +6,15 @@
 
 import { useMemo, useEffect, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Crown, Shield, ExternalLink, Copy, Check, Users } from 'lucide-react';
+import {
+  ArrowLeft,
+  Crown,
+  Shield,
+  ExternalLink,
+  Copy,
+  Check,
+  Users,
+} from 'lucide-react';
 import { DeckVoteButton } from '@/components/deck/DeckVoteButton';
 import { DeckCommentsSection } from '@/components/deck/DeckCommentsSection';
 import { Header } from '@/components/Header';
@@ -36,8 +44,9 @@ function useOpenGraphMeta(deck: Deck | undefined, cards: DeckCard[]) {
 
     const totalCards = cards.reduce((s, c) => s + c.quantity, 0);
     const title = `${deck.name} – ${FORMAT_LABELS[deck.format] || deck.format} | OffMeta`;
-    const description = deck.description
-      || `${totalCards}-card ${FORMAT_LABELS[deck.format] || deck.format} deck${deck.commander_name ? ` led by ${deck.commander_name}` : ''}. View the full decklist on OffMeta.`;
+    const description =
+      deck.description ||
+      `${totalCards}-card ${FORMAT_LABELS[deck.format] || deck.format} deck${deck.commander_name ? ` led by ${deck.commander_name}` : ''}. View the full decklist on OffMeta.`;
     const url = `${window.location.origin}/deck/${deck.id}`;
 
     // Commander image from Scryfall for OG image
@@ -58,14 +67,17 @@ function useOpenGraphMeta(deck: Deck | undefined, cards: DeckCard[]) {
       'twitter:title': title,
       'twitter:description': description,
       'twitter:image': ogImage,
-      'description': description,
+      description: description,
     };
 
     const cleanups: (() => void)[] = [];
     for (const [property, content] of Object.entries(metaTags)) {
-      const isOg = property.startsWith('og:') || property.startsWith('twitter:');
+      const isOg =
+        property.startsWith('og:') || property.startsWith('twitter:');
       const attr = isOg ? 'property' : 'name';
-      let el = document.querySelector(`meta[${attr}="${property}"]`) as HTMLMetaElement | null;
+      let el = document.querySelector(
+        `meta[${attr}="${property}"]`,
+      ) as HTMLMetaElement | null;
       if (!el) {
         el = document.createElement('meta');
         el.setAttribute(attr, property);
@@ -74,11 +86,16 @@ function useOpenGraphMeta(deck: Deck | undefined, cards: DeckCard[]) {
       }
       const prev = el.content;
       el.content = content;
-      if (!cleanups.length) cleanups.push(() => { el!.content = prev; });
+      if (!cleanups.length)
+        cleanups.push(() => {
+          el!.content = prev;
+        });
     }
 
     // Canonical
-    let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    let canonical = document.querySelector(
+      'link[rel="canonical"]',
+    ) as HTMLLinkElement | null;
     const prevCanonical = canonical?.href;
     if (!canonical) {
       canonical = document.createElement('link');
@@ -152,7 +169,9 @@ function usePublicDeckCards(deckId: string | undefined) {
  * This prevents incremental UI pop-in when opening decks from /decks.
  */
 function useScryfallHydration(cards: DeckCard[]) {
-  const [scryfallMap, setScryfallMap] = useState<Map<string, ScryfallCard>>(new Map());
+  const [scryfallMap, setScryfallMap] = useState<Map<string, ScryfallCard>>(
+    new Map(),
+  );
   const [version, setVersion] = useState(0);
   const fetchedRef = useRef<Set<string>>(new Set());
 
@@ -185,7 +204,9 @@ function useScryfallHydration(cards: DeckCard[]) {
     };
 
     void fetchAll();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [cards]);
 
   return { scryfallMap, version };
@@ -195,7 +216,11 @@ export default function PublicDeckView() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { t } = useTranslation();
-  const { data: deck, isLoading: deckLoading, error: deckError } = usePublicDeck(id);
+  const {
+    data: deck,
+    isLoading: deckLoading,
+    error: deckError,
+  } = usePublicDeck(id);
   const { data: cards = [], isLoading: cardsLoading } = usePublicDeckCards(id);
   const { data: deckTags = [] } = useDeckTags(id);
   const { data: isOwner = false } = useIsOwner(id, user?.id);
@@ -204,27 +229,43 @@ export default function PublicDeckView() {
 
   useOpenGraphMeta(deck, cards);
 
-  const mainboardCards = useMemo(() => cards.filter((c) => c.board !== 'sideboard' && c.board !== 'maybeboard'), [cards]);
-  const sideboardCards = useMemo(() => cards.filter((c) => c.board === 'sideboard'), [cards]);
-  const maybeboardCards = useMemo(() => cards.filter((c) => c.board === 'maybeboard'), [cards]);
+  const mainboardCards = useMemo(
+    () =>
+      cards.filter((c) => c.board !== 'sideboard' && c.board !== 'maybeboard'),
+    [cards],
+  );
+  const sideboardCards = useMemo(
+    () => cards.filter((c) => c.board === 'sideboard'),
+    [cards],
+  );
+  const maybeboardCards = useMemo(
+    () => cards.filter((c) => c.board === 'maybeboard'),
+    [cards],
+  );
 
   const grouped = useMemo(() => {
     const groups: Record<string, DeckCard[]> = {};
     for (const card of mainboardCards) {
-      const cat = card.is_commander ? 'Commander' : card.category || DEFAULT_CATEGORY;
+      const cat = card.is_commander
+        ? 'Commander'
+        : card.category || DEFAULT_CATEGORY;
       if (!groups[cat]) groups[cat] = [];
       groups[cat].push(card);
     }
     const sorted: [string, DeckCard[]][] = [];
-    for (const cat of CATEGORIES) { if (groups[cat]) sorted.push([cat, groups[cat]]); }
+    for (const cat of CATEGORIES) {
+      if (groups[cat]) sorted.push([cat, groups[cat]]);
+    }
     for (const [cat, catCards] of Object.entries(groups)) {
-      if (!(CATEGORIES as readonly string[]).includes(cat)) sorted.push([cat, catCards]);
+      if (!(CATEGORIES as readonly string[]).includes(cat))
+        sorted.push([cat, catCards]);
     }
     return sorted;
   }, [mainboardCards]);
 
   const totalMainboard = mainboardCards.reduce((s, c) => s + c.quantity, 0);
-  const formatConfig = FORMATS.find((f) => f.value === deck?.format) ?? FORMATS[0];
+  const formatConfig =
+    FORMATS.find((f) => f.value === deck?.format) ?? FORMATS[0];
 
   const handleCopyUrl = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -233,32 +274,37 @@ export default function PublicDeckView() {
   };
 
   // Loading
-  if (deckLoading) return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Header />
-      <div className="flex-1 flex items-center justify-center">
-        <div className="h-8 w-48 shimmer rounded-lg" />
+  if (deckLoading)
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="h-8 w-48 shimmer rounded-lg" />
+        </div>
       </div>
-    </div>
-  );
+    );
 
   // Not found / private
-  if (deckError || !deck) return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Header />
-      <div className="flex-1 flex items-center justify-center flex-col gap-4">
-        <Users className="h-12 w-12 text-muted-foreground/40" />
-        <h2 className="text-lg font-semibold">{t('publicDeck.notFound')}</h2>
-        <p className="text-muted-foreground text-sm max-w-sm text-center">
-          {t('publicDeck.notFoundDesc')}
-        </p>
-        <Button variant="outline" asChild>
-          <Link to="/"><ArrowLeft className="h-4 w-4 mr-2" />{t('publicDeck.backHome')}</Link>
-        </Button>
+  if (deckError || !deck)
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <div className="flex-1 flex items-center justify-center flex-col gap-4">
+          <Users className="h-12 w-12 text-muted-foreground/40" />
+          <h2 className="text-lg font-semibold">{t('publicDeck.notFound')}</h2>
+          <p className="text-muted-foreground text-sm max-w-sm text-center">
+            {t('publicDeck.notFoundDesc')}
+          </p>
+          <Button variant="outline" asChild>
+            <Link to="/">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              {t('publicDeck.backHome')}
+            </Link>
+          </Button>
+        </div>
+        <Footer />
       </div>
-      <Footer />
-    </div>
-  );
+    );
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -269,19 +315,28 @@ export default function PublicDeckView() {
         <div className="space-y-3">
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-1 min-w-0">
-              <h1 className="text-2xl font-bold tracking-tight truncate">{deck.name}</h1>
+              <h1 className="text-2xl font-bold tracking-tight truncate">
+                {deck.name}
+              </h1>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
                   {FORMAT_LABELS[deck.format] || deck.format}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {t('publicDeck.cards').replace('{count}', String(totalMainboard))}
+                  {t('publicDeck.cards').replace(
+                    '{count}',
+                    String(totalMainboard),
+                  )}
                 </span>
                 {deck.color_identity.length > 0 && (
                   <div className="flex items-center gap-0.5">
                     {deck.color_identity.map((c) => (
-                      <img key={c} src={`https://svgs.scryfall.io/card-symbols/${c}.svg`}
-                        alt={c} className="h-4 w-4" />
+                      <img
+                        key={c}
+                        src={`https://svgs.scryfall.io/card-symbols/${c}.svg`}
+                        alt={c}
+                        className="h-4 w-4"
+                      />
                     ))}
                   </div>
                 )}
@@ -293,12 +348,17 @@ export default function PublicDeckView() {
               {isOwner && (
                 <Button variant="outline" size="sm" asChild>
                   <Link to={`/deckbuilder/${deck.id}`}>
-                    <ExternalLink className="h-3.5 w-3.5 mr-1.5" />{t('publicDeck.edit')}
+                    <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                    {t('publicDeck.edit')}
                   </Link>
                 </Button>
               )}
               <Button variant="secondary" size="sm" onClick={handleCopyUrl}>
-                {copied ? <Check className="h-3.5 w-3.5 mr-1.5" /> : <Copy className="h-3.5 w-3.5 mr-1.5" />}
+                {copied ? (
+                  <Check className="h-3.5 w-3.5 mr-1.5" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5 mr-1.5" />
+                )}
                 {copied ? t('publicDeck.copied') : t('publicDeck.share')}
               </Button>
             </div>
@@ -309,26 +369,37 @@ export default function PublicDeckView() {
             <div className="flex items-center gap-2 flex-wrap">
               {deck.commander_name && (
                 <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-accent/10 text-accent border border-accent/20">
-                  <Crown className="h-3 w-3" />{deck.commander_name}
+                  <Crown className="h-3 w-3" />
+                  {deck.commander_name}
                 </span>
               )}
               {deck.companion_name && (
                 <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
-                  <Shield className="h-3 w-3" />{deck.companion_name}
+                  <Shield className="h-3 w-3" />
+                  {deck.companion_name}
                 </span>
               )}
             </div>
           )}
 
           {deck.description && (
-            <p className="text-sm text-muted-foreground leading-relaxed">{deck.description}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {deck.description}
+            </p>
           )}
 
           {deckTags.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {deckTags.map((tag) => (
-                <Link key={tag.id} to={`/decks?tag=${encodeURIComponent(tag.tag)}`}>
-                  <Badge variant="outline" size="sm" className="hover:bg-accent/10 hover:text-accent transition-colors cursor-pointer">
+                <Link
+                  key={tag.id}
+                  to={`/decks?tag=${encodeURIComponent(tag.tag)}`}
+                >
+                  <Badge
+                    variant="outline"
+                    size="sm"
+                    className="hover:bg-accent/10 hover:text-accent transition-colors cursor-pointer"
+                  >
                     {tag.tag}
                   </Badge>
                 </Link>
@@ -340,8 +411,12 @@ export default function PublicDeckView() {
         {/* ── Stats Bar ── */}
         {mainboardCards.length > 0 && (
           <div className="rounded-xl border border-border overflow-hidden">
-            <DeckStatsBar cards={mainboardCards} scryfallCache={scryfallMap}
-              formatMax={formatConfig.max} cacheVersion={version} />
+            <DeckStatsBar
+              cards={mainboardCards}
+              scryfallCache={scryfallMap}
+              formatMax={formatConfig.max}
+              cacheVersion={version}
+            />
           </div>
         )}
 
@@ -349,21 +424,36 @@ export default function PublicDeckView() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
           {cardsLoading ? (
             <div className="space-y-2 col-span-full">
-              {[1, 2, 3].map((i) => <div key={i} className="h-8 shimmer rounded-lg" />)}
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-8 shimmer rounded-lg" />
+              ))}
             </div>
           ) : (
             <>
               {grouped.map(([category, catCards]) => (
-                <PublicCategorySection key={category} category={category} cards={catCards}
-                  scryfallCache={scryfallMap} cacheVersion={version} />
+                <PublicCategorySection
+                  key={category}
+                  category={category}
+                  cards={catCards}
+                  scryfallCache={scryfallMap}
+                  cacheVersion={version}
+                />
               ))}
               {sideboardCards.length > 0 && (
-                <PublicCategorySection category="Sideboard" cards={sideboardCards}
-                  scryfallCache={scryfallMap} cacheVersion={version} />
+                <PublicCategorySection
+                  category="Sideboard"
+                  cards={sideboardCards}
+                  scryfallCache={scryfallMap}
+                  cacheVersion={version}
+                />
               )}
               {maybeboardCards.length > 0 && (
-                <PublicCategorySection category="Maybeboard" cards={maybeboardCards}
-                  scryfallCache={scryfallMap} cacheVersion={version} />
+                <PublicCategorySection
+                  category="Maybeboard"
+                  cards={maybeboardCards}
+                  scryfallCache={scryfallMap}
+                  cacheVersion={version}
+                />
               )}
             </>
           )}
@@ -382,7 +472,10 @@ export default function PublicDeckView() {
 
 /** Read-only category section for public deck view. */
 function PublicCategorySection({
-  category, cards, scryfallCache, cacheVersion,
+  category,
+  cards,
+  scryfallCache,
+  cacheVersion,
 }: {
   category: string;
   cards: DeckCard[];
@@ -392,6 +485,7 @@ function PublicCategorySection({
   const totalQty = cards.reduce((s, c) => s + c.quantity, 0);
 
   const categoryPrice = useMemo(() => {
+    void cacheVersion;
     let total = 0;
     for (const card of cards) {
       const cached = scryfallCache.get(card.card_name);
@@ -399,8 +493,7 @@ function PublicCategorySection({
       total += price * card.quantity;
     }
     return total;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cards, cacheVersion]);
+  }, [cards, cacheVersion, scryfallCache]);
 
   return (
     <div className="space-y-0.5">
@@ -410,36 +503,49 @@ function PublicCategorySection({
         {categoryPrice > 0 && (
           <>
             <span className="text-xs text-muted-foreground">–</span>
-            <span className="text-xs text-muted-foreground font-medium">${categoryPrice.toFixed(2)}</span>
+            <span className="text-xs text-muted-foreground font-medium">
+              ${categoryPrice.toFixed(2)}
+            </span>
           </>
         )}
       </div>
       <ul>
         {cards.map((card) => {
           const cached = scryfallCache.get(card.card_name);
-          const manaCost = cached?.mana_cost || cached?.card_faces?.[0]?.mana_cost;
+          const manaCost =
+            cached?.mana_cost || cached?.card_faces?.[0]?.mana_cost;
           const price = cached?.prices?.usd;
 
           return (
-            <li key={card.id}
-              className="flex items-center gap-2 px-1 py-1.5 hover:bg-secondary/20 rounded transition-colors text-sm">
+            <li
+              key={card.id}
+              className="flex items-center gap-2 px-1 py-1.5 hover:bg-secondary/20 rounded transition-colors text-sm"
+            >
               <span className="flex items-center gap-1 shrink-0 w-6">
                 {(card.is_commander || card.is_companion) && (
-                  <span className={cn(
-                    'w-1.5 h-1.5 rounded-full shrink-0',
-                    card.is_commander ? 'bg-accent' : 'bg-primary',
-                  )} />
+                  <span
+                    className={cn(
+                      'w-1.5 h-1.5 rounded-full shrink-0',
+                      card.is_commander ? 'bg-accent' : 'bg-primary',
+                    )}
+                  />
                 )}
-                <span className="text-xs text-muted-foreground">{card.quantity}</span>
+                <span className="text-xs text-muted-foreground">
+                  {card.quantity}
+                </span>
               </span>
-              <span className={cn(
-                'truncate text-sm',
-                (card.is_commander || card.is_companion) && 'font-semibold',
-              )}>
+              <span
+                className={cn(
+                  'truncate text-sm',
+                  (card.is_commander || card.is_companion) && 'font-semibold',
+                )}
+              >
                 {card.card_name}
               </span>
               <span className="flex-1" />
-              {manaCost && <ManaCost cost={manaCost} size="sm" className="shrink-0" />}
+              {manaCost && (
+                <ManaCost cost={manaCost} size="sm" className="shrink-0" />
+              )}
               {price && (
                 <span className="text-xs text-muted-foreground tabular-nums shrink-0 font-mono">
                   ${price}

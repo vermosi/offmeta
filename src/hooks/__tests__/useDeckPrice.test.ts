@@ -18,7 +18,8 @@ vi.mock('@/services/local-cards', () => ({
 // Mock scryfall client
 const mockGetCardsByExactNames = vi.fn().mockResolvedValue([]);
 vi.mock('@/lib/scryfall/client', () => ({
-  getCardsByExactNames: (...args: unknown[]) => mockGetCardsByExactNames(...args),
+  getCardsByExactNames: (...args: unknown[]) =>
+    mockGetCardsByExactNames(...args),
 }));
 
 const makeDeckCard = (name: string, qty: number): DeckCard => ({
@@ -35,7 +36,7 @@ const makeDeckCard = (name: string, qty: number): DeckCard => ({
 });
 
 const makeScryfallCard = (name: string, usd: string): ScryfallCard =>
-  ({ name, prices: { usd } } as unknown as ScryfallCard);
+  ({ name, prices: { usd } }) as unknown as ScryfallCard;
 
 describe('useDeckPrice', () => {
   beforeEach(() => {
@@ -43,7 +44,9 @@ describe('useDeckPrice', () => {
   });
 
   it('returns null total for empty deck', async () => {
-    const cache = createRef<Map<string, ScryfallCard>>() as React.RefObject<Map<string, ScryfallCard>>;
+    const cache = createRef<Map<string, ScryfallCard>>() as React.RefObject<
+      Map<string, ScryfallCard>
+    >;
     (cache as { current: Map<string, ScryfallCard> }).current = new Map();
     const onUpdate = vi.fn();
 
@@ -56,7 +59,9 @@ describe('useDeckPrice', () => {
   });
 
   it('calculates total from cached prices', async () => {
-    const cache = createRef<Map<string, ScryfallCard>>() as React.RefObject<Map<string, ScryfallCard>>;
+    const cache = createRef<Map<string, ScryfallCard>>() as React.RefObject<
+      Map<string, ScryfallCard>
+    >;
     (cache as { current: Map<string, ScryfallCard> }).current = new Map([
       ['Lightning Bolt', makeScryfallCard('Lightning Bolt', '1.50')],
       ['Counterspell', makeScryfallCard('Counterspell', '2.00')],
@@ -79,9 +84,14 @@ describe('useDeckPrice', () => {
   });
 
   it('handles cards with no price gracefully', async () => {
-    const cache = createRef<Map<string, ScryfallCard>>() as React.RefObject<Map<string, ScryfallCard>>;
+    const cache = createRef<Map<string, ScryfallCard>>() as React.RefObject<
+      Map<string, ScryfallCard>
+    >;
     (cache as { current: Map<string, ScryfallCard> }).current = new Map([
-      ['Token Card', { name: 'Token Card', prices: {} } as unknown as ScryfallCard],
+      [
+        'Token Card',
+        { name: 'Token Card', prices: {} } as unknown as ScryfallCard,
+      ],
     ]);
     const onUpdate = vi.fn();
 
@@ -97,7 +107,9 @@ describe('useDeckPrice', () => {
   });
 
   it('fetches uncached cards from Scryfall collection API', async () => {
-    const cache = createRef<Map<string, ScryfallCard>>() as React.RefObject<Map<string, ScryfallCard>>;
+    const cache = createRef<Map<string, ScryfallCard>>() as React.RefObject<
+      Map<string, ScryfallCard>
+    >;
     (cache as { current: Map<string, ScryfallCard> }).current = new Map();
     const onUpdate = vi.fn();
 
@@ -118,7 +130,9 @@ describe('useDeckPrice', () => {
   });
 
   it('swallows fetch errors gracefully', async () => {
-    const cache = createRef<Map<string, ScryfallCard>>() as React.RefObject<Map<string, ScryfallCard>>;
+    const cache = createRef<Map<string, ScryfallCard>>() as React.RefObject<
+      Map<string, ScryfallCard>
+    >;
     (cache as { current: Map<string, ScryfallCard> }).current = new Map();
     const onUpdate = vi.fn();
 
@@ -132,5 +146,33 @@ describe('useDeckPrice', () => {
       expect(result.current.loading).toBe(false);
     });
     // Should not throw — error is swallowed
+  });
+
+  it('uses latest onCacheUpdated callback without re-running effect', async () => {
+    const cache = createRef<Map<string, ScryfallCard>>() as React.RefObject<
+      Map<string, ScryfallCard>
+    >;
+    (cache as { current: Map<string, ScryfallCard> }).current = new Map();
+    const firstUpdate = vi.fn();
+    const secondUpdate = vi.fn();
+
+    mockGetCardsByExactNames.mockResolvedValueOnce([
+      { name: 'Arcane Signet', prices: { usd: '1.00' } },
+    ]);
+
+    const cards = [makeDeckCard('Arcane Signet', 1)];
+    const { rerender, result } = renderHook(
+      ({ onUpdate }) => useDeckPrice(cards, cache, onUpdate),
+      { initialProps: { onUpdate: firstUpdate } },
+    );
+
+    rerender({ onUpdate: secondUpdate });
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(firstUpdate).not.toHaveBeenCalled();
+    expect(secondUpdate).toHaveBeenCalledTimes(1);
   });
 });
