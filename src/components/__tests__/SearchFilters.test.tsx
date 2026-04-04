@@ -274,6 +274,9 @@ describe('SearchFilters', () => {
     const cardTypeButton = screen.getByRole('button', { name: 'Instant' });
 
     for (const control of [filterButton, sortTrigger, cardTypeButton]) {
+      expect(control.className).toMatch(
+        /(text-(foreground|muted-foreground|primary)|bg-(background|card)|border-border)/,
+      );
       expect(control.className).not.toContain('text-white');
       expect(control.className).not.toContain('bg-black');
     }

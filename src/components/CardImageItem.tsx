@@ -35,11 +35,11 @@ export const CardImageItem = memo(function CardImageItem({
     >
       {isOwned && (
         <div
-          className="absolute top-1.5 left-1.5 z-10 h-5 w-5 rounded-full bg-emerald-500/90 flex items-center justify-center shadow-sm"
+          className="absolute top-1.5 left-1.5 z-10 h-5 w-5 rounded-full bg-success/90 flex items-center justify-center shadow-sm"
           aria-label="Owned"
         >
           <svg
-            className="h-3 w-3 text-white"
+            className="h-3 w-3 text-success-foreground"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"

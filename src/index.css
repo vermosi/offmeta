@@ -54,6 +54,9 @@
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
+    --overlay: 270 45% 6%;
+    --contrast: 0 0% 100%;
+    --contrast-foreground: 270 45% 6%;
 
     /* Borders */
     --border: 270 20% 88%;
@@ -125,6 +128,9 @@
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
+    --overlay: 270 45% 6%;
+    --contrast: 0 0% 100%;
+    --contrast-foreground: 270 45% 6%;
 
     /* Borders - Subtle purple */
     --border: 270 30% 18%;
