@@ -224,6 +224,25 @@ export async function translateQueryWithDedup(
     }
   }
 
+  // Fast-path: check client-side pretranslated map before any network calls
+  const normalizedLower = query.toLowerCase().trim();
+  const pretranslated = PRETRANSLATED[normalizedLower];
+  if (pretranslated && !filters) {
+    logger.info('[SearchDiag] Pretranslated hit', { query, pretranslated });
+    recordSearch(query);
+    return {
+      scryfallQuery: pretranslated,
+      explanation: {
+        readable: `Translated: ${query}`,
+        assumptions: [],
+        confidence: 0.95,
+      },
+      showAffiliate: true,
+      source: 'pretranslated',
+      edgeSource: 'pretranslated',
+    };
+  }
+
   // Check for pending request with same key
   if (!bypassCache && pendingTranslations.has(key)) {
     logger.info('[SearchDiag] Dedup hit', { query });
