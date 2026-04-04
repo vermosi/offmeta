@@ -8,7 +8,6 @@
  * @module functions/spicerack-import
  */
 
-
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, requireServiceRole } from '../_shared/auth.ts';
@@ -48,7 +47,9 @@ const FORMAT_MAP: Record<string, string> = {
  * Parse a plaintext decklist (MTGO/Arena format) into card entries.
  * Expected lines: "2 Lightning Bolt" or "1x Sol Ring"
  */
-function parseDecklistText(text: string): { name: string; quantity: number; board: string }[] {
+function parseDecklistText(
+  text: string,
+): { name: string; quantity: number; board: string }[] {
   if (!text || typeof text !== 'string') return [];
 
   const cards: { name: string; quantity: number; board: string }[] = [];
@@ -87,18 +88,25 @@ const MOXFIELD_DELAY_MS = 150;
  */
 async function fetchMoxfieldDeck(
   url: string,
-): Promise<{ cards: { name: string; quantity: number; board: string }[]; commander: string | null; colors: string[] }> {
+): Promise<{
+  cards: { name: string; quantity: number; board: string }[];
+  commander: string | null;
+  colors: string[];
+}> {
   const match = url.match(/moxfield\.com\/decks\/([A-Za-z0-9_-]+)/);
   if (!match) return { cards: [], commander: null, colors: [] };
 
   const publicId = match[1];
   try {
-    const resp = await fetch(`https://api2.moxfield.com/v3/decks/all/${publicId}`, {
-      headers: {
-        Accept: 'application/json',
-        'User-Agent': 'OffMeta/1.0 (spicerack-import)',
+    const resp = await fetch(
+      `https://api2.moxfield.com/v3/decks/all/${publicId}`,
+      {
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': 'OffMeta/1.0 (spicerack-import)',
+        },
       },
-    });
+    );
 
     if (!resp.ok) {
       await resp.text();
@@ -128,7 +136,11 @@ async function fetchMoxfieldDeck(
     }
 
     // Extract mainboard + sideboard + companions
-    for (const [boardName, boardKey] of [['mainboard', 'mainboard'], ['sideboard', 'sideboard'], ['companions', 'companion']] as const) {
+    for (const [boardName, boardKey] of [
+      ['mainboard', 'mainboard'],
+      ['sideboard', 'sideboard'],
+      ['companions', 'companion'],
+    ] as const) {
       const board = boards[boardName];
       if (!board || typeof board !== 'object') continue;
       const boardCards = board.cards ?? board;
@@ -161,7 +173,7 @@ async function fetchMoxfieldDeck(
  */
 async function batchResolveOracleIds(
   cardNames: string[],
-  supabase: ReturnType<typeof createClient<any>>,
+  supabase: ReturnType<typeof createClient>,
 ): Promise<Map<string, string | null>> {
   const result = new Map<string, string | null>();
   const unique = [...new Set(cardNames)];
@@ -181,7 +193,9 @@ async function batchResolveOracleIds(
           result.set(row.name, row.oracle_id);
         }
       }
-    } catch { /* continue */ }
+    } catch {
+      /* continue */
+    }
 
     for (const name of batch) {
       if (!result.has(name)) missing.push(name);
@@ -191,7 +205,9 @@ async function batchResolveOracleIds(
   if (missing.length === 0) return result;
 
   // 2. Fall back to Scryfall for missing cards
-  log.info(`Resolving ${missing.length}/${unique.length} oracle IDs from Scryfall (not in local DB)`);
+  log.info(
+    `Resolving ${missing.length}/${unique.length} oracle IDs from Scryfall (not in local DB)`,
+  );
   for (let i = 0; i < missing.length; i += SCRYFALL_BATCH_SIZE) {
     const batch = missing.slice(i, i + SCRYFALL_BATCH_SIZE);
     const identifiers = batch.map((name) => ({ name }));
@@ -246,7 +262,10 @@ serve(async (req: Request): Promise<Response> => {
   const spicerackApiKey = Deno.env.get('SPICERACK_API_KEY');
 
   if (!supabaseUrl || !serviceRoleKey) {
-    return new Response(JSON.stringify({ error: 'Not configured' }), { status: 500, headers });
+    return new Response(JSON.stringify({ error: 'Not configured' }), {
+      status: 500,
+      headers,
+    });
   }
 
   if (!spicerackApiKey) {
@@ -276,7 +295,7 @@ serve(async (req: Request): Promise<Response> => {
 
     const apiResp = await fetch(apiUrl.toString(), {
       headers: {
-        'Accept': 'application/json',
+        Accept: 'application/json',
         'X-API-Key': spicerackApiKey,
       },
     });
@@ -285,18 +304,29 @@ serve(async (req: Request): Promise<Response> => {
       const text = await apiResp.text();
       if (apiResp.status === 404) {
         return new Response(
-          JSON.stringify({ success: true, message: 'Spicerack API not available', imported: 0 }),
+          JSON.stringify({
+            success: true,
+            message: 'Spicerack API not available',
+            imported: 0,
+          }),
           { status: 200, headers },
         );
       }
-      throw new Error(`Spicerack API error: ${apiResp.status} ${text.slice(0, 200)}`);
+      throw new Error(
+        `Spicerack API error: ${apiResp.status} ${text.slice(0, 200)}`,
+      );
     }
 
     const tournaments = await apiResp.json();
 
     if (!Array.isArray(tournaments) || tournaments.length === 0) {
       return new Response(
-        JSON.stringify({ success: true, message: 'No tournaments returned', imported: 0, tournaments: 0 }),
+        JSON.stringify({
+          success: true,
+          message: 'No tournaments returned',
+          imported: 0,
+          tournaments: 0,
+        }),
         { status: 200, headers },
       );
     }
@@ -317,7 +347,11 @@ serve(async (req: Request): Promise<Response> => {
           const decklistUrl = standing.decklist ?? '';
 
           // Only process if standing has a Moxfield URL
-          if (typeof decklistUrl !== 'string' || !decklistUrl.includes('moxfield.com/decks/')) continue;
+          if (
+            typeof decklistUrl !== 'string' ||
+            !decklistUrl.includes('moxfield.com/decks/')
+          )
+            continue;
           checked++;
 
           // Update existing deck that has no source_url
@@ -336,7 +370,13 @@ serve(async (req: Request): Promise<Response> => {
 
       log.info(`Backfill URLs: checked=${checked}, updated=${updated}`);
       return new Response(
-        JSON.stringify({ success: true, mode: 'backfill_urls', checked, updated, tournaments: tournaments.length }),
+        JSON.stringify({
+          success: true,
+          mode: 'backfill_urls',
+          checked,
+          updated,
+          tournaments: tournaments.length,
+        }),
         { status: 200, headers },
       );
     }
@@ -348,8 +388,12 @@ serve(async (req: Request): Promise<Response> => {
 
     for (const tournament of tournaments) {
       const tid = String(tournament.TID ?? '');
-      const tournamentName = String(tournament.tournamentName ?? 'Unknown Event');
-      const format = FORMAT_MAP[tournament.format] ?? String(tournament.format ?? 'unknown').toLowerCase();
+      const tournamentName = String(
+        tournament.tournamentName ?? 'Unknown Event',
+      );
+      const format =
+        FORMAT_MAP[tournament.format] ??
+        String(tournament.format ?? 'unknown').toLowerCase();
       const startDate = tournament.startDate
         ? new Date(tournament.startDate * 1000).toISOString().split('T')[0]
         : null;
@@ -371,7 +415,10 @@ serve(async (req: Request): Promise<Response> => {
           .eq('source_id', sourceId)
           .maybeSingle();
 
-        if (existing) { skipped++; continue; }
+        if (existing) {
+          skipped++;
+          continue;
+        }
 
         // Try plaintext first, then Moxfield URL
         const decklistText = standing.decklist_text ?? '';
@@ -383,7 +430,10 @@ serve(async (req: Request): Promise<Response> => {
         if (cards.length === 0) {
           // Check if decklist is a Moxfield URL
           const decklistUrl = standing.decklist ?? '';
-          if (typeof decklistUrl === 'string' && decklistUrl.includes('moxfield.com/decks/')) {
+          if (
+            typeof decklistUrl === 'string' &&
+            decklistUrl.includes('moxfield.com/decks/')
+          ) {
             sourceUrl = decklistUrl;
             const moxResult = await fetchMoxfieldDeck(decklistUrl);
             cards = moxResult.cards;
@@ -393,7 +443,10 @@ serve(async (req: Request): Promise<Response> => {
           }
         }
 
-        if (cards.length === 0) { skipped++; continue; }
+        if (cards.length === 0) {
+          skipped++;
+          continue;
+        }
 
         // Build deck name
         const deckName = `${playerName} — ${tournamentName}`.slice(0, 200);
@@ -442,17 +495,24 @@ serve(async (req: Request): Promise<Response> => {
       }
     }
 
-    log.info(`Spicerack import: tournaments=${tournamentsProcessed}, imported=${imported}, skipped=${skipped}`);
+    log.info(
+      `Spicerack import: tournaments=${tournamentsProcessed}, imported=${imported}, skipped=${skipped}`,
+    );
 
     return new Response(
-      JSON.stringify({ success: true, imported, skipped, tournaments: tournamentsProcessed }),
+      JSON.stringify({
+        success: true,
+        imported,
+        skipped,
+        tournaments: tournamentsProcessed,
+      }),
       { status: 200, headers },
     );
   } catch (e) {
     log.error('spicerack-import error', e);
-    return new Response(
-      JSON.stringify({ error: 'Internal error' }),
-      { status: 500, headers },
-    );
+    return new Response(JSON.stringify({ error: 'Internal error' }), {
+      status: 500,
+      headers,
+    });
   }
 });

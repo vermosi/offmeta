@@ -18,7 +18,7 @@ const DECK_BATCH_SIZE = 50;
 /** Batch-resolve oracle IDs — checks local cards table first, falls back to Scryfall. */
 async function batchResolveOracleIds(
   cardNames: string[],
-  supabase: ReturnType<typeof createClient<any>>,
+  supabase: ReturnType<typeof createClient>,
 ): Promise<Map<string, string | null>> {
   const result = new Map<string, string | null>();
   const unique = [...new Set(cardNames)];
@@ -38,7 +38,9 @@ async function batchResolveOracleIds(
           result.set(row.name, row.oracle_id);
         }
       }
-    } catch { /* continue */ }
+    } catch {
+      /* continue */
+    }
 
     for (const name of batch) {
       if (!result.has(name)) missing.push(name);
@@ -48,7 +50,9 @@ async function batchResolveOracleIds(
   if (missing.length === 0) return result;
 
   // 2. Fall back to Scryfall for missing cards
-  log.info(`Resolving ${missing.length}/${unique.length} oracle IDs from Scryfall (not in local DB)`);
+  log.info(
+    `Resolving ${missing.length}/${unique.length} oracle IDs from Scryfall (not in local DB)`,
+  );
   for (let i = 0; i < missing.length; i += SCRYFALL_BATCH_SIZE) {
     const batch = missing.slice(i, i + SCRYFALL_BATCH_SIZE);
     const identifiers = batch.map((name) => ({ name }));
@@ -116,13 +120,19 @@ serve(async (req: Request): Promise<Response> => {
   // Auth guard: accept anon key (for pg_cron) or service role
   const auth = await validateAuth(req);
   if (!auth.authorized) {
-    return new Response(JSON.stringify({ error: auth.error }), { status: 401, headers });
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: 401,
+      headers,
+    });
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   if (!supabaseUrl || !serviceRoleKey) {
-    return new Response(JSON.stringify({ error: 'Not configured' }), { status: 500, headers });
+    return new Response(JSON.stringify({ error: 'Not configured' }), {
+      status: 500,
+      headers,
+    });
   }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
@@ -137,14 +147,20 @@ serve(async (req: Request): Promise<Response> => {
     const listResp = await fetch('https://mtgjson.com/api/v5/DeckList.json');
     if (!listResp.ok) {
       const text = await listResp.text();
-      throw new Error(`Failed to fetch DeckList: ${listResp.status} ${text.slice(0, 200)}`);
+      throw new Error(
+        `Failed to fetch DeckList: ${listResp.status} ${text.slice(0, 200)}`,
+      );
     }
     const deckListData = await listResp.json();
     const allDecks: Array<Record<string, unknown>> = deckListData.data ?? [];
 
     if (offset >= allDecks.length) {
       return new Response(
-        JSON.stringify({ success: true, message: 'No more decks to process', total: allDecks.length }),
+        JSON.stringify({
+          success: true,
+          message: 'No more decks to process',
+          total: allDecks.length,
+        }),
         { status: 200, headers },
       );
     }
@@ -201,21 +217,26 @@ serve(async (req: Request): Promise<Response> => {
       const format = inferFormat(deck);
 
       // MTGJSON CardDeck model: { name, count, colors, ... }
-      const mainboard: Array<{ name: string; count: number; colors?: string[] }> =
-        (deck.mainBoard ?? []).map((c: Record<string, unknown>) => ({
-          name: String(c.name ?? ''),
-          count: Number(c.count ?? c.quantity ?? 1),
-          colors: c.colors as string[] | undefined,
-        }));
-      const sideboard: Array<{ name: string; count: number }> =
-        (deck.sideBoard ?? []).map((c: Record<string, unknown>) => ({
-          name: String(c.name ?? ''),
-          count: Number(c.count ?? c.quantity ?? 1),
-        }));
-      const commanderCards: Array<{ name: string }> =
-        (deck.commander ?? []).map((c: Record<string, unknown>) => ({
-          name: String(c.name ?? ''),
-        }));
+      const mainboard: Array<{
+        name: string;
+        count: number;
+        colors?: string[];
+      }> = (deck.mainBoard ?? []).map((c: Record<string, unknown>) => ({
+        name: String(c.name ?? ''),
+        count: Number(c.count ?? c.quantity ?? 1),
+        colors: c.colors as string[] | undefined,
+      }));
+      const sideboard: Array<{ name: string; count: number }> = (
+        deck.sideBoard ?? []
+      ).map((c: Record<string, unknown>) => ({
+        name: String(c.name ?? ''),
+        count: Number(c.count ?? c.quantity ?? 1),
+      }));
+      const commanderCards: Array<{ name: string }> = (
+        deck.commander ?? []
+      ).map((c: Record<string, unknown>) => ({
+        name: String(c.name ?? ''),
+      }));
       const commanderName = commanderCards[0]?.name ?? null;
       const colors = extractColors(mainboard as Array<{ colors?: string[] }>);
 
@@ -278,7 +299,9 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     const hasMore = offset + limit < allDecks.length;
-    log.info(`MTGJSON batch complete: imported=${imported}, skipped=${skipped}, errors=${errors.length}, hasMore=${hasMore}`);
+    log.info(
+      `MTGJSON batch complete: imported=${imported}, skipped=${skipped}, errors=${errors.length}, hasMore=${hasMore}`,
+    );
 
     return new Response(
       JSON.stringify({
@@ -295,9 +318,9 @@ serve(async (req: Request): Promise<Response> => {
     );
   } catch (e) {
     log.error('mtgjson-import error', e);
-    return new Response(
-      JSON.stringify({ error: 'Internal error' }),
-      { status: 500, headers },
-    );
+    return new Response(JSON.stringify({ error: 'Internal error' }), {
+      status: 500,
+      headers,
+    });
   }
 });
