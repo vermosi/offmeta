@@ -7,8 +7,8 @@
 
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white&style=flat-square)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white&style=flat-square)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white&style=flat-square)](https://tailwindcss.com/)
-[![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white&style=flat-square)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3-06B6D4?logo=tailwindcss&logoColor=white&style=flat-square)](https://tailwindcss.com/)
+[![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white&style=flat-square)](https://vite.dev/)
 [![Tests](https://img.shields.io/badge/tests-1560%2B-brightgreen?style=flat-square)](docs/testing.md)
 [![E2E](https://img.shields.io/badge/e2e-23%20Playwright%20scenarios-0ea5e9?style=flat-square)](src/tests/e2e)
 [![A11y](https://img.shields.io/badge/a11y-3%20axe%20suites-14b8a6?style=flat-square)](src/tests/e2e/accessibility.spec.ts)
@@ -24,26 +24,26 @@
 
 ## ✨ Features
 
-| Feature                          | Description                                                                                      |
-| -------------------------------- | ------------------------------------------------------------------------------------------------ |
-| **Natural Language Search**      | Describe cards in plain English — AI translates to Scryfall syntax                               |
-| **200+ Deterministic Patterns**  | Fast, cached translations for common queries without AI calls                                    |
-| **Combo Finder**                 | Discover card combos for any commander via Commander Spellbook                                   |
-| **Deck Recommendations**         | AI-powered suggestions (High Synergy, Upgrades, Budget Picks) from Moxfield import or text paste |
+| Feature                          | Description                                                                                                |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Natural Language Search**      | Describe cards in plain English — AI translates to Scryfall syntax                                         |
+| **200+ Deterministic Patterns**  | Fast, cached translations for common queries without AI calls                                              |
+| **Combo Finder**                 | Discover card combos for any commander via Commander Spellbook                                             |
+| **Deck Recommendations**         | AI-powered suggestions (High Synergy, Upgrades, Budget Picks) from Moxfield import or text paste           |
 | **Archetypes**                   | Data-driven archetype browser across Commander, Pauper, Legacy & Premodern — backed by a materialized view |
-| **10 Progressive Search Guides** | Learn from basic type searches to expert multi-constraint queries                                |
-| **Voice Input**                  | Hands-free searching with speech recognition                                                     |
-| **Card Details**                 | Rulings, prices, printings, and legality in a clean modal                                        |
-| **Card Comparison**              | Compare 2–4 cards side-by-side on stats, price, and legality                                     |
-| **Multiple View Modes**          | Grid, list, and image-only views with persistent preference                                      |
-| **Export Results**               | Copy card names or download CSV for deck builders                                                |
-| **Smart Filters**                | Color, format, type, CMC, price, and rarity filter chips                                         |
-| **Alchemy Exclusion**            | Rebalanced digital-only cards automatically filtered out                                         |
-| **Client-Side Caching**          | Sub-100ms response for repeated queries                                                          |
-| **PWA Support**                  | Installable with offline-first architecture                                                      |
-| **Dark/Light Theme**             | Automatic system preference detection                                                            |
-| **Mobile-First Design**          | Responsive from 320px to 1920px with progressive spacing                                         |
-| **11-Language i18n**             | Full UI and guide content localized in EN, ES, FR, DE, IT, PT, JA, KO, RU, ZHS, ZHT              |
+| **10 Progressive Search Guides** | Learn from basic type searches to expert multi-constraint queries                                          |
+| **Voice Input**                  | Hands-free searching with speech recognition                                                               |
+| **Card Details**                 | Rulings, prices, printings, and legality in a clean modal                                                  |
+| **Card Comparison**              | Compare 2–4 cards side-by-side on stats, price, and legality                                               |
+| **Multiple View Modes**          | Grid, list, and image-only views with persistent preference                                                |
+| **Export Results**               | Copy card names or download CSV for deck builders                                                          |
+| **Smart Filters**                | Color, format, type, CMC, price, and rarity filter chips                                                   |
+| **Alchemy Exclusion**            | Rebalanced digital-only cards automatically filtered out                                                   |
+| **Client-Side Caching**          | Sub-100ms response for repeated queries                                                                    |
+| **PWA Support**                  | Installable with offline-first architecture                                                                |
+| **Dark/Light Theme**             | Automatic system preference detection                                                                      |
+| **Mobile-First Design**          | Responsive from 320px to 1920px with progressive spacing                                                   |
+| **11-Language i18n**             | Full UI and guide content localized in EN, ES, FR, DE, IT, PT, JA, KO, RU, ZHS, ZHT                        |
 
 ---
 
