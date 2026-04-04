@@ -104,6 +104,7 @@ import { ConversionFunnelPanel } from '@/pages/admin-analytics/components/Conver
 import { HitRatePanel } from '@/pages/admin-analytics/components/HitRatePanel';
 import { AICostPanel } from '@/pages/admin-analytics/components/AICostPanel';
 import { logger } from '@/lib/core/logger';
+import { useAdminAnalyticsFilters } from '@/hooks/useAdminAnalyticsFilters';
 
 export default function AdminAnalytics() {
   const { user, isLoading: authLoading } = useAuth();
@@ -145,6 +146,22 @@ export default function AdminAnalytics() {
   const [editValidationCount, setEditValidationCount] = useState<number | null>(
     null,
   );
+
+  const {
+    pendingFeedbackCount,
+    archivedFeedbackCount,
+    filteredFeedback,
+    filteredRules,
+    activeRulesCount,
+    nonArchivedRulesCount,
+    archivedRulesCount,
+  } = useAdminAnalyticsFilters({
+    feedback,
+    feedbackFilter,
+    rules,
+    rulesFilter,
+    rulesSearch,
+  });
 
   useEffect(() => {
     if (!authLoading && !roleLoading) {
@@ -1355,43 +1372,23 @@ export default function AdminAnalytics() {
               <h2 className="text-sm font-semibold text-foreground flex items-center gap-2 flex-wrap">
                 <MessageSquareWarning className="h-4 w-4 text-warning" />
                 Feedback Queue
-                {feedback.filter(
-                  (f) =>
-                    f.processing_status === 'pending' ||
-                    f.processing_status == null,
-                ).length > 0 && (
+                {pendingFeedbackCount > 0 && (
                   <Badge variant="secondary" className="text-[10px]">
-                    {
-                      feedback.filter(
-                        (f) =>
-                          f.processing_status === 'pending' ||
-                          f.processing_status == null,
-                      ).length
-                    }{' '}
-                    pending
+                    {pendingFeedbackCount} pending
                   </Badge>
                 )}
-                {feedback.filter((f) => f.processing_status === 'archived')
-                  .length > 0 && (
+                {archivedFeedbackCount > 0 && (
                   <Badge
                     variant="outline"
                     className="text-[10px] text-muted-foreground gap-1"
                   >
                     <Archive className="h-2.5 w-2.5" />
-                    {
-                      feedback.filter((f) => f.processing_status === 'archived')
-                        .length
-                    }{' '}
-                    archived
+                    {archivedFeedbackCount} archived
                   </Badge>
                 )}
               </h2>
               <div className="flex items-center gap-2">
-                {feedback.filter(
-                  (f) =>
-                    f.processing_status === 'pending' ||
-                    f.processing_status == null,
-                ).length > 0 && (
+                {pendingFeedbackCount > 0 && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -1443,32 +1440,16 @@ export default function AdminAnalytics() {
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
             ) : (
-              (() => {
-                const filtered = feedback.filter((f) => {
-                  const s = f.processing_status ?? 'pending';
-                  if (feedbackFilter === 'all') return true;
-                  if (feedbackFilter === 'completed')
-                    return (
-                      s === 'completed' ||
-                      s === 'updated_existing' ||
-                      s === 'done'
-                    );
-                  return s === feedbackFilter;
-                });
-
-                if (filtered.length === 0) {
-                  return (
-                    <p className="text-sm text-muted-foreground text-center py-10">
-                      {feedbackFilter === 'all'
-                        ? 'No feedback submitted yet'
-                        : `No ${feedbackFilter} items`}
-                    </p>
-                  );
-                }
-
-                return (
+              <>
+                {filteredFeedback.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-10">
+                    {feedbackFilter === 'all'
+                      ? 'No feedback submitted yet'
+                      : `No ${feedbackFilter} items`}
+                  </p>
+                ) : (
                   <div className="divide-y divide-border max-h-[640px] overflow-y-auto">
-                    {filtered.map((f) => {
+                    {filteredFeedback.map((f) => {
                       const status = f.processing_status ?? 'pending';
                       const isExpanded = expandedFeedback.has(f.id);
                       const rule = f.translation_rules;
@@ -1689,8 +1670,8 @@ export default function AdminAnalytics() {
                       );
                     })}
                   </div>
-                );
-              })()
+                )}
+              </>
             )}
           </div>
 
@@ -1703,17 +1684,16 @@ export default function AdminAnalytics() {
                 Translation Rules
                 {rules.length > 0 && (
                   <Badge variant="secondary" className="text-[10px]">
-                    {rules.filter((r) => r.is_active && !r.archived_at).length}{' '}
-                    active / {rules.filter((r) => !r.archived_at).length} total
+                    {activeRulesCount} active / {nonArchivedRulesCount} total
                   </Badge>
                 )}
-                {rules.filter((r) => r.archived_at).length > 0 && (
+                {archivedRulesCount > 0 && (
                   <Badge
                     variant="outline"
                     className="text-[10px] text-muted-foreground gap-1"
                   >
                     <Archive className="h-2.5 w-2.5" />
-                    {rules.filter((r) => r.archived_at).length} archived
+                    {archivedRulesCount} archived
                   </Badge>
                 )}
               </h2>
@@ -1779,53 +1759,35 @@ export default function AdminAnalytics() {
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
             ) : (
-              (() => {
-                const filtered = rules.filter((r) => {
-                  const matchesFilter =
-                    rulesFilter === 'all' ||
-                    (rulesFilter === 'active' && r.is_active) ||
-                    (rulesFilter === 'inactive' && !r.is_active);
-                  const q = rulesSearch.trim().toLowerCase();
-                  const matchesSearch =
-                    !q ||
-                    r.pattern.toLowerCase().includes(q) ||
-                    r.scryfall_syntax.toLowerCase().includes(q) ||
-                    (r.description ?? '').toLowerCase().includes(q);
-                  return matchesFilter && matchesSearch;
-                });
-
-                if (filtered.length === 0) {
-                  return (
-                    <div className="flex flex-col items-center gap-3 py-12 px-5 text-center">
-                      <BookOpen className="h-8 w-8 text-muted-foreground/30" />
-                      <p className="text-sm text-muted-foreground">
-                        {rules.length === 0
-                          ? 'No active translation rules yet'
-                          : 'No rules match your filter'}
+              <>
+                {filteredRules.length === 0 ? (
+                  <div className="flex flex-col items-center gap-3 py-12 px-5 text-center">
+                    <BookOpen className="h-8 w-8 text-muted-foreground/30" />
+                    <p className="text-sm text-muted-foreground">
+                      {rules.length === 0
+                        ? 'No active translation rules yet'
+                        : 'No rules match your filter'}
+                    </p>
+                    {rules.length === 0 && (
+                      <p className="text-xs text-muted-foreground/70 max-w-xs">
+                        Rules are generated automatically when users submit
+                        search feedback.{' '}
+                        {!showArchivedRules && (
+                          <button
+                            className="text-primary hover:underline"
+                            onClick={() => {
+                              setShowArchivedRules(true);
+                              showArchivedRulesRef.current = true;
+                              void fetchRules(true);
+                            }}
+                          >
+                            Show archived rules
+                          </button>
+                        )}
                       </p>
-                      {rules.length === 0 && (
-                        <p className="text-xs text-muted-foreground/70 max-w-xs">
-                          Rules are generated automatically when users submit
-                          search feedback.{' '}
-                          {!showArchivedRules && (
-                            <button
-                              className="text-primary hover:underline"
-                              onClick={() => {
-                                setShowArchivedRules(true);
-                                showArchivedRulesRef.current = true;
-                                void fetchRules(true);
-                              }}
-                            >
-                              Show archived rules
-                            </button>
-                          )}
-                        </p>
-                      )}
-                    </div>
-                  );
-                }
-
-                return (
+                    )}
+                  </div>
+                ) : (
                   <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
                     <table className="w-full text-sm">
                       <thead className="sticky top-0 bg-background border-b border-border z-10">
@@ -1852,7 +1814,7 @@ export default function AdminAnalytics() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border/50">
-                        {filtered.map((rule) => {
+                        {filteredRules.map((rule) => {
                           const isToggling = ruleDirectTogglingId === rule.id;
                           const isArchiving = archivingRuleId === rule.id;
                           const isArchived = !!rule.archived_at;
@@ -2143,8 +2105,8 @@ export default function AdminAnalytics() {
                       </tbody>
                     </table>
                   </div>
-                );
-              })()
+                )}
+              </>
             )}
           </div>
         </div>
