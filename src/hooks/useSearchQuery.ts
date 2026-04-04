@@ -10,6 +10,7 @@ import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';
 import { CLIENT_CONFIG } from '@/lib/config';
 import { logger } from '@/lib/core/logger';
+import { PRETRANSLATED } from '@/lib/search/fallback';
 
 // Hardcoded fallback queries if DB fetch fails
 const FALLBACK_POPULAR_QUERIES = ['mana rocks', 'board wipes'];
@@ -223,6 +224,25 @@ export async function translateQueryWithDedup(
     }
   }
 
+  // Fast-path: check client-side pretranslated map before any network calls
+  const normalizedLower = query.toLowerCase().trim();
+  const pretranslated = PRETRANSLATED[normalizedLower];
+  if (pretranslated && !filters) {
+    logger.info('[SearchDiag] Pretranslated hit', { query, pretranslated });
+    recordSearch(query);
+    return {
+      scryfallQuery: pretranslated,
+      explanation: {
+        readable: `Translated: ${query}`,
+        assumptions: [],
+        confidence: 0.95,
+      },
+      showAffiliate: true,
+      source: 'pretranslated',
+      edgeSource: 'pretranslated',
+    };
+  }
+
   // Check for pending request with same key
   if (!bypassCache && pendingTranslations.has(key)) {
     logger.info('[SearchDiag] Dedup hit', { query });
@@ -428,4 +448,3 @@ export function usePrefetchPopularQueries() {
     return () => clearTimeout(id);
   }, [queryClient]);
 }
-

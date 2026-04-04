@@ -158,9 +158,17 @@ export function useSearch() {
   const serverSampleSize = serverIntelligence?.total_searches ?? 0;
   const shouldUseServerQuality =
     serverConfidence >= 0.3 && serverSampleSize >= 20;
+
+  // Translation confidence from the current search result (e.g. 0.95 for pattern matches)
+  const translationConfidence = lastSearchResult?.explanation?.confidence ?? 0;
+
+  // Use server quality if available, then fall back to translation confidence
+  // (which is high for pattern matches), then local behavioral signals
   const effectiveQueryQualityScore = shouldUseServerQuality
     ? (serverIntelligence?.search_quality_score ?? 0)
-    : localQueryQualityScore;
+    : translationConfidence >= 0.7
+      ? translationConfidence
+      : localQueryQualityScore;
 
   // --- Redirect legacy ?q= URLs to /search/:slug ---
   useEffect(() => {

@@ -9,7 +9,7 @@
  * Pre-translated queries for known guide and archetype searches.
  * These bypass all parsing and return the exact Scryfall query.
  */
-const PRETRANSLATED: Record<string, string> = {
+export const PRETRANSLATED: Record<string, string> = {
   // Guides
   'dragons': 't:dragon',
   'mono red creatures': 'id=r t:creature',
