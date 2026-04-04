@@ -58,13 +58,13 @@ Translates a natural-language Magic: The Gathering query into valid Scryfall syn
 
 #### `source` values
 
-| Value | Meaning |
-|-------|---------|
-| `cache` | Returned from persistent DB cache |
-| `deterministic` | Pattern/rules-based match, no AI used |
-| `pattern_match` | Matched a seeded translation rule |
-| `ai` | AI (Gemini Flash) was invoked |
-| `raw_syntax` | Input was already valid Scryfall syntax |
+| Value           | Meaning                                 |
+| --------------- | --------------------------------------- |
+| `cache`         | Returned from persistent DB cache       |
+| `deterministic` | Pattern/rules-based match, no AI used   |
+| `pattern_match` | Matched a seeded translation rule       |
+| `ai`            | AI (Gemini Flash) was invoked           |
+| `raw_syntax`    | Input was already valid Scryfall syntax |
 
 #### Headers
 
@@ -264,13 +264,13 @@ Processes a pending `search_feedback` row: validates the issue, uses Gemini 2.5 
 
 #### `status` values
 
-| Value | Meaning |
-|---|---|
-| `completed` | AI generated a new rule; rule inserted and linked to the feedback row |
-| `updated_existing` | Pattern already existed; existing rule confidence updated |
-| `duplicate` | Feedback query identical to an existing rule; no write performed |
-| `skipped` | AI returned a low-confidence or empty result; no rule created |
-| `failed` | Unrecoverable error (timeout, AI error); feedback row marked `failed` |
+| Value              | Meaning                                                               |
+| ------------------ | --------------------------------------------------------------------- |
+| `completed`        | AI generated a new rule; rule inserted and linked to the feedback row |
+| `updated_existing` | Pattern already existed; existing rule confidence updated             |
+| `duplicate`        | Feedback query identical to an existing rule; no write performed      |
+| `skipped`          | AI returned a low-confidence or empty result; no rule created         |
+| `failed`           | Unrecoverable error (timeout, AI error); feedback row marked `failed` |
 
 > A 25-second safety timeout resets any feedback row still in `processing` state to `failed` on the next invocation, preventing permanently stuck rows.
 
@@ -303,11 +303,11 @@ Scans `translation_logs` for the last 30 days and batch-promotes high-frequency,
 }
 ```
 
-| Field | Description |
-|---|---|
+| Field             | Description                                     |
+| ----------------- | ----------------------------------------------- |
 | `patternsCreated` | Number of new `translation_rules` rows inserted |
-| `analyzed` | Number of candidate log entries examined |
-| `timeMs` | Total wall-clock time for the run |
+| `analyzed`        | Number of candidate log entries examined        |
+| `timeMs`          | Total wall-clock time for the run               |
 
 #### Promotion criteria
 
@@ -339,10 +339,10 @@ Fetches tournament decklists from the Spicerack API and stores them in `communit
 }
 ```
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `num_days` | number | `14` | Number of days of tournament data to fetch |
-| `event_format` | string | `null` | Optional filter: `STANDARD`, `MODERN`, `PIONEER`, `LEGACY`, `VINTAGE`, `COMMANDER2`, `PAUPER`, `HISTORIC`, `EXPLORER`, `TIMELESS`, `DUEL`, `OATHBREAKER`, `PREMODERN`, `GLADIATOR`, `STANDARD_BRAWL`, `PREDH` |
+| Field          | Type   | Default | Description                                                                                                                                                                                                   |
+| -------------- | ------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `num_days`     | number | `14`    | Number of days of tournament data to fetch                                                                                                                                                                    |
+| `event_format` | string | `null`  | Optional filter: `STANDARD`, `MODERN`, `PIONEER`, `LEGACY`, `VINTAGE`, `COMMANDER2`, `PAUPER`, `HISTORIC`, `EXPLORER`, `TIMELESS`, `DUEL`, `OATHBREAKER`, `PREMODERN`, `GLADIATOR`, `STANDARD_BRAWL`, `PREDH` |
 
 #### Response body (success)
 
@@ -355,11 +355,11 @@ Fetches tournament decklists from the Spicerack API and stores them in `communit
 }
 ```
 
-| Field | Description |
-|-------|-------------|
-| `imported` | Number of new decks inserted |
-| `skipped` | Decks skipped (already imported or empty decklist) |
-| `tournaments` | Number of tournaments processed |
+| Field         | Description                                        |
+| ------------- | -------------------------------------------------- |
+| `imported`    | Number of new decks inserted                       |
+| `skipped`     | Decks skipped (already imported or empty decklist) |
+| `tournaments` | Number of tournaments processed                    |
 
 #### Cron schedule
 
@@ -416,9 +416,9 @@ Computes card co-occurrence statistics from `community_decks` and stores pairwis
 }
 ```
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `format` | string | `"all"` | Format to compute cooccurrence for (or `"all"`) |
+| Field          | Type    | Default | Description                                                                 |
+| -------------- | ------- | ------- | --------------------------------------------------------------------------- |
+| `format`       | string  | `"all"` | Format to compute cooccurrence for (or `"all"`)                             |
 | `full_rebuild` | boolean | `false` | If true, deletes existing cooccurrence data for the format before computing |
 
 #### Response body (success)
@@ -462,12 +462,12 @@ AI-powered deck analysis that suggests cuts and additions with reasoning. Uses G
 }
 ```
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `commander` | string | No | Commander name for context |
-| `cards` | array | Yes | Array of card objects (5–200 cards) |
-| `color_identity` | string[] | No | Color identity for legality checking |
-| `format` | string | No | Format context (default: `commander`) |
+| Field            | Type     | Required | Description                           |
+| ---------------- | -------- | -------- | ------------------------------------- |
+| `commander`      | string   | No       | Commander name for context            |
+| `cards`          | array    | Yes      | Array of card objects (5–200 cards)   |
+| `color_identity` | string[] | No       | Color identity for legality checking  |
+| `format`         | string   | No       | Format context (default: `commander`) |
 
 #### Response body (success)
 
@@ -561,14 +561,14 @@ AI-powered "Why This Card Is Played" rationale generator. Returns strategic reas
 }
 ```
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `cardName` | string | Yes | Card name |
-| `typeLine` | string | Yes | Card type line |
-| `oracleText` | string | No | Oracle text for context |
-| `colorIdentity` | string[] | No | Color identity |
-| `edhrecRank` | number | No | EDHREC popularity rank |
-| `legalities` | object | No | Format legality map |
+| Field           | Type     | Required | Description             |
+| --------------- | -------- | -------- | ----------------------- |
+| `cardName`      | string   | Yes      | Card name               |
+| `typeLine`      | string   | Yes      | Card type line          |
+| `oracleText`    | string   | No       | Oracle text for context |
+| `colorIdentity` | string[] | No       | Color identity          |
+| `edhrecRank`    | number   | No       | EDHREC popularity rank  |
+| `legalities`    | object   | No       | Format legality map     |
 
 #### Response body (success)
 
@@ -617,8 +617,14 @@ Generates Scryfall queries for similar cards and budget alternatives, plus AI-po
   "similarQuery": "t:enchantment id<=U mv>=2 mv<=4 o:\"draw\" -!\"Rhystic Study\"",
   "budgetQuery": "t:enchantment id<=U o:\"draw\" -!\"Rhystic Study\" usd<22",
   "synergyCards": [
-    { "name": "Mystic Remora", "reason": "Similar tax effect for early game card draw" },
-    { "name": "Consecrated Sphinx", "reason": "Powerful draw engine that scales with opponents" }
+    {
+      "name": "Mystic Remora",
+      "reason": "Similar tax effect for early game card draw"
+    },
+    {
+      "name": "Consecrated Sphinx",
+      "reason": "Powerful draw engine that scales with opponents"
+    }
   ],
   "cached": false
 }
@@ -644,11 +650,11 @@ Returns cards commonly played alongside a given card, powered by the `card_coocc
 }
 ```
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
+| Field       | Type   | Default  | Description                    |
+| ----------- | ------ | -------- | ------------------------------ |
 | `oracle_id` | string | required | Scryfall oracle ID of the card |
-| `format` | string | `"all"` | Format filter |
-| `limit` | number | `20` | Max results (capped at 50) |
+| `format`    | string | `"all"`  | Format filter                  |
+| `limit`     | number | `20`     | Max results (capped at 50)     |
 
 #### Response body (success)
 
@@ -697,7 +703,11 @@ AI-powered deck concept generator. Returns archetype, strategy, key cards, syner
   "success": true,
   "archetype": "Rakdos Treasure Aristocrats",
   "strategy": "Sacrifice treasure tokens and creatures for value, draining opponents with blood artist effects while generating card advantage.",
-  "keyCards": ["Korvold, Fae-Cursed King", "Dockside Extortionist", "Pitiless Plunderer"],
+  "keyCards": [
+    "Korvold, Fae-Cursed King",
+    "Dockside Extortionist",
+    "Pitiless Plunderer"
+  ],
   "synergyPieces": ["Revel in Riches", "Marionette Master", "Xorn"],
   "budgetOptions": ["Mayhem Devil", "Deadly Dispute", "Treasure Keeper"]
 }
@@ -805,6 +815,458 @@ If `queries` is provided, only those queries are warmed. Otherwise, the built-in
   "durationMs": 45000
 }
 ```
+
+---
+
+### Auto Generate SEO Pages
+
+**Endpoint**: `POST supabase/functions/auto-generate-seo-pages`
+
+Automatically selects popular untranslated/unused queries and generates up to 5 new published SEO pages by internally calling `generate-seo-page`.
+
+**Auth**: Service role required (`requireServiceRole`).
+
+#### Request body
+
+```json
+{}
+```
+
+No request fields are required.
+
+#### Response body (success)
+
+```json
+{
+  "total": 5,
+  "succeeded": 4,
+  "results": [
+    {
+      "query": "best mana rocks commander",
+      "status": "success",
+      "slug": "best-mana-rocks-commander"
+    }
+  ]
+}
+```
+
+Source of truth: `supabase/functions/auto-generate-seo-pages/index.ts`.
+
+---
+
+### Batch Generate SEO Pages
+
+**Endpoint**: `POST supabase/functions/batch-generate-seo-pages`
+
+Batch-generates SEO pages from a default seed list or caller-provided query list.
+
+**Auth**: Service role required (`requireServiceRole`).
+
+#### Request body
+
+```json
+{
+  "queries": [
+    "best mana rocks for commander",
+    "token doublers magic the gathering"
+  ],
+  "publish": true,
+  "regenerate": false
+}
+```
+
+| Field        | Type     | Default            | Description                       |
+| ------------ | -------- | ------------------ | --------------------------------- |
+| `queries`    | string[] | built-in seed list | Queries to generate               |
+| `publish`    | boolean  | `true`             | Publish immediately when true     |
+| `regenerate` | boolean  | `false`            | Regenerate existing pages by slug |
+
+#### Response body (success)
+
+```json
+{
+  "total": 2,
+  "succeeded": 2,
+  "failed": 0,
+  "results": [
+    {
+      "query": "best mana rocks for commander",
+      "status": "success",
+      "slug": "best-mana-rocks-for-commander"
+    }
+  ]
+}
+```
+
+Source of truth: `supabase/functions/batch-generate-seo-pages/index.ts`.
+
+---
+
+### Bulk Data Sync
+
+**Endpoint**: `POST supabase/functions/bulk-data-sync`
+
+Chunked Scryfall sync that upserts card metadata and writes price snapshots in paginated batches.
+
+**Auth**: Valid API auth required via `validateAuth` (anon JWT, user JWT, service role, or API secret accepted by shared auth helper).
+
+#### Request body
+
+```json
+{
+  "page": 1,
+  "cleanup": true
+}
+```
+
+| Field     | Type    | Default | Description                                |
+| --------- | ------- | ------- | ------------------------------------------ |
+| `page`    | number  | `1`     | Starting Scryfall page for this invocation |
+| `cleanup` | boolean | `false` | Forces old price snapshot cleanup          |
+
+#### Response body (success)
+
+```json
+{
+  "success": true,
+  "startPage": 1,
+  "pagesProcessed": 20,
+  "totalCardsInBatch": 3500,
+  "cardsUpserted": 3400,
+  "cardErrors": 0,
+  "pricesInserted": 2800,
+  "priceErrors": 0,
+  "skipped": 12,
+  "hasMore": true,
+  "nextPage": 21
+}
+```
+
+Source of truth: `supabase/functions/bulk-data-sync/index.ts`.
+
+---
+
+### Fix Zero Results
+
+**Endpoint**: `POST supabase/functions/fix-zero-results`
+
+Analyzes frequent zero-result searches, generates improved Scryfall syntax, validates against Scryfall, and either auto-promotes or flags for review.
+
+**Auth**: Valid API auth required via `validateAuth`.
+
+#### Request body
+
+```json
+{}
+```
+
+No request fields are required.
+
+#### Response body (success)
+
+```json
+{
+  "success": true,
+  "processed": 10,
+  "autoPromoted": 3,
+  "flaggedForReview": 4,
+  "results": [
+    {
+      "query": "good white draw",
+      "status": "auto_promoted",
+      "newSyntax": "id<=w otag:draw",
+      "confidence": 0.9,
+      "scryfallResults": 128
+    }
+  ],
+  "responseTimeMs": 1400
+}
+```
+
+Source of truth: `supabase/functions/fix-zero-results/index.ts`.
+
+---
+
+### Generate Retention Triggers
+
+**Endpoint**: `POST supabase/functions/generate-retention-triggers`
+
+Runs retention trigger jobs via the `run_retention_trigger_jobs` RPC.
+
+**Auth**: `validateAuth` must authorize and role must be `service` or `api`.
+
+#### Request body
+
+```json
+{}
+```
+
+No request fields are required.
+
+#### Response body (success)
+
+```json
+{
+  "ok": true,
+  "data": {}
+}
+```
+
+Source of truth: `supabase/functions/generate-retention-triggers/index.ts`.
+
+---
+
+### Generate SEO Page
+
+**Endpoint**: `POST supabase/functions/generate-seo-page`
+
+Generates a structured SEO page from a query, validates card names against local card data, and stores a `draft` or `published` record in `seo_pages`.
+
+**Auth**: Admin or service role required (`requireAdminOrService`).
+
+#### Request body
+
+```json
+{
+  "query": "best budget board wipes",
+  "publish": false,
+  "regenerate": false
+}
+```
+
+| Field        | Type    | Required | Description                       |
+| ------------ | ------- | -------- | --------------------------------- |
+| `query`      | string  | Yes      | Seed query (3–200 chars)          |
+| `publish`    | boolean | No       | Publishes immediately when true   |
+| `regenerate` | boolean | No       | Rebuilds existing slug if present |
+
+#### Response body (success)
+
+```json
+{
+  "success": true,
+  "slug": "best-budget-board-wipes",
+  "status": "draft",
+  "validatedCards": 10,
+  "totalCardsGenerated": 12
+}
+```
+
+Source of truth: `supabase/functions/generate-seo-page/index.ts`.
+
+---
+
+### Get Affiliate Config
+
+**Endpoint**: `GET supabase/functions/get-affiliate-config`
+
+Returns public affiliate-link base configuration used by the frontend.
+
+**Auth**: No auth required.
+
+#### Request fields
+
+None.
+
+#### Response body (success)
+
+```json
+{
+  "tcgplayerAffiliateBase": "https://..."
+}
+```
+
+Source of truth: `supabase/functions/get-affiliate-config/index.ts`.
+
+---
+
+### MTGJSON Import
+
+**Endpoint**: `POST supabase/functions/mtgjson-import`
+
+Imports community decks from MTGJSON in chunks and resolves oracle IDs for deck cards.
+
+**Auth**: Valid API auth required via `validateAuth`.
+
+#### Request body
+
+```json
+{
+  "offset": 0,
+  "limit": 50
+}
+```
+
+| Field    | Type   | Default | Description                         |
+| -------- | ------ | ------- | ----------------------------------- |
+| `offset` | number | `0`     | DeckList start index                |
+| `limit`  | number | `50`    | Number of decks to process this run |
+
+#### Response body (success)
+
+```json
+{
+  "success": true,
+  "imported": 32,
+  "skipped": 18,
+  "errors": 1,
+  "errorDetails": ["insert:SomeDeck"],
+  "total": 2400,
+  "nextOffset": 50,
+  "hasMore": true
+}
+```
+
+Source of truth: `supabase/functions/mtgjson-import/index.ts`.
+
+---
+
+### Prerender
+
+**Endpoint**: `GET supabase/functions/prerender?path=<route>`
+
+Returns prerendered HTML for `/cards/:slug`, `/search/:slug`, and `/ai/:slug` routes for crawlers and social previews.
+
+**Auth**: No auth required.
+
+#### Request fields
+
+| Field  | Location     | Required | Description                                             |
+| ------ | ------------ | -------- | ------------------------------------------------------- |
+| `path` | query string | Yes      | Route path to prerender (for example `/cards/sol-ring`) |
+
+#### Response shape
+
+- Returns `text/html` on success with SEO metadata, structured data, and cache headers.
+- Returns JSON error shapes for invalid requests (for example `{ "error": "Missing path parameter" }`).
+
+Source of truth: `supabase/functions/prerender/index.ts`.
+
+---
+
+### Process Email Queue
+
+**Endpoint**: `POST supabase/functions/process-email-queue`
+
+Processes queued auth and transactional emails, handling retries, DLQ routing, and rate-limit backoff.
+
+**Auth**: Requires `Authorization: Bearer <jwt>` with `service_role` claim.
+
+#### Request body
+
+```json
+{}
+```
+
+No request fields are required.
+
+#### Response body (success)
+
+```json
+{
+  "processed": 10
+}
+```
+
+Possible partial-success response during rate limiting:
+
+```json
+{
+  "processed": 4,
+  "stopped": "rate_limited"
+}
+```
+
+Source of truth: `supabase/functions/process-email-queue/index.ts`.
+
+---
+
+### Promote Searches
+
+**Endpoint**: `POST supabase/functions/promote-searches`
+
+Promotes high-frequency, high-confidence natural-language searches into `curated_searches`.
+
+**Auth**: Valid API auth required via `validateAuth`.
+
+#### Request body
+
+```json
+{}
+```
+
+No request fields are required.
+
+#### Response body (success)
+
+```json
+{
+  "success": true,
+  "promoted": 3,
+  "entries": [
+    {
+      "slug": "best-mono-red-draw",
+      "title": "Best Mono Red Draw for MTG",
+      "category": "colors"
+    }
+  ],
+  "responseTimeMs": 420
+}
+```
+
+Source of truth: `supabase/functions/promote-searches/index.ts`.
+
+---
+
+### Sitemap
+
+**Endpoint**: `GET supabase/functions/sitemap`
+
+Generates dynamic sitemap XML that includes static pages, curated searches, cards, public decks, and published AI SEO pages.
+
+**Auth**: No auth required.
+
+#### Request fields
+
+None.
+
+#### Response shape
+
+- Returns `application/xml` sitemap payload.
+- On failure returns plain-text `Internal error` with HTTP 500.
+
+Source of truth: `supabase/functions/sitemap/index.ts`.
+
+---
+
+### Sync Card Names
+
+**Endpoint**: `POST supabase/functions/sync-card-names`
+
+Syncs the `card_names` table from Scryfall's card-name catalog endpoint.
+
+**Auth**: Valid API auth required via `validateAuth`.
+
+#### Request body
+
+```json
+{}
+```
+
+No request fields are required.
+
+#### Response body (success)
+
+```json
+{
+  "success": true,
+  "totalNames": 30000,
+  "upserted": 30000,
+  "errors": 0
+}
+```
+
+Source of truth: `supabase/functions/sync-card-names/index.ts`.
 
 ---
 
