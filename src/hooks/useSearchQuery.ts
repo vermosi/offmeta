@@ -10,6 +10,7 @@ import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';
 import { CLIENT_CONFIG } from '@/lib/config';
 import { logger } from '@/lib/core/logger';
+import { PRETRANSLATED } from '@/lib/search/fallback';
 
 // Hardcoded fallback queries if DB fetch fails
 const FALLBACK_POPULAR_QUERIES = ['mana rocks', 'board wipes'];
