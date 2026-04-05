@@ -33,7 +33,7 @@ interface EdgeFnDef {
 const EDGE_FUNCTIONS: EdgeFnDef[] = [
   // Pipeline
   { name: 'semantic-search', label: 'Semantic Search', description: 'Test the AI translation pipeline with a sample query', method: 'POST', body: { query: 'cheap red creatures' }, category: 'pipeline' },
-  { name: 'process-feedback', label: 'Process Feedback', description: 'Process pending feedback items and generate translation rules', method: 'POST', category: 'pipeline' },
+  { name: 'process-feedback', label: 'Process Feedback', description: 'Process a specific feedback item (requires feedbackId)', method: 'POST', body: { feedbackId: 'PASTE_UUID_HERE' }, category: 'pipeline' },
   { name: 'fix-zero-results', label: 'Fix Zero Results', description: 'Auto-repair queries that returned zero results', method: 'POST', category: 'pipeline' },
   { name: 'promote-searches', label: 'Promote Searches', description: 'Promote popular queries to curated searches', method: 'POST', category: 'pipeline' },
   { name: 'generate-patterns', label: 'Generate Patterns', description: 'Generate new translation patterns from logs', method: 'POST', category: 'pipeline' },
