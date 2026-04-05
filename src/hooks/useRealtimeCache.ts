@@ -3,7 +3,7 @@
  * Subscribes to query_cache changes to invalidate stale cached translations.
  */
 
-import React, { useEffect, useRef } from 'react';
+import { type ReactNode, type ReactElement, useEffect, useRef, createElement, Fragment } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type {
