@@ -1,6 +1,6 @@
 /**
  * Tests for the Find My Combos page.
- * Covers rendering, input mode toggling, parse behaviour, and error states.
+ * Covers rendering and Moxfield import flow behavior.
  * @module FindMyCombos.test
  */
 
@@ -13,11 +13,16 @@ import { AuthProvider } from '@/components/AuthProvider';
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     auth: {
-      getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-      onAuthStateChange: (_cb: unknown) => ({ data: { subscription: { unsubscribe: vi.fn() } } }),
+      getSession: () =>
+        Promise.resolve({ data: { session: null }, error: null }),
+      onAuthStateChange: (_cb: unknown) => ({
+        data: { subscription: { unsubscribe: vi.fn() } },
+      }),
     },
     from: () => ({
-      select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: null }) }) }),
+      select: () => ({
+        eq: () => ({ single: () => Promise.resolve({ data: null }) }),
+      }),
     }),
     functions: {
       invoke: vi.fn(),
@@ -67,19 +72,17 @@ describe('FindMyCombos', () => {
 
   it('defaults to Moxfield URL input mode', async () => {
     await renderPage();
-    expect(screen.getByPlaceholderText(/moxfield\.com\/decks/i)).toBeInTheDocument();
-  });
-
-  it('switches to paste mode when clicked', async () => {
-    await renderPage();
-    fireEvent.click(screen.getByText('Paste List'));
-    expect(screen.getByPlaceholderText(/COMMANDER: Thrasios/i)).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(/moxfield\.com\/decks/i),
+    ).toBeInTheDocument();
   });
 
   it('shows Deck Summary with empty state prompt', async () => {
     await renderPage();
     expect(screen.getByText('Deck Summary')).toBeInTheDocument();
-    expect(screen.getByText(/Import a Moxfield deck to get started/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Import a Moxfield deck to get started/i),
+    ).toBeInTheDocument();
   });
 
   it('disables import button when URL is empty', async () => {
@@ -88,24 +91,55 @@ describe('FindMyCombos', () => {
     expect(btn).toBeDisabled();
   });
 
-  it('parses pasted decklist and shows card count', async () => {
-    await renderPage();
-    fireEvent.click(screen.getByText('Paste List'));
-    const textarea = screen.getByPlaceholderText(/COMMANDER: Thrasios/i);
-    fireEvent.change(textarea, {
-      target: { value: 'COMMANDER: Kenrith\n1 Sol Ring\n1 Arcane Signet' },
+  it('parses imported Moxfield decklist and shows card count', async () => {
+    const { supabase } = await import('@/integrations/supabase/client');
+    vi.mocked(supabase.functions.invoke).mockResolvedValueOnce({
+      data: {
+        decklist: 'COMMANDER: Kenrith\n1 Sol Ring\n1 Arcane Signet',
+        deckName: 'Five Color Test',
+        colorIdentity: ['W', 'U', 'B', 'R', 'G'],
+        cardCount: 2,
+      },
+      error: null,
     });
-    fireEvent.click(screen.getByText('Parse Decklist'));
+    await renderPage();
+    fireEvent.change(screen.getByPlaceholderText(/moxfield\.com\/decks/i), {
+      target: { value: 'https://www.moxfield.com/decks/test-deck' },
+    });
+    fireEvent.click(
+      screen.getByRole('button', { name: /Import from Moxfield/i }),
+    );
+
+    await waitFor(() =>
+      expect(screen.getByText(/Imported:/i)).toBeInTheDocument(),
+    );
     expect(screen.getByText(/Cards:/i)).toBeInTheDocument();
     expect(screen.getByText('2')).toBeInTheDocument();
   });
 
-  it('shows Find My Combos button after parsing', async () => {
+  it('shows Find My Combos button after importing', async () => {
+    const { supabase } = await import('@/integrations/supabase/client');
+    vi.mocked(supabase.functions.invoke).mockResolvedValueOnce({
+      data: {
+        decklist: '1 Sol Ring',
+        deckName: 'Artifact Test',
+        colorIdentity: [],
+        cardCount: 1,
+      },
+      error: null,
+    });
     await renderPage();
-    fireEvent.click(screen.getByText('Paste List'));
-    const textarea = screen.getByPlaceholderText(/COMMANDER: Thrasios/i);
-    fireEvent.change(textarea, { target: { value: '1 Sol Ring' } });
-    fireEvent.click(screen.getByText('Parse Decklist'));
-    expect(screen.getByRole('button', { name: /Find My Combos/i })).toBeInTheDocument();
+    fireEvent.change(screen.getByPlaceholderText(/moxfield\.com\/decks/i), {
+      target: { value: 'https://www.moxfield.com/decks/artifacts' },
+    });
+    fireEvent.click(
+      screen.getByRole('button', { name: /Import from Moxfield/i }),
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: /Find My Combos/i }),
+      ).toBeInTheDocument(),
+    );
   });
 });
