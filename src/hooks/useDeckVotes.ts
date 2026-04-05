@@ -21,14 +21,12 @@ export function useDeckVotes(deckId: string | undefined) {
   const { data = { count: 0, hasVoted: false }, isLoading } = useQuery({
     queryKey,
     queryFn: async (): Promise<VoteState> => {
-      // Fetch count
-      const { count, error } = await supabase
-        .from('deck_votes')
-        .select('*', { count: 'exact', head: true })
-        .eq('deck_id', deckId!);
+      // Fetch count via RPC (no user_id exposure)
+      const { data: voteCount, error } = await supabase
+        .rpc('get_deck_vote_count', { target_deck_id: deckId! });
       if (error) throw error;
 
-      // Check if user voted
+      // Check if user voted (uses RLS — only sees own votes)
       let hasVoted = false;
       if (user) {
         const { data: vote } = await supabase
@@ -40,7 +38,7 @@ export function useDeckVotes(deckId: string | undefined) {
         hasVoted = !!vote;
       }
 
-      return { count: count ?? 0, hasVoted };
+      return { count: voteCount ?? 0, hasVoted };
     },
     enabled: !!deckId,
   });
