@@ -236,7 +236,7 @@ export function EdgeFunctionTriggerPanel() {
                           variant="outline"
                           size="sm"
                           onClick={() => invoke(fn)}
-                          disabled={isLoading}
+                          disabled={isLoading || fn.serviceRoleOnly}
                           className="shrink-0 h-7 px-2 gap-1"
                         >
                           {isLoading ? (
