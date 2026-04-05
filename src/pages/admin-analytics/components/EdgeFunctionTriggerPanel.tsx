@@ -222,6 +222,11 @@ export function EdgeFunctionTriggerPanel() {
                                 ⚠
                               </Badge>
                             )}
+                            {fn.serviceRoleOnly && (
+                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">
+                                🔒 cron
+                              </Badge>
+                            )}
                           </div>
                           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
                             {fn.description}
