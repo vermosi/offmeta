@@ -1,13 +1,12 @@
 /**
  * Find My Combos page.
- * Users paste a decklist or Moxfield URL to discover combos in their deck
+ * Users import a Moxfield URL to discover combos in their deck
  * using the Commander Spellbook API.
  */
 
 import { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -22,7 +21,6 @@ import {
   Loader2,
   Zap,
   Link2,
-  FileText,
   Sparkles,
   AlertTriangle,
   X,
@@ -39,7 +37,6 @@ const COLOR_NAMES: Record<string, string> = {
   G: 'Green',
 };
 
-type InputMode = 'url' | 'paste';
 type SortMode =
   | 'popularity'
   | 'cards-asc'
@@ -89,8 +86,6 @@ export default function FindMyCombos() {
       document.getElementById('combos-jsonld')?.remove();
     };
   }, []);
-  const [inputMode, setInputMode] = useState<InputMode>('url');
-  const [rawText, setRawText] = useState('');
   const [moxfieldUrl, setMoxfieldUrl] = useState('');
   const [moxfieldDeckName, setMoxfieldDeckName] = useState<string | null>(null);
   const [fetchingDeck, setFetchingDeck] = useState(false);
@@ -185,7 +180,6 @@ export default function FindMyCombos() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      setRawText(data.decklist);
       setMoxfieldDeckName(data.deckName);
       setColorIdentity(data.colorIdentity ?? []);
       const p = parseDecklist(data.decklist);
@@ -198,19 +192,6 @@ export default function FindMyCombos() {
       toast.error(e instanceof Error ? e.message : 'Failed to fetch deck');
     } finally {
       setFetchingDeck(false);
-    }
-  };
-
-  const handleParse = () => {
-    if (!rawText.trim()) return;
-    const p = parseDecklist(rawText);
-    setCommander(p.commander);
-    setCardNames(p.cards.map((c) => c.name));
-    setColorIdentity([]);
-    setResults(null);
-    setError(null);
-    if (p.cards.length === 0) {
-      toast.error('No cards found. Check the format.');
     }
   };
 
@@ -270,87 +251,40 @@ export default function FindMyCombos() {
         {/* Input */}
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-3">
-            <div className="flex gap-1 p-1 bg-secondary/50 rounded-lg w-fit">
-              <button
-                onClick={() => setInputMode('url')}
-                className={`px-3 py-1.5 text-sm rounded-md transition-colors flex items-center gap-1.5 ${
-                  inputMode === 'url'
-                    ? 'bg-background text-foreground shadow-sm font-medium'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
+            <div className="space-y-3">
+              <label className="text-sm font-medium">
+                {t('combos.moxfieldLabel')}
+              </label>
+              <Input
+                value={moxfieldUrl}
+                onChange={(e) => setMoxfieldUrl(e.target.value)}
+                placeholder="https://www.moxfield.com/decks/..."
+                className="font-mono text-xs"
+              />
+              <Button
+                onClick={handleFetchMoxfield}
+                disabled={fetchingDeck || !moxfieldUrl.trim()}
+                variant="secondary"
+                className="w-full gap-2"
               >
-                <Link2 className="h-3.5 w-3.5" />
-                {t('combos.moxfieldUrl')}
-              </button>
-              <button
-                onClick={() => setInputMode('paste')}
-                className={`px-3 py-1.5 text-sm rounded-md transition-colors flex items-center gap-1.5 ${
-                  inputMode === 'paste'
-                    ? 'bg-background text-foreground shadow-sm font-medium'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <FileText className="h-3.5 w-3.5" />
-                {t('combos.pasteList')}
-              </button>
-            </div>
-
-            {inputMode === 'url' ? (
-              <div className="space-y-3">
-                <label className="text-sm font-medium">
-                  {t('combos.moxfieldLabel')}
-                </label>
-                <Input
-                  value={moxfieldUrl}
-                  onChange={(e) => setMoxfieldUrl(e.target.value)}
-                  placeholder="https://www.moxfield.com/decks/..."
-                  className="font-mono text-xs"
-                />
-                <Button
-                  onClick={handleFetchMoxfield}
-                  disabled={fetchingDeck || !moxfieldUrl.trim()}
-                  variant="secondary"
-                  className="w-full gap-2"
-                >
-                  {fetchingDeck ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Link2 className="h-4 w-4" />
-                  )}
-                  {fetchingDeck
-                    ? t('combos.importing')
-                    : t('combos.importButton')}
-                </Button>
-                {moxfieldDeckName && (
-                  <p className="text-xs text-muted-foreground">
-                    ✓ {t('combos.imported')}:{' '}
-                    <span className="font-medium text-foreground">
-                      {moxfieldDeckName}
-                    </span>
-                  </p>
+                {fetchingDeck ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Link2 className="h-4 w-4" />
                 )}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <label className="text-sm font-medium">
-                  {t('combos.pasteLabel')}
-                </label>
-                <Textarea
-                  value={rawText}
-                  onChange={(e) => setRawText(e.target.value)}
-                  placeholder={`COMMANDER: Thrasios, Triton Hero\n1 Sol Ring\n1 Demonic Consultation\n1 Thassa's Oracle\n1 Mana Crypt`}
-                  className="min-h-[260px] font-mono text-xs"
-                  maxLength={10000}
-                />
-                <Button
-                  onClick={handleParse}
-                  variant="secondary"
-                  className="w-full"
-                >
-                  {t('combos.parseButton')}
-                </Button>
-              </div>
-            )}
+                {fetchingDeck
+                  ? t('combos.importing')
+                  : t('combos.importButton')}
+              </Button>
+              {moxfieldDeckName && (
+                <p className="text-xs text-muted-foreground">
+                  ✓ {t('combos.imported')}:{' '}
+                  <span className="font-medium text-foreground">
+                    {moxfieldDeckName}
+                  </span>
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Summary + find button */}
@@ -405,9 +339,7 @@ export default function FindMyCombos() {
               </>
             ) : (
               <p className="text-sm text-muted-foreground">
-                {inputMode === 'url'
-                  ? t('combos.emptyUrl')
-                  : t('combos.emptyPaste')}
+                {t('combos.emptyUrl')}
               </p>
             )}
           </div>
