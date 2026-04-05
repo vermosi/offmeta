@@ -908,7 +908,7 @@ export default function DeckEditor() {
   // ── Category sections ──
   const categorySection = (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-      {grouped.map(([category, catCards]) => (
+      {grouped.map(([category, catCards]: [string, DeckCard[]]) => (
         <CategorySection
           key={category}
           category={category}
