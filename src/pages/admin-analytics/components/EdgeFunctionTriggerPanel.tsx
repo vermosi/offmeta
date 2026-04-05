@@ -46,7 +46,7 @@ const EDGE_FUNCTIONS: EdgeFnDef[] = [
   { name: 'price-snapshot', label: 'Price Snapshot', description: 'Take a snapshot of current card prices', method: 'POST', category: 'data-sync' },
   { name: 'compute-cooccurrence', label: 'Compute Co-occurrence', description: 'Compute card co-occurrence data from decks (service-role only — use cron)', method: 'POST', category: 'data-sync', dangerous: true, serviceRoleOnly: true },
   { name: 'detect-archetypes', label: 'Detect Archetypes', description: 'Detect deck archetypes from community decks', method: 'POST', category: 'data-sync' },
-  { name: 'spicerack-import', label: 'SpiceRack Import', description: 'Import data from SpiceRack API', method: 'POST', category: 'data-sync' },
+  { name: 'spicerack-import', label: 'SpiceRack Import', description: 'Import data from SpiceRack API (service-role only — use cron)', method: 'POST', category: 'data-sync', dangerous: true, serviceRoleOnly: true },
   { name: 'mtgjson-import', label: 'MTGJSON Import', description: 'Import data from MTGJSON', method: 'POST', category: 'data-sync', dangerous: true },
   { name: 'fetch-moxfield-deck', label: 'Fetch Moxfield Deck', description: 'Fetch a deck from Moxfield by URL', method: 'POST', body: { url: 'https://www.moxfield.com/decks/example' }, category: 'data-sync' },
 
