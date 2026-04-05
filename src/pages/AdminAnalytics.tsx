@@ -88,6 +88,7 @@ import { HitRatePanel } from '@/pages/admin-analytics/components/HitRatePanel';
 import { FeedbackQueuePanel } from '@/pages/admin-analytics/components/FeedbackQueuePanel';
 import { PipelineHealthIndicator } from '@/pages/admin-analytics/components/PipelineHealthIndicator';
 import { SystemStatusPanel } from '@/pages/admin-analytics/components/SystemStatusPanel';
+import { EdgeFunctionTriggerPanel } from '@/pages/admin-analytics/components/EdgeFunctionTriggerPanel';
 import type {
   AnalyticsData,
   FeedbackFilter,
@@ -1071,6 +1072,9 @@ export default function AdminAnalytics() {
 
               {/* Conversion Funnel */}
               <ConversionFunnelPanel days={Number(days)} />
+
+              {/* Edge Function Triggers */}
+              <EdgeFunctionTriggerPanel />
 
               {/* System Status */}
               <SystemStatusPanel />
