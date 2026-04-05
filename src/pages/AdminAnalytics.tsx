@@ -1073,6 +1073,9 @@ export default function AdminAnalytics() {
               {/* Conversion Funnel */}
               <ConversionFunnelPanel days={Number(days)} />
 
+              {/* Edge Function Triggers */}
+              <EdgeFunctionTriggerPanel />
+
               {/* System Status */}
               <SystemStatusPanel />
 
