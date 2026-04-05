@@ -1225,6 +1225,18 @@ export type Database = {
         }[]
       }
       get_system_status: { Args: never; Returns: Json }
+      get_zero_result_candidates: {
+        Args: {
+          max_results?: number
+          min_frequency?: number
+          since_date: string
+        }
+        Returns: {
+          frequency: number
+          last_translation: string
+          query: string
+        }[]
+      }
       has_role: {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
