@@ -1008,9 +1008,9 @@ export default function DeckEditor() {
     </div>
   );
 
-  const mainCount = mainboardCards.reduce((s, c) => s + c.quantity, 0);
-  const sideCount = sideboardCards.reduce((s, c) => s + c.quantity, 0);
-  const maybeCount = maybeboardCards.reduce((s, c) => s + c.quantity, 0);
+  const mainCount = totalMainboard;
+  const sideCount = totalSideboard;
+  const maybeCount = totalMaybeboard;
 
   const deckCountBar = cards.length > 0 && (
     <div className="flex items-center gap-3 px-4 py-1.5 border-t border-border bg-card text-xs text-muted-foreground">
