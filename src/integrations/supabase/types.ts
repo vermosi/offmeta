@@ -1171,6 +1171,7 @@ export type Database = {
         }[]
       }
       get_conversion_funnel: { Args: { days_back?: number }; Returns: Json }
+      get_deck_vote_count: { Args: { target_deck_id: string }; Returns: number }
       get_missing_oracle_ids: {
         Args: never
         Returns: {
