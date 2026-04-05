@@ -44,7 +44,7 @@ const EDGE_FUNCTIONS: EdgeFnDef[] = [
   { name: 'card-sync', label: 'Card Sync', description: 'Sync missing card metadata from Scryfall', method: 'POST', category: 'data-sync' },
   { name: 'sync-card-names', label: 'Sync Card Names', description: 'Update the card_names lookup table', method: 'POST', category: 'data-sync' },
   { name: 'price-snapshot', label: 'Price Snapshot', description: 'Take a snapshot of current card prices', method: 'POST', category: 'data-sync' },
-  { name: 'compute-cooccurrence', label: 'Compute Co-occurrence', description: 'Compute card co-occurrence data from decks', method: 'POST', category: 'data-sync' },
+  { name: 'compute-cooccurrence', label: 'Compute Co-occurrence', description: 'Compute card co-occurrence data from decks (service-role only — use cron)', method: 'POST', category: 'data-sync', dangerous: true, serviceRoleOnly: true },
   { name: 'detect-archetypes', label: 'Detect Archetypes', description: 'Detect deck archetypes from community decks', method: 'POST', category: 'data-sync' },
   { name: 'spicerack-import', label: 'SpiceRack Import', description: 'Import data from SpiceRack API', method: 'POST', category: 'data-sync' },
   { name: 'mtgjson-import', label: 'MTGJSON Import', description: 'Import data from MTGJSON', method: 'POST', category: 'data-sync', dangerous: true },
