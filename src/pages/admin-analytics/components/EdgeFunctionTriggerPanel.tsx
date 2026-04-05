@@ -16,7 +16,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+
 
 type FnMethod = 'GET' | 'POST';
 
@@ -28,12 +28,13 @@ interface EdgeFnDef {
   body?: Record<string, unknown>;
   category: 'pipeline' | 'data-sync' | 'seo' | 'maintenance' | 'ai' | 'other';
   dangerous?: boolean;
+  serviceRoleOnly?: boolean;
 }
 
 const EDGE_FUNCTIONS: EdgeFnDef[] = [
   // Pipeline
   { name: 'semantic-search', label: 'Semantic Search', description: 'Test the AI translation pipeline with a sample query', method: 'POST', body: { query: 'cheap red creatures' }, category: 'pipeline' },
-  { name: 'process-feedback', label: 'Process Feedback', description: 'Process pending feedback items and generate translation rules', method: 'POST', category: 'pipeline' },
+  { name: 'process-feedback', label: 'Process Feedback', description: 'Process a specific feedback item (requires feedbackId)', method: 'POST', body: { feedbackId: 'PASTE_UUID_HERE' }, category: 'pipeline' },
   { name: 'fix-zero-results', label: 'Fix Zero Results', description: 'Auto-repair queries that returned zero results', method: 'POST', category: 'pipeline' },
   { name: 'promote-searches', label: 'Promote Searches', description: 'Promote popular queries to curated searches', method: 'POST', category: 'pipeline' },
   { name: 'generate-patterns', label: 'Generate Patterns', description: 'Generate new translation patterns from logs', method: 'POST', category: 'pipeline' },
@@ -44,9 +45,9 @@ const EDGE_FUNCTIONS: EdgeFnDef[] = [
   { name: 'card-sync', label: 'Card Sync', description: 'Sync missing card metadata from Scryfall', method: 'POST', category: 'data-sync' },
   { name: 'sync-card-names', label: 'Sync Card Names', description: 'Update the card_names lookup table', method: 'POST', category: 'data-sync' },
   { name: 'price-snapshot', label: 'Price Snapshot', description: 'Take a snapshot of current card prices', method: 'POST', category: 'data-sync' },
-  { name: 'compute-cooccurrence', label: 'Compute Co-occurrence', description: 'Compute card co-occurrence data from decks', method: 'POST', category: 'data-sync' },
+  { name: 'compute-cooccurrence', label: 'Compute Co-occurrence', description: 'Compute card co-occurrence data from decks (service-role only — use cron)', method: 'POST', category: 'data-sync', dangerous: true, serviceRoleOnly: true },
   { name: 'detect-archetypes', label: 'Detect Archetypes', description: 'Detect deck archetypes from community decks', method: 'POST', category: 'data-sync' },
-  { name: 'spicerack-import', label: 'SpiceRack Import', description: 'Import data from SpiceRack API', method: 'POST', category: 'data-sync' },
+  { name: 'spicerack-import', label: 'SpiceRack Import', description: 'Import data from SpiceRack API (service-role only — use cron)', method: 'POST', category: 'data-sync', dangerous: true, serviceRoleOnly: true },
   { name: 'mtgjson-import', label: 'MTGJSON Import', description: 'Import data from MTGJSON', method: 'POST', category: 'data-sync', dangerous: true },
   { name: 'fetch-moxfield-deck', label: 'Fetch Moxfield Deck', description: 'Fetch a deck from Moxfield by URL', method: 'POST', body: { url: 'https://www.moxfield.com/decks/example' }, category: 'data-sync' },
 
@@ -221,6 +222,11 @@ export function EdgeFunctionTriggerPanel() {
                                 ⚠
                               </Badge>
                             )}
+                            {fn.serviceRoleOnly && (
+                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">
+                                🔒 cron
+                              </Badge>
+                            )}
                           </div>
                           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
                             {fn.description}
@@ -230,7 +236,7 @@ export function EdgeFunctionTriggerPanel() {
                           variant="outline"
                           size="sm"
                           onClick={() => invoke(fn)}
-                          disabled={isLoading}
+                          disabled={isLoading || fn.serviceRoleOnly}
                           className="shrink-0 h-7 px-2 gap-1"
                         >
                           {isLoading ? (
