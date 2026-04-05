@@ -253,9 +253,17 @@ serve(async (req) => {
     return preflightResponse;
   }
 
-  // Diagnostic endpoint: GET ?diagnostics=card-names
+  // Diagnostic endpoint: GET ?diagnostics=card-names (service-role only)
   const url = new URL(req.url);
   if (req.method === 'GET' && url.searchParams.get('diagnostics') === 'card-names') {
+    const authHeader = req.headers.get('Authorization');
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!authHeader || authHeader !== `Bearer ${serviceRoleKey}`) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
     return new Response(
       JSON.stringify({ cardNameIndex: getCardNameDiagnostics(), serverTime: new Date().toISOString() }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
