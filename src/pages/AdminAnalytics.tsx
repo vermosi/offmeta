@@ -46,24 +46,18 @@ import {
   Download,
   Search,
   Gauge,
-  MessageSquareWarning,
-  ChevronDown,
-  ChevronUp,
   CheckCircle2,
   XCircle,
-  RotateCcw,
-  Code2,
-  Sparkles,
   BookOpen,
   ExternalLink,
   Filter,
   Archive,
   ArchiveRestore,
-  Pencil,
-  X,
-  Save,
   AlertCircle,
   FileText,
+  Pencil,
+  Save,
+  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Footer } from '@/components/Footer';
@@ -85,13 +79,13 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   BarRow,
   StatCard,
-  StatusBadge,
 } from '@/pages/admin-analytics/components/AnalyticsPrimitives';
 import { AICostPanel } from '@/pages/admin-analytics/components/AICostPanel';
 import { AuthFailuresPanel } from '@/pages/admin-analytics/components/AuthFailuresPanel';
 import { ConversionFunnelPanel } from '@/pages/admin-analytics/components/ConversionFunnelPanel';
 import { EngagementMetricsPanel } from '@/pages/admin-analytics/components/EngagementMetricsPanel';
 import { HitRatePanel } from '@/pages/admin-analytics/components/HitRatePanel';
+import { FeedbackQueuePanel } from '@/pages/admin-analytics/components/FeedbackQueuePanel';
 import { PipelineHealthIndicator } from '@/pages/admin-analytics/components/PipelineHealthIndicator';
 import { SystemStatusPanel } from '@/pages/admin-analytics/components/SystemStatusPanel';
 import type {
@@ -1362,315 +1356,23 @@ export default function AdminAnalytics() {
             </div>
           )}
 
-          {/* ── Feedback Queue ── */}
-          <div className="surface-elevated border border-border mt-8 overflow-hidden">
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border flex-wrap gap-2">
-              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2 flex-wrap">
-                <MessageSquareWarning className="h-4 w-4 text-warning" />
-                Feedback Queue
-                {pendingFeedbackCount > 0 && (
-                  <Badge variant="secondary" className="text-[10px]">
-                    {pendingFeedbackCount} pending
-                  </Badge>
-                )}
-                {archivedFeedbackCount > 0 && (
-                  <Badge
-                    variant="outline"
-                    className="text-[10px] text-muted-foreground gap-1"
-                  >
-                    <Archive className="h-2.5 w-2.5" />
-                    {archivedFeedbackCount} archived
-                  </Badge>
-                )}
-              </h2>
-              <div className="flex items-center gap-2">
-                {pendingFeedbackCount > 0 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={processAllPending}
-                    disabled={processingAllPending}
-                    className="h-8 text-xs gap-1"
-                  >
-                    {processingAllPending ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Zap className="h-3 w-3" />
-                    )}
-                    Process All Pending
-                  </Button>
-                )}
-                <Select
-                  value={feedbackFilter}
-                  onValueChange={(v) => setFeedbackFilter(v as FeedbackFilter)}
-                >
-                  <SelectTrigger className="h-8 w-[140px] text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="processing">Processing</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="failed">Failed</SelectItem>
-                    <SelectItem value="skipped">Skipped</SelectItem>
-                    <SelectItem value="archived">Archived</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={fetchFeedback}
-                  disabled={feedbackLoading}
-                  className="h-8 w-8 p-0"
-                >
-                  <RefreshCw
-                    className={`h-3.5 w-3.5 ${feedbackLoading ? 'animate-spin' : ''}`}
-                  />
-                </Button>
-              </div>
-            </div>
-
-            {feedbackLoading ? (
-              <div className="flex justify-center py-10">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              </div>
-            ) : (
-              <>
-                {filteredFeedback.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-10">
-                    {feedbackFilter === 'all'
-                      ? 'No feedback submitted yet'
-                      : `No ${feedbackFilter} items`}
-                  </p>
-                ) : (
-                  <div className="divide-y divide-border max-h-[640px] overflow-y-auto">
-                    {filteredFeedback.map((f) => {
-                      const status = f.processing_status ?? 'pending';
-                      const isExpanded = expandedFeedback.has(f.id);
-                      const rule = f.translation_rules;
-                      const canRetrigger =
-                        status === 'failed' || status === 'skipped';
-                      const isRetriggering = retriggeringId === f.id;
-                      const isTogglingRule = ruleTogglingId === f.id;
-
-                      return (
-                        <div
-                          key={f.id}
-                          id={`feedback-${f.id}`}
-                          className="px-5 py-4 space-y-3 scroll-mt-4"
-                        >
-                          {/* Row 1 — status + query + timestamp */}
-                          <div className="flex items-start gap-3 flex-wrap sm:flex-nowrap">
-                            <StatusBadge status={status} />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground truncate">
-                                &ldquo;{f.original_query}&rdquo;
-                              </p>
-                              <p className="text-[10px] text-muted-foreground mt-0.5">
-                                {new Date(f.created_at).toLocaleString()}
-                                {f.processed_at && (
-                                  <>
-                                    {' '}
-                                    · processed{' '}
-                                    {new Date(
-                                      f.processed_at,
-                                    ).toLocaleDateString()}
-                                  </>
-                                )}
-                              </p>
-                            </div>
-                            {/* Expand toggle */}
-                            <button
-                              onClick={() =>
-                                setExpandedFeedback((prev) => {
-                                  const next = new Set(prev);
-                                  if (next.has(f.id)) next.delete(f.id);
-                                  else next.add(f.id);
-                                  return next;
-                                })
-                              }
-                              className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors mt-0.5"
-                              aria-label={isExpanded ? 'Collapse' : 'Expand'}
-                            >
-                              {isExpanded ? (
-                                <ChevronUp className="h-4 w-4" />
-                              ) : (
-                                <ChevronDown className="h-4 w-4" />
-                              )}
-                            </button>
-                          </div>
-
-                          {/* Row 2 — issue description (always visible) */}
-                          <p
-                            className={`text-xs text-muted-foreground leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}
-                          >
-                            {f.issue_description}
-                          </p>
-
-                          {/* Row 3 — translated query (expanded only) */}
-                          {isExpanded && f.translated_query && (
-                            <div className="flex items-start gap-1.5 text-xs">
-                              <Code2 className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground mt-0.5" />
-                              <span className="font-mono text-muted-foreground break-all">
-                                {f.translated_query}
-                              </span>
-                            </div>
-                          )}
-
-                          {/* Row 4 — AI-generated rule box */}
-                          {rule && (
-                            <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
-                              <div className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                <Sparkles className="h-3 w-3" />
-                                AI-Generated Rule
-                                <div className="ml-auto flex items-center gap-1.5">
-                                  {/* Cards found badge */}
-                                  {f.scryfall_validation_count != null && (
-                                    <Badge
-                                      variant="secondary"
-                                      className={`text-[10px] ${
-                                        f.scryfall_validation_count >= 100
-                                          ? 'bg-success/10 text-success'
-                                          : f.scryfall_validation_count >= 10
-                                            ? 'bg-warning/10 text-warning'
-                                            : 'bg-destructive/10 text-destructive'
-                                      }`}
-                                      title="Number of cards returned by this rule's Scryfall query during validation"
-                                    >
-                                      {f.scryfall_validation_count.toLocaleString()}{' '}
-                                      cards
-                                    </Badge>
-                                  )}
-                                  {/* Confidence badge */}
-                                  {rule.confidence != null && (
-                                    <Badge
-                                      variant="secondary"
-                                      className={`text-[10px] ${
-                                        rule.confidence >= 0.8
-                                          ? 'bg-success/10 text-success'
-                                          : rule.confidence >= 0.6
-                                            ? 'bg-warning/10 text-warning'
-                                            : 'bg-destructive/10 text-destructive'
-                                      }`}
-                                    >
-                                      {Math.round(rule.confidence * 100)}% conf
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-
-                              <div className="space-y-1">
-                                <div className="flex gap-2 text-xs">
-                                  <span className="text-muted-foreground flex-shrink-0 w-14">
-                                    Pattern
-                                  </span>
-                                  <span className="text-foreground font-medium break-words">
-                                    {rule.pattern}
-                                  </span>
-                                </div>
-                                <div className="flex gap-2 text-xs">
-                                  <span className="text-muted-foreground flex-shrink-0 w-14">
-                                    Syntax
-                                  </span>
-                                  <span className="font-mono text-foreground break-all">
-                                    {rule.scryfall_syntax}
-                                  </span>
-                                </div>
-                                {rule.description && (
-                                  <div className="flex gap-2 text-xs">
-                                    <span className="text-muted-foreground flex-shrink-0 w-14">
-                                      Note
-                                    </span>
-                                    <span className="text-muted-foreground">
-                                      {rule.description}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Approve / Reject */}
-                              <div className="flex items-center justify-end gap-2 pt-1 border-t border-border/50">
-                                <span
-                                  className={`text-[10px] font-medium ${rule.is_active ? 'text-success' : 'text-muted-foreground'}`}
-                                >
-                                  {rule.is_active ? 'Active' : 'Inactive'}
-                                </span>
-                                {rule.is_active ? (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-6 px-2 text-[10px] gap-1 border-destructive/40 text-destructive hover:bg-destructive/10"
-                                    disabled={isTogglingRule}
-                                    onClick={() =>
-                                      toggleRuleActive(
-                                        f.id,
-                                        f.generated_rule_id!,
-                                        true,
-                                      )
-                                    }
-                                  >
-                                    {isTogglingRule ? (
-                                      <Loader2 className="h-3 w-3 animate-spin" />
-                                    ) : (
-                                      <XCircle className="h-3 w-3" />
-                                    )}
-                                    Deactivate
-                                  </Button>
-                                ) : (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-6 px-2 text-[10px] gap-1 border-success/40 text-success hover:bg-success/10"
-                                    disabled={isTogglingRule}
-                                    onClick={() =>
-                                      toggleRuleActive(
-                                        f.id,
-                                        f.generated_rule_id!,
-                                        false,
-                                      )
-                                    }
-                                  >
-                                    {isTogglingRule ? (
-                                      <Loader2 className="h-3 w-3 animate-spin" />
-                                    ) : (
-                                      <CheckCircle2 className="h-3 w-3" />
-                                    )}
-                                    Activate
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Row 5 — actions */}
-                          {canRetrigger && (
-                            <div className="flex justify-end">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 px-2 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
-                                disabled={isRetriggering}
-                                onClick={() => retriggerFeedback(f.id)}
-                              >
-                                {isRetriggering ? (
-                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                ) : (
-                                  <RotateCcw className="h-3.5 w-3.5" />
-                                )}
-                                Re-process
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+          <FeedbackQueuePanel
+            pendingFeedbackCount={pendingFeedbackCount}
+            archivedFeedbackCount={archivedFeedbackCount}
+            processAllPending={processAllPending}
+            processingAllPending={processingAllPending}
+            feedbackFilter={feedbackFilter}
+            onFeedbackFilterChange={setFeedbackFilter}
+            onRefresh={fetchFeedback}
+            feedbackLoading={feedbackLoading}
+            filteredFeedback={filteredFeedback}
+            expandedFeedback={expandedFeedback}
+            setExpandedFeedback={setExpandedFeedback}
+            retriggeringId={retriggeringId}
+            ruleTogglingId={ruleTogglingId}
+            onRetriggerFeedback={retriggerFeedback}
+            onToggleRuleActive={toggleRuleActive}
+          />
 
           {/* ── Translation Rules Management ── */}
           <div className="surface-elevated border border-border mt-8 overflow-hidden">

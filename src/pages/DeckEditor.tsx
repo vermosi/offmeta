@@ -14,7 +14,6 @@ import {
   Wand2,
   Loader2,
   Shield,
-  Keyboard,
   DollarSign,
   LayoutGrid,
   Columns3,
@@ -31,7 +30,12 @@ import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useDeck, useDeckCards, useDeckMutations, type DeckCard } from '@/hooks/useDeck';
+import {
+  useDeck,
+  useDeckCards,
+  useDeckMutations,
+  type DeckCard,
+} from '@/hooks/useDeck';
 import { useDeckEditorDerivedState } from '@/hooks/useDeckEditorDerivedState';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/core/utils';
@@ -42,6 +46,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/useToast';
 import { DeckStatsBar } from '@/components/deckbuilder/DeckStats';
 import { DeckExportMenu } from '@/components/deckbuilder/DeckExportMenu';
+import { DeckEditorShortcutsModal } from '@/components/deckbuilder/DeckEditorShortcutsModal';
 import { useTranslation } from '@/lib/i18n';
 import {
   useDeckTags,
@@ -1096,83 +1101,10 @@ export default function DeckEditor() {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       {isMobile ? mobileLayout : desktopLayout}
-      {shortcutsOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm"
-          onClick={() => setShortcutsOpen(false)}
-        >
-          <div
-            className="bg-popover border border-border rounded-xl shadow-2xl p-5 w-72 space-y-3"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold flex items-center gap-2">
-                <Keyboard className="h-4 w-4 text-muted-foreground" />
-                {t('deckEditor.shortcuts.title')}
-              </h3>
-              <button
-                onClick={() => setShortcutsOpen(false)}
-                className="text-muted-foreground hover:text-foreground transition-colors text-xs"
-              >
-                ✕
-              </button>
-            </div>
-            <ul className="space-y-2 text-xs">
-              {(
-                [
-                  { keys: ['/'], desc: t('deckEditor.shortcuts.focusSearch') },
-                  {
-                    keys: ['Del', '/', 'Backspace'],
-                    desc: t('deckEditor.shortcuts.removeCard'),
-                  },
-                  {
-                    keys: ['+', '/', '-'],
-                    desc: t('deckEditor.shortcuts.adjustQuantity'),
-                  },
-                  {
-                    keys: ['Shift', 'S'],
-                    desc: t('deckEditor.shortcuts.toSideboard'),
-                  },
-                  {
-                    keys: ['Shift', 'M'],
-                    desc: t('deckEditor.shortcuts.toMaybeboard'),
-                  },
-                  { keys: ['?'], desc: t('deckEditor.shortcuts.toggleHelp') },
-                  {
-                    keys: ['Esc'],
-                    desc: t('deckEditor.shortcuts.deselectClose'),
-                  },
-                  { keys: ['Ctrl', 'Z'], desc: t('deckEditor.shortcuts.undo') },
-                  {
-                    keys: ['Ctrl', 'Shift', 'Z'],
-                    desc: t('deckEditor.shortcuts.redo'),
-                  },
-                ] as const
-              ).map(({ keys, desc }) => (
-                <li
-                  key={desc}
-                  className="flex items-center justify-between gap-3"
-                >
-                  <span className="text-muted-foreground">{desc}</span>
-                  <span className="flex items-center gap-1 shrink-0">
-                    {keys.map((k) => (
-                      <kbd
-                        key={k}
-                        className="inline-flex items-center px-1.5 py-0.5 rounded bg-secondary border border-border font-mono text-[10px] leading-none"
-                      >
-                        {k}
-                      </kbd>
-                    ))}
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <p className="text-[10px] text-muted-foreground">
-              {t('deckEditor.shortcuts.hint')}
-            </p>
-          </div>
-        </div>
-      )}
+      <DeckEditorShortcutsModal
+        isOpen={shortcutsOpen}
+        onClose={() => setShortcutsOpen(false)}
+      />
     </div>
   );
 }
