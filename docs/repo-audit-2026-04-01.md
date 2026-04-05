@@ -20,4 +20,3 @@ The full structured findings were delivered in the review response generated alo
 3. Security posture is improved by shared auth utilities, but broad `verify_jwt = false` creates operational risk if endpoint-specific checks regress.
 4. Accessibility foundations exist (skip links, focus trap) with likely modal/mobile edge-case gaps.
 5. Content/SEO expansion risks diluting search-first user value if left ungoverned.
-
