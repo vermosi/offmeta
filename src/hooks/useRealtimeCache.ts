@@ -90,8 +90,8 @@ export function useRealtimeCache(): void {
 export function RealtimeCacheProvider({
   children,
 }: {
-  children: React.ReactNode;
-}): React.ReactElement {
+  children: ReactNode;
+}): ReactElement {
   useRealtimeCache();
-  return React.createElement(React.Fragment, null, children);
+  return createElement(Fragment, null, children);
 }
