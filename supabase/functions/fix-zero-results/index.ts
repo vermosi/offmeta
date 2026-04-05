@@ -26,7 +26,7 @@ const MIN_FREQUENCY = 1;
 /** Max queries to process per run */
 const MAX_QUERIES = 15;
 /** Look-back window in days */
-const LOOKBACK_DAYS = 7;
+const LOOKBACK_DAYS = 30;
 /** Confidence threshold for auto-promotion */
 const AUTO_PROMOTE_CONFIDENCE = 0.85;
 /** Minimum Scryfall results to consider a fix valid */
