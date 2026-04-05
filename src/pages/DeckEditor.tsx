@@ -4,7 +4,7 @@
  * @module pages/DeckEditor
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -31,7 +31,8 @@ import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useDeck, useDeckCards, useDeckMutations } from '@/hooks/useDeck';
+import { useDeck, useDeckCards, useDeckMutations, type DeckCard } from '@/hooks/useDeck';
+import { useDeckEditorDerivedState } from '@/hooks/useDeckEditorDerivedState';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/core/utils';
 import { useIsMobile } from '@/hooks/useMobile';
@@ -61,7 +62,6 @@ import { PileView } from '@/components/deckbuilder/PileView';
 import {
   cardImageFetchCache,
   printingsByName,
-  CATEGORIES,
 } from '@/components/deckbuilder/constants';
 import { CategorySection } from '@/components/deckbuilder/CategorySection';
 import { SideboardSection } from '@/components/deckbuilder/SideboardSection';
@@ -242,63 +242,36 @@ export default function DeckEditor() {
     importCards();
   }, [id, location.state, addCard, navigate, location.pathname, t]);
 
-  // Board separation
-  const mainboardCards = useMemo(
-    () =>
-      cards.filter((c) => c.board !== 'sideboard' && c.board !== 'maybeboard'),
-    [cards],
-  );
-  const sideboardCards = useMemo(
-    () => cards.filter((c) => c.board === 'sideboard'),
-    [cards],
-  );
-  const maybeboardCards = useMemo(
-    () => cards.filter((c) => c.board === 'maybeboard'),
-    [cards],
-  );
+  // Derived deck state (board separation, grouping, totals, format)
+  const {
+    mainboardCards,
+    sideboardCards,
+    maybeboardCards,
+    grouped,
+    totalMainboard,
+    totalSideboard,
+    totalMaybeboard,
+    formatConfig,
+    formatMax,
+    sortedMainboard: hookSortedMainboard,
+  } = useDeckEditorDerivedState({
+    cards,
+    deckFormat: deck?.format,
+    deckSortMode,
+    scryfallCache: scryfallCacheRef.current,
+  });
 
-  // Group mainboard by category
-  const grouped = useMemo(() => {
-    const groups: Record<string, DeckCard[]> = {};
-    for (const card of mainboardCards) {
-      const cat = card.is_commander
-        ? 'Commander'
-        : card.category || DEFAULT_CATEGORY;
-      if (!groups[cat]) groups[cat] = [];
-      groups[cat].push(card);
-    }
-    const sorted: [string, DeckCard[]][] = [];
-    for (const cat of CATEGORIES) {
-      if (groups[cat]) sorted.push([cat, groups[cat]]);
-    }
-    for (const [cat, catCards] of Object.entries(groups)) {
-      if (!(CATEGORIES as readonly string[]).includes(cat))
-        sorted.push([cat, catCards]);
-    }
-    return sorted;
-  }, [mainboardCards]);
-
-  const totalMainboard = mainboardCards.reduce((sum, c) => sum + c.quantity, 0);
-  const totalSideboard = sideboardCards.reduce((sum, c) => sum + c.quantity, 0);
-  const totalMaybeboard = maybeboardCards.reduce(
-    (sum, c) => sum + c.quantity,
-    0,
-  );
-  const formatConfig =
-    FORMATS.find((f) => f.value === deck?.format) ?? FORMATS[0];
-  const formatMax = formatConfig.max;
   const { total: deckPrice, loading: priceLoading } = useDeckPrice(
     mainboardCards,
     scryfallCacheRef,
     () => setScryfallCacheVersion((v) => v + 1),
   );
 
+  // Re-sort when scryfall cache updates (version counter triggers re-render)
   const sortedMainboard = useMemo(() => {
     void scryfallCacheVersion;
-    return deckSortMode === 'category'
-      ? mainboardCards
-      : sortDeckCards(mainboardCards, deckSortMode, scryfallCacheRef.current);
-  }, [mainboardCards, deckSortMode, scryfallCacheVersion]);
+    return hookSortedMainboard;
+  }, [hookSortedMainboard, scryfallCacheVersion]);
 
   // ── Handlers ──
   const handleRecategorizeAll = useCallback(async () => {
@@ -934,7 +907,7 @@ export default function DeckEditor() {
   // ── Category sections ──
   const categorySection = (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-      {grouped.map(([category, catCards]) => (
+      {grouped.map(([category, catCards]: [string, DeckCard[]]) => (
         <CategorySection
           key={category}
           category={category}
@@ -1034,9 +1007,9 @@ export default function DeckEditor() {
     </div>
   );
 
-  const mainCount = mainboardCards.reduce((s, c) => s + c.quantity, 0);
-  const sideCount = sideboardCards.reduce((s, c) => s + c.quantity, 0);
-  const maybeCount = maybeboardCards.reduce((s, c) => s + c.quantity, 0);
+  const mainCount = totalMainboard;
+  const sideCount = totalSideboard;
+  const maybeCount = totalMaybeboard;
 
   const deckCountBar = cards.length > 0 && (
     <div className="flex items-center gap-3 px-4 py-1.5 border-t border-border bg-card text-xs text-muted-foreground">
