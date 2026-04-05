@@ -62,7 +62,6 @@ import { PileView } from '@/components/deckbuilder/PileView';
 import {
   cardImageFetchCache,
   printingsByName,
-  CATEGORIES,
 } from '@/components/deckbuilder/constants';
 import { CategorySection } from '@/components/deckbuilder/CategorySection';
 import { SideboardSection } from '@/components/deckbuilder/SideboardSection';
