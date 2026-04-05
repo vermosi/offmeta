@@ -28,6 +28,7 @@ interface EdgeFnDef {
   body?: Record<string, unknown>;
   category: 'pipeline' | 'data-sync' | 'seo' | 'maintenance' | 'ai' | 'other';
   dangerous?: boolean;
+  serviceRoleOnly?: boolean;
 }
 
 const EDGE_FUNCTIONS: EdgeFnDef[] = [
