@@ -22,7 +22,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 const logger = createLogger('fix-zero-results');
 
 /** Minimum occurrences before we consider fixing a query */
-const MIN_FREQUENCY = 3;
+const MIN_FREQUENCY = 1;
 /** Max queries to process per run */
 const MAX_QUERIES = 15;
 /** Look-back window in days */
