@@ -243,63 +243,36 @@ export default function DeckEditor() {
     importCards();
   }, [id, location.state, addCard, navigate, location.pathname, t]);
 
-  // Board separation
-  const mainboardCards = useMemo(
-    () =>
-      cards.filter((c) => c.board !== 'sideboard' && c.board !== 'maybeboard'),
-    [cards],
-  );
-  const sideboardCards = useMemo(
-    () => cards.filter((c) => c.board === 'sideboard'),
-    [cards],
-  );
-  const maybeboardCards = useMemo(
-    () => cards.filter((c) => c.board === 'maybeboard'),
-    [cards],
-  );
+  // Derived deck state (board separation, grouping, totals, format)
+  const {
+    mainboardCards,
+    sideboardCards,
+    maybeboardCards,
+    grouped,
+    totalMainboard,
+    totalSideboard,
+    totalMaybeboard,
+    formatConfig,
+    formatMax,
+    sortedMainboard: hookSortedMainboard,
+  } = useDeckEditorDerivedState({
+    cards,
+    deckFormat: deck?.format,
+    deckSortMode,
+    scryfallCache: scryfallCacheRef.current,
+  });
 
-  // Group mainboard by category
-  const grouped = useMemo(() => {
-    const groups: Record<string, DeckCard[]> = {};
-    for (const card of mainboardCards) {
-      const cat = card.is_commander
-        ? 'Commander'
-        : card.category || DEFAULT_CATEGORY;
-      if (!groups[cat]) groups[cat] = [];
-      groups[cat].push(card);
-    }
-    const sorted: [string, DeckCard[]][] = [];
-    for (const cat of CATEGORIES) {
-      if (groups[cat]) sorted.push([cat, groups[cat]]);
-    }
-    for (const [cat, catCards] of Object.entries(groups)) {
-      if (!(CATEGORIES as readonly string[]).includes(cat))
-        sorted.push([cat, catCards]);
-    }
-    return sorted;
-  }, [mainboardCards]);
-
-  const totalMainboard = mainboardCards.reduce((sum, c) => sum + c.quantity, 0);
-  const totalSideboard = sideboardCards.reduce((sum, c) => sum + c.quantity, 0);
-  const totalMaybeboard = maybeboardCards.reduce(
-    (sum, c) => sum + c.quantity,
-    0,
-  );
-  const formatConfig =
-    FORMATS.find((f) => f.value === deck?.format) ?? FORMATS[0];
-  const formatMax = formatConfig.max;
   const { total: deckPrice, loading: priceLoading } = useDeckPrice(
     mainboardCards,
     scryfallCacheRef,
     () => setScryfallCacheVersion((v) => v + 1),
   );
 
+  // Re-sort when scryfall cache updates (version counter triggers re-render)
   const sortedMainboard = useMemo(() => {
     void scryfallCacheVersion;
-    return deckSortMode === 'category'
-      ? mainboardCards
-      : sortDeckCards(mainboardCards, deckSortMode, scryfallCacheRef.current);
-  }, [mainboardCards, deckSortMode, scryfallCacheVersion]);
+    return hookSortedMainboard;
+  }, [hookSortedMainboard, scryfallCacheVersion]);
 
   // ── Handlers ──
   const handleRecategorizeAll = useCallback(async () => {
