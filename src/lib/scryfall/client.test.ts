@@ -250,8 +250,9 @@ describe('scryfall client', () => {
           ],
         }),
       )
-      .mockResolvedValueOnce(mockResponse({ object: 'error' }, 500))
-      .mockRejectedValueOnce(new Error('Network error'));
+      .mockResolvedValueOnce(mockResponse({ object: 'error' }, 400))
+      .mockRejectedValueOnce(new Error('Network error'))
+      .mockResolvedValue(mockResponse({ object: 'error' }, 400));
 
     const consoleSpy = vi
       .spyOn(console, 'error')
