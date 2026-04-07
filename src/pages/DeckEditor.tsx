@@ -9,7 +9,7 @@
  */
 
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { useDeck, useDeckCards, useDeckMutations } from '@/hooks/useDeck';
@@ -48,7 +48,7 @@ export default function DeckEditor() {
 
   const h = useDeckEditorHandlers({
     id,
-    deck,
+    deck: deck ?? null,
     cards,
     user,
     isMobile,
