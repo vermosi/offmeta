@@ -5,7 +5,7 @@
 
 export { useAdminAnalyticsData } from './useAdminAnalyticsData';
 export { useAdminAnalyticsFilters } from './useAdminAnalyticsFilters';
-export { useAffiliateConfig, wrapAffiliateUrl, getUtmData } from './useAffiliateConfig';
+export { useAffiliateConfig, wrapAffiliateUrl } from './useAffiliateConfig';
 export { useAnalytics } from './useAnalytics';
 export {
   useArchetypeData,
