@@ -35,7 +35,9 @@ import type { DeckCard } from '@/hooks/useDeck';
 import type { DeckSortMode } from '@/lib/deckbuilder/sort-deck-cards';
 import type { DeckViewMode } from '@/hooks/useDeckEditorHandlers';
 import type { ScryfallCard } from '@/types/card';
-import type { useUndoRedo } from '@/hooks/useUndoRedo';
+import { useUndoRedo } from '@/hooks/useUndoRedo';
+
+type UndoRedoReturn = ReturnType<typeof useUndoRedo>;
 
 interface DeckListViewProps {
   cards: DeckCard[];
@@ -46,7 +48,7 @@ interface DeckListViewProps {
   onDeckViewModeChange: (mode: DeckViewMode) => void;
   deckSortMode: DeckSortMode;
   onDeckSortModeChange: (mode: DeckSortMode) => void;
-  undoRedo: UseUndoRedoReturn;
+  undoRedo: UndoRedoReturn;
   previewOpen: boolean;
   onPreviewOpenChange: (open: boolean) => void;
 

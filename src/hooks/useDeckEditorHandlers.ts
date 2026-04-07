@@ -23,7 +23,9 @@ import {
 import type { CardSuggestion } from '@/components/deckbuilder/SuggestionsPanel';
 import type { DeckSortMode } from '@/lib/deckbuilder/sort-deck-cards';
 import { DEFAULT_CATEGORY } from '@/lib/deckbuilder/infer-category';
-import type { useUndoRedo } from '@/hooks/useUndoRedo';
+import { useUndoRedo } from '@/hooks/useUndoRedo';
+
+type UndoRedoReturn = ReturnType<typeof useUndoRedo>;
 
 export type DeckViewMode = 'list' | 'visual' | 'pile';
 
@@ -43,7 +45,7 @@ interface UseDeckEditorHandlersInput {
   cardsLoading: boolean;
   user: { id: string } | null;
   isMobile: boolean;
-  undoRedo: UseUndoRedoReturn;
+  undoRedo: UndoRedoReturn;
   addCard: { mutate: (data: { card_name: string; quantity?: number; is_commander?: boolean }) => void };
   updateCard: { mutate: (data: { id: string; [key: string]: unknown }) => void };
   updateDeck: { mutate: (data: { id: string; [key: string]: unknown }) => void };
@@ -58,7 +60,7 @@ export function useDeckEditorHandlers({
   id,
   deck,
   cards,
-  cardsLoading,
+  _cardsLoading,
   user,
   isMobile,
   undoRedo,
