@@ -35,7 +35,7 @@ import type { DeckCard } from '@/hooks/useDeck';
 import type { DeckSortMode } from '@/lib/deckbuilder/sort-deck-cards';
 import type { DeckViewMode } from '@/hooks/useDeckEditorHandlers';
 import type { ScryfallCard } from '@/types/card';
-import type { UseUndoRedoReturn } from '@/hooks/useUndoRedo';
+import type { useUndoRedo } from '@/hooks/useUndoRedo';
 
 interface DeckListViewProps {
   cards: DeckCard[];
