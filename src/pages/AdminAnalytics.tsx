@@ -4,66 +4,26 @@
  * Protected page (`user_roles.role = 'admin'` required) that surfaces
  * aggregated search pipeline telemetry and a full feedback queue panel.
  *
- * ## Analytics sections
- * - Summary stats: total searches, avg confidence, AI usage rate, p50/p95/p99 response times
- * - Daily search volume chart (lookback window: 1–90 days, default 7)
- * - Source distribution: cache / deterministic / pattern_match / ai / raw_syntax
- * - Confidence score buckets and deterministic coverage trend
- * - Top 20 most-searched queries and low-confidence query review list
+ * Delegates data management to `useAdminAnalyticsData` and rendering to:
+ * - `AnalyticsChartsSection` — summary stats, charts, source/confidence breakdowns
+ * - `FeedbackQueuePanel` — feedback queue with status badges and inline rule display
+ * - `TranslationRulesPanel` — rule management table with inline editing
  *
- * ## Feedback queue panel
- * - Displays every `search_feedback` row with a color-coded pipeline status badge:
- *   `pending` (amber) · `processing` (blue) · `completed` / `updated_existing` (green)
- *   · `failed` (red) · `skipped` / `duplicate` / `archived` (gray).
- * - Filter by status via dropdown.
- * - Inline display of the linked AI-generated `translation_rules` row
- *   (pattern, Scryfall syntax, confidence %).
- * - One-click approve/reject toggle: flips `translation_rules.is_active`
- *   with an optimistic update that reverts on error.
- * - Re-trigger button for `failed` and `skipped` rows — calls the
- *   `process-feedback` edge function and resets status to `pending`.
- *
- * Data is fetched from the `admin-analytics` edge function (GET ?days=N)
- * and supplemented by direct Supabase queries for the feedback queue.
- *
- * @see supabase/functions/admin-analytics/index.ts
- * @see src/hooks/useUserRole.ts
+ * @see src/hooks/useAdminAnalyticsData.ts
+ * @see src/pages/admin-analytics/components/AnalyticsChartsSection.tsx
+ * @see src/pages/admin-analytics/components/TranslationRulesPanel.tsx
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Loader2,
   ArrowLeft,
   BarChart3,
-  Clock,
-  Target,
-  AlertTriangle,
-  TrendingUp,
-  RefreshCw,
-  Zap,
-  ShieldAlert,
   Download,
-  Search,
-  Gauge,
-  CheckCircle2,
-  XCircle,
-  BookOpen,
-  ExternalLink,
-  Filter,
-  Archive,
-  ArchiveRestore,
-  AlertCircle,
+  RefreshCw,
   FileText,
-  Pencil,
-  Save,
-  X,
 } from 'lucide-react';
-import { toast } from 'sonner';
-import { Footer } from '@/components/Footer';
-import { Header } from '@/components/Header';
-import { SkipLinks } from '@/components/SkipLinks';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -72,89 +32,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Footer } from '@/components/Footer';
+import { Header } from '@/components/Header';
+import { SkipLinks } from '@/components/SkipLinks';
 import { useAuth } from '@/hooks/useAuth';
-import { useAdminAnalyticsFilters } from '@/hooks/useAdminAnalyticsFilters';
 import { useUserRole } from '@/hooks/useUserRole';
-import { supabase } from '@/integrations/supabase/client';
-import {
-  BarRow,
-  StatCard,
-} from '@/pages/admin-analytics/components/AnalyticsPrimitives';
-import { AICostPanel } from '@/pages/admin-analytics/components/AICostPanel';
-import { AuthFailuresPanel } from '@/pages/admin-analytics/components/AuthFailuresPanel';
-import { ConversionFunnelPanel } from '@/pages/admin-analytics/components/ConversionFunnelPanel';
-import { EngagementMetricsPanel } from '@/pages/admin-analytics/components/EngagementMetricsPanel';
-import { HitRatePanel } from '@/pages/admin-analytics/components/HitRatePanel';
-import { FeedbackQueuePanel } from '@/pages/admin-analytics/components/FeedbackQueuePanel';
+import { useAdminAnalyticsData } from '@/hooks/useAdminAnalyticsData';
 import { PipelineHealthIndicator } from '@/pages/admin-analytics/components/PipelineHealthIndicator';
-import { SystemStatusPanel } from '@/pages/admin-analytics/components/SystemStatusPanel';
-import { EdgeFunctionTriggerPanel } from '@/pages/admin-analytics/components/EdgeFunctionTriggerPanel';
-import type {
-  AnalyticsData,
-  FeedbackFilter,
-  FeedbackItem,
-  RulesFilter,
-  TranslationRuleRow,
-} from '@/pages/admin-analytics/types';
+import { AnalyticsChartsSection } from '@/pages/admin-analytics/components/AnalyticsChartsSection';
+import { FeedbackQueuePanel } from '@/pages/admin-analytics/components/FeedbackQueuePanel';
+import { TranslationRulesPanel } from '@/pages/admin-analytics/components/TranslationRulesPanel';
 import { exportToCsv } from '@/pages/admin-analytics/utils/exportCsv';
-import { logger } from '@/lib/core/logger';
 
 export default function AdminAnalytics() {
   const { user, isLoading: authLoading } = useAuth();
   const { hasRole: isAdmin, isLoading: roleLoading } = useUserRole('admin');
   const navigate = useNavigate();
-  const [data, setData] = useState<AnalyticsData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [days, setDays] = useState('7');
-  const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
-  const [feedbackLoading, setFeedbackLoading] = useState(false);
-  const [feedbackFilter, setFeedbackFilter] = useState<FeedbackFilter>('all');
-  const [expandedFeedback, setExpandedFeedback] = useState<Set<string>>(
-    new Set(),
-  );
-  const [ruleTogglingId, setRuleTogglingId] = useState<string | null>(null);
-  const [retriggeringId, setRetriggeringId] = useState<string | null>(null);
-  const [processingAllPending, setProcessingAllPending] = useState(false);
 
-  // Translation Rules panel state
-  const [rules, setRules] = useState<TranslationRuleRow[]>([]);
-  const [rulesLoading, setRulesLoading] = useState(false);
-  const [rulesFilter, setRulesFilter] = useState<RulesFilter>('all');
-  const [rulesSearch, setRulesSearch] = useState('');
-  const [ruleDirectTogglingId, setRuleDirectTogglingId] = useState<
-    string | null
-  >(null);
-  const [showArchivedRules, setShowArchivedRules] = useState(false);
-  const showArchivedRulesRef = useRef(false);
-  const [archivingRuleId, setArchivingRuleId] = useState<string | null>(null);
-
-  // Inline syntax editing state
-  const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
-  const [editingSyntax, setEditingSyntax] = useState('');
-  const [editValidating, setEditValidating] = useState(false);
-  const [editSaving, setEditSaving] = useState(false);
-  const [editValidationError, setEditValidationError] = useState<string | null>(
-    null,
-  );
-  const [editValidationCount, setEditValidationCount] = useState<number | null>(
-    null,
-  );
-
-  const {
-    pendingFeedbackCount,
-    archivedFeedbackCount,
-    filteredFeedback,
-    filteredRules,
-    activeRulesCount,
-    nonArchivedRulesCount,
-    archivedRulesCount,
-  } = useAdminAnalyticsFilters({
-    feedback,
-    feedbackFilter,
-    rules,
-    rulesFilter,
-    rulesSearch,
-  });
+  const hook = useAdminAnalyticsData(user, isAdmin);
 
   useEffect(() => {
     if (!authLoading && !roleLoading) {
@@ -163,714 +58,6 @@ export default function AdminAnalytics() {
       }
     }
   }, [authLoading, roleLoading, user, isAdmin, navigate]);
-
-  const fetchAnalytics = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const session = await supabase.auth.getSession();
-      const token = session.data.session?.access_token;
-      if (!token) throw new Error('Not authenticated');
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-analytics?days=${days}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          },
-        },
-      );
-
-      if (!response.ok) {
-        const errBody = await response.text();
-        throw new Error(errBody || `HTTP ${response.status}`);
-      }
-
-      const analyticsData = await response.json();
-      setData(analyticsData);
-    } catch (e) {
-      void e;
-      toast.error('Failed to load analytics');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [days]);
-
-  const fetchFeedback = useCallback(async () => {
-    setFeedbackLoading(true);
-    try {
-      const { data: rows, error } = await supabase
-        .from('search_feedback')
-        .select(
-          `
-          id, original_query, translated_query, issue_description,
-          processing_status, created_at, processed_at, generated_rule_id,
-          scryfall_validation_count,
-          translation_rules!fk_search_feedback_generated_rule ( pattern, scryfall_syntax, confidence, is_active, description )
-        `,
-        )
-        .order('created_at', { ascending: false })
-        .limit(100);
-
-      if (error) throw error;
-      setFeedback((rows as unknown as FeedbackItem[]) ?? []);
-    } catch (err) {
-      logger.error('[AdminAnalytics] Failed to load feedback:', err);
-      toast.error('Failed to load feedback');
-    } finally {
-      setFeedbackLoading(false);
-    }
-  }, []);
-
-  /** Fetch all translation_rules for the standalone management panel. */
-  const fetchRules = useCallback(
-    async (includeArchived = showArchivedRulesRef.current) => {
-      setRulesLoading(true);
-      try {
-        let query = supabase
-          .from('translation_rules')
-          .select(
-            'id, pattern, scryfall_syntax, confidence, is_active, description, created_at, source_feedback_id, archived_at',
-          )
-          .order('created_at', { ascending: false })
-          .limit(200);
-
-        if (!includeArchived) {
-          query = query.is('archived_at', null);
-        }
-
-        const { data: rows, error } = await query;
-        if (error) throw error;
-        setRules((rows as TranslationRuleRow[]) ?? []);
-      } catch {
-        toast.error('Failed to load translation rules');
-      } finally {
-        setRulesLoading(false);
-      }
-    },
-    [],
-  );
-
-  /** Soft-delete (archive) or restore a rule with optimistic update. */
-  const archiveRule = useCallback(
-    async (ruleId: string, isCurrentlyArchived: boolean) => {
-      setArchivingRuleId(ruleId);
-      const newArchivedAt = isCurrentlyArchived
-        ? null
-        : new Date().toISOString();
-      // Optimistic update
-      setRules((prev) =>
-        prev.map((r) =>
-          r.id === ruleId ? { ...r, archived_at: newArchivedAt } : r,
-        ),
-      );
-      const { error } = await supabase
-        .from('translation_rules')
-        .update({ archived_at: newArchivedAt })
-        .eq('id', ruleId);
-      if (error) {
-        // Revert
-        setRules((prev) =>
-          prev.map((r) =>
-            r.id === ruleId
-              ? {
-                  ...r,
-                  archived_at: isCurrentlyArchived
-                    ? new Date().toISOString()
-                    : null,
-                }
-              : r,
-          ),
-        );
-        toast.error('Failed to update rule');
-      } else {
-        toast.success(isCurrentlyArchived ? 'Rule restored' : 'Rule archived');
-        // If not showing archived, remove it from view after a tick
-        if (!showArchivedRulesRef.current && !isCurrentlyArchived) {
-          setTimeout(
-            () => setRules((prev) => prev.filter((r) => r.id !== ruleId)),
-            600,
-          );
-        }
-      }
-      setArchivingRuleId(null);
-    },
-    [],
-  );
-
-  /**
-   * Validate a new scryfall_syntax string against the live Scryfall API,
-   * then save it if valid. Shows an inline error without saving on failure.
-   */
-  const validateAndSaveRuleSyntax = useCallback(
-    async (ruleId: string, newSyntax: string) => {
-      const trimmed = newSyntax.trim();
-      if (!trimmed) return;
-
-      setEditValidating(true);
-      setEditValidationError(null);
-      setEditValidationCount(null);
-
-      // ── Scryfall validation ────────────────────────────────────────────────
-      let validationOk = false;
-      let validationCount = 0;
-      let validationError = '';
-
-      try {
-        const url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(trimmed)}&extras=true`;
-        const resp = await fetch(url, {
-          headers: { 'User-Agent': 'OffMeta-Admin/1.0 (rule-editor)' },
-        });
-
-        if (resp.status === 200) {
-          const data = await resp.json();
-          validationCount = data.total_cards ?? 0;
-          if (validationCount > 0) {
-            validationOk = true;
-            setEditValidationCount(validationCount);
-          } else {
-            validationError =
-              'Query returned 0 results on Scryfall — tighten or correct the syntax';
-          }
-        } else if (resp.status === 404) {
-          await resp.text();
-          validationError =
-            'Scryfall returned 404 — query is invalid or matched no cards';
-        } else {
-          const body = await resp.text();
-          // Extract Scryfall's human-readable details if present
-          try {
-            const parsed = JSON.parse(body);
-            validationError =
-              parsed.details ||
-              parsed.warnings?.join('; ') ||
-              `Scryfall error ${resp.status}`;
-          } catch {
-            validationError = `Scryfall returned HTTP ${resp.status}`;
-          }
-        }
-      } catch {
-        // Network error — block the save to avoid pushing unknown syntax
-        validationError =
-          'Could not reach Scryfall to validate — check your connection and try again';
-      }
-
-      setEditValidating(false);
-
-      if (!validationOk) {
-        setEditValidationError(validationError);
-        return; // do NOT save
-      }
-
-      // ── Persist ────────────────────────────────────────────────────────────
-      setEditSaving(true);
-      const { error } = await supabase
-        .from('translation_rules')
-        .update({ scryfall_syntax: trimmed })
-        .eq('id', ruleId);
-
-      if (error) {
-        toast.error('Failed to save rule syntax');
-      } else {
-        // Optimistic update + close edit mode
-        setRules((prev) =>
-          prev.map((r) =>
-            r.id === ruleId ? { ...r, scryfall_syntax: trimmed } : r,
-          ),
-        );
-        // Sync feedback panel
-        setFeedback((prev) =>
-          prev.map((f) =>
-            f.generated_rule_id === ruleId && f.translation_rules
-              ? {
-                  ...f,
-                  translation_rules: {
-                    ...f.translation_rules,
-                    scryfall_syntax: trimmed,
-                  },
-                }
-              : f,
-          ),
-        );
-        toast.success(
-          `Rule updated · ${validationCount.toLocaleString()} cards found`,
-        );
-        setEditingRuleId(null);
-        setEditingSyntax('');
-        setEditValidationCount(null);
-      }
-      setEditSaving(false);
-    },
-    [],
-  );
-
-  /** Cancel inline edit without saving. */
-  const cancelEditRule = useCallback(() => {
-    setEditingRuleId(null);
-    setEditingSyntax('');
-    setEditValidationError(null);
-    setEditValidationCount(null);
-  }, []);
-
-  const toggleRuleDirect = useCallback(
-    async (ruleId: string, currentActive: boolean) => {
-      setRuleDirectTogglingId(ruleId);
-      // Optimistic
-      setRules((prev) =>
-        prev.map((r) =>
-          r.id === ruleId ? { ...r, is_active: !currentActive } : r,
-        ),
-      );
-      // Also sync feedback panel if rule appears there
-      setFeedback((prev) =>
-        prev.map((f) =>
-          f.generated_rule_id === ruleId && f.translation_rules
-            ? {
-                ...f,
-                translation_rules: {
-                  ...f.translation_rules,
-                  is_active: !currentActive,
-                },
-              }
-            : f,
-        ),
-      );
-      const { error } = await supabase
-        .from('translation_rules')
-        .update({ is_active: !currentActive })
-        .eq('id', ruleId);
-      if (error) {
-        // Revert
-        setRules((prev) =>
-          prev.map((r) =>
-            r.id === ruleId ? { ...r, is_active: currentActive } : r,
-          ),
-        );
-        setFeedback((prev) =>
-          prev.map((f) =>
-            f.generated_rule_id === ruleId && f.translation_rules
-              ? {
-                  ...f,
-                  translation_rules: {
-                    ...f.translation_rules,
-                    is_active: currentActive,
-                  },
-                }
-              : f,
-          ),
-        );
-        toast.error('Failed to update rule');
-      } else {
-        toast.success(currentActive ? 'Rule deactivated' : 'Rule activated');
-      }
-      setRuleDirectTogglingId(null);
-    },
-    [],
-  );
-
-  /** Toggle is_active on a linked translation_rules row with optimistic update. */
-  const toggleRuleActive = useCallback(
-    async (feedbackId: string, ruleId: string, currentActive: boolean) => {
-      setRuleTogglingId(feedbackId);
-      // Optimistic update
-      setFeedback((prev) =>
-        prev.map((f) =>
-          f.id === feedbackId && f.translation_rules
-            ? {
-                ...f,
-                translation_rules: {
-                  ...f.translation_rules,
-                  is_active: !currentActive,
-                },
-              }
-            : f,
-        ),
-      );
-      const { error } = await supabase
-        .from('translation_rules')
-        .update({ is_active: !currentActive })
-        .eq('id', ruleId);
-      if (error) {
-        // Revert on failure
-        setFeedback((prev) =>
-          prev.map((f) =>
-            f.id === feedbackId && f.translation_rules
-              ? {
-                  ...f,
-                  translation_rules: {
-                    ...f.translation_rules,
-                    is_active: currentActive,
-                  },
-                }
-              : f,
-          ),
-        );
-        toast.error('Failed to update rule');
-      } else {
-        toast.success(currentActive ? 'Rule deactivated' : 'Rule activated');
-      }
-      setRuleTogglingId(null);
-    },
-    [],
-  );
-
-  /** Re-trigger process-feedback for failed/skipped items. */
-  const retriggerFeedback = useCallback(
-    async (feedbackId: string) => {
-      setRetriggeringId(feedbackId);
-      // Optimistically reset status to processing
-      setFeedback((prev) =>
-        prev.map((f) =>
-          f.id === feedbackId ? { ...f, processing_status: 'processing' } : f,
-        ),
-      );
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        const res = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-feedback`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${session?.access_token ?? ''}`,
-              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            },
-            body: JSON.stringify({ feedbackId }),
-          },
-        );
-        const result = await res.json();
-        if (!res.ok) throw new Error(result.error ?? `HTTP ${res.status}`);
-        toast.success(`Re-processed: ${result.status ?? 'done'}`);
-        await fetchFeedback();
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : 'Re-trigger failed');
-        setFeedback((prev) =>
-          prev.map((f) =>
-            f.id === feedbackId ? { ...f, processing_status: 'failed' } : f,
-          ),
-        );
-      } finally {
-        setRetriggeringId(null);
-      }
-    },
-    [fetchFeedback],
-  );
-
-  /** Process all pending feedback items in sequence. */
-  const processAllPending = useCallback(async () => {
-    const pendingItems = feedback.filter(
-      (f) => f.processing_status === 'pending' || f.processing_status == null,
-    );
-    if (pendingItems.length === 0) {
-      toast.info('No pending feedback to process');
-      return;
-    }
-    setProcessingAllPending(true);
-    let successCount = 0;
-    let failCount = 0;
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      if (!token) {
-        toast.error('Not authenticated');
-        return;
-      }
-      for (const item of pendingItems) {
-        try {
-          const res = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-feedback`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-                apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-              },
-              body: JSON.stringify({ feedbackId: item.id }),
-            },
-          );
-          if (res.ok) successCount++;
-          else failCount++;
-        } catch {
-          failCount++;
-        }
-      }
-      toast.success(
-        `Processed ${successCount} items${failCount > 0 ? `, ${failCount} failed` : ''}`,
-      );
-      await fetchFeedback();
-    } catch {
-      toast.error('Failed to process pending feedback');
-    } finally {
-      setProcessingAllPending(false);
-    }
-  }, [feedback, fetchFeedback]);
-
-  // Re-fetch analytics only when days changes (skip initial mount)
-  const daysInitialized = useRef(false);
-  useEffect(() => {
-    if (!isAdmin || !user) return;
-    if (!daysInitialized.current) {
-      daysInitialized.current = true;
-      return;
-    }
-    fetchAnalytics();
-  }, [days, isAdmin, user, fetchAnalytics]);
-
-  // Poll feedback & rules every 30s as a fallback for realtime RLS limitations
-  useEffect(() => {
-    if (!isAdmin || !user) return;
-    const interval = setInterval(() => {
-      fetchFeedback();
-      fetchRules();
-    }, 30_000);
-    return () => clearInterval(interval);
-  }, [isAdmin, user, fetchFeedback, fetchRules]);
-
-  // Real-time subscriptions for live updates
-  const [isLive, setIsLive] = useState(false);
-  const liveCountRef = useRef(0);
-  const initialLoadDoneRef = useRef(false);
-
-  // Initial load: fetch everything once per authenticated admin session.
-  useEffect(() => {
-    if (!isAdmin || !user || initialLoadDoneRef.current) return;
-    initialLoadDoneRef.current = true;
-    fetchAnalytics();
-    fetchFeedback();
-    fetchRules();
-  }, [isAdmin, user, fetchAnalytics, fetchFeedback, fetchRules]);
-
-  useEffect(() => {
-    if (!isAdmin || !user) return;
-    const channel = supabase
-      .channel('admin-analytics-realtime')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'translation_logs' },
-        (payload) => {
-          const row = payload.new as {
-            confidence_score: number | null;
-            response_time_ms: number | null;
-            fallback_used: boolean | null;
-            source: string | null;
-            created_at: string | null;
-            natural_language_query: string;
-            translated_query: string;
-          };
-          liveCountRef.current++;
-
-          setData((prev) => {
-            if (!prev) return prev;
-            const total = prev.summary.totalSearches + 1;
-            const conf = row.confidence_score ?? 0;
-            const respTime = row.response_time_ms ?? 0;
-            const newAvgConf =
-              (prev.summary.avgConfidence * prev.summary.totalSearches + conf) /
-              total;
-            const newAvgResp = Math.round(
-              (prev.summary.avgResponseTime * prev.summary.totalSearches +
-                respTime) /
-                total,
-            );
-            const fallbackCount =
-              Math.round(
-                (prev.summary.fallbackRate * prev.summary.totalSearches) / 100,
-              ) + (row.fallback_used ? 1 : 0);
-
-            const src = row.source || 'ai';
-            const sourceBreakdown = {
-              ...prev.sourceBreakdown,
-              [src]: (prev.sourceBreakdown[src] || 0) + 1,
-            };
-
-            const buckets = { ...prev.confidenceBuckets };
-            if (conf >= 0.8) buckets.high++;
-            else if (conf >= 0.6) buckets.medium++;
-            else buckets.low++;
-
-            const day = row.created_at?.substring(0, 10) || 'unknown';
-            const dailyVolume = {
-              ...prev.dailyVolume,
-              [day]: (prev.dailyVolume[day] || 0) + 1,
-            };
-
-            const lowConfidenceQueries =
-              conf < 0.6
-                ? [
-                    {
-                      query: row.natural_language_query,
-                      translated: row.translated_query,
-                      confidence: conf,
-                      source: src,
-                      time: row.created_at || new Date().toISOString(),
-                    },
-                    ...prev.lowConfidenceQueries,
-                  ].slice(0, 20)
-                : prev.lowConfidenceQueries;
-
-            return {
-              ...prev,
-              summary: {
-                ...prev.summary,
-                totalSearches: total,
-                avgConfidence: Math.round(newAvgConf * 100) / 100,
-                avgResponseTime: newAvgResp,
-                fallbackRate:
-                  total > 0 ? Math.round((fallbackCount / total) * 100) : 0,
-              },
-              sourceBreakdown,
-              confidenceBuckets: buckets,
-              dailyVolume,
-              lowConfidenceQueries,
-            };
-          });
-        },
-      )
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'analytics_events' },
-        (payload) => {
-          const row = payload.new as { event_type: string };
-          setData((prev) => {
-            if (!prev) return prev;
-            return {
-              ...prev,
-              eventBreakdown: {
-                ...prev.eventBreakdown,
-                [row.event_type]:
-                  (prev.eventBreakdown[row.event_type] || 0) + 1,
-              },
-            };
-          });
-        },
-      )
-      // ── Feedback queue: new submission arrives ──────────────────────────
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'search_feedback' },
-        (payload) => {
-          const row = payload.new as FeedbackItem;
-          setFeedback((prev) => {
-            // Avoid duplicates if fetchFeedback already picked it up
-            if (prev.some((f) => f.id === row.id)) return prev;
-            return [
-              {
-                ...row,
-                translation_rules: null,
-                scryfall_validation_count: null,
-              },
-              ...prev,
-            ].slice(0, 100);
-          });
-        },
-      )
-
-      // ── Feedback queue: status or rule changes (process-feedback writes) ─
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'search_feedback' },
-        (payload) => {
-          const row = payload.new as FeedbackItem;
-          setFeedback((prev) => {
-            const exists = prev.some((f) => f.id === row.id);
-            if (!exists) return prev;
-
-            // If generated_rule_id just appeared we need the full join —
-            // refetch so the inline rule box populates.
-            if (row.generated_rule_id) {
-              // Fire-and-forget: fetchFeedback keeps the ref fresh
-              void supabase
-                .from('search_feedback')
-                .select(
-                  `
-                  id, original_query, translated_query, issue_description,
-                  processing_status, created_at, processed_at, generated_rule_id,
-                  scryfall_validation_count,
-                  translation_rules!fk_search_feedback_generated_rule ( pattern, scryfall_syntax, confidence, is_active, description )
-                `,
-                )
-                .eq('id', row.id)
-                .single()
-                .then(({ data }) => {
-                  if (!data) return;
-                  setFeedback((cur) =>
-                    cur.map((f) =>
-                      f.id === row.id ? (data as unknown as FeedbackItem) : f,
-                    ),
-                  );
-                });
-            } else {
-              // No linked rule yet — just update the scalar fields
-              setFeedback((cur) =>
-                cur.map((f) =>
-                  f.id === row.id
-                    ? {
-                        ...f,
-                        processing_status: row.processing_status,
-                        processed_at: row.processed_at,
-                        scryfall_validation_count:
-                          row.scryfall_validation_count,
-                      }
-                    : f,
-                ),
-              );
-            }
-
-            return prev; // state is updated inside the async branch above
-          });
-        },
-      )
-      // ── Translation Rules panel: new rule generated ─────────────────────
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'translation_rules' },
-        (payload) => {
-          const row = payload.new as TranslationRuleRow;
-          setRules((prev) => {
-            if (prev.some((r) => r.id === row.id)) return prev;
-            return [row, ...prev].slice(0, 200);
-          });
-        },
-      )
-      // ── Translation Rules panel: rule updated (e.g. is_active toggled) ──
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'translation_rules' },
-        (payload) => {
-          const row = payload.new as TranslationRuleRow;
-          setRules((prev) =>
-            prev.map((r) => (r.id === row.id ? { ...r, ...row } : r)),
-          );
-          // Keep feedback panel in sync
-          setFeedback((prev) =>
-            prev.map((f) =>
-              f.generated_rule_id === row.id && f.translation_rules
-                ? {
-                    ...f,
-                    translation_rules: {
-                      ...f.translation_rules,
-                      is_active: row.is_active,
-                    },
-                  }
-                : f,
-            ),
-          );
-        },
-      )
-      .subscribe((status) => {
-        setIsLive(status === 'SUBSCRIBED');
-      });
-
-    return () => {
-      supabase.removeChannel(channel);
-      setIsLive(false);
-    };
-  }, [isAdmin, user]);
 
   if (authLoading || roleLoading) {
     return (
@@ -887,14 +74,8 @@ export default function AdminAnalytics() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background relative">
-      <div
-        className="fixed inset-0 pointer-events-none bg-page-gradient"
-        aria-hidden="true"
-      />
-      <div
-        className="fixed inset-0 pointer-events-none bg-page-noise"
-        aria-hidden="true"
-      />
+      <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
+      <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
 
       <SkipLinks />
       <Header />
@@ -909,12 +90,13 @@ export default function AdminAnalytics() {
             Back
           </Link>
 
+          {/* Page header with controls */}
           <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
             <div className="space-y-1">
               <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
                 <BarChart3 className="h-5 w-5" />
                 Search Analytics
-                {isLive && (
+                {hook.isLive && (
                   <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success">
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
@@ -945,7 +127,7 @@ export default function AdminAnalytics() {
             </div>
 
             <div className="flex items-center gap-2">
-              <Select value={days} onValueChange={setDays}>
+              <Select value={hook.days} onValueChange={hook.setDays}>
                 <SelectTrigger className="w-[120px] h-9 text-sm">
                   <SelectValue />
                 </SelectTrigger>
@@ -956,11 +138,11 @@ export default function AdminAnalytics() {
                   <SelectItem value="90">Last 90 days</SelectItem>
                 </SelectContent>
               </Select>
-              {data && (
+              {hook.data && (
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => exportToCsv(data)}
+                  onClick={() => exportToCsv(hook.data!)}
                   className="gap-1.5"
                 >
                   <Download className="h-3.5 w-3.5" />
@@ -970,848 +152,94 @@ export default function AdminAnalytics() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={fetchAnalytics}
-                disabled={isLoading}
+                onClick={hook.fetchAnalytics}
+                disabled={hook.isLoading}
                 className="gap-1.5"
               >
-                <RefreshCw
-                  className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`}
-                />
+                <RefreshCw className={`h-3.5 w-3.5 ${hook.isLoading ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
             </div>
           </div>
 
-          {isLoading && !data ? (
+          {/* Analytics charts */}
+          {hook.isLoading && !hook.data ? (
             <div className="flex justify-center py-20">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
-          ) : data ? (
-            <div className="space-y-8">
-              {/* Summary cards */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                <StatCard
-                  icon={TrendingUp}
-                  label="Total Searches"
-                  value={data.summary.totalSearches.toLocaleString()}
-                  subtext={`Last ${data.summary.days} days`}
-                />
-                <StatCard
-                  icon={Target}
-                  label="Avg Confidence"
-                  value={`${Math.round(data.summary.avgConfidence * 100)}%`}
-                  variant={
-                    data.summary.avgConfidence >= 0.8
-                      ? 'success'
-                      : data.summary.avgConfidence >= 0.6
-                        ? 'warning'
-                        : 'danger'
-                  }
-                />
-                <StatCard
-                  icon={Clock}
-                  label="Avg Response"
-                  value={`${data.summary.avgResponseTime}ms`}
-                  variant={
-                    data.summary.avgResponseTime < 1000 ? 'success' : 'warning'
-                  }
-                />
-                <StatCard
-                  icon={AlertTriangle}
-                  label="Fallback Rate"
-                  value={`${data.summary.fallbackRate}%`}
-                  variant={
-                    data.summary.fallbackRate < 10
-                      ? 'success'
-                      : data.summary.fallbackRate < 25
-                        ? 'warning'
-                        : 'danger'
-                  }
-                />
-              </div>
-
-              {/* Response time percentiles */}
-              {data.responsePercentiles && (
-                <div className="grid grid-cols-3 gap-3 sm:gap-4">
-                  <StatCard
-                    icon={Gauge}
-                    label="P50 Response"
-                    value={`${data.responsePercentiles.p50}ms`}
-                    subtext="Median"
-                    variant={
-                      data.responsePercentiles.p50 < 500 ? 'success' : 'warning'
-                    }
-                  />
-                  <StatCard
-                    icon={Gauge}
-                    label="P95 Response"
-                    value={`${data.responsePercentiles.p95}ms`}
-                    subtext="95th percentile"
-                    variant={
-                      data.responsePercentiles.p95 < 2000
-                        ? 'success'
-                        : data.responsePercentiles.p95 < 5000
-                          ? 'warning'
-                          : 'danger'
-                    }
-                  />
-                  <StatCard
-                    icon={Gauge}
-                    label="P99 Response"
-                    value={`${data.responsePercentiles.p99}ms`}
-                    subtext="99th percentile"
-                    variant={
-                      data.responsePercentiles.p99 < 5000 ? 'success' : 'danger'
-                    }
-                  />
-                </div>
-              )}
-
-              {/* Engagement Metrics: searches/session + zero-result rate */}
-              <EngagementMetricsPanel days={Number(days)} />
-
-              {/* Conversion Funnel */}
-              <ConversionFunnelPanel days={Number(days)} />
-
-              {/* Edge Function Triggers */}
-              <EdgeFunctionTriggerPanel />
-
-              {/* System Status */}
-              <SystemStatusPanel />
-
-              {/* Local DB vs Scryfall Hit Rate */}
-              <HitRatePanel days={Number(days)} />
-
-              {/* AI Cost Monitoring */}
-              <AICostPanel days={Number(days)} />
-
-              {/* Auth Failures Panel */}
-              <AuthFailuresPanel days={Number(days)} />
-
-              {/* Source breakdown + confidence */}
-              <div className="grid md:grid-cols-2 gap-4">
-                {/* Source breakdown */}
-                <div className="surface-elevated p-5 border border-border">
-                  <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                    <Zap className="h-4 w-4" />
-                    Translation Source
-                  </h2>
-                  <div className="space-y-3">
-                    {Object.entries(data.sourceBreakdown)
-                      .sort(([, a], [, b]) => b - a)
-                      .map(([source, count]) => (
-                        <BarRow
-                          key={source}
-                          label={source}
-                          value={count}
-                          total={data.summary.totalSearches}
-                          color={
-                            source === 'deterministic'
-                              ? 'bg-success'
-                              : source === 'cache'
-                                ? 'bg-primary'
-                                : source === 'ai'
-                                  ? 'bg-accent'
-                                  : source === 'pattern_match'
-                                    ? 'bg-success/70'
-                                    : 'bg-warning'
-                          }
-                        />
-                      ))}
-                  </div>
-                </div>
-
-                {/* Confidence distribution */}
-                <div className="surface-elevated p-5 border border-border">
-                  <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                    <Target className="h-4 w-4" />
-                    Confidence Distribution
-                  </h2>
-                  <div className="space-y-3">
-                    <BarRow
-                      label="High (≥80%)"
-                      value={data.confidenceBuckets.high}
-                      total={data.summary.totalSearches}
-                      color="bg-success"
-                    />
-                    <BarRow
-                      label="Medium (60-79%)"
-                      value={data.confidenceBuckets.medium}
-                      total={data.summary.totalSearches}
-                      color="bg-warning"
-                    />
-                    <BarRow
-                      label="Low (<60%)"
-                      value={data.confidenceBuckets.low}
-                      total={data.summary.totalSearches}
-                      color="bg-destructive"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Deterministic Coverage Trend */}
-              {Object.keys(data.deterministicCoverage).length > 1 && (
-                <div className="surface-elevated p-5 border border-border">
-                  <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4" />
-                    Deterministic Coverage Trend
-                  </h2>
-                  <p className="text-xs text-muted-foreground mb-3">
-                    Percentage of queries handled without AI (deterministic +
-                    pattern match)
-                  </p>
-                  <div className="space-y-2">
-                    {Object.entries(data.deterministicCoverage)
-                      .sort(([a], [b]) => a.localeCompare(b))
-                      .map(([day, pct]) => (
-                        <div key={day} className="flex items-center gap-3">
-                          <span className="text-xs text-muted-foreground w-20 tabular-nums flex-shrink-0">
-                            {day}
-                          </span>
-                          <div className="flex-1 h-5 bg-muted rounded overflow-hidden">
-                            <div
-                              className="h-full bg-success/60 rounded"
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
-                          <span className="text-xs text-muted-foreground tabular-nums w-10 text-right">
-                            {pct}%
-                          </span>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Daily volume */}
-              <div className="surface-elevated p-5 border border-border">
-                <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4" />
-                  Daily Search Volume
-                </h2>
-                <div className="space-y-2">
-                  {Object.entries(data.dailyVolume)
-                    .sort(([a], [b]) => a.localeCompare(b))
-                    .map(([day, count]) => {
-                      const maxCount = Math.max(
-                        ...Object.values(data.dailyVolume),
-                      );
-                      return (
-                        <div key={day} className="flex items-center gap-3">
-                          <span className="text-xs text-muted-foreground w-20 tabular-nums flex-shrink-0">
-                            {day}
-                          </span>
-                          <div className="flex-1 h-5 bg-muted rounded overflow-hidden">
-                            <div
-                              className="h-full bg-primary/70 rounded"
-                              style={{
-                                width: `${maxCount > 0 ? (count / maxCount) * 100 : 0}%`,
-                              }}
-                            />
-                          </div>
-                          <span className="text-xs text-muted-foreground tabular-nums w-10 text-right">
-                            {count}
-                          </span>
-                        </div>
-                      );
-                    })}
-                </div>
-              </div>
-
-              {/* Popular Queries */}
-              {data.popularQueries && data.popularQueries.length > 0 && (
-                <div className="surface-elevated p-5 border border-border">
-                  <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                    <Search className="h-4 w-4" />
-                    Popular Queries (Top 20)
-                  </h2>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-border">
-                          <th className="text-left py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            #
-                          </th>
-                          <th className="text-left py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Query
-                          </th>
-                          <th className="text-right py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Count
-                          </th>
-                          <th className="text-right py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Avg Conf
-                          </th>
-                          <th className="text-right py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Source
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {data.popularQueries.map((pq, i) => (
-                          <tr
-                            key={i}
-                            className="border-b border-border/30 hover:bg-muted/20"
-                          >
-                            <td className="py-2 text-muted-foreground tabular-nums">
-                              {i + 1}
-                            </td>
-                            <td className="py-2 font-medium truncate max-w-[300px]">
-                              {pq.query}
-                            </td>
-                            <td className="py-2 text-right tabular-nums">
-                              {pq.count}
-                            </td>
-                            <td className="py-2 text-right">
-                              <Badge
-                                variant="secondary"
-                                className={`text-[10px] ${
-                                  pq.avg_confidence >= 0.8
-                                    ? 'bg-success/10 text-success'
-                                    : pq.avg_confidence >= 0.6
-                                      ? 'bg-warning/10 text-warning'
-                                      : 'bg-destructive/10 text-destructive'
-                                }`}
-                              >
-                                {Math.round(pq.avg_confidence * 100)}%
-                              </Badge>
-                            </td>
-                            <td className="py-2 text-right text-xs text-muted-foreground">
-                              {pq.primary_source}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* Event type breakdown */}
-              {Object.keys(data.eventBreakdown).length > 0 && (
-                <div className="surface-elevated p-5 border border-border">
-                  <h2 className="text-sm font-semibold text-foreground mb-4">
-                    Event Types
-                  </h2>
-                  <div className="flex flex-wrap gap-2">
-                    {Object.entries(data.eventBreakdown)
-                      .sort(([, a], [, b]) => b - a)
-                      .map(([type, count]) => (
-                        <Badge
-                          key={type}
-                          variant="secondary"
-                          className="text-xs gap-1.5 py-1"
-                        >
-                          {type}
-                          <span className="text-muted-foreground tabular-nums">
-                            {count}
-                          </span>
-                        </Badge>
-                      ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Low confidence queries */}
-              {data.lowConfidenceQueries.length > 0 && (
-                <div className="surface-elevated p-5 border border-border">
-                  <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                    <ShieldAlert className="h-4 w-4 text-warning" />
-                    Low Confidence Queries (for review)
-                  </h2>
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {data.lowConfidenceQueries.map((q, i) => (
-                      <div
-                        key={i}
-                        className="p-3 rounded-lg bg-muted/30 border border-border/50 space-y-1"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-sm font-medium text-foreground truncate">
-                            "{q.query}"
-                          </p>
-                          <Badge
-                            variant="secondary"
-                            className={`text-[10px] flex-shrink-0 ${
-                              (q.confidence || 0) < 0.4
-                                ? 'bg-destructive/10 text-destructive'
-                                : 'bg-warning/10 text-warning'
-                            }`}
-                          >
-                            {Math.round((q.confidence || 0) * 100)}%
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground font-mono truncate">
-                          → {q.translated}
-                        </p>
-                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                          <span>{q.source}</span>
-                          <span>·</span>
-                          <span>{new Date(q.time).toLocaleString()}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+          ) : hook.data ? (
+            <AnalyticsChartsSection data={hook.data} days={Number(hook.days)} />
           ) : (
             <div className="text-center py-20 text-muted-foreground">
               No analytics data available
             </div>
           )}
 
+          {/* Feedback queue */}
           <FeedbackQueuePanel
-            pendingFeedbackCount={pendingFeedbackCount}
-            archivedFeedbackCount={archivedFeedbackCount}
-            processAllPending={processAllPending}
-            processingAllPending={processingAllPending}
-            feedbackFilter={feedbackFilter}
-            onFeedbackFilterChange={setFeedbackFilter}
-            onRefresh={fetchFeedback}
-            feedbackLoading={feedbackLoading}
-            filteredFeedback={filteredFeedback}
-            expandedFeedback={expandedFeedback}
-            setExpandedFeedback={setExpandedFeedback}
-            retriggeringId={retriggeringId}
-            ruleTogglingId={ruleTogglingId}
-            onRetriggerFeedback={retriggerFeedback}
-            onToggleRuleActive={toggleRuleActive}
+            pendingFeedbackCount={hook.pendingFeedbackCount}
+            archivedFeedbackCount={hook.archivedFeedbackCount}
+            processAllPending={hook.processAllPending}
+            processingAllPending={hook.processingAllPending}
+            feedbackFilter={hook.feedbackFilter}
+            onFeedbackFilterChange={hook.setFeedbackFilter}
+            onRefresh={hook.fetchFeedback}
+            feedbackLoading={hook.feedbackLoading}
+            filteredFeedback={hook.filteredFeedback}
+            expandedFeedback={hook.expandedFeedback}
+            setExpandedFeedback={hook.setExpandedFeedback}
+            retriggeringId={hook.retriggeringId}
+            ruleTogglingId={hook.ruleTogglingId}
+            onRetriggerFeedback={hook.retriggerFeedback}
+            onToggleRuleActive={hook.toggleRuleActive}
           />
 
-          {/* ── Translation Rules Management ── */}
-          <div className="surface-elevated border border-border mt-8 overflow-hidden">
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border flex-wrap gap-3">
-              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2 flex-wrap">
-                <BookOpen className="h-4 w-4 text-primary" />
-                Translation Rules
-                {rules.length > 0 && (
-                  <Badge variant="secondary" className="text-[10px]">
-                    {activeRulesCount} active / {nonArchivedRulesCount} total
-                  </Badge>
-                )}
-                {archivedRulesCount > 0 && (
-                  <Badge
-                    variant="outline"
-                    className="text-[10px] text-muted-foreground gap-1"
-                  >
-                    <Archive className="h-2.5 w-2.5" />
-                    {archivedRulesCount} archived
-                  </Badge>
-                )}
-              </h2>
-              <div className="flex items-center gap-2 flex-wrap">
-                {/* Show archived toggle */}
-                <button
-                  onClick={() => {
-                    const next = !showArchivedRules;
-                    setShowArchivedRules(next);
-                    showArchivedRulesRef.current = next;
-                    void fetchRules(next);
-                  }}
-                  className={`inline-flex items-center gap-1.5 h-8 px-2.5 text-xs rounded-md border transition-colors ${
-                    showArchivedRules
-                      ? 'border-primary/40 text-primary bg-primary/5 hover:bg-primary/10'
-                      : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted/40'
-                  }`}
-                >
-                  <Archive className="h-3 w-3" />
-                  {showArchivedRules ? 'Hide archived' : 'Show archived'}
-                </button>
-                {/* Search */}
-                <div className="relative">
-                  <Filter className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
-                  <input
-                    type="text"
-                    value={rulesSearch}
-                    onChange={(e) => setRulesSearch(e.target.value)}
-                    placeholder="Filter pattern / syntax…"
-                    className="h-8 pl-6 pr-3 text-xs rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring w-48"
-                  />
-                </div>
-                {/* Active filter */}
-                <Select
-                  value={rulesFilter}
-                  onValueChange={(v) => setRulesFilter(v as RulesFilter)}
-                >
-                  <SelectTrigger className="h-8 w-[110px] text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => fetchRules()}
-                  disabled={rulesLoading}
-                  className="h-8 w-8 p-0"
-                >
-                  <RefreshCw
-                    className={`h-3.5 w-3.5 ${rulesLoading ? 'animate-spin' : ''}`}
-                  />
-                </Button>
-              </div>
-            </div>
-
-            {rulesLoading ? (
-              <div className="flex justify-center py-10">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              </div>
-            ) : (
-              <>
-                {filteredRules.length === 0 ? (
-                  <div className="flex flex-col items-center gap-3 py-12 px-5 text-center">
-                    <BookOpen className="h-8 w-8 text-muted-foreground/30" />
-                    <p className="text-sm text-muted-foreground">
-                      {rules.length === 0
-                        ? 'No active translation rules yet'
-                        : 'No rules match your filter'}
-                    </p>
-                    {rules.length === 0 && (
-                      <p className="text-xs text-muted-foreground/70 max-w-xs">
-                        Rules are generated automatically when users submit
-                        search feedback.{' '}
-                        {!showArchivedRules && (
-                          <button
-                            className="text-primary hover:underline"
-                            onClick={() => {
-                              setShowArchivedRules(true);
-                              showArchivedRulesRef.current = true;
-                              void fetchRules(true);
-                            }}
-                          >
-                            Show archived rules
-                          </button>
-                        )}
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-                    <table className="w-full text-sm">
-                      <thead className="sticky top-0 bg-background border-b border-border z-10">
-                        <tr>
-                          <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider w-5"></th>
-                          <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Pattern
-                          </th>
-                          <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Scryfall Syntax
-                          </th>
-                          <th className="text-center px-3 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Conf
-                          </th>
-                          <th className="text-left px-3 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Added
-                          </th>
-                          <th className="text-left px-3 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Source
-                          </th>
-                          <th className="text-right px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Action
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border/50">
-                        {filteredRules.map((rule) => {
-                          const isToggling = ruleDirectTogglingId === rule.id;
-                          const isArchiving = archivingRuleId === rule.id;
-                          const isArchived = !!rule.archived_at;
-                          const isEditing = editingRuleId === rule.id;
-                          const isEditBusy = editValidating || editSaving;
-                          return (
-                            <tr
-                              key={rule.id}
-                              className={`hover:bg-muted/20 transition-colors ${!rule.is_active || isArchived ? 'opacity-60' : ''} ${isArchived ? 'bg-muted/10' : ''}`}
-                            >
-                              {/* Active indicator dot */}
-                              <td className="px-5 py-3">
-                                <span
-                                  className={`inline-flex h-2 w-2 rounded-full ${isArchived ? 'bg-muted-foreground/20' : rule.is_active ? 'bg-success' : 'bg-muted-foreground/40'}`}
-                                  title={
-                                    isArchived
-                                      ? 'Archived'
-                                      : rule.is_active
-                                        ? 'Active'
-                                        : 'Inactive'
-                                  }
-                                />
-                              </td>
-                              {/* Pattern */}
-                              <td className="px-5 py-3 max-w-[200px]">
-                                <p
-                                  className="font-medium text-foreground text-xs truncate"
-                                  title={rule.pattern}
-                                >
-                                  {rule.pattern}
-                                </p>
-                                {rule.description && (
-                                  <p
-                                    className="text-[10px] text-muted-foreground truncate mt-0.5"
-                                    title={rule.description}
-                                  >
-                                    {rule.description}
-                                  </p>
-                                )}
-                              </td>
-                              {/* Scryfall syntax — editable inline */}
-                              <td className="px-5 py-3 max-w-[260px]">
-                                {isEditing ? (
-                                  <div className="space-y-1.5">
-                                    <textarea
-                                      autoFocus
-                                      value={editingSyntax}
-                                      onChange={(e) => {
-                                        setEditingSyntax(e.target.value);
-                                        setEditValidationError(null);
-                                        setEditValidationCount(null);
-                                      }}
-                                      onKeyDown={(e) => {
-                                        if (e.key === 'Escape')
-                                          cancelEditRule();
-                                        if (
-                                          e.key === 'Enter' &&
-                                          (e.metaKey || e.ctrlKey)
-                                        ) {
-                                          void validateAndSaveRuleSyntax(
-                                            rule.id,
-                                            editingSyntax,
-                                          );
-                                        }
-                                      }}
-                                      rows={2}
-                                      className="w-full text-[11px] font-mono rounded border border-border bg-background text-foreground px-2 py-1 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
-                                      placeholder="e.g. otag:ramp c:g"
-                                    />
-                                    {/* Validation feedback */}
-                                    {editValidationError && (
-                                      <div className="flex items-start gap-1 text-[10px] text-destructive">
-                                        <AlertCircle className="h-3 w-3 flex-shrink-0 mt-0.5" />
-                                        <span>{editValidationError}</span>
-                                      </div>
-                                    )}
-                                    {editValidationCount != null &&
-                                      !editValidationError && (
-                                        <div className="flex items-center gap-1 text-[10px] text-success">
-                                          <CheckCircle2 className="h-3 w-3" />
-                                          <span>
-                                            {editValidationCount.toLocaleString()}{' '}
-                                            cards found
-                                          </span>
-                                        </div>
-                                      )}
-                                    {/* Save / Cancel buttons */}
-                                    <div className="flex items-center gap-1.5">
-                                      <button
-                                        disabled={
-                                          isEditBusy || !editingSyntax.trim()
-                                        }
-                                        onClick={() =>
-                                          void validateAndSaveRuleSyntax(
-                                            rule.id,
-                                            editingSyntax,
-                                          )
-                                        }
-                                        className="inline-flex items-center gap-1 h-5 px-2 text-[10px] rounded bg-primary text-primary-foreground disabled:opacity-50 hover:bg-primary/90"
-                                        title="Validate against Scryfall then save (⌘Enter)"
-                                      >
-                                        {editValidating ? (
-                                          <Loader2 className="h-2.5 w-2.5 animate-spin" />
-                                        ) : editSaving ? (
-                                          <Loader2 className="h-2.5 w-2.5 animate-spin" />
-                                        ) : (
-                                          <Save className="h-2.5 w-2.5" />
-                                        )}
-                                        {editValidating
-                                          ? 'Validating…'
-                                          : editSaving
-                                            ? 'Saving…'
-                                            : 'Validate & Save'}
-                                      </button>
-                                      <button
-                                        disabled={isEditBusy}
-                                        onClick={cancelEditRule}
-                                        className="inline-flex items-center gap-1 h-5 px-2 text-[10px] rounded border border-border text-muted-foreground hover:text-foreground disabled:opacity-50"
-                                      >
-                                        <X className="h-2.5 w-2.5" />
-                                        Cancel
-                                      </button>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <code
-                                    className="text-[11px] font-mono text-foreground/80 break-all line-clamp-2"
-                                    title={rule.scryfall_syntax}
-                                  >
-                                    {rule.scryfall_syntax}
-                                  </code>
-                                )}
-                              </td>
-
-                              {/* Confidence */}
-                              <td className="px-3 py-3 text-center">
-                                {rule.confidence != null ? (
-                                  <Badge
-                                    variant="secondary"
-                                    className={`text-[10px] ${
-                                      rule.confidence >= 0.8
-                                        ? 'bg-success/10 text-success'
-                                        : rule.confidence >= 0.6
-                                          ? 'bg-warning/10 text-warning'
-                                          : 'bg-destructive/10 text-destructive'
-                                    }`}
-                                  >
-                                    {Math.round(rule.confidence * 100)}%
-                                  </Badge>
-                                ) : (
-                                  <span className="text-muted-foreground text-[10px]">
-                                    —
-                                  </span>
-                                )}
-                              </td>
-                              {/* Created at */}
-                              <td className="px-3 py-3 text-[10px] text-muted-foreground whitespace-nowrap">
-                                {new Date(rule.created_at).toLocaleDateString()}
-                              </td>
-                              {/* Source feedback link */}
-                              <td className="px-3 py-3">
-                                {rule.source_feedback_id ? (
-                                  <button
-                                    className="inline-flex items-center gap-1 text-[10px] text-primary hover:underline"
-                                    onClick={() => {
-                                      // Scroll feedback queue into view and highlight the item
-                                      document
-                                        .getElementById(
-                                          `feedback-${rule.source_feedback_id}`,
-                                        )
-                                        ?.scrollIntoView({
-                                          behavior: 'smooth',
-                                          block: 'center',
-                                        });
-                                      setExpandedFeedback((prev) => {
-                                        const next = new Set(prev);
-                                        next.add(rule.source_feedback_id!);
-                                        return next;
-                                      });
-                                    }}
-                                    title="Jump to source feedback"
-                                  >
-                                    <ExternalLink className="h-3 w-3" />
-                                    Feedback
-                                  </button>
-                                ) : (
-                                  <span className="text-[10px] text-muted-foreground">
-                                    Manual
-                                  </span>
-                                )}
-                              </td>
-                              {/* Actions */}
-                              <td className="px-5 py-3 text-right">
-                                <div className="flex items-center justify-end gap-1.5 flex-wrap">
-                                  {/* Edit syntax (hidden when archived or already editing) */}
-                                  {!isArchived && !isEditing && (
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      className="h-6 px-2 text-[10px] gap-1 text-muted-foreground hover:text-foreground"
-                                      disabled={
-                                        isToggling ||
-                                        isArchiving ||
-                                        (editingRuleId !== null &&
-                                          editingRuleId !== rule.id)
-                                      }
-                                      onClick={() => {
-                                        setEditingRuleId(rule.id);
-                                        setEditingSyntax(rule.scryfall_syntax);
-                                        setEditValidationError(null);
-                                        setEditValidationCount(null);
-                                      }}
-                                      title="Edit Scryfall syntax (validates before saving)"
-                                    >
-                                      <Pencil className="h-3 w-3" />
-                                      Edit
-                                    </Button>
-                                  )}
-                                  {/* Activate / Deactivate (hidden when archived or editing) */}
-                                  {!isArchived &&
-                                    !isEditing &&
-                                    (rule.is_active ? (
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="h-6 px-2 text-[10px] gap-1 border-destructive/40 text-destructive hover:bg-destructive/10"
-                                        disabled={isToggling || isArchiving}
-                                        onClick={() =>
-                                          toggleRuleDirect(rule.id, true)
-                                        }
-                                      >
-                                        {isToggling ? (
-                                          <Loader2 className="h-3 w-3 animate-spin" />
-                                        ) : (
-                                          <XCircle className="h-3 w-3" />
-                                        )}
-                                        Deactivate
-                                      </Button>
-                                    ) : (
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="h-6 px-2 text-[10px] gap-1 border-success/40 text-success hover:bg-success/10"
-                                        disabled={isToggling || isArchiving}
-                                        onClick={() =>
-                                          toggleRuleDirect(rule.id, false)
-                                        }
-                                      >
-                                        {isToggling ? (
-                                          <Loader2 className="h-3 w-3 animate-spin" />
-                                        ) : (
-                                          <CheckCircle2 className="h-3 w-3" />
-                                        )}
-                                        Activate
-                                      </Button>
-                                    ))}
-                                  {/* Archive / Restore (hidden while editing) */}
-                                  {!isEditing && (
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      className="h-6 px-2 text-[10px] gap-1 text-muted-foreground hover:text-foreground"
-                                      disabled={isArchiving || isToggling}
-                                      onClick={() =>
-                                        archiveRule(rule.id, isArchived)
-                                      }
-                                      title={
-                                        isArchived
-                                          ? 'Restore rule'
-                                          : 'Archive rule (soft-delete)'
-                                      }
-                                    >
-                                      {isArchiving ? (
-                                        <Loader2 className="h-3 w-3 animate-spin" />
-                                      ) : isArchived ? (
-                                        <ArchiveRestore className="h-3 w-3" />
-                                      ) : (
-                                        <Archive className="h-3 w-3" />
-                                      )}
-                                      {isArchived ? 'Restore' : 'Archive'}
-                                    </Button>
-                                  )}
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+          {/* Translation rules */}
+          <TranslationRulesPanel
+            rules={hook.rules}
+            filteredRules={hook.filteredRules}
+            rulesLoading={hook.rulesLoading}
+            rulesFilter={hook.rulesFilter}
+            rulesSearch={hook.rulesSearch}
+            showArchivedRules={hook.showArchivedRules}
+            activeRulesCount={hook.activeRulesCount}
+            nonArchivedRulesCount={hook.nonArchivedRulesCount}
+            archivedRulesCount={hook.archivedRulesCount}
+            ruleDirectTogglingId={hook.ruleDirectTogglingId}
+            archivingRuleId={hook.archivingRuleId}
+            editingRuleId={hook.editingRuleId}
+            editingSyntax={hook.editingSyntax}
+            editValidating={hook.editValidating}
+            editSaving={hook.editSaving}
+            editValidationError={hook.editValidationError}
+            editValidationCount={hook.editValidationCount}
+            onRulesFilterChange={hook.setRulesFilter}
+            onRulesSearchChange={hook.setRulesSearch}
+            onToggleShowArchived={hook.toggleShowArchivedRules}
+            onRefresh={() => hook.fetchRules()}
+            onToggleRuleDirect={hook.toggleRuleDirect}
+            onArchiveRule={hook.archiveRule}
+            onValidateAndSave={hook.validateAndSaveRuleSyntax}
+            onCancelEdit={hook.cancelEditRule}
+            onStartEdit={(ruleId, syntax) => {
+              hook.setEditingRuleId(ruleId);
+              hook.setEditingSyntax(syntax);
+              hook.setEditValidationError(null);
+              hook.setEditValidationCount(null);
+            }}
+            onEditingSyntaxChange={(syntax) => {
+              hook.setEditingSyntax(syntax);
+              hook.setEditValidationError(null);
+              hook.setEditValidationCount(null);
+            }}
+            onExpandFeedback={(feedbackId) => {
+              hook.setExpandedFeedback((prev) => {
+                const next = new Set(prev);
+                next.add(feedbackId);
+                return next;
+              });
+            }}
+          />
         </div>
       </main>
 
