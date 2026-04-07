@@ -60,7 +60,6 @@ export function useDeckEditorHandlers({
   deck,
   cards,
   user,
-  user,
   isMobile,
   undoRedo,
   addCard,
