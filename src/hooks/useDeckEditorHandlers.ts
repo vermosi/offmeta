@@ -42,7 +42,7 @@ interface UseDeckEditorHandlersInput {
     is_public: boolean;
   } | null;
   cards: DeckCard[];
-  cardsLoading: boolean;
+  user: { id: string } | null;
   user: { id: string } | null;
   isMobile: boolean;
   undoRedo: UndoRedoReturn;
