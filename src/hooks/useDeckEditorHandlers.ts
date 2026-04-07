@@ -43,7 +43,6 @@ interface UseDeckEditorHandlersInput {
   } | null;
   cards: DeckCard[];
   user: { id: string } | null;
-  user: { id: string } | null;
   isMobile: boolean;
   undoRedo: UndoRedoReturn;
   addCard: { mutate: (data: { card_name: string; quantity?: number; is_commander?: boolean }) => void };
@@ -60,7 +59,7 @@ export function useDeckEditorHandlers({
   id,
   deck,
   cards,
-  _cardsLoading,
+  user,
   user,
   isMobile,
   undoRedo,
