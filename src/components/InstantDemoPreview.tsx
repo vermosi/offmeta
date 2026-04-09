@@ -55,7 +55,7 @@ export function InstantDemoPreview({ onTrySearch }: InstantDemoPreviewProps) {
   }, [trackEvent]);
 
   const handleSearchClick = () => {
-    trackEvent('demo_preview_click', { query: DEMO_QUERY, trigger: 'search_button' });
+    trackEvent('demo_preview_click', { query: DEMO_QUERY, action: 'search_button' });
     onTrySearch(DEMO_QUERY);
   };
 
