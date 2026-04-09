@@ -356,20 +356,22 @@ export function useSearch() {
             description: 'The initial translation returned no results.',
             duration: 4000,
           });
-          // Re-execute with the fallback query
-          setSearchQuery(fallbackQuery);
-          setLastSearchResult(prev => prev ? {
-            ...prev,
-            scryfallQuery: fallbackQuery,
-            explanation: {
-              readable: `Broadened search for: ${originalQuery}`,
-              assumptions: ['Original AI translation returned 0 results — using simplified search'],
-              confidence: 0.6,
-            },
-            source: 'client_recovery',
-          } : prev);
-          queryClient.invalidateQueries({
-            queryKey: ['cards', fallbackQuery, scryfallLang],
+          // Re-execute with the fallback query — deferred to avoid synchronous setState in effect
+          queueMicrotask(() => {
+            setSearchQuery(fallbackQuery);
+            setLastSearchResult(prev => prev ? {
+              ...prev,
+              scryfallQuery: fallbackQuery,
+              explanation: {
+                readable: `Broadened search for: ${originalQuery}`,
+                assumptions: ['Original AI translation returned 0 results — using simplified search'],
+                confidence: 0.6,
+              },
+              source: 'client_recovery',
+            } : prev);
+            queryClient.invalidateQueries({
+              queryKey: ['cards', fallbackQuery, scryfallLang],
+            });
           });
           return; // Skip tracking — will re-trigger when results arrive
         }
@@ -406,6 +408,8 @@ export function useSearch() {
     hasSearched,
     isSearching,
     validatedSearchQuery,
+    queryClient,
+    scryfallLang,
   ]);
 
   // --- Track pagination (load-more) ---

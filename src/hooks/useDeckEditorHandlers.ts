@@ -23,7 +23,7 @@ import {
 import type { CardSuggestion } from '@/components/deckbuilder/SuggestionsPanel';
 import type { DeckSortMode } from '@/lib/deckbuilder/sort-deck-cards';
 import { DEFAULT_CATEGORY } from '@/lib/deckbuilder/infer-category';
-import { useUndoRedo } from '@/hooks/useUndoRedo';
+import type { useUndoRedo } from '@/hooks/useUndoRedo';
 
 type UndoRedoReturn = ReturnType<typeof useUndoRedo>;
 

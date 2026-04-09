@@ -7,7 +7,7 @@
  * See: supabase/functions/semantic-search/ for the test setup.
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 // Since we can't import edge function code in vitest (Deno modules),
 // we replicate the prompt injection regex patterns here for validation.
