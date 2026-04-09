@@ -14,26 +14,26 @@ const DEMO_CARDS = [
   {
     name: 'Blasphemous Act',
     imageUri:
-      'https://cards.scryfall.io/normal/front/0/b/0b4ae2f6-a70e-4de7-92b4-b9267089da27.jpg?1736926345',
-    price: '$1.29',
+      'https://cards.scryfall.io/normal/front/1/7/175eb155-7262-4c2e-85c3-e0cc9be855e5.jpg?1775052162',
+    price: '$2.00',
   },
   {
-    name: 'Farewell',
+    name: 'Austere Command',
     imageUri:
-      'https://cards.scryfall.io/normal/front/1/0/10b78a1c-db8e-4e30-936c-7cdc63de5ab2.jpg?1743206741',
-    price: '$3.49',
-  },
-  {
-    name: 'Toxic Deluge',
-    imageUri:
-      'https://cards.scryfall.io/normal/front/d/0/d0068305-45e3-4e46-a3e3-58e96fa8d3b4.jpg?1742355219',
-    price: '$4.99',
-  },
-  {
-    name: 'Chain Reaction',
-    imageUri:
-      'https://cards.scryfall.io/normal/front/2/3/23b3dda0-d08a-4d32-ad26-8fe0e1656cde.jpg?1740003073',
+      'https://cards.scryfall.io/normal/front/a/3/a31ffc9e-d21b-4a8f-ac67-695e38e09e3b.jpg?1706240553',
     price: '$0.49',
+  },
+  {
+    name: 'Damn',
+    imageUri:
+      'https://cards.scryfall.io/normal/front/8/4/84056124-1a6f-4274-bee2-74cf0debddb5.jpg?1698988237',
+    price: '$2.18',
+  },
+  {
+    name: 'Supreme Verdict',
+    imageUri:
+      'https://cards.scryfall.io/normal/front/3/8/3892f1c5-937e-4ef4-b6f9-e0c0ded070d0.jpg?1706240181',
+    price: '$2.79',
   },
 ] as const;
 
