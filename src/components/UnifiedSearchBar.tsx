@@ -37,6 +37,7 @@ const SearchHelpModal = lazy(() =>
   })),
 );
 import { VoiceSearchButton } from '@/components/VoiceSearchButton';
+import { SearchCountBadge } from '@/components/SearchCountBadge';
 import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';
 import { useTranslation } from '@/lib/i18n';
@@ -232,31 +233,19 @@ export const UnifiedSearchBar = forwardRef<
   );
 
   const showExamples = !query;
+  const [showAllExamples, setShowAllExamples] = useState(false);
+
   const visibleExamples = useMemo(() => {
-    const maxExamples = isMobile ? 5 : Number.POSITIVE_INFINITY;
+    // On mobile, show only top 2 categories unless expanded
+    const maxCategories = isMobile && !showAllExamples ? 2 : EXAMPLE_QUERY_GROUPS.length;
 
-    return EXAMPLE_QUERY_GROUPS.reduce<
-      Array<{ category: string; queries: readonly string[] }>
-    >((groups, { category, queries }) => {
-      const shownCount = groups.reduce(
-        (count, group) => count + group.queries.length,
-        0,
-      );
+    return EXAMPLE_QUERY_GROUPS.slice(0, maxCategories).map(({ category, queries }) => ({
+      category,
+      queries,
+    }));
+  }, [isMobile, showAllExamples]);
 
-      if (shownCount >= maxExamples) {
-        return groups;
-      }
-
-      const remainingSlots = maxExamples - shownCount;
-      const visibleQueries = queries.slice(0, remainingSlots);
-
-      if (visibleQueries.length === 0) {
-        return groups;
-      }
-
-      return [...groups, { category, queries: visibleQueries }];
-    }, []);
-  }, [isMobile]);
+  const hasHiddenExamples = isMobile && !showAllExamples && EXAMPLE_QUERY_GROUPS.length > 2;
 
   const flattenedVisibleExamples = useMemo(
     () =>
@@ -496,6 +485,7 @@ export const UnifiedSearchBar = forwardRef<
           <span>✦ Free to use</span>
           <span>✦ Powered by Scryfall</span>
           <span>✦ No account required</span>
+          <SearchCountBadge />
         </div>
       )}
 
@@ -556,6 +546,15 @@ export const UnifiedSearchBar = forwardRef<
               </div>
             ))}
           </div>
+          {hasHiddenExamples && (
+            <button
+              type="button"
+              onClick={() => setShowAllExamples(true)}
+              className="mt-3 mx-auto block text-xs text-accent hover:text-accent/80 transition-colors"
+            >
+              Show more examples ▾
+            </button>
+          )}
         </div>
       )}
     </div>
