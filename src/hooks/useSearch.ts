@@ -9,6 +9,7 @@ import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { queryToSlug, slugToQuery } from '@/lib/search-slug';
+import { buildClientFallbackQuery } from '@/lib/search/fallback';
 import type {
   SearchResult,
   UnifiedSearchBarHandle,
@@ -347,7 +348,6 @@ export function useSearch() {
       const hasAttemptedRecovery = sessionStorage.getItem('offmeta_recovery_in_progress') === '1';
 
       if (!hasAttemptedRecovery && (source === 'ai' || source === 'ai_recovered' || source === 'concept_match')) {
-        const { buildClientFallbackQuery } = await import('@/lib/search/fallback');
         const fallbackQuery = buildClientFallbackQuery(originalQuery);
         
         if (fallbackQuery && fallbackQuery !== lastSearchResult.scryfallQuery) {
