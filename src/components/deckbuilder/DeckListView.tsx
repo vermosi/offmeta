@@ -30,12 +30,9 @@ import { MaybeboardSection } from '@/components/deckbuilder/MaybeboardSection';
 import { DeckStatsBar } from '@/components/deckbuilder/DeckStats';
 import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n';
-import {
-  toast,
-  useUndoRedo,
-  type DeckCard,
-  type DeckViewMode,
-} from '@/hooks';
+import { toast } from '@/hooks';
+import type { useUndoRedo } from '@/hooks';
+import type { DeckCard, DeckViewMode } from '@/hooks';
 import type { DeckSortMode } from '@/lib/deckbuilder';
 import type { ScryfallCard } from '@/types/card';
 
@@ -377,7 +374,7 @@ export function DeckListView({
   const statsBar = cards.length > 0 && (
     <DeckStatsBar
       cards={mainboardCards}
-      scryfallCache={scryfallCacheRef.current}
+      scryfallCache={scryfallCacheRef}
       formatMax={formatMax}
       cacheVersion={scryfallCacheVersion}
     />

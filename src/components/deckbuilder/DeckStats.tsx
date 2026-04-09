@@ -3,7 +3,7 @@
  * @module components/deckbuilder/DeckStats
  */
 
-import { useMemo } from 'react';
+import { useMemo, type RefObject } from 'react';
 import { type DeckCard } from '@/hooks';
 import type { ScryfallCard } from '@/types/card';
 import { cn } from '@/lib/core/utils';
@@ -117,10 +117,16 @@ function ColorPie({ colorCounts }: { colorCounts: Record<string, number> }) {
 // ── Stats Container ──
 export interface DeckStatsData {
   cards: DeckCard[];
-  scryfallCache: Map<string, ScryfallCard>;
+  scryfallCache: Map<string, ScryfallCard> | RefObject<Map<string, ScryfallCard>>;
   formatMax: number;
   /** Bump this counter to force re-computation when the cache mutates in place. */
   cacheVersion?: number;
+}
+
+function resolveCache(
+  cache: Map<string, ScryfallCard> | RefObject<Map<string, ScryfallCard>>,
+): Map<string, ScryfallCard> {
+  return cache instanceof Map ? cache : cache.current;
 }
 
 export function DeckStatsBar({
@@ -132,6 +138,7 @@ export function DeckStatsBar({
   const { t } = useTranslation();
   const stats = useMemo(() => {
     void cacheVersion;
+    const cache = resolveCache(scryfallCache);
     const curve = new Array(8).fill(0);
     const colorCounts: Record<string, number> = {};
     const typeCounts: Record<string, number> = {};
@@ -141,7 +148,7 @@ export function DeckStatsBar({
     let priceCount = 0;
 
     for (const dc of cards) {
-      const sc = scryfallCache.get(dc.card_name);
+      const sc = cache.get(dc.card_name);
       const qty = dc.quantity;
 
       // CMC distribution (skip lands)
