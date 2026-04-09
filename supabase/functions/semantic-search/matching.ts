@@ -488,6 +488,123 @@ const HARDCODED_TRANSLATIONS: Record<string, CacheEntry['result']> = {
     },
     showAffiliate: true,
   },
+  'creatures that buff the board': {
+    scryfallQuery: 't:creature (otag:lord or otag:anthem)',
+    explanation: {
+      readable: 'Creatures that buff other creatures (lords/anthems)',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'cards that untap permanents': {
+    scryfallQuery: 'otag:untapper',
+    explanation: {
+      readable: 'Cards that untap permanents',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'untap permanents': {
+    scryfallQuery: 'otag:untapper',
+    explanation: {
+      readable: 'Cards that untap permanents',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'common legendaries': {
+    scryfallQuery: 'r:common t:legendary',
+    explanation: {
+      readable: 'Common rarity legendary cards',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'common legendary creatures': {
+    scryfallQuery: 'r:common t:legendary t:creature',
+    explanation: {
+      readable: 'Common rarity legendary creatures',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'cards with red in the name': {
+    scryfallQuery: 'name:red',
+    explanation: {
+      readable: 'Cards with "red" in their name',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'cast a spell get mana': {
+    scryfallQuery: 'o:"whenever you cast" o:"add"',
+    explanation: {
+      readable: 'Cards that produce mana when you cast spells',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'free spells': {
+    scryfallQuery: 'mv=0 -t:land',
+    explanation: {
+      readable: 'Spells with zero mana cost',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'protection from everything': {
+    scryfallQuery: 'o:"protection from everything"',
+    explanation: {
+      readable: 'Cards with protection from everything',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'flash creatures': {
+    scryfallQuery: 't:creature kw:flash',
+    explanation: {
+      readable: 'Creatures with flash',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'token doublers': {
+    scryfallQuery: 'o:"if" o:"token" o:"twice that many"',
+    explanation: {
+      readable: 'Cards that double token creation',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'blink creatures': {
+    scryfallQuery: 'otag:blink',
+    explanation: {
+      readable: 'Cards that exile and return permanents (blink)',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
+  'stax pieces': {
+    scryfallQuery: 'otag:hatebear',
+    explanation: {
+      readable: 'Hatebear/stax cards that restrict opponents',
+      assumptions: [],
+      confidence: 0.95,
+    },
+    showAffiliate: true,
+  },
 };
 
 /**

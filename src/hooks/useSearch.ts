@@ -7,7 +7,9 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { queryToSlug, slugToQuery } from '@/lib/search-slug';
+import { buildClientFallbackQuery } from '@/lib/search/fallback';
 import type {
   SearchResult,
   UnifiedSearchBarHandle,
@@ -341,6 +343,38 @@ export function useSearch() {
         });
       }
     } else if (totalCards === 0 && !isSearching && validatedSearchQuery) {
+      // Client-side no-results recovery: auto-retry with broader query
+      const source = lastSearchResult.source || 'ai';
+      const hasAttemptedRecovery = sessionStorage.getItem('offmeta_recovery_in_progress') === '1';
+
+      if (!hasAttemptedRecovery && (source === 'ai' || source === 'ai_recovered' || source === 'concept_match')) {
+        const fallbackQuery = buildClientFallbackQuery(originalQuery);
+        
+        if (fallbackQuery && fallbackQuery !== lastSearchResult.scryfallQuery) {
+          sessionStorage.setItem('offmeta_recovery_in_progress', '1');
+          toast.info('Trying a broader search...', {
+            description: 'The initial translation returned no results.',
+            duration: 4000,
+          });
+          // Re-execute with the fallback query
+          setSearchQuery(fallbackQuery);
+          setLastSearchResult(prev => prev ? {
+            ...prev,
+            scryfallQuery: fallbackQuery,
+            explanation: {
+              readable: `Broadened search for: ${originalQuery}`,
+              assumptions: ['Original AI translation returned 0 results — using simplified search'],
+              confidence: 0.6,
+            },
+            source: 'client_recovery',
+          } : prev);
+          queryClient.invalidateQueries({
+            queryKey: ['cards', fallbackQuery, scryfallLang],
+          });
+          return; // Skip tracking — will re-trigger when results arrive
+        }
+      }
+
       trackSearchFailure({
         query: originalQuery,
         translated_query: lastSearchResult.scryfallQuery,
