@@ -5,8 +5,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { usePrefetchPopularQueries } from '@/hooks/useSearchQuery';
-import { useRealtimeCache } from '@/hooks/useRealtimeCache';
+import { usePrefetchPopularQueries, useRealtimeCache } from '@/hooks';
 import { supabase } from '@/integrations/supabase/client';
 
 function useEdgeFunctionWarmup() {

@@ -4,7 +4,7 @@
  */
 import { Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useDeckVotes } from '@/hooks/useDeckVotes';
+import { useDeckVotes } from '@/hooks';
 import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n';
 

@@ -35,9 +35,7 @@ import {
 import { Footer } from '@/components/Footer';
 import { Header } from '@/components/Header';
 import { SkipLinks } from '@/components/SkipLinks';
-import { useAuth } from '@/hooks/useAuth';
-import { useUserRole } from '@/hooks/useUserRole';
-import { useAdminAnalyticsData } from '@/hooks/useAdminAnalyticsData';
+import { useAuth, useUserRole, useAdminAnalyticsData } from '@/hooks';
 import { PipelineHealthIndicator } from '@/pages/admin-analytics/components/PipelineHealthIndicator';
 import { AnalyticsChartsSection } from '@/pages/admin-analytics/components/AnalyticsChartsSection';
 import { FeedbackQueuePanel } from '@/pages/admin-analytics/components/FeedbackQueuePanel';

@@ -1,6 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { useDeckEditorDerivedState } from '@/hooks/useDeckEditorDerivedState';
-import type { DeckCard } from '@/hooks/useDeck';
+import { useDeckEditorDerivedState, type DeckCard } from '@/hooks';
 
 const cards = [
   {

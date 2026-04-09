@@ -20,12 +20,12 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
-import { useAnalytics } from '@/hooks/useAnalytics';
+import { useAnalytics } from '@/hooks';
 import type { FilterState } from '@/types/filters';
 
-import { checkRateLimit } from '@/lib/feedback/rate-limit';
-import { validateIssue, extractErrorDetail } from '@/lib/feedback/validate';
-import { submitFeedback } from '@/lib/feedback/submit';
+import { checkRateLimit } from '@/lib/feedback';
+import { validateIssue, extractErrorDetail } from '@/lib/feedback';
+import { submitFeedback } from '@/lib/feedback';
 import { ReportContextPanel } from '@/components/report/ReportContextPanel';
 
 interface ReportIssueDialogProps {

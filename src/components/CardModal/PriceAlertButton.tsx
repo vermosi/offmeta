@@ -13,7 +13,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks';
 import {
   useCardPriceAlerts,
   useCreatePriceAlert,

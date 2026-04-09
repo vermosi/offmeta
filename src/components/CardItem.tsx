@@ -22,7 +22,7 @@ import {
   getLocalizedTypeLine,
 } from '@/lib/scryfall/localized';
 import { useTranslation } from '@/lib/i18n';
-import { useAnalytics } from '@/hooks/useAnalytics';
+import { useAnalytics } from '@/hooks';
 import {
   useAffiliateConfig,
   wrapAffiliateUrl,

@@ -79,18 +79,20 @@ const PwaInstallBanner = lazy(() =>
 );
 import { SkipLinks } from '@/components/SkipLinks';
 
-import { useSearch } from '@/hooks/useSearch';
+import {
+  useSearch,
+  useCompare,
+  useKeyboardShortcuts,
+  useRovingTabIndex,
+  useCollectionLookup,
+  useAuth,
+  useSimilarCards,
+  useDeckIdeas,
+  useQuerySuggestions,
+  useNoIndex,
+  useAnalytics,
+} from '@/hooks';
 import { useTranslation } from '@/lib/i18n';
-import { useCompare } from '@/hooks/useCompare';
-import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
-import { useRovingTabIndex } from '@/hooks/useRovingTabIndex';
-import { useCollectionLookup } from '@/hooks/useCollection';
-import { useAuth } from '@/hooks/useAuth';
-import { useSimilarCards } from '@/hooks/useSimilarCards';
-import { useDeckIdeas } from '@/hooks/useDeckIdeas';
-import { useQuerySuggestions } from '@/hooks/useQuerySuggestions';
-import { useNoIndex } from '@/hooks/useNoIndex';
-import { useAnalytics } from '@/hooks/useAnalytics';
 const CardModal = lazy(() => import('@/components/CardModal'));
 
 const Index = () => {

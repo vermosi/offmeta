@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { parseDecklist } from '@/lib/decklist-parser';
-import { toast } from '@/hooks/useToast';
+import { toast } from '@/hooks';
 import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n';
 

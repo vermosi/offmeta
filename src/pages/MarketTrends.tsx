@@ -12,7 +12,7 @@ import { Footer } from '@/components/Footer';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PriceSparkline } from '@/components/collection/PriceSparkline';
-import { useMarketTrends, type PriceMover } from '@/hooks/useMarketTrends';
+import { useMarketTrends, type PriceMover } from '@/hooks';
 import { cardNameToSlug } from '@/lib/card-slug';
 import {
   TrendingUp,

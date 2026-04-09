@@ -4,7 +4,7 @@ import {
   loadCachedCritique,
   saveCritique,
 } from '../critique-cache';
-import type { DeckCard } from '@/hooks/useDeck';
+import { type DeckCard } from '@/hooks';
 import { createTestCard, createMockCritiqueResult } from '@/test/factories';
 
 describe('critique-cache', () => {

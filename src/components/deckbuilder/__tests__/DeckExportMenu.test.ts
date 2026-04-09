@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import type { DeckCard, Deck } from '@/hooks/useDeck';
+import { type DeckCard, type Deck } from '@/hooks';
 
 // Re-implement buildDecklistText for testing (mirrors DeckExportMenu)
 function buildDecklistText(deck: Deck, cards: DeckCard[]): string {

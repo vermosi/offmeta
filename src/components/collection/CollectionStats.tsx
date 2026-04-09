@@ -4,7 +4,7 @@
  */
 
 import { DollarSign, Layers, BarChart3, Loader2 } from 'lucide-react';
-import { useCollectionValue, type CollectionValueData } from '@/hooks/useCollectionValue';
+import { useCollectionValue, type CollectionValueData } from '@/hooks';
 import { ManaSymbol } from '@/components/ManaSymbol';
 
 const RARITY_ORDER = ['mythic', 'rare', 'uncommon', 'common', 'unknown'];

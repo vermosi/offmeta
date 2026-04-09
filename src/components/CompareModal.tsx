@@ -14,7 +14,7 @@ import { ManaCost, OracleText } from '@/components/ManaSymbol';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { getCardImage } from '@/lib/scryfall/client';
-import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { useFocusTrap } from '@/hooks';
 import { useTranslation } from '@/lib/i18n';
 import type { ScryfallCard } from '@/types/card';
 

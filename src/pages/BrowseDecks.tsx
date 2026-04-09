@@ -17,8 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n';
 import { FORMATS, FORMAT_LABELS } from '@/data/formats';
-import type { Deck } from '@/hooks/useDeck';
-import type { DeckTag } from '@/hooks/useDeckTags';
+import { type Deck, type DeckTag } from '@/hooks';
 
 const COLORS = ['W', 'U', 'B', 'R', 'G'] as const;
 const PAGE_SIZE = 25;

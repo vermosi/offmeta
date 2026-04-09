@@ -19,7 +19,12 @@ import { DeckVoteButton } from '@/components/deck/DeckVoteButton';
 import { DeckCommentsSection } from '@/components/deck/DeckCommentsSection';
 import { Header } from '@/components/Header';
 import { Badge } from '@/components/ui/badge';
-import { useDeckTags } from '@/hooks/useDeckTags';
+import {
+  useDeckTags,
+  useAuth,
+  type Deck,
+  type DeckCard,
+} from '@/hooks';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,11 +36,9 @@ import { CATEGORIES } from '@/components/deckbuilder/constants';
 import { FORMAT_LABELS } from '@/data/formats';
 import { FORMATS } from '@/data/formats';
 import { getCardsByExactNames } from '@/lib/scryfall';
-import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/lib/i18n';
-import type { Deck, DeckCard } from '@/hooks/useDeck';
 import type { ScryfallCard } from '@/types/card';
-import { DEFAULT_CATEGORY } from '@/lib/deckbuilder/infer-category';
+import { DEFAULT_CATEGORY } from '@/lib/deckbuilder';
 
 /** Set document head meta tags for OG sharing. */
 function useOpenGraphMeta(deck: Deck | undefined, cards: DeckCard[]) {

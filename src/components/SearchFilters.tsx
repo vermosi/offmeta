@@ -24,7 +24,7 @@ import type { FilterState } from '@/types/filters';
 import { cn } from '@/lib/core/utils';
 import { Filter, ArrowUpDown, X, ChevronDown, Package, Shield } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks';
 import { useSearchFilterState } from '@/components/SearchFilters/useSearchFilterState';
 import {
   applyCardFilters,

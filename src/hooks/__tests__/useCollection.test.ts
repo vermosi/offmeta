@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import type { CollectionCard } from '@/hooks/useCollection';
+import { type CollectionCard } from '@/hooks';
 
 // Test the aggregation logic directly (mirrors useCollectionLookup)
 function buildLookupMap(collection: CollectionCard[]): Map<string, number> {

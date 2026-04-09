@@ -4,8 +4,7 @@
  */
 
 import type { ScryfallCard } from '@/types/card';
-import type { TranslationResult } from '@/hooks/useSearchQuery';
-import type { DeckCard, Deck } from '@/hooks/useDeck';
+import { type TranslationResult, type DeckCard, type Deck } from '@/hooks';
 import type { CritiqueResult } from '@/components/deckbuilder/critique-cache';
 import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';

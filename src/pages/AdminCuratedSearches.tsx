@@ -8,8 +8,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
-import { useAuth } from '@/hooks/useAuth';
-import { useUserRole } from '@/hooks/useUserRole';
+import { useAuth, useUserRole } from '@/hooks';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Loader2,

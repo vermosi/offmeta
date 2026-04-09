@@ -30,12 +30,14 @@ import { MaybeboardSection } from '@/components/deckbuilder/MaybeboardSection';
 import { DeckStatsBar } from '@/components/deckbuilder/DeckStats';
 import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n';
-import { toast } from '@/hooks/useToast';
-import type { DeckCard } from '@/hooks/useDeck';
-import type { DeckSortMode } from '@/lib/deckbuilder/sort-deck-cards';
-import type { DeckViewMode } from '@/hooks/useDeckEditorHandlers';
+import {
+  toast,
+  useUndoRedo,
+  type DeckCard,
+  type DeckViewMode,
+} from '@/hooks';
+import type { DeckSortMode } from '@/lib/deckbuilder';
 import type { ScryfallCard } from '@/types/card';
-import { useUndoRedo } from '@/hooks/useUndoRedo';
 
 type UndoRedoReturn = ReturnType<typeof useUndoRedo>;
 

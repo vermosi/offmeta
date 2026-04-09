@@ -6,7 +6,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/core/logger';
-import { recordSubmission } from '@/lib/feedback/rate-limit';
+import { recordSubmission } from '@/lib/feedback';
 
 export interface FeedbackPayload {
   originalQuery: string;

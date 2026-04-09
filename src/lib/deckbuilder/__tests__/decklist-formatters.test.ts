@@ -4,7 +4,7 @@ import {
   buildArenaText,
   buildMtgoText,
 } from '../decklist-formatters';
-import type { DeckCard, Deck } from '@/hooks/useDeck';
+import { type DeckCard, type Deck } from '@/hooks';
 
 function makeCard(name: string, overrides?: Partial<DeckCard>): DeckCard {
   return {

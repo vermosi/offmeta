@@ -5,7 +5,7 @@ import {
   validateEmailAddress,
   validatePasswordInput,
   validateSearchInput,
-} from '@/lib/validation/clientInput';
+} from '@/lib/validation';
 
 describe('clientInput validation', () => {
   it('sanitizes and validates email addresses', () => {

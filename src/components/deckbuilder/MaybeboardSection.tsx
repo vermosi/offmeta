@@ -9,7 +9,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { CardHoverImage } from '@/components/deckbuilder/CardHoverImage';
 import { SetBadge, PrintingPickerPopover } from '@/components/deckbuilder/PrintingPickerPopover';
 import { useTranslation } from '@/lib/i18n';
-import type { DeckCard } from '@/hooks/useDeck';
+import { type DeckCard } from '@/hooks';
 import type { ScryfallCard } from '@/types/card';
 import type { CardPrinting } from '@/lib/scryfall/printings';
 

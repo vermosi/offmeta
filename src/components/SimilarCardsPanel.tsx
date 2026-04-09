@@ -3,7 +3,7 @@
  * @module components/SimilarCardsPanel
  */
 
-import type { SimilarityData, SynergyCard } from '@/hooks/useSimilarCards';
+import { type SimilarityData, type SynergyCard } from '@/hooks';
 import type { ScryfallCard } from '@/types/card';
 import { CardItem } from '@/components/CardItem';
 import { Skeleton } from '@/components/ui/skeleton';

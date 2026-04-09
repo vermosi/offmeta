@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { useAdminAnalyticsFilters } from '@/hooks/useAdminAnalyticsFilters';
+import { useAdminAnalyticsFilters } from '@/hooks';
 import type {
   FeedbackItem,
   TranslationRuleRow,

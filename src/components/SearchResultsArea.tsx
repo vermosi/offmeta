@@ -5,7 +5,13 @@
  */
 
 import { lazy, useMemo } from 'react';
-import { useBatchPriceHistory } from '@/hooks/useBatchPriceHistory';
+import {
+  useBatchPriceHistory,
+  useAuth,
+  type SimilarityData,
+  type DeckIdea,
+  type QuerySuggestion,
+} from '@/hooks';
 
 import { CardItem } from '@/components/CardItem';
 import { CardListItem } from '@/components/CardListItem';
@@ -22,13 +28,9 @@ import { ExplanationPanel } from '@/components/ExplanationPanel';
 import { CLIENT_CONFIG } from '@/lib/config';
 import { useTranslation } from '@/lib/i18n';
 import { rerankCardsWithIntelligence } from '@/lib/search/intelligence-ranking';
-import { useAuth } from '@/hooks/useAuth';
 import type { ScryfallCard } from '@/types/card';
 import type { ViewMode } from '@/lib/view-mode-storage';
 import type { ResultsTab } from '@/components/ResultsTabs';
-import type { SimilarityData } from '@/hooks/useSimilarCards';
-import type { DeckIdea } from '@/hooks/useDeckIdeas';
-import type { QuerySuggestion } from '@/hooks/useQuerySuggestions';
 
 const ArtLightbox = lazy(() =>
   import('@/components/ArtLightbox').then((m) => ({ default: m.ArtLightbox })),

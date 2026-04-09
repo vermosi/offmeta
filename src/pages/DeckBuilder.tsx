@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Trash2, Layers, Crown, Upload, Globe, Lock } from 'lucide-react';
 import { AuthModal } from '@/components/AuthModal';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth, useDecks, useDeckMutations } from '@/hooks';
 import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
@@ -18,7 +18,6 @@ import {
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
-import { useDecks, useDeckMutations } from '@/hooks/useDeck';
 import { DeckImportModal } from '@/components/deckbuilder/DeckImportModal';
 import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n';

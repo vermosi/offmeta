@@ -76,7 +76,7 @@ vi.mock('@/lib/i18n/constants', () => ({
   LOCALE_TO_SCRYFALL_LANG: { en: 'en' },
 }));
 
-import { useSearch } from '@/hooks/useSearch';
+import { useSearch } from '@/hooks';
 
 function createWrapper(initialRoute = '/') {
   const qc = new QueryClient({

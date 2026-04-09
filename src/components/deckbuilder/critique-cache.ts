@@ -3,7 +3,7 @@
  * @module components/deckbuilder/critique-cache
  */
 
-import type { DeckCard } from '@/hooks/useDeck';
+import { type DeckCard } from '@/hooks';
 
 export interface CritiqueResult {
   summary: string;

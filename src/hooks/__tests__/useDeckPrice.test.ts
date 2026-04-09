@@ -5,8 +5,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
-import { useDeckPrice } from '@/hooks/useDeckPrice';
-import type { DeckCard } from '@/hooks/useDeck';
+import { useDeckPrice, type DeckCard } from '@/hooks';
 import type { ScryfallCard } from '@/types/card';
 import { createRef } from 'react';
 
