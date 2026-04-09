@@ -4,8 +4,10 @@
  * @module components/InstantDemoPreview
  */
 
+import { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Search } from 'lucide-react';
+import { useAnalytics } from '@/hooks';
 
 const DEMO_QUERY = 'budget board wipes under $5';
 const DEMO_SCRYFALL = 'otag:board-wipe usd<5';
@@ -42,6 +44,30 @@ interface InstantDemoPreviewProps {
 }
 
 export function InstantDemoPreview({ onTrySearch }: InstantDemoPreviewProps) {
+  const { trackEvent } = useAnalytics();
+  const impressionTracked = useRef(false);
+
+  useEffect(() => {
+    if (!impressionTracked.current) {
+      impressionTracked.current = true;
+      trackEvent('demo_preview_impression', { query: DEMO_QUERY });
+    }
+  }, [trackEvent]);
+
+  const handleSearchClick = () => {
+    trackEvent('demo_preview_click', { query: DEMO_QUERY, action: 'search_button' });
+    onTrySearch(DEMO_QUERY);
+  };
+
+  const handleCardClick = (cardName: string, position: number) => {
+    trackEvent('demo_preview_card_click', {
+      query: DEMO_QUERY,
+      card_name: cardName,
+      position,
+    });
+    onTrySearch(DEMO_QUERY);
+  };
+
   return (
     <div className="animate-reveal rounded-xl border border-border/60 bg-card/50 p-4 sm:p-5 space-y-3">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -56,7 +82,7 @@ export function InstantDemoPreview({ onTrySearch }: InstantDemoPreviewProps) {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => onTrySearch(DEMO_QUERY)}
+          onClick={handleSearchClick}
           className="gap-1.5 text-xs self-start sm:self-auto"
         >
           <Search className="h-3 w-3" aria-hidden="true" />
@@ -65,11 +91,11 @@ export function InstantDemoPreview({ onTrySearch }: InstantDemoPreviewProps) {
       </div>
 
       <div className="grid grid-cols-4 gap-2 sm:gap-3">
-        {DEMO_CARDS.map((card) => (
+        {DEMO_CARDS.map((card, index) => (
           <button
             key={card.name}
             type="button"
-            onClick={() => onTrySearch(DEMO_QUERY)}
+            onClick={() => handleCardClick(card.name, index)}
             className="group flex flex-col items-center gap-1.5 focus-ring rounded-lg"
           >
             <div className="relative aspect-[488/680] w-full overflow-hidden rounded-lg border border-border/40 bg-muted">

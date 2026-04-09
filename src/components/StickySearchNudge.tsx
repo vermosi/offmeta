@@ -4,10 +4,11 @@
  * @module components/StickySearchNudge
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks';
+import { useAnalytics } from '@/hooks';
 
 const NUDGE_QUERY = 'budget board wipes under $5';
 const DISMISS_KEY = 'offmeta_nudge_dismissed';
@@ -23,6 +24,8 @@ export function StickySearchNudge({
 }: StickySearchNudgeProps) {
   const isMobile = useIsMobile();
   const [visible, setVisible] = useState(false);
+  const { trackEvent } = useAnalytics();
+  const impressionTracked = useRef(false);
 
   useEffect(() => {
     if (hasSearched || !isMobile) return;
@@ -37,10 +40,18 @@ export function StickySearchNudge({
     return () => clearTimeout(timer);
   }, [hasSearched, isMobile]);
 
+  useEffect(() => {
+    if (visible && !impressionTracked.current) {
+      impressionTracked.current = true;
+      trackEvent('nudge_impression', { query: NUDGE_QUERY });
+    }
+  }, [visible, trackEvent]);
+
   if (!visible || hasSearched) return null;
 
   const dismiss = () => {
     setVisible(false);
+    trackEvent('nudge_dismiss', { query: NUDGE_QUERY });
     try {
       sessionStorage.setItem(DISMISS_KEY, '1');
     } catch {
@@ -54,6 +65,7 @@ export function StickySearchNudge({
         <button
           type="button"
           onClick={() => {
+            trackEvent('nudge_click', { query: NUDGE_QUERY });
             onTrySearch(NUDGE_QUERY);
             dismiss();
           }}

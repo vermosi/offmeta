@@ -236,6 +236,12 @@ const ALLOWED_EVENT_TYPES = [
   'example_query_click',
   'example_query_search_success',
   'example_query_result_click',
+  'demo_preview_impression',
+  'demo_preview_click',
+  'demo_preview_card_click',
+  'nudge_impression',
+  'nudge_click',
+  'nudge_dismiss',
 ] as const;
 
 type EventType = (typeof ALLOWED_EVENT_TYPES)[number];
