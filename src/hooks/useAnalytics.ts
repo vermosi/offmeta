@@ -111,15 +111,6 @@ function captureUtmParams(): UtmData {
   return utm;
 }
 
-/** Retrieve stored UTM data from session storage. */
-export function getUtmData(): UtmData {
-  try {
-    const data = sessionStorage.getItem(UTM_STORAGE_KEY);
-    return data ? (JSON.parse(data) as UtmData) : {};
-  } catch {
-    return {};
-  }
-}
 
 interface RateLimitData {
   count: number;

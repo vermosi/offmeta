@@ -111,13 +111,6 @@ export function injectJsonLd(data: Record<string, unknown>): () => void {
   };
 }
 
-/**
- * Remove any existing JSON-LD block injected by injectJsonLd.
- */
-export function removeJsonLd(): void {
-  document.getElementById(JSON_LD_ID)?.remove();
-}
-
 // ── JSON-LD builders ──────────────────────────────────────────────────────────
 
 import type { ScryfallCard } from '@/types/card';
