@@ -117,7 +117,7 @@ function ColorPie({ colorCounts }: { colorCounts: Record<string, number> }) {
 // ── Stats Container ──
 export interface DeckStatsData {
   cards: DeckCard[];
-  scryfallCache: Map<string, ScryfallCard>;
+  scryfallCacheRef: RefObject<Map<string, ScryfallCard>>;
   formatMax: number;
   /** Bump this counter to force re-computation when the cache mutates in place. */
   cacheVersion?: number;
@@ -125,13 +125,14 @@ export interface DeckStatsData {
 
 export function DeckStatsBar({
   cards,
-  scryfallCache,
+  scryfallCacheRef,
   formatMax,
   cacheVersion,
 }: DeckStatsData) {
   const { t } = useTranslation();
   const stats = useMemo(() => {
     void cacheVersion;
+    const scryfallCache = scryfallCacheRef.current;
     const curve = new Array(8).fill(0);
     const colorCounts: Record<string, number> = {};
     const typeCounts: Record<string, number> = {};
