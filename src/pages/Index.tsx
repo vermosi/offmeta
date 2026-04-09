@@ -44,7 +44,9 @@ import { Header } from '@/components/Header';
 const HeroSection = lazy(() =>
   import('@/components/HeroSection').then((m) => ({ default: m.HeroSection })),
 );
-import { HomepageLandingContent } from '@/components/HomepageLandingContent';
+import { InstantDemoPreview } from '@/components/InstantDemoPreview';
+import { ValuePropStrip } from '@/components/ValuePropStrip';
+import { StickySearchNudge } from '@/components/StickySearchNudge';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { type ViewMode, getStoredViewMode } from '@/lib/view-mode-storage';
 const ResultsTabs = lazy(() =>
@@ -440,18 +442,7 @@ const Index = () => {
             </div>
 
             {!hasSearched && (
-              <p className="text-center text-sm text-muted-foreground animate-reveal">
-                Describe your deck need in plain English. Example:{' '}
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleTryExample('commander board wipes under $5')
-                  }
-                  className="underline decoration-dotted underline-offset-4 hover:text-foreground transition-colors"
-                >
-                  "commander board wipes under $5"
-                </button>
-              </p>
+              <InstantDemoPreview onTrySearch={handleTryExample} />
             )}
 
             {hasSearched && (
@@ -524,27 +515,6 @@ const Index = () => {
                     workflow.
                   </div>
                 )}
-                {lastClickLatencyMs !== null && lastClickLatencyMs < 1200 && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setTabState({ query: originalQuery, tab: 'similar' })
-                    }
-                    className="w-full text-left rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-xs text-foreground hover:bg-accent/15 transition-colors"
-                  >
-                    Fast pick detected ({lastClickLatencyMs}ms). See boosted
-                    similar cards →
-                  </button>
-                )}
-                {struggleCount >= 2 && (
-                  <div className="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-foreground">
-                    Looks like this search is struggling. Try guided suggestions
-                    below to recover quickly.
-                  </div>
-                )}
-                <div className="text-[11px] text-muted-foreground">
-                  Search quality score: {Math.round(queryQualityScore * 100)}%
-                </div>
                 {shouldShowProUpsell && (
                   <div className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-foreground">
                     Better results with Pro: advanced explainability + priority
@@ -612,11 +582,14 @@ const Index = () => {
           />
         </main>
 
-        {!hasSearched && (
-          <HomepageLandingContent onTrySearch={handleTryExample} />
-        )}
+        {!hasSearched && <ValuePropStrip />}
 
         <Footer />
+
+        <StickySearchNudge
+          hasSearched={hasSearched}
+          onTrySearch={handleTryExample}
+        />
         <ScrollToTop threshold={800} />
 
         {selectedCard && (
