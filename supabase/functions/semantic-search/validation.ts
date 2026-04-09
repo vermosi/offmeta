@@ -168,6 +168,30 @@ export function sanitizeInputQuery(query: string): {
     };
   }
 
+  // Detect prompt injection patterns — reject before wasting AI budget
+  const PROMPT_INJECTION_PATTERNS = [
+    /\bignore\s+(all\s+)?previous\s+instructions?\b/i,
+    /\bignore\s+(all\s+)?prior\s+instructions?\b/i,
+    /\bforget\s+(all\s+)?(your|previous)\s+instructions?\b/i,
+    /\byou\s+are\s+(now\s+)?a\b/i,
+    /\bsystem\s+prompt\b/i,
+    /\bact\s+as\s+(a|an|if)\b/i,
+    /\bpretend\s+(you\s+are|to\s+be)\b/i,
+    /\boverride\s+(all\s+)?(previous|prior|system)\b/i,
+    /\bdo\s+not\s+follow\s+(your|the)\s+(instructions?|rules?|guidelines?)\b/i,
+    /\bnew\s+instructions?\s*:/i,
+    /\bdisregard\s+(all\s+)?(previous|prior|above)\b/i,
+  ];
+
+  for (const pattern of PROMPT_INJECTION_PATTERNS) {
+    if (pattern.test(sanitized)) {
+      return {
+        valid: false,
+        reason: 'Query contains invalid instructions',
+      };
+    }
+  }
+
   return { valid: true, sanitized };
 }
 

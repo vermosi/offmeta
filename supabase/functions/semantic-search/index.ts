@@ -36,6 +36,7 @@ import {
   extractAIContent,
   parseAIContent,
 } from './schemas.ts';
+import { relaxSpeculativeClauses } from './scryfall.ts';
 import { VALID_SEARCH_KEYS } from './constants.ts';
 import {
   AI_FETCH_TIMEOUT_MS,
@@ -513,14 +514,38 @@ serve(async (req) => {
     }
 
     // 2.5b. Fast-path for card-name queries (skip cache/pattern/AI entirely)
-    // First check DB for known card names, then fall back to heuristic for capitalized queries.
+    // First check DB for known card names, then fall back to Scryfall fuzzy + heuristic.
     const queryWords = query.trim().split(/\s+/);
     const hasSearchKeywords = /\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries)\b/i.test(query);
 
     // DB lookup: exact card name match (async, ~1ms from in-memory cache)
-    const isKnownCard = !hasSearchKeywords && queryWords.length <= 6
+    let isKnownCard = !hasSearchKeywords && queryWords.length <= 6
       ? await markStage('card_name_lookup', () => lookupCardName(query))
       : false;
+
+    // Scryfall fuzzy name fallback: if DB misses and query is 2-5 words without
+    // search keywords, try Scryfall's fuzzy name endpoint as a secondary check.
+    if (!isKnownCard && !hasSearchKeywords && queryWords.length >= 2 && queryWords.length <= 5) {
+      try {
+        const fuzzyResp = await fetchWithTimeout(
+          `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(query.trim())}`,
+          {},
+          2000,
+        );
+        if (fuzzyResp.ok) {
+          const cardData = await fuzzyResp.json();
+          if (cardData.name) {
+            isKnownCard = true;
+            logInfo('scryfall_fuzzy_card_name_hit', {
+              query: query.substring(0, 50),
+              matchedName: cardData.name,
+            });
+          }
+        }
+      } catch {
+        // Fuzzy lookup failed — proceed without it
+      }
+    }
 
     // Heuristic fallback for capitalized queries not in DB
     const isFastNameCandidate = !isKnownCard &&
@@ -1357,10 +1382,17 @@ serve(async (req) => {
 
       // Parse AI response (expecting JSON-like block or raw scryfall)
       const parsedContent = parseAIContent(rawContent);
-      const scryfallQuery = parsedContent.scryfallQuery;
+      let scryfallQuery = parsedContent.scryfallQuery;
       const explanationText =
         parsedContent.explanation || `Translated: ${query}`;
       const confidence = parsedContent.confidence || 0.75;
+
+      // Step 2: Guard against empty AI responses
+      if (!scryfallQuery || !scryfallQuery.trim()) {
+        logWarn('ai_empty_response_guard', { query: query.substring(0, 50) });
+        // Fall back to exact name search or deterministic query
+        scryfallQuery = deterministicQuery || `!"${query.trim()}"`;
+      }
 
       // 8. Post-Processing & Validation
       const qualityFlags = detectQualityFlags(scryfallQuery);
@@ -1370,18 +1402,128 @@ serve(async (req) => {
       );
       const validation = validateQuery(correctedQuery);
 
+      // Step 3: Scryfall result count validation (2s timeout)
+      // If AI translation returns 0 results, try deterministic fallback
+      let finalQuery = validation.sanitized;
+      let resultCount: number | null = null;
+      let aiValidationNote: string | null = null;
+
+      try {
+        const countResp = await fetchWithTimeout(
+          `https://api.scryfall.com/cards/search?q=${encodeURIComponent(finalQuery)}&page=1`,
+          {},
+          2000,
+        );
+        if (countResp.status === 200) {
+          const countData = await countResp.json();
+          resultCount = countData.total_cards ?? null;
+        } else if (countResp.status === 404) {
+          resultCount = 0;
+        }
+      } catch {
+        // Scryfall validation timed out — proceed without it
+      }
+
+      // If AI translation returned zero results, try fallback strategies
+      if (resultCount === 0) {
+        logWarn('ai_zero_results_detected', {
+          query: query.substring(0, 50),
+          aiQuery: finalQuery,
+        });
+
+        // Strategy 1: Try deterministic query
+        if (deterministicQuery && deterministicQuery !== finalQuery) {
+          try {
+            const detResp = await fetchWithTimeout(
+              `https://api.scryfall.com/cards/search?q=${encodeURIComponent(deterministicQuery)}&page=1`,
+              {},
+              2000,
+            );
+            if (detResp.status === 200) {
+              const detData = await detResp.json();
+              if (detData.total_cards > 0) {
+                finalQuery = deterministicQuery;
+                resultCount = detData.total_cards;
+                aiValidationNote = 'AI translation returned 0 results — using deterministic fallback';
+                logInfo('ai_zero_results_recovered_deterministic', {
+                  query: query.substring(0, 50),
+                  recoveredCount: resultCount,
+                });
+              }
+            }
+          } catch {
+            // Deterministic validation failed — proceed
+          }
+        }
+
+        // Strategy 2: Try relaxed query (strip speculative clauses)
+        if (resultCount === 0) {
+          const { relaxedQuery, removed } = relaxSpeculativeClauses(finalQuery);
+          if (removed.length > 0) {
+            try {
+              const relaxResp = await fetchWithTimeout(
+                `https://api.scryfall.com/cards/search?q=${encodeURIComponent(relaxedQuery)}&page=1`,
+                {},
+                2000,
+              );
+              if (relaxResp.status === 200) {
+                const relaxData = await relaxResp.json();
+                if (relaxData.total_cards > 0) {
+                  finalQuery = relaxedQuery;
+                  resultCount = relaxData.total_cards;
+                  aiValidationNote = `AI translation returned 0 results — relaxed by removing: ${removed.join(', ')}`;
+                  logInfo('ai_zero_results_recovered_relaxed', {
+                    query: query.substring(0, 50),
+                    removed,
+                    recoveredCount: resultCount,
+                  });
+                }
+              }
+            } catch {
+              // Relaxed validation failed — proceed
+            }
+          }
+        }
+
+        // Strategy 3: Fall back to name search as last resort
+        if (resultCount === 0) {
+          const nameQuery = `!"${query.trim()}"`;
+          try {
+            const nameResp = await fetchWithTimeout(
+              `https://api.scryfall.com/cards/search?q=${encodeURIComponent(nameQuery)}&page=1`,
+              {},
+              2000,
+            );
+            if (nameResp.status === 200) {
+              const nameData = await nameResp.json();
+              if (nameData.total_cards > 0) {
+                finalQuery = nameQuery;
+                resultCount = nameData.total_cards;
+                aiValidationNote = 'AI translation returned 0 results — matched as card name';
+              }
+            }
+          } catch {
+            // Name search failed — proceed with original
+          }
+        }
+      }
+
       const readableExplanation = detectedCardName
         ? `Finding cards that synergize with ${detectedCardName}`
         : explanationText;
 
+      const allCorrections = aiValidationNote
+        ? [...corrections, aiValidationNote]
+        : corrections;
+
       const finalResult = {
-        scryfallQuery: validation.sanitized,
+        scryfallQuery: finalQuery,
         explanation: {
           readable: readableExplanation,
           assumptions: detectedCardName
-            ? [`Detected card: ${detectedCardName}`, ...corrections]
-            : corrections,
-          confidence: confidence,
+            ? [`Detected card: ${detectedCardName}`, ...allCorrections]
+            : allCorrections,
+          confidence: aiValidationNote ? Math.max(confidence - 0.1, 0.5) : confidence,
         },
         showAffiliate: true,
       };
@@ -1392,29 +1534,30 @@ serve(async (req) => {
       logInfo('request_completed', getPerfLogFields('ai', responseTimeMs));
 
       // Cache AI results more aggressively (>= 0.65 instead of 0.8) to prevent duplicate AI calls
-      if (useCache && confidence >= 0.65) {
+      if (useCache && finalResult.explanation.confidence >= 0.65) {
         setCachedResult(query, filters, finalResult, cacheSalt);
         setPersistentCache(query, filters, finalResult, cacheSalt);
       }
 
       // Auto-seed high-confidence AI translations into translation_rules for future pattern matches
-      if (confidence >= 0.8 && validation.sanitized.length > 0) {
+      if (finalResult.explanation.confidence >= 0.8 && finalQuery.length > 0) {
         runInBackground(
-          seedTranslationRule(query, validation.sanitized, confidence),
+          seedTranslationRule(query, finalQuery, finalResult.explanation.confidence),
         );
       }
 
+      // Step 4: Populate result_count in translation_logs
       logTranslation(
         query,
-        validation.sanitized,
-        confidence,
+        finalQuery,
+        finalResult.explanation.confidence,
         responseTimeMs,
         validation.issues,
         qualityFlags,
         filters,
         false,
-        'ai',
-        null,
+        aiValidationNote ? 'ai_recovered' : 'ai',
+        resultCount,
         {
           preTranslationAttempted,
           preTranslationSkippedReason,
@@ -1424,6 +1567,7 @@ serve(async (req) => {
         responseTimeMs,
         preTranslationAttempted,
         preTranslationSkippedReason,
+        resultCount,
       });
       flushLogQueue(); // fire-and-forget
 
@@ -1435,7 +1579,7 @@ serve(async (req) => {
           validationIssues: validation.issues,
           responseTimeMs: responseTimeMs,
           success: true,
-          source: 'ai',
+          source: aiValidationNote ? 'ai_recovered' : 'ai',
         }),
         { headers: jsonHeaders },
       );
