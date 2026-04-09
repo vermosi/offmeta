@@ -207,7 +207,7 @@ export function DeckStatsBar({
       totalPrice,
       priceCount,
     };
-  }, [cards, scryfallCache, cacheVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cards, scryfallCache, cacheVersion]);
 
   return (
     <div className="border-t border-border bg-card px-4 py-2.5">
