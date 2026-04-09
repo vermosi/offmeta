@@ -3,7 +3,7 @@
  * @module components/deckbuilder/DeckStats
  */
 
-import { useMemo } from 'react';
+import { useMemo, type RefObject } from 'react';
 import { type DeckCard } from '@/hooks';
 import type { ScryfallCard } from '@/types/card';
 import { cn } from '@/lib/core/utils';
@@ -117,22 +117,28 @@ function ColorPie({ colorCounts }: { colorCounts: Record<string, number> }) {
 // ── Stats Container ──
 export interface DeckStatsData {
   cards: DeckCard[];
-  scryfallCacheRef: RefObject<Map<string, ScryfallCard>>;
+  scryfallCache: Map<string, ScryfallCard> | RefObject<Map<string, ScryfallCard>>;
   formatMax: number;
   /** Bump this counter to force re-computation when the cache mutates in place. */
   cacheVersion?: number;
 }
 
+function resolveCache(
+  cache: Map<string, ScryfallCard> | RefObject<Map<string, ScryfallCard>>,
+): Map<string, ScryfallCard> {
+  return cache instanceof Map ? cache : cache.current;
+}
+
 export function DeckStatsBar({
   cards,
-  scryfallCacheRef,
+  scryfallCache,
   formatMax,
   cacheVersion,
 }: DeckStatsData) {
   const { t } = useTranslation();
   const stats = useMemo(() => {
     void cacheVersion;
-    const scryfallCache = scryfallCacheRef.current;
+    const cache = resolveCache(scryfallCache);
     const curve = new Array(8).fill(0);
     const colorCounts: Record<string, number> = {};
     const typeCounts: Record<string, number> = {};
