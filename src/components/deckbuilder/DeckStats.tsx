@@ -148,7 +148,7 @@ export function DeckStatsBar({
     let priceCount = 0;
 
     for (const dc of cards) {
-      const sc = scryfallCache.get(dc.card_name);
+      const sc = cache.get(dc.card_name);
       const qty = dc.quantity;
 
       // CMC distribution (skip lands)
@@ -207,7 +207,7 @@ export function DeckStatsBar({
       totalPrice,
       priceCount,
     };
-  }, [cards, scryfallCache, cacheVersion]);
+  }, [cards, scryfallCache, cacheVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="border-t border-border bg-card px-4 py-2.5">

@@ -371,11 +371,10 @@ export function DeckListView({
     </div>
   );
 
-  const scryfallCacheSnapshot = scryfallCacheRef.current;
   const statsBar = cards.length > 0 && (
     <DeckStatsBar
       cards={mainboardCards}
-      scryfallCache={scryfallCacheSnapshot}
+      scryfallCache={scryfallCacheRef}
       formatMax={formatMax}
       cacheVersion={scryfallCacheVersion}
     />
