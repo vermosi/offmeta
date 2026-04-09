@@ -63,7 +63,7 @@ export function InstantDemoPreview({ onTrySearch }: InstantDemoPreviewProps) {
     trackEvent('demo_preview_card_click', {
       query: DEMO_QUERY,
       card_name: cardName,
-      position_in_results: position,
+      position,
     });
     onTrySearch(DEMO_QUERY);
   };
