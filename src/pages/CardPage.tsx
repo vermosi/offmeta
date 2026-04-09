@@ -20,7 +20,7 @@ import {
   buildFaqJsonLd,
   buildCardFaqs,
 } from '@/lib/seo';
-import { useSimilarCards } from '@/hooks/useSimilarCards';
+import { useSimilarCards } from '@/hooks';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { ManaSymbol } from '@/components/ManaSymbol';

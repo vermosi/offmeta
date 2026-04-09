@@ -10,7 +10,7 @@ import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks';
 import { supabase } from '@/integrations/supabase/client';
 import { SkipLinks } from '@/components/SkipLinks';
 import { toast } from 'sonner';

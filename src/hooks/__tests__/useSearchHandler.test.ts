@@ -33,7 +33,7 @@ vi.mock('@/lib/core/logger', () => ({
 }));
 
 // Import after mocks are defined
-import { useSearchHandler } from '@/hooks/useSearchHandler';
+import { useSearchHandler } from '@/hooks';
 import { toast } from 'sonner';
 
 const mockToast = toast as unknown as {

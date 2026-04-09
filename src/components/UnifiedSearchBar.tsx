@@ -16,7 +16,16 @@ import {
 import { Button } from '@/components/ui/button';
 import { Search, Loader2, X, Clock, Sparkles, Database } from 'lucide-react';
 import { SearchHistoryDropdown } from '@/components/SearchHistoryDropdown';
-import { useIsMobile } from '@/hooks/useMobile';
+import {
+  useIsMobile,
+  useTypingPlaceholder,
+  useSearchContext,
+  useSearchHistory,
+  useSearchHandler,
+  useVoiceInput,
+  useAnalytics,
+  type SearchPhase,
+} from '@/hooks';
 const SearchFeedback = lazy(() =>
   import('@/components/SearchFeedback').then((m) => ({
     default: m.SearchFeedback,
@@ -29,13 +38,7 @@ const SearchHelpModal = lazy(() =>
 );
 import { VoiceSearchButton } from '@/components/VoiceSearchButton';
 import type { FilterState } from '@/types/filters';
-import { useTypingPlaceholder } from '@/hooks/useTypingPlaceholder';
 import type { SearchIntent } from '@/types/search';
-import { useSearchContext } from '@/hooks/useSearchContext';
-import { useSearchHistory } from '@/hooks/useSearchHistory';
-import { useSearchHandler, type SearchPhase } from '@/hooks/useSearchHandler';
-import { useVoiceInput } from '@/hooks/useVoiceInput';
-import { useAnalytics } from '@/hooks/useAnalytics';
 import { useTranslation } from '@/lib/i18n';
 
 export interface SearchResult {

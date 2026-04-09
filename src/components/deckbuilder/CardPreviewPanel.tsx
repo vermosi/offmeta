@@ -11,7 +11,7 @@ import { DeckCritiquePanel } from '@/components/deckbuilder/DeckCritiquePanel';
 import { useTranslation } from '@/lib/i18n';
 import { searchCards } from '@/lib/scryfall';
 import type { ScryfallCard } from '@/types/card';
-import type { DeckCard } from '@/hooks/useDeck';
+import { type DeckCard } from '@/hooks';
 import type { CardSuggestion } from '@/components/deckbuilder/SuggestionsPanel';
 
 interface CardPreviewPanelProps {

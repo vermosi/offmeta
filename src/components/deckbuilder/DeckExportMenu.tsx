@@ -13,14 +13,13 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/hooks/useToast';
-import type { DeckCard, Deck } from '@/hooks/useDeck';
+import { toast, type DeckCard, type Deck } from '@/hooks';
 import { useTranslation } from '@/lib/i18n';
 import {
   buildDecklistText,
   buildArenaText,
   buildMtgoText,
-} from '@/lib/deckbuilder/decklist-formatters';
+} from '@/lib/deckbuilder';
 
 interface DeckExportMenuProps {
   deck: Deck;

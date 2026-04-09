@@ -5,7 +5,7 @@
 
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { useDeckTags, useDeckTagMutations, usePopularTags } from '@/hooks/useDeckTags';
+import { useDeckTags, useDeckTagMutations, usePopularTags } from '@/hooks';
 import { useTranslation } from '@/lib/i18n';
 
 export function DeckTagEditor({ deckId }: { deckId: string }) {

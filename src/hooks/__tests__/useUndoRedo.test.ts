@@ -1,6 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
-import { useUndoRedo } from '@/hooks/useUndoRedo';
-import type { UndoableAction } from '@/hooks/useUndoRedo';
+import { useUndoRedo, type UndoableAction } from '@/hooks';
 
 describe('useUndoRedo', () => {
   it('starts empty with no undo/redo available', () => {

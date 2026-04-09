@@ -5,7 +5,7 @@
 import { type RefObject } from 'react';
 import { CardPreviewPanel } from '@/components/deckbuilder/CardPreviewPanel';
 import type { ScryfallCard } from '@/types/card';
-import type { DeckCard } from '@/hooks/useDeck';
+import { type DeckCard } from '@/hooks';
 import type { CardSuggestion } from '@/components/deckbuilder/SuggestionsPanel';
 
 interface DeckPreviewSidebarProps {

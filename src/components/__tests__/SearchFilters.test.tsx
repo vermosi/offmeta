@@ -6,7 +6,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { SearchFilters } from '../SearchFilters';
-import { AuthContext } from '@/hooks/useAuth';
+import { AuthContext } from '@/hooks';
 import type { ScryfallCard } from '@/types/card';
 
 const mockAuth = {

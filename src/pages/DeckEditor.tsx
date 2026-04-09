@@ -12,12 +12,16 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
-import { useDeck, useDeckCards, useDeckMutations } from '@/hooks/useDeck';
-import { useAuth } from '@/hooks/useAuth';
-import { useIsMobile } from '@/hooks/useMobile';
-import { useUndoRedo } from '@/hooks/useUndoRedo';
-import { useDeckActions } from '@/hooks/useDeckActions';
-import { useDeckEditorHandlers } from '@/hooks/useDeckEditorHandlers';
+import {
+  useDeck,
+  useDeckCards,
+  useDeckMutations,
+  useAuth,
+  useIsMobile,
+  useUndoRedo,
+  useDeckActions,
+  useDeckEditorHandlers,
+} from '@/hooks';
 import { DeckEditorHeader } from '@/components/deckbuilder/DeckEditorHeader';
 import { DeckListView } from '@/components/deckbuilder/DeckListView';
 import { DeckPreviewSidebar } from '@/components/deckbuilder/DeckPreviewSidebar';

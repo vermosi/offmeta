@@ -37,7 +37,7 @@ import {
 } from '@/components/deckbuilder/PrintingPickerPopover';
 import { ManaCost } from '@/components/ManaSymbol';
 import { useTranslation } from '@/lib/i18n';
-import type { DeckCard } from '@/hooks/useDeck';
+import { type DeckCard } from '@/hooks';
 import type { ScryfallCard } from '@/types/card';
 import type { CardPrinting } from '@/lib/scryfall/printings';
 

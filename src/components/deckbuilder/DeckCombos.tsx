@@ -14,7 +14,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 
-import type { DeckCard } from '@/hooks/useDeck';
+import { type DeckCard } from '@/hooks';
 
 interface ComboCard {
   name: string;

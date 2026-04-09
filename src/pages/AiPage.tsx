@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect, useRef } from 'react';
 import { applySeoMeta, injectJsonLd } from '@/lib/seo';
-import { useNoIndex } from '@/hooks/useNoIndex';
+import { useNoIndex } from '@/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Accordion,

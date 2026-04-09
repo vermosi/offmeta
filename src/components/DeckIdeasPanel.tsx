@@ -3,7 +3,7 @@
  * @module components/DeckIdeasPanel
  */
 
-import type { DeckIdea } from '@/hooks/useDeckIdeas';
+import { type DeckIdea } from '@/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Lightbulb, Star, Puzzle, DollarSign, ExternalLink } from 'lucide-react';

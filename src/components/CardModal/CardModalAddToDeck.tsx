@@ -15,12 +15,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useAuth } from '@/hooks/useAuth';
-import { useDecks, useDeckMutations } from '@/hooks/useDeck';
-import { toast } from '@/hooks/useToast';
+import {
+  useAuth,
+  useDecks,
+  useDeckMutations,
+  toast,
+} from '@/hooks';
 import { useTranslation } from '@/lib/i18n';
 import type { ScryfallCard } from '@/types/card';
-import { inferCategory } from '@/lib/deckbuilder/infer-category';
+import { inferCategory } from '@/lib/deckbuilder';
 
 interface CardModalAddToDeckProps {
   card: ScryfallCard;

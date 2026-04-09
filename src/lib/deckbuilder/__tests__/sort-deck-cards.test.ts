@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { sortDeckCards } from '../sort-deck-cards';
-import type { DeckCard } from '@/hooks/useDeck';
+import { type DeckCard } from '@/hooks';
 import type { ScryfallCard } from '@/types/card';
 
 function makeDeckCard(name: string, overrides?: Partial<DeckCard>): DeckCard {

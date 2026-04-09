@@ -31,7 +31,7 @@ import { DeckTagEditor } from '@/components/deckbuilder/DeckTagEditor';
 import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n';
 import type { ScryfallCard } from '@/types/card';
-import type { DeckCard } from '@/hooks/useDeck';
+import { type DeckCard } from '@/hooks';
 
 interface DeckEditorHeaderProps {
   deck: {

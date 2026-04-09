@@ -9,7 +9,7 @@ import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks';
 import { Lock, Loader2, CheckCircle2 } from 'lucide-react';
 import { SkipLinks } from '@/components/SkipLinks';
 import { useTranslation } from '@/lib/i18n';

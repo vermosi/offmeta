@@ -6,7 +6,7 @@
 
 import { Minus, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/core/utils';
-import type { DeckCard } from '@/hooks/useDeck';
+import { type DeckCard } from '@/hooks';
 import type { ScryfallCard } from '@/types/card';
 
 interface VisualCardGridProps {

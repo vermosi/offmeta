@@ -23,9 +23,12 @@ import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { X, Loader2, ChevronRight } from 'lucide-react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { useIsMobile } from '@/hooks/useMobile';
-import { useAnalytics } from '@/hooks/useAnalytics';
-import { useAffiliateConfig, wrapAffiliateUrl } from '@/hooks/useAffiliateConfig';
+import {
+  useIsMobile,
+  useAnalytics,
+  useAffiliateConfig,
+  wrapAffiliateUrl,
+} from '@/hooks';
 import { useTranslation } from '@/lib/i18n';
 
 import {

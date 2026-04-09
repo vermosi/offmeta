@@ -6,7 +6,7 @@ import { useState, useCallback, useRef } from 'react';
 import { MessageSquare, Trash2, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { useDeckComments, type DeckComment } from '@/hooks/useDeckComments';
+import { useDeckComments, type DeckComment } from '@/hooks';
 import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n';
 

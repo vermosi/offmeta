@@ -22,7 +22,7 @@ import { NotificationBell } from '@/components/NotificationBell';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { Logo } from '@/components/Logo';
 import { AuthModal } from '@/components/AuthModal';
-import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { useFocusTrap, useAuth, useUserRole } from '@/hooks';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,8 +32,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n';
-import { useAuth } from '@/hooks/useAuth';
-import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
 
 /* ------------------------------------------------------------------ */

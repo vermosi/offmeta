@@ -3,7 +3,7 @@
  */
 
 import type { ReactNode } from 'react';
-import { AuthContext, useAuthProvider } from '@/hooks/useAuth';
+import { AuthContext, useAuthProvider } from '@/hooks';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const auth = useAuthProvider();

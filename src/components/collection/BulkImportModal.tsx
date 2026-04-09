@@ -15,7 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Upload, FileText, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react';
-import { useAddToCollection } from '@/hooks/useCollection';
+import { useAddToCollection } from '@/hooks';
 import { toast } from 'sonner';
 
 interface BulkImportModalProps {

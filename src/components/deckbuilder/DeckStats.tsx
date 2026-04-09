@@ -4,7 +4,7 @@
  */
 
 import { useMemo } from 'react';
-import type { DeckCard } from '@/hooks/useDeck';
+import { type DeckCard } from '@/hooks';
 import type { ScryfallCard } from '@/types/card';
 import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n/useTranslation';

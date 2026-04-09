@@ -6,7 +6,7 @@
 import { memo } from 'react';
 import { Plus, Minus, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks';
 import {
   useCollectionCard,
   useAddToCollection,

@@ -6,7 +6,7 @@
 
 import { useMemo } from 'react';
 import { cn } from '@/lib/core/utils';
-import type { DeckCard } from '@/hooks/useDeck';
+import { type DeckCard } from '@/hooks';
 import type { ScryfallCard } from '@/types/card';
 
 const PILE_COLORS: { key: string; label: string }[] = [
