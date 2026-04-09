@@ -35,6 +35,7 @@ export {
   useDeckCards,
   useDeckMutations,
   useDeckCardMutations,
+  ensureSession,
   type Deck,
   type DeckCard,
 } from './useDeck';
@@ -78,7 +79,7 @@ export { useSearchHistory } from './useSearchHistory';
 export { useTranslateQuery, usePrefetchPopularQueries, type TranslationResult } from './useSearchQuery';
 export { useSignatureCards, type SignatureCard } from './useSignatureCards';
 export { useSimilarCards, type SynergyCard, type SimilarityData } from './useSimilarCards';
-export { toast } from './useToast';
+export { useToast, toast } from './useToast';
 export { useTypingPlaceholder } from './useTypingPlaceholder';
 export { useUndoRedo, type UndoableAction } from './useUndoRedo';
 export { useUserRole } from './useUserRole';
