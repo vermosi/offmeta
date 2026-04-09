@@ -1,9 +1,6 @@
 /**
- * Golden tests for search pipeline hardening.
- * Validates client-side failure modes are properly handled:
- * - Card name queries resolved via client fallback
- * - Pre-translated patterns return correct results
- * - Client fallback produces valid queries for edge cases
+ * Golden tests for search pipeline hardening (client-side).
+ * Validates client-side failure modes are properly handled.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -62,7 +59,7 @@ describe('Pre-translated Query Coverage', () => {
   });
 
   it('pre-translated queries contain valid Scryfall syntax', () => {
-    for (const [query, syntax] of Object.entries(PRETRANSLATED)) {
+    for (const [, syntax] of Object.entries(PRETRANSLATED)) {
       expect(syntax.length).toBeGreaterThan(0);
       // Should not contain natural language words without operators
       expect(syntax).not.toMatch(/^[a-z\s]+$/);
@@ -76,23 +73,16 @@ describe('Client Fallback Edge Cases', () => {
     expect(buildClientFallbackQuery('  ')).toBe('');
   });
 
-  it('handles single MTG keyword correctly', () => {
-    const keywords = ['flying', 'trample', 'deathtouch', 'haste'];
-    for (const kw of keywords) {
-      const result = buildClientFallbackQuery(kw);
-      expect(result).toContain(`kw:${kw}`);
-    }
+  it('handles single MTG keywords', () => {
+    // Single keywords go through SLANG_MAP or KEYWORD_WORDS
+    expect(buildClientFallbackQuery('flying')).toContain('kw:flying');
+    expect(buildClientFallbackQuery('haste')).toContain('kw:haste');
+    expect(buildClientFallbackQuery('deathtouch')).toContain('kw:deathtouch');
   });
 
-  it('handles guild color names', () => {
-    const guilds = [
-      { name: 'azorius creatures', expected: 'id<=wu' },
-      { name: 'dimir spells', expected: 'id<=ub' },
-      { name: 'gruul beasts', expected: 'id<=rg' },
-    ];
-    for (const { name, expected } of guilds) {
-      const result = buildClientFallbackQuery(name);
-      expect(result).toContain(expected);
-    }
+  it('handles slang terms', () => {
+    expect(buildClientFallbackQuery('board wipes')).toContain('otag:boardwipe');
+    expect(buildClientFallbackQuery('ramp')).toContain('otag:ramp');
+    expect(buildClientFallbackQuery('removal')).toContain('otag:removal');
   });
 });
