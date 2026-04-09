@@ -128,6 +128,8 @@ describe('localStorage override takes priority over browser detection', () => {
 
   beforeEach(() => {
     localStorage.clear();
+    // Reset module cache so getInitialLocale re-runs with fresh state
+    vi.resetModules();
   });
 
   afterEach(() => {
@@ -136,17 +138,13 @@ describe('localStorage override takes priority over browser detection', () => {
   });
 
   it('stored locale wins even when browser reports a different language', async () => {
-    // Store 'es' explicitly
     localStorage.setItem(STORAGE_KEY, 'es');
-    // Browser reports French
     setNavigatorLanguages(['fr-FR']);
 
     const { I18nProvider } = await import('../index');
     const { I18nContext } = await import('../context');
     const { render, screen } = await import('@testing-library/react');
 
-    // Render a Consumer that writes the locale as DOM text — no outer variable
-    // mutation inside render, satisfying react-hooks/immutability.
     function Consumer() {
       const ctx = React.useContext(I18nContext);
       return React.createElement('span', { 'data-testid': 'locale' }, ctx?.locale ?? '');
@@ -160,7 +158,6 @@ describe('localStorage override takes priority over browser detection', () => {
   });
 
   it('auto-detected locale is persisted to localStorage on first visit', async () => {
-    // No stored preference
     localStorage.removeItem(STORAGE_KEY);
     setNavigatorLanguages(['de-DE']);
 
