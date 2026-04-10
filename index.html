@@ -58,12 +58,24 @@
     <link rel="alternate" hreflang="zh-Hant" href="https://offmeta.app/" />
     <link rel="alternate" hreflang="x-default" href="https://offmeta.app/" />
 
-    <!-- Preconnect to Google Fonts (highest priority - used in CSS) -->
+    <!-- Preconnect to Google Fonts (highest priority) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Non-render-blocking font loading -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+      />
+    </noscript>
 
     <!-- Preconnect to external APIs for faster first requests -->
-    <link rel="preconnect" href="https://api.scryfall.com" crossorigin />
     <link rel="dns-prefetch" href="https://api.scryfall.com" />
     <link rel="preconnect" href="https://cards.scryfall.io" crossorigin />
     <link rel="dns-prefetch" href="https://cards.scryfall.io" />
