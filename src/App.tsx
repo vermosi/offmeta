@@ -69,50 +69,52 @@ const App = () => (
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <Suspense fallback={null}>
-          <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <AppInitializer />
-            </Suspense>
-            <BrowserRouter>
-              <ScrollToTopOnNavigate />
-              <ErrorBoundary>
-              <Suspense fallback={<div className="min-h-screen bg-background" />}>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/search/:slug" element={<Index />} />
-                  <Route path="/docs" element={<DocsIndex />} />
-                  <Route path="/docs/syntax" element={<SyntaxCheatSheet />} />
-                  <Route path="/guides" element={<GuidesIndex />} />
-                  <Route path="/guides/:slug" element={<GuidePage />} />
-                  <Route path="/saved" element={<SavedSearches />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/profile" element={<ProfileSettings />} />
-                  <Route path="/admin/analytics" element={<AdminAnalytics />} />
-                  <Route path="/admin/curated-searches" element={<AdminCuratedSearches />} />
-                  <Route path="/deck-recs" element={<DeckRecommendations />} />
-                  <Route path="/combos" element={<FindMyCombos />} />
-                  <Route path="/archetypes" element={<ArchetypesIndex />} />
-                  <Route path="/archetypes/:slug" element={<ArchetypePage />} />
-                  <Route path="/deckbuilder" element={<DeckBuilder />} />
-                  <Route path="/deckbuilder/:id" element={<DeckEditor />} />
-                  <Route path="/deck/:id" element={<PublicDeckView />} />
-                  <Route path="/decks" element={<BrowseDecks />} />
-                  <Route path="/browse-searches" element={<BrowseSearches />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/collection" element={<Collection />} />
-                  <Route path="/market" element={<MarketTrends />} />
-                  <Route path="/cards/:slug" element={<CardPage />} />
-                  <Route path="/user/:userId" element={<PublicProfile />} />
-                  <Route path="/ai" element={<AiIndex />} />
-                  <Route path="/ai/:slug" element={<AiPage />} />
-                  <Route path="/admin/seo-pages" element={<AdminSeoPages />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
+            <TooltipProvider>
+              <Suspense fallback={null}>
+                <Toaster />
+                <Sonner />
+                <AppInitializer />
               </Suspense>
-              </ErrorBoundary>
-            </BrowserRouter>
-          </TooltipProvider>
+              <BrowserRouter>
+                <ScrollToTopOnNavigate />
+                <ErrorBoundary>
+                <Suspense fallback={<div className="min-h-screen bg-background" />}>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/search/:slug" element={<Index />} />
+                    <Route path="/docs" element={<DocsIndex />} />
+                    <Route path="/docs/syntax" element={<SyntaxCheatSheet />} />
+                    <Route path="/guides" element={<GuidesIndex />} />
+                    <Route path="/guides/:slug" element={<GuidePage />} />
+                    <Route path="/saved" element={<SavedSearches />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/profile" element={<ProfileSettings />} />
+                    <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                    <Route path="/admin/curated-searches" element={<AdminCuratedSearches />} />
+                    <Route path="/deck-recs" element={<DeckRecommendations />} />
+                    <Route path="/combos" element={<FindMyCombos />} />
+                    <Route path="/archetypes" element={<ArchetypesIndex />} />
+                    <Route path="/archetypes/:slug" element={<ArchetypePage />} />
+                    <Route path="/deckbuilder" element={<DeckBuilder />} />
+                    <Route path="/deckbuilder/:id" element={<DeckEditor />} />
+                    <Route path="/deck/:id" element={<PublicDeckView />} />
+                    <Route path="/decks" element={<BrowseDecks />} />
+                    <Route path="/browse-searches" element={<BrowseSearches />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/collection" element={<Collection />} />
+                    <Route path="/market" element={<MarketTrends />} />
+                    <Route path="/cards/:slug" element={<CardPage />} />
+                    <Route path="/user/:userId" element={<PublicProfile />} />
+                    <Route path="/ai" element={<AiIndex />} />
+                    <Route path="/ai/:slug" element={<AiPage />} />
+                    <Route path="/admin/seo-pages" element={<AdminSeoPages />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+                </ErrorBoundary>
+              </BrowserRouter>
+            </TooltipProvider>
+          </Suspense>
         </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
