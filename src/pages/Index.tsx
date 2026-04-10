@@ -72,11 +72,6 @@ const CompareModal = lazy(() =>
     default: m.CompareModal,
   })),
 );
-const PwaInstallBanner = lazy(() =>
-  import('@/components/PwaInstallBanner').then((m) => ({
-    default: m.PwaInstallBanner,
-  })),
-);
 import { SkipLinks } from '@/components/SkipLinks';
 
 import {
@@ -625,7 +620,7 @@ const Index = () => {
           onClose={closeCompare}
         />
 
-        <PwaInstallBanner />
+        
       </div>
     </ErrorBoundary>
   );
