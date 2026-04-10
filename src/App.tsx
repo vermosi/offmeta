@@ -69,9 +69,11 @@ const App = () => (
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <Suspense fallback={null}><AppInitializer /></Suspense>
+            <Suspense fallback={null}>
+              <Toaster />
+              <Sonner />
+              <AppInitializer />
+            </Suspense>
             <BrowserRouter>
               <ScrollToTopOnNavigate />
               <ErrorBoundary>
