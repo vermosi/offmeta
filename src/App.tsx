@@ -7,8 +7,6 @@
  */
 
 import { lazy, Suspense } from 'react';
-import { Toaster } from '@/components/ui/toaster';
-import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
@@ -17,6 +15,9 @@ import { I18nProvider } from '@/lib/i18n';
 import { AuthProvider } from '@/components/AuthProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ScrollToTopOnNavigate } from '@/components/ScrollToTopOnNavigate';
+
+const Toaster = lazy(() => import('@/components/ui/toaster').then(m => ({ default: m.Toaster })));
+const Sonner = lazy(() => import('@/components/ui/sonner').then(m => ({ default: m.Toaster })));
 const Index = lazy(() => import('./pages/Index'));
 const GuidesIndex = lazy(() => import('./pages/GuidesIndex'));
 const GuidePage = lazy(() => import('./pages/GuidePage'));
@@ -68,9 +69,11 @@ const App = () => (
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <Suspense fallback={null}><AppInitializer /></Suspense>
+            <Suspense fallback={null}>
+              <Toaster />
+              <Sonner />
+              <AppInitializer />
+            </Suspense>
             <BrowserRouter>
               <ScrollToTopOnNavigate />
               <ErrorBoundary>
