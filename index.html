@@ -58,9 +58,24 @@
     <link rel="alternate" hreflang="zh-Hant" href="https://offmeta.app/" />
     <link rel="alternate" hreflang="x-default" href="https://offmeta.app/" />
 
-    <!-- Preconnect to Google Fonts (highest priority) -->
+    <!-- Preconnect to Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Preload critical font files to break the dependency chain -->
+    <link
+      rel="preload"
+      href="https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="https://fonts.gstatic.com/s/spacegrotesk/v22/V8mDoQDjQSkFtoMM3T6r8E7mPbF4C_k3HqU.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     <!-- Non-render-blocking font loading -->
     <link
       rel="stylesheet"
