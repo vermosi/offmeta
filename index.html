@@ -306,7 +306,16 @@
         <p>Please enable JavaScript to use OffMeta.</p>
       </div>
     </noscript>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Inline placeholder for instant FCP before JS bundle loads -->
+      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0a0a14">
+        <svg width="48" height="48" viewBox="0 0 48 48" style="animation:pulse 1.5s ease-in-out infinite;opacity:0.6">
+          <circle cx="24" cy="24" r="20" stroke="#7c3aed" stroke-width="3" fill="none" stroke-dasharray="80 40" stroke-linecap="round">
+            <animateTransform attributeName="transform" type="rotate" from="0 24 24" to="360 24 24" dur="1s" repeatCount="indefinite"/>
+          </circle>
+        </svg>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
