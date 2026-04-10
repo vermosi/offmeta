@@ -68,8 +68,8 @@ const App = () => (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
+          <Suspense fallback={null}>
           <TooltipProvider>
-            <Suspense fallback={null}>
               <Toaster />
               <Sonner />
               <AppInitializer />
