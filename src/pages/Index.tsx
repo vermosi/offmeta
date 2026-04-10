@@ -41,9 +41,7 @@ const Footer = lazy(() =>
   import('@/components/Footer').then((m) => ({ default: m.Footer })),
 );
 import { Header } from '@/components/Header';
-const HeroSection = lazy(() =>
-  import('@/components/HeroSection').then((m) => ({ default: m.HeroSection })),
-);
+import { HeroSection } from '@/components/HeroSection';
 import { InstantDemoPreview } from '@/components/InstantDemoPreview';
 import { ValuePropStrip } from '@/components/ValuePropStrip';
 import { StickySearchNudge } from '@/components/StickySearchNudge';

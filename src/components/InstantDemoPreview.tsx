@@ -102,8 +102,9 @@ export function InstantDemoPreview({ onTrySearch }: InstantDemoPreviewProps) {
               <img
                 src={card.imageUri}
                 alt={card.name}
-                loading="lazy"
-                decoding="async"
+                loading={index === 0 ? 'eager' : 'lazy'}
+                decoding={index === 0 ? 'sync' : 'async'}
+                fetchPriority={index === 0 ? 'high' : undefined}
                 className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
               />
             </div>
