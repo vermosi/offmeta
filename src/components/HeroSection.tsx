@@ -26,7 +26,6 @@ export function HeroSection() {
 
         <p
           className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto animate-slide-up text-center whitespace-pre-line"
-          style={{ animationDelay: '80ms' }}
         >
           {t(
             'hero.subtitleCompact',
