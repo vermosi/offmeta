@@ -7,7 +7,7 @@
  */
 
 import { lazy, Suspense } from 'react';
-import { TooltipProvider } from '@/components/ui/tooltip';
+const TooltipProvider = lazy(() => import('@/components/ui/tooltip').then(m => ({ default: m.TooltipProvider })));
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from 'next-themes';
