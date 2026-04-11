@@ -232,14 +232,14 @@ export const UnifiedSearchBar = forwardRef<
     if (!showExamples) return;
 
     flattenedVisibleExamples.forEach(
-      ({ query: example, category, position }) => {
-        const impressionKey = `offmeta_example_impression:${category}:${example}:${isMobile ? 'mobile' : 'desktop'}`;
+      ({ query: example, position }) => {
+        const impressionKey = `offmeta_example_impression:${example}:${isMobile ? 'mobile' : 'desktop'}`;
         if (sessionStorage.getItem(impressionKey)) return;
 
         sessionStorage.setItem(impressionKey, '1');
         trackExampleQueryImpression({
           query: example,
-          category,
+          category: 'flat',
           position,
           visible_count: flattenedVisibleExamples.length,
           is_mobile: isMobile,
