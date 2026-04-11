@@ -37,7 +37,7 @@ export const EmptyState = ({
   const hasSuggestions = suggestions && suggestions.length > 0;
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-center animate-reveal">
+    <div role="status" className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-center animate-reveal">
       <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-secondary flex items-center justify-center mb-5">
         <SearchX className="h-6 w-6 sm:h-7 sm:w-7 text-muted-foreground" />
       </div>

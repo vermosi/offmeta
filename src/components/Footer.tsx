@@ -31,7 +31,7 @@ const BUILT_WITH = [
   { name: 'TypeScript', href: 'https://www.typescriptlang.org' },
   { name: 'Tailwind CSS', href: 'https://tailwindcss.com' },
   { name: 'Vite', href: 'https://vitejs.dev' },
-  { name: 'Supabase', href: 'https://supabase.com' },
+  { name: 'Lovable Cloud', href: 'https://lovable.dev/cloud' },
   { name: 'Lovable', href: 'https://lovable.dev' },
 ] as const;
 

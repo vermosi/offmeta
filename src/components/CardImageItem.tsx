@@ -56,6 +56,8 @@ export const CardImageItem = memo(function CardImageItem({
         alt={displayName}
         loading="lazy"
         decoding="async"
+        width={488}
+        height={680}
         className="w-full h-full object-cover"
       />
     </button>
