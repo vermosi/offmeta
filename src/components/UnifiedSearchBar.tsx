@@ -474,45 +474,36 @@ export const UnifiedSearchBar = forwardRef<
               {t('search.trySearchingFor')}
             </span>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-            {visibleExamples.map(({ category, queries }) => (
-              <div key={category} className="flex flex-col gap-2">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-accent">
-                  {category}
+          <div className="flex flex-wrap justify-center gap-2">
+            {visibleExamples.map(({ query: example, position }) => (
+              <button
+                key={example}
+                type="button"
+                onClick={() => {
+                  trackExampleQueryClick({
+                    query: example,
+                    category: 'flat',
+                    position,
+                    visible_count: flattenedVisibleExamples.length,
+                    is_mobile: isMobile,
+                  });
+                  setQuery(example);
+                  handleSearch(example);
+                }}
+                className="group flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium transition-all duration-200 focus-ring text-muted-foreground hover:text-foreground border border-border/60 hover:border-accent/40 hover:bg-accent/10 active:scale-[0.97]"
+                aria-label={t('search.searchFor').replace(
+                  '{query}',
+                  example,
+                )}
+              >
+                <Search
+                  className="h-3 w-3 flex-shrink-0 text-accent/40 group-hover:text-accent transition-colors duration-200"
+                  aria-hidden="true"
+                />
+                <span className="group-hover:text-foreground transition-colors duration-200">
+                  {example}
                 </span>
-                <div className="flex flex-col gap-1.5">
-                  {queries.map((example, i) => (
-                    <button
-                      key={`${category}-${example}`}
-                      type="button"
-                      onClick={() => {
-                        trackExampleQueryClick({
-                          query: example,
-                          category,
-                          position: i,
-                          visible_count: flattenedVisibleExamples.length,
-                          is_mobile: isMobile,
-                        });
-                        setQuery(example);
-                        handleSearch(example);
-                      }}
-                      className="group flex items-start gap-2 text-left px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 focus-ring text-muted-foreground hover:text-foreground border border-transparent hover:border-accent/30 hover:bg-accent/10 hover:translate-x-0.5 active:scale-[0.98]"
-                      aria-label={t('search.searchFor').replace(
-                        '{query}',
-                        example,
-                      )}
-                    >
-                      <Search
-                        className="h-3 w-3 mt-0.5 flex-shrink-0 text-accent/40 group-hover:text-accent transition-colors duration-200"
-                        aria-hidden="true"
-                      />
-                      <span className="group-hover:text-foreground transition-colors duration-200">
-                        {example}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              </button>
             ))}
           </div>
           {hasHiddenExamples && (
