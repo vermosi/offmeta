@@ -517,6 +517,202 @@
     }
   }
 
+  /* ---- Animated gradient text shimmer ---- */
+  .text-gradient-animated {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--gradient-start)) 0%,
+      hsl(var(--gradient-end)) 25%,
+      hsl(var(--gradient-start)) 50%,
+      hsl(var(--gradient-end)) 75%,
+      hsl(var(--gradient-start)) 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradientShimmer 4s ease-in-out infinite;
+  }
+
+  @keyframes gradientShimmer {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* ---- Hero card fan ---- */
+  .hero-card-fan {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    perspective: 1200px;
+  }
+
+  .hero-card {
+    position: absolute;
+    width: 130px;
+    height: 182px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgb(0 0 0 / 0.3);
+    animation: heroCardFloat 6s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  @media (min-width: 640px) {
+    .hero-card {
+      width: 180px;
+      height: 252px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .hero-card {
+      width: 200px;
+      height: 280px;
+    }
+  }
+
+  .hero-card-1 {
+    left: 2%;
+    top: 15%;
+    opacity: 0.18;
+    transform: rotate(-18deg) scale(0.85);
+    animation-delay: 0s;
+  }
+  .hero-card-2 {
+    left: 18%;
+    top: 0%;
+    opacity: 0.25;
+    transform: rotate(-8deg) scale(0.95);
+    animation-delay: -1.5s;
+  }
+  .hero-card-3 {
+    left: 50%;
+    top: -8%;
+    transform: translateX(-50%) rotate(0deg) scale(1);
+    opacity: 0.3;
+    animation-delay: -3s;
+  }
+  .hero-card-4 {
+    right: 18%;
+    top: 0%;
+    opacity: 0.25;
+    transform: rotate(8deg) scale(0.95);
+    animation-delay: -4.5s;
+  }
+  .hero-card-5 {
+    right: 2%;
+    top: 15%;
+    opacity: 0.18;
+    transform: rotate(18deg) scale(0.85);
+    animation-delay: -2s;
+  }
+
+  /* On mobile, hide outer cards */
+  @media (max-width: 639px) {
+    .hero-card-1,
+    .hero-card-5 {
+      display: none;
+    }
+    .hero-card-2 {
+      left: 5%;
+      top: 10%;
+      opacity: 0.15;
+    }
+    .hero-card-4 {
+      right: 5%;
+      top: 10%;
+      opacity: 0.15;
+    }
+    .hero-card-3 {
+      opacity: 0.2;
+    }
+  }
+
+  @keyframes heroCardFloat {
+    0%, 100% { transform: translateY(0) rotate(var(--_r, 0deg)); }
+    50% { transform: translateY(-12px) rotate(var(--_r, 0deg)); }
+  }
+
+  .hero-card-mask {
+    background: radial-gradient(
+      ellipse 80% 70% at 50% 40%,
+      transparent 20%,
+      hsl(var(--background) / 0.6) 55%,
+      hsl(var(--background)) 80%
+    );
+  }
+
+  /* ---- Demo card entrance animation ---- */
+  .demo-card-entrance {
+    opacity: 0;
+    animation: demoCardEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes demoCardEnter {
+    from {
+      opacity: 0;
+      transform: translateY(30px) scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* 3D hover for demo cards */
+  .demo-card-3d {
+    transition: transform 0.5s ease, box-shadow 0.5s ease;
+  }
+  .demo-card-3d:hover {
+    transform: perspective(800px) rotateX(2deg) rotateY(-3deg) scale(1.02);
+  }
+
+  /* ---- Value card hover glow ---- */
+  .value-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+  .value-card:hover {
+    transform: translateY(-4px);
+    box-shadow:
+      0 0 0 1px hsl(var(--accent) / 0.2),
+      0 20px 40px -12px hsl(var(--accent) / 0.15),
+      var(--shadow-lg);
+  }
+
+  /* ---- Floating particles ---- */
+  .hero-particles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .hero-particle {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: hsl(var(--accent) / 0.4);
+    animation: particleFloat 10s ease-in-out infinite;
+  }
+
+  @keyframes particleFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    50% { transform: translate(var(--px, 40px), var(--py, -80px)) scale(0.5); }
+  }
+
+  /* ---- Section divider ---- */
+  .section-divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, hsl(var(--accent) / 0.3), transparent);
+  }
+
   /* Premium button shadows */
   .btn-premium {
     box-shadow:
@@ -579,7 +775,7 @@
   .gradient-border-wrap {
     position: relative;
     border-radius: var(--radius);
-    padding: 1.5px;
+    padding: 2px;
     background: linear-gradient(
       var(--gradient-angle, 0deg),
       hsl(var(--gradient-start) / 0.6),

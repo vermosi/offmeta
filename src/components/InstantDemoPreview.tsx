@@ -1,9 +1,9 @@
 /**
- * Instant demo preview — glass-card treatment with hover lift.
+ * Instant demo preview — cinematic showcase with larger cards, typewriter query, and 3D hover.
  * @module components/InstantDemoPreview
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Search, Sparkles } from 'lucide-react';
 import { useAnalytics } from '@/hooks';
@@ -42,9 +42,32 @@ interface InstantDemoPreviewProps {
   onTrySearch: (query: string) => void;
 }
 
+function useTypewriter(text: string, speed = 40) {
+  const [displayed, setDisplayed] = useState('');
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    setDisplayed('');
+    setDone(false);
+    let i = 0;
+    const interval = setInterval(() => {
+      i++;
+      setDisplayed(text.slice(0, i));
+      if (i >= text.length) {
+        clearInterval(interval);
+        setDone(true);
+      }
+    }, speed);
+    return () => clearInterval(interval);
+  }, [text, speed]);
+
+  return { displayed, done };
+}
+
 export function InstantDemoPreview({ onTrySearch }: InstantDemoPreviewProps) {
   const { trackEvent } = useAnalytics();
   const impressionTracked = useRef(false);
+  const { displayed: typedQuery, done: typingDone } = useTypewriter(DEMO_QUERY, 50);
 
   useEffect(() => {
     if (!impressionTracked.current) {
@@ -68,62 +91,76 @@ export function InstantDemoPreview({ onTrySearch }: InstantDemoPreviewProps) {
   };
 
   return (
-    <div className="animate-reveal glass-card rounded-2xl p-4 sm:p-6 space-y-4">
-      {/* Heading */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-accent" aria-hidden="true" />
-            <span className="text-sm font-semibold text-foreground tracking-wide">
-              See it in action
-            </span>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            &ldquo;{DEMO_QUERY}&rdquo;
-            <span className="mx-1.5 text-muted-foreground/50">→</span>
-            <code className="text-[11px] font-mono text-accent/80">{DEMO_SCRYFALL}</code>
-          </p>
-        </div>
-        <Button
-          variant="accent"
-          size="sm"
-          onClick={handleSearchClick}
-          className="gap-1.5 text-xs self-start sm:self-auto font-medium magnetic"
-        >
-          <Search className="h-3.5 w-3.5" aria-hidden="true" />
-          Try this search
-        </Button>
-      </div>
+    <div className="animate-reveal space-y-6">
+      {/* Section divider */}
+      <div className="h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" aria-hidden="true" />
 
-      {/* Card grid */}
-      <div className="grid grid-cols-4 gap-2.5 sm:gap-4">
-        {DEMO_CARDS.map((card, index) => (
-          <button
-            key={card.name}
-            type="button"
-            onClick={() => handleCardClick(card.name, index)}
-            className="group flex flex-col items-center gap-1.5 focus-ring rounded-lg"
+      <div className="glass-card rounded-2xl p-5 sm:p-8 space-y-6">
+        {/* Heading with typewriter */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-accent" aria-hidden="true" />
+              <span className="text-base font-semibold text-foreground tracking-wide">
+                See it in action
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              &ldquo;<span className="text-foreground/80">{typedQuery}</span>
+              {!typingDone && (
+                <span className="inline-block w-[2px] h-4 bg-accent/70 ml-0.5 align-middle animate-pulse" />
+              )}
+              &rdquo;
+              {typingDone && (
+                <span className="animate-fade-in">
+                  <span className="mx-2 text-muted-foreground/50">→</span>
+                  <code className="text-xs font-mono text-accent/80">{DEMO_SCRYFALL}</code>
+                </span>
+              )}
+            </p>
+          </div>
+          <Button
+            variant="accent"
+            size="sm"
+            onClick={handleSearchClick}
+            className="gap-2 text-sm self-start sm:self-auto font-medium magnetic shadow-lg shadow-accent/20"
           >
-            <div className="relative aspect-[488/680] w-full overflow-hidden rounded-lg border border-border/40 bg-muted shadow-sm transition-all duration-300 group-hover:shadow-lg group-hover:-translate-y-1">
-              <img
-                src={card.imageUri}
-                alt={card.name}
-                width={488}
-                height={680}
-                loading={index === 0 ? 'eager' : 'lazy'}
-                decoding={index === 0 ? 'sync' : 'async'}
-                fetchPriority={index === 0 ? 'high' : undefined}
-                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-            </div>
-            <div className="text-center">
-              <p className="text-[10px] sm:text-xs font-medium text-foreground truncate max-w-full">
-                {card.name}
-              </p>
-              <p className="text-[10px] text-muted-foreground">{card.price}</p>
-            </div>
-          </button>
-        ))}
+            <Search className="h-4 w-4" aria-hidden="true" />
+            Try this search
+          </Button>
+        </div>
+
+        {/* Card grid — larger cards with 3D hover */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-5">
+          {DEMO_CARDS.map((card, index) => (
+            <button
+              key={card.name}
+              type="button"
+              onClick={() => handleCardClick(card.name, index)}
+              className="group flex flex-col items-center gap-2 focus-ring rounded-lg demo-card-entrance"
+              style={{ animationDelay: `${index * 100 + 300}ms` }}
+            >
+              <div className="relative aspect-[488/680] w-full overflow-hidden rounded-xl border border-border/40 bg-muted shadow-md transition-all duration-500 group-hover:shadow-2xl group-hover:shadow-accent/10 group-hover:-translate-y-2 demo-card-3d">
+                <img
+                  src={card.imageUri}
+                  alt={card.name}
+                  width={488}
+                  height={680}
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                  decoding={index === 0 ? 'sync' : 'async'}
+                  fetchPriority={index === 0 ? 'high' : undefined}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              </div>
+              <div className="text-center">
+                <p className="text-xs sm:text-sm font-medium text-foreground truncate max-w-full">
+                  {card.name}
+                </p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">{card.price}</p>
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

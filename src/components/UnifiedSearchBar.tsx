@@ -285,12 +285,12 @@ export const UnifiedSearchBar = forwardRef<
           <div className={`gradient-border-wrap ${isFocused ? 'opacity-100' : 'opacity-60 hover:opacity-80'} transition-opacity duration-300`}>
           <div
             className={`
-              relative flex items-center gap-1.5 sm:gap-2 p-1 sm:p-1.5 rounded-xl bg-card
-              transition-all duration-200
+              relative flex items-center gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-xl bg-card
+              transition-all duration-300
               ${
                 isFocused
-                  ? 'shadow-lg'
-                  : 'shadow-sm'
+                  ? 'shadow-xl shadow-accent/10'
+                  : 'shadow-md'
               }
             `}
           >
@@ -331,7 +331,7 @@ export const UnifiedSearchBar = forwardRef<
                     setTimeout(() => setShowHistoryDropdown(false), 200);
                   }
                 }}
-                className="flex-1 min-w-0 w-full bg-transparent text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none py-2 px-2 sm:px-1"
+                className="flex-1 min-w-0 w-full bg-transparent text-base sm:text-lg text-foreground placeholder:text-muted-foreground focus:outline-none py-3 px-3 sm:px-2"
                 autoComplete="off"
                 autoCorrect="off"
                 spellCheck="false"
@@ -382,7 +382,7 @@ export const UnifiedSearchBar = forwardRef<
               }
               variant="accent"
               size="sm"
-              className="h-9 sm:h-10 px-3 sm:px-4 rounded-lg gap-1.5 sm:gap-2 font-medium flex-shrink-0"
+              className="h-10 sm:h-12 px-4 sm:px-5 rounded-xl gap-2 font-medium flex-shrink-0 shadow-lg shadow-accent/20"
               data-testid="search-submit-button"
               aria-label={
                 rateLimitCountdown > 0
@@ -492,7 +492,7 @@ export const UnifiedSearchBar = forwardRef<
                   setQuery(example);
                   handleSearch(example);
                 }}
-                className="group flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium transition-all duration-200 focus-ring text-muted-foreground hover:text-foreground border border-border/60 hover:border-accent/40 hover:bg-accent/10 active:scale-[0.97]"
+                className="group flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 focus-ring text-muted-foreground hover:text-foreground border border-border/60 hover:border-accent/40 hover:bg-accent/10 active:scale-[0.97] hover:scale-105 hover:shadow-md hover:shadow-accent/5"
                 aria-label={t('search.searchFor').replace(
                   '{query}',
                   example,
