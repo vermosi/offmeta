@@ -272,14 +272,26 @@ const CardPage = () => {
               {/* Card image */}
               <div className="flex flex-col items-center gap-3">
                 {cardImage ? (
-                  <img
-                    src={cardImage}
-                    alt={`${card.name} card art`}
-                    className="rounded-xl shadow-elegant w-full max-w-[320px]"
-                    loading="eager"
-                    width={672}
-                    height={936}
-                  />
+                  <div className="relative w-full max-w-[320px]">
+                    <img
+                      src={cardImage}
+                      alt={`${displayName} card art`}
+                      className="rounded-xl shadow-elegant w-full transition-transform duration-300"
+                      loading="eager"
+                      width={672}
+                      height={936}
+                    />
+                    {isFlippable && (
+                      <button
+                        onClick={() => setFaceIndex((i) => (i === 0 ? 1 : 0))}
+                        className="absolute bottom-3 right-3 bg-background/80 backdrop-blur-sm border border-border/50 rounded-full p-2 hover:bg-background transition-colors shadow-md"
+                        aria-label={faceIndex === 0 ? 'Show back face' : 'Show front face'}
+                        title={faceIndex === 0 ? 'Flip to back' : 'Flip to front'}
+                      >
+                        <RotateCw className="h-4 w-4 text-foreground" />
+                      </button>
+                    )}
+                  </div>
                 ) : (
                   <div className="aspect-[488/680] bg-muted rounded-xl w-full max-w-[320px]" />
                 )}
@@ -315,16 +327,25 @@ const CardPage = () => {
               <div className="space-y-5">
                 <div>
                   <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3 flex-wrap">
-                    {card.name}
-                    {card.mana_cost && (
+                    {displayName}
+                    {displayManaCost && (
                       <span className="inline-flex items-center gap-0.5">
-                        {card.mana_cost.match(/\{[^}]+\}/g)?.map((s, i) => (
+                        {displayManaCost.match(/\{[^}]+\}/g)?.map((s, i) => (
                           <ManaSymbol key={i} symbol={s} size="sm" />
                         ))}
                       </span>
                     )}
                   </h1>
-                  <p className="text-muted-foreground mt-1">{card.type_line}</p>
+                  <p className="text-muted-foreground mt-1">{displayTypeLine}</p>
+                  {isFlippable && (
+                    <button
+                      onClick={() => setFaceIndex((i) => (i === 0 ? 1 : 0))}
+                      className="mt-2 text-xs text-primary hover:underline flex items-center gap-1"
+                    >
+                      <RotateCw className="h-3 w-3" />
+                      {faceIndex === 0 ? 'Show back face' : 'Show front face'}
+                    </button>
+                  )}
                 </div>
 
                 {/* Oracle text */}
