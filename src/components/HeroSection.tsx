@@ -1,9 +1,9 @@
 /**
- * Hero section — streamlined above-the-fold value prop.
- * Minimal copy so the search bar stays visible without scrolling.
+ * Hero section — streamlined above-the-fold value prop with card backdrop.
  */
 
 import { useTranslation } from '@/lib/i18n';
+import { HeroCardBackdrop } from '@/components/HeroCardBackdrop';
 
 export function HeroSection() {
   const { t } = useTranslation();
@@ -13,12 +13,16 @@ export function HeroSection() {
       className="relative pt-6 sm:pt-12 lg:pt-16 pb-1 sm:pb-3 overflow-x-hidden"
       aria-labelledby="hero-heading"
     >
-      {/* Subtle radial glow behind hero text */}
+      {/* Card art collage — desktop only */}
+      <HeroCardBackdrop />
+
+      {/* Ambient glow blobs */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none overflow-hidden"
         aria-hidden="true"
       >
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] rounded-full bg-accent/5 blur-3xl" />
+        <div className="glow-orb absolute -top-40 -left-20 opacity-40" />
+        <div className="glow-orb glow-orb-secondary absolute -top-20 -right-32 opacity-30" />
       </div>
 
       <div className="container-main text-center relative z-10">
@@ -32,9 +36,7 @@ export function HeroSection() {
           </span>
         </h1>
 
-        <p
-          className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto animate-slide-up text-center"
-        >
+        <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto animate-slide-up text-center">
           {t(
             'hero.subtitleCompact',
             'Describe the card you need. OffMeta translates it into a real search instantly.',

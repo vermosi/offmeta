@@ -555,6 +555,56 @@
   }
 
   /* Dotted mesh (avoids subpixel "giant line" artifacts that can happen with translated grids) */
+  /* Glass card — frosted surface with gradient border hint */
+  .glass-card {
+    background: hsl(var(--card) / 0.5);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid hsl(var(--border) / 0.5);
+    box-shadow:
+      0 0 0 1px hsl(var(--accent) / 0.05),
+      var(--shadow-md),
+      inset 0 1px 0 hsl(var(--contrast) / 0.03);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .glass-card:hover {
+    box-shadow:
+      0 0 0 1px hsl(var(--accent) / 0.12),
+      var(--shadow-lg),
+      inset 0 1px 0 hsl(var(--contrast) / 0.05);
+  }
+
+  /* Animated gradient border beam for search bar */
+  .gradient-border-wrap {
+    position: relative;
+    border-radius: var(--radius);
+    padding: 1.5px;
+    background: linear-gradient(
+      var(--gradient-angle, 0deg),
+      hsl(var(--gradient-start) / 0.6),
+      hsl(var(--gradient-end) / 0.4),
+      hsl(var(--gradient-start) / 0.2),
+      hsl(var(--gradient-end) / 0.6)
+    );
+    animation: gradientRotate 4s linear infinite;
+  }
+
+  .gradient-border-wrap > * {
+    border-radius: calc(var(--radius) - 1.5px);
+  }
+
+  @keyframes gradientRotate {
+    0% { --gradient-angle: 0deg; }
+    100% { --gradient-angle: 360deg; }
+  }
+
+  @property --gradient-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+  }
+
   .bg-page-mesh {
     background-image: radial-gradient(
       hsl(var(--border) / 0.09) 1px,
