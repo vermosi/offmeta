@@ -94,7 +94,7 @@ describe('UnifiedSearchBar', () => {
     expect(screen.getByText(/type your search query/i)).toBeInTheDocument();
   });
 
-  it('renders example query buttons when input is empty', () => {
+  it('renders example query chips when input is empty', () => {
     render(<UnifiedSearchBar {...defaultProps} />);
     expect(
       screen.getByRole('group', { name: /try searching for/i }),
