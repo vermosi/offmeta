@@ -235,7 +235,8 @@ const CardPage = () => {
     );
   }
 
-  const [faceIndex, setFaceIndex] = useState(0);
+  const isFlippable = card ? isDFC(card) : false;
+  const activeFace = isFlippable && card ? card.card_faces![faceIndex] : null;
   const isFlippable = isDFC(card);
   const activeFace = isFlippable ? card.card_faces![faceIndex] : null;
   const oracleText = activeFace?.oracle_text ?? getOracleText(card);
