@@ -7,7 +7,7 @@
  * @module pages/CardPage
  */
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getCardByName } from '@/lib/scryfall/client';
@@ -35,13 +35,22 @@ import {
   DollarSign,
   Sparkles,
   Shield,
+  RotateCw,
 } from 'lucide-react';
 import type { ScryfallCard } from '@/types/card';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function getCardImage(card: ScryfallCard, size: 'normal' | 'large' | 'art_crop' = 'normal'): string | undefined {
-  return card.image_uris?.[size] ?? card.card_faces?.[0]?.image_uris?.[size];
+function getCardImage(card: ScryfallCard, size: 'normal' | 'large' | 'art_crop' = 'normal', faceIndex = 0): string | undefined {
+  // Single-faced cards or cards where both faces share one image
+  if (card.image_uris) return card.image_uris[size];
+  // Double-faced cards with per-face images
+  return card.card_faces?.[faceIndex]?.image_uris?.[size] ?? card.card_faces?.[0]?.image_uris?.[size];
+}
+
+/** Check if a card is a true double-faced card with separate face images. */
+function isDFC(card: ScryfallCard): boolean {
+  return !!(card.card_faces && card.card_faces.length > 1 && card.card_faces[0]?.image_uris);
 }
 
 function getOracleText(card: ScryfallCard): string {
@@ -226,8 +235,14 @@ const CardPage = () => {
     );
   }
 
-  const oracleText = getOracleText(card);
-  const cardImage = getCardImage(card, 'large');
+  const [faceIndex, setFaceIndex] = useState(0);
+  const isFlippable = isDFC(card);
+  const activeFace = isFlippable ? card.card_faces![faceIndex] : null;
+  const oracleText = activeFace?.oracle_text ?? getOracleText(card);
+  const cardImage = getCardImage(card, 'large', faceIndex);
+  const displayName = activeFace?.name ?? card.name;
+  const displayTypeLine = activeFace?.type_line ?? card.type_line;
+  const displayManaCost = activeFace?.mana_cost ?? card.mana_cost;
   
 
   return (
