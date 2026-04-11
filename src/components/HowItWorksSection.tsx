@@ -1,5 +1,6 @@
 /**
- * "How It Works" — 3-step visual flow with glass cards.
+ * "How It Works" — horizontal timeline with animated gradient connectors.
+ * Mobile: vertical timeline with gradient line on left.
  * @module components/HowItWorksSection
  */
 
@@ -29,46 +30,74 @@ const STEPS = [
 export function HowItWorksSection() {
   return (
     <section
-      className="container-main py-8 sm:py-12"
+      className="container-main py-12 sm:py-16"
       aria-label="How it works"
     >
-      <h2 className="text-center text-lg sm:text-xl font-semibold text-foreground mb-6 sm:mb-8 tracking-tight">
+      <h2 className="text-center text-xl sm:text-2xl lg:text-3xl font-semibold text-foreground mb-10 sm:mb-14 tracking-tight">
         How it works
       </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 stagger-children max-w-3xl mx-auto">
-        {STEPS.map(({ icon: Icon, number, title, detail }) => (
-          <div
-            key={number}
-            className="glass-card relative flex flex-col items-center text-center p-5 sm:p-6 rounded-2xl"
-          >
-            {/* Number badge */}
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mb-3 bg-gradient-to-br from-accent to-accent/60 text-accent-foreground shadow-sm">
-              {number}
+      {/* Desktop: horizontal timeline */}
+      <div className="hidden sm:flex items-start justify-center gap-0 max-w-4xl mx-auto">
+        {STEPS.map(({ icon: Icon, number, title, detail }, i) => (
+          <div key={number} className="flex items-start flex-1">
+            <div className="flex flex-col items-center text-center flex-1 stagger-children">
+              {/* Number badge */}
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-bold mb-4 bg-gradient-to-br from-accent to-accent/50 text-accent-foreground shadow-lg shadow-accent/20">
+                {number}
+              </div>
+
+              <Icon
+                className="h-7 w-7 text-accent mb-3 flex-shrink-0"
+                aria-hidden="true"
+              />
+              <h3 className="text-base font-semibold text-foreground mb-2">
+                {title}
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-[200px]">
+                {detail}
+              </p>
             </div>
 
-            <Icon
-              className="h-6 w-6 text-accent mb-2 flex-shrink-0"
-              aria-hidden="true"
-            />
-            <h3 className="text-sm font-semibold text-foreground mb-1">
-              {title}
-            </h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              {detail}
-            </p>
-
-            {/* Connector arrow (hidden on mobile, only between cards) */}
-            {number !== '3' && (
-              <div
-                className="hidden sm:block absolute -right-3 top-1/2 -translate-y-1/2 text-muted-foreground/30 text-lg z-10"
-                aria-hidden="true"
-              >
-                →
+            {/* Connector line */}
+            {i < STEPS.length - 1 && (
+              <div className="flex-shrink-0 w-16 lg:w-24 mt-7 px-2" aria-hidden="true">
+                <div className="h-[2px] w-full bg-gradient-to-r from-accent/60 to-accent/10 rounded-full" />
               </div>
             )}
           </div>
         ))}
+      </div>
+
+      {/* Mobile: vertical timeline */}
+      <div className="sm:hidden relative pl-10">
+        {/* Gradient vertical line */}
+        <div
+          className="absolute left-4 top-2 bottom-2 w-[2px] rounded-full"
+          style={{
+            background: 'linear-gradient(to bottom, hsl(var(--accent)), hsl(var(--accent) / 0.1))',
+          }}
+          aria-hidden="true"
+        />
+
+        <div className="space-y-8">
+          {STEPS.map(({ icon: Icon, number, title, detail }) => (
+            <div key={number} className="relative">
+              {/* Node on the line */}
+              <div className="absolute -left-10 top-0 w-8 h-8 rounded-full bg-gradient-to-br from-accent to-accent/50 flex items-center justify-center text-xs font-bold text-accent-foreground shadow-md shadow-accent/20">
+                {number}
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Icon className="h-5 w-5 text-accent flex-shrink-0" aria-hidden="true" />
+                  <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">{detail}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
