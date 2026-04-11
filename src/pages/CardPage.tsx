@@ -463,36 +463,7 @@ const CardPage = () => {
                   ))}
                 </div>
               ) : similarityData?.similarResults?.data?.length ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {similarityData.similarResults.data.slice(0, 8).map((alt) => (
-                    <Link
-                      key={alt.id}
-                      to={`/cards/${cardNameToSlug(alt.name)}`}
-                      className="group"
-                    >
-                      <div className="rounded-lg overflow-hidden border border-border/30 hover:border-primary/40 transition-all hover:shadow-lg">
-                        {alt.image_uris?.normal ? (
-                          <img
-                            src={alt.image_uris.normal}
-                            alt={alt.name}
-                            className="w-full"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="aspect-[488/680] bg-muted flex items-center justify-center text-sm text-muted-foreground p-4 text-center">
-                            {alt.name}
-                          </div>
-                        )}
-                      </div>
-                      <p className="mt-1.5 text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
-                        {alt.name}
-                      </p>
-                      {alt.prices?.usd && (
-                        <p className="text-xs text-muted-foreground">${alt.prices.usd}</p>
-                      )}
-                    </Link>
-                  ))}
-                </div>
+                <CardAlternativesGrid cards={similarityData.similarResults.data} />
               ) : (
                 <p className="text-sm text-muted-foreground italic">
                   No alternatives found yet. Try searching for this card to discover similar options.
