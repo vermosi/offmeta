@@ -385,6 +385,25 @@ const Index = () => {
 
         {!hasSearched && <HeroSection />}
 
+        {/* Floating particles — hero area */}
+        {!hasSearched && (
+          <div className="hero-particles" aria-hidden="true">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div
+                key={i}
+                className="hero-particle"
+                style={{
+                  left: `${10 + i * 12}%`,
+                  top: `${20 + (i % 3) * 25}%`,
+                  animationDelay: `${i * -1.2}s`,
+                  ['--px' as string]: `${(i % 2 ? 1 : -1) * (20 + i * 8)}px`,
+                  ['--py' as string]: `${-40 - i * 15}px`,
+                }}
+              />
+            ))}
+          </div>
+        )}
+
         {/* SEO manager (renders nothing) */}
         <SeoManager
           hasSearched={hasSearched}
@@ -574,7 +593,17 @@ const Index = () => {
           />
         </main>
 
+        {!hasSearched && (
+          <div className="container-main" aria-hidden="true">
+            <div className="section-divider" />
+          </div>
+        )}
         {!hasSearched && <HowItWorksSection />}
+        {!hasSearched && (
+          <div className="container-main" aria-hidden="true">
+            <div className="section-divider" />
+          </div>
+        )}
         {!hasSearched && <ValuePropStrip />}
 
         <Footer />
