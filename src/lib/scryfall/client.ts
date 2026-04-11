@@ -258,9 +258,18 @@ export async function getCardByName(name: string): Promise<ScryfallCard> {
   }
 
   const encodedName = encodeURIComponent(name);
-  const response = await rateLimitedFetch(
+
+  // Try exact match first, fall back to fuzzy for slug-derived names
+  // that may be missing punctuation (commas, apostrophes, etc.)
+  let response = await rateLimitedFetch(
     `${BASE_URL}/cards/named?exact=${encodedName}`,
   );
+
+  if (!response.ok && response.status === 404) {
+    response = await rateLimitedFetch(
+      `${BASE_URL}/cards/named?fuzzy=${encodedName}`,
+    );
+  }
 
   if (!response.ok) {
     throw new Error(`Card not found: ${name}`);
