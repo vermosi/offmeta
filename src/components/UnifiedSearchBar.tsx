@@ -217,28 +217,16 @@ export const UnifiedSearchBar = forwardRef<
   const [showAllExamples, setShowAllExamples] = useState(false);
 
   const visibleExamples = useMemo(() => {
-    // On mobile, show only top 2 categories unless expanded
-    const maxCategories = isMobile && !showAllExamples ? 2 : EXAMPLE_QUERY_GROUPS.length;
-
-    return EXAMPLE_QUERY_GROUPS.slice(0, maxCategories).map(({ category, queries }) => ({
-      category,
-      queries,
+    const maxVisible = isMobile && !showAllExamples ? 4 : EXAMPLE_QUERIES.length;
+    return EXAMPLE_QUERIES.slice(0, maxVisible).map((q, i) => ({
+      query: q,
+      position: i,
     }));
   }, [isMobile, showAllExamples]);
 
-  const hasHiddenExamples = isMobile && !showAllExamples && EXAMPLE_QUERY_GROUPS.length > 2;
+  const hasHiddenExamples = isMobile && !showAllExamples && EXAMPLE_QUERIES.length > 4;
 
-  const flattenedVisibleExamples = useMemo(
-    () =>
-      visibleExamples.flatMap(({ category, queries }) =>
-        queries.map((example, position) => ({
-          category,
-          query: example,
-          position,
-        })),
-      ),
-    [visibleExamples],
-  );
+  const flattenedVisibleExamples = visibleExamples;
 
   useEffect(() => {
     if (!showExamples) return;
