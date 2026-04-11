@@ -1,6 +1,5 @@
 /**
- * Instant demo preview — shows hardcoded card results to prove the tool works
- * before the user types anything. Renders only on the landing page.
+ * Instant demo preview — glass-card treatment with hover lift.
  * @module components/InstantDemoPreview
  */
 
@@ -69,7 +68,7 @@ export function InstantDemoPreview({ onTrySearch }: InstantDemoPreviewProps) {
   };
 
   return (
-    <div className="animate-reveal rounded-xl border border-accent/20 bg-card/60 p-4 sm:p-6 space-y-4">
+    <div className="animate-reveal glass-card rounded-2xl p-4 sm:p-6 space-y-4">
       {/* Heading */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="space-y-1.5">
@@ -89,7 +88,7 @@ export function InstantDemoPreview({ onTrySearch }: InstantDemoPreviewProps) {
           variant="accent"
           size="sm"
           onClick={handleSearchClick}
-          className="gap-1.5 text-xs self-start sm:self-auto font-medium"
+          className="gap-1.5 text-xs self-start sm:self-auto font-medium magnetic"
         >
           <Search className="h-3.5 w-3.5" aria-hidden="true" />
           Try this search
@@ -105,7 +104,7 @@ export function InstantDemoPreview({ onTrySearch }: InstantDemoPreviewProps) {
             onClick={() => handleCardClick(card.name, index)}
             className="group flex flex-col items-center gap-1.5 focus-ring rounded-lg"
           >
-            <div className="relative aspect-[488/680] w-full overflow-hidden rounded-lg border border-border/40 bg-muted shadow-sm group-hover:shadow-md transition-shadow duration-200">
+            <div className="relative aspect-[488/680] w-full overflow-hidden rounded-lg border border-border/40 bg-muted shadow-sm transition-all duration-300 group-hover:shadow-lg group-hover:-translate-y-1">
               <img
                 src={card.imageUri}
                 alt={card.name}
@@ -114,7 +113,7 @@ export function InstantDemoPreview({ onTrySearch }: InstantDemoPreviewProps) {
                 loading={index === 0 ? 'eager' : 'lazy'}
                 decoding={index === 0 ? 'sync' : 'async'}
                 fetchPriority={index === 0 ? 'high' : undefined}
-                className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
             </div>
             <div className="text-center">
