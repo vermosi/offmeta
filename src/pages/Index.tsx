@@ -44,6 +44,7 @@ import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
 import { InstantDemoPreview } from '@/components/InstantDemoPreview';
 import { ValuePropStrip } from '@/components/ValuePropStrip';
+import { HowItWorksSection } from '@/components/HowItWorksSection';
 import { StickySearchNudge } from '@/components/StickySearchNudge';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { type ViewMode, getStoredViewMode } from '@/lib/view-mode-storage';
