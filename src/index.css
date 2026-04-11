@@ -775,7 +775,7 @@
   .gradient-border-wrap {
     position: relative;
     border-radius: var(--radius);
-    padding: 1.5px;
+    padding: 2px;
     background: linear-gradient(
       var(--gradient-angle, 0deg),
       hsl(var(--gradient-start) / 0.6),
