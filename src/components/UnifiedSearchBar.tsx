@@ -282,14 +282,15 @@ export const UnifiedSearchBar = forwardRef<
             setShowHistoryDropdown(false);
           }}
         >
+          <div className={`gradient-border-wrap ${isFocused ? 'opacity-100' : 'opacity-60 hover:opacity-80'} transition-opacity duration-300`}>
           <div
             className={`
-              relative flex items-center gap-1.5 sm:gap-2 p-1 sm:p-1.5 rounded-xl border bg-card
+              relative flex items-center gap-1.5 sm:gap-2 p-1 sm:p-1.5 rounded-xl bg-card
               transition-all duration-200
               ${
                 isFocused
-                  ? 'border-foreground/20 shadow-lg ring-2 ring-ring ring-offset-2 ring-offset-background'
-                  : 'border-border shadow-sm hover:border-muted-foreground/30 hover:shadow-md'
+                  ? 'shadow-lg'
+                  : 'shadow-sm'
               }
             `}
           >
