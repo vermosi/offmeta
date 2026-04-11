@@ -426,6 +426,7 @@ export const UnifiedSearchBar = forwardRef<
               </Suspense>
             </div>
           </div>
+          </div>
         </SearchHistoryDropdown>
 
         {/* Secondary row: Mobile-only auxiliary actions */}
