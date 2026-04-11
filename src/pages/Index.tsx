@@ -574,6 +574,7 @@ const Index = () => {
           />
         </main>
 
+        {!hasSearched && <HowItWorksSection />}
         {!hasSearched && <ValuePropStrip />}
 
         <Footer />
