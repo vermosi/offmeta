@@ -7,7 +7,7 @@
  * @module pages/CardPage
  */
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getCardByName } from '@/lib/scryfall/client';
@@ -35,13 +35,22 @@ import {
   DollarSign,
   Sparkles,
   Shield,
+  RotateCw,
 } from 'lucide-react';
 import type { ScryfallCard } from '@/types/card';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function getCardImage(card: ScryfallCard, size: 'normal' | 'large' | 'art_crop' = 'normal'): string | undefined {
-  return card.image_uris?.[size] ?? card.card_faces?.[0]?.image_uris?.[size];
+function getCardImage(card: ScryfallCard, size: 'normal' | 'large' | 'art_crop' = 'normal', faceIndex = 0): string | undefined {
+  // Single-faced cards or cards where both faces share one image
+  if (card.image_uris) return card.image_uris[size];
+  // Double-faced cards with per-face images
+  return card.card_faces?.[faceIndex]?.image_uris?.[size] ?? card.card_faces?.[0]?.image_uris?.[size];
+}
+
+/** Check if a card is a true double-faced card with separate face images. */
+function isDFC(card: ScryfallCard): boolean {
+  return !!(card.card_faces && card.card_faces.length > 1 && card.card_faces[0]?.image_uris);
 }
 
 function getOracleText(card: ScryfallCard): string {
@@ -107,6 +116,13 @@ const CardPage = () => {
     gcTime: 60 * 60 * 1000,
     retry: 1,
   });
+
+  const [faceIndex, setFaceIndex] = useState(0);
+
+  // Reset face when card changes
+  useEffect(() => {
+    setFaceIndex(0);
+  }, [card?.name]);
 
   // Activate similar cards on load
   const {
@@ -226,9 +242,13 @@ const CardPage = () => {
     );
   }
 
-  const oracleText = getOracleText(card);
-  const cardImage = getCardImage(card, 'large');
-  
+  const isFlippable = isDFC(card);
+  const activeFace = isFlippable ? card.card_faces![faceIndex] : null;
+  const oracleText = activeFace?.oracle_text ?? getOracleText(card);
+  const cardImage = getCardImage(card, 'large', faceIndex);
+  const displayName = activeFace?.name ?? card.name;
+  const displayTypeLine = activeFace?.type_line ?? card.type_line;
+  const displayManaCost = activeFace?.mana_cost ?? card.mana_cost;
 
   return (
     <ErrorBoundary>
@@ -252,14 +272,26 @@ const CardPage = () => {
               {/* Card image */}
               <div className="flex flex-col items-center gap-3">
                 {cardImage ? (
-                  <img
-                    src={cardImage}
-                    alt={`${card.name} card art`}
-                    className="rounded-xl shadow-elegant w-full max-w-[320px]"
-                    loading="eager"
-                    width={672}
-                    height={936}
-                  />
+                  <div className="relative w-full max-w-[320px]">
+                    <img
+                      src={cardImage}
+                      alt={`${displayName} card art`}
+                      className="rounded-xl shadow-elegant w-full transition-transform duration-300"
+                      loading="eager"
+                      width={672}
+                      height={936}
+                    />
+                    {isFlippable && (
+                      <button
+                        onClick={() => setFaceIndex((i) => (i === 0 ? 1 : 0))}
+                        className="absolute bottom-3 right-3 bg-background/80 backdrop-blur-sm border border-border/50 rounded-full p-2 hover:bg-background transition-colors shadow-md"
+                        aria-label={faceIndex === 0 ? 'Show back face' : 'Show front face'}
+                        title={faceIndex === 0 ? 'Flip to back' : 'Flip to front'}
+                      >
+                        <RotateCw className="h-4 w-4 text-foreground" />
+                      </button>
+                    )}
+                  </div>
                 ) : (
                   <div className="aspect-[488/680] bg-muted rounded-xl w-full max-w-[320px]" />
                 )}
@@ -295,16 +327,25 @@ const CardPage = () => {
               <div className="space-y-5">
                 <div>
                   <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3 flex-wrap">
-                    {card.name}
-                    {card.mana_cost && (
+                    {displayName}
+                    {displayManaCost && (
                       <span className="inline-flex items-center gap-0.5">
-                        {card.mana_cost.match(/\{[^}]+\}/g)?.map((s, i) => (
+                        {displayManaCost.match(/\{[^}]+\}/g)?.map((s, i) => (
                           <ManaSymbol key={i} symbol={s} size="sm" />
                         ))}
                       </span>
                     )}
                   </h1>
-                  <p className="text-muted-foreground mt-1">{card.type_line}</p>
+                  <p className="text-muted-foreground mt-1">{displayTypeLine}</p>
+                  {isFlippable && (
+                    <button
+                      onClick={() => setFaceIndex((i) => (i === 0 ? 1 : 0))}
+                      className="mt-2 text-xs text-primary hover:underline flex items-center gap-1"
+                    >
+                      <RotateCw className="h-3 w-3" />
+                      {faceIndex === 0 ? 'Show back face' : 'Show front face'}
+                    </button>
+                  )}
                 </div>
 
                 {/* Oracle text */}
