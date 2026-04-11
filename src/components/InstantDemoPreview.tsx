@@ -6,7 +6,7 @@
 
 import { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Search } from 'lucide-react';
+import { Search, Sparkles } from 'lucide-react';
 import { useAnalytics } from '@/hooks';
 
 const DEMO_QUERY = 'budget board wipes under $5';
@@ -69,28 +69,35 @@ export function InstantDemoPreview({ onTrySearch }: InstantDemoPreviewProps) {
   };
 
   return (
-    <div className="animate-reveal rounded-xl border border-border/60 bg-card/50 p-4 sm:p-5 space-y-3">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <div className="space-y-1">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            Example: &ldquo;{DEMO_QUERY}&rdquo;
+    <div className="animate-reveal rounded-xl border border-accent/20 bg-card/60 p-4 sm:p-6 space-y-4">
+      {/* Heading */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-accent" aria-hidden="true" />
+            <span className="text-sm font-semibold text-foreground tracking-wide">
+              See it in action
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            &ldquo;{DEMO_QUERY}&rdquo;
+            <span className="mx-1.5 text-muted-foreground/50">→</span>
+            <code className="text-[11px] font-mono text-accent/80">{DEMO_SCRYFALL}</code>
           </p>
-          <code className="text-[11px] sm:text-xs text-muted-foreground/80 font-mono">
-            → {DEMO_SCRYFALL}
-          </code>
         </div>
         <Button
-          variant="outline"
+          variant="accent"
           size="sm"
           onClick={handleSearchClick}
-          className="gap-1.5 text-xs self-start sm:self-auto"
+          className="gap-1.5 text-xs self-start sm:self-auto font-medium"
         >
-          <Search className="h-3 w-3" aria-hidden="true" />
-          Search this →
+          <Search className="h-3.5 w-3.5" aria-hidden="true" />
+          Try this search
         </Button>
       </div>
 
-      <div className="grid grid-cols-4 gap-2 sm:gap-3">
+      {/* Card grid */}
+      <div className="grid grid-cols-4 gap-2.5 sm:gap-4">
         {DEMO_CARDS.map((card, index) => (
           <button
             key={card.name}
@@ -98,10 +105,12 @@ export function InstantDemoPreview({ onTrySearch }: InstantDemoPreviewProps) {
             onClick={() => handleCardClick(card.name, index)}
             className="group flex flex-col items-center gap-1.5 focus-ring rounded-lg"
           >
-            <div className="relative aspect-[488/680] w-full overflow-hidden rounded-lg border border-border/40 bg-muted">
+            <div className="relative aspect-[488/680] w-full overflow-hidden rounded-lg border border-border/40 bg-muted shadow-sm group-hover:shadow-md transition-shadow duration-200">
               <img
                 src={card.imageUri}
                 alt={card.name}
+                width={488}
+                height={680}
                 loading={index === 0 ? 'eager' : 'lazy'}
                 decoding={index === 0 ? 'sync' : 'async'}
                 fetchPriority={index === 0 ? 'high' : undefined}

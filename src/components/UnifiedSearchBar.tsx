@@ -127,34 +127,15 @@ export interface UnifiedSearchBarHandle {
   ) => void;
 }
 
-const EXAMPLE_QUERY_GROUPS = [
-  {
-    category: 'Budget',
-    queries: ['budget board wipes under $5', 'cheap white protection spells'],
-  },
-  {
-    category: 'Commander',
-    queries: [
-      'cards that protect my commander',
-      'cheap graveyard hate for EDH',
-    ],
-  },
-  {
-    category: 'Tribal',
-    queries: ['elf lords', 'best zombie tribal payoffs'],
-  },
-  {
-    category: 'Combo',
-    queries: ['sacrifice outlets', 'cards that go infinite with sacrifice'],
-  },
-  {
-    category: 'Staples',
-    queries: ['mana rocks that cost 2', 'best black removal for commander'],
-  },
-  {
-    category: 'Synergy',
-    queries: ['cards that double ETB triggers', 'ramp spells in green'],
-  },
+const EXAMPLE_QUERIES = [
+  'budget board wipes under $5',
+  'cards that protect my commander',
+  'cheap graveyard hate for EDH',
+  'mana rocks that cost 2',
+  'best black removal for commander',
+  'cards that double ETB triggers',
+  'cheap white protection spells',
+  'sacrifice outlets',
 ] as const;
 
 export const UnifiedSearchBar = forwardRef<
