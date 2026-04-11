@@ -243,7 +243,8 @@ const CardPage = () => {
   const displayName = activeFace?.name ?? card.name;
   const displayTypeLine = activeFace?.type_line ?? card.type_line;
   const displayManaCost = activeFace?.mana_cost ?? card.mana_cost;
-  
+
+  const [faceIndex, setFaceIndex] = useState(0);
 
   return (
     <ErrorBoundary>
