@@ -27,6 +27,7 @@ import { ManaSymbol } from '@/components/ManaSymbol';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FeatureCrossLinks } from '@/components/FeatureCrossLinks';
+import { CardAlternativesGrid } from '@/components/CardAlternativesGrid';
 import { Badge } from '@/components/ui/badge';
 import {
   ExternalLink,
@@ -118,6 +119,7 @@ const CardPage = () => {
   });
 
   const [faceIndex, setFaceIndex] = useState(0);
+  const [isFlipping, setIsFlipping] = useState(false);
 
   // Reset face when card changes
   useEffect(() => {
@@ -272,18 +274,32 @@ const CardPage = () => {
               {/* Card image */}
               <div className="flex flex-col items-center gap-3">
                 {cardImage ? (
-                  <div className="relative w-full max-w-[320px]">
-                    <img
-                      src={cardImage}
-                      alt={`${displayName} card art`}
-                      className="rounded-xl shadow-elegant w-full transition-transform duration-300"
-                      loading="eager"
-                      width={672}
-                      height={936}
-                    />
+                  <div className="relative w-full max-w-[260px] sm:max-w-[320px]" style={{ perspective: '1000px' }}>
+                    <div
+                      className="transition-transform duration-500"
+                      style={{
+                        transformStyle: 'preserve-3d',
+                        transform: isFlipping ? 'rotateY(90deg)' : 'rotateY(0deg)',
+                      }}
+                    >
+                      <img
+                        src={cardImage}
+                        alt={`${displayName} card art`}
+                        className="rounded-xl shadow-elegant w-full"
+                        loading="eager"
+                        width={672}
+                        height={936}
+                      />
+                    </div>
                     {isFlippable && (
                       <button
-                        onClick={() => setFaceIndex((i) => (i === 0 ? 1 : 0))}
+                        onClick={() => {
+                          setIsFlipping(true);
+                          setTimeout(() => {
+                            setFaceIndex((i) => (i === 0 ? 1 : 0));
+                            setIsFlipping(false);
+                          }, 250);
+                        }}
                         className="absolute bottom-3 right-3 bg-background/80 backdrop-blur-sm border border-border/50 rounded-full p-2 hover:bg-background transition-colors shadow-md"
                         aria-label={faceIndex === 0 ? 'Show back face' : 'Show front face'}
                         title={faceIndex === 0 ? 'Flip to back' : 'Flip to front'}
@@ -339,7 +355,13 @@ const CardPage = () => {
                   <p className="text-muted-foreground mt-1">{displayTypeLine}</p>
                   {isFlippable && (
                     <button
-                      onClick={() => setFaceIndex((i) => (i === 0 ? 1 : 0))}
+                      onClick={() => {
+                        setIsFlipping(true);
+                        setTimeout(() => {
+                          setFaceIndex((i) => (i === 0 ? 1 : 0));
+                          setIsFlipping(false);
+                        }, 250);
+                      }}
                       className="mt-2 text-xs text-primary hover:underline flex items-center gap-1"
                     >
                       <RotateCw className="h-3 w-3" />
@@ -357,8 +379,8 @@ const CardPage = () => {
 
                 {/* Stats row */}
                 <div className="flex flex-wrap gap-3">
-                  {card.power != null && card.toughness != null && (
-                    <Badge variant="outline">{card.power}/{card.toughness}</Badge>
+                  {(activeFace?.power ?? card.power) != null && (activeFace?.toughness ?? card.toughness) != null && (
+                    <Badge variant="outline">{activeFace?.power ?? card.power}/{activeFace?.toughness ?? card.toughness}</Badge>
                   )}
                   <Badge variant="outline" className="capitalize">{card.rarity}</Badge>
                   <Badge variant="outline">{card.set_name}</Badge>
@@ -366,6 +388,17 @@ const CardPage = () => {
                     <Badge variant="secondary" className="gap-1">
                       <DollarSign className="h-3 w-3" />
                       ${priceDisplay.usd}
+                    </Badge>
+                  )}
+                  {priceDisplay?.foil && !priceDisplay?.usd && (
+                    <Badge variant="secondary" className="gap-1">
+                      <DollarSign className="h-3 w-3" />
+                      ${priceDisplay.foil} (foil)
+                    </Badge>
+                  )}
+                  {priceDisplay?.foil && priceDisplay?.usd && (
+                    <Badge variant="outline" className="gap-1 text-muted-foreground">
+                      Foil ${priceDisplay.foil}
                     </Badge>
                   )}
                 </div>
@@ -430,36 +463,7 @@ const CardPage = () => {
                   ))}
                 </div>
               ) : similarityData?.similarResults?.data?.length ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {similarityData.similarResults.data.slice(0, 8).map((alt) => (
-                    <Link
-                      key={alt.id}
-                      to={`/cards/${cardNameToSlug(alt.name)}`}
-                      className="group"
-                    >
-                      <div className="rounded-lg overflow-hidden border border-border/30 hover:border-primary/40 transition-all hover:shadow-lg">
-                        {alt.image_uris?.normal ? (
-                          <img
-                            src={alt.image_uris.normal}
-                            alt={alt.name}
-                            className="w-full"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="aspect-[488/680] bg-muted flex items-center justify-center text-sm text-muted-foreground p-4 text-center">
-                            {alt.name}
-                          </div>
-                        )}
-                      </div>
-                      <p className="mt-1.5 text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
-                        {alt.name}
-                      </p>
-                      {alt.prices?.usd && (
-                        <p className="text-xs text-muted-foreground">${alt.prices.usd}</p>
-                      )}
-                    </Link>
-                  ))}
-                </div>
+                <CardAlternativesGrid cards={similarityData.similarResults.data} />
               ) : (
                 <p className="text-sm text-muted-foreground italic">
                   No alternatives found yet. Try searching for this card to discover similar options.
@@ -474,36 +478,7 @@ const CardPage = () => {
                   <DollarSign className="h-5 w-5 text-primary" />
                   Budget-Friendly Picks
                 </h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {similarityData.budgetResults.data.slice(0, 8).map((alt) => (
-                    <Link
-                      key={alt.id}
-                      to={`/cards/${cardNameToSlug(alt.name)}`}
-                      className="group"
-                    >
-                      <div className="rounded-lg overflow-hidden border border-border/30 hover:border-primary/40 transition-all hover:shadow-lg">
-                        {alt.image_uris?.normal ? (
-                          <img
-                            src={alt.image_uris.normal}
-                            alt={alt.name}
-                            className="w-full"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="aspect-[488/680] bg-muted flex items-center justify-center text-sm text-muted-foreground p-4 text-center">
-                            {alt.name}
-                          </div>
-                        )}
-                      </div>
-                      <p className="mt-1.5 text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
-                        {alt.name}
-                      </p>
-                      {alt.prices?.usd && (
-                        <p className="text-xs text-muted-foreground">${alt.prices.usd}</p>
-                      )}
-                    </Link>
-                  ))}
-                </div>
+                <CardAlternativesGrid cards={similarityData.budgetResults.data} />
               </section>
             ) : null}
 

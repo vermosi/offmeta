@@ -118,6 +118,8 @@ export const CardItem = memo(function CardItem({
           alt={displayName}
           loading="lazy"
           decoding="async"
+          width={488}
+          height={680}
           className="w-full h-full object-cover"
           onError={() => setImgError(true)}
         />
