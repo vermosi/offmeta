@@ -117,6 +117,13 @@ const CardPage = () => {
     retry: 1,
   });
 
+  const [faceIndex, setFaceIndex] = useState(0);
+
+  // Reset face when card changes
+  useEffect(() => {
+    setFaceIndex(0);
+  }, [card?.name]);
+
   // Activate similar cards on load
   const {
     similarityData,
@@ -235,8 +242,6 @@ const CardPage = () => {
     );
   }
 
-  const isFlippable = card ? isDFC(card) : false;
-  const activeFace = isFlippable && card ? card.card_faces![faceIndex] : null;
   const isFlippable = isDFC(card);
   const activeFace = isFlippable ? card.card_faces![faceIndex] : null;
   const oracleText = activeFace?.oracle_text ?? getOracleText(card);
@@ -244,8 +249,6 @@ const CardPage = () => {
   const displayName = activeFace?.name ?? card.name;
   const displayTypeLine = activeFace?.type_line ?? card.type_line;
   const displayManaCost = activeFace?.mana_cost ?? card.mana_cost;
-
-  const [faceIndex, setFaceIndex] = useState(0);
 
   return (
     <ErrorBoundary>
