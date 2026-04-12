@@ -576,17 +576,17 @@
   }
 
   .hero-card-1 {
-    left: 2%;
-    top: 15%;
-    opacity: 0.18;
-    transform: rotate(-18deg) scale(0.85);
+    left: -1%;
+    top: 25%;
+    opacity: 0.15;
+    transform: rotate(-22deg) scale(0.78);
     animation-delay: 0s;
   }
   .hero-card-2 {
-    left: 18%;
-    top: 0%;
-    opacity: 0.25;
-    transform: rotate(-8deg) scale(0.95);
+    left: 10%;
+    top: 18%;
+    opacity: 0.2;
+    transform: rotate(-14deg) scale(0.88);
     animation-delay: -1.5s;
   }
   .hero-card-3 {
