@@ -590,17 +590,17 @@
     animation-delay: -1.5s;
   }
   .hero-card-3 {
-    left: 50%;
-    top: -8%;
-    transform: translateX(-50%) rotate(0deg) scale(1);
-    opacity: 0.3;
+    left: 28%;
+    top: 2%;
+    opacity: 0.25;
+    transform: rotate(-5deg) scale(0.95);
     animation-delay: -3s;
   }
   .hero-card-4 {
-    right: 18%;
-    top: 0%;
+    right: 28%;
+    top: 2%;
     opacity: 0.25;
-    transform: rotate(8deg) scale(0.95);
+    transform: rotate(5deg) scale(0.95);
     animation-delay: -4.5s;
   }
   .hero-card-5 {
