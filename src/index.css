@@ -604,17 +604,24 @@
     animation-delay: -4.5s;
   }
   .hero-card-5 {
-    right: 2%;
-    top: 15%;
-    opacity: 0.18;
-    transform: rotate(18deg) scale(0.85);
+    right: 10%;
+    top: 18%;
+    opacity: 0.2;
+    transform: rotate(14deg) scale(0.88);
     animation-delay: -2s;
   }
+  .hero-card-6 {
+    right: -1%;
+    top: 25%;
+    opacity: 0.15;
+    transform: rotate(22deg) scale(0.78);
+    animation-delay: -5s;
+  }
 
-  /* On mobile, hide outer cards */
+  /* On mobile, hide outermost cards */
   @media (max-width: 639px) {
     .hero-card-1,
-    .hero-card-5 {
+    .hero-card-6 {
       display: none;
     }
     .hero-card-2 {
