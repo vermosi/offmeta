@@ -63,6 +63,8 @@ export function HeroCardBackdrop() {
             <img
               src={src}
               alt=""
+              width={200}
+              height={280}
               loading="lazy"
               decoding="async"
               className="w-full h-full object-cover rounded-xl"
