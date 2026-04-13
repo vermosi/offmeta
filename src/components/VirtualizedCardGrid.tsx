@@ -151,16 +151,26 @@ export function VirtualizedCardGrid({
   const rowHeight = cardHeight + GAP;
   const rowCount = Math.ceil(cards.length / columns);
 
-  // Use a key to force virtualizer re-creation when layout changes
-  const virtualizerKey = `${columns}-${cardHeight}`;
+  // Use a key that also tracks the visible card order so sort changes force
+  // row identity updates instead of reusing stale virtual rows.
+  const virtualizerKey = useCallback(
+    (index: number) => {
+      const startIndex = index * columns;
+      const rowCardIds = cards
+        .slice(startIndex, startIndex + columns)
+        .map((card) => card.id)
+        .join('|');
+      return `${columns}-${cardHeight}-${index}-${rowCardIds}`;
+    },
+    [cards, columns, cardHeight],
+  );
 
   const rowVirtualizer = useWindowVirtualizer({
     count: rowCount,
     estimateSize: () => rowHeight,
     overscan: 3,
     scrollMargin,
-    // This ensures rows are re-measured when size changes
-    getItemKey: (index) => `${virtualizerKey}-${index}`,
+    getItemKey: virtualizerKey,
   });
 
   // Load more when near bottom
