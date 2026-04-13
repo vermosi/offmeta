@@ -81,10 +81,10 @@ export function ResultsToolbar({
             role="status"
             aria-live="polite"
           >
-            {t('a11y.cardsCount').replace(
-              '{count}',
-              totalCards.toLocaleString(),
-            )}
+            {displayCards.length < totalCards
+              ? `${displayCards.length.toLocaleString()} / ${totalCards.toLocaleString()}`
+              : totalCards.toLocaleString()}{' '}
+            {t('a11y.cardsCount').replace('{count}', '').trim()}
           </span>
         )}
         <ShareSearchButton />
