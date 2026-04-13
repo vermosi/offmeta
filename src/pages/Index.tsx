@@ -556,6 +556,7 @@ const Index = () => {
 
           {/* Tab content area */}
           <SearchResultsArea
+            activeSort={activeFilters?.sortBy}
             activeTab={activeTab}
             cards={cards}
             displayCards={displayCards}
