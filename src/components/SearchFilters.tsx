@@ -165,7 +165,7 @@ export function SearchFilters({
     if (applyResetIfNeeded()) {
       setIsOpen(false);
     }
-  });
+  }, [applyResetIfNeeded]);
 
   useEffect(() => {
     syncCmcRangeIfPristine();
