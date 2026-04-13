@@ -37,6 +37,8 @@ const ArtLightbox = lazy(() =>
 );
 
 interface SearchResultsAreaProps {
+  /** Current sort key from filters — when non-default, skip intelligence reranking */
+  activeSort?: string;
   activeTab: ResultsTab;
   cards: ScryfallCard[];
   displayCards: ScryfallCard[];
