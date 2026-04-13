@@ -7,6 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { buildVirtualizedRowKey } from '@/components/VirtualizedCardGrid';
 import { buildMockCards } from './index';
 
 // ============================================================================
@@ -66,6 +67,45 @@ describe('Regression: UI_VIRT - Virtualization', () => {
       expect(getColumnCount(700)).toBe(3); // Tablet
       expect(getColumnCount(900)).toBe(4); // Small desktop
       expect(getColumnCount(1200)).toBe(5); // Desktop
+    });
+
+    it('changes virtual row keys when the same row index receives a new sorted card order', () => {
+      const cards = buildMockCards(8);
+      const columns = 4;
+      const cardHeight = 280;
+
+      const originalRow0Key = buildVirtualizedRowKey(cards, columns, cardHeight, 0);
+      const originalRow1Key = buildVirtualizedRowKey(cards, columns, cardHeight, 1);
+
+      const reorderedCards = [
+        cards[7],
+        cards[6],
+        cards[5],
+        cards[4],
+        cards[3],
+        cards[2],
+        cards[1],
+        cards[0],
+      ];
+
+      const reorderedRow0Key = buildVirtualizedRowKey(reorderedCards, columns, cardHeight, 0);
+      const reorderedRow1Key = buildVirtualizedRowKey(reorderedCards, columns, cardHeight, 1);
+
+      expect(reorderedRow0Key).not.toBe(originalRow0Key);
+      expect(reorderedRow1Key).not.toBe(originalRow1Key);
+    });
+
+    it('keeps virtual row keys stable when card order does not change', () => {
+      const cards = buildMockCards(8);
+      const columns = 4;
+      const cardHeight = 280;
+
+      expect(buildVirtualizedRowKey(cards, columns, cardHeight, 0)).toBe(
+        buildVirtualizedRowKey(cards, columns, cardHeight, 0),
+      );
+      expect(buildVirtualizedRowKey(cards, columns, cardHeight, 1)).toBe(
+        buildVirtualizedRowKey(cards, columns, cardHeight, 1),
+      );
     });
   });
 
