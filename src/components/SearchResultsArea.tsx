@@ -37,6 +37,8 @@ const ArtLightbox = lazy(() =>
 );
 
 interface SearchResultsAreaProps {
+  /** Current sort key from filters — when non-default, skip intelligence reranking */
+  activeSort?: string;
   activeTab: ResultsTab;
   cards: ScryfallCard[];
   displayCards: ScryfallCard[];
@@ -81,6 +83,7 @@ interface SearchResultsAreaProps {
 }
 
 export function SearchResultsArea({
+  activeSort,
   activeTab,
   cards,
   displayCards,
@@ -134,19 +137,23 @@ export function SearchResultsArea({
   const hadFastClick =
     sessionStorage.getItem('offmeta_fast_click_query') === originalQuery;
   const hadRefinement = sessionStorage.getItem('offmeta_once:first_refinement') === '1';
+  const hasCustomSort = activeSort && activeSort !== 'name-asc';
   const rankedCards = useMemo(
     () =>
-      rerankCardsWithIntelligence(displayCards, {
-        queryQualityScore,
-        queryConfidence,
-        querySampleSize,
-        ownedCards: collectionLookup,
-        hadFastClick,
-        hadRefinement,
-        isAuthenticated: !!user,
-      }),
+      hasCustomSort
+        ? displayCards
+        : rerankCardsWithIntelligence(displayCards, {
+            queryQualityScore,
+            queryConfidence,
+            querySampleSize,
+            ownedCards: collectionLookup,
+            hadFastClick,
+            hadRefinement,
+            isAuthenticated: !!user,
+          }),
     [
       displayCards,
+      hasCustomSort,
       queryQualityScore,
       queryConfidence,
       querySampleSize,
