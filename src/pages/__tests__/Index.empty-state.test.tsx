@@ -51,6 +51,7 @@ vi.mock('@/integrations/supabase/client', () => ({
     from: vi.fn(() => ({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      gte: vi.fn().mockResolvedValue({ count: 0, error: null }),
       single: vi.fn().mockResolvedValue({ data: null }),
       insert: vi.fn().mockResolvedValue({ error: null }),
     })),
