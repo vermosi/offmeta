@@ -172,6 +172,13 @@ export function SearchResultsArea({
     [activeSort, rankedCards],
   );
 
+  return (
+    <div className="space-y-6">
+      {/* Cards tab */}
+      {activeTab === 'cards' && (
+        <>
+          {totalCards > 0 && cards.length > 0 ? (
+            <>
               {displayCards.length > 0 ? (
                 viewMode === 'grid' &&
                 displayCards.length > CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD ? (
@@ -337,7 +344,6 @@ export function SearchResultsArea({
                 showEndMessage={cards.length > 0}
               />
 
-              {/* Related cards discovery strip */}
               <RelatedCardsStrip
                 sourceCard={topSourceCard}
                 onCardClick={onRelatedCardClick}
@@ -355,7 +361,6 @@ export function SearchResultsArea({
             />
           ) : null}
 
-          {/* Cross-links to other tools — show after results loaded */}
           {hasSearched && !isSearching && totalCards > 0 && (
             <div className="container-main mt-6">
               <FeatureCrossLinks />
