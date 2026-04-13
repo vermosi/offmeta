@@ -213,7 +213,7 @@ jobs:
     steps:
       - name: Create issue when CI fails
         if: ${{ contains(needs.*.result, 'failure') }}
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
