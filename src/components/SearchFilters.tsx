@@ -437,15 +437,24 @@ export function SearchFilters({
           <SelectValue placeholder={t('filters.sort')} />
         </SelectTrigger>
         <SelectContent className="z-50 bg-popover border border-border shadow-lg">
-          {SORT_OPTIONS.map((option) => (
-            <SelectItem
-              key={option.value}
-              value={option.value}
-              className="text-xs sm:text-sm"
-            >
-              {t(option.labelKey)}
-            </SelectItem>
-          ))}
+          {SORT_OPTIONS.map((option) => {
+            const isEdhrec = option.value.startsWith('edhrec');
+            const edhrecCoverage = isEdhrec
+              ? cards.filter((c) => c.edhrec_rank != null).length / Math.max(cards.length, 1)
+              : 1;
+            return (
+              <SelectItem
+                key={option.value}
+                value={option.value}
+                className="text-xs sm:text-sm"
+              >
+                {t(option.labelKey)}
+                {isEdhrec && edhrecCoverage < 0.5 && (
+                  <span className="ml-1 text-[10px] text-muted-foreground/60">⚠ limited data</span>
+                )}
+              </SelectItem>
+            );
+          })}
         </SelectContent>
       </Select>
 
