@@ -90,6 +90,21 @@ const BREAKPOINTS = [
   { minWidth: 0, columns: 2 },   // mobile
 ];
 
+export function buildVirtualizedRowKey(
+  cards: ScryfallCard[],
+  columns: number,
+  cardHeight: number,
+  index: number,
+): string {
+  const startIndex = index * columns;
+  const rowCardIds = cards
+    .slice(startIndex, startIndex + columns)
+    .map((card) => card.id)
+    .join('|');
+
+  return `${columns}-${cardHeight}-${index}-${rowCardIds}`;
+}
+
 export function VirtualizedCardGrid({
   cards,
   onCardClick,
@@ -151,26 +166,12 @@ export function VirtualizedCardGrid({
   const rowHeight = cardHeight + GAP;
   const rowCount = Math.ceil(cards.length / columns);
 
-  // Use a key that also tracks the visible card order so sort changes force
-  // row identity updates instead of reusing stale virtual rows.
-  const virtualizerKey = useCallback(
-    (index: number) => {
-      const startIndex = index * columns;
-      const rowCardIds = cards
-        .slice(startIndex, startIndex + columns)
-        .map((card) => card.id)
-        .join('|');
-      return `${columns}-${cardHeight}-${index}-${rowCardIds}`;
-    },
-    [cards, columns, cardHeight],
-  );
-
   const rowVirtualizer = useWindowVirtualizer({
     count: rowCount,
     estimateSize: () => rowHeight,
     overscan: 3,
     scrollMargin,
-    getItemKey: virtualizerKey,
+    getItemKey: (index) => buildVirtualizedRowKey(cards, columns, cardHeight, index),
   });
 
   // Load more when near bottom
