@@ -137,7 +137,7 @@ export function SearchResultsArea({
   const hadFastClick =
     sessionStorage.getItem('offmeta_fast_click_query') === originalQuery;
   const hadRefinement = sessionStorage.getItem('offmeta_once:first_refinement') === '1';
-  const hasCustomSort = activeSort && activeSort !== 'name-asc';
+  const hasCustomSort = !!activeSort && activeSort !== 'name-asc';
   const rankedCards = useMemo(
     () =>
       hasCustomSort
@@ -163,17 +163,20 @@ export function SearchResultsArea({
       user,
     ],
   );
-  return (
-    <div className="mt-3 sm:mt-6 container-main">
-      {/* Cards tab */}
-      {activeTab === 'cards' && (
-        <>
-          {totalCards > 0 && cards.length > 0 ? (
-            <>
+  const virtualizedGridKey = useMemo(
+    () =>
+      `${activeSort ?? 'name-asc'}:${rankedCards.length}:${rankedCards
+        .slice(0, 12)
+        .map((card) => card.id)
+        .join('|')}`,
+    [activeSort, rankedCards],
+  );
+...
               {displayCards.length > 0 ? (
                 viewMode === 'grid' &&
                 displayCards.length > CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD ? (
                   <VirtualizedCardGrid
+                    key={virtualizedGridKey}
                     cards={rankedCards}
                     onCardClick={handleCardClick}
                     onLoadMore={
