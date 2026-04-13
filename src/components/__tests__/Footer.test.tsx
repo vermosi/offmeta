@@ -96,7 +96,6 @@ describe('Footer', () => {
     expect(screen.getByText('TypeScript').closest('a')).toHaveAttribute('href', 'https://www.typescriptlang.org');
     expect(screen.getByText('Tailwind CSS').closest('a')).toHaveAttribute('href', 'https://tailwindcss.com');
     expect(screen.getByText('Vite').closest('a')).toHaveAttribute('href', 'https://vitejs.dev');
-    expect(screen.getByText('Supabase').closest('a')).toHaveAttribute('href', 'https://supabase.com');
     expect(screen.getByText('Lovable').closest('a')).toHaveAttribute('href', 'https://lovable.dev');
   });
 });

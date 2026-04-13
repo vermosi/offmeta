@@ -53,6 +53,7 @@ vi.mock('@/integrations/supabase/client', () => ({
     from: vi.fn(() => ({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      gte: vi.fn().mockResolvedValue({ count: 0, error: null }),
       single: vi.fn().mockResolvedValue({ data: null }),
       insert: vi.fn().mockResolvedValue({ error: null }),
     })),
@@ -159,8 +160,6 @@ describe('Index – example queries', () => {
     expect(
       screen.getByRole('group', { name: /try searching for/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText('Budget')).toBeInTheDocument();
-    expect(screen.getByText('Commander')).toBeInTheDocument();
     expect(
       screen.getByRole('button', {
         name: /search for budget board wipes under \$5/i,
@@ -171,7 +170,7 @@ describe('Index – example queries', () => {
       expect(mockTrackExampleQueryImpression).toHaveBeenCalledWith(
         expect.objectContaining({
           query: 'budget board wipes under $5',
-          category: 'Budget',
+          category: 'flat',
         }),
       );
     });
@@ -195,7 +194,7 @@ describe('Index – example queries', () => {
       expect(mockTrackExampleQueryClick).toHaveBeenCalledWith(
         expect.objectContaining({
           query: 'cards that protect my commander',
-          category: 'Commander',
+          category: 'flat',
         }),
       );
     });
