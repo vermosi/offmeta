@@ -163,19 +163,27 @@ describe('Index – empty state', () => {
 
     await renderIndex(IndexPage);
     const input = screen.getByRole('searchbox');
+
+    // Fire change + enter inside act, then flush debounce with fake timers
+    vi.useFakeTimers();
     await act(async () => {
       fireEvent.change(input, { target: { value: 'nonexistent card xyz' } });
       fireEvent.keyDown(input, { key: 'Enter' });
     });
+    // Advance past any debounce timer
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+    });
+    vi.useRealTimers();
 
     await waitFor(
       () => {
         expect(mockSearchCards).toHaveBeenCalledTimes(1);
       },
-      { timeout: 10000 },
+      { timeout: 5000 },
     );
 
     // The search returned 0 results, so no card elements should be visible
     expect(screen.queryByRole('img', { name: /card/i })).not.toBeInTheDocument();
-  }, 15000);
+  }, 10000);
 });
