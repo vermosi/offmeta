@@ -83,6 +83,7 @@ interface SearchResultsAreaProps {
 }
 
 export function SearchResultsArea({
+  activeSort,
   activeTab,
   cards,
   displayCards,
