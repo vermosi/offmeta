@@ -171,7 +171,7 @@ export function SearchResultsArea({
         .join('|')}`,
     [activeSort, rankedCards],
   );
-...
+
               {displayCards.length > 0 ? (
                 viewMode === 'grid' &&
                 displayCards.length > CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD ? (
