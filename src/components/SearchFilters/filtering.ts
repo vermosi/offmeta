@@ -71,8 +71,11 @@ export function applyCardSort(
         comparison = (a.cmc || 0) - (b.cmc || 0);
         break;
       case 'price': {
-        const priceA = parseFloat(a.prices?.usd || '0');
-        const priceB = parseFloat(b.prices?.usd || '0');
+        const priceA = a.prices?.usd ? parseFloat(a.prices.usd) : null;
+        const priceB = b.prices?.usd ? parseFloat(b.prices.usd) : null;
+        if (priceA == null && priceB == null) return 0;
+        if (priceA == null) return 1;
+        if (priceB == null) return -1;
         comparison = priceA - priceB;
         break;
       }
@@ -85,8 +88,11 @@ export function applyCardSort(
         break;
       }
       case 'edhrec': {
-        const rankA = a.edhrec_rank ?? 999999;
-        const rankB = b.edhrec_rank ?? 999999;
+        const rankA = a.edhrec_rank ?? null;
+        const rankB = b.edhrec_rank ?? null;
+        if (rankA == null && rankB == null) return 0;
+        if (rankA == null) return 1;
+        if (rankB == null) return -1;
         comparison = rankA - rankB;
         break;
       }

@@ -161,9 +161,11 @@ export function SearchFilters({
     onFilteredCards(filteredCards, hasActiveFilters, filters);
   }, [filteredCards, hasActiveFilters, onFilteredCards, filters]);
 
-  if (applyResetIfNeeded()) {
-    setIsOpen(false);
-  }
+  useEffect(() => {
+    if (applyResetIfNeeded()) {
+      setIsOpen(false);
+    }
+  }, [applyResetIfNeeded]);
 
   useEffect(() => {
     syncCmcRangeIfPristine();

@@ -39,16 +39,16 @@ export function useSearchFilterState({
   const lastDefaultMaxCmc = useRef(defaultMaxCmc);
   const [prevResetKey, setPrevResetKey] = useState(resetKey);
 
-  const applyResetIfNeeded = () => {
+  const applyResetIfNeeded = useCallback(() => {
     if (prevResetKey !== resetKey) {
       setPrevResetKey(resetKey);
       setFilters(defaultFilters);
       return true;
     }
     return false;
-  };
+  }, [prevResetKey, resetKey, defaultFilters]);
 
-  const syncCmcRangeIfPristine = () => {
+  const syncCmcRangeIfPristine = useCallback(() => {
     if (lastDefaultMaxCmc.current === defaultMaxCmc) {
       return;
     }
@@ -69,7 +69,7 @@ export function useSearchFilterState({
 
       return { ...prev, cmcRange: [0, defaultMaxCmc] };
     });
-  };
+  }, [defaultMaxCmc]);
 
   return {
     filters,
