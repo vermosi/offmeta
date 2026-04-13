@@ -83,7 +83,9 @@ export function ResultsToolbar({
           >
             {t('a11y.cardsCount').replace(
               '{count}',
-              totalCards.toLocaleString(),
+              displayCards.length < totalCards
+                ? `${displayCards.length.toLocaleString()} / ${totalCards.toLocaleString()}`
+                : totalCards.toLocaleString(),
             )}
           </span>
         )}
