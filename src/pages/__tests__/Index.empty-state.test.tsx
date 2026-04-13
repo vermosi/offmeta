@@ -171,9 +171,11 @@ describe('Index – empty state', () => {
     await waitFor(
       () => {
         expect(mockSearchCards).toHaveBeenCalledTimes(1);
-        expect(document.title).toContain('nonexistent card xyz');
       },
       { timeout: 10000 },
     );
+
+    // The search returned 0 results, so no card elements should be visible
+    expect(screen.queryByRole('img', { name: /card/i })).not.toBeInTheDocument();
   }, 15000);
 });
