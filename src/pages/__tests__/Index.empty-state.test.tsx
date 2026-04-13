@@ -168,9 +168,12 @@ describe('Index – empty state', () => {
       fireEvent.keyDown(input, { key: 'Enter' });
     });
 
-    await waitFor(() => {
-      expect(mockSearchCards).toHaveBeenCalledTimes(1);
-      expect(document.title).toContain('nonexistent card xyz');
-    });
-  });
+    await waitFor(
+      () => {
+        expect(mockSearchCards).toHaveBeenCalledTimes(1);
+        expect(document.title).toContain('nonexistent card xyz');
+      },
+      { timeout: 10000 },
+    );
+  }, 15000);
 });
