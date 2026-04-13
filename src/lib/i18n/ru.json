@@ -917,6 +917,8 @@
   "results.adjustFilters": "Попробуйте изменить критерии фильтра.",
   "results.cards": "карт",
   "results.cardsTotal": "всего {count} карт",
+  "results.search.refinementUpsell": "Narrow results like this? Save this refinement as a reusable workflow.",
+  "results.search.proUpsell": "Better results with Pro: advanced explainability + priority ranking.",
   "results.endMessage": "Вы достигли конца · всего {count} карт",
   "results.fallbackLangNotice": "Показаны результаты на английском — не все карты доступны на этом языке.",
   "results.loadingMore": "Загрузка дополнительных карт...",

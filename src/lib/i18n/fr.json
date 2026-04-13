@@ -890,6 +890,8 @@
   "results.adjustFilters": "Essayez d'ajuster vos critères de filtre.",
   "results.cards": "cartes",
   "results.cardsTotal": "{count} cartes au total",
+  "results.search.refinementUpsell": "Narrow results like this? Save this refinement as a reusable workflow.",
+  "results.search.proUpsell": "Better results with Pro: advanced explainability + priority ranking.",
   "results.endMessage": "Vous avez atteint la fin · {count} cartes au total",
   "results.fallbackLangNotice": "Affichage des résultats en anglais — toutes les cartes ne sont pas disponibles dans cette langue.",
   "results.loadingMore": "Chargement de plus de cartes...",

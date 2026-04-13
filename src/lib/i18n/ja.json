@@ -888,6 +888,8 @@
   "results.adjustFilters": "フィルター条件を調整してみてください。",
   "results.cards": "枚のカード",
   "results.cardsTotal": "合計{count}枚",
+  "results.search.refinementUpsell": "Narrow results like this? Save this refinement as a reusable workflow.",
+  "results.search.proUpsell": "Better results with Pro: advanced explainability + priority ranking.",
   "results.endMessage": "最後まで到達しました · 合計{count}枚",
   "results.fallbackLangNotice": "英語の結果を表示しています — すべてのカードがこの言語で利用できるわけではありません。",
   "results.loadingMore": "さらにカードを読み込み中...",
