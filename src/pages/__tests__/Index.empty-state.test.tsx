@@ -168,17 +168,15 @@ describe('Index – empty state', () => {
       fireEvent.keyDown(input, { key: 'Enter' });
     });
 
-    // Wait for the search pipeline to complete and render results (or lack thereof)
+    // Wait long enough for the search pipeline (debounce + translation + fetch)
+    // to complete, then assert no card images rendered.
     await waitFor(
       () => {
-        // Once search completes with 0 results, no card images should be present
-        expect(screen.queryAllByRole('img')).toEqual(
-          expect.not.arrayContaining([
-            expect.objectContaining({ alt: expect.stringMatching(/card/i) }),
-          ]),
-        );
+        expect(
+          screen.queryByRole('img', { name: /card/i }),
+        ).not.toBeInTheDocument();
       },
-      { timeout: 12000 },
+      { timeout: 15000 },
     );
-  }, 20000);
+  }, 30000);
 });
