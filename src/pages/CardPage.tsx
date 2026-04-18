@@ -157,10 +157,10 @@ const CardPage = () => {
         ? ` Legal in ${legalFormats[0]}.`
         : '';
 
-    const description = `${card.name} — ${colorLabel}${typeShort}. Find off-meta alternatives, synergies, and budget picks.${priceSnippet}${formatSnippet}`;
+    const description = `Cards like ${card.name}: similar ${colorLabel}${typeShort} picks, off-meta alternatives, prices & synergies.${priceSnippet}${formatSnippet}`;
 
     const cleanupSeo = applySeoMeta({
-      title: `${card.name} — MTG Off-Meta Alternatives, Price & Synergies | OffMeta`,
+      title: `Cards Like ${card.name} — Similar MTG Picks (2026) | OffMeta`.slice(0, 60) === `Cards Like ${card.name} — Similar MTG Picks (2026) | OffMeta` ? `Cards Like ${card.name} — Similar MTG Picks (2026) | OffMeta` : `Cards Like ${card.name} — Similar Picks | OffMeta`,
       description: description.slice(0, 160),
       url: pageUrl,
       type: 'website',

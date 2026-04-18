@@ -58,7 +58,11 @@ export default function FindMyCombos() {
 
   useEffect(() => {
     const prev = document.title;
-    document.title = 'Find My Combos — OffMeta MTG';
+    const prevDesc = document.querySelector('meta[name="description"]')?.getAttribute('content') ?? '';
+    document.title = 'MTG Combo Finder — Powered by Commander Spellbook | OffMeta';
+    const descEl = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
+    const newDesc = 'Find every infinite combo in your Magic: The Gathering deck. Paste a Moxfield URL and instantly see Commander Spellbook combos, prices & color identity.';
+    if (descEl) descEl.content = newDesc;
     const s = document.createElement('script');
     s.type = 'application/ld+json';
     s.id = 'combos-jsonld';
@@ -83,6 +87,7 @@ export default function FindMyCombos() {
     document.head.appendChild(s);
     return () => {
       document.title = prev;
+      if (descEl && prevDesc) descEl.content = prevDesc;
       document.getElementById('combos-jsonld')?.remove();
     };
   }, []);
