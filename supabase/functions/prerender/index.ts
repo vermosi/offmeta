@@ -174,10 +174,14 @@ function getCardImage(card: ScryfallCard): string | null {
 // ── HTML builders ────────────────────────────────────────────────────────────
 
 function buildCardPageHtml(card: ScryfallCard, slug: string): string {
-  const title = `${card.name} — MTG Card Details | OffMeta`;
-  const desc = card.oracle_text
-    ? `${card.name} — ${card.type_line ?? 'Card'}. ${card.oracle_text.slice(0, 120)}…`
-    : `${card.name} — ${card.type_line ?? 'Magic: The Gathering card'}. View details, prices, legalities, and alternative printings on OffMeta.`;
+  // Benefit-led title pattern: "Cards Like X — Similar MTG Picks (2026) | OffMeta"
+  // Falls back to a shorter variant when the full title would exceed 60 chars.
+  const longTitle = `Cards Like ${card.name} — Similar MTG Picks (2026) | OffMeta`;
+  const shortTitle = `Cards Like ${card.name} — Similar MTG Picks | OffMeta`;
+  const title = longTitle.length <= 60 ? longTitle : (shortTitle.length <= 60 ? shortTitle : `Cards Like ${card.name} | OffMeta`);
+  const priceHint = card.prices?.usd ? ` From $${card.prices.usd}.` : '';
+  const typeHint = card.type_line ? card.type_line.split('—')[0].trim() : 'MTG card';
+  const desc = `Cards like ${card.name}: 12+ similar ${typeHint.toLowerCase()} alternatives, off-meta picks, prices & synergies for Commander, Modern & Pauper.${priceHint}`.slice(0, 160);
   const image = getCardImage(card) ?? OG_IMAGE_DEFAULT;
   const canonicalUrl = `${SITE_URL}/cards/${slug}`;
   const price = card.prices?.usd ? `$${card.prices.usd}` : null;
