@@ -4,14 +4,51 @@ import { MemoryRouter } from 'react-router-dom';
 import { Header } from '../Header';
 import { AuthProvider } from '@/components/AuthProvider';
 
+const mockLoggerError = vi.fn();
+let mockSession: { user: { id: string; email: string } } | null = null;
+let mockSavedSearchResponse: { count: number | null; error: unknown } = {
+  count: null,
+  error: null,
+};
+
+vi.mock('@/lib/core/logger', () => ({
+  logger: {
+    error: (...args: unknown[]) => mockLoggerError(...args),
+    warn: vi.fn(),
+    info: vi.fn(),
+    debug: vi.fn(),
+  },
+}));
+
 // Mock Supabase client so auth resolves synchronously (prevents act warnings)
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     auth: {
-      getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-      onAuthStateChange: (_cb: unknown) => ({ data: { subscription: { unsubscribe: vi.fn() } } }),
+      getSession: () =>
+        Promise.resolve({ data: { session: mockSession }, error: null }),
+      onAuthStateChange: (_cb: unknown) => ({
+        data: { subscription: { unsubscribe: vi.fn() } },
+      }),
     },
-    from: () => ({ select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: null }) }) }) }),
+    from: (table: string) => {
+      if (table === 'saved_searches') {
+        return {
+          select: () => ({
+            eq: () => Promise.resolve(mockSavedSearchResponse),
+          }),
+        };
+      }
+
+      const roleQuery = {
+        eq: () => roleQuery,
+        maybeSingle: () => Promise.resolve({ data: null, error: null }),
+        single: () => Promise.resolve({ data: null, error: null }),
+      };
+
+      return {
+        select: () => roleQuery,
+      };
+    },
   },
 }));
 
@@ -45,10 +82,11 @@ async function renderHeader(initialRoute = '/') {
   return result;
 }
 
-
 describe('Header', () => {
   beforeEach(() => {
     document.body.style.overflow = '';
+    mockSession = null;
+    mockSavedSearchResponse = { count: null, error: null };
     vi.clearAllMocks();
   });
 
@@ -167,7 +205,7 @@ describe('Header', () => {
     await renderHeader();
     const hamburger = screen.getByTestId('hamburger-button');
     fireEvent.click(hamburger);
-    
+
     const dialog = screen.getByRole('dialog');
     const guidesLink = Array.from(dialog.querySelectorAll('a')).find(
       (a) => a.getAttribute('href') === '/guides',
@@ -175,5 +213,25 @@ describe('Header', () => {
     expect(guidesLink).toBeTruthy();
     fireEvent.click(guidesLink!);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('logs and falls back to zero when saved count query returns an error', async () => {
+    mockSession = { user: { id: 'user-2', email: 'tester2@example.com' } };
+    mockSavedSearchResponse = {
+      count: null,
+      error: { message: 'boom' },
+    };
+
+    await renderHeader();
+
+    await waitFor(() => {
+      expect(mockLoggerError).toHaveBeenCalledWith(
+        '[Header] Failed to fetch saved search count',
+        expect.objectContaining({ userId: 'user-2' }),
+      );
+    });
+
+    fireEvent.pointerDown(screen.getByLabelText('User menu'));
+    expect(screen.queryByText(/\b1\b/)).not.toBeInTheDocument();
   });
 });
