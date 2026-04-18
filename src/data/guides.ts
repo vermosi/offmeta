@@ -32,7 +32,7 @@ export const GUIDES: Guide[] = [
     slug: 'search-by-creature-type',
     level: 1,
     title: 'Search by Creature Type',
-    metaTitle: 'MTG Search by Creature Type — Find Any Tribe (2026) | OffMeta',
+    metaTitle: 'MTG Tribe Search — Find Dragons, Elves & More | OffMeta',
     metaDescription:
       'Find every Dragon, Elf, Goblin or Vampire in MTG without Scryfall syntax. Type the tribe in plain English — OffMeta does the rest. Free, instant, no login.',
     heading: 'Search by Creature Type',
@@ -137,7 +137,7 @@ export const GUIDES: Guide[] = [
     slug: 'format-legality-search',
     level: 4,
     title: 'Format Legality Search',
-    metaTitle: 'MTG Format Legal Search — Commander, Modern, Pauper | OffMeta',
+    metaTitle: 'MTG Format Legal Search — Commander, Modern & More | OffMeta',
     metaDescription:
       'Find cards legal in Commander, Standard, Modern, Pioneer, Pauper & more. Type "modern counterspells" or "pauper removal" — OffMeta filters by format instantly.',
     heading: 'Format Legality Search',
@@ -172,7 +172,7 @@ export const GUIDES: Guide[] = [
     slug: 'keyword-ability-search',
     level: 5,
     title: 'MTG Keyword Ability Search',
-    metaTitle: 'MTG Keywords List — Search Flying, Deathtouch & 100+ More | OffMeta',
+    metaTitle: 'MTG Keywords List — Flying, Deathtouch & 100+ | OffMeta',
     metaDescription:
       'Complete MTG keyword list: flying, deathtouch, haste, trample, lifelink, ward & 100+ more. Search every card with any keyword ability — no Scryfall syntax needed.',
     heading: 'Magic: The Gathering Keywords List & Search',
@@ -218,7 +218,7 @@ export const GUIDES: Guide[] = [
     slug: 'ramp-and-card-draw',
     level: 6,
     title: 'Ramp & Card Draw',
-    metaTitle: 'Best MTG Ramp & Card Draw — Find Engines Fast (2026) | OffMeta',
+    metaTitle: 'Best MTG Ramp & Card Draw — Find Engines Fast | OffMeta',
     metaDescription:
       'Find the best ramp spells, mana dorks, card draw engines & Commander staples in MTG. Search by what cards do — not what they say. Free, no syntax.',
     heading: 'Ramp & Card Draw',
@@ -253,7 +253,7 @@ export const GUIDES: Guide[] = [
     slug: 'tribal-synergies-for-commander',
     level: 7,
     title: 'Tribal Synergies for Commander',
-    metaTitle: 'MTG Tribal Synergy Finder — Lords & Payoffs for EDH | OffMeta',
+    metaTitle: 'MTG Tribal Finder — Lords & Payoffs for Commander | OffMeta',
     metaDescription:
       'Build better tribal Commander decks. Find lords, anthems, tribal payoffs & synergies for Dragons, Elves, Goblins or any tribe — instantly, in plain English.',
     heading: 'Tribal Synergies for Commander',
@@ -288,7 +288,7 @@ export const GUIDES: Guide[] = [
     slug: 'token-and-sacrifice-synergies',
     level: 8,
     title: 'Token & Sacrifice Synergies',
-    metaTitle: 'MTG Aristocrats Finder — Tokens, Sac Outlets & Drains | OffMeta',
+    metaTitle: 'MTG Aristocrats Finder — Tokens, Sac & Drains | OffMeta',
     metaDescription:
       'Build the perfect Aristocrats deck: token generators, sacrifice outlets, death triggers & drain effects in one search. Free MTG card finder, no syntax.',
     heading: 'Token & Sacrifice Synergies',
@@ -358,7 +358,7 @@ export const GUIDES: Guide[] = [
     slug: 'multi-constraint-complex-search',
     level: 10,
     title: 'Multi-Constraint Complex Search',
-    metaTitle: 'Advanced MTG Search — Combine Color, Type, Price & Format | OffMeta',
+    metaTitle: 'Advanced MTG Search — Color, Type, Price & Format | OffMeta',
     metaDescription:
       'Run complex MTG searches in one sentence: "Esper utility lands under $5 for Commander". Combine color, type, format, price & function — OffMeta handles it.',
     heading: 'Multi-Constraint Complex Search',
