@@ -7,6 +7,7 @@ import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { usePrefetchPopularQueries, useRealtimeCache } from '@/hooks';
 import { supabase } from '@/integrations/supabase/client';
+import { initWebVitals } from '@/lib/rum/webVitals';
 
 /**
  * Schedules work for when the browser is idle, falling back to setTimeout.
@@ -191,6 +192,12 @@ function usePrefetchSignatureCards() {
   }, [queryClient]);
 }
 
+function useRumInit() {
+  useEffect(() => {
+    initWebVitals();
+  }, []);
+}
+
 export default function AppInitializer() {
   usePrefetchPopularQueries();
   useRealtimeCache();
@@ -198,5 +205,6 @@ export default function AppInitializer() {
   usePrefetchArchetypes();
   usePrefetchMarketTrends();
   usePrefetchSignatureCards();
+  useRumInit();
   return null;
 }

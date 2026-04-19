@@ -242,6 +242,7 @@ const ALLOWED_EVENT_TYPES = [
   'nudge_impression',
   'nudge_click',
   'nudge_dismiss',
+  'web_vital',
 ] as const;
 
 type EventType = (typeof ALLOWED_EVENT_TYPES)[number];

@@ -26,6 +26,7 @@ import { SystemStatusPanel } from '@/pages/admin-analytics/components/SystemStat
 import { HitRatePanel } from '@/pages/admin-analytics/components/HitRatePanel';
 import { AICostPanel } from '@/pages/admin-analytics/components/AICostPanel';
 import { AuthFailuresPanel } from '@/pages/admin-analytics/components/AuthFailuresPanel';
+import { RumPanel } from '@/pages/admin-analytics/components/RumPanel';
 import type { AnalyticsData } from '@/pages/admin-analytics/types';
 
 interface AnalyticsChartsSectionProps {
@@ -109,6 +110,7 @@ export function AnalyticsChartsSection({ data, days }: AnalyticsChartsSectionPro
         </div>
       )}
 
+      <RumPanel days={days} />
       <EngagementMetricsPanel days={days} />
       <ConversionFunnelPanel days={days} />
       <EdgeFunctionTriggerPanel />
