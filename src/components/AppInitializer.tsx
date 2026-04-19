@@ -8,6 +8,24 @@ import { useQueryClient } from '@tanstack/react-query';
 import { usePrefetchPopularQueries, useRealtimeCache } from '@/hooks';
 import { supabase } from '@/integrations/supabase/client';
 
+/**
+ * Schedules work for when the browser is idle, falling back to setTimeout.
+ * Prevents background prefetch / warmup from competing with the user's
+ * first paint and first interaction.
+ */
+function scheduleIdle(cb: () => void, fallbackDelay = 1500): () => void {
+  const w = window as Window & {
+    requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+    cancelIdleCallback?: (id: number) => void;
+  };
+  if (typeof w.requestIdleCallback === 'function') {
+    const id = w.requestIdleCallback(cb, { timeout: 4000 });
+    return () => w.cancelIdleCallback?.(id);
+  }
+  const id = window.setTimeout(cb, fallbackDelay);
+  return () => window.clearTimeout(id);
+}
+
 function useEdgeFunctionWarmup() {
   const lastWarmupPath = useRef<string | null>(null);
 
@@ -24,20 +42,11 @@ function useEdgeFunctionWarmup() {
         .catch(() => {});
     };
 
-    const runWarmupOnReady = () => {
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', warmEdgeFunction, {
-          once: true,
-        });
-        return;
-      }
+    // Defer warmup until the browser is idle so it never competes with
+    // first paint or the user's first interaction.
+    const cancel = scheduleIdle(warmEdgeFunction, 2000);
 
-      warmEdgeFunction();
-    };
-
-    runWarmupOnReady();
-
-    const onNavigation = () => warmEdgeFunction();
+    const onNavigation = () => scheduleIdle(warmEdgeFunction, 500);
 
     window.addEventListener('popstate', onNavigation);
 
@@ -53,7 +62,7 @@ function useEdgeFunctionWarmup() {
     };
 
     return () => {
-      document.removeEventListener('DOMContentLoaded', warmEdgeFunction);
+      cancel();
       window.removeEventListener('popstate', onNavigation);
       history.pushState = originalPushState;
       history.replaceState = originalReplaceState;
@@ -73,7 +82,7 @@ function usePrefetchArchetypes() {
     if (prefetched.current) return;
     prefetched.current = true;
 
-    const id = setTimeout(() => {
+    const cancel = scheduleIdle(() => {
       queryClient.prefetchQuery({
         queryKey: ['archetype-data-by-format'],
         queryFn: async () => {
@@ -90,7 +99,7 @@ function usePrefetchArchetypes() {
       });
     }, 3000);
 
-    return () => clearTimeout(id);
+    return cancel;
   }, [queryClient]);
 }
 
@@ -106,7 +115,7 @@ function usePrefetchMarketTrends() {
     if (prefetched.current) return;
     prefetched.current = true;
 
-    const id = setTimeout(() => {
+    const cancel = scheduleIdle(() => {
       // Prefetch both daily (1-day) and weekly (7-day) movers in parallel
       for (const daysBack of [1, 7]) {
         queryClient.prefetchQuery({
@@ -122,9 +131,9 @@ function usePrefetchMarketTrends() {
           staleTime: 30 * 60 * 1000,
         });
       }
-    }, 4000); // After archetypes to avoid request contention
+    }, 4000);
 
-    return () => clearTimeout(id);
+    return cancel;
   }, [queryClient]);
 }
 
@@ -140,7 +149,7 @@ function usePrefetchSignatureCards() {
     if (prefetched.current) return;
     prefetched.current = true;
 
-    const id = setTimeout(() => {
+    const cancel = scheduleIdle(() => {
       for (const format of [
         'commander',
         'modern',
@@ -176,9 +185,9 @@ function usePrefetchSignatureCards() {
           staleTime: 30 * 60 * 1000,
         });
       }
-    }, 5000); // After market trends to stagger requests
+    }, 5000);
 
-    return () => clearTimeout(id);
+    return cancel;
   }, [queryClient]);
 }
 
