@@ -62,7 +62,7 @@ function useEdgeFunctionWarmup() {
     };
 
     return () => {
-      document.removeEventListener('DOMContentLoaded', warmEdgeFunction);
+      cancel();
       window.removeEventListener('popstate', onNavigation);
       history.pushState = originalPushState;
       history.replaceState = originalReplaceState;
