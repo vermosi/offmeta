@@ -82,7 +82,7 @@ function usePrefetchArchetypes() {
     if (prefetched.current) return;
     prefetched.current = true;
 
-    const id = setTimeout(() => {
+    const cancel = scheduleIdle(() => {
       queryClient.prefetchQuery({
         queryKey: ['archetype-data-by-format'],
         queryFn: async () => {
@@ -99,7 +99,7 @@ function usePrefetchArchetypes() {
       });
     }, 3000);
 
-    return () => clearTimeout(id);
+    return cancel;
   }, [queryClient]);
 }
 
@@ -115,7 +115,7 @@ function usePrefetchMarketTrends() {
     if (prefetched.current) return;
     prefetched.current = true;
 
-    const id = setTimeout(() => {
+    const cancel = scheduleIdle(() => {
       // Prefetch both daily (1-day) and weekly (7-day) movers in parallel
       for (const daysBack of [1, 7]) {
         queryClient.prefetchQuery({
@@ -131,9 +131,9 @@ function usePrefetchMarketTrends() {
           staleTime: 30 * 60 * 1000,
         });
       }
-    }, 4000); // After archetypes to avoid request contention
+    }, 4000);
 
-    return () => clearTimeout(id);
+    return cancel;
   }, [queryClient]);
 }
 
@@ -149,7 +149,7 @@ function usePrefetchSignatureCards() {
     if (prefetched.current) return;
     prefetched.current = true;
 
-    const id = setTimeout(() => {
+    const cancel = scheduleIdle(() => {
       for (const format of [
         'commander',
         'modern',
@@ -185,9 +185,9 @@ function usePrefetchSignatureCards() {
           staleTime: 30 * 60 * 1000,
         });
       }
-    }, 5000); // After market trends to stagger requests
+    }, 5000);
 
-    return () => clearTimeout(id);
+    return cancel;
   }, [queryClient]);
 }
 
