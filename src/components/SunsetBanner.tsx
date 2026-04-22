@@ -16,10 +16,10 @@ export function SunsetBanner({ feature }: SunsetBannerProps) {
   return (
     <div
       role="status"
-      className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 flex items-start gap-3 text-sm"
+      className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 flex items-start gap-3 text-sm"
     >
       <AlertTriangle
-        className="h-4 w-4 mt-0.5 shrink-0 text-amber-500"
+        className="h-4 w-4 mt-0.5 shrink-0 text-primary"
         aria-hidden="true"
       />
       <div className="flex-1 min-w-0 space-y-1">
