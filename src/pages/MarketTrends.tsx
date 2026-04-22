@@ -354,11 +354,16 @@ export default function MarketTrends() {
     setFilters(DEFAULT_FILTERS);
   }, []);
 
+  useNoIndex(true);
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
 
       <main className="flex-1 container max-w-4xl mx-auto px-4 py-6 sm:py-8">
+        <div className="mb-6">
+          <SunsetBanner feature="Market Trends" />
+        </div>
         {/* Page header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
           <div>

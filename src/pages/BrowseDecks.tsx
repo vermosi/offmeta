@@ -17,7 +17,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n';
 import { FORMATS, FORMAT_LABELS } from '@/data/formats';
-import { type Deck, type DeckTag } from '@/hooks';
+import { type Deck, type DeckTag, useNoIndex } from '@/hooks';
+import { SunsetBanner } from '@/components/SunsetBanner';
 
 const COLORS = ['W', 'U', 'B', 'R', 'G'] as const;
 const PAGE_SIZE = 25;

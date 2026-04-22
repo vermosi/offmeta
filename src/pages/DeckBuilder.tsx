@@ -8,7 +8,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Trash2, Layers, Crown, Upload, Globe, Lock } from 'lucide-react';
 import { AuthModal } from '@/components/AuthModal';
-import { useAuth, useDecks, useDeckMutations } from '@/hooks';
+import { useAuth, useDecks, useDeckMutations, useNoIndex } from '@/hooks';
+import { SunsetBanner } from '@/components/SunsetBanner';
 import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,

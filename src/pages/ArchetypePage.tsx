@@ -26,6 +26,8 @@ import {
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { SkipLinks } from '@/components/SkipLinks';
+import { SunsetBanner } from '@/components/SunsetBanner';
+import { useNoIndex } from '@/hooks';
 import { applySeoMeta } from '@/lib/seo';
 
 /** Format names for display */

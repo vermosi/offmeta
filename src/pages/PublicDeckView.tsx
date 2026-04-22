@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   useDeckTags,
   useAuth,
+  useNoIndex,
   type Deck,
   type DeckCard,
 } from '@/hooks';
