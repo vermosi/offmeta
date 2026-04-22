@@ -9,10 +9,12 @@ import { useState, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { SunsetBanner } from '@/components/SunsetBanner';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PriceSparkline } from '@/components/collection/PriceSparkline';
 import { useMarketTrends, type PriceMover } from '@/hooks';
+import { useNoIndex } from '@/hooks';
 import { cardNameToSlug } from '@/lib/card-slug';
 import {
   TrendingUp,
