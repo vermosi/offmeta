@@ -888,6 +888,8 @@
   "results.adjustFilters": "Prova a modificare i criteri di filtro.",
   "results.cards": "carte",
   "results.cardsTotal": "{count} carte in totale",
+  "results.search.refinementUpsell": "Narrow results like this? Save this refinement as a reusable workflow.",
+  "results.search.proUpsell": "Better results with Pro: advanced explainability + priority ranking.",
   "results.endMessage": "Hai raggiunto la fine · {count} carte in totale",
   "results.fallbackLangNotice": "Risultati in inglese — non tutte le carte sono disponibili in questa lingua.",
   "results.loadingMore": "Caricamento altre carte...",

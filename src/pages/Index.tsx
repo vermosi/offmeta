@@ -522,14 +522,18 @@ const Index = () => {
               <div className="space-y-2">
                 {refinementCount > 0 && (
                   <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-foreground">
-                    Narrow results like this? Save this refinement as a reusable
-                    workflow.
+                    {t(
+                      'results.search.refinementUpsell',
+                      'Narrow results like this? Save this refinement as a reusable workflow.',
+                    )}
                   </div>
                 )}
                 {shouldShowProUpsell && (
                   <div className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-foreground">
-                    Better results with Pro: advanced explainability + priority
-                    ranking.
+                    {t(
+                      'results.search.proUpsell',
+                      'Better results with Pro: advanced explainability + priority ranking.',
+                    )}
                   </div>
                 )}
               </div>
@@ -651,8 +655,6 @@ const Index = () => {
           open={compareOpen}
           onClose={closeCompare}
         />
-
-        
       </div>
     </ErrorBoundary>
   );

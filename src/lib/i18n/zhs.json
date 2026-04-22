@@ -917,6 +917,8 @@
   "results.adjustFilters": "请尝试调整筛选条件。",
   "results.cards": "张卡牌",
   "results.cardsTotal": "共 {count} 张",
+  "results.search.refinementUpsell": "Narrow results like this? Save this refinement as a reusable workflow.",
+  "results.search.proUpsell": "Better results with Pro: advanced explainability + priority ranking.",
   "results.endMessage": "已到达末尾 · 共 {count} 张",
   "results.fallbackLangNotice": "显示英文结果 — 并非所有卡牌都有此语言版本。",
   "results.loadingMore": "正在加载更多卡牌...",

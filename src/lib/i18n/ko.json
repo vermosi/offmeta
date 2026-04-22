@@ -917,6 +917,8 @@
   "results.adjustFilters": "필터 기준을 조정해 보세요.",
   "results.cards": "장의 카드",
   "results.cardsTotal": "총 {count}장",
+  "results.search.refinementUpsell": "Narrow results like this? Save this refinement as a reusable workflow.",
+  "results.search.proUpsell": "Better results with Pro: advanced explainability + priority ranking.",
   "results.endMessage": "끝에 도달했습니다 · 총 {count}장",
   "results.fallbackLangNotice": "영어 결과를 표시합니다 — 모든 카드가 이 언어로 제공되지는 않습니다.",
   "results.loadingMore": "카드 더 불러오는 중...",

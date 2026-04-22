@@ -57,6 +57,8 @@
   "results.loadingMore": "Loading more cards...",
   "results.endMessage": "You've reached the end · {count} cards total",
   "results.cardsTotal": "{count} cards total",
+  "results.search.refinementUpsell": "Narrow results like this? Save this refinement as a reusable workflow.",
+  "results.search.proUpsell": "Better results with Pro: advanced explainability + priority ranking.",
   "empty.noCards": "No cards found",
   "empty.noMatch": "We couldn't find any cards matching",
   "empty.tips": "Search tips",
