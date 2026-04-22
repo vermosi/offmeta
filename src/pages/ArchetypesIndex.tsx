@@ -10,7 +10,8 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { ManaSymbol } from '@/components/ManaSymbol';
 import { Badge } from '@/components/ui/badge';
-import { useArchetypeData, useArchetypeTrends, useSignatureCards } from '@/hooks';
+import { useArchetypeData, useArchetypeTrends, useSignatureCards, useNoIndex } from '@/hooks';
+import { SunsetBanner } from '@/components/SunsetBanner';
 import {
   ArrowLeft,
   Compass,

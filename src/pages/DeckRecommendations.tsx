@@ -26,6 +26,8 @@ import { Input } from '@/components/ui/input';
 import { ManaSymbol, OracleText } from '@/components/ManaSymbol';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { SkipLinks } from '@/components/SkipLinks';
+import { SunsetBanner } from '@/components/SunsetBanner';
+import { useNoIndex } from '@/hooks';
 
 const WUBRG = ['W', 'U', 'B', 'R', 'G'] as const;
 const COLOR_NAMES: Record<string, string> = {

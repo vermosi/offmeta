@@ -74,27 +74,11 @@ export function Header() {
 
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
-  /* ---- Grouped nav data ---- */
-  const DECK_LINKS = [
-    { label: t('nav.deckBuilder', 'Deck Builder'), href: '/deckbuilder' },
-    { label: t('nav.browseDecks', 'Browse Decks'), href: '/decks' },
-    { label: t('nav.deckRecs'), href: '/deck-recs' },
-  ];
-
-  const DISCOVER_LINKS = [
-    { label: t('nav.archetypes'), href: '/archetypes' },
-    { label: t('nav.combos'), href: '/combos' },
-    { label: t('nav.marketTrends', 'Market Trends'), href: '/market' },
-    {
-      label: t('nav.browseSearches', 'Browse Searches'),
-      href: '/browse-searches',
-    },
-  ];
-
-  const LEARN_LINKS = [
-    { label: t('header.docs'), href: '/docs' },
-    { label: t('header.guides'), href: '/guides' },
-    { label: t('header.about'), href: '/about' },
+  /* ---- Core nav (search-first) ---- */
+  const CORE_LINKS = [
+    { label: t('header.guides', 'Guides'), href: '/guides' },
+    { label: t('nav.combos', 'Combos'), href: '/combos' },
+    { label: t('header.about', 'About'), href: '/about' },
   ];
 
   /* Link groups used in the mobile menu */
@@ -171,47 +155,7 @@ export function Header() {
             className="container-main py-6 flex flex-col gap-1 pb-safe"
             aria-label="Main navigation links"
           >
-            {/* Section: Decks */}
-            <p className="px-4 pt-2 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t('nav.mobileDecks', 'Decks')}
-            </p>
-            {DECK_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                to={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={cn(
-                  'w-full px-4 py-3 text-base font-medium rounded-xl',
-                  'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
-                )}
-              >
-                {link.label}
-              </Link>
-            ))}
-
-            {/* Section: Discover */}
-            <p className="px-4 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t('nav.mobileDiscover', 'Discover')}
-            </p>
-            {DISCOVER_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                to={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={cn(
-                  'w-full px-4 py-3 text-base font-medium rounded-xl',
-                  'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
-                )}
-              >
-                {link.label}
-              </Link>
-            ))}
-
-            {/* Section: Learn */}
-            <p className="px-4 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t('nav.mobileLearn', 'Learn')}
-            </p>
-            {LEARN_LINKS.map((link) => (
+            {CORE_LINKS.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
@@ -357,43 +301,20 @@ export function Header() {
             </span>
           </Link>
 
-          {/* Desktop nav – grouped dropdowns */}
+          {/* Desktop nav — minimal, search-first */}
           <nav
             className="hidden md:flex items-center gap-0.5"
             aria-label="Main navigation"
           >
-            <NavDropdown label="Decks">
-              {DECK_LINKS.map((link) => (
-                <DropdownMenuItem
-                  key={link.href}
-                  onClick={() => navigate(link.href)}
-                >
-                  {link.label}
-                </DropdownMenuItem>
-              ))}
-            </NavDropdown>
-
-            <NavDropdown label="Discover">
-              {DISCOVER_LINKS.map((link) => (
-                <DropdownMenuItem
-                  key={link.href}
-                  onClick={() => navigate(link.href)}
-                >
-                  {link.label}
-                </DropdownMenuItem>
-              ))}
-            </NavDropdown>
-
-            <NavDropdown label="Learn">
-              {LEARN_LINKS.map((link) => (
-                <DropdownMenuItem
-                  key={link.href}
-                  onClick={() => navigate(link.href)}
-                >
-                  {link.label}
-                </DropdownMenuItem>
-              ))}
-            </NavDropdown>
+            {CORE_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                to={link.href}
+                className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary/50 focus-ring"
+              >
+                {link.label}
+              </Link>
+            ))}
           </nav>
 
           {/* Right side: auth + theme toggle + hamburger */}

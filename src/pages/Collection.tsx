@@ -19,7 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useAuth, toast, useCollectionValue } from '@/hooks';
+import { useAuth, toast, useCollectionValue, useNoIndex } from '@/hooks';
+import { SunsetBanner } from '@/components/SunsetBanner';
 import { AuthModal } from '@/components/AuthModal';
 import {
   useCollection,

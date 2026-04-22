@@ -11,10 +11,8 @@ import { useTranslation } from '@/lib/i18n';
 const MAX_MOBILE_GUIDES = 5;
 
 const EXPLORE_LINKS = [
-  { to: '/archetypes', labelKey: 'nav.archetypes', fallback: 'Archetypes' },
-  { to: '/deck-recs', labelKey: 'nav.deckRecs', fallback: 'Deck Recs' },
   { to: '/combos', labelKey: 'footer.comboFinder', fallback: 'Combo Finder' },
-  { to: '/deckbuilder', labelKey: 'nav.deckBuilder', fallback: 'Deck Builder' },
+  { to: '/guides', labelKey: 'header.guides', fallback: 'Guides' },
   { to: '/docs/syntax', labelKey: 'footer.syntaxCheatSheet', fallback: 'Syntax Cheat Sheet' },
   { to: '/about', labelKey: 'footer.about', fallback: 'About' },
 ] as const;
