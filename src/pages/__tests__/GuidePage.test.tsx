@@ -111,7 +111,7 @@ describe('GuidePage', () => {
 
     it('sets the document title for SEO', () => {
       renderGuidePage('search-by-creature-type');
-      expect(document.title).toBe('How to Search by Creature Type — OffMeta MTG Guide');
+      expect(document.title).toBe('MTG Tribe Search — Find Dragons, Elves & More | OffMeta');
     });
 
     it('renders JSON-LD structured data', () => {

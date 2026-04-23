@@ -38,18 +38,13 @@ describe('Footer', () => {
     expect(link).toHaveAttribute('target', '_blank');
   });
 
-  it('renders Explore section with internal links', () => {
+  it('renders core internal links (search-first nav)', () => {
     renderFooter();
-    expect(screen.getByText('Explore')).toBeInTheDocument();
-    expect(screen.getByText('Archetypes')).toBeInTheDocument();
-    expect(screen.getByText('Deck Recs')).toBeInTheDocument();
-    expect(screen.getByText('Combo Finder')).toBeInTheDocument();
-    expect(screen.getByText('Syntax Cheat Sheet')).toBeInTheDocument();
-  });
-
-  it('renders Guides section heading', () => {
-    renderFooter();
-    expect(screen.getByText('Guides')).toBeInTheDocument();
+    const links = screen.getAllByRole('link');
+    const hrefs = links.map((l) => l.getAttribute('href'));
+    expect(hrefs).toContain('/guides');
+    expect(hrefs).toContain('/combos');
+    expect(hrefs).toContain('/about');
   });
 
   it('renders guide links', () => {
