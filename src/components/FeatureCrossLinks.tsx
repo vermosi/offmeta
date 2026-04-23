@@ -4,7 +4,7 @@
  */
 
 import { Link } from 'react-router-dom';
-import { Zap, BookOpen, Layers } from 'lucide-react';
+import { Zap, BookOpen, Search } from 'lucide-react';
 
 interface FeatureCrossLinksProps {
   /** Optional card name to contextualize links */
@@ -15,16 +15,16 @@ interface FeatureCrossLinksProps {
 
 const FEATURES = [
   {
+    to: '/',
+    icon: Search,
+    label: 'Search Cards',
+    description: 'Type plain English — get the perfect card',
+  },
+  {
     to: '/combos',
     icon: Zap,
     label: 'Find Combos',
     description: 'Discover infinite combos for your deck',
-  },
-  {
-    to: '/deck-recs',
-    icon: Layers,
-    label: 'Deck Recommendations',
-    description: 'Get card suggestions for your decklist',
   },
   {
     to: '/guides',
