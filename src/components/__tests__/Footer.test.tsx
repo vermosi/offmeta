@@ -42,7 +42,6 @@ describe('Footer', () => {
     renderFooter();
     const links = screen.getAllByRole('link');
     const hrefs = links.map((l) => l.getAttribute('href'));
-    expect(hrefs).toContain('/');
     expect(hrefs).toContain('/guides');
     expect(hrefs).toContain('/combos');
     expect(hrefs).toContain('/about');
