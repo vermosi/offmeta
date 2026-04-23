@@ -8,6 +8,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getGuideBySlug, GUIDES } from '@/data/guides';
 import { Footer } from '@/components/Footer';
 import { Header } from '@/components/Header';
+import { PageSearchBar } from '@/components/PageSearchBar';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { Search, ArrowRight, Lightbulb, HelpCircle, BookOpen, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -119,6 +120,11 @@ export default function GuidePage() {
       </nav>
 
       <main id="main-content" className="flex-1 container-main py-8 sm:py-10 lg:py-12">
+        <div className="max-w-2xl mx-auto mb-6">
+          <PageSearchBar
+            placeholder={`Search: ${guide.searchQuery}`}
+          />
+        </div>
         <article className="max-w-2xl mx-auto space-y-8 sm:space-y-10 min-w-0">
           <header className="space-y-4 min-w-0">
             <h1 className="text-2xl sm:text-3xl lg:text-5xl font-semibold text-foreground leading-tight break-words">

@@ -13,12 +13,13 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const BASE_URL = 'https://offmeta.lovable.app';
 
+// Search-first focus: only core search/discovery routes are indexed.
+// Tier-3 routes (deckbuilder, market, decks, collection, archetypes,
+// deck-recs) are excluded — see mem://product/core-focus.
 const STATIC_PAGES = [
   { loc: '/', priority: '1.0', changefreq: 'daily' },
   { loc: '/browse-searches', priority: '0.8', changefreq: 'weekly' },
   { loc: '/combos', priority: '0.8', changefreq: 'weekly' },
-  { loc: '/market', priority: '0.7', changefreq: 'daily' },
-  { loc: '/decks', priority: '0.7', changefreq: 'daily' },
   { loc: '/about', priority: '0.5', changefreq: 'monthly' },
   { loc: '/guides', priority: '0.6', changefreq: 'weekly' },
   { loc: '/syntax', priority: '0.5', changefreq: 'monthly' },
@@ -135,21 +136,7 @@ serve(async (req) => {
       }
     }
 
-    // Public decks
-    if (decks) {
-      for (const deck of decks) {
-        const lastmod = deck.updated_at
-          ? new Date(deck.updated_at).toISOString().split('T')[0]
-          : today;
-        xml += `  <url>
-    <loc>${BASE_URL}/deck/${deck.id}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-`;
-      }
-    }
+    // Public decks excluded from sitemap (Tier-3 — see mem://product/core-focus)
 
     // AI SEO pages (high priority — AI-optimized content)
     if (seoPages) {
