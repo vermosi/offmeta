@@ -57,11 +57,11 @@ describe('Header', () => {
     expect(screen.getByLabelText('OffMeta - Home')).toBeInTheDocument();
   });
 
-  it('renders desktop nav dropdown triggers', async () => {
+  it('renders desktop nav links', async () => {
     await renderHeader();
-    expect(screen.getByText('Decks')).toBeInTheDocument();
-    expect(screen.getByText('Discover')).toBeInTheDocument();
-    expect(screen.getByText('Learn')).toBeInTheDocument();
+    expect(screen.getByText('Guides')).toBeInTheDocument();
+    expect(screen.getByText('Combos')).toBeInTheDocument();
+    expect(screen.getByText('About')).toBeInTheDocument();
   });
 
   it('renders hamburger button for mobile', async () => {
@@ -106,19 +106,14 @@ describe('Header', () => {
     expect(document.body.style.overflow).toBe('');
   });
 
-  it('mobile menu contains grouped nav links', async () => {
+  it('mobile menu contains core nav links', async () => {
     await renderHeader();
     const hamburger = screen.getByTestId('hamburger-button');
     fireEvent.click(hamburger);
     const dialog = screen.getByRole('dialog');
-    // Section headers
-    expect(dialog).toHaveTextContent('Decks');
-    expect(dialog).toHaveTextContent('Discover');
-    expect(dialog).toHaveTextContent('Learn');
-    // Key links
-    expect(dialog).toHaveTextContent('Combos');
-    expect(dialog).toHaveTextContent('Deck Recs');
     expect(dialog).toHaveTextContent('Guides');
+    expect(dialog).toHaveTextContent('Combos');
+    expect(dialog).toHaveTextContent('About');
   });
 
   it('Guides link points to /guides in mobile menu', async () => {
@@ -143,15 +138,15 @@ describe('Header', () => {
     expect(combosLink).toBeTruthy();
   });
 
-  it('Deck Recs link points to /deck-recs in mobile menu', async () => {
+  it('About link points to /about in mobile menu', async () => {
     await renderHeader();
     const hamburger = screen.getByTestId('hamburger-button');
     fireEvent.click(hamburger);
     const dialog = screen.getByRole('dialog');
-    const deckRecsLink = Array.from(dialog.querySelectorAll('a')).find(
-      (a) => a.getAttribute('href') === '/deck-recs',
+    const aboutLink = Array.from(dialog.querySelectorAll('a')).find(
+      (a) => a.getAttribute('href') === '/about',
     );
-    expect(deckRecsLink).toBeTruthy();
+    expect(aboutLink).toBeTruthy();
   });
 
   it('has proper aria attributes on hamburger', async () => {
