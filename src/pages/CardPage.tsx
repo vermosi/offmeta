@@ -28,6 +28,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FeatureCrossLinks } from '@/components/FeatureCrossLinks';
 import { CardAlternativesGrid } from '@/components/CardAlternativesGrid';
+import { PageSearchBar } from '@/components/PageSearchBar';
 import { Badge } from '@/components/ui/badge';
 import {
   ExternalLink,
@@ -260,6 +261,12 @@ const CardPage = () => {
 
         <main className="relative flex-1 py-6 sm:py-10">
           <div className="container-main space-y-8">
+            {/* Persistent search funnel */}
+            <PageSearchBar
+              placeholder={`Search cards like ${card.name}…`}
+              initialValue=""
+            />
+
             {/* Breadcrumb */}
             <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
               <ol className="flex items-center gap-1.5">

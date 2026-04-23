@@ -117,10 +117,15 @@ export default function DeckBuilder() {
     }
   };
 
+  useNoIndex(true);
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main className="flex-1 container-main py-8 sm:py-12">
+        <div className="mb-6">
+          <SunsetBanner feature="Deck Builder" />
+        </div>
         <div className="flex items-center justify-between mb-8 gap-3">
           <div className="min-w-0">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('deck.title')}</h1>

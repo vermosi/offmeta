@@ -222,6 +222,8 @@ export default function ArchetypePage() {
   const { data: topCards } = useArchetypeTopCards(slug ?? '', format);
   const { data: formats } = useArchetypeFormats(slug ?? '');
 
+  useNoIndex(true);
+
   const totalDecks = useMemo(() => {
     if (!formats) return 0;
     return formats.reduce((sum, f) => sum + f.count, 0);
@@ -303,6 +305,9 @@ export default function ArchetypePage() {
 
       <main id="main-content" className="relative flex-1 pt-2 sm:pt-4 pb-16">
         <div className="container-main max-w-3xl">
+          <div className="mb-6">
+            <SunsetBanner feature="Archetypes" />
+          </div>
           {/* Header */}
           <div className="space-y-3 mb-8">
             <div className="flex items-center gap-2.5">

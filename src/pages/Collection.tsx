@@ -115,10 +115,13 @@ export default function Collection() {
     );
   }
 
+  useNoIndex(true);
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-6 space-y-4">
+        <SunsetBanner feature="Collection" />
         {/* Header */}
         <div className="flex items-center justify-between gap-4">
           <div className="space-y-1">

@@ -232,6 +232,7 @@ export default function PublicDeckView() {
   const [copied, setCopied] = useState(false);
 
   useOpenGraphMeta(deck, cards);
+  useNoIndex(true);
 
   const mainboardCards = useMemo(
     () =>

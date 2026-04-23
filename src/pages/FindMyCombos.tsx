@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ManaSymbol } from '@/components/ManaSymbol';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { SkipLinks } from '@/components/SkipLinks';
+import { PageSearchBar } from '@/components/PageSearchBar';
 import { ComboItem } from '@/components/find-my-combos/ComboItem';
 import type { Combo, ComboResults } from '@/components/find-my-combos/types';
 import {
@@ -232,6 +233,7 @@ export default function FindMyCombos() {
       <SkipLinks />
       <Header />
       <main id="main-content" className="container-main flex-1 py-8 space-y-8">
+        <PageSearchBar placeholder="Search Magic cards in plain English…" />
         <div>
           <div className="flex items-center gap-2">
             <Zap className="h-6 w-6 text-primary" />

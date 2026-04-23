@@ -163,10 +163,13 @@ export default function BrowseDecks() {
     });
   };
 
+  useNoIndex(true);
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-6 space-y-6">
+        <SunsetBanner feature="Browse Decks" />
         <div className="space-y-1">
           <h1 className="text-2xl font-bold tracking-tight">
             {t('browse.title')}

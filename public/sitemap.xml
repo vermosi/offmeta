@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://offmeta.app/</loc><lastmod>2026-04-13T06:46:39.909Z</lastmod></url>
-  <url><loc>https://offmeta.app/browse</loc><lastmod>2026-04-13T06:46:39.909Z</lastmod></url>
-  <url><loc>https://offmeta.app/deckbuilder</loc><lastmod>2026-04-13T06:46:39.909Z</lastmod></url>
-  <url><loc>https://offmeta.app/cards</loc><lastmod>2026-04-13T06:46:39.909Z</lastmod></url>
-  <url><loc>https://offmeta.app/guides</loc><lastmod>2026-04-13T06:46:39.909Z</lastmod></url>
-  <url><loc>https://offmeta.app/about</loc><lastmod>2026-04-13T06:46:39.909Z</lastmod></url>
-  <url><loc>https://offmeta.app/privacy</loc><lastmod>2026-04-13T06:46:39.909Z</lastmod></url>
-  <url><loc>https://offmeta.app/terms</loc><lastmod>2026-04-13T06:46:39.909Z</lastmod></url>
-  <url><loc>https://offmeta.app/contact</loc><lastmod>2026-04-13T06:46:39.909Z</lastmod></url>
+  <url><loc>https://offmeta.app/</loc><lastmod>2026-04-23T00:00:00.000Z</lastmod></url>
+  <url><loc>https://offmeta.app/cards</loc><lastmod>2026-04-23T00:00:00.000Z</lastmod></url>
+  <url><loc>https://offmeta.app/guides</loc><lastmod>2026-04-23T00:00:00.000Z</lastmod></url>
+  <url><loc>https://offmeta.app/combos</loc><lastmod>2026-04-23T00:00:00.000Z</lastmod></url>
+  <url><loc>https://offmeta.app/browse-searches</loc><lastmod>2026-04-23T00:00:00.000Z</lastmod></url>
+  <url><loc>https://offmeta.app/about</loc><lastmod>2026-04-23T00:00:00.000Z</lastmod></url>
+  <url><loc>https://offmeta.app/privacy</loc><lastmod>2026-04-23T00:00:00.000Z</lastmod></url>
+  <url><loc>https://offmeta.app/terms</loc><lastmod>2026-04-23T00:00:00.000Z</lastmod></url>
+  <url><loc>https://offmeta.app/contact</loc><lastmod>2026-04-23T00:00:00.000Z</lastmod></url>
 </urlset>
