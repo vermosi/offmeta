@@ -176,11 +176,14 @@ export default function DeckRecommendations() {
     setTimeout(() => setCopiedAll(false), 2000);
   };
 
+  useNoIndex(true);
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <SkipLinks />
       <Header />
       <main id="main-content" className="container-main flex-1 py-8 space-y-8">
+        <SunsetBanner feature="Deck Recommendations" />
         <div>
           <h1 className="text-2xl font-bold">{t('deckRecs.title')}</h1>
           <p className="text-muted-foreground text-sm mt-1">

@@ -66,6 +66,8 @@ export default function ArchetypesIndex() {
 
   const activeData = formatData?.find((f) => f.format === effectiveFormat);
 
+  useNoIndex(true);
+
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -106,6 +108,9 @@ export default function ArchetypesIndex() {
 
       <main id="main-content" className="relative flex-1 pt-6 sm:pt-10 pb-16">
         <div className="container-main max-w-4xl">
+          <div className="mb-6">
+            <SunsetBanner feature="Archetypes" />
+          </div>
           <Link
             to="/"
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
