@@ -544,6 +544,9 @@ const CardPage = () => {
               </section>
             )}
 
+            {/* Internal SEO links — co-played cards build topical clusters for Google */}
+            <RelatedCardLinks oracleId={card.oracle_id} cardName={card.name} />
+
             {/* Cross-links to other tools */}
             <FeatureCrossLinks cardName={card.name} />
           </div>
