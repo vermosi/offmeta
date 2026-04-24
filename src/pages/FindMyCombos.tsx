@@ -497,7 +497,6 @@ export default function FindMyCombos() {
                         label="Share results"
                       />
                     </div>
-                    </h2>
                   </div>
                   {filteredIncluded.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
