@@ -29,6 +29,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { FeatureCrossLinks } from '@/components/FeatureCrossLinks';
 import { CardAlternativesGrid } from '@/components/CardAlternativesGrid';
 import { PageSearchBar } from '@/components/PageSearchBar';
+import { RelatedCardLinks } from '@/components/RelatedCardLinks';
+import { SharePageButton } from '@/components/SharePageButton';
 import { Badge } from '@/components/ui/badge';
 import {
   ExternalLink,
@@ -433,7 +435,7 @@ const CardPage = () => {
                 </div>
 
                 {/* Links */}
-                <div className="flex flex-wrap gap-3 pt-2">
+                <div className="flex flex-wrap gap-3 pt-2 items-center">
                   <a
                     href={card.scryfall_uri}
                     target="_blank"
@@ -449,6 +451,11 @@ const CardPage = () => {
                     <Search className="h-3.5 w-3.5" />
                     Find more like this
                   </Link>
+                  <SharePageButton
+                    title={`${card.name} — OffMeta`}
+                    text={`Found this on OffMeta — ${card.name}`}
+                    label="Share"
+                  />
                 </div>
               </div>
             </div>
