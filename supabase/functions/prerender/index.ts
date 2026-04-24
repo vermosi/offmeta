@@ -312,11 +312,17 @@ function buildSearchPageHtml(
 
   const heading = curated ? curated.title : `MTG Card Search: ${query}`;
 
+  // Use the first result's art_crop as the OG image when available — gives social
+  // shares (Discord/Reddit/Twitter) a card-specific preview instead of the generic
+  // OffMeta default. Falls back to the default when no result image exists.
+  const firstCardImage = results?.data ? results.data.map(getCardImage).find(Boolean) : null;
+  const ogImage = firstCardImage ?? OG_IMAGE_DEFAULT;
+
   return buildFullHtml({
     title,
     description: desc,
     canonicalUrl,
-    image: OG_IMAGE_DEFAULT,
+    image: ogImage,
     jsonLd,
     noindex: shouldNoindex,
     bodyContent: `
@@ -472,6 +478,16 @@ Deno.serve(async (req: Request) => {
       const title = `${seoPage.query} — MTG Card Guide | OffMeta`;
       const desc = content.tldr.slice(0, 160);
 
+      // Enrich OG image with the first featured card's art for richer social previews.
+      // Reuses the existing local-first card fetcher — adds at most one DB lookup.
+      let ogImage: string = OG_IMAGE_DEFAULT;
+      const firstCardName = content.cards?.[0]?.name;
+      if (firstCardName) {
+        const firstCard = await fetchCardByName(firstCardName);
+        const img = firstCard ? getCardImage(firstCard) : null;
+        if (img) ogImage = img;
+      }
+
       const cardListHtml = content.cards.map(card => `
         <li>
           <strong>${escapeHtml(card.name)}</strong> <small>${escapeHtml(card.manaCost)}</small>
@@ -550,7 +566,7 @@ Deno.serve(async (req: Request) => {
         title,
         description: desc,
         canonicalUrl,
-        image: OG_IMAGE_DEFAULT,
+        image: ogImage,
         jsonLd,
         bodyContent,
       }), {

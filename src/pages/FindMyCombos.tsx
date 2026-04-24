@@ -17,6 +17,7 @@ import { useTranslation } from '@/lib/i18n/useTranslation';
 import { SkipLinks } from '@/components/SkipLinks';
 import { PageSearchBar } from '@/components/PageSearchBar';
 import { ComboItem } from '@/components/find-my-combos/ComboItem';
+import { SharePageButton } from '@/components/SharePageButton';
 import type { Combo, ComboResults } from '@/components/find-my-combos/types';
 import {
   Loader2,
@@ -484,11 +485,18 @@ export default function FindMyCombos() {
 
                 {/* Included combos */}
                 <section className="space-y-3">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <Zap className="h-5 w-5 text-primary" />
                     <h2 className="text-lg font-semibold">
                       {t('combos.combosInDeck')} ({filteredIncluded.length})
                     </h2>
+                    <div className="ml-auto">
+                      <SharePageButton
+                        title="MTG Combo Finder — OffMeta"
+                        text={`Found ${filteredIncluded.length} combos in this deck on OffMeta`}
+                        label="Share results"
+                      />
+                    </div>
                   </div>
                   {filteredIncluded.length === 0 ? (
                     <p className="text-sm text-muted-foreground">

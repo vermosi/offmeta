@@ -11,7 +11,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const BASE_URL = 'https://offmeta.lovable.app';
+const BASE_URL = 'https://offmeta.app';
 
 // Search-first focus: only core search/discovery routes are indexed.
 // Tier-3 routes (deckbuilder, market, decks, collection, archetypes,

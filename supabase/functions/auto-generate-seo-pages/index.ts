@@ -12,7 +12,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, requireServiceRole } from '../_shared/auth.ts';
 import { logEvent } from '../_shared/logger.ts';
 
-const MAX_NEW_PAGES = 5;
+// Increased from 5 → 15 per growth plan to expand /ai/* SEO surface daily.
+const MAX_NEW_PAGES = 15;
 
 Deno.serve(async (req: Request) => {
   const corsHeaders = getCorsHeaders(req);

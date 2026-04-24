@@ -23,12 +23,12 @@ const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = validateEnv([
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 const logger = createLogger('promote-searches');
 
-/** Minimum number of times a query must appear to be considered */
-const MIN_FREQUENCY = 5;
-/** Minimum average confidence score */
+/** Minimum number of times a query must appear to be considered (lowered to widen SEO surface) */
+const MIN_FREQUENCY = 3;
+/** Minimum average confidence score (lowered from 0.85 → 0.75 per growth plan) */
 const MIN_AVG_CONFIDENCE = 0.75;
 /** Maximum number of queries to promote per run */
-const MAX_PROMOTIONS = 10;
+const MAX_PROMOTIONS = 20;
 /** Look-back window in days */
 const LOOKBACK_DAYS = 30;
 /** Default priority for auto-promoted entries (lower than editorial ~0.6-0.9) */
