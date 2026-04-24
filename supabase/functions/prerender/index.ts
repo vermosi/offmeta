@@ -312,11 +312,17 @@ function buildSearchPageHtml(
 
   const heading = curated ? curated.title : `MTG Card Search: ${query}`;
 
+  // Use the first result's art_crop as the OG image when available — gives social
+  // shares (Discord/Reddit/Twitter) a card-specific preview instead of the generic
+  // OffMeta default. Falls back to the default when no result image exists.
+  const firstCardImage = results?.data ? results.data.map(getCardImage).find(Boolean) : null;
+  const ogImage = firstCardImage ?? OG_IMAGE_DEFAULT;
+
   return buildFullHtml({
     title,
     description: desc,
     canonicalUrl,
-    image: OG_IMAGE_DEFAULT,
+    image: ogImage,
     jsonLd,
     noindex: shouldNoindex,
     bodyContent: `
