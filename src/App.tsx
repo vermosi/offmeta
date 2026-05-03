@@ -15,6 +15,7 @@ import { I18nProvider } from '@/lib/i18n';
 import { AuthProvider } from '@/components/AuthProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ScrollToTopOnNavigate } from '@/components/ScrollToTopOnNavigate';
+import { RouteTracker } from '@/components/RouteTracker';
 
 const Toaster = lazy(() => import('@/components/ui/toaster').then(m => ({ default: m.Toaster })));
 const Sonner = lazy(() => import('@/components/ui/sonner').then(m => ({ default: m.Toaster })));
@@ -77,6 +78,7 @@ const App = () => (
               </Suspense>
               <BrowserRouter>
                 <ScrollToTopOnNavigate />
+                <RouteTracker />
                 <ErrorBoundary>
                 <Suspense fallback={<div className="min-h-screen bg-background" />}>
                   <Routes>

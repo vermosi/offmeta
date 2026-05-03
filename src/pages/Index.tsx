@@ -96,7 +96,6 @@ const Index = () => {
   const location = useLocation();
   const {
     trackLandingPageView,
-    trackRouteView,
     trackFirstSave,
     trackFirstReturnVisit,
     trackEvent,
@@ -343,16 +342,12 @@ const Index = () => {
     if (lastTrackedRouteRef.current === routeKey) return;
     lastTrackedRouteRef.current = routeKey;
 
-    const routeData = {
-      path: location.pathname,
-      search: location.search || undefined,
-      referrer: document.referrer || undefined,
-    };
-
-    trackRouteView(routeData);
-
     if (location.pathname === '/' && !location.search && !hasSearched) {
-      trackLandingPageView(routeData);
+      trackLandingPageView({
+        path: location.pathname,
+        search: location.search || undefined,
+        referrer: document.referrer || undefined,
+      });
     }
   }, [
     hasSearched,
@@ -360,7 +355,6 @@ const Index = () => {
     location.pathname,
     location.search,
     trackLandingPageView,
-    trackRouteView,
   ]);
 
   const showSimilarTab = hasSearched && !isSearching;

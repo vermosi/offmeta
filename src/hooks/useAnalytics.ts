@@ -345,6 +345,9 @@ interface RouteViewEventData {
   path: string;
   search?: string;
   referrer?: string;
+  from_path?: string;
+  nav_index?: number;
+  dwell_ms?: number;
 }
 
 interface ExampleQueryEventData {
