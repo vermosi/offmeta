@@ -78,6 +78,7 @@ const App = () => (
               </Suspense>
               <BrowserRouter>
                 <ScrollToTopOnNavigate />
+                <RouteTracker />
                 <ErrorBoundary>
                 <Suspense fallback={<div className="min-h-screen bg-background" />}>
                   <Routes>
