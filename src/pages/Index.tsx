@@ -96,7 +96,6 @@ const Index = () => {
   const location = useLocation();
   const {
     trackLandingPageView,
-    trackRouteView,
     trackFirstSave,
     trackFirstReturnVisit,
     trackEvent,
