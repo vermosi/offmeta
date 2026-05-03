@@ -162,9 +162,8 @@ describe('Index – search flow', () => {
     expect(mockTrackLandingPageView).toHaveBeenCalledWith(
       expect.objectContaining({ path: '/' }),
     );
-    expect(mockTrackRouteView).toHaveBeenCalledWith(
-      expect.objectContaining({ path: '/' }),
-    );
+    // route_view is now fired by global RouteTracker in App.tsx,
+    // not by Index — so it's not asserted here.
   });
 
   it('displays skeleton loaders while searching', async () => {
