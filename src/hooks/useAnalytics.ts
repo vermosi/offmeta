@@ -63,6 +63,53 @@ const getSessionId = (): string => {
   return sessionId;
 };
 
+// ---------------------------------------------------------------------------
+// Bot detection
+// ---------------------------------------------------------------------------
+//
+// Crawler farms running our JS produce telltale session IDs because their
+// headless runtime seeds Math.random the same way across instances. A real
+// observed signature: many "different" sessions all ending in `yhd4ldlif`.
+// We also flag standard headless markers (webdriver, common bot UAs).
+//
+// Known colliding random suffixes from production analytics. Add new ones
+// here as they appear in the data.
+const KNOWN_BOT_SUFFIXES = new Set<string>(['yhd4ldlif']);
+
+const BOT_UA_PATTERN =
+  /bot|crawl|spider|slurp|headless|phantom|puppeteer|playwright|selenium|webdriver|http-?client|axios|wget|curl|python-requests|node-fetch|scrapy|googlebot|bingbot|gptbot|claudebot|perplexitybot/i;
+
+let cachedBotResult: boolean | null = null;
+
+function isBotSession(): boolean {
+  if (cachedBotResult !== null) return cachedBotResult;
+  try {
+    const sid = sessionStorage.getItem('offmeta_session_id') || '';
+    const suffix = sid.split('-')[1] || '';
+    if (KNOWN_BOT_SUFFIXES.has(suffix)) {
+      cachedBotResult = true;
+      return true;
+    }
+    const nav = typeof navigator !== 'undefined' ? navigator : null;
+    if (nav) {
+      // Standard webdriver flag
+      if ((nav as Navigator & { webdriver?: boolean }).webdriver === true) {
+        cachedBotResult = true;
+        return true;
+      }
+      const ua = nav.userAgent || '';
+      if (BOT_UA_PATTERN.test(ua)) {
+        cachedBotResult = true;
+        return true;
+      }
+    }
+  } catch {
+    /* private browsing may throw */
+  }
+  cachedBotResult = false;
+  return false;
+}
+
 // UTM parameter capture — stores on first visit per session
 const UTM_PARAMS = [
   'utm_source',
