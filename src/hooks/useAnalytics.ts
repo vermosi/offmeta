@@ -485,6 +485,11 @@ export function useAnalytics() {
           eventData as unknown as Record<string, unknown>,
         );
 
+        // Bot traffic — drop entirely so dashboards reflect humans only.
+        if (isBotSession()) {
+          return;
+        }
+
         // Internal traffic handling
         const internal = isInternalTraffic();
         if (internal && shouldSuppressInsert()) {
