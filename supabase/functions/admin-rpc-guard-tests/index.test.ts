@@ -63,18 +63,25 @@ Deno.test("admin RPCs reject authenticated non-admin users", async () => {
   const email = `guard-test-${crypto.randomUUID()}@example.com`;
   const password = `T3st!${crypto.randomUUID()}`;
 
-  const signUpRes = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
-    method: "POST",
-    headers: { apikey: SUPABASE_ANON_KEY, "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
-  const signUpJson = await signUpRes.json();
+  const SERVICE_ROLE_KEY =
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
+    ?? Deno.env.get("SUPABASE_SECRET_KEYS");
 
-  let accessToken: string | undefined = signUpJson?.access_token
-    ?? signUpJson?.session?.access_token;
+  let accessToken: string | undefined;
 
-  // If sign-up didn't return a session (no email-confirm auto-issue), try password grant.
-  if (!accessToken) {
+  // Preferred path: service-role admin createUser (auto-confirms email).
+  if (SERVICE_ROLE_KEY) {
+    const adminRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
+      method: "POST",
+      headers: {
+        apikey: SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password, email_confirm: true }),
+    });
+    await adminRes.text();
+
     const pwRes = await fetch(
       `${SUPABASE_URL}/auth/v1/token?grant_type=password`,
       {
@@ -85,14 +92,23 @@ Deno.test("admin RPCs reject authenticated non-admin users", async () => {
     );
     const pwJson = await pwRes.json();
     accessToken = pwJson?.access_token;
-    if (!accessToken) {
-      console.warn(
-        `[skip-auth-half] could not obtain non-admin session ` +
-        `(signup status ${signUpRes.status}, password-grant status ${pwRes.status}, body: ${JSON.stringify(pwJson)}). ` +
-        `Anon-call test still validates the EXECUTE/has_role guard.`,
-      );
-      return;
-    }
+  } else {
+    // Fallback: ordinary signup (only works if email confirmation is disabled).
+    const signUpRes = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+      method: "POST",
+      headers: { apikey: SUPABASE_ANON_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const signUpJson = await signUpRes.json();
+    accessToken = signUpJson?.access_token ?? signUpJson?.session?.access_token;
+  }
+
+  if (!accessToken) {
+    console.warn(
+      `[skip-auth-half] could not obtain a non-admin session. ` +
+      `Anon-call test still validates the EXECUTE/has_role guard.`,
+    );
+    return;
   }
 
   // Sanity: the new user should NOT have admin role.
