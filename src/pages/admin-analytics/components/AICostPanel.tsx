@@ -62,11 +62,11 @@ export function AICostPanel({ days }: { days: number }) {
   const fetchStats = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc('get_ai_usage_stats', {
-        days_back: days,
+      const { data, error } = await supabase.functions.invoke('admin-rpc', {
+        body: { fn: 'get_ai_usage_stats', args: { days_back: days } },
       });
       if (error) throw error;
-      setStats(data as unknown as AIUsageStats);
+      setStats((data as { data: AIUsageStats }).data);
     } catch (err) {
       logger.error('[AICostPanel] Failed to load AI usage stats:', err);
     } finally {

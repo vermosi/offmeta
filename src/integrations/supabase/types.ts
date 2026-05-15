@@ -1152,7 +1152,6 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
-      get_ai_usage_stats: { Args: { days_back?: number }; Returns: Json }
       get_card_recommendations: {
         Args: {
           result_limit?: number
@@ -1170,7 +1169,6 @@ export type Database = {
           weight: number
         }[]
       }
-      get_conversion_funnel: { Args: { days_back?: number }; Returns: Json }
       get_deck_vote_count: { Args: { target_deck_id: string }; Returns: number }
       get_missing_oracle_ids: {
         Args: never
@@ -1211,10 +1209,6 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: Json
       }
-      get_search_analytics: {
-        Args: { max_low_confidence?: number; since_date: string }
-        Returns: Json
-      }
       get_signature_cards: {
         Args: { target_format?: string }
         Returns: {
@@ -1224,7 +1218,6 @@ export type Database = {
           image_url: string
         }[]
       }
-      get_system_status: { Args: never; Returns: Json }
       get_zero_result_candidates: {
         Args: {
           max_results?: number
