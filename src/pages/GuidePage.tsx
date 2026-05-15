@@ -75,6 +75,21 @@ export default function GuidePage() {
     })),
   };
 
+  const howToJsonLd = guide.tips.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: guide.metaTitle,
+    description: guide.metaDescription,
+    url: `https://offmeta.app/guides/${guide.slug}`,
+    step: guide.tips.map((tip, i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      name: `Step ${i + 1}`,
+      text: tip,
+      url: `https://offmeta.app/guides/${guide.slug}#step-${i + 1}`,
+    })),
+  } : null;
+
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
