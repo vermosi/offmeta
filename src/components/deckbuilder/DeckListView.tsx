@@ -215,7 +215,7 @@ export function DeckListView({
                         if (a) toast({ title: t('deckEditor.redoAction').replace('{label}', a.label) });
                       })
                     }
-                    className="text-xs text-muted-foreground/50 italic flex items-center gap-2"
+                    className="text-xs text-muted-foreground italic flex items-center gap-2"
                   >
                     <Redo2 className="h-3 w-3 shrink-0" />
                     <span className="truncate">{label}</span>
