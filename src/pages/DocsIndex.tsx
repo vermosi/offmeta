@@ -10,6 +10,7 @@ import { GUIDES } from '@/data/guides';
 import { BookOpen, FileText, Sparkles, ChevronRight, TrendingUp } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { SkipLinks } from '@/components/SkipLinks';
+import { applySeoMeta, injectJsonLd } from '@/lib/seo';
 
 export default function DocsIndex() {
   const { t } = useTranslation();
