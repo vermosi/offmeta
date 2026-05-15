@@ -3,11 +3,14 @@
  * authenticated non-admin) with a Forbidden error sourced from the
  * internal `public.has_role('admin')` guard.
  */
-import "https://deno.land/std@0.224.0/dotenv/load.ts";
 import { assert, assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 
-const SUPABASE_URL = Deno.env.get("VITE_SUPABASE_URL")!;
-const SUPABASE_ANON_KEY = Deno.env.get("VITE_SUPABASE_PUBLISHABLE_KEY")!;
+const SUPABASE_URL =
+  Deno.env.get("VITE_SUPABASE_URL") ?? Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_ANON_KEY =
+  Deno.env.get("VITE_SUPABASE_PUBLISHABLE_KEY")
+  ?? Deno.env.get("SUPABASE_ANON_KEY")
+  ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!;
 
 const ADMIN_RPCS: Array<{ name: string; body: Record<string, unknown> }> = [
   { name: "get_system_status", body: {} },
