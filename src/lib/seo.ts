@@ -51,12 +51,17 @@ export function applySeoMeta(opts: SeoOptions): () => void {
   setMeta('og:type', opts.type ?? 'article', 'property');
   setMeta('twitter:title', opts.title);
   setMeta('twitter:description', opts.description);
-  setMeta('twitter:card', opts.twitterCard ?? 'summary');
+  setMeta('twitter:card', opts.twitterCard ?? 'summary_large_image');
+  setMeta('twitter:url', opts.url);
+  setMeta('twitter:site', '@offmeta');
 
-  if (opts.image) {
-    setMeta('og:image', opts.image, 'property');
-    setMeta('twitter:image', opts.image);
-  }
+  // Default to the sitewide OG image so social previews always render an image,
+  // even on routes that don't supply their own.
+  const image = opts.image ?? 'https://offmeta.app/og-image.png';
+  setMeta('og:image', image, 'property');
+  setMeta('og:image:alt', opts.title, 'property');
+  setMeta('twitter:image', image);
+  setMeta('twitter:image:alt', opts.title);
 
   if (opts.extraMeta) {
     for (const [key, value] of Object.entries(opts.extraMeta)) {
