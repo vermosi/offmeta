@@ -191,6 +191,17 @@ Join the OffMeta community on Discord to share ideas, get help, and discuss deck
 
 For security vulnerability reporting, see [SECURITY.md](SECURITY.md).
 
+For the admin authorization model — `admin_api` schema, `SECURITY DEFINER` RPCs, the `admin-rpc` edge dispatcher, and the `admin-rpc-guard-tests` invariant suite — see [Admin RBAC in docs/security.md](docs/security.md#admin-rbac-security-definer--internal-publichas_roleadmin).
+
+### Database functions vs edge functions
+
+Use the right tool for the job:
+
+- **Database functions (`SECURITY DEFINER` RPCs)** — for set-based work that stays inside Postgres: aggregations, joins across internal tables, trigger logic, and discovery helpers (e.g. `get_card_recommendations`, `get_signature_cards`, `get_price_movers`). Public helpers live in `public` and are callable from PostgREST. **Admin-only** RPCs live in the private `admin_api` schema, are granted to `service_role` only, and must call `public.has_role('admin')` as their first statement.
+- **Edge functions** — for anything that needs network I/O, secrets, AI Gateway calls, third-party APIs, CORS-bound browser access, or request/response shaping (e.g. `semantic-search`, `fetch-moxfield-deck`, transactional email). Admin RPCs are reached **only** through the `admin-rpc` edge dispatcher, which validates the JWT, enforces `has_role('admin')`, and forwards to the whitelisted `admin_api.*` function with `service_role`.
+
+Rule of thumb: if the work is pure SQL over our own tables → database function. If it touches the network, secrets, or untrusted input shaping → edge function. Never expose admin-gated logic via a `public` RPC or a direct `supabase.rpc(...)` call.
+
 ---
 
 ## 📚 Documentation
@@ -206,6 +217,7 @@ For security vulnerability reporting, see [SECURITY.md](SECURITY.md).
 | [Roadmap](docs/roadmap.md)             | Planned features                                       |
 | [FAQ](docs/FAQ.md)                     | Common questions                                       |
 | [Internationalization](docs/i18n.md)   | i18n system and translation guide                      |
+| [Security](docs/security.md)           | Admin RBAC, `admin_api` schema, guard-test runbook     |
 
 ---
 
