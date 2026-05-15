@@ -498,7 +498,7 @@ export default function AdminCuratedSearches() {
 
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                  Scryfall Query <span className="text-muted-foreground/60">(optional — auto-translated if blank)</span>
+                  Scryfall Query <span className="text-muted-foreground">(optional — auto-translated if blank)</span>
                 </label>
                 <Input
                   value={form.scryfall_query}

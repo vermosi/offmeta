@@ -96,7 +96,7 @@ export function NotificationBell() {
                   {n.body}
                 </span>
               )}
-              <span className="text-[10px] text-muted-foreground/60 pl-4">
+              <span className="text-[10px] text-muted-foreground pl-4">
                 {new Date(n.created_at).toLocaleDateString(undefined, {
                   month: 'short',
                   day: 'numeric',

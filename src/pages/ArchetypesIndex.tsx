@@ -284,7 +284,7 @@ export default function ArchetypesIndex() {
                                     {deck.deckCount} decks
                                   </span>
                                   {sig && (
-                                    <span className="text-[10px] text-muted-foreground/60 truncate hidden sm:inline">
+                                    <span className="text-[10px] text-muted-foreground truncate hidden sm:inline">
                                       · {sig.cardName}
                                     </span>
                                   )}

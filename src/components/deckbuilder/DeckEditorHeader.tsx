@@ -183,8 +183,8 @@ export function DeckEditorHeader({
               )}
             >
               {totalMainboard}/{formatMax}
-              {totalSideboard > 0 && <span className="text-muted-foreground/60"> +{totalSideboard}sb</span>}
-              {totalMaybeboard > 0 && <span className="text-muted-foreground/60"> +{totalMaybeboard}mb</span>}
+              {totalSideboard > 0 && <span className="text-muted-foreground"> +{totalSideboard}sb</span>}
+              {totalMaybeboard > 0 && <span className="text-muted-foreground"> +{totalMaybeboard}mb</span>}
             </span>
 
             {mainboardCount > 0 && (

@@ -61,7 +61,7 @@ export function SetBadge({ cardName, scryfallId, scryfallCache, cacheVersion: _c
       {setCode && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className="ml-1 shrink-0 inline-flex items-center gap-0.5 text-[9px] font-mono text-muted-foreground/60 bg-muted/40 rounded px-1 py-px leading-tight tracking-wide align-middle select-none cursor-default">
+            <span className="ml-1 shrink-0 inline-flex items-center gap-0.5 text-[9px] font-mono text-muted-foreground bg-muted/40 rounded px-1 py-px leading-tight tracking-wide align-middle select-none cursor-default">
               <img
                 src={`https://svgs.scryfall.io/sets/${setCode.toLowerCase()}.svg`}
                 alt={setCode.toUpperCase()}
@@ -79,7 +79,7 @@ export function SetBadge({ cardName, scryfallId, scryfallCache, cacheVersion: _c
         </Tooltip>
       )}
       {price && (
-        <span className="ml-1 shrink-0 text-[10px] text-muted-foreground/60 tabular-nums align-middle select-none">
+        <span className="ml-1 shrink-0 text-[10px] text-muted-foreground tabular-nums align-middle select-none">
           {price}
         </span>
       )}

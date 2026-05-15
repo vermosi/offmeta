@@ -452,7 +452,7 @@ export function SearchFilters({
               >
                 {t(option.labelKey)}
                 {isEdhrec && edhrecCoverage < 0.5 && (
-                  <span className="ml-1 text-[10px] text-muted-foreground/60">⚠ limited data</span>
+                  <span className="ml-1 text-[10px] text-muted-foreground">⚠ limited data</span>
                 )}
               </SelectItem>
             );

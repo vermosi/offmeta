@@ -72,7 +72,7 @@ function TypeDistribution({
           >
             <div className={cn('h-2.5 w-2.5 rounded-sm', info.color)} />
             <span className="text-[9px] text-muted-foreground">{count}</span>
-            <span className="text-[8px] text-muted-foreground/60">{pct}%</span>
+            <span className="text-[8px] text-muted-foreground">{pct}%</span>
           </div>
         );
       })}
