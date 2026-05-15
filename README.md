@@ -217,6 +217,7 @@ Rule of thumb: if the work is pure SQL over our own tables → database function
 | [Roadmap](docs/roadmap.md)             | Planned features                                       |
 | [FAQ](docs/FAQ.md)                     | Common questions                                       |
 | [Internationalization](docs/i18n.md)   | i18n system and translation guide                      |
+| [Security](docs/security.md)           | Admin RBAC, `admin_api` schema, guard-test runbook     |
 
 ---
 
