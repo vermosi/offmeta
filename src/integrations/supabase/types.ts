@@ -1275,8 +1275,6 @@ export type Database = {
         }[]
       }
       refresh_archetype_stats: { Args: never; Returns: undefined }
-      show_limit: { Args: never; Returns: number }
-      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
