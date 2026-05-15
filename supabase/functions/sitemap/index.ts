@@ -119,6 +119,17 @@ serve(async (req) => {
 `;
     }
 
+    // Static guide pages
+    for (const slug of GUIDE_SLUGS) {
+      xml += `  <url>
+    <loc>${BASE_URL}/guides/${escapeXml(slug)}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+`;
+    }
+
     // Curated search pages (high-value SEO targets)
     if (curatedSearches) {
       for (const search of curatedSearches) {
