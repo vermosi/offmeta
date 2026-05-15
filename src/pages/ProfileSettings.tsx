@@ -17,6 +17,7 @@ import { Loader2, User, ArrowLeft, Camera, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { SkipLinks } from '@/components/SkipLinks';
+import { applySeoMeta } from '@/lib/seo';
 
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2 MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];

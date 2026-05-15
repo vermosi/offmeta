@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks';
 import { Lock, Loader2, CheckCircle2 } from 'lucide-react';
 import { SkipLinks } from '@/components/SkipLinks';
 import { useTranslation } from '@/lib/i18n';
+import { applySeoMeta } from '@/lib/seo';
 
 const ResetPassword = () => {
   const { t } = useTranslation();

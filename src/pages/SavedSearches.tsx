@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { SkipLinks } from '@/components/SkipLinks';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n/useTranslation';
+import { applySeoMeta } from '@/lib/seo';
 import {
   Search,
   Trash2,
