@@ -36,14 +36,17 @@ async function callRpc(name: string, body: Record<string, unknown>, accessToken:
 }
 
 function assertForbidden(name: string, status: number, text: string) {
-  // PostgREST surfaces RAISE EXCEPTION as 4xx/5xx with the message in the body.
+  // Either guard is acceptable:
+  //  - PostgREST EXECUTE revoke -> 42501 "permission denied for function ..."
+  //  - Internal has_role check  -> "Forbidden: admin role required"
   assert(
     status >= 400 && status < 600,
     `[${name}] expected error status, got ${status}. Body: ${text}`,
   );
+  const lower = text.toLowerCase();
   assert(
-    text.toLowerCase().includes(FORBIDDEN_MARKER),
-    `[${name}] expected body to mention "${FORBIDDEN_MARKER}", got: ${text}`,
+    lower.includes(FORBIDDEN_MARKER) || lower.includes("permission denied"),
+    `[${name}] expected forbidden/permission-denied response, got: ${text}`,
   );
 }
 
