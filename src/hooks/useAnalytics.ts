@@ -422,6 +422,7 @@ interface LifecycleEventData {
   time_to_click_ms?: number;
   action?: string;
   placement?: string;
+  cta?: string;
 }
 
 type EventData =
