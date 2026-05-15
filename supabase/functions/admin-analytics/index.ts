@@ -61,13 +61,14 @@ serve(async (req) => {
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
   try {
-    // Call RPC using the user's JWT so auth.uid() resolves correctly inside the function
-    const supabaseUserForRpc = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
-      global: { headers: { Authorization: authHeader } },
+    // Function lives in the private admin_api schema and is only callable
+    // via service_role. Admin identity was already verified above.
+    const supabaseAdminApi = createClient(supabaseUrl, supabaseServiceKey, {
+      db: { schema: 'admin_api' as never },
     });
-    const { data: analytics, error: rpcError } = await supabaseUserForRpc.rpc(
-      'get_search_analytics',
-      { since_date: since, max_low_confidence: 20 },
+    const { data: analytics, error: rpcError } = await supabaseAdminApi.rpc(
+      'get_search_analytics' as never,
+      { since_date: since, max_low_confidence: 20 } as never,
     );
 
     if (rpcError) throw rpcError;
