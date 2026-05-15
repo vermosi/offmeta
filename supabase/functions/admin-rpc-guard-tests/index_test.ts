@@ -14,7 +14,14 @@
  *
  * Run: tested via Deno's built-in runner with --allow-net --allow-env.
  */
-import 'https://deno.land/std@0.224.0/dotenv/load.ts';
+import { loadSync } from 'https://deno.land/std@0.224.0/dotenv/mod.ts';
+
+// Load root .env without strict .env.example validation (test runner injects most vars).
+try {
+  loadSync({ export: true, allowEmptyValues: true, examplePath: null });
+} catch {
+  // Env may already be populated by the runner; ignore loader failures.
+}
 import { assertEquals } from 'https://deno.land/std@0.224.0/assert/mod.ts';
 
 const SUPABASE_URL = Deno.env.get('VITE_SUPABASE_URL') ?? Deno.env.get('SUPABASE_URL')!;
