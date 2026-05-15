@@ -45,6 +45,15 @@ const SavedSearches = () => {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
 
+  useEffect(() => {
+    return applySeoMeta({
+      title: 'Saved Searches | OffMeta',
+      description: 'Your bookmarked MTG card searches on OffMeta. Sign in to revisit, rename, or delete saved natural-language queries.',
+      url: 'https://offmeta.app/saved',
+      extraMeta: { robots: 'noindex, nofollow' },
+    });
+  }, []);
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
   const editInputRef = useRef<HTMLInputElement>(null);

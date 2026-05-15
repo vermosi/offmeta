@@ -33,6 +33,16 @@ export default function ProfileSettings() {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Per-route SEO + noindex (private route)
+  useEffect(() => {
+    return applySeoMeta({
+      title: 'Profile Settings | OffMeta',
+      description: 'Update your OffMeta display name and avatar. Private account settings — sign-in required.',
+      url: 'https://offmeta.app/profile',
+      extraMeta: { robots: 'noindex, nofollow' },
+    });
+  }, []);
+
   // Redirect if not logged in
   useEffect(() => {
     if (!authLoading && !user) {
