@@ -28,7 +28,7 @@ export default function DocsIndex() {
     // Meta description
     const desc = document.createElement('meta');
     desc.name = 'description';
-    desc.content = 'OffMeta MTG card search reference — guides, syntax cheat sheet, and FAQ for natural language Magic: The Gathering card search. Find cards fast without learning Scryfall syntax.';
+    desc.content = 'OffMeta MTG search reference — guides, Scryfall syntax cheat sheet, and FAQ for natural language Magic card search.';
     desc.id = 'docs-meta-desc';
     document.head.appendChild(desc);
 

@@ -39,8 +39,8 @@ export default function GuidesIndex() {
 
   useEffect(() => {
     return applySeoMeta({
-      title: 'MTG Search Guides — Learn to Find Any Magic Card | OffMeta',
-      description: 'Master Magic: The Gathering card search with 10 progressive guides. From basic type searches to complex multi-constraint queries. Find any card using natural language.',
+      title: 'MTG Search Guides — Find Any Magic Card | OffMeta',
+      description: 'Master MTG card search with 10 progressive guides — from basic type searches to multi-constraint queries, all in natural language.',
       url: 'https://offmeta.app/guides',
       type: 'website',
     });

@@ -11,10 +11,9 @@ import { Link } from 'react-router-dom';
 import { Search, WandSparkles, Code2, ArrowRight } from 'lucide-react';
 
 const ABOUT_META = {
-  title:
-    'About OffMeta — Transparent AI MTG Search Tool for Real Scryfall Queries',
+  title: 'About OffMeta — Transparent AI MTG Card Search',
   description:
-    'OffMeta is a transparent AI-powered MTG search engine. Search Magic cards in plain English, see the real Scryfall query instantly, and edit it yourself.',
+    'OffMeta is a transparent AI-powered MTG search engine. Search Magic cards in plain English, see the real Scryfall query, and edit it yourself.',
   url: 'https://offmeta.app/about',
   image: 'https://offmeta.app/og-image.png',
 } as const;
