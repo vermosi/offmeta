@@ -54,75 +54,75 @@ export default function GuidePage() {
     navigate(`/?q=${encodeURIComponent(guide.searchQuery)}`);
   };
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: guide.metaTitle,
-    description: guide.metaDescription,
-    url: `https://offmeta.app/guides/${guide.slug}`,
-    author: { '@type': 'Organization', name: 'OffMeta' },
-    publisher: { '@type': 'Organization', name: 'OffMeta' },
-    mainEntityOfPage: `https://offmeta.app/guides/${guide.slug}`,
-  };
+  // Single consolidated JSON-LD graph. Combining Article + FAQPage + HowTo +
+  // BreadcrumbList into one @graph (with stable @ids) prevents duplicate or
+  // conflicting scripts and lets crawlers see the entities as related.
+  const pageUrl = `https://offmeta.app/guides/${guide.slug}`;
+  const articleId = `${pageUrl}#article`;
+  const faqId = `${pageUrl}#faq`;
+  const howToId = `${pageUrl}#howto`;
+  const breadcrumbId = `${pageUrl}#breadcrumb`;
 
-  const faqJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: guide.faq.map((f) => ({
-      '@type': 'Question',
-      name: f.question,
-      acceptedAnswer: { '@type': 'Answer', text: f.answer },
-    })),
-  };
+  const graph: Array<Record<string, unknown>> = [
+    {
+      '@type': 'Article',
+      '@id': articleId,
+      headline: guide.metaTitle,
+      description: guide.metaDescription,
+      url: pageUrl,
+      mainEntityOfPage: pageUrl,
+      author: { '@type': 'Organization', name: 'OffMeta' },
+      publisher: { '@type': 'Organization', name: 'OffMeta' },
+      isPartOf: { '@id': breadcrumbId },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      '@id': breadcrumbId,
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://offmeta.app/' },
+        { '@type': 'ListItem', position: 2, name: 'Guides', item: 'https://offmeta.app/guides' },
+        { '@type': 'ListItem', position: 3, name: guide.title, item: pageUrl },
+      ],
+    },
+  ];
 
-  const howToJsonLd = guide.tips.length > 0 ? {
-    '@context': 'https://schema.org',
-    '@type': 'HowTo',
-    name: guide.metaTitle,
-    description: guide.metaDescription,
-    url: `https://offmeta.app/guides/${guide.slug}`,
-    step: guide.tips.map((tip, i) => ({
-      '@type': 'HowToStep',
-      position: i + 1,
-      name: `Step ${i + 1}`,
-      text: tip,
-      url: `https://offmeta.app/guides/${guide.slug}#step-${i + 1}`,
-    })),
-  } : null;
+  if (guide.faq.length > 0) {
+    graph.push({
+      '@type': 'FAQPage',
+      '@id': faqId,
+      mainEntity: guide.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.question,
+        acceptedAnswer: { '@type': 'Answer', text: f.answer },
+      })),
+    });
+  }
 
-  const breadcrumbJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      {
-        '@type': 'ListItem',
-        position: 1,
-        name: 'Home',
-        item: 'https://offmeta.app/',
-      },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: 'Guides',
-        item: 'https://offmeta.app/guides',
-      },
-      {
-        '@type': 'ListItem',
-        position: 3,
-        name: guide.title,
-        item: `https://offmeta.app/guides/${guide.slug}`,
-      },
-    ],
-  };
+  if (guide.tips.length > 0) {
+    graph.push({
+      '@type': 'HowTo',
+      '@id': howToId,
+      name: guide.metaTitle,
+      description: guide.metaDescription,
+      url: pageUrl,
+      step: guide.tips.map((tip, i) => ({
+        '@type': 'HowToStep',
+        position: i + 1,
+        name: `Step ${i + 1}`,
+        text: tip,
+        url: `${pageUrl}#step-${i + 1}`,
+      })),
+    });
+  }
+
+  const jsonLd = { '@context': 'https://schema.org', '@graph': graph };
 
   return (
     <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
-      {howToJsonLd && (
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }} />
-      )}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
       <SkipLinks />
       <Header />
