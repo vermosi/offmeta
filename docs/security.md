@@ -167,3 +167,145 @@ Use this every time you introduce a new admin-gated RPC. All boxes must be check
 ### 6. Frontend wiring
 - [ ] Call the new RPC via `supabase.functions.invoke('admin-rpc', { body: { fn: 'get_my_new_admin_rpc', args: { ... } } })` — never `supabase.rpc(...)` directly.
 - [ ] Handle the documented status codes (`401`, `403`, `400`, `500`) with user-facing messages in the admin UI.
+
+---
+
+## Running and interpreting `admin-rpc-guard-tests`
+
+The `admin-rpc-guard-tests` edge function is the canonical proof that the admin authorization wall is intact. It exercises every admin endpoint with three caller identities and reports per-check pass/fail.
+
+### What it covers
+
+For every entry in `ADMIN_FNS` (currently `get_system_status`, `get_ai_usage_stats`, `get_conversion_funnel`, `get_search_analytics`):
+
+1. **Direct PostgREST hit** to `POST /rest/v1/rpc/<fn>` — must `404` because the function lives in the private `admin_api` schema.
+2. **`admin-rpc` dispatcher with anon JWT** — must `401 Unauthorized` (no valid user claims).
+3. **`admin-rpc` dispatcher with a freshly-provisioned non-admin user JWT** — must `403 Forbidden: admin role required`.
+
+The function returns HTTP `200` only if **every** check is blocked; otherwise it returns `500` with a `failures` array.
+
+### Running locally (against the deployed Cloud backend)
+
+The Deno test that wraps the edge function does not need any service-role secret locally — it only needs the public URL and anon key from `.env`:
+
+```bash
+# From the repo root, with the project's .env present:
+deno test \
+  --allow-net --allow-env \
+  supabase/functions/admin-rpc-guard-tests/index_test.ts
+```
+
+What it does:
+- Loads `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` from `.env`.
+- Calls `POST /functions/v1/admin-rpc-guard-tests` (which has the service-role secret available in the edge runtime and provisions the throw-away non-admin user).
+- Asserts every `admin-rpc:*` check for the `authenticated_non_admin` caller returned exactly `403`.
+
+You can also hit the function directly to see the full report:
+
+```bash
+curl -s -X POST \
+  -H "apikey: $VITE_SUPABASE_PUBLISHABLE_KEY" \
+  -H "Authorization: Bearer $VITE_SUPABASE_PUBLISHABLE_KEY" \
+  "$VITE_SUPABASE_URL/functions/v1/admin-rpc-guard-tests" | jq
+```
+
+### Running in CI
+
+Add a step that invokes the same Deno test. CI only needs the two public env vars (no service-role secret) because the heavy lifting happens inside the edge function:
+
+```yaml
+- name: Admin RPC guard tests
+  env:
+    VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+    VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+  run: |
+    deno test --allow-net --allow-env \
+      supabase/functions/admin-rpc-guard-tests/index_test.ts
+```
+
+A non-zero exit code means the wall has been breached — block the merge.
+
+### Sample healthy output
+
+```json
+{
+  "ok": true,
+  "total": 12,
+  "blocked": 12,
+  "failures": [],
+  "results": [
+    {
+      "check": "postgrest:get_system_status",
+      "caller": "unauthenticated",
+      "status": 404,
+      "blocked": true,
+      "reason": "unreachable via PostgREST (expected)",
+      "body_excerpt": "{\"code\":\"PGRST202\",\"details\":\"Searched for the function public.get_system_status…\"}"
+    },
+    {
+      "check": "admin-rpc:get_system_status",
+      "caller": "anon",
+      "status": 401,
+      "blocked": true,
+      "reason": "blocked with 401 (expected)",
+      "body_excerpt": "{\"error\":\"Unauthorized\"}"
+    },
+    {
+      "check": "admin-rpc:get_system_status",
+      "caller": "authenticated_non_admin",
+      "status": 403,
+      "blocked": true,
+      "reason": "blocked with 403 (expected)",
+      "body_excerpt": "{\"error\":\"Forbidden: admin role required\"}"
+    }
+    /* …same three checks repeated for the other admin functions… */
+  ]
+}
+```
+
+### Sample failure (regression — wall broken)
+
+If, for example, the new `get_system_status` accidentally remains in `public` AND grants `EXECUTE` to `authenticated`, the report will show:
+
+```json
+{
+  "ok": false,
+  "total": 12,
+  "blocked": 10,
+  "failures": [
+    {
+      "check": "postgrest:get_system_status",
+      "caller": "unauthenticated",
+      "status": 200,
+      "blocked": false,
+      "reason": "reachable — schema leak!",
+      "body_excerpt": "{\"cron_jobs\":[…],\"data_freshness\":{…}}"
+    },
+    {
+      "check": "admin-rpc:get_system_status",
+      "caller": "authenticated_non_admin",
+      "status": 200,
+      "blocked": false,
+      "reason": "expected 403 but got 200",
+      "body_excerpt": "{\"data\":{…}}"
+    }
+  ],
+  "results": [ /* full per-check breakdown */ ]
+}
+```
+
+### How to interpret each failure
+
+| Failure shape                                                             | Likely cause                                                                                               | Fix |
+|---------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|-----|
+| `postgrest:<fn>` returned `2xx`                                           | The function exists in `public` (or `admin_api` was exposed to PostgREST).                                 | Move the function to `admin_api`, drop the `public` copy, ensure `admin_api` is not in PostgREST's `db.schemas`. |
+| `admin-rpc:<fn>` for `anon` returned anything other than `401`            | The dispatcher's JWT validation regressed (e.g. accepting unsigned tokens, or `getClaims` short-circuited).| Re-check `admin-rpc/index.ts` step 1; confirm `corsHeaders` are not also applied to non-OPTIONS methods.       |
+| `admin-rpc:<fn>` for `authenticated_non_admin` returned `200`             | The dispatcher's `has_role('admin')` check regressed, OR the internal guard inside the function was dropped.| Restore the `if not public.has_role('admin') then raise…` guard AND the dispatcher's role check.               |
+| `admin-rpc:<fn>` for `authenticated_non_admin` returned `401`             | The user JWT failed to mint — usually an auth-config drift (email confirmation policy changed).            | Inspect edge function logs; the test prints `partial_results` if the provisioning step failed.                 |
+| Function returned `500` with `error: "could not provision non-admin user"`| The service-role key in the edge function environment is missing or revoked.                              | Re-add `SUPABASE_SERVICE_ROLE_KEY` to the function secrets and redeploy.                                       |
+
+### Operational notes
+
+- The non-admin user is created with a random email/password and is **not** cleaned up by the edge function itself — the `index_test.ts` wrapper deletes it via the auth admin API. If you call the edge function manually (curl), expect a few `guard-test-*@example.com` users to accumulate; prune them periodically.
+- Run the test after **any** of: schema migration touching `admin_api`, edits to `supabase/functions/admin-rpc/index.ts`, changes to `public.has_role`, or changes to auth providers/email confirmation policy.
+- Do not edit the test to "make it pass" — every assertion is a security invariant.
