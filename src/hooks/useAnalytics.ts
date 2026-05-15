@@ -289,6 +289,7 @@ const ALLOWED_EVENT_TYPES = [
   'nudge_impression',
   'nudge_click',
   'nudge_dismiss',
+  'hero_cta_clicked',
   'web_vital',
 ] as const;
 
