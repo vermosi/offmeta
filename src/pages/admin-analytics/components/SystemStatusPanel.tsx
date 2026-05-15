@@ -108,9 +108,11 @@ export function SystemStatusPanel() {
     setLoading(true);
     setError(null);
     try {
-      const { data, error: rpcError } = await supabase.rpc('get_system_status');
-      if (rpcError) throw rpcError;
-      setStatus(data as unknown as SystemStatus);
+      const { data, error: fnError } = await supabase.functions.invoke('admin-rpc', {
+        body: { fn: 'get_system_status' },
+      });
+      if (fnError) throw fnError;
+      setStatus((data as { data: SystemStatus }).data);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load status');
     } finally {

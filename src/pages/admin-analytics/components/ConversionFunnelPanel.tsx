@@ -50,21 +50,20 @@ export function ConversionFunnelPanel({ days }: ConversionFunnelPanelProps) {
     async function load() {
       setLoading(true);
       try {
-        const { data, error } = await supabase.rpc(
-          'get_conversion_funnel' as 'get_search_analytics',
-          {
-            days_back: days,
-          } as never,
-        );
+        const { data, error } = await supabase.functions.invoke('admin-rpc', {
+          body: { fn: 'get_conversion_funnel', args: { days_back: days } },
+        });
 
         if (error) throw error;
 
-        const result = data as unknown as {
-          sequential: FunnelCounts;
-          independent: FunnelCounts;
-          eventTotals: Record<string, number> | null;
-          utmSources: UtmRow[];
-        };
+        const result = (data as {
+          data: {
+            sequential: FunnelCounts;
+            independent: FunnelCounts;
+            eventTotals: Record<string, number> | null;
+            utmSources: UtmRow[];
+          };
+        }).data;
 
         setSequential(result.sequential);
         setIndependent(result.independent);
