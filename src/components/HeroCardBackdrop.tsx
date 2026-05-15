@@ -58,19 +58,25 @@ export function HeroCardBackdrop() {
       <div className="absolute inset-0 z-10 hero-card-mask" />
 
       <div className="hero-card-fan">
-        {cards.map((src, i) => (
-          <div key={i} className={`hero-card hero-card-${i + 1}`}>
-            <img
-              src={src}
-              alt=""
-              width={200}
-              height={280}
-              loading="lazy"
-              decoding="async"
-              className="w-full h-full object-cover rounded-xl"
-            />
-          </div>
-        ))}
+        {cards.map((src, i) => {
+          // The first/center card is the LCP candidate — load eagerly with high
+          // fetch priority. Remaining cards stay lazy to preserve bandwidth.
+          const isLcp = i === 0;
+          return (
+            <div key={i} className={`hero-card hero-card-${i + 1}`}>
+              <img
+                src={src}
+                alt=""
+                width={200}
+                height={280}
+                loading={isLcp ? 'eager' : 'lazy'}
+                fetchPriority={isLcp ? 'high' : 'auto'}
+                decoding="async"
+                className="w-full h-full object-cover rounded-xl"
+              />
+            </div>
+          );
+        })}
       </div>
     </div>
   );
