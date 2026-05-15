@@ -70,15 +70,29 @@ Deno.test("admin RPCs reject authenticated non-admin users", async () => {
   });
   const signUpJson = await signUpRes.json();
 
-  const accessToken: string | undefined = signUpJson?.access_token
+  let accessToken: string | undefined = signUpJson?.access_token
     ?? signUpJson?.session?.access_token;
 
+  // If sign-up didn't return a session (no email-confirm auto-issue), try password grant.
   if (!accessToken) {
-    console.warn(
-      `[skip] could not obtain non-admin session (status ${signUpRes.status}, body: ${JSON.stringify(signUpJson)}). ` +
-      `Anon-call test still validates the has_role() guard.`,
+    const pwRes = await fetch(
+      `${SUPABASE_URL}/auth/v1/token?grant_type=password`,
+      {
+        method: "POST",
+        headers: { apikey: SUPABASE_ANON_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      },
     );
-    return;
+    const pwJson = await pwRes.json();
+    accessToken = pwJson?.access_token;
+    if (!accessToken) {
+      console.warn(
+        `[skip-auth-half] could not obtain non-admin session ` +
+        `(signup status ${signUpRes.status}, password-grant status ${pwRes.status}, body: ${JSON.stringify(pwJson)}). ` +
+        `Anon-call test still validates the EXECUTE/has_role guard.`,
+      );
+      return;
+    }
   }
 
   // Sanity: the new user should NOT have admin role.
