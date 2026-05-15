@@ -48,28 +48,14 @@ export default function SyntaxCheatSheet() {
   const { t } = useTranslation();
 
   useEffect(() => {
-    const prev = document.title;
-    document.title = 'Scryfall Syntax Cheat Sheet — Natural Language MTG Search Reference | OffMeta';
-
-    // Canonical
-    const canonical = document.createElement('link');
-    canonical.rel = 'canonical';
-    canonical.href = 'https://offmeta.app/docs/syntax';
-    canonical.id = 'syntax-canonical';
-    document.head.appendChild(canonical);
-
-    // Meta description
-    const desc = document.createElement('meta');
-    desc.name = 'description';
-    desc.content = 'Scryfall syntax cheat sheet — maps natural language MTG phrases to Scryfall search operators. Colors, types, mana cost, format, price, power/toughness, ramp, removal, and more.';
-    desc.id = 'syntax-meta-desc';
-    document.head.appendChild(desc);
-
-    // JSON-LD
-    const s = document.createElement('script');
-    s.type = 'application/ld+json';
-    s.id = 'syntax-jsonld';
-    s.textContent = JSON.stringify({
+    const cleanupSeo = applySeoMeta({
+      title: 'Scryfall Syntax Cheat Sheet | OffMeta',
+      description:
+        'Scryfall syntax cheat sheet — maps natural-language MTG phrases to Scryfall operators: colors, types, mana cost, format, price, ramp, removal, and more.',
+      url: 'https://offmeta.app/docs/syntax',
+      type: 'article',
+    });
+    const cleanupLd = injectJsonLd({
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
@@ -78,15 +64,12 @@ export default function SyntaxCheatSheet() {
         { '@type': 'ListItem', position: 3, name: 'Syntax Cheat Sheet', item: 'https://offmeta.app/docs/syntax' },
       ],
     });
-    document.head.appendChild(s);
-
     return () => {
-      document.title = prev;
-      document.getElementById('syntax-canonical')?.remove();
-      document.getElementById('syntax-meta-desc')?.remove();
-      document.getElementById('syntax-jsonld')?.remove();
+      cleanupSeo();
+      cleanupLd();
     };
   }, []);
+
 
   const SYNTAX_EXAMPLES: { categoryKey: string; rows: SyntaxRow[] }[] = useMemo(() => [
     {
