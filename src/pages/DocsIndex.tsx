@@ -16,28 +16,14 @@ export default function DocsIndex() {
   const { t } = useTranslation();
 
   useEffect(() => {
-    const prev = document.title;
-    document.title = 'OffMeta Docs — MTG Search Guides & Syntax Reference';
-
-    // Canonical
-    const canonical = document.createElement('link');
-    canonical.rel = 'canonical';
-    canonical.href = 'https://offmeta.app/docs';
-    canonical.id = 'docs-canonical';
-    document.head.appendChild(canonical);
-
-    // Meta description
-    const desc = document.createElement('meta');
-    desc.name = 'description';
-    desc.content = 'OffMeta MTG search reference — guides, Scryfall syntax cheat sheet, and FAQ for natural language Magic card search.';
-    desc.id = 'docs-meta-desc';
-    document.head.appendChild(desc);
-
-    // JSON-LD
-    const s = document.createElement('script');
-    s.type = 'application/ld+json';
-    s.id = 'docs-jsonld';
-    s.textContent = JSON.stringify({
+    const cleanupSeo = applySeoMeta({
+      title: 'OffMeta Docs — MTG Search Guides & Syntax',
+      description:
+        'OffMeta MTG search reference — guides, Scryfall syntax cheat sheet, and FAQ for natural-language Magic card search.',
+      url: 'https://offmeta.app/docs',
+      type: 'website',
+    });
+    const cleanupLd = injectJsonLd({
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
@@ -45,15 +31,12 @@ export default function DocsIndex() {
         { '@type': 'ListItem', position: 2, name: 'Docs', item: 'https://offmeta.app/docs' },
       ],
     });
-    document.head.appendChild(s);
-
     return () => {
-      document.title = prev;
-      document.getElementById('docs-canonical')?.remove();
-      document.getElementById('docs-meta-desc')?.remove();
-      document.getElementById('docs-jsonld')?.remove();
+      cleanupSeo();
+      cleanupLd();
     };
   }, []);
+
 
   const sections = useMemo(() => [
     {
