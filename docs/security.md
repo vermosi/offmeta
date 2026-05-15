@@ -104,3 +104,66 @@ $$;
 ```
 
 This avoids RLS recursion (the function is `SECURITY DEFINER` so it doesn't re-trigger `user_roles` policies when called from another policy or RPC).
+
+---
+
+## Checklist: adding a new admin-only `SECURITY DEFINER` RPC
+
+Use this every time you introduce a new admin-gated RPC. All boxes must be checked before merge.
+
+### 1. Schema placement
+- [ ] Define the function in the **private `admin_api` schema** (never `public`).
+  ```sql
+  create or replace function admin_api.get_my_new_admin_rpc(...)
+  returns ...
+  language plpgsql
+  security definer
+  set search_path = public
+  set statement_timeout = '15s'
+  as $$ ... $$;
+  ```
+- [ ] Do **not** add the function to `public` — `admin_api` is hidden from PostgREST and the only intentional path is the `admin-rpc` edge dispatcher.
+
+### 2. Internal authorization guard (defense-in-depth)
+- [ ] First statement of the function body **must** be:
+  ```sql
+  if not public.has_role('admin'::app_role) then
+    raise exception 'Forbidden: admin role required';
+  end if;
+  ```
+  This protects against any caller who somehow obtains the service-role key and tries to invoke the function via PostgREST.
+
+### 3. Grants
+- [ ] Revoke `EXECUTE` from everyone, then grant only to `service_role`:
+  ```sql
+  revoke all on function admin_api.get_my_new_admin_rpc(...) from public, anon, authenticated;
+  grant execute on function admin_api.get_my_new_admin_rpc(...) to service_role;
+  ```
+- [ ] Schema-level grants are already in place (`USAGE on admin_api` is granted only to `service_role`); do not relax them.
+
+### 4. Edge dispatcher whitelist
+- [ ] Add the function name and its allowed arg keys to the `ALLOWED` map in `supabase/functions/admin-rpc/index.ts`:
+  ```ts
+  const ALLOWED: Record<string, readonly string[]> = {
+    // ...existing entries
+    get_my_new_admin_rpc: ['arg_one', 'arg_two'],
+  };
+  ```
+- [ ] Anything not in `ALLOWED` is rejected with `400 Unknown function` before reaching the database.
+
+### 5. Guard-test coverage (expected behavior)
+- [ ] Add the new function to `ADMIN_FNS` in `supabase/functions/admin-rpc-guard-tests/index.ts`.
+- [ ] Re-run guard tests and confirm the new function appears in the report with all three checks passing:
+
+  | Caller                       | Endpoint                              | Expected status |
+  |------------------------------|---------------------------------------|-----------------|
+  | Anon (PostgREST direct)      | `POST /rest/v1/rpc/<fn>`              | `404` (schema not exposed) |
+  | Anon                         | `POST /functions/v1/admin-rpc`        | `401 Unauthorized` |
+  | Authenticated non-admin      | `POST /functions/v1/admin-rpc`        | `403 Forbidden: admin role required` |
+  | Authenticated admin          | `POST /functions/v1/admin-rpc`        | `200` with `{ data: ... }` |
+
+  The end-to-end Deno test (`index_test.ts`) will then automatically cover the non-admin 403 case for the new function with no further changes.
+
+### 6. Frontend wiring
+- [ ] Call the new RPC via `supabase.functions.invoke('admin-rpc', { body: { fn: 'get_my_new_admin_rpc', args: { ... } } })` — never `supabase.rpc(...)` directly.
+- [ ] Handle the documented status codes (`401`, `403`, `400`, `500`) with user-facing messages in the admin UI.
