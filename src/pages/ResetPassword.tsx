@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks';
 import { Lock, Loader2, CheckCircle2 } from 'lucide-react';
 import { SkipLinks } from '@/components/SkipLinks';
 import { useTranslation } from '@/lib/i18n';
+import { applySeoMeta } from '@/lib/seo';
 
 const ResetPassword = () => {
   const { t } = useTranslation();
@@ -23,6 +24,16 @@ const ResetPassword = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+
+  // Per-route SEO + noindex (private auth flow)
+  useEffect(() => {
+    return applySeoMeta({
+      title: 'Reset Password | OffMeta',
+      description: 'Choose a new password for your OffMeta account. This page is reached from a password-reset email link.',
+      url: 'https://offmeta.app/reset-password',
+      extraMeta: { robots: 'noindex, nofollow' },
+    });
+  }, []);
 
   // Check that we arrived via a recovery link
   useEffect(() => {

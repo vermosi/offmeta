@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { SkipLinks } from '@/components/SkipLinks';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n/useTranslation';
+import { applySeoMeta } from '@/lib/seo';
 import {
   Search,
   Trash2,
@@ -43,6 +44,15 @@ const SavedSearches = () => {
   const [searches, setSearches] = useState<SavedSearch[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+
+  useEffect(() => {
+    return applySeoMeta({
+      title: 'Saved Searches | OffMeta',
+      description: 'Your bookmarked MTG card searches on OffMeta. Sign in to revisit, rename, or delete saved natural-language queries.',
+      url: 'https://offmeta.app/saved',
+      extraMeta: { robots: 'noindex, nofollow' },
+    });
+  }, []);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');

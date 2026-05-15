@@ -20,9 +20,25 @@ const STATIC_PAGES = [
   { loc: '/', priority: '1.0', changefreq: 'daily' },
   { loc: '/browse-searches', priority: '0.8', changefreq: 'weekly' },
   { loc: '/combos', priority: '0.8', changefreq: 'weekly' },
+  { loc: '/guides', priority: '0.8', changefreq: 'weekly' },
+  { loc: '/ai', priority: '0.7', changefreq: 'weekly' },
+  { loc: '/docs', priority: '0.6', changefreq: 'weekly' },
+  { loc: '/docs/syntax', priority: '0.6', changefreq: 'monthly' },
   { loc: '/about', priority: '0.5', changefreq: 'monthly' },
-  { loc: '/guides', priority: '0.6', changefreq: 'weekly' },
-  { loc: '/syntax', priority: '0.5', changefreq: 'monthly' },
+];
+
+// Static guide slugs — keep in sync with src/data/guides.ts
+const GUIDE_SLUGS = [
+  'search-by-creature-type',
+  'filter-by-color',
+  'budget-price-filters',
+  'format-legality-search',
+  'keyword-ability-search',
+  'ramp-and-card-draw',
+  'tribal-synergies-for-commander',
+  'token-and-sacrifice-synergies',
+  'etb-and-flicker-combos',
+  'multi-constraint-complex-search',
 ];
 
 function slugify(name: string): string {
@@ -99,6 +115,17 @@ serve(async (req) => {
     <lastmod>${today}</lastmod>
     <changefreq>${page.changefreq}</changefreq>
     <priority>${page.priority}</priority>
+  </url>
+`;
+    }
+
+    // Static guide pages
+    for (const slug of GUIDE_SLUGS) {
+      xml += `  <url>
+    <loc>${BASE_URL}/guides/${escapeXml(slug)}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
 `;
     }

@@ -17,6 +17,7 @@ import { Loader2, User, ArrowLeft, Camera, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { SkipLinks } from '@/components/SkipLinks';
+import { applySeoMeta } from '@/lib/seo';
 
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2 MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
@@ -31,6 +32,16 @@ export default function ProfileSettings() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Per-route SEO + noindex (private route)
+  useEffect(() => {
+    return applySeoMeta({
+      title: 'Profile Settings | OffMeta',
+      description: 'Update your OffMeta display name and avatar. Private account settings — sign-in required.',
+      url: 'https://offmeta.app/profile',
+      extraMeta: { robots: 'noindex, nofollow' },
+    });
+  }, []);
 
   // Redirect if not logged in
   useEffect(() => {
