@@ -42,11 +42,27 @@ const Footer = lazy(() =>
 );
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
-import { InstantDemoPreview } from '@/components/InstantDemoPreview';
-import { ValuePropStrip } from '@/components/ValuePropStrip';
-import { HowItWorksSection } from '@/components/HowItWorksSection';
-import { StickySearchNudge } from '@/components/StickySearchNudge';
-import { ScrollToTop } from '@/components/ScrollToTop';
+const InstantDemoPreview = lazy(() =>
+  import('@/components/InstantDemoPreview').then((m) => ({
+    default: m.InstantDemoPreview,
+  })),
+);
+const ValuePropStrip = lazy(() =>
+  import('@/components/ValuePropStrip').then((m) => ({ default: m.ValuePropStrip })),
+);
+const HowItWorksSection = lazy(() =>
+  import('@/components/HowItWorksSection').then((m) => ({
+    default: m.HowItWorksSection,
+  })),
+);
+const StickySearchNudge = lazy(() =>
+  import('@/components/StickySearchNudge').then((m) => ({
+    default: m.StickySearchNudge,
+  })),
+);
+const ScrollToTop = lazy(() =>
+  import('@/components/ScrollToTop').then((m) => ({ default: m.ScrollToTop })),
+);
 import { type ViewMode, getStoredViewMode } from '@/lib/view-mode-storage';
 const ResultsTabs = lazy(() =>
   import('@/components/ResultsTabs').then((m) => ({
@@ -54,7 +70,9 @@ const ResultsTabs = lazy(() =>
   })),
 );
 import type { ResultsTab } from '@/components/ResultsTabs';
-import { SeoManager } from '@/components/SeoManager';
+const SeoManager = lazy(() =>
+  import('@/components/SeoManager').then((m) => ({ default: m.SeoManager })),
+);
 const ResultsToolbar = lazy(() =>
   import('@/components/ResultsToolbar').then((m) => ({
     default: m.ResultsToolbar,
