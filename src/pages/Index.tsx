@@ -42,11 +42,27 @@ const Footer = lazy(() =>
 );
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
-import { InstantDemoPreview } from '@/components/InstantDemoPreview';
-import { ValuePropStrip } from '@/components/ValuePropStrip';
-import { HowItWorksSection } from '@/components/HowItWorksSection';
-import { StickySearchNudge } from '@/components/StickySearchNudge';
-import { ScrollToTop } from '@/components/ScrollToTop';
+const InstantDemoPreview = lazy(() =>
+  import('@/components/InstantDemoPreview').then((m) => ({
+    default: m.InstantDemoPreview,
+  })),
+);
+const ValuePropStrip = lazy(() =>
+  import('@/components/ValuePropStrip').then((m) => ({ default: m.ValuePropStrip })),
+);
+const HowItWorksSection = lazy(() =>
+  import('@/components/HowItWorksSection').then((m) => ({
+    default: m.HowItWorksSection,
+  })),
+);
+const StickySearchNudge = lazy(() =>
+  import('@/components/StickySearchNudge').then((m) => ({
+    default: m.StickySearchNudge,
+  })),
+);
+const ScrollToTop = lazy(() =>
+  import('@/components/ScrollToTop').then((m) => ({ default: m.ScrollToTop })),
+);
 import { type ViewMode, getStoredViewMode } from '@/lib/view-mode-storage';
 const ResultsTabs = lazy(() =>
   import('@/components/ResultsTabs').then((m) => ({
@@ -54,7 +70,9 @@ const ResultsTabs = lazy(() =>
   })),
 );
 import type { ResultsTab } from '@/components/ResultsTabs';
-import { SeoManager } from '@/components/SeoManager';
+const SeoManager = lazy(() =>
+  import('@/components/SeoManager').then((m) => ({ default: m.SeoManager })),
+);
 const ResultsToolbar = lazy(() =>
   import('@/components/ResultsToolbar').then((m) => ({
     default: m.ResultsToolbar,
@@ -75,19 +93,17 @@ const CompareModal = lazy(() =>
 );
 import { SkipLinks } from '@/components/SkipLinks';
 
-import {
-  useSearch,
-  useCompare,
-  useKeyboardShortcuts,
-  useRovingTabIndex,
-  useCollectionLookup,
-  useAuth,
-  useSimilarCards,
-  useDeckIdeas,
-  useQuerySuggestions,
-  useNoIndex,
-  useAnalytics,
-} from '@/hooks';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { useAuth } from '@/hooks/useAuth';
+import { useCollectionLookup } from '@/hooks/useCollection';
+import { useCompare } from '@/hooks/useCompare';
+import { useDeckIdeas } from '@/hooks/useDeckIdeas';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useNoIndex } from '@/hooks/useNoIndex';
+import { useQuerySuggestions } from '@/hooks/useQuerySuggestions';
+import { useRovingTabIndex } from '@/hooks/useRovingTabIndex';
+import { useSearch } from '@/hooks/useSearch';
+import { useSimilarCards } from '@/hooks/useSimilarCards';
 import { useTranslation } from '@/lib/i18n';
 const CardModal = lazy(() => import('@/components/CardModal'));
 
@@ -398,16 +414,17 @@ const Index = () => {
           </div>
         )}
 
-        {/* SEO manager (renders nothing) */}
-        <SeoManager
-          hasSearched={hasSearched}
-          isSearching={isSearching}
-          displayCards={displayCards}
-          originalQuery={originalQuery}
-          searchQuery={searchQuery}
-          compiledQuery={lastSearchResult?.scryfallQuery || searchQuery}
-          totalCards={totalCards}
-        />
+        <Suspense fallback={null}>
+          <SeoManager
+            hasSearched={hasSearched}
+            isSearching={isSearching}
+            displayCards={displayCards}
+            originalQuery={originalQuery}
+            searchQuery={searchQuery}
+            compiledQuery={lastSearchResult?.scryfallQuery || searchQuery}
+            totalCards={totalCards}
+          />
+        </Suspense>
 
         {/* Screen reader search status announcements */}
         <div
@@ -447,7 +464,9 @@ const Index = () => {
             </div>
 
             {!hasSearched && (
+              <Suspense fallback={null}>
               <InstantDemoPreview onTrySearch={handleTryExample} />
+              </Suspense>
             )}
 
             {hasSearched && (
@@ -549,43 +568,47 @@ const Index = () => {
           </div>
 
           {/* Tab content area */}
-          <SearchResultsArea
-            activeSort={activeFilters?.sortBy}
-            activeTab={activeTab}
-            cards={cards}
-            displayCards={displayCards}
-            totalCards={totalCards}
-            viewMode={viewMode}
-            isSearching={isSearching}
-            hasSearched={hasSearched}
-            searchQuery={searchQuery}
-            originalQuery={originalQuery}
-            queryQualityScore={queryQualityScore}
-            queryConfidence={queryQualityConfidence}
-            querySampleSize={queryQualitySampleSize}
-            hasNextPage={hasNextPage}
-            isFetchingNextPage={isFetchingNextPage}
-            fetchNextPage={fetchNextPage}
-            handleCardClick={handleCardClick}
-            handleTryExample={handleTryExample}
-            compareMode={compareMode}
-            toggleCompareCard={toggleCompareCard}
-            isCardSelected={isCardSelected}
-            collectionLookup={collectionLookup}
-            loadMoreRef={loadMoreRef}
-            getRovingProps={getRovingProps}
-            lightboxIndex={lightboxIndex}
-            openLightbox={openLightbox}
-            closeLightbox={closeLightbox}
-            similarityData={similarityData}
-            similarLoading={similarLoading}
-            deckIdea={deckIdea}
-            deckIdeasLoading={deckIdeasLoading}
-            querySuggestions={querySuggestions}
-            isCheckingSuggestions={isCheckingSuggestions}
-            onTrySuggestion={handleTrySuggestion}
-            onRelatedCardClick={handleTryExample}
-          />
+          {hasSearched && (
+            <Suspense fallback={null}>
+              <SearchResultsArea
+                activeSort={activeFilters?.sortBy}
+                activeTab={activeTab}
+                cards={cards}
+                displayCards={displayCards}
+                totalCards={totalCards}
+                viewMode={viewMode}
+                isSearching={isSearching}
+                hasSearched={hasSearched}
+                searchQuery={searchQuery}
+                originalQuery={originalQuery}
+                queryQualityScore={queryQualityScore}
+                queryConfidence={queryQualityConfidence}
+                querySampleSize={queryQualitySampleSize}
+                hasNextPage={hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+                fetchNextPage={fetchNextPage}
+                handleCardClick={handleCardClick}
+                handleTryExample={handleTryExample}
+                compareMode={compareMode}
+                toggleCompareCard={toggleCompareCard}
+                isCardSelected={isCardSelected}
+                collectionLookup={collectionLookup}
+                loadMoreRef={loadMoreRef}
+                getRovingProps={getRovingProps}
+                lightboxIndex={lightboxIndex}
+                openLightbox={openLightbox}
+                closeLightbox={closeLightbox}
+                similarityData={similarityData}
+                similarLoading={similarLoading}
+                deckIdea={deckIdea}
+                deckIdeasLoading={deckIdeasLoading}
+                querySuggestions={querySuggestions}
+                isCheckingSuggestions={isCheckingSuggestions}
+                onTrySuggestion={handleTrySuggestion}
+                onRelatedCardClick={handleTryExample}
+              />
+            </Suspense>
+          )}
         </main>
 
         {!hasSearched && (
@@ -593,21 +616,37 @@ const Index = () => {
             <div className="section-divider" />
           </div>
         )}
-        {!hasSearched && <HowItWorksSection />}
+        {!hasSearched && (
+          <Suspense fallback={null}>
+            <HowItWorksSection />
+          </Suspense>
+        )}
         {!hasSearched && (
           <div className="container-main" aria-hidden="true">
             <div className="section-divider" />
           </div>
         )}
-        {!hasSearched && <ValuePropStrip />}
+        {!hasSearched && (
+          <Suspense fallback={null}>
+            <ValuePropStrip />
+          </Suspense>
+        )}
 
-        <Footer />
+        <Suspense fallback={null}>
+          <Footer />
+        </Suspense>
 
-        <StickySearchNudge
-          hasSearched={hasSearched}
-          onTrySearch={handleTryExample}
-        />
-        <ScrollToTop threshold={800} />
+        <Suspense fallback={null}>
+          <StickySearchNudge
+            hasSearched={hasSearched}
+            onTrySearch={handleTryExample}
+          />
+        </Suspense>
+        {hasSearched && (
+          <Suspense fallback={null}>
+            <ScrollToTop threshold={800} />
+          </Suspense>
+        )}
 
         {selectedCard && (
           <Suspense

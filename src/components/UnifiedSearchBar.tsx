@@ -16,16 +16,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Search, Loader2, X, Clock, Sparkles, Database } from 'lucide-react';
 import { SearchHistoryDropdown } from '@/components/SearchHistoryDropdown';
-import {
-  useIsMobile,
-  useTypingPlaceholder,
-  useSearchContext,
-  useSearchHistory,
-  useSearchHandler,
-  useVoiceInput,
-  useAnalytics,
-  type SearchPhase,
-} from '@/hooks';
+import { useIsMobile } from '@/hooks/useMobile';
+import { useTypingPlaceholder } from '@/hooks/useTypingPlaceholder';
+import { useSearchContext } from '@/hooks/useSearchContext';
+import { useSearchHistory } from '@/hooks/useSearchHistory';
+import { useSearchHandler, type SearchPhase } from '@/hooks/useSearchHandler';
+import { useVoiceInput } from '@/hooks/useVoiceInput';
+import { useAnalytics } from '@/hooks/useAnalytics';
 const SearchFeedback = lazy(() =>
   import('@/components/SearchFeedback').then((m) => ({
     default: m.SearchFeedback,
@@ -36,11 +33,20 @@ const SearchHelpModal = lazy(() =>
     default: m.SearchHelpModal,
   })),
 );
-import { VoiceSearchButton } from '@/components/VoiceSearchButton';
-import { SearchCountBadge } from '@/components/SearchCountBadge';
 import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';
 import { useTranslation } from '@/lib/i18n';
+
+const SearchCountBadge = lazy(() =>
+  import('@/components/SearchCountBadge').then((m) => ({
+    default: m.SearchCountBadge,
+  })),
+);
+const VoiceSearchButton = lazy(() =>
+  import('@/components/VoiceSearchButton').then((m) => ({
+    default: m.VoiceSearchButton,
+  })),
+);
 
 export interface SearchResult {
   scryfallQuery: string;
@@ -365,12 +371,16 @@ export const UnifiedSearchBar = forwardRef<
               </button>
             )}
 
-            <VoiceSearchButton
-              isListening={isListening}
-              isSupported={isVoiceSupported}
-              onToggle={isListening ? stopListening : startListening}
-              className="h-9 w-9 sm:h-10 sm:w-10"
-            />
+            {isVoiceSupported && (
+              <Suspense fallback={null}>
+                <VoiceSearchButton
+                  isListening={isListening}
+                  isSupported={isVoiceSupported}
+                  onToggle={isListening ? stopListening : startListening}
+                  className="h-9 w-9 sm:h-10 sm:w-10"
+                />
+              </Suspense>
+            )}
 
             <Button
               onClick={() => handleSearch()}
@@ -456,7 +466,9 @@ export const UnifiedSearchBar = forwardRef<
           <span>✦ Free to use</span>
           <span>✦ Powered by Scryfall</span>
           <span>✦ No account required</span>
-          <SearchCountBadge />
+          <Suspense fallback={null}>
+            <SearchCountBadge />
+          </Suspense>
         </div>
       )}
 

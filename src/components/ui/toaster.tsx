@@ -1,4 +1,4 @@
-import { useToast } from '@/hooks';
+import { useToast } from '@/hooks/useToast';
 import {
   Toast,
   ToastClose,
