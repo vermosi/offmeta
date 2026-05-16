@@ -7,7 +7,9 @@
  */
 
 import { lazy, Suspense } from 'react';
-const TooltipProvider = lazy(() => import('@/components/ui/tooltip').then(m => ({ default: m.TooltipProvider })));
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { Toaster } from '@/components/ui/toaster';
+import { Toaster as Sonner } from '@/components/ui/sonner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from 'next-themes';
@@ -16,10 +18,12 @@ import { AuthProvider } from '@/components/AuthProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ScrollToTopOnNavigate } from '@/components/ScrollToTopOnNavigate';
 import { RouteTracker } from '@/components/RouteTracker';
+import AppInitializer from '@/components/AppInitializer';
+// Eager-load the landing page so the initial paint on `/` does not wait on a
+// secondary chunk fetch. All other (heavier) pages remain lazy.
+import Index from './pages/Index';
 
-const Toaster = lazy(() => import('@/components/ui/toaster').then(m => ({ default: m.Toaster })));
-const Sonner = lazy(() => import('@/components/ui/sonner').then(m => ({ default: m.Toaster })));
-const Index = lazy(() => import('./pages/Index'));
+
 const GuidesIndex = lazy(() => import('./pages/GuidesIndex'));
 const GuidePage = lazy(() => import('./pages/GuidePage'));
 const DocsIndex = lazy(() => import('./pages/DocsIndex'));
@@ -60,8 +64,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-const AppInitializer = lazy(() => import('@/components/AppInitializer'));
 
 
 const App = () => (
