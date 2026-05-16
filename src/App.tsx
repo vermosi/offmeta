@@ -18,7 +18,7 @@ import { AuthProvider } from '@/components/AuthProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ScrollToTopOnNavigate } from '@/components/ScrollToTopOnNavigate';
 import { RouteTracker } from '@/components/RouteTracker';
-import { AppInitializer } from '@/components/AppInitializer';
+import AppInitializer from '@/components/AppInitializer';
 // Eager-load the landing page so the initial paint on `/` does not wait on a
 // secondary chunk fetch. All other (heavier) pages remain lazy.
 import Index from './pages/Index';
