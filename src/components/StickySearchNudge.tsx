@@ -7,8 +7,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useIsMobile } from '@/hooks';
-import { useAnalytics } from '@/hooks';
+import { useIsMobile } from '@/hooks/useMobile';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 const NUDGE_QUERY = 'budget board wipes under $5';
 const DISMISS_KEY = 'offmeta_nudge_dismissed';
