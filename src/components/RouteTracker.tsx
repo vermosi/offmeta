@@ -13,7 +13,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useAnalytics } from '@/hooks';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 export function RouteTracker() {
   const location = useLocation();
