@@ -6,7 +6,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Search, Sparkles } from 'lucide-react';
-import { useAnalytics } from '@/hooks';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 const DEMO_QUERY = 'budget board wipes under $5';
 const DEMO_SCRYFALL = 'otag:board-wipe usd<5';
