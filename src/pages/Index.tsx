@@ -616,21 +616,37 @@ const Index = () => {
             <div className="section-divider" />
           </div>
         )}
-        {!hasSearched && <HowItWorksSection />}
+        {!hasSearched && (
+          <Suspense fallback={null}>
+            <HowItWorksSection />
+          </Suspense>
+        )}
         {!hasSearched && (
           <div className="container-main" aria-hidden="true">
             <div className="section-divider" />
           </div>
         )}
-        {!hasSearched && <ValuePropStrip />}
+        {!hasSearched && (
+          <Suspense fallback={null}>
+            <ValuePropStrip />
+          </Suspense>
+        )}
 
-        <Footer />
+        <Suspense fallback={null}>
+          <Footer />
+        </Suspense>
 
-        <StickySearchNudge
-          hasSearched={hasSearched}
-          onTrySearch={handleTryExample}
-        />
-        <ScrollToTop threshold={800} />
+        <Suspense fallback={null}>
+          <StickySearchNudge
+            hasSearched={hasSearched}
+            onTrySearch={handleTryExample}
+          />
+        </Suspense>
+        {hasSearched && (
+          <Suspense fallback={null}>
+            <ScrollToTop threshold={800} />
+          </Suspense>
+        )}
 
         {selectedCard && (
           <Suspense
