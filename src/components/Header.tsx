@@ -344,7 +344,11 @@ export function Header() {
             </a>
             <LanguageSelector />
             <ThemeToggle />
-            <NotificationBell />
+            {user && (
+              <Suspense fallback={null}>
+                <NotificationBell />
+              </Suspense>
+            )}
 
             {/* Auth controls */}
             {user ? (
@@ -443,7 +447,11 @@ export function Header() {
 
       {mobileMenu}
 
-      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
+      {authModalOpen && (
+        <Suspense fallback={null}>
+          <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
+        </Suspense>
+      )}
     </>
   );
 }
