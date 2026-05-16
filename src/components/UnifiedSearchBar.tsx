@@ -371,12 +371,16 @@ export const UnifiedSearchBar = forwardRef<
               </button>
             )}
 
-            <VoiceSearchButton
-              isListening={isListening}
-              isSupported={isVoiceSupported}
-              onToggle={isListening ? stopListening : startListening}
-              className="h-9 w-9 sm:h-10 sm:w-10"
-            />
+            {isVoiceSupported && (
+              <Suspense fallback={null}>
+                <VoiceSearchButton
+                  isListening={isListening}
+                  isSupported={isVoiceSupported}
+                  onToggle={isListening ? stopListening : startListening}
+                  className="h-9 w-9 sm:h-10 sm:w-10"
+                />
+              </Suspense>
+            )}
 
             <Button
               onClick={() => handleSearch()}
@@ -462,7 +466,9 @@ export const UnifiedSearchBar = forwardRef<
           <span>✦ Free to use</span>
           <span>✦ Powered by Scryfall</span>
           <span>✦ No account required</span>
-          <SearchCountBadge />
+          <Suspense fallback={null}>
+            <SearchCountBadge />
+          </Suspense>
         </div>
       )}
 
