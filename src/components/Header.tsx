@@ -2,7 +2,7 @@
  * Header component — clean, minimal nav with grouped dropdowns.
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { lazy, Suspense, useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -18,11 +18,11 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { NotificationBell } from '@/components/NotificationBell';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { Logo } from '@/components/Logo';
-import { AuthModal } from '@/components/AuthModal';
-import { useFocusTrap, useAuth, useUserRole } from '@/hooks';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,6 +33,13 @@ import {
 import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/integrations/supabase/client';
+
+const AuthModal = lazy(() =>
+  import('@/components/AuthModal').then((m) => ({ default: m.AuthModal })),
+);
+const NotificationBell = lazy(() =>
+  import('@/components/NotificationBell').then((m) => ({ default: m.NotificationBell })),
+);
 
 /* ------------------------------------------------------------------ */
 /*  Tiny helper – a header dropdown trigger                           */
