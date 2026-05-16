@@ -5,8 +5,9 @@
  * @module pages/MarketTrends
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { applySeoMeta } from '@/lib/seo';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { SunsetBanner } from '@/components/SunsetBanner';
@@ -355,6 +356,16 @@ export default function MarketTrends() {
   }, []);
 
   useNoIndex(true);
+
+  useEffect(() => {
+    return applySeoMeta({
+      title: 'MTG Price Movers & Market Trends | OffMeta',
+      description:
+        'Track Magic: The Gathering price movers — biggest gainers and losers across formats, with filterable time ranges and rarity. Sunset feature on OffMeta.',
+      url: 'https://offmeta.app/market',
+      extraMeta: { robots: 'noindex, follow' },
+    });
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

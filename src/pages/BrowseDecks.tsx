@@ -4,8 +4,9 @@
  * @module pages/BrowseDecks
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { applySeoMeta } from '@/lib/seo';
 import { Search, Crown, Loader2, Library } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -164,6 +165,16 @@ export default function BrowseDecks() {
   };
 
   useNoIndex(true);
+
+  useEffect(() => {
+    return applySeoMeta({
+      title: 'Browse Community MTG Decks | OffMeta',
+      description:
+        'Explore community-shared Magic: The Gathering decklists by format, color identity, and tag. Sunset feature on OffMeta — search remains the focus.',
+      url: 'https://offmeta.app/decks',
+      extraMeta: { robots: 'noindex, follow' },
+    });
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
