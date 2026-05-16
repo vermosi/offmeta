@@ -15,6 +15,7 @@ import {
 } from 'react';
 import { Button } from '@/components/ui/button';
 import { Search, Loader2, X, Clock, Sparkles, Database } from 'lucide-react';
+import { SearchHistoryDropdown } from '@/components/SearchHistoryDropdown';
 import { useIsMobile } from '@/hooks/useMobile';
 import { useTypingPlaceholder } from '@/hooks/useTypingPlaceholder';
 import { useSearchContext } from '@/hooks/useSearchContext';
@@ -36,11 +37,6 @@ import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';
 import { useTranslation } from '@/lib/i18n';
 
-const SearchHistoryDropdown = lazy(() =>
-  import('@/components/SearchHistoryDropdown').then((m) => ({
-    default: m.SearchHistoryDropdown,
-  })),
-);
 const SearchCountBadge = lazy(() =>
   import('@/components/SearchCountBadge').then((m) => ({
     default: m.SearchCountBadge,
