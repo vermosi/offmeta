@@ -1,15 +1,33 @@
-import {
-  hasMinimumAlphanumeric,
-  hasRepetitiveChars,
-  sanitizeInput,
-} from '@/lib/security';
-
 export type ClientValidationResult<T> =
   | { success: true; data: T }
   | { success: false; message: string };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_ADMIN_QUERY_LENGTH = 200;
+
+function sanitizeInput(input: string): string {
+  const nullByteRegex = /\x00/g;
+  const controlCharRegex = /[\x01-\x08\x0B\x0C\x0E-\x1F\x7F]/g;
+  const zeroWidthRegex = /[\u200B-\u200D\uFEFF]/g;
+
+  return input
+    .replace(nullByteRegex, '')
+    .replace(controlCharRegex, '')
+    .replace(zeroWidthRegex, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function hasRepetitiveChars(input: string, threshold: number = 6): boolean {
+  const pattern = new RegExp(`(.)\\1{${threshold - 1},}`);
+  return pattern.test(input);
+}
+
+function hasMinimumAlphanumeric(input: string, ratio: number = 0.5): boolean {
+  if (input.length <= 10) return true;
+  const alphanumericCount = (input.match(/[a-zA-Z0-9]/g) || []).length;
+  return alphanumericCount >= input.length * ratio;
+}
 
 export function validateEmailAddress(
   email: string,
