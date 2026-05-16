@@ -93,19 +93,17 @@ const CompareModal = lazy(() =>
 );
 import { SkipLinks } from '@/components/SkipLinks';
 
-import {
-  useSearch,
-  useCompare,
-  useKeyboardShortcuts,
-  useRovingTabIndex,
-  useCollectionLookup,
-  useAuth,
-  useSimilarCards,
-  useDeckIdeas,
-  useQuerySuggestions,
-  useNoIndex,
-  useAnalytics,
-} from '@/hooks';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { useAuth } from '@/hooks/useAuth';
+import { useCollectionLookup } from '@/hooks/useCollection';
+import { useCompare } from '@/hooks/useCompare';
+import { useDeckIdeas } from '@/hooks/useDeckIdeas';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useNoIndex } from '@/hooks/useNoIndex';
+import { useQuerySuggestions } from '@/hooks/useQuerySuggestions';
+import { useRovingTabIndex } from '@/hooks/useRovingTabIndex';
+import { useSearch } from '@/hooks/useSearch';
+import { useSimilarCards } from '@/hooks/useSimilarCards';
 import { useTranslation } from '@/lib/i18n';
 const CardModal = lazy(() => import('@/components/CardModal'));
 
