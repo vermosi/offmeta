@@ -65,8 +65,6 @@ const queryClient = new QueryClient({
   },
 });
 
-const AppInitializer = lazy(() => import('@/components/AppInitializer'));
-
 
 const App = () => (
   <I18nProvider>
