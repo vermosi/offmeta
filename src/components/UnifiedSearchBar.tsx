@@ -15,17 +15,13 @@ import {
 } from 'react';
 import { Button } from '@/components/ui/button';
 import { Search, Loader2, X, Clock, Sparkles, Database } from 'lucide-react';
-import { SearchHistoryDropdown } from '@/components/SearchHistoryDropdown';
-import {
-  useIsMobile,
-  useTypingPlaceholder,
-  useSearchContext,
-  useSearchHistory,
-  useSearchHandler,
-  useVoiceInput,
-  useAnalytics,
-  type SearchPhase,
-} from '@/hooks';
+import { useIsMobile } from '@/hooks/useMobile';
+import { useTypingPlaceholder } from '@/hooks/useTypingPlaceholder';
+import { useSearchContext } from '@/hooks/useSearchContext';
+import { useSearchHistory } from '@/hooks/useSearchHistory';
+import { useSearchHandler, type SearchPhase } from '@/hooks/useSearchHandler';
+import { useVoiceInput } from '@/hooks/useVoiceInput';
+import { useAnalytics } from '@/hooks/useAnalytics';
 const SearchFeedback = lazy(() =>
   import('@/components/SearchFeedback').then((m) => ({
     default: m.SearchFeedback,
@@ -36,11 +32,25 @@ const SearchHelpModal = lazy(() =>
     default: m.SearchHelpModal,
   })),
 );
-import { VoiceSearchButton } from '@/components/VoiceSearchButton';
-import { SearchCountBadge } from '@/components/SearchCountBadge';
 import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';
 import { useTranslation } from '@/lib/i18n';
+
+const SearchHistoryDropdown = lazy(() =>
+  import('@/components/SearchHistoryDropdown').then((m) => ({
+    default: m.SearchHistoryDropdown,
+  })),
+);
+const SearchCountBadge = lazy(() =>
+  import('@/components/SearchCountBadge').then((m) => ({
+    default: m.SearchCountBadge,
+  })),
+);
+const VoiceSearchButton = lazy(() =>
+  import('@/components/VoiceSearchButton').then((m) => ({
+    default: m.VoiceSearchButton,
+  })),
+);
 
 export interface SearchResult {
   scryfallQuery: string;
