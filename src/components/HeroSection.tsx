@@ -8,7 +8,7 @@ import { useTranslation } from '@/lib/i18n';
 import { HeroCardBackdrop } from '@/components/HeroCardBackdrop';
 import { Sparkles, ArrowRight, Compass } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useAnalytics } from '@/hooks';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 export function HeroSection() {
   const { t } = useTranslation();
