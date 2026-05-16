@@ -414,16 +414,17 @@ const Index = () => {
           </div>
         )}
 
-        {/* SEO manager (renders nothing) */}
-        <SeoManager
-          hasSearched={hasSearched}
-          isSearching={isSearching}
-          displayCards={displayCards}
-          originalQuery={originalQuery}
-          searchQuery={searchQuery}
-          compiledQuery={lastSearchResult?.scryfallQuery || searchQuery}
-          totalCards={totalCards}
-        />
+        <Suspense fallback={null}>
+          <SeoManager
+            hasSearched={hasSearched}
+            isSearching={isSearching}
+            displayCards={displayCards}
+            originalQuery={originalQuery}
+            searchQuery={searchQuery}
+            compiledQuery={lastSearchResult?.scryfallQuery || searchQuery}
+            totalCards={totalCards}
+          />
+        </Suspense>
 
         {/* Screen reader search status announcements */}
         <div
@@ -463,7 +464,9 @@ const Index = () => {
             </div>
 
             {!hasSearched && (
+              <Suspense fallback={null}>
               <InstantDemoPreview onTrySearch={handleTryExample} />
+              </Suspense>
             )}
 
             {hasSearched && (
@@ -565,43 +568,47 @@ const Index = () => {
           </div>
 
           {/* Tab content area */}
-          <SearchResultsArea
-            activeSort={activeFilters?.sortBy}
-            activeTab={activeTab}
-            cards={cards}
-            displayCards={displayCards}
-            totalCards={totalCards}
-            viewMode={viewMode}
-            isSearching={isSearching}
-            hasSearched={hasSearched}
-            searchQuery={searchQuery}
-            originalQuery={originalQuery}
-            queryQualityScore={queryQualityScore}
-            queryConfidence={queryQualityConfidence}
-            querySampleSize={queryQualitySampleSize}
-            hasNextPage={hasNextPage}
-            isFetchingNextPage={isFetchingNextPage}
-            fetchNextPage={fetchNextPage}
-            handleCardClick={handleCardClick}
-            handleTryExample={handleTryExample}
-            compareMode={compareMode}
-            toggleCompareCard={toggleCompareCard}
-            isCardSelected={isCardSelected}
-            collectionLookup={collectionLookup}
-            loadMoreRef={loadMoreRef}
-            getRovingProps={getRovingProps}
-            lightboxIndex={lightboxIndex}
-            openLightbox={openLightbox}
-            closeLightbox={closeLightbox}
-            similarityData={similarityData}
-            similarLoading={similarLoading}
-            deckIdea={deckIdea}
-            deckIdeasLoading={deckIdeasLoading}
-            querySuggestions={querySuggestions}
-            isCheckingSuggestions={isCheckingSuggestions}
-            onTrySuggestion={handleTrySuggestion}
-            onRelatedCardClick={handleTryExample}
-          />
+          {hasSearched && (
+            <Suspense fallback={null}>
+              <SearchResultsArea
+                activeSort={activeFilters?.sortBy}
+                activeTab={activeTab}
+                cards={cards}
+                displayCards={displayCards}
+                totalCards={totalCards}
+                viewMode={viewMode}
+                isSearching={isSearching}
+                hasSearched={hasSearched}
+                searchQuery={searchQuery}
+                originalQuery={originalQuery}
+                queryQualityScore={queryQualityScore}
+                queryConfidence={queryQualityConfidence}
+                querySampleSize={queryQualitySampleSize}
+                hasNextPage={hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+                fetchNextPage={fetchNextPage}
+                handleCardClick={handleCardClick}
+                handleTryExample={handleTryExample}
+                compareMode={compareMode}
+                toggleCompareCard={toggleCompareCard}
+                isCardSelected={isCardSelected}
+                collectionLookup={collectionLookup}
+                loadMoreRef={loadMoreRef}
+                getRovingProps={getRovingProps}
+                lightboxIndex={lightboxIndex}
+                openLightbox={openLightbox}
+                closeLightbox={closeLightbox}
+                similarityData={similarityData}
+                similarLoading={similarLoading}
+                deckIdea={deckIdea}
+                deckIdeasLoading={deckIdeasLoading}
+                querySuggestions={querySuggestions}
+                isCheckingSuggestions={isCheckingSuggestions}
+                onTrySuggestion={handleTrySuggestion}
+                onRelatedCardClick={handleTryExample}
+              />
+            </Suspense>
+          )}
         </main>
 
         {!hasSearched && (
