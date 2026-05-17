@@ -1,731 +1,218 @@
 /**
- * Home page — the primary search interface.
- * Orchestrates the search bar, card grid, filters, modals, comparison,
- * discovery sections, and tabbed results (Cards | Similar | Deck Ideas | Explain).
- * All search state is managed via the `useSearch` hook.
- * @module pages/Index
+ * Lightweight homepage shell.
+ * Keeps the first paint free of search/auth/database bundles; the full search
+ * experience is imported after idle, on search-field interaction, or when the
+ * user navigates to /search/:slug.
  */
-import {
-  lazy,
-  Suspense,
-  useEffect,
-  useCallback,
-  useState,
-  useMemo,
-  useRef,
-} from 'react';
-import { useLocation } from 'react-router-dom';
-import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
-const EditableQueryBar = lazy(() =>
-  import('@/components/EditableQueryBar').then((m) => ({
-    default: m.EditableQueryBar,
-  })),
-);
-const SaveSearchButton = lazy(() =>
-  import('@/components/SaveSearchButton').then((m) => ({
-    default: m.SaveSearchButton,
-  })),
-);
-const ExplainCompilationPanel = lazy(() =>
-  import('@/components/ExplainCompilationPanel').then((m) => ({
-    default: m.ExplainCompilationPanel,
-  })),
-);
-const ReportIssueDialog = lazy(() =>
-  import('@/components/ReportIssueDialog').then((m) => ({
-    default: m.ReportIssueDialog,
-  })),
-);
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-const Footer = lazy(() =>
-  import('@/components/Footer').then((m) => ({ default: m.Footer })),
-);
-import { Header } from '@/components/Header';
-import { HeroSection } from '@/components/HeroSection';
-const InstantDemoPreview = lazy(() =>
-  import('@/components/InstantDemoPreview').then((m) => ({
-    default: m.InstantDemoPreview,
-  })),
-);
-const ValuePropStrip = lazy(() =>
-  import('@/components/ValuePropStrip').then((m) => ({ default: m.ValuePropStrip })),
-);
-const HowItWorksSection = lazy(() =>
-  import('@/components/HowItWorksSection').then((m) => ({
-    default: m.HowItWorksSection,
-  })),
-);
-const StickySearchNudge = lazy(() =>
-  import('@/components/StickySearchNudge').then((m) => ({
-    default: m.StickySearchNudge,
-  })),
-);
-const ScrollToTop = lazy(() =>
-  import('@/components/ScrollToTop').then((m) => ({ default: m.ScrollToTop })),
-);
-import { type ViewMode, getStoredViewMode } from '@/lib/view-mode-storage';
-const ResultsTabs = lazy(() =>
-  import('@/components/ResultsTabs').then((m) => ({
-    default: m.ResultsTabs,
-  })),
-);
-import type { ResultsTab } from '@/components/ResultsTabs';
-const SeoManager = lazy(() =>
-  import('@/components/SeoManager').then((m) => ({ default: m.SeoManager })),
-);
-const ResultsToolbar = lazy(() =>
-  import('@/components/ResultsToolbar').then((m) => ({
-    default: m.ResultsToolbar,
-  })),
-);
-const SearchResultsArea = lazy(() =>
-  import('@/components/SearchResultsArea').then((m) => ({
-    default: m.SearchResultsArea,
-  })),
-);
-const CompareBar = lazy(() =>
-  import('@/components/CompareBar').then((m) => ({ default: m.CompareBar })),
-);
-const CompareModal = lazy(() =>
-  import('@/components/CompareModal').then((m) => ({
-    default: m.CompareModal,
-  })),
-);
-import { SkipLinks } from '@/components/SkipLinks';
 
-import { useAnalytics } from '@/hooks/useAnalytics';
-import { useAuth } from '@/hooks/useAuth';
-import { useCollectionLookup } from '@/hooks/useCollection';
-import { useCompare } from '@/hooks/useCompare';
-import { useDeckIdeas } from '@/hooks/useDeckIdeas';
-import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
-import { useNoIndex } from '@/hooks/useNoIndex';
-import { useQuerySuggestions } from '@/hooks/useQuerySuggestions';
-import { useRovingTabIndex } from '@/hooks/useRovingTabIndex';
-import { useSearch } from '@/hooks/useSearch';
-import { useSimilarCards } from '@/hooks/useSimilarCards';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { queryToSlug } from '@/lib/search-slug';
 import { useTranslation } from '@/lib/i18n';
-const CardModal = lazy(() => import('@/components/CardModal'));
 
-const Index = () => {
-  const { t } = useTranslation();
-  const location = useLocation();
-  const {
-    trackLandingPageView,
-    trackFirstSave,
-    trackFirstReturnVisit,
-    trackEvent,
-  } = useAnalytics();
-  const { user } = useAuth();
-  const collectionLookup = useCollectionLookup();
-  const lastTrackedRouteRef = useRef<string | null>(null);
-
-  const {
-    searchQuery,
-    originalQuery,
-    selectedCard,
-    setSelectedCard,
-    hasSearched,
-    lastSearchResult,
-    lastIntent,
-    activeFilters,
-    filtersResetKey,
-    reportDialogOpen,
-    setReportDialogOpen,
-    currentRequestId,
-    refinementCount,
-    queryQualityScore,
-    queryQualityConfidence,
-    queryQualitySampleSize,
-    cards,
-    displayCards,
-    totalCards,
-    isSearching,
-    hasNextPage,
-    isFetchingNextPage,
-    fetchNextPage,
-    searchBarRef,
-    loadMoreRef,
-    handleSearch,
-    handleRerunEditedQuery,
-    handleCardClick,
-    handleTryExample,
-    handleRegenerateTranslation,
-    handleFilteredCards,
-    initialUrlFilters,
-  } = useSearch();
-
-  // View mode toggle
-  const [viewMode, setViewMode] = useState<ViewMode>(getStoredViewMode);
-
-  // Results tab state
-  const [tabState, setTabState] = useState<{ query: string; tab: ResultsTab }>(
-    () => ({
-      query: originalQuery,
-      tab: 'cards',
-    }),
-  );
-  const activeTab = tabState.query === originalQuery ? tabState.tab : 'cards';
-
-  // Similar cards & deck ideas hooks
-  const {
-    similarityData,
-    isLoading: similarLoading,
-    activate: activateSimilar,
-  } = useSimilarCards(originalQuery);
-  const {
-    deckIdea,
-    isLoading: deckIdeasLoading,
-    isDeckQuery,
-    activate: activateDeckIdeas,
-  } = useDeckIdeas(originalQuery);
-
-  // "Did you mean?" suggestions when 0 results
-  const { suggestions: querySuggestions, isChecking: isCheckingSuggestions } =
-    useQuerySuggestions(searchQuery, totalCards, hasSearched && !isSearching);
-
-  // Prevent indexing of zero-result search pages
-  useNoIndex(hasSearched && !isSearching && totalCards === 0);
-
-  const handleTrySuggestion = useCallback(
-    (scryfallQuery: string) => {
-      sessionStorage.setItem('offmeta_recovery_in_progress', '1');
-      trackEvent('search_recovery_clicked', {
-        query: originalQuery,
-        suggestion_query: scryfallQuery,
-      });
-      handleRerunEditedQuery(scryfallQuery);
-    },
-    [handleRerunEditedQuery, originalQuery, trackEvent],
-  );
-
-  // Activate feature hooks when tab is selected
-  const handleTabChange = useCallback(
-    (tab: ResultsTab) => {
-      if (tab === activeTab) return;
-      setTabState({ query: originalQuery, tab });
-      if (tab === 'similar') activateSimilar();
-      if (tab === 'deck-ideas') activateDeckIdeas();
-    },
-    [activateSimilar, activateDeckIdeas, activeTab, originalQuery],
-  );
-
-  // Card comparison
-  const {
-    compareCards,
-    compareOpen,
-    toggleCompareCard,
-    removeCompareCard,
-    clearCompare,
-    openCompare,
-    closeCompare,
-    isCardSelected,
-  } = useCompare();
-  const [compareMode, setCompareMode] = useState(false);
-
-  const handleToggleCompareMode = useCallback(() => {
-    setCompareMode((m) => {
-      if (m) clearCompare();
-      return !m;
-    });
-  }, [clearCompare]);
-
-  // Keyboard shortcuts
-  const focusSearch = useCallback(() => {
-    const input = document.getElementById('search-input');
-    input?.focus();
-  }, []);
-  useKeyboardShortcuts({ onFocusSearch: focusSearch });
-
-  // Art lightbox
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const openLightbox = useCallback(
-    (index: number) => setLightboxIndex(index),
-    [],
-  );
-  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
-
-  // Roving tabindex column count based on view mode
-  const rovingColumns = useMemo(() => {
-    if (viewMode === 'list') return 1;
-    if (viewMode === 'images') return 6;
-    return 4;
-  }, [viewMode]);
-
-  const rovingActivate = useCallback(
-    (index: number) => {
-      if (viewMode === 'images') {
-        openLightbox(index);
-      } else if (displayCards[index]) {
-        handleCardClick(displayCards[index], index);
-      }
-    },
-    [viewMode, displayCards, handleCardClick, openLightbox],
-  );
-
-  const { getRovingProps } = useRovingTabIndex({
-    itemCount: displayCards.length,
-    columns: rovingColumns,
-    onActivate: rovingActivate,
-  });
-
-  // (parallax removed — static gradient background)
-  const [upsellEvaluationNowMs, setUpsellEvaluationNowMs] = useState(() =>
-    Date.now(),
-  );
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setUpsellEvaluationNowMs(Date.now());
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, [hasSearched, isSearching, queryQualityScore]);
-
-  const shouldShowProUpsell = useMemo(() => {
-    const readSessionValue = (key: string): string | null => {
-      try {
-        return sessionStorage.getItem(key);
-      } catch {
-        return null;
-      }
-    };
-    const readLocalValue = (key: string): string | null => {
-      try {
-        return localStorage.getItem(key);
-      } catch {
-        return null;
-      }
-    };
-    const searchesThisSession = parseInt(
-      readSessionValue('offmeta_searches_per_session') || '0',
-      10,
-    );
-    const hasSaved = readSessionValue('offmeta_once:first_save') === '1';
-    const hasSuccess =
-      readSessionValue('offmeta_once:first_search_success') === '1';
-    const cooldownUntil = parseInt(
-      readLocalValue('offmeta_pro_upsell_cooldown_until') || '0',
-      10,
-    );
-    const inCooldown =
-      Number.isFinite(cooldownUntil) && upsellEvaluationNowMs < cooldownUntil;
-
-    return (
-      hasSearched &&
-      !isSearching &&
-      queryQualityScore < 0.55 &&
-      searchesThisSession >= 3 &&
-      hasSuccess &&
-      !hasSaved &&
-      !inCooldown
-    );
-  }, [hasSearched, isSearching, queryQualityScore, upsellEvaluationNowMs]);
-
-  // Handle hash-based scroll
-  useEffect(() => {
-    const hash = window.location.hash;
-    if (!hash) return;
-    const timeout = setTimeout(() => {
-      const el = document.getElementById(hash.slice(1));
-      el?.scrollIntoView({ behavior: 'smooth' });
-    }, 300);
-    return () => clearTimeout(timeout);
-  }, []);
-
-  // Preload search-result chunks after idle or on first user interaction
-  // with the search input. Keeps initial paint lean while ensuring results
-  // render instantly when the user submits.
-  useEffect(() => {
-    let done = false;
-    const prefetch = () => {
-      if (done) return;
-      done = true;
-      void import('@/components/SearchResultsArea');
-      void import('@/components/ResultsTabs');
-      void import('@/components/ResultsToolbar');
-      void import('@/components/EditableQueryBar');
-      void import('@/components/CardModal');
-    };
-    const w = window as Window & {
-      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
-      cancelIdleCallback?: (id: number) => void;
-    };
-    const idleId = typeof w.requestIdleCallback === 'function'
-      ? w.requestIdleCallback(prefetch, { timeout: 3000 })
-      : window.setTimeout(prefetch, 2000);
-    const onInteract = () => prefetch();
-    const input = document.getElementById('search-input');
-    input?.addEventListener('focus', onInteract, { once: true });
-    input?.addEventListener('pointerdown', onInteract, { once: true });
-    return () => {
-      if (typeof w.cancelIdleCallback === 'function' && typeof idleId === 'number') {
-        w.cancelIdleCallback(idleId);
-      } else {
-        window.clearTimeout(idleId as number);
-      }
-      input?.removeEventListener('focus', onInteract);
-      input?.removeEventListener('pointerdown', onInteract);
-    };
-  }, []);
-
-
-  useEffect(() => {
-    trackFirstReturnVisit();
-  }, [trackFirstReturnVisit]);
-
-  useEffect(() => {
-    if (!shouldShowProUpsell) return;
-    trackEvent('pro_upgrade_impression', {
-      query: originalQuery,
-      search_quality_score: queryQualityScore,
-      placement: 'search_feedback_loop',
-    });
-    try {
-      localStorage.setItem(
-        'offmeta_pro_upsell_cooldown_until',
-        String(Date.now() + 24 * 60 * 60 * 1000),
-      );
-    } catch {
-      // ignore storage failures; no upsell blocking can be persisted
-    }
-  }, [originalQuery, queryQualityScore, shouldShowProUpsell, trackEvent]);
-
-  useEffect(() => {
-    const routeKey = `${location.pathname}${location.search}${location.hash}`;
-    if (lastTrackedRouteRef.current === routeKey) return;
-    lastTrackedRouteRef.current = routeKey;
-
-    if (location.pathname === '/' && !location.search && !hasSearched) {
-      trackLandingPageView({
-        path: location.pathname,
-        search: location.search || undefined,
-        referrer: document.referrer || undefined,
-      });
-    }
-  }, [
-    hasSearched,
-    location.hash,
-    location.pathname,
-    location.search,
-    trackLandingPageView,
-  ]);
-
-  const showSimilarTab = hasSearched && !isSearching;
-  const showDeckIdeasTab = hasSearched && !isSearching && isDeckQuery;
-  const showExplanationTab = hasSearched && !isSearching;
-
-  return (
-    <ErrorBoundary>
-      <SkipLinks showSearchLink />
-      <div className="min-h-screen min-h-[100dvh] flex flex-col relative overflow-x-hidden">
-        {/* Static premium gradient background */}
-        <div
-          className="fixed inset-0 pointer-events-none bg-page-gradient"
-          aria-hidden="true"
-        />
-        <div
-          className="fixed inset-0 pointer-events-none bg-page-noise"
-          aria-hidden="true"
-        />
-
-        <Header />
-
-        {!hasSearched && <HeroSection />}
-
-        {/* Floating particles — hero area */}
-        {!hasSearched && (
-          <div className="hero-particles" aria-hidden="true">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div
-                key={i}
-                className="hero-particle"
-                style={{
-                  left: `${10 + i * 12}%`,
-                  top: `${20 + (i % 3) * 25}%`,
-                  animationDelay: `${i * -1.2}s`,
-                  ['--px' as string]: `${(i % 2 ? 1 : -1) * (20 + i * 8)}px`,
-                  ['--py' as string]: `${-40 - i * 15}px`,
-                }}
-              />
-            ))}
-          </div>
-        )}
-
-        <Suspense fallback={null}>
-          <SeoManager
-            hasSearched={hasSearched}
-            isSearching={isSearching}
-            displayCards={displayCards}
-            originalQuery={originalQuery}
-            searchQuery={searchQuery}
-            compiledQuery={lastSearchResult?.scryfallQuery || searchQuery}
-            totalCards={totalCards}
-          />
-        </Suspense>
-
-        {/* Screen reader search status announcements */}
-        <div
-          className="sr-only"
-          role="status"
-          aria-live="assertive"
-          aria-atomic="true"
-        >
-          {isSearching
-            ? t('a11y.searching')
-            : hasSearched && totalCards > 0
-              ? t('a11y.foundCards').replace(
-                  '{count}',
-                  totalCards.toLocaleString(),
-                )
-              : hasSearched && totalCards === 0
-                ? t('a11y.noCardsFound')
-                : ''}
-        </div>
-
-        {/* Main content */}
-        <main
-          id="main-content"
-          className={`relative ${hasSearched ? 'pt-4 sm:pt-6' : 'pt-2 sm:pt-3'} pb-4 sm:pb-8 safe-bottom`}
-          role="main"
-        >
-          <div className="container-main space-y-3 sm:space-y-6">
-            <div>
-              <UnifiedSearchBar
-                ref={searchBarRef}
-                onSearch={handleSearch}
-                isLoading={isSearching}
-                lastTranslatedQuery={lastSearchResult?.scryfallQuery}
-                filters={activeFilters}
-                isCardFetching={isSearching}
-              />
-            </div>
-
-            {!hasSearched && (
-              <Suspense fallback={null}>
-              <InstantDemoPreview onTrySearch={handleTryExample} />
-              </Suspense>
-            )}
-
-            {hasSearched && (
-              <div className="animate-reveal flex items-start gap-2">
-                <div className="flex-1 min-w-0">
-                  <EditableQueryBar
-                    scryfallQuery={(
-                      lastSearchResult?.scryfallQuery || searchQuery
-                    ).trim()}
-                    confidence={lastSearchResult?.explanation?.confidence}
-                    isLoading={isSearching}
-                    originalQuery={originalQuery}
-                    onRerun={handleRerunEditedQuery}
-                    onRegenerate={handleRegenerateTranslation}
-                    onReportIssue={() => setReportDialogOpen(true)}
-                    validationError={
-                      lastSearchResult?.validationIssues?.length
-                        ? lastSearchResult.validationIssues.join(' • ')
-                        : null
-                    }
-                  />
-                </div>
-                <div className="pt-[26px]">
-                  <SaveSearchButton
-                    naturalQuery={originalQuery}
-                    scryfallQuery={
-                      lastSearchResult?.scryfallQuery || searchQuery
-                    }
-                    filters={activeFilters}
-                    onSaved={() =>
-                      trackFirstSave({
-                        query: originalQuery,
-                        request_id: currentRequestId ?? undefined,
-                      })
-                    }
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Explain panel — hidden on mobile */}
-            {hasSearched && (
-              <div className="hidden sm:block animate-reveal">
-                <ExplainCompilationPanel
-                  intent={lastSearchResult?.intent || lastIntent}
-                />
-              </div>
-            )}
-
-            {/* Results Tabs */}
-            {hasSearched && !isSearching && (
-              <div className="animate-reveal">
-                <ResultsTabs
-                  activeTab={activeTab}
-                  onTabChange={handleTabChange}
-                  showSimilar={showSimilarTab}
-                  showDeckIdeas={showDeckIdeasTab}
-                  showExplanation={showExplanationTab}
-                  similarLoading={similarLoading}
-                  deckIdeasLoading={deckIdeasLoading}
-                />
-              </div>
-            )}
-
-            {hasSearched && !isSearching && (
-              <div className="space-y-2">
-                {refinementCount > 0 && (
-                  <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-foreground">
-                    Narrow results like this? Save this refinement as a reusable
-                    workflow.
-                  </div>
-                )}
-                {shouldShowProUpsell && (
-                  <div className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-foreground">
-                    Better results with Pro: advanced explainability + priority
-                    ranking.
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Toolbar row — only show for Cards tab */}
-            {cards.length > 0 && !isSearching && activeTab === 'cards' && (
-              <ResultsToolbar
-                cards={cards}
-                displayCards={displayCards}
-                totalCards={totalCards}
-                activeFilters={activeFilters}
-                filtersResetKey={filtersResetKey}
-                initialUrlFilters={initialUrlFilters}
-                collectionLookup={user ? collectionLookup : undefined}
-                onFilteredCards={handleFilteredCards}
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-                compareMode={compareMode}
-                onToggleCompareMode={handleToggleCompareMode}
-              />
-            )}
-          </div>
-
-          {/* Tab content area */}
-          {hasSearched && (
-            <Suspense fallback={null}>
-              <SearchResultsArea
-                activeSort={activeFilters?.sortBy}
-                activeTab={activeTab}
-                cards={cards}
-                displayCards={displayCards}
-                totalCards={totalCards}
-                viewMode={viewMode}
-                isSearching={isSearching}
-                hasSearched={hasSearched}
-                searchQuery={searchQuery}
-                originalQuery={originalQuery}
-                queryQualityScore={queryQualityScore}
-                queryConfidence={queryQualityConfidence}
-                querySampleSize={queryQualitySampleSize}
-                hasNextPage={hasNextPage}
-                isFetchingNextPage={isFetchingNextPage}
-                fetchNextPage={fetchNextPage}
-                handleCardClick={handleCardClick}
-                handleTryExample={handleTryExample}
-                compareMode={compareMode}
-                toggleCompareCard={toggleCompareCard}
-                isCardSelected={isCardSelected}
-                collectionLookup={collectionLookup}
-                loadMoreRef={loadMoreRef}
-                getRovingProps={getRovingProps}
-                lightboxIndex={lightboxIndex}
-                openLightbox={openLightbox}
-                closeLightbox={closeLightbox}
-                similarityData={similarityData}
-                similarLoading={similarLoading}
-                deckIdea={deckIdea}
-                deckIdeasLoading={deckIdeasLoading}
-                querySuggestions={querySuggestions}
-                isCheckingSuggestions={isCheckingSuggestions}
-                onTrySuggestion={handleTrySuggestion}
-                onRelatedCardClick={handleTryExample}
-              />
-            </Suspense>
-          )}
-        </main>
-
-        {!hasSearched && (
-          <div className="container-main" aria-hidden="true">
-            <div className="section-divider" />
-          </div>
-        )}
-        {!hasSearched && (
-          <Suspense fallback={null}>
-            <HowItWorksSection />
-          </Suspense>
-        )}
-        {!hasSearched && (
-          <div className="container-main" aria-hidden="true">
-            <div className="section-divider" />
-          </div>
-        )}
-        {!hasSearched && (
-          <Suspense fallback={null}>
-            <ValuePropStrip />
-          </Suspense>
-        )}
-
-        <Suspense fallback={null}>
-          <Footer />
-        </Suspense>
-
-        <Suspense fallback={null}>
-          <StickySearchNudge
-            hasSearched={hasSearched}
-            onTrySearch={handleTryExample}
-          />
-        </Suspense>
-        {hasSearched && (
-          <Suspense fallback={null}>
-            <ScrollToTop threshold={800} />
-          </Suspense>
-        )}
-
-        {selectedCard && (
-          <Suspense
-            fallback={
-              <div className="sr-only" role="status">
-                Loading card details…
-              </div>
-            }
-          >
-            <CardModal
-              card={selectedCard}
-              open={true}
-              onClose={() => setSelectedCard(null)}
-            />
-          </Suspense>
-        )}
-
-        <ReportIssueDialog
-          open={reportDialogOpen}
-          onOpenChange={setReportDialogOpen}
-          originalQuery={originalQuery}
-          compiledQuery={lastSearchResult?.scryfallQuery || searchQuery}
-          filters={activeFilters}
-          requestId={currentRequestId || undefined}
-        />
-
-        <CompareBar
-          cards={compareCards}
-          onRemove={removeCompareCard}
-          onClear={clearCompare}
-          onCompare={openCompare}
-        />
-        <CompareModal
-          cards={compareCards}
-          open={compareOpen}
-          onClose={closeCompare}
-        />
-
-        
-      </div>
-    </ErrorBoundary>
-  );
+type WindowWithIdleCallback = Window & {
+  requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+  cancelIdleCallback?: (id: number) => void;
 };
 
-export default Index;
+let searchExperiencePreloaded = false;
+
+export function preloadSearchExperience() {
+  if (searchExperiencePreloaded) return;
+  searchExperiencePreloaded = true;
+  void import('./SearchExperience');
+}
+
+function scheduleSearchPreload() {
+  const w = window as WindowWithIdleCallback;
+  if (typeof w.requestIdleCallback === 'function') {
+    const id = w.requestIdleCallback(preloadSearchExperience, { timeout: 7000 });
+    return () => w.cancelIdleCallback?.(id);
+  }
+
+  const id = window.setTimeout(preloadSearchExperience, 7000);
+  return () => window.clearTimeout(id);
+}
+
+function BrandMark() {
+  return (
+    <svg viewBox="0 0 32 32" className="h-7 w-7 text-accent" aria-hidden="true">
+      <path d="M16 2L30 16L16 30L2 16L16 2Z" fill="currentColor" opacity="0.15" />
+      <path d="M16 2L30 16L16 30L2 16L16 2Z" stroke="currentColor" strokeWidth="1.5" fill="none" />
+      <path d="M8 16C8 16 11 11 16 11C21 11 24 16 24 16C24 16 21 21 16 21C11 21 8 16 8 16Z" stroke="currentColor" strokeWidth="1.25" fill="none" />
+      <circle cx="16" cy="16" r="2" fill="currentColor" />
+    </svg>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </svg>
+  );
+}
+
+function ArrowIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M5 12h14" />
+      <path d="m12 5 7 7-7 7" />
+    </svg>
+  );
+}
+
+function SparkleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-3 w-3" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 3l1.6 5.2L19 10l-5.4 1.8L12 17l-1.6-5.2L5 10l5.4-1.8L12 3Z" />
+      <path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z" />
+    </svg>
+  );
+}
+
+export default function Index() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [query, setQuery] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => scheduleSearchPreload(), []);
+
+  const handleSearchIntent = useCallback(() => {
+    preloadSearchExperience();
+  }, []);
+
+  const submitSearch = useCallback(
+    (event?: React.FormEvent<HTMLFormElement>) => {
+      event?.preventDefault();
+      const trimmed = query.trim();
+      if (!trimmed) {
+        inputRef.current?.focus();
+        return;
+      }
+
+      preloadSearchExperience();
+      navigate(`/search/${queryToSlug(trimmed)}`);
+    },
+    [navigate, query],
+  );
+
+  const startSearching = useCallback(() => {
+    handleSearchIntent();
+    inputRef.current?.focus();
+    inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [handleSearchIntent]);
+
+  return (
+    <div className="min-h-screen min-h-[100dvh] overflow-x-hidden bg-background text-foreground">
+      <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
+      <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
+
+      <header className="relative z-20 border-b border-border/40 bg-background/70 backdrop-blur-xl">
+        <nav className="container-main flex h-[72px] items-center justify-between gap-4" aria-label={t('a11y.mainNavigation', 'Main navigation')}>
+          <Link to="/" className="flex items-center gap-3 font-semibold text-foreground" aria-label="OffMeta home">
+            <BrandMark />
+            <span>OffMeta</span>
+          </Link>
+
+          <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
+            <Link className="transition-colors hover:text-foreground" to="/guides">{t('header.guides', 'Guides')}</Link>
+            <Link className="transition-colors hover:text-foreground" to="/combos">{t('nav.combos', 'Combos')}</Link>
+            <Link className="transition-colors hover:text-foreground" to="/about">{t('header.about', 'About')}</Link>
+          </div>
+
+          <button
+            type="button"
+            onClick={startSearching}
+            className="inline-flex min-h-10 items-center justify-center rounded-full border border-border/70 px-4 text-sm font-medium text-muted-foreground transition-colors hover:border-accent/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {t('auth.signIn', 'Sign In')}
+          </button>
+        </nav>
+      </header>
+
+      <main className="relative z-10" role="main">
+        <section className="container-main pt-12 sm:pt-20 lg:pt-24 pb-4 text-center" aria-labelledby="hero-heading">
+          <div className="flex justify-center mb-4 sm:mb-6">
+            <span className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1.5 text-xs font-medium text-accent backdrop-blur-sm">
+              <SparkleIcon />
+              {t('hero.taglinePill', 'AI-powered MTG discovery engine')}
+            </span>
+          </div>
+
+          <h1 id="hero-heading" className="mx-auto mb-3 sm:mb-5 max-w-5xl text-foreground text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-semibold leading-[1.05]">
+            {t('hero.title', 'Search Magic cards')}{' '}
+            <span className="text-gradient-animated">{t('hero.titleAccent', 'in plain English')}</span>
+          </h1>
+
+          <p className="mx-auto max-w-2xl text-sm sm:text-lg leading-relaxed text-muted-foreground">
+            {t(
+              'hero.subtitleCompact',
+              'Describe the card you need. OffMeta translates intent into a real Scryfall search — instantly, transparently, and without the syntax.',
+            )}
+          </p>
+
+          <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={startSearching}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-accent px-6 text-sm font-medium text-accent-foreground shadow-lg shadow-accent/20 transition-all duration-200 hover:scale-[1.02] hover:shadow-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              {t('hero.ctaPrimary', 'Start searching')}
+              <ArrowIcon />
+            </button>
+
+            <Link
+              to="/archetypes"
+              onPointerEnter={preloadSearchExperience}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-border/80 bg-card/40 px-6 text-sm font-medium text-foreground backdrop-blur-md transition-all duration-200 hover:border-accent/40 hover:bg-card/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              {t('hero.ctaSecondary', 'Explore archetypes')}
+            </Link>
+          </div>
+        </section>
+
+        <section className="relative border-y border-border/50 bg-card/20 py-4 sm:py-6" aria-label={t('search.searchLabel', 'Search cards')}>
+          <div className="container-main">
+            <form
+              onSubmit={submitSearch}
+              className="mx-auto flex max-w-5xl flex-col gap-3 rounded-xl border border-border/80 bg-card/70 p-2 shadow-xl backdrop-blur-xl sm:flex-row sm:items-center"
+            >
+              <label className="sr-only" htmlFor="search-input">{t('search.searchLabel', 'Search cards')}</label>
+              <input
+                ref={inputRef}
+                id="search-input"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                onFocus={handleSearchIntent}
+                onPointerDown={handleSearchIntent}
+                type="search"
+                inputMode="search"
+                autoComplete="off"
+                spellCheck={false}
+                maxLength={500}
+                placeholder={t('search.placeholder', 'cheap green ramp spells')}
+                className="min-h-12 flex-1 rounded-lg border border-input bg-background/70 px-4 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-ring/40"
+              />
+              <button
+                type="submit"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-accent px-6 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <SearchIcon />
+                {t('search.button', 'Search')}
+              </button>
+            </form>
+
+            <div className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
+              <span>{t('trust.free', 'Free to use')}</span>
+              <span>{t('trust.scryfall', 'Powered by Scryfall')}</span>
+              <span>{t('trust.noAccount', 'No account required')}</span>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}
