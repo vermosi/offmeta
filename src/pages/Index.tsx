@@ -69,7 +69,8 @@ export default function Index() {
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => scheduleSearchPreload(), []);
+  // No idle preload: the search bundle is only fetched on direct user intent
+  // (input focus/pointerdown, or hover on a CTA that needs it).
 
   const handleSearchIntent = useCallback(() => {
     preloadSearchExperience();
