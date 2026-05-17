@@ -2,8 +2,10 @@
  * I18n provider component.
  * useTranslation is re-exported here for convenience.
  *
- * Locale dictionaries are lazy-loaded (except English) to reduce
- * the main bundle size. Only the user's active locale is fetched.
+ * Locale dictionaries (including English) are lazy-loaded so the homepage
+ * entry bundle does not ship a ~60KB JSON dictionary on first paint.
+ * Components must always pass an inline English `fallback` to `t()` so the
+ * UI renders correctly before the dictionary resolves.
  */
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -16,12 +18,10 @@ import {
   useEffect,
   type ReactNode,
 } from 'react';
-import en from './en.json';
 
 import type { SupportedLocale } from './constants';
 import { I18nContext, type I18nContextValue } from './context';
 import { detectBrowserLocale } from './detect-locale';
-import { logger } from '@/lib/core/logger';
 
 // Re-export for unit tests
 // eslint-disable-next-line react-refresh/only-export-components
@@ -30,10 +30,11 @@ export { detectBrowserLocale } from './detect-locale';
 type TranslationDictionary = Record<string, string>;
 
 /**
- * Lazy loaders for non-English locales.
- * Each returns a dynamic import that Vite code-splits into its own chunk.
+ * Lazy loaders for all locales — English included so it doesn't bloat the
+ * homepage entry bundle. Each returns a dynamic import that Vite code-splits.
  */
 const LOCALE_LOADERS: Record<string, () => Promise<{ default: TranslationDictionary }>> = {
+  en: () => import('./en.json'),
   es: () => import('./es.json'),
   fr: () => import('./fr.json'),
   de: () => import('./de.json'),
@@ -47,15 +48,15 @@ const LOCALE_LOADERS: Record<string, () => Promise<{ default: TranslationDiction
 };
 
 /** Cache loaded dictionaries so we only fetch each once. */
-const loadedDictionaries: Record<string, TranslationDictionary> = { en };
+const loadedDictionaries: Record<string, TranslationDictionary> = {};
+const EMPTY_DICT: TranslationDictionary = {};
 
 const STORAGE_KEY = 'offmeta-locale';
 
 function getInitialLocale(): SupportedLocale {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored && (stored === 'en' || stored in LOCALE_LOADERS)) {
-      logger.info(`[i18n] Restored locale from storage: ${stored}`);
+    if (stored && stored in LOCALE_LOADERS) {
       return stored as SupportedLocale;
     }
   } catch {
@@ -63,9 +64,6 @@ function getInitialLocale(): SupportedLocale {
   }
   const detected = detectBrowserLocale();
   const locale = detected ?? 'en';
-  logger.info(
-    `[i18n] navigator.languages=${JSON.stringify(navigator.languages ?? [navigator.language])} → detected=${detected ?? 'none'} → using=${locale}`,
-  );
   try {
     localStorage.setItem(STORAGE_KEY, locale);
   } catch {
@@ -81,39 +79,29 @@ interface I18nProviderProps {
 /**
  * Wrap your app with `<I18nProvider>` to enable locale switching.
  * Persists selection to localStorage.
- * Non-English dictionaries are loaded on demand.
+ * All dictionaries (English included) are loaded on demand.
  */
 export function I18nProvider({ children }: I18nProviderProps) {
   const [locale, setLocaleState] = useState<SupportedLocale>(getInitialLocale);
-  const [asyncDict, setAsyncDict] = useState<TranslationDictionary | null>(null);
+  const [, force] = useState(0);
 
-  // Synchronously resolve the dictionary when it's already cached or has no loader
-  const syncDict = useMemo(() => {
-    if (loadedDictionaries[locale]) return loadedDictionaries[locale];
-    if (!LOCALE_LOADERS[locale]) return en;
-    return null;
-  }, [locale]);
+  const dictionary = loadedDictionaries[locale] ?? EMPTY_DICT;
 
-  // The active dictionary: prefer sync (cached), then async (loaded), then English fallback
-  const dictionary = syncDict ?? asyncDict ?? en;
-
-  // Only run the effect for async loading when no sync dictionary is available
   useEffect(() => {
-    // If resolved synchronously, nothing to load
-    if (loadedDictionaries[locale] || !LOCALE_LOADERS[locale]) return;
-
-    const loader = LOCALE_LOADERS[locale];
+    if (loadedDictionaries[locale]) return;
+    const loader = LOCALE_LOADERS[locale] ?? LOCALE_LOADERS.en;
     let cancelled = false;
     loader()
       .then((mod) => {
-        const dict = mod.default;
-        loadedDictionaries[locale] = dict;
-        if (!cancelled) setAsyncDict(dict);
+        loadedDictionaries[locale] = mod.default;
+        if (!cancelled) force((n) => n + 1);
       })
       .catch(() => {
-        if (!cancelled) setAsyncDict(en);
+        if (!cancelled) {
+          loadedDictionaries[locale] = {};
+          force((n) => n + 1);
+        }
       });
-
     return () => {
       cancelled = true;
     };
