@@ -1,29 +1,18 @@
 /**
  * Root application component.
- * Wires up providers (i18n, theme, query cache, tooltips, toasts)
- * and defines top-level routes via React Router.
- * All page components are lazy-loaded for optimal bundle splitting.
+ * Keeps `/` extremely small, then loads the full provider stack only for
+ * interactive/search routes.
  * @module App
  */
 
 import { lazy, Suspense } from 'react';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import { Toaster } from '@/components/ui/toaster';
-import { Toaster as Sonner } from '@/components/ui/sonner';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from 'next-themes';
 import { I18nProvider } from '@/lib/i18n';
-import { AuthProvider } from '@/components/AuthProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { ScrollToTopOnNavigate } from '@/components/ScrollToTopOnNavigate';
-import { RouteTracker } from '@/components/RouteTracker';
-import AppInitializer from '@/components/AppInitializer';
-// Eager-load the landing page so the initial paint on `/` does not wait on a
-// secondary chunk fetch. All other (heavier) pages remain lazy.
 import Index from './pages/Index';
 
-
+const FullAppProviders = lazy(() => import('@/components/FullAppProviders'));
 const GuidesIndex = lazy(() => import('./pages/GuidesIndex'));
 const GuidePage = lazy(() => import('./pages/GuidePage'));
 const DocsIndex = lazy(() => import('./pages/DocsIndex'));
@@ -53,75 +42,53 @@ const AdminSeoPages = lazy(() => import('./pages/AdminSeoPages'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const SearchExperience = lazy(() => import('./pages/SearchExperience'));
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes - reduce refetches
-      gcTime: 30 * 60 * 1000, // 30 minutes cache retention
-      retry: 2, // Limit retries to avoid hammering on errors
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
-      refetchOnWindowFocus: false, // Prevent refetch storms
-      refetchOnReconnect: false,
-    },
-  },
-});
-
+const routeFallback = <div className="min-h-screen bg-background" />;
+const withFullApp = (element: JSX.Element) => (
+  <Suspense fallback={routeFallback}>
+    <FullAppProviders>{element}</FullAppProviders>
+  </Suspense>
+);
 
 const App = () => (
   <I18nProvider>
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <Suspense fallback={null}>
-            <TooltipProvider>
-              <Suspense fallback={null}>
-                <Toaster />
-                <Sonner />
-                <AppInitializer />
-              </Suspense>
-              <BrowserRouter>
-                <ScrollToTopOnNavigate />
-                <RouteTracker />
-                <ErrorBoundary>
-                <Suspense fallback={<div className="min-h-screen bg-background" />}>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/search/:slug" element={<SearchExperience />} />
-                    <Route path="/docs" element={<DocsIndex />} />
-                    <Route path="/docs/syntax" element={<SyntaxCheatSheet />} />
-                    <Route path="/guides" element={<GuidesIndex />} />
-                    <Route path="/guides/:slug" element={<GuidePage />} />
-                    <Route path="/saved" element={<SavedSearches />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route path="/profile" element={<ProfileSettings />} />
-                    <Route path="/admin/analytics" element={<AdminAnalytics />} />
-                    <Route path="/admin/curated-searches" element={<AdminCuratedSearches />} />
-                    <Route path="/deck-recs" element={<DeckRecommendations />} />
-                    <Route path="/combos" element={<FindMyCombos />} />
-                    <Route path="/archetypes" element={<ArchetypesIndex />} />
-                    <Route path="/archetypes/:slug" element={<ArchetypePage />} />
-                    <Route path="/deckbuilder" element={<DeckBuilder />} />
-                    <Route path="/deckbuilder/:id" element={<DeckEditor />} />
-                    <Route path="/deck/:id" element={<PublicDeckView />} />
-                    <Route path="/decks" element={<BrowseDecks />} />
-                    <Route path="/browse-searches" element={<BrowseSearches />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/collection" element={<Collection />} />
-                    <Route path="/market" element={<MarketTrends />} />
-                    <Route path="/cards/:slug" element={<CardPage />} />
-                    <Route path="/user/:userId" element={<PublicProfile />} />
-                    <Route path="/ai" element={<AiIndex />} />
-                    <Route path="/ai/:slug" element={<AiPage />} />
-                    <Route path="/admin/seo-pages" element={<AdminSeoPages />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Suspense>
-                </ErrorBoundary>
-              </BrowserRouter>
-            </TooltipProvider>
+      <BrowserRouter>
+        <ErrorBoundary>
+          <Suspense fallback={routeFallback}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/search/:slug" element={withFullApp(<SearchExperience />)} />
+              <Route path="/docs" element={withFullApp(<DocsIndex />)} />
+              <Route path="/docs/syntax" element={withFullApp(<SyntaxCheatSheet />)} />
+              <Route path="/guides" element={withFullApp(<GuidesIndex />)} />
+              <Route path="/guides/:slug" element={withFullApp(<GuidePage />)} />
+              <Route path="/saved" element={withFullApp(<SavedSearches />)} />
+              <Route path="/reset-password" element={withFullApp(<ResetPassword />)} />
+              <Route path="/profile" element={withFullApp(<ProfileSettings />)} />
+              <Route path="/admin/analytics" element={withFullApp(<AdminAnalytics />)} />
+              <Route path="/admin/curated-searches" element={withFullApp(<AdminCuratedSearches />)} />
+              <Route path="/deck-recs" element={withFullApp(<DeckRecommendations />)} />
+              <Route path="/combos" element={withFullApp(<FindMyCombos />)} />
+              <Route path="/archetypes" element={withFullApp(<ArchetypesIndex />)} />
+              <Route path="/archetypes/:slug" element={withFullApp(<ArchetypePage />)} />
+              <Route path="/deckbuilder" element={withFullApp(<DeckBuilder />)} />
+              <Route path="/deckbuilder/:id" element={withFullApp(<DeckEditor />)} />
+              <Route path="/deck/:id" element={withFullApp(<PublicDeckView />)} />
+              <Route path="/decks" element={withFullApp(<BrowseDecks />)} />
+              <Route path="/browse-searches" element={withFullApp(<BrowseSearches />)} />
+              <Route path="/about" element={withFullApp(<About />)} />
+              <Route path="/collection" element={withFullApp(<Collection />)} />
+              <Route path="/market" element={withFullApp(<MarketTrends />)} />
+              <Route path="/cards/:slug" element={withFullApp(<CardPage />)} />
+              <Route path="/user/:userId" element={withFullApp(<PublicProfile />)} />
+              <Route path="/ai" element={withFullApp(<AiIndex />)} />
+              <Route path="/ai/:slug" element={withFullApp(<AiPage />)} />
+              <Route path="/admin/seo-pages" element={withFullApp(<AdminSeoPages />)} />
+              <Route path="*" element={withFullApp(<NotFound />)} />
+            </Routes>
           </Suspense>
-        </AuthProvider>
-      </QueryClientProvider>
+        </ErrorBoundary>
+      </BrowserRouter>
     </ThemeProvider>
   </I18nProvider>
 );
