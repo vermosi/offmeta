@@ -53,23 +53,19 @@ const EMPTY_DICT: TranslationDictionary = {};
 
 const STORAGE_KEY = 'offmeta-locale';
 
-function getInitialLocale(): SupportedLocale {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored && stored in LOCALE_LOADERS) {
-      return stored as SupportedLocale;
-    }
-  } catch {
-    // SSR or storage unavailable
+type IdleWindow = Window & {
+  requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+  cancelIdleCallback?: (id: number) => void;
+};
+
+function scheduleIdle(cb: () => void): () => void {
+  const w = window as IdleWindow;
+  if (typeof w.requestIdleCallback === 'function') {
+    const id = w.requestIdleCallback(cb, { timeout: 2000 });
+    return () => w.cancelIdleCallback?.(id);
   }
-  const detected = detectBrowserLocale();
-  const locale = detected ?? 'en';
-  try {
-    localStorage.setItem(STORAGE_KEY, locale);
-  } catch {
-    // storage unavailable
-  }
-  return locale;
+  const id = window.setTimeout(cb, 0);
+  return () => window.clearTimeout(id);
 }
 
 interface I18nProviderProps {
@@ -78,34 +74,71 @@ interface I18nProviderProps {
 
 /**
  * Wrap your app with `<I18nProvider>` to enable locale switching.
- * Persists selection to localStorage.
- * All dictionaries (English included) are loaded on demand.
+ *
+ * Boot path is fully non-blocking for first paint:
+ *  - Initial render starts with `locale='en'` and an empty dictionary, so
+ *    consumers immediately see their inline English `fallback` strings.
+ *  - localStorage read, browser-locale detection, AND the dictionary
+ *    `import()` are all deferred to `requestIdleCallback` after the first
+ *    commit, so they never run during render or as a layout-adjacent effect.
  */
 export function I18nProvider({ children }: I18nProviderProps) {
-  const [locale, setLocaleState] = useState<SupportedLocale>(getInitialLocale);
+  const [locale, setLocaleState] = useState<SupportedLocale>('en');
   const [, force] = useState(0);
 
   const dictionary = loadedDictionaries[locale] ?? EMPTY_DICT;
 
+  // Resolve the user's preferred locale only after first paint.
   useEffect(() => {
-    if (loadedDictionaries[locale]) return;
-    const loader = LOCALE_LOADERS[locale] ?? LOCALE_LOADERS.en;
     let cancelled = false;
-    loader()
-      .then((mod) => {
-        loadedDictionaries[locale] = mod.default;
-        if (!cancelled) force((n) => n + 1);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          loadedDictionaries[locale] = {};
-          force((n) => n + 1);
+    const cancel = scheduleIdle(() => {
+      if (cancelled) return;
+      let resolved: SupportedLocale = 'en';
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored && stored in LOCALE_LOADERS) {
+          resolved = stored as SupportedLocale;
+        } else {
+          resolved = detectBrowserLocale() ?? 'en';
+          try {
+            localStorage.setItem(STORAGE_KEY, resolved);
+          } catch {
+            /* storage unavailable */
+          }
         }
-      });
+      } catch {
+        /* storage unavailable */
+      }
+      if (!cancelled && resolved !== 'en') setLocaleState(resolved);
+      // Even when staying on `en`, kick off the dictionary load.
+      if (!cancelled) loadDictionary(resolved);
+    });
     return () => {
       cancelled = true;
+      cancel();
     };
+  }, []);
+
+  // Re-load dictionary whenever the user explicitly switches locales.
+  useEffect(() => {
+    if (loadedDictionaries[locale]) return;
+    const cancel = scheduleIdle(() => loadDictionary(locale));
+    return cancel;
   }, [locale]);
+
+  function loadDictionary(target: SupportedLocale) {
+    if (loadedDictionaries[target]) return;
+    const loader = LOCALE_LOADERS[target] ?? LOCALE_LOADERS.en;
+    loader()
+      .then((mod) => {
+        loadedDictionaries[target] = mod.default;
+        force((n) => n + 1);
+      })
+      .catch(() => {
+        loadedDictionaries[target] = {};
+        force((n) => n + 1);
+      });
+  }
 
   const setLocale = useCallback((newLocale: SupportedLocale) => {
     setLocaleState(newLocale);
