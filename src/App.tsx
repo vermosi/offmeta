@@ -5,7 +5,7 @@
  * @module App
  */
 
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, type ReactElement } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from 'next-themes';
 import { I18nProvider } from '@/lib/i18n';
@@ -43,7 +43,7 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 const SearchExperience = lazy(() => import('./pages/SearchExperience'));
 
 const routeFallback = <div className="min-h-screen bg-background" />;
-const withFullApp = (element: JSX.Element) => (
+const withFullApp = (element: ReactElement) => (
   <Suspense fallback={routeFallback}>
     <FullAppProviders>{element}</FullAppProviders>
   </Suspense>
