@@ -5,7 +5,7 @@
  * user navigates to /search/:slug.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { queryToSlug } from '@/lib/search-slug';
 import { useTranslation } from '@/lib/i18n';
@@ -85,7 +85,7 @@ export default function Index() {
   }, []);
 
   const submitSearch = useCallback(
-    (event?: React.FormEvent<HTMLFormElement>) => {
+    (event?: FormEvent<HTMLFormElement>) => {
       event?.preventDefault();
       const trimmed = query.trim();
       if (!trimmed) {
@@ -112,7 +112,7 @@ export default function Index() {
 
       <header className="relative z-20 border-b border-border/40 bg-background/70 backdrop-blur-xl">
         <nav className="container-main flex h-[72px] items-center justify-between gap-4" aria-label={t('a11y.mainNavigation', 'Main navigation')}>
-          <Link to="/" className="flex items-center gap-3 font-semibold text-foreground" aria-label="OffMeta home">
+          <Link to="/" className="flex items-center gap-3 font-semibold text-foreground" aria-label={t('header.home', 'OffMeta home')}>
             <BrandMark />
             <span>OffMeta</span>
           </Link>
@@ -128,7 +128,7 @@ export default function Index() {
             onClick={startSearching}
             className="inline-flex min-h-10 items-center justify-center rounded-full border border-border/70 px-4 text-sm font-medium text-muted-foreground transition-colors hover:border-accent/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            {t('auth.signIn', 'Sign In')}
+            {t('search.button', 'Search')}
           </button>
         </nav>
       </header>
