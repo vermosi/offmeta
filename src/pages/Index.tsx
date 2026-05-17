@@ -332,6 +332,43 @@ const Index = () => {
     return () => clearTimeout(timeout);
   }, []);
 
+  // Preload search-result chunks after idle or on first user interaction
+  // with the search input. Keeps initial paint lean while ensuring results
+  // render instantly when the user submits.
+  useEffect(() => {
+    let done = false;
+    const prefetch = () => {
+      if (done) return;
+      done = true;
+      void import('@/components/SearchResultsArea');
+      void import('@/components/ResultsTabs');
+      void import('@/components/ResultsToolbar');
+      void import('@/components/EditableQueryBar');
+      void import('@/components/CardModal');
+    };
+    const w = window as Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    const idleId = typeof w.requestIdleCallback === 'function'
+      ? w.requestIdleCallback(prefetch, { timeout: 3000 })
+      : window.setTimeout(prefetch, 2000);
+    const onInteract = () => prefetch();
+    const input = document.getElementById('search-input');
+    input?.addEventListener('focus', onInteract, { once: true });
+    input?.addEventListener('pointerdown', onInteract, { once: true });
+    return () => {
+      if (typeof w.cancelIdleCallback === 'function' && typeof idleId === 'number') {
+        w.cancelIdleCallback(idleId);
+      } else {
+        window.clearTimeout(idleId as number);
+      }
+      input?.removeEventListener('focus', onInteract);
+      input?.removeEventListener('pointerdown', onInteract);
+    };
+  }, []);
+
+
   useEffect(() => {
     trackFirstReturnVisit();
   }, [trackFirstReturnVisit]);
