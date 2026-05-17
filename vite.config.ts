@@ -25,6 +25,23 @@ export default defineConfig(() => ({
           if (id.includes('node_modules/lucide-react')) return 'vendor-icons';
           if (id.includes('node_modules/react-hook-form') || id.includes('node_modules/@hookform') || id.includes('node_modules/zod')) return 'vendor-forms';
           if (id.includes('node_modules/sonner') || id.includes('node_modules/cmdk') || id.includes('node_modules/vaul') || id.includes('node_modules/next-themes')) return 'vendor-misc';
+          // Search engine code — heavy and only needed after the user actually searches.
+          // Isolating into its own chunk lets the homepage paint without loading it.
+          if (
+            id.includes('/src/lib/search/') ||
+            id.includes('/src/lib/scryfall/') ||
+            id.includes('/src/lib/relationships/') ||
+            id.includes('/src/lib/query-translator') ||
+            id.includes('/src/services/discovery') ||
+            id.includes('/src/services/local-cards') ||
+            id.includes('/src/hooks/useSearch') ||
+            id.includes('/src/hooks/useSimilarCards') ||
+            id.includes('/src/hooks/useDeckIdeas') ||
+            id.includes('/src/hooks/useQueryIntelligence') ||
+            id.includes('/src/hooks/useQuerySuggestions')
+          ) {
+            return 'chunk-search';
+          }
         },
       },
     },
