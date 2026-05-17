@@ -25,13 +25,19 @@ export function preloadSearchExperience() {
 
 function scheduleSearchPreload() {
   const w = window as WindowWithIdleCallback;
-  if (typeof w.requestIdleCallback === 'function') {
-    const id = w.requestIdleCallback(preloadSearchExperience, { timeout: 7000 });
-    return () => w.cancelIdleCallback?.(id);
-  }
+  let idleId: number | null = null;
+  const timerId = window.setTimeout(() => {
+    if (typeof w.requestIdleCallback === 'function') {
+      idleId = w.requestIdleCallback(preloadSearchExperience, { timeout: 5000 });
+      return;
+    }
+    preloadSearchExperience();
+  }, 5000);
 
-  const id = window.setTimeout(preloadSearchExperience, 7000);
-  return () => window.clearTimeout(id);
+  return () => {
+    window.clearTimeout(timerId);
+    if (idleId !== null) w.cancelIdleCallback?.(idleId);
+  };
 }
 
 function BrandMark() {
