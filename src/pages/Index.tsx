@@ -10,34 +10,19 @@ import { Link, useNavigate } from 'react-router-dom';
 import { queryToSlug } from '@/lib/search-slug';
 import { useTranslation } from '@/lib/i18n';
 
-type WindowWithIdleCallback = Window & {
-  requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
-  cancelIdleCallback?: (id: number) => void;
-};
-
 let searchExperiencePreloaded = false;
 
+/**
+ * Lazy-load the search bundle. Only ever fired by direct user intent
+ * (focus / pointerdown on the search input, or pointerenter on a nav link
+ * that needs the full app). We intentionally do NOT idle-preload it: the
+ * critical first-paint path stays minimal and the ~chunk-search /
+ * AppRoutes bundles only download when the user signals they want them.
+ */
 export function preloadSearchExperience() {
   if (searchExperiencePreloaded) return;
   searchExperiencePreloaded = true;
   void import('./SearchExperience');
-}
-
-function scheduleSearchPreload() {
-  const w = window as WindowWithIdleCallback;
-  let idleId: number | null = null;
-  const timerId = window.setTimeout(() => {
-    if (typeof w.requestIdleCallback === 'function') {
-      idleId = w.requestIdleCallback(preloadSearchExperience, { timeout: 5000 });
-      return;
-    }
-    preloadSearchExperience();
-  }, 5000);
-
-  return () => {
-    window.clearTimeout(timerId);
-    if (idleId !== null) w.cancelIdleCallback?.(idleId);
-  };
 }
 
 function BrandMark() {
