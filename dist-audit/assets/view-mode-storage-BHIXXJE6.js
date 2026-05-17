@@ -1,1 +1,0 @@
-var e=`offmeta_view_mode`;function t(){if(typeof window>`u`)return`grid`;try{let t=localStorage.getItem(e);if(t===`grid`||t===`list`||t===`images`)return t}catch{}return`grid`}function n(t){try{localStorage.setItem(e,t)}catch{}}export{n,t};

@@ -1,1 +1,0 @@
-import{St as e}from"./chunk-search-DyBngoFw.js";import{t}from"./utils-DkOIlf8H.js";var n=e();function r({className:e,variant:r=`default`,...i}){return(0,n.jsx)(`div`,{className:t(`shimmer animate-pulse`,{default:`bg-muted`,card:`bg-muted rounded-xl`,text:`bg-muted h-4 rounded`,avatar:`bg-muted rounded-full`,button:`bg-muted h-9 rounded-lg`}[r],e),...i})}export{r as t};
