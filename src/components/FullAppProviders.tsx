@@ -11,6 +11,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { AuthProvider } from '@/components/AuthProvider';
 import AppInitializer from '@/components/AppInitializer';
+import { RouteTracker } from '@/components/RouteTracker';
+import { ScrollToTopOnNavigate } from '@/components/ScrollToTopOnNavigate';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +36,8 @@ export default function FullAppProviders({ children }: { children: ReactNode }) 
             <Toaster />
             <Sonner />
             <AppInitializer />
+            <RouteTracker />
+            <ScrollToTopOnNavigate />
           </Suspense>
           {children}
         </TooltipProvider>
