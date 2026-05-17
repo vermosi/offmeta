@@ -1,32 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Static fallback sitemap. The canonical sitemap is served by the
-  `sitemap` edge function via /sitemap.xml (see public/_redirects),
-  which enumerates dynamic /cards/:slug, /guides/:slug, /ai/:slug,
-  /archetypes/:slug, /search/:slug entries.
-
-  Private/utility routes (/saved, /reset-password, /profile,
-  /admin/*, /deck/edit/*, etc.) are intentionally excluded — they
-  carry `noindex, nofollow` meta and require authentication.
--->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://offmeta.app/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
-  <url><loc>https://offmeta.app/docs</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://offmeta.app/docs/syntax</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://offmeta.app/guides</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://offmeta.app/guides/search-by-creature-type</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://offmeta.app/guides/filter-by-color</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://offmeta.app/guides/budget-price-filters</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://offmeta.app/guides/format-legality-search</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://offmeta.app/guides/keyword-ability-search</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://offmeta.app/guides/ramp-and-card-draw</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://offmeta.app/guides/tribal-synergies-for-commander</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://offmeta.app/guides/token-and-sacrifice-synergies</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://offmeta.app/guides/etb-and-flicker-combos</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://offmeta.app/guides/multi-constraint-complex-search</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://offmeta.app/combos</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://offmeta.app/archetypes</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://offmeta.app/browse-searches</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://offmeta.app/ai</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://offmeta.app/about</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://offmeta.app/</loc><lastmod>2026-05-17T23:32:26.917Z</lastmod></url>
+  <url><loc>https://offmeta.app/browse</loc><lastmod>2026-05-17T23:32:26.917Z</lastmod></url>
+  <url><loc>https://offmeta.app/deckbuilder</loc><lastmod>2026-05-17T23:32:26.917Z</lastmod></url>
+  <url><loc>https://offmeta.app/cards</loc><lastmod>2026-05-17T23:32:26.917Z</lastmod></url>
+  <url><loc>https://offmeta.app/guides</loc><lastmod>2026-05-17T23:32:26.917Z</lastmod></url>
+  <url><loc>https://offmeta.app/about</loc><lastmod>2026-05-17T23:32:26.917Z</lastmod></url>
+  <url><loc>https://offmeta.app/privacy</loc><lastmod>2026-05-17T23:32:26.917Z</lastmod></url>
+  <url><loc>https://offmeta.app/terms</loc><lastmod>2026-05-17T23:32:26.917Z</lastmod></url>
+  <url><loc>https://offmeta.app/contact</loc><lastmod>2026-05-17T23:32:26.917Z</lastmod></url>
 </urlset>
