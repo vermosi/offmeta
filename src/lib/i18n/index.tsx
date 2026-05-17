@@ -132,11 +132,16 @@ export function I18nProvider({ children }: I18nProviderProps) {
     loader()
       .then((mod) => {
         loadedDictionaries[target] = mod.default;
-        force((n) => n + 1);
+        // Only re-render if the freshly loaded dictionary will actually
+        // change visible text. Every `t(key, fallback)` call already returns
+        // the inline English fallback, so loading the English dictionary
+        // doesn't change a single string — skip the re-render to avoid
+        // flushing every i18n consumer (Index, Header, etc.) for nothing.
+        if (target !== 'en' && target === locale) force((n) => n + 1);
       })
       .catch(() => {
         loadedDictionaries[target] = {};
-        force((n) => n + 1);
+        // Same reasoning: an empty dict falls back to English, no re-render needed.
       });
   }
 
