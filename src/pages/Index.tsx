@@ -5,7 +5,7 @@
  * user navigates to /search/:slug.
  */
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { queryToSlug } from '@/lib/search-slug';
 import { useTranslation } from '@/lib/i18n';
