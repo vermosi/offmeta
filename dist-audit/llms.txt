@@ -1,0 +1,24 @@
+# OffMeta
+
+> Natural language search engine for Magic: The Gathering cards. Type plain English ("cheap green ramp", "commander board wipes under $5") and get real Scryfall results — no syntax needed.
+
+OffMeta translates natural language into valid Scryfall queries, runs them against the Scryfall API, and renders the matching cards. Scryfall is the source of truth for all card data; OffMeta is a search translator, not a card database.
+
+## Pages
+
+- [Home](/): Natural-language MTG card search.
+- [Guides](/guides): 10 progressive guides for finding any Magic card.
+- [Docs](/docs): Search reference, syntax cheat sheet, and FAQ.
+- [Syntax cheat sheet](/docs/syntax): Scryfall search operators reference.
+- [Combos](/combos): Find Commander combos by card or color identity.
+- [Archetypes](/archetypes): MTG archetypes across formats with meta share and signature cards.
+- [Market](/market): Daily MTG card price movers — gainers and losers.
+- [Decks](/decks): Browse public decklists shared by the community.
+- [Browse searches](/browse-searches): Curated natural-language search examples.
+- [AI search index](/ai): Programmatic SEO landing pages for common MTG search intents.
+- [About](/about): What OffMeta is and how it works.
+
+## Optional
+
+- [Card pages](/cards/): One page per Magic card with oracle text, prices, and alternatives. e.g. `/cards/lotus-petal`.
+- [Guide pages](/guides/): One page per progressive guide. e.g. `/guides/search-by-creature-type`.
