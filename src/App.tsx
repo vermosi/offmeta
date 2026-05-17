@@ -51,6 +51,7 @@ const AiIndex = lazy(() => import('./pages/AiIndex'));
 const AiPage = lazy(() => import('./pages/AiPage'));
 const AdminSeoPages = lazy(() => import('./pages/AdminSeoPages'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const SearchExperience = lazy(() => import('./pages/SearchExperience'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -85,7 +86,7 @@ const App = () => (
                 <Suspense fallback={<div className="min-h-screen bg-background" />}>
                   <Routes>
                     <Route path="/" element={<Index />} />
-                    <Route path="/search/:slug" element={<Index />} />
+                    <Route path="/search/:slug" element={<SearchExperience />} />
                     <Route path="/docs" element={<DocsIndex />} />
                     <Route path="/docs/syntax" element={<SyntaxCheatSheet />} />
                     <Route path="/guides" element={<GuidesIndex />} />
