@@ -137,7 +137,7 @@ export function I18nProvider({ children }: I18nProviderProps) {
         // the inline English fallback, so loading the English dictionary
         // doesn't change a single string — skip the re-render to avoid
         // flushing every i18n consumer (Index, Header, etc.) for nothing.
-        if (target !== 'en' && target === locale) force((n) => n + 1);
+        if (target !== 'en') force((n) => n + 1);
       })
       .catch(() => {
         loadedDictionaries[target] = {};
