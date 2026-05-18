@@ -22,6 +22,7 @@ import {
 import type { SupportedLocale } from './constants';
 import { I18nContext, type I18nContextValue } from './context';
 import { detectBrowserLocale } from './detect-locale';
+import enDictionary from './en.json';
 
 // Re-export for unit tests
 // eslint-disable-next-line react-refresh/only-export-components
@@ -34,7 +35,6 @@ type TranslationDictionary = Record<string, string>;
  * homepage entry bundle. Each returns a dynamic import that Vite code-splits.
  */
 const LOCALE_LOADERS: Record<string, () => Promise<{ default: TranslationDictionary }>> = {
-  en: () => import('./en.json'),
   es: () => import('./es.json'),
   fr: () => import('./fr.json'),
   de: () => import('./de.json'),
@@ -47,8 +47,8 @@ const LOCALE_LOADERS: Record<string, () => Promise<{ default: TranslationDiction
   zht: () => import('./zht.json'),
 };
 
-/** Cache loaded dictionaries so we only fetch each once. */
-const loadedDictionaries: Record<string, TranslationDictionary> = {};
+/** Cache loaded dictionaries so we only fetch each once. English ships in the entry. */
+const loadedDictionaries: Record<string, TranslationDictionary> = { en: enDictionary as TranslationDictionary };
 const EMPTY_DICT: TranslationDictionary = {};
 
 const STORAGE_KEY = 'offmeta-locale';
@@ -109,9 +109,10 @@ export function I18nProvider({ children }: I18nProviderProps) {
       } catch {
         /* storage unavailable */
       }
-      if (!cancelled && resolved !== 'en') setLocaleState(resolved);
-      // Even when staying on `en`, kick off the dictionary load.
-      if (!cancelled) loadDictionary(resolved);
+      if (!cancelled && resolved !== 'en') {
+        setLocaleState(resolved);
+        loadDictionary(resolved);
+      }
     });
     return () => {
       cancelled = true;
