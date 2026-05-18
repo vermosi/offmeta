@@ -109,9 +109,10 @@ export function I18nProvider({ children }: I18nProviderProps) {
       } catch {
         /* storage unavailable */
       }
-      if (!cancelled && resolved !== 'en') setLocaleState(resolved);
-      // Even when staying on `en`, kick off the dictionary load.
-      if (!cancelled) loadDictionary(resolved);
+      if (!cancelled && resolved !== 'en') {
+        setLocaleState(resolved);
+        loadDictionary(resolved);
+      }
     });
     return () => {
       cancelled = true;
