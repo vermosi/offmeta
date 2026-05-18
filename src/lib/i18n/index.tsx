@@ -35,7 +35,6 @@ type TranslationDictionary = Record<string, string>;
  * homepage entry bundle. Each returns a dynamic import that Vite code-splits.
  */
 const LOCALE_LOADERS: Record<string, () => Promise<{ default: TranslationDictionary }>> = {
-  en: () => import('./en.json'),
   es: () => import('./es.json'),
   fr: () => import('./fr.json'),
   de: () => import('./de.json'),
@@ -48,8 +47,8 @@ const LOCALE_LOADERS: Record<string, () => Promise<{ default: TranslationDiction
   zht: () => import('./zht.json'),
 };
 
-/** Cache loaded dictionaries so we only fetch each once. */
-const loadedDictionaries: Record<string, TranslationDictionary> = {};
+/** Cache loaded dictionaries so we only fetch each once. English ships in the entry. */
+const loadedDictionaries: Record<string, TranslationDictionary> = { en: enDictionary as TranslationDictionary };
 const EMPTY_DICT: TranslationDictionary = {};
 
 const STORAGE_KEY = 'offmeta-locale';
