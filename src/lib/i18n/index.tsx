@@ -22,6 +22,7 @@ import {
 import type { SupportedLocale } from './constants';
 import { I18nContext, type I18nContextValue } from './context';
 import { detectBrowserLocale } from './detect-locale';
+import enDictionary from './en.json';
 
 // Re-export for unit tests
 // eslint-disable-next-line react-refresh/only-export-components
