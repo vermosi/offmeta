@@ -71,6 +71,8 @@ function buildSitemap(paths) {
 
 const popularCards = await fetchPopularCardNames();
 const cardPaths = popularCards.map((name) => `/cards/${slugifyCardName(name)}`);
-const xml = buildSitemap([...STATIC_PATHS, ...cardPaths]);
+const guidePaths = GUIDE_SLUGS.map((slug) => `/guides/${slug}`);
+const allPaths = [...STATIC_PATHS, ...guidePaths, ...cardPaths];
+const xml = buildSitemap(allPaths);
 await fs.writeFile(OUTPUT, xml, 'utf8');
-console.log(`Generated sitemap with ${STATIC_PATHS.length + cardPaths.length} URLs.`);
+console.log(`Generated sitemap with ${allPaths.length} URLs.`);
