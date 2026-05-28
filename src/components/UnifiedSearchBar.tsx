@@ -526,7 +526,7 @@ export const UnifiedSearchBar = forwardRef<
               onClick={() => setShowAllExamples(true)}
               className="mt-3 mx-auto block text-xs text-accent hover:text-accent/80 transition-colors"
             >
-              Show more examples ▾
+              Show more example search queries ▾
             </button>
           )}
         </div>
