@@ -1,12 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://offmeta.app/</loc><lastmod>2026-05-17T23:34:32.839Z</lastmod></url>
-  <url><loc>https://offmeta.app/browse</loc><lastmod>2026-05-17T23:34:32.839Z</lastmod></url>
-  <url><loc>https://offmeta.app/deckbuilder</loc><lastmod>2026-05-17T23:34:32.839Z</lastmod></url>
-  <url><loc>https://offmeta.app/cards</loc><lastmod>2026-05-17T23:34:32.839Z</lastmod></url>
-  <url><loc>https://offmeta.app/guides</loc><lastmod>2026-05-17T23:34:32.839Z</lastmod></url>
-  <url><loc>https://offmeta.app/about</loc><lastmod>2026-05-17T23:34:32.839Z</lastmod></url>
-  <url><loc>https://offmeta.app/privacy</loc><lastmod>2026-05-17T23:34:32.839Z</lastmod></url>
-  <url><loc>https://offmeta.app/terms</loc><lastmod>2026-05-17T23:34:32.839Z</lastmod></url>
-  <url><loc>https://offmeta.app/contact</loc><lastmod>2026-05-17T23:34:32.839Z</lastmod></url>
+  <url><loc>https://offmeta.app/</loc><lastmod>2026-05-28T00:00:00.000Z</lastmod><priority>1.0</priority></url>
+  <url><loc>https://offmeta.app/browse-searches</loc><lastmod>2026-05-28T00:00:00.000Z</lastmod><priority>0.8</priority></url>
+  <url><loc>https://offmeta.app/combos</loc><lastmod>2026-05-28T00:00:00.000Z</lastmod><priority>0.8</priority></url>
+  <url><loc>https://offmeta.app/guides</loc><lastmod>2026-05-28T00:00:00.000Z</lastmod><priority>0.8</priority></url>
+  <url><loc>https://offmeta.app/guides/search-by-creature-type</loc><lastmod>2026-05-28T00:00:00.000Z</lastmod><priority>0.7</priority></url>
+  <url><loc>https://offmeta.app/guides/filter-by-color</loc><lastmod>2026-05-28T00:00:00.000Z</lastmod><priority>0.7</priority></url>
+  <url><loc>https://offmeta.app/guides/budget-price-filters</loc><lastmod>2026-05-28T00:00:00.000Z</lastmod><priority>0.7</priority></url>
+  <url><loc>https://offmeta.app/guides/format-legality-search</loc><lastmod>2026-05-28T00:00:00.000Z</lastmod><priority>0.7</priority></url>
+  <url><loc>https://offmeta.app/guides/keyword-ability-search</loc><lastmod>2026-05-28T00:00:00.000Z</lastmod><priority>0.7</priority></url>
+  <url><loc>https://offmeta.app/guides/ramp-and-card-draw</loc><lastmod>2026-05-28T00:00:00.000Z</lastmod><priority>0.7</priority></url>
+  <url><loc>https://offmeta.app/guides/tribal-synergies-for-commander</loc><lastmod>2026-05-28T00:00:00.000Z</lastmod><priority>0.7</priority></url>
+  <url><loc>https://offmeta.app/guides/token-and-sacrifice-synergies</loc><lastmod>2026-05-28T00:00:00.000Z</lastmod><priority>0.7</priority></url>
+  <url><loc>https://offmeta.app/guides/etb-and-flicker-combos</loc><lastmod>2026-05-28T00:00:00.000Z</lastmod><priority>0.7</priority></url>
+  <url><loc>https://offmeta.app/guides/multi-constraint-complex-search</loc><lastmod>2026-05-28T00:00:00.000Z</lastmod><priority>0.7</priority></url>
+  <url><loc>https://offmeta.app/ai</loc><lastmod>2026-05-28T00:00:00.000Z</lastmod><priority>0.7</priority></url>
+  <url><loc>https://offmeta.app/docs</loc><lastmod>2026-05-28T00:00:00.000Z</lastmod><priority>0.6</priority></url>
+  <url><loc>https://offmeta.app/docs/syntax</loc><lastmod>2026-05-28T00:00:00.000Z</lastmod><priority>0.6</priority></url>
+  <url><loc>https://offmeta.app/about</loc><lastmod>2026-05-28T00:00:00.000Z</lastmod><priority>0.5</priority></url>
 </urlset>

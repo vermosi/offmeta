@@ -2,8 +2,30 @@ import fs from 'node:fs/promises';
 
 const SITE_URL = 'https://offmeta.app';
 const OUTPUT = 'public/sitemap.xml';
+// Keep in sync with real routes in src/AppRoutes.tsx + supabase/functions/sitemap.
+// Search-first focus (mem://product/core-focus) — Tier-3 routes are excluded.
 const STATIC_PATHS = [
-  '/', '/browse', '/deckbuilder', '/cards', '/guides', '/about', '/privacy', '/terms', '/contact',
+  '/',
+  '/browse-searches',
+  '/combos',
+  '/guides',
+  '/ai',
+  '/docs',
+  '/docs/syntax',
+  '/about',
+];
+
+const GUIDE_SLUGS = [
+  'search-by-creature-type',
+  'filter-by-color',
+  'budget-price-filters',
+  'format-legality-search',
+  'keyword-ability-search',
+  'ramp-and-card-draw',
+  'tribal-synergies-for-commander',
+  'token-and-sacrifice-synergies',
+  'etb-and-flicker-combos',
+  'multi-constraint-complex-search',
 ];
 
 function slugifyCardName(name) {
@@ -49,6 +71,8 @@ function buildSitemap(paths) {
 
 const popularCards = await fetchPopularCardNames();
 const cardPaths = popularCards.map((name) => `/cards/${slugifyCardName(name)}`);
-const xml = buildSitemap([...STATIC_PATHS, ...cardPaths]);
+const guidePaths = GUIDE_SLUGS.map((slug) => `/guides/${slug}`);
+const allPaths = [...STATIC_PATHS, ...guidePaths, ...cardPaths];
+const xml = buildSitemap(allPaths);
 await fs.writeFile(OUTPUT, xml, 'utf8');
-console.log(`Generated sitemap with ${STATIC_PATHS.length + cardPaths.length} URLs.`);
+console.log(`Generated sitemap with ${allPaths.length} URLs.`);
