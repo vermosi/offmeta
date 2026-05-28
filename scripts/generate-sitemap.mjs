@@ -2,8 +2,30 @@ import fs from 'node:fs/promises';
 
 const SITE_URL = 'https://offmeta.app';
 const OUTPUT = 'public/sitemap.xml';
+// Keep in sync with real routes in src/AppRoutes.tsx + supabase/functions/sitemap.
+// Search-first focus (mem://product/core-focus) — Tier-3 routes are excluded.
 const STATIC_PATHS = [
-  '/', '/browse', '/deckbuilder', '/cards', '/guides', '/about', '/privacy', '/terms', '/contact',
+  '/',
+  '/browse-searches',
+  '/combos',
+  '/guides',
+  '/ai',
+  '/docs',
+  '/docs/syntax',
+  '/about',
+];
+
+const GUIDE_SLUGS = [
+  'search-by-creature-type',
+  'filter-by-color',
+  'budget-price-filters',
+  'format-legality-search',
+  'keyword-ability-search',
+  'ramp-and-card-draw',
+  'tribal-synergies-for-commander',
+  'token-and-sacrifice-synergies',
+  'etb-and-flicker-combos',
+  'multi-constraint-complex-search',
 ];
 
 function slugifyCardName(name) {
