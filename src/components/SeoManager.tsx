@@ -66,10 +66,24 @@ export function SeoManager({
       ? buildSearchCanonical(compiledQuery)
       : 'https://offmeta.app/';
 
-    // SEO title + description
+    // SEO title + description — must stay within 60 chars including suffix.
+    const MAX_TITLE = 60;
+    const candidates = [
+      `${originalQuery} — MTG Card Search | OffMeta`,
+      `${originalQuery} — MTG Search | OffMeta`,
+      `${originalQuery} — OffMeta`,
+      `${originalQuery}`,
+    ];
+    let title = candidates.find((c) => c.length <= MAX_TITLE) ?? candidates[candidates.length - 1];
+    if (title.length > MAX_TITLE) {
+      // Truncate query itself, preserve " | OffMeta" suffix for brand recognition.
+      const suffix = ' | OffMeta';
+      const budget = MAX_TITLE - suffix.length - 1; // -1 for ellipsis
+      title = `${originalQuery.slice(0, Math.max(1, budget)).trimEnd()}…${suffix}`;
+    }
     const desc = `Find ${totalCards} Magic: The Gathering cards matching "${originalQuery}" — off-meta picks, alternatives & synergies.`;
     applySeoMeta({
-      title: `${originalQuery} — MTG Card Search | OffMeta`,
+      title,
       description: desc.slice(0, 160),
       url: canonicalUrl,
       type: 'website',
