@@ -11,7 +11,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { getCorsHeaders, validateAuth } from '../_shared/auth.ts';
+import { getCorsHeaders, requireServiceOrPipelineKey } from '../_shared/auth.ts';
 import { validateEnv } from '../_shared/env.ts';
 import { createLogger } from '../_shared/logger.ts';
 
@@ -267,13 +267,8 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const auth = await validateAuth(req);
-  if (!auth.authorized) {
-    return new Response(JSON.stringify({ error: auth.error }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
+  const authCheck = await requireServiceOrPipelineKey(req, corsHeaders);
+  if (!authCheck.authorized) return authCheck.response;
 
   const startTime = Date.now();
 

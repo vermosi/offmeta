@@ -12,7 +12,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { getCorsHeaders } from '../_shared/auth.ts';
+import { getCorsHeaders, requireServiceOrPipelineKey } from '../_shared/auth.ts';
 import { createLogger } from '../_shared/logger.ts';
 
 const BATCH_SIZE = 75;
@@ -27,6 +27,10 @@ serve(async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const authCheck = await requireServiceOrPipelineKey(req, corsHeaders);
+  if (!authCheck.authorized) return authCheck.response;
+
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;

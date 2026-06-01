@@ -443,6 +443,36 @@ export function requireServiceRole(
   return { authorized: true };
 }
 
+/**
+ * Pipeline auth: accept service-role bearer, OR a shared pipeline key passed
+ * in the JSON request body as `pipeline_key`. Use for internal cron/webhook
+ * jobs that must not be callable by anonymous browser visitors.
+ */
+export async function requireServiceOrPipelineKey(
+  req: Request,
+  corsHeaders: Record<string, string>,
+): Promise<{ authorized: true } | { authorized: false; response: Response }> {
+  const serviceCheck = requireServiceRole(req, corsHeaders);
+  if (serviceCheck.authorized) return serviceCheck;
+
+  const pipelineKey = Deno.env.get('OFFMETA_PIPELINE_KEY');
+  if (pipelineKey) {
+    try {
+      const bodyText = await req.clone().text();
+      if (bodyText) {
+        const parsed = JSON.parse(bodyText);
+        if (parsed && parsed.pipeline_key === pipelineKey) {
+          return { authorized: true };
+        }
+      }
+    } catch {
+      /* fall through */
+    }
+  }
+
+  return serviceCheck;
+}
+
 export async function requireAdmin(
   req: Request,
   corsHeaders: Record<string, string>,

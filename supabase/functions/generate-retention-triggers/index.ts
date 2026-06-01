@@ -2,7 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 import { validateEnv } from '../_shared/env.ts';
-import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
+import { requireServiceOrPipelineKey, getCorsHeaders } from '../_shared/auth.ts';
 
 const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = validateEnv([
   'SUPABASE_URL',
@@ -17,13 +17,8 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const auth = await validateAuth(req);
-  if (!auth.authorized || (auth.role !== 'service' && auth.role !== 'api')) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
+  const authCheck = await requireServiceOrPipelineKey(req, corsHeaders);
+  if (!authCheck.authorized) return authCheck.response;
 
   const { data, error } = await supabase.rpc('run_retention_trigger_jobs');
 
