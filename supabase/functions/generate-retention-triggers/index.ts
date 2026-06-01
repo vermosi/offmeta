@@ -17,13 +17,8 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const auth = await validateAuth(req);
-  if (!auth.authorized || (auth.role !== 'service' && auth.role !== 'api')) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
+  const authCheck = await requireServiceOrPipelineKey(req, corsHeaders);
+  if (!authCheck.authorized) return authCheck.response;
 
   const { data, error } = await supabase.rpc('run_retention_trigger_jobs');
 
