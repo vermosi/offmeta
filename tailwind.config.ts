@@ -84,6 +84,10 @@ export default {
           DEFAULT: 'hsl(var(--warning))',
           foreground: 'hsl(var(--warning-foreground))',
         },
+        info: {
+          DEFAULT: 'hsl(var(--info))',
+          foreground: 'hsl(var(--info-foreground))',
+        },
         overlay: 'hsl(var(--overlay))',
         contrast: {
           DEFAULT: 'hsl(var(--contrast))',
@@ -112,6 +116,65 @@ export default {
         gradient: {
           start: 'hsl(var(--gradient-start))',
           end: 'hsl(var(--gradient-end))',
+        },
+        mtg: {
+          white: {
+            DEFAULT: 'hsl(var(--mtg-white))',
+            foreground: 'hsl(var(--mtg-white-foreground))',
+          },
+          blue: {
+            DEFAULT: 'hsl(var(--mtg-blue))',
+            foreground: 'hsl(var(--mtg-blue-foreground))',
+          },
+          black: {
+            DEFAULT: 'hsl(var(--mtg-black))',
+            foreground: 'hsl(var(--mtg-black-foreground))',
+          },
+          red: {
+            DEFAULT: 'hsl(var(--mtg-red))',
+            foreground: 'hsl(var(--mtg-red-foreground))',
+          },
+          green: {
+            DEFAULT: 'hsl(var(--mtg-green))',
+            foreground: 'hsl(var(--mtg-green-foreground))',
+          },
+          colorless: {
+            DEFAULT: 'hsl(var(--mtg-colorless))',
+            foreground: 'hsl(var(--mtg-colorless-foreground))',
+          },
+        },
+        rarity: {
+          common: {
+            DEFAULT: 'hsl(var(--rarity-common))',
+            foreground: 'hsl(var(--rarity-common-foreground))',
+          },
+          uncommon: {
+            DEFAULT: 'hsl(var(--rarity-uncommon))',
+            foreground: 'hsl(var(--rarity-uncommon-foreground))',
+          },
+          rare: {
+            DEFAULT: 'hsl(var(--rarity-rare))',
+            foreground: 'hsl(var(--rarity-rare-foreground))',
+          },
+          mythic: {
+            DEFAULT: 'hsl(var(--rarity-mythic))',
+            foreground: 'hsl(var(--rarity-mythic-foreground))',
+          },
+        },
+        analytics: {
+          local: 'hsl(var(--analytics-local))',
+          cache: 'hsl(var(--analytics-cache))',
+          scryfall: 'hsl(var(--analytics-scryfall))',
+        },
+        deck: {
+          creature: 'hsl(var(--deck-creature))',
+          instant: 'hsl(var(--deck-instant))',
+          sorcery: 'hsl(var(--deck-sorcery))',
+          artifact: 'hsl(var(--deck-artifact))',
+          enchantment: 'hsl(var(--deck-enchantment))',
+          planeswalker: 'hsl(var(--deck-planeswalker))',
+          land: 'hsl(var(--deck-land))',
+          battle: 'hsl(var(--deck-battle))',
         },
       },
       borderRadius: {

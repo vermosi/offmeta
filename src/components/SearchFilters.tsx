@@ -414,7 +414,7 @@ export function SearchFilters({
           className={cn(
             'flex items-center gap-1 py-1 px-2.5 text-xs rounded-md transition-colors h-8 sm:h-9',
             filters.ownedOnly
-              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+              ? 'bg-success/10 text-success border border-success/30'
               : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
           )}
           aria-pressed={!!filters.ownedOnly}

@@ -144,21 +144,21 @@ export const EXAMPLE_QUERIES = [
 export const CONFIDENCE_LEVELS = [
   {
     level: 'High (80-100%)',
-    color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30',
+    color: 'bg-success/10 text-success border-success/30',
     description:
       'The search engine is very confident it understood your query correctly. Results should closely match what you asked for.',
     examples: ['red creatures', 'blue instants', 'legendary dragons'],
   },
   {
     level: 'Medium (50-79%)',
-    color: 'bg-amber-500/10 text-amber-600 border-amber-500/30',
+    color: 'bg-warning/10 text-warning border-warning/30',
     description:
       'The engine made some assumptions about your query. Check the interpretation to see if it matches your intent.',
     examples: ['cards that go infinite', 'combo pieces for Yawgmoth'],
   },
   {
     level: 'Low (<50%)',
-    color: 'bg-red-500/10 text-red-600 border-red-500/30',
+    color: 'bg-destructive/10 text-destructive border-destructive/30',
     description:
       'The engine is uncertain about the translation. Consider rephrasing or using more specific terms.',
     examples: ['that one card from the set with the thing'],

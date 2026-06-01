@@ -54,6 +54,43 @@
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
+    --info: 205 90% 50%;
+    --info-foreground: 0 0% 100%;
+
+    /* MTG color identity tokens */
+    --mtg-white: 45 93% 88%;
+    --mtg-white-foreground: 35 70% 22%;
+    --mtg-blue: 208 90% 66%;
+    --mtg-blue-foreground: 215 70% 18%;
+    --mtg-black: 240 6% 28%;
+    --mtg-black-foreground: 0 0% 96%;
+    --mtg-red: 0 84% 60%;
+    --mtg-red-foreground: 0 0% 100%;
+    --mtg-green: 142 71% 45%;
+    --mtg-green-foreground: 0 0% 100%;
+    --mtg-colorless: 240 5% 82%;
+    --mtg-colorless-foreground: 240 6% 24%;
+
+    /* Domain data visualization tokens */
+    --rarity-common: 270 20% 90%;
+    --rarity-common-foreground: 270 15% 45%;
+    --rarity-uncommon: 220 12% 64%;
+    --rarity-uncommon-foreground: 220 18% 28%;
+    --rarity-rare: 38 92% 55%;
+    --rarity-rare-foreground: 38 90% 20%;
+    --rarity-mythic: 24 95% 58%;
+    --rarity-mythic-foreground: 24 90% 18%;
+    --analytics-local: 152 60% 45%;
+    --analytics-cache: 205 90% 50%;
+    --analytics-scryfall: 38 92% 50%;
+    --deck-creature: 142 71% 45%;
+    --deck-instant: 205 90% 58%;
+    --deck-sorcery: 0 84% 65%;
+    --deck-artifact: 240 5% 64%;
+    --deck-enchantment: 280 75% 64%;
+    --deck-planeswalker: 38 92% 58%;
+    --deck-land: 35 70% 38%;
+    --deck-battle: 24 95% 58%;
     --overlay: 270 45% 6%;
     --contrast: 0 0% 100%;
     --contrast-foreground: 270 45% 6%;
@@ -128,6 +165,43 @@
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 55%;
     --warning-foreground: 0 0% 100%;
+    --info: 205 90% 62%;
+    --info-foreground: 250 50% 8%;
+
+    /* MTG color identity tokens */
+    --mtg-white: 45 93% 82%;
+    --mtg-white-foreground: 35 70% 18%;
+    --mtg-blue: 208 85% 58%;
+    --mtg-blue-foreground: 0 0% 100%;
+    --mtg-black: 240 5% 38%;
+    --mtg-black-foreground: 0 0% 96%;
+    --mtg-red: 0 72% 52%;
+    --mtg-red-foreground: 0 0% 100%;
+    --mtg-green: 142 62% 42%;
+    --mtg-green-foreground: 0 0% 100%;
+    --mtg-colorless: 240 5% 66%;
+    --mtg-colorless-foreground: 240 6% 18%;
+
+    /* Domain data visualization tokens */
+    --rarity-common: 252 30% 18%;
+    --rarity-common-foreground: 258 18% 70%;
+    --rarity-uncommon: 220 12% 72%;
+    --rarity-uncommon-foreground: 220 18% 18%;
+    --rarity-rare: 38 92% 58%;
+    --rarity-rare-foreground: 38 90% 18%;
+    --rarity-mythic: 24 95% 62%;
+    --rarity-mythic-foreground: 24 90% 14%;
+    --analytics-local: 152 60% 50%;
+    --analytics-cache: 205 90% 60%;
+    --analytics-scryfall: 38 92% 55%;
+    --deck-creature: 142 60% 50%;
+    --deck-instant: 205 90% 62%;
+    --deck-sorcery: 0 78% 66%;
+    --deck-artifact: 240 5% 70%;
+    --deck-enchantment: 280 75% 70%;
+    --deck-planeswalker: 38 92% 62%;
+    --deck-land: 35 70% 48%;
+    --deck-battle: 24 95% 62%;
     --overlay: 250 50% 5%;
     --contrast: 0 0% 100%;
     --contrast-foreground: 250 50% 5%;

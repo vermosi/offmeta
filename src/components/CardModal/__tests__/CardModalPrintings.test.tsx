@@ -213,8 +213,8 @@ describe('CardModalPrintings', () => {
       <CardModalPrintings {...defaultProps} isMobile={false} />,
     );
     
-    expect(container.querySelector('.bg-orange-500')).toBeInTheDocument(); // mythic
-    expect(container.querySelector('.bg-amber-500')).toBeInTheDocument(); // rare
-    expect(container.querySelector('.bg-slate-400')).toBeInTheDocument(); // uncommon
+    expect(container.querySelector('.bg-rarity-mythic')).toBeInTheDocument(); // mythic
+    expect(container.querySelector('.bg-rarity-rare')).toBeInTheDocument(); // rare
+    expect(container.querySelector('.bg-rarity-uncommon')).toBeInTheDocument(); // uncommon
   });
 });

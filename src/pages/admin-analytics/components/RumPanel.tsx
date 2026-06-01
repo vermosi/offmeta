@@ -122,10 +122,10 @@ function VitalCard({ name, stats }: { name: VitalName; stats: VitalStats }) {
 
   const ratingColor =
     p75Rating === 'good'
-      ? 'text-emerald-500'
+      ? 'text-success'
       : p75Rating === 'needs-improvement'
-        ? 'text-amber-500'
-        : 'text-red-500';
+        ? 'text-rarity-rare'
+        : 'text-destructive';
 
   const RatingIcon =
     p75Rating === 'good' ? CheckCircle2 : p75Rating === 'needs-improvement' ? AlertCircle : AlertTriangle;
@@ -168,7 +168,7 @@ function VitalCard({ name, stats }: { name: VitalName; stats: VitalStats }) {
           </div>
           <div className="mt-3 pt-2 border-t border-border flex items-center justify-between text-[10px] text-muted-foreground">
             <span>{stats.count.toLocaleString()} samples</span>
-            <span className="text-emerald-500 font-medium">{stats.goodPct}% good</span>
+            <span className="text-success font-medium">{stats.goodPct}% good</span>
           </div>
         </>
       )}

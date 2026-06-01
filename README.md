@@ -75,10 +75,11 @@ Run security tests:
 
 ```bash
 npm run test -- src/lib/security
-# Optional equivalent: bun run test -- src/lib/security
 ```
 
-Run E2E and accessibility tests locally:
+This project uses npm only; `package-lock.json` is the sole dependency lockfile source.
+
+Run E2E and accessibility tests:
 
 ```bash
 npx playwright test --project=chromium --grep @e2e-smoke

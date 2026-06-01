@@ -16,10 +16,10 @@ const badgeVariants = cva(
         // Card rarity variants
         common: 'border-transparent bg-secondary text-muted-foreground',
         uncommon:
-          'border-transparent bg-zinc-200/50 text-zinc-700 dark:bg-zinc-700/50 dark:text-zinc-300',
-        rare: 'border-transparent bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
+          'border-transparent bg-rarity-uncommon/20 text-rarity-uncommon',
+        rare: 'border-transparent bg-rarity-rare/20 text-rarity-rare',
         mythic:
-          'border-transparent bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
+          'border-transparent bg-rarity-mythic/20 text-rarity-mythic',
         // Status badges
         success:
           'border-transparent bg-success/15 text-success dark:bg-success/20 dark:text-success',

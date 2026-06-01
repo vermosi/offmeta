@@ -260,9 +260,9 @@ function MoverRow({ mover }: { mover: PriceMover }) {
         <div className="flex items-center gap-1.5 mt-0.5">
           {mover.rarity && (
             <span className={`text-[10px] capitalize ${
-              mover.rarity === 'mythic' ? 'text-orange-500' :
-              mover.rarity === 'rare' ? 'text-amber-500' :
-              mover.rarity === 'uncommon' ? 'text-slate-400' :
+              mover.rarity === 'mythic' ? 'text-rarity-mythic' :
+              mover.rarity === 'rare' ? 'text-rarity-rare' :
+              mover.rarity === 'uncommon' ? 'text-rarity-uncommon' :
               'text-muted-foreground'
             }`}>
               {mover.rarity}
@@ -453,9 +453,9 @@ export default function MarketTrends() {
                     className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
                       filters.direction === opt.value
                         ? opt.value === 'up'
-                          ? 'bg-emerald-500/15 text-emerald-600 border border-emerald-500/30'
+                          ? 'bg-analytics-local/15 text-success border border-success/30'
                           : opt.value === 'down'
-                            ? 'bg-red-500/15 text-red-600 border border-red-500/30'
+                            ? 'bg-destructive/15 text-destructive border border-destructive/30'
                             : 'bg-primary text-primary-foreground'
                         : 'text-muted-foreground hover:text-foreground'
                     }`}

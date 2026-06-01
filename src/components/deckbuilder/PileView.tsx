@@ -21,8 +21,8 @@ const PILE_COLORS: { key: string; label: string }[] = [
 ];
 
 const COLOR_BG: Record<string, string> = {
-  W: 'bg-yellow-50/10', U: 'bg-blue-950/20', B: 'bg-gray-950/30',
-  R: 'bg-red-950/20', G: 'bg-green-950/20', M: 'bg-amber-950/20',
+  W: 'bg-mtg-white/10', U: 'bg-mtg-blue/20', B: 'bg-mtg-black/30',
+  R: 'bg-mtg-red/20', G: 'bg-mtg-green/20', M: 'bg-rarity-rare/20',
   C: 'bg-secondary/30', L: 'bg-secondary/20',
 };
 

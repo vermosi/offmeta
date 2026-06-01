@@ -15,7 +15,7 @@ npm run dev
 
 ## Tooling convention
 
-Use `npm` as the canonical task runner because CI and required checks run npm scripts. Bun is supported as an optional local equivalent for common test commands; see [`docs/testing.md`](./testing.md) for the canonical test command set.
+Use `npm` as the only supported package manager and task runner. CI and required checks install dependencies with `npm ci`, and `package-lock.json` is the sole dependency lockfile source. Do not commit Bun lockfiles (`bun.lock` or `bun.lockb`); if dependency metadata changes, update `package-lock.json` with npm. See [`docs/testing.md`](./testing.md) for the canonical test command set.
 
 ## Project scripts
 

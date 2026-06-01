@@ -40,14 +40,14 @@ function ManaCurve({ distribution }: { distribution: number[] }) {
 
 // ── Type Distribution ──
 const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
-  Creature: { label: 'Creatures', color: 'bg-green-500' },
-  Instant: { label: 'Instants', color: 'bg-blue-400' },
-  Sorcery: { label: 'Sorceries', color: 'bg-red-400' },
-  Artifact: { label: 'Artifacts', color: 'bg-zinc-400' },
-  Enchantment: { label: 'Enchantments', color: 'bg-purple-400' },
-  Planeswalker: { label: 'Planeswalkers', color: 'bg-amber-400' },
-  Land: { label: 'Lands', color: 'bg-yellow-700' },
-  Battle: { label: 'Battles', color: 'bg-orange-400' },
+  Creature: { label: 'Creatures', color: 'bg-deck-creature' },
+  Instant: { label: 'Instants', color: 'bg-deck-instant' },
+  Sorcery: { label: 'Sorceries', color: 'bg-deck-sorcery' },
+  Artifact: { label: 'Artifacts', color: 'bg-deck-artifact' },
+  Enchantment: { label: 'Enchantments', color: 'bg-deck-enchantment' },
+  Planeswalker: { label: 'Planeswalkers', color: 'bg-deck-planeswalker' },
+  Land: { label: 'Lands', color: 'bg-deck-land' },
+  Battle: { label: 'Battles', color: 'bg-deck-battle' },
 };
 
 function TypeDistribution({
@@ -82,12 +82,12 @@ function TypeDistribution({
 
 // ── Color Pie ──
 const COLOR_MAP: Record<string, { label: string; color: string }> = {
-  W: { label: 'White', color: 'bg-yellow-100 dark:bg-yellow-200' },
-  U: { label: 'Blue', color: 'bg-blue-400 dark:bg-blue-500' },
-  B: { label: 'Black', color: 'bg-zinc-700 dark:bg-zinc-600' },
-  R: { label: 'Red', color: 'bg-red-500 dark:bg-red-600' },
-  G: { label: 'Green', color: 'bg-green-500 dark:bg-green-600' },
-  C: { label: 'Colorless', color: 'bg-zinc-300 dark:bg-zinc-400' },
+  W: { label: 'White', color: 'bg-mtg-white' },
+  U: { label: 'Blue', color: 'bg-mtg-blue' },
+  B: { label: 'Black', color: 'bg-mtg-black' },
+  R: { label: 'Red', color: 'bg-mtg-red' },
+  G: { label: 'Green', color: 'bg-mtg-green' },
+  C: { label: 'Colorless', color: 'bg-mtg-colorless' },
 };
 
 function ColorPie({ colorCounts }: { colorCounts: Record<string, number> }) {
