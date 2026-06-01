@@ -62,13 +62,9 @@ describe('SystemStatusPanel', () => {
     expect(failedStatus).toHaveClass('text-destructive');
     expect(failBadge).toHaveClass('text-destructive');
 
-    expect(okStatus.className).not.toMatch(
-      /text-emerald-600|dark:text-emerald-400/,
-    );
-    expect(failedStatus.className).not.toMatch(
-      /text-red-600|dark:text-red-400/,
-    );
-    expect(failBadge.className).not.toMatch(/text-red-600|dark:text-red-400/);
+    expect(okStatus.className).not.toMatch(/text-destructive/);
+    expect(failedStatus.className).not.toMatch(/text-success/);
+    expect(failBadge.className).not.toMatch(/text-success/);
   });
 
   it('uses semantic status tokens in data freshness rows', async () => {
@@ -103,11 +99,7 @@ describe('SystemStatusPanel', () => {
     expect(activeLabel).toHaveClass('text-success');
     expect(pendingLabel).toHaveClass('text-warning');
 
-    expect(activeLabel.className).not.toMatch(
-      /text-emerald-600|dark:text-emerald-400/,
-    );
-    expect(pendingLabel.className).not.toMatch(
-      /text-amber-600|dark:text-amber-400/,
-    );
+    expect(activeLabel.className).not.toMatch(/text-warning/);
+    expect(pendingLabel.className).not.toMatch(/text-success/);
   });
 });

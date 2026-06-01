@@ -59,18 +59,18 @@ export function PipelineHealthIndicator() {
       icon: Sparkles,
       label: 'AI Translation Live',
       classes:
-        'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
+        'bg-success/10 text-success border-success/30',
     },
     deterministic: {
       icon: Cpu,
       label: 'Deterministic Fallback',
       classes:
-        'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30',
+        'bg-warning/10 text-warning border-warning/30',
     },
     error: {
       icon: AlertCircle,
       label: 'Pipeline Error',
-      classes: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30',
+      classes: 'bg-destructive/10 text-destructive border-destructive/30',
     },
   };
 

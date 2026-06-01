@@ -9,9 +9,9 @@ import { ManaSymbol } from '@/components/ManaSymbol';
 
 const RARITY_ORDER = ['mythic', 'rare', 'uncommon', 'common', 'unknown'];
 const RARITY_COLORS: Record<string, string> = {
-  mythic: 'text-orange-400',
-  rare: 'text-yellow-400',
-  uncommon: 'text-zinc-300',
+  mythic: 'text-rarity-mythic',
+  rare: 'text-rarity-rare',
+  uncommon: 'text-rarity-uncommon',
   common: 'text-muted-foreground',
   unknown: 'text-muted-foreground',
 };

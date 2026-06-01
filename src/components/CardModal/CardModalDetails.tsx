@@ -99,7 +99,7 @@ export function CardModalDetails({
         {isReserved && (
           <Badge
             variant="outline"
-            className="bg-amber-500/10 text-amber-600 border-amber-500/30 gap-1"
+            className="bg-rarity-rare/10 text-rarity-rare border-rarity-rare/30 gap-1"
           >
             <Shield className="h-3 w-3" />
             {t('card.reservedList', 'Reserved List')}
@@ -108,7 +108,7 @@ export function CardModalDetails({
         {isFirstPrinting && (
           <Badge
             variant="outline"
-            className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
+            className="bg-success/10 text-success border-success/30"
           >
             {t('card.firstPrinting', 'First Printing')}
           </Badge>
@@ -116,7 +116,7 @@ export function CardModalDetails({
         {isOnlyPrinting && (
           <Badge
             variant="outline"
-            className="bg-purple-500/10 text-purple-600 border-purple-500/30"
+            className="bg-accent/10 text-accent border-accent/30"
           >
             {t('card.onlyPrinting', 'Only Printing')}
           </Badge>
@@ -124,7 +124,7 @@ export function CardModalDetails({
         {isUniqueArt && (
           <Badge
             variant="outline"
-            className="bg-pink-500/10 text-pink-600 border-pink-500/30"
+            className="bg-brand/10 text-brand border-brand/30"
           >
             {t('card.uniqueArt', 'Unique Art')}
           </Badge>

@@ -123,21 +123,21 @@ function HitBar({
     <div className="h-3 rounded-full overflow-hidden bg-muted flex">
       {local > 0 && (
         <div
-          className="bg-emerald-500 transition-all"
+          className="bg-analytics-local transition-all"
           style={{ width: barWidth(local) }}
           title={`Local: ${local}`}
         />
       )}
       {cache > 0 && (
         <div
-          className="bg-sky-500 transition-all"
+          className="bg-analytics-cache transition-all"
           style={{ width: barWidth(cache) }}
           title={`Cache: ${cache}`}
         />
       )}
       {scryfall > 0 && (
         <div
-          className="bg-amber-500 transition-all"
+          className="bg-analytics-scryfall transition-all"
           style={{ width: barWidth(scryfall) }}
           title={`Scryfall: ${scryfall}`}
         />
@@ -158,15 +158,15 @@ function HitLegend({
   return (
     <div className="flex gap-4 mt-1.5 text-[10px] text-muted-foreground">
       <span className="flex items-center gap-1">
-        <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
+        <span className="inline-block h-2 w-2 rounded-full bg-analytics-local" />
         Local ({local.toLocaleString()})
       </span>
       <span className="flex items-center gap-1">
-        <span className="inline-block h-2 w-2 rounded-full bg-sky-500" />
+        <span className="inline-block h-2 w-2 rounded-full bg-analytics-cache" />
         Cache ({cache.toLocaleString()})
       </span>
       <span className="flex items-center gap-1">
-        <span className="inline-block h-2 w-2 rounded-full bg-amber-500" />
+        <span className="inline-block h-2 w-2 rounded-full bg-analytics-scryfall" />
         Scryfall ({scryfall.toLocaleString()})
       </span>
     </div>
@@ -210,19 +210,19 @@ function OperationBreakdown({
             <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden flex">
               {v.local > 0 && (
                 <div
-                  className="bg-emerald-500"
+                  className="bg-analytics-local"
                   style={{ width: barWidth(v.local, opTotal) }}
                 />
               )}
               {v.cache > 0 && (
                 <div
-                  className="bg-sky-500"
+                  className="bg-analytics-cache"
                   style={{ width: barWidth(v.cache, opTotal) }}
                 />
               )}
               {v.scryfall > 0 && (
                 <div
-                  className="bg-amber-500"
+                  className="bg-analytics-scryfall"
                   style={{ width: barWidth(v.scryfall, opTotal) }}
                 />
               )}

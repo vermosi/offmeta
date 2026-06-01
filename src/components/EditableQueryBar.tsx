@@ -148,7 +148,7 @@ export const EditableQueryBar = memo(function EditableQueryBar({
         <div className="flex items-center gap-2 text-xs">
           <span className="text-muted-foreground">{t('queryBar.label', 'Scryfall query · click to edit')}</span>
           {showConfidenceWarning && (
-            <span className="text-amber-600 dark:text-amber-400 font-medium">
+            <span className="text-warning font-medium">
               {t('queryBar.lowConfidence', 'Low confidence')}
             </span>
           )}
@@ -220,7 +220,7 @@ export const EditableQueryBar = memo(function EditableQueryBar({
 
       {/* Validation error */}
       {validationError && (
-        <div className="flex items-start gap-2 p-2 rounded-lg border border-red-500/30 bg-red-500/5 text-red-600 dark:text-red-400 text-xs">
+        <div className="flex items-start gap-2 p-2 rounded-lg border border-destructive/30 bg-destructive/5 text-destructive text-xs">
           <AlertTriangle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
           <p>{validationError}</p>
         </div>
@@ -240,8 +240,8 @@ export const EditableQueryBar = memo(function EditableQueryBar({
             className={cn(
               'font-mono text-sm pr-8 h-10',
               validationError &&
-                'border-red-500/50 focus-visible:ring-red-500/20',
-              hasChanges && !validationError && 'border-blue-500/50',
+                'border-destructive/50 focus-visible:ring-destructive/20',
+              hasChanges && !validationError && 'border-info/50',
             )}
           placeholder={t('queryBar.placeholder', 'Enter Scryfall query...')}
             disabled={isLoading}

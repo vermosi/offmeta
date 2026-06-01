@@ -6,8 +6,8 @@
 
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/core/utils';
-import type { CardModalPrintingsProps } from './types';
 import { useTranslation } from '@/lib/i18n';
+import type { CardModalPrintingsProps } from './types';
 
 export function CardModalPrintings({
   printings,
@@ -47,17 +47,17 @@ export function CardModalPrintings({
                   <span
                     className={cn(
                       'h-2 w-2 rounded-full flex-shrink-0',
-                      printing.rarity === 'mythic' && 'bg-orange-500',
-                      printing.rarity === 'rare' && 'bg-amber-500',
-                      printing.rarity === 'uncommon' && 'bg-slate-400',
-                      printing.rarity === 'common' && 'bg-slate-600',
+                      printing.rarity === 'mythic' && 'bg-rarity-mythic',
+                      printing.rarity === 'rare' && 'bg-rarity-rare',
+                      printing.rarity === 'uncommon' && 'bg-rarity-uncommon',
+                      printing.rarity === 'common' && 'bg-rarity-common',
                     )}
                   />
                   <span className="truncate text-foreground text-xs">
                     {printing.set_name}
                   </span>
                 </div>
-                <span className="text-xs font-medium text-emerald-500">
+                <span className="text-xs font-medium text-success">
                   {printing.prices.usd
                     ? `$${printing.prices.usd}`
                     : printing.prices.eur
@@ -117,10 +117,10 @@ export function CardModalPrintings({
                 <span
                   className={cn(
                     'h-2 w-2 rounded-full flex-shrink-0',
-                    printing.rarity === 'mythic' && 'bg-orange-500',
-                    printing.rarity === 'rare' && 'bg-amber-500',
-                    printing.rarity === 'uncommon' && 'bg-slate-400',
-                    printing.rarity === 'common' && 'bg-slate-600',
+                    printing.rarity === 'mythic' && 'bg-rarity-mythic',
+                    printing.rarity === 'rare' && 'bg-rarity-rare',
+                    printing.rarity === 'uncommon' && 'bg-rarity-uncommon',
+                    printing.rarity === 'common' && 'bg-rarity-common',
                   )}
                 />
                 <span className="truncate text-foreground text-xs">
@@ -130,23 +130,23 @@ export function CardModalPrintings({
                   </span>
                 </span>
               </div>
-              <span className="text-right font-medium text-emerald-500 text-xs">
+              <span className="text-right font-medium text-success text-xs">
                 {printing.prices.usd ? `$${printing.prices.usd}` : '—'}
               </span>
-              <span className="text-right font-medium text-purple-500 text-xs">
+              <span className="text-right font-medium text-accent text-xs">
                 {printing.prices.usd_foil
                   ? `$${printing.prices.usd_foil}`
                   : '—'}
               </span>
-              <span className="text-right font-medium text-blue-500 text-xs">
+              <span className="text-right font-medium text-info text-xs">
                 {printing.prices.eur ? `€${printing.prices.eur}` : '—'}
               </span>
-              <span className="text-right font-medium text-indigo-400 text-xs">
+              <span className="text-right font-medium text-primary text-xs">
                 {printing.prices.eur_foil
                   ? `€${printing.prices.eur_foil}`
                   : '—'}
               </span>
-              <span className="text-right font-medium text-amber-500 text-xs">
+              <span className="text-right font-medium text-rarity-rare text-xs">
                 {printing.prices.tix ? printing.prices.tix : '—'}
               </span>
             </button>

@@ -162,7 +162,7 @@ export function PrintingPickerPopover({ cardName, currentScryfallId, onSelect }:
                   <span className="text-[10px] text-muted-foreground shrink-0 mr-2">
                     #{p.collector_number} · {p.lang.toUpperCase()}
                   </span>
-                  <span className="text-[10px] text-emerald-500 shrink-0 font-medium">
+                  <span className="text-[10px] text-success shrink-0 font-medium">
                     {p.prices.usd ? `$${p.prices.usd}` : '—'}
                   </span>
                   {isSelected && <Check className="h-3 w-3 text-primary ml-1 shrink-0" />}
