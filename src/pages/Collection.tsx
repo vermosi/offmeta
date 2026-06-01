@@ -72,6 +72,8 @@ export default function Collection() {
     [collection],
   );
 
+  useNoIndex(true);
+
   const handleExportCsv = useCallback(() => {
     const header = 'Card Name,Quantity,Foil,Price (USD),Date Added\n';
     const rows = collection
@@ -114,8 +116,6 @@ export default function Collection() {
       </div>
     );
   }
-
-  useNoIndex(true);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

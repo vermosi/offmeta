@@ -72,8 +72,8 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch curated search pages, top cards, public decks, and SEO pages in parallel
-    const [curatedResult, cardsResult, decksResult, seoResult] = await Promise.all([
+    // Fetch curated search pages, top cards, and SEO pages in parallel
+    const [curatedResult, cardsResult, seoResult] = await Promise.all([
       supabase
         .from('curated_searches')
         .select('slug, priority, updated_at')
@@ -86,12 +86,6 @@ serve(async (req) => {
         .order('updated_at', { ascending: false })
         .limit(500),
       supabase
-        .from('decks')
-        .select('id, updated_at')
-        .eq('is_public', true)
-        .order('updated_at', { ascending: false })
-        .limit(200),
-      supabase
         .from('seo_pages')
         .select('slug, updated_at')
         .eq('status', 'published')
@@ -100,7 +94,6 @@ serve(async (req) => {
 
     const curatedSearches = curatedResult.data;
     const cards = cardsResult.data;
-    const decks = decksResult.data;
     const seoPages = seoResult.data;
     const today = new Date().toISOString().split('T')[0];
 

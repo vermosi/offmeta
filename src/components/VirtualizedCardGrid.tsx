@@ -6,6 +6,7 @@
 import { useRef, useCallback, useEffect, useState } from 'react';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { CardItem } from '@/components/CardItem';
+import { buildVirtualizedRowKey } from '@/components/virtualizedRowKey';
 import type { ScryfallCard } from '@/types/card';
 
 /** Track which card index has keyboard focus within the grid */
@@ -89,21 +90,6 @@ const BREAKPOINTS = [
   { minWidth: 768, columns: 3 }, // md
   { minWidth: 0, columns: 2 },   // mobile
 ];
-
-export function buildVirtualizedRowKey(
-  cards: ScryfallCard[],
-  columns: number,
-  cardHeight: number,
-  index: number,
-): string {
-  const startIndex = index * columns;
-  const rowCardIds = cards
-    .slice(startIndex, startIndex + columns)
-    .map((card) => card.id)
-    .join('|');
-
-  return `${columns}-${cardHeight}-${index}-${rowCardIds}`;
-}
 
 export function VirtualizedCardGrid({
   cards,

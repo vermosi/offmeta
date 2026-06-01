@@ -6,13 +6,13 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_ADMIN_QUERY_LENGTH = 200;
 
 function sanitizeInput(input: string): string {
-  const nullByteRegex = /\x00/g;
-  const controlCharRegex = /[\x01-\x08\x0B\x0C\x0E-\x1F\x7F]/g;
   const zeroWidthRegex = /[\u200B-\u200D\uFEFF]/g;
+  const nullByte = String.fromCharCode(0);
+  const controlChars = new RegExp(`[${String.fromCharCode(1)}-${String.fromCharCode(8)}${String.fromCharCode(11)}${String.fromCharCode(12)}${String.fromCharCode(14)}-${String.fromCharCode(31)}${String.fromCharCode(127)}]`, 'g');
 
   return input
-    .replace(nullByteRegex, '')
-    .replace(controlCharRegex, '')
+    .replaceAll(nullByte, '')
+    .replace(controlChars, '')
     .replace(zeroWidthRegex, '')
     .replace(/\s+/g, ' ')
     .trim();

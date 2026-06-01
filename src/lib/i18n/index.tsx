@@ -88,6 +88,25 @@ export function I18nProvider({ children }: I18nProviderProps) {
 
   const dictionary = loadedDictionaries[locale] ?? EMPTY_DICT;
 
+  const loadDictionary = useCallback((target: SupportedLocale) => {
+    if (loadedDictionaries[target]) return;
+    const loader = LOCALE_LOADERS[target] ?? LOCALE_LOADERS.en;
+    loader()
+      .then((mod) => {
+        loadedDictionaries[target] = mod.default;
+        // Only re-render if the freshly loaded dictionary will actually
+        // change visible text. Every `t(key, fallback)` call already returns
+        // the inline English fallback, so loading the English dictionary
+        // doesn't change a single string — skip the re-render to avoid
+        // flushing every i18n consumer (Index, Header, etc.) for nothing.
+        if (target !== 'en') force((n) => n + 1);
+      })
+      .catch(() => {
+        loadedDictionaries[target] = {};
+        // Same reasoning: an empty dict falls back to English, no re-render needed.
+      });
+  }, []);
+
   // Resolve the user's preferred locale only after first paint.
   useEffect(() => {
     let cancelled = false;
@@ -118,33 +137,14 @@ export function I18nProvider({ children }: I18nProviderProps) {
       cancelled = true;
       cancel();
     };
-  }, []);
+  }, [loadDictionary]);
 
   // Re-load dictionary whenever the user explicitly switches locales.
   useEffect(() => {
     if (loadedDictionaries[locale]) return;
     const cancel = scheduleIdle(() => loadDictionary(locale));
     return cancel;
-  }, [locale]);
-
-  function loadDictionary(target: SupportedLocale) {
-    if (loadedDictionaries[target]) return;
-    const loader = LOCALE_LOADERS[target] ?? LOCALE_LOADERS.en;
-    loader()
-      .then((mod) => {
-        loadedDictionaries[target] = mod.default;
-        // Only re-render if the freshly loaded dictionary will actually
-        // change visible text. Every `t(key, fallback)` call already returns
-        // the inline English fallback, so loading the English dictionary
-        // doesn't change a single string — skip the re-render to avoid
-        // flushing every i18n consumer (Index, Header, etc.) for nothing.
-        if (target !== 'en') force((n) => n + 1);
-      })
-      .catch(() => {
-        loadedDictionaries[target] = {};
-        // Same reasoning: an empty dict falls back to English, no re-render needed.
-      });
-  }
+  }, [locale, loadDictionary]);
 
   const setLocale = useCallback((newLocale: SupportedLocale) => {
     setLocaleState(newLocale);

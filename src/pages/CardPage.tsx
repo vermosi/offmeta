@@ -126,7 +126,8 @@ const CardPage = () => {
 
   // Reset face when card changes
   useEffect(() => {
-    setFaceIndex(0);
+    const timeoutId = window.setTimeout(() => setFaceIndex(0), 0);
+    return () => window.clearTimeout(timeoutId);
   }, [card?.name]);
 
   // Activate similar cards on load

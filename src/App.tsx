@@ -6,7 +6,7 @@
  * dependency chains.
  */
 
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider } from 'next-themes';
 import { I18nProvider } from '@/lib/i18n';
@@ -23,15 +23,7 @@ const routeFallback = <div className="min-h-screen bg-background" />;
  */
 function RouteSwitch() {
   const location = useLocation();
-  const [hasNavigatedAway, setHasNavigatedAway] = useState(
-    () => location.pathname !== '/',
-  );
-
-  useEffect(() => {
-    if (location.pathname !== '/') setHasNavigatedAway(true);
-  }, [location.pathname]);
-
-  if (!hasNavigatedAway) {
+  if (location.pathname === '/') {
     return (
       <Routes>
         <Route path="/" element={<Index />} />

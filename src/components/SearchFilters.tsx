@@ -162,9 +162,12 @@ export function SearchFilters({
   }, [filteredCards, hasActiveFilters, onFilteredCards, filters]);
 
   useEffect(() => {
-    if (applyResetIfNeeded()) {
-      setIsOpen(false);
+    if (!applyResetIfNeeded()) {
+      return undefined;
     }
+
+    const timeoutId = window.setTimeout(() => setIsOpen(false), 0);
+    return () => window.clearTimeout(timeoutId);
   }, [applyResetIfNeeded]);
 
   useEffect(() => {

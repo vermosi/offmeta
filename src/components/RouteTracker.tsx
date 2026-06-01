@@ -20,7 +20,7 @@ export function RouteTracker() {
   const { trackRouteView } = useAnalytics();
   const lastKeyRef = useRef<string | null>(null);
   const lastPathRef = useRef<string | null>(null);
-  const lastEnteredAtRef = useRef<number>(Date.now());
+  const lastEnteredAtRef = useRef<number>(0);
   const navIndexRef = useRef<number>(0);
 
   useEffect(() => {
