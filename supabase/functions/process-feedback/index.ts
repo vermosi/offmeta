@@ -38,19 +38,18 @@ serve(async (req) => {
   // Authentication check - require authenticated user, service role, or API key
   // Anonymous (anon key) access is explicitly rejected to prevent AI cost abuse
   const authResult = await validateAuth(req);
-  if (!authResult.authorized) {
-    await logAuthFailure(
-      req,
-      authResult.error || 'Unauthorized',
-      'process-feedback',
-    );
+  if (!authResult.authorized || authResult.role === 'anon') {
+    const failureReason = !authResult.authorized
+      ? authResult.error || 'Unauthorized'
+      : 'Authenticated user required';
+    await logAuthFailure(req, failureReason, 'process-feedback');
     return new Response(
       JSON.stringify({
-        error: authResult.error || 'Unauthorized',
+        error: failureReason,
         success: false,
       }),
       {
-        status: 401,
+        status: !authResult.authorized ? 401 : 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       },
     );
