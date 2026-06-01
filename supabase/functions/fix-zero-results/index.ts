@@ -267,13 +267,8 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const auth = await validateAuth(req);
-  if (!auth.authorized) {
-    return new Response(JSON.stringify({ error: auth.error }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
+  const authCheck = await requireServiceOrPipelineKey(req, corsHeaders);
+  if (!authCheck.authorized) return authCheck.response;
 
   const startTime = Date.now();
 
