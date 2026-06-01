@@ -4,13 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import {
-  screen,
-  fireEvent,
-  waitFor,
-  act,
-  cleanup,
-} from '@testing-library/react';
+import { screen, cleanup } from '@testing-library/react';
 import { createMockTranslation } from '@/test/factories';
 import { renderIndex, MOCK_CARDS } from './index-test-setup';
 

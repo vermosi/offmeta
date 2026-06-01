@@ -18,20 +18,20 @@ export function SearchCountBadge() {
   const [count, setCount] = useState<number | null>(null);
 
   useEffect(() => {
-    try {
-      const cached = sessionStorage.getItem(CACHE_KEY);
-      if (cached) {
-        const { value, ts } = JSON.parse(cached);
-        if (Date.now() - ts < CACHE_TTL_MS) {
-          setCount(value);
-          return;
-        }
-      }
-    } catch {
-      // ignore
-    }
-
     const fetchCount = async () => {
+      try {
+        const cached = sessionStorage.getItem(CACHE_KEY);
+        if (cached) {
+          const { value, ts } = JSON.parse(cached) as { value: number; ts: number };
+          if (Date.now() - ts < CACHE_TTL_MS) {
+            setCount(value);
+            return;
+          }
+        }
+      } catch {
+        // ignore
+      }
+
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       const { count: rowCount, error } = await supabase
         .from('translation_logs')
@@ -48,7 +48,11 @@ export function SearchCountBadge() {
       }
     };
 
-    fetchCount();
+    const timeoutId = window.setTimeout(() => {
+      void fetchCount();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   if (count === null || count < 50) return null;

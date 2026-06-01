@@ -45,6 +45,8 @@ export default function DeckBuilder() {
   // Auto-open sign-in modal when visiting /deckbuilder while logged out
   const needsAuth = !authLoading && !user;
 
+  useNoIndex(true);
+
   if (needsAuth) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
@@ -116,8 +118,6 @@ export default function DeckBuilder() {
       void err;
     }
   };
-
-  useNoIndex(true);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

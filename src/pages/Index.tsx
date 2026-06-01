@@ -19,7 +19,7 @@ let searchExperiencePreloaded = false;
  * critical first-paint path stays minimal and the ~chunk-search /
  * AppRoutes bundles only download when the user signals they want them.
  */
-export function preloadSearchExperience() {
+function preloadSearchExperience() {
   if (searchExperiencePreloaded) return;
   searchExperiencePreloaded = true;
   void import('./SearchExperience');

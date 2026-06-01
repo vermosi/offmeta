@@ -66,7 +66,11 @@ describe('applyCardSort', () => {
       makeCard({ id: '1', name: 'Cheap', prices: { usd: '0.50' } }),
       makeCard({ id: '2', name: 'NoPriceA', prices: {} }),
       makeCard({ id: '3', name: 'Expensive', prices: { usd: '10.00' } }),
-      makeCard({ id: '4', name: 'NoPriceB', prices: { usd: null } } as any),
+      makeCard({
+        id: '4',
+        name: 'NoPriceB',
+        prices: { usd: undefined },
+      }),
     ];
 
     it('ascending: priced cards first, missing last', () => {
@@ -90,9 +94,9 @@ describe('applyCardSort', () => {
 
   describe('edhrec sort — missing ranks always last', () => {
     const cards = [
-      makeCard({ id: '1', name: 'Popular', edhrec_rank: 100 } as any),
+      makeCard({ id: '1', name: 'Popular', edhrec_rank: 100 }),
       makeCard({ id: '2', name: 'NoRank' }),
-      makeCard({ id: '3', name: 'Obscure', edhrec_rank: 50000 } as any),
+      makeCard({ id: '3', name: 'Obscure', edhrec_rank: 50000 }),
     ];
 
     it('ascending: ranked cards first, missing last', () => {

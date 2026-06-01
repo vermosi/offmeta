@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { buildVirtualizedRowKey } from '@/components/VirtualizedCardGrid';
+import { buildVirtualizedRowKey } from '@/components/virtualizedRowKey';
 import { buildMockCards } from './index';
 
 // ============================================================================
