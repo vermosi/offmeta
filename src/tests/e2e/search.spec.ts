@@ -9,13 +9,13 @@ import {
 const CARD_SELECTOR = '[data-testid="search-result-card"]';
 
 test.describe('Search Flow', () => {
-  test('page loads and search input is visible', async ({ page }) => {
+  test('page loads and search input is visible @e2e-smoke', async ({ page }) => {
     await page.goto('/');
     const searchInput = page.locator(SEARCH_INPUT_SELECTOR).first();
     await expect(searchInput).toBeVisible({ timeout: 15_000 });
   });
 
-  test('typing a query and pressing Enter shows card results', async ({
+  test('typing a query and pressing Enter shows card results @e2e-smoke', async ({
     page,
   }) => {
     await mockSearchAPIs(page);

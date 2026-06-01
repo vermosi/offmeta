@@ -7,7 +7,7 @@ import {
 } from './fixtures/mock-helpers';
 
 test.describe('Accessibility Audits @a11y', () => {
-  test('homepage has no critical or serious violations', async ({
+  test('homepage has no critical or serious violations @a11y-smoke', async ({
     page,
   }, testInfo) => {
     await page.goto('/');

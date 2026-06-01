@@ -130,19 +130,21 @@ npm run test -- src/lib/regression
 
 ### E2E tests (Playwright)
 
-Located in `src/tests/e2e/search.spec.ts`.
+Located in `src/tests/e2e/*.spec.ts`. The PR-safe smoke subset is tagged `@e2e-smoke`.
 
 ```bash
 npx playwright install --with-deps chromium
-npx playwright test
+npx playwright test --project=chromium --grep @e2e-smoke
+npx playwright test --project=chromium
 ```
 
 ### Accessibility tests (Playwright + axe-core)
 
-Located in `src/tests/e2e/accessibility.spec.ts`.
+Located in `src/tests/e2e/accessibility.spec.ts` and other specs tagged `@a11y`. The PR-safe smoke subset is tagged `@a11y-smoke`.
 
 ```bash
-npx playwright test --grep @a11y
+npx playwright test --project=chromium --grep @a11y-smoke
+npx playwright test --project=chromium --grep @a11y
 ```
 
 ### Live Scryfall validation (opt-in)
@@ -170,6 +172,8 @@ npm run test -- --coverage
 
 ## CI integration
 
-All tests run automatically on pull requests via GitHub Actions (`.github/workflows/ci.yml`). Pull requests always run lightweight `e2e-smoke` and `a11y-smoke` jobs (critical navigation/search/dialog + one axe suite), while full `e2e` and `a11y` coverage remains on push/nightly/manual runs and can be opted into on PRs with `ci:e2e` / `ci:a11y` labels.
+Pull requests and `main` pushes run the deterministic quality gates (`lint`, `typecheck`, `test`, `build`, `bundle-size`) plus lightweight `e2e-smoke` and `a11y-smoke` Playwright jobs. The smoke jobs cover the stable `@e2e-smoke` search paths and the `@a11y-smoke` homepage axe audit.
+
+The full Playwright `e2e` and `a11y` jobs remain off the PR path while full-suite flakiness is tracked in [GitHub issue #190](https://github.com/vermosi/offmeta/issues/190). They run on the nightly `0 3 * * *` schedule and can be run manually through `workflow_dispatch` using the `run_e2e` and `run_a11y` inputs.
 
 For branch protection, require: `lint`, `typecheck`, `test`, `build`, `bundle-size`, `e2e-smoke`, and `a11y-smoke`.
