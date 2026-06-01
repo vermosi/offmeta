@@ -160,9 +160,113 @@ jobs:
             fi
           fi
 
-  # ─── E2E and a11y jobs temporarily disabled until flakiness is resolved ───
-  # See: https://github.com/offmeta/offmeta/issues/TBD
-  # e2e-smoke, e2e, a11y-smoke, a11y jobs removed from CI
+  # ─── Playwright smoke/full coverage policy ─────────────────────────
+  # Tracking full-suite flakiness: https://github.com/vermosi/offmeta/issues/190
+  # PRs and main pushes run the stable smoke subset. Full E2E/a11y runs nightly
+  # or by explicit workflow_dispatch inputs while issue #190 remains open.
+  e2e-smoke:
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run stable E2E smoke subset
+        run: npx playwright test --project=chromium --grep @e2e-smoke
+      - name: Upload E2E smoke report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-e2e-smoke-report
+          path: playwright-report
+          if-no-files-found: ignore
+
+  a11y-smoke:
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run stable accessibility smoke subset
+        run: npx playwright test --project=chromium --grep @a11y-smoke
+      - name: Upload a11y smoke report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-a11y-smoke-report
+          path: playwright-report
+          if-no-files-found: ignore
+
+  e2e:
+    if: >-
+      github.event.schedule == '0 3 * * *' ||
+      (github.event_name == 'workflow_dispatch' && inputs.run_e2e)
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run full E2E suite
+        run: npx playwright test --project=chromium --grep-invert @a11y
+      - name: Upload E2E report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-e2e-report
+          path: playwright-report
+          if-no-files-found: ignore
+
+  a11y:
+    if: >-
+      github.event.schedule == '0 3 * * *' ||
+      (github.event_name == 'workflow_dispatch' && inputs.run_a11y)
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run full accessibility suite
+        run: npx playwright test --project=chromium --grep @a11y
+      - name: Upload a11y report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-a11y-report
+          path: playwright-report
+          if-no-files-found: ignore
 
   # ─── API security tests (on-demand) ─────────────────────────────────
   api-security:
@@ -209,6 +313,8 @@ jobs:
       - test
       - build
       - bundle-size
+      - e2e-smoke
+      - a11y-smoke
     runs-on: ubuntu-latest
     steps:
       - name: Create issue when CI fails

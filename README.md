@@ -10,8 +10,8 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3-06B6D4?logo=tailwindcss&logoColor=white&style=flat-square)](https://tailwindcss.com/)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white&style=flat-square)](https://vite.dev/)
 [![Tests](https://img.shields.io/badge/tests-1560%2B-brightgreen?style=flat-square)](docs/testing.md)
-[![E2E](https://img.shields.io/badge/e2e-23%20Playwright%20scenarios-0ea5e9?style=flat-square)](src/tests/e2e)
-[![A11y](https://img.shields.io/badge/a11y-3%20axe%20suites-14b8a6?style=flat-square)](src/tests/e2e/accessibility.spec.ts)
+[![E2E](https://img.shields.io/badge/e2e-PR%20smoke%20%2B%20nightly%20full-0ea5e9?style=flat-square)](docs/testing.md#ci-integration)
+[![A11y](https://img.shields.io/badge/a11y-PR%20smoke%20%2B%20nightly%20full-14b8a6?style=flat-square)](docs/testing.md#ci-integration)
 [![Built with Lovable](https://img.shields.io/badge/Built%20with-Lovable-ff69b4?style=flat-square)](https://lovable.dev)
 
 **Natural language search for Magic: The Gathering cards, powered by Scryfall.**
@@ -64,8 +64,8 @@ npm run dev
 OffMeta includes enterprise-grade features:
 
 - **Security**: 300+ security tests covering input sanitization, injection prevention, and rate limiting
-- **E2E Coverage**: 23 Playwright scenarios across search, navigation, deck workflows, and regression-critical user paths
-- **Accessibility Coverage**: Dedicated axe-core Playwright suite for critical pages and interactive flows
+- **E2E Coverage**: Stable Playwright smoke checks run on PRs/main; the full suite runs nightly or by manual workflow dispatch while full-suite flakiness is tracked in [GitHub issue #190](https://github.com/vermosi/offmeta/issues/190)
+- **Accessibility Coverage**: A homepage axe smoke audit runs on PRs/main; the full axe-core Playwright suite runs nightly or by manual workflow dispatch
 - **Rate Limiting**: Server and client-side throttling with abuse prevention
 - **CORS Protection**: Origin allowlist enforcement with proper security headers
 - **Error Sanitization**: Prevents leaking file paths, stack traces, and credentials
@@ -82,8 +82,10 @@ This project uses npm only; `package-lock.json` is the sole dependency lockfile 
 Run E2E and accessibility tests:
 
 ```bash
+npx playwright test --project=chromium --grep @e2e-smoke
+npx playwright test --project=chromium --grep @a11y-smoke
 npx playwright test --project=chromium
-npx playwright test --grep @a11y
+npx playwright test --project=chromium --grep @a11y
 ```
 
 ---
