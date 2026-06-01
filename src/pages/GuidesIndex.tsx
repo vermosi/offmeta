@@ -28,10 +28,10 @@ const LEVEL_LABEL_KEYS: Record<number, string> = {
 };
 
 const LEVEL_COLORS: Record<string, string> = {
-  'guides.levelBeginner': 'bg-green-500/10 text-green-400 border-green-500/20',
-  'guides.levelIntermediate': 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  'guides.levelAdvanced': 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  'guides.levelExpert': 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+  'guides.levelBeginner': 'bg-success/10 text-success border-success/20',
+  'guides.levelIntermediate': 'bg-info/10 text-info border-info/20',
+  'guides.levelAdvanced': 'bg-warning/10 text-warning border-warning/20',
+  'guides.levelExpert': 'bg-accent/10 text-accent border-accent/20',
 };
 
 export default function GuidesIndex() {

@@ -74,32 +74,32 @@ export function StatusBadge({ status }: { status: string }) {
     pending: {
       label: 'Pending',
       className:
-        'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30',
+        'bg-warning/10 text-warning border-warning/30',
     },
     processing: {
       label: 'Processing',
       className:
-        'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30',
+        'bg-info/10 text-info border-info/30',
     },
     completed: {
       label: 'Completed',
       className:
-        'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30',
+        'bg-success/10 text-success border-success/30',
     },
     updated_existing: {
       label: 'Updated',
       className:
-        'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30',
+        'bg-success/10 text-success border-success/30',
     },
     done: {
       label: 'Resolved',
       className:
-        'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30',
+        'bg-success/10 text-success border-success/30',
     },
     failed: {
       label: 'Failed',
       className:
-        'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30',
+        'bg-destructive/10 text-destructive border-destructive/30',
     },
     skipped: {
       label: 'Skipped',

@@ -184,9 +184,9 @@ export function CompareModal({ cards, open, onClose }: CompareModalProps) {
                       <div
                         className={`h-1.5 w-1.5 rounded-full ${
                           card.legalities[fmt] === 'legal'
-                            ? 'bg-green-500'
+                            ? 'bg-success'
                             : card.legalities[fmt] === 'banned'
-                              ? 'bg-red-500'
+                              ? 'bg-destructive'
                               : 'bg-muted-foreground/30'
                         }`}
                       />

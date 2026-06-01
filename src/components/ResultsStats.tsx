@@ -18,19 +18,19 @@ interface ResultsStatsProps {
 const COLOR_KEYS = ['W', 'U', 'B', 'R', 'G', 'C'] as const;
 
 const COLOR_MAP: Record<string, { label: string; bg: string; symbol: string }> = {
-  W: { label: 'White', bg: 'bg-amber-100 dark:bg-amber-200', symbol: 'W' },
-  U: { label: 'Blue', bg: 'bg-blue-400 dark:bg-blue-500', symbol: 'U' },
-  B: { label: 'Black', bg: 'bg-zinc-700 dark:bg-zinc-600', symbol: 'B' },
-  R: { label: 'Red', bg: 'bg-red-500 dark:bg-red-600', symbol: 'R' },
-  G: { label: 'Green', bg: 'bg-green-500 dark:bg-green-600', symbol: 'G' },
-  C: { label: 'Colorless', bg: 'bg-muted', symbol: 'C' },
+  W: { label: 'White', bg: 'bg-mtg-white', symbol: 'W' },
+  U: { label: 'Blue', bg: 'bg-mtg-blue', symbol: 'U' },
+  B: { label: 'Black', bg: 'bg-mtg-black', symbol: 'B' },
+  R: { label: 'Red', bg: 'bg-mtg-red', symbol: 'R' },
+  G: { label: 'Green', bg: 'bg-mtg-green', symbol: 'G' },
+  C: { label: 'Colorless', bg: 'bg-mtg-colorless', symbol: 'C' },
 };
 
 const RARITY_MAP: Record<string, { label: string; class: string }> = {
   common: { label: 'C', class: 'text-muted-foreground' },
-  uncommon: { label: 'U', class: 'text-slate-400 dark:text-slate-300' },
-  rare: { label: 'R', class: 'text-amber-500' },
-  mythic: { label: 'M', class: 'text-orange-400' },
+  uncommon: { label: 'U', class: 'text-rarity-uncommon' },
+  rare: { label: 'R', class: 'text-rarity-rare' },
+  mythic: { label: 'M', class: 'text-rarity-mythic' },
 };
 
 function computeStats(cards: ScryfallCard[]) {

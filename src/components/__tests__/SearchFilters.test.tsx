@@ -277,8 +277,8 @@ describe('SearchFilters', () => {
       expect(control.className).toMatch(
         /(text-(foreground|muted-foreground|primary)|bg-(background|card)|border-border)/,
       );
-      expect(control.className).not.toContain('text-white');
-      expect(control.className).not.toContain('bg-black');
+      expect(control.className).not.toContain('text-contrast');
+      expect(control.className).not.toContain('bg-overlay');
     }
   });
 });

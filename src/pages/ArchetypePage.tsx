@@ -376,7 +376,7 @@ export default function ArchetypePage() {
           {topCards && topCards.length > 0 && (
             <section className="rounded-xl border border-border/50 bg-card/50 p-5 sm:p-6 mb-6">
               <div className="flex items-center gap-2 mb-3">
-                <Star className="h-4 w-4 text-amber-500" />
+                <Star className="h-4 w-4 text-rarity-rare" />
                 <h2 className="text-sm font-semibold text-foreground">
                   Most Played Cards
                 </h2>
@@ -430,7 +430,7 @@ export default function ArchetypePage() {
           {curated && formatContent && (
             <section className="rounded-xl border border-border/50 bg-card/50 p-5 sm:p-6 mb-6">
               <div className="flex items-center gap-2 mb-3">
-                <DollarSign className="h-4 w-4 text-emerald-500" />
+                <DollarSign className="h-4 w-4 text-success" />
                 <h2 className="text-sm font-semibold text-foreground">{t('archetypes.budgetAlternatives')}</h2>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">

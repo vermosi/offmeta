@@ -139,7 +139,7 @@ export function ExplainCompilationPanel({
           </div>
 
           {intent.warnings.length > 0 && (
-            <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-2.5 text-xs text-amber-700 dark:text-amber-400">
+            <div className="rounded-lg border border-warning/20 bg-warning/5 p-2.5 text-xs text-warning">
               <ul className="list-disc pl-4 space-y-0.5">
                 {intent.warnings.map((warning, index) => (
                   <li key={`${warning}-${index}`}>{warning}</li>
