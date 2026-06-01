@@ -4,8 +4,8 @@ OffMeta uses [Vitest](https://vitest.dev/) as the primary testing framework, wit
 
 ## Tooling convention
 
-- **Canonical runner:** `npm` (matches CI and required status checks).
-- **Optional equivalent:** `bun` for local runs if preferred.
+- **Supported runner:** `npm` only (matches CI and required status checks).
+- **Lockfile source:** `package-lock.json` only. Do not commit Bun lockfiles (`bun.lock` or `bun.lockb`).
 
 Canonical commands:
 
@@ -13,14 +13,6 @@ Canonical commands:
 npm run test
 npm run test:watch
 npm run test -- --coverage
-```
-
-Optional Bun equivalents:
-
-```bash
-bun run test
-bun run test:watch
-bun run test -- --coverage
 ```
 
 ## Quick start
