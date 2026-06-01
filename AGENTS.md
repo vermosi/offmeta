@@ -20,18 +20,12 @@ See `docs/architecture.md` for full details. Key modules:
 
 ## Running Tests
 
+Use npm only. `package-lock.json` is the sole dependency lockfile source; do not commit Bun lockfiles.
+
 ```bash
 npm run test                    # All tests (canonical)
 npm run test:watch              # Watch mode (canonical)
 npm run test -- src/lib/security # Security suite only (canonical)
-```
-
-Optional Bun equivalents:
-
-```bash
-bun run test
-bun run test:watch
-bun run test -- src/lib/security
 ```
 
 ## PR Checklist

@@ -75,8 +75,9 @@ Run security tests:
 
 ```bash
 npm run test -- src/lib/security
-# Optional equivalent: bun run test -- src/lib/security
 ```
+
+This project uses npm only; `package-lock.json` is the sole dependency lockfile source.
 
 Run E2E and accessibility tests:
 
