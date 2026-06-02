@@ -15,7 +15,6 @@ import {
   Settings,
   Shield,
   Package,
-  ChevronDown,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageSelector } from '@/components/LanguageSelector';
@@ -39,33 +38,10 @@ const AuthModal = lazy(() =>
   import('@/components/AuthModal').then((m) => ({ default: m.AuthModal })),
 );
 const NotificationBell = lazy(() =>
-  import('@/components/NotificationBell').then((m) => ({ default: m.NotificationBell })),
+  import('@/components/NotificationBell').then((m) => ({
+    default: m.NotificationBell,
+  })),
 );
-
-/* ------------------------------------------------------------------ */
-/*  Tiny helper – a header dropdown trigger                           */
-/* ------------------------------------------------------------------ */
-function NavDropdown({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-1 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary/50 focus-ring">
-          {label}
-          <ChevronDown className="h-3.5 w-3.5 opacity-60" />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-[160px]">
-        {children}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /*  Header                                                            */
