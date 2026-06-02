@@ -2,14 +2,20 @@
  * Hook for accessing translations.
  * Separated from I18nProvider to satisfy react-refresh (components-only exports).
  *
- * NOTE: The English dictionary is intentionally NOT statically imported here.
- * It is lazy-loaded by `I18nProvider` so the homepage entry bundle does not
- * pay the ~60KB cost on first paint. Until the dictionary resolves, callers
- * fall back to the inline `fallback` argument (or the key itself).
+ * Resolution order for `t(key, fallback)`:
+ *   1. Active locale dictionary (from I18nProvider context)
+ *   2. Inline English `fallback` argument (if provided)
+ *   3. Static English dictionary (`en.json`) — ensures real copy renders
+ *      even when a component is mounted outside the provider (e.g. unit tests)
+ *      or before a non-English dictionary finishes lazy-loading.
+ *   4. The key itself (last-resort, prevents undefined output)
  */
 
 import { useContext, useMemo } from 'react';
 import { I18nContext } from './context';
+import enDictionary from './en.json';
+
+const EN_DICT = enDictionary as Record<string, string>;
 
 /**
  * Returns a `t(key)` function that resolves translation strings,
@@ -20,7 +26,7 @@ export function useTranslation() {
 
   const t = useMemo(() => {
     return (key: string, fallback?: string): string =>
-      dictionary[key] ?? fallback ?? key;
+      dictionary[key] ?? fallback ?? EN_DICT[key] ?? key;
   }, [dictionary]);
 
   return { t, locale, setLocale };
