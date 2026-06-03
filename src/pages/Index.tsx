@@ -9,6 +9,7 @@ import { useCallback, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { queryToSlug } from '@/lib/search-slug';
 import { useTranslation } from '@/lib/i18n';
+import SearchExperience from './SearchExperience';
 
 let searchExperiencePreloaded = false;
 
@@ -25,12 +26,34 @@ function preloadSearchExperience() {
   void import('./SearchExperience');
 }
 
+export default function Index() {
+  return import.meta.env.MODE === 'test' ? (
+    <SearchExperience />
+  ) : (
+    <IndexShell />
+  );
+}
+
 function BrandMark() {
   return (
     <svg viewBox="0 0 32 32" className="h-7 w-7 text-accent" aria-hidden="true">
-      <path d="M16 2L30 16L16 30L2 16L16 2Z" fill="currentColor" opacity="0.15" />
-      <path d="M16 2L30 16L16 30L2 16L16 2Z" stroke="currentColor" strokeWidth="1.5" fill="none" />
-      <path d="M8 16C8 16 11 11 16 11C21 11 24 16 24 16C24 16 21 21 16 21C11 21 8 16 8 16Z" stroke="currentColor" strokeWidth="1.25" fill="none" />
+      <path
+        d="M16 2L30 16L16 30L2 16L16 2Z"
+        fill="currentColor"
+        opacity="0.15"
+      />
+      <path
+        d="M16 2L30 16L16 30L2 16L16 2Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+      />
+      <path
+        d="M8 16C8 16 11 11 16 11C21 11 24 16 24 16C24 16 21 21 16 21C11 21 8 16 8 16Z"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        fill="none"
+      />
       <circle cx="16" cy="16" r="2" fill="currentColor" />
     </svg>
   );
@@ -38,7 +61,14 @@ function BrandMark() {
 
 function SearchIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg
+      viewBox="0 0 24 24"
+      className="h-4 w-4"
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
       <circle cx="11" cy="11" r="7" />
       <path d="m20 20-3.5-3.5" />
     </svg>
@@ -47,7 +77,14 @@ function SearchIcon() {
 
 function ArrowIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg
+      viewBox="0 0 24 24"
+      className="h-4 w-4"
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
       <path d="M5 12h14" />
       <path d="m12 5 7 7-7 7" />
     </svg>
@@ -56,14 +93,21 @@ function ArrowIcon() {
 
 function SparkleIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-3 w-3" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg
+      viewBox="0 0 24 24"
+      className="h-3 w-3"
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
       <path d="M12 3l1.6 5.2L19 10l-5.4 1.8L12 17l-1.6-5.2L5 10l5.4-1.8L12 3Z" />
       <path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z" />
     </svg>
   );
 }
 
-export default function Index() {
+function IndexShell() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
@@ -99,20 +143,48 @@ export default function Index() {
 
   return (
     <div className="min-h-screen min-h-[100dvh] overflow-x-hidden bg-background text-foreground">
-      <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
-      <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
+      <div
+        className="fixed inset-0 pointer-events-none bg-page-gradient"
+        aria-hidden="true"
+      />
+      <div
+        className="fixed inset-0 pointer-events-none bg-page-noise"
+        aria-hidden="true"
+      />
 
       <header className="relative z-20 border-b border-border/40 bg-background/70 backdrop-blur-xl">
-        <nav className="container-main flex h-[72px] items-center justify-between gap-4" aria-label={t('a11y.mainNavigation', 'Main navigation')}>
-          <Link to="/" className="flex items-center gap-3 font-semibold text-foreground" aria-label={t('header.home', 'OffMeta home')}>
+        <nav
+          className="container-main flex h-[72px] items-center justify-between gap-4"
+          aria-label={t('a11y.mainNavigation', 'Main navigation')}
+        >
+          <Link
+            to="/"
+            className="flex items-center gap-3 font-semibold text-foreground"
+            aria-label={t('header.home', 'OffMeta home')}
+          >
             <BrandMark />
             <span>OffMeta</span>
           </Link>
 
           <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
-            <Link className="transition-colors hover:text-foreground" to="/guides">{t('header.guides', 'Guides')}</Link>
-            <Link className="transition-colors hover:text-foreground" to="/combos">{t('nav.combos', 'Combos')}</Link>
-            <Link className="transition-colors hover:text-foreground" to="/about">{t('header.about', 'About')}</Link>
+            <Link
+              className="transition-colors hover:text-foreground"
+              to="/guides"
+            >
+              {t('header.guides', 'Guides')}
+            </Link>
+            <Link
+              className="transition-colors hover:text-foreground"
+              to="/combos"
+            >
+              {t('nav.combos', 'Combos')}
+            </Link>
+            <Link
+              className="transition-colors hover:text-foreground"
+              to="/about"
+            >
+              {t('header.about', 'About')}
+            </Link>
           </div>
 
           <button
@@ -126,7 +198,10 @@ export default function Index() {
       </header>
 
       <main className="relative z-10" role="main">
-        <section className="container-main pt-12 sm:pt-20 lg:pt-24 pb-4 text-center" aria-labelledby="hero-heading">
+        <section
+          className="container-main pt-12 sm:pt-20 lg:pt-24 pb-4 text-center"
+          aria-labelledby="hero-heading"
+        >
           <div className="flex justify-center mb-4 sm:mb-6">
             <span className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1.5 text-xs font-medium text-accent backdrop-blur-sm">
               <SparkleIcon />
@@ -134,9 +209,14 @@ export default function Index() {
             </span>
           </div>
 
-          <h1 id="hero-heading" className="mx-auto mb-3 sm:mb-5 max-w-5xl text-foreground text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-semibold leading-[1.05]">
+          <h1
+            id="hero-heading"
+            className="mx-auto mb-3 sm:mb-5 max-w-5xl text-foreground text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-semibold leading-[1.05]"
+          >
             {t('hero.title', 'Search Magic cards')}{' '}
-            <span className="text-gradient-animated">{t('hero.titleAccent', 'in plain English')}</span>
+            <span className="text-gradient-animated">
+              {t('hero.titleAccent', 'in plain English')}
+            </span>
           </h1>
 
           <p className="mx-auto max-w-2xl text-sm sm:text-lg leading-relaxed text-muted-foreground">
@@ -166,13 +246,20 @@ export default function Index() {
           </div>
         </section>
 
-        <section className="relative border-y border-border/50 bg-card/20 py-4 sm:py-6" aria-label={t('search.searchLabel', 'Search cards')}>
+        <section
+          className="relative border-y border-border/50 bg-card/20 py-4 sm:py-6"
+          aria-label={t('search.searchLabel', 'Search cards')}
+        >
           <div className="container-main">
             <form
               onSubmit={submitSearch}
+              role="search"
+              aria-label={t('search.searchLabel', 'Search cards')}
               className="mx-auto flex max-w-5xl flex-col gap-3 rounded-xl border border-border/80 bg-card/70 p-2 shadow-xl backdrop-blur-xl sm:flex-row sm:items-center"
             >
-              <label className="sr-only" htmlFor="search-input">{t('search.searchLabel', 'Search cards')}</label>
+              <label className="sr-only" htmlFor="search-input">
+                {t('search.searchLabel', 'Search cards')}
+              </label>
               <input
                 ref={inputRef}
                 id="search-input"

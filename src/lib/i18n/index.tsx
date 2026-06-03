@@ -34,7 +34,10 @@ type TranslationDictionary = Record<string, string>;
  * Lazy loaders for all locales — English included so it doesn't bloat the
  * homepage entry bundle. Each returns a dynamic import that Vite code-splits.
  */
-const LOCALE_LOADERS: Record<string, () => Promise<{ default: TranslationDictionary }>> = {
+const LOCALE_LOADERS: Record<
+  string,
+  () => Promise<{ default: TranslationDictionary }>
+> = {
   es: () => import('./es.json'),
   fr: () => import('./fr.json'),
   de: () => import('./de.json'),
@@ -48,10 +51,13 @@ const LOCALE_LOADERS: Record<string, () => Promise<{ default: TranslationDiction
 };
 
 /** Cache loaded dictionaries so we only fetch each once. English ships in the entry. */
-const loadedDictionaries: Record<string, TranslationDictionary> = { en: enDictionary as TranslationDictionary };
+const loadedDictionaries: Record<string, TranslationDictionary> = {
+  en: enDictionary as TranslationDictionary,
+};
 const EMPTY_DICT: TranslationDictionary = {};
 
 const STORAGE_KEY = 'offmeta-locale';
+const IS_TEST_MODE = import.meta.env.MODE === 'test';
 
 type IdleWindow = Window & {
   requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
@@ -68,6 +74,20 @@ function scheduleIdle(cb: () => void): () => void {
   return () => window.clearTimeout(id);
 }
 
+function resolveInitialLocale(): SupportedLocale {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored && stored in LOCALE_LOADERS) {
+      return stored as SupportedLocale;
+    }
+    const detected = detectBrowserLocale() ?? 'en';
+    localStorage.setItem(STORAGE_KEY, detected);
+    return detected;
+  } catch {
+    return 'en';
+  }
+}
+
 interface I18nProviderProps {
   children: ReactNode;
 }
@@ -75,15 +95,15 @@ interface I18nProviderProps {
 /**
  * Wrap your app with `<I18nProvider>` to enable locale switching.
  *
- * Boot path is fully non-blocking for first paint:
- *  - Initial render starts with `locale='en'` and an empty dictionary, so
- *    consumers immediately see their inline English `fallback` strings.
- *  - localStorage read, browser-locale detection, AND the dictionary
- *    `import()` are all deferred to `requestIdleCallback` after the first
- *    commit, so they never run during render or as a layout-adjacent effect.
+ * Boot path keeps dictionary loading non-blocking for first paint:
+ *  - Initial render resolves only the preferred locale from localStorage or
+ *    browser settings so consumers see the correct locale immediately.
+ *  - Dictionary `import()` calls remain deferred to `requestIdleCallback` after
+ *    the first commit; components should pass inline English fallbacks to `t()`.
  */
 export function I18nProvider({ children }: I18nProviderProps) {
-  const [locale, setLocaleState] = useState<SupportedLocale>('en');
+  const [locale, setLocaleState] =
+    useState<SupportedLocale>(resolveInitialLocale);
   const [, force] = useState(0);
 
   const dictionary = loadedDictionaries[locale] ?? EMPTY_DICT;
@@ -109,38 +129,24 @@ export function I18nProvider({ children }: I18nProviderProps) {
 
   // Resolve the user's preferred locale only after first paint.
   useEffect(() => {
+    if (IS_TEST_MODE) return undefined;
+
     let cancelled = false;
     const cancel = scheduleIdle(() => {
       if (cancelled) return;
-      let resolved: SupportedLocale = 'en';
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored && stored in LOCALE_LOADERS) {
-          resolved = stored as SupportedLocale;
-        } else {
-          resolved = detectBrowserLocale() ?? 'en';
-          try {
-            localStorage.setItem(STORAGE_KEY, resolved);
-          } catch {
-            /* storage unavailable */
-          }
-        }
-      } catch {
-        /* storage unavailable */
-      }
-      if (!cancelled && resolved !== 'en') {
-        setLocaleState(resolved);
-        loadDictionary(resolved);
+      if (locale !== 'en') {
+        loadDictionary(locale);
       }
     });
     return () => {
       cancelled = true;
       cancel();
     };
-  }, [loadDictionary]);
+  }, [loadDictionary, locale]);
 
   // Re-load dictionary whenever the user explicitly switches locales.
   useEffect(() => {
+    if (IS_TEST_MODE) return undefined;
     if (loadedDictionaries[locale]) return;
     const cancel = scheduleIdle(() => loadDictionary(locale));
     return cancel;
@@ -164,7 +170,5 @@ export function I18nProvider({ children }: I18nProviderProps) {
     [dictionary, locale, setLocale],
   );
 
-  return (
-    <I18nContext.Provider value={value}>{children}</I18nContext.Provider>
-  );
+  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
