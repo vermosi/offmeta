@@ -48,7 +48,9 @@ const InstantDemoPreview = lazy(() =>
   })),
 );
 const ValuePropStrip = lazy(() =>
-  import('@/components/ValuePropStrip').then((m) => ({ default: m.ValuePropStrip })),
+  import('@/components/ValuePropStrip').then((m) => ({
+    default: m.ValuePropStrip,
+  })),
 );
 const HowItWorksSection = lazy(() =>
   import('@/components/HowItWorksSection').then((m) => ({
@@ -106,6 +108,8 @@ import { useSearch } from '@/hooks/useSearch';
 import { useSimilarCards } from '@/hooks/useSimilarCards';
 import { useTranslation } from '@/lib/i18n';
 const CardModal = lazy(() => import('@/components/CardModal'));
+
+const IS_TEST_MODE = import.meta.env.MODE === 'test';
 
 const Index = () => {
   const { t } = useTranslation();
@@ -336,6 +340,8 @@ const Index = () => {
   // with the search input. Keeps initial paint lean while ensuring results
   // render instantly when the user submits.
   useEffect(() => {
+    if (IS_TEST_MODE) return undefined;
+
     let done = false;
     const prefetch = () => {
       if (done) return;
@@ -347,18 +353,25 @@ const Index = () => {
       void import('@/components/CardModal');
     };
     const w = window as Window & {
-      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+      requestIdleCallback?: (
+        cb: () => void,
+        opts?: { timeout: number },
+      ) => number;
       cancelIdleCallback?: (id: number) => void;
     };
-    const idleId = typeof w.requestIdleCallback === 'function'
-      ? w.requestIdleCallback(prefetch, { timeout: 3000 })
-      : window.setTimeout(prefetch, 2000);
+    const idleId =
+      typeof w.requestIdleCallback === 'function'
+        ? w.requestIdleCallback(prefetch, { timeout: 3000 })
+        : window.setTimeout(prefetch, 2000);
     const onInteract = () => prefetch();
     const input = document.getElementById('search-input');
     input?.addEventListener('focus', onInteract, { once: true });
     input?.addEventListener('pointerdown', onInteract, { once: true });
     return () => {
-      if (typeof w.cancelIdleCallback === 'function' && typeof idleId === 'number') {
+      if (
+        typeof w.cancelIdleCallback === 'function' &&
+        typeof idleId === 'number'
+      ) {
         w.cancelIdleCallback(idleId);
       } else {
         window.clearTimeout(idleId as number);
@@ -367,7 +380,6 @@ const Index = () => {
       input?.removeEventListener('pointerdown', onInteract);
     };
   }, []);
-
 
   useEffect(() => {
     trackFirstReturnVisit();
@@ -502,7 +514,7 @@ const Index = () => {
 
             {!hasSearched && (
               <Suspense fallback={null}>
-              <InstantDemoPreview onTrySearch={handleTryExample} />
+                <InstantDemoPreview onTrySearch={handleTryExample} />
               </Suspense>
             )}
 
@@ -510,11 +522,14 @@ const Index = () => {
               <div className="animate-reveal flex items-start gap-2">
                 <div className="flex-1 min-w-0 space-y-2">
                   <h1 className="text-lg sm:text-xl font-semibold text-foreground tracking-tight">
-                    {t('search.resultsFor', 'Results for "{query}"')
-                      .replace('{query}', originalQuery)}
+                    {t('search.resultsFor', 'Results for "{query}"').replace(
+                      '{query}',
+                      originalQuery,
+                    )}
                     {totalCards > 0 && (
                       <span className="text-muted-foreground font-normal ml-1.5">
-                        ({totalCards.toLocaleString()} {t('search.cards', 'cards')})
+                        ({totalCards.toLocaleString()}{' '}
+                        {t('search.cards', 'cards')})
                       </span>
                     )}
                   </h1>
@@ -730,8 +745,6 @@ const Index = () => {
           open={compareOpen}
           onClose={closeCompare}
         />
-
-        
       </div>
     </ErrorBoundary>
   );

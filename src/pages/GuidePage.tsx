@@ -10,7 +10,14 @@ import { Footer } from '@/components/Footer';
 import { Header } from '@/components/Header';
 import { PageSearchBar } from '@/components/PageSearchBar';
 import { ScrollToTop } from '@/components/ScrollToTop';
-import { Search, ArrowRight, Lightbulb, HelpCircle, BookOpen, Sparkles } from 'lucide-react';
+import {
+  Search,
+  ArrowRight,
+  Lightbulb,
+  HelpCircle,
+  BookOpen,
+  Sparkles,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n';
 import { SkipLinks } from '@/components/SkipLinks';
@@ -36,7 +43,9 @@ export default function GuidePage() {
       <div className="min-h-screen flex flex-col bg-background">
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center space-y-4">
-            <h1 className="text-2xl font-semibold text-foreground">{t('guide.notFound')}</h1>
+            <h1 className="text-2xl font-semibold text-foreground">
+              {t('guide.notFound')}
+            </h1>
             <Link to="/" className="text-primary hover:underline">
               {t('nav.backToSearch')}
             </Link>
@@ -54,74 +63,62 @@ export default function GuidePage() {
     navigate(`/?q=${encodeURIComponent(guide.searchQuery)}`);
   };
 
-  // Single consolidated JSON-LD graph. Combining Article + FAQPage + HowTo +
-  // BreadcrumbList into one @graph (with stable @ids) prevents duplicate or
-  // conflicting scripts and lets crawlers see the entities as related.
   const pageUrl = `https://offmeta.app/guides/${guide.slug}`;
-  const articleId = `${pageUrl}#article`;
-  const faqId = `${pageUrl}#faq`;
-  const howToId = `${pageUrl}#howto`;
-  const breadcrumbId = `${pageUrl}#breadcrumb`;
 
-  const graph: Array<Record<string, unknown>> = [
-    {
-      '@type': 'Article',
-      '@id': articleId,
-      headline: guide.metaTitle,
-      description: guide.metaDescription,
-      url: pageUrl,
-      mainEntityOfPage: pageUrl,
-      author: { '@type': 'Organization', name: 'OffMeta' },
-      publisher: { '@type': 'Organization', name: 'OffMeta' },
-      isPartOf: { '@id': breadcrumbId },
-    },
-    {
-      '@type': 'BreadcrumbList',
-      '@id': breadcrumbId,
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://offmeta.app/' },
-        { '@type': 'ListItem', position: 2, name: 'Guides', item: 'https://offmeta.app/guides' },
-        { '@type': 'ListItem', position: 3, name: guide.title, item: pageUrl },
-      ],
-    },
-  ];
+  const articleJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: guide.metaTitle,
+    description: guide.metaDescription,
+    url: pageUrl,
+    mainEntityOfPage: pageUrl,
+    author: { '@type': 'Organization', name: 'OffMeta' },
+    publisher: { '@type': 'Organization', name: 'OffMeta' },
+  };
 
-  if (guide.faq.length > 0) {
-    graph.push({
-      '@type': 'FAQPage',
-      '@id': faqId,
-      mainEntity: guide.faq.map((f) => ({
-        '@type': 'Question',
-        name: f.question,
-        acceptedAnswer: { '@type': 'Answer', text: f.answer },
-      })),
-    });
-  }
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: guide.faq.map((f) => ({
+      '@type': 'Question',
+      name: f.question,
+      acceptedAnswer: { '@type': 'Answer', text: f.answer },
+    })),
+  };
 
-  if (guide.tips.length > 0) {
-    graph.push({
-      '@type': 'HowTo',
-      '@id': howToId,
-      name: guide.metaTitle,
-      description: guide.metaDescription,
-      url: pageUrl,
-      step: guide.tips.map((tip, i) => ({
-        '@type': 'HowToStep',
-        position: i + 1,
-        name: `Step ${i + 1}`,
-        text: tip,
-        url: `${pageUrl}#step-${i + 1}`,
-      })),
-    });
-  }
-
-  const jsonLd = { '@context': 'https://schema.org', '@graph': graph };
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: 'https://offmeta.app/',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Guides',
+        item: 'https://offmeta.app/guides',
+      },
+      { '@type': 'ListItem', position: 3, name: guide.title, item: pageUrl },
+    ],
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
       <SkipLinks />
@@ -129,59 +126,93 @@ export default function GuidePage() {
 
       <nav className="container-main pt-4 sm:pt-6 pb-2" aria-label="Breadcrumb">
         <ol className="flex items-center gap-1.5 text-sm text-muted-foreground">
-          <li><Link to="/" className="hover:text-foreground transition-colors">{t('nav.home')}</Link></li>
+          <li>
+            <Link to="/" className="hover:text-foreground transition-colors">
+              {t('nav.home')}
+            </Link>
+          </li>
           <li aria-hidden="true">/</li>
-          <li><Link to="/guides" className="hover:text-foreground transition-colors">{t('nav.guides')}</Link></li>
+          <li>
+            <Link
+              to="/guides"
+              className="hover:text-foreground transition-colors"
+            >
+              {t('nav.guides')}
+            </Link>
+          </li>
           <li aria-hidden="true">/</li>
-          <li className="text-foreground font-medium truncate">{t(`guide.title.${guide.slug}`, guide.title)}</li>
+          <li className="text-foreground font-medium truncate">
+            {t(`guide.title.${guide.slug}`, guide.title)}
+          </li>
         </ol>
       </nav>
 
-      <main id="main-content" className="flex-1 container-main py-8 sm:py-10 lg:py-12">
+      <main
+        id="main-content"
+        className="flex-1 container-main py-8 sm:py-10 lg:py-12"
+      >
         <div className="max-w-2xl mx-auto mb-6">
-          <PageSearchBar
-            placeholder={`Search: ${guide.searchQuery}`}
-          />
+          <PageSearchBar placeholder={`Search: ${guide.searchQuery}`} />
         </div>
         <article className="max-w-2xl mx-auto space-y-8 sm:space-y-10 min-w-0">
           <header className="space-y-4 min-w-0">
             <h1 className="text-2xl sm:text-3xl lg:text-5xl font-semibold text-foreground leading-tight break-words">
               {t(`guide.title.${guide.slug}`, guide.heading)}
             </h1>
-            <p className="text-lg text-muted-foreground break-words">{t(`guide.sub.${guide.slug}`, guide.subheading)}</p>
+            <p className="text-lg text-muted-foreground break-words">
+              {t(`guide.sub.${guide.slug}`, guide.subheading)}
+            </p>
           </header>
 
           <div className="rounded-xl border border-border bg-card p-5 sm:p-6 space-y-3 overflow-hidden">
-            <p className="text-sm text-muted-foreground">{t('guide.searchInstantly')}</p>
-            <Button onClick={handleSearchClick} className="w-full sm:w-auto gap-2 max-w-full !whitespace-normal text-left" size="lg">
+            <p className="text-sm text-muted-foreground">
+              {t('guide.searchInstantly')}
+            </p>
+            <Button
+              onClick={handleSearchClick}
+              className="w-full sm:w-auto gap-2 max-w-full !whitespace-normal text-left"
+              size="lg"
+            >
               <Search className="h-4 w-4 flex-shrink-0" />
-              <span className="line-clamp-1">{t('guide.search')} "{guide.searchQuery}"</span>
+              <span className="line-clamp-1">
+                {t('guide.search')} "{guide.searchQuery}"
+              </span>
               <ArrowRight className="h-4 w-4 flex-shrink-0" />
             </Button>
           </div>
 
           <section className="prose-section min-w-0">
-            <p className="text-base leading-relaxed text-foreground/90 break-words">{t(`guide.intro.${guide.slug}`, guide.intro)}</p>
+            <p className="text-base leading-relaxed text-foreground/90 break-words">
+              {t(`guide.intro.${guide.slug}`, guide.intro)}
+            </p>
           </section>
 
           {'howOffmetaHelps' in guide && guide.howOffmetaHelps && (
             <section className="space-y-3">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" />
-                <h2 className="text-xl font-semibold text-foreground">{t('guide.howOffmetaHelps')}</h2>
+                <h2 className="text-xl font-semibold text-foreground">
+                  {t('guide.howOffmetaHelps')}
+                </h2>
               </div>
               <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 overflow-hidden">
                 <div className="flex flex-wrap items-center gap-2 mb-2 text-xs text-muted-foreground min-w-0">
                   <span>{t('guide.youType')}</span>
-                  <code className="px-2 py-0.5 rounded bg-muted text-foreground font-mono text-xs break-all max-w-full">{guide.searchQuery}</code>
+                  <code className="px-2 py-0.5 rounded bg-muted text-foreground font-mono text-xs break-all max-w-full">
+                    {guide.searchQuery}
+                  </code>
                 </div>
                 {'translatedQuery' in guide && (
                   <div className="flex flex-wrap items-center gap-2 mb-3 text-xs text-muted-foreground">
                     <span>{t('guide.offmetaGenerates')}</span>
-                    <code className="px-2 py-0.5 rounded bg-muted text-foreground font-mono text-xs break-all">{(guide as { translatedQuery: string }).translatedQuery}</code>
+                    <code className="px-2 py-0.5 rounded bg-muted text-foreground font-mono text-xs break-all">
+                      {(guide as { translatedQuery: string }).translatedQuery}
+                    </code>
                   </div>
                 )}
-                <p className="text-sm text-foreground/85 leading-relaxed break-words">{t(`guide.howHelps.${guide.slug}`, guide.howOffmetaHelps)}</p>
+                <p className="text-sm text-foreground/85 leading-relaxed break-words">
+                  {t(`guide.howHelps.${guide.slug}`, guide.howOffmetaHelps)}
+                </p>
               </div>
             </section>
           )}
@@ -189,12 +220,19 @@ export default function GuidePage() {
           <section className="space-y-4">
             <div className="flex items-center gap-2">
               <Lightbulb className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold text-foreground">{t('guide.tipsStrategy')}</h2>
+              <h2 className="text-xl font-semibold text-foreground">
+                {t('guide.tipsStrategy')}
+              </h2>
             </div>
             <ul className="space-y-3">
               {guide.tips.map((tip, i) => (
-                <li key={i} className="flex gap-3 text-sm text-foreground/85 leading-relaxed">
-                  <span className="flex-shrink-0 mt-1 h-5 w-5 rounded-full bg-primary/10 text-primary text-xs font-medium flex items-center justify-center">{i + 1}</span>
+                <li
+                  key={i}
+                  className="flex gap-3 text-sm text-foreground/85 leading-relaxed"
+                >
+                  <span className="flex-shrink-0 mt-1 h-5 w-5 rounded-full bg-primary/10 text-primary text-xs font-medium flex items-center justify-center">
+                    {i + 1}
+                  </span>
                   {t(`guide.tip${i + 1}.${guide.slug}`, tip)}
                 </li>
               ))}
@@ -204,13 +242,22 @@ export default function GuidePage() {
           <section className="space-y-4">
             <div className="flex items-center gap-2">
               <HelpCircle className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold text-foreground">{t('guide.faqHeading')}</h2>
+              <h2 className="text-xl font-semibold text-foreground">
+                {t('guide.faqHeading')}
+              </h2>
             </div>
             <div className="space-y-4">
               {guide.faq.map((f, i) => (
-                <div key={i} className="rounded-lg border border-border bg-card p-4 space-y-2">
-                  <h3 className="font-medium text-foreground">{t(`guide.faq${i + 1}q.${guide.slug}`, f.question)}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{t(`guide.faq${i + 1}a.${guide.slug}`, f.answer)}</p>
+                <div
+                  key={i}
+                  className="rounded-lg border border-border bg-card p-4 space-y-2"
+                >
+                  <h3 className="font-medium text-foreground">
+                    {t(`guide.faq${i + 1}q.${guide.slug}`, f.question)}
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {t(`guide.faq${i + 1}a.${guide.slug}`, f.answer)}
+                  </p>
                 </div>
               ))}
             </div>
@@ -220,22 +267,39 @@ export default function GuidePage() {
             <section className="space-y-4">
               <div className="flex items-center gap-2">
                 <BookOpen className="h-5 w-5 text-primary" />
-                <h2 className="text-xl font-semibold text-foreground">{t('guide.relatedGuides')}</h2>
+                <h2 className="text-xl font-semibold text-foreground">
+                  {t('guide.relatedGuides')}
+                </h2>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                {relatedGuides.map((rg) => rg && (
-                  <Link key={rg.slug} to={`/guides/${rg.slug}`} className="group rounded-lg border border-border bg-card p-4 hover:border-primary/30 transition-colors">
-                    <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">{t(`guide.title.${rg.slug}`, rg.title)}</h3>
-                    <p className="text-xs text-muted-foreground mt-1">{t(`guide.sub.${rg.slug}`, rg.subheading)}</p>
-                  </Link>
-                ))}
+                {relatedGuides.map(
+                  (rg) =>
+                    rg && (
+                      <Link
+                        key={rg.slug}
+                        to={`/guides/${rg.slug}`}
+                        className="group rounded-lg border border-border bg-card p-4 hover:border-primary/30 transition-colors"
+                      >
+                        <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">
+                          {t(`guide.title.${rg.slug}`, rg.title)}
+                        </h3>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {t(`guide.sub.${rg.slug}`, rg.subheading)}
+                        </p>
+                      </Link>
+                    ),
+                )}
               </div>
             </section>
           )}
 
           <div className="rounded-xl border border-primary/20 bg-primary/5 p-6 text-center space-y-3">
-            <h2 className="text-lg font-semibold text-foreground">{t('guide.readyToFind')}</h2>
-            <p className="text-sm text-muted-foreground">{t('guide.readyToFindDesc')}</p>
+            <h2 className="text-lg font-semibold text-foreground">
+              {t('guide.readyToFind')}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {t('guide.readyToFindDesc')}
+            </p>
             <Button onClick={() => navigate('/')} size="lg" className="gap-2">
               <Search className="h-4 w-4" />
               {t('guides.startSearching')}
