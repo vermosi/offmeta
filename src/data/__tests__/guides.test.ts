@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { GUIDES, getGuideBySlug, type Guide } from '@/data/guides';
+import { GUIDE_SUMMARIES } from '@/data/guide-summaries';
+
 
 describe('guides data', () => {
   describe('GUIDES array structure', () => {
@@ -208,6 +210,15 @@ describe('guides data', () => {
           `Guide "${guide.slug}" translatedQuery should contain valid Scryfall operators`,
         ).toBe(true);
       }
+    }); 
+  });
+
+  describe('GUIDE_SUMMARIES stays in sync with GUIDES', () => {
+    it('matches GUIDES slug + title in the same order', () => {
+      expect(GUIDE_SUMMARIES).toEqual(
+        GUIDES.map((g) => ({ slug: g.slug, title: g.title })),
+      );
     });
   });
 });
+

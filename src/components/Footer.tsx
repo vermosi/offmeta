@@ -4,7 +4,7 @@
 
 import { Link } from 'react-router-dom';
 import { ExternalLink, Github } from 'lucide-react';
-import { GUIDES } from '@/data/guides';
+import { GUIDE_SUMMARIES as GUIDES } from '@/data/guide-summaries';
 import { Logo } from '@/components/Logo';
 import { useTranslation } from '@/lib/i18n';
 
