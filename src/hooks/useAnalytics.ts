@@ -485,6 +485,50 @@ function shouldTrackOnce(key: string): boolean {
  * All tracking is fire-and-forget to avoid blocking UI.
  * Includes rate limiting (60 events/minute) and input validation.
  */
+
+/**
+ * Standalone (non-hook) event fire. Used by IndexShell so the homepage can log
+ * a `landing_page_view` without pulling in FullAppProviders. Applies the same
+ * validation, rate limit, bot/internal filtering, and UTM tagging as the hook.
+ */
+export async function trackEventDirect(
+  eventType: string,
+  eventData: Record<string, unknown> = {},
+): Promise<void> {
+  try {
+    if (!isValidEventType(eventType)) return;
+    if (!checkAndUpdateRateLimit()) return;
+    if (isBotSession()) return;
+    const sanitizedData = sanitizeEventData(eventData);
+    const internal = isInternalTraffic();
+    if (internal && shouldSuppressInsert()) return;
+    const utm = captureUtmParams();
+    const searchCount = parseInt(
+      sessionStorage.getItem('offmeta_searches_per_session') || '0',
+      10,
+    );
+    const eventPayload: Record<string, string | number | boolean | null> = {
+      ...sanitizedData,
+      searches_per_session: searchCount,
+      ...(internal && { is_internal: true }),
+      ...(utm.utm_source && { utm_source: utm.utm_source }),
+      ...(utm.utm_medium && { utm_medium: utm.utm_medium }),
+      ...(utm.utm_campaign && { utm_campaign: utm.utm_campaign }),
+      ...(utm.utm_term && { utm_term: utm.utm_term }),
+      ...(utm.utm_content && { utm_content: utm.utm_content }),
+    };
+    await supabase.from('analytics_events').insert([
+      {
+        event_type: eventType,
+        event_data: eventPayload,
+        session_id: getSessionId(),
+      },
+    ]);
+  } catch {
+    // Analytics is best-effort; never break the caller.
+  }
+}
+
 export function useAnalytics() {
   const sessionIdRef = useRef<string | null>(null);
   const utmRef = useRef<UtmData>({});
