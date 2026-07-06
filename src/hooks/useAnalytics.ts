@@ -591,6 +591,28 @@ export function useAnalytics() {
     [trackEvent],
   );
 
+  const trackShareClicked = useCallback(
+    (data: { surface: string; url?: string; [key: string]: unknown } = { surface: 'unknown' }) => {
+      trackEvent('share_clicked', data);
+    },
+    [trackEvent],
+  );
+
+  const trackDeckClick = useCallback(
+    (data: { deck_id?: string; source?: string; [key: string]: unknown } = {}) => {
+      trackEvent('deck_click', data);
+    },
+    [trackEvent],
+  );
+
+  const trackSearchStarted = useCallback(
+    (data: { query?: string; [key: string]: unknown } = {}) => {
+      trackEvent('search_started', data);
+    },
+    [trackEvent],
+  );
+
+
   const trackPagination = useCallback(
     (data: PaginationEventData) => {
       trackEvent('pagination', data);
