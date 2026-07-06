@@ -28,7 +28,7 @@ import { useTranslation } from '@/lib/i18n/useTranslation';
 import { SkipLinks } from '@/components/SkipLinks';
 import { SunsetBanner } from '@/components/SunsetBanner';
 import { useNoIndex } from '@/hooks';
-import { applySeoMeta, injectJsonLd } from '@/lib/seo';
+import { applySeoMeta } from '@/lib/seo';
 
 /** Format names for display */
 const FORMAT_LABELS: Record<string, string> = {
@@ -233,26 +233,15 @@ export default function ArchetypePage() {
 
   useEffect(() => {
     if (!slug) return;
-    const cleanupMeta = applySeoMeta({
+    // BreadcrumbList JSON-LD is rendered inline in JSX below (SSR-friendly).
+    // applySeoMeta handles the per-route title/description/canonical/og:url.
+    return applySeoMeta({
       title: `${displayName}${formatLabel ? ` (${formatLabel})` : ''} Archetype — Strategy & Decklists | OffMeta`,
       description: curated?.tagline
         ? `${curated.tagline}. Explore ${totalDecks} ${displayName} decklists from the community.`
         : `Explore ${totalDecks} ${displayName} decklists across multiple formats. Data-driven archetype discovery.`,
       url: `https://offmeta.app/archetypes/${slug}${format ? `?format=${format}` : ''}`,
     });
-    const cleanupJsonLd = injectJsonLd({
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'OffMeta', item: 'https://offmeta.app/' },
-        { '@type': 'ListItem', position: 2, name: 'Archetypes', item: 'https://offmeta.app/archetypes' },
-        { '@type': 'ListItem', position: 3, name: displayName, item: `https://offmeta.app/archetypes/${slug}` },
-      ],
-    });
-    return () => {
-      cleanupMeta();
-      cleanupJsonLd();
-    };
   }, [slug, displayName, formatLabel, totalDecks, curated?.tagline, format]);
 
   const handleSearch = useCallback(
