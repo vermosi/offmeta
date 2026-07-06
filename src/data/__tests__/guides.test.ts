@@ -210,6 +210,15 @@ describe('guides data', () => {
           `Guide "${guide.slug}" translatedQuery should contain valid Scryfall operators`,
         ).toBe(true);
       }
+    }); 
+  });
+
+  describe('GUIDE_SUMMARIES stays in sync with GUIDES', () => {
+    it('matches GUIDES slug + title in the same order', () => {
+      expect(GUIDE_SUMMARIES).toEqual(
+        GUIDES.map((g) => ({ slug: g.slug, title: g.title })),
+      );
     });
   });
 });
+
