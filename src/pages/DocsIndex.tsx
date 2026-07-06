@@ -6,7 +6,7 @@ import { useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
-import { GUIDES } from '@/data/guides';
+import { GUIDE_SUMMARIES as GUIDES } from '@/data/guide-summaries';
 import { BookOpen, FileText, Sparkles, ChevronRight, TrendingUp } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { SkipLinks } from '@/components/SkipLinks';
