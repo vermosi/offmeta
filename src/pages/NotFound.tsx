@@ -5,6 +5,8 @@ import { useTranslation } from '@/lib/i18n';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { SkipLinks } from '@/components/SkipLinks';
+import { useNoIndex } from '@/hooks';
+import { applySeoMeta } from '@/lib/seo';
 import { Search, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -12,11 +14,23 @@ const NotFound = () => {
   const location = useLocation();
   const { t } = useTranslation();
 
+  // Ensure crawlers do not index 404s and social preview reflects the state,
+  // instead of inheriting the last route's meta.
+  useNoIndex(true);
+
   useEffect(() => {
+    const cleanup = applySeoMeta({
+      title: 'Page not found — OffMeta MTG',
+      description:
+        "The page you're looking for doesn't exist. Search Magic: The Gathering cards in plain English on OffMeta.",
+      url: `https://offmeta.app${location.pathname}`,
+      type: 'website',
+    });
     logger.error(
       '404 Error: User attempted to access non-existent route:',
       location.pathname,
     );
+    return cleanup;
   }, [location.pathname]);
 
   return (
