@@ -1,11 +1,14 @@
 /**
- * spicerack-import — Fetches tournament decklists from Spicerack's
- * public decklist database API and stores them in community_decks.
+ * topdeck-import — Fetches tournament decklists from TopDeck.gg's
+ * public tournaments API and stores them in community_decks.
  *
- * Documented endpoint: GET https://api.spicerack.gg/api/export-decklists/
- * Auth: X-API-Key header
+ * Replaces the defunct Spicerack API.
  *
- * @module functions/spicerack-import
+ * Endpoint: POST https://topdeck.gg/api/v2/tournaments
+ * Auth: Authorization: <API_KEY> header (no Bearer prefix)
+ * Docs: https://topdeck.gg/api/docs
+ *
+ * @module functions/topdeck-import
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
@@ -13,39 +16,56 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, requireServiceRole } from '../_shared/auth.ts';
 import { createLogger } from '../_shared/logger.ts';
 
-const log = createLogger('spicerack-import');
+const log = createLogger('topdeck-import');
 const SCRYFALL_DELAY_MS = 100;
 const SCRYFALL_BATCH_SIZE = 75;
+const MOXFIELD_DELAY_MS = 150;
+const TOPDECK_API_URL = 'https://topdeck.gg/api/v2/tournaments';
+const TOPDECK_GAME = 'Magic: The Gathering';
 
-/** Map Spicerack format strings to our lowercase format names. */
+/** Map TopDeck.gg format strings (case sensitive) to our lowercase format names. */
 const FORMAT_MAP: Record<string, string> = {
-  STANDARD: 'standard',
-  MODERN: 'modern',
-  PIONEER: 'pioneer',
-  LEGACY: 'legacy',
-  VINTAGE: 'vintage',
-  COMMANDER2: 'commander',
-  PAUPER: 'pauper',
-  BOOSTER_DRAFT: 'draft',
-  SEALED_DECK: 'sealed',
-  HISTORIC: 'historic',
-  EXPLORER: 'explorer',
-  TIMELESS: 'timeless',
-  DUEL: 'duel',
-  OATHBREAKER: 'oathbreaker',
-  PREMODERN: 'premodern',
-  PAUPER_COMMANDER: 'paupercommander',
-  OLDSCHOOL: 'oldschool',
-  OTHER: 'other',
-  GLADIATOR: 'gladiator',
-  STANDARD_BRAWL: 'standardbrawl',
-  PREDH: 'predh',
-  TRIOS_CONSTRUCTED: 'other',
+  'EDH': 'commander',
+  'Pauper EDH': 'paupercommander',
+  'Standard': 'standard',
+  'Pioneer': 'pioneer',
+  'Modern': 'modern',
+  'Legacy': 'legacy',
+  'Pauper': 'pauper',
+  'Vintage': 'vintage',
+  'Premodern': 'premodern',
+  'Sealed': 'sealed',
+  'Limited': 'draft',
+  'Duel Commander': 'duel',
+  'Old School 93/94': 'oldschool',
+  'Canadian Highlander': 'other',
+  'Tiny Leaders': 'other',
+  'Team Trios': 'other',
+  'Two-Headed Giant': 'other',
+  'EDH Draft': 'commander',
+  'Timeless': 'timeless',
+  'Historic': 'historic',
+  'Explorer': 'explorer',
+  '7pt Highlander': 'other',
+  'Oathbreaker': 'oathbreaker',
 };
 
+/** Default set of formats to poll per run. Override via request body. */
+const DEFAULT_FORMATS = [
+  'EDH',
+  'Modern',
+  'Pioneer',
+  'Standard',
+  'Legacy',
+  'Pauper',
+  'Vintage',
+];
+
 /**
- * Parse a plaintext decklist (MTGO/Arena format) into card entries.
- * Expected lines: "2 Lightning Bolt" or "1x Sol Ring"
+ * Parse a plaintext decklist. Handles both MTGO/Arena format
+ * ("2 Lightning Bolt", "SB: 1 Card") and TopDeck/Scrollrack format
+ * with section headers like `~~Commanders~~`, `~~Sideboard~~`,
+ * `~~Companions~~`, `~~Maybeboard~~`.
  */
 function parseDecklistText(
   text: string,
@@ -59,20 +79,36 @@ function parseDecklistText(
     const line = raw.trim();
     if (!line) continue;
 
-    // Detect sideboard header
+    // TopDeck/Scrollrack section markers: ~~Section Name~~
+    const sectionMatch = line.match(/^~~\s*(.+?)\s*~~$/);
+    if (sectionMatch) {
+      const section = sectionMatch[1].toLowerCase();
+      if (section.startsWith('commander')) currentBoard = 'commander';
+      else if (section.startsWith('sideboard')) currentBoard = 'sideboard';
+      else if (section.startsWith('companion')) currentBoard = 'companion';
+      else if (section.startsWith('maybe')) currentBoard = 'maybeboard';
+      else if (section.startsWith('token')) currentBoard = 'tokens';
+      else if (section.startsWith('signature')) currentBoard = 'signature';
+      else currentBoard = 'mainboard';
+      continue;
+    }
+
+    // MTGO-style sideboard header
     if (/^sideboard/i.test(line) || line === 'SB:') {
       currentBoard = 'sideboard';
       continue;
     }
 
-    // Match "2 Card Name" or "2x Card Name" or "SB: 1 Card Name"
     const sbPrefix = line.startsWith('SB:') ? 'sideboard' : null;
     const cleaned = sbPrefix ? line.slice(3).trim() : line;
     const match = cleaned.match(/^(\d+)x?\s+(.+)$/);
     if (!match) continue;
 
     const quantity = parseInt(match[1], 10);
-    const name = match[2].trim();
+    // Strip trailing set codes like "(NEO) 123" or "*F*"
+    let name = match[2].trim();
+    name = name.replace(/\s+\([A-Z0-9]{2,6}\)(\s+\S+)?$/, '').trim();
+    name = name.replace(/\s+\*F\*$/i, '').trim();
     if (name && quantity > 0) {
       cards.push({ name, quantity, board: sbPrefix ?? currentBoard });
     }
@@ -81,10 +117,9 @@ function parseDecklistText(
   return cards;
 }
 
-const MOXFIELD_DELAY_MS = 150;
-
 /**
- * Fetch a decklist from a Moxfield URL and return parsed card entries.
+ * Fetch a decklist from a Moxfield URL — fallback when TopDeck standings
+ * link out instead of embedding plaintext.
  */
 async function fetchMoxfieldDeck(
   url: string,
@@ -103,7 +138,7 @@ async function fetchMoxfieldDeck(
       {
         headers: {
           Accept: 'application/json',
-          'User-Agent': 'OffMeta/1.0 (spicerack-import)',
+          'User-Agent': 'OffMeta/1.0 (topdeck-import)',
         },
       },
     );
@@ -118,7 +153,6 @@ async function fetchMoxfieldDeck(
     const cards: { name: string; quantity: number; board: string }[] = [];
     const commanders: string[] = [];
 
-    // Extract commanders
     const cmdBoard = boards.commanders;
     if (cmdBoard) {
       const cmdCards = cmdBoard.cards ?? cmdBoard;
@@ -135,7 +169,6 @@ async function fetchMoxfieldDeck(
       }
     }
 
-    // Extract mainboard + sideboard + companions
     for (const [boardName, boardKey] of [
       ['mainboard', 'mainboard'],
       ['sideboard', 'sideboard'],
@@ -169,6 +202,29 @@ async function fetchMoxfieldDeck(
 }
 
 /**
+ * Derive commander name(s) and color identity from a parsed decklist
+ * when the source did not provide structured deck data.
+ */
+function deriveCommanderAndColors(
+  cards: { name: string; quantity: number; board: string }[],
+  deckObj: unknown,
+): { commander: string | null; colors: string[] } {
+  const commanders = cards.filter((c) => c.board === 'commander').map((c) => c.name);
+  const commander = commanders.length > 0 ? commanders.join(' // ') : null;
+
+  let colors: string[] = [];
+  if (
+    deckObj &&
+    typeof deckObj === 'object' &&
+    Array.isArray((deckObj as { colorIdentity?: unknown }).colorIdentity)
+  ) {
+    const ci = (deckObj as { colorIdentity: unknown[] }).colorIdentity;
+    colors = ['W', 'U', 'B', 'R', 'G'].filter((c) => ci.includes(c));
+  }
+  return { commander, colors };
+}
+
+/**
  * Batch-resolve oracle IDs — checks local cards table first, falls back to Scryfall.
  */
 async function batchResolveOracleIds(
@@ -178,7 +234,6 @@ async function batchResolveOracleIds(
   const result = new Map<string, string | null>();
   const unique = [...new Set(cardNames)];
 
-  // 1. Check local cards table first
   const missing: string[] = [];
   for (let i = 0; i < unique.length; i += 100) {
     const batch = unique.slice(i, i + 100);
@@ -204,7 +259,6 @@ async function batchResolveOracleIds(
 
   if (missing.length === 0) return result;
 
-  // 2. Fall back to Scryfall for missing cards
   log.info(
     `Resolving ${missing.length}/${unique.length} oracle IDs from Scryfall (not in local DB)`,
   );
@@ -243,6 +297,41 @@ async function batchResolveOracleIds(
   return result;
 }
 
+/** Fetch tournaments for a single TopDeck.gg format. */
+async function fetchTopdeckFormat(
+  format: string,
+  numDays: number,
+  apiKey: string,
+): Promise<unknown[]> {
+  const resp = await fetch(TOPDECK_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Authorization: apiKey,
+    },
+    body: JSON.stringify({
+      game: TOPDECK_GAME,
+      format,
+      last: numDays,
+      columns: ['name', 'decklist', 'wins', 'draws', 'losses'],
+    }),
+  });
+
+  if (!resp.ok) {
+    const text = await resp.text();
+    log.warn(`TopDeck API error for format=${format}`, {
+      status: resp.status,
+      body: text.slice(0, 200),
+    });
+    if (resp.status === 404) return [];
+    throw new Error(`TopDeck API ${resp.status}: ${text.slice(0, 200)}`);
+  }
+
+  const data = await resp.json();
+  return Array.isArray(data) ? data : [];
+}
+
 serve(async (req: Request): Promise<Response> => {
   const corsHeaders = getCorsHeaders(req);
   const headers = { ...corsHeaders, 'Content-Type': 'application/json' };
@@ -251,7 +340,6 @@ serve(async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Auth guard: service role only (cron jobs use service role key)
   const authCheck = requireServiceRole(req, corsHeaders);
   if (!authCheck.authorized) {
     return authCheck.response;
@@ -259,7 +347,7 @@ serve(async (req: Request): Promise<Response> => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  const spicerackApiKey = Deno.env.get('SPICERACK_API_KEY');
+  const topdeckApiKey = Deno.env.get('TOPDECK_API_KEY');
 
   if (!supabaseUrl || !serviceRoleKey) {
     return new Response(JSON.stringify({ error: 'Not configured' }), {
@@ -268,9 +356,9 @@ serve(async (req: Request): Promise<Response> => {
     });
   }
 
-  if (!spicerackApiKey) {
+  if (!topdeckApiKey) {
     return new Response(
-      JSON.stringify({ error: 'SPICERACK_API_KEY not configured' }),
+      JSON.stringify({ error: 'TOPDECK_API_KEY not configured' }),
       { status: 500, headers },
     );
   }
@@ -279,47 +367,27 @@ serve(async (req: Request): Promise<Response> => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const backfillUrls = body.backfill_urls === true;
-    const numDays = body.num_days ?? (backfillUrls ? 90 : 14);
-    const eventFormat = body.event_format ?? null; // e.g. "MODERN", "COMMANDER2"
+    const numDays: number = body.num_days ?? 14;
+    const requestedFormats: string[] = Array.isArray(body.formats) && body.formats.length > 0
+      ? body.formats
+      : DEFAULT_FORMATS;
 
-    // Build API URL with query params
-    const apiUrl = new URL('https://api.spicerack.gg/api/export-decklists/');
-    apiUrl.searchParams.set('num_days', String(numDays));
-    apiUrl.searchParams.set('decklist_as_text', 'true');
-    if (eventFormat) {
-      apiUrl.searchParams.set('event_format', eventFormat);
-    }
-
-    log.info(`Fetching Spicerack tournaments: ${apiUrl.toString()}`);
-
-    const apiResp = await fetch(apiUrl.toString(), {
-      headers: {
-        Accept: 'application/json',
-        'X-API-Key': spicerackApiKey,
-      },
-    });
-
-    if (!apiResp.ok) {
-      const text = await apiResp.text();
-      if (apiResp.status === 404) {
-        return new Response(
-          JSON.stringify({
-            success: true,
-            message: 'Spicerack API not available',
-            imported: 0,
-          }),
-          { status: 200, headers },
-        );
+    // Aggregate tournaments across all requested formats.
+    const tournaments: any[] = [];
+    for (const fmt of requestedFormats) {
+      try {
+        const list = await fetchTopdeckFormat(fmt, numDays, topdeckApiKey);
+        tournaments.push(...list);
+        // Modest pacing to stay under rate limits.
+        await new Promise((r) => setTimeout(r, 400));
+      } catch (e) {
+        log.warn(`Skipping format=${fmt}`, { error: (e as Error).message });
       }
-      throw new Error(
-        `Spicerack API error: ${apiResp.status} ${text.slice(0, 200)}`,
-      );
     }
 
-    const tournaments = await apiResp.json();
+    log.info(`TopDeck: fetched ${tournaments.length} tournaments across ${requestedFormats.length} formats`);
 
-    if (!Array.isArray(tournaments) || tournaments.length === 0) {
+    if (tournaments.length === 0) {
       return new Response(
         JSON.stringify({
           success: true,
@@ -331,87 +399,32 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    // ── Backfill source_url mode ──
-    if (backfillUrls) {
-      let updated = 0;
-      let checked = 0;
-
-      for (const tournament of tournaments) {
-        const tid = String(tournament.TID ?? '');
-        const standings = tournament.standings ?? [];
-        if (!Array.isArray(standings)) continue;
-
-        for (const standing of standings) {
-          const playerName = String(standing.name ?? 'Unknown');
-          const sourceId = `${tid}-${playerName}`.slice(0, 200);
-          const decklistUrl = standing.decklist ?? '';
-
-          // Only process if standing has a Moxfield URL
-          if (
-            typeof decklistUrl !== 'string' ||
-            !decklistUrl.includes('moxfield.com/decks/')
-          )
-            continue;
-          checked++;
-
-          // Update existing deck that has no source_url
-          const { data: updatedRow } = await supabase
-            .from('community_decks')
-            .update({ source_url: decklistUrl })
-            .eq('source', 'spicerack')
-            .eq('source_id', sourceId)
-            .is('source_url', null)
-            .select('id')
-            .maybeSingle();
-
-          if (updatedRow) updated++;
-        }
-      }
-
-      log.info(`Backfill URLs: checked=${checked}, updated=${updated}`);
-      return new Response(
-        JSON.stringify({
-          success: true,
-          mode: 'backfill_urls',
-          checked,
-          updated,
-          tournaments: tournaments.length,
-        }),
-        { status: 200, headers },
-      );
-    }
-
-    // ── Normal import mode ──
     let imported = 0;
     let skipped = 0;
     let tournamentsProcessed = 0;
 
     for (const tournament of tournaments) {
       const tid = String(tournament.TID ?? '');
-      const tournamentName = String(
-        tournament.tournamentName ?? 'Unknown Event',
-      );
-      const format =
-        FORMAT_MAP[tournament.format] ??
-        String(tournament.format ?? 'unknown').toLowerCase();
+      const tournamentName = String(tournament.tournamentName ?? 'Unknown Event');
+      const rawFormat = String(tournament.format ?? '');
+      const format = FORMAT_MAP[rawFormat] ?? rawFormat.toLowerCase() ?? 'unknown';
       const startDate = tournament.startDate
         ? new Date(tournament.startDate * 1000).toISOString().split('T')[0]
         : null;
       const standings = tournament.standings ?? [];
 
-      if (!Array.isArray(standings)) continue;
+      if (!tid || !Array.isArray(standings)) continue;
       tournamentsProcessed++;
 
       for (const standing of standings) {
         const playerName = String(standing.name ?? 'Unknown');
-        // Use TID + player name as unique source_id
         const sourceId = `${tid}-${playerName}`.slice(0, 200);
 
-        // Skip if already imported
+        // Skip if already imported.
         const { data: existing } = await supabase
           .from('community_decks')
           .select('id')
-          .eq('source', 'spicerack')
+          .eq('source', 'topdeck')
           .eq('source_id', sourceId)
           .maybeSingle();
 
@@ -420,26 +433,28 @@ serve(async (req: Request): Promise<Response> => {
           continue;
         }
 
-        // Try plaintext first, then Moxfield URL
-        const decklistText = standing.decklist_text ?? '';
-        let cards = parseDecklistText(decklistText);
+        // TopDeck usually returns plaintext in `decklist`. If it's a URL,
+        // fall through to Moxfield fetching.
+        const rawDecklist = standing.decklist ?? '';
+        let cards: { name: string; quantity: number; board: string }[] = [];
         let commander: string | null = null;
         let deckColors: string[] = [];
         let sourceUrl: string | null = null;
 
-        if (cards.length === 0) {
-          // Check if decklist is a Moxfield URL
-          const decklistUrl = standing.decklist ?? '';
-          if (
-            typeof decklistUrl === 'string' &&
-            decklistUrl.includes('moxfield.com/decks/')
-          ) {
-            sourceUrl = decklistUrl;
-            const moxResult = await fetchMoxfieldDeck(decklistUrl);
-            cards = moxResult.cards;
-            commander = moxResult.commander;
-            deckColors = moxResult.colors;
-            await new Promise((r) => setTimeout(r, MOXFIELD_DELAY_MS));
+        if (typeof rawDecklist === 'string' && rawDecklist.trim().length > 0) {
+          if (/^https?:\/\//i.test(rawDecklist)) {
+            if (rawDecklist.includes('moxfield.com/decks/')) {
+              sourceUrl = rawDecklist;
+              const moxResult = await fetchMoxfieldDeck(rawDecklist);
+              cards = moxResult.cards;
+              commander = moxResult.commander;
+              deckColors = moxResult.colors;
+              await new Promise((r) => setTimeout(r, MOXFIELD_DELAY_MS));
+            } else {
+              sourceUrl = rawDecklist;
+            }
+          } else {
+            cards = parseDecklistText(rawDecklist);
           }
         }
 
@@ -448,7 +463,12 @@ serve(async (req: Request): Promise<Response> => {
           continue;
         }
 
-        // Build deck name
+        if (!commander) {
+          const derived = deriveCommanderAndColors(cards, standing.deckObj);
+          commander = derived.commander;
+          if (deckColors.length === 0) deckColors = derived.colors;
+        }
+
         const deckName = `${playerName} — ${tournamentName}`.slice(0, 200);
 
         const { data: deckRow, error: deckErr } = await supabase
@@ -456,7 +476,7 @@ serve(async (req: Request): Promise<Response> => {
           .insert({
             name: deckName,
             format,
-            source: 'spicerack',
+            source: 'topdeck',
             source_id: sourceId,
             commander,
             colors: deckColors,
@@ -473,7 +493,6 @@ serve(async (req: Request): Promise<Response> => {
           continue;
         }
 
-        // Batch resolve oracle IDs for all cards
         const cardNames = cards.map((c) => c.name).filter(Boolean);
         const oracleMap = await batchResolveOracleIds(cardNames, supabase);
 
@@ -496,7 +515,7 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     log.info(
-      `Spicerack import: tournaments=${tournamentsProcessed}, imported=${imported}, skipped=${skipped}`,
+      `TopDeck import: tournaments=${tournamentsProcessed}, imported=${imported}, skipped=${skipped}`,
     );
 
     return new Response(
@@ -505,14 +524,15 @@ serve(async (req: Request): Promise<Response> => {
         imported,
         skipped,
         tournaments: tournamentsProcessed,
+        formats: requestedFormats,
       }),
       { status: 200, headers },
     );
   } catch (e) {
-    log.error('spicerack-import error', e);
-    return new Response(JSON.stringify({ error: 'Internal error' }), {
-      status: 500,
-      headers,
-    });
+    log.error('topdeck-import error', e);
+    return new Response(
+      JSON.stringify({ error: (e as Error).message }),
+      { status: 500, headers },
+    );
   }
 });

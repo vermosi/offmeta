@@ -126,7 +126,7 @@ export default function ArchetypesIndex() {
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground max-w-2xl">
               Deck archetypes discovered from tournament decklists across
-              multiple formats. Data sourced from Spicerack.gg community events.
+              multiple formats. Data sourced from TopDeck.gg community events.
             </p>
             {totalDecks > 0 && (
               <p className="text-xs text-muted-foreground">

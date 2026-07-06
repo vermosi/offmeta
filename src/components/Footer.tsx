@@ -21,7 +21,7 @@ const DATA_SOURCES = [
   { name: 'Scryfall', href: 'https://scryfall.com' },
   { name: 'Moxfield', href: 'https://www.moxfield.com' },
   { name: 'Commander Spellbook', href: 'https://commanderspellbook.com' },
-  { name: 'Spicerack', href: 'https://spicerack.gg' },
+  { name: 'TopDeck.gg', href: 'https://topdeck.gg' },
 ] as const;
 
 const BUILT_WITH = [

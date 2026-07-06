@@ -35,7 +35,7 @@ Cron jobs are registered in the database using `pg_cron` (enabled via migration)
 | `price-snapshot-nightly` | `0 1 * * *` (01:00 UTC) | `price-snapshot` | Capture price snapshots from Scryfall for all collection cards |
 | `cleanup-logs-nightly` | `0 2 * * *` (02:00 UTC) | `cleanup-logs` | Delete old translation logs and analytics events |
 | `generate-patterns-nightly` | `0 3 * * *` (03:00 UTC) | `generate-patterns` | Promote high-confidence translation logs into rules |
-| `spicerack-import-daily` | `0 6 * * *` (06:00 UTC) | `spicerack-import` | Import tournament decklists from Spicerack API |
+| `topdeck-import-daily` | `0 6 * * *` (06:00 UTC) | `topdeck-import` | Import tournament decklists from TopDeck.gg API |
 | `card-sync-daily` | `0 7 * * *` (07:00 UTC) | `card-sync` | Sync Scryfall card metadata for imported deck cards |
 | `compute-cooccurrence-daily` | `0 8 * * *` (08:00 UTC) | `compute-cooccurrence` | Recompute card co-occurrence synergy graph |
 | `mtgjson-import-weekly` | `0 4 * * 0` (04:00 UTC Sun) | `mtgjson-import` | Import MTGJSON preconstructed decklists |

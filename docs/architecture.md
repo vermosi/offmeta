@@ -229,7 +229,7 @@ Edge functions use a shared `validateAuth` helper in `supabase/functions/_shared
 | `promote-searches`            | anon-authenticated |
 | `semantic-search`             | anon-authenticated |
 | `sitemap`                     | public             |
-| `spicerack-import`            | service/admin-only |
+| `topdeck-import`            | service/admin-only |
 | `sync-card-names`             | anon-authenticated |
 | `warmup-cache`                | service/admin-only |
 
