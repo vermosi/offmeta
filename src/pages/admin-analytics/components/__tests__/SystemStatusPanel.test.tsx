@@ -7,6 +7,13 @@ const rpcMock = vi.fn();
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     rpc: (...args: unknown[]) => rpcMock(...args),
+    schema: () => ({
+      rpc: (...args: unknown[]) => rpcMock(...args),
+    }),
+    functions: {
+      invoke: (_name: string, opts?: { body?: unknown }) =>
+        rpcMock('get_system_status', opts?.body),
+    },
   },
 }));
 

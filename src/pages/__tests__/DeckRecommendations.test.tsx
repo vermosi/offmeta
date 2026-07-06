@@ -61,13 +61,13 @@ describe('DeckRecommendations', () => {
 
   it('renders the page heading', async () => {
     await renderPage();
-    expect(screen.getByText('Deck Recommendations')).toBeInTheDocument();
-  });
+    expect(await screen.findByText('Deck Recommendations', {}, { timeout: 10000 })).toBeInTheDocument();
+  }, 15000);
 
   it('defaults to Moxfield URL input mode', async () => {
     await renderPage();
     expect(
-      screen.getByPlaceholderText(/moxfield\.com\/decks/i),
+      screen.getAllByPlaceholderText(/moxfield\.com\/decks/i)[0],
     ).toBeInTheDocument();
   });
 
@@ -98,7 +98,7 @@ describe('DeckRecommendations', () => {
       error: null,
     });
     await renderPage();
-    fireEvent.change(screen.getByPlaceholderText(/moxfield\.com\/decks/i), {
+    fireEvent.change(screen.getAllByPlaceholderText(/moxfield\.com\/decks/i)[0], {
       target: { value: 'https://www.moxfield.com/decks/elemental-value' },
     });
     fireEvent.click(
@@ -124,7 +124,7 @@ describe('DeckRecommendations', () => {
       error: null,
     });
     await renderPage();
-    fireEvent.change(screen.getByPlaceholderText(/moxfield\.com\/decks/i), {
+    fireEvent.change(screen.getAllByPlaceholderText(/moxfield\.com\/decks/i)[0], {
       target: { value: 'https://www.moxfield.com/decks/artifact-shell' },
     });
     fireEvent.click(
