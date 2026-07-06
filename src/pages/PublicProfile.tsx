@@ -83,6 +83,22 @@ export default function PublicProfile() {
 
   const { t } = useTranslation();
 
+  useEffect(() => {
+    if (!userId) return;
+    const displayName = profile?.display_name?.trim() || 'MTG player';
+    const deckCountText = decks.length
+      ? `${decks.length} public deck${decks.length === 1 ? '' : 's'}`
+      : 'Magic: The Gathering profile';
+    return applySeoMeta({
+      title: `${displayName} on OffMeta — ${deckCountText}`,
+      description: `Browse ${displayName}'s public Magic: The Gathering decks and collection stats on OffMeta.`,
+      url: `https://offmeta.app/user/${userId}`,
+      image: profile?.avatar_url || 'https://offmeta.app/og-image.png',
+      type: 'profile',
+    });
+  }, [userId, profile?.display_name, profile?.avatar_url, decks.length]);
+
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SkipLinks />
