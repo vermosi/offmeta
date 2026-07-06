@@ -121,7 +121,7 @@ export function SystemStatusPanel() {
         ? await invokeAdminRpc('admin-rpc', {
             body: { fn: 'get_system_status' },
           })
-        : await supabase.rpc('get_system_status' as AdminRpcName as PublicRpcName);
+        : await (supabase.schema('admin_api' as never) as unknown as UntypedRpcClient).rpc('get_system_status');
       if (fnError) throw fnError;
       setStatus('data' in data ? data.data : (data as SystemStatus));
     } catch (e) {
