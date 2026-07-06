@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { parseDecklist, type ParsedDecklist } from '@/lib/decklist-parser';
 import { supabase } from '@/integrations/supabase/client';
+import { applySeoMeta, injectJsonLd } from '@/lib/seo';
 import {
   Loader2,
   Sparkles,
@@ -59,33 +60,26 @@ export default function DeckRecommendations() {
   const { t } = useTranslation();
 
   useEffect(() => {
-    const prev = document.title;
-    document.title = 'Deck Recommendations — OffMeta MTG';
-    const s = document.createElement('script');
-    s.type = 'application/ld+json';
-    s.id = 'deck-recs-jsonld';
-    s.textContent = JSON.stringify({
+    // Per-route SEO: title/description/canonical/og:url via applySeoMeta.
+    // Prior code only set document.title, so /deck-recs shared everywhere pulled homepage OG.
+    const cleanupMeta = applySeoMeta({
+      title: 'Deck Recommendations — OffMeta MTG',
+      description:
+        'Get AI-powered card recommendations for your Magic: The Gathering deck. Paste a Moxfield URL and see curated additions by role.',
+      url: 'https://offmeta.app/deck-recs',
+      type: 'website',
+    });
+    const cleanupJsonLd = injectJsonLd({
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        {
-          '@type': 'ListItem',
-          position: 1,
-          name: 'OffMeta',
-          item: 'https://offmeta.app/',
-        },
-        {
-          '@type': 'ListItem',
-          position: 2,
-          name: 'Deck Recommendations',
-          item: 'https://offmeta.app/deck-recs',
-        },
+        { '@type': 'ListItem', position: 1, name: 'OffMeta', item: 'https://offmeta.app/' },
+        { '@type': 'ListItem', position: 2, name: 'Deck Recommendations', item: 'https://offmeta.app/deck-recs' },
       ],
     });
-    document.head.appendChild(s);
     return () => {
-      document.title = prev;
-      document.getElementById('deck-recs-jsonld')?.remove();
+      cleanupMeta();
+      cleanupJsonLd();
     };
   }, []);
   const [rawText, setRawText] = useState('');
