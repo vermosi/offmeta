@@ -5,7 +5,7 @@
  * user navigates to /search/:slug.
  */
 
-import { useCallback, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { queryToSlug } from '@/lib/search-slug';
 import { useTranslation } from '@/lib/i18n';
@@ -112,6 +112,38 @@ function IndexShell() {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Fire a single `landing_page_view` analytics event on mount, after idle,
+  // via dynamic import so the analytics module never lands in the critical
+  // first-paint bundle. Previously the homepage bypassed FullAppProviders
+  // entirely, so no analytics event fired for the very first hit of every
+  // session — bounces on `/` were invisible in the funnel.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const fire = () => {
+      import('@/hooks/useAnalytics')
+        .then(({ trackEventDirect }) => {
+          trackEventDirect?.('landing_page_view', {
+            path: '/',
+            referrer: document.referrer || undefined,
+            variant: 'index_shell',
+          });
+        })
+        .catch(() => {
+          // Analytics is best-effort; never surface an error to the UI.
+        });
+    };
+    const idle = (
+      window as unknown as {
+        requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+      }
+    ).requestIdleCallback;
+    if (idle) {
+      idle(fire, { timeout: 2000 });
+    } else {
+      setTimeout(fire, 800);
+    }
+  }, []);
 
   // No idle preload: the search bundle is only fetched on direct user intent
   // (input focus/pointerdown, or hover on a CTA that needs it).
