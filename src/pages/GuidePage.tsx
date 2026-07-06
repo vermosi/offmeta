@@ -181,7 +181,7 @@ export default function GuidePage() {
             </Button>
           </div>
 
-          <section className="prose-section min-w-0">
+          <section className="min-w-0">
             <p className="text-base leading-relaxed text-foreground/90 break-words">
               {t(`guide.intro.${guide.slug}`, guide.intro)}
             </p>
