@@ -11,6 +11,7 @@ import { useCallback } from 'react';
 import { Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
+import { trackAnalyticsEvent } from '@/lib/analytics/track';
 
 interface SharePageButtonProps {
   /** Title used by native share sheet (falls back to document.title). */
