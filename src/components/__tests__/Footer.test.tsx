@@ -81,7 +81,7 @@ describe('Footer', () => {
     expect(screen.getByText('Data Sources')).toBeInTheDocument();
     expect(screen.getByText('Moxfield').closest('a')).toHaveAttribute('href', 'https://www.moxfield.com');
     expect(screen.getByText('Commander Spellbook').closest('a')).toHaveAttribute('href', 'https://commanderspellbook.com');
-    expect(screen.getByText('Spicerack').closest('a')).toHaveAttribute('href', 'https://spicerack.gg');
+    expect(screen.getByText('TopDeck.gg').closest('a')).toHaveAttribute('href', 'https://topdeck.gg');
   });
 
   it('renders Built With section with tech stack links', () => {
