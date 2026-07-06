@@ -109,7 +109,7 @@ export default function DocsIndex() {
           </header>
 
           {/* Substantive intro — gives Googlebot enough prose to assess page quality */}
-          <section className="prose prose-sm max-w-none text-muted-foreground space-y-3 text-sm leading-relaxed border-b border-border/30 pb-8">
+          <section className="prose prose-sm prose-invert max-w-none text-muted-foreground space-y-3 text-sm leading-relaxed border-b border-border/30 pb-8">
             <p>
               OffMeta is a natural language Magic: The Gathering card search engine. Instead of
               learning Scryfall's query syntax, you describe what you need in plain English —
