@@ -14,15 +14,7 @@ import {
   Activity,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
-
-/**
- * `get_system_status` lives in the private `admin_api` schema, which isn't
- * exposed in the generated Database types. We scope the client to that
- * schema via `supabase.schema(...)` and cast to the loose PostgrestClient
- * shape so TypeScript accepts the RPC name.
- */
-type UntypedRpcClient = { rpc: (name: string) => Promise<{ data: unknown; error: unknown }> };
+import { callAdminRpc, type AdminRpcResultMap } from '@/integrations/supabase/adminRpc';
 
 interface CronJob {
   jobid: number;
