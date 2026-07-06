@@ -4,6 +4,16 @@
  */
 
 import '@testing-library/jest-dom';
+import { afterEach } from 'vitest';
+import { cleanup } from '@testing-library/react';
+
+// Ensure React Testing Library unmounts and clears the DOM after each test,
+// even when an assertion throws or the test times out mid-render. Without
+// this, leftover trees from a previous test cause "multiple elements found"
+// errors and slow interleaved failures in subsequent tests.
+afterEach(() => {
+  cleanup();
+});
 
 // Mock window.matchMedia for tests that use responsive hooks
 Object.defineProperty(window, 'matchMedia', {
