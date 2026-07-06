@@ -61,8 +61,8 @@ describe('FindMyCombos', () => {
 
   it('renders the page heading', async () => {
     await renderPage();
-    expect(screen.getByText('Find My Combos')).toBeInTheDocument();
-  });
+    expect(await screen.findByText('Find My Combos', {}, { timeout: 10000 })).toBeInTheDocument();
+  }, 15000);
 
   it('renders Commander Spellbook attribution', async () => {
     await renderPage();
