@@ -373,7 +373,7 @@ serve(async (req: Request): Promise<Response> => {
       : DEFAULT_FORMATS;
 
     // Aggregate tournaments across all requested formats.
-    const tournaments: any[] = [];
+    const tournaments: unknown[] = [];
     for (const fmt of requestedFormats) {
       try {
         const list = await fetchTopdeckFormat(fmt, numDays, topdeckApiKey);
