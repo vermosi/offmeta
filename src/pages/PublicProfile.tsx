@@ -5,7 +5,7 @@
  * @module pages/PublicProfile
  */
 
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useTranslation } from '@/lib/i18n';
 import { useParams, Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
@@ -20,6 +20,7 @@ import { ManaCost } from '@/components/ManaSymbol';
 import { FORMAT_LABELS } from '@/data/formats';
 import { SkipLinks } from '@/components/SkipLinks';
 import { PublicCollectionStats } from '@/components/profile/PublicCollectionStats';
+import { applySeoMeta } from '@/lib/seo';
 
 interface PublicProfile {
   id: string;
