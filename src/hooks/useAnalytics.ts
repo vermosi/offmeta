@@ -251,8 +251,9 @@ function sanitizeEventData(
 // Validate event type against allowed list
 const ALLOWED_EVENT_TYPES = [
   'search',
+  'search_started', // NEW: fired the moment a query is submitted (before results/failure resolve)
   'search_results',
-  'search_failure', // NEW: Track 0-result and error searches
+  'search_failure', // Track 0-result and error searches
   'first_search_start',
   'first_search_success',
   'first_result_click',
@@ -274,6 +275,8 @@ const ALLOWED_EVENT_TYPES = [
   'rerun_edited_query',
   'card_click',
   'card_modal_view',
+  'deck_click', // NEW: click into a public deck from any surface (browse, archetype, similar)
+  'share_clicked', // NEW: fired by SharePageButton / ShareSearchButton on click
   'affiliate_click',
   'pagination',
   'feedback_submitted',
@@ -425,6 +428,23 @@ interface LifecycleEventData {
   cta?: string;
 }
 
+interface ShareClickedEventData {
+  surface: string;
+  url?: string;
+  [key: string]: unknown;
+}
+
+interface DeckClickEventData {
+  deck_id?: string;
+  source?: string;
+  [key: string]: unknown;
+}
+
+interface SearchStartedEventData {
+  query?: string;
+  [key: string]: unknown;
+}
+
 type EventData =
   | SearchEventData
   | SearchFailureEventData
@@ -436,13 +456,28 @@ type EventData =
   | RerunEditedQueryEventData
   | RouteViewEventData
   | ExampleQueryEventData
-  | LifecycleEventData;
+  | LifecycleEventData
+  | ShareClickedEventData
+  | DeckClickEventData
+  | SearchStartedEventData;
 
 function shouldTrackOnce(key: string): boolean {
+  // Use localStorage so first_* lifecycle events fire at most once per user (browser),
+  // not once per tab. Fallback to sessionStorage in privacy modes that block localStorage.
   const storageKey = `offmeta_once:${key}`;
-  if (sessionStorage.getItem(storageKey) === '1') return false;
-  sessionStorage.setItem(storageKey, '1');
-  return true;
+  try {
+    if (localStorage.getItem(storageKey) === '1') return false;
+    localStorage.setItem(storageKey, '1');
+    return true;
+  } catch {
+    try {
+      if (sessionStorage.getItem(storageKey) === '1') return false;
+      sessionStorage.setItem(storageKey, '1');
+      return true;
+    } catch {
+      return true;
+    }
+  }
 }
 
 /**
@@ -450,6 +485,50 @@ function shouldTrackOnce(key: string): boolean {
  * All tracking is fire-and-forget to avoid blocking UI.
  * Includes rate limiting (60 events/minute) and input validation.
  */
+
+/**
+ * Standalone (non-hook) event fire. Used by IndexShell so the homepage can log
+ * a `landing_page_view` without pulling in FullAppProviders. Applies the same
+ * validation, rate limit, bot/internal filtering, and UTM tagging as the hook.
+ */
+export async function trackEventDirect(
+  eventType: string,
+  eventData: Record<string, unknown> = {},
+): Promise<void> {
+  try {
+    if (!isValidEventType(eventType)) return;
+    if (!checkAndUpdateRateLimit()) return;
+    if (isBotSession()) return;
+    const sanitizedData = sanitizeEventData(eventData);
+    const internal = isInternalTraffic();
+    if (internal && shouldSuppressInsert()) return;
+    const utm = captureUtmParams();
+    const searchCount = parseInt(
+      sessionStorage.getItem('offmeta_searches_per_session') || '0',
+      10,
+    );
+    const eventPayload: Record<string, string | number | boolean | null> = {
+      ...sanitizedData,
+      searches_per_session: searchCount,
+      ...(internal && { is_internal: true }),
+      ...(utm.utm_source && { utm_source: utm.utm_source }),
+      ...(utm.utm_medium && { utm_medium: utm.utm_medium }),
+      ...(utm.utm_campaign && { utm_campaign: utm.utm_campaign }),
+      ...(utm.utm_term && { utm_term: utm.utm_term }),
+      ...(utm.utm_content && { utm_content: utm.utm_content }),
+    };
+    await supabase.from('analytics_events').insert([
+      {
+        event_type: eventType,
+        event_data: eventPayload,
+        session_id: getSessionId(),
+      },
+    ]);
+  } catch {
+    // Analytics is best-effort; never break the caller.
+  }
+}
+
 export function useAnalytics() {
   const sessionIdRef = useRef<string | null>(null);
   const utmRef = useRef<UtmData>({});
@@ -576,6 +655,28 @@ export function useAnalytics() {
     [trackEvent],
   );
 
+  const trackShareClicked = useCallback(
+    (data: ShareClickedEventData = { surface: 'unknown' }) => {
+      trackEvent('share_clicked', data);
+    },
+    [trackEvent],
+  );
+
+  const trackDeckClick = useCallback(
+    (data: DeckClickEventData = {}) => {
+      trackEvent('deck_click', data);
+    },
+    [trackEvent],
+  );
+
+  const trackSearchStarted = useCallback(
+    (data: SearchStartedEventData = {}) => {
+      trackEvent('search_started', data);
+    },
+    [trackEvent],
+  );
+
+
   const trackPagination = useCallback(
     (data: PaginationEventData) => {
       trackEvent('pagination', data);
@@ -696,10 +797,13 @@ export function useAnalytics() {
 
   return {
     trackSearch,
+    trackSearchStarted,
     trackSearchFailure,
     trackCardClick,
     trackCardModalView,
     trackAffiliateClick,
+    trackShareClicked,
+    trackDeckClick,
     trackPagination,
     trackFeedback,
     trackLandingPageView,

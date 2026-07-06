@@ -8,6 +8,7 @@
 import { lazy, Suspense, type ReactElement } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import FullAppProviders from '@/components/FullAppProviders';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const GuidesIndex = lazy(() => import('./pages/GuidesIndex'));
 const GuidePage = lazy(() => import('./pages/GuidePage'));
@@ -39,8 +40,12 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 const SearchExperience = lazy(() => import('./pages/SearchExperience'));
 
 const routeFallback = <div className="min-h-screen bg-background" />;
+// Per-route ErrorBoundary so a lazy-chunk load failure or render crash on one
+// page doesn't blank the whole app via the root boundary.
 const withFullApp = (element: ReactElement) => (
-  <Suspense fallback={routeFallback}>{element}</Suspense>
+  <ErrorBoundary>
+    <Suspense fallback={routeFallback}>{element}</Suspense>
+  </ErrorBoundary>
 );
 
 export default function AppRoutes() {

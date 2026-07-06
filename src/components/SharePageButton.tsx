@@ -11,6 +11,7 @@ import { useCallback } from 'react';
 import { Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface SharePageButtonProps {
   /** Title used by native share sheet (falls back to document.title). */
@@ -35,11 +36,18 @@ export function SharePageButton({
   className,
 }: SharePageButtonProps) {
   const { t } = useTranslation();
+  const { trackShareClicked } = useAnalytics();
 
   const handleShare = useCallback(async () => {
     const shareUrl = url ?? window.location.href;
     const shareTitle = title ?? document.title;
     const shareText = text ?? shareTitle;
+
+    // Fire-and-forget analytics ping — surface = path so we can attribute where shares come from.
+    trackShareClicked({
+      surface: typeof window !== 'undefined' ? window.location.pathname : 'unknown',
+      url: shareUrl,
+    });
 
     if (navigator.share) {
       try {
@@ -58,7 +66,7 @@ export function SharePageButton({
     } catch {
       toast.error(t('share.copyFailed', 'Could not copy link'));
     }
-  }, [url, title, text, t]);
+  }, [url, title, text, t, trackShareClicked]);
 
   const baseClasses =
     variant === 'pill'

@@ -233,6 +233,8 @@ export default function ArchetypePage() {
 
   useEffect(() => {
     if (!slug) return;
+    // BreadcrumbList JSON-LD is rendered inline in JSX below (SSR-friendly).
+    // applySeoMeta handles the per-route title/description/canonical/og:url.
     return applySeoMeta({
       title: `${displayName}${formatLabel ? ` (${formatLabel})` : ''} Archetype — Strategy & Decklists | OffMeta`,
       description: curated?.tagline

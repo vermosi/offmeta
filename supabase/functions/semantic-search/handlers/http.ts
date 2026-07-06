@@ -154,6 +154,21 @@ export async function parseJsonBody(
   jsonHeaders: Record<string, string>,
   logWarn: (event: string, payload: Record<string, unknown>) => void,
 ): Promise<{ requestBody: Record<string, unknown> } | { response: Response }> {
+  // Guard against oversized POST bodies. sanitizeInputQuery caps the query
+  // string internally, but without this check a multi-MB body is fully read
+  // into memory before parsing. 64 KB is far more than any legitimate search.
+  const MAX_BODY_BYTES = 64 * 1024;
+  const contentLengthHeader = req.headers.get('content-length');
+  if (contentLengthHeader) {
+    const contentLength = Number(contentLengthHeader);
+    if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) {
+      logWarn('body_too_large', { contentLength });
+      return {
+        response: errorResponse('Request body too large', 413, jsonHeaders),
+      };
+    }
+  }
+
   try {
     const requestBody = (await req.json()) as Record<string, unknown>;
     return { requestBody };

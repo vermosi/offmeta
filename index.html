@@ -44,21 +44,20 @@
       name="keywords"
       content="magic card search engine, MTG natural language search, Magic The Gathering search, MTG card search, Scryfall natural language, Commander card search, EDH card finder, MTG keywords search"
     />
-    <link rel="canonical" href="https://offmeta.app/" />
+    <!--
+      No hardcoded <link rel="canonical"> or hreflang tags here.
+      Per-route Helmet-style code in src/lib/seo.ts (applySeoMeta) sets the
+      canonical + og:url for each page after mount. A hardcoded homepage
+      canonical in the static shell was causing non-JS social crawlers
+      (Reddit, Discord, Slack, LinkedIn, Twitter card bot) to attribute
+      every /cards/*, /search/*, /guides/*, /ai/* URL to the homepage, and
+      was a strong initial-HTML signal to Googlebot that conflicted with
+      the JS-rendered per-route canonical.
 
-    <!-- Hreflang alternate links for international SEO -->
-    <link rel="alternate" hreflang="en" href="https://offmeta.app/" />
-    <link rel="alternate" hreflang="es" href="https://offmeta.app/" />
-    <link rel="alternate" hreflang="fr" href="https://offmeta.app/" />
-    <link rel="alternate" hreflang="de" href="https://offmeta.app/" />
-    <link rel="alternate" hreflang="it" href="https://offmeta.app/" />
-    <link rel="alternate" hreflang="pt" href="https://offmeta.app/" />
-    <link rel="alternate" hreflang="ja" href="https://offmeta.app/" />
-    <link rel="alternate" hreflang="ko" href="https://offmeta.app/" />
-    <link rel="alternate" hreflang="ru" href="https://offmeta.app/" />
-    <link rel="alternate" hreflang="zh-Hans" href="https://offmeta.app/" />
-    <link rel="alternate" hreflang="zh-Hant" href="https://offmeta.app/" />
-    <link rel="alternate" hreflang="x-default" href="https://offmeta.app/" />
+      hreflang self-references pointing at "/" for every language were
+      actively harmful for non-homepage URLs — omit them until per-route
+      hreflang can be emitted with a real localized href.
+    -->
 
     <!-- Preconnect to Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -103,9 +102,8 @@
     />
     <link rel="dns-prefetch" href="https://nxmzyykkzwomkcentctt.supabase.co" />
 
-    <!-- Open Graph -->
+    <!-- Open Graph (homepage defaults; per-route pages override og:url/title/desc via applySeoMeta) -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://offmeta.app/" />
     <meta
       property="og:title"
       content="Magic Card Search Engine — Natural Language MTG | OffMeta"
@@ -121,9 +119,8 @@
     <meta property="og:site_name" content="OffMeta" />
     <meta property="og:locale" content="en_US" />
 
-    <!-- Twitter/X Card -->
+    <!-- Twitter/X Card (per-route pages override twitter:url/title/desc via applySeoMeta) -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content="https://offmeta.app/" />
     <meta
       name="twitter:title"
       content="Magic Card Search Engine — Natural Language MTG | OffMeta"
