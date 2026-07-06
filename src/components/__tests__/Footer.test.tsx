@@ -76,7 +76,7 @@ describe('Footer', () => {
     expect(screen.getByRole('contentinfo')).toBeInTheDocument();
   });
 
-  it('renders Data Sources section with Moxfield, Commander Spellbook, and Spicerack', () => {
+  it('renders Data Sources section with Moxfield, Commander Spellbook, and TopDeck.gg', () => {
     renderFooter();
     expect(screen.getByText('Data Sources')).toBeInTheDocument();
     expect(screen.getByText('Moxfield').closest('a')).toHaveAttribute('href', 'https://www.moxfield.com');

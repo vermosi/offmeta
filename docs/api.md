@@ -328,7 +328,7 @@ Up to 50 rules are inserted per run. Once promoted, those patterns are picked up
 
 Fetches tournament decklists from the TopDeck.gg API and stores them in `community_decks`. Resolves Moxfield deck URLs via the Moxfield API and batch-resolves card oracle IDs via Scryfall.
 
-**Auth**: Anon JWT accepted. Requires `SPICERACK_API_KEY` secret to be configured.
+**Auth**: Anon JWT accepted. Requires `TOPDECK_API_KEY` secret to be configured.
 
 #### Request body
 
