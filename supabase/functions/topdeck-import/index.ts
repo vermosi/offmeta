@@ -403,7 +403,24 @@ serve(async (req: Request): Promise<Response> => {
     let skipped = 0;
     let tournamentsProcessed = 0;
 
-    for (const tournament of tournaments) {
+    interface TopdeckStanding {
+      name?: string;
+      decklist?: string;
+      deckObj?: unknown;
+      wins?: number;
+      draws?: number;
+      losses?: number;
+    }
+    interface TopdeckTournament {
+      TID?: string;
+      tournamentName?: string;
+      format?: string;
+      startDate?: number;
+      standings?: TopdeckStanding[];
+    }
+
+    for (const raw of tournaments) {
+      const tournament = raw as TopdeckTournament;
       const tid = String(tournament.TID ?? '');
       const tournamentName = String(tournament.tournamentName ?? 'Unknown Event');
       const rawFormat = String(tournament.format ?? '');
@@ -416,7 +433,7 @@ serve(async (req: Request): Promise<Response> => {
       if (!tid || !Array.isArray(standings)) continue;
       tournamentsProcessed++;
 
-      for (const standing of standings) {
+      for (const standing of standings as TopdeckStanding[]) {
         const playerName = String(standing.name ?? 'Unknown');
         const sourceId = `${tid}-${playerName}`.slice(0, 200);
 
