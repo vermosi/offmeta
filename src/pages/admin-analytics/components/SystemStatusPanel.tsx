@@ -15,6 +15,16 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
+
+/**
+ * Allowed RPC names callable from this panel. `get_system_status` lives in
+ * the private `admin_api` schema, so it isn't in the generated public
+ * `Database['public']['Functions']` union — we widen the union locally so
+ * the fallback `supabase.rpc(...)` call typechecks without a blanket cast.
+ */
+type PublicRpcName = keyof Database['public']['Functions'];
+type AdminRpcName = PublicRpcName | 'get_system_status';
 
 interface CronJob {
   jobid: number;
