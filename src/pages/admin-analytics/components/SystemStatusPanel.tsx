@@ -14,15 +14,7 @@ import {
   Activity,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
-
-/**
- * `get_system_status` lives in the private `admin_api` schema, which isn't
- * exposed in the generated Database types. We scope the client to that
- * schema via `supabase.schema(...)` and cast to the loose PostgrestClient
- * shape so TypeScript accepts the RPC name.
- */
-type UntypedRpcClient = { rpc: (name: string) => Promise<{ data: unknown; error: unknown }> };
+import { callAdminRpc, type AdminRpcResultMap } from '@/integrations/supabase/adminRpc';
 
 interface CronJob {
   jobid: number;
@@ -115,20 +107,13 @@ export function SystemStatusPanel() {
   const fetchStatus = useCallback(async () => {
     setLoading(true);
     setError(null);
-    try {
-      const invokeAdminRpc = supabase.functions?.invoke;
-      const { data, error: fnError } = invokeAdminRpc
-        ? await invokeAdminRpc('admin-rpc', {
-            body: { fn: 'get_system_status' },
-          })
-        : await (supabase.schema('admin_api' as never) as unknown as UntypedRpcClient).rpc('get_system_status');
-      if (fnError) throw fnError;
-      setStatus('data' in data ? data.data : (data as SystemStatus));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load status');
-    } finally {
-      setLoading(false);
+    const { data, error: rpcError } = await callAdminRpc('get_system_status');
+    if (rpcError) {
+      setError(rpcError.message);
+    } else if (data) {
+      setStatus(data satisfies AdminRpcResultMap['get_system_status']);
     }
+    setLoading(false);
   }, []);
 
   return (
