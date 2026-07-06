@@ -251,8 +251,9 @@ function sanitizeEventData(
 // Validate event type against allowed list
 const ALLOWED_EVENT_TYPES = [
   'search',
+  'search_started', // NEW: fired the moment a query is submitted (before results/failure resolve)
   'search_results',
-  'search_failure', // NEW: Track 0-result and error searches
+  'search_failure', // Track 0-result and error searches
   'first_search_start',
   'first_search_success',
   'first_result_click',
@@ -274,6 +275,8 @@ const ALLOWED_EVENT_TYPES = [
   'rerun_edited_query',
   'card_click',
   'card_modal_view',
+  'deck_click', // NEW: click into a public deck from any surface (browse, archetype, similar)
+  'share_clicked', // NEW: fired by SharePageButton / ShareSearchButton on click
   'affiliate_click',
   'pagination',
   'feedback_submitted',
@@ -439,10 +442,22 @@ type EventData =
   | LifecycleEventData;
 
 function shouldTrackOnce(key: string): boolean {
+  // Use localStorage so first_* lifecycle events fire at most once per user (browser),
+  // not once per tab. Fallback to sessionStorage in privacy modes that block localStorage.
   const storageKey = `offmeta_once:${key}`;
-  if (sessionStorage.getItem(storageKey) === '1') return false;
-  sessionStorage.setItem(storageKey, '1');
-  return true;
+  try {
+    if (localStorage.getItem(storageKey) === '1') return false;
+    localStorage.setItem(storageKey, '1');
+    return true;
+  } catch {
+    try {
+      if (sessionStorage.getItem(storageKey) === '1') return false;
+      sessionStorage.setItem(storageKey, '1');
+      return true;
+    } catch {
+      return true;
+    }
+  }
 }
 
 /**
