@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { parseDecklist } from '@/lib/decklist-parser';
 import { supabase } from '@/integrations/supabase/client';
+import { applySeoMeta, injectJsonLd } from '@/lib/seo';
 import { ManaSymbol } from '@/components/ManaSymbol';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { SkipLinks } from '@/components/SkipLinks';
@@ -59,38 +60,27 @@ export default function FindMyCombos() {
   const { t } = useTranslation();
 
   useEffect(() => {
-    const prev = document.title;
-    const prevDesc = document.querySelector('meta[name="description"]')?.getAttribute('content') ?? '';
-    document.title = 'MTG Combo Finder — Powered by Commander Spellbook | OffMeta';
-    const descEl = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
-    const newDesc = 'Find every infinite combo in your Magic: The Gathering deck. Paste a Moxfield URL and instantly see Commander Spellbook combos, prices & color identity.';
-    if (descEl) descEl.content = newDesc;
-    const s = document.createElement('script');
-    s.type = 'application/ld+json';
-    s.id = 'combos-jsonld';
-    s.textContent = JSON.stringify({
+    // Per-route SEO: title, description, canonical, og:url + BreadcrumbList JSON-LD.
+    // Previously only title/description were set — canonical/og:url were left pointing at the homepage,
+    // so /combos shared on Reddit/Discord/Slack showed the homepage preview.
+    const cleanupMeta = applySeoMeta({
+      title: 'MTG Combo Finder — Powered by Commander Spellbook | OffMeta',
+      description:
+        'Find every infinite combo in your Magic: The Gathering deck. Paste a Moxfield URL and instantly see Commander Spellbook combos, prices & color identity.',
+      url: 'https://offmeta.app/combos',
+      type: 'website',
+    });
+    const cleanupJsonLd = injectJsonLd({
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        {
-          '@type': 'ListItem',
-          position: 1,
-          name: 'OffMeta',
-          item: 'https://offmeta.app/',
-        },
-        {
-          '@type': 'ListItem',
-          position: 2,
-          name: 'Combos',
-          item: 'https://offmeta.app/combos',
-        },
+        { '@type': 'ListItem', position: 1, name: 'OffMeta', item: 'https://offmeta.app/' },
+        { '@type': 'ListItem', position: 2, name: 'Combos', item: 'https://offmeta.app/combos' },
       ],
     });
-    document.head.appendChild(s);
     return () => {
-      document.title = prev;
-      if (descEl && prevDesc) descEl.content = prevDesc;
-      document.getElementById('combos-jsonld')?.remove();
+      cleanupMeta();
+      cleanupJsonLd();
     };
   }, []);
   const [moxfieldUrl, setMoxfieldUrl] = useState('');
