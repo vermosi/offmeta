@@ -123,7 +123,7 @@ export function SystemStatusPanel() {
         ? await invokeAdminRpc('admin-rpc', {
             body: { fn: 'get_system_status' },
           })
-        : await supabase.rpc('get_system_status' as never);
+        : await supabase.rpc('get_system_status' as AdminRpcName as PublicRpcName);
       if (fnError) throw fnError;
       setStatus('data' in data ? data.data : (data as SystemStatus));
     } catch (e) {
