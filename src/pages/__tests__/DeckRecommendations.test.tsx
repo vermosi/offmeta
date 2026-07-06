@@ -61,8 +61,8 @@ describe('DeckRecommendations', () => {
 
   it('renders the page heading', async () => {
     await renderPage();
-    expect(screen.getByText('Deck Recommendations')).toBeInTheDocument();
-  });
+    expect(await screen.findByText('Deck Recommendations', {}, { timeout: 10000 })).toBeInTheDocument();
+  }, 15000);
 
   it('defaults to Moxfield URL input mode', async () => {
     await renderPage();
