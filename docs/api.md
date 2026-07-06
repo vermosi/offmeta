@@ -322,11 +322,11 @@ Up to 50 rules are inserted per run. Once promoted, those patterns are picked up
 
 ---
 
-### Spicerack Import
+### TopDeck.gg Import
 
-**Endpoint**: `POST supabase/functions/spicerack-import`
+**Endpoint**: `POST supabase/functions/topdeck-import`
 
-Fetches tournament decklists from the Spicerack API and stores them in `community_decks`. Resolves Moxfield deck URLs via the Moxfield API and batch-resolves card oracle IDs via Scryfall.
+Fetches tournament decklists from the TopDeck.gg API and stores them in `community_decks`. Resolves Moxfield deck URLs via the Moxfield API and batch-resolves card oracle IDs via Scryfall.
 
 **Auth**: Anon JWT accepted. Requires `SPICERACK_API_KEY` secret to be configured.
 
@@ -363,7 +363,7 @@ Fetches tournament decklists from the Spicerack API and stores them in `communit
 
 #### Cron schedule
 
-Runs daily at **06:00 UTC** via `pg_cron` job `spicerack-import-daily` with `{"num_days": 1}` to fetch the previous day's tournaments.
+Runs daily at **06:00 UTC** via `pg_cron` job `topdeck-import-daily` with `{"num_days": 1}` to fetch the previous day's tournaments.
 
 ---
 
