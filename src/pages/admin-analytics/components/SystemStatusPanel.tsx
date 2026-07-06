@@ -15,16 +15,14 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import type { Database as SupabaseDatabase } from '@/integrations/supabase/types';
 
 /**
- * Allowed RPC names callable from this panel. `get_system_status` lives in
- * the private `admin_api` schema, so it isn't in the generated public
- * Functions union — we widen the union locally so the fallback
- * `supabase.rpc(...)` call typechecks without a blanket cast.
+ * `get_system_status` lives in the private `admin_api` schema, which isn't
+ * exposed in the generated Database types. We scope the client to that
+ * schema via `supabase.schema(...)` and cast to the loose PostgrestClient
+ * shape so TypeScript accepts the RPC name.
  */
-type PublicRpcName = keyof SupabaseDatabase['public']['Functions'];
-type AdminRpcName = PublicRpcName | 'get_system_status';
+type UntypedRpcClient = { rpc: (name: string) => Promise<{ data: unknown; error: unknown }> };
 
 interface CronJob {
   jobid: number;
