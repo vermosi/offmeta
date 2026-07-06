@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { GUIDES, getGuideBySlug, type Guide } from '@/data/guides';
+import { GUIDE_SUMMARIES } from '@/data/guide-summaries';
+
 
 describe('guides data', () => {
   describe('GUIDES array structure', () => {
