@@ -428,6 +428,23 @@ interface LifecycleEventData {
   cta?: string;
 }
 
+interface ShareClickedEventData {
+  surface: string;
+  url?: string;
+  [key: string]: unknown;
+}
+
+interface DeckClickEventData {
+  deck_id?: string;
+  source?: string;
+  [key: string]: unknown;
+}
+
+interface SearchStartedEventData {
+  query?: string;
+  [key: string]: unknown;
+}
+
 type EventData =
   | SearchEventData
   | SearchFailureEventData
@@ -439,7 +456,10 @@ type EventData =
   | RerunEditedQueryEventData
   | RouteViewEventData
   | ExampleQueryEventData
-  | LifecycleEventData;
+  | LifecycleEventData
+  | ShareClickedEventData
+  | DeckClickEventData
+  | SearchStartedEventData;
 
 function shouldTrackOnce(key: string): boolean {
   // Use localStorage so first_* lifecycle events fire at most once per user (browser),
@@ -592,21 +612,21 @@ export function useAnalytics() {
   );
 
   const trackShareClicked = useCallback(
-    (data: { surface: string; url?: string; [key: string]: unknown } = { surface: 'unknown' }) => {
+    (data: ShareClickedEventData = { surface: 'unknown' }) => {
       trackEvent('share_clicked', data);
     },
     [trackEvent],
   );
 
   const trackDeckClick = useCallback(
-    (data: { deck_id?: string; source?: string; [key: string]: unknown } = {}) => {
+    (data: DeckClickEventData = {}) => {
       trackEvent('deck_click', data);
     },
     [trackEvent],
   );
 
   const trackSearchStarted = useCallback(
-    (data: { query?: string; [key: string]: unknown } = {}) => {
+    (data: SearchStartedEventData = {}) => {
       trackEvent('search_started', data);
     },
     [trackEvent],
@@ -733,10 +753,13 @@ export function useAnalytics() {
 
   return {
     trackSearch,
+    trackSearchStarted,
     trackSearchFailure,
     trackCardClick,
     trackCardModalView,
     trackAffiliateClick,
+    trackShareClicked,
+    trackDeckClick,
     trackPagination,
     trackFeedback,
     trackLandingPageView,
