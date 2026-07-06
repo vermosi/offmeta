@@ -15,6 +15,16 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database as SupabaseDatabase } from '@/integrations/supabase/types';
+
+/**
+ * Allowed RPC names callable from this panel. `get_system_status` lives in
+ * the private `admin_api` schema, so it isn't in the generated public
+ * Functions union — we widen the union locally so the fallback
+ * `supabase.rpc(...)` call typechecks without a blanket cast.
+ */
+type PublicRpcName = keyof SupabaseDatabase['public']['Functions'];
+type AdminRpcName = PublicRpcName | 'get_system_status';
 
 interface CronJob {
   jobid: number;
@@ -113,7 +123,7 @@ export function SystemStatusPanel() {
         ? await invokeAdminRpc('admin-rpc', {
             body: { fn: 'get_system_status' },
           })
-        : await supabase.rpc('get_system_status' as never);
+        : await supabase.rpc('get_system_status' as AdminRpcName as PublicRpcName);
       if (fnError) throw fnError;
       setStatus('data' in data ? data.data : (data as SystemStatus));
     } catch (e) {
