@@ -335,15 +335,22 @@ export function SearchResultsArea({
                   </div>
                 )
               ) : (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground">
-                    {t('results.noMatch')}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {t('results.adjustFilters')}
-                  </p>
+                <div className="py-12">
+                  <EmptyState
+                    query={searchQuery}
+                    onTryExample={handleTryExample}
+                    suggestions={querySuggestions}
+                    isCheckingSuggestions={isCheckingSuggestions}
+                    onTrySuggestion={onTrySuggestion}
+                    activeFilters={activeFilters}
+                    onApplyFilterPatch={onApplyFilterPatch}
+                    onClearAllFilters={onClearAllFilters}
+                    variant="filtered"
+                    filteredFromCount={cards.length}
+                  />
                 </div>
               )}
+
 
               <LoadMoreIndicator
                 ref={
