@@ -128,6 +128,9 @@ export function SearchResultsArea({
   isCheckingSuggestions,
   onTrySuggestion,
   onRelatedCardClick,
+  activeFilters,
+  onApplyFilterPatch,
+  onClearAllFilters,
 }: SearchResultsAreaProps) {
   const { t } = useTranslation();
 
