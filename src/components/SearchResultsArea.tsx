@@ -32,6 +32,7 @@ import { CLIENT_CONFIG } from '@/lib/config';
 import { useTranslation } from '@/lib/i18n';
 import { rerankCardsWithIntelligence } from '@/lib/search/intelligence-ranking';
 import type { ScryfallCard } from '@/types/card';
+import type { FilterState } from '@/types/filters';
 import type { ViewMode } from '@/lib/view-mode-storage';
 import type { ResultsTab } from '@/components/ResultsTabs';
 
