@@ -4,6 +4,7 @@
  * @module components/HowItWorksSection
  */
 
+import { Fragment } from 'react';
 import { MessageSquare, Sparkles, LayoutGrid } from 'lucide-react';
 
 const STEPS = [
