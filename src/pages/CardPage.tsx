@@ -219,23 +219,83 @@ const CardPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="min-h-screen flex flex-col bg-background relative">
+        <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
         <Header />
-        <main className="flex-1 container-main py-8 space-y-6">
-          <Skeleton className="h-8 w-48" />
-          <div className="grid md:grid-cols-[320px_1fr] gap-8">
-            <Skeleton className="aspect-[488/680] rounded-xl" />
-            <div className="space-y-4">
-              <Skeleton className="h-6 w-64" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
+        <main
+          className="relative flex-1 py-4 sm:py-10"
+          role="status"
+          aria-busy="true"
+          aria-label="Loading card details"
+        >
+          <div className="container-main space-y-6 sm:space-y-10 animate-fade-in">
+            {/* Search bar placeholder */}
+            <Skeleton className="h-11 w-full rounded-full" />
+
+            {/* Breadcrumb placeholder */}
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-4 w-16" />
+              <span className="text-muted-foreground/40">/</span>
+              <Skeleton className="h-4 w-40" />
             </div>
+
+            {/* Card hero: image on top on mobile, side-by-side on md+ */}
+            <div className="grid gap-6 sm:gap-8 md:grid-cols-[320px_1fr]">
+              <div className="mx-auto w-full max-w-[300px] sm:max-w-[320px] md:mx-0">
+                <Skeleton className="aspect-[488/680] w-full rounded-xl" />
+              </div>
+
+              <div className="space-y-4">
+                {/* Title + mana cost row */}
+                <div className="flex items-start justify-between gap-3">
+                  <Skeleton className="h-7 sm:h-9 w-2/3" />
+                  <Skeleton className="h-7 w-20 rounded-md" />
+                </div>
+
+                {/* Type line */}
+                <Skeleton className="h-4 w-1/2" />
+
+                {/* Oracle text block */}
+                <div className="space-y-2 rounded-lg border border-border/60 bg-card/40 p-4">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-11/12" />
+                  <Skeleton className="h-4 w-4/5" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+
+                {/* Stat chips row */}
+                <div className="flex flex-wrap gap-2">
+                  <Skeleton className="h-7 w-24 rounded-full" />
+                  <Skeleton className="h-7 w-20 rounded-full" />
+                  <Skeleton className="h-7 w-28 rounded-full" />
+                </div>
+
+                {/* CTAs */}
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <Skeleton className="h-10 w-32 rounded-md" />
+                  <Skeleton className="h-10 w-24 rounded-md" />
+                </div>
+              </div>
+            </div>
+
+            {/* Section: similar cards */}
+            <div className="space-y-3">
+              <Skeleton className="h-5 w-40" />
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="aspect-[488/680] w-full rounded-lg" />
+                ))}
+              </div>
+            </div>
+
+            <span className="sr-only">Loading card details…</span>
           </div>
         </main>
         <Footer />
       </div>
     );
   }
+
 
   if (error || !card) {
     return (
