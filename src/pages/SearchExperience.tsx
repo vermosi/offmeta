@@ -683,8 +683,12 @@ const Index = () => {
                 isCheckingSuggestions={isCheckingSuggestions}
                 onTrySuggestion={handleTrySuggestion}
                 onRelatedCardClick={handleTryExample}
+                activeFilters={activeFilters}
+                onApplyFilterPatch={applyFilterPatch}
+                onClearAllFilters={clearAllFilters}
               />
             </Suspense>
+
           )}
         </main>
 
