@@ -467,13 +467,21 @@ export function useSearch() {
         }
       }
 
+      const failureReason = classifyFailureReason(originalQuery);
+      const fuzzyAttempted = extractCardNameCandidate(originalQuery) !== null;
       trackSearchFailure({
         query: originalQuery,
         translated_query: lastSearchResult.scryfallQuery,
         error_type: 'zero_results',
+        failure_reason: failureReason,
+        fuzzy_attempted: fuzzyAttempted,
+        // If we reached the terminal failure event after a fuzzy attempt,
+        // the resolver did not rescue this query.
+        fuzzy_resolved: false,
       });
       trackEvent('search_no_result_shown', {
         query: originalQuery,
+        failure_reason: failureReason,
         request_id: currentRequestId ?? undefined,
       });
       queueMicrotask(() => {
