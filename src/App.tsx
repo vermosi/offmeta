@@ -7,57 +7,25 @@
  */
 
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from 'next-themes';
 import { I18nProvider } from '@/lib/i18n';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import Index from './pages/Index';
 
 const AppRoutes = lazy(() => import('./AppRoutes'));
 
 const routeFallback = <div className="min-h-screen bg-background" />;
-
-/**
- * Render `Index` directly for `/`. For any other path, mount the lazy
- * `AppRoutes` module which owns the full router + provider stack.
- */
-function RouteSwitch() {
-  const location = useLocation();
-  if (location.pathname === '/') {
-    return (
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="*" element={<TriggerAppRoutes />} />
-      </Routes>
-    );
-  }
-
-  return (
-    <Suspense fallback={routeFallback}>
-      <AppRoutes />
-    </Suspense>
-  );
-}
-
-/** Renders nothing — triggers a state flip so AppRoutes mounts on next render. */
-function TriggerAppRoutes() {
-  return (
-    <Suspense fallback={routeFallback}>
-      <AppRoutes />
-    </Suspense>
-  );
-}
 
 const App = () => (
   <I18nProvider>
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
       <BrowserRouter>
         <ErrorBoundary>
-          <RouteSwitch />
+          <Suspense fallback={routeFallback}>
+            <AppRoutes />
+          </Suspense>
         </ErrorBoundary>
       </BrowserRouter>
     </ThemeProvider>
   </I18nProvider>
 );
-
-export default App;
