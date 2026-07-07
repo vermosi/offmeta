@@ -53,6 +53,7 @@ export default function AppRoutes() {
     <FullAppProviders>
       <Suspense fallback={routeFallback}>
         <Routes>
+          <Route path="/" element={withFullApp(<SearchExperience />)} />
           <Route path="/search/:slug" element={withFullApp(<SearchExperience />)} />
           <Route path="/docs" element={withFullApp(<DocsIndex />)} />
           <Route path="/docs/syntax" element={withFullApp(<SyntaxCheatSheet />)} />
