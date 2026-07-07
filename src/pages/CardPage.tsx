@@ -402,12 +402,12 @@ const CardPage = () => {
                 )}
 
                 {/* Stats row */}
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2">
                   {(activeFace?.power ?? card.power) != null && (activeFace?.toughness ?? card.toughness) != null && (
                     <Badge variant="outline">{activeFace?.power ?? card.power}/{activeFace?.toughness ?? card.toughness}</Badge>
                   )}
                   <Badge variant="outline" className="capitalize">{card.rarity}</Badge>
-                  <Badge variant="outline">{card.set_name}</Badge>
+                  <Badge variant="outline" className="max-w-full truncate">{card.set_name}</Badge>
                   {priceDisplay?.usd && (
                     <Badge variant="secondary" className="gap-1">
                       <DollarSign className="h-3 w-3" />
