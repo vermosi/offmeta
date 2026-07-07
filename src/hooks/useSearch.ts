@@ -351,9 +351,68 @@ export function useSearch() {
       const source = lastSearchResult.source || 'ai';
       const hasAttemptedRecovery = sessionStorage.getItem('offmeta_recovery_in_progress') === '1';
 
-      if (!hasAttemptedRecovery && (source === 'ai' || source === 'ai_recovered' || source === 'concept_match')) {
+      if (!hasAttemptedRecovery && (source === 'ai' || source === 'ai_recovered' || source === 'concept_match' || source === 'client_recovery')) {
+        // Step 1: fuzzy card-name recovery — handles typos like
+        // "atraxia" → "Atraxa, Praetors' Voice" or "cards like eterna witness"
+        // → "Eternal Witness". This is the dominant zero-result failure class.
+        const nameCandidate = extractCardNameCandidate(originalQuery);
+        if (nameCandidate && source !== 'client_recovery') {
+          sessionStorage.setItem('offmeta_recovery_in_progress', '1');
+          void (async () => {
+            const resolved = await resolveFuzzyCardName(nameCandidate);
+            if (resolved) {
+              const fuzzyQuery = `!"${resolved}"`;
+              if (fuzzyQuery !== lastSearchResult.scryfallQuery) {
+                toast.info(`Showing results for "${resolved}"`, {
+                  description: `We couldn't find "${nameCandidate}" — did you mean this card?`,
+                  duration: 5000,
+                });
+                setSearchQuery(fuzzyQuery);
+                setLastSearchResult(prev => prev ? {
+                  ...prev,
+                  scryfallQuery: fuzzyQuery,
+                  explanation: {
+                    readable: `Did you mean: ${resolved}`,
+                    assumptions: [`Fuzzy-matched "${nameCandidate}" to "${resolved}"`],
+                    confidence: 0.85,
+                  },
+                  source: 'client_recovery',
+                } : prev);
+                queryClient.invalidateQueries({
+                  queryKey: ['cards', fuzzyQuery, scryfallLang],
+                });
+                return;
+              }
+            }
+            // Fuzzy failed — fall through to broaden-and-retry
+            sessionStorage.removeItem('offmeta_recovery_in_progress');
+            const fallbackQuery = buildClientFallbackQuery(originalQuery);
+            if (fallbackQuery && fallbackQuery !== lastSearchResult.scryfallQuery) {
+              sessionStorage.setItem('offmeta_recovery_in_progress', '1');
+              toast.info('Trying a broader search...', {
+                description: 'The initial translation returned no results.',
+                duration: 4000,
+              });
+              setSearchQuery(fallbackQuery);
+              setLastSearchResult(prev => prev ? {
+                ...prev,
+                scryfallQuery: fallbackQuery,
+                explanation: {
+                  readable: `Broadened search for: ${originalQuery}`,
+                  assumptions: ['Original AI translation returned 0 results — using simplified search'],
+                  confidence: 0.6,
+                },
+                source: 'client_recovery',
+              } : prev);
+              queryClient.invalidateQueries({
+                queryKey: ['cards', fallbackQuery, scryfallLang],
+              });
+            }
+          })();
+          return; // Skip tracking — will re-trigger when results arrive
+        }
+
         const fallbackQuery = buildClientFallbackQuery(originalQuery);
-        
         if (fallbackQuery && fallbackQuery !== lastSearchResult.scryfallQuery) {
           sessionStorage.setItem('offmeta_recovery_in_progress', '1');
           toast.info('Trying a broader search...', {
