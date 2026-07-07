@@ -4,6 +4,7 @@
  * @module components/HowItWorksSection
  */
 
+import { Fragment } from 'react';
 import { MessageSquare, Sparkles, LayoutGrid } from 'lucide-react';
 
 const STEPS = [
@@ -38,10 +39,10 @@ export function HowItWorksSection() {
       </h2>
 
       {/* Desktop: horizontal timeline */}
-      <div className="hidden sm:flex items-start justify-center gap-0 max-w-4xl mx-auto">
+      <div className="hidden sm:flex items-start justify-center gap-4 lg:gap-6 max-w-4xl mx-auto">
         {STEPS.map(({ icon: Icon, number, title, detail }, i) => (
-          <div key={number} className="flex items-start flex-1">
-            <div className="flex flex-col items-center text-center flex-1 stagger-children">
+          <Fragment key={number}>
+            <div className="flex flex-col items-center text-center flex-1 min-w-0 stagger-children">
               {/* Number badge */}
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-bold mb-4 bg-gradient-to-br from-accent to-accent/50 text-accent-foreground shadow-lg shadow-accent/20">
                 {number}
@@ -61,13 +62,17 @@ export function HowItWorksSection() {
 
             {/* Connector line */}
             {i < STEPS.length - 1 && (
-              <div className="flex-shrink-0 w-16 lg:w-24 mt-7 px-2" aria-hidden="true">
+              <div
+                className="flex-shrink-0 w-12 lg:w-20 mt-7"
+                aria-hidden="true"
+              >
                 <div className="h-[2px] w-full bg-gradient-to-r from-accent/60 to-accent/10 rounded-full" />
               </div>
             )}
-          </div>
+          </Fragment>
         ))}
       </div>
+
 
       {/* Mobile: vertical timeline */}
       <div className="sm:hidden relative pl-10">
