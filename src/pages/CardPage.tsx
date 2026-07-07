@@ -334,7 +334,7 @@ const CardPage = () => {
         <Header />
 
         <main className="relative flex-1 py-4 sm:py-10">
-          <div className="container-main space-y-6 sm:space-y-10">
+          <div className="container-main space-y-6 sm:space-y-10 animate-fade-in">
             {/* Persistent search funnel */}
             <PageSearchBar
               placeholder={`Search cards like ${card.name}…`}
