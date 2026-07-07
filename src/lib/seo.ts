@@ -10,6 +10,16 @@ interface SeoOptions {
   type?: string;
   image?: string;
   twitterCard?: 'summary' | 'summary_large_image';
+  /** Comma-joined keyword list for <meta name="keywords"> and social hints. */
+  keywords?: string | string[];
+  /** ISO 8601 publish date → article:published_time. */
+  publishedTime?: string;
+  /** ISO 8601 last-modified date → article:modified_time. */
+  modifiedTime?: string;
+  /** Section/category → article:section (e.g. "Guides", "Docs"). */
+  section?: string;
+  /** BCP-47 locale → og:locale (e.g. "en_US"). */
+  locale?: string;
   /** Additional meta tags to set */
   extraMeta?: Record<string, string>;
 }
