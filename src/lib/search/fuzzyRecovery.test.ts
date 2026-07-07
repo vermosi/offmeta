@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { resolveFuzzyCardName } from '@/lib/scryfall/client';
+import { resolveFuzzyCardName, __resetFuzzyCardNameCache } from '@/lib/scryfall/client';
 import { extractCardNameCandidate } from '@/lib/search/fallback';
 
 /**
