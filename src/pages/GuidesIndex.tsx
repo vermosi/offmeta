@@ -85,7 +85,23 @@ export default function GuidesIndex() {
     description:
       'Master Magic: The Gathering card search with 10 progressive guides.',
     url: 'https://offmeta.app/guides',
-    publisher: { '@type': 'Organization', name: 'OffMeta' },
+    inLanguage: 'en',
+    publisher: {
+      '@type': 'Organization',
+      name: 'OffMeta',
+      url: 'https://offmeta.app/',
+      logo: { '@type': 'ImageObject', url: 'https://offmeta.app/og-image.png' },
+    },
+    mainEntity: {
+      '@type': 'ItemList',
+      numberOfItems: sorted.length,
+      itemListElement: sorted.map((g, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        url: `https://offmeta.app/guides/${g.slug}`,
+        name: g.title,
+      })),
+    },
   };
 
   return (
