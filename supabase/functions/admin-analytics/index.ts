@@ -61,14 +61,12 @@ serve(async (req) => {
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
   try {
-    // Function lives in the private admin_api schema and is only callable
-    // via service_role. Admin identity was already verified above.
-    const supabaseAdminApi = createClient(supabaseUrl, supabaseServiceKey, {
-      db: { schema: 'admin_api' as never },
-    });
-    const { data: analytics, error: rpcError } = await supabaseAdminApi.rpc(
-      'get_search_analytics' as never,
-      { since_date: since, max_low_confidence: 20 } as never,
+    // Call the public wrapper — it delegates to admin_api.get_search_analytics
+    // after re-checking the admin role. PostgREST only exposes public/graphql_public,
+    // so a direct admin_api RPC would return PGRST106.
+    const { data: analytics, error: rpcError } = await supabaseAdmin.rpc(
+      'get_search_analytics',
+      { since_date: since, max_low_confidence: 20 },
     );
 
     if (rpcError) throw rpcError;

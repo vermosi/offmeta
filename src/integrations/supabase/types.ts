@@ -1210,6 +1210,10 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: Json
       }
+      get_search_analytics: {
+        Args: { max_low_confidence?: number; since_date: string }
+        Returns: Json
+      }
       get_search_failure_breakdown: {
         Args: { since_date: string; until_date?: string }
         Returns: {
