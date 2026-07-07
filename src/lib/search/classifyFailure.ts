@@ -21,9 +21,19 @@ export type FailureReason =
   | 'unknown';
 
 const WRAPPER_PATTERNS: RegExp[] = [
-  /\b(?:cards?|which|what(?:'?s|\s+is)?)\s+(?:that\s+(?:is|are|works?|plays?)\s+)?(?:like|similar\s+to)\b/i,
+  // Leading "cards like X" / "cards similar to X" / "cards that are like X"
+  /^cards?\s+(?:that\s+(?:is|are|works?|plays?)\s+)?(?:like|similar\s+to)\b/i,
+  // Leading "what/which (card) (is) like|similar to X"
+  /^(?:what(?:'?s|\s+is)?|which)\b.*\b(?:like|similar\s+to)\b/i,
+  // "is there a card like|similar to X"
+  /^(?:is\s+there\s+)?a\s+cards?\s+(?:that\s+(?:is|works?|plays?)\s+)?(?:like|similar\s+to)\b/i,
+  // Leading "similar (cards) to X"
+  /^similar\s+(?:cards?\s+)?to\b/i,
+  // "alternatives|replacements to|for X"
   /\b(?:alternatives?|replacements?)\s+(?:to|for)\b/i,
-  /\b(?:but\s+(?:cheaper|budget|better))$/i,
+  // Trailing "X but cheaper|budget|better"
+  /\bbut\s+(?:cheaper|budget|better)$/i,
+  // Trailing "X alternatives|replacements"
   /\b(?:alternatives?|replacements?)$/i,
 ];
 
