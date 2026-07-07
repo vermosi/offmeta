@@ -131,7 +131,13 @@ export function HeroCardBackdrop() {
               }}
             >
               <img
-                src={failed[i] ? CARD_FALLBACK_SVG : src}
+                src={
+                  failed[i]
+                    ? CARD_FALLBACK_SVG
+                    : retryTick[i]
+                      ? `${src}${src.includes('?') ? '&' : '?'}retry=${retryTick[i]}`
+                      : src
+                }
                 alt=""
                 width={200}
                 height={280}
