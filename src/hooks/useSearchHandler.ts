@@ -267,9 +267,14 @@ export function useSearchHandler({
           error instanceof Error ? error.message : String(error);
 
         if (requestTokenRef.current !== currentToken) {
+          endSearchTrace(traceId, { aborted: true });
           return;
         }
         const responseMs = Date.now() - searchStartTime;
+        markSearchPhase(traceId, 'translation:error', {
+          error: errorMessage.substring(0, 120),
+          elapsedMs: responseMs,
+        });
 
         if (errorMessage === 'Search timeout') {
           const fallbackQuery = buildClientFallbackQuery(queryToSearch);
