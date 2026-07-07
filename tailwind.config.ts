@@ -10,6 +10,17 @@ export default {
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
   ],
+  // Safelist dynamic classnames built via template literals so Tailwind's
+  // JIT does not strip our custom @layer utilities keyed off them.
+  // `hero-card-N` is generated as `hero-card-${i + 1}` in HeroCardBackdrop.
+  safelist: [
+    'hero-card-1',
+    'hero-card-2',
+    'hero-card-3',
+    'hero-card-4',
+    'hero-card-5',
+    'hero-card-6',
+  ],
   prefix: '',
   theme: {
     container: {
