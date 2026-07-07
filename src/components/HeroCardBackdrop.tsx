@@ -6,7 +6,7 @@
  * @module components/HeroCardBackdrop
  */
 
-import { useMemo, useRef, useState, type SyntheticEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type SyntheticEvent } from 'react';
 
 /**
  * Inline SVG silhouette used when a Scryfall image fails or is slow to load.
@@ -103,6 +103,45 @@ export function HeroCardBackdrop() {
   const handleLoad = (i: number) => () => {
     setLoaded((prev) => (prev[i] ? prev : { ...prev, [i]: true }));
   };
+
+  // Prefetch all six selected card images right after mount so the browser
+  // warms its HTTP cache in parallel — even lazy <img> slots resolve from
+  // cache instantly instead of waiting on the network. Uses `Image()` +
+  // `<link rel="preload">` for maximum coverage; both are cheap and idempotent.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const links: HTMLLinkElement[] = [];
+    // Defer to idle so we don't fight the LCP image for bandwidth on slow
+    // connections; the first card already loads eagerly via its <img> tag.
+    const schedule =
+      (window as unknown as { requestIdleCallback?: (cb: () => void) => number })
+        .requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 0));
+
+    const handle = schedule(() => {
+      for (const src of cards) {
+        // In-memory Image() kicks the fetch immediately.
+        const img = new Image();
+        img.decoding = 'async';
+        img.src = src;
+
+        // <link rel="preload"> hints the browser cache and shows up in devtools.
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'image';
+        link.href = src;
+        document.head.appendChild(link);
+        links.push(link);
+      }
+    });
+
+    return () => {
+      const cancel = (window as unknown as { cancelIdleCallback?: (id: number) => void })
+        .cancelIdleCallback;
+      if (cancel && typeof handle === 'number') cancel(handle);
+      for (const link of links) link.parentNode?.removeChild(link);
+    };
+  }, [cards]);
 
   return (
     <div
