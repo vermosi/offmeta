@@ -332,24 +332,50 @@ export function isLikelyCardName(query: string): boolean {
  * Used to power the fuzzy-name recovery step for zero-result searches.
  */
 export function extractCardNameCandidate(query: string): string | null {
-  const trimmed = query.trim();
+  let trimmed = query.trim();
   if (!trimmed) return null;
 
-  // Strip common "similar to / like / alternative" wrappers
+  // Strip trailing punctuation ("?", ".", "!") and stray quotes
+  trimmed = trimmed.replace(/[?!.]+$/u, '').replace(/^["']|["']$/g, '').trim();
+  if (!trimmed) return null;
+
+  // Strip trailing format qualifiers: "sol ring in commander" → "sol ring"
+  // (Only when the format word is at the very end — mid-sentence "in commander"
+  //  is left alone so descriptive queries still fail the keyword check below.)
+  const FORMAT_WORDS =
+    'commander|edh|modern|legacy|vintage|standard|pioneer|pauper|brawl|historic|explorer|alchemy|premodern|penny|oathbreaker|timeless';
+  const trailingFormat = new RegExp(
+    `^(.+?)\\s+(?:in|for|legal\\s+in)\\s+(?:${FORMAT_WORDS})$`,
+    'i',
+  );
+  const fmtMatch = trimmed.match(trailingFormat);
+  if (fmtMatch) trimmed = fmtMatch[1].trim();
+
+  // Strip common "similar to / like / alternative / replacement" wrappers
   const patterns: RegExp[] = [
+    // "what/which card(s) is/are like|similar to X", "whats a card like X"
+    /^(?:what(?:'?s|\s+is)?|which)\s+(?:a\s+)?cards?\s+(?:is\s+|are\s+)?(?:like|similar\s+to)\s+(.+)$/i,
+    // "is there a card like|similar to X"
+    /^(?:is\s+there\s+)?(?:a\s+)?cards?\s+(?:that\s+(?:is|works?|plays?)\s+)?(?:like|similar\s+to)\s+(.+)$/i,
+    // "cards (that are) similar to|like X"
     /^cards?\s+(?:that\s+are\s+)?(?:similar\s+to|like)\s+(.+)$/i,
+    // "similar (cards) to X"
     /^similar\s+(?:cards?\s+)?to\s+(.+)$/i,
-    /^(?:cheap|budget)\s+alternatives?\s+(?:to|for)\s+(.+)$/i,
-    /^alternatives?\s+(?:to|for)\s+(.+)$/i,
-    /^(.+?)\s+(?:cheap|budget)?\s*alternatives?$/i,
+    // "cheap|budget alternatives/replacements to|for X"
+    /^(?:cheap|budget)\s+(?:alternatives?|replacements?)\s+(?:to|for)\s+(.+)$/i,
+    // "alternatives|replacements to|for X"
+    /^(?:alternatives?|replacements?)\s+(?:to|for)\s+(.+)$/i,
+    // Trailing: "X (cheap|budget) alternatives|replacements"
+    /^(.+?)\s+(?:cheap|budget)?\s*(?:alternatives?|replacements?)$/i,
     /^(.+?)\s+alternative$/i,
-    /^(.+?)\s+but\s+(?:cheaper|budget)$/i,
+    // "X but cheaper|budget|better"
+    /^(.+?)\s+but\s+(?:cheaper|budget|better)$/i,
   ];
 
   for (const re of patterns) {
     const match = trimmed.match(re);
     if (match) {
-      const inner = match[1].trim();
+      const inner = match[1].trim().replace(/^["']|["']$/g, '').trim();
       // Reject if the extracted piece still looks like a description
       if (inner.length >= 3 && inner.split(/\s+/).length <= 6) {
         return inner;
