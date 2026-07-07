@@ -105,6 +105,7 @@ import { useNoIndex } from '@/hooks/useNoIndex';
 import { useQuerySuggestions } from '@/hooks/useQuerySuggestions';
 import { useRovingTabIndex } from '@/hooks/useRovingTabIndex';
 import { useSearch } from '@/hooks/useSearch';
+import { useSearchRenderProfiler } from '@/hooks/useSearchRenderProfiler';
 import { useSimilarCards } from '@/hooks/useSimilarCards';
 import { useTranslation } from '@/lib/i18n';
 const CardModal = lazy(() => import('@/components/CardModal'));
