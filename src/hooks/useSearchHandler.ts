@@ -162,6 +162,14 @@ export function useSearchHandler({
       setSearchPhase('translating');
 
       const searchStartTime = Date.now();
+      const traceId = startSearchTrace(queryToSearch, {
+        complexity: complexity.level,
+        hasFilters: !!filters,
+        bypassCache: !!options?.bypassCache,
+      });
+      markSearchPhase(traceId, 'validated', {
+        wasSimplified: complexity.shouldSimplify,
+      });
       logger.info('[SearchDiag] Search started', {
         query: queryToSearch,
         originalQuery:
@@ -169,6 +177,7 @@ export function useSearchHandler({
         complexity: complexity.level,
         hasFilters: !!filters,
         bypassCache: !!options?.bypassCache,
+        traceId,
       });
 
       // Timeout promise
