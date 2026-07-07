@@ -31,12 +31,28 @@ export default function GuidePage() {
   // Update document head for SEO
   useEffect(() => {
     if (!guide) return;
+    const keywords = [
+      guide.title,
+      guide.searchQuery,
+      'MTG',
+      'Magic: The Gathering',
+      'Scryfall',
+      'card search',
+      'OffMeta guide',
+      ...guide.relatedGuides,
+    ];
     return applySeoMeta({
       title: guide.metaTitle,
       description: guide.metaDescription,
       url: `https://offmeta.app/guides/${guide.slug}`,
+      type: 'article',
+      keywords,
+      section: 'Guides',
+      publishedTime: GUIDE_PUBLISHED_AT,
+      modifiedTime: GUIDE_MODIFIED_AT,
     });
   }, [guide]);
+
 
   if (!guide) {
     return (
