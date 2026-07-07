@@ -6,7 +6,31 @@
  * @module components/HeroCardBackdrop
  */
 
-import { useMemo } from 'react';
+import { useMemo, useState, type SyntheticEvent } from 'react';
+
+/**
+ * Inline SVG silhouette used when a Scryfall image fails or is slow to load.
+ * A soft rounded card shape with a subtle inner glow — matches the hero aesthetic
+ * and prevents the slot from collapsing/flashing on error.
+ */
+const CARD_FALLBACK_SVG =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 280' preserveAspectRatio='xMidYMid slice'>
+      <defs>
+        <linearGradient id='g' x1='0' y1='0' x2='0' y2='1'>
+          <stop offset='0%' stop-color='hsl(265 40% 20%)' stop-opacity='0.85'/>
+          <stop offset='100%' stop-color='hsl(200 40% 12%)' stop-opacity='0.85'/>
+        </linearGradient>
+        <radialGradient id='glow' cx='50%' cy='45%' r='60%'>
+          <stop offset='0%' stop-color='hsl(280 60% 55%)' stop-opacity='0.35'/>
+          <stop offset='100%' stop-color='hsl(280 60% 55%)' stop-opacity='0'/>
+        </radialGradient>
+      </defs>
+      <rect width='200' height='280' rx='14' ry='14' fill='url(#g)'/>
+      <rect width='200' height='280' rx='14' ry='14' fill='url(#glow)'/>
+    </svg>`
+  );
 
 /** Pool of iconic MTG card images to randomly pick from. */
 const CARD_POOL = [
