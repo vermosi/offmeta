@@ -633,6 +633,8 @@
     box-shadow: 0 8px 32px rgb(0 0 0 / 0.35);
     animation: heroCardFloat 6s ease-in-out infinite;
     will-change: transform;
+    /* Sit above the ambient page layers but below the vignette + hero copy. */
+    z-index: 1;
   }
 
   /* Hide any image that fails to load so we never paint a blank card. */
@@ -658,56 +660,78 @@
     }
   }
 
-  /* Center pair removed — they sat directly behind the headline. */
-  .hero-card-3,
-  .hero-card-4 {
-    display: none;
-  }
-
+  /* Six-card arc. Cards 3 & 4 peek down from the top so they read as
+     "hero cards" without landing behind the H1. Side cards (1/2/5/6) fan
+     outward to keep the composition wide. */
   .hero-card-1 {
     left: -2%;
-    top: 28%;
-    opacity: 0.16;
+    top: 32%;
+    opacity: 0.18;
     transform: rotate(-24deg) scale(0.82);
     animation-delay: 0s;
   }
   .hero-card-2 {
-    left: 6%;
-    top: 18%;
-    opacity: 0.22;
+    left: 8%;
+    top: 22%;
+    opacity: 0.26;
     transform: rotate(-16deg) scale(0.92);
     animation-delay: -1.5s;
   }
+  .hero-card-3 {
+    left: 26%;
+    top: -18%;
+    opacity: 0.32;
+    transform: rotate(-8deg) scale(0.95);
+    animation-delay: -3s;
+  }
+  .hero-card-4 {
+    right: 26%;
+    top: -18%;
+    opacity: 0.32;
+    transform: rotate(8deg) scale(0.95);
+    animation-delay: -4.5s;
+  }
   .hero-card-5 {
-    right: 6%;
-    top: 18%;
-    opacity: 0.22;
+    right: 8%;
+    top: 22%;
+    opacity: 0.26;
     transform: rotate(16deg) scale(0.92);
     animation-delay: -2s;
   }
   .hero-card-6 {
     right: -2%;
-    top: 28%;
-    opacity: 0.16;
+    top: 32%;
+    opacity: 0.18;
     transform: rotate(24deg) scale(0.82);
     animation-delay: -5s;
   }
 
-  /* On mobile, hide outermost cards */
+  /* On mobile: hide outermost pair and pull the top pair further off-screen
+     so the compact headline stays clean. */
   @media (max-width: 639px) {
     .hero-card-1,
     .hero-card-6 {
       display: none;
     }
     .hero-card-2 {
-      left: 4%;
-      top: 12%;
-      opacity: 0.14;
+      left: 2%;
+      top: 22%;
+      opacity: 0.18;
     }
     .hero-card-5 {
-      right: 4%;
-      top: 12%;
-      opacity: 0.14;
+      right: 2%;
+      top: 22%;
+      opacity: 0.18;
+    }
+    .hero-card-3 {
+      left: 12%;
+      top: -22%;
+      opacity: 0.22;
+    }
+    .hero-card-4 {
+      right: 12%;
+      top: -22%;
+      opacity: 0.22;
     }
   }
 
@@ -716,16 +740,18 @@
     50% { transform: translateY(-12px) rotate(var(--_r, 0deg)); }
   }
 
-  /* Edge-only vignette — keeps side cards soft without darkening the section
-     center so the hero background matches the page below seamlessly. */
+  /* Vignette lives above cards (mask element has z-10) so it can soften card
+     edges. Kept transparent through the middle-vertical band where the H1
+     sits so cards still read; only the far edges and the CTA row fade. */
   .hero-card-mask {
     background: radial-gradient(
-      ellipse 100% 85% at 50% 50%,
-      transparent 55%,
-      hsl(var(--background) / 0.7) 80%,
+      ellipse 110% 90% at 50% 45%,
+      transparent 45%,
+      hsl(var(--background) / 0.55) 75%,
       hsl(var(--background)) 100%
     );
   }
+
 
 
 
