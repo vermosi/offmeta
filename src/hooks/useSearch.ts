@@ -751,7 +751,45 @@ export function useSearch() {
     handleRegenerateTranslation,
     handleFilteredCards,
 
+    activeFilters,
+    filtersResetKey,
+    pendingFilterOverride,
+    filterOverrideKey,
+    reportDialogOpen,
+    setReportDialogOpen,
+    currentRequestId,
+    lastClickLatencyMs,
+    refinementCount,
+    struggleCount,
+    queryQualityScore: effectiveQueryQualityScore,
+    queryQualityConfidence: shouldUseServerQuality ? serverConfidence : 0,
+    queryQualitySampleSize: shouldUseServerQuality ? serverSampleSize : 0,
+
+    // Data
+    cards,
+    displayCards,
+    totalCards,
+    isSearching,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+
+    // Refs
+    searchBarRef,
+    loadMoreRef,
+
+    // Callbacks
+    handleSearch,
+    handleRerunEditedQuery,
+    handleCardClick,
+    handleTryExample,
+    handleRegenerateTranslation,
+    handleFilteredCards,
+    applyFilterPatch,
+    clearAllFilters,
+
     // Initial URL filters (for hydrating SearchFilters on load)
     initialUrlFilters,
   };
 }
+
