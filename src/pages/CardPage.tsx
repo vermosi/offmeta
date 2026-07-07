@@ -503,8 +503,8 @@ const CardPage = () => {
             {/* Budget Alternatives */}
             {similarityData?.budgetResults?.data?.length ? (
               <section className="space-y-4">
-                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-primary" />
+                <h2 className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-primary shrink-0" />
                   Budget-Friendly Picks
                 </h2>
                 <CardAlternativesGrid cards={similarityData.budgetResults.data} />
