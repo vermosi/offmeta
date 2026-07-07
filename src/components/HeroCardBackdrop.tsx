@@ -73,11 +73,18 @@ function shuffleAndPick<T>(pool: readonly T[], count: number): T[] {
 export function HeroCardBackdrop() {
   const cards = useMemo(() => shuffleAndPick(CARD_POOL, CARD_COUNT), []);
   const [failed, setFailed] = useState<Record<number, boolean>>({});
+  const [loaded, setLoaded] = useState<Record<number, boolean>>({});
 
   const handleError = (i: number) => (e: SyntheticEvent<HTMLImageElement>) => {
     if (failed[i]) return;
     setFailed((prev) => ({ ...prev, [i]: true }));
     e.currentTarget.src = CARD_FALLBACK_SVG;
+    // Fallback SVG counts as loaded so it stays visible without another fade.
+    setLoaded((prev) => ({ ...prev, [i]: true }));
+  };
+
+  const handleLoad = (i: number) => () => {
+    setLoaded((prev) => (prev[i] ? prev : { ...prev, [i]: true }));
   };
 
   return (
@@ -93,6 +100,7 @@ export function HeroCardBackdrop() {
           // The first/center card is the LCP candidate — load eagerly with high
           // fetch priority. Remaining cards stay lazy to preserve bandwidth.
           const isLcp = i === 0;
+          const isLoaded = loaded[i] ?? false;
           return (
             <div
               key={i}
@@ -114,6 +122,11 @@ export function HeroCardBackdrop() {
                 fetchPriority={isLcp ? 'high' : 'auto'}
                 decoding="async"
                 onError={handleError(i)}
+                onLoad={handleLoad(i)}
+                style={{
+                  opacity: isLoaded ? 1 : 0,
+                  transition: 'opacity 500ms ease-out',
+                }}
                 className="w-full h-full object-cover rounded-xl"
               />
             </div>
