@@ -291,11 +291,14 @@ const CardPage = () => {
             </nav>
 
             {/* Card hero section */}
-            <div className="grid md:grid-cols-[320px_1fr] gap-6 lg:gap-10">
+            <div className="grid md:grid-cols-[320px_1fr] gap-5 sm:gap-6 lg:gap-10">
               {/* Card image */}
               <div className="flex flex-col items-center gap-3">
                 {cardImage ? (
-                  <div className="relative w-full max-w-[260px] sm:max-w-[320px]" style={{ perspective: '1000px' }}>
+                  <div
+                    className="relative w-full max-w-[300px] sm:max-w-[320px] mx-auto"
+                    style={{ perspective: '1000px' }}
+                  >
                     <div
                       className="transition-transform duration-500"
                       style={{
@@ -306,7 +309,7 @@ const CardPage = () => {
                       <img
                         src={cardImage}
                         alt={`${displayName} card art`}
-                        className="rounded-xl shadow-elegant w-full"
+                        className="rounded-xl shadow-elegant w-full h-auto block"
                         loading="eager"
                         width={672}
                         height={936}
@@ -321,7 +324,7 @@ const CardPage = () => {
                             setIsFlipping(false);
                           }, 250);
                         }}
-                        className="absolute bottom-3 right-3 bg-background/80 backdrop-blur-sm border border-border/50 rounded-full p-2 hover:bg-background transition-colors shadow-md"
+                        className="absolute bottom-3 right-3 min-h-9 min-w-9 flex items-center justify-center bg-background/80 backdrop-blur-sm border border-border/50 rounded-full hover:bg-background transition-colors shadow-md"
                         aria-label={faceIndex === 0 ? 'Show back face' : 'Show front face'}
                         title={faceIndex === 0 ? 'Flip to back' : 'Flip to front'}
                       >
@@ -330,7 +333,7 @@ const CardPage = () => {
                     )}
                   </div>
                 ) : (
-                  <div className="aspect-[488/680] bg-muted rounded-xl w-full max-w-[320px]" />
+                  <div className="aspect-[488/680] bg-muted rounded-xl w-full max-w-[300px] sm:max-w-[320px] mx-auto" />
                 )}
 
                 {/* Purchase links */}
