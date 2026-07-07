@@ -10,6 +10,7 @@ import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { queryToSlug, slugToQuery } from '@/lib/search-slug';
 import { buildClientFallbackQuery } from '@/lib/search/fallback';
+import { extractCardNameCandidate } from '@/lib/search/fallback';
 import type {
   SearchResult,
   UnifiedSearchBarHandle,
