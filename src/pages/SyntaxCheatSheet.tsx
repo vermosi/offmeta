@@ -54,6 +54,15 @@ export default function SyntaxCheatSheet() {
         'Scryfall syntax cheat sheet — maps natural-language MTG phrases to Scryfall operators: colors, types, mana cost, format, price, ramp, removal, and more.',
       url: 'https://offmeta.app/docs/syntax',
       type: 'article',
+      section: 'Docs',
+      keywords: [
+        'Scryfall syntax',
+        'Scryfall cheat sheet',
+        'MTG search operators',
+        'Scryfall query reference',
+        'natural language to Scryfall',
+        'MTG search syntax',
+      ],
     });
     const cleanupLd = injectJsonLd({
       '@context': 'https://schema.org',

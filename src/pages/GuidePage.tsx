@@ -22,6 +22,11 @@ import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n';
 import { SkipLinks } from '@/components/SkipLinks';
 
+// Static publish/modified timestamps for the guides content set.
+// Bump GUIDE_MODIFIED_AT whenever guide copy is meaningfully updated.
+const GUIDE_PUBLISHED_AT = '2025-01-15T00:00:00Z';
+const GUIDE_MODIFIED_AT = '2026-07-07T00:00:00Z';
+
 export default function GuidePage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -31,12 +36,28 @@ export default function GuidePage() {
   // Update document head for SEO
   useEffect(() => {
     if (!guide) return;
+    const keywords = [
+      guide.title,
+      guide.searchQuery,
+      'MTG',
+      'Magic: The Gathering',
+      'Scryfall',
+      'card search',
+      'OffMeta guide',
+      ...guide.relatedGuides,
+    ];
     return applySeoMeta({
       title: guide.metaTitle,
       description: guide.metaDescription,
       url: `https://offmeta.app/guides/${guide.slug}`,
+      type: 'article',
+      keywords,
+      section: 'Guides',
+      publishedTime: GUIDE_PUBLISHED_AT,
+      modifiedTime: GUIDE_MODIFIED_AT,
     });
   }, [guide]);
+
 
   if (!guide) {
     return (
@@ -72,9 +93,24 @@ export default function GuidePage() {
     description: guide.metaDescription,
     url: pageUrl,
     mainEntityOfPage: pageUrl,
-    author: { '@type': 'Organization', name: 'OffMeta' },
-    publisher: { '@type': 'Organization', name: 'OffMeta' },
+    image: 'https://offmeta.app/og-image.png',
+    inLanguage: 'en',
+    keywords: [guide.title, guide.searchQuery, 'MTG', 'Scryfall', 'card search'].join(', '),
+    articleSection: 'Guides',
+    datePublished: GUIDE_PUBLISHED_AT,
+    dateModified: GUIDE_MODIFIED_AT,
+    author: { '@type': 'Organization', name: 'OffMeta', url: 'https://offmeta.app/' },
+    publisher: {
+      '@type': 'Organization',
+      name: 'OffMeta',
+      url: 'https://offmeta.app/',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://offmeta.app/og-image.png',
+      },
+    },
   };
+
 
   const faqJsonLd = {
     '@context': 'https://schema.org',

@@ -10,6 +10,16 @@ interface SeoOptions {
   type?: string;
   image?: string;
   twitterCard?: 'summary' | 'summary_large_image';
+  /** Comma-joined keyword list for <meta name="keywords"> and social hints. */
+  keywords?: string | string[];
+  /** ISO 8601 publish date → article:published_time. */
+  publishedTime?: string;
+  /** ISO 8601 last-modified date → article:modified_time. */
+  modifiedTime?: string;
+  /** Section/category → article:section (e.g. "Guides", "Docs"). */
+  section?: string;
+  /** BCP-47 locale → og:locale (e.g. "en_US"). */
+  locale?: string;
   /** Additional meta tags to set */
   extraMeta?: Record<string, string>;
 }
@@ -62,6 +72,27 @@ export function applySeoMeta(opts: SeoOptions): () => void {
   setMeta('og:image:alt', opts.title, 'property');
   setMeta('twitter:image', image);
   setMeta('twitter:image:alt', opts.title);
+
+  const kw = Array.isArray(opts.keywords)
+    ? opts.keywords.filter(Boolean).join(', ')
+    : opts.keywords;
+  if (kw) {
+    setMeta('keywords', kw);
+    setMeta('news_keywords', kw);
+  }
+
+  setMeta('og:locale', opts.locale ?? 'en_US', 'property');
+  setMeta('og:site_name', 'OffMeta', 'property');
+
+  if ((opts.type ?? 'article') === 'article') {
+    if (opts.publishedTime) setMeta('article:published_time', opts.publishedTime, 'property');
+    if (opts.modifiedTime) setMeta('article:modified_time', opts.modifiedTime, 'property');
+    if (opts.section) setMeta('article:section', opts.section, 'property');
+    if (kw) {
+      // article:tag can repeat; setMeta dedupes by property, so join into one hint tag.
+      setMeta('article:tag', kw, 'property');
+    }
+  }
 
   if (opts.extraMeta) {
     for (const [key, value] of Object.entries(opts.extraMeta)) {
