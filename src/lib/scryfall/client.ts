@@ -305,6 +305,34 @@ export async function getCardByName(name: string): Promise<ScryfallCard> {
 }
 
 /**
+ * Resolve a possibly-misspelled card name to its canonical Scryfall name.
+ * Uses Scryfall's fuzzy /cards/named endpoint. Returns null if no confident match.
+ *
+ * @param name - Raw card-name-ish string (typos allowed)
+ * @returns Canonical card name, or null if not found
+ */
+export async function resolveFuzzyCardName(
+  name: string,
+): Promise<string | null> {
+  const trimmed = name.trim();
+  if (trimmed.length < 3) return null;
+
+  try {
+    const encoded = encodeURIComponent(trimmed);
+    const response = await rateLimitedFetch(
+      `${BASE_URL}/cards/named?fuzzy=${encoded}`,
+    );
+    if (!response.ok) return null;
+    const card = (await response.json()) as { name?: string };
+    return typeof card.name === 'string' && card.name.length > 0
+      ? card.name
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Get the image URL for a card at the specified size.
  * Handles both single-faced and double-faced cards.
  * @param card - The card to get the image for

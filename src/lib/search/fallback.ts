@@ -79,6 +79,13 @@ const SLANG_MAP: Record<string, string> = {
   tutors: 'otag:tutor',
   lifegain: 'otag:lifegain',
   mill: 'otag:mill',
+  mil: 'otag:mill',
+  'mana burn': 'o:"mana burn"',
+  'combat evasion': '(kw:flying or kw:menace or kw:trample or kw:unblockable or kw:shadow or kw:fear or kw:intimidate or kw:skulk or o:"can\'t be blocked")',
+  'mass combat evasion': '(kw:flying or kw:menace or kw:trample or o:"can\'t be blocked") o:"creatures you control"',
+  'untap target permanent': 'o:"untap target permanent"',
+  'play off top': 'o:"play the top card of your library"',
+  'play off the top': 'o:"play the top card of your library"',
   blink: 'otag:blink',
   flicker: 'otag:flicker',
   reanimation: 'otag:reanimate',
@@ -285,7 +292,7 @@ const MANA_PRODUCTION_PATTERNS: Array<{ regex: RegExp; syntax: string | ((m: Reg
  * Detect if a query looks like a card name rather than a search description.
  * Card names are typically 1-6 title-cased words without search keywords.
  */
-function isLikelyCardName(query: string): boolean {
+export function isLikelyCardName(query: string): boolean {
   const trimmed = query.trim();
   const words = trimmed.split(/\s+/);
   if (words.length < 1 || words.length > 6) return false;
@@ -314,6 +321,53 @@ function isLikelyCardName(query: string): boolean {
   }
 
   return false;
+}
+
+/**
+ * Extract a candidate card name from a natural-language query.
+ * Handles patterns like "cards like X", "similar to X", "X alternatives",
+ * "cheap alternatives to X", "cards similar to X", plus bare card names.
+ *
+ * Returns the extracted name, or null if the query doesn't look name-shaped.
+ * Used to power the fuzzy-name recovery step for zero-result searches.
+ */
+export function extractCardNameCandidate(query: string): string | null {
+  const trimmed = query.trim();
+  if (!trimmed) return null;
+
+  // Strip common "similar to / like / alternative" wrappers
+  const patterns: RegExp[] = [
+    /^cards?\s+(?:that\s+are\s+)?(?:similar\s+to|like)\s+(.+)$/i,
+    /^similar\s+(?:cards?\s+)?to\s+(.+)$/i,
+    /^(?:cheap|budget)\s+alternatives?\s+(?:to|for)\s+(.+)$/i,
+    /^alternatives?\s+(?:to|for)\s+(.+)$/i,
+    /^(.+?)\s+(?:cheap|budget)?\s*alternatives?$/i,
+    /^(.+?)\s+alternative$/i,
+    /^(.+?)\s+but\s+(?:cheaper|budget)$/i,
+  ];
+
+  for (const re of patterns) {
+    const match = trimmed.match(re);
+    if (match) {
+      const inner = match[1].trim();
+      // Reject if the extracted piece still looks like a description
+      if (inner.length >= 3 && inner.split(/\s+/).length <= 6) {
+        return inner;
+      }
+    }
+  }
+
+  // Bare card name (with typos allowed — fuzzy resolver handles them)
+  if (isLikelyCardName(trimmed)) return trimmed;
+
+  // Short, non-keyword-y phrase (1–4 words) — worth a fuzzy attempt
+  const words = trimmed.split(/\s+/);
+  if (words.length >= 1 && words.length <= 4) {
+    const hasKeywords = /\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck|spells?|create|make|search|find|tap|produce|generate)\b/i.test(trimmed);
+    if (!hasKeywords) return trimmed;
+  }
+
+  return null;
 }
 
 /**
