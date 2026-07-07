@@ -364,10 +364,10 @@ const CardPage = () => {
               </div>
 
               {/* Card info */}
-              <div className="space-y-5">
+              <div className="min-w-0 space-y-4 sm:space-y-5">
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3 flex-wrap">
-                    {displayName}
+                  <h1 className="text-[1.6rem] leading-tight sm:text-3xl font-bold text-foreground break-words flex items-center gap-x-3 gap-y-1 flex-wrap">
+                    <span className="min-w-0">{displayName}</span>
                     {displayManaCost && (
                       <span className="inline-flex items-center gap-0.5">
                         {displayManaCost.match(/\{[^}]+\}/g)?.map((s, i) => (
@@ -376,7 +376,7 @@ const CardPage = () => {
                       </span>
                     )}
                   </h1>
-                  <p className="text-muted-foreground mt-1">{displayTypeLine}</p>
+                  <p className="text-sm sm:text-base text-muted-foreground mt-1 break-words">{displayTypeLine}</p>
                   {isFlippable && (
                     <button
                       onClick={() => {
@@ -386,7 +386,7 @@ const CardPage = () => {
                           setIsFlipping(false);
                         }, 250);
                       }}
-                      className="mt-2 text-xs text-primary hover:underline flex items-center gap-1"
+                      className="mt-2 text-xs text-primary hover:underline inline-flex items-center gap-1 min-h-9"
                     >
                       <RotateCw className="h-3 w-3" />
                       {faceIndex === 0 ? 'Show back face' : 'Show front face'}
@@ -396,7 +396,7 @@ const CardPage = () => {
 
                 {/* Oracle text */}
                 {oracleText && (
-                  <div className="bg-card/60 border border-border/40 rounded-lg p-4 text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                  <div className="bg-card/60 border border-border/40 rounded-lg p-3.5 sm:p-4 text-sm text-foreground whitespace-pre-wrap break-words leading-relaxed">
                     {oracleText}
                   </div>
                 )}
