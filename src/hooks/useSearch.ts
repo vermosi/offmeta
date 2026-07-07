@@ -125,6 +125,9 @@ export function useSearch() {
   const [activeFilters, setActiveFilters] = useState<FilterState | null>(null);
   const [lastIntent, setLastIntent] = useState<SearchIntent | null>(null);
   const [filtersResetKey, setFiltersResetKey] = useState(0);
+  const [pendingFilterOverride, setPendingFilterOverride] =
+    useState<Partial<FilterState> | null>(null);
+  const [filterOverrideKey, setFilterOverrideKey] = useState(0);
 
   const searchBarRef = useRef<UnifiedSearchBarHandle>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -671,6 +674,40 @@ export function useSearch() {
     [setSearchParams],
   );
 
+  /**
+   * Patch the active filters from outside `SearchFilters` (e.g. the empty
+   * state broaden chips). Bumps `filterOverrideKey` so the child hook can
+   * apply the patch on the next render.
+   */
+  const applyFilterPatch = useCallback(
+    (patch: Partial<FilterState>) => {
+      setPendingFilterOverride(patch);
+      setFilterOverrideKey((k) => k + 1);
+    },
+    [],
+  );
+
+  /**
+   * Reset all client-side filters back to defaults and strip filter params
+   * from the URL. Useful from the empty state "Clear all filters" chip.
+   */
+  const clearAllFilters = useCallback(() => {
+    setFilteredCards([]);
+    setHasActiveFilters(false);
+    setActiveFilters(null);
+    setPendingFilterOverride(null);
+    setFiltersResetKey((k) => k + 1);
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        encodeFiltersToUrl(next, null);
+        return next;
+      },
+      { replace: true },
+    );
+  }, [setSearchParams]);
+
+
   return {
     // State
     locale,
@@ -683,6 +720,8 @@ export function useSearch() {
     lastIntent,
     activeFilters,
     filtersResetKey,
+    pendingFilterOverride,
+    filterOverrideKey,
     reportDialogOpen,
     setReportDialogOpen,
     currentRequestId,
@@ -713,8 +752,13 @@ export function useSearch() {
     handleTryExample,
     handleRegenerateTranslation,
     handleFilteredCards,
+    applyFilterPatch,
+    clearAllFilters,
+
+
 
     // Initial URL filters (for hydrating SearchFilters on load)
     initialUrlFilters,
   };
 }
+

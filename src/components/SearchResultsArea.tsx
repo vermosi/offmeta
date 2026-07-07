@@ -32,6 +32,7 @@ import { CLIENT_CONFIG } from '@/lib/config';
 import { useTranslation } from '@/lib/i18n';
 import { rerankCardsWithIntelligence } from '@/lib/search/intelligence-ranking';
 import type { ScryfallCard } from '@/types/card';
+import type { FilterState } from '@/types/filters';
 import type { ViewMode } from '@/lib/view-mode-storage';
 import type { ResultsTab } from '@/components/ResultsTabs';
 
@@ -83,6 +84,12 @@ interface SearchResultsAreaProps {
   isCheckingSuggestions: boolean;
   onTrySuggestion: (scryfallQuery: string) => void;
   onRelatedCardClick?: (cardName: string) => void;
+  /** Snapshot of the last applied filters; used by the empty state chips. */
+  activeFilters?: FilterState | null;
+  /** Patch one or more filter values (e.g. clear colors) — broadens the query. */
+  onApplyFilterPatch?: (patch: Partial<FilterState>) => void;
+  /** Reset all client-side filters to defaults. */
+  onClearAllFilters?: () => void;
 }
 
 export function SearchResultsArea({
@@ -121,6 +128,9 @@ export function SearchResultsArea({
   isCheckingSuggestions,
   onTrySuggestion,
   onRelatedCardClick,
+  activeFilters,
+  onApplyFilterPatch,
+  onClearAllFilters,
 }: SearchResultsAreaProps) {
   const { t } = useTranslation();
 
@@ -325,15 +335,22 @@ export function SearchResultsArea({
                   </div>
                 )
               ) : (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground">
-                    {t('results.noMatch')}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {t('results.adjustFilters')}
-                  </p>
+                <div className="py-12">
+                  <EmptyState
+                    query={searchQuery}
+                    onTryExample={handleTryExample}
+                    suggestions={querySuggestions}
+                    isCheckingSuggestions={isCheckingSuggestions}
+                    onTrySuggestion={onTrySuggestion}
+                    activeFilters={activeFilters}
+                    onApplyFilterPatch={onApplyFilterPatch}
+                    onClearAllFilters={onClearAllFilters}
+                    variant="filtered"
+                    filteredFromCount={cards.length}
+                  />
                 </div>
               )}
+
 
               <LoadMoreIndicator
                 ref={
@@ -364,8 +381,12 @@ export function SearchResultsArea({
               suggestions={querySuggestions}
               isCheckingSuggestions={isCheckingSuggestions}
               onTrySuggestion={onTrySuggestion}
+              activeFilters={activeFilters}
+              onApplyFilterPatch={onApplyFilterPatch}
+              onClearAllFilters={onClearAllFilters}
             />
           ) : null}
+
 
           {hasSearched && !isSearching && totalCards > 0 && (
             <div className="container-main mt-6">

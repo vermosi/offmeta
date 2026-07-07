@@ -34,6 +34,8 @@ interface ResultsToolbarProps {
   onViewModeChange: (mode: ViewMode) => void;
   compareMode: boolean;
   onToggleCompareMode: () => void;
+  pendingFilterOverride?: Partial<FilterState> | null;
+  filterOverrideKey?: number;
 }
 
 export function ResultsToolbar({
@@ -48,6 +50,8 @@ export function ResultsToolbar({
   onViewModeChange,
   compareMode,
   onToggleCompareMode,
+  pendingFilterOverride,
+  filterOverrideKey,
 }: ResultsToolbarProps) {
   const { t } = useTranslation();
 
@@ -62,7 +66,10 @@ export function ResultsToolbar({
           resetKey={filtersResetKey}
           initialFilters={initialUrlFilters}
           collectionLookup={collectionLookup}
+          pendingOverride={pendingFilterOverride}
+          overrideKey={filterOverrideKey}
         />
+
         <ViewToggle value={viewMode} onChange={onViewModeChange} />
 
         {/* Compare — icon-only on mobile */}

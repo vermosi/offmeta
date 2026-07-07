@@ -135,6 +135,10 @@ const Index = () => {
     lastIntent,
     activeFilters,
     filtersResetKey,
+    pendingFilterOverride,
+    filterOverrideKey,
+    applyFilterPatch,
+    clearAllFilters,
     reportDialogOpen,
     setReportDialogOpen,
     currentRequestId,
@@ -633,7 +637,10 @@ const Index = () => {
                 onViewModeChange={setViewMode}
                 compareMode={compareMode}
                 onToggleCompareMode={handleToggleCompareMode}
+                pendingFilterOverride={pendingFilterOverride}
+                filterOverrideKey={filterOverrideKey}
               />
+
             )}
           </div>
 
@@ -676,8 +683,12 @@ const Index = () => {
                 isCheckingSuggestions={isCheckingSuggestions}
                 onTrySuggestion={handleTrySuggestion}
                 onRelatedCardClick={handleTryExample}
+                activeFilters={activeFilters}
+                onApplyFilterPatch={applyFilterPatch}
+                onClearAllFilters={clearAllFilters}
               />
             </Suspense>
+
           )}
         </main>
 
