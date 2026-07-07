@@ -369,6 +369,7 @@ export function useSearchHandler({
             queryToSearch,
           );
         }
+        endSearchTrace(traceId, { fellBack: true });
       } finally {
         setIsSearching(false);
         setSearchPhase('idle');
