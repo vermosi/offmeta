@@ -41,9 +41,19 @@ export default function GuidesIndex() {
     return applySeoMeta({
       title: 'MTG Search Guides — Learn to Find Any Magic Card | OffMeta',
       description:
-        'Master MTG card search with 10 progressive guides — from basic type searches to multi-constraint queries, all in natural language.',
+        'Master MTG card search with 10 progressive guides — from basic type searches to multi-constraint queries, all in natural language. Free, no login, no Scryfall syntax required.',
       url: 'https://offmeta.app/guides',
       type: 'website',
+      section: 'Guides',
+      keywords: [
+        'MTG search guides',
+        'Magic: The Gathering search',
+        'Scryfall alternatives',
+        'natural language MTG search',
+        'MTG deckbuilding guides',
+        'find MTG cards',
+        'OffMeta guides',
+      ],
     });
   }, []);
 
