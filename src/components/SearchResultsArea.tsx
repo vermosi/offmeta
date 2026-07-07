@@ -381,8 +381,12 @@ export function SearchResultsArea({
               suggestions={querySuggestions}
               isCheckingSuggestions={isCheckingSuggestions}
               onTrySuggestion={onTrySuggestion}
+              activeFilters={activeFilters}
+              onApplyFilterPatch={onApplyFilterPatch}
+              onClearAllFilters={onClearAllFilters}
             />
           ) : null}
+
 
           {hasSearched && !isSearching && totalCards > 0 && (
             <div className="container-main mt-6">
