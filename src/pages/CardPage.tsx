@@ -514,7 +514,7 @@ const CardPage = () => {
             {/* Synergy Cards */}
             {similarityData?.synergyCards?.length ? (
               <section className="space-y-4">
-                <h2 className="text-xl font-bold text-foreground">
+                <h2 className="text-lg sm:text-xl font-bold text-foreground">
                   Pairs Well With
                 </h2>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
