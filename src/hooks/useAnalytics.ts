@@ -264,6 +264,9 @@ const ALLOWED_EVENT_TYPES = [
   'search_recovery_clicked',
   'search_recovery_success',
   'search_quality_computed',
+  'fuzzy_recovery_attempted', // fuzzy card-name resolver was called
+  'fuzzy_recovery_resolved',  // resolver returned a canonical name
+  'fuzzy_recovery_failed',    // resolver returned null (Scryfall miss / network)
   'guided_suggestion_shown',
   'narrow_results_prompt_shown',
   'fast_click_detected',
@@ -342,6 +345,12 @@ interface SearchFailureEventData {
   error_type: 'zero_results' | 'api_error' | 'timeout' | 'rate_limited';
   error_message?: string;
   search_duration_ms?: number;
+  /** Bucketed failure reason (misspelling / wrapper_phrase / missing_concept / too_short / unknown). */
+  failure_reason?: string;
+  /** True if the fuzzy card-name recovery flow was attempted for this query. */
+  fuzzy_attempted?: boolean;
+  /** True if the fuzzy resolver returned a canonical card name. */
+  fuzzy_resolved?: boolean;
 }
 
 interface CardClickEventData {

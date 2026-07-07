@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { queryToSlug, slugToQuery } from '@/lib/search-slug';
 import { buildClientFallbackQuery } from '@/lib/search/fallback';
 import { extractCardNameCandidate } from '@/lib/search/fallback';
+import { classifyFailureReason } from '@/lib/search/classifyFailure';
 import type {
   SearchResult,
   UnifiedSearchBarHandle,
@@ -358,11 +359,22 @@ export function useSearch() {
         const nameCandidate = extractCardNameCandidate(originalQuery);
         if (nameCandidate && source !== 'client_recovery') {
           sessionStorage.setItem('offmeta_recovery_in_progress', '1');
+          trackEvent('fuzzy_recovery_attempted', {
+            query: originalQuery,
+            candidate: nameCandidate,
+            request_id: currentRequestId ?? undefined,
+          });
           void (async () => {
             const resolved = await resolveFuzzyCardName(nameCandidate);
             if (resolved) {
               const fuzzyQuery = `!"${resolved}"`;
               if (fuzzyQuery !== lastSearchResult.scryfallQuery) {
+                trackEvent('fuzzy_recovery_resolved', {
+                  query: originalQuery,
+                  candidate: nameCandidate,
+                  resolved_name: resolved,
+                  request_id: currentRequestId ?? undefined,
+                });
                 const applyFuzzy = () => {
                   setSearchQuery(fuzzyQuery);
                   setLastSearchResult(prev => prev ? {
@@ -392,6 +404,12 @@ export function useSearch() {
                 return;
               }
             }
+
+            trackEvent('fuzzy_recovery_failed', {
+              query: originalQuery,
+              candidate: nameCandidate,
+              request_id: currentRequestId ?? undefined,
+            });
 
             // Fuzzy failed — fall through to broaden-and-retry
             sessionStorage.removeItem('offmeta_recovery_in_progress');
@@ -449,13 +467,21 @@ export function useSearch() {
         }
       }
 
+      const failureReason = classifyFailureReason(originalQuery);
+      const fuzzyAttempted = extractCardNameCandidate(originalQuery) !== null;
       trackSearchFailure({
         query: originalQuery,
         translated_query: lastSearchResult.scryfallQuery,
         error_type: 'zero_results',
+        failure_reason: failureReason,
+        fuzzy_attempted: fuzzyAttempted,
+        // If we reached the terminal failure event after a fuzzy attempt,
+        // the resolver did not rescue this query.
+        fuzzy_resolved: false,
       });
       trackEvent('search_no_result_shown', {
         query: originalQuery,
+        failure_reason: failureReason,
         request_id: currentRequestId ?? undefined,
       });
       queueMicrotask(() => {

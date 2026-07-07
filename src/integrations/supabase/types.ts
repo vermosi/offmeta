@@ -1210,6 +1210,17 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: Json
       }
+      get_search_failure_breakdown: {
+        Args: { since_date: string; until_date?: string }
+        Returns: {
+          failure_reason: string
+          fuzzy_attempted: number
+          fuzzy_fix_rate_pct: number
+          fuzzy_resolved: number
+          share_pct: number
+          total: number
+        }[]
+      }
       get_signature_cards: {
         Args: { target_format?: string }
         Returns: {
