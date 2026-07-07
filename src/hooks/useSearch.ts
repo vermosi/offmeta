@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { queryToSlug, slugToQuery } from '@/lib/search-slug';
 import { buildClientFallbackQuery } from '@/lib/search/fallback';
 import { extractCardNameCandidate } from '@/lib/search/fallback';
+import { classifyFailureReason } from '@/lib/search/classifyFailure';
 import type {
   SearchResult,
   UnifiedSearchBarHandle,
