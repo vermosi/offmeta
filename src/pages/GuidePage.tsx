@@ -93,9 +93,24 @@ export default function GuidePage() {
     description: guide.metaDescription,
     url: pageUrl,
     mainEntityOfPage: pageUrl,
-    author: { '@type': 'Organization', name: 'OffMeta' },
-    publisher: { '@type': 'Organization', name: 'OffMeta' },
+    image: 'https://offmeta.app/og-image.png',
+    inLanguage: 'en',
+    keywords: [guide.title, guide.searchQuery, 'MTG', 'Scryfall', 'card search'].join(', '),
+    articleSection: 'Guides',
+    datePublished: GUIDE_PUBLISHED_AT,
+    dateModified: GUIDE_MODIFIED_AT,
+    author: { '@type': 'Organization', name: 'OffMeta', url: 'https://offmeta.app/' },
+    publisher: {
+      '@type': 'Organization',
+      name: 'OffMeta',
+      url: 'https://offmeta.app/',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://offmeta.app/og-image.png',
+      },
+    },
   };
+
 
   const faqJsonLd = {
     '@context': 'https://schema.org',
