@@ -96,7 +96,7 @@ export const FORMAT_OPTIONS = [
 ] as const;
 
 // Sort options
-const SORT_OPTIONS = [
+export const SORT_OPTIONS = [
   { value: 'name-asc', labelKey: 'filters.sortNameAsc' },
   { value: 'name-desc', labelKey: 'filters.sortNameDesc' },
   { value: 'cmc-asc', labelKey: 'filters.sortCmcAsc' },
