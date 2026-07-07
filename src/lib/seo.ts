@@ -73,6 +73,27 @@ export function applySeoMeta(opts: SeoOptions): () => void {
   setMeta('twitter:image', image);
   setMeta('twitter:image:alt', opts.title);
 
+  const kw = Array.isArray(opts.keywords)
+    ? opts.keywords.filter(Boolean).join(', ')
+    : opts.keywords;
+  if (kw) {
+    setMeta('keywords', kw);
+    setMeta('news_keywords', kw);
+  }
+
+  setMeta('og:locale', opts.locale ?? 'en_US', 'property');
+  setMeta('og:site_name', 'OffMeta', 'property');
+
+  if ((opts.type ?? 'article') === 'article') {
+    if (opts.publishedTime) setMeta('article:published_time', opts.publishedTime, 'property');
+    if (opts.modifiedTime) setMeta('article:modified_time', opts.modifiedTime, 'property');
+    if (opts.section) setMeta('article:section', opts.section, 'property');
+    if (kw) {
+      // article:tag can repeat; setMeta dedupes by property, so join into one hint tag.
+      setMeta('article:tag', kw, 'property');
+    }
+  }
+
   if (opts.extraMeta) {
     for (const [key, value] of Object.entries(opts.extraMeta)) {
       setMeta(key, value);
