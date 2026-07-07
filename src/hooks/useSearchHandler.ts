@@ -189,6 +189,7 @@ export function useSearchHandler({
       });
 
       try {
+        markSearchPhase(traceId, 'translation:start');
         const translationPromise = translateQueryWithDedup({
           query: queryToSearch,
           filters: filters || undefined,
@@ -202,8 +203,15 @@ export function useSearchHandler({
         ]);
 
         if (requestTokenRef.current !== currentToken) {
+          endSearchTrace(traceId, { aborted: true });
           return;
         }
+
+        markSearchPhase(traceId, 'translation:end', {
+          source: result.source,
+          edgeSource: result.edgeSource,
+          edgeResponseTimeMs: result.edgeResponseTimeMs ?? null,
+        });
 
         saveContext(queryToSearch, result.scryfallQuery);
 
@@ -232,6 +240,9 @@ export function useSearchHandler({
               }
             : result.explanation;
 
+        markSearchPhase(traceId, 'onSearch:dispatch', {
+          scryfallQuery: result.scryfallQuery,
+        });
         onSearch(
           result.scryfallQuery,
           {
@@ -244,6 +255,11 @@ export function useSearchHandler({
           },
           rawQuery, // Always pass original query as naturalQuery
         );
+        endSearchTrace(traceId, {
+          phase: 'handoff',
+          scryfallQuery: result.scryfallQuery,
+          endToEndMs: endToEndElapsedMs,
+        });
 
         // No success toast — results appearing is sufficient feedback
       } catch (error: unknown) {
