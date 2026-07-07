@@ -345,7 +345,9 @@ export function SearchResultsArea({
                 hasNextPage={hasNextPage}
                 totalCards={totalCards}
                 showEndMessage={cards.length > 0}
+                viewMode={viewMode}
               />
+
 
               <RelatedCardsStrip
                 sourceCard={topSourceCard}
