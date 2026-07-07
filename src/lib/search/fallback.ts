@@ -285,7 +285,7 @@ const MANA_PRODUCTION_PATTERNS: Array<{ regex: RegExp; syntax: string | ((m: Reg
  * Detect if a query looks like a card name rather than a search description.
  * Card names are typically 1-6 title-cased words without search keywords.
  */
-function isLikelyCardName(query: string): boolean {
+export function isLikelyCardName(query: string): boolean {
   const trimmed = query.trim();
   const words = trimmed.split(/\s+/);
   if (words.length < 1 || words.length > 6) return false;
