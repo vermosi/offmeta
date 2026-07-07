@@ -22,6 +22,11 @@ import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n';
 import { SkipLinks } from '@/components/SkipLinks';
 
+// Static publish/modified timestamps for the guides content set.
+// Bump GUIDE_MODIFIED_AT whenever guide copy is meaningfully updated.
+const GUIDE_PUBLISHED_AT = '2025-01-15T00:00:00Z';
+const GUIDE_MODIFIED_AT = '2026-07-07T00:00:00Z';
+
 export default function GuidePage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
