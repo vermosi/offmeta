@@ -6,7 +6,7 @@
  * @module components/HeroCardBackdrop
  */
 
-import { useMemo, useState, type SyntheticEvent } from 'react';
+import { useMemo, useRef, useState, type SyntheticEvent } from 'react';
 
 /**
  * Inline SVG silhouette used when a Scryfall image fails or is slow to load.
