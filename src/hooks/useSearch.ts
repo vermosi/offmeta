@@ -359,11 +359,22 @@ export function useSearch() {
         const nameCandidate = extractCardNameCandidate(originalQuery);
         if (nameCandidate && source !== 'client_recovery') {
           sessionStorage.setItem('offmeta_recovery_in_progress', '1');
+          trackEvent('fuzzy_recovery_attempted', {
+            query: originalQuery,
+            candidate: nameCandidate,
+            request_id: currentRequestId ?? undefined,
+          });
           void (async () => {
             const resolved = await resolveFuzzyCardName(nameCandidate);
             if (resolved) {
               const fuzzyQuery = `!"${resolved}"`;
               if (fuzzyQuery !== lastSearchResult.scryfallQuery) {
+                trackEvent('fuzzy_recovery_resolved', {
+                  query: originalQuery,
+                  candidate: nameCandidate,
+                  resolved_name: resolved,
+                  request_id: currentRequestId ?? undefined,
+                });
                 const applyFuzzy = () => {
                   setSearchQuery(fuzzyQuery);
                   setLastSearchResult(prev => prev ? {
@@ -393,6 +404,12 @@ export function useSearch() {
                 return;
               }
             }
+
+            trackEvent('fuzzy_recovery_failed', {
+              query: originalQuery,
+              candidate: nameCandidate,
+              request_id: currentRequestId ?? undefined,
+            });
 
             // Fuzzy failed — fall through to broaden-and-retry
             sessionStorage.removeItem('offmeta_recovery_in_progress');
