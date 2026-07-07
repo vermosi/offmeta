@@ -118,6 +118,122 @@ describe('extractCardNameCandidate', () => {
     });
   });
 
+  describe('question-style wrappers', () => {
+    it('strips "what card is like X"', () => {
+      expect(extractCardNameCandidate('what card is like sol ring')).toBe(
+        'sol ring',
+      );
+    });
+
+    it('strips "whats a card like X"', () => {
+      expect(extractCardNameCandidate("whats a card like eternal witness")).toBe(
+        'eternal witness',
+      );
+    });
+
+    it("strips \"what's a card similar to X\"", () => {
+      expect(
+        extractCardNameCandidate("what's a card similar to lightning bolt"),
+      ).toBe('lightning bolt');
+    });
+
+    it('strips "which card is similar to X"', () => {
+      expect(
+        extractCardNameCandidate('which card is similar to mana crypt'),
+      ).toBe('mana crypt');
+    });
+
+    it('strips "is there a card like X"', () => {
+      expect(extractCardNameCandidate('is there a card like sol ring')).toBe(
+        'sol ring',
+      );
+    });
+
+    it('strips a "card similar to X" (singular, no "cards")', () => {
+      expect(extractCardNameCandidate('card similar to bolt')).toBe('bolt');
+    });
+
+    it('strips "a card that works like X"', () => {
+      expect(
+        extractCardNameCandidate('a card that works like snapcaster mage'),
+      ).toBe('snapcaster mage');
+    });
+
+    it('tolerates trailing "?"', () => {
+      expect(extractCardNameCandidate('what card is like sol ring?')).toBe(
+        'sol ring',
+      );
+    });
+  });
+
+  describe('trailing format qualifiers', () => {
+    it('strips "in commander"', () => {
+      expect(extractCardNameCandidate('sol ring in commander')).toBe(
+        'sol ring',
+      );
+    });
+
+    it('strips "in modern"', () => {
+      expect(extractCardNameCandidate('snapcaster mage in modern')).toBe(
+        'snapcaster mage',
+      );
+    });
+
+    it('strips "legal in edh"', () => {
+      expect(extractCardNameCandidate('mana crypt legal in edh')).toBe(
+        'mana crypt',
+      );
+    });
+
+    it('combines wrapper + trailing format', () => {
+      expect(
+        extractCardNameCandidate('cards like eternal witness in commander'),
+      ).toBe('eternal witness');
+    });
+
+    it('still rejects descriptive queries even when they end in a format', () => {
+      expect(
+        extractCardNameCandidate('creatures that produce treasure in commander'),
+      ).toBeNull();
+    });
+  });
+
+  describe('replacement wrappers', () => {
+    it('strips "replacement for X"', () => {
+      expect(extractCardNameCandidate('replacement for sol ring')).toBe(
+        'sol ring',
+      );
+    });
+
+    it('strips "budget replacements for X"', () => {
+      expect(
+        extractCardNameCandidate('budget replacements for mana crypt'),
+      ).toBe('mana crypt');
+    });
+
+    it('strips trailing "X replacements"', () => {
+      expect(extractCardNameCandidate('mana crypt replacements')).toBe(
+        'mana crypt',
+      );
+    });
+
+    it('strips "X but better"', () => {
+      expect(extractCardNameCandidate('sol ring but better')).toBe('sol ring');
+    });
+  });
+
+  describe('quotes around card names', () => {
+    it('strips wrapping double quotes', () => {
+      expect(extractCardNameCandidate('"sol ring"')).toBe('sol ring');
+    });
+
+    it('strips inner quotes after wrapper', () => {
+      expect(extractCardNameCandidate('cards like "eternal witness"')).toBe(
+        'eternal witness',
+      );
+    });
+  });
+
   describe('regression: dominant zero-result failures', () => {
     // These are the real-world queries the fuzzy recovery flow should catch.
     it.each([
@@ -126,6 +242,8 @@ describe('extractCardNameCandidate', () => {
       ['rogues passage', 'rogues passage'],
       ['eterna witness', 'eterna witness'],
       ['cards like eterna witness', 'eterna witness'],
+      ['what card is like eterna witness', 'eterna witness'],
+      ['eterna witness in commander', 'eterna witness'],
     ])('extracts a candidate from %s', (input, expected) => {
       expect(extractCardNameCandidate(input)).toBe(expected);
     });
