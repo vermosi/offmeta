@@ -83,6 +83,12 @@ interface SearchResultsAreaProps {
   isCheckingSuggestions: boolean;
   onTrySuggestion: (scryfallQuery: string) => void;
   onRelatedCardClick?: (cardName: string) => void;
+  /** Snapshot of the last applied filters; used by the empty state chips. */
+  activeFilters?: FilterState | null;
+  /** Patch one or more filter values (e.g. clear colors) — broadens the query. */
+  onApplyFilterPatch?: (patch: Partial<FilterState>) => void;
+  /** Reset all client-side filters to defaults. */
+  onClearAllFilters?: () => void;
 }
 
 export function SearchResultsArea({
