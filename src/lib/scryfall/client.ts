@@ -94,9 +94,17 @@ export async function searchCards(
   // ── Cache check (avoids API call + queue delay entirely) ───────────────────
   const cacheKey = makeSearchCacheKey(finalQuery, page, lang);
   const cached = getSearchCache(cacheKey);
-  if (cached) return cached;
+  if (cached) {
+    if (typeof performance !== 'undefined') {
+      try {
+        performance.mark?.(`offmeta.scryfall:cache-hit:${page}`);
+      } catch { /* ignore */ }
+    }
+    return cached;
+  }
   // ──────────────────────────────────────────────────────────────────────────
 
+  const fetchStart = typeof performance !== 'undefined' ? performance.now() : 0;
   const encodedQuery = encodeURIComponent(finalQuery);
   const response = await rateLimitedFetch(
     `${BASE_URL}/cards/search?q=${encodedQuery}&page=${page}`,
@@ -111,6 +119,23 @@ export async function searchCards(
 
   const result: SearchResult = await response.json();
   setSearchCache(cacheKey, result);
+
+  if (typeof performance !== 'undefined' && fetchStart) {
+    try {
+      const durationMs = performance.now() - fetchStart;
+      performance.mark?.(`offmeta.scryfall:fetch-end:${page}`);
+      // Surface slow fetches so the search profiler picks them up.
+      if (durationMs > 800) {
+        logger.debug('[SearchDiag] Slow Scryfall fetch', {
+          page,
+          durationMs: Math.round(durationMs),
+          totalCards: result.total_cards,
+          query: finalQuery.substring(0, 120),
+        });
+      }
+    } catch { /* ignore */ }
+  }
+
   return result;
 }
 
