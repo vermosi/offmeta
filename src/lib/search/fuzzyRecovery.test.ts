@@ -90,6 +90,41 @@ describe('resolveFuzzyCardName', () => {
 
     expect(result).toBeNull();
   });
+
+  it('caches results in-memory so repeated retries hit Scryfall only once', async () => {
+    const fetchSpy = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ name: "Atraxa, Praetors' Voice" }),
+    } as unknown as Response);
+    globalThis.fetch = fetchSpy;
+
+    const first = await runWithTimers(resolveFuzzyCardName('atraxia'));
+    const second = await runWithTimers(resolveFuzzyCardName('atraxia'));
+    // Different casing / whitespace should hit the same cache key.
+    const third = await runWithTimers(resolveFuzzyCardName('  ATRAXIA  '));
+
+    expect(first).toBe("Atraxa, Praetors' Voice");
+    expect(second).toBe("Atraxa, Praetors' Voice");
+    expect(third).toBe("Atraxa, Praetors' Voice");
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('caches 404 misses so repeated retries do not re-fetch', async () => {
+    const fetchSpy = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: async () => ({}),
+    } as unknown as Response);
+    globalThis.fetch = fetchSpy;
+
+    const first = await runWithTimers(resolveFuzzyCardName('zzzznotacard'));
+    const second = await runWithTimers(resolveFuzzyCardName('zzzznotacard'));
+
+    expect(first).toBeNull();
+    expect(second).toBeNull();
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('fuzzy recovery flow — end-to-end composition', () => {
