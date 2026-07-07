@@ -363,27 +363,36 @@ export function useSearch() {
             if (resolved) {
               const fuzzyQuery = `!"${resolved}"`;
               if (fuzzyQuery !== lastSearchResult.scryfallQuery) {
-                toast.info(`Showing results for "${resolved}"`, {
-                  description: `We couldn't find "${nameCandidate}" — did you mean this card?`,
-                  duration: 5000,
-                });
-                setSearchQuery(fuzzyQuery);
-                setLastSearchResult(prev => prev ? {
-                  ...prev,
-                  scryfallQuery: fuzzyQuery,
-                  explanation: {
-                    readable: `Did you mean: ${resolved}`,
-                    assumptions: [`Fuzzy-matched "${nameCandidate}" to "${resolved}"`],
-                    confidence: 0.85,
+                const applyFuzzy = () => {
+                  setSearchQuery(fuzzyQuery);
+                  setLastSearchResult(prev => prev ? {
+                    ...prev,
+                    scryfallQuery: fuzzyQuery,
+                    explanation: {
+                      readable: `Did you mean: ${resolved}`,
+                      assumptions: [`Fuzzy-matched "${nameCandidate}" to "${resolved}"`],
+                      confidence: 0.85,
+                    },
+                    source: 'client_recovery',
+                  } : prev);
+                  queryClient.invalidateQueries({
+                    queryKey: ['cards', fuzzyQuery, scryfallLang],
+                  });
+                };
+
+                toast.info(`Did you mean “${resolved}”?`, {
+                  description: `We couldn't find "${nameCandidate}". Switching to ${fuzzyQuery}`,
+                  duration: 7000,
+                  action: {
+                    label: 'Show results',
+                    onClick: applyFuzzy,
                   },
-                  source: 'client_recovery',
-                } : prev);
-                queryClient.invalidateQueries({
-                  queryKey: ['cards', fuzzyQuery, scryfallLang],
                 });
+                applyFuzzy();
                 return;
               }
             }
+
             // Fuzzy failed — fall through to broaden-and-retry
             sessionStorage.removeItem('offmeta_recovery_in_progress');
             const fallbackQuery = buildClientFallbackQuery(originalQuery);
