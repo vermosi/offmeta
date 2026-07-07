@@ -9,6 +9,7 @@ export {
   getRandomCard,
   getCardByName,
   resolveFuzzyCardName,
+  __resetFuzzyCardNameCache,
   getCardsByExactNames,
   getCardImage,
   isDoubleFacedCard,
