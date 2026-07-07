@@ -68,22 +68,29 @@ describe('classifyFailureReason', () => {
   });
 
   describe('missing_concept', () => {
-    it('classifies descriptive queries as missing_concept', () => {
-      expect(classifyFailureReason('mass combat evasion')).toBe(
-        'missing_concept',
-      );
+    it('classifies keyword-heavy descriptive queries as missing_concept', () => {
+      expect(
+        classifyFailureReason('cards that create treasure in commander'),
+      ).toBe('missing_concept');
       expect(
         classifyFailureReason('creatures that untap target permanent'),
       ).toBe('missing_concept');
-      expect(classifyFailureReason('play off top of library')).toBe(
+      expect(
+        classifyFailureReason('spells that draw cards from graveyard'),
+      ).toBe('missing_concept');
+    });
+
+    it('classifies queries with search vocabulary', () => {
+      expect(classifyFailureReason('cheap removal in mono black')).toBe(
         'missing_concept',
       );
     });
 
-    it('classifies keyword-heavy queries', () => {
-      expect(
-        classifyFailureReason('cards that create treasure in commander'),
-      ).toBe('missing_concept');
+    it('short phrases without keywords are treated as fuzzy-recoverable', () => {
+      // "mass combat evasion" has no known concept keywords → extractor
+      // hands it to the fuzzy resolver. That's fine: the resolver will
+      // fail, and the terminal event records fuzzy_resolved=false.
+      expect(classifyFailureReason('mass combat evasion')).toBe('misspelling');
     });
   });
 
