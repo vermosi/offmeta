@@ -29,3 +29,5 @@ const App = () => (
     </ThemeProvider>
   </I18nProvider>
 );
+
+export default App;
