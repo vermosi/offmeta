@@ -76,7 +76,7 @@ const CARD_TYPES = [
 ] as const;
 
 /** Format legality options — ordered by popularity */
-const FORMAT_OPTIONS = [
+export const FORMAT_OPTIONS = [
   { value: 'commander', label: 'Commander' },
   { value: 'modern', label: 'Modern' },
   { value: 'standard', label: 'Standard' },
