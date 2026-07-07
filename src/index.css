@@ -740,15 +740,16 @@
     50% { transform: translateY(-12px) rotate(var(--_r, 0deg)); }
   }
 
-  /* Vignette lives above cards (mask element has z-10) so it can soften card
-     edges. Kept transparent through the middle-vertical band where the H1
-     sits so cards still read; only the far edges and the CTA row fade. */
+  /* Vignette lives above cards (mask element has z-10) to soften card edges
+     into the shared page ambience. Uses transparent stops only — no solid
+     background fill — so the page gradient reads continuously across the
+     hero without a darker rectangular halo at the edges. */
   .hero-card-mask {
     background: radial-gradient(
       ellipse 110% 90% at 50% 45%,
       transparent 45%,
-      hsl(var(--background) / 0.55) 75%,
-      hsl(var(--background)) 100%
+      hsl(var(--background) / 0.25) 80%,
+      transparent 100%
     );
   }
 
