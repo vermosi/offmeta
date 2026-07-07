@@ -125,6 +125,9 @@ export function useSearch() {
   const [activeFilters, setActiveFilters] = useState<FilterState | null>(null);
   const [lastIntent, setLastIntent] = useState<SearchIntent | null>(null);
   const [filtersResetKey, setFiltersResetKey] = useState(0);
+  const [pendingFilterOverride, setPendingFilterOverride] =
+    useState<Partial<FilterState> | null>(null);
+  const [filterOverrideKey, setFilterOverrideKey] = useState(0);
 
   const searchBarRef = useRef<UnifiedSearchBarHandle>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
