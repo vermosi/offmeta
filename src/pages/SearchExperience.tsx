@@ -160,6 +160,14 @@ const Index = () => {
     initialUrlFilters,
   } = useSearch();
 
+  // Profile the render side of the search flow. No-op unless
+  // `localStorage.offmeta_profile_search === '1'` (auto-on in dev).
+  useSearchRenderProfiler({
+    scryfallQuery: lastSearchResult?.scryfallQuery ?? searchQuery,
+    cardCount: cards.length,
+    isSearching,
+  });
+
   // View mode toggle
   const [viewMode, setViewMode] = useState<ViewMode>(getStoredViewMode);
 
