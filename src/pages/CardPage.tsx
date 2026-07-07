@@ -273,8 +273,8 @@ const CardPage = () => {
         <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
         <Header />
 
-        <main className="relative flex-1 py-6 sm:py-10">
-          <div className="container-main space-y-8">
+        <main className="relative flex-1 py-4 sm:py-10">
+          <div className="container-main space-y-6 sm:space-y-10">
             {/* Persistent search funnel */}
             <PageSearchBar
               placeholder={`Search cards like ${card.name}…`}
@@ -291,11 +291,14 @@ const CardPage = () => {
             </nav>
 
             {/* Card hero section */}
-            <div className="grid md:grid-cols-[320px_1fr] gap-6 lg:gap-10">
+            <div className="grid md:grid-cols-[320px_1fr] gap-5 sm:gap-6 lg:gap-10">
               {/* Card image */}
               <div className="flex flex-col items-center gap-3">
                 {cardImage ? (
-                  <div className="relative w-full max-w-[260px] sm:max-w-[320px]" style={{ perspective: '1000px' }}>
+                  <div
+                    className="relative w-full max-w-[300px] sm:max-w-[320px] mx-auto"
+                    style={{ perspective: '1000px' }}
+                  >
                     <div
                       className="transition-transform duration-500"
                       style={{
@@ -306,7 +309,7 @@ const CardPage = () => {
                       <img
                         src={cardImage}
                         alt={`${displayName} card art`}
-                        className="rounded-xl shadow-elegant w-full"
+                        className="rounded-xl shadow-elegant w-full h-auto block"
                         loading="eager"
                         width={672}
                         height={936}
@@ -321,7 +324,7 @@ const CardPage = () => {
                             setIsFlipping(false);
                           }, 250);
                         }}
-                        className="absolute bottom-3 right-3 bg-background/80 backdrop-blur-sm border border-border/50 rounded-full p-2 hover:bg-background transition-colors shadow-md"
+                        className="absolute bottom-3 right-3 min-h-9 min-w-9 flex items-center justify-center bg-background/80 backdrop-blur-sm border border-border/50 rounded-full hover:bg-background transition-colors shadow-md"
                         aria-label={faceIndex === 0 ? 'Show back face' : 'Show front face'}
                         title={faceIndex === 0 ? 'Flip to back' : 'Flip to front'}
                       >
@@ -330,7 +333,7 @@ const CardPage = () => {
                     )}
                   </div>
                 ) : (
-                  <div className="aspect-[488/680] bg-muted rounded-xl w-full max-w-[320px]" />
+                  <div className="aspect-[488/680] bg-muted rounded-xl w-full max-w-[300px] sm:max-w-[320px] mx-auto" />
                 )}
 
                 {/* Purchase links */}
@@ -361,10 +364,10 @@ const CardPage = () => {
               </div>
 
               {/* Card info */}
-              <div className="space-y-5">
+              <div className="min-w-0 space-y-4 sm:space-y-5">
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3 flex-wrap">
-                    {displayName}
+                  <h1 className="text-[1.6rem] leading-tight sm:text-3xl font-bold text-foreground break-words flex items-center gap-x-3 gap-y-1 flex-wrap">
+                    <span className="min-w-0">{displayName}</span>
                     {displayManaCost && (
                       <span className="inline-flex items-center gap-0.5">
                         {displayManaCost.match(/\{[^}]+\}/g)?.map((s, i) => (
@@ -373,7 +376,7 @@ const CardPage = () => {
                       </span>
                     )}
                   </h1>
-                  <p className="text-muted-foreground mt-1">{displayTypeLine}</p>
+                  <p className="text-sm sm:text-base text-muted-foreground mt-1 break-words">{displayTypeLine}</p>
                   {isFlippable && (
                     <button
                       onClick={() => {
@@ -383,7 +386,7 @@ const CardPage = () => {
                           setIsFlipping(false);
                         }, 250);
                       }}
-                      className="mt-2 text-xs text-primary hover:underline flex items-center gap-1"
+                      className="mt-2 text-xs text-primary hover:underline inline-flex items-center gap-1 min-h-9"
                     >
                       <RotateCw className="h-3 w-3" />
                       {faceIndex === 0 ? 'Show back face' : 'Show front face'}
@@ -393,18 +396,18 @@ const CardPage = () => {
 
                 {/* Oracle text */}
                 {oracleText && (
-                  <div className="bg-card/60 border border-border/40 rounded-lg p-4 text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                  <div className="bg-card/60 border border-border/40 rounded-lg p-3.5 sm:p-4 text-sm text-foreground whitespace-pre-wrap break-words leading-relaxed">
                     {oracleText}
                   </div>
                 )}
 
                 {/* Stats row */}
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2">
                   {(activeFace?.power ?? card.power) != null && (activeFace?.toughness ?? card.toughness) != null && (
                     <Badge variant="outline">{activeFace?.power ?? card.power}/{activeFace?.toughness ?? card.toughness}</Badge>
                   )}
                   <Badge variant="outline" className="capitalize">{card.rarity}</Badge>
-                  <Badge variant="outline">{card.set_name}</Badge>
+                  <Badge variant="outline" className="max-w-full truncate">{card.set_name}</Badge>
                   {priceDisplay?.usd && (
                     <Badge variant="secondary" className="gap-1">
                       <DollarSign className="h-3 w-3" />
@@ -474,8 +477,8 @@ const CardPage = () => {
 
             {/* Off-Meta Alternatives section */}
             <section className="space-y-4">
-              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
+              <h2 className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary shrink-0" />
                 Off-Meta Alternatives
               </h2>
               <p className="text-sm text-muted-foreground">
@@ -500,8 +503,8 @@ const CardPage = () => {
             {/* Budget Alternatives */}
             {similarityData?.budgetResults?.data?.length ? (
               <section className="space-y-4">
-                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-primary" />
+                <h2 className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-primary shrink-0" />
                   Budget-Friendly Picks
                 </h2>
                 <CardAlternativesGrid cards={similarityData.budgetResults.data} />
@@ -511,7 +514,7 @@ const CardPage = () => {
             {/* Synergy Cards */}
             {similarityData?.synergyCards?.length ? (
               <section className="space-y-4">
-                <h2 className="text-xl font-bold text-foreground">
+                <h2 className="text-lg sm:text-xl font-bold text-foreground">
                   Pairs Well With
                 </h2>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
