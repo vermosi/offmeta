@@ -74,12 +74,29 @@ export function HeroCardBackdrop() {
   const cards = useMemo(() => shuffleAndPick(CARD_POOL, CARD_COUNT), []);
   const [failed, setFailed] = useState<Record<number, boolean>>({});
   const [loaded, setLoaded] = useState<Record<number, boolean>>({});
+  // Cache-busting suffix per card index — bumped on each retry so the browser
+  // re-issues the request instead of serving a stale failed entry.
+  const [retryTick, setRetryTick] = useState<Record<number, number>>({});
+  // Persist attempt counts across renders without triggering re-renders.
+  const attemptsRef = useRef<Record<number, number>>({});
+
+  const MAX_RETRIES = 3;
+  const RETRY_DELAYS_MS = [400, 1200, 3000];
 
   const handleError = (i: number) => (e: SyntheticEvent<HTMLImageElement>) => {
     if (failed[i]) return;
+    const attempts = attemptsRef.current[i] ?? 0;
+    if (attempts < MAX_RETRIES) {
+      attemptsRef.current[i] = attempts + 1;
+      const delay = RETRY_DELAYS_MS[attempts] ?? 3000;
+      window.setTimeout(() => {
+        setRetryTick((prev) => ({ ...prev, [i]: (prev[i] ?? 0) + 1 }));
+      }, delay);
+      return;
+    }
+    // Exhausted retries → lock in the silhouette fallback.
     setFailed((prev) => ({ ...prev, [i]: true }));
     e.currentTarget.src = CARD_FALLBACK_SVG;
-    // Fallback SVG counts as loaded so it stays visible without another fade.
     setLoaded((prev) => ({ ...prev, [i]: true }));
   };
 
