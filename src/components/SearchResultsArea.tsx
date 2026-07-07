@@ -353,7 +353,8 @@ export function SearchResultsArea({
               />
             </>
           ) : isSearching ? (
-            <CardSkeletonGrid count={10} />
+            <SearchResultsSkeleton viewMode={viewMode} />
+
           ) : hasSearched && totalCards === 0 ? (
             <EmptyState
               query={searchQuery}
