@@ -16,7 +16,10 @@ import {
 import { CardItem } from '@/components/CardItem';
 import { CardListItem } from '@/components/CardListItem';
 import { CardImageItem } from '@/components/CardImageItem';
-import { CardSkeletonGrid } from '@/components/CardSkeleton';
+import {
+  SearchResultsSkeleton,
+  LoadMoreSkeletonRow,
+} from '@/components/SearchResultsSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { LoadMoreIndicator } from '@/components/LoadMoreIndicator';
 import { VirtualizedCardGrid } from '@/components/VirtualizedCardGrid';
@@ -342,7 +345,9 @@ export function SearchResultsArea({
                 hasNextPage={hasNextPage}
                 totalCards={totalCards}
                 showEndMessage={cards.length > 0}
+                viewMode={viewMode}
               />
+
 
               <RelatedCardsStrip
                 sourceCard={topSourceCard}
@@ -350,7 +355,8 @@ export function SearchResultsArea({
               />
             </>
           ) : isSearching ? (
-            <CardSkeletonGrid count={10} />
+            <SearchResultsSkeleton viewMode={viewMode} />
+
           ) : hasSearched && totalCards === 0 ? (
             <EmptyState
               query={searchQuery}
