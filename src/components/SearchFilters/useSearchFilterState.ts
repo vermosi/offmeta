@@ -6,12 +6,18 @@ interface UseSearchFilterStateParams {
   defaultMaxCmc: number;
   initialFilters?: Partial<FilterState> | null;
   resetKey: number;
+  /** External patch to merge into filters when `overrideKey` changes. */
+  pendingOverride?: Partial<FilterState> | null;
+  /** Bumped by parent whenever `pendingOverride` should be applied. */
+  overrideKey?: number;
 }
 
 export function useSearchFilterState({
   defaultMaxCmc,
   initialFilters,
   resetKey,
+  pendingOverride,
+  overrideKey = 0,
 }: UseSearchFilterStateParams) {
   const buildFilters = useCallback(
     (maxCmc: number): FilterState => {
@@ -38,6 +44,7 @@ export function useSearchFilterState({
   );
   const lastDefaultMaxCmc = useRef(defaultMaxCmc);
   const [prevResetKey, setPrevResetKey] = useState(resetKey);
+  const [prevOverrideKey, setPrevOverrideKey] = useState(overrideKey);
 
   const applyResetIfNeeded = useCallback(() => {
     if (prevResetKey !== resetKey) {
@@ -47,6 +54,22 @@ export function useSearchFilterState({
     }
     return false;
   }, [prevResetKey, resetKey, defaultFilters]);
+
+  const applyOverrideIfNeeded = useCallback(() => {
+    if (prevOverrideKey === overrideKey || !pendingOverride) {
+      return false;
+    }
+    setPrevOverrideKey(overrideKey);
+    setFilters((prev) => {
+      const next: FilterState = { ...prev, ...pendingOverride };
+      // Guard cmcRange shape when patch supplies partial range.
+      if (pendingOverride.cmcRange) {
+        next.cmcRange = pendingOverride.cmcRange;
+      }
+      return next;
+    });
+    return true;
+  }, [prevOverrideKey, overrideKey, pendingOverride]);
 
   const syncCmcRangeIfPristine = useCallback(() => {
     if (lastDefaultMaxCmc.current === defaultMaxCmc) {
@@ -76,6 +99,8 @@ export function useSearchFilterState({
     setFilters,
     defaultFilters,
     applyResetIfNeeded,
+    applyOverrideIfNeeded,
     syncCmcRangeIfPristine,
   };
 }
+
