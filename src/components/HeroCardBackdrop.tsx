@@ -104,22 +104,29 @@ export function HeroCardBackdrop() {
     setLoaded((prev) => (prev[i] ? prev : { ...prev, [i]: true }));
   };
 
-  // Prefetch all six selected card images right after mount so the browser
-  // warms its HTTP cache in parallel — even lazy <img> slots resolve from
-  // cache instantly instead of waiting on the network. Uses `Image()` +
-  // `<link rel="preload">` for maximum coverage; both are cheap and idempotent.
+  // Slot indexes for the two central cards in the fan (hero-card-3 and
+  // hero-card-4 — the top peekers directly behind the H1). These render
+  // eagerly and get prefetched; the outer cards stay lazy so they only
+  // fetch when they scroll or animate into view.
+  const CENTER_INDEXES = useMemo(() => new Set([2, 3]), []);
+
+  // Prefetch ONLY the center cards right after mount so we warm the cache
+  // for the visually dominant slots without burning bandwidth on the outer
+  // pair (which is hidden on mobile and less critical on desktop).
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     const links: HTMLLinkElement[] = [];
     // Defer to idle so we don't fight the LCP image for bandwidth on slow
-    // connections; the first card already loads eagerly via its <img> tag.
+    // connections; the eager <img> tags already kick their own fetches.
     const schedule =
       (window as unknown as { requestIdleCallback?: (cb: () => void) => number })
         .requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 0));
 
     const handle = schedule(() => {
-      for (const src of cards) {
+      cards.forEach((src, i) => {
+        if (!CENTER_INDEXES.has(i)) return;
+
         // In-memory Image() kicks the fetch immediately.
         const img = new Image();
         img.decoding = 'async';
@@ -130,9 +137,10 @@ export function HeroCardBackdrop() {
         link.rel = 'preload';
         link.as = 'image';
         link.href = src;
+        link.fetchPriority = 'high';
         document.head.appendChild(link);
         links.push(link);
-      }
+      });
     });
 
     return () => {
@@ -141,7 +149,7 @@ export function HeroCardBackdrop() {
       if (cancel && typeof handle === 'number') cancel(handle);
       for (const link of links) link.parentNode?.removeChild(link);
     };
-  }, [cards]);
+  }, [cards, CENTER_INDEXES]);
 
   return (
     <div
@@ -153,9 +161,11 @@ export function HeroCardBackdrop() {
 
       <div className="hero-card-fan">
         {cards.map((src, i) => {
-          // The first/center card is the LCP candidate — load eagerly with high
-          // fetch priority. Remaining cards stay lazy to preserve bandwidth.
-          const isLcp = i === 0;
+          // Center slots (hero-card-3 / hero-card-4) sit directly behind the
+          // headline and must render immediately — eager load + high fetch
+          // priority. The outer pair stays lazy so the browser only downloads
+          // them when they scroll or animate into view, cutting initial bytes.
+          const isCenter = CENTER_INDEXES.has(i);
           const isLoaded = loaded[i] ?? false;
           return (
             <div
@@ -180,8 +190,8 @@ export function HeroCardBackdrop() {
                 alt=""
                 width={200}
                 height={280}
-                loading={isLcp ? 'eager' : 'lazy'}
-                fetchPriority={isLcp ? 'high' : 'auto'}
+                loading={isCenter ? 'eager' : 'lazy'}
+                fetchPriority={isCenter ? 'high' : 'low'}
                 decoding="async"
                 onError={handleError(i)}
                 onLoad={handleLoad(i)}
