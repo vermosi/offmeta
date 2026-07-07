@@ -207,3 +207,65 @@ describe('fuzzy recovery flow — end-to-end composition', () => {
     expect(fuzzyQuery).toBeNull();
   });
 });
+
+describe('fuzzy recovery — newly supported wrapper phrases retry with canonical name', () => {
+  async function runFuzzyRecovery(
+    originalQuery: string,
+  ): Promise<{ candidate: string | null; resolved: string | null; fuzzyQuery: string | null }> {
+    const candidate = extractCardNameCandidate(originalQuery);
+    if (!candidate) return { candidate: null, resolved: null, fuzzyQuery: null };
+    const resolved = await resolveFuzzyCardName(candidate);
+    const fuzzyQuery = resolved ? `!"${resolved}"` : null;
+    return { candidate, resolved, fuzzyQuery };
+  }
+
+  /**
+   * Each row is: [wrapper query, expected extracted candidate, canonical Scryfall name].
+   * Verifies extract → fuzzy → `!"Canonical"` retry works for every wrapper we
+   * added support for. A miss on any row means either the wrapper regex
+   * regressed or the composed retry query would be wrong.
+   */
+  const cases: Array<[string, string, string]> = [
+    // Question-style wrappers
+    ['what card is like sol ring', 'sol ring', 'Sol Ring'],
+    ["whats a card like eterna witness", 'eterna witness', 'Eternal Witness'],
+    ["what's a card similar to lightning bolt", 'lightning bolt', 'Lightning Bolt'],
+    ['which card is similar to mana crypt', 'mana crypt', 'Mana Crypt'],
+    ['is there a card like sol ring', 'sol ring', 'Sol Ring'],
+    ['card similar to bolt', 'bolt', 'Lightning Bolt'],
+    ['a card that works like snapcaster mage', 'snapcaster mage', 'Snapcaster Mage'],
+    // Trailing format qualifiers
+    ['sol ring in commander', 'sol ring', 'Sol Ring'],
+    ['snapcaster mage in modern', 'snapcaster mage', 'Snapcaster Mage'],
+    ['mana crypt legal in edh', 'mana crypt', 'Mana Crypt'],
+    // Wrapper + trailing format combo
+    ['cards like eterna witness in commander', 'eterna witness', 'Eternal Witness'],
+    // Replacement wrappers
+    ['replacement for sol ring', 'sol ring', 'Sol Ring'],
+    ['budget replacements for mana crypt', 'mana crypt', 'Mana Crypt'],
+    ['mana crypt replacements', 'mana crypt', 'Mana Crypt'],
+    ['sol ring but better', 'sol ring', 'Sol Ring'],
+    // Trailing "?" tolerance
+    ['what card is like sol ring?', 'sol ring', 'Sol Ring'],
+  ];
+
+  it.each(cases)(
+    '%s → extracts %s and retries with canonical name',
+    async (query, expectedCandidate, canonical) => {
+      mockFetchOnce(200, { name: canonical });
+
+      const { candidate, resolved, fuzzyQuery } = await runWithTimers(
+        runFuzzyRecovery(query),
+      );
+
+      expect(candidate).toBe(expectedCandidate);
+      expect(resolved).toBe(canonical);
+      expect(fuzzyQuery).toBe(`!"${canonical}"`);
+      // The retried Scryfall call uses the extracted candidate, not the raw query.
+      const call = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+      expect(call[0]).toContain(
+        `fuzzy=${encodeURIComponent(expectedCandidate)}`,
+      );
+    },
+  );
+});
