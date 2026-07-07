@@ -305,8 +305,35 @@ export async function getCardByName(name: string): Promise<ScryfallCard> {
 }
 
 /**
+ * In-memory cache for fuzzy card-name lookups.
+ *
+ * Same-session repeated retries (e.g. broaden-and-retry loops that re-invoke the
+ * fuzzy resolver for the same misspelling) should not hit Scryfall multiple
+ * times. Both hits and misses are cached so 404s aren't re-fetched either.
+ *
+ * TTL is short (5 min) so canonical name corrections (e.g. Scryfall renames a
+ * printing) still propagate within a reasonable window. Cache is bounded to
+ * avoid unbounded growth from adversarial input.
+ */
+const FUZZY_CACHE_TTL_MS = 5 * 60 * 1000;
+const FUZZY_CACHE_MAX_ENTRIES = 500;
+const fuzzyNameCache = new Map<string, { value: string | null; expiresAt: number }>();
+
+function fuzzyCacheKey(name: string): string {
+  return name.trim().toLowerCase();
+}
+
+/** Test-only: clear the fuzzy name cache between runs. */
+export function __resetFuzzyCardNameCache(): void {
+  fuzzyNameCache.clear();
+}
+
+/**
  * Resolve a possibly-misspelled card name to its canonical Scryfall name.
  * Uses Scryfall's fuzzy /cards/named endpoint. Returns null if no confident match.
+ *
+ * Results (hits and misses) are memoized in-process for {@link FUZZY_CACHE_TTL_MS}
+ * so repeated retries within one search session don't repeatedly hit Scryfall.
  *
  * @param name - Raw card-name-ish string (typos allowed)
  * @returns Canonical card name, or null if not found
@@ -317,19 +344,38 @@ export async function resolveFuzzyCardName(
   const trimmed = name.trim();
   if (trimmed.length < 3) return null;
 
+  const key = fuzzyCacheKey(trimmed);
+  const now = Date.now();
+  const cached = fuzzyNameCache.get(key);
+  if (cached && cached.expiresAt > now) {
+    return cached.value;
+  }
+  if (cached) {
+    fuzzyNameCache.delete(key);
+  }
+
+  let value: string | null = null;
   try {
     const encoded = encodeURIComponent(trimmed);
     const response = await rateLimitedFetch(
       `${BASE_URL}/cards/named?fuzzy=${encoded}`,
     );
-    if (!response.ok) return null;
-    const card = (await response.json()) as { name?: string };
-    return typeof card.name === 'string' && card.name.length > 0
-      ? card.name
-      : null;
+    if (response.ok) {
+      const card = (await response.json()) as { name?: string };
+      value =
+        typeof card.name === 'string' && card.name.length > 0 ? card.name : null;
+    }
   } catch {
-    return null;
+    value = null;
   }
+
+  // Bound cache size with simple FIFO eviction.
+  if (fuzzyNameCache.size >= FUZZY_CACHE_MAX_ENTRIES) {
+    const oldestKey = fuzzyNameCache.keys().next().value;
+    if (oldestKey !== undefined) fuzzyNameCache.delete(oldestKey);
+  }
+  fuzzyNameCache.set(key, { value, expiresAt: now + FUZZY_CACHE_TTL_MS });
+  return value;
 }
 
 /**
