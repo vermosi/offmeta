@@ -637,7 +637,10 @@ const Index = () => {
                 onViewModeChange={setViewMode}
                 compareMode={compareMode}
                 onToggleCompareMode={handleToggleCompareMode}
+                pendingFilterOverride={pendingFilterOverride}
+                filterOverrideKey={filterOverrideKey}
               />
+
             )}
           </div>
 
