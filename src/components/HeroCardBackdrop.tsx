@@ -72,6 +72,13 @@ function shuffleAndPick<T>(pool: readonly T[], count: number): T[] {
 
 export function HeroCardBackdrop() {
   const cards = useMemo(() => shuffleAndPick(CARD_POOL, CARD_COUNT), []);
+  const [failed, setFailed] = useState<Record<number, boolean>>({});
+
+  const handleError = (i: number) => (e: SyntheticEvent<HTMLImageElement>) => {
+    if (failed[i]) return;
+    setFailed((prev) => ({ ...prev, [i]: true }));
+    e.currentTarget.src = CARD_FALLBACK_SVG;
+  };
 
   return (
     <div
@@ -87,15 +94,26 @@ export function HeroCardBackdrop() {
           // fetch priority. Remaining cards stay lazy to preserve bandwidth.
           const isLcp = i === 0;
           return (
-            <div key={i} className={`hero-card hero-card-${i + 1}`}>
+            <div
+              key={i}
+              className={`hero-card hero-card-${i + 1}`}
+              style={{
+                // Silhouette backdrop guarantees the slot is always visible,
+                // even before the network image resolves or if it fails.
+                backgroundImage: `url("${CARD_FALLBACK_SVG}")`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            >
               <img
-                src={src}
+                src={failed[i] ? CARD_FALLBACK_SVG : src}
                 alt=""
                 width={200}
                 height={280}
                 loading={isLcp ? 'eager' : 'lazy'}
                 fetchPriority={isLcp ? 'high' : 'auto'}
                 decoding="async"
+                onError={handleError(i)}
                 className="w-full h-full object-cover rounded-xl"
               />
             </div>
