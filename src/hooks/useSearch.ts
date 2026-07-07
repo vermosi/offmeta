@@ -720,6 +720,8 @@ export function useSearch() {
     lastIntent,
     activeFilters,
     filtersResetKey,
+    pendingFilterOverride,
+    filterOverrideKey,
     reportDialogOpen,
     setReportDialogOpen,
     currentRequestId,
@@ -750,6 +752,9 @@ export function useSearch() {
     handleTryExample,
     handleRegenerateTranslation,
     handleFilteredCards,
+    applyFilterPatch,
+    clearAllFilters,
+
 
     activeFilters,
     filtersResetKey,
