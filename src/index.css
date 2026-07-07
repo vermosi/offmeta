@@ -630,10 +630,18 @@
     height: 182px;
     border-radius: 12px;
     overflow: hidden;
-    background: hsl(var(--background));
     box-shadow: 0 8px 32px rgb(0 0 0 / 0.35);
     animation: heroCardFloat 6s ease-in-out infinite;
     will-change: transform;
+  }
+
+  /* Hide any image that fails to load so we never paint a blank card. */
+  .hero-card img {
+    background: transparent;
+  }
+  .hero-card img:not([src]),
+  .hero-card img[src=""] {
+    display: none;
   }
 
   @media (min-width: 640px) {
@@ -650,46 +658,38 @@
     }
   }
 
+  /* Center pair removed — they sat directly behind the headline. */
+  .hero-card-3,
+  .hero-card-4 {
+    display: none;
+  }
+
   .hero-card-1 {
     left: -2%;
     top: 28%;
-    opacity: 0.14;
-    transform: rotate(-24deg) scale(0.78);
+    opacity: 0.16;
+    transform: rotate(-24deg) scale(0.82);
     animation-delay: 0s;
   }
   .hero-card-2 {
-    left: 8%;
-    top: 20%;
-    opacity: 0.18;
-    transform: rotate(-16deg) scale(0.88);
+    left: 6%;
+    top: 18%;
+    opacity: 0.22;
+    transform: rotate(-16deg) scale(0.92);
     animation-delay: -1.5s;
   }
-  .hero-card-3 {
-    left: 22%;
-    top: 4%;
-    opacity: 0.14;
-    transform: rotate(-6deg) scale(0.92);
-    animation-delay: -3s;
-  }
-  .hero-card-4 {
-    right: 22%;
-    top: 4%;
-    opacity: 0.14;
-    transform: rotate(6deg) scale(0.92);
-    animation-delay: -4.5s;
-  }
   .hero-card-5 {
-    right: 8%;
-    top: 20%;
-    opacity: 0.18;
-    transform: rotate(16deg) scale(0.88);
+    right: 6%;
+    top: 18%;
+    opacity: 0.22;
+    transform: rotate(16deg) scale(0.92);
     animation-delay: -2s;
   }
   .hero-card-6 {
     right: -2%;
     top: 28%;
-    opacity: 0.14;
-    transform: rotate(24deg) scale(0.78);
+    opacity: 0.16;
+    transform: rotate(24deg) scale(0.82);
     animation-delay: -5s;
   }
 
@@ -702,16 +702,12 @@
     .hero-card-2 {
       left: 4%;
       top: 12%;
-      opacity: 0.12;
+      opacity: 0.14;
     }
     .hero-card-5 {
       right: 4%;
       top: 12%;
-      opacity: 0.12;
-    }
-    .hero-card-3,
-    .hero-card-4 {
-      opacity: 0.1;
+      opacity: 0.14;
     }
   }
 
@@ -720,22 +716,17 @@
     50% { transform: translateY(-12px) rotate(var(--_r, 0deg)); }
   }
 
-  /* Vignette + center scrim so hero copy always reads cleanly over the fan */
+  /* Edge-only vignette — keeps side cards soft without darkening the section
+     center so the hero background matches the page below seamlessly. */
   .hero-card-mask {
-    background:
-      radial-gradient(
-        ellipse 55% 45% at 50% 45%,
-        hsl(var(--background) / 0.85) 0%,
-        hsl(var(--background) / 0.55) 40%,
-        transparent 75%
-      ),
-      radial-gradient(
-        ellipse 90% 80% at 50% 40%,
-        transparent 30%,
-        hsl(var(--background) / 0.7) 65%,
-        hsl(var(--background)) 90%
-      );
+    background: radial-gradient(
+      ellipse 100% 85% at 50% 50%,
+      transparent 55%,
+      hsl(var(--background) / 0.7) 80%,
+      hsl(var(--background)) 100%
+    );
   }
+
 
 
   /* ---- Demo card entrance animation ---- */
