@@ -809,7 +809,7 @@
       0 8px 20px hsl(var(--gradient-start) / 0.2);
   }
 
-  /* Page background — single elegant gradient */
+  /* Page background — single elegant gradient shared across every route. */
   .bg-page-gradient {
     background: linear-gradient(
       165deg,
@@ -820,6 +820,32 @@
     );
     z-index: -10;
   }
+
+  /* Ambient violet/cyan glow — fixed layer so the hero and every section
+     below share the same halo instead of the glow ending at the hero seam.
+     Uses the same --gradient-start / --gradient-end tokens as text and
+     borders so palette shifts stay in sync across the whole page. */
+  .bg-page-ambience {
+    z-index: -9;
+    background:
+      radial-gradient(
+        600px 600px at 12% 8%,
+        hsl(var(--gradient-start) / 0.22) 0%,
+        transparent 65%
+      ),
+      radial-gradient(
+        520px 520px at 88% 14%,
+        hsl(var(--gradient-end) / 0.18) 0%,
+        transparent 65%
+      ),
+      radial-gradient(
+        800px 800px at 50% 95%,
+        hsl(var(--gradient-start) / 0.12) 0%,
+        transparent 70%
+      );
+    filter: blur(40px);
+  }
+
 
   .bg-page-noise {
     opacity: 0.03;

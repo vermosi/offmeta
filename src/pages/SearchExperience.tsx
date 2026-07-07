@@ -443,9 +443,15 @@ const Index = () => {
     <ErrorBoundary>
       <SkipLinks showSearchLink />
       <div className="min-h-screen min-h-[100dvh] flex flex-col relative overflow-x-hidden">
-        {/* Static premium gradient background */}
+        {/* Shared page background stack — gradient wash, ambient glow, noise.
+            Kept fixed so the hero and every section below share the same
+            atmosphere instead of the hero's glow ending at its bottom edge. */}
         <div
           className="fixed inset-0 pointer-events-none bg-page-gradient"
+          aria-hidden="true"
+        />
+        <div
+          className="fixed inset-0 pointer-events-none bg-page-ambience"
           aria-hidden="true"
         />
         <div

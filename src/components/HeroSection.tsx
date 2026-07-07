@@ -31,18 +31,10 @@ export function HeroSection() {
       className="relative pt-8 sm:pt-16 lg:pt-20 pb-2 sm:pb-4 overflow-x-hidden"
       aria-labelledby="hero-heading"
     >
-      {/* Card art collage */}
+      {/* Card art collage. Ambient violet/cyan glow now lives on the shared
+          `.bg-page-ambience` fixed layer in SearchExperience so the hero and
+          the sections below share one continuous atmosphere. */}
       <HeroCardBackdrop />
-
-      {/* Ambient violet/cyan glow */}
-      <div
-        className="absolute inset-0 pointer-events-none overflow-hidden"
-        aria-hidden="true"
-      >
-        <div className="glow-orb absolute -top-40 -left-20 opacity-50" />
-        <div className="glow-orb glow-orb-secondary absolute -top-20 -right-32 opacity-40" />
-        <div className="glow-orb absolute bottom-0 left-1/3 opacity-20 w-[800px] h-[800px]" />
-      </div>
 
       <div className="container-main text-center relative z-10">
         {/* Tagline pill */}
