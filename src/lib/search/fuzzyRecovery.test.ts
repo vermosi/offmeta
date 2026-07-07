@@ -21,6 +21,7 @@ function mockFetchOnce(status: number, body?: unknown) {
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['setTimeout'] });
+  __resetFuzzyCardNameCache();
 });
 
 afterEach(() => {
