@@ -6,7 +6,31 @@
  * @module components/HeroCardBackdrop
  */
 
-import { useMemo } from 'react';
+import { useMemo, useState, type SyntheticEvent } from 'react';
+
+/**
+ * Inline SVG silhouette used when a Scryfall image fails or is slow to load.
+ * A soft rounded card shape with a subtle inner glow — matches the hero aesthetic
+ * and prevents the slot from collapsing/flashing on error.
+ */
+const CARD_FALLBACK_SVG =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 280' preserveAspectRatio='xMidYMid slice'>
+      <defs>
+        <linearGradient id='g' x1='0' y1='0' x2='0' y2='1'>
+          <stop offset='0%' stop-color='hsl(265 40% 20%)' stop-opacity='0.85'/>
+          <stop offset='100%' stop-color='hsl(200 40% 12%)' stop-opacity='0.85'/>
+        </linearGradient>
+        <radialGradient id='glow' cx='50%' cy='45%' r='60%'>
+          <stop offset='0%' stop-color='hsl(280 60% 55%)' stop-opacity='0.35'/>
+          <stop offset='100%' stop-color='hsl(280 60% 55%)' stop-opacity='0'/>
+        </radialGradient>
+      </defs>
+      <rect width='200' height='280' rx='14' ry='14' fill='url(#g)'/>
+      <rect width='200' height='280' rx='14' ry='14' fill='url(#glow)'/>
+    </svg>`
+  );
 
 /** Pool of iconic MTG card images to randomly pick from. */
 const CARD_POOL = [
@@ -48,6 +72,13 @@ function shuffleAndPick<T>(pool: readonly T[], count: number): T[] {
 
 export function HeroCardBackdrop() {
   const cards = useMemo(() => shuffleAndPick(CARD_POOL, CARD_COUNT), []);
+  const [failed, setFailed] = useState<Record<number, boolean>>({});
+
+  const handleError = (i: number) => (e: SyntheticEvent<HTMLImageElement>) => {
+    if (failed[i]) return;
+    setFailed((prev) => ({ ...prev, [i]: true }));
+    e.currentTarget.src = CARD_FALLBACK_SVG;
+  };
 
   return (
     <div
@@ -63,15 +94,26 @@ export function HeroCardBackdrop() {
           // fetch priority. Remaining cards stay lazy to preserve bandwidth.
           const isLcp = i === 0;
           return (
-            <div key={i} className={`hero-card hero-card-${i + 1}`}>
+            <div
+              key={i}
+              className={`hero-card hero-card-${i + 1}`}
+              style={{
+                // Silhouette backdrop guarantees the slot is always visible,
+                // even before the network image resolves or if it fails.
+                backgroundImage: `url("${CARD_FALLBACK_SVG}")`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            >
               <img
-                src={src}
+                src={failed[i] ? CARD_FALLBACK_SVG : src}
                 alt=""
                 width={200}
                 height={280}
                 loading={isLcp ? 'eager' : 'lazy'}
                 fetchPriority={isLcp ? 'high' : 'auto'}
                 decoding="async"
+                onError={handleError(i)}
                 className="w-full h-full object-cover rounded-xl"
               />
             </div>
