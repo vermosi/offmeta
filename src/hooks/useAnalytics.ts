@@ -496,9 +496,9 @@ function shouldTrackOnce(key: string): boolean {
  */
 
 /**
- * Standalone (non-hook) event fire. Used by IndexShell so the homepage can log
- * a `landing_page_view` without pulling in FullAppProviders. Applies the same
- * validation, rate limit, bot/internal filtering, and UTM tagging as the hook.
+ * Standalone (non-hook) event fire. Callable from modules that don't sit
+ * inside FullAppProviders. Applies the same validation, rate limit,
+ * bot/internal filtering, and UTM tagging as the hook.
  */
 export async function trackEventDirect(
   eventType: string,
