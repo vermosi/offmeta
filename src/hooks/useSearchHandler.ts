@@ -17,6 +17,11 @@ import type { FilterState } from '@/types/filters';
 import type { SearchResult } from '@/components/UnifiedSearchBar';
 
 import { validateSearchInput } from '@/lib/validation/clientInput';
+import {
+  startSearchTrace,
+  markSearchPhase,
+  endSearchTrace,
+} from '@/lib/rum/searchProfiler';
 
 export type SearchPhase = 'idle' | 'translating' | 'fetching';
 
