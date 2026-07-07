@@ -122,6 +122,10 @@ interface SearchFiltersProps {
   initialFilters?: Partial<FilterState> | null;
   /** Collection lookup map for "owned only" filtering */
   collectionLookup?: Map<string, number>;
+  /** External patch to merge into filters when `overrideKey` changes. */
+  pendingOverride?: Partial<FilterState> | null;
+  /** Bumped by parent whenever `pendingOverride` should be applied. */
+  overrideKey?: number;
 }
 
 export function SearchFilters({
@@ -131,6 +135,8 @@ export function SearchFilters({
   resetKey,
   initialFilters,
   collectionLookup,
+  pendingOverride,
+  overrideKey,
 }: SearchFiltersProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -142,11 +148,14 @@ export function SearchFilters({
     setFilters,
     defaultFilters,
     applyResetIfNeeded,
+    applyOverrideIfNeeded,
     syncCmcRangeIfPristine,
   } = useSearchFilterState({
     defaultMaxCmc,
     initialFilters,
     resetKey,
+    pendingOverride,
+    overrideKey,
   });
   const [isOpen, setIsOpen] = useState(false);
 
@@ -171,8 +180,13 @@ export function SearchFilters({
   }, [applyResetIfNeeded]);
 
   useEffect(() => {
+    applyOverrideIfNeeded();
+  }, [applyOverrideIfNeeded]);
+
+  useEffect(() => {
     syncCmcRangeIfPristine();
   }, [syncCmcRangeIfPristine]);
+
 
   const toggleColor = useCallback(
     (colorId: string) => {
