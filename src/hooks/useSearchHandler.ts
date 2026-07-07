@@ -17,6 +17,11 @@ import type { FilterState } from '@/types/filters';
 import type { SearchResult } from '@/components/UnifiedSearchBar';
 
 import { validateSearchInput } from '@/lib/validation/clientInput';
+import {
+  startSearchTrace,
+  markSearchPhase,
+  endSearchTrace,
+} from '@/lib/rum/searchProfiler';
 
 export type SearchPhase = 'idle' | 'translating' | 'fetching';
 
@@ -157,6 +162,14 @@ export function useSearchHandler({
       setSearchPhase('translating');
 
       const searchStartTime = Date.now();
+      const traceId = startSearchTrace(queryToSearch, {
+        complexity: complexity.level,
+        hasFilters: !!filters,
+        bypassCache: !!options?.bypassCache,
+      });
+      markSearchPhase(traceId, 'validated', {
+        wasSimplified: complexity.shouldSimplify,
+      });
       logger.info('[SearchDiag] Search started', {
         query: queryToSearch,
         originalQuery:
@@ -164,6 +177,7 @@ export function useSearchHandler({
         complexity: complexity.level,
         hasFilters: !!filters,
         bypassCache: !!options?.bypassCache,
+        traceId,
       });
 
       // Timeout promise
@@ -175,6 +189,7 @@ export function useSearchHandler({
       });
 
       try {
+        markSearchPhase(traceId, 'translation:start');
         const translationPromise = translateQueryWithDedup({
           query: queryToSearch,
           filters: filters || undefined,
@@ -188,8 +203,15 @@ export function useSearchHandler({
         ]);
 
         if (requestTokenRef.current !== currentToken) {
+          endSearchTrace(traceId, { aborted: true });
           return;
         }
+
+        markSearchPhase(traceId, 'translation:end', {
+          source: result.source,
+          edgeSource: result.edgeSource,
+          edgeResponseTimeMs: result.edgeResponseTimeMs ?? null,
+        });
 
         saveContext(queryToSearch, result.scryfallQuery);
 
@@ -218,6 +240,9 @@ export function useSearchHandler({
               }
             : result.explanation;
 
+        markSearchPhase(traceId, 'onSearch:dispatch', {
+          scryfallQuery: result.scryfallQuery,
+        });
         onSearch(
           result.scryfallQuery,
           {
@@ -230,6 +255,11 @@ export function useSearchHandler({
           },
           rawQuery, // Always pass original query as naturalQuery
         );
+        endSearchTrace(traceId, {
+          phase: 'handoff',
+          scryfallQuery: result.scryfallQuery,
+          endToEndMs: endToEndElapsedMs,
+        });
 
         // No success toast — results appearing is sufficient feedback
       } catch (error: unknown) {
@@ -237,9 +267,14 @@ export function useSearchHandler({
           error instanceof Error ? error.message : String(error);
 
         if (requestTokenRef.current !== currentToken) {
+          endSearchTrace(traceId, { aborted: true });
           return;
         }
         const responseMs = Date.now() - searchStartTime;
+        markSearchPhase(traceId, 'translation:error', {
+          error: errorMessage.substring(0, 120),
+          elapsedMs: responseMs,
+        });
 
         if (errorMessage === 'Search timeout') {
           const fallbackQuery = buildClientFallbackQuery(queryToSearch);
@@ -334,6 +369,7 @@ export function useSearchHandler({
             queryToSearch,
           );
         }
+        endSearchTrace(traceId, { fellBack: true });
       } finally {
         setIsSearching(false);
         setSearchPhase('idle');
