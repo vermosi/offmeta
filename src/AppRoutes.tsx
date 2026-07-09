@@ -38,6 +38,7 @@ const AiPage = lazy(() => import('./pages/AiPage'));
 const AdminSeoPages = lazy(() => import('./pages/AdminSeoPages'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const SearchExperience = lazy(() => import('./pages/SearchExperience'));
+const OAuthConsent = lazy(() => import('./pages/OAuthConsent'));
 
 const routeFallback = <div className="min-h-screen bg-background" />;
 // Per-route ErrorBoundary so a lazy-chunk load failure or render crash on one
@@ -81,6 +82,7 @@ export default function AppRoutes() {
           <Route path="/ai" element={withFullApp(<AiIndex />)} />
           <Route path="/ai/:slug" element={withFullApp(<AiPage />)} />
           <Route path="/admin/seo-pages" element={withFullApp(<AdminSeoPages />)} />
+          <Route path="/.lovable/oauth/consent" element={withFullApp(<OAuthConsent />)} />
           <Route path="*" element={withFullApp(<NotFound />)} />
         </Routes>
       </Suspense>
