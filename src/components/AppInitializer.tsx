@@ -8,6 +8,7 @@ import { useRealtimeCache } from '@/hooks/useRealtimeCache';
 import { usePrefetchPopularQueries } from '@/hooks/useSearchQuery';
 import { supabase } from '@/integrations/supabase/client';
 import { initWebVitals } from '@/lib/rum/webVitals';
+import { startSessionHeartbeat } from '@/lib/analytics/sessionHeartbeat';
 
 /**
  * Schedules work for when the browser is idle, falling back to setTimeout.
