@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
+import { mcpPlugin } from '@lovable.dev/mcp-js/stacks/supabase/vite';
 import path from 'path';
 
 // https://vitejs.dev/config/
