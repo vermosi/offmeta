@@ -75,6 +75,8 @@ function useEdgeFunctionWarmup() {
 function useRumInit() {
   useEffect(() => {
     initWebVitals();
+    const stopHeartbeat = startSessionHeartbeat();
+    return stopHeartbeat;
   }, []);
 }
 
