@@ -161,6 +161,11 @@ export function I18nProvider({ children }: I18nProviderProps) {
     }
   }, []);
 
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    document.documentElement.lang = locale;
+  }, [locale]);
+
   const value = useMemo<I18nContextValue>(
     () => ({
       dictionary,

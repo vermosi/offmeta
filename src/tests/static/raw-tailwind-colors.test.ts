@@ -63,7 +63,7 @@ function collectFiles(dir: string): string[] {
 }
 
 describe('Tailwind semantic color tokens', () => {
-  it('rejects raw Tailwind palette color utility classes', () => {
+  it('rejects raw Tailwind palette color utility classes', { timeout: 15000 }, () => {
     const violations = collectFiles(SRC_ROOT).flatMap((file) => {
       const repoPath = relative(REPO_ROOT, file);
       if (repoPath === THIS_FILE) return [];

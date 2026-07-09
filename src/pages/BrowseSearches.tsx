@@ -1,5 +1,5 @@
 /**
- * Browse curated search pages — categorized grid of high-value MTG searches.
+ * Browse curated search pages - categorized grid of high-value MTG searches.
  * Provides internal linking for SEO and user discovery.
  * @module pages/BrowseSearches
  */
@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { applySeoMeta, injectJsonLd } from '@/lib/seo';
 import { logger } from '@/lib/core/logger';
+import { useTranslation } from '@/lib/i18n';
 
 interface CuratedSearch {
   slug: string;
@@ -31,6 +32,7 @@ const CATEGORY_CONFIG: Record<string, { label: string; icon: typeof Search; orde
 };
 
 export default function BrowseSearches() {
+  const { t } = useTranslation();
   const [searches, setSearches] = useState<CuratedSearch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -60,7 +62,9 @@ export default function BrowseSearches() {
       }
     }
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const grouped = useMemo(() => {
@@ -77,19 +81,22 @@ export default function BrowseSearches() {
 
   useEffect(() => {
     const cleanupSeo = applySeoMeta({
-      title: 'Browse MTG Card Searches | OffMeta',
-      description: 'Explore curated Magic: The Gathering card searches by category — Commander staples, budget picks, tribal lords, mechanics, and more.',
+      title: t('browse.title'),
+      description: t('browse.description'),
       url: 'https://offmeta.app/browse-searches',
     });
     const cleanupLd = injectJsonLd({
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
-      name: 'Browse MTG Card Searches',
-      description: 'Curated Magic: The Gathering card searches organized by category.',
+      name: t('browse.collectionName'),
+      description: t('browse.collectionDesc'),
       url: 'https://offmeta.app/browse-searches',
     });
-    return () => { cleanupSeo(); cleanupLd(); };
-  }, []);
+    return () => {
+      cleanupSeo();
+      cleanupLd();
+    };
+  }, [t]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -98,10 +105,10 @@ export default function BrowseSearches() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-10">
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
-              Browse Card Searches
+              {t('browse.heading')}
             </h1>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Explore curated searches for the most popular Magic: The Gathering strategies, themes, and archetypes.
+              {t('browse.subheading')}
             </p>
           </div>
 
@@ -113,11 +120,11 @@ export default function BrowseSearches() {
             </div>
           ) : error ? (
             <div className="text-center py-12">
-              <p className="text-sm text-destructive mb-2">Failed to load curated searches</p>
-              <p className="text-xs text-muted-foreground">{(error as Error).message}</p>
+              <p className="text-sm text-destructive mb-2">{t('browse.error')}</p>
+              <p className="text-xs text-muted-foreground">{error.message}</p>
             </div>
           ) : searches.length === 0 ? (
-            <p className="text-center text-muted-foreground py-12">No curated searches available yet.</p>
+            <p className="text-center text-muted-foreground py-12">{t('browse.empty')}</p>
           ) : (
             <div className="space-y-10">
               {grouped.map(([category, items]) => {

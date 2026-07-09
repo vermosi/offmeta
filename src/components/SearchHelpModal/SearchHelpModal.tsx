@@ -55,7 +55,7 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
           variant="ghost"
           size="sm"
           className="h-8 px-2 gap-1.5 text-xs rounded-full text-muted-foreground hover:text-foreground"
-          aria-label="Search help"
+          aria-label={t('help.ariaLabel')}
           data-testid="search-help-trigger"
         >
           <HelpCircle className="h-4 w-4" />
@@ -75,36 +75,32 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
             <TabsList className="w-full grid grid-cols-4">
               <TabsTrigger value="examples" className="gap-2">
                 <Lightbulb className="h-4 w-4" />
-                <span className="hidden sm:inline">Examples</span>
+                <span className="hidden sm:inline">{t('help.tabs.examples')}</span>
               </TabsTrigger>
               <TabsTrigger value="advanced" className="gap-2">
                 <Zap className="h-4 w-4" />
-                <span className="hidden sm:inline">Advanced</span>
+                <span className="hidden sm:inline">{t('help.tabs.advanced')}</span>
               </TabsTrigger>
               <TabsTrigger value="confidence" className="gap-2">
                 <Target className="h-4 w-4" />
-                <span className="hidden sm:inline">Confidence</span>
+                <span className="hidden sm:inline">{t('help.tabs.confidence')}</span>
               </TabsTrigger>
               <TabsTrigger value="tips" className="gap-2">
                 <Sparkles className="h-4 w-4" />
-                <span className="hidden sm:inline">Tips</span>
+                <span className="hidden sm:inline">{t('help.tabs.tips')}</span>
               </TabsTrigger>
             </TabsList>
           </div>
 
           <ScrollArea className="h-[400px] px-6 py-4">
-            {/* Examples Tab */}
             <TabsContent value="examples" className="mt-0 space-y-6">
-              <p className="text-sm text-muted-foreground">
-                OffMeta understands natural language. Just describe what you are
-                looking for!
-              </p>
+              <p className="text-sm text-muted-foreground">{t('help.examples.intro')}</p>
 
               {EXAMPLE_QUERIES.map((category) => (
-                <div key={category.category} className="space-y-3">
+                <div key={category.categoryKey} className="space-y-3">
                   <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
                     <category.icon className="h-4 w-4 text-primary" />
-                    {category.category}
+                    {t(category.categoryKey)}
                   </h3>
                   <div className="grid gap-2">
                     {category.examples.map((example) => (
@@ -118,14 +114,14 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
                             &quot;{example.query}&quot;
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {example.description}
+                            {t(example.descriptionKey)}
                           </p>
                         </div>
                         <Badge
                           variant="secondary"
                           className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
-                          Try it
+                          {t('help.tryIt')}
                         </Badge>
                       </button>
                     ))}
@@ -134,16 +130,13 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
               ))}
             </TabsContent>
 
-            {/* Advanced Tab */}
             <TabsContent value="advanced" className="mt-0 space-y-6">
-              <p className="text-sm text-muted-foreground">
-                Power-user features for more precise searches:
-              </p>
+              <p className="text-sm text-muted-foreground">{t('help.advanced.intro')}</p>
 
               {ADVANCED_FEATURES.map((feature) => (
-                <div key={feature.category} className="space-y-2">
+                <div key={feature.categoryKey} className="space-y-2">
                   <h3 className="text-sm font-medium text-foreground">
-                    {feature.category}
+                    {t(feature.categoryKey)}
                   </h3>
                   <div className="space-y-1.5">
                     {feature.items.map((item, idx) => (
@@ -151,7 +144,7 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
                         key={idx}
                         className="text-sm text-muted-foreground pl-3 border-l-2 border-primary/30"
                       >
-                        {item}
+                        {t(item)}
                       </div>
                     ))}
                   </div>
@@ -163,26 +156,19 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
                   <Share2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-foreground">
-                      Shareable Searches
+                      {t('help.shareable.title')}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      Every search creates a unique URL you can copy and share!
-                      Click the Share button after searching to copy the link.
-                    </p>
+                    <p className="text-xs text-muted-foreground">{t('help.shareable.body')}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Scryfall Syntax Quick Reference */}
               <div className="pt-4 border-t border-border space-y-3">
                 <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
                   <Zap className="h-4 w-4 text-primary" />
-                  Scryfall Syntax Quick Reference
+                  {t('help.syntax.title')}
                 </h3>
-                <p className="text-sm text-muted-foreground">
-                  OffMeta translates your natural language to Scryfall syntax.
-                  Here are the key operators:
-                </p>
+                <p className="text-sm text-muted-foreground">{t('help.syntax.intro')}</p>
                 <div className="space-y-2">
                   {SCRYFALL_SYNTAX_TIPS.map((tip) => (
                     <div
@@ -194,15 +180,11 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
                           {tip.syntax}
                         </code>
                         <span className="text-sm font-medium text-foreground">
-                          {tip.meaning}
+                          {t(tip.meaningKey)}
                         </span>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {tip.description}
-                      </p>
-                      <p className="text-xs text-muted-foreground italic">
-                        {tip.example}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{t(tip.descriptionKey)}</p>
+                      <p className="text-xs text-muted-foreground italic">{t(tip.example)}</p>
                     </div>
                   ))}
                 </div>
@@ -210,12 +192,9 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
 
               <div className="pt-4 border-t border-border space-y-3">
                 <h3 className="text-sm font-medium text-foreground">
-                  Full Scryfall Documentation
+                  {t('help.docs.title')}
                 </h3>
-                <p className="text-sm text-muted-foreground">
-                  You can also use Scryfall search syntax directly—our engine
-                  will recognize and pass it through.
-                </p>
+                <p className="text-sm text-muted-foreground">{t('help.docs.body')}</p>
                 <Button
                   variant="outline"
                   size="sm"
@@ -225,41 +204,30 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
                   }
                 >
                   <ExternalLink className="h-4 w-4" />
-                  Scryfall Syntax Guide
+                  {t('help.docs.button')}
                 </Button>
               </div>
             </TabsContent>
 
-            {/* Confidence Tab */}
             <TabsContent value="confidence" className="mt-0 space-y-6">
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  When you search, OffMeta shows a confidence level indicating
-                  how well it understood your query.
-                </p>
+                <p className="text-sm text-muted-foreground">{t('help.confidence.intro')}</p>
                 <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
                   <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                  <p className="text-xs text-muted-foreground">
-                    If results do not match your expectations, try rephrasing
-                    your query or check the &quot;Interpreted as&quot; section
-                    to see what the search engine understood.
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t('help.confidence.note')}</p>
                 </div>
               </div>
 
               <div className="space-y-4">
                 {CONFIDENCE_LEVELS.map((level) => (
-                  <div key={level.level} className="space-y-2">
+                  <div key={level.levelKey} className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Badge
-                        variant="outline"
-                        className={cn('font-medium', level.color)}
-                      >
-                        {level.level}
+                      <Badge variant="outline" className={cn('font-medium', level.color)}>
+                        {t(level.levelKey)}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground pl-1">
-                      {level.description}
+                      {t(level.descriptionKey)}
                     </p>
                     <div className="flex flex-wrap gap-2 pl-1">
                       {level.examples.map((ex) => (
@@ -277,70 +245,59 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
 
               <div className="pt-4 border-t border-border">
                 <h3 className="text-sm font-medium text-foreground mb-3">
-                  What affects confidence?
+                  {t('help.confidence.factors')}
                 </h3>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-start gap-2">
                     <span className="text-primary">•</span>
                     <span>
-                      <strong>Clarity:</strong> Specific, well-defined queries
-                      score higher
+                      <strong>{t('help.confidence.clarityLabel')}</strong> {t('help.confidence.clarityBody')}
                     </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary">•</span>
                     <span>
-                      <strong>MTG Terms:</strong> Using game terminology
-                      improves accuracy
+                      <strong>{t('help.confidence.termsLabel')}</strong> {t('help.confidence.termsBody')}
                     </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary">•</span>
                     <span>
-                      <strong>Ambiguity:</strong> Vague or multi-interpretation
-                      queries score lower
+                      <strong>{t('help.confidence.ambiguityLabel')}</strong> {t('help.confidence.ambiguityBody')}
                     </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary">•</span>
                     <span>
-                      <strong>Complexity:</strong> Very complex queries may have
-                      lower confidence
+                      <strong>{t('help.confidence.complexityLabel')}</strong> {t('help.confidence.complexityBody')}
                     </span>
                   </li>
                 </ul>
               </div>
             </TabsContent>
 
-            {/* Tips Tab */}
             <TabsContent value="tips" className="mt-0 space-y-6">
-              <p className="text-sm text-muted-foreground">
-                Get better results with these search tips:
-              </p>
+              <p className="text-sm text-muted-foreground">{t('help.tips.intro')}</p>
 
               <div className="space-y-3">
                 {TIPS.map((tip, index) => (
                   <div
-                    key={index}
+                    key={tip}
                     className="flex items-start gap-3 p-3 rounded-lg border border-border bg-card"
                   >
                     <div className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/10 text-primary text-xs font-medium shrink-0">
                       {index + 1}
                     </div>
-                    <p className="text-sm text-foreground">{tip}</p>
+                    <p className="text-sm text-foreground">{t(tip)}</p>
                   </div>
                 ))}
               </div>
 
               <div className="pt-4 border-t border-border space-y-3">
                 <h3 className="text-sm font-medium text-foreground">
-                  Advanced: Scryfall Syntax
+                  {t('help.syntax.advancedTitle')}
                 </h3>
-                <p className="text-sm text-muted-foreground">
-                  For power users, you can also use Scryfall search syntax
-                  directly. Our natural language engine will recognize it and
-                  pass it through.
-                </p>
+                <p className="text-sm text-muted-foreground">{t('help.syntax.advancedBody')}</p>
                 <Button
                   variant="outline"
                   size="sm"
@@ -350,7 +307,7 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
                   }
                 >
                   <ExternalLink className="h-4 w-4" />
-                  Scryfall Syntax Guide
+                  {t('help.docs.button')}
                 </Button>
               </div>
             </TabsContent>
@@ -358,10 +315,7 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
         </Tabs>
 
         <div className="p-4 border-t border-border bg-muted/30">
-          <p className="text-xs text-center text-muted-foreground">
-            Can&apos;t find what you need? Use the feedback button after
-            searching to help us improve!
-          </p>
+          <p className="text-xs text-center text-muted-foreground">{t('help.footer')}</p>
         </div>
       </DialogContent>
     </Dialog>

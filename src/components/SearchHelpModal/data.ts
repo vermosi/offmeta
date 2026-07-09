@@ -1,6 +1,6 @@
 /**
  * Static data for the Search Help Modal.
- * Examples, tips, confidence levels, and syntax references.
+ * The UI resolves labels and descriptions through i18n keys.
  */
 
 import {
@@ -14,262 +14,171 @@ import {
 
 export const EXAMPLE_QUERIES = [
   {
-    category: 'Basic Searches',
+    categoryKey: 'help.examples.basic',
     icon: Lightbulb,
     examples: [
-      {
-        query: 'cheap red creatures',
-        description: 'Low-cost red creature cards',
-      },
-      {
-        query: 'blue card draw spells',
-        description: 'Blue instants/sorceries that draw cards',
-      },
-      { query: 'green ramp cards', description: 'Green mana acceleration' },
-      {
-        query: 'black removal',
-        description: 'Black creature destruction spells',
-      },
+      { query: 'cheap red creatures', descriptionKey: 'help.examples.basic1' },
+      { query: 'blue card draw spells', descriptionKey: 'help.examples.basic2' },
+      { query: 'green ramp cards', descriptionKey: 'help.examples.basic3' },
+      { query: 'black removal', descriptionKey: 'help.examples.basic4' },
     ],
   },
   {
-    category: 'Strategy & Synergy',
+    categoryKey: 'help.examples.strategy',
     icon: Target,
     examples: [
-      {
-        query: 'sacrifice outlets for commander',
-        description: 'Cards that let you sacrifice permanents',
-      },
-      {
-        query: 'cards that make treasure tokens',
-        description: 'Treasure token generators',
-      },
-      {
-        query: 'ETB triggers that deal damage',
-        description: 'Enter-the-battlefield damage effects',
-      },
-      {
-        query: 'graveyard recursion in white',
-        description: 'White cards that return things from graveyard',
-      },
+      { query: 'sacrifice outlets for commander', descriptionKey: 'help.examples.strategy1' },
+      { query: 'cards that make treasure tokens', descriptionKey: 'help.examples.strategy2' },
+      { query: 'ETB triggers that deal damage', descriptionKey: 'help.examples.strategy3' },
+      { query: 'graveyard recursion in white', descriptionKey: 'help.examples.strategy4' },
     ],
   },
   {
-    category: 'Format-Specific',
+    categoryKey: 'help.examples.format',
     icon: Zap,
     examples: [
-      {
-        query: 'modern legal counterspells',
-        description: 'Counter magic playable in Modern',
-      },
-      {
-        query: 'pauper staples for mono blue',
-        description: 'Common blue cards for Pauper',
-      },
-      {
-        query: 'commander dragons under $5',
-        description: 'Budget legendary dragons',
-      },
-      {
-        query: 'standard legal board wipes',
-        description: 'Mass removal in current Standard',
-      },
+      { query: 'modern legal counterspells', descriptionKey: 'help.examples.format1' },
+      { query: 'pauper staples for mono blue', descriptionKey: 'help.examples.format2' },
+      { query: 'commander dragons under $5', descriptionKey: 'help.examples.format3' },
+      { query: 'standard legal board wipes', descriptionKey: 'help.examples.format4' },
     ],
   },
   {
-    category: 'Mana & Colors',
+    categoryKey: 'help.examples.mana',
     icon: Mountain,
     examples: [
-      {
-        query: 'artifacts that produce 2 mana',
-        description: 'Mana rocks with high output',
-      },
-      {
-        query: 'red or black creatures under 3 mana',
-        description: 'Cheap Rakdos-only creatures',
-      },
-      {
-        query: 'lands that produce any color',
-        description: 'Five-color mana fixing',
-      },
-      {
-        query: 'mana dorks that cost 1',
-        description: 'One-mana creature ramp',
-      },
+      { query: 'artifacts that produce 2 mana', descriptionKey: 'help.examples.mana1' },
+      { query: 'red or black creatures under 3 mana', descriptionKey: 'help.examples.mana2' },
+      { query: 'lands that produce any color', descriptionKey: 'help.examples.mana3' },
+      { query: 'mana dorks that cost 1', descriptionKey: 'help.examples.mana4' },
     ],
   },
   {
-    category: 'Tribal / Typal',
+    categoryKey: 'help.examples.tribal',
     icon: Users,
     examples: [
-      { query: 'elf lords', description: 'Elves that buff other elves' },
-      {
-        query: 'zombie tribal payoffs',
-        description: 'Cards that reward playing zombies',
-      },
-      {
-        query: 'dragon commanders under $10',
-        description: 'Budget legendary dragons',
-      },
-      {
-        query: 'goblin token generators',
-        description: 'Cards that create goblin tokens',
-      },
+      { query: 'elf lords', descriptionKey: 'help.examples.tribal1' },
+      { query: 'zombie tribal payoffs', descriptionKey: 'help.examples.tribal2' },
+      { query: 'dragon commanders under $10', descriptionKey: 'help.examples.tribal3' },
+      { query: 'goblin token generators', descriptionKey: 'help.examples.tribal4' },
     ],
   },
   {
-    category: 'Complex Queries',
+    categoryKey: 'help.examples.complex',
     icon: Sparkles,
     examples: [
-      {
-        query: 'creatures that double ETB effects',
-        description: 'Panharmonicon-style effects',
-      },
-      {
-        query: 'artifacts that produce 2 mana and cost 4 or less',
-        description: 'Efficient mana rocks',
-      },
-      {
-        query: 'red or black creature that draws cards',
-        description: 'Rakdos card advantage creatures',
-      },
-      {
-        query: 'enchantments that draw cards when creatures die',
-        description: 'Death trigger card advantage',
-      },
+      { query: 'creatures that double ETB effects', descriptionKey: 'help.examples.complex1' },
+      { query: 'artifacts that produce 2 mana and cost 4 or less', descriptionKey: 'help.examples.complex2' },
+      { query: 'red or black creature that draws cards', descriptionKey: 'help.examples.complex3' },
+      { query: 'enchantments that draw cards when creatures die', descriptionKey: 'help.examples.complex4' },
     ],
   },
-];
+] as const;
 
 export const CONFIDENCE_LEVELS = [
   {
-    level: 'High (80-100%)',
+    levelKey: 'help.confidence.highLevel',
     color: 'bg-success/10 text-success border-success/30',
-    description:
-      'The search engine is very confident it understood your query correctly. Results should closely match what you asked for.',
+    descriptionKey: 'help.confidence.highDescription',
     examples: ['red creatures', 'blue instants', 'legendary dragons'],
   },
   {
-    level: 'Medium (50-79%)',
+    levelKey: 'help.confidence.mediumLevel',
     color: 'bg-warning/10 text-warning border-warning/30',
-    description:
-      'The engine made some assumptions about your query. Check the interpretation to see if it matches your intent.',
+    descriptionKey: 'help.confidence.mediumDescription',
     examples: ['cards that go infinite', 'combo pieces for Yawgmoth'],
   },
   {
-    level: 'Low (<50%)',
+    levelKey: 'help.confidence.lowLevel',
     color: 'bg-destructive/10 text-destructive border-destructive/30',
-    description:
-      'The engine is uncertain about the translation. Consider rephrasing or using more specific terms.',
+    descriptionKey: 'help.confidence.lowDescription',
     examples: ['that one card from the set with the thing'],
   },
-];
+] as const;
 
 export const TIPS = [
-  'Be specific about colors, formats, and card types when possible',
-  "Use common MTG terminology like 'ETB', 'ramp', 'mill', 'voltron'",
-  "Mention price constraints like 'under $5' or 'budget'",
-  "Specify formats: 'modern legal', 'commander staple', 'pauper playable'",
-  "Describe effects: 'draws cards', 'destroys creatures', 'gains life'",
-  "Use color combinations: 'Rakdos', 'Simic', 'Esper', 'Naya'",
-  "Reference archetypes: 'aristocrats', 'tokens', 'control', 'aggro'",
-  "Search land types: 'fetch lands', 'shock lands', 'check lands', 'triomes'",
-  "Tribal searches work: 'goblin lords', 'elf tribal', 'zombie payoffs'",
-  "Sort results: 'sorted by price', 'cheapest first', 'by popularity'",
-];
+  'help.tips.1',
+  'help.tips.2',
+  'help.tips.3',
+  'help.tips.4',
+  'help.tips.5',
+  'help.tips.6',
+  'help.tips.7',
+  'help.tips.8',
+  'help.tips.9',
+  'help.tips.10',
+] as const;
 
 export const ADVANCED_FEATURES = [
   {
-    category: 'Land Type Shortcuts',
-    items: [
-      'fetch lands, shock lands, check lands, pain lands',
-      'fast lands, slow lands, dual lands, triomes',
-      'bounce lands, filter lands, MDFCs',
-    ],
+    categoryKey: 'help.advanced.landTypes',
+    items: ['help.advanced.landTypes1', 'help.advanced.landTypes2', 'help.advanced.landTypes3'],
   },
   {
-    category: 'Sorting & Display',
-    items: [
-      'sorted by price, cheapest first',
-      'sorted by popularity (EDHREC rank)',
-      'newest printings, oldest printing',
-    ],
+    categoryKey: 'help.advanced.sorting',
+    items: ['help.advanced.sorting1', 'help.advanced.sorting2', 'help.advanced.sorting3'],
   },
   {
-    category: 'Format Legality',
-    items: [
-      'banned in commander, restricted in vintage',
-      'not legal in modern, legal in pioneer',
-      'pauper legal, historic legal',
-    ],
+    categoryKey: 'help.advanced.legality',
+    items: ['help.advanced.legality1', 'help.advanced.legality2', 'help.advanced.legality3'],
   },
   {
-    category: 'Price Preferences',
-    items: [
-      'under $5, budget, cheap',
-      'under $1 for pauper, expensive staples',
-      'cheapest version, premium printing',
-    ],
+    categoryKey: 'help.advanced.price',
+    items: ['help.advanced.price1', 'help.advanced.price2', 'help.advanced.price3'],
   },
   {
-    category: 'Commander-Specific',
-    items: [
-      'partner commanders, backgrounds',
-      'cEDH staples, casual commander',
-      'fast mana, staples for [color]',
-    ],
+    categoryKey: 'help.advanced.commander',
+    items: ['help.advanced.commander1', 'help.advanced.commander2', 'help.advanced.commander3'],
   },
-];
+] as const;
 
 export const SCRYFALL_SYNTAX_TIPS = [
   {
     syntax: 'c<=rb',
-    meaning: 'Color restricted to red/black only',
-    example: '"red or black creature" → c<=rb t:creature',
-    description:
-      'Excludes Gruul, Grixis, etc. — only mono-red, mono-black, or Rakdos',
+    meaningKey: 'help.syntax.c1Meaning',
+    example: 'help.syntax.c1Example',
+    descriptionKey: 'help.syntax.c1Description',
   },
   {
     syntax: 'c>=rb',
-    meaning: 'Must have BOTH red AND black',
-    example: '"red and black creature" → c>=rb t:creature',
-    description: 'Requires both colors — includes Rakdos, Grixis, Mardu, etc.',
+    meaningKey: 'help.syntax.c2Meaning',
+    example: 'help.syntax.c2Example',
+    descriptionKey: 'help.syntax.c2Description',
   },
   {
     syntax: 'c=r',
-    meaning: 'Exactly this color only (mono)',
-    example: '"mono red creature" → c=r t:creature',
-    description: 'Excludes all multicolor cards',
+    meaningKey: 'help.syntax.c3Meaning',
+    example: 'help.syntax.c3Example',
+    descriptionKey: 'help.syntax.c3Description',
   },
   {
     syntax: 'id<=br',
-    meaning: 'Playable in Rakdos commander',
-    example: '"fits in Rakdos deck" → id<=br',
-    description:
-      'Color identity — includes colorless, mono-R, mono-B, and Rakdos',
+    meaningKey: 'help.syntax.c4Meaning',
+    example: 'help.syntax.c4Example',
+    descriptionKey: 'help.syntax.c4Description',
   },
   {
     syntax: 'produces>=2',
-    meaning: 'Produces 2+ mana',
-    example: '"artifact that makes 2 mana" → t:artifact produces>=2',
-    description: 'Filter by mana production amount',
+    meaningKey: 'help.syntax.c5Meaning',
+    example: 'help.syntax.c5Example',
+    descriptionKey: 'help.syntax.c5Description',
   },
   {
     syntax: 'produces:g',
-    meaning: 'Produces green mana',
-    example: '"lands that tap for green" → t:land produces:g',
-    description: 'Filter by mana color production',
+    meaningKey: 'help.syntax.c6Meaning',
+    example: 'help.syntax.c6Example',
+    descriptionKey: 'help.syntax.c6Description',
   },
   {
     syntax: 'mv<=4',
-    meaning: 'Mana value 4 or less',
-    example: '"cheap dragons" → t:dragon mv<=4',
-    description: 'Also: mv=3 (exactly 3), mv>=5 (5+)',
+    meaningKey: 'help.syntax.c7Meaning',
+    example: 'help.syntax.c7Example',
+    descriptionKey: 'help.syntax.c7Description',
   },
   {
     syntax: 'year>=2020',
-    meaning: 'Printed in 2020 or later',
-    example: '"recent commanders" → is:commander year>=2020',
-    description: 'Filter by release year',
+    meaningKey: 'help.syntax.c8Meaning',
+    example: 'help.syntax.c8Example',
+    descriptionKey: 'help.syntax.c8Description',
   },
-];
+] as const;

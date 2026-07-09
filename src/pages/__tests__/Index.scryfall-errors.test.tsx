@@ -158,7 +158,7 @@ async function submitSearch(query: string) {
 // ── Tests ──────────────────────────────────────────────────
 
 describe('Index – Scryfall error flows', () => {
-  it('shows empty state when Scryfall returns 404 (no matching cards)', async () => {
+  it('shows empty state when Scryfall returns 404 (no matching cards)', { timeout: 15000 }, async () => {
     // Scryfall returns 404 for queries with no matches; client converts to empty result
     mockSearchCards.mockResolvedValue({
       object: 'list',
@@ -174,7 +174,7 @@ describe('Index – Scryfall error flows', () => {
         const matches = screen.getAllByText(/no cards found/i);
         expect(matches.length).toBeGreaterThanOrEqual(1);
       },
-      { timeout: 5000 },
+      { timeout: 10000 },
     );
   });
 

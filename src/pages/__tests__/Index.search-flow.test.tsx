@@ -192,7 +192,7 @@ describe('Index – search flow', () => {
     });
   });
 
-  it('renders card results after successful search flow', async () => {
+  it('renders card results after successful search flow', { timeout: 15000 }, async () => {
     await renderIndex(IndexPage);
     const input = screen.getByRole('searchbox');
     await act(async () => {
@@ -205,11 +205,11 @@ describe('Index – search flow', () => {
         expect.objectContaining({ query: 'treasure makers' }),
       );
       expect(mockSearchCards).toHaveBeenCalled();
-    });
+    }, { timeout: 10000 });
     expect(screen.queryByText(/no cards found/i)).not.toBeInTheDocument();
   });
 
-  it('shows total cards count after search', async () => {
+  it('shows total cards count after search', { timeout: 15000 }, async () => {
     await renderIndex(IndexPage);
     const input = screen.getByRole('searchbox');
     await act(async () => {

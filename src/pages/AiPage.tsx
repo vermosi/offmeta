@@ -7,7 +7,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { applySeoMeta, injectJsonLd } from '@/lib/seo';
 import { useNoIndex } from '@/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,8 +18,8 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { ArrowRight, ExternalLink, Copy, Check } from 'lucide-react';
-import { useState, useCallback } from 'react';
 import { cardNameToSlug } from '@/lib/card-slug';
+import { useTranslation } from '@/lib/i18n';
 
 interface SeoPageContent {
   tldr: string;
@@ -46,6 +46,7 @@ interface SeoPage {
 
 function CopyAnswerButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
+  const { t } = useTranslation();
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(text);
@@ -56,11 +57,11 @@ function CopyAnswerButton({ text }: { text: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border/50 bg-card/50 text-xs text-muted-foreground hover:text-foreground hover:border-accent/30 transition-colors"
-      aria-label="Copy answer"
+      className="inline-flex items-center gap-1.5 rounded-md border border-border/50 bg-card/50 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-accent/30 hover:text-foreground"
+      aria-label={copied ? t('ai.copied') : t('ai.copyAnswer')}
     >
       {copied ? <Check className="h-3.5 w-3.5 text-accent" /> : <Copy className="h-3.5 w-3.5" />}
-      {copied ? 'Copied' : 'Copy Answer'}
+      {copied ? t('ai.copied') : t('ai.copyAnswer')}
     </button>
   );
 }
@@ -70,8 +71,9 @@ function CardEntity({ card }: { card: SeoPageContent['cards'][0] }) {
   const [imgUrl, setImgUrl] = useState<string | null>(null);
   const [hovered, setHovered] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { t } = useTranslation();
 
-  const onEnter = useCallback(async () => {
+  const onEnter = useCallback(() => {
     timerRef.current = setTimeout(async () => {
       setHovered(true);
       if (imgUrl !== null) return;
@@ -94,34 +96,35 @@ function CardEntity({ card }: { card: SeoPageContent['cards'][0] }) {
   }, []);
 
   return (
-    <li className="py-3 border-b border-border/30 last:border-0">
+    <li className="border-b border-border/30 py-3 last:border-0">
       <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0 relative" onMouseEnter={onEnter} onMouseLeave={onLeave}>
-          <Link
-            to={`/cards/${slug}`}
-            className="font-semibold text-foreground hover:text-accent transition-colors"
-          >
+        <div className="relative min-w-0 flex-1" onMouseEnter={onEnter} onMouseLeave={onLeave}>
+          <Link to={`/cards/${slug}`} className="font-semibold text-foreground transition-colors hover:text-accent">
             {card.name}
           </Link>
-          <span className="ml-2 text-xs text-muted-foreground font-mono">
-            {card.manaCost}
-          </span>
-          <p className="text-sm text-muted-foreground mt-0.5">{card.typeLine}</p>
-          <p className="text-sm mt-1">{card.description}</p>
-          {/* Card image hover preview */}
+          <span className="ml-2 font-mono text-xs text-muted-foreground">{card.manaCost}</span>
+          <p className="mt-0.5 text-sm text-muted-foreground">{card.typeLine}</p>
+          <p className="mt-1 text-sm">{card.description}</p>
           {hovered && imgUrl && (
             <span
-              className="pointer-events-none absolute right-0 top-0 z-50 rounded-xl shadow-2xl border border-border overflow-hidden"
+              className="pointer-events-none absolute right-0 top-0 z-50 overflow-hidden rounded-xl border border-border shadow-2xl"
               style={{ width: 146, height: 204 }}
             >
-              <img src={imgUrl} alt={card.name} width={146} height={204} className="block object-cover w-full h-full" loading="lazy" />
+              <img
+                src={imgUrl}
+                alt={card.name}
+                width={146}
+                height={204}
+                className="block h-full w-full object-cover"
+                loading="lazy"
+              />
             </span>
           )}
         </div>
         <Link
           to={`/cards/${slug}`}
-          className="shrink-0 text-muted-foreground hover:text-accent transition-colors"
-          aria-label={`View ${card.name} details`}
+          className="shrink-0 text-muted-foreground transition-colors hover:text-accent"
+          aria-label={t('ai.viewCardDetails', { name: card.name })}
         >
           <ExternalLink className="h-4 w-4" />
         </Link>
@@ -131,6 +134,7 @@ function CardEntity({ card }: { card: SeoPageContent['cards'][0] }) {
 }
 
 export default function AiPage() {
+  const { t } = useTranslation();
   const { slug } = useParams<{ slug: string }>();
 
   const { data: page, isLoading, error } = useQuery({
@@ -144,7 +148,7 @@ export default function AiPage() {
         .maybeSingle();
 
       if (error) throw error;
-      if (!data) throw new Error('Page not found');
+      if (!data) throw new Error(t('ai.pageNotFound'));
 
       return data as unknown as SeoPage;
     },
@@ -155,7 +159,6 @@ export default function AiPage() {
 
   const content = page?.content_json;
 
-  // SEO meta + JSON-LD
   useEffect(() => {
     if (!page || !content) return;
 
@@ -163,13 +166,12 @@ export default function AiPage() {
     const desc = content.tldr.slice(0, 160);
 
     const cleanupMeta = applySeoMeta({
-      title: `${page.query} — MTG Card Guide | OffMeta`,
+      title: t('ai.seoTitle', { query: page.query }),
       description: desc,
       url: canonicalUrl,
       type: 'article',
     });
 
-    // FAQPage + Article JSON-LD
     const jsonLdData = {
       '@context': 'https://schema.org',
       '@graph': [
@@ -202,8 +204,8 @@ export default function AiPage() {
         {
           '@type': 'BreadcrumbList',
           itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'OffMeta', item: 'https://offmeta.app' },
-            { '@type': 'ListItem', position: 2, name: 'AI Guides', item: 'https://offmeta.app/ai' },
+            { '@type': 'ListItem', position: 1, name: t('ai.breadcrumbHome'), item: 'https://offmeta.app' },
+            { '@type': 'ListItem', position: 2, name: t('ai.breadcrumbAiGuides'), item: 'https://offmeta.app/ai' },
             { '@type': 'ListItem', position: 3, name: page.query, item: canonicalUrl },
           ],
         },
@@ -216,14 +218,14 @@ export default function AiPage() {
       cleanupMeta();
       cleanupJsonLd();
     };
-  }, [page, content]);
+  }, [page, content, t]);
 
   useNoIndex(!page && !isLoading);
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="max-w-3xl mx-auto px-4 py-12 space-y-6">
+        <div className="mx-auto max-w-3xl space-y-6 px-4 py-12">
           <Skeleton className="h-10 w-3/4" />
           <Skeleton className="h-24 w-full" />
           <Skeleton className="h-40 w-full" />
@@ -235,12 +237,12 @@ export default function AiPage() {
 
   if (error || !page || !content) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <h1 className="text-2xl font-semibold">Page Not Found</h1>
-          <p className="text-muted-foreground">This guide doesn't exist yet.</p>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="space-y-4 text-center">
+          <h1 className="text-2xl font-semibold">{t('ai.pageNotFoundTitle')}</h1>
+          <p className="text-muted-foreground">{t('ai.pageNotFoundDesc')}</p>
           <Link to="/" className="text-accent hover:underline">
-            Search for cards →
+            {t('ai.searchForCards')}
           </Link>
         </div>
       </div>
@@ -249,16 +251,18 @@ export default function AiPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <article className="max-w-3xl mx-auto px-4 py-8 sm:py-12">
-        {/* Breadcrumb */}
-        <nav
-          className="text-sm text-muted-foreground mb-6"
-          aria-label="Breadcrumb"
-        >
+      <article className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
+        <nav className="mb-6 text-sm text-muted-foreground" aria-label={t('ai.breadcrumbLabel')}>
           <ol className="flex items-center gap-1.5">
             <li>
-              <Link to="/" className="hover:text-foreground transition-colors">
-                OffMeta
+              <Link to="/" className="transition-colors hover:text-foreground">
+                {t('ai.breadcrumbHome')}
+              </Link>
+            </li>
+            <li>/</li>
+            <li>
+              <Link to="/ai" className="transition-colors hover:text-foreground">
+                {t('ai.breadcrumbAiGuides')}
               </Link>
             </li>
             <li>/</li>
@@ -266,39 +270,26 @@ export default function AiPage() {
           </ol>
         </nav>
 
-        {/* H1 — exact query */}
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-6">
-          {page.query}
-        </h1>
+        <h1 className="mb-6 text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">{page.query}</h1>
 
-        {/* TL;DR Answer Block */}
-        <section
-          className="rounded-lg border border-accent/20 bg-accent/5 p-5 sm:p-6 mb-8"
-          aria-label="Quick answer"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-accent">
-              TL;DR
-            </span>
+        <section className="mb-8 rounded-lg border border-accent/20 bg-accent/5 p-5 sm:p-6" aria-label={t('ai.quickAnswer')}>
+          <div className="mb-3 flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-accent">{t('ai.tldr')}</span>
             <CopyAnswerButton text={content.tldr} />
           </div>
-          <p className="text-base sm:text-lg leading-relaxed">{content.tldr}</p>
+          <p className="text-base leading-relaxed sm:text-lg">{content.tldr}</p>
         </section>
 
-        {/* Expanded Explanation */}
-        <section className="prose prose-invert max-w-none mb-10">
+        <section className="prose prose-invert mb-10 max-w-none">
           {content.explanation.split('\n\n').map((paragraph, i) => (
-            <p key={i} className="text-base leading-relaxed text-foreground/90 mb-4">
+            <p key={i} className="mb-4 text-base leading-relaxed text-foreground/90">
               {paragraph}
             </p>
           ))}
         </section>
 
-        {/* Card List */}
         <section className="mb-10">
-          <h2 className="text-xl sm:text-2xl font-semibold mb-4">
-            Top Cards for "{page.query}"
-          </h2>
+          <h2 className="mb-4 text-xl font-semibold sm:text-2xl">{t('ai.topCards', { query: page.query })}</h2>
           <ul className="divide-y-0">
             {content.cards.map((card) => (
               <CardEntity key={card.name} card={card} />
@@ -306,22 +297,14 @@ export default function AiPage() {
           </ul>
         </section>
 
-        {/* Why These Work */}
         <section className="mb-10">
-          <h2 className="text-xl sm:text-2xl font-semibold mb-3">
-            Why These Cards Work
-          </h2>
-          <p className="text-base leading-relaxed text-foreground/90">
-            {content.whyTheseWork}
-          </p>
+          <h2 className="mb-3 text-xl font-semibold sm:text-2xl">{t('ai.whyTheseWork')}</h2>
+          <p className="text-base leading-relaxed text-foreground/90">{content.whyTheseWork}</p>
         </section>
 
-        {/* Related Queries */}
         {content.relatedQueries.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-xl sm:text-2xl font-semibold mb-4">
-              Related Searches
-            </h2>
+            <h2 className="mb-4 text-xl font-semibold sm:text-2xl">{t('ai.relatedSearches')}</h2>
             <div className="flex flex-wrap gap-2">
               {content.relatedQueries.map((rq) => {
                 const rqSlug = rq
@@ -330,11 +313,12 @@ export default function AiPage() {
                   .trim()
                   .replace(/\s+/g, '-')
                   .slice(0, 80);
+
                 return (
                   <Link
                     key={rq}
                     to={`/search/${rqSlug}`}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-border/50 bg-card/50 text-sm hover:border-accent/30 hover:text-accent transition-colors"
+                    className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-card/50 px-3 py-1.5 text-sm transition-colors hover:border-accent/30 hover:text-accent"
                   >
                     {rq}
                     <ArrowRight className="h-3 w-3" />
@@ -345,26 +329,22 @@ export default function AiPage() {
           </section>
         )}
 
-        {/* FAQ Section */}
         {content.faqs.length > 0 && (
           <section className="mb-10" aria-labelledby="faq-heading">
-            <h2
-              id="faq-heading"
-              className="text-xl sm:text-2xl font-semibold mb-4"
-            >
-              Frequently Asked Questions
+            <h2 id="faq-heading" className="mb-4 text-xl font-semibold sm:text-2xl">
+              {t('ai.faqTitle')}
             </h2>
             <Accordion type="single" collapsible className="w-full space-y-2">
               {content.faqs.map((faq, index) => (
                 <AccordionItem
                   key={index}
                   value={`faq-${index}`}
-                  className="border border-border/50 rounded-lg px-4 sm:px-6 bg-card/50 hover:border-accent/20 transition-colors"
+                  className="rounded-lg border border-border/50 bg-card/50 px-4 transition-colors hover:border-accent/20 sm:px-6"
                 >
-                  <AccordionTrigger className="text-left text-base font-medium hover:no-underline py-4">
+                  <AccordionTrigger className="py-4 text-left text-base font-medium hover:no-underline">
                     {faq.question}
                   </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground text-sm sm:text-base pb-4 leading-relaxed">
+                  <AccordionContent className="pb-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
                     {faq.answer}
                   </AccordionContent>
                 </AccordionItem>
@@ -373,26 +353,25 @@ export default function AiPage() {
           </section>
         )}
 
-        {/* Citation footer */}
-        <footer className="mt-12 pt-6 border-t border-border/30 text-sm text-muted-foreground">
+        <footer className="mt-12 border-t border-border/30 pt-6 text-sm text-muted-foreground">
           <p>
-            Source:{' '}
+            {t('ai.sourceLabel')}{' '}
             <Link to="/" className="text-accent hover:underline">
-              OffMeta
+              {t('ai.breadcrumbHome')}
             </Link>{' '}
-            — AI-powered MTG card search and discovery.
+            {t('ai.sourceDescription')}
           </p>
           <p className="mt-1">
-            Card data sourced from{' '}
+            {t('ai.cardDataSource')}{' '}
             <a
               href="https://scryfall.com"
               target="_blank"
               rel="noopener noreferrer"
               className="text-accent hover:underline"
             >
-              Scryfall
+              {t('ai.scryfall')}
             </a>
-            . Prices are approximate and subject to change.
+            {t('ai.priceNote')}
           </p>
         </footer>
       </article>

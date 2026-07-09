@@ -83,6 +83,24 @@ describe('I18nProvider', () => {
     expect(localStorage.getItem('offmeta-locale')).toBe('es');
   });
 
+  it('syncs the document language with the active locale', async () => {
+    render(
+      <I18nProvider>
+        <TestConsumer />
+      </I18nProvider>,
+    );
+
+    expect(document.documentElement.lang).toBe('en');
+
+    await act(async () => {
+      screen.getByText('Switch to ES').click();
+    });
+
+    await waitFor(() => {
+      expect(document.documentElement.lang).toBe('es');
+    });
+  });
+
   it('switches back to English', async () => {
     render(
       <I18nProvider>
