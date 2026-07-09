@@ -12,6 +12,7 @@ const MAX_MOBILE_GUIDES = 5;
 
 const EXPLORE_LINKS = [
   { to: '/combos', labelKey: 'footer.comboFinder', fallback: 'Combo Finder' },
+  { to: '/archetypes', labelKey: 'nav.archetypes', fallback: 'Archetypes' },
   { to: '/guides', labelKey: 'header.guides', fallback: 'Guides' },
   { to: '/docs/syntax', labelKey: 'footer.syntaxCheatSheet', fallback: 'Syntax Cheat Sheet' },
   { to: '/about', labelKey: 'footer.about', fallback: 'About' },

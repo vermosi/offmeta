@@ -29,7 +29,6 @@ import {
   Pencil,
   Search,
   Sparkles,
-  Target,
   TrendingDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -66,6 +65,9 @@ export default function AdminAnalytics() {
   const navigate = useNavigate();
 
   const hook = useAdminAnalyticsData(user, isAdmin);
+  const lowConfidenceQueries = hook.data?.lowConfidenceQueries ?? [];
+  const queryDetailRules = hook.queryDetail?.rules ?? [];
+  const queryDetailRecentOutcomes = hook.queryDetail?.recentOutcomes ?? [];
 
   useEffect(() => {
     if (!authLoading && !roleLoading) {
@@ -299,7 +301,7 @@ export default function AdminAnalytics() {
                 Low-Confidence AI Fallback Queries
               </h2>
               <div className="space-y-2 max-h-72 overflow-auto">
-                {hook.data?.lowConfidenceQueries.slice(0, 8).map((item) => (
+                {lowConfidenceQueries.slice(0, 8).map((item) => (
                   <div key={`${item.query}-${item.time}`} className="rounded-lg border border-border px-3 py-2">
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-sm font-medium truncate">{item.query}</p>
@@ -495,10 +497,10 @@ export default function AdminAnalytics() {
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold">Existing translation rules</h3>
                 <div className="space-y-2">
-                  {hook.queryDetail.rules.length === 0 ? (
+                  {queryDetailRules.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No matching rules yet.</p>
                   ) : (
-                    hook.queryDetail.rules.map((rule) => (
+                    queryDetailRules.map((rule) => (
                       <div key={rule.id} className="rounded-lg border border-border p-3">
                         <div className="flex items-center justify-between gap-2">
                           <p className="text-sm font-medium">{rule.pattern}</p>
@@ -518,10 +520,10 @@ export default function AdminAnalytics() {
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold">Recent outcomes</h3>
                 <div className="space-y-2 max-h-56 overflow-auto">
-                  {hook.queryDetail.recentOutcomes.length === 0 ? (
+                  {queryDetailRecentOutcomes.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No recent outcomes recorded.</p>
                   ) : (
-                    hook.queryDetail.recentOutcomes.map((event) => (
+                    queryDetailRecentOutcomes.map((event) => (
                       <div key={`${event.event_type}-${event.created_at}`} className="rounded-lg border border-border p-3 text-sm">
                         <div className="flex items-center justify-between gap-2">
                           <span className="font-medium">{event.event_type}</span>

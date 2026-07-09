@@ -16,7 +16,6 @@ import type {
   FeedbackItem,
   QueryDetail,
   QueryRepairItem,
-  QuerySignalEvent,
   RulesFilter,
   TranslationRuleRow,
 } from '@/pages/admin-analytics/types';
@@ -612,7 +611,7 @@ export function useAdminAnalyticsData(user: { id: string } | null, isAdmin: bool
     fetchFeedback();
     fetchRules();
     fetchRepairQueue();
-  }, [isAdmin, user, fetchAnalytics, fetchFeedback, fetchRules]);
+  }, [isAdmin, user, fetchAnalytics, fetchFeedback, fetchRules, fetchRepairQueue]);
 
   useEffect(() => {
     if (!isAdmin || !user) return;

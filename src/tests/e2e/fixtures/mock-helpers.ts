@@ -13,7 +13,7 @@ import {
 } from './mock-responses';
 
 const SEARCH_INPUT_SELECTOR = '#search-input';
-const SEARCH_RESULT_CARD_SELECTOR = '[data-testid="search-result-card"]';
+const SEARCH_RESULT_CARD_SELECTOR = '[role="button"][aria-label^="View details for"]';
 
 /* ------------------------------------------------------------------ */
 /*  Search mocks                                                      */
@@ -154,7 +154,7 @@ export async function mockAuthAPIs(
   );
 
   if (mockSignup) {
-    await page.route('**/auth/v1/signup', (route) =>
+    await page.route('**/auth/v1/signup**', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -170,7 +170,7 @@ export async function mockAuthAPIs(
   }
 
   if (mockRecover) {
-    await page.route('**/auth/v1/recover', (route) =>
+    await page.route('**/auth/v1/recover**', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',

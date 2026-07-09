@@ -318,6 +318,21 @@ export function Header() {
             className="hidden md:flex items-center gap-0.5"
             aria-label="Main navigation"
           >
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary/50 focus-ring">
+                  {t('nav.mobileDecks', 'Decks')}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                <DropdownMenuItem onClick={() => navigate('/deckbuilder')}>
+                  {t('nav.deckBuilder', 'Deck Builder')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/decks')}>
+                  {t('nav.browseDecks')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             {CORE_LINKS.map((link) => (
               <Link
                 key={link.href}

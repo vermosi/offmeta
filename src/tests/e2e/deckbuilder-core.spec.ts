@@ -176,7 +176,7 @@ test.describe('Deckbuilder core flows', () => {
     await page.getByRole('button', { name: /add notes|edit notes/i }).click();
     const notesInput = page.getByPlaceholder(/describe|notes/i);
     await notesInput.fill('Persisted deck notes from e2e');
-    await notesInput.blur();
+    await page.keyboard.press('Tab');
 
     await page.reload();
     await expect(

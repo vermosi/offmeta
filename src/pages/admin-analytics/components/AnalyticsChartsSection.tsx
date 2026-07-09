@@ -35,6 +35,10 @@ interface AnalyticsChartsSectionProps {
 }
 
 export function AnalyticsChartsSection({ data, days }: AnalyticsChartsSectionProps) {
+  const confidenceBuckets = data.confidenceBuckets ?? { high: 0, medium: 0, low: 0 };
+  const deterministicCoverage = data.deterministicCoverage ?? {};
+  const eventBreakdown = data.eventBreakdown ?? {};
+  const lowConfidenceQueries = data.lowConfidenceQueries ?? [];
   return (
     <div className="space-y-8">
       {/* Summary cards */}
@@ -157,15 +161,15 @@ export function AnalyticsChartsSection({ data, days }: AnalyticsChartsSectionPro
             Confidence Distribution
           </h2>
           <div className="space-y-3">
-            <BarRow label="High (≥80%)" value={data.confidenceBuckets.high} total={data.summary.totalSearches} color="bg-success" />
-            <BarRow label="Medium (60-79%)" value={data.confidenceBuckets.medium} total={data.summary.totalSearches} color="bg-warning" />
-            <BarRow label="Low (<60%)" value={data.confidenceBuckets.low} total={data.summary.totalSearches} color="bg-destructive" />
+            <BarRow label="High (≥80%)" value={confidenceBuckets.high} total={data.summary.totalSearches} color="bg-success" />
+            <BarRow label="Medium (60-79%)" value={confidenceBuckets.medium} total={data.summary.totalSearches} color="bg-warning" />
+            <BarRow label="Low (<60%)" value={confidenceBuckets.low} total={data.summary.totalSearches} color="bg-destructive" />
           </div>
         </div>
       </div>
 
       {/* Deterministic Coverage Trend */}
-      {Object.keys(data.deterministicCoverage).length > 1 && (
+      {Object.keys(deterministicCoverage).length > 1 && (
         <div className="surface-elevated p-5 border border-border">
           <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
@@ -175,7 +179,7 @@ export function AnalyticsChartsSection({ data, days }: AnalyticsChartsSectionPro
             Percentage of queries handled without AI (deterministic + pattern match)
           </p>
           <div className="space-y-2">
-            {Object.entries(data.deterministicCoverage)
+            {Object.entries(deterministicCoverage)
               .sort(([a], [b]) => a.localeCompare(b))
               .map(([day, pct]) => (
                 <div key={day} className="flex items-center gap-3">
@@ -265,11 +269,11 @@ export function AnalyticsChartsSection({ data, days }: AnalyticsChartsSectionPro
       )}
 
       {/* Event type breakdown */}
-      {Object.keys(data.eventBreakdown).length > 0 && (
+      {Object.keys(eventBreakdown).length > 0 && (
         <div className="surface-elevated p-5 border border-border">
           <h2 className="text-sm font-semibold text-foreground mb-4">Event Types</h2>
           <div className="flex flex-wrap gap-2">
-            {Object.entries(data.eventBreakdown)
+            {Object.entries(eventBreakdown)
               .sort(([, a], [, b]) => b - a)
               .map(([type, count]) => (
                 <Badge key={type} variant="secondary" className="text-xs gap-1.5 py-1">
@@ -282,14 +286,14 @@ export function AnalyticsChartsSection({ data, days }: AnalyticsChartsSectionPro
       )}
 
       {/* Low confidence queries */}
-      {data.lowConfidenceQueries.length > 0 && (
+      {lowConfidenceQueries.length > 0 && (
         <div className="surface-elevated p-5 border border-border">
           <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
             <ShieldAlert className="h-4 w-4 text-warning" />
             Low Confidence Queries (for review)
           </h2>
           <div className="space-y-3 max-h-96 overflow-y-auto">
-            {data.lowConfidenceQueries.map((q, i) => (
+            {lowConfidenceQueries.map((q, i) => (
               <div key={i} className="p-3 rounded-lg bg-muted/30 border border-border/50 space-y-1">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-sm font-medium text-foreground truncate">"{q.query}"</p>

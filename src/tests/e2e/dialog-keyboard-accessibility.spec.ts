@@ -145,7 +145,7 @@ test.describe('Dialog focus management and keyboard flows', () => {
 
     // Navigate down and select
     await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('Enter');
+    await deckBuilderMenuItem.press('Enter');
 
     await page.waitForURL('**/deckbuilder', { timeout: 10_000 });
   });

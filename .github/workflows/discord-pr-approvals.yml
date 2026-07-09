@@ -32,7 +32,14 @@ jobs:
         run: |
           set -euo pipefail
 
-          MESSAGE=$(python -c "import json, os; content=(f\"✅ **PR Approved** in `{os.environ['REPOSITORY']}`\\n\" f\"**#{os.environ['PR_NUMBER']}:** {os.environ['PR_TITLE']}\\n\" f\"**Approver:** {os.environ['APPROVER']} • **Author:** {os.environ['AUTHOR']}\\n\" f\"**Branch:** `{os.environ['HEAD_REF']}` → `{os.environ['BASE_REF']}`\\n\" f\"{os.environ['PR_URL']}\"); print(json.dumps({'content': content}))")
+          CONTENT="[PASS] PR Approved in \`$REPOSITORY\`
+          #$PR_NUMBER: $PR_TITLE
+          Approver: $APPROVER
+          Author: $AUTHOR
+          Branch: \`$HEAD_REF\` -> \`$BASE_REF\`
+          $PR_URL"
+
+          MESSAGE=$(python -c "import json, os; print(json.dumps({'content': os.environ['CONTENT']}))")
 
           curl -fsS -X POST "$DISCORD_WEBHOOK_URL" \
             -H "Content-Type: application/json" \

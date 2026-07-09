@@ -31,7 +31,13 @@ jobs:
         run: |
           set -euo pipefail
 
-          MESSAGE=$(python -c "import json, os; content=(f\"🚀 **PR Merged** in `{os.environ['REPOSITORY']}`\\n\" f\"**#{os.environ['PR_NUMBER']}:** {os.environ['PR_TITLE']}\\n\" f\"**Merged by:** {os.environ['MERGED_BY']}\\n\" f\"**Branch:** `{os.environ['HEAD_REF']}` → `{os.environ['BASE_REF']}`\\n\" f\"{os.environ['PR_URL']}\"); print(json.dumps({'content': content}))")
+          CONTENT="[ROCKET] PR Merged in \`$REPOSITORY\`
+          #$PR_NUMBER: $PR_TITLE
+          Merged by: $MERGED_BY
+          Branch: \`$HEAD_REF\` -> \`$BASE_REF\`
+          $PR_URL"
+
+          MESSAGE=$(python -c "import json, os; print(json.dumps({'content': os.environ['CONTENT']}))")
 
           curl -fsS -X POST "$DISCORD_WEBHOOK_URL" \
             -H "Content-Type: application/json" \

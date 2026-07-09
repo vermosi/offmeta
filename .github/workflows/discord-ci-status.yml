@@ -31,7 +31,22 @@ jobs:
         run: |
           set -euo pipefail
 
-          MESSAGE=$(python -c "import json, os; status=os.environ['CONCLUSION']; emoji='✅' if status == 'success' else '❌'; label='Passed' if status == 'success' else 'Failed'; short_sha=os.environ['COMMIT_SHA'][:7]; content=(f\"{emoji} **CI {label}** in `{os.environ['REPOSITORY']}`\\n\" f\"**Workflow:** {os.environ['WORKFLOW_NAME']}\\n\" f\"**Branch:** `{os.environ['BRANCH']}`\\n\" f\"**Commit:** `{short_sha}`\\n\" f\"{os.environ['RUN_URL']}\"); print(json.dumps({'content': content}))")
+          if [ "$CONCLUSION" = "success" ]; then
+            LABEL="Passed"
+            PREFIX="[PASS]"
+          else
+            LABEL="Failed"
+            PREFIX="[FAIL]"
+          fi
+
+          SHORT_SHA="${COMMIT_SHA:0:7}"
+          CONTENT="$PREFIX CI $LABEL in \`$REPOSITORY\`
+          Workflow: $WORKFLOW_NAME
+          Branch: \`$BRANCH\`
+          Commit: \`$SHORT_SHA\`
+          $RUN_URL"
+
+          MESSAGE=$(python -c "import json, os; print(json.dumps({'content': os.environ['CONTENT']}))")
 
           curl -fsS -X POST "$DISCORD_WEBHOOK_URL" \
             -H "Content-Type: application/json" \

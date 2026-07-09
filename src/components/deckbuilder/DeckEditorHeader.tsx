@@ -118,6 +118,7 @@ export function DeckEditorHeader({
           <Link
             to="/deckbuilder"
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors shrink-0"
+            aria-label={t('deckEditor.backToDecks')}
           >
             <ArrowLeft className="h-4 w-4" />
           </Link>
@@ -251,7 +252,7 @@ export function DeckEditorHeader({
                 onDescriptionBlur();
                 onDescriptionOpenChange(false);
               }}
-              placeholder={t('deckEditor.descriptionPlaceholder')}
+              placeholder={descriptionInput ? t('deckEditor.descriptionPlaceholder') : t('deckEditor.addNotes')}
               rows={2}
               className="text-xs resize-none"
               autoFocus

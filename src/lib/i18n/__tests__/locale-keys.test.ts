@@ -1,15 +1,23 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, it, expect } from 'vitest';
-import en from '@/lib/i18n/en.json';
-import es from '@/lib/i18n/es.json';
-import fr from '@/lib/i18n/fr.json';
-import de from '@/lib/i18n/de.json';
-import itLocale from '@/lib/i18n/it.json';
-import pt from '@/lib/i18n/pt.json';
-import ja from '@/lib/i18n/ja.json';
-import ko from '@/lib/i18n/ko.json';
-import ru from '@/lib/i18n/ru.json';
-import zhs from '@/lib/i18n/zhs.json';
-import zht from '@/lib/i18n/zht.json';
+
+function loadLocale(locale: string) {
+  const filePath = resolve(process.cwd(), 'src/lib/i18n', `${locale}.json`);
+  return JSON.parse(readFileSync(filePath, 'utf8')) as Record<string, string>;
+}
+
+const en = loadLocale('en');
+const es = loadLocale('es');
+const fr = loadLocale('fr');
+const de = loadLocale('de');
+const itLocale = loadLocale('it');
+const pt = loadLocale('pt');
+const ja = loadLocale('ja');
+const ko = loadLocale('ko');
+const ru = loadLocale('ru');
+const zhs = loadLocale('zhs');
+const zht = loadLocale('zht');
 
 const locales: Record<string, Record<string, string>> = {
   es,

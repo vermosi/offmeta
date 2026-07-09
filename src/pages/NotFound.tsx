@@ -43,7 +43,7 @@ const NotFound = () => {
 
       <main id="main-content" className="relative flex-1 flex items-center justify-center px-4">
         <div className="text-center max-w-md space-y-6">
-          <div className="text-8xl font-black text-primary/20 select-none">404</div>
+          <h1 className="text-8xl font-black text-primary/45 select-none">404</h1>
           <h1 className="text-2xl font-bold text-foreground">
             {t('notFound.title')}
           </h1>

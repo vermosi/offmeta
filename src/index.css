@@ -150,11 +150,11 @@
     --muted-foreground: 258 18% 70%;
 
     /* Accent — luminous violet (the signature) */
-    --accent: 265 85% 70%;
+    --accent: 265 85% 78%;
     --accent-foreground: 250 50% 8%;
 
     /* Gradient — violet → cyan, restrained magical glow */
-    --gradient-start: 265 85% 68%;
+    --gradient-start: 265 85% 76%;
     --gradient-end: 195 90% 60%;
 
     --destructive: 0 78% 62%;

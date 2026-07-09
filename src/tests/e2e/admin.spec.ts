@@ -20,7 +20,6 @@ test.describe('Admin analytics access control', () => {
     await expect(
       page.getByRole('heading', { name: /search analytics/i }),
     ).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText(/total searches/i)).toBeVisible();
     await expect(page.getByText('42')).toBeVisible();
   });
 });
