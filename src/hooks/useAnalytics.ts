@@ -297,6 +297,8 @@ const ALLOWED_EVENT_TYPES = [
   'nudge_dismiss',
   'hero_cta_clicked',
   'web_vital',
+  'engaged_session_ping',
+  'session_end',
 ] as const;
 
 type EventType = (typeof ALLOWED_EVENT_TYPES)[number];
