@@ -236,6 +236,38 @@ Returns: summary stats, daily volume, source breakdown, confidence buckets, resp
 
 ---
 
+### Search Quality Repair
+
+**Endpoint**: `GET supabase/functions/admin-search-quality-repair?days=7`
+
+Returns ranked repair candidates for the admin analytics workflow. **Requires admin role**.
+
+Each row includes quality score, no-result counts, refinement counts, confidence, sample size, and flags for existing or active translation rules.
+
+**Endpoint**: `GET supabase/functions/admin-search-quality-repair?query=<normalized_query>&days=7`
+
+Returns a query detail payload with analytics, feedback, existing translation rules, and recent outcomes for one query.
+
+**Endpoint**: `POST supabase/functions/admin-search-quality-repair`
+
+Creates or updates a `translation_rules` row through the admin-safe service-role path.
+
+Request body:
+
+```json
+{
+  "id": "optional-rule-id",
+  "pattern": "ramp spells",
+  "scryfall_syntax": "otag:ramp (t:instant or t:sorcery)",
+  "description": "optional note",
+  "confidence": 0.92,
+  "is_active": true,
+  "source_feedback_id": null
+}
+```
+
+---
+
 ### Process Feedback
 
 **Endpoint**: `POST supabase/functions/process-feedback`

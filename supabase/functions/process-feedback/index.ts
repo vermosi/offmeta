@@ -87,7 +87,14 @@ function sanitizeForPrompt(input: string | null | undefined): string {
   if (!input) return '';
   let s = String(input);
   // Drop control chars and collapse all whitespace to single spaces.
-  s = s.replace(/[\u0000-\u001F\u007F]/g, ' ').replace(/\s+/g, ' ').trim();
+  s = Array.from(s)
+    .map((char) => {
+      const code = char.charCodeAt(0);
+      return code <= 0x1f || code === 0x7f ? ' ' : char;
+    })
+    .join('')
+    .replace(/\s+/g, ' ')
+    .trim();
   // Strip delimiter-breaking characters so the value can't escape its XML tag
   // or open a fake code fence inside the prompt.
   s = s.replace(/[`<>]/g, '');

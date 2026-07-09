@@ -76,7 +76,7 @@ const CARD_TYPES = [
 ] as const;
 
 /** Format legality options — ordered by popularity */
-export const FORMAT_OPTIONS = [
+const FORMAT_OPTIONS = [
   { value: 'commander', label: 'Commander' },
   { value: 'modern', label: 'Modern' },
   { value: 'standard', label: 'Standard' },
@@ -96,7 +96,7 @@ export const FORMAT_OPTIONS = [
 ] as const;
 
 // Sort options
-export const SORT_OPTIONS = [
+const SORT_OPTIONS = [
   { value: 'name-asc', labelKey: 'filters.sortNameAsc' },
   { value: 'name-desc', labelKey: 'filters.sortNameDesc' },
   { value: 'cmc-asc', labelKey: 'filters.sortCmcAsc' },

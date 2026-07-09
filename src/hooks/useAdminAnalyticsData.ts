@@ -14,6 +14,9 @@ import type {
   AnalyticsData,
   FeedbackFilter,
   FeedbackItem,
+  QueryDetail,
+  QueryRepairItem,
+  QuerySignalEvent,
   RulesFilter,
   TranslationRuleRow,
 } from '@/pages/admin-analytics/types';
@@ -23,6 +26,12 @@ export function useAdminAnalyticsData(user: { id: string } | null, isAdmin: bool
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [days, setDays] = useState('7');
+  const [repairQueue, setRepairQueue] = useState<QueryRepairItem[]>([]);
+  const [repairQueueLoading, setRepairQueueLoading] = useState(false);
+  const [queryDetail, setQueryDetail] = useState<QueryDetail | null>(null);
+  const [queryDetailLoading, setQueryDetailLoading] = useState(false);
+  const [queryDetailOpen, setQueryDetailOpen] = useState(false);
+  const [copyFixtureQuery, setCopyFixtureQuery] = useState<string | null>(null);
 
   // ── Feedback state ─────────────────────────────────────────────────────
   const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
@@ -125,6 +134,70 @@ export function useAdminAnalyticsData(user: { id: string } | null, isAdmin: bool
       setFeedbackLoading(false);
     }
   }, []);
+
+  const fetchRepairQueue = useCallback(async () => {
+    setRepairQueueLoading(true);
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      if (!token) throw new Error('Not authenticated');
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-search-quality-repair?days=${days}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        const errBody = await response.text();
+        throw new Error(errBody || `HTTP ${response.status}`);
+      }
+
+      const payload = (await response.json()) as { queue: QueryRepairItem[] };
+      setRepairQueue(payload.queue ?? []);
+    } catch (error) {
+      void error;
+      toast.error('Failed to load repair queue');
+    } finally {
+      setRepairQueueLoading(false);
+    }
+  }, [days]);
+
+  const fetchQueryDetail = useCallback(async (query: string) => {
+    setQueryDetailLoading(true);
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      if (!token) throw new Error('Not authenticated');
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-search-quality-repair?query=${encodeURIComponent(query)}&days=${days}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        const errBody = await response.text();
+        throw new Error(errBody || `HTTP ${response.status}`);
+      }
+
+      const payload = (await response.json()) as { detail: QueryDetail };
+      setQueryDetail(payload.detail);
+      setQueryDetailOpen(true);
+    } catch {
+      toast.error('Failed to load query details');
+    } finally {
+      setQueryDetailLoading(false);
+    }
+  }, [days]);
 
   // ── Fetch rules ────────────────────────────────────────────────────────
   const fetchRules = useCallback(
@@ -275,6 +348,70 @@ export function useAdminAnalyticsData(user: { id: string } | null, isAdmin: bool
     setEditValidationError(null);
     setEditValidationCount(null);
   }, []);
+
+  const createOrEditTranslationRule = useCallback(
+    async (input: {
+      id?: string;
+      pattern: string;
+      scryfall_syntax: string;
+      description?: string;
+      confidence?: number;
+      is_active?: boolean;
+      source_feedback_id?: string | null;
+    }) => {
+      setEditSaving(true);
+      try {
+        const session = await supabase.auth.getSession();
+        const token = session.data.session?.access_token;
+        if (!token) throw new Error('Not authenticated');
+
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-search-quality-repair`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            },
+            body: JSON.stringify(input),
+          },
+        );
+
+        const result = (await response.json()) as { success?: boolean; error?: string };
+        if (!response.ok || result.success === false) {
+          throw new Error(result.error || `HTTP ${response.status}`);
+        }
+
+        toast.success(input.id ? 'Rule updated' : 'Rule created');
+        await fetchRules(showArchivedRulesRef.current);
+        await fetchFeedback();
+        await fetchRepairQueue();
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'Failed to save rule');
+      } finally {
+        setEditSaving(false);
+      }
+    },
+    [fetchFeedback, fetchRepairQueue, fetchRules],
+  );
+
+  const copyGoldenTestFixture = useCallback((query: string) => {
+    const fixture = JSON.stringify(
+      {
+        query,
+        expectedTranslation: queryDetail?.rules[0]?.scryfall_syntax ?? '',
+        expectedRulePattern: queryDetail?.rules[0]?.pattern ?? query,
+        notes: queryDetail?.feedback[0]?.issue_description ?? '',
+      },
+      null,
+      2,
+    );
+    void navigator.clipboard.writeText(fixture);
+    setCopyFixtureQuery(query);
+    toast.success('Golden test fixture copied');
+    window.setTimeout(() => setCopyFixtureQuery((current) => (current === query ? null : current)), 1500);
+  }, [queryDetail]);
 
   // ── Toggle rule active (from rules panel) ──────────────────────────────
   const toggleRuleDirect = useCallback(
@@ -474,7 +611,13 @@ export function useAdminAnalyticsData(user: { id: string } | null, isAdmin: bool
     fetchAnalytics();
     fetchFeedback();
     fetchRules();
+    fetchRepairQueue();
   }, [isAdmin, user, fetchAnalytics, fetchFeedback, fetchRules]);
+
+  useEffect(() => {
+    if (!isAdmin || !user) return;
+    fetchRepairQueue();
+  }, [days, isAdmin, user, fetchRepairQueue]);
 
   // Realtime subscriptions
   useEffect(() => {
@@ -692,9 +835,20 @@ export function useAdminAnalyticsData(user: { id: string } | null, isAdmin: bool
     retriggeringId,
     processingAllPending,
     fetchFeedback,
+    fetchRepairQueue,
+    repairQueue,
+    repairQueueLoading,
+    queryDetail,
+    queryDetailLoading,
+    queryDetailOpen,
+    setQueryDetailOpen,
+    fetchQueryDetail,
+    copyGoldenTestFixture,
+    copyFixtureQuery,
     toggleRuleActive,
     retriggerFeedback,
     processAllPending,
+    createOrEditTranslationRule,
 
     // Rules
     rules,
