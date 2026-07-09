@@ -18,7 +18,6 @@ import { CardListItem } from '@/components/CardListItem';
 import { CardImageItem } from '@/components/CardImageItem';
 import {
   SearchResultsSkeleton,
-  LoadMoreSkeletonRow,
 } from '@/components/SearchResultsSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { LoadMoreIndicator } from '@/components/LoadMoreIndicator';

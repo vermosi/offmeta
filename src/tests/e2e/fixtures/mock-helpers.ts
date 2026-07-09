@@ -68,7 +68,7 @@ export async function searchForCard(page: Page, query: string) {
   await expect(searchInput).toBeVisible({ timeout: 15_000 });
 
   await searchInput.fill(query);
-  await searchInput.press('Enter');
+  await page.getByTestId('search-submit-button').click();
 
   await expect(
     page.locator(SEARCH_RESULT_CARD_SELECTOR).first(),

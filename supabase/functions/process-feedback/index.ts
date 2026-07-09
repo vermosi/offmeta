@@ -52,8 +52,36 @@ const AUTO_APPROVE_MIN_RESULTS = 5;
  * instructions.
  */
 const PROMPT_MAX_LEN = 500;
-const INSTRUCTION_OVERRIDE_RE =
-  /\b(?:ignore\s+(?:the\s+)?(?:above|previous|prior|earlier|all)|disregard\s+(?:the\s+)?(?:above|previous|prior)|forget\s+(?:the\s+)?(?:above|previous|prior|all)|(?:new|updated|revised)\s+(?:instructions?|system\s+prompt|rules?)|you\s+are\s+now|act\s+as|pretend\s+(?:to\s+be|you\s+are)|system\s*:|assistant\s*:|developer\s*:)\b/gi;
+const INSTRUCTION_OVERRIDE_PHRASES = [
+  'ignore the above',
+  'ignore previous',
+  'ignore prior',
+  'ignore earlier',
+  'ignore all',
+  'disregard the above',
+  'disregard previous',
+  'disregard prior',
+  'forget the above',
+  'forget previous',
+  'forget prior',
+  'forget all',
+  'new instructions',
+  'updated instructions',
+  'revised instructions',
+  'new system prompt',
+  'updated system prompt',
+  'revised system prompt',
+  'new rules',
+  'updated rules',
+  'revised rules',
+  'you are now',
+  'act as',
+  'pretend to be',
+  'pretend you are',
+  'system:',
+  'assistant:',
+  'developer:',
+];
 
 function sanitizeForPrompt(input: string | null | undefined): string {
   if (!input) return '';
@@ -63,9 +91,11 @@ function sanitizeForPrompt(input: string | null | undefined): string {
   // Strip delimiter-breaking characters so the value can't escape its XML tag
   // or open a fake code fence inside the prompt.
   s = s.replace(/[`<>]/g, '');
-  // Neutralize common instruction-override phrases without losing the surrounding
-  // context (helpful for debugging what the user submitted).
-  s = s.replace(INSTRUCTION_OVERRIDE_RE, '[filtered]');
+  // Neutralize common instruction-override phrases without using a regex that
+  // contains control-character escapes, which trips our lint rule.
+  for (const phrase of INSTRUCTION_OVERRIDE_PHRASES) {
+    s = s.replaceAll(phrase, '[filtered]');
+  }
   if (s.length > PROMPT_MAX_LEN) {
     s = s.slice(0, PROMPT_MAX_LEN) + '…';
   }
