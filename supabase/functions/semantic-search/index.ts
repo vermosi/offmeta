@@ -1,6 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { buildDeterministicIntent } from './deterministic/index.ts';
-import { lookupCardName, getCardNameDiagnostics } from './card-name-lookup.ts';
+import { lookupCardName } from './card-name-lookup.ts';
 import { buildSystemPrompt, type QueryTier } from './prompts.ts';
 import { getCorsHeaders } from '../_shared/auth.ts';
 import { LOVABLE_API_KEY, supabase } from './client.ts';
@@ -26,10 +26,10 @@ import {
   detectQualityFlags,
   applyAutoCorrections,
   runValidationTables,
-  sanitizeInputQuery,
 } from './validation.ts';
 import { buildFallbackQuery, applyFiltersToQuery } from './fallback.ts';
 import { logTranslation, createLogger, flushLogQueue } from './logging.ts';
+import { createDiagnosticsResponse, validateSearchRequest } from './request.ts';
 import { runPipeline, type PipelineContext } from './pipeline/index.ts';
 import {
   validateAIResponse,
@@ -47,7 +47,6 @@ import {
 } from './config.ts';
 import {
   enforceRequestGuards,
-  errorResponse,
   handleCorsPreflight,
   parseJsonBody,
   parseRequestBudget,
@@ -254,21 +253,12 @@ serve(async (req) => {
     return preflightResponse;
   }
 
-  // Diagnostic endpoint: GET ?diagnostics=card-names (service-role only)
-  const url = new URL(req.url);
-  if (req.method === 'GET' && url.searchParams.get('diagnostics') === 'card-names') {
-    const authHeader = req.headers.get('Authorization');
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    if (!authHeader || authHeader !== `Bearer ${serviceRoleKey}`) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
-    }
-    return new Response(
-      JSON.stringify({ cardNameIndex: getCardNameDiagnostics(), serverTime: new Date().toISOString() }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    );
+  const diagnosticsResponse = createDiagnosticsResponse(req, {
+    ...corsHeaders,
+    'Content-Type': 'application/json',
+  });
+  if (diagnosticsResponse) {
+    return diagnosticsResponse;
   }
 
   const requestStartTime = Date.now();
@@ -320,18 +310,17 @@ serve(async (req) => {
   if ('response' in parsedBody) {
     return parsedBody.response;
   }
-  const requestBody = parsedBody.requestBody;
+  const validatedRequest = validateSearchRequest(
+    parsedBody.requestBody as Record<string, unknown>,
+    jsonHeaders,
+  );
+  if (!validatedRequest.ok) {
+    return validatedRequest.response;
+  }
+  const requestBody = validatedRequest.data;
 
   try {
-    const {
-      query: rawQuery,
-      filters: rawFilters,
-      debug,
-      useCache,
-      cacheSalt,
-    } = requestBody;
-    const query = rawQuery as string;
-    const filters = (rawFilters ?? null) as Record<string, unknown> | null;
+    const { query, filters, debug, useCache, cacheSalt } = requestBody;
     const requestBudget = parseRequestBudget(
       req,
       requestStartTime,
@@ -365,83 +354,6 @@ serve(async (req) => {
     );
     const overlyBroadThreshold =
       debugOptions.overlyBroadThreshold ?? DEFAULT_OVERLY_BROAD_THRESHOLD;
-
-    // 1. Input Validation
-    if (!query || typeof query !== 'string' || query.trim().length === 0) {
-      return errorResponse('Query is required', 400, jsonHeaders);
-    }
-
-    if (query.length > 500) {
-      return errorResponse(
-        'Query too long (max 500 characters)',
-        400,
-        jsonHeaders,
-      );
-    }
-
-    // 1.5 Input Sanitization - Reject malformed/spam queries early
-    const sanitizationResult = sanitizeInputQuery(query);
-    if (!sanitizationResult.valid) {
-      logWarn('input_sanitization_rejected', {
-        query: query.substring(0, 50),
-        reason: sanitizationResult.reason,
-      });
-      return errorResponse(
-        sanitizationResult.reason || 'Invalid query format',
-        400,
-        jsonHeaders,
-      );
-    }
-
-    // Validate filters if provided
-    if (filters !== undefined && filters !== null) {
-      if (typeof filters !== 'object' || Array.isArray(filters)) {
-        return errorResponse('Invalid filters format', 400, jsonHeaders);
-      }
-
-      const typedFilters = filters as RequestFilters;
-
-      if (typedFilters.format && typeof typedFilters.format !== 'string') {
-        return errorResponse('Invalid format type', 400, jsonHeaders);
-      }
-
-      if (typedFilters.colorIdentity !== undefined) {
-        if (!Array.isArray(typedFilters.colorIdentity)) {
-          return errorResponse('Invalid colorIdentity type', 400, jsonHeaders);
-        }
-        if (typedFilters.colorIdentity.length > 5) {
-          return errorResponse(
-            'Invalid color identity (max 5 colors)',
-            400,
-            jsonHeaders,
-          );
-        }
-      }
-
-      if (typedFilters.maxCmc !== undefined) {
-        if (
-          typeof typedFilters.maxCmc !== 'number' ||
-          typedFilters.maxCmc < 0 ||
-          typedFilters.maxCmc > 20
-        ) {
-          return errorResponse(
-            'Invalid max CMC (must be 0-20)',
-            400,
-            jsonHeaders,
-          );
-        }
-      }
-    }
-
-    // Validate useCache
-    if (useCache !== undefined && typeof useCache !== 'boolean') {
-      return errorResponse('Invalid useCache type', 400, jsonHeaders);
-    }
-
-    // Validate cacheSalt
-    if (cacheSalt !== undefined && typeof cacheSalt !== 'string') {
-      return errorResponse('Invalid cacheSalt type', 400, jsonHeaders);
-    }
 
     // 2. Forced Fallback / Core Tests (Debug Mode)
     if (shouldForceFallback) {
@@ -516,16 +428,25 @@ serve(async (req) => {
     // 2.5b. Fast-path for card-name queries (skip cache/pattern/AI entirely)
     // First check DB for known card names, then fall back to Scryfall fuzzy + heuristic.
     const queryWords = query.trim().split(/\s+/);
-    const hasSearchKeywords = /\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries)\b/i.test(query);
+    const hasSearchKeywords =
+      /\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries)\b/i.test(
+        query,
+      );
 
     // DB lookup: exact card name match (async, ~1ms from in-memory cache)
-    let isKnownCard = !hasSearchKeywords && queryWords.length <= 6
-      ? await markStage('card_name_lookup', () => lookupCardName(query))
-      : false;
+    let isKnownCard =
+      !hasSearchKeywords && queryWords.length <= 6
+        ? await markStage('card_name_lookup', () => lookupCardName(query))
+        : false;
 
     // Scryfall fuzzy name fallback: if DB misses and query is 2-5 words without
     // search keywords, try Scryfall's fuzzy name endpoint as a secondary check.
-    if (!isKnownCard && !hasSearchKeywords && queryWords.length >= 2 && queryWords.length <= 5) {
+    if (
+      !isKnownCard &&
+      !hasSearchKeywords &&
+      queryWords.length >= 2 &&
+      queryWords.length <= 5
+    ) {
       try {
         const fuzzyResp = await fetchWithTimeout(
           `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(query.trim())}`,
@@ -548,7 +469,8 @@ serve(async (req) => {
     }
 
     // Heuristic fallback for capitalized queries not in DB
-    const isFastNameCandidate = !isKnownCard &&
+    const isFastNameCandidate =
+      !isKnownCard &&
       queryWords.length <= 6 &&
       queryWords.length >= 1 &&
       queryWords.every(
@@ -559,7 +481,9 @@ serve(async (req) => {
 
     if (isKnownCard || isFastNameCandidate) {
       const fastResult = await markStage('deterministic', () =>
-        Promise.resolve(buildDeterministicIntent(query, { isKnownCardName: isKnownCard })),
+        Promise.resolve(
+          buildDeterministicIntent(query, { isKnownCardName: isKnownCard }),
+        ),
       );
       const fastQuery = applyFiltersToQuery(
         fastResult.deterministicQuery,
@@ -660,7 +584,9 @@ serve(async (req) => {
 
     // 4. Deterministic build first (fast and CPU-only)
     const deterministicResult = await markStage('deterministic', () =>
-      Promise.resolve(buildDeterministicIntent(query, { isKnownCardName: isKnownCard })),
+      Promise.resolve(
+        buildDeterministicIntent(query, { isKnownCardName: isKnownCard }),
+      ),
     );
 
     const deterministicQuery = applyFiltersToQuery(
@@ -671,11 +597,12 @@ serve(async (req) => {
     // Strip noise words from residual so deterministic queries don't fall through to slower stages.
     const FAST_PATH_NOISE_WORDS =
       /\b(in|that|the|a|an|and|or|for|with|of|to|from|are|is|be|my|your|its|cards?|spells?|good|best|great|nice|cool|top|find|some|any|also|really|very|most|all|every|each|other)\b/gi;
-    const deterministicRemaining =
-      (deterministicResult.intent.remainingQuery || '')
-        .replace(FAST_PATH_NOISE_WORDS, '')
-        .replace(/\s+/g, ' ')
-        .trim();
+    const deterministicRemaining = (
+      deterministicResult.intent.remainingQuery || ''
+    )
+      .replace(FAST_PATH_NOISE_WORDS, '')
+      .replace(/\s+/g, ' ')
+      .trim();
 
     // Hardcoded patterns already checked at step 2.5a above
 
@@ -906,7 +833,7 @@ serve(async (req) => {
         .toLowerCase()
         .replace(/[^a-z\s]/g, ' ')
         .split(/\s+/)
-        .filter(w => w.length >= 3)
+        .filter((w) => w.length >= 3),
     );
 
     if (meaningfulResidual.length >= 3) {
@@ -917,42 +844,60 @@ serve(async (req) => {
       try {
         const { findConceptMatches } = await import('./pipeline/concepts.ts');
         const concepts = await findConceptMatches(
-          residualForConcepts, 5, 0.7, skipLLMClassification,
+          residualForConcepts,
+          5,
+          0.7,
+          skipLLMClassification,
         );
 
         // Filter out concepts that conflict with the deterministic query.
         // E.g., if deterministic produced t:creature, reject concepts that inject t:artifact.
-        const relevantConcepts = concepts.filter(c => {
+        const relevantConcepts = concepts.filter((c) => {
           // Check if concept's Scryfall syntax has a type constraint that conflicts
-          const conceptTypes = (c.scryfallSyntax.match(/\bt:(\w+)/g) || []).map(t => t.replace('t:', ''));
-          const deterministicTypes = ((deterministicQuery || '').match(/\bt:(\w+)/g) || []).map(t => t.replace('t:', ''));
-          
+          const conceptTypes = (c.scryfallSyntax.match(/\bt:(\w+)/g) || []).map(
+            (t) => t.replace('t:', ''),
+          );
+          const deterministicTypes = (
+            (deterministicQuery || '').match(/\bt:(\w+)/g) || []
+          ).map((t) => t.replace('t:', ''));
+
           if (conceptTypes.length > 0 && deterministicTypes.length > 0) {
             // If concept adds a type that conflicts with the deterministic type, reject it
-            const hasConflict = conceptTypes.some(ct => 
-              deterministicTypes.length > 0 && !deterministicTypes.includes(ct)
+            const hasConflict = conceptTypes.some(
+              (ct) =>
+                deterministicTypes.length > 0 &&
+                !deterministicTypes.includes(ct),
             );
             if (hasConflict) return false;
           }
-          
+
           // Also reject concepts matched via fuzzy/alias that only partially overlap
           // with the residual (e.g., "mana" matching "mana rock" when query is about mana value)
           if (c.matchType === 'alias' && c.similarity < 0.9) {
             const aliasWords = (c.pattern || '').toLowerCase().split(/\s+/);
-            const queryWords = new Set(residualForConcepts.toLowerCase().split(/\s+/));
-            const aliasWordsCovered = aliasWords.filter(w => queryWords.has(w));
+            const queryWords = new Set(
+              residualForConcepts.toLowerCase().split(/\s+/),
+            );
+            const aliasWordsCovered = aliasWords.filter((w) =>
+              queryWords.has(w),
+            );
             // Require ALL words of the alias to appear in the query
             if (aliasWordsCovered.length < aliasWords.length) return false;
           }
-          
+
           return true;
         });
 
         // Coverage check: compare residual words against concept alias words
         // (not just conceptId). Also exclude words already handled by deterministic.
-        const allResidualWords = meaningfulResidual.toLowerCase().split(/\s+/).filter(w => w.length >= 3);
+        const allResidualWords = meaningfulResidual
+          .toLowerCase()
+          .split(/\s+/)
+          .filter((w) => w.length >= 3);
         // Remove words already captured by deterministic layer
-        const residualWords = allResidualWords.filter(w => !deterministicHandledWords.has(w));
+        const residualWords = allResidualWords.filter(
+          (w) => !deterministicHandledWords.has(w),
+        );
 
         // Build coverage set from ALL alias words across matched concepts
         const conceptCoveredWords = new Set<string>();
@@ -967,17 +912,22 @@ serve(async (req) => {
           }
         }
 
-        const coveredWords = residualWords.filter(w => conceptCoveredWords.has(w));
-        const coverageRatio = residualWords.length > 0
-          ? coveredWords.length / residualWords.length
-          : (relevantConcepts.length > 0 ? 1 : 0); // All words handled by deterministic = full coverage
+        const coveredWords = residualWords.filter((w) =>
+          conceptCoveredWords.has(w),
+        );
+        const coverageRatio =
+          residualWords.length > 0
+            ? coveredWords.length / residualWords.length
+            : relevantConcepts.length > 0
+              ? 1
+              : 0; // All words handled by deterministic = full coverage
 
         logInfo('concept_match_coverage_check', {
           query: query.substring(0, 50),
           residualWords: residualWords.length,
           coveredCount: coveredWords.length,
           coverageRatio: Math.round(coverageRatio * 100),
-          conceptIds: relevantConcepts.map(c => c.conceptId),
+          conceptIds: relevantConcepts.map((c) => c.conceptId),
         });
 
         // For very short residuals (1-2 words), only accept exact matches
@@ -985,10 +935,14 @@ serve(async (req) => {
         // "commanders", "partner commanders", AND "commander staples")
         const isShortResidual = residualWords.length <= 2;
         const effectiveConcepts = isShortResidual
-          ? relevantConcepts.filter(c => c.confidence >= 0.95).slice(0, 1)
+          ? relevantConcepts.filter((c) => c.confidence >= 0.95).slice(0, 1)
           : relevantConcepts;
 
-        if (effectiveConcepts.length > 0 && effectiveConcepts[0].confidence >= 0.85 && coverageRatio >= 0.4) {
+        if (
+          effectiveConcepts.length > 0 &&
+          effectiveConcepts[0].confidence >= 0.85 &&
+          coverageRatio >= 0.4
+        ) {
           // Build query from concept templates, deduplicating by normalized category
           const seenCategories = new Set<string>();
           const dedupedConcepts = effectiveConcepts.filter((c) => {
@@ -1444,7 +1398,8 @@ serve(async (req) => {
               if (detData.total_cards > 0) {
                 finalQuery = deterministicQuery;
                 resultCount = detData.total_cards;
-                aiValidationNote = 'AI translation returned 0 results — using deterministic fallback';
+                aiValidationNote =
+                  'AI translation returned 0 results — using deterministic fallback';
                 logInfo('ai_zero_results_recovered_deterministic', {
                   query: query.substring(0, 50),
                   recoveredCount: resultCount,
@@ -1499,7 +1454,8 @@ serve(async (req) => {
               if (nameData.total_cards > 0) {
                 finalQuery = nameQuery;
                 resultCount = nameData.total_cards;
-                aiValidationNote = 'AI translation returned 0 results — matched as card name';
+                aiValidationNote =
+                  'AI translation returned 0 results — matched as card name';
               }
             }
           } catch {
@@ -1523,7 +1479,9 @@ serve(async (req) => {
           assumptions: detectedCardName
             ? [`Detected card: ${detectedCardName}`, ...allCorrections]
             : allCorrections,
-          confidence: aiValidationNote ? Math.max(confidence - 0.1, 0.5) : confidence,
+          confidence: aiValidationNote
+            ? Math.max(confidence - 0.1, 0.5)
+            : confidence,
         },
         showAffiliate: true,
       };
@@ -1542,7 +1500,11 @@ serve(async (req) => {
       // Auto-seed high-confidence AI translations into translation_rules for future pattern matches
       if (finalResult.explanation.confidence >= 0.8 && finalQuery.length > 0) {
         runInBackground(
-          seedTranslationRule(query, finalQuery, finalResult.explanation.confidence),
+          seedTranslationRule(
+            query,
+            finalQuery,
+            finalResult.explanation.confidence,
+          ),
         );
       }
 

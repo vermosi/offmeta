@@ -27,13 +27,16 @@ serve(async (req) => {
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const authHeader = req.headers.get('authorization')!;
 
   // Create client with user's JWT to check role
-  const supabaseUser = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
-    global: { headers: { Authorization: authHeader } },
-  });
+  const supabaseUser = createClient(
+    supabaseUrl,
+    Deno.env.get('SUPABASE_ANON_KEY')!,
+    {
+      global: { headers: { Authorization: authHeader } },
+    },
+  );
 
   // Parse query params
   const url = new URL(req.url);
@@ -62,6 +65,9 @@ serve(async (req) => {
     return new Response(JSON.stringify(result), { headers });
   } catch (e) {
     console.error('Analytics error:', e);
-    return new Response(JSON.stringify({ error: 'Failed to fetch analytics' }), { status: 500, headers });
+    return new Response(
+      JSON.stringify({ error: 'Failed to fetch analytics' }),
+      { status: 500, headers },
+    );
   }
 });
