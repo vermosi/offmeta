@@ -108,6 +108,7 @@ export const VALID_SEARCH_KEYS = new Set([
   'cube',
   'name',
   'wildpair',
+  'kw',
   'keyword',
   'keywords',
   // Oracle tags

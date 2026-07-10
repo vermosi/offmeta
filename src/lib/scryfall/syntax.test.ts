@@ -12,6 +12,7 @@ const buildSampleQuery = (key: string): string => {
   if (key === 'not') return 'not:token';
   if (key === 'has') return 'has:foil';
   if (key === 'otag' || key === 'oracletag') return 'otag:draw';
+  if (key === 'kw') return 'kw:flying';
   if (key === 'c' || key === 'color') return `${key}:r`;
   if (key === 'id' || key === 'identity' || key === 'ci') return `${key}:br`;
   if (key === 'mv' || key === 'cmc' || key === 'manavalue') return `${key}>=3`;
