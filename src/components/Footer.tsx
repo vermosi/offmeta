@@ -31,14 +31,6 @@ const DATA_SOURCES = [
   { name: 'TopDeck.gg', href: 'https://topdeck.gg' },
 ] as const;
 
-const BUILT_WITH = [
-  { name: 'React', href: 'https://react.dev' },
-  { name: 'TypeScript', href: 'https://www.typescriptlang.org' },
-  { name: 'Tailwind CSS', href: 'https://tailwindcss.com' },
-  { name: 'Vite', href: 'https://vitejs.dev' },
-  
-  { name: 'Lovable', href: 'https://lovable.dev' },
-] as const;
 
 function ExternalAnchor({ href, children }: { href: string; children: React.ReactNode }) {
   return (
@@ -73,7 +65,7 @@ export function Footer() {
 
         {/* Links grid — 2 cols mobile, 4 cols desktop */}
         <div className="border-t border-border pt-4">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-5">
             {/* Explore column */}
             <div>
               <h3 className="text-xs font-semibold text-foreground mb-2">
@@ -136,19 +128,6 @@ export function Footer() {
               </ul>
             </div>
 
-            {/* Built With column */}
-            <div>
-              <h3 className="text-xs font-semibold text-foreground mb-2">
-                {t('footer.builtWith', 'Built With')}
-              </h3>
-              <ul className="space-y-1.5">
-                {BUILT_WITH.map((tech) => (
-                  <li key={tech.name}>
-                    <ExternalAnchor href={tech.href}>{tech.name}</ExternalAnchor>
-                  </li>
-                ))}
-              </ul>
-            </div>
           </div>
         </div>
 
