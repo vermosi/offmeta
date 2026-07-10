@@ -107,11 +107,27 @@ export function SystemStatusPanel() {
   const fetchStatus = useCallback(async () => {
     setLoading(true);
     setError(null);
+<<<<<<< ours
     const { data, error: rpcError } = await callAdminRpc('get_system_status');
     if (rpcError) {
       setError(rpcError.message);
     } else if (data) {
       setStatus(data satisfies AdminRpcResultMap['get_system_status']);
+=======
+    try {
+      const invokeAdminRpc = supabase.functions?.invoke;
+      const { data, error: fnError } = invokeAdminRpc
+        ? await invokeAdminRpc('admin-rpc', {
+            body: { fn: 'get_system_status' },
+          })
+        : await supabase.rpc('get_system_status');
+      if (fnError) throw fnError;
+      setStatus('data' in data ? data.data : (data as SystemStatus));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load status');
+    } finally {
+      setLoading(false);
+>>>>>>> theirs
     }
     setLoading(false);
   }, []);

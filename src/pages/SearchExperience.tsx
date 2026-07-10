@@ -555,6 +555,7 @@ const Index = () => {
             {(hasSearched || isSearching) && (
               <div className="animate-reveal flex items-start gap-2">
                 <div className="flex-1 min-w-0 space-y-2">
+<<<<<<< ours
                 <h1 className="text-lg sm:text-xl font-semibold text-foreground tracking-tight">
                   {t('search.resultsFor', 'Results for "{query}"').replace(
                     '{query}',
@@ -580,6 +581,23 @@ const Index = () => {
                 <EditableQueryBar
                   scryfallQuery={(
                     lastSearchResult?.scryfallQuery || searchQuery
+=======
+                  <h1 className="text-lg sm:text-xl font-semibold text-foreground tracking-tight">
+                    {t('search.resultsFor', 'Results for "{query}"').replace(
+                      '{query}',
+                      originalQuery,
+                    )}
+                    {totalCards > 0 && (
+                      <span className="text-muted-foreground font-normal ml-1.5">
+                        ({totalCards.toLocaleString()}{' '}
+                        {t('search.cards', 'cards')})
+                      </span>
+                    )}
+                  </h1>
+                  <EditableQueryBar
+                    scryfallQuery={(
+                      lastSearchResult?.scryfallQuery || searchQuery
+>>>>>>> theirs
                     ).trim()}
                     confidence={lastSearchResult?.explanation?.confidence}
                     isLoading={isSearching}

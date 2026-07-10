@@ -87,10 +87,9 @@ Deno.serve(async (req) => {
     return jsonResponse(400, { error: `Unexpected arg keys: ${extraKeys.join(', ')}` });
   }
 
-  // --- 4. Service-role dispatch into admin_api ---
+  // --- 4. Service-role dispatch through public admin wrappers ---
   const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
-    db: { schema: 'admin_api' as never },
   });
 
   const { data, error } = await adminClient.rpc(fn as never, args as never);

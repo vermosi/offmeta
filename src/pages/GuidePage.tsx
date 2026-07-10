@@ -85,6 +85,7 @@ export default function GuidePage() {
   };
 
   const pageUrl = `https://offmeta.app/guides/${guide.slug}`;
+<<<<<<< ours
 
   const articleJsonLd = {
     '@context': 'https://schema.org',
@@ -122,6 +123,30 @@ export default function GuidePage() {
     })),
   };
 
+=======
+
+  const articleJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: guide.metaTitle,
+    description: guide.metaDescription,
+    url: pageUrl,
+    mainEntityOfPage: pageUrl,
+    author: { '@type': 'Organization', name: 'OffMeta' },
+    publisher: { '@type': 'Organization', name: 'OffMeta' },
+  };
+
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: guide.faq.map((f) => ({
+      '@type': 'Question',
+      name: f.question,
+      acceptedAnswer: { '@type': 'Answer', text: f.answer },
+    })),
+  };
+
+>>>>>>> theirs
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -217,7 +242,11 @@ export default function GuidePage() {
             </Button>
           </div>
 
+<<<<<<< ours
           <section className="min-w-0">
+=======
+          <section className="prose-section min-w-0">
+>>>>>>> theirs
             <p className="text-base leading-relaxed text-foreground/90 break-words">
               {t(`guide.intro.${guide.slug}`, guide.intro)}
             </p>
