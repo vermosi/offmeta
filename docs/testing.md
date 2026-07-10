@@ -23,7 +23,21 @@ npm run test:watch
 npm run test -- --coverage
 ```
 
-## Test categories
+## Coverage Map
+
+| Test Type | Primary Locations | What It Covers |
+| --- | --- | --- |
+| Unit Testing | `src/lib/**/*.test.ts`, `src/hooks/__tests__/`, `src/services/*.test.ts` | Pure logic, helpers, hooks, parsing, validation, and small isolated behaviors |
+| Component Testing | `src/components/*/__tests__/`, `src/pages/__tests__/` | React components, page shells, and UI state in isolation |
+| Integration Testing | `src/pages/__tests__/Index.*.test.tsx`, `src/lib/regression/`, `supabase/functions/**/*.test.ts` | Search pipeline, cross-module behavior, edge functions, and regressions |
+| System Testing | `src/tests/e2e/*.spec.ts`, `src/tests/e2e/accessibility.spec.ts` | Full-app browser flows that span multiple screens and services |
+| End-to-End (E2E) | `src/tests/e2e/search.spec.ts`, `src/tests/e2e/auth.spec.ts`, `src/tests/e2e/report-issue.spec.ts` | User-facing critical paths in a real browser |
+| Smoke Testing | `src/tests/e2e/search.spec.ts`, `src/tests/e2e/auth.spec.ts`, `src/tests/e2e/report-issue.spec.ts`, `src/tests/e2e/accessibility.spec.ts` | Small, stable PR-safe checks tagged `@e2e-smoke` or `@a11y-smoke` |
+| Sanity Testing | Mostly covered by targeted regression specs | Quick confirmation that a bug fix or small change behaves correctly |
+| Regression Testing | `src/lib/regression/`, `src/pages/__tests__/Index.scryfall-errors.test.tsx`, `src/tests/e2e/search.spec.ts` | Previously fixed bugs and failure paths that should not reappear |
+| Acceptance Testing (UAT) | Not a dedicated automated suite | Business-level validation is still manual or embedded in E2E scenarios |
+| Exploratory Testing | Not automated | Ad hoc human-driven discovery and edge-case exploration |
+| Ad Hoc Testing | Not automated | Informal manual checks outside the scripted suite |
 
 ### Golden translation tests
 
@@ -130,6 +144,15 @@ npx playwright test --project=chromium --grep @e2e-smoke
 npx playwright test --project=chromium
 ```
 
+Recommended smoke coverage:
+
+- app loads and search input is visible
+- one successful search path
+- sign-in happy path
+- issue report submission flow
+
+When adding new Playwright coverage, prefer tagging only the smallest stable critical-path check as `@e2e-smoke` and leave deeper scenario coverage untagged for the full suite.
+
 ### Accessibility tests (Playwright + axe-core)
 
 Located in `src/tests/e2e/accessibility.spec.ts` and other specs tagged `@a11y`. The PR-safe smoke subset is tagged `@a11y-smoke`.
@@ -164,7 +187,7 @@ npm run test -- --coverage
 
 ## CI integration
 
-Pull requests and `main` pushes run the deterministic quality gates (`lint`, `typecheck`, `test`, `build`, `bundle-size`) plus lightweight `e2e-smoke` and `a11y-smoke` Playwright jobs. The smoke jobs cover the stable `@e2e-smoke` search paths and the `@a11y-smoke` homepage axe audit.
+Pull requests and `main` pushes run the deterministic quality gates (`lint`, `typecheck`, `test`, `build`, `bundle-size`) plus lightweight `e2e-smoke` and `a11y-smoke` Playwright jobs. The smoke jobs now cover the stable `@e2e-smoke` search, auth, and report-issue paths and the `@a11y-smoke` homepage axe audit.
 
 The full Playwright `e2e` and `a11y` jobs remain off the PR path while full-suite flakiness is tracked in [GitHub issue #190](https://github.com/vermosi/offmeta/issues/190). They run on the nightly `0 3 * * *` schedule and can be run manually through `workflow_dispatch` using the `run_e2e` and `run_a11y` inputs.
 

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { mockSearchAPIs, searchForCard } from './fixtures/mock-helpers';
 
 test.describe('Report issue dialog', () => {
-  test('validation errors and successful submit confirmation state', async ({
+  test('validation errors and successful submit confirmation state @e2e-smoke', async ({
     page,
   }) => {
     // Mock search APIs so search results render in CI

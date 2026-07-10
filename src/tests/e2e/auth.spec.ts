@@ -33,7 +33,7 @@ test.describe('Auth modal flows', () => {
     ).toBeVisible({ timeout: 5_000 });
   });
 
-  test('signin happy path', async ({ page }) => {
+  test('signin happy path @e2e-smoke', async ({ page }) => {
     await page.goto('/');
 
     await page
