@@ -8,46 +8,12 @@ on:
 jobs:
   notify-discord:
     if: github.event.workflow_run.head_branch == github.event.repository.default_branch && (github.event.workflow_run.conclusion == 'success' || github.event.workflow_run.conclusion == 'failure')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Validate webhook secret
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        run: |
-          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
-            echo "Missing required secret: DISCORD_WEBHOOK_URL"
-            exit 1
-          fi
-
-      - name: Post CI status to Discord
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          REPOSITORY: ${{ github.repository }}
-          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
-          BRANCH: ${{ github.event.workflow_run.head_branch }}
-          COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
-          RUN_URL: ${{ github.event.workflow_run.html_url }}
-          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
-        run: |
-          set -euo pipefail
-
-          if [ "$CONCLUSION" = "success" ]; then
-            LABEL="Passed"
-            PREFIX="[PASS]"
-          else
-            LABEL="Failed"
-            PREFIX="[FAIL]"
-          fi
-
-          SHORT_SHA="${COMMIT_SHA:0:7}"
-          CONTENT="$PREFIX CI $LABEL in \`$REPOSITORY\`
-          Workflow: $WORKFLOW_NAME
-          Branch: \`$BRANCH\`
-          Commit: \`$SHORT_SHA\`
-          $RUN_URL"
-
-          MESSAGE=$(CONTENT="$CONTENT" python -c "import json, os; print(json.dumps({'content': os.environ['CONTENT']}))")
-
-          curl -fsS -X POST "$DISCORD_WEBHOOK_URL" \
-            -H "Content-Type: application/json" \
-            --data "$MESSAGE"
+    uses: ./.github/workflows/discord-notify.yml
+    with:
+      content: |-
+        ${{ github.event.workflow_run.conclusion == 'success' && '[PASS] CI Passed' || '[FAIL] CI Failed' }} in `${{ github.repository }}`
+        Workflow: ${{ github.event.workflow_run.name }}
+        Branch: `${{ github.event.workflow_run.head_branch }}`
+        Commit: `${{ github.event.workflow_run.head_sha }}`
+        ${{ github.event.workflow_run.html_url }}
+    secrets: inherit

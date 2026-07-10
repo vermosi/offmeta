@@ -1,0 +1,35 @@
+name: Manual Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_api_security:
+        description: 'Run API security tests'
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: manual-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api-security:
+    if: inputs.run_api_security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci
+      - name: Run API security tests
+        env:
+          RUN_API_TESTS: '1'
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+        run: npx vitest run src/tests/api/

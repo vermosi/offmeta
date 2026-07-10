@@ -1,0 +1,26 @@
+name: Discord Notify
+
+on:
+  workflow_call:
+    inputs:
+      content:
+        required: true
+        type: string
+    secrets:
+      DISCORD_WEBHOOK_URL:
+        required: true
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Discord message
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          CONTENT: ${{ inputs.content }}
+        run: |
+          set -euo pipefail
+          MESSAGE=$(python -c "import json, os; print(json.dumps({'content': os.environ['CONTENT']}))")
+          curl -fsS -X POST "$DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            --data "$MESSAGE"

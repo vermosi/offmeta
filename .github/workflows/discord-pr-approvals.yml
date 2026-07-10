@@ -7,40 +7,13 @@ on:
 jobs:
   notify-discord:
     if: github.event.review.state == 'approved'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Validate webhook secret
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        run: |
-          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
-            echo "Missing required secret: DISCORD_WEBHOOK_URL"
-            exit 1
-          fi
-
-      - name: Post approval message to Discord
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          REPOSITORY: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          PR_TITLE: ${{ github.event.pull_request.title }}
-          APPROVER: ${{ github.event.review.user.login }}
-          AUTHOR: ${{ github.event.pull_request.user.login }}
-          HEAD_REF: ${{ github.event.pull_request.head.ref }}
-          BASE_REF: ${{ github.event.pull_request.base.ref }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
-        run: |
-          set -euo pipefail
-
-          CONTENT="[PASS] PR Approved in \`$REPOSITORY\`
-          #$PR_NUMBER: $PR_TITLE
-          Approver: $APPROVER
-          Author: $AUTHOR
-          Branch: \`$HEAD_REF\` -> \`$BASE_REF\`
-          $PR_URL"
-
-          MESSAGE=$(python -c "import json, os; print(json.dumps({'content': os.environ['CONTENT']}))")
-
-          curl -fsS -X POST "$DISCORD_WEBHOOK_URL" \
-            -H "Content-Type: application/json" \
-            --data "$MESSAGE"
+    uses: ./.github/workflows/discord-notify.yml
+    with:
+      content: |-
+        [PASS] PR Approved in `${{ github.repository }}`
+        #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}
+        Approver: ${{ github.event.review.user.login }}
+        Author: ${{ github.event.pull_request.user.login }}
+        Branch: `${{ github.event.pull_request.head.ref }}` -> `${{ github.event.pull_request.base.ref }}`
+        ${{ github.event.pull_request.html_url }}
+    secrets: inherit

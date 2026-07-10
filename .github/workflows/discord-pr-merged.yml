@@ -7,38 +7,12 @@ on:
 jobs:
   notify-discord:
     if: github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
-    steps:
-      - name: Validate webhook secret
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        run: |
-          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
-            echo "Missing required secret: DISCORD_WEBHOOK_URL"
-            exit 1
-          fi
-
-      - name: Post merge message to Discord
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          REPOSITORY: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          PR_TITLE: ${{ github.event.pull_request.title }}
-          MERGED_BY: ${{ github.actor }}
-          HEAD_REF: ${{ github.event.pull_request.head.ref }}
-          BASE_REF: ${{ github.event.pull_request.base.ref }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
-        run: |
-          set -euo pipefail
-
-          CONTENT="[ROCKET] PR Merged in \`$REPOSITORY\`
-          #$PR_NUMBER: $PR_TITLE
-          Merged by: $MERGED_BY
-          Branch: \`$HEAD_REF\` -> \`$BASE_REF\`
-          $PR_URL"
-
-          MESSAGE=$(python -c "import json, os; print(json.dumps({'content': os.environ['CONTENT']}))")
-
-          curl -fsS -X POST "$DISCORD_WEBHOOK_URL" \
-            -H "Content-Type: application/json" \
-            --data "$MESSAGE"
+    uses: ./.github/workflows/discord-notify.yml
+    with:
+      content: |-
+        [ROCKET] PR Merged in `${{ github.repository }}`
+        #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}
+        Merged by: ${{ github.actor }}
+        Branch: `${{ github.event.pull_request.head.ref }}` -> `${{ github.event.pull_request.base.ref }}`
+        ${{ github.event.pull_request.html_url }}
+    secrets: inherit
