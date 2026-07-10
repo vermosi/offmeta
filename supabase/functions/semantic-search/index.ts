@@ -36,6 +36,7 @@ import {
   createSearchFallbackResponse,
   createSearchSuccessResponse,
 } from './responses.ts';
+import { tryConceptStage } from './concept-stage.ts';
 import { runPipeline, type PipelineContext } from './pipeline/index.ts';
 import {
   validateAIResponse,
@@ -768,14 +769,10 @@ serve(async (req) => {
     // 6b. Concept Matching (known MTG concepts — skip AI if high-confidence match)
     const residualForConcepts =
       deterministicResult.intent.remainingQuery || query;
-    // Reuse fast-path noise stripping to avoid garbage concept matches.
     const meaningfulResidual = residualForConcepts
       .replace(FAST_PATH_NOISE_WORDS, '')
       .replace(/\s+/g, ' ')
       .trim();
-
-    // Also strip words that the deterministic layer already handled
-    // (e.g., "legendary", "creatures", color words) to avoid penalizing coverage
     const deterministicHandledWords = new Set(
       (deterministicQuery || '')
         .toLowerCase()
@@ -784,232 +781,38 @@ serve(async (req) => {
         .filter((w) => w.length >= 3),
     );
 
-    if (meaningfulResidual.length >= 3) {
-      // Budget guard: ensure we have at least 3s left for concept matching + AI
-      const budgetBeforeConcepts = requestBudget.remainingMs();
-      const skipLLMClassification = budgetBeforeConcepts < 4000; // Skip Tier 3 if <4s left
-
-      try {
+    const conceptResponse = await tryConceptStage({
+      query,
+      filters,
+      cacheSalt,
+      deterministicQuery,
+      deterministicHandledWords,
+      meaningfulResidual,
+      residualForConcepts,
+      requestStartTime,
+      stageDurationsMs,
+      logInfo,
+      logWarn,
+      jsonHeaders,
+      setCachedResult,
+      flushLogQueue,
+      findConceptMatches: async (
+        residual,
+        maxConcepts,
+        threshold,
+        skipLLMClassification,
+      ) => {
         const { findConceptMatches } = await import('./pipeline/concepts.ts');
-        const concepts = await findConceptMatches(
-          residualForConcepts,
-          5,
-          0.7,
+        return findConceptMatches(
+          residual,
+          maxConcepts,
+          threshold,
           skipLLMClassification,
         );
-
-        // Filter out concepts that conflict with the deterministic query.
-        // E.g., if deterministic produced t:creature, reject concepts that inject t:artifact.
-        const relevantConcepts = concepts.filter((c) => {
-          // Check if concept's Scryfall syntax has a type constraint that conflicts
-          const conceptTypes = (c.scryfallSyntax.match(/\bt:(\w+)/g) || []).map(
-            (t) => t.replace('t:', ''),
-          );
-          const deterministicTypes = (
-            (deterministicQuery || '').match(/\bt:(\w+)/g) || []
-          ).map((t) => t.replace('t:', ''));
-
-          if (conceptTypes.length > 0 && deterministicTypes.length > 0) {
-            // If concept adds a type that conflicts with the deterministic type, reject it
-            const hasConflict = conceptTypes.some(
-              (ct) =>
-                deterministicTypes.length > 0 &&
-                !deterministicTypes.includes(ct),
-            );
-            if (hasConflict) return false;
-          }
-
-          // Also reject concepts matched via fuzzy/alias that only partially overlap
-          // with the residual (e.g., "mana" matching "mana rock" when query is about mana value)
-          if (c.matchType === 'alias' && c.similarity < 0.9) {
-            const aliasWords = (c.pattern || '').toLowerCase().split(/\s+/);
-            const queryWords = new Set(
-              residualForConcepts.toLowerCase().split(/\s+/),
-            );
-            const aliasWordsCovered = aliasWords.filter((w) =>
-              queryWords.has(w),
-            );
-            // Require ALL words of the alias to appear in the query
-            if (aliasWordsCovered.length < aliasWords.length) return false;
-          }
-
-          return true;
-        });
-
-        // Coverage check: compare residual words against concept alias words
-        // (not just conceptId). Also exclude words already handled by deterministic.
-        const allResidualWords = meaningfulResidual
-          .toLowerCase()
-          .split(/\s+/)
-          .filter((w) => w.length >= 3);
-        // Remove words already captured by deterministic layer
-        const residualWords = allResidualWords.filter(
-          (w) => !deterministicHandledWords.has(w),
-        );
-
-        // Build coverage set from ALL alias words across matched concepts
-        const conceptCoveredWords = new Set<string>();
-        for (const c of relevantConcepts) {
-          // Add conceptId words
-          for (const w of (c.conceptId || '').toLowerCase().split(/[_\s]+/)) {
-            if (w.length >= 3) conceptCoveredWords.add(w);
-          }
-          // Add all alias words for matched concepts
-          for (const alias of (c.pattern || '').toLowerCase().split(/\s+/)) {
-            if (alias.length >= 3) conceptCoveredWords.add(alias);
-          }
-        }
-
-        const coveredWords = residualWords.filter((w) =>
-          conceptCoveredWords.has(w),
-        );
-        const coverageRatio =
-          residualWords.length > 0
-            ? coveredWords.length / residualWords.length
-            : relevantConcepts.length > 0
-              ? 1
-              : 0; // All words handled by deterministic = full coverage
-
-        logInfo('concept_match_coverage_check', {
-          query: query.substring(0, 50),
-          residualWords: residualWords.length,
-          coveredCount: coveredWords.length,
-          coverageRatio: Math.round(coverageRatio * 100),
-          conceptIds: relevantConcepts.map((c) => c.conceptId),
-        });
-
-        // For very short residuals (1-2 words), only accept exact matches
-        // and limit to 1 concept to prevent stuffing (e.g., "commanders" matching
-        // "commanders", "partner commanders", AND "commander staples")
-        const isShortResidual = residualWords.length <= 2;
-        const effectiveConcepts = isShortResidual
-          ? relevantConcepts.filter((c) => c.confidence >= 0.95).slice(0, 1)
-          : relevantConcepts;
-
-        if (
-          effectiveConcepts.length > 0 &&
-          effectiveConcepts[0].confidence >= 0.85 &&
-          coverageRatio >= 0.4
-        ) {
-          // Build query from concept templates, deduplicating by normalized category
-          const seenCategories = new Set<string>();
-          const dedupedConcepts = effectiveConcepts.filter((c) => {
-            // Normalize category to prevent near-duplicates
-            // e.g., "Mass removal", "Mass removal spells", "Cards that destroy all creatures"
-            const normCat = (c.category || '')
-              .toLowerCase()
-              .replace(/\b(cards?\s+that\s+|spells?\s*)/g, '')
-              .trim();
-            if (seenCategories.has(normCat)) return false;
-            seenCategories.add(normCat);
-            return true;
-          });
-
-          // Strip color constraints from concept templates when user didn't
-          // specify a color (prevents "board whipe" → c:w from "white board wipes")
-          const userSpecifiedColor =
-            deterministicQuery &&
-            /\b(c|ci)(:|<=|>=|=|<|>)\S+/i.test(deterministicQuery);
-          const conceptParts = dedupedConcepts
-            .map((c) => {
-              let syntax = c.scryfallSyntax;
-              if (!userSpecifiedColor) {
-                syntax = syntax
-                  .replace(/\b(c|ci)(:|<=|>=|=|<|>)\S+/gi, '')
-                  .replace(/\s+/g, ' ')
-                  .trim();
-              }
-              return syntax;
-            })
-            .filter(Boolean);
-
-          let conceptQuery = conceptParts.join(' ');
-          if (deterministicQuery) {
-            conceptQuery = `${deterministicQuery} ${conceptQuery}`;
-          }
-          conceptQuery = applyFiltersToQuery(conceptQuery, filters);
-          const validation = validateQuery(conceptQuery);
-          const responseTimeMs = Date.now() - requestStartTime;
-
-          logInfo('concept_match_hit', {
-            query: query.substring(0, 50),
-            concepts: dedupedConcepts.map((c) => c.conceptId),
-            responseTimeMs,
-          });
-          logInfo(
-            'request_completed',
-            buildPerfLogFields(
-              stageDurationsMs,
-              'pattern_match',
-              responseTimeMs,
-            ),
-          );
-
-          const readableDesc = dedupedConcepts
-            .map((c) => c.description || c.conceptId)
-            .join(', ');
-          const conceptIds = dedupedConcepts.map((c) => c.conceptId).join(', ');
-
-          setCachedResult(
-            query,
-            filters,
-            {
-              scryfallQuery: validation.sanitized,
-              explanation: {
-                readable: `Searching for: ${readableDesc}`,
-                assumptions: [`Matched concepts: ${conceptIds}`],
-                confidence: concepts[0].confidence,
-              },
-              showAffiliate: true,
-            },
-            cacheSalt,
-          );
-
-          logTranslation(
-            query,
-            validation.sanitized,
-            concepts[0].confidence,
-            responseTimeMs,
-            [],
-            [],
-            filters,
-            false,
-            'concept_match',
-          );
-          flushLogQueue();
-
-          return createSearchSuccessResponse(
-            query,
-            {
-              scryfallQuery: validation.sanitized,
-              explanation: {
-                readable: `Searching for: ${readableDesc}`,
-                assumptions: [`Matched concepts: ${conceptIds}`],
-                confidence: concepts[0].confidence,
-              },
-            },
-            responseTimeMs,
-            'concept_match',
-            jsonHeaders,
-          );
-        } else if (concepts.length > 0 && coverageRatio < 0.4) {
-          logInfo('concept_match_low_coverage', {
-            query: query.substring(0, 50),
-            coverageRatio: Math.round(coverageRatio * 100),
-            residualWords: residualWords.length,
-            coveredWords: coveredWords.length,
-          });
-          // Fall through to AI
-        }
-      } catch (conceptErr) {
-        logWarn('concept_match_error', {
-          error:
-            conceptErr instanceof Error
-              ? conceptErr.message
-              : String(conceptErr),
-        });
-        // Fall through to AI
-      }
+      },
+    });
+    if (conceptResponse) {
+      return conceptResponse;
     }
 
     const buildBudgetExceededResponse = (
