@@ -11,6 +11,7 @@ import type { SearchIntent } from '@/types/search';
 import { CLIENT_CONFIG } from '@/lib/config';
 import { logger } from '@/lib/core/logger';
 import { PRETRANSLATED } from '@/lib/search/fallback';
+import { useTranslation } from '@/lib/i18n';
 
 // Hardcoded fallback queries if DB fetch fails
 const FALLBACK_POPULAR_QUERIES = ['mana rocks', 'board wipes'];
@@ -40,6 +41,7 @@ interface TranslationParams {
   filters?: FilterState | null;
   cacheSalt?: string;
   bypassCache?: boolean;
+  locale?: string;
 }
 
 // Request deduplication map for in-flight requests
@@ -148,9 +150,10 @@ function getTranslationKey(
   query: string,
   filters?: FilterState | null,
   cacheSalt?: string,
+  locale?: string,
 ): string {
   const normalized = query.toLowerCase().trim().replace(/\s+/g, ' ');
-  return `translation:${normalized}|${JSON.stringify(filters || {})}|${cacheSalt || ''}`;
+  return `translation:${normalized}|${JSON.stringify(filters || {})}|${cacheSalt || ''}|${locale || ''}`;
 }
 
 /**
@@ -213,8 +216,8 @@ function recordSearch(query: string): void {
 export async function translateQueryWithDedup(
   params: TranslationParams,
 ): Promise<TranslationResult> {
-  const { query, filters, cacheSalt, bypassCache } = params;
-  const key = getTranslationKey(query, filters, cacheSalt);
+  const { query, filters, cacheSalt, bypassCache, locale } = params;
+  const key = getTranslationKey(query, filters, cacheSalt, locale);
 
   // Check rate limit (skip for cache hits)
   if (!bypassCache) {
@@ -294,6 +297,7 @@ export async function translateQueryWithDedup(
             useCache: !bypassCache,
             filters: filters || undefined,
             cacheSalt: cacheSalt || undefined,
+            locale,
           },
           headers: {
             'x-session-id': sessionId,
@@ -363,7 +367,7 @@ export async function translateQueryWithDedup(
  */
 export function useTranslateQuery(params: TranslationParams | null) {
   const queryKey = params
-    ? ['translation', params.query, params.filters, params.cacheSalt]
+    ? ['translation', params.query, params.filters, params.cacheSalt, params.locale]
     : ['translation', null];
 
   return useQuery({
@@ -385,6 +389,7 @@ export function useTranslateQuery(params: TranslationParams | null) {
 export function usePrefetchPopularQueries() {
   const queryClient = useQueryClient();
   const hasPrefetched = useRef(false);
+  const { locale } = useTranslation();
 
   useEffect(() => {
     if (hasPrefetched.current) return;
@@ -406,9 +411,14 @@ export function usePrefetchPopularQueries() {
           FALLBACK_POPULAR_QUERIES.forEach((query, index) => {
             setTimeout(() => {
               queryClient.prefetchQuery({
-                queryKey: ['translation', query, null, undefined],
+                queryKey: ['translation', query, null, undefined, locale],
                 queryFn: () =>
-                  translateQueryWithDedup({ query, filters: null, bypassCache: false }),
+                  translateQueryWithDedup({
+                    query,
+                    filters: null,
+                    bypassCache: false,
+                    locale,
+                  }),
                 staleTime: CLIENT_CONFIG.TRANSLATION_STALE_TIME_MS,
               });
             }, index * 3000);
@@ -431,10 +441,17 @@ export function usePrefetchPopularQueries() {
           };
 
           queryClient.setQueryData(
-            ['translation', row.normalized_query, null, undefined],
+            ['translation', row.normalized_query, null, undefined, locale],
             result,
             { updatedAt: Date.now() },
           );
+          if (locale) {
+            queryClient.setQueryData(
+              ['translation', row.normalized_query, null, undefined],
+              result,
+              { updatedAt: Date.now() },
+            );
+          }
         }
 
         logger.info('[Prefetch] Seeded client cache with top queries', {
@@ -446,5 +463,5 @@ export function usePrefetchPopularQueries() {
     }, 2000); // Start after 2s — before user's likely first search
 
     return () => clearTimeout(id);
-  }, [queryClient]);
+  }, [locale, queryClient]);
 }

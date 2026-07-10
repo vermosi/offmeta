@@ -6,6 +6,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { logger } from '@/lib/core/logger';
+import { useTranslation } from '@/lib/i18n';
 import {
   translateQueryWithDedup,
   type TranslationResult,
@@ -64,6 +65,7 @@ export function useSearchHandler({
   const lastSearchRef = useRef<string>('');
   const abortControllerRef = useRef<AbortController | null>(null);
   const requestTokenRef = useRef(0);
+  const { locale } = useTranslation();
 
   // Abort pending requests on unmount
   useEffect(() => {
@@ -195,6 +197,7 @@ export function useSearchHandler({
           filters: filters || undefined,
           cacheSalt: cacheSalt || undefined,
           bypassCache: options?.bypassCache,
+          locale,
         });
 
         const result: TranslationResult = await Promise.race([
@@ -376,7 +379,15 @@ export function useSearchHandler({
         abortControllerRef.current = null;
       }
     },
-    [addToHistory, filters, onSearch, query, rateLimitedUntil, saveContext],
+    [
+      addToHistory,
+      filters,
+      locale,
+      onSearch,
+      query,
+      rateLimitedUntil,
+      saveContext,
+    ],
   );
 
   return {

@@ -43,6 +43,7 @@ import {
   extractAIContent,
   parseAIContent,
 } from './schemas.ts';
+import { validateAgainstScryfall, repairQuery } from './pipeline/repair.ts';
 import { relaxSpeculativeClauses } from './scryfall.ts';
 import { VALID_SEARCH_KEYS } from './constants.ts';
 import {
@@ -314,7 +315,7 @@ serve(async (req) => {
   const requestBody = validatedRequest.data;
 
   try {
-    const { query, filters, debug, useCache, cacheSalt } = requestBody;
+    const { query, filters, debug, useCache, cacheSalt, locale } = requestBody;
     const requestBudget = parseRequestBudget(
       req,
       requestStartTime,
@@ -861,6 +862,9 @@ serve(async (req) => {
     let queryForAI = remainingQuery;
     let preTranslationAttempted = false;
     let preTranslationSkippedReason: string | null = null;
+    const normalizedLocale = locale?.toLowerCase();
+    const localePrefersTranslation =
+      normalizedLocale !== undefined && normalizedLocale !== 'en';
 
     // Detect non-Latin scripts or common non-English patterns
     const hasNonLatin =
@@ -877,7 +881,8 @@ serve(async (req) => {
       hasAccentedLatin &&
       !hasNonLatin &&
       deterministicConfidence >= ACCENTED_LATIN_HIGH_CONFIDENCE_THRESHOLD;
-    const looksNonEnglish = hasNonLatin || shouldPreTranslateAccentedLatin;
+    const looksNonEnglish =
+      hasNonLatin || shouldPreTranslateAccentedLatin || localePrefersTranslation;
 
     if (looksNonEnglish && remainingQuery.trim().length > 0) {
       const remainingBudgetMs = requestBudget.deadlineMs - Date.now();
@@ -903,7 +908,7 @@ serve(async (req) => {
                   {
                     role: 'system',
                     content:
-                      'You are a translator. Translate the following Magic: The Gathering card search query into English. Preserve all MTG-specific intent (counter, destroy, exile, ramp, etc.). Output ONLY the English translation, nothing else.',
+                      `You are a translator. Translate the following Magic: The Gathering card search query into English. Preserve all MTG-specific intent (counter, destroy, exile, ramp, etc.). The user's UI locale is ${normalizedLocale || 'unknown'}, so use that as a hint about the input language when helpful. Output ONLY the English translation, nothing else.`,
                   },
                   { role: 'user', content: remainingQuery },
                 ],
@@ -1117,26 +1122,47 @@ serve(async (req) => {
       );
       const validation = validateQuery(correctedQuery);
 
-      // Step 3: Scryfall result count validation (2s timeout)
-      // If AI translation returns 0 results, try deterministic fallback
+      // Step 3: Scryfall validation and recovery
       let finalQuery = validation.sanitized;
       let resultCount: number | null = null;
       let aiValidationNote: string | null = null;
+      let scryfallStatus: number | null = null;
 
-      try {
-        const countResp = await fetchWithTimeout(
-          `https://api.scryfall.com/cards/search?q=${encodeURIComponent(finalQuery)}&page=1`,
-          {},
-          2000,
+      const probeScryfall = async (candidateQuery: string): Promise<void> => {
+        const probe = await validateAgainstScryfall(
+          candidateQuery,
+          overlyBroadThreshold,
         );
-        if (countResp.status === 200) {
-          const countData = await countResp.json();
-          resultCount = countData.total_cards ?? null;
-        } else if (countResp.status === 404) {
-          resultCount = 0;
+        scryfallStatus = probe.status;
+        if (probe.status === 200 || probe.status === 404) {
+          resultCount = probe.totalCards ?? 0;
+        } else {
+          resultCount = null;
         }
-      } catch {
-        // Scryfall validation timed out — proceed without it
+      };
+
+      await probeScryfall(finalQuery);
+
+      if (scryfallStatus !== null && scryfallStatus >= 400) {
+        const repair = await repairQuery(
+          finalQuery,
+          undefined,
+          overlyBroadThreshold,
+        );
+        if (repair.success && repair.repairedQuery !== finalQuery) {
+          const repairedQuery = repair.repairedQuery;
+          await probeScryfall(repairedQuery);
+          if ((resultCount ?? 0) > 0) {
+            finalQuery = repairedQuery;
+            aiValidationNote = `AI translation repaired for Scryfall compatibility using: ${repair.steps.join(', ')}`;
+            logInfo('ai_scryfall_repaired', {
+              query: query.substring(0, 50),
+              status: scryfallStatus,
+              repairedQuery: finalQuery,
+              steps: repair.steps,
+            });
+          }
+        }
       }
 
       // If AI translation returned zero results, try fallback strategies
@@ -1144,6 +1170,7 @@ serve(async (req) => {
         logWarn('ai_zero_results_detected', {
           query: query.substring(0, 50),
           aiQuery: finalQuery,
+          scryfallStatus,
         });
 
         // Strategy 1: Try deterministic query
@@ -1351,3 +1378,4 @@ serve(async (req) => {
     );
   }
 });
+

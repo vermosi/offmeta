@@ -7,6 +7,7 @@ type SearchRequestBody = {
   debug?: unknown;
   useCache?: unknown;
   cacheSalt?: unknown;
+  locale?: unknown;
 };
 
 type SearchRequestData = {
@@ -15,6 +16,7 @@ type SearchRequestData = {
   debug: unknown;
   useCache: boolean | undefined;
   cacheSalt: string | undefined;
+  locale: string | undefined;
 };
 
 type JsonHeaders = Record<string, string>;
@@ -58,6 +60,7 @@ export function validateSearchRequest(
   const debug = requestBody.debug;
   const useCache = requestBody.useCache;
   const cacheSalt = requestBody.cacheSalt;
+  const locale = requestBody.locale;
 
   if (!query || typeof query !== 'string' || query.trim().length === 0) {
     return {
@@ -140,6 +143,19 @@ export function validateSearchRequest(
     };
   }
 
+  if (locale !== undefined && typeof locale !== 'string') {
+    return {
+      ok: false,
+      response: new Response(
+        JSON.stringify({ error: 'Invalid locale type', success: false }),
+        {
+          status: 400,
+          headers: jsonHeaders,
+        },
+      ),
+    };
+  }
+
   return {
     ok: true,
     data: {
@@ -148,6 +164,7 @@ export function validateSearchRequest(
       debug,
       useCache,
       cacheSalt,
+      locale,
     },
   };
 }

@@ -135,7 +135,7 @@ export default function AdminCuratedSearches() {
       setSearches((data ?? []) as CuratedSearch[]);
     }
     setLoading(false);
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (isAdmin) fetchSearches();

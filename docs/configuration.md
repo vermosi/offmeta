@@ -1,80 +1,19 @@
 # Configuration
 
+This page is the short index for environment and scheduler setup.
+
 ## Environment variables
 
-Copy `.env.example` to `.env` and populate the values.
+- Frontend values: see [README.md](../README.md#configuration)
+- Edge-function values: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `LOVABLE_API_KEY`
 
-### Frontend (Vite)
+## Cache and jobs
 
-| Variable                        | Required | Description                                       |
-| ------------------------------- | -------- | ------------------------------------------------- |
-| `VITE_SUPABASE_URL`             | Yes      | Supabase project URL used by the frontend client. |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Yes      | Supabase anon/publishable key.                    |
+- `useCache` controls semantic-search cache usage
+- Cron jobs and schedules are defined in the database
 
-### Supabase Edge Functions
+## Canonical references
 
-| Variable                      | Required | Description                                                    |
-| ----------------------------- | -------- | -------------------------------------------------------------- |
-| `SUPABASE_URL`                | Yes      | Supabase project URL for server-side clients.                  |
-| `SUPABASE_ANON_KEY`           | Yes      | Supabase anon key for public calls (warmup).                   |
-| `SUPABASE_SERVICE_ROLE_KEY`   | Yes      | Service role key for cache/rules tables.                       |
-| `LOVABLE_API_KEY`             | Yes      | API key for the AI gateway used in query translation.          |
-| `LOG_ALL_TRANSLATIONS`        | No       | Set to `true` to log all translations (debug only).            |
-| `RUN_QUERY_VALIDATION_CHECKS` | No       | Set to `true` to validate against Scryfall during translation. |
-
-## Cache controls
-
-The semantic search edge function accepts a `useCache` flag in the request body. Set `useCache: false` to bypass all cache layers for debugging.
-
-## Scheduled jobs
-
-Cron jobs are registered in the database using `pg_cron` (enabled via migration). They fire HTTP requests to edge functions via `pg_net`.
-
-| Job name | Schedule | Function | Purpose |
-| --- | --- | --- | --- |
-| `price-snapshot-nightly` | `0 1 * * *` (01:00 UTC) | `price-snapshot` | Capture price snapshots from Scryfall for all collection cards |
-| `cleanup-logs-nightly` | `0 2 * * *` (02:00 UTC) | `cleanup-logs` | Delete old translation logs and analytics events |
-| `generate-patterns-nightly` | `0 3 * * *` (03:00 UTC) | `generate-patterns` | Promote high-confidence translation logs into rules |
-| `topdeck-import-daily` | `0 6 * * *` (06:00 UTC) | `topdeck-import` | Import tournament decklists from TopDeck.gg API |
-| `card-sync-daily` | `0 7 * * *` (07:00 UTC) | `card-sync` | Sync Scryfall card metadata for imported deck cards |
-| `compute-cooccurrence-daily` | `0 8 * * *` (08:00 UTC) | `compute-cooccurrence` | Recompute card co-occurrence synergy graph |
-| `bulk-data-sync-weekly` | `30 4 * * 0` (04:30 UTC Sun) | `bulk-data-sync` | Refresh the full cards table and price snapshots from Scryfall bulk search pages |
-| `card-printings-sync-weekly` | `30 5 * * 0` (05:30 UTC Sun) | `card-printings-sync` | Refresh the printing-level cache from MTGJSON for the deckbuilder and card modals |
-| `warmup-cache-weekly` | `0 4 * * 0` (04:00 UTC Sun) | `warmup-cache` | Pre-seed the query cache with common MTG search patterns |
-| `auto-generate-seo-pages-weekly` | `30 4 * * 0` (04:30 UTC Sun) | `auto-generate-seo-pages` | Generate new SEO pages from popular untranslated queries |
-| `batch-generate-seo-pages-weekly` | `0 5 * * 0` (05:00 UTC Sun) | `batch-generate-seo-pages` | Generate a seeded batch of SEO pages for core search themes |
-| `mtgjson-import-weekly` | `0 4 * * 0` (04:00 UTC Sun) | `mtgjson-import` | Import MTGJSON preconstructed decklists |
-| `sync-card-names-weekly` | `0 5 * * 0` (05:00 UTC Sun) | `sync-card-names` | Refresh card name catalog from Scryfall |
-
-### Verifying job registration
-
-```sql
--- Confirm jobs are registered
-SELECT jobname, schedule, active FROM cron.job;
-
--- Check recent run results
-SELECT jobname, status, return_message, start_time
-FROM cron.job_run_details
-ORDER BY start_time DESC
-LIMIT 20;
-```
-
-### Adding a new cron job
-
-Use `cron.schedule()` via `supabase--insert` (not a migration) since the call embeds live project credentials:
-
-```sql
-SELECT cron.schedule(
-  'my-job-name',
-  '0 2 * * *',
-  $$
-  SELECT net.http_post(
-    url     := 'https://<project-ref>.supabase.co/functions/v1/<function-name>',
-    headers := '{"Content-Type": "application/json", "Authorization": "Bearer <anon-key>", "apikey": "<anon-key>"}'::jsonb,
-    body    := '{}'::jsonb
-  ) AS request_id;
-  $$
-);
-```
-
-> **Note**: Replace `<project-ref>` and `<anon-key>` with your actual project values. Never commit actual keys to version control.
+- `supabase/functions/semantic-search/config.ts`
+- `supabase/config.toml`
+- [README configuration section](../README.md#configuration)

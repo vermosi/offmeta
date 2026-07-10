@@ -86,7 +86,7 @@ export function ResultsStats({ cards }: ResultsStatsProps) {
         onClick={toggle}
         className="flex items-center gap-1.5 py-1 px-2.5 text-[11px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50"
         aria-expanded={isOpen}
-        aria-label="Toggle results statistics"
+        aria-label={t('results.toggleStats', 'Toggle results statistics')}
       >
         <BarChart3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
         <span>{t('results.stats')}</span>
@@ -105,7 +105,7 @@ export function ResultsStats({ cards }: ResultsStatsProps) {
             {/* Color Distribution */}
             <div className="space-y-2">
               <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                Colors
+                {t('results.colors', 'Colors')}
               </p>
               <div className="flex gap-0.5 h-3 rounded-full overflow-hidden bg-muted">
                 {COLOR_KEYS
@@ -134,7 +134,7 @@ export function ResultsStats({ cards }: ResultsStatsProps) {
             {/* Mana Curve */}
             <div className="space-y-2">
               <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                Mana Curve
+                {t('results.manaCurve', 'Mana Curve')}
               </p>
               <div className="flex items-end gap-[3px] h-12">
                 {Array.from({ length: 8 }, (_, i) => {
@@ -146,7 +146,7 @@ export function ResultsStats({ cards }: ResultsStatsProps) {
                         <div
                           className="w-full rounded-t bg-primary/60 transition-all min-h-[2px]"
                           style={{ height: `${Math.max(heightPct, 4)}%` }}
-                          title={`${i === 7 ? '7+' : i} CMC: ${count} cards`}
+                        title={`${i === 7 ? '7+' : i} CMC: ${count} ${t('results.cards', 'cards')}`}
                         />
                       </div>
                       <span className="text-[9px] text-muted-foreground leading-none">
@@ -161,7 +161,7 @@ export function ResultsStats({ cards }: ResultsStatsProps) {
             {/* Rarity + Price */}
             <div className="space-y-2">
               <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                Rarity & Price
+                {t('results.rarityPrice', 'Rarity & Price')}
               </p>
               <div className="flex gap-3">
                 {Object.entries(stats.rarityCounts)
@@ -179,7 +179,12 @@ export function ResultsStats({ cards }: ResultsStatsProps) {
               </div>
               {stats.avgPrice > 0 && (
                 <div className="text-xs text-muted-foreground">
-                  Avg ${stats.avgPrice.toFixed(2)} · Total ${stats.totalPrice.toFixed(2)}
+                  {t(
+                    'results.avgTotalPrice',
+                    'Avg ${avg} · Total ${total}',
+                  )
+                    .replace('${avg}', stats.avgPrice.toFixed(2))
+                    .replace('${total}', stats.totalPrice.toFixed(2))}
                 </div>
               )}
             </div>

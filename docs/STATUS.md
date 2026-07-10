@@ -1,63 +1,10 @@
+---
+status: archived
+source_of_truth: docs/README.md
+---
+
 # Project Status
 
-## What this is
+Archived snapshot.
 
-OffMeta is a natural-language search frontend for Magic: The Gathering cards. It translates plain-English queries into Scryfall search syntax using backend edge functions and returns card results in a React 19 + Vite UI.
-
-## How to run
-
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
-2. Copy the environment template and fill in required values:
-   ```bash
-   cp .env.example .env
-   ```
-3. Start the dev server:
-   ```bash
-   npm run dev
-   ```
-
-## Known gaps / TODO
-
-- ~~Semantic-search budget fallback test helper debt~~ — resolved: `callSemanticSearchWithBudget` is now fully implemented with 6 active tests covering forced budget fallback, debug flags, AI failure simulation, confidence scoring, and explanation validation.
-- ~~Combo finder filtering/sorting~~ — completed: filtering by color, price, and card count; sorting by relevance and price.
-- ~~Deck recommendation sideboard suggestions~~ — completed: Sideboard category added to AI recommendations.
-- ~~Collection management/tracking~~ — completed: bulk import (text/CSV/Moxfield), value estimates, set tracking, CSV export with prices.
-- Open work remains in the product roadmap for:
-  - card-meta-context integration in the card modal
-  - AI deck critique / cut-add suggestions
-  - price tracking and alerts
-  - public user profiles with published decks and collection stats
-  - broader accessibility and keyboard-audit hardening on complex dialogs and mobile flows
-
-## Recent additions
-
-- **Soft-delete / archive for Translation Rules**: `archived_at TIMESTAMPTZ` column added to `translation_rules`. Admin panel now has Archive/Restore buttons, a "Show archived" toggle, archived-count badge, and structured empty state. Partial index `WHERE archived_at IS NULL` keeps active-rule queries fast. `confidence` column tightened to `NOT NULL`. Indexes added for `source_feedback_id` FK and `search_feedback` status/created_at queries.
-- **Security hardening**: `service_role_all_feedback` RLS policy on `search_feedback` narrowed from `USING (true)` to `USING (auth.role() = 'service_role')`. `deck_cards` UPDATE policy gained a `WITH CHECK` clause to prevent deck_id reassignment attacks.
-- **Feedback auto-repair pipeline**: `process-feedback` edge function processes each user-submitted correction through Gemini 2.5 Flash Lite, generates a linked `translation_rules` row, and transitions the feedback row through `pending → processing → completed`. Fixed a 401 rejection that prevented anon callers from triggering the pipeline (`verify_jwt = false` added to config).
-- **Nightly pattern promotion** (`generate-patterns-nightly`): pg_cron job registered at 03:00 UTC. Scans the last 30 days of `translation_logs`, promotes queries meeting all three guards (≥2 occurrences, ≥0.8 confidence, ≥1 Scryfall result) into `translation_rules` (up to 50 per run, with deduplication).
-- **Admin feedback queue panel**: Upgraded feedback section in the admin analytics dashboard — full pipeline status badges (pending/processing/completed/failed/skipped/duplicate/updated_existing), inline AI-generated `translation_rules` display (pattern, Scryfall syntax, confidence), and one-click approve/reject toggle.
-- **About Page** (`/about`): Cinematic 7-phase product story with animated stat counters, staggered scroll-reveal phase timeline, Evolution Arc milestone visualizer, and Phase 7 teaser cards. Includes BreadcrumbList JSON-LD, OG/Twitter meta tags, and a typewriter tagline cycling "Find the card. / Build the deck. / Discover the combo."
-- **Structured data (JSON-LD)**: BreadcrumbList schemas added to `/about`, `/docs`, `/combos`, `/deck-recs`, and `/archetypes`. `/guides` and individual guide pages already had breadcrumbs. All schemas mount/unmount cleanly via `useEffect`.
-- **i18n**: `header.about` key added across all 11 language files (en, de, es, fr, it, pt, ja, ko, ru, zh-Hans, zh-Hant). About page nav link is fully localized.
-- **Mobile-First Responsive Design**: Standardized spacing system with progressive scaling across mobile (390px), tablet (768px), and desktop (1280px+). Overflow protection on all pages.
-- **Home Discovery Section**: Dedicated section with Recent Searches, Features Showcase, Daily Pick, How It Works, and FAQ.
-- **Deck Recommendations** (`/deck-recs`): AI-powered card suggestions via Moxfield import. Categorized by High Synergy, Upgrades, and Budget Picks with Commander legality enforcement.
-- **Combo Finder** (`/combos`): Discover card combos from imported Moxfield decks with prerequisites, steps, and pricing. Accessible from top navigation.
-- **Archetypes** (`/archetypes`): Data-driven archetype browser across multiple formats (Commander, Pauper, Legacy, Premodern). Uses `archetype_stats` materialized view for sub-second loading.
-- **Features Showcase**: Landing page section highlighting all core tools with direct navigation links.
-- **Alchemy Exclusion**: All Scryfall queries automatically exclude rebalanced digital-only cards (`-is:rebalanced`).
-- **Footer Attribution**: Powered by Scryfall, Moxfield, and Commander Spellbook with external links.
-- **Search Guides**: 10 progressive guides (`/guides`) teaching natural language search from basic to expert.
-- **Card Comparison**: Side-by-side comparison of 2–4 cards.
-- **View Modes**: Grid, list, and image-only views with persistent preference.
-- **Export Results**: Copy card names or download CSV.
-- **Quick Search Chips**: Archetype-based search suggestions via guides and similar searches.
-- **Cross-page Navigation**: Hash links work from any page (navigate home + scroll).
-- **Security Suite**: 300+ security tests covering injection, CORS, ReDoS, prototype pollution, and timing attacks.
-- **Regression Suite**: 70+ regression tests across caching, virtualization, and analytics.
-- **Edge Function Contract Tests**: Dedicated guard tests cover admin RPC auth boundaries, and the edge-function test surface includes auth, rate limiting, and pipeline behavior.
-- **Internationalization**: Full i18n with 11 languages covering UI strings and all 10 search guide pages (intro, tips, FAQ).
-- **Accessibility**: WCAG 2.1 AA — skip links, focus trap on mobile nav, ARIA live regions, roving tab index for card grids, reduced-motion support for all animations.
+For current documentation, start at [docs/README.md](./README.md).

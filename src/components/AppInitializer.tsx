@@ -9,6 +9,7 @@ import { usePrefetchPopularQueries } from '@/hooks/useSearchQuery';
 import { supabase } from '@/integrations/supabase/client';
 import { initWebVitals } from '@/lib/rum/webVitals';
 import { startSessionHeartbeat } from '@/lib/analytics/sessionHeartbeat';
+import { useTranslation } from '@/lib/i18n';
 
 /**
  * Schedules work for when the browser is idle, falling back to setTimeout.
@@ -30,6 +31,7 @@ function scheduleIdle(cb: () => void, fallbackDelay = 1500): () => void {
 
 function useEdgeFunctionWarmup() {
   const lastWarmupPath = useRef<string | null>(null);
+  const { locale } = useTranslation();
 
   useEffect(() => {
     const warmEdgeFunction = () => {
@@ -39,7 +41,7 @@ function useEdgeFunctionWarmup() {
 
       void supabase.functions
         .invoke('semantic-search', {
-          body: { query: 'ping warmup', useCache: true },
+          body: { query: 'ping warmup', useCache: true, locale },
         })
         .catch(() => {});
     };
@@ -69,7 +71,7 @@ function useEdgeFunctionWarmup() {
       history.pushState = originalPushState;
       history.replaceState = originalReplaceState;
     };
-  }, []);
+  }, [locale]);
 }
 
 function useRumInit() {

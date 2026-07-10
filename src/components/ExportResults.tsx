@@ -73,7 +73,7 @@ export function ExportResults({ cards }: ExportResultsProps) {
           aria-label={t('export.label')}
         >
           <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          <span>Export</span>
+          <span>{t('export.button', 'Export')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="z-50">

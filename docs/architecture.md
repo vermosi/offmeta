@@ -1,297 +1,66 @@
 # Architecture
 
+This page is the compact index for the app and edge-function architecture.
+
+## Start here
+
+- [docs/README.md](./README.md)
+- [README.md](../README.md)
+
+## Core sections
+
+- [Overview](#overview)
+- [Data flow](#data-flow)
+- [Directory map](#directory-map)
+- [Key modules](#key-modules)
+- [Data stores](#data-stores)
+- [Auth and RLS](#auth-and-rls)
+- [Error handling](#error-handling)
+
 ## Overview
 
-OffMeta is a React 19 + Vite frontend that translates natural-language Magic: The Gathering card searches into valid Scryfall syntax, then queries Scryfall and renders results. It also features a full deck builder with AI-powered categorization, combo detection, and card suggestions. The app follows a mobile-first responsive design with standardized spacing across all breakpoints.
+OffMeta is a React 19 + Vite app that translates natural-language Magic: The Gathering searches into Scryfall syntax, then queries Scryfall and renders results.
 
-## High-level flow
+## Data flow
 
-1. **User input** (text or voice) is collected in `src/components/UnifiedSearchBar.tsx`.
-2. **Backend edge function** (`supabase/functions/semantic-search`) transforms the query through a prioritized pipeline:
-   - Memory cache → Persistent DB cache → Deterministic/pattern match → AI (Gemini Flash)
-3. **Scryfall API** is queried via the frontend client in `src/lib/scryfall/client.ts`.
-4. **Results** render in the card grid and modal components.
+1. User input enters the search UI.
+2. The semantic-search edge function applies deterministic rules first.
+3. AI translation is used only as fallback.
+4. Scryfall returns cards, which the UI renders.
 
-```mermaid
-flowchart LR
-  UI["UI (text/voice)"] --> Edge["semantic-search EF"]
-  Edge -->|"1. memory cache"| Cache["In-memory LRU"]
-  Edge -->|"2. DB cache"| PCache["query_cache table"]
-  Edge -->|"3. deterministic"| Det["Pattern / rules match"]
-  Edge -->|"4. fallback"| AI["Gemini Flash AI"]
-  Det --> Scryfall["Scryfall API"]
-  AI --> Scryfall
-  Cache --> Results["Results + metadata"]
-  PCache --> Results
-  Scryfall --> Results
-  Results --> UI
-```
+## Directory map
 
-## Directory structure
-
-```
-src/
-├── components/          # React components
-│   ├── CardModal/       # Card detail modal (image, prices, rulings, legalities, combos)
-│   ├── SearchHelpModal/ # In-app search help overlay
-│   ├── deckbuilder/     # Deck editor sub-components (see below)
-│   ├── ui/              # shadcn/ui primitives
-│   └── __tests__/       # Component behavioral tests
-├── data/                # Static data (guides, daily gems, archetypes, similar searches)
-├── hooks/               # Custom React hooks
-│   ├── useDeck.ts       # Deck CRUD state and Supabase sync
-│   ├── useDeckPrice.ts  # Mainboard USD price aggregation via Scryfall collection API
-│   └── ...
-├── lib/
-│   ├── core/            # Environment, logging, utils, monitoring
-│   ├── deckbuilder/     # Deck utilities: sort-deck-cards, infer-category, decklist-formatters
-│   ├── scryfall/        # Scryfall API client, query validation, printings
-│   ├── search/          # Server-side filter construction
-│   ├── security/        # Security utilities and test infrastructure
-│   ├── regression/      # Regression test suites
-│   ├── i18n/            # Lightweight i18n: 11 languages, JSON dictionaries
-│   └── pwa/             # Service worker registration
-├── pages/               # Route pages
-│   └── __tests__/       # Page-level behavioral tests
-├── integrations/        # Supabase client (auto-generated)
-└── types/               # Shared TypeScript types (card, filters, search)
-
-supabase/
-└── functions/
-    ├── _shared/              # Shared utilities: auth (JWT validation), rate limiting, env
-    ├── semantic-search/      # Query translation pipeline
-    │   ├── pipeline/         # Normalize → Classify → Slots → Concepts → Assemble
-    │   ├── deterministic/    # IR-based deterministic translation
-    │   ├── mappings/         # Keyword, archetype, slang, art-tag mappings
-    │   ├── cache.ts          # Memory + persistent DB cache with LRU eviction
-    │   ├── circuit-breaker.ts# AI gateway circuit breaker (fail-fast)
-    │   ├── logging.ts        # Non-blocking async log queue
-    │   ├── validation.ts     # Input/output sanitization and quality flags
-    │   └── config.ts         # Centralized configuration constants
-    ├── deck-categorize/      # AI functional categorization of deck cards (Gemini Flash)
-    ├── deck-suggest/         # AI card suggestion engine for open deck slots
-    ├── combo-search/         # Commander Spellbook combo search (in-deck + almost-there)
-    ├── deck-recommendations/ # AI-powered full deck recommendations via Moxfield import
-    ├── fetch-moxfield-deck/  # Moxfield deck import proxy (CORS bypass)
-    ├── process-feedback/     # Feedback → AI rule generation (per-submission; user JWT required)
-    ├── admin-analytics/      # Admin analytics aggregation (requires admin role)
-    ├── cleanup-logs/         # Log rotation (scheduled; companion to generate-patterns)
-    ├── generate-patterns/    # Nightly batch: promote high-frequency logs → rules (pg_cron 03:00 UTC)
-    └── warmup-cache/         # Cache pre-warming (scheduled)
-```
-
-### Deckbuilder sub-components (`src/components/deckbuilder/`)
-
-The deck editor is split into focused single-responsibility modules:
-
-| File                        | Purpose                                                                                  |
-| --------------------------- | ---------------------------------------------------------------------------------------- |
-| `constants.ts`              | Shared constants, module-level caches (cardImageFetchCache, printingsByName, CATEGORIES) |
-| `CardHoverImage.tsx`        | Hover-triggered floating card image preview with 350ms debounce                          |
-| `CardSearchPanel.tsx`       | Natural-language / Scryfall card search with smart-search toggle                         |
-| `CardPreviewPanel.tsx`      | Right-panel card detail preview with rulings, legalities, and prints                     |
-| `CategorySection.tsx`       | Collapsible card category group with full row controls                                   |
-| `SideboardSection.tsx`      | Sideboard board management section                                                       |
-| `MaybeboardSection.tsx`     | Maybeboard (considering) section                                                         |
-| `VisualCardGrid.tsx`        | Image-grid view mode for the mainboard                                                   |
-| `PileView.tsx`              | Pile view sorted by color identity (WUBRGCM columns)                                     |
-| `PrintingPickerPopover.tsx` | Printing/set picker popover with lazy Scryfall fetch and price display                   |
-| `SuggestionsPanel.tsx`      | AI card suggestions panel (deck-suggest edge function)                                   |
-| `DeckCombos.tsx`            | Inline combo detection via Commander Spellbook (auto-fires at 10+ cards)                 |
-| `DeckStats.tsx`             | Real-time stats bar: mana curve, color pie, type breakdown, CMC average, price           |
-| `DeckExportMenu.tsx`        | Export to text list, CSV, or copy card names                                             |
-| `DeckImportModal.tsx`       | Import from Moxfield URL or plain text decklist                                          |
+- `src/components/` - UI surfaces
+- `src/hooks/` - stateful logic and search flow
+- `src/lib/` - shared utilities and validation
+- `supabase/functions/semantic-search/` - NL to Scryfall pipeline
+- `supabase/functions/` - other edge-function surfaces
 
 ## Key modules
 
-| Module               | Location                                                     | Purpose                                                                                     |
-| -------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| UI Components        | `src/components/`                                            | Search bar, card grid, modals, compare                                                      |
-| Deck Builder         | `src/pages/DeckEditor.tsx`                                   | Full-featured deck editor (≈650 lines, delegates to sub-components)                         |
-| Deck List            | `src/pages/DeckBuilder.tsx`                                  | User's deck library with create/import/delete                                               |
-| Guides               | `src/pages/Guides*.tsx` + `src/data/guides.ts`               | 10 progressive search tutorials                                                             |
-| Archetypes           | `src/pages/Archetype*.tsx` + `src/hooks/useArchetypeData.ts` | Data-driven archetype browser (multi-format, backed by `archetype_stats` materialized view) |
-| Combo Finder         | `src/pages/FindMyCombos.tsx`                                 | Commander combo discovery via Commander Spellbook                                           |
-| Deck Recommendations | `src/pages/DeckRecommendations.tsx`                          | AI-powered deck improvement suggestions                                                     |
-| Scryfall Client      | `src/lib/scryfall/`                                          | API calls, query validation, printings                                                      |
-| Deckbuilder Utils    | `src/lib/deckbuilder/`                                       | sortDeckCards, inferCategory, decklist formatters                                           |
-| Core Utilities       | `src/lib/core/`                                              | Environment, logging, monitoring                                                            |
-| Security Suite       | `src/lib/security/`                                          | Security utilities, test helpers                                                            |
-| Search Pipeline      | `supabase/functions/semantic-search/`                        | NL → Scryfall translation (4-layer pipeline)                                                |
-| Combo Search EF      | `supabase/functions/combo-search/`                           | Commander Spellbook API proxy                                                               |
-| Deck Categorize EF   | `supabase/functions/deck-categorize/`                        | AI functional card categorization                                                           |
-| Deck Suggest EF      | `supabase/functions/deck-suggest/`                           | AI card suggestion engine                                                                   |
-| Deck Recs EF         | `supabase/functions/deck-recommendations/`                   | AI deck analysis edge function                                                              |
-| Moxfield Proxy       | `supabase/functions/fetch-moxfield-deck/`                    | Moxfield deck import proxy                                                                  |
-| Supabase Client      | `src/integrations/supabase/client.ts`                        | Auto-generated DB client (do not edit)                                                      |
-| i18n                 | `src/lib/i18n/`                                              | 11-language translation system                                                              |
-
-## Design system
-
-## Component size & refactor strategy
-
-- Keep page/components focused. As a guideline, once a file grows beyond ~400 lines, extract:
-  1. **Stateful logic** into hooks under `src/hooks/` (fetching, filter state, transforms).
-  2. **Presentational blocks** into feature folders under `src/components/<feature>/` with strict typed props.
-  3. **Pure data transforms** into `lib/` or hook-local helpers so they can be unit tested independently.
-- During refactors, preserve behavior by adding targeted tests for extracted hooks/components first, then removing inline legacy code.
-- Prefer incremental extraction (one domain panel/section at a time) over broad rewrites to reduce regressions and simplify reviews.
-
-### Semantic color tokens
-
-All state-based colors use semantic HSL CSS variables defined in `src/index.css` and registered in `tailwind.config.ts`. Never use raw Tailwind palette classes (e.g. `text-green-600`) in components — always use the semantic token.
-
-| Token         | CSS variable    | Light mode       | Dark mode        | Usage                                                                  |
-| ------------- | --------------- | ---------------- | ---------------- | ---------------------------------------------------------------------- |
-| `success`     | `--success`     | `142 71% 45%`    | `142 71% 55%`    | Active rules, high confidence (≥80%), live indicator, completed status |
-| `warning`     | `--warning`     | `38 92% 50%`     | `38 92% 60%`     | Medium confidence (60–79%), alert icons, processing indicators         |
-| `destructive` | `--destructive` | (shadcn default) | (shadcn default) | Low confidence (<60%), deactivate actions, failed status               |
-| `primary`     | `--primary`     | (shadcn default) | (shadcn default) | Brand actions, cache source bars, links                                |
-
-Foreground variants (`--success-foreground`, `--warning-foreground`) are provided for text-on-colored-background cases.
+- `src/components/UnifiedSearchBar.tsx`
+- `src/lib/scryfall/client.ts`
+- `src/lib/i18n/`
+- `supabase/functions/semantic-search/index.ts`
+- `supabase/functions/semantic-search/validation.ts`
+- `supabase/functions/semantic-search/pipeline/`
 
 ## Data stores
 
-Supabase tables:
+- `translation_logs`
+- `translation_rules`
+- `query_cache`
+- `search_feedback`
+- `user_roles`
+- `saved_searches`
 
-| Table               | Purpose                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `decks`             | User deck metadata (name, format, commander, color identity, public flag)                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `deck_cards`        | Cards in a deck (board, quantity, category, scryfall_id)                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `translation_rules` | Concept patterns and Scryfall mappings. Populated by `process-feedback` (per-submission) and `generate-patterns` (nightly batch). `source_feedback_id` links back to the originating `search_feedback` row. `archived_at TIMESTAMPTZ` enables soft-delete — null means active; a timestamp means archived. Archived rows are excluded from default queries via a partial index `WHERE archived_at IS NULL`. Full audit trail is preserved — archived rows are never deleted from the database. |
-| `translation_logs`  | Query translation history for analytics. Pruned nightly at 02:00 UTC by `cleanup-logs-nightly` (30-day retention). Used as the source for nightly pattern promotion at 03:00 UTC (entries ≥2 occurrences, ≥0.8 confidence, ≥1 Scryfall result).                                                                                                                                                                                                                                                |
-| `query_cache`       | Persistent NL → Scryfall query cache (48h TTL)                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `search_feedback`   | User-reported translation issues. `processing_status` follows the lifecycle: `pending → processing → completed \| failed \| skipped \| duplicate \| updated_existing`. `generated_rule_id` is a FK to `translation_rules.id` (`ON DELETE SET NULL`) — nulled automatically when a rule is deleted.                                                                                                                                                                                             |
-| `analytics_events`  | Usage analytics (event-type + session-id)                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `profiles`          | User display names and avatars                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `user_roles`        | Admin / moderator role assignments                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `saved_searches`    | User-saved search queries with filter snapshots (max 100/user)                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+## Auth and RLS
 
-### Realtime publication
-
-The following tables are added to the `supabase_realtime` publication so that Postgres WAL events are broadcast to connected clients:
-
-| Table               | Subscribed events  | Consumer                                                                                                                     |
-| ------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| `translation_logs`  | `INSERT`           | Admin analytics — live search counter, confidence buckets, source breakdown, daily volume, low-confidence list               |
-| `analytics_events`  | `INSERT`           | Admin analytics — live event-type breakdown                                                                                  |
-| `search_feedback`   | `INSERT`, `UPDATE` | Admin feedback queue — new submissions prepended; status/rule updates patched in-place                                       |
-| `translation_rules` | `INSERT`, `UPDATE` | Admin rules panel — new rules prepended; `is_active` toggle synced across both rules table and feedback queue simultaneously |
-
-All four subscriptions share a single Supabase channel (`admin-analytics-realtime`). The channel is opened when an admin user loads the analytics page and torn down on unmount.
-
-**UPDATE merge strategy for `search_feedback`**: When `generated_rule_id` is present in the UPDATE payload, the component fires a targeted single-row join fetch (`search_feedback` + `translation_rules`) to hydrate the inline rule box. When `generated_rule_id` is null, only the scalar fields (`processing_status`, `processed_at`) are patched, avoiding unnecessary network round-trips.
-
-## Authentication
-
-Edge functions use a shared `validateAuth` helper in `supabase/functions/_shared/auth.ts` that accepts:
-
-- **Service role key** — internal/admin access
-- **Custom API secret** (`OFFMETA_API_SECRET`) — machine-to-machine integrations
-- **Supabase JWTs** — both anon JWTs (`iss: 'supabase'`) and authenticated user JWTs (`iss: 'https://<project>.supabase.co/auth/v1'`) are accepted
-
-> **Note**: Authenticated user tokens use a full URL issuer, not just `'supabase'`. The validator checks `payload.iss.includes('supabase')` to handle both forms.
-
-## Edge function auth matrix
-
-`supabase/config.toml` now defaults edge functions to `verify_jwt = true`. Only explicitly public endpoints opt out with `verify_jwt = false`.
-
-| Function                      | Auth level         |
-| ----------------------------- | ------------------ |
-| `admin-analytics`             | service/admin-only |
-| `auto-generate-seo-pages`     | service/admin-only |
-| `batch-generate-seo-pages`    | service/admin-only |
-| `bulk-data-sync`              | anon-authenticated |
-| `card-meta-context`           | anon-authenticated |
-| `card-recommendations`        | anon-authenticated |
-| `card-similarity`             | anon-authenticated |
-| `card-sync`                   | anon-authenticated |
-| `cleanup-logs`                | service/admin-only |
-| `combo-search`                | anon-authenticated |
-| `compute-cooccurrence`        | service/admin-only |
-| `deck-categorize`             | anon-authenticated |
-| `deck-critique`               | anon-authenticated |
-| `deck-ideas`                  | anon-authenticated |
-| `deck-recommendations`        | anon-authenticated |
-| `deck-suggest`                | anon-authenticated |
-| `detect-archetypes`           | anon-authenticated |
-| `fetch-moxfield-deck`         | anon-authenticated |
-| `fix-zero-results`            | anon-authenticated |
-| `generate-patterns`           | service/admin-only |
-| `generate-retention-triggers` | service/admin-only |
-| `generate-seo-page`           | service/admin-only |
-| `get-affiliate-config`        | public             |
-| `mtgjson-import`              | anon-authenticated |
-| `prerender`                   | public             |
-| `price-snapshot`              | service/admin-only |
-| `process-email-queue`         | service/admin-only |
-| `process-feedback`            | user-authenticated |
-| `promote-searches`            | anon-authenticated |
-| `semantic-search`             | anon-authenticated |
-| `sitemap`                     | public             |
-| `topdeck-import`            | service/admin-only |
-| `sync-card-names`             | anon-authenticated |
-| `warmup-cache`                | service/admin-only |
-
-> Note: several admin analytics functions are exposed through `public` wrappers
-> that perform an internal admin-role check before delegating to `admin_api`.
-> The `admin-rpc` dispatcher is the preferred path from the frontend because it
-> keeps the auth boundary explicit in one place.
-
-## Row-level security
-
-RLS follows the **consolidation pattern**: duplicate `authenticated` + `anon` policies are collapsed into a single `public` role policy to reduce maintenance surface. Sensitive tables (`translation_logs`, `query_cache`, `analytics_events`) are restricted to `service_role` only, with an additional admin-role SELECT policy using `public.has_role(auth.uid(), 'admin')`.
-
-### `translation_rules` access matrix
-
-| Operation | Who                   | Policy                                                    | Notes                                                                                                              |
-| --------- | --------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| SELECT    | service_role          | `auth.role() = 'service_role'`                            |                                                                                                                    |
-| SELECT    | admin users           | `has_role(auth.uid(), 'admin')`                           |                                                                                                                    |
-| INSERT    | service_role **only** | `auth.role() = 'service_role'`                            | Admins cannot INSERT directly — rules are created by `process-feedback` or `generate-patterns` edge functions only |
-| UPDATE    | service_role          | `auth.role() = 'service_role'`                            |                                                                                                                    |
-| UPDATE    | admin users           | `has_role(auth.uid(), 'admin')` (both USING + WITH CHECK) | Covers `is_active` toggle and `archived_at` soft-delete from the admin UI                                          |
-| DELETE    | service_role **only** | `auth.role() = 'service_role'`                            | Admins cannot hard-delete rules; use `archived_at` for soft-delete instead                                         |
-
-Admin UPDATE access allows admins to flip `is_active` and set/clear `archived_at` directly from the client (rules management panel) without routing through an edge function. All admin policies use the `public.has_role` security-definer function to avoid recursive RLS lookups.
+- Tables use RLS.
+- Admin work goes through guarded `SECURITY DEFINER` RPCs or edge functions.
+- Networked or secret-bearing work stays in edge functions.
 
 ## Error handling
 
-- `src/components/ErrorBoundary.tsx` provides a user-friendly fallback for React runtime errors.
-- Edge functions return JSON error payloads with appropriate HTTP status codes.
-- The AI gateway circuit breaker (`circuit-breaker.ts`) trips after repeated failures, preventing cascading timeouts.
-- Non-blocking log flushing (`logging.ts`) ensures logging never adds latency to the response path.
-- `src/lib/core/monitoring.ts` provides hooks for error tracking integration.
-
-## Performance
-
-- **4-layer cache**: in-memory LRU → persistent DB cache → deterministic match → AI (AI only fires on cache+deterministic miss)
-- **Non-blocking logs**: `flushLogQueue()` is fire-and-forget; response is sent before logs are written
-- **Lazy image loading**: `CardHoverImage` waits 350ms before fetching, uses a module-level cache shared across the deck editor session
-- **Scryfall collection API**: `useDeckPrice` batches up to 75 card names per request for price lookups
-- **Input debounce**: search bar debounces at 300–500ms; session-level deduplication prevents identical concurrent queries
-
-## Responsive design
-
-The app follows a mobile-first approach with a standardized spacing system:
-
-- **Sections** (FAQ): `py-10 sm:py-14 lg:py-16`
-- **Main content areas**: `py-8 sm:py-10 lg:py-12`
-- **Discovery spacing** (Recent Searches, Curated Searches, FAQ): `space-y-8 sm:space-y-10 lg:space-y-12`
-- **Footer**: `py-6 sm:py-8`
-- **Deck editor**: three-tab mobile interface (`search | list | preview/AI`)
-
-## Alchemy exclusion
-
-The Scryfall client (`src/lib/scryfall/client.ts`) automatically appends `-is:rebalanced` to all search queries to exclude Alchemy rebalanced card variants from results.
-
-## Third-party integrations
-
-| Service                                               | Purpose                                                         | Integration Point                         |
-| ----------------------------------------------------- | --------------------------------------------------------------- | ----------------------------------------- |
-| [Scryfall](https://scryfall.com)                      | Card search, images, prices, rulings, printings                 | `src/lib/scryfall/client.ts`              |
-| [Moxfield](https://moxfield.com)                      | Deck import for recommendations and deck editor                 | `supabase/functions/fetch-moxfield-deck/` |
-| [Commander Spellbook](https://commanderspellbook.com) | Combo discovery (in-deck + almost-there)                        | `supabase/functions/combo-search/`        |
-| [Lovable AI Gateway](https://lovable.dev)             | Gemini Flash for query translation, categorization, suggestions | `LOVABLE_API_KEY` secret                  |
-
-Overflow protection is applied at the HTML root level (`overflow-x: hidden`) with `min-w-0` on content wrappers to prevent horizontal scroll on all viewports.
+- `src/components/ErrorBoundary.tsx` handles React runtime failures.
+- The semantic-search function validates, repairs, and falls back when Scryfall rejects a query.

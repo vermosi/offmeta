@@ -6,6 +6,7 @@
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Sparkles, Lightbulb, BookOpen } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 export type ResultsTab = 'cards' | 'similar' | 'deck-ideas' | 'explanation';
 
@@ -30,12 +31,13 @@ export function ResultsTabs({
   deckIdeasLoading,
   explanationLoading,
 }: ResultsTabsProps) {
+  const { t } = useTranslation();
   // Always show cards tab; others are conditional
   const visibleTabs = [
-    { id: 'cards' as const, label: 'Cards', icon: Search, show: true },
-    { id: 'similar' as const, label: 'Similar', icon: Sparkles, show: showSimilar, loading: similarLoading },
-    { id: 'deck-ideas' as const, label: 'Deck Ideas', icon: Lightbulb, show: showDeckIdeas, loading: deckIdeasLoading },
-    { id: 'explanation' as const, label: 'Explain', icon: BookOpen, show: showExplanation, loading: explanationLoading },
+    { id: 'cards' as const, label: t('results.tabs.cards', 'Cards'), icon: Search, show: true },
+    { id: 'similar' as const, label: t('results.tabs.similar', 'Similar'), icon: Sparkles, show: showSimilar, loading: similarLoading },
+    { id: 'deck-ideas' as const, label: t('results.tabs.deckIdeas', 'Deck Ideas'), icon: Lightbulb, show: showDeckIdeas, loading: deckIdeasLoading },
+    { id: 'explanation' as const, label: t('results.tabs.explain', 'Explain'), icon: BookOpen, show: showExplanation, loading: explanationLoading },
   ].filter((t) => t.show);
 
   // Don't render tabs if only "Cards" is visible

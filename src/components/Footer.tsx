@@ -18,6 +18,12 @@ const EXPLORE_LINKS = [
   { to: '/about', labelKey: 'footer.about', fallback: 'About' },
 ] as const;
 
+const DOCS_QUICK_LINKS = [
+  { to: 'https://github.com/vermosi/offmeta/tree/main/docs', label: 'Docs' },
+  { to: 'https://github.com/vermosi/offmeta/blob/main/docs/architecture.md', label: 'Architecture' },
+  { to: 'https://github.com/vermosi/offmeta/blob/main/docs/testing.md', label: 'Testing' },
+] as const;
+
 const DATA_SOURCES = [
   { name: 'Scryfall', href: 'https://scryfall.com' },
   { name: 'Moxfield', href: 'https://www.moxfield.com' },
@@ -143,6 +149,23 @@ export function Footer() {
                 ))}
               </ul>
             </div>
+          </div>
+        </div>
+
+        <div className="border-t border-border/60 pt-3">
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-[10px] text-muted-foreground">
+            <span className="font-medium text-foreground">{t('footer.docs', 'Docs')}</span>
+            {DOCS_QUICK_LINKS.map((link) => (
+              <a
+                key={link.to}
+                href={link.to}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-foreground transition-colors"
+              >
+                {link.label}
+              </a>
+            ))}
           </div>
         </div>
 
