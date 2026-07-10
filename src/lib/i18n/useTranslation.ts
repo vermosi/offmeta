@@ -25,8 +25,20 @@ export function useTranslation() {
   const { dictionary, locale, setLocale } = useContext(I18nContext);
 
   const t = useMemo(() => {
-    return (key: string, fallback?: string): string =>
-      dictionary[key] ?? fallback ?? EN_DICT[key] ?? key;
+    return (
+      key: string,
+      fallbackOrParams?: string | Record<string, string | number>,
+      maybeParams?: Record<string, string | number>,
+    ): string => {
+      const fallback = typeof fallbackOrParams === 'string' ? fallbackOrParams : undefined;
+      const params =
+        typeof fallbackOrParams === 'object' ? fallbackOrParams : maybeParams;
+      const raw = dictionary[key] ?? fallback ?? EN_DICT[key] ?? key;
+      if (!params) return raw;
+      return raw.replace(/\{(\w+)\}/g, (_, k) =>
+        params[k] !== undefined ? String(params[k]) : `{${k}}`,
+      );
+    };
   }, [dictionary]);
 
   return { t, locale, setLocale };
