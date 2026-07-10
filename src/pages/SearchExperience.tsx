@@ -16,6 +16,7 @@ import {
 } from 'react';
 import { useLocation } from 'react-router-dom';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
+import { Badge } from '@/components/ui/badge';
 const EditableQueryBar = lazy(() =>
   import('@/components/EditableQueryBar').then((m) => ({
     default: m.EditableQueryBar,
@@ -438,6 +439,20 @@ const Index = () => {
   const showSimilarTab = hasSearched && !isSearching;
   const showDeckIdeasTab = hasSearched && !isSearching && isDeckQuery;
   const showExplanationTab = hasSearched && !isSearching;
+  const translationSource = lastSearchResult?.source ?? 'ai';
+  const translationConfidence = lastSearchResult?.explanation?.confidence;
+  const translationSourceLabel =
+    translationSource === 'deterministic'
+      ? 'Deterministic'
+      : translationSource === 'cache'
+        ? 'Cached'
+        : translationSource === 'client_recovery'
+          ? 'Recovered'
+          : translationSource === 'concept_match'
+            ? 'Concept match'
+            : translationSource === 'budget_fallback'
+              ? 'Fallback'
+              : 'AI';
 
   return (
     <ErrorBoundary>
@@ -540,21 +555,31 @@ const Index = () => {
             {(hasSearched || isSearching) && (
               <div className="animate-reveal flex items-start gap-2">
                 <div className="flex-1 min-w-0 space-y-2">
-                  <h1 className="text-lg sm:text-xl font-semibold text-foreground tracking-tight">
-                    {t('search.resultsFor', 'Results for "{query}"').replace(
-                      '{query}',
-                      originalQuery || searchQuery || '',
-                    )}
+                <h1 className="text-lg sm:text-xl font-semibold text-foreground tracking-tight">
+                  {t('search.resultsFor', 'Results for "{query}"').replace(
+                    '{query}',
+                    originalQuery || searchQuery || '',
+                  )}
                     {hasSearched && totalCards > 0 && (
                       <span className="text-muted-foreground font-normal ml-1.5">
                         ({totalCards.toLocaleString()}{' '}
                         {t('search.cards', 'cards')})
-                      </span>
-                    )}
-                  </h1>
-                  <EditableQueryBar
-                    scryfallQuery={(
-                      lastSearchResult?.scryfallQuery || searchQuery
+                    </span>
+                  )}
+                </h1>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="secondary" className="gap-1 text-[10px] uppercase tracking-wide">
+                    {translationSourceLabel}
+                  </Badge>
+                  {typeof translationConfidence === 'number' && (
+                    <Badge variant="outline" className="text-[10px]">
+                      {Math.round(translationConfidence * 100)}% confidence
+                    </Badge>
+                  )}
+                </div>
+                <EditableQueryBar
+                  scryfallQuery={(
+                    lastSearchResult?.scryfallQuery || searchQuery
                     ).trim()}
                     confidence={lastSearchResult?.explanation?.confidence}
                     isLoading={isSearching}

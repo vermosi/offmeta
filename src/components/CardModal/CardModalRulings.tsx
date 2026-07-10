@@ -53,7 +53,8 @@ export function CardModalRulings({
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {ruling.source} •{' '}
-                  {new Date(ruling.published_at).toLocaleDateString(locale, {
+                  {new Date(`${ruling.published_at}T00:00:00Z`).toLocaleDateString(locale, {
+                    timeZone: 'UTC',
                     year: 'numeric',
                     month: 'short',
                     day: 'numeric',

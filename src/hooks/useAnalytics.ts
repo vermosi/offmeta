@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/core/logger';
+import { classifyTraffic } from '@/lib/analytics/traffic';
 
 // ---------------------------------------------------------------------------
 // Internal traffic detection
@@ -18,28 +19,12 @@ import { logger } from '@/lib/core/logger';
  * Synchronous — no async overhead.
  */
 function isInternalTraffic(): boolean {
-  const host = window.location.hostname;
-  // Localhost / IP
-  if (host === 'localhost' || host === '127.0.0.1') return true;
-  // Lovable preview domains (NOT the published offmeta.lovable.app)
-  if (host.includes('-preview--') && host.endsWith('.lovable.app')) return true;
-  // Manual founder flag: localStorage.setItem('offmeta_internal', 'true')
-  try {
-    if (localStorage.getItem('offmeta_internal') === 'true') return true;
-  } catch {
-    /* private browsing may throw */
-  }
-  return false;
+  return classifyTraffic().isInternal;
 }
 
 /** Whether to skip the DB insert entirely (localhost / preview). */
 function shouldSuppressInsert(): boolean {
-  const host = window.location.hostname;
-  return (
-    host === 'localhost' ||
-    host === '127.0.0.1' ||
-    (host.includes('-preview--') && host.endsWith('.lovable.app'))
-  );
+  return classifyTraffic().shouldSuppressInsert;
 }
 
 // Rate limiting configuration

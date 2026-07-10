@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { SuggestionsPanel } from '@/components/deckbuilder/SuggestionsPanel';
 import { DeckCombos } from '@/components/deckbuilder/DeckCombos';
 import { DeckCritiquePanel } from '@/components/deckbuilder/DeckCritiquePanel';
+import { CardExplainabilitySummary } from '@/components/CardExplainabilitySummary';
 import { useTranslation } from '@/lib/i18n';
 import { searchCards } from '@/lib/scryfall';
 import type { ScryfallCard } from '@/types/card';
@@ -117,6 +118,11 @@ export function CardPreviewPanel({
             {displayCard.oracle_text && <p className="text-xs mt-2 whitespace-pre-line leading-relaxed">{displayCard.oracle_text}</p>}
             {displayCard.prices?.usd && <p className="text-xs text-muted-foreground mt-2">${displayCard.prices.usd}</p>}
           </div>
+          <CardExplainabilitySummary
+            card={displayCard}
+            title={t('card.whyPlayed', 'Why It\'s Played')}
+            compact
+          />
         </div>
       ) : (
         <div className="space-y-3" data-testid="card-preview-placeholder">

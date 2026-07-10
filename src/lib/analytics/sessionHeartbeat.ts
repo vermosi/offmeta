@@ -16,6 +16,7 @@
  */
 
 import { trackEventDirect } from '@/hooks/useAnalytics';
+import { classifyTraffic } from '@/lib/analytics/traffic';
 
 const PING_INTERVAL_MS = 15_000; // send an engaged ping every 15s of active time
 const TICK_MS = 1_000; // accrue engaged time in 1s steps
@@ -32,12 +33,7 @@ const INTERACTION_EVENTS = [
 let started = false;
 
 function shouldSuppress(): boolean {
-  const host = window.location.hostname;
-  return (
-    host === 'localhost' ||
-    host === '127.0.0.1' ||
-    (host.includes('-preview--') && host.endsWith('.lovable.app'))
-  );
+  return classifyTraffic().shouldSuppressInsert;
 }
 
 function getSessionId(): string | null {

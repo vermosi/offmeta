@@ -122,7 +122,7 @@ describe('CardModalRulings', () => {
       />,
     );
     expect(getByText(/wotc/)).toBeInTheDocument();
-    expect(getByText(/Jan 14, 2023/)).toBeInTheDocument();
+    expect(getByText(/Jan 15, 2023/)).toBeInTheDocument();
   });
 
   it('renders when loading even with empty rulings', () => {

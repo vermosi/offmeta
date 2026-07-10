@@ -1,19 +1,15 @@
 /**
- * Explanation panel — enhanced card explanation using existing Meta Context.
+ * Explanation panel — enhanced card explanation using shared meta context.
  * Shows a simplified "Explain This Card" when a specific card is detected.
  * @module components/ExplanationPanel
  */
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import type { ScryfallCard } from '@/types/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
-import { BookOpen, AlertTriangle, Zap } from 'lucide-react';
-import { logger } from '@/lib/core/logger';
+import { BookOpen } from 'lucide-react';
 import { ManaSymbol } from '@/components/ManaSymbol';
 import { formatManaSymbols } from '@/lib/scryfall/client';
 import { useTranslation } from '@/lib/i18n';
+import { CardExplainabilitySummary } from '@/components/CardExplainabilitySummary';
 
 interface ExplanationPanelProps {
   card: ScryfallCard | null | undefined;
@@ -21,53 +17,7 @@ interface ExplanationPanelProps {
 }
 
 export function ExplanationPanel({ card, isLoading: externalLoading }: ExplanationPanelProps) {
-  const [rationale, setRationale] = useState<string | null>(null);
-  const [archetypes, setArchetypes] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { t } = useTranslation();
-
-  useEffect(() => {
-    if (!card) return;
-    let cancelled = false;
-
-    const run = async () => {
-      if (cancelled) return;
-      setRationale(null);
-      setArchetypes([]);
-      setError(null);
-      setLoading(true);
-
-      const { data, error: fnError } = await supabase.functions.invoke(
-        'card-meta-context',
-        {
-          body: {
-            cardName: card.name,
-            typeLine: card.type_line,
-            oracleText: card.oracle_text,
-            colorIdentity: card.color_identity,
-            edhrecRank: card.edhrec_rank,
-            legalities: card.legalities,
-          },
-        },
-      );
-
-      if (cancelled) return;
-      if (fnError || !data?.success) {
-        logger.warn('Explanation fetch failed', fnError || data?.error);
-        setError(t('explanation.errorGenerate'));
-        setLoading(false);
-        return;
-      }
-
-      setRationale(data.rationale || '');
-      setArchetypes(data.archetypes || []);
-      setLoading(false);
-    };
-
-    run();
-    return () => { cancelled = true; };
-  }, [card, t]);
 
   if (externalLoading || !card) {
     return (
@@ -100,63 +50,13 @@ export function ExplanationPanel({ card, isLoading: externalLoading }: Explanati
           )}
         </div>
 
-        {card.oracle_text && (
-          <p className="text-sm leading-relaxed text-foreground/80 mt-3 whitespace-pre-line">
-            {card.oracle_text}
-          </p>
-        )}
-      </div>
-
-      {/* Explanation loading skeleton */}
-      {loading && (
-        <div className="space-y-4 animate-fade-in">
-          <div className="flex items-center gap-1.5">
-            <Skeleton className="h-4 w-4 rounded-full" />
-            <Skeleton className="h-4 w-48" />
-          </div>
-          <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 space-y-2.5">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-[90%]" />
-            <Skeleton className="h-4 w-[75%]" />
-            <Skeleton className="h-4 w-[85%]" />
-            <Skeleton className="h-4 w-[60%]" />
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            <Skeleton className="h-6 w-20 rounded-full" />
-            <Skeleton className="h-6 w-24 rounded-full" />
-            <Skeleton className="h-6 w-16 rounded-full" />
-          </div>
-        </div>
+      {card.oracle_text && (
+        <p className="text-sm leading-relaxed text-foreground/80 mt-3 whitespace-pre-line">
+          {card.oracle_text}
+        </p>
       )}
-
-      {error && !loading && (
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/5 border border-destructive/20">
-          <AlertTriangle className="h-4 w-4 text-destructive" />
-          <span className="text-sm text-destructive">{error}</span>
-        </div>
-      )}
-
-      {rationale && !loading && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-1.5">
-            <Zap className="h-4 w-4 text-primary" />
-            <h4 className="text-sm font-semibold text-foreground">{t('explanation.whyPlayed')}</h4>
-          </div>
-          <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 text-sm leading-relaxed text-foreground/90">
-            {rationale}
-          </div>
-
-          {archetypes.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {archetypes.map((arch) => (
-                <Badge key={arch} variant="secondary" size="sm">
-                  {arch}
-                </Badge>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+    </div>
+      <CardExplainabilitySummary card={card} title={t('explanation.whyPlayed')} />
     </div>
   );
 }

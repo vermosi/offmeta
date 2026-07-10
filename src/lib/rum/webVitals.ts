@@ -8,6 +8,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { classifyTraffic } from '@/lib/analytics/traffic';
 
 type VitalName = 'LCP' | 'CLS' | 'INP' | 'FID';
 
@@ -62,28 +63,11 @@ function rate(name: VitalName, value: number): VitalReport['rating'] {
 }
 
 function isInternal(): boolean {
-  try {
-    const host = window.location.hostname;
-    if (host === 'localhost' || host === '127.0.0.1') return true;
-    if (host.includes('-preview--') && host.endsWith('.lovable.app')) return true;
-    if (localStorage.getItem('offmeta_internal') === 'true') return true;
-  } catch {
-    /* ignore */
-  }
-  return false;
+  return classifyTraffic().isInternal;
 }
 
 function shouldSuppressInsert(): boolean {
-  try {
-    const host = window.location.hostname;
-    return (
-      host === 'localhost' ||
-      host === '127.0.0.1' ||
-      (host.includes('-preview--') && host.endsWith('.lovable.app'))
-    );
-  } catch {
-    return true;
-  }
+  return classifyTraffic().shouldSuppressInsert;
 }
 
 const pending: VitalReport[] = [];
