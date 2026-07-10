@@ -118,12 +118,9 @@ export function HeroCardBackdrop() {
   useEffect(() => {
     if (typeof window === 'undefined' || prefetchedRef.current) return;
 
-    const connection = navigator.connection as
-      | {
-          effectiveType?: string;
-          saveData?: boolean;
-        }
-      | undefined;
+    const connection = (navigator as Navigator & {
+      connection?: { effectiveType?: string; saveData?: boolean };
+    }).connection;
     if (connection?.saveData || connection?.effectiveType === '2g') return;
 
     prefetchedRef.current = true;
