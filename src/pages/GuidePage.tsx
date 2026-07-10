@@ -22,8 +22,6 @@ import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n';
 import { SkipLinks } from '@/components/SkipLinks';
 
-// Static publish/modified timestamps for the guides content set.
-// Bump GUIDE_MODIFIED_AT whenever guide copy is meaningfully updated.
 const GUIDE_PUBLISHED_AT = '2025-01-15T00:00:00Z';
 const GUIDE_MODIFIED_AT = '2026-07-07T00:00:00Z';
 
@@ -33,7 +31,6 @@ export default function GuidePage() {
   const guide = slug ? getGuideBySlug(slug) : undefined;
   const { t } = useTranslation();
 
-  // Update document head for SEO
   useEffect(() => {
     if (!guide) return;
     const keywords = [
@@ -57,7 +54,6 @@ export default function GuidePage() {
       modifiedTime: GUIDE_MODIFIED_AT,
     });
   }, [guide]);
-
 
   if (!guide) {
     return (
@@ -85,45 +81,6 @@ export default function GuidePage() {
   };
 
   const pageUrl = `https://offmeta.app/guides/${guide.slug}`;
-<<<<<<< ours
-
-  const articleJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: guide.metaTitle,
-    description: guide.metaDescription,
-    url: pageUrl,
-    mainEntityOfPage: pageUrl,
-    image: 'https://offmeta.app/og-image.png',
-    inLanguage: 'en',
-    keywords: [guide.title, guide.searchQuery, 'MTG', 'Scryfall', 'card search'].join(', '),
-    articleSection: 'Guides',
-    datePublished: GUIDE_PUBLISHED_AT,
-    dateModified: GUIDE_MODIFIED_AT,
-    author: { '@type': 'Organization', name: 'OffMeta', url: 'https://offmeta.app/' },
-    publisher: {
-      '@type': 'Organization',
-      name: 'OffMeta',
-      url: 'https://offmeta.app/',
-      logo: {
-        '@type': 'ImageObject',
-        url: 'https://offmeta.app/og-image.png',
-      },
-    },
-  };
-
-
-  const faqJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: guide.faq.map((f) => ({
-      '@type': 'Question',
-      name: f.question,
-      acceptedAnswer: { '@type': 'Answer', text: f.answer },
-    })),
-  };
-
-=======
 
   const articleJsonLd = {
     '@context': 'https://schema.org',
@@ -146,7 +103,6 @@ export default function GuidePage() {
     })),
   };
 
->>>>>>> theirs
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -203,7 +159,7 @@ export default function GuidePage() {
           </li>
           <li aria-hidden="true">/</li>
           <li className="text-foreground font-medium truncate">
-            {t(`guide.title.${guide.slug}`, guide.title)}
+            {t(`guide.title.${guide.slug}`, guide.heading)}
           </li>
         </ol>
       </nav>
@@ -242,11 +198,7 @@ export default function GuidePage() {
             </Button>
           </div>
 
-<<<<<<< ours
           <section className="min-w-0">
-=======
-          <section className="prose-section min-w-0">
->>>>>>> theirs
             <p className="text-base leading-relaxed text-foreground/90 break-words">
               {t(`guide.intro.${guide.slug}`, guide.intro)}
             </p>

@@ -32,13 +32,13 @@ export function CardExplainabilitySummary({
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setRationale(null);
-    setArchetypes([]);
+    const run = async () => {
+      setLoading(true);
+      setError(null);
+      setRationale(null);
+      setArchetypes([]);
 
-    void supabase.functions
-      .invoke('card-meta-context', {
+      const { data, error: fnError } = await supabase.functions.invoke('card-meta-context', {
         body: {
           cardName: card.name,
           typeLine: card.type_line,
@@ -47,21 +47,22 @@ export function CardExplainabilitySummary({
           edhrecRank: card.edhrec_rank,
           legalities: card.legalities,
         },
-      })
-      .then(({ data, error: fnError }) => {
-        if (cancelled) return;
-        if (fnError || !data?.success) {
-          logger.warn('Card explainability fetch failed', fnError || data?.error);
-          setError(t('explanation.errorGenerate'));
-          return;
-        }
-
-        setRationale(data.rationale || '');
-        setArchetypes(data.archetypes || []);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
       });
+
+      if (cancelled) return;
+      if (fnError || !data?.success) {
+        logger.warn('Card explainability fetch failed', fnError || data?.error);
+        setError(t('explanation.errorGenerate'));
+        setLoading(false);
+        return;
+      }
+
+      setRationale(data.rationale || '');
+      setArchetypes(data.archetypes || []);
+      setLoading(false);
+    };
+
+    void run();
 
     return () => {
       cancelled = true;

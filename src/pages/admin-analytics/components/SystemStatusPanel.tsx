@@ -1,5 +1,5 @@
 /**
- * System Status Panel — shows cron job health and data freshness
+ * System Status Panel - shows cron job health and data freshness
  * for admin transparency. Calls the get_system_status() RPC.
  */
 
@@ -14,7 +14,7 @@ import {
   Activity,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { callAdminRpc, type AdminRpcResultMap } from '@/integrations/supabase/adminRpc';
+import { callAdminRpc } from '@/integrations/supabase/adminRpc';
 
 interface CronJob {
   jobid: number;
@@ -107,29 +107,16 @@ export function SystemStatusPanel() {
   const fetchStatus = useCallback(async () => {
     setLoading(true);
     setError(null);
-<<<<<<< ours
-    const { data, error: rpcError } = await callAdminRpc('get_system_status');
-    if (rpcError) {
-      setError(rpcError.message);
-    } else if (data) {
-      setStatus(data satisfies AdminRpcResultMap['get_system_status']);
-=======
     try {
-      const invokeAdminRpc = supabase.functions?.invoke;
-      const { data, error: fnError } = invokeAdminRpc
-        ? await invokeAdminRpc('admin-rpc', {
-            body: { fn: 'get_system_status' },
-          })
-        : await supabase.rpc('get_system_status');
-      if (fnError) throw fnError;
-      setStatus('data' in data ? data.data : (data as SystemStatus));
+      const { data, error: rpcError } = await callAdminRpc('get_system_status');
+      if (rpcError) throw rpcError;
+      if (data) setStatus(data as SystemStatus);
+      else throw new Error('No status payload returned');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load status');
     } finally {
       setLoading(false);
->>>>>>> theirs
     }
-    setLoading(false);
   }, []);
 
   return (
@@ -155,7 +142,6 @@ export function SystemStatusPanel() {
 
       {status && (
         <div className="space-y-6">
-          {/* Cron Jobs */}
           <div>
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5" />
@@ -166,16 +152,10 @@ export function SystemStatusPanel() {
                 <thead>
                   <tr className="border-b border-border text-muted-foreground">
                     <th className="text-left pb-2 pr-3 font-medium">Job</th>
-                    <th className="text-left pb-2 pr-3 font-medium">
-                      Schedule
-                    </th>
-                    <th className="text-left pb-2 pr-3 font-medium">
-                      Last Run
-                    </th>
+                    <th className="text-left pb-2 pr-3 font-medium">Schedule</th>
+                    <th className="text-left pb-2 pr-3 font-medium">Last Run</th>
                     <th className="text-left pb-2 pr-3 font-medium">Status</th>
-                    <th className="text-right pb-2 pr-3 font-medium">
-                      Duration
-                    </th>
+                    <th className="text-right pb-2 pr-3 font-medium">Duration</th>
                     <th className="text-right pb-2 font-medium">24h</th>
                   </tr>
                 </thead>
@@ -216,9 +196,7 @@ export function SystemStatusPanel() {
                           )}
                         </td>
                         <td className="py-2 pr-3 text-right text-muted-foreground tabular-nums">
-                          {job.last_duration_s != null
-                            ? `${job.last_duration_s}s`
-                            : '—'}
+                          {job.last_duration_s != null ? `${job.last_duration_s}s` : '—'}
                         </td>
                         <td className="py-2 text-right whitespace-nowrap">
                           <span className="tabular-nums text-muted-foreground">
@@ -241,7 +219,6 @@ export function SystemStatusPanel() {
             </div>
           </div>
 
-          {/* Data Freshness */}
           <div>
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
               <Database className="h-3.5 w-3.5" />
@@ -252,10 +229,7 @@ export function SystemStatusPanel() {
                 const label = TABLE_LABELS[key] ?? key;
                 const latestAgo = entry.latest ? timeAgo(entry.latest) : null;
                 return (
-                  <div
-                    key={key}
-                    className="border border-border rounded-lg p-3 space-y-1"
-                  >
+                  <div key={key} className="border border-border rounded-lg p-3 space-y-1">
                     <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider truncate">
                       {label}
                     </p>

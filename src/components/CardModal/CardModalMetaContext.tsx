@@ -12,8 +12,6 @@ import { getEdhrecPercentile, getEdhrecTier } from '@/lib/scryfall/edhrec';
 import { matchArchetypes } from '@/lib/scryfall/archetype-matching';
 import type { ScryfallCard } from '@/types/card';
 import { CardExplainabilitySummary } from '@/components/CardExplainabilitySummary';
-
-import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import {
   ChevronDown,
@@ -73,7 +71,6 @@ function getBestFormat(legalities: Record<string, string>): string {
 export function CardModalMetaContext({ card, oracleId, onCardClick, isMobile }: CardModalMetaContextProps) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(true);
-  const [aiArchetypes, setAiArchetypes] = useState<string[]>([]);
 
   // Synergy cards state
   const [synergyCards, setSynergyCards] = useState<SynergyCard[]>([]);
@@ -207,20 +204,6 @@ export function CardModalMetaContext({ card, oracleId, onCardClick, isMobile }: 
             title={t('card.whyPlayed', 'Why It\'s Played')}
             compact
           />
-
-          {/* AI-suggested archetypes (deduplicated from local matches) */}
-          {aiArchetypes.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {aiArchetypes
-                .filter((a) => !matchedArchetypes.some((m) => m.name.toLowerCase() === a.toLowerCase()))
-                .slice(0, isMobile ? 3 : 4)
-                .map((tag) => (
-                  <Badge key={tag} variant="outline" size="sm" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
-            </div>
-          )}
 
           {/* Format-specific synergy cards */}
           {oracleId && (
