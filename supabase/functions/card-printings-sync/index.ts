@@ -20,8 +20,6 @@ const UPSERT_BATCH = 250;
 const MTGJSON_ALL_PRINTINGS_URL = 'https://mtgjson.com/api/v5/AllPrintings.json';
 
 type JsonObject = Record<string, unknown>;
-type JsonMap = Record<string, JsonValue>;
-type JsonValue = string | number | boolean | null | JsonObject | JsonValue[];
 
 interface MtgjsonSetCard {
   uuid?: string;
