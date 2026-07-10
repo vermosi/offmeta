@@ -342,7 +342,20 @@ export async function getLocalCardPrintings(
 
   try {
     const supabase = await getSupabaseClient();
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as unknown as {
+      from: (table: string) => {
+        select: (cols: string) => {
+          ilike: (col: string, val: string) => {
+            order: (col: string, opts: { ascending: boolean; nullsFirst?: boolean }) => {
+              order: (
+                col: string,
+                opts: { ascending: boolean },
+              ) => Promise<{ data: LocalCardPrinting[] | null; error: unknown }>;
+            };
+          };
+        };
+      };
+    })
       .from('card_printings')
       .select(
         'id, scryfall_id, mtgjson_uuid, oracle_id, name, set, set_name, collector_number, rarity, artist, prices, image_url, purchase_uris, identifiers, related_cards, released_at, lang',
