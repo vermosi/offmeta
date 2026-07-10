@@ -2,7 +2,7 @@
 
 ## Admin RBAC: `SECURITY DEFINER` + internal `public.has_role('admin')`
 
-OffMeta exposes admin functionality (analytics, system status, AI usage, conversion funnel) as Postgres RPCs called from the admin dashboard over PostgREST. Authorization for those RPCs is enforced **inside the function body**, not via Postgres `EXECUTE` grants.
+OffMeta exposes admin functionality (analytics, system status, AI usage, conversion funnel) as Postgres RPCs called from the admin dashboard over PostgREST. The current implementation uses a guarded `admin-rpc` edge dispatcher plus `public` wrappers that perform an internal `public.has_role('admin')` check before delegating to the private `admin_api` functions.
 
 ### The pattern
 
@@ -33,7 +33,7 @@ grant execute on function public.get_system_status() to authenticated;
 
 `public.has_role` is itself `SECURITY DEFINER` and reads from `public.user_roles` — see the canonical implementation in [`user-roles`](#user-roles-table) below.
 
-### Why `EXECUTE` is granted to `authenticated` (and why that's safe)
+### Why `EXECUTE` is granted to `authenticated` on the public wrappers (and why that's safe)
 
 PostgREST sets the Postgres session role from the request's JWT to **exactly one** of three roles: `anon`, `authenticated`, or `service_role`. It does **not** read `user_roles.role = 'admin'` and does **not** issue `SET ROLE admin_user`. So:
 
@@ -43,7 +43,7 @@ PostgREST sets the Postgres session role from the request's JWT to **exactly one
 | Grant `EXECUTE` only to a custom `admin_role` Postgres role | PostgREST never `SET ROLE`s to it. Same breakage. |
 | **Grant `EXECUTE` to `authenticated` + internal `has_role()` guard** | Non-admins receive `P0001 Forbidden: admin role required`. Admins succeed. |
 
-The third row is what we do, and it is the pattern Supabase officially recommends for RBAC over PostgREST.
+The third row is what we do on the public wrappers, while the private `admin_api` functions remain service-role only. This keeps the frontend contract simple without exposing the underlying admin schema.
 
 ### What the Supabase linter says about this
 
@@ -55,7 +55,7 @@ Lint `0029` ("Function with `SECURITY DEFINER` is `EXECUTE`-able by `authenticat
 
 Authorization guards are continuously verified by the `admin-rpc-guard-tests` edge function (`supabase/functions/admin-rpc-guard-tests/index.ts`). It asserts that:
 
-1. **Anon callers** receive `42501 permission denied for function ...` for every admin RPC (via the `EXECUTE` revoke from `anon`).
+1. **Anon callers** are blocked from the direct PostgREST path for every admin RPC.
 2. **Authenticated non-admins** receive `P0001 Forbidden: admin role required` from the internal `has_role()` guard.
 
 Run it after any change to admin RPCs or `public.has_role`:
@@ -112,7 +112,7 @@ This avoids RLS recursion (the function is `SECURITY DEFINER` so it doesn't re-t
 Use this every time you introduce a new admin-gated RPC. All boxes must be checked before merge.
 
 ### 1. Schema placement
-- [ ] Define the function in the **private `admin_api` schema** (never `public`).
+- [ ] Define the function in the **private `admin_api` schema** and, if the UI needs a PostgREST entrypoint, add a thin `public` wrapper that performs the admin-role guard first.
   ```sql
   create or replace function admin_api.get_my_new_admin_rpc(...)
   returns ...
@@ -122,7 +122,7 @@ Use this every time you introduce a new admin-gated RPC. All boxes must be check
   set statement_timeout = '15s'
   as $$ ... $$;
   ```
-- [ ] Do **not** add the function to `public` — `admin_api` is hidden from PostgREST and the only intentional path is the `admin-rpc` edge dispatcher.
+- [ ] Do **not** expose the raw `admin_api` function to PostgREST. If a `public` wrapper is added, it must keep the `has_role()` guard and remain a thin delegate.
 
 ### 2. Internal authorization guard (defense-in-depth)
 - [ ] First statement of the function body **must** be:
@@ -134,12 +134,13 @@ Use this every time you introduce a new admin-gated RPC. All boxes must be check
   This protects against any caller who somehow obtains the service-role key and tries to invoke the function via PostgREST.
 
 ### 3. Grants
-- [ ] Revoke `EXECUTE` from everyone, then grant only to `service_role`:
+- [ ] Revoke `EXECUTE` from everyone on the `admin_api` function, then grant only to `service_role`:
   ```sql
   revoke all on function admin_api.get_my_new_admin_rpc(...) from public, anon, authenticated;
   grant execute on function admin_api.get_my_new_admin_rpc(...) to service_role;
   ```
 - [ ] Schema-level grants are already in place (`USAGE on admin_api` is granted only to `service_role`); do not relax them.
+- [ ] If you add a `public` wrapper, revoke `anon` and grant `authenticated` only after the wrapper’s internal role check is in place.
 
 ### 4. Edge dispatcher whitelist
 - [ ] Add the function name and its allowed arg keys to the `ALLOWED` map in `supabase/functions/admin-rpc/index.ts`:
@@ -157,7 +158,7 @@ Use this every time you introduce a new admin-gated RPC. All boxes must be check
 
   | Caller                       | Endpoint                              | Expected status |
   |------------------------------|---------------------------------------|-----------------|
-  | Anon (PostgREST direct)      | `POST /rest/v1/rpc/<fn>`              | `404` (schema not exposed) |
+  | Anon (PostgREST direct)      | `POST /rest/v1/rpc/<fn>`              | `4xx` (blocked) |
   | Anon                         | `POST /functions/v1/admin-rpc`        | `401 Unauthorized` |
   | Authenticated non-admin      | `POST /functions/v1/admin-rpc`        | `403 Forbidden: admin role required` |
   | Authenticated admin          | `POST /functions/v1/admin-rpc`        | `200` with `{ data: ... }` |
@@ -178,7 +179,7 @@ The `admin-rpc-guard-tests` edge function is the canonical proof that the admin 
 
 For every entry in `ADMIN_FNS` (currently `get_system_status`, `get_ai_usage_stats`, `get_conversion_funnel`, `get_search_analytics`):
 
-1. **Direct PostgREST hit** to `POST /rest/v1/rpc/<fn>` — must `404` because the function lives in the private `admin_api` schema.
+1. **Direct PostgREST hit** to `POST /rest/v1/rpc/<fn>` — must be blocked with a non-2xx response.
 2. **`admin-rpc` dispatcher with anon JWT** — must `401 Unauthorized` (no valid user claims).
 3. **`admin-rpc` dispatcher with a freshly-provisioned non-admin user JWT** — must `403 Forbidden: admin role required`.
 
@@ -298,7 +299,7 @@ If, for example, the new `get_system_status` accidentally remains in `public` AN
 
 | Failure shape                                                             | Likely cause                                                                                               | Fix |
 |---------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|-----|
-| `postgrest:<fn>` returned `2xx`                                           | The function exists in `public` (or `admin_api` was exposed to PostgREST).                                 | Move the function to `admin_api`, drop the `public` copy, ensure `admin_api` is not in PostgREST's `db.schemas`. |
+| `postgrest:<fn>` returned `2xx`                                           | The function is callable without the intended RBAC guard.                                                   | Move the function behind the intended guard, verify the wrapper checks `public.has_role('admin')`, and ensure anon access stays revoked. |
 | `admin-rpc:<fn>` for `anon` returned anything other than `401`            | The dispatcher's JWT validation regressed (e.g. accepting unsigned tokens, or `getClaims` short-circuited).| Re-check `admin-rpc/index.ts` step 1; confirm `corsHeaders` are not also applied to non-OPTIONS methods.       |
 | `admin-rpc:<fn>` for `authenticated_non_admin` returned `200`             | The dispatcher's `has_role('admin')` check regressed, OR the internal guard inside the function was dropped.| Restore the `if not public.has_role('admin') then raise…` guard AND the dispatcher's role check.               |
 | `admin-rpc:<fn>` for `authenticated_non_admin` returned `401`             | The user JWT failed to mint — usually an auth-config drift (email confirmation policy changed).            | Inspect edge function logs; the test prints `partial_results` if the provisioning step failed.                 |

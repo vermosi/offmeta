@@ -3,8 +3,8 @@
  *
  * Verifies the post-refactor admin authorization path:
  *
- *   1. Direct PostgREST hits to /rest/v1/rpc/<admin_fn> 404 because the
- *      functions live in the private `admin_api` schema, not `public`.
+ *   1. Direct PostgREST hits to /rest/v1/rpc/<admin_fn> are blocked because
+ *      the public wrappers revoke anon access and re-check the admin role.
  *   2. The `admin-rpc` edge function rejects:
  *        - anon callers          → 401 Unauthorized
  *        - authenticated non-admins → 403 Forbidden
@@ -44,7 +44,9 @@ async function callPostgrest(name: string, jwt: string): Promise<CheckResult> {
     body: '{}',
   });
   const text = await res.text();
-  // Expect 404 (function not found in public schema) or any non-2xx.
+  // Expect any non-2xx. Depending on the RPC and current grant surface, this
+  // may be 401, 403, or 42501; the important part is that it is not callable
+  // by a plain anon context.
   return {
     check: `postgrest:${name}`,
     caller: 'unauthenticated',
@@ -118,7 +120,7 @@ Deno.serve(async (req) => {
 
   const results: CheckResult[] = [];
 
-  // 1. PostgREST direct hits should 404 (schema not exposed).
+  // 1. PostgREST direct hits should be blocked.
   for (const { fn } of ADMIN_FNS) {
     results.push(await callPostgrest(fn, ANON_KEY));
   }

@@ -25,8 +25,12 @@ OffMeta is a natural-language search frontend for Magic: The Gathering cards. It
 - ~~Combo finder filtering/sorting~~ — completed: filtering by color, price, and card count; sorting by relevance and price.
 - ~~Deck recommendation sideboard suggestions~~ — completed: Sideboard category added to AI recommendations.
 - ~~Collection management/tracking~~ — completed: bulk import (text/CSV/Moxfield), value estimates, set tracking, CSV export with prices.
-- Community backlog still open: local Supabase Edge Function contract tests, deployment documentation for Supabase + hosting, and accessibility/keyboard-navigation audit improvements.
-- Next priority: Phase 7 Meta Intelligence (card-meta-context in modal, AI deck critique).
+- Open work remains in the product roadmap for:
+  - card-meta-context integration in the card modal
+  - AI deck critique / cut-add suggestions
+  - price tracking and alerts
+  - public user profiles with published decks and collection stats
+  - broader accessibility and keyboard-audit hardening on complex dialogs and mobile flows
 
 ## Recent additions
 
@@ -54,5 +58,6 @@ OffMeta is a natural-language search frontend for Magic: The Gathering cards. It
 - **Cross-page Navigation**: Hash links work from any page (navigate home + scroll).
 - **Security Suite**: 300+ security tests covering injection, CORS, ReDoS, prototype pollution, and timing attacks.
 - **Regression Suite**: 70+ regression tests across caching, virtualization, and analytics.
+- **Edge Function Contract Tests**: Dedicated guard tests cover admin RPC auth boundaries, and the edge-function test surface includes auth, rate limiting, and pipeline behavior.
 - **Internationalization**: Full i18n with 11 languages covering UI strings and all 10 search guide pages (intro, tips, FAQ).
 - **Accessibility**: WCAG 2.1 AA — skip links, focus trap on mobile nav, ARIA live regions, roving tab index for card grids, reduced-motion support for all animations.

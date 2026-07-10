@@ -20,7 +20,7 @@ Use the "Report Issue" or feedback dialogs in the UI to submit corrections. Feed
 
 ## Can I search in languages other than English?
 
-Yes. OffMeta supports 11 languages (en, es, fr, de, it, pt, ja, ko, ru, zhs, zht). Non-English queries are automatically pre-translated to English using a lightweight AI model before being processed by the Scryfall translation pipeline. This ensures intent preservation (e.g., "counter" in Spanish/Portuguese queries).
+Yes. OffMeta supports 11 languages (en, es, fr, de, it, pt, ja, ko, ru, zhs, zht). Non-English queries are automatically pre-translated to English before being processed by the Scryfall translation pipeline. This helps preserve intent across locales.
 
 ## What is the translation pipeline architecture?
 
@@ -33,13 +33,13 @@ Yes. OffMeta supports 11 languages (en, es, fr, de, it, pt, ja, ko, ru, zhs, zht
 
 ## What Scryfall syntax does OffMeta use?
 
-OffMeta prefers `otag:` (Oracle Tags) for effect-based searches (e.g., `otag:card-draw`, `otag:removal`, `otag:counterspell`) as they are more accurate than raw oracle text searches. It uses `mv` (mana value) instead of the deprecated `cmc`. ETB effects use `o:"enters"` (short form) rather than the full phrase.
+OffMeta prefers `otag:` (Oracle Tags) for effect-based searches where available, and falls back to oracle text searches when a tag is not available. It uses `mv` (mana value) instead of the deprecated `cmc`. ETB effects are translated using the canonical oracle phrase rather than a shortened placeholder.
 
 ## How does the feedback loop work?
 
 When you submit a correction via "Report Issue", it is stored as a `pending` feedback entry. The `process-feedback` backend function immediately analyzes it using AI (Gemini 2.5 Flash Lite) and, if the translation can be improved, generates a new `translation_rules` entry linked to your submission. Future identical searches will match the rule directly without going through AI at all.
 
-The nightly `generate-patterns` job additionally promotes any query seen 3+ times across all users with ≥80% confidence into a permanent rule. Admins can review, approve, or reject generated rules from the analytics dashboard's Feedback Queue panel.
+The nightly `generate-patterns` job additionally promotes repeated queries that meet the configured frequency and confidence thresholds into a permanent rule. Admins can review, approve, or reject generated rules from the analytics dashboard's Feedback Queue panel.
 
 ## How can I approve or reject AI-generated rules?
 

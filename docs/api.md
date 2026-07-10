@@ -12,7 +12,7 @@ All edge functions are deployed to `supabase/functions/`. Authentication is hand
 
 Translates a natural-language Magic: The Gathering query into valid Scryfall syntax via a 4-layer pipeline:
 
-1. **In-memory LRU cache** — sub-millisecond repeat hits within the same function instance
+1. **In-memory LRU cache** — very fast repeat hits within the same function instance
 2. **Persistent DB cache** (`query_cache` table, 48h TTL) — shared across instances
 3. **Deterministic / pattern match** — rule-based translation for common archetypes and slang
 4. **AI fallback** — Gemini Flash for novel/complex queries (circuit-breaker protected)
@@ -202,7 +202,7 @@ Uses Gemini Flash to analyze a full decklist and generate categorized improvemen
 
 #### Response body (success)
 
-Returns categorized recommendations: **High Synergy**, **Upgrades**, and **Budget Picks**, each with `card_name`, `reason`, and `category`.
+Returns categorized recommendations: **High Synergy**, **Upgrades**, **Budget Picks**, and **Sideboard**, each with `card_name`, `reason`, and `category`.
 
 ---
 

@@ -1,14 +1,15 @@
 /**
- * Typed wrapper for RPCs living in the private `admin_api` schema.
+ * Typed wrapper for the admin analytics RPCs.
  *
- * These functions aren't exposed in the generated Database types (the
- * generator only reflects `public`), so we maintain a small allowlist here
- * to keep call sites type-safe without leaking `any` into the codebase.
+ * The dashboard prefers the `admin-rpc` edge dispatcher when available so
+ * auth is enforced server-side. We keep a small allowlist here because the
+ * generated Database types only reflect `public` and do not preserve the
+ * admin wrapper details.
  */
 
 import { supabase } from './client';
 
-/** Allowlist of admin_api RPC names. Add new admin RPCs here. */
+/** Allowlist of admin RPC names. Add new admin RPCs here. */
 export type AdminRpcName = 'get_system_status';
 
 /** Response shape for each admin RPC. Keep in sync with the SQL definitions. */
@@ -39,9 +40,9 @@ type UntypedRpcClient = {
 };
 
 /**
- * Call an `admin_api` RPC. Prefers the `admin-rpc` edge function when
- * available (which enforces auth server-side); falls back to a direct
- * schema-scoped PostgREST call.
+ * Call an admin RPC. Prefers the `admin-rpc` edge function when available
+ * (which enforces auth server-side); falls back to a direct schema-scoped
+ * PostgREST call for environments where the edge dispatcher is unavailable.
  */
 export async function callAdminRpc<Name extends AdminRpcName>(
   name: Name,

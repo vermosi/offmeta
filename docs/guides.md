@@ -38,7 +38,7 @@ Both pages use the shared `Header` component for consistent navigation.
 
 ### Routing
 
-Routes are registered in `src/App.tsx`:
+Routes are registered in `src/AppRoutes.tsx`:
 
 ```tsx
 <Route path="/guides" element={<GuidesIndex />} />

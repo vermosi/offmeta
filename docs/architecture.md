@@ -233,6 +233,11 @@ Edge functions use a shared `validateAuth` helper in `supabase/functions/_shared
 | `sync-card-names`             | anon-authenticated |
 | `warmup-cache`                | service/admin-only |
 
+> Note: several admin analytics functions are exposed through `public` wrappers
+> that perform an internal admin-role check before delegating to `admin_api`.
+> The `admin-rpc` dispatcher is the preferred path from the frontend because it
+> keeps the auth boundary explicit in one place.
+
 ## Row-level security
 
 RLS follows the **consolidation pattern**: duplicate `authenticated` + `anon` policies are collapsed into a single `public` role policy to reduce maintenance surface. Sensitive tables (`translation_logs`, `query_cache`, `analytics_events`) are restricted to `service_role` only, with an additional admin-role SELECT policy using `public.has_role(auth.uid(), 'admin')`.

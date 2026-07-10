@@ -29,17 +29,18 @@
 | **Natural Language Search**      | Describe cards in plain English — AI translates to Scryfall syntax                                         |
 | **200+ Deterministic Patterns**  | Fast, cached translations for common queries without AI calls                                              |
 | **Combo Finder**                 | Discover card combos for any commander via Commander Spellbook                                             |
-| **Deck Recommendations**         | AI-powered suggestions (High Synergy, Upgrades, Budget Picks) from Moxfield import or text paste           |
+| **Deck Recommendations**         | AI-powered suggestions (High Synergy, Upgrades, Budget Picks, Sideboard) from Moxfield import or text paste |
 | **Archetypes**                   | Data-driven archetype browser across Commander, Pauper, Legacy & Premodern — backed by a materialized view |
 | **10 Progressive Search Guides** | Learn from basic type searches to expert multi-constraint queries                                          |
 | **Voice Input**                  | Hands-free searching with speech recognition                                                               |
 | **Card Details**                 | Rulings, prices, printings, and legality in a clean modal                                                  |
+| **Card Meta Context**            | "Why this card matters" explanations in the card modal                                                    |
 | **Card Comparison**              | Compare 2–4 cards side-by-side on stats, price, and legality                                               |
 | **Multiple View Modes**          | Grid, list, and image-only views with persistent preference                                                |
 | **Export Results**               | Copy card names or download CSV for deck builders                                                          |
 | **Smart Filters**                | Color, format, type, CMC, price, and rarity filter chips                                                   |
 | **Alchemy Exclusion**            | Rebalanced digital-only cards automatically filtered out                                                   |
-| **Client-Side Caching**          | Sub-100ms response for repeated queries                                                                    |
+| **Session Caching**              | Session-level caching for repeated queries                                                                  |
 | **PWA Support**                  | Installable with offline-first architecture                                                                |
 | **Dark/Light Theme**             | Automatic system preference detection                                                                      |
 | **Mobile-First Design**          | Responsive from 320px to 1920px with progressive spacing                                                   |

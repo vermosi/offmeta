@@ -1,14 +1,14 @@
 /**
- * admin-rpc — guarded dispatcher for the private `admin_api` schema.
+ * admin-rpc — guarded dispatcher for the admin analytics RPCs.
  *
- * The four admin RPCs (system_status, search_analytics, ai_usage_stats,
- * conversion_funnel) live in a private `admin_api` schema that is not
- * exposed to PostgREST. This function is the only path to invoke them.
+ * The admin dashboard calls through this function for server-verified access
+ * control. The dispatcher allows either:
+ *   1. a service-role bearer token, or
+ *   2. an authenticated admin user.
  *
- * Auth flow:
- *   1. Accept either a service-role bearer token or an authenticated admin user.
- *   2. Confirm the caller is allowed to reach the dispatcher.
- *   3. Dispatch the whitelisted RPC against `admin_api` with the service role.
+ * It then dispatches the whitelisted RPC name via the service-role client.
+ * The underlying SQL currently lives behind public wrappers that re-check the
+ * admin role and delegate to `admin_api`.
  *
  * Request:  POST { fn: string, args?: object }
  * Response: 200 { data: <rpc result> } | 401 | 403 | 400 | 500

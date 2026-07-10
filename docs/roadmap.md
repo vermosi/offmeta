@@ -50,8 +50,8 @@ Tracking format: `[Status: <planned|in progress|blocked|completed>] [Priority: <
 
 ## Near term
 
-- Wire card-meta-context edge function into card modal for "why this card matters" explanations — [Status: planned] [Priority: P1] [Discussion: Milestone `near-term`; owner `@core-team`]
-- AI deck critique edge function with cut/addition suggestions — [Status: planned] [Priority: P1] [Discussion: Milestone `near-term`; owner `@core-team`]
+- Wire `card-meta-context` into the card modal for "why this card matters" explanations — [Status: planned] [Priority: P1] [Discussion: Milestone `near-term`; owner `@core-team`]
+- Ship the AI deck critique flow with cut/addition suggestions and clear recommendation reasons — [Status: planned] [Priority: P1] [Discussion: Milestone `near-term`; owner `@core-team`]
 
 ## Mid term
 
@@ -61,5 +61,4 @@ Tracking format: `[Status: <planned|in progress|blocked|completed>] [Priority: <
 ## Long term
 
 - Optimize translation accuracy with community-contributed patterns — [Status: planned] [Priority: P3] [Discussion: Milestone `long-term`; owner `@core-team`]
-- Add card price tracking and alerts — [Status: planned] [Priority: P3] [Discussion: Milestone `long-term`; owner `@core-team`]
-- Build social features (shared decklists, user profiles) — [Status: planned] [Priority: P3] [Discussion: Milestone `long-term`; owner `@core-team`]
+- Expand social features beyond public profiles, including sharing and collaboration flows — [Status: planned] [Priority: P3] [Discussion: Milestone `long-term`; owner `@core-team`]
