@@ -10,10 +10,10 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { requireAdmin, getCorsHeaders } from '../_shared/auth.ts';
+import { getCorsHeaders } from '../_shared/auth.ts';
 import { validateEnv } from '../_shared/env.ts';
-import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
 import { createLogger } from '../_shared/logger.ts';
+import { applyJobRateLimit, requireAdminJob } from '../_shared/jobGuards.ts';
 
 const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = validateEnv([
   'SUPABASE_URL',
@@ -30,35 +30,18 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
-
-  // Require admin role (not just any valid token)
-  const adminCheck = await requireAdmin(req, corsHeaders);
+  const adminCheck = await requireAdminJob(req);
   if (!adminCheck.authorized) {
     return adminCheck.response;
   }
 
-  // Rate limiting: 1 req/min (batch job)
-  maybeCleanup();
-  const clientIp =
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  const { allowed, retryAfter } = await checkRateLimit(
-    clientIp,
-    undefined,
-    1,
-    10,
-  );
-  if (!allowed) {
-    return new Response(
-      JSON.stringify({ error: 'Rate limit exceeded', success: false }),
-      {
-        status: 429,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-          'Retry-After': String(retryAfter),
-        },
-      },
-    );
+  const rateLimit = await applyJobRateLimit(req, corsHeaders, {
+    bucketSize: 1,
+    globalLimit: 10,
+    label: 'Cleanup job',
+  });
+  if (!rateLimit.allowed) {
+    return rateLimit.response;
   }
 
   const startTime = Date.now();

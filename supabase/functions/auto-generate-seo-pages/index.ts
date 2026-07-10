@@ -9,8 +9,9 @@ declare const Deno: {
 };
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { getCorsHeaders, requireServiceRole } from '../_shared/auth.ts';
+import { getCorsHeaders } from '../_shared/auth.ts';
 import { logEvent } from '../_shared/logger.ts';
+import { requireServiceJob } from '../_shared/jobGuards.ts';
 
 // Increased from 5 → 15 per growth plan to expand /ai/* SEO surface daily.
 const MAX_NEW_PAGES = 15;
@@ -23,7 +24,7 @@ Deno.serve(async (req: Request) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const authz = requireServiceRole(req, corsHeaders);
+  const authz = requireServiceJob(req);
   if (!authz.authorized) {
     return authz.response;
   }

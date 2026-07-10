@@ -9,7 +9,8 @@
  */
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { getCorsHeaders, logAuthFailure } from '../_shared/auth.ts';
+import { getCorsHeaders } from '../_shared/auth.ts';
+import { requireAdminJob } from '../_shared/jobGuards.ts';
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -20,40 +21,19 @@ serve(async (req) => {
 
   const headers = { ...corsHeaders, 'Content-Type': 'application/json' };
 
-  // Validate auth token
-  const authHeader = req.headers.get('authorization');
-  if (!authHeader) {
-    await logAuthFailure(req, 'Missing Authorization header', 'admin-analytics');
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers });
+  const authCheck = await requireAdminJob(req);
+  if (!authCheck.authorized) {
+    return authCheck.response;
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const authHeader = req.headers.get('authorization')!;
 
   // Create client with user's JWT to check role
   const supabaseUser = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
     global: { headers: { Authorization: authHeader } },
   });
-
-  const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
-  if (userError || !user) {
-    await logAuthFailure(req, userError?.message ?? 'Invalid token', 'admin-analytics');
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers });
-  }
-
-  // Check admin role using service role client
-  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-  const { data: roleData } = await supabaseAdmin
-    .from('user_roles')
-    .select('role')
-    .eq('user_id', user.id)
-    .eq('role', 'admin')
-    .maybeSingle();
-
-  if (!roleData) {
-    await logAuthFailure(req, 'Forbidden: admin role required', 'admin-analytics');
-    return new Response(JSON.stringify({ error: 'Forbidden: admin role required' }), { status: 403, headers });
-  }
 
   // Parse query params
   const url = new URL(req.url);

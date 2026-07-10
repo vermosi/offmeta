@@ -9,8 +9,9 @@ declare const Deno: {
   serve: (handler: (req: Request) => Promise<Response>) => void;
 };
 
-import { getCorsHeaders, requireServiceRole } from '../_shared/auth.ts';
+import { getCorsHeaders } from '../_shared/auth.ts';
 import { logEvent } from '../_shared/logger.ts';
+import { requireServiceJob } from '../_shared/jobGuards.ts';
 
 const SEED_QUERIES = [
   'best mana rocks for commander',
@@ -43,7 +44,7 @@ Deno.serve(async (req: Request) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const authz = requireServiceRole(req, corsHeaders);
+  const authz = requireServiceJob(req);
   if (!authz.authorized) {
     return authz.response;
   }

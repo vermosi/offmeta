@@ -46,7 +46,7 @@ jobs:
           Commit: \`$SHORT_SHA\`
           $RUN_URL"
 
-          MESSAGE=$(python -c "import json, os; print(json.dumps({'content': os.environ['CONTENT']}))")
+          MESSAGE=$(CONTENT="$CONTENT" python -c "import json, os; print(json.dumps({'content': os.environ['CONTENT']}))")
 
           curl -fsS -X POST "$DISCORD_WEBHOOK_URL" \
             -H "Content-Type: application/json" \
