@@ -480,11 +480,11 @@ export default function AdminAnalytics() {
                     const pattern = (document.getElementById('repair-pattern') as HTMLInputElement | null)?.value ?? hook.queryDetail!.normalized_query;
                     const scryfallSyntax = (document.getElementById('repair-syntax') as HTMLTextAreaElement | null)?.value ?? '';
                     void hook.createOrEditTranslationRule({
-                      id: hook.queryDetail.rules[0]?.id,
+                      id: hook.queryDetail!.rules[0]?.id,
                       pattern,
                       scryfall_syntax: scryfallSyntax,
                       description: `Repair workflow for ${hook.queryDetail!.normalized_query}`,
-                      confidence: hook.queryDetail.confidence,
+                      confidence: hook.queryDetail!.confidence,
                       is_active: true,
                     });
                   }}
