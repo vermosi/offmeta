@@ -64,7 +64,10 @@ serve(async (req) => {
     // Call the public wrapper — it delegates to admin_api.get_search_analytics
     // after re-checking the admin role. PostgREST only exposes public/graphql_public,
     // so a direct admin_api RPC would return PGRST106.
-    const { data: analytics, error: rpcError } = await supabaseAdmin.rpc(
+    // Must call through the user's JWT client so auth.uid() resolves inside
+    // has_role(); the service-role client has no auth context and the RPC's
+    // admin check would raise "Insufficient privileges".
+    const { data: analytics, error: rpcError } = await supabaseUser.rpc(
       'get_search_analytics',
       { since_date: since, max_low_confidence: 20 },
     );
