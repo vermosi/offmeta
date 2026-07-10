@@ -1153,6 +1153,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_ai_usage_stats: { Args: { days_back?: number }; Returns: Json }
       get_card_recommendations: {
         Args: {
           result_limit?: number
@@ -1170,6 +1171,7 @@ export type Database = {
           weight: number
         }[]
       }
+      get_conversion_funnel: { Args: { days_back?: number }; Returns: Json }
       get_deck_vote_count: { Args: { target_deck_id: string }; Returns: number }
       get_missing_oracle_ids: {
         Args: never
