@@ -28,8 +28,8 @@ export const CARDS_LIKE_MAP: Record<string, string> = {
   // Removal
   'swords to plowshares': 'o:"exile target creature" mv<=2',
   'path to exile': 'o:"exile target creature" mv<=2',
-  'wrath of god': 'otag:board-wipe',
-  damnation: 'otag:board-wipe',
+  'wrath of god': 'otag:boardwipe',
+  damnation: 'otag:boardwipe',
   'cyclonic rift': 'o:"return all" o:"to their owners\' hands"',
 
   // Counters

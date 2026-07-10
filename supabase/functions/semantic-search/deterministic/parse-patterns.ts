@@ -159,7 +159,7 @@ export function parseSpecialPatterns(query: string, ir: SearchIR): string {
   // as format intent rather than card property.
   // e.g. "best commander board wipes" → tag mappings consume "board wipes" first,
   // leaving "best commander" → should be f:commander, not is:commander.
-  const CONCEPT_TAGS = ['otag:board-wipe', 'otag:draw', 'otag:ramp', 'otag:removal',
+  const CONCEPT_TAGS = ['otag:boardwipe', 'otag:draw', 'otag:ramp', 'otag:removal',
     'otag:counter', 'otag:tutor', 'otag:sacrifice-outlet', 'otag:reanimate',
     'otag:lifegain', 'otag:manarock', 'otag:mana-rock', 'otag:mana-dork',
     'otag:stax', 'otag:mill', 'otag:token-maker', 'otag:mass-removal',

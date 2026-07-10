@@ -170,7 +170,7 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
   },
   {
     pattern: /\bsweepers?\b/gi,
-    syntax: 'otag:board-wipe',
+    syntax: 'otag:boardwipe',
     description: 'Board wipe effects',
   },
 
@@ -604,7 +604,7 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     syntax: 't:land produces>=2',
     description: 'Lands that produce two or more colors',
   },
-  // wrath, board wipes — handled by TAG_FIRST_MAP (otag:board-wipe with fallback)
+  // wrath, board wipes — handled by TAG_FIRST_MAP (otag:boardwipe with fallback)
   // tutors — handled by TAG_FIRST_MAP (otag:tutor with fallback)
   {
     pattern: /\bramp\b/gi,
@@ -875,17 +875,17 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
   },
   {
     pattern: /\b(?:board\s*wipes?|wraths?|sweepers?)\s+(?:that\s+)?(?:(?:also|and)\s+)?(?:create|make|generate|produce)s?\s+tokens?\b/gi,
-    syntax: 'otag:board-wipe o:"create" o:"token"',
+    syntax: 'otag:boardwipe o:"create" o:"token"',
     description: 'Board wipes that also create tokens',
   },
   {
     pattern: /\btoken\s+(?:board\s*wipes?|wraths?|sweepers?)\b/gi,
-    syntax: 'otag:board-wipe o:"create" o:"token"',
+    syntax: 'otag:boardwipe o:"create" o:"token"',
     description: 'Board wipes that create tokens',
   },
   {
     pattern: /\b(?:board\s*wipes?|wraths?|sweepers?)\s+(?:with|and)\s+tokens?\b/gi,
-    syntax: 'otag:board-wipe o:"create" o:"token"',
+    syntax: 'otag:boardwipe o:"create" o:"token"',
     description: 'Board wipes with token creation',
   },
 

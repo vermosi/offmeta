@@ -117,8 +117,8 @@ export function buildFallbackQuery(
     [/\bcreature tutors?\b/gi, 'otag:creature-tutor'],
 
     // Removal
-    [/\bboard ?wipes?\b/gi, 'otag:board-wipe'],
-    [/\bwraths?\b/gi, 'otag:board-wipe'],
+    [/\bboard ?wipes?\b/gi, 'otag:boardwipe'],
+    [/\bwraths?\b/gi, 'otag:boardwipe'],
     // NOTE: otag:counterspell is NOT valid — use otag:counter instead
     [/\bcounterspells?\b/gi, 'otag:counter'],
     [/\bcounter ?magic\b/gi, 'otag:counter'],

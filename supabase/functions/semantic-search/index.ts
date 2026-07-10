@@ -375,6 +375,13 @@ serve(async (req) => {
     // Hardcoded otag translations like "elf lords" must take priority over card name heuristics
     const earlyHardcodedMatch0 = getHardcodedPatternMatch(query);
     if (earlyHardcodedMatch0) {
+      const filteredQuery = applyFiltersToQuery(
+        earlyHardcodedMatch0.scryfallQuery,
+        filters,
+      );
+      const responsePayload = filteredQuery
+        ? { ...earlyHardcodedMatch0, scryfallQuery: filteredQuery }
+        : earlyHardcodedMatch0;
       const responseTimeMs = Date.now() - requestStartTime;
       logInfo('pattern_match_hit', {
         query: query.substring(0, 50),
@@ -385,11 +392,11 @@ serve(async (req) => {
         buildPerfLogFields(stageDurationsMs, 'pattern_match', responseTimeMs),
       );
 
-      setCachedResult(query, filters, earlyHardcodedMatch0, cacheSalt);
+      setCachedResult(query, filters, responsePayload, cacheSalt);
       logTranslation(
         query,
-        earlyHardcodedMatch0.scryfallQuery,
-        earlyHardcodedMatch0.explanation?.confidence ?? 0.95,
+        responsePayload.scryfallQuery,
+        responsePayload.explanation?.confidence ?? 0.95,
         responseTimeMs,
         [],
         [],
@@ -401,7 +408,7 @@ serve(async (req) => {
 
       return createSearchSuccessResponse(
         query,
-        earlyHardcodedMatch0,
+        responsePayload,
         responseTimeMs,
         'pattern_match',
         jsonHeaders,
@@ -661,6 +668,10 @@ serve(async (req) => {
       checkPatternMatch(query, filters),
     );
     if (patternMatch) {
+      const filteredQuery = applyFiltersToQuery(patternMatch.scryfallQuery, filters);
+      const responsePayload = filteredQuery
+        ? { ...patternMatch, scryfallQuery: filteredQuery }
+        : patternMatch;
       const responseTimeMs = Date.now() - requestStartTime;
       logInfo('pattern_match_hit', {
         query: query.substring(0, 50),
@@ -671,11 +682,11 @@ serve(async (req) => {
         buildPerfLogFields(stageDurationsMs, 'pattern_match', responseTimeMs),
       );
 
-      setCachedResult(query, filters, patternMatch, cacheSalt);
+      setCachedResult(query, filters, responsePayload, cacheSalt);
       logTranslation(
         query,
-        patternMatch.scryfallQuery,
-        patternMatch.explanation?.confidence ?? 0.85,
+        responsePayload.scryfallQuery,
+        responsePayload.explanation?.confidence ?? 0.85,
         responseTimeMs,
         [],
         [],
@@ -687,7 +698,7 @@ serve(async (req) => {
 
       return createSearchSuccessResponse(
         query,
-        patternMatch,
+        responsePayload,
         responseTimeMs,
         'pattern_match',
         jsonHeaders,
@@ -723,6 +734,8 @@ serve(async (req) => {
     const trimmedQuery = query.trim();
     if (isRawScryfallSyntax(trimmedQuery)) {
       const validation = validateQuery(trimmedQuery);
+      const filteredQuery = applyFiltersToQuery(validation.sanitized, filters);
+      const finalQuery = filteredQuery || validation.sanitized;
       const responseTimeMs = Date.now() - requestStartTime;
       logInfo('raw_syntax_passthrough', {
         query: trimmedQuery.substring(0, 50),
@@ -734,7 +747,7 @@ serve(async (req) => {
       );
       logTranslation(
         query,
-        validation.sanitized,
+        finalQuery,
         0.95,
         responseTimeMs,
         [],
@@ -746,7 +759,7 @@ serve(async (req) => {
       flushLogQueue(); // fire-and-forget
 
       const rawResult = {
-        scryfallQuery: validation.sanitized,
+        scryfallQuery: finalQuery,
         explanation: {
           readable: `Direct Scryfall syntax: ${trimmedQuery}`,
           assumptions: [],

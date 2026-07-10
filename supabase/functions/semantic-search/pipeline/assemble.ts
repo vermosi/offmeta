@@ -21,7 +21,7 @@
  * - ci<=X = fits within color identity (most common for commander)
  *
  * ORACLE TAGS:
- * - otag:ramp, otag:board-wipe, otag:card-draw, etc.
+ * - otag:ramp, otag:boardwipe, otag:card-draw, etc.
  * - These are community-maintained tags on Scryfall
  */
 

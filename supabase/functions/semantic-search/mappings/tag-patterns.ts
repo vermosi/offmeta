@@ -33,10 +33,10 @@ export const TAG_FIRST_MAP: TagPattern[] = [
   },
   {
     pattern: /\bboard[ -]?wipes?\b/gi,
-    tag: 'board-wipe',
+    tag: 'boardwipe',
     fallback: 'o:"destroy all"',
   },
-  { pattern: /\bwraths?\b/gi, tag: 'board-wipe', fallback: 'o:"destroy all"' },
+  { pattern: /\bwraths?\b/gi, tag: 'boardwipe', fallback: 'o:"destroy all"' },
   { pattern: /\bcantrips?\b/gi, tag: 'cantrip', fallback: 'o:"draw a card"' },
   {
     pattern: /\btutors?\b/gi,

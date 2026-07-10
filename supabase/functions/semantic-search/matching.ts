@@ -48,7 +48,7 @@ const HARDCODED_TRANSLATIONS: Record<string, CacheEntry['result']> = {
     showAffiliate: true,
   },
   'board wipes': {
-    scryfallQuery: 'otag:board-wipe',
+    scryfallQuery: 'otag:boardwipe',
     explanation: {
       readable: 'Cards that destroy or remove all creatures/permanents',
       assumptions: [],
@@ -399,7 +399,7 @@ const HARDCODED_TRANSLATIONS: Record<string, CacheEntry['result']> = {
     showAffiliate: true,
   },
   'best commander board wipes': {
-    scryfallQuery: 'otag:board-wipe f:commander',
+    scryfallQuery: 'otag:boardwipe f:commander',
     explanation: {
       readable: 'Board wipes legal in Commander',
       assumptions: [],
@@ -417,7 +417,7 @@ const HARDCODED_TRANSLATIONS: Record<string, CacheEntry['result']> = {
     showAffiliate: true,
   },
   'commander board wipes': {
-    scryfallQuery: 'otag:board-wipe f:commander',
+    scryfallQuery: 'otag:boardwipe f:commander',
     explanation: {
       readable: 'Board wipes legal in Commander',
       assumptions: [],

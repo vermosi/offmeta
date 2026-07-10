@@ -1,4 +1,4 @@
-import { KNOWN_OTAGS } from './tags.ts';
+import { KNOWN_OTAGS, resolveOtag } from './tags.ts';
 import { VALID_SEARCH_KEYS } from './constants.ts';
 import { createLogger } from './logging.ts';
 
@@ -284,7 +284,8 @@ export function validateQuery(query: string): {
   let tagMatch;
   while ((tagMatch = otagPattern.exec(sanitized)) !== null) {
     const tag = tagMatch[1].toLowerCase();
-    if (!KNOWN_OTAGS.has(tag)) {
+    const canonicalTag = resolveOtag(tag);
+    if (!KNOWN_OTAGS.has(canonicalTag)) {
       unknownTags.push(tag);
     }
   }

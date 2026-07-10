@@ -161,7 +161,7 @@ PLAYER SLANG → otag: MAPPINGS (USE THESE!):
 - "ramp" / "mana acceleration" = otag:ramp
 - "card draw" / "draw cards" = otag:draw
 - "removal" = otag:removal
-- "board wipe" / "wrath" = otag:board-wipe
+- "board wipe" / "wrath" = otag:boardwipe
 - "tutor" / "search library" = otag:tutor
 - "counterspell" / "counter" = otag:counter
 - "self-mill" / "mill myself" = otag:self-mill
@@ -293,7 +293,7 @@ COMPREHENSIVE OTAGS (prefer these for accuracy):
 Mana: otag:ramp, otag:mana-dork, otag:mana-rock, otag:land-ramp, otag:ritual
 Draw: otag:draw, otag:cantrip, otag:loot, otag:rummage, otag:wheel
 Search: otag:tutor, o:"search your library" o:"land", o:"search your library" o:"creature"
-Removal: otag:removal, otag:creature-removal, otag:artifact-removal, otag:enchantment-removal, otag:board-wipe
+Removal: otag:removal, otag:creature-removal, otag:artifact-removal, otag:enchantment-removal, otag:boardwipe
 Counter: otag:counter, o:"counter target"
 Graveyard: otag:self-mill, o:"mill", otag:recursion, otag:reanimate, otag:graveyard-hate
 Combat: otag:pump, otag:combat-trick, otag:fog, otag:gives-menace
@@ -461,7 +461,7 @@ REMOVAL:
 - otag:artifact-removal (removes artifacts)
 - otag:enchantment-removal (removes enchantments)
 - otag:planeswalker-removal (removes planeswalkers)
-- otag:board-wipe (mass removal)
+- otag:boardwipe (mass removal)
 - otag:mass-removal (destroys multiple permanents)
 - otag:creature-board-wipe (destroys all creatures)
 

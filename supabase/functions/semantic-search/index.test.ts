@@ -586,7 +586,7 @@ Deno.test('translates budget constraint language', async () => {
     query.includes('destroy all') ||
     query.includes('exile all') ||
     query.includes('wipe') ||
-    query.includes('otag:board-wipe');
+    query.includes('otag:boardwipe');
   assertEquals(
     hasBudget || hasBoardWipe || result.success,
     true,

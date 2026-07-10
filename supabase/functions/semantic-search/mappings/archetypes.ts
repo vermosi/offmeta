@@ -18,7 +18,7 @@ export const ARCHETYPE_MAP: Record<string, string> = {
     '(t:equipment or t:aura or o:"equipped creature" or o:"enchanted creature")',
   aristocrats: '(otag:sacrifice-outlet or (o:"whenever" (o:"dies" or o:"sacrifice")))',
   reanimator: 'otag:reanimate',
-  control: '(otag:removal or otag:board-wipe)',
+  control: '(otag:removal or otag:boardwipe)',
   combo:
     '(o:"infinite" or o:"you win the game" or o:"opponents lose the game")',
   midrange: 't:creature mv>=3 mv<=5',

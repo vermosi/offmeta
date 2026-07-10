@@ -5,7 +5,7 @@
  * @module deterministic/parse-mappings
  */
 
-import { KNOWN_OTAGS } from '../tags.ts';
+import { KNOWN_OTAGS, resolveOtag } from '../tags.ts';
 import {
   KEYWORD_MAP,
   SPECIAL_KEYWORD_MAP,
@@ -47,8 +47,9 @@ export function applyTagMappings(query: string, ir: SearchIR): string {
   for (const { pattern, tag, fallback } of TAG_FIRST_MAP) {
     if (pattern.test(remaining)) {
       remaining = remaining.replace(pattern, '').trim();
-      if (KNOWN_OTAGS.has(tag)) {
-        ir.tags.push(`otag:${tag}`);
+      const canonicalTag = resolveOtag(tag);
+      if (KNOWN_OTAGS.has(canonicalTag)) {
+        ir.tags.push(`otag:${canonicalTag}`);
       } else if (fallback) {
         ir.oracle.push(fallback);
         ir.warnings.push(
@@ -171,8 +172,9 @@ export function parseEnablers(query: string, ir: SearchIR): string {
     );
     if (pattern.test(remaining)) {
       const tagName = `gives-${keyword}`;
-      if (KNOWN_OTAGS.has(tagName)) {
-        ir.tags.push(`otag:${tagName}`);
+      const canonicalTag = resolveOtag(tagName);
+      if (KNOWN_OTAGS.has(canonicalTag)) {
+        ir.tags.push(`otag:${canonicalTag}`);
       } else {
         ir.oracle.push(`o:"${keyword.replace('-', ' ')}"`);
       }
@@ -188,8 +190,9 @@ export function parseEnablers(query: string, ir: SearchIR): string {
     );
     if (pattern.test(remaining)) {
       const tagName = `gives-${keyword}`;
-      if (KNOWN_OTAGS.has(tagName)) {
-        ir.tags.push(`otag:${tagName}`);
+      const canonicalTag = resolveOtag(tagName);
+      if (KNOWN_OTAGS.has(canonicalTag)) {
+        ir.tags.push(`otag:${canonicalTag}`);
       } else {
         ir.oracle.push(`o:"${keyword.replace('-', ' ')}"`);
       }
