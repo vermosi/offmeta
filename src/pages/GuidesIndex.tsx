@@ -39,9 +39,9 @@ export default function GuidesIndex() {
 
   useEffect(() => {
     return applySeoMeta({
-      title: 'MTG Search Guides — Learn to Find Any Magic Card | OffMeta',
+      title: 'MTG Search Guides - Learn to Find Any Magic Card | OffMeta',
       description:
-        'Master MTG card search with 10 progressive guides — from basic type searches to multi-constraint queries, all in natural language.',
+        'Master MTG card search with 10 progressive guides - from basic type searches to multi-constraint queries, all in natural language.',
       url: 'https://offmeta.app/guides',
       type: 'website',
       section: 'Guides',
@@ -59,62 +59,8 @@ export default function GuidesIndex() {
 
   const sorted = [...GUIDES].sort((a, b) => a.level - b.level);
 
-  const breadcrumbJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      {
-        '@type': 'ListItem',
-        position: 1,
-        name: 'OffMeta',
-        item: 'https://offmeta.app/',
-      },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: 'Guides',
-        item: 'https://offmeta.app/guides',
-      },
-    ],
-  };
-
-  const collectionJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'CollectionPage',
-    name: 'MTG Search Guides',
-    description:
-      'Master Magic: The Gathering card search with 10 progressive guides.',
-    url: 'https://offmeta.app/guides',
-    inLanguage: 'en',
-    publisher: {
-      '@type': 'Organization',
-      name: 'OffMeta',
-      url: 'https://offmeta.app/',
-      logo: { '@type': 'ImageObject', url: 'https://offmeta.app/og-image.png' },
-    },
-    mainEntity: {
-      '@type': 'ItemList',
-      numberOfItems: sorted.length,
-      itemListElement: sorted.map((g, i) => ({
-        '@type': 'ListItem',
-        position: i + 1,
-        url: `https://offmeta.app/guides/${g.slug}`,
-        name: g.title,
-      })),
-    },
-  };
-
   return (
     <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
-      />
-
       <SkipLinks />
       <Header />
 
@@ -130,10 +76,7 @@ export default function GuidesIndex() {
         </ol>
       </nav>
 
-      <main
-        id="main-content"
-        className="flex-1 container-main py-8 sm:py-10 lg:py-12"
-      >
+      <main id="main-content" className="flex-1 container-main py-8 sm:py-10 lg:py-12">
         <div className="max-w-4xl mx-auto space-y-8 sm:space-y-10 min-w-0">
           <header className="text-center space-y-4">
             <div className="flex items-center justify-center gap-2.5 text-primary">
@@ -151,10 +94,8 @@ export default function GuidesIndex() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             {sorted.map((guide) => {
-              const labelKey =
-                LEVEL_LABEL_KEYS[guide.level] || 'guides.levelBeginner';
-              const colorClass =
-                LEVEL_COLORS[labelKey] || LEVEL_COLORS['guides.levelBeginner'];
+              const labelKey = LEVEL_LABEL_KEYS[guide.level] || 'guides.levelBeginner';
+              const colorClass = LEVEL_COLORS[labelKey] || LEVEL_COLORS['guides.levelBeginner'];
 
               return (
                 <Link
@@ -200,9 +141,7 @@ export default function GuidesIndex() {
             <h2 className="text-lg font-semibold text-foreground">
               {t('guides.readyToSearch')}
             </h2>
-            <p className="text-sm text-muted-foreground">
-              {t('guides.readyToSearchDesc')}
-            </p>
+            <p className="text-sm text-muted-foreground">{t('guides.readyToSearchDesc')}</p>
             <Link
               to="/"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity"

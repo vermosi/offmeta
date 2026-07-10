@@ -28,6 +28,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { validateAdminSeoQuery } from '@/lib/validation';
+import { useTranslation } from '@/lib/i18n';
 
 interface SeoPage {
   id: string;
@@ -45,6 +46,7 @@ interface SeoPage {
 }
 
 export default function AdminSeoPages() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { hasRole: isAdmin, isLoading: roleLoading } = useUserRole('admin');
@@ -79,9 +81,9 @@ export default function AdminSeoPages() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-seo-pages'] });
-      toast.success('Status updated');
+      toast.success(t('common.statusUpdated', 'Status updated'));
     },
-    onError: () => toast.error('Failed to update status'),
+    onError: () => toast.error(t('common.updateFailed', 'Failed to update status')),
   });
 
   const deletePage = useMutation({
@@ -91,9 +93,9 @@ export default function AdminSeoPages() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-seo-pages'] });
-      toast.success('Page deleted');
+      toast.success(t('common.pageDeleted', 'Page deleted'));
     },
-    onError: () => toast.error('Failed to delete'),
+    onError: () => toast.error(t('common.deleteFailed', 'Failed to delete')),
   });
 
   const regeneratePage = useMutation({
@@ -109,9 +111,9 @@ export default function AdminSeoPages() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-seo-pages'] });
-      toast.success(`Regenerated: ${data?.slug}`);
+      toast.success(t('adminSeo.regenerated', 'Regenerated: {slug}').replace('{slug}', data?.slug ?? ''));
     },
-    onError: () => toast.error('Failed to regenerate'),
+    onError: () => toast.error(t('adminSeo.regenerateFailed', 'Failed to regenerate')),
   });
 
   const generateNew = useCallback(async () => {
@@ -141,7 +143,7 @@ export default function AdminSeoPages() {
       <div className="min-h-screen bg-background">
         <Header />
         <div className="flex items-center justify-center py-20 text-muted-foreground">
-          Admin access required.
+          {t('common.adminAccessRequired', 'Admin access required.')}
         </div>
       </div>
     );
@@ -173,10 +175,12 @@ export default function AdminSeoPages() {
           <div>
             <h1 className="text-xl font-bold flex items-center gap-2">
               <FileText className="h-5 w-5 text-accent" />
-              AI SEO Pages
+              {t('adminSeo.title', 'AI SEO Pages')}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {published} published · {drafts} drafts
+              {t('adminSeo.summary', '{published} published · {drafts} drafts')
+                .replace('{published}', String(published))
+                .replace('{drafts}', String(drafts))}
             </p>
           </div>
         </div>
@@ -186,7 +190,7 @@ export default function AdminSeoPages() {
           <Input
             value={newQuery}
             onChange={(e) => setNewQuery(e.target.value)}
-            placeholder="Enter query to generate new page..."
+            placeholder={t('adminSeo.generatePlaceholder', 'Enter query to generate new page...')}
             className="flex-1"
             onKeyDown={(e) => e.key === 'Enter' && generateNew()}
           />
@@ -200,7 +204,7 @@ export default function AdminSeoPages() {
             ) : (
               <Plus className="h-4 w-4 mr-1" />
             )}
-            Generate
+            {t('common.generate', 'Generate')}
           </Button>
         </div>
 
@@ -210,7 +214,7 @@ export default function AdminSeoPages() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Filter pages..."
+            placeholder={t('common.filterPages', 'Filter pages...')}
             className="pl-10"
           />
         </div>

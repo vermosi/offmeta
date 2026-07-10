@@ -8,7 +8,8 @@ import { useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Link } from 'react-router-dom';
-import { Search, WandSparkles, Code2, ArrowRight } from 'lucide-react';
+import { Search, Code2 } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 const ABOUT_META = {
   title: 'About OffMeta — Transparent AI MTG Card Search',
@@ -51,6 +52,8 @@ function setCanonical(url: string) {
 }
 
 export default function About() {
+  const { t } = useTranslation();
+
   useEffect(() => {
     const prev = {
       title: document.title,
@@ -59,8 +62,7 @@ export default function About() {
           .querySelector('meta[name="description"]')
           ?.getAttribute('content') ?? '',
       canonical:
-        document.querySelector('link[rel="canonical"]')?.getAttribute('href') ??
-        '',
+        document.querySelector('link[rel="canonical"]')?.getAttribute('href') ?? '',
     };
 
     document.title = ABOUT_META.title;
@@ -86,18 +88,8 @@ export default function About() {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        {
-          '@type': 'ListItem',
-          position: 1,
-          name: 'OffMeta',
-          item: 'https://offmeta.app/',
-        },
-        {
-          '@type': 'ListItem',
-          position: 2,
-          name: 'About',
-          item: 'https://offmeta.app/about',
-        },
+        { '@type': 'ListItem', position: 1, name: 'OffMeta', item: 'https://offmeta.app/' },
+        { '@type': 'ListItem', position: 2, name: 'About', item: 'https://offmeta.app/about' },
       ],
     });
     document.head.appendChild(breadcrumb);
@@ -124,7 +116,7 @@ export default function About() {
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:rounded focus:bg-primary focus:text-primary-foreground focus:outline-none"
       >
-        Skip to main content
+        {t('common.skipToMain', 'Skip to main content')}
       </a>
 
       <Header />
@@ -136,20 +128,21 @@ export default function About() {
           </div>
           <div className="relative max-w-4xl mx-auto text-center">
             <p className="inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-6">
-              About OffMeta
+              {t('about.badge', 'About OffMeta')}
             </p>
             <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-foreground leading-tight mb-6">
-              Search Magic cards in plain English.{' '}
+              {t('about.heroTitle', 'Search Magic cards in plain English.')}
+              {' '}
               <br className="hidden sm:block" />
               <span className="text-accent">
-                Get a real Scryfall query you can edit.
+                {t('about.heroAccent', 'Get a real Scryfall query you can edit.')}
               </span>
             </h1>
             <p className="max-w-3xl mx-auto text-lg sm:text-xl text-muted-foreground leading-relaxed mb-10">
-              OffMeta is a transparent AI-powered MTG search tool, not a
-              decklist site, not an EDH content brand, and not a black-box AI
-              toy. We help you search the way you naturally think, then show the
-              exact Scryfall syntax behind the result so you stay in control.
+              {t(
+                'about.heroBody',
+                'OffMeta is a transparent AI-powered MTG search tool, not a decklist site, not an EDH content brand, and not a black-box AI toy. We help you search the way you naturally think, then show the exact Scryfall syntax behind the result so you stay in control.',
+              )}
             </p>
             <div className="flex flex-wrap justify-center gap-3">
               <Link
@@ -157,7 +150,7 @@ export default function About() {
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
               >
                 <Search className="h-4 w-4" />
-                Try OffMeta Search
+                {t('about.trySearch', 'Try OffMeta Search')}
               </Link>
               <a
                 href="https://scryfall.com/docs/syntax"
@@ -166,7 +159,7 @@ export default function About() {
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm font-medium hover:bg-card/80 transition-colors"
               >
                 <Code2 className="h-4 w-4" />
-                Learn Scryfall Syntax
+                {t('about.learnSyntax', 'Learn Scryfall Syntax')}
               </a>
             </div>
           </div>
@@ -175,14 +168,13 @@ export default function About() {
         <section className="py-16 sm:py-20 px-4 border-b border-border/30">
           <div className="max-w-3xl mx-auto space-y-5">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-              What OffMeta does
+              {t('about.whatDoes', 'What OffMeta does')}
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              OffMeta turns natural language MTG search into production-ready
-              Scryfall search. Type a request like, “cheap red instants that
-              deal damage and can hit any target,” and OffMeta translates it
-              into a structured query immediately. You can run it, refine it,
-              and iterate without memorizing every operator first.
+              {t(
+                'about.whatDoesBody',
+                'OffMeta turns natural language MTG search into production-ready Scryfall search. Type a request like, "cheap red instants that deal damage and can hit any target," and OffMeta translates it into a structured query immediately. You can run it, refine it, and iterate without memorizing every operator first.',
+              )}
             </p>
           </div>
         </section>
@@ -190,14 +182,13 @@ export default function About() {
         <section className="py-16 sm:py-20 px-4 border-b border-border/30 bg-card/20">
           <div className="max-w-3xl mx-auto space-y-5">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-              Why OffMeta exists
+              {t('about.why', 'Why OffMeta exists')}
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Magic card search is powerful, but syntax can slow down discovery.
-              OffMeta exists to remove that friction for brewers, grinders, and
-              curious players who think in game concepts first and filters
-              second. It gives you faster first results while still respecting
-              the precision that makes Scryfall great.
+              {t(
+                'about.whyBody',
+                'Magic card search is powerful, but syntax can slow down discovery. OffMeta exists to remove that friction for brewers, grinders, and curious players who think in game concepts first and filters second. It gives you faster first results while still respecting the precision that makes Scryfall great.',
+              )}
             </p>
           </div>
         </section>
@@ -205,19 +196,19 @@ export default function About() {
         <section className="py-16 sm:py-20 px-4 border-b border-border/30">
           <div className="max-w-3xl mx-auto space-y-5">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-              What makes it different
+              {t('about.different', 'What makes it different')}
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Most AI Magic card search experiences hide their logic. OffMeta
-              does the opposite. You can always see the generated Scryfall
-              query, edit it directly, and understand why results appeared. That
-              transparency is the moat: better speed from AI, better trust from
-              visible syntax, and better control for power users.
+              {t(
+                'about.differentBody',
+                'Most AI Magic card search experiences hide their logic. OffMeta does the opposite. You can always see the generated Scryfall query, edit it directly, and understand why results appeared. That transparency is the moat: better speed from AI, better trust from visible syntax, and better control for power users.',
+              )}
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              OffMeta is designed as a layer on top of Scryfall, not a
-              replacement for it. We help you get to the right query faster,
-              then hand control back to you.
+              {t(
+                'about.differentBody2',
+                'OffMeta is designed as a layer on top of Scryfall, not a replacement for it. We help you get to the right query faster, then hand control back to you.',
+              )}
             </p>
           </div>
         </section>
@@ -225,29 +216,33 @@ export default function About() {
         <section className="py-16 sm:py-20 px-4 border-b border-border/30 bg-card/20">
           <div className="max-w-3xl mx-auto space-y-6">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-              Plain English in, real Scryfall query out
+              {t('about.demoTitle', 'Plain English in, real Scryfall query out')}
             </h2>
             <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-4">
               <div>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">
-                  Natural language input
+                  {t('about.demoInputLabel', 'Natural language input')}
                 </p>
                 <p className="text-foreground font-medium">
-                  “Blue and white creatures with flying or vigilance, mana value
-                  3 or less.”
+                  {t(
+                    'about.demoInput',
+                    'Blue and white creatures with flying or vigilance, mana value 3 or less.',
+                  )}
                 </p>
               </div>
               <div>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">
-                  Generated query
+                  {t('about.demoQueryLabel', 'Generated query')}
                 </p>
                 <code className="block text-sm sm:text-base text-foreground bg-secondary rounded-lg px-3 py-2 overflow-x-auto">
                   (c:wu) t:creature (o:flying or o:vigilance) mv&lt;=3
                 </code>
               </div>
               <p className="text-sm text-muted-foreground">
-                Then edit it however you want: add legality, narrow text, or
-                tune mana cost. The query is yours.
+                {t(
+                  'about.demoBody',
+                  'Then edit it however you want: add legality, narrow text, or tune mana cost. The query is yours.',
+                )}
               </p>
             </div>
           </div>
@@ -256,13 +251,13 @@ export default function About() {
         <section className="py-16 sm:py-20 px-4 border-b border-border/30">
           <div className="max-w-3xl mx-auto space-y-5">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-              Who it is for
+              {t('about.who', 'Who it is for')}
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              OffMeta is for players who want fast, accurate Magic card search
-              without giving up control. If you brew often, test weird ideas,
-              compare options across formats, or just want an AI Magic card
-              search tool that shows its work, OffMeta is built for you.
+              {t(
+                'about.whoBody',
+                'OffMeta is for players who want fast, accurate Magic card search without giving up control. If you brew often, test weird ideas, compare options across formats, or just want an AI Magic card search tool that shows its work, OffMeta is built for you.',
+              )}
             </p>
           </div>
         </section>
@@ -270,40 +265,14 @@ export default function About() {
         <section className="py-16 sm:py-20 px-4 border-b border-border/30 bg-card/20">
           <div className="max-w-3xl mx-auto space-y-5">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-              Where we are going
+              {t('about.roadmap', 'Where we are going')}
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Our focus is simple: keep improving natural language MTG search
-              while staying transparent. We are investing in better query
-              translation, clearer explanations, and tighter workflows for
-              players who move from idea to card pool fast. The long-term vision
-              is an MTG search engine that feels effortless for new users and
-              precise for experts.
+              {t(
+                'about.roadmapBody',
+                'Our focus is simple: keep improving natural language MTG search while staying transparent. We are investing in better query translation, clearer explanations, and tighter workflows for players who move from idea to card pool fast. The long-term vision is an MTG search engine that feels effortless for new users and still satisfies advanced deckbuilders.',
+              )}
             </p>
-          </div>
-        </section>
-
-        <section className="py-16 sm:py-20 px-4">
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/10 text-accent mb-5">
-              <WandSparkles className="h-7 w-7" />
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
-              A clearer way to search Magic cards
-            </h2>
-            <p className="text-muted-foreground leading-relaxed mb-8">
-              If you are looking for an MTG search tool, a dependable Magic card
-              search workflow, or a practical way to bridge AI with Scryfall
-              search, OffMeta gives you all three: natural language in,
-              transparent query out, full control in your hands.
-            </p>
-            <Link
-              to="/"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
-            >
-              Start searching now
-              <ArrowRight className="h-4 w-4" />
-            </Link>
           </div>
         </section>
       </main>

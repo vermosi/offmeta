@@ -7,6 +7,7 @@ import {
   TooltipProvider,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/core/utils';
+import { useTranslation } from '@/lib/i18n';
 
 interface VoiceSearchButtonProps {
   isListening: boolean;
@@ -23,6 +24,7 @@ export function VoiceSearchButton({
   onToggle,
   className,
 }: VoiceSearchButtonProps) {
+  const { t } = useTranslation();
   if (!isSupported) {
     return null;
   }
@@ -36,7 +38,11 @@ export function VoiceSearchButton({
             size="icon"
             onClick={onToggle}
             disabled={isProcessing}
-            aria-label={isListening ? 'Stop listening' : 'Start voice search'}
+            aria-label={
+              isListening
+                ? t('voice.stopListening', 'Stop listening')
+                : t('voice.start', 'Start voice search')
+            }
             className={cn(
               'h-12 w-12 rounded-full relative transition-all duration-300',
               isListening &&
@@ -62,7 +68,11 @@ export function VoiceSearchButton({
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{isListening ? 'Stop listening' : 'Start voice search'}</p>
+          <p>
+            {isListening
+              ? t('voice.stopListening', 'Stop listening')
+              : t('voice.start', 'Start voice search')}
+          </p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

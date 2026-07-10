@@ -218,7 +218,7 @@ export function Header() {
                       'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
                     )}
                   >
-                    {t('nav.savedSearches')}
+                    {t('nav.savedSearches', 'Saved Searches')}
                   </Link>
                   <Link
                     to="/collection"
@@ -329,7 +329,7 @@ export function Header() {
                   {t('nav.deckBuilder', 'Deck Builder')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/decks')}>
-                  {t('nav.browseDecks')}
+                  {t('nav.browseDecks', 'Browse Decks')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -351,7 +351,7 @@ export function Header() {
               target="_blank"
               rel="noopener noreferrer"
               className="hidden sm:flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors focus-ring"
-              aria-label="Join our Discord (opens in new tab)"
+              aria-label={t('header.discordLabel', 'Join our Discord (opens in new tab)')}
             >
               <svg
                 className="h-4 w-4"
@@ -406,7 +406,7 @@ export function Header() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate('/saved')}>
                     <Bookmark className="h-4 w-4 mr-2" />
-                    {t('nav.savedSearches')}
+                    {t('nav.savedSearches', 'Saved Searches')}
                     {savedCount > 0 && (
                       <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
                         {savedCount}

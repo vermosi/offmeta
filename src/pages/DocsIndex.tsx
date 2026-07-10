@@ -1,5 +1,5 @@
 /**
- * Docs landing page — indexes guides, FAQ, and syntax cheat sheet.
+ * Docs landing page - indexes guides, FAQ, and syntax cheat sheet.
  */
 
 import { useMemo, useEffect } from 'react';
@@ -17,9 +17,9 @@ export default function DocsIndex() {
 
   useEffect(() => {
     const cleanupSeo = applySeoMeta({
-      title: 'OffMeta Docs — MTG Search Guides & Syntax',
+      title: 'OffMeta Docs - MTG Search Guides & Syntax',
       description:
-        'OffMeta MTG search reference — guides, Scryfall syntax cheat sheet, and FAQ for natural-language Magic: The Gathering card search.',
+        'OffMeta MTG search reference - guides, Scryfall syntax cheat sheet, and FAQ for natural-language Magic: The Gathering card search.',
       url: 'https://offmeta.app/docs',
       type: 'website',
       section: 'Docs',
@@ -46,57 +46,74 @@ export default function DocsIndex() {
     };
   }, []);
 
-
-  const sections = useMemo(() => [
-    {
-      title: t('docs.syntaxTitle'),
-      description: t('docs.syntaxDesc'),
-      href: '/docs/syntax',
-      icon: Sparkles,
-    },
-    {
-      title: t('nav.guides'),
-      description: `${GUIDES.length} ${t('docs.guidesDesc')}`,
-      href: '/guides',
-      icon: BookOpen,
-    },
-    {
-      title: 'Archetypes & Metagame',
-      description: 'Browse MTG archetypes across formats with meta share percentages and signature cards.',
-      href: '/archetypes',
-      icon: BookOpen,
-    },
-    {
-      title: 'Market Trends',
-      description: 'Track daily and weekly MTG card price movers — biggest gainers and losers.',
-      href: '/market',
-      icon: TrendingUp,
-    },
-    {
-      title: 'Deck Builder',
-      description: 'Build, save, and share MTG decks with full format validation and card suggestions.',
-      href: '/deckbuilder',
-      icon: FileText,
-    },
-    {
-      title: 'Browse Community Decks',
-      description: 'Explore tournament and community-submitted decks across all formats.',
-      href: '/decks',
-      icon: BookOpen,
-    },
-    {
-      title: 'Combo Finder',
-      description: 'Discover card combos and synergy packages for your deck or commander.',
-      href: '/combos',
-      icon: Sparkles,
-    },
-    {
-      title: t('docs.faqTitle'),
-      description: t('docs.faqDesc'),
-      href: '/#faq',
-      icon: FileText,
-    },
-  ], [t]);
+  const sections = useMemo(
+    () => [
+      {
+        title: t('docs.syntaxTitle', 'Search Syntax Cheat Sheet'),
+        description: t('docs.syntaxDesc', 'Translate common natural phrases into Scryfall operators.'),
+        href: '/docs/syntax',
+        icon: Sparkles,
+      },
+      {
+        title: t('nav.guides', 'Guides'),
+        description: `${GUIDES.length} ${t('docs.guidesDesc', 'progressive guides')}`,
+        href: '/guides',
+        icon: BookOpen,
+      },
+      {
+        title: t('docs.archetypesTitle', 'Archetypes & Metagame'),
+        description: t(
+          'docs.archetypesDesc',
+          'Browse MTG archetypes across formats with meta share percentages and signature cards.',
+        ),
+        href: '/archetypes',
+        icon: BookOpen,
+      },
+      {
+        title: t('docs.marketTrendsTitle', 'Market Trends'),
+        description: t(
+          'docs.marketTrendsDesc',
+          'Track daily and weekly MTG card price movers - biggest gainers and losers.',
+        ),
+        href: '/market',
+        icon: TrendingUp,
+      },
+      {
+        title: t('docs.deckBuilderTitle', 'Deck Builder'),
+        description: t(
+          'docs.deckBuilderDesc',
+          'Build, save, and share MTG decks with full format validation and card suggestions.',
+        ),
+        href: '/deckbuilder',
+        icon: FileText,
+      },
+      {
+        title: t('docs.communityDecksTitle', 'Browse Community Decks'),
+        description: t(
+          'docs.communityDecksDesc',
+          'Explore tournament and community-submitted decks across all formats.',
+        ),
+        href: '/decks',
+        icon: BookOpen,
+      },
+      {
+        title: t('docs.comboFinderTitle', 'Combo Finder'),
+        description: t(
+          'docs.comboFinderDesc',
+          'Discover card combos and synergy packages for your deck or commander.',
+        ),
+        href: '/combos',
+        icon: Sparkles,
+      },
+      {
+        title: t('docs.faqTitle'),
+        description: t('docs.faqDesc'),
+        href: '/#faq',
+        icon: FileText,
+      },
+    ],
+    [t],
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-background relative overflow-x-hidden">
@@ -110,35 +127,46 @@ export default function DocsIndex() {
         <div className="max-w-2xl mx-auto space-y-10">
           <header className="space-y-4 text-center">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-foreground">
-              OffMeta Documentation
+              {t('docs.pageTitle', 'OffMeta Documentation')}
             </h1>
             <p className="text-lg text-muted-foreground max-w-lg mx-auto">
               {t('docs.subtitle')}
             </p>
           </header>
 
-          {/* Substantive intro — gives Googlebot enough prose to assess page quality */}
           <section className="prose prose-sm prose-invert max-w-none text-muted-foreground space-y-3 text-sm leading-relaxed border-b border-border/30 pb-8">
             <p>
-              OffMeta is a natural language Magic: The Gathering card search engine. Instead of
-              learning Scryfall's query syntax, you describe what you need in plain English —
-              <em> "cheap green ramp spells," "blue flying creatures under $2," "commander-legal
-              board wipes"</em> — and OffMeta translates it into a valid Scryfall query and
-              returns real card results instantly.
+              {t(
+                'docs.intro1',
+                'OffMeta is a natural language Magic: The Gathering card search engine. Instead of learning Scryfall\'s query syntax, you describe what you need in plain English -',
+              )}{' '}
+              <em>
+                {t(
+                  'docs.introExamples',
+                  '"cheap green ramp spells," "blue flying creatures under $2," "commander-legal board wipes"',
+                )}
+              </em>{' '}
+              {t(
+                'docs.intro1Tail',
+                'and OffMeta translates it into a valid Scryfall query and returns real card results instantly.',
+              )}
             </p>
             <p>
-              This documentation covers everything you need to get the most out of OffMeta: a
-              full <strong>Search Syntax Cheat Sheet</strong> mapping natural phrases to Scryfall
-              operators, <strong>{GUIDES.length} progressive search guides</strong> from beginner
-              creature-type searches to expert multi-constraint queries, and a{' '}
-              <strong>FAQ</strong> answering common questions about how the translation engine
-              works.
+              {t(
+                'docs.intro2',
+                'This documentation covers everything you need to get the most out of OffMeta: a full Search Syntax Cheat Sheet mapping natural phrases to Scryfall operators,',
+              )}{' '}
+              <strong>{GUIDES.length} {t('docs.progressiveGuides', 'progressive search guides')}</strong>{' '}
+              {t(
+                'docs.intro2Tail',
+                'from beginner creature-type searches to expert multi-constraint queries, and a FAQ answering common questions about how the translation engine works.',
+              )}
             </p>
             <p>
-              Whether you are building a Commander deck, looking for budget staples, searching
-              by keyword ability, or hunting for tribal synergy pieces, the guides below teach
-              you the patterns OffMeta understands — so your natural language searches get more
-              accurate results.
+              {t(
+                'docs.intro3',
+                'Whether you are building a Commander deck, looking for budget staples, searching by keyword ability, or hunting for tribal synergy pieces, the guides below teach you the patterns OffMeta understands - so your natural language searches get more accurate results.',
+              )}
             </p>
           </section>
 
@@ -183,39 +211,39 @@ export default function DocsIndex() {
             </div>
           </section>
 
-          {/* Additional substantive content for search indexing */}
           <section className="space-y-3 border-t border-border/30 pt-8 text-sm text-muted-foreground leading-relaxed">
-            <h2 className="text-base font-semibold text-foreground">How OffMeta Search Works</h2>
+            <h2 className="text-base font-semibold text-foreground">
+              {t('docs.howItWorksTitle', 'How OffMeta Search Works')}
+            </h2>
             <p>
-              OffMeta uses a combination of deterministic rule matching and AI translation to
-              convert your natural language input into valid{' '}
+              {t(
+                'docs.howItWorksBody1',
+                'OffMeta uses a combination of deterministic rule matching and AI translation to convert your natural language input into valid',
+              )}{' '}
               <a
                 href="https://scryfall.com/docs/syntax"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"
               >
-                Scryfall search syntax
+                {t('docs.scryfallSyntaxLink', 'Scryfall search syntax')}
               </a>
-              . Common patterns — colors, creature types, formats, price ranges, keywords — are
-              resolved instantly using a curated rule set, with no AI latency. Complex or
-              ambiguous queries fall back to AI translation so results remain accurate even for
-              unusual requests.
+              {t(
+                'docs.howItWorksBody1Tail',
+                '. Common patterns - colors, creature types, formats, price ranges, keywords - are resolved instantly using a curated rule set, with no AI latency. Complex or ambiguous queries fall back to AI translation so results remain accurate even for unusual requests.',
+              )}
             </p>
             <p>
-              Scryfall is the most comprehensive Magic: The Gathering card database available,
-              covering every card ever printed including oracle text, rulings, prices, legalities,
-              and alternate art printings. OffMeta acts as the natural language layer on top of
-              Scryfall — you describe what you need, OffMeta writes the Scryfall query, and
-              Scryfall returns the matching cards.
+              {t(
+                'docs.howItWorksBody2',
+                'Scryfall is the most comprehensive Magic: The Gathering card database available, covering every card ever printed including oracle text, rulings, prices, legalities, and alternate art printings. OffMeta acts as the natural language layer on top of Scryfall - you describe what you need, OffMeta writes the Scryfall query, and Scryfall returns the matching cards.',
+              )}
             </p>
             <p>
-              The search guides cover the most common MTG search patterns: finding cards by{' '}
-              <strong>creature type</strong>, filtering by <strong>color identity</strong>,
-              setting <strong>budget price limits</strong>, checking <strong>format
-              legality</strong>, searching by <strong>keyword ability</strong>, finding{' '}
-              <strong>ramp and card draw</strong> effects, building <strong>tribal
-              synergy</strong> packages, and combining multiple constraints in a single query.
+              {t(
+                'docs.howItWorksBody3',
+                'The search guides cover the most common MTG search patterns: finding cards by creature type, filtering by color identity, setting budget price limits, checking format legality, searching by keyword ability, finding ramp and card draw effects, building tribal synergy packages, and combining multiple constraints in a single query.',
+              )}
             </p>
           </section>
         </div>

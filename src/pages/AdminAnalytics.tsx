@@ -53,6 +53,7 @@ import { Footer } from '@/components/Footer';
 import { Header } from '@/components/Header';
 import { SkipLinks } from '@/components/SkipLinks';
 import { useAuth, useUserRole, useAdminAnalyticsData } from '@/hooks';
+import { useTranslation } from '@/lib/i18n';
 import { PipelineHealthIndicator } from '@/pages/admin-analytics/components/PipelineHealthIndicator';
 import { AnalyticsChartsSection } from '@/pages/admin-analytics/components/AnalyticsChartsSection';
 import { FeedbackQueuePanel } from '@/pages/admin-analytics/components/FeedbackQueuePanel';
@@ -60,6 +61,7 @@ import { TranslationRulesPanel } from '@/pages/admin-analytics/components/Transl
 import { exportToCsv } from '@/pages/admin-analytics/utils/exportCsv';
 
 export default function AdminAnalytics() {
+  const { t } = useTranslation();
   const { user, isLoading: authLoading } = useAuth();
   const { hasRole: isAdmin, isLoading: roleLoading } = useUserRole('admin');
   const navigate = useNavigate();
@@ -105,7 +107,7 @@ export default function AdminAnalytics() {
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back
+            {t('common.back', 'Back')}
           </Link>
 
           {/* Page header with controls */}
@@ -113,19 +115,22 @@ export default function AdminAnalytics() {
             <div className="space-y-1">
               <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
                 <BarChart3 className="h-5 w-5" />
-                Search Analytics
+                {t('adminAnalytics.title', 'Search Analytics')}
                 {hook.isLive && (
                   <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success">
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-success" />
                     </span>
-                    Live
+                    {t('adminAnalytics.live', 'Live')}
                   </span>
                 )}
               </h1>
               <p className="text-sm text-muted-foreground">
-                Translation pipeline performance and query insights
+                {t(
+                  'adminAnalytics.subtitle',
+                  'Translation pipeline performance and query insights',
+                )}
               </p>
               <PipelineHealthIndicator />
               <Link

@@ -6,36 +6,38 @@
 
 import { Fragment } from 'react';
 import { MessageSquare, Sparkles, LayoutGrid } from 'lucide-react';
-
-const STEPS = [
-  {
-    icon: MessageSquare,
-    number: '1',
-    title: 'Describe what you need',
-    detail: '"budget board wipes under $5"',
-  },
-  {
-    icon: Sparkles,
-    number: '2',
-    title: 'We translate it',
-    detail: 'AI converts to precise Scryfall syntax',
-  },
-  {
-    icon: LayoutGrid,
-    number: '3',
-    title: 'Get real results',
-    detail: 'Instant cards from the full MTG database',
-  },
-] as const;
+import { useTranslation } from '@/lib/i18n';
 
 export function HowItWorksSection() {
+  const { t } = useTranslation();
+  const STEPS = [
+    {
+      icon: MessageSquare,
+      number: '1',
+      title: t('howItWorks.step1Title', 'Describe what you need'),
+      detail: t('howItWorks.step1Detail', '"budget board wipes under $5"'),
+    },
+    {
+      icon: Sparkles,
+      number: '2',
+      title: t('howItWorks.step2Title', 'We translate it'),
+      detail: t('howItWorks.step2Detail', 'AI converts to precise Scryfall syntax'),
+    },
+    {
+      icon: LayoutGrid,
+      number: '3',
+      title: t('howItWorks.step3Title', 'Get real results'),
+      detail: t('howItWorks.step3Detail', 'Instant cards from the full MTG database'),
+    },
+  ] as const;
+
   return (
     <section
       className="container-main py-12 sm:py-16"
-      aria-label="How it works"
+      aria-label={t('howItWorks.label', 'How it works')}
     >
       <h2 className="text-center text-xl sm:text-2xl lg:text-3xl font-semibold text-foreground mb-10 sm:mb-14 tracking-tight">
-        How it works
+        {t('howItWorks.heading', 'How it works')}
       </h2>
 
       {/* Desktop: horizontal timeline */}

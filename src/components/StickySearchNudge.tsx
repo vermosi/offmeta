@@ -9,6 +9,7 @@ import { Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/useMobile';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useTranslation } from '@/lib/i18n';
 
 const NUDGE_QUERY = 'budget board wipes under $5';
 const DISMISS_KEY = 'offmeta_nudge_dismissed';
@@ -25,6 +26,7 @@ export function StickySearchNudge({
   const isMobile = useIsMobile();
   const [visible, setVisible] = useState(false);
   const { trackEvent } = useAnalytics();
+  const { t } = useTranslation();
   const impressionTracked = useRef(false);
 
   useEffect(() => {
@@ -73,7 +75,8 @@ export function StickySearchNudge({
         >
           <Search className="h-4 w-4 text-accent flex-shrink-0" aria-hidden="true" />
           <span>
-            Try: <span className="font-medium text-foreground">{NUDGE_QUERY}</span>
+            {t('nudge.tryPrefix', 'Try:')}{' '}
+            <span className="font-medium text-foreground">{NUDGE_QUERY}</span>
           </span>
         </button>
         <Button
@@ -81,7 +84,7 @@ export function StickySearchNudge({
           size="sm"
           onClick={dismiss}
           className="h-8 w-8 p-0 flex-shrink-0"
-          aria-label="Dismiss"
+          aria-label={t('nudge.dismiss', 'Dismiss')}
         >
           <X className="h-4 w-4" aria-hidden="true" />
         </Button>

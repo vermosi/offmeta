@@ -4,30 +4,35 @@
  */
 
 import { Eye, Zap, Gift } from 'lucide-react';
-
-const PROPS = [
-  {
-    icon: Eye,
-    label: 'Transparent',
-    detail: 'See the exact query running behind the scenes',
-  },
-  {
-    icon: Zap,
-    label: 'Instant',
-    detail: 'Natural language to results in seconds',
-  },
-  {
-    icon: Gift,
-    label: 'Free',
-    detail: 'No account, no signup, no limits',
-  },
-] as const;
+import { useTranslation } from '@/lib/i18n';
 
 export function ValuePropStrip() {
+  const { t } = useTranslation();
+  const PROPS = [
+    {
+      icon: Eye,
+      label: t('value.transparent', 'Transparent'),
+      detail: t(
+        'value.transparentDetail',
+        'See the exact query running behind the scenes',
+      ),
+    },
+    {
+      icon: Zap,
+      label: t('value.instant', 'Instant'),
+      detail: t('value.instantDetail', 'Natural language to results in seconds'),
+    },
+    {
+      icon: Gift,
+      label: t('value.free', 'Free'),
+      detail: t('value.freeDetail', 'No account, no signup, no limits'),
+    },
+  ] as const;
+
   return (
     <section
       className="container-main pb-12 sm:pb-16"
-      aria-label="Why use OffMeta"
+      aria-label={t('value.sectionLabel', 'Why use OffMeta')}
     >
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-8 stagger-children max-w-4xl mx-auto">
         {PROPS.map(({ icon: Icon, label, detail }) => (

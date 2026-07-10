@@ -45,6 +45,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
+import { useTranslation } from '@/lib/i18n';
 
 interface CuratedSearch {
   id: string;
@@ -96,6 +97,7 @@ function slugify(text: string): string {
 }
 
 export default function AdminCuratedSearches() {
+  const { t } = useTranslation();
   const { user, isLoading: authLoading } = useAuth();
   const { hasRole: isAdmin, isLoading: roleLoading } = useUserRole('admin');
   const navigate = useNavigate();
@@ -128,7 +130,7 @@ export default function AdminCuratedSearches() {
       .order('priority', { ascending: false });
 
     if (error) {
-      toast.error('Failed to load curated searches');
+      toast.error(t('adminCurated.loadFailed', 'Failed to load curated searches'));
     } else {
       setSearches((data ?? []) as CuratedSearch[]);
     }
@@ -165,10 +167,12 @@ export default function AdminCuratedSearches() {
       .eq('id', id);
 
     if (error) {
-      toast.error('Failed to toggle status');
+      toast.error(t('adminCurated.toggleFailed', 'Failed to toggle status'));
       setSearches(prev);
     } else {
-      toast.success(!current ? 'Activated' : 'Deactivated');
+      toast.success(
+        !current ? t('adminCurated.activated', 'Activated') : t('adminCurated.deactivated', 'Deactivated'),
+      );
     }
   };
 
@@ -236,18 +240,23 @@ export default function AdminCuratedSearches() {
           })
           .eq('id', editingId);
         if (error) throw error;
-        toast.success('Updated');
+        toast.success(t('common.updated', 'Updated'));
       } else {
         const { error } = await supabase
           .from('curated_searches')
           .insert([form]);
         if (error) throw error;
-        toast.success('Created');
+        toast.success(t('common.created', 'Created'));
       }
       setDialogOpen(false);
       fetchSearches();
     } catch (err: unknown) {
-      toast.error(`Save failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      toast.error(
+        t('adminCurated.saveFailed', 'Save failed: {message}').replace(
+          '{message}',
+          err instanceof Error ? err.message : 'Unknown error',
+        ),
+      );
     } finally {
       setSaving(false);
     }
@@ -261,9 +270,9 @@ export default function AdminCuratedSearches() {
       .delete()
       .eq('id', deleteId);
     if (error) {
-      toast.error('Delete failed');
+      toast.error(t('common.deleteFailed', 'Delete failed'));
     } else {
-      toast.success('Deleted');
+      toast.success(t('common.deleted', 'Deleted'));
       setSearches((s) => s.filter((x) => x.id !== deleteId));
     }
     setDeleteId(null);
@@ -296,15 +305,22 @@ export default function AdminCuratedSearches() {
             <div>
               <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
                 <FileText className="h-5 w-5 text-primary" />
-                Curated Searches
+                {t('adminCurated.title', 'Curated Searches')}
               </h1>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {searches.length} total · {activeCount} active · {editorialCount} editorial · {autoCount} auto-promoted
+                {t(
+                  'adminCurated.summary',
+                  '{total} total · {active} active · {editorial} editorial · {auto} auto-promoted',
+                )
+                  .replace('{total}', String(searches.length))
+                  .replace('{active}', String(activeCount))
+                  .replace('{editorial}', String(editorialCount))
+                  .replace('{auto}', String(autoCount))}
               </p>
             </div>
           </div>
           <Button onClick={openCreate} size="sm" className="gap-1.5">
-            <Plus className="h-4 w-4" /> New Search
+            <Plus className="h-4 w-4" /> {t('adminCurated.newSearch', 'New Search')}
           </Button>
         </div>
 
