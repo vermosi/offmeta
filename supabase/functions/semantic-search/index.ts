@@ -30,6 +30,12 @@ import {
 import { buildFallbackQuery, applyFiltersToQuery } from './fallback.ts';
 import { logTranslation, createLogger, flushLogQueue } from './logging.ts';
 import { createDiagnosticsResponse, validateSearchRequest } from './request.ts';
+import {
+  buildPerfLogFields,
+  createPipelineResponse,
+  createSearchFallbackResponse,
+  createSearchSuccessResponse,
+} from './responses.ts';
 import { runPipeline, type PipelineContext } from './pipeline/index.ts';
 import {
   validateAIResponse,
@@ -278,19 +284,6 @@ serve(async (req) => {
     }
   };
 
-  const getPerfLogFields = (source: string, responseTimeMs: number) => ({
-    source,
-    responseTimeMs,
-    stageDurationsMs: {
-      deterministic: stageDurationsMs.deterministic ?? null,
-      cache: stageDurationsMs.cache ?? null,
-      pattern: stageDurationsMs.pattern ?? null,
-      preTranslate: stageDurationsMs.preTranslate ?? null,
-      ai: stageDurationsMs.ai ?? null,
-      fallback: stageDurationsMs.fallback ?? null,
-    },
-  });
-
   const jsonHeaders = {
     ...corsHeaders,
     'Content-Type': 'application/json',
@@ -363,25 +356,17 @@ serve(async (req) => {
       const responseTimeMs = Date.now() - requestStartTime;
       logInfo(
         'request_completed',
-        getPerfLogFields('forced_fallback', responseTimeMs),
+        buildPerfLogFields(stageDurationsMs, 'forced_fallback', responseTimeMs),
       );
-
-      return new Response(
-        JSON.stringify({
-          originalQuery: query,
-          scryfallQuery: fallbackResult.sanitized,
-          explanation: {
-            readable: `Searching for: ${query}`,
-            assumptions: ['Using forced fallback translation'],
-            confidence: 0.6,
-          },
-          validationIssues: fallbackResult.issues,
-          responseTimeMs,
-          success: true,
-          fallback: true,
-          source: 'forced_fallback',
-        }),
-        { headers: jsonHeaders },
+      return createSearchFallbackResponse(
+        query,
+        fallbackResult.sanitized,
+        `Searching for: ${query}`,
+        ['Using forced fallback translation'],
+        responseTimeMs,
+        'forced_fallback',
+        jsonHeaders,
+        { validationIssues: fallbackResult.issues },
       );
     }
 
@@ -396,7 +381,7 @@ serve(async (req) => {
       });
       logInfo(
         'request_completed',
-        getPerfLogFields('pattern_match', responseTimeMs),
+        buildPerfLogFields(stageDurationsMs, 'pattern_match', responseTimeMs),
       );
 
       setCachedResult(query, filters, earlyHardcodedMatch0, cacheSalt);
@@ -413,15 +398,12 @@ serve(async (req) => {
       );
       flushLogQueue();
 
-      return new Response(
-        JSON.stringify({
-          originalQuery: query,
-          ...earlyHardcodedMatch0,
-          responseTimeMs,
-          success: true,
-          source: 'pattern_match',
-        }),
-        { headers: jsonHeaders },
+      return createSearchSuccessResponse(
+        query,
+        earlyHardcodedMatch0,
+        responseTimeMs,
+        'pattern_match',
+        jsonHeaders,
       );
     }
 
@@ -505,19 +487,19 @@ serve(async (req) => {
         );
         flushLogQueue();
 
-        return new Response(
-          JSON.stringify({
-            originalQuery: query,
+        return createSearchSuccessResponse(
+          query,
+          {
             scryfallQuery: validation.sanitized,
             explanation: {
               readable: `Searching for: ${query}`,
               assumptions: fastResult.intent.warnings,
               confidence: isKnownCard ? 0.95 : 0.9,
             },
-            success: true,
-            source: 'deterministic',
-          }),
-          { headers: jsonHeaders },
+          },
+          responseTimeMs,
+          'deterministic',
+          jsonHeaders,
         );
       }
     }
@@ -551,25 +533,7 @@ serve(async (req) => {
         setPersistentCache(query, filters, cachePayload, cacheSalt);
       }
 
-      return new Response(
-        JSON.stringify({
-          originalQuery: query,
-          scryfallQuery: pipelineResult.finalQuery,
-          explanation: pipelineResult.explanation,
-          intent: pipelineResult.intent,
-          slots: pipelineResult.slots,
-          concepts: pipelineResult.concepts.map((c) => ({
-            id: c.conceptId,
-            confidence: c.confidence,
-            category: c.category,
-          })),
-          responseTimeMs: pipelineResult.responseTimeMs,
-          success: true,
-          source: pipelineResult.source,
-          debug: pipelineResult.debug,
-        }),
-        { headers: jsonHeaders },
-      );
+      return createPipelineResponse(query, pipelineResult, jsonHeaders);
     }
 
     // 3. Start cache lookup in parallel, but do not block deterministic fast-paths on it.
@@ -612,7 +576,7 @@ serve(async (req) => {
       const responseTimeMs = Date.now() - requestStartTime;
       logInfo(
         'request_completed',
-        getPerfLogFields('deterministic', responseTimeMs),
+        buildPerfLogFields(stageDurationsMs, 'deterministic', responseTimeMs),
       );
       logTranslation(
         query,
@@ -664,7 +628,10 @@ serve(async (req) => {
       if (cached) {
         const responseTimeMs = Date.now() - requestStartTime;
         logInfo('cache_hit', { query: query.substring(0, 50), responseTimeMs });
-        logInfo('request_completed', getPerfLogFields('cache', responseTimeMs));
+        logInfo(
+          'request_completed',
+          buildPerfLogFields(stageDurationsMs, 'cache', responseTimeMs),
+        );
         logTranslation(
           query,
           cached.scryfallQuery,
@@ -678,16 +645,12 @@ serve(async (req) => {
         );
         flushLogQueue(); // fire-and-forget — don't block the response
 
-        return new Response(
-          JSON.stringify({
-            originalQuery: query,
-            ...cached,
-            responseTimeMs: responseTimeMs,
-            success: true,
-            cached: true,
-            source: 'cache',
-          }),
-          { headers: jsonHeaders },
+        return createSearchSuccessResponse(
+          query,
+          { ...cached, cached: true },
+          responseTimeMs,
+          'cache',
+          jsonHeaders,
         );
       }
     }
@@ -704,7 +667,7 @@ serve(async (req) => {
       });
       logInfo(
         'request_completed',
-        getPerfLogFields('pattern_match', responseTimeMs),
+        buildPerfLogFields(stageDurationsMs, 'pattern_match', responseTimeMs),
       );
 
       setCachedResult(query, filters, patternMatch, cacheSalt);
@@ -721,15 +684,12 @@ serve(async (req) => {
       );
       flushLogQueue(); // fire-and-forget
 
-      return new Response(
-        JSON.stringify({
-          originalQuery: query,
-          ...patternMatch,
-          responseTimeMs: responseTimeMs,
-          success: true,
-          source: 'pattern_match',
-        }),
-        { headers: jsonHeaders },
+      return createSearchSuccessResponse(
+        query,
+        patternMatch,
+        responseTimeMs,
+        'pattern_match',
+        jsonHeaders,
       );
     }
 
@@ -744,25 +704,16 @@ serve(async (req) => {
       const responseTimeMs = Date.now() - requestStartTime;
       logInfo(
         'request_completed',
-        getPerfLogFields('fallback', responseTimeMs),
+        buildPerfLogFields(stageDurationsMs, 'fallback', responseTimeMs),
       );
-      return new Response(
-        JSON.stringify({
-          originalQuery: query,
-          scryfallQuery: fallback.sanitized,
-          explanation: {
-            readable: `Searching for: ${query}`,
-            assumptions: [
-              'AI temporarily unavailable - using simplified search',
-            ],
-            confidence: 0.6,
-          },
-          responseTimeMs,
-          success: true,
-          fallback: true,
-          source: 'fallback',
-        }),
-        { headers: jsonHeaders },
+      return createSearchFallbackResponse(
+        query,
+        fallback.sanitized,
+        `Searching for: ${query}`,
+        ['AI temporarily unavailable - using simplified search'],
+        responseTimeMs,
+        'fallback',
+        jsonHeaders,
       );
     }
 
@@ -778,7 +729,7 @@ serve(async (req) => {
       });
       logInfo(
         'request_completed',
-        getPerfLogFields('raw_syntax', responseTimeMs),
+        buildPerfLogFields(stageDurationsMs, 'raw_syntax', responseTimeMs),
       );
       logTranslation(
         query,
@@ -805,15 +756,12 @@ serve(async (req) => {
 
       setCachedResult(query, filters, rawResult, cacheSalt);
 
-      return new Response(
-        JSON.stringify({
-          originalQuery: query,
-          ...rawResult,
-          responseTimeMs,
-          success: true,
-          source: 'raw_syntax',
-        }),
-        { headers: jsonHeaders },
+      return createSearchSuccessResponse(
+        query,
+        rawResult,
+        responseTimeMs,
+        'raw_syntax',
+        jsonHeaders,
       );
     }
 
@@ -990,7 +938,11 @@ serve(async (req) => {
           });
           logInfo(
             'request_completed',
-            getPerfLogFields('pattern_match', responseTimeMs),
+            buildPerfLogFields(
+              stageDurationsMs,
+              'pattern_match',
+              responseTimeMs,
+            ),
           );
 
           const readableDesc = dedupedConcepts
@@ -1026,20 +978,19 @@ serve(async (req) => {
           );
           flushLogQueue();
 
-          return new Response(
-            JSON.stringify({
-              originalQuery: query,
+          return createSearchSuccessResponse(
+            query,
+            {
               scryfallQuery: validation.sanitized,
               explanation: {
                 readable: `Searching for: ${readableDesc}`,
                 assumptions: [`Matched concepts: ${conceptIds}`],
                 confidence: concepts[0].confidence,
               },
-              responseTimeMs,
-              success: true,
-              source: 'concept_match',
-            }),
-            { headers: jsonHeaders },
+            },
+            responseTimeMs,
+            'concept_match',
+            jsonHeaders,
           );
         } else if (concepts.length > 0 && coverageRatio < 0.4) {
           logInfo('concept_match_low_coverage', {
@@ -1076,22 +1027,16 @@ serve(async (req) => {
         deadlineMs: requestBudget.deadlineMs,
       });
 
-      return new Response(
-        JSON.stringify({
-          originalQuery: query,
-          scryfallQuery: fallback.sanitized,
-          explanation: {
-            readable: `Searching for: ${query}`,
-            assumptions,
-            confidence,
-          },
-          responseTimeMs,
-          budgetExceededAtStage: stage,
-          success: true,
-          fallback: true,
-          source: 'budget_fallback',
-        }),
-        { headers: jsonHeaders },
+      return createSearchFallbackResponse(
+        query,
+        fallback.sanitized,
+        `Searching for: ${query}`,
+        assumptions,
+        responseTimeMs,
+        'budget_fallback',
+        jsonHeaders,
+        { budgetExceededAtStage: stage },
+        confidence,
       );
     };
 
@@ -1489,7 +1434,10 @@ serve(async (req) => {
       // 9. Success Housekeeping
       recordCircuitSuccess();
       const responseTimeMs = Date.now() - requestStartTime;
-      logInfo('request_completed', getPerfLogFields('ai', responseTimeMs));
+      logInfo(
+        'request_completed',
+        buildPerfLogFields(stageDurationsMs, 'ai', responseTimeMs),
+      );
 
       // Cache AI results more aggressively (>= 0.65 instead of 0.8) to prevent duplicate AI calls
       if (useCache && finalResult.explanation.confidence >= 0.65) {
@@ -1533,17 +1481,16 @@ serve(async (req) => {
       });
       flushLogQueue(); // fire-and-forget
 
-      return new Response(
-        JSON.stringify({
-          originalQuery: query,
+      return createSearchSuccessResponse(
+        query,
+        {
           ...finalResult,
           ...(detectedCardName ? { detectedCardName } : {}),
           validationIssues: validation.issues,
-          responseTimeMs: responseTimeMs,
-          success: true,
-          source: aiValidationNote ? 'ai_recovered' : 'ai',
-        }),
-        { headers: jsonHeaders },
+        },
+        responseTimeMs,
+        aiValidationNote ? 'ai_recovered' : 'ai',
+        jsonHeaders,
       );
     } catch (e) {
       if (!requestBudget.hasBudgetFor(1)) {
@@ -1559,23 +1506,20 @@ serve(async (req) => {
       const responseTimeMs = Date.now() - requestStartTime;
       logInfo(
         'request_completed',
-        getPerfLogFields('ai_failure_fallback', responseTimeMs),
-      );
-      return new Response(
-        JSON.stringify({
-          originalQuery: query,
-          scryfallQuery: fallback.sanitized,
-          explanation: {
-            readable: `Searching for: ${query}`,
-            assumptions: ['AI failed - using fallback'],
-            confidence: 0.5,
-          },
+        buildPerfLogFields(
+          stageDurationsMs,
+          'ai_failure_fallback',
           responseTimeMs,
-          success: true,
-          fallback: true,
-          source: 'ai_failure_fallback',
-        }),
-        { headers: jsonHeaders },
+        ),
+      );
+      return createSearchFallbackResponse(
+        query,
+        fallback.sanitized,
+        `Searching for: ${query}`,
+        ['AI failed - using fallback'],
+        responseTimeMs,
+        'ai_failure_fallback',
+        jsonHeaders,
       );
     }
   } catch {
@@ -1583,7 +1527,7 @@ serve(async (req) => {
     const responseTimeMs = Date.now() - requestStartTime;
     logWarn(
       'request_completed',
-      getPerfLogFields('internal_error', responseTimeMs),
+      buildPerfLogFields(stageDurationsMs, 'internal_error', responseTimeMs),
     );
     return new Response(
       JSON.stringify({ error: 'Internal search error', success: false }),
