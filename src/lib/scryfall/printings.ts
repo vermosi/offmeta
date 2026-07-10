@@ -7,6 +7,7 @@
 import type { ScryfallCard } from '@/types/card';
 import { logger } from '@/lib/core/logger';
 import { rateLimitedFetch } from './fetch-utils';
+import { getLocalCardPrintings } from '@/services/local-cards';
 
 const BASE_URL = 'https://api.scryfall.com';
 
@@ -67,6 +68,38 @@ export async function getCardPrintings(
   // Return cached data if still valid
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
     return cached.data;
+  }
+
+  try {
+    const localPrintings = await getLocalCardPrintings(cardName);
+    if (localPrintings.length > 0) {
+      const mapped = localPrintings.map((printing) => ({
+        id: printing.id,
+        set: printing.set,
+        set_name: printing.set_name,
+        collector_number: printing.collector_number,
+        rarity: printing.rarity ?? 'common',
+        artist: printing.artist ?? undefined,
+        prices: printing.prices ?? {},
+        image_uris: printing.image_url
+          ? {
+              small: printing.image_url,
+              normal: printing.image_url,
+              large: printing.image_url,
+            }
+          : undefined,
+        purchase_uris: printing.purchase_uris ?? undefined,
+        released_at: printing.released_at ?? '',
+        lang: printing.lang ?? 'en',
+      }));
+
+      printingsCache.set(cacheKey, { data: mapped, timestamp: Date.now() });
+      return mapped;
+    }
+  } catch (error) {
+    logger.warn('Local printings lookup failed, falling back to Scryfall', {
+      error,
+    });
   }
 
   try {

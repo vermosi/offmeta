@@ -79,6 +79,8 @@ export function HeroCardBackdrop() {
   const [retryTick, setRetryTick] = useState<Record<number, number>>({});
   // Persist attempt counts across renders without triggering re-renders.
   const attemptsRef = useRef<Record<number, number>>({});
+  // Avoid queueing the warmup work more than once per mount.
+  const prefetchedRef = useRef(false);
 
   const MAX_RETRIES = 3;
   const RETRY_DELAYS_MS = [400, 1200, 3000];
@@ -110,44 +112,51 @@ export function HeroCardBackdrop() {
   // fetch when they scroll or animate into view.
   const CENTER_INDEXES = useMemo(() => new Set([2, 3]), []);
 
-  // Prefetch ONLY the center cards right after mount so we warm the cache
-  // for the visually dominant slots without burning bandwidth on the outer
-  // pair (which is hidden on mobile and less critical on desktop).
+  // Warm the cache for the visually dominant slots without competing with
+  // the actual above-the-fold text. This uses prefetch rather than preload
+  // so the browser can keep it lower priority when needed.
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || prefetchedRef.current) return;
 
-    const links: HTMLLinkElement[] = [];
-    // Defer to idle so we don't fight the LCP image for bandwidth on slow
-    // connections; the eager <img> tags already kick their own fetches.
+    const connection = navigator.connection as
+      | {
+          effectiveType?: string;
+          saveData?: boolean;
+        }
+      | undefined;
+    if (connection?.saveData || connection?.effectiveType === '2g') return;
+
+    prefetchedRef.current = true;
+    const prefetchedLinks: HTMLLinkElement[] = [];
+    const warmupSources = cards.filter((_, i) => CENTER_INDEXES.has(i));
+
     const schedule =
-      (window as unknown as { requestIdleCallback?: (cb: () => void) => number })
-        .requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 0));
+      (window as unknown as {
+        requestIdleCallback?: (
+          cb: () => void,
+          opts?: { timeout: number },
+        ) => number;
+      }).requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1600));
 
-    const handle = schedule(() => {
-      cards.forEach((src, i) => {
-        if (!CENTER_INDEXES.has(i)) return;
-
-        // In-memory Image() kicks the fetch immediately.
-        const img = new Image();
-        img.decoding = 'async';
-        img.src = src;
-
-        // <link rel="preload"> hints the browser cache and shows up in devtools.
-        const link = document.createElement('link');
-        link.rel = 'preload';
-        link.as = 'image';
-        link.href = src;
-        link.fetchPriority = 'high';
-        document.head.appendChild(link);
-        links.push(link);
-      });
-    });
+    const handle = schedule(
+      () => {
+        warmupSources.forEach((src) => {
+          const link = document.createElement('link');
+          link.rel = 'prefetch';
+          link.as = 'image';
+          link.href = src;
+          document.head.appendChild(link);
+          prefetchedLinks.push(link);
+        });
+      },
+      { timeout: 2500 },
+    );
 
     return () => {
       const cancel = (window as unknown as { cancelIdleCallback?: (id: number) => void })
         .cancelIdleCallback;
       if (cancel && typeof handle === 'number') cancel(handle);
-      for (const link of links) link.parentNode?.removeChild(link);
+      for (const link of prefetchedLinks) link.parentNode?.removeChild(link);
     };
   }, [cards, CENTER_INDEXES]);
 
@@ -191,7 +200,7 @@ export function HeroCardBackdrop() {
                 width={200}
                 height={280}
                 loading={isCenter ? 'eager' : 'lazy'}
-                fetchPriority={isCenter ? 'high' : 'low'}
+                fetchPriority={isCenter ? 'auto' : 'low'}
                 decoding="async"
                 onError={handleError(i)}
                 onLoad={handleLoad(i)}

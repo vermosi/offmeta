@@ -9,7 +9,7 @@ export default defineConfig(() => ({
     host: '::',
     port: 8080,
   },
-  plugins: [react(), mcpPlugin()],
+  plugins: [react(), ...(process.env.VITEST ? [] : [mcpPlugin()])],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

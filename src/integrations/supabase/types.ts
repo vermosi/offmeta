@@ -191,6 +191,69 @@ export type Database = {
         }
         Relationships: []
       }
+      card_printings: {
+        Row: {
+          artist: string | null
+          collector_number: string
+          id: string
+          image_url: string | null
+          identifiers: Json | null
+          lang: string
+          mtgjson_uuid: string
+          name: string
+          oracle_id: string
+          prices: Json | null
+          purchase_uris: Json | null
+          rarity: string | null
+          related_cards: Json | null
+          released_at: string | null
+          scryfall_id: string | null
+          set: string
+          set_name: string
+          updated_at: string
+        }
+        Insert: {
+          artist?: string | null
+          collector_number: string
+          id: string
+          image_url?: string | null
+          identifiers?: Json | null
+          lang?: string
+          mtgjson_uuid: string
+          name: string
+          oracle_id: string
+          prices?: Json | null
+          purchase_uris?: Json | null
+          rarity?: string | null
+          related_cards?: Json | null
+          released_at?: string | null
+          scryfall_id?: string | null
+          set: string
+          set_name: string
+          updated_at?: string
+        }
+        Update: {
+          artist?: string | null
+          collector_number?: string
+          id?: string
+          image_url?: string | null
+          identifiers?: Json | null
+          lang?: string
+          mtgjson_uuid?: string
+          name?: string
+          oracle_id?: string
+          prices?: Json | null
+          purchase_uris?: Json | null
+          rarity?: string | null
+          related_cards?: Json | null
+          released_at?: string | null
+          scryfall_id?: string | null
+          set?: string
+          set_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cards: {
         Row: {
           cmc: number

@@ -1,18 +1,16 @@
 /**
  * Root application component.
- * Renders only the lightweight `Index` shell for `/`. Every other route is
- * code-split into the lazy `AppRoutes` module so the homepage entry bundle
- * doesn't include any non-root page references, FullAppProviders, or their
- * dependency chains.
+ * Renders the router shell and delegates route-level code splitting to
+ * `AppRoutes` itself. Keeping the route table eager lets the homepage start
+ * rendering sooner, while individual non-home pages still stay lazy.
  */
 
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from 'next-themes';
 import { I18nProvider } from '@/lib/i18n';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-
-const AppRoutes = lazy(() => import('./AppRoutes'));
+import AppRoutes from './AppRoutes';
 
 const routeFallback = <div className="min-h-screen bg-background" />;
 

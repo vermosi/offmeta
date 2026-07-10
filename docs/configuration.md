@@ -38,6 +38,11 @@ Cron jobs are registered in the database using `pg_cron` (enabled via migration)
 | `topdeck-import-daily` | `0 6 * * *` (06:00 UTC) | `topdeck-import` | Import tournament decklists from TopDeck.gg API |
 | `card-sync-daily` | `0 7 * * *` (07:00 UTC) | `card-sync` | Sync Scryfall card metadata for imported deck cards |
 | `compute-cooccurrence-daily` | `0 8 * * *` (08:00 UTC) | `compute-cooccurrence` | Recompute card co-occurrence synergy graph |
+| `bulk-data-sync-weekly` | `30 4 * * 0` (04:30 UTC Sun) | `bulk-data-sync` | Refresh the full cards table and price snapshots from Scryfall bulk search pages |
+| `card-printings-sync-weekly` | `30 5 * * 0` (05:30 UTC Sun) | `card-printings-sync` | Refresh the printing-level cache from MTGJSON for the deckbuilder and card modals |
+| `warmup-cache-weekly` | `0 4 * * 0` (04:00 UTC Sun) | `warmup-cache` | Pre-seed the query cache with common MTG search patterns |
+| `auto-generate-seo-pages-weekly` | `30 4 * * 0` (04:30 UTC Sun) | `auto-generate-seo-pages` | Generate new SEO pages from popular untranslated queries |
+| `batch-generate-seo-pages-weekly` | `0 5 * * 0` (05:00 UTC Sun) | `batch-generate-seo-pages` | Generate a seeded batch of SEO pages for core search themes |
 | `mtgjson-import-weekly` | `0 4 * * 0` (04:00 UTC Sun) | `mtgjson-import` | Import MTGJSON preconstructed decklists |
 | `sync-card-names-weekly` | `0 5 * * 0` (05:00 UTC Sun) | `sync-card-names` | Refresh card name catalog from Scryfall |
 

@@ -8,7 +8,6 @@
  * @module services/local-cards
  */
 
-import { supabase } from '@/integrations/supabase/client';
 import type { ScryfallCard } from '@/types/card';
 import { logger } from '@/lib/core/logger';
 import { recordHit } from '@/services/hit-rate-tracker';
@@ -18,6 +17,28 @@ import { recordHit } from '@/services/hit-rate-tracker';
 const cardByNameCache = new Map<string, LocalCard | null>();
 const CARD_CACHE_TTL_MS = 30 * 60 * 1000; // 30 min
 const cardCacheTimestamps = new Map<string, number>();
+
+function hasSupabaseConfig(): boolean {
+  try {
+    if (
+      import.meta.env.MODE === 'test' ||
+      (typeof import.meta !== 'undefined' && (import.meta as { vitest?: unknown }).vitest)
+    ) {
+      return false;
+    }
+    return Boolean(
+      import.meta.env.VITE_SUPABASE_URL &&
+        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    );
+  } catch {
+    return false;
+  }
+}
+
+async function getSupabaseClient() {
+  const { supabase } = await import('@/integrations/supabase/client');
+  return supabase;
+}
 
 export interface LocalCard {
   oracle_id: string;
@@ -39,6 +60,36 @@ export interface LocalCardPrice {
   scryfall_id: string | null;
 }
 
+export interface LocalCardPrinting {
+  id: string;
+  scryfall_id: string | null;
+  oracle_id: string;
+  mtgjson_uuid: string;
+  name: string;
+  set: string;
+  set_name: string;
+  collector_number: string;
+  rarity: string | null;
+  artist: string | null;
+  prices: {
+    usd?: string;
+    usd_foil?: string;
+    eur?: string;
+    eur_foil?: string;
+    tix?: string;
+  } | null;
+  image_url: string | null;
+  purchase_uris: {
+    tcgplayer?: string;
+    cardmarket?: string;
+    cardhoarder?: string;
+  } | null;
+  identifiers: Record<string, unknown> | null;
+  related_cards: Record<string, unknown> | null;
+  released_at: string | null;
+  lang: string;
+}
+
 // ── Card lookups ────────────────────────────────────────────────────────────
 
 /**
@@ -46,6 +97,7 @@ export interface LocalCardPrice {
  * Returns null if not found locally.
  */
 export async function getLocalCardByName(name: string): Promise<LocalCard | null> {
+  if (!hasSupabaseConfig()) return null;
   const key = name.toLowerCase();
   const cached = cardByNameCache.get(key);
   const ts = cardCacheTimestamps.get(key);
@@ -54,6 +106,7 @@ export async function getLocalCardByName(name: string): Promise<LocalCard | null
   }
 
   try {
+    const supabase = await getSupabaseClient();
     const { data, error } = await supabase
       .from('cards')
       .select('oracle_id, name, mana_cost, type_line, oracle_text, colors, cmc, image_url, rarity, legalities')
@@ -96,6 +149,7 @@ export async function getLocalCardByName(name: string): Promise<LocalCard | null
 export async function getLocalCardsByNames(names: string[]): Promise<Map<string, LocalCard>> {
   const result = new Map<string, LocalCard>();
   if (names.length === 0) return result;
+  if (!hasSupabaseConfig()) return result;
 
   // Check cache first, collect misses
   const uncached: string[] = [];
@@ -113,6 +167,7 @@ export async function getLocalCardsByNames(names: string[]): Promise<Map<string,
   if (uncached.length === 0) return result;
 
   try {
+    const supabase = await getSupabaseClient();
     // Query in batches of 100 to avoid payload limits
     for (let i = 0; i < uncached.length; i += 100) {
       const batch = uncached.slice(i, i + 100);
@@ -161,7 +216,9 @@ export async function getLocalCardsByNames(names: string[]): Promise<Map<string,
  * Uses a random offset query. Falls back to null if DB is empty.
  */
 export async function getLocalRandomCard(): Promise<LocalCard | null> {
+  if (!hasSupabaseConfig()) return null;
   try {
+    const supabase = await getSupabaseClient();
     // Get approximate count first, then random offset
     const { count } = await supabase
       .from('cards')
@@ -205,8 +262,10 @@ export async function getLocalRandomCard(): Promise<LocalCard | null> {
  */
 export async function localAutocomplete(query: string): Promise<string[]> {
   if (query.length < 2) return [];
+  if (!hasSupabaseConfig()) return [];
 
   try {
+    const supabase = await getSupabaseClient();
     const { data, error } = await supabase
       .from('card_names')
       .select('name')
@@ -231,8 +290,10 @@ export async function getLocalPrices(
 ): Promise<Map<string, LocalCardPrice>> {
   const result = new Map<string, LocalCardPrice>();
   if (cardNames.length === 0) return result;
+  if (!hasSupabaseConfig()) return result;
 
   try {
+    const supabase = await getSupabaseClient();
     // Use distinct-on to get only the latest snapshot per card
     // Query in batches
     for (let i = 0; i < cardNames.length; i += 100) {
@@ -266,6 +327,36 @@ export async function getLocalPrices(
   }
 
   return result;
+}
+
+/**
+ * Get all known printings for a card name from the local card_printings table.
+ * Returns printings ordered by release date descending when available.
+ */
+export async function getLocalCardPrintings(
+  cardName: string,
+): Promise<LocalCardPrinting[]> {
+  const trimmed = cardName.trim();
+  if (!trimmed) return [];
+  if (!hasSupabaseConfig()) return [];
+
+  try {
+    const supabase = await getSupabaseClient();
+    const { data, error } = await supabase
+      .from('card_printings')
+      .select(
+        'id, scryfall_id, mtgjson_uuid, oracle_id, name, set, set_name, collector_number, rarity, artist, prices, image_url, purchase_uris, identifiers, related_cards, released_at, lang',
+      )
+      .ilike('name', trimmed)
+      .order('released_at', { ascending: false, nullsFirst: false })
+      .order('collector_number', { ascending: true });
+
+    if (error || !data) return [];
+    return data as LocalCardPrinting[];
+  } catch (err) {
+    logger.error('Local card printings lookup failed', err);
+    return [];
+  }
 }
 
 /**
