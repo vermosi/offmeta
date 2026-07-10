@@ -1,13 +1,12 @@
 import { getCorsHeaders, requireAdmin, requireServiceRole } from './auth.ts';
 import { checkRateLimit, maybeCleanup } from './rateLimit.ts';
 
-export function buildJsonHeaders(req: Request): Record<string, string> {
-  return { ...getCorsHeaders(req), 'Content-Type': 'application/json' };
-}
-
 export async function requireAdminJob(
   req: Request,
-): Promise<{ authorized: true; corsHeaders: Record<string, string> } | { authorized: false; response: Response }> {
+): Promise<
+  | { authorized: true; corsHeaders: Record<string, string> }
+  | { authorized: false; response: Response }
+> {
   const corsHeaders = getCorsHeaders(req);
   const adminCheck = await requireAdmin(req, corsHeaders);
   if (!adminCheck.authorized) {
@@ -19,7 +18,9 @@ export async function requireAdminJob(
 
 export function requireServiceJob(
   req: Request,
-): { authorized: true; corsHeaders: Record<string, string> } | { authorized: false; response: Response } {
+):
+  | { authorized: true; corsHeaders: Record<string, string> }
+  | { authorized: false; response: Response } {
   const corsHeaders = getCorsHeaders(req);
   const serviceCheck = requireServiceRole(req, corsHeaders);
   if (!serviceCheck.authorized) {
