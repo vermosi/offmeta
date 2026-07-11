@@ -170,12 +170,11 @@ export const UnifiedSearchBar = forwardRef<
   }, [isMobile]);
 
   const placeholder = 'budget board wipes under $5';
-  const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
+  const [, setShowHistoryDropdown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { saveContext } = useSearchContext();
-  const { history, addToHistory, removeFromHistory, clearHistory } =
-    useSearchHistory();
+  const { history, addToHistory } = useSearchHistory();
   const { isSearching, searchPhase, rateLimitCountdown, handleSearch } =
     useSearchHandler({
       query,

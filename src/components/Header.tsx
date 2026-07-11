@@ -13,11 +13,6 @@ import { supabase } from '@/integrations/supabase/client';
 const AuthModal = lazy(() =>
   import('@/components/AuthModal').then((m) => ({ default: m.AuthModal })),
 );
-const NotificationBell = lazy(() =>
-  import('@/components/NotificationBell').then((m) => ({
-    default: m.NotificationBell,
-  })),
-);
 const HeaderDesktopActions = lazy(() =>
   import('@/components/HeaderDesktopActions').then((m) => ({
     default: m.HeaderDesktopActions,
@@ -43,7 +38,6 @@ export function Header() {
   useEffect(() => {
     let isMounted = true;
     if (!user) {
-      setSavedCount(0);
       return () => {
         isMounted = false;
       };
