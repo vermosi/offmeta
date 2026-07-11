@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { parseDecklist } from '@/lib/decklist-parser';
 import Uppy from '@uppy/core';
+// @ts-expect-error - sortablejs has no bundled types
 import Sortable from 'sortablejs';
 import { toast } from '@/hooks';
 import { cn } from '@/lib/core/utils';
@@ -56,8 +57,8 @@ export function DeckImportModal({ open, onOpenChange, onImport }: DeckImportModa
     });
 
     uppy.on('file-added', async (file) => {
-      const data = file.data;
-      if (!(data instanceof File)) return;
+      const data = file.data as Blob | File;
+      if (!(data instanceof Blob)) return;
       const text = await data.text();
       setUploadedFileName(file.name);
       setUploadedText(text);
@@ -171,7 +172,7 @@ export function DeckImportModal({ open, onOpenChange, onImport }: DeckImportModa
       animation: 150,
       handle: '[data-drag-handle="true"]',
       ghostClass: 'opacity-60',
-      onEnd: ({ oldIndex, newIndex }) => {
+      onEnd: ({ oldIndex, newIndex }: { oldIndex?: number; newIndex?: number }) => {
         if (oldIndex == null || newIndex == null || oldIndex === newIndex) return;
         setUploadedCards((current) => {
           const next = [...current];
