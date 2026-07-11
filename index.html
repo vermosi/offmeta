@@ -307,6 +307,12 @@
         gap: 0.75rem;
         justify-content: center;
       }
+      .shell-auth {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        z-index: 20;
+      }
       .shell-form {
         display: flex;
         gap: 0.75rem;
@@ -393,6 +399,17 @@
     <!-- Pre-hydration background placeholder (no text — avoids a flash of
          different content before React renders the real HeroSection). -->
     <main class="shell" id="static-shell">
+      <div class="shell-auth">
+        <button
+          id="home-sign-in-button"
+          type="button"
+          data-testid="home-sign-in-button"
+          onclick="window.__openAuthModal?.()"
+          class="shell-button shell-button-secondary"
+        >
+          Sign in
+        </button>
+      </div>
       <div class="shell-inner">
         <span class="shell-kicker">AI-powered MTG discovery engine</span>
         <h1 class="shell-title">

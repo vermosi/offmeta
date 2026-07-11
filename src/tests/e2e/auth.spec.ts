@@ -14,12 +14,9 @@ test.describe('Auth modal flows', () => {
   test('signup happy path (deterministic mocked equivalent)', async ({
     page,
   }) => {
-    await page.goto('/about');
+    await page.goto('/');
 
-    await page
-      .getByRole('button', { name: /sign in/i })
-      .first()
-      .click();
+    await page.getByTestId('home-sign-in-button').click();
     const dialog = page.getByRole('dialog').first();
     await expect(dialog).toBeVisible();
 
@@ -34,12 +31,9 @@ test.describe('Auth modal flows', () => {
   });
 
   test('signin happy path @e2e-smoke', async ({ page }) => {
-    await page.goto('/about');
+    await page.goto('/');
 
-    await page
-      .getByRole('button', { name: /sign in/i })
-      .first()
-      .click();
+    await page.getByTestId('home-sign-in-button').click();
     const dialog = page.getByRole('dialog').first();
 
     await dialog.getByLabel('Email').fill('existing@example.com');
@@ -50,12 +44,9 @@ test.describe('Auth modal flows', () => {
   });
 
   test('password reset request flow', async ({ page }) => {
-    await page.goto('/about');
+    await page.goto('/');
 
-    await page
-      .getByRole('button', { name: /sign in/i })
-      .first()
-      .click();
+    await page.getByTestId('home-sign-in-button').click();
     const dialog = page.getByRole('dialog').first();
 
     await dialog.getByRole('button', { name: /forgot password\?/i }).click();
