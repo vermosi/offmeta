@@ -33,3 +33,17 @@ export function useQueryIntelligence(query: string) {
     },
   });
 }
+
+export async function fetchQueryIntelligence(
+  query: string,
+): Promise<QueryIntelligence | null> {
+  const normalized = query.trim().toLowerCase();
+  if (normalized.length < 2) return null;
+
+  const { data, error } = await supabase.rpc('get_query_intelligence' as never, {
+    p_query: normalized,
+  } as never);
+  if (error) throw error;
+  const row = ((data as unknown as QueryIntelligence[]) ?? [])[0] ?? null;
+  return row;
+}

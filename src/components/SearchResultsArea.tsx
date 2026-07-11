@@ -4,14 +4,8 @@
  * @module components/SearchResultsArea
  */
 
-import { lazy, useMemo } from 'react';
-import {
-  useBatchPriceHistory,
-  useAuth,
-  type SimilarityData,
-  type DeckIdea,
-  type QuerySuggestion,
-} from '@/hooks';
+import { lazy, Suspense, useMemo } from 'react';
+import { useBatchPriceHistory, useAuth } from '@/hooks';
 
 import { CardItem } from '@/components/CardItem';
 import { CardListItem } from '@/components/CardListItem';
@@ -19,13 +13,10 @@ import { CardImageItem } from '@/components/CardImageItem';
 import {
   SearchResultsSkeleton,
 } from '@/components/SearchResultsSkeleton';
-import { EmptyState } from '@/components/EmptyState';
 import { LoadMoreIndicator } from '@/components/LoadMoreIndicator';
 import { VirtualizedCardGrid } from '@/components/VirtualizedCardGrid';
 import { RelatedCardsStrip } from '@/components/RelatedCardsStrip';
 import { FeatureCrossLinks } from '@/components/FeatureCrossLinks';
-import { SimilarCardsPanel } from '@/components/SimilarCardsPanel';
-import { DeckIdeasPanel } from '@/components/DeckIdeasPanel';
 import { ExplanationPanel } from '@/components/ExplanationPanel';
 import { CLIENT_CONFIG } from '@/lib/config';
 import { useTranslation } from '@/lib/i18n';
@@ -37,6 +28,21 @@ import type { ResultsTab } from '@/components/ResultsTabs';
 
 const ArtLightbox = lazy(() =>
   import('@/components/ArtLightbox').then((m) => ({ default: m.ArtLightbox })),
+);
+const SimilarTabContent = lazy(() =>
+  import('@/components/SimilarTabContent').then((m) => ({
+    default: m.SimilarTabContent,
+  })),
+);
+const DeckIdeasTabContent = lazy(() =>
+  import('@/components/DeckIdeasTabContent').then((m) => ({
+    default: m.DeckIdeasTabContent,
+  })),
+);
+const SearchEmptyState = lazy(() =>
+  import('@/components/SearchEmptyState').then((m) => ({
+    default: m.SearchEmptyState,
+  })),
 );
 
 interface SearchResultsAreaProps {
@@ -75,13 +81,6 @@ interface SearchResultsAreaProps {
   openLightbox: (index: number) => void;
   closeLightbox: () => void;
   // Tab content data
-  similarityData: SimilarityData | null | undefined;
-  similarLoading: boolean;
-  deckIdea: DeckIdea | null | undefined;
-  deckIdeasLoading: boolean;
-  // Query suggestions for empty state
-  querySuggestions: QuerySuggestion[];
-  isCheckingSuggestions: boolean;
   onTrySuggestion: (scryfallQuery: string) => void;
   onRelatedCardClick?: (cardName: string) => void;
   /** Snapshot of the last applied filters; used by the empty state chips. */
@@ -121,12 +120,6 @@ export function SearchResultsArea({
   lightboxIndex,
   openLightbox,
   closeLightbox,
-  similarityData,
-  similarLoading,
-  deckIdea,
-  deckIdeasLoading,
-  querySuggestions,
-  isCheckingSuggestions,
   onTrySuggestion,
   onRelatedCardClick,
   activeFilters,
@@ -337,18 +330,20 @@ export function SearchResultsArea({
                 )
               ) : (
                 <div className="py-12">
-                  <EmptyState
-                    query={searchQuery}
-                    onTryExample={handleTryExample}
-                    suggestions={querySuggestions}
-                    isCheckingSuggestions={isCheckingSuggestions}
-                    onTrySuggestion={onTrySuggestion}
-                    activeFilters={activeFilters}
-                    onApplyFilterPatch={onApplyFilterPatch}
-                    onClearAllFilters={onClearAllFilters}
-                    variant="filtered"
-                    filteredFromCount={cards.length}
-                  />
+                  <Suspense fallback={null}>
+                    <SearchEmptyState
+                      query={searchQuery}
+                      totalCards={cards.length}
+                      hasSearched={hasSearched}
+                      onTryExample={handleTryExample}
+                      onTrySuggestion={onTrySuggestion}
+                      activeFilters={activeFilters}
+                      onApplyFilterPatch={onApplyFilterPatch}
+                      onClearAllFilters={onClearAllFilters}
+                      variant="filtered"
+                      filteredFromCount={cards.length}
+                    />
+                  </Suspense>
                 </div>
               )}
 
@@ -376,16 +371,18 @@ export function SearchResultsArea({
             <SearchResultsSkeleton viewMode={viewMode} />
 
           ) : hasSearched && totalCards === 0 ? (
-            <EmptyState
-              query={searchQuery}
-              onTryExample={handleTryExample}
-              suggestions={querySuggestions}
-              isCheckingSuggestions={isCheckingSuggestions}
-              onTrySuggestion={onTrySuggestion}
-              activeFilters={activeFilters}
-              onApplyFilterPatch={onApplyFilterPatch}
-              onClearAllFilters={onClearAllFilters}
-            />
+            <Suspense fallback={null}>
+              <SearchEmptyState
+                query={searchQuery}
+                totalCards={totalCards}
+                hasSearched={hasSearched}
+                onTryExample={handleTryExample}
+                onTrySuggestion={onTrySuggestion}
+                activeFilters={activeFilters}
+                onApplyFilterPatch={onApplyFilterPatch}
+                onClearAllFilters={onClearAllFilters}
+              />
+            </Suspense>
           ) : null}
 
 
@@ -399,20 +396,23 @@ export function SearchResultsArea({
 
       {/* Similar tab */}
       {activeTab === 'similar' && (
-        <SimilarCardsPanel
-          data={similarityData}
-          isLoading={similarLoading}
-          onCardClick={handleCardClick}
-        />
+        <Suspense fallback={null}>
+          <SimilarTabContent
+            query={originalQuery}
+            active={activeTab === 'similar'}
+            onCardClick={handleCardClick}
+          />
+        </Suspense>
       )}
 
       {/* Deck Ideas tab */}
       {activeTab === 'deck-ideas' && (
-        <DeckIdeasPanel
-          data={deckIdea}
-          isLoading={deckIdeasLoading}
-          query={originalQuery}
-        />
+        <Suspense fallback={null}>
+          <DeckIdeasTabContent
+            query={originalQuery}
+            active={activeTab === 'deck-ideas'}
+          />
+        </Suspense>
       )}
 
       {/* Explanation tab */}

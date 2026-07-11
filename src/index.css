@@ -320,20 +320,6 @@
     color: hsl(var(--foreground) / 0.65);
   }
 
-  .brand-discord-surface {
-    background-color: hsl(var(--brand) / 0.12);
-    color: hsl(var(--brand));
-  }
-
-  .brand-discord-button {
-    background-color: hsl(var(--brand));
-    color: hsl(var(--brand-foreground));
-  }
-
-  .brand-discord-button:hover {
-    background-color: hsl(var(--brand) / 0.88);
-  }
-
   .mtg-chip-white {
     @apply bg-secondary text-secondary-foreground border-border;
   }
@@ -369,11 +355,6 @@
     box-shadow: var(--shadow-md);
   }
 
-  .surface-elevated-lg {
-    @apply bg-card border border-border rounded-2xl;
-    box-shadow: var(--shadow-lg);
-  }
-
   /* Card hover effect - subtle lift */
   .card-hover {
     @apply transition-all duration-300 ease-out;
@@ -395,72 +376,6 @@
 
   .magnetic:active {
     transform: translateY(0) scale(0.98);
-  }
-
-  /* Text gradient - Oracle magenta to cyan */
-  .text-gradient {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(
-      135deg,
-      hsl(var(--gradient-start)) 0%,
-      hsl(var(--gradient-end)) 100%
-    );
-  }
-
-  /* Accent text with gradient */
-  .text-accent-glow {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(
-      135deg,
-      hsl(var(--gradient-start)) 0%,
-      hsl(var(--gradient-end)) 100%
-    );
-  }
-
-  /* Border gradient effect */
-  .border-gradient {
-    position: relative;
-  }
-  .border-gradient::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    padding: 1px;
-    border-radius: inherit;
-    background: linear-gradient(
-      135deg,
-      hsl(var(--gradient-start)),
-      hsl(var(--gradient-end))
-    );
-    -webkit-mask:
-      linear-gradient(#fff 0 0) content-box,
-      linear-gradient(#fff 0 0);
-    mask:
-      linear-gradient(#fff 0 0) content-box,
-      linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-  }
-
-  /* Glow effect */
-  .glow-accent {
-    box-shadow:
-      0 0 20px hsl(var(--gradient-start) / 0.3),
-      0 0 40px hsl(var(--gradient-end) / 0.2);
-  }
-
-  /* Pill badges */
-  .pill {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium;
-    @apply bg-secondary text-secondary-foreground border border-border;
-  }
-
-  .pill-accent {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium;
-    background: hsl(var(--accent) / 0.12);
-    color: hsl(var(--accent));
-    border: 1px solid hsl(var(--accent) / 0.25);
   }
 
   /* Reveal animation */
@@ -526,21 +441,6 @@
     }
   }
 
-  /* Onboarding spotlight pulse */
-  .onboarding-pulse {
-    animation: onboardingPulse 2s ease-in-out infinite;
-  }
-
-  @keyframes onboardingPulse {
-    0%,
-    100% {
-      box-shadow: 0 0 0 0 hsl(var(--accent) / 0.4);
-    }
-    50% {
-      box-shadow: 0 0 0 8px hsl(var(--accent) / 0);
-    }
-  }
-
   /* Pulse ring for voice */
   .animate-pulse-ring {
     animation: pulseRing 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -555,206 +455,6 @@
       box-shadow: 0 0 0 12px hsl(var(--destructive) / 0);
     }
   }
-
-  /* Premium glow orb for hero section */
-  .glow-orb {
-    position: absolute;
-    width: 600px;
-    height: 600px;
-    border-radius: 50%;
-    background: radial-gradient(
-      circle,
-      hsl(var(--gradient-start) / 0.25) 0%,
-      transparent 70%
-    );
-    filter: blur(80px);
-    pointer-events: none;
-    animation: orbFloat 8s ease-in-out infinite;
-  }
-
-  .glow-orb-secondary {
-    background: radial-gradient(
-      circle,
-      hsl(var(--gradient-end) / 0.2) 0%,
-      transparent 70%
-    );
-    animation-delay: -4s;
-  }
-
-  @keyframes orbFloat {
-    0%,
-    100% {
-      transform: translate(0, 0) scale(1);
-    }
-    50% {
-      transform: translate(20px, -20px) scale(1.05);
-    }
-  }
-
-  /* ---- Animated gradient text shimmer ---- */
-  .text-gradient-animated {
-    background: linear-gradient(
-      90deg,
-      hsl(var(--gradient-start)) 0%,
-      hsl(var(--gradient-end)) 25%,
-      hsl(var(--gradient-start)) 50%,
-      hsl(var(--gradient-end)) 75%,
-      hsl(var(--gradient-start)) 100%
-    );
-    background-size: 200% 100%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: gradientShimmer 4s ease-in-out infinite;
-  }
-
-  @keyframes gradientShimmer {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-
-  /* ---- Hero card fan ---- */
-  .hero-card-fan {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    perspective: 1200px;
-  }
-
-  .hero-card {
-    position: absolute;
-    width: 130px;
-    height: 182px;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 8px 32px rgb(0 0 0 / 0.35);
-    animation: heroCardFloat 6s ease-in-out infinite;
-    will-change: transform;
-    /* Sit above the ambient page layers but below the vignette + hero copy. */
-    z-index: 1;
-  }
-
-  /* Hide any image that fails to load so we never paint a blank card. */
-  .hero-card img {
-    background: transparent;
-  }
-  .hero-card img:not([src]),
-  .hero-card img[src=""] {
-    display: none;
-  }
-
-  @media (min-width: 640px) {
-    .hero-card {
-      width: 180px;
-      height: 252px;
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .hero-card {
-      width: 200px;
-      height: 280px;
-    }
-  }
-
-  /* Six-card arc. Cards 3 & 4 peek down from the top so they read as
-     "hero cards" without landing behind the H1. Side cards (1/2/5/6) fan
-     outward to keep the composition wide. */
-  .hero-card-1 {
-    left: -2%;
-    top: 32%;
-    opacity: 0.18;
-    transform: rotate(-24deg) scale(0.82);
-    animation-delay: 0s;
-  }
-  .hero-card-2 {
-    left: 8%;
-    top: 22%;
-    opacity: 0.26;
-    transform: rotate(-16deg) scale(0.92);
-    animation-delay: -1.5s;
-  }
-  .hero-card-3 {
-    left: 26%;
-    top: -18%;
-    opacity: 0.32;
-    transform: rotate(-8deg) scale(0.95);
-    animation-delay: -3s;
-  }
-  .hero-card-4 {
-    right: 26%;
-    top: -18%;
-    opacity: 0.32;
-    transform: rotate(8deg) scale(0.95);
-    animation-delay: -4.5s;
-  }
-  .hero-card-5 {
-    right: 8%;
-    top: 22%;
-    opacity: 0.26;
-    transform: rotate(16deg) scale(0.92);
-    animation-delay: -2s;
-  }
-  .hero-card-6 {
-    right: -2%;
-    top: 32%;
-    opacity: 0.18;
-    transform: rotate(24deg) scale(0.82);
-    animation-delay: -5s;
-  }
-
-  /* On mobile: hide outermost pair and pull the top pair further off-screen
-     so the compact headline stays clean. */
-  @media (max-width: 639px) {
-    .hero-card-1,
-    .hero-card-6 {
-      display: none;
-    }
-    .hero-card-2 {
-      left: 2%;
-      top: 22%;
-      opacity: 0.18;
-    }
-    .hero-card-5 {
-      right: 2%;
-      top: 22%;
-      opacity: 0.18;
-    }
-    .hero-card-3 {
-      left: 12%;
-      top: -22%;
-      opacity: 0.22;
-    }
-    .hero-card-4 {
-      right: 12%;
-      top: -22%;
-      opacity: 0.22;
-    }
-  }
-
-  @keyframes heroCardFloat {
-    0%, 100% { transform: translateY(0) rotate(var(--_r, 0deg)); }
-    50% { transform: translateY(-12px) rotate(var(--_r, 0deg)); }
-  }
-
-  /* Vignette lives above cards (mask element has z-10) to soften card edges
-     into the shared page ambience. Uses transparent stops only — no solid
-     background fill — so the page gradient reads continuously across the
-     hero without a darker rectangular halo at the edges. */
-  .hero-card-mask {
-    background: radial-gradient(
-      ellipse 110% 90% at 50% 45%,
-      transparent 45%,
-      hsl(var(--background) / 0.25) 80%,
-      transparent 100%
-    );
-  }
-
-
-
 
   /* ---- Demo card entrance animation ---- */
   .demo-card-entrance {
@@ -793,47 +493,10 @@
       var(--shadow-lg);
   }
 
-  /* ---- Floating particles ---- */
-  .hero-particles {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-    pointer-events: none;
-  }
-
-  .hero-particle {
-    position: absolute;
-    width: 3px;
-    height: 3px;
-    border-radius: 50%;
-    background: hsl(var(--accent) / 0.4);
-    animation: particleFloat 10s ease-in-out infinite;
-  }
-
-  @keyframes particleFloat {
-    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0; }
-    10% { opacity: 1; }
-    90% { opacity: 1; }
-    50% { transform: translate(var(--px, 40px), var(--py, -80px)) scale(0.5); }
-  }
-
   /* ---- Section divider ---- */
   .section-divider {
     height: 1px;
     background: linear-gradient(to right, transparent, hsl(var(--accent) / 0.3), transparent);
-  }
-
-  /* Premium button shadows */
-  .btn-premium {
-    box-shadow:
-      0 1px 2px hsl(var(--gradient-start) / 0.1),
-      0 4px 12px hsl(var(--gradient-start) / 0.15);
-  }
-
-  .btn-premium:hover {
-    box-shadow:
-      0 2px 4px hsl(var(--gradient-start) / 0.15),
-      0 8px 20px hsl(var(--gradient-start) / 0.2);
   }
 
   /* Page background — single elegant gradient shared across every route. */
@@ -848,30 +511,6 @@
     z-index: -10;
   }
 
-  /* Ambient violet/cyan glow — fixed layer so the hero and every section
-     below share the same halo instead of the glow ending at the hero seam.
-     Uses the same --gradient-start / --gradient-end tokens as text and
-     borders so palette shifts stay in sync across the whole page. */
-  .bg-page-ambience {
-    z-index: -9;
-    background:
-      radial-gradient(
-        600px 600px at 12% 8%,
-        hsl(var(--gradient-start) / 0.22) 0%,
-        transparent 65%
-      ),
-      radial-gradient(
-        520px 520px at 88% 14%,
-        hsl(var(--gradient-end) / 0.18) 0%,
-        transparent 65%
-      ),
-      radial-gradient(
-        800px 800px at 50% 95%,
-        hsl(var(--gradient-start) / 0.12) 0%,
-        transparent 70%
-      );
-    filter: blur(40px);
-  }
 
 
   .bg-page-noise {
@@ -937,14 +576,6 @@
     inherits: false;
   }
 
-  .bg-page-mesh {
-    background-image: radial-gradient(
-      hsl(var(--border) / 0.09) 1px,
-      transparent 1px
-    );
-    background-size: 44px 44px;
-    background-position: 0 0;
-  }
 }
 
 /* ========================================

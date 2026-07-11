@@ -105,14 +105,11 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 import { useAuth } from '@/hooks/useAuth';
 import { useCollectionLookup } from '@/hooks/useCollection';
 import { useCompare } from '@/hooks/useCompare';
-import { useDeckIdeas } from '@/hooks/useDeckIdeas';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { useQuerySuggestions } from '@/hooks/useQuerySuggestions';
 import { useRovingTabIndex } from '@/hooks/useRovingTabIndex';
 import { useSearch } from '@/hooks/useSearch';
 import { useSearchRenderProfiler } from '@/hooks/useSearchRenderProfiler';
-import { useSimilarCards } from '@/hooks/useSimilarCards';
 import { useTranslation } from '@/lib/i18n';
 const CardModal = lazy(() => import('@/components/CardModal'));
 
@@ -189,23 +186,10 @@ const Index = () => {
     }),
   );
   const activeTab = tabState.query === originalQuery ? tabState.tab : 'cards';
-
-  // Similar cards & deck ideas hooks
-  const {
-    similarityData,
-    isLoading: similarLoading,
-    activate: activateSimilar,
-  } = useSimilarCards(originalQuery);
-  const {
-    deckIdea,
-    isLoading: deckIdeasLoading,
-    isDeckQuery,
-    activate: activateDeckIdeas,
-  } = useDeckIdeas(originalQuery);
-
-  // "Did you mean?" suggestions when 0 results
-  const { suggestions: querySuggestions, isChecking: isCheckingSuggestions } =
-    useQuerySuggestions(searchQuery, totalCards, hasSearched && !isSearching);
+  const showSimilarTab = hasSearched && !isSearching;
+  const showDeckIdeasTab =
+    hasSearched && !isSearching && /\b(deck|build|commander|strategy|brew|edh)\b/i.test(originalQuery);
+  const showExplanationTab = hasSearched && !isSearching;
 
   // Prevent indexing of zero-result search pages
   useNoIndex(hasSearched && !isSearching && totalCards === 0);
@@ -222,15 +206,12 @@ const Index = () => {
     [handleRerunEditedQuery, originalQuery, trackEvent],
   );
 
-  // Activate feature hooks when tab is selected
   const handleTabChange = useCallback(
     (tab: ResultsTab) => {
       if (tab === activeTab) return;
       setTabState({ query: originalQuery, tab });
-      if (tab === 'similar') activateSimilar();
-      if (tab === 'deck-ideas') activateDeckIdeas();
     },
-    [activateSimilar, activateDeckIdeas, activeTab, originalQuery],
+    [activeTab, originalQuery],
   );
 
   // Card comparison
@@ -441,9 +422,6 @@ const Index = () => {
     trackLandingPageView,
   ]);
 
-  const showSimilarTab = hasSearched && !isSearching;
-  const showDeckIdeasTab = hasSearched && !isSearching && isDeckQuery;
-  const showExplanationTab = hasSearched && !isSearching;
   const showResultsMode = hasSearched || isSearching;
   const translationSource = lastSearchResult?.source ?? 'ai';
   const translationConfidence = lastSearchResult?.explanation?.confidence;
@@ -472,10 +450,6 @@ const Index = () => {
           aria-hidden="true"
         />
         <div
-          className="fixed inset-0 pointer-events-none bg-page-ambience"
-          aria-hidden="true"
-        />
-        <div
           className="fixed inset-0 pointer-events-none bg-page-noise"
           aria-hidden="true"
         />
@@ -485,24 +459,6 @@ const Index = () => {
         {!hasSearched && <HeroSection />}
 
         {/* Floating particles — hero area */}
-        {!hasSearched && (
-          <div className="hero-particles" aria-hidden="true">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div
-                key={i}
-                className="hero-particle"
-                style={{
-                  left: `${10 + i * 12}%`,
-                  top: `${20 + (i % 3) * 25}%`,
-                  animationDelay: `${i * -1.2}s`,
-                  ['--px' as string]: `${(i % 2 ? 1 : -1) * (20 + i * 8)}px`,
-                  ['--py' as string]: `${-40 - i * 15}px`,
-                }}
-              />
-            ))}
-          </div>
-        )}
-
         <Suspense fallback={null}>
           <SeoManager
             hasSearched={hasSearched}
@@ -682,8 +638,6 @@ const Index = () => {
                   showSimilar={showSimilarTab}
                   showDeckIdeas={showDeckIdeasTab}
                   showExplanation={showExplanationTab}
-                  similarLoading={similarLoading}
-                  deckIdeasLoading={deckIdeasLoading}
                 />
               </div>
             )}
@@ -775,12 +729,6 @@ const Index = () => {
                 lightboxIndex={lightboxIndex}
                 openLightbox={openLightbox}
                 closeLightbox={closeLightbox}
-                similarityData={similarityData}
-                similarLoading={similarLoading}
-                deckIdea={deckIdea}
-                deckIdeasLoading={deckIdeasLoading}
-                querySuggestions={querySuggestions}
-                isCheckingSuggestions={isCheckingSuggestions}
                 onTrySuggestion={handleTrySuggestion}
                 onRelatedCardClick={handleTryExample}
                 activeFilters={activeFilters}

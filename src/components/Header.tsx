@@ -1,35 +1,11 @@
-/**
- * Header component — clean, minimal nav with grouped dropdowns.
- */
-
-import { lazy, Suspense, useState, useEffect, useRef } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, useNavigate } from 'react-router-dom';
-import {
-  Menu,
-  X,
-  LogIn,
-  LogOut,
-  Bookmark,
-  User,
-  Settings,
-  Shield,
-  Package,
-} from 'lucide-react';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import { LanguageSelector } from '@/components/LanguageSelector';
+import { Link } from 'react-router-dom';
+import { Menu, X } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import { logger } from '@/lib/core/logger';
 import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/integrations/supabase/client';
@@ -42,10 +18,12 @@ const NotificationBell = lazy(() =>
     default: m.NotificationBell,
   })),
 );
+const HeaderDesktopActions = lazy(() =>
+  import('@/components/HeaderDesktopActions').then((m) => ({
+    default: m.HeaderDesktopActions,
+  })),
+);
 
-/* ------------------------------------------------------------------ */
-/*  Header                                                            */
-/* ------------------------------------------------------------------ */
 export function Header() {
   const { t } = useTranslation();
   const { user, displayName, avatarUrl, signOut } = useAuth();
@@ -54,29 +32,18 @@ export function Header() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [savedCount, setSavedCount] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
-  const navigate = useNavigate();
-
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
-  /* ---- Core nav (search-first) ---- */
   const CORE_LINKS = [
     { label: t('header.guides', 'Guides'), href: '/guides' },
     { label: t('nav.combos', 'Combos'), href: '/combos' },
     { label: t('header.about', 'About'), href: '/about' },
   ];
 
-  /* Link groups used in the mobile menu */
-
-  // Fetch saved search count for badge; reset to 0 on logout
   useEffect(() => {
     let isMounted = true;
-
     if (!user) {
-      Promise.resolve().then(() => {
-        if (isMounted) {
-          setSavedCount(0);
-        }
-      });
+      setSavedCount(0);
       return () => {
         isMounted = false;
       };
@@ -86,21 +53,11 @@ export function Header() {
       .from('saved_searches')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id)
-      .then(({ count, error }) => {
-        if (!isMounted) {
-          return;
-        }
-
-        if (error) {
-          logger.error('[Header] Failed to fetch saved search count', {
-            error,
-            userId: user.id,
-          });
-          setSavedCount(0);
-          return;
-        }
-
-        setSavedCount(count ?? 0);
+      .then(({ count }) => {
+        if (isMounted) setSavedCount(count ?? 0);
+      })
+      .catch(() => {
+        if (isMounted) setSavedCount(0);
       });
 
     return () => {
@@ -108,7 +65,6 @@ export function Header() {
     };
   }, [user]);
 
-  // Header chrome: avoid a persistent "line"; only show border after scroll.
   useEffect(() => {
     let raf = 0;
     const onScroll = () => {
@@ -121,7 +77,6 @@ export function Header() {
 
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
-
     return () => {
       window.removeEventListener('scroll', onScroll);
       if (raf) window.cancelAnimationFrame(raf);
@@ -137,22 +92,15 @@ export function Header() {
     return () => document.removeEventListener('keydown', handleEscape);
   }, [mobileMenuOpen]);
 
-  // Lock body scroll when menu is open
   useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
     return () => {
       document.body.style.overflow = '';
     };
   }, [mobileMenuOpen]);
 
-  // Focus trap for mobile menu
   useFocusTrap(mobileMenuRef, mobileMenuOpen);
 
-  /* ---- Mobile menu (portal) ---- */
   const mobileMenu = mobileMenuOpen
     ? createPortal(
         <div
@@ -163,10 +111,7 @@ export function Header() {
           aria-modal="true"
           aria-label="Mobile navigation"
         >
-          <nav
-            className="container-main py-6 flex flex-col gap-1 pb-safe"
-            aria-label="Main navigation links"
-          >
+          <nav className="container-main py-6 flex flex-col gap-1 pb-safe" aria-label="Main navigation links">
             {CORE_LINKS.map((link) => (
               <Link
                 key={link.href}
@@ -180,8 +125,6 @@ export function Header() {
                 {link.label}
               </Link>
             ))}
-
-            {/* Community */}
             <p className="px-4 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t('nav.mobileCommunity', 'Community')}
             </p>
@@ -195,60 +138,22 @@ export function Header() {
                 'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
               )}
             >
-              <svg
-                className="h-4 w-4"
-                aria-hidden="true"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z" />
-              </svg>
               {t('nav.discord', 'Discord')}
             </a>
-
-            {/* Auth section */}
             <div className="mt-4 pt-4 border-t border-border/50">
               {user ? (
                 <>
-                  <Link
-                    to="/saved"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={cn(
-                      'w-full px-4 py-3 text-base font-medium rounded-xl',
-                      'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
-                    )}
-                  >
+                  <Link to="/saved" onClick={() => setMobileMenuOpen(false)} className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring">
                     {t('nav.savedSearches', 'Saved Searches')}
                   </Link>
-                  <Link
-                    to="/collection"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={cn(
-                      'w-full px-4 py-3 text-base font-medium rounded-xl',
-                      'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
-                    )}
-                  >
+                  <Link to="/collection" onClick={() => setMobileMenuOpen(false)} className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring">
                     {t('nav.collection', 'My Collection')}
                   </Link>
-                  <Link
-                    to="/profile"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={cn(
-                      'w-full px-4 py-3 text-base font-medium rounded-xl',
-                      'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
-                    )}
-                  >
+                  <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring">
                     {t('nav.profileSettings')}
                   </Link>
                   {isAdmin && (
-                    <Link
-                      to="/admin/analytics"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={cn(
-                        'w-full px-4 py-3 text-base font-medium rounded-xl',
-                        'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
-                      )}
-                    >
+                    <Link to="/admin/analytics" onClick={() => setMobileMenuOpen(false)} className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring">
                       {t('nav.adminDashboard')}
                     </Link>
                   )}
@@ -257,10 +162,7 @@ export function Header() {
                       setMobileMenuOpen(false);
                       signOut();
                     }}
-                    className={cn(
-                      'w-full text-left px-4 py-3 text-base font-medium rounded-xl',
-                      'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
-                    )}
+                    className="w-full text-left px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring"
                   >
                     {t('nav.signOut')}
                   </button>
@@ -271,10 +173,7 @@ export function Header() {
                     setMobileMenuOpen(false);
                     setAuthModalOpen(true);
                   }}
-                  className={cn(
-                    'w-full text-left px-4 py-3 text-base font-medium rounded-xl',
-                    'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
-                  )}
+                  className="w-full text-left px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring"
                 >
                   {t('nav.signIn')}
                 </button>
@@ -298,45 +197,16 @@ export function Header() {
         role="banner"
       >
         <div className="container-main py-3 sm:py-4 flex items-center justify-between">
-          {/* Logo */}
           <Link
             to="/"
             className="group flex items-center gap-2.5 min-h-0 focus-ring rounded-lg -ml-2 px-2 py-1"
             aria-label={t('header.home')}
           >
-            <Logo
-              variant="gradient"
-              className="h-7 w-7 sm:h-8 sm:w-8 transition-transform duration-200 group-hover:scale-105"
-            />
-            <span className="text-lg font-semibold tracking-tight">
-              OffMeta
-            </span>
+            <Logo variant="gradient" className="h-7 w-7 sm:h-8 sm:w-8 transition-transform duration-200 group-hover:scale-105" />
+            <span className="text-lg font-semibold tracking-tight">OffMeta</span>
           </Link>
 
-          {/* Desktop nav — minimal, search-first */}
-          <nav
-            className="hidden md:flex items-center gap-0.5"
-            aria-label="Main navigation"
-          >
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary/50 focus-ring"
-                  aria-label={t('nav.mobileDecks', 'Decks')}
-                >
-                  {t('nav.mobileDecks', 'Decks')}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-48">
-                <DropdownMenuItem onClick={() => navigate('/deckbuilder')}>
-                  {t('nav.deckBuilder', 'Deck Builder')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/decks')}>
-                  {t('nav.browseDecks', 'Browse Decks')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <nav className="hidden md:flex items-center gap-0.5" aria-label="Main navigation">
             {CORE_LINKS.map((link) => (
               <Link
                 key={link.href}
@@ -348,126 +218,29 @@ export function Header() {
             ))}
           </nav>
 
-          {/* Right side: auth + theme toggle + hamburger */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <a
-              href="https://discord.gg/9UEv6vrTD4"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden sm:flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors focus-ring"
-              aria-label={t('header.discordLabel', 'Join our Discord (opens in new tab)')}
-            >
-              <svg
-                className="h-4 w-4"
-                aria-hidden="true"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z" />
-              </svg>
-            </a>
-            <LanguageSelector />
-            <ThemeToggle />
-            {user && (
-              <Suspense fallback={null}>
-                <NotificationBell />
-              </Suspense>
-            )}
+          <Suspense fallback={null}>
+            <HeaderDesktopActions
+              user={user}
+              displayName={displayName}
+              avatarUrl={avatarUrl}
+              savedCount={savedCount}
+              isAdmin={isAdmin}
+              onSignOut={signOut}
+              onOpenAuth={() => setAuthModalOpen(true)}
+            />
+          </Suspense>
 
-            {/* Auth controls */}
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className="h-8 w-8 rounded-full bg-primary/10 border border-border flex items-center justify-center text-xs font-semibold text-primary hover:bg-primary/20 transition-colors focus-ring overflow-hidden"
-                    aria-label={t('nav.userMenu')}
-                  >
-                    {avatarUrl ? (
-                      <img
-                        src={avatarUrl}
-                        alt=""
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      displayName?.charAt(0).toUpperCase() ||
-                      user.email?.charAt(0).toUpperCase() || (
-                        <User className="h-4 w-4" />
-                      )
-                    )}
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <div className="px-2 py-1.5">
-                    {displayName && (
-                      <p className="text-sm font-medium truncate">
-                        {displayName}
-                      </p>
-                    )}
-                    <p className="text-xs text-muted-foreground truncate">
-                      {user.email}
-                    </p>
-                  </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/saved')}>
-                    <Bookmark className="h-4 w-4 mr-2" />
-                    {t('nav.savedSearches', 'Saved Searches')}
-                    {savedCount > 0 && (
-                      <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
-                        {savedCount}
-                      </span>
-                    )}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/collection')}>
-                    <Package className="h-4 w-4 mr-2" />
-                    {t('nav.collection', 'My Collection')}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/profile')}>
-                    <Settings className="h-4 w-4 mr-2" />
-                    {t('nav.profileSettings')}
-                  </DropdownMenuItem>
-                  {isAdmin && (
-                    <DropdownMenuItem
-                      onClick={() => navigate('/admin/analytics')}
-                    >
-                      <Shield className="h-4 w-4 mr-2" />
-                      {t('nav.adminDashboard')}
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem onClick={() => signOut()}>
-                    <LogOut className="h-4 w-4 mr-2" />
-                    {t('nav.signOut')}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setAuthModalOpen(true)}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary/50 focus-ring"
-              >
-                <LogIn className="h-4 w-4" />
-                {t('nav.signIn')}
-              </button>
-            )}
-
-            <button
-              type="button"
-              className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors focus-ring"
-              onClick={() => setMobileMenuOpen((prev) => !prev)}
-              aria-label={
-                mobileMenuOpen ? t('header.closeMenu') : t('header.openMenu')
-              }
-              aria-expanded={mobileMenuOpen}
-              aria-controls="mobile-nav-menu"
-              data-testid="hamburger-button"
-            >
-              {mobileMenuOpen ? (
-                <X className="h-5 w-5" aria-hidden="true" />
-              ) : (
-                <Menu className="h-5 w-5" aria-hidden="true" />
-              )}
-            </button>
-          </div>
+          <button
+            type="button"
+            className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors focus-ring"
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
+            aria-label={mobileMenuOpen ? t('header.closeMenu') : t('header.openMenu')}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-nav-menu"
+            data-testid="hamburger-button"
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
+          </button>
         </div>
       </header>
 

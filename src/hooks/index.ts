@@ -80,7 +80,6 @@ export { useTranslateQuery, usePrefetchPopularQueries, type TranslationResult } 
 export { useSignatureCards, type SignatureCard } from './useSignatureCards';
 export { useSimilarCards, type SynergyCard, type SimilarityData } from './useSimilarCards';
 export { useToast, toast } from './useToast';
-export { useTypingPlaceholder } from './useTypingPlaceholder';
 export { useUndoRedo, type UndoableAction } from './useUndoRedo';
 export { useUserRole } from './useUserRole';
 export { useVoiceInput } from './useVoiceInput';

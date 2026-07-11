@@ -15,13 +15,10 @@ import {
 } from 'react';
 import { Button } from '@/components/ui/button';
 import { Search, Loader2, X, Clock, Sparkles, Database } from 'lucide-react';
-import { SearchHistoryDropdown } from '@/components/SearchHistoryDropdown';
 import { useIsMobile } from '@/hooks/useMobile';
-import { useTypingPlaceholder } from '@/hooks/useTypingPlaceholder';
 import { useSearchContext } from '@/hooks/useSearchContext';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { useSearchHandler, type SearchPhase } from '@/hooks/useSearchHandler';
-import { useVoiceInput } from '@/hooks/useVoiceInput';
 import { useAnalytics } from '@/hooks/useAnalytics';
 const SearchFeedback = lazy(() =>
   import('@/components/SearchFeedback').then((m) => ({
@@ -42,9 +39,9 @@ const SearchCountBadge = lazy(() =>
     default: m.SearchCountBadge,
   })),
 );
-const VoiceSearchButton = lazy(() =>
-  import('@/components/VoiceSearchButton').then((m) => ({
-    default: m.VoiceSearchButton,
+const VoiceSearchControl = lazy(() =>
+  import('@/components/VoiceSearchControl').then((m) => ({
+    default: m.VoiceSearchControl,
   })),
 );
 
@@ -157,6 +154,9 @@ export const UnifiedSearchBar = forwardRef<
     useAnalytics();
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const isVoiceSupported =
+    typeof window !== 'undefined' &&
+    ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
   // Auto-focus search input on desktop to encourage immediate search
   useEffect(() => {
@@ -169,12 +169,7 @@ export const UnifiedSearchBar = forwardRef<
     return undefined;
   }, [isMobile]);
 
-  const {
-    placeholder,
-    typingText,
-    isAnimating: isTyping,
-    stop: stopTyping,
-  } = useTypingPlaceholder('', !query && !isFocused);
+  const placeholder = 'budget board wipes under $5';
   const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -189,21 +184,6 @@ export const UnifiedSearchBar = forwardRef<
       addToHistory,
       saveContext,
     });
-
-  const {
-    isListening,
-    isSupported: isVoiceSupported,
-    startListening,
-    stopListening,
-  } = useVoiceInput({
-    onFinalTranscript: (transcript) => {
-      setQuery(transcript);
-      handleSearch(transcript);
-    },
-    onTranscript: (transcript) => {
-      setQuery(transcript);
-    },
-  });
 
   useImperativeHandle(
     ref,
@@ -273,22 +253,7 @@ export const UnifiedSearchBar = forwardRef<
     >
       {/* Search input */}
       <div className="relative space-y-2">
-        <SearchHistoryDropdown
-          history={history}
-          open={showHistoryDropdown}
-          onOpenChange={setShowHistoryDropdown}
-          onSelectQuery={(selectedQuery) => {
-            setQuery(selectedQuery);
-            setShowHistoryDropdown(false);
-            handleSearch(selectedQuery);
-          }}
-          onRemoveQuery={removeFromHistory}
-          onClearAll={() => {
-            clearHistory();
-            setShowHistoryDropdown(false);
-          }}
-        >
-          <div className={`gradient-border-wrap ${isFocused ? 'opacity-100' : 'opacity-60 hover:opacity-80'} transition-opacity duration-300`}>
+        <div className={`gradient-border-wrap ${isFocused ? 'opacity-100' : 'opacity-60 hover:opacity-80'} transition-opacity duration-300`}>
           <div
             className={`
               relative flex items-center gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-xl bg-card
@@ -321,7 +286,6 @@ export const UnifiedSearchBar = forwardRef<
                   }
                 }}
                 onFocus={() => {
-                  stopTyping();
                   setIsFocused(true);
                   if (history.length > 0) {
                     setShowHistoryDropdown(true);
@@ -343,18 +307,6 @@ export const UnifiedSearchBar = forwardRef<
                 spellCheck="false"
                 aria-describedby="search-hint"
               />
-
-              {!query && !isFocused && isTyping && (
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-y-0 left-2 sm:left-1 right-2 flex items-center text-sm sm:text-base text-muted-foreground"
-                >
-                  <span className="truncate">
-                    {typingText || '\u200B'}
-                    <span className="inline-block w-[2px] h-4 bg-accent/70 ml-0.5 align-middle animate-pulse" />
-                  </span>
-                </div>
-              )}
             </div>
 
             {query && (
@@ -373,11 +325,15 @@ export const UnifiedSearchBar = forwardRef<
 
             {isVoiceSupported && (
               <Suspense fallback={null}>
-                <VoiceSearchButton
-                  isListening={isListening}
-                  isSupported={isVoiceSupported}
-                  onToggle={isListening ? stopListening : startListening}
+                <VoiceSearchControl
                   className="h-9 w-9 sm:h-10 sm:w-10"
+                  onTranscript={(transcript) => {
+                    setQuery(transcript);
+                  }}
+                  onFinalTranscript={(transcript) => {
+                    setQuery(transcript);
+                    handleSearch(transcript);
+                  }}
                 />
               </Suspense>
             )}
@@ -424,7 +380,7 @@ export const UnifiedSearchBar = forwardRef<
             <div className="hidden sm:flex items-center gap-1 flex-shrink-0">
               <Suspense fallback={null}>
                 <SearchFeedback
-                  originalQuery={query || history[0] || ''}
+                  originalQuery={query}
                   translatedQuery={lastTranslatedQuery}
                 />
                 <SearchHelpModal
@@ -436,14 +392,13 @@ export const UnifiedSearchBar = forwardRef<
               </Suspense>
             </div>
           </div>
-          </div>
-        </SearchHistoryDropdown>
+        </div>
 
         {/* Secondary row: Mobile-only auxiliary actions */}
         <div className="flex sm:hidden items-center justify-center gap-2 flex-wrap">
           <Suspense fallback={null}>
             <SearchFeedback
-              originalQuery={query || history[0] || ''}
+              originalQuery={query}
               translatedQuery={lastTranslatedQuery}
             />
             <SearchHelpModal

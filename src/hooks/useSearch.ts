@@ -30,7 +30,6 @@ import {
   updateQueryQuality,
 } from '@/lib/search/quality-model';
 import { createCardSearchIndex, searchCardIndex } from '@/lib/search';
-import { useQueryIntelligence } from '@/hooks/useQueryIntelligence';
 import {
   encodeFiltersToUrl,
   generateRequestId,
@@ -101,7 +100,38 @@ export function useSearch() {
     () => getQueryQuality(originalQuery)?.score ?? 0,
     [originalQuery],
   );
-  const { data: serverIntelligence } = useQueryIntelligence(originalQuery);
+  const [serverIntelligence, setServerIntelligence] = useState<{
+    confidence: number;
+    total_searches: number;
+    search_quality_score: number;
+  } | null>(null);
+  useEffect(() => {
+    const normalized = originalQuery.trim().toLowerCase();
+    if (!hasSearched || normalized.length < 2) {
+      setServerIntelligence(null);
+      return undefined;
+    }
+
+    let cancelled = false;
+    void import('@/hooks/useQueryIntelligence').then(({ fetchQueryIntelligence }) => {
+      if (cancelled) return;
+      void fetchQueryIntelligence(originalQuery)
+        .then((result) => {
+          if (!cancelled) {
+            setServerIntelligence(result);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setServerIntelligence(null);
+          }
+        });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hasSearched, originalQuery]);
   const serverConfidence = serverIntelligence?.confidence ?? 0;
   const serverSampleSize = serverIntelligence?.total_searches ?? 0;
   const shouldUseServerQuality =

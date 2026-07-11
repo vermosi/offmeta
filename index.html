@@ -288,10 +288,80 @@
          HeroSection (with backdrop, CTAs, animated headline) mounts on top
          immediately after. */
       .shell {
-        position: fixed; inset: 0;
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
         background: var(--bg);
         z-index: 0;
         pointer-events: none;
+        text-align: center;
+        color: var(--fg);
+      }
+      .shell-inner {
+        max-width: 52rem;
+        display: grid;
+        gap: 1rem;
+      }
+      .shell-kicker {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        padding: 0.4rem 0.9rem;
+        border: 1px solid hsla(280, 70%, 60%, 0.25);
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--fg);
+        background: hsla(280, 70%, 60%, 0.08);
+      }
+      .shell-title {
+        margin: 0;
+        font-size: clamp(2.5rem, 6vw, 5rem);
+        line-height: 1.02;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+      }
+      .shell-accent {
+        color: hsl(195 95% 65%);
+      }
+      .shell-copy {
+        margin: 0 auto;
+        max-width: 42rem;
+        color: var(--mfg);
+        font-size: clamp(1rem, 2vw, 1.25rem);
+        line-height: 1.65;
+      }
+      .shell-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .shell-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 0.75rem 1.4rem;
+        border-radius: 9999px;
+        font: inherit;
+        font-weight: 600;
+        text-decoration: none;
+        pointer-events: auto;
+      }
+      .shell-button-primary {
+        background: hsl(195 95% 55%);
+        color: hsl(270 45% 6%);
+      }
+      .shell-button-secondary {
+        border: 1px solid hsla(0, 0%, 100%, 0.12);
+        color: var(--fg);
+        background: hsla(0, 0%, 100%, 0.04);
       }
       /* Removed once React mounts (see src/main.tsx). */
     </style>
@@ -341,7 +411,26 @@
 
     <!-- Pre-hydration background placeholder (no text — avoids a flash of
          different content before React renders the real HeroSection). -->
-    <div class="shell" id="static-shell" aria-hidden="true"></div>
+    <div class="shell" id="static-shell" aria-hidden="true">
+      <div class="shell-inner">
+        <span class="shell-kicker">AI-powered MTG discovery engine</span>
+        <h1 class="shell-title">
+          Search Magic cards <span class="shell-accent">in plain English</span>
+        </h1>
+        <p class="shell-copy">
+          Describe the card you need. OffMeta translates intent into a real
+          Scryfall search, instantly and transparently, without the syntax.
+        </p>
+        <div class="shell-actions">
+          <a class="shell-button shell-button-primary" href="#root">
+            Start searching
+          </a>
+          <a class="shell-button shell-button-secondary" href="/archetypes">
+            Explore archetypes
+          </a>
+        </div>
+      </div>
+    </div>
 
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
