@@ -8,7 +8,7 @@ import { auth, defineMcp } from "npm:@lovable.dev/mcp-js@0.20.0";
 // src/lib/mcp/tools/search-cards.ts
 import { defineTool } from "npm:@lovable.dev/mcp-js@0.20.0";
 import { z } from "npm:zod@^4.3.6";
-var search_cards_default = defineTool({
+const search_cards_default = defineTool({
   name: "search_cards",
   title: "Search MTG cards",
   description: 'Search Magic: The Gathering cards using Scryfall search syntax (e.g. "o:draw c:u mv<=2 f:commander"). Returns up to 20 matching cards with name, mana cost, type line, oracle text, prices, and image URL.',
@@ -92,7 +92,7 @@ function supabaseForUser(ctx) {
     }
   );
 }
-var list_my_decks_default = defineTool2({
+const list_my_decks_default = defineTool2({
   name: "list_my_decks",
   title: "List my decks",
   description: "List the signed-in user's decks (name, format, commander, card count, public/private, updated_at). Use get_deck for full card lists.",
@@ -146,7 +146,7 @@ function supabaseForUser2(ctx) {
     }
   );
 }
-var get_deck_default = defineTool3({
+const get_deck_default = defineTool3({
   name: "get_deck",
   title: "Get deck details",
   description: "Fetch a deck (metadata + full card list grouped by board) the signed-in user owns or that is marked public.",
@@ -210,7 +210,7 @@ function supabaseForUser3(ctx) {
     }
   );
 }
-var list_saved_searches_default = defineTool4({
+const list_saved_searches_default = defineTool4({
   name: "list_saved_searches",
   title: "List saved searches",
   description: "List the signed-in user's saved natural-language searches with their translated Scryfall queries.",
@@ -255,7 +255,7 @@ function supabaseForUser4(ctx) {
     }
   );
 }
-var get_collection_summary_default = defineTool5({
+const get_collection_summary_default = defineTool5({
   name: "get_collection_summary",
   title: "Get collection summary",
   description: "Return summary stats for the signed-in user's Magic card collection: unique cards, total cards, estimated USD value.",
@@ -291,8 +291,8 @@ var get_collection_summary_default = defineTool5({
 });
 
 // src/lib/mcp/index.ts
-var projectRef = "nxmzyykkzwomkcentctt";
-var mcp_default = defineMcp({
+const projectRef = "nxmzyykkzwomkcentctt";
+const mcp_default = defineMcp({
   name: "offmeta-mcp",
   title: "OffMeta",
   version: "0.1.0",
