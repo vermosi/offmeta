@@ -312,9 +312,7 @@ describe('Index – Scryfall error flows', () => {
 
     await waitFor(() => {
       expect(mockSearchCards).toHaveBeenCalledTimes(1);
-      expect(
-        screen.getByText(/we couldn't find any cards matching/i),
-      ).toBeInTheDocument();
+      expect(screen.getAllByText(/no cards found/i).length).toBeGreaterThan(0);
     });
 
     expect(document.title).toContain('very specific nonexistent card');

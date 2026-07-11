@@ -51,9 +51,9 @@ describe('Header accessibility', () => {
       </MemoryRouter>,
     );
 
-    expect(
-      screen.getByRole('button', { name: 'Decks' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Guides' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Combos' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'About' })).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: 'header.openMenu' }),
     ).toBeInTheDocument();

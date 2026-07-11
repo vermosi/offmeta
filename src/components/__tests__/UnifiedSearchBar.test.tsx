@@ -184,9 +184,9 @@ describe('UnifiedSearchBar', () => {
     expect(input).toHaveValue('dragon');
   });
 
-  it('renders input with empty placeholder for typewriter effect', () => {
+  it('renders the example placeholder used for the typewriter effect', () => {
     render(<UnifiedSearchBar {...defaultProps} />);
     const input = screen.getByRole('searchbox');
-    expect(input).toHaveAttribute('placeholder', '');
+    expect(input).toHaveAttribute('placeholder', 'budget board wipes under $5');
   });
 });

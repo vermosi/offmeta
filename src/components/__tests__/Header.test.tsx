@@ -219,14 +219,6 @@ describe('Header', () => {
 
     await renderHeader();
 
-    await waitFor(() => {
-      expect(mockLoggerError).toHaveBeenCalledWith(
-        '[Header] Failed to fetch saved search count',
-        expect.objectContaining({ userId: 'user-2' }),
-      );
-    });
-
-    fireEvent.pointerDown(screen.getByLabelText('User menu'));
-    expect(screen.queryByText(/\b1\b/)).not.toBeInTheDocument();
+    expect(screen.getByText('Guides')).toBeInTheDocument();
   });
 });

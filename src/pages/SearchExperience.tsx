@@ -187,8 +187,10 @@ const Index = () => {
   );
   const activeTab = tabState.query === originalQuery ? tabState.tab : 'cards';
   const showSimilarTab = hasSearched && !isSearching;
+  const isDeckQuery =
+    /\b(deck|build|commander|strategy|brew|edh)\b/i.test(originalQuery);
   const showDeckIdeasTab =
-    hasSearched && !isSearching && /\b(deck|build|commander|strategy|brew|edh)\b/i.test(originalQuery);
+    hasSearched && !isSearching && isDeckQuery;
   const showExplanationTab = hasSearched && !isSearching;
 
   // Prevent indexing of zero-result search pages

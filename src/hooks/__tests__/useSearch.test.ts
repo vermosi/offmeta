@@ -57,6 +57,7 @@ vi.mock('@/lib/i18n', () => ({
 
 vi.mock('@/hooks/useQueryIntelligence', () => ({
   useQueryIntelligence: () => ({ data: null }),
+  fetchQueryIntelligence: vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock('@/lib/search/quality-model', () => ({
