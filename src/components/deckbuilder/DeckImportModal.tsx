@@ -172,7 +172,7 @@ export function DeckImportModal({ open, onOpenChange, onImport }: DeckImportModa
       animation: 150,
       handle: '[data-drag-handle="true"]',
       ghostClass: 'opacity-60',
-      onEnd: ({ oldIndex, newIndex }) => {
+      onEnd: ({ oldIndex, newIndex }: { oldIndex?: number; newIndex?: number }) => {
         if (oldIndex == null || newIndex == null || oldIndex === newIndex) return;
         setUploadedCards((current) => {
           const next = [...current];
