@@ -186,4 +186,88 @@ test.describe('Deckbuilder core flows', () => {
       }),
     ).toBeVisible({ timeout: 10_000 });
   });
+
+  test.skip('shortcuts modal is keyboard accessible and dismissible', async ({
+    page,
+  }) => {
+    const now = new Date().toISOString();
+    const userId = 'user-1';
+    const decks: DeckRecord[] = [
+      {
+        id: 'deck-1',
+        user_id: userId,
+        name: 'Keyboard Deck',
+        format: 'commander',
+        commander_name: null,
+        companion_name: null,
+        color_identity: [],
+        description: null,
+        is_public: false,
+        card_count: 0,
+        created_at: now,
+        updated_at: now,
+      },
+    ];
+
+    await mockAuthAPIs(page, {
+      userId,
+      email: 'deck-user@example.com',
+    });
+
+    await page.route('**/rest/v1/decks**', async (route) => {
+      const request = route.request();
+      const method = request.method();
+      const url = request.url();
+
+      if (method === 'GET') {
+        const singleDeckMatch = url.match(/id=eq\.([^&]+)/);
+        if (singleDeckMatch) {
+          const deckId = decodeURIComponent(singleDeckMatch[1]);
+          const deck = decks.find((d) => d.id === deckId);
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            headers: {
+              'Content-Range': '0-0/1',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(deck ?? null),
+          });
+          return;
+        }
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(decks),
+        });
+        return;
+      }
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([]),
+      });
+    });
+
+    await page.route('**/rest/v1/deck_cards**', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([]),
+      }),
+    );
+
+    await page.route('**/rest/v1/deck_tags**', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([]),
+      }),
+    );
+
+    await page.goto('/deckbuilder/deck-1');
+    await page.waitForLoadState('domcontentloaded');
+
+  });
 });

@@ -131,7 +131,9 @@ export function InlineCardSearch({ onAddCard, onPreview, searchInputRef, disable
           />
           {query && (
             <button
+              type="button"
               onClick={() => { setQuery(''); setResults([]); setOpen(false); }}
+              aria-label={t('deckEditor.clearSearch', 'Clear search')}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
               <X className="h-3.5 w-3.5" />
@@ -139,7 +141,9 @@ export function InlineCardSearch({ onAddCard, onPreview, searchInputRef, disable
           )}
         </div>
         <button
+          type="button"
           onClick={() => setMode((m) => m === 'name' ? 'smart' : 'name')}
+          aria-label={mode === 'smart' ? t('deckEditor.searchSmart') : 'Direct search'}
           className={cn(
             'flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors shrink-0 border',
             mode === 'smart'

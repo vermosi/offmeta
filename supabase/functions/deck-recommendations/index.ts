@@ -120,6 +120,8 @@ serve(async (req) => {
     undefined,
     5,
     200,
+    60000,
+    { failOpen: false },
   );
   if (!allowed) {
     return new Response(

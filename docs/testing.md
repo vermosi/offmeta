@@ -14,6 +14,7 @@ npm run test -- --coverage
 
 - [Security tests](../README.md#built-for-production)
 - [Edge-function tests](../supabase/functions/semantic-search/index.test.ts)
+- [Semantic-search contract helpers](../src/lib/search/__tests__/edge-contract.test.ts)
 - [Component tests](../src/components)
 - [Page tests](../src/pages)
 - [Regression tests](../src/lib/regression)

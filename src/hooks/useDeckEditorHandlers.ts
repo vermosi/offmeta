@@ -104,7 +104,7 @@ export function useDeckEditorHandlers({
     searchInputRef,
     onSelectCard: setSelectedCardId,
     onToggleShortcuts: (open?: boolean) =>
-      setShortcutsOpen(open !== undefined ? open : (o: boolean) => !o),
+      setShortcutsOpen((current) => (open !== undefined ? open : !current)),
     onRemove: handleRemoveCard,
     onSetQuantity: handleSetQuantity,
     onMoveToSideboard: handleMoveToSideboard,

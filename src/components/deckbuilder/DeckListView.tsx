@@ -129,6 +129,7 @@ export function DeckListView({
             key={mode}
             onClick={() => onDeckViewModeChange(mode)}
             title={label}
+            aria-label={label}
             className={cn(
               'p-1.5 rounded transition-colors',
               deckViewMode === mode
@@ -169,6 +170,7 @@ export function DeckListView({
             }
             disabled={!undoRedo.canUndo}
             title={t('deckEditor.undoTooltip')}
+            aria-label={t('deckEditor.undoTooltip')}
             className={cn(
               'p-1.5 rounded transition-colors',
               undoRedo.canUndo
@@ -186,6 +188,7 @@ export function DeckListView({
             }
             disabled={!undoRedo.canRedo}
             title={t('deckEditor.redoTooltip')}
+            aria-label={t('deckEditor.redoTooltip')}
             className={cn(
               'p-1.5 rounded transition-colors',
               undoRedo.canRedo
@@ -200,6 +203,7 @@ export function DeckListView({
               <DropdownMenuTrigger asChild>
                 <button
                   title={t('deckEditor.actionHistory')}
+                  aria-label={t('deckEditor.actionHistory')}
                   className="p-1.5 rounded transition-colors text-muted-foreground hover:text-foreground hover:bg-secondary/50 flex items-center gap-0.5"
                 >
                   <History className="h-3.5 w-3.5" />
@@ -257,6 +261,7 @@ export function DeckListView({
       {!isMobile && (
         <button
           onClick={() => onPreviewOpenChange(!previewOpen)}
+          aria-label={previewOpen ? t('deckEditor.hidePreview') : t('deckEditor.showPreview')}
           className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-1 rounded hover:bg-secondary/50"
           title={previewOpen ? t('deckEditor.hidePreview') : t('deckEditor.showPreview')}
         >

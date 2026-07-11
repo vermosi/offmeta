@@ -69,7 +69,7 @@ export function DeckExportMenu({ deck, cards, onTogglePublic }: DeckExportMenuPr
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button size="sm" variant="ghost" className="h-7 text-[11px] gap-1">
+        <Button size="sm" variant="ghost" className="h-7 text-[11px] gap-1" aria-label={t('deckExport.share')}>
           <Share2 className="h-3 w-3" />
           <span className="hidden sm:inline">{t('deckExport.share')}</span>
         </Button>
@@ -101,7 +101,8 @@ export function DeckExportMenu({ deck, cards, onTogglePublic }: DeckExportMenuPr
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleCopyShareLink} className="gap-2 text-xs"
           disabled={!deck.is_public}
-          title={deck.is_public ? undefined : 'Make deck public first'}>
+          title={deck.is_public ? undefined : 'Make deck public first'}
+          aria-disabled={!deck.is_public}>
           <Share2 className="h-3.5 w-3.5" />
           {t('deckExport.copyLink')}
         </DropdownMenuItem>

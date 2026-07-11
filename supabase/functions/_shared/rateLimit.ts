@@ -10,6 +10,11 @@ type SupabaseClientLike = {
   from: (table: 'rate_limits') => RateLimitTableQueryBuilder;
 };
 
+type SupabaseClientFactory = (
+  url: string,
+  key: string,
+) => SupabaseClientLike;
+
 type QueryResult<TData> = PromiseLike<{
   data: TData | null;
   error: unknown;
@@ -63,6 +68,7 @@ const rateLimiter = new Map<string, RateLimitEntry>();
 const sessionLimiter = new Map<string, RateLimitEntry>();
 let globalRequestCount = 0;
 let globalResetTime = Date.now() + 60000;
+let sharedRateLimitClientPromise: Promise<SupabaseClientLike | null> | null = null;
 
 // Session rate limiting: stricter limits per session to prevent abuse loops
 const SESSION_LIMIT = 20; // 20 requests per minute per session
@@ -123,6 +129,26 @@ function decodeBase64Url(input: string): string | null {
   } catch {
     return null;
   }
+}
+
+async function getSharedRateLimitClient(): Promise<SupabaseClientLike | null> {
+  if (sharedRateLimitClientPromise) return sharedRateLimitClientPromise;
+
+  sharedRateLimitClientPromise = (async () => {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!supabaseUrl || !serviceRoleKey) return null;
+
+    const { createClient } = (await import(
+      'https://esm.sh/@supabase/supabase-js@2'
+    )) as {
+      createClient: SupabaseClientFactory;
+    };
+
+    return createClient(supabaseUrl, serviceRoleKey);
+  })();
+
+  return sharedRateLimitClientPromise;
 }
 
 function getStablePrincipal(req: Request): string | null {
@@ -193,32 +219,71 @@ export async function checkRateLimit(
   windowMs: number = 60000,
   options?: RateLimitOptions,
 ): Promise<RateLimitResult> {
-  const shouldFailOpen = options?.failOpen ?? true;
+  const shouldFailOpen = options?.failOpen ?? false;
   try {
     // 1. Check Global Limit (In-Memory is fine for this to save DB)
     const now = Date.now();
-    if (now > globalResetTime) {
-      globalRequestCount = 0;
-      globalResetTime = now + windowMs;
+
+    const sharedClient = supabase ?? (await getSharedRateLimitClient());
+    if (sharedClient) {
+      const globalBucketKey = `global:${windowMs}:${globalLimit}`;
+      const { data: globalData, error: globalError } = await sharedClient
+        .from('rate_limits')
+        .select('count, window_start')
+        .eq('ip', globalBucketKey)
+        .single();
+
+      if (!globalError && globalData) {
+        const windowStartedAt = new Date(globalData.window_start).getTime();
+        if (now - windowStartedAt < windowMs) {
+          if (globalData.count >= globalLimit) {
+            return {
+              allowed: false,
+              retryAfter: Math.ceil((windowStartedAt + windowMs - now) / 1000),
+              statusCode: 429,
+            };
+          }
+          await sharedClient
+            .from('rate_limits')
+            .update({ count: globalData.count + 1 })
+            .eq('ip', globalBucketKey);
+        } else {
+          await sharedClient
+            .from('rate_limits')
+            .update({ count: 1, window_start: new Date().toISOString() })
+            .eq('ip', globalBucketKey);
+        }
+      } else {
+        await sharedClient.from('rate_limits').insert({
+          ip: globalBucketKey,
+          count: 1,
+          window_start: new Date().toISOString(),
+        });
+      }
+    } else {
+      if (now > globalResetTime) {
+        globalRequestCount = 0;
+        globalResetTime = now + windowMs;
+      }
+
+      if (globalRequestCount >= globalLimit) {
+        return {
+          allowed: false,
+          retryAfter: Math.ceil((globalResetTime - now) / 1000),
+          statusCode: 429,
+        };
+      }
+      globalRequestCount++;
     }
 
-    if (globalRequestCount >= globalLimit) {
-      return {
-        allowed: false,
-        retryAfter: Math.ceil((globalResetTime - now) / 1000),
-        statusCode: 429,
-      };
-    }
-    globalRequestCount++;
-
-    // 2. Distributed Rate Limit (if client provided)
-    if (supabase) {
+    // 2. Per-bucket rate limit (shared client when available, otherwise memory)
+    if (sharedClient) {
       // Simple implementation: Count recent requests
       // Note: Ideal production implementation uses Redis or a dedicated count table with upsert
       // This implementation assumes a log/event based table or similar
 
       // Upsert into rate_limits table
-      const { data, error } = await supabase.rpc('increment_rate_limit', {
+      const { data, error } = await sharedClient.rpc('increment_rate_limit', {
         client_ip: bucketKey,
         limit_count: ipLimit,
         window_seconds: windowMs / 1000,
@@ -238,7 +303,7 @@ export async function checkRateLimit(
       // Fallback to table query if RPC not exists or fails
       // This requires the rate_limits table to exist
       try {
-        const { data: limitData, error: limitError } = await supabase
+        const { data: limitData, error: limitError } = await sharedClient
           .from('rate_limits')
           .select('count, window_start')
           .eq('ip', bucketKey)
@@ -257,14 +322,14 @@ export async function checkRateLimit(
               };
             }
             // Increment
-            await supabase
+            await sharedClient
               .from('rate_limits')
               .update({ count: limitData.count + 1 })
               .eq('ip', bucketKey);
             return { allowed: true };
           } else {
             // Reset
-            await supabase
+            await sharedClient
               .from('rate_limits')
               .update({ count: 1, window_start: new Date().toISOString() })
               .eq('ip', bucketKey);
@@ -272,7 +337,7 @@ export async function checkRateLimit(
           }
         } else {
           // Insert new
-          await supabase.from('rate_limits').insert({
+          await sharedClient.from('rate_limits').insert({
             ip: bucketKey,
             count: 1,
             window_start: new Date().toISOString(),

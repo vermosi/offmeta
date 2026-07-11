@@ -119,9 +119,11 @@ export function PrintingPickerPopover({ cardName, currentScryfallId, onSelect }:
     <Popover open={open} onOpenChange={(v) => { setOpen(v); if (v) load(); }}>
       <PopoverTrigger asChild>
         <button
+          type="button"
           onClick={(e) => e.stopPropagation()}
           className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
           title="Change printing / set"
+          aria-label="Change printing / set"
         >
           <Layers className="h-3 w-3" />
         </button>
@@ -144,6 +146,7 @@ export function PrintingPickerPopover({ cardName, currentScryfallId, onSelect }:
               return (
                 <button
                   key={p.id}
+                  type="button"
                   className={cn(
                     'flex items-center w-full px-3 py-2 text-left text-xs hover:bg-muted/50 transition-colors gap-1',
                     isSelected && 'bg-primary/10 font-semibold',

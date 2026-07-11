@@ -8,3 +8,7 @@ export {
   mergeQueryWithFilters,
   hasActiveServerFilters,
 } from './filters';
+export {
+  createCardSearchIndex,
+  searchCardIndex,
+} from './local-index';

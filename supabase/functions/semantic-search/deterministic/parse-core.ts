@@ -87,11 +87,11 @@ export function parseNumericConstraint(
       op: '>=',
     },
     {
-      regex: new RegExp(`\\b(\\d+)\\s*(?:${aliasGroup})\\s+or\\s+more\\b`, 'i'),
+      regex: new RegExp(`\\b(\\d+)\\s*(?:${aliasGroup})\\s+or\\s+(?:more|greater)\\b`, 'i'),
       op: '>=',
     },
     {
-      regex: new RegExp(`\\b(?:${aliasGroup})\\s*(\\d+)\\s+or\\s+more\\b`, 'i'),
+      regex: new RegExp(`\\b(?:${aliasGroup})\\s*(\\d+)\\s+or\\s+(?:more|greater)\\b`, 'i'),
       op: '>=',
     },
     {
@@ -118,7 +118,21 @@ export function parseNumericConstraint(
     },
     {
       regex: new RegExp(
+        `\\b(?:${aliasGroup})\\s+(?:under|less than|below)\\s*(\\d+)\\b`,
+        'i',
+      ),
+      op: '<',
+    },
+    {
+      regex: new RegExp(
         `\\b(?:over|more than|above)\\s*(\\d+)\\s*(?:${aliasGroup})\\b`,
+        'i',
+      ),
+      op: '>',
+    },
+    {
+      regex: new RegExp(
+        `\\b(?:${aliasGroup})\\s+(?:over|more than|above)\\s*(\\d+)\\b`,
         'i',
       ),
       op: '>',

@@ -13,6 +13,7 @@ import {
   Wand2,
   Loader2,
   Pencil,
+  Keyboard,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -75,6 +76,7 @@ interface DeckEditorHeaderProps {
   onTogglePublic: () => void;
   onAddCard: (card: ScryfallCard) => void;
   onPreview: (card: ScryfallCard | null) => void;
+  onOpenShortcuts: () => void;
   searchInputRef: React.RefObject<HTMLInputElement | null>;
 }
 
@@ -107,6 +109,7 @@ export function DeckEditorHeader({
   onTogglePublic,
   onAddCard,
   onPreview,
+  onOpenShortcuts,
   searchInputRef,
 }: DeckEditorHeaderProps) {
   const { t } = useTranslation();
@@ -203,6 +206,19 @@ export function DeckEditorHeader({
           </div>
 
           {!isReadOnly && <DeckExportMenu deck={deck} cards={cards} onTogglePublic={onTogglePublic} />}
+          {!isReadOnly && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={onOpenShortcuts}
+              className="h-8 gap-2 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+              aria-label={t('deckEditor.shortcuts.title')}
+              data-testid="deck-editor-shortcuts-button"
+            >
+              <Keyboard className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{t('deckEditor.shortcuts.title')}</span>
+            </Button>
+          )}
         </div>
 
         {(deck.commander_name || deck.companion_name || !isReadOnly) && (

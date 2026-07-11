@@ -71,6 +71,10 @@ Translates a natural-language Magic: The Gathering query into valid Scryfall syn
 - Requests should include `x-session-id` for server-side per-session rate limiting.
 - Responses include `x-request-id` for log correlation.
 
+#### Shared contract helpers
+
+The app-side semantic-search contract helpers are implemented in [`src/lib/search/semantic-contract.ts`](../src/lib/search/semantic-contract.ts) and covered by [`src/lib/search/__tests__/edge-contract.test.ts`](../src/lib/search/__tests__/edge-contract.test.ts). They mirror the request validation and JSON response envelopes used by the edge function so local tests can validate the shape without calling the deployed service.
+
 #### Cache bypass
 
 Set `useCache: false` in the request body to skip all cache layers. Useful for debugging translation accuracy.

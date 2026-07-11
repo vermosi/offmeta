@@ -134,6 +134,48 @@ describe('Deterministic MTG query translation', () => {
     expect(query).toContain('pow>=4');
   });
 
+  it('T16b: creatures with power 4 or greater', () => {
+    const query = getQuery('creatures with power 4 or greater');
+    expect(query).toContain('t:creature');
+    expect(query).toContain('pow>=4');
+  });
+
+  it('T16c: toughness less than 3', () => {
+    const query = getQuery('toughness less than 3');
+    expect(query).toContain('tou<3');
+  });
+
+  it('T16d: cards banned in modern', () => {
+    const query = getQuery('cards banned in modern');
+    expect(query).toContain('banned:modern');
+    expect(query).not.toContain('f:modern');
+  });
+
+  it('T16e: party tribal cards', () => {
+    const query = getQuery('party tribal cards');
+    expect(query).toContain('cleric');
+    expect(query).toContain('rogue');
+    expect(query).toContain('warrior');
+    expect(query).toContain('wizard');
+  });
+
+  it('T16f: cards that draw a card', () => {
+    const query = getQuery('cards that draw a card');
+    expect(query).toMatch(/otag:draw|o:"draw a card"|o:\/draw/i);
+  });
+
+  it('T16g: cards that draw two cards', () => {
+    const query = getQuery('cards that draw two cards');
+    expect(query).toMatch(/otag:draw|o:"draw two cards"|o:\/draw/i);
+  });
+
+  it('T16h: lands that produce any color of mana', () => {
+    const query = getQuery('lands that produce any color of mana');
+    expect(query).toContain('t:land');
+    expect(query).toContain('o:"add"');
+    expect(query).toContain('o:"any color"');
+  });
+
   // ── Phase 6: New keyword tests ──
 
   it('T17: creatures with cycling', () => {

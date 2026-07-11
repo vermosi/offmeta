@@ -143,6 +143,13 @@ export function parseSpecialPatterns(query: string, ir: SearchIR): string {
     remaining = remaining.replace(commanderFormatPattern, '').trim();
   }
 
+  const bannedPattern = /\bbanned\s+in\s+(standard|pioneer|modern|legacy|vintage|pauper|historic|timeless|oathbreaker|brawl|commander|alchemy|gladiator|penny)\b/gi;
+  const bannedMatch = bannedPattern.exec(remaining);
+  if (bannedMatch) {
+    ir.specials.push(`banned:${bannedMatch[1].toLowerCase()}`);
+    remaining = remaining.replace(bannedMatch[0], '').trim();
+  }
+
   // "best/top commander [concept]" = format legality, not card property
   // e.g. "best commander board wipes", "commander card draw", "commander ramp"
   const commanderConceptPattern =
@@ -264,6 +271,29 @@ export function parseOraclePatterns(query: string, ir: SearchIR): string {
     remaining = remaining.replace(/\b(?:draw cards?|card\s+draw)\b/gi, '').trim();
   }
 
+  if (/\bdraws?\s+(?:a|one)\s+card\b/i.test(remaining)) {
+    if (KNOWN_OTAGS.has('draw')) {
+      ir.tags.push('otag:draw');
+    } else {
+      ir.oracle.push('o:"draw a card"');
+    }
+    remaining = remaining.replace(/\bdraws?\s+(?:a|one)\s+card\b/gi, '').trim();
+  }
+
+  if (/\bdraws?\s+(?:two|2)\s+cards?\b/i.test(remaining)) {
+    if (KNOWN_OTAGS.has('draw')) {
+      ir.tags.push('otag:draw');
+    } else {
+      ir.oracle.push('o:"draw two cards"');
+    }
+    remaining = remaining.replace(/\bdraws?\s+(?:two|2)\s+cards?\b/gi, '').trim();
+  }
+
+  if (/\bparty\s+tribal\b/i.test(remaining)) {
+    ir.oracle.push('(t:cleric or t:rogue or t:warrior or t:wizard)');
+    remaining = remaining.replace(/\bparty\s+tribal\b/gi, '').trim();
+  }
+
   if (/\bsacrifice\b/i.test(remaining) && /\blands?\b/i.test(remaining)) {
     ir.oracle.push('o:sacrifice');
     ir.oracle.push('o:land');
@@ -271,6 +301,21 @@ export function parseOraclePatterns(query: string, ir: SearchIR): string {
     ir.types = ir.types.filter((type) => type !== 'land');
     remaining = remaining.replace(/\bsacrifice\b/gi, '').trim();
     remaining = remaining.replace(/\blands?\b/gi, '').trim();
+  }
+
+  if (
+    /\blands?\b/i.test(remaining) &&
+    /\b(?:produce|add|tap for)\s+any\s+color(?:\s+of\s+mana)?\b/i.test(remaining)
+  ) {
+    if (!ir.types.includes('land')) {
+      ir.types.push('land');
+    }
+    ir.oracle.push('o:"add"');
+    ir.oracle.push('o:"any color"');
+    remaining = remaining
+      .replace(/\b(?:produce|add|tap for)\s+any\s+color(?:\s+of\s+mana)?\b/gi, '')
+      .replace(/\blands?\b/gi, '')
+      .trim();
   }
 
   if (

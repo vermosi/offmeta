@@ -8,6 +8,8 @@
 - [Development](./development.md) - local setup and workflow
 - [Testing](./testing.md) - canonical test commands and CI coverage
 - [Configuration](./configuration.md) - environment and scheduled jobs
+- [Deployment](./deployment.md) - production rollout checklist
+- [Releases](./deployment.md#releases) - semantic versioning and release flow
 - [Internationalization](./i18n.md) - locale system and translation flow
 - [Guides](./guides.md) - search-guide system
 

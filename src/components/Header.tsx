@@ -320,7 +320,11 @@ export function Header() {
           >
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary/50 focus-ring">
+                <button
+                  type="button"
+                  className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary/50 focus-ring"
+                  aria-label={t('nav.mobileDecks', 'Decks')}
+                >
                   {t('nav.mobileDecks', 'Decks')}
                 </button>
               </DropdownMenuTrigger>
@@ -437,6 +441,7 @@ export function Header() {
               </DropdownMenu>
             ) : (
               <button
+                type="button"
                 onClick={() => setAuthModalOpen(true)}
                 className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary/50 focus-ring"
               >
@@ -446,6 +451,7 @@ export function Header() {
             )}
 
             <button
+              type="button"
               className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors focus-ring"
               onClick={() => setMobileMenuOpen((prev) => !prev)}
               aria-label={

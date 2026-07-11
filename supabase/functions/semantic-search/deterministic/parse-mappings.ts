@@ -304,6 +304,11 @@ export function parseArchetypes(query: string, ir: SearchIR): string {
     // Don't fall through to generic "tribal" below
   }
 
+  if (/\bparty\s+tribal\b/i.test(remaining)) {
+    ir.oracle.push('(t:cleric or t:rogue or t:warrior or t:wizard)');
+    remaining = remaining.replace(/\bparty\s+tribal\b/gi, '').trim();
+  }
+
   const skipSacrificeAsArchetype =
     /\bsacrifice\s+(a\s+)?(creature|land|artifact|enchantment|permanent)/i.test(
       remaining,

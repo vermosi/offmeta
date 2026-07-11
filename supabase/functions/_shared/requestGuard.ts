@@ -87,6 +87,8 @@ export async function runRequestGuard(
     undefined,
     ipLimit,
     globalLimit,
+    60000,
+    { failOpen: false },
   );
   if (!allowed) {
     return {

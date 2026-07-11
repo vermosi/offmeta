@@ -216,7 +216,8 @@ export function CategorySection({
                       <DropdownMenuTrigger asChild>
                         <button
                           onClick={(e) => e.stopPropagation()}
-                          className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors shrink-0 sm:opacity-0 sm:group-hover:opacity-100"
+                          aria-label={`${category} ${card.card_name} actions`}
+                          className="p-1 rounded text-muted-foreground hover:text-foreground focus-visible:text-foreground transition-colors shrink-0 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
                         >
                           <MoreVertical className="h-3.5 w-3.5" />
                         </button>
@@ -232,6 +233,7 @@ export function CategorySection({
                               onClick={() =>
                                 onSetQuantity(card.id, card.quantity - 1)
                               }
+                              aria-label={`Decrease quantity for ${card.card_name}`}
                               className="p-1 rounded hover:bg-secondary transition-colors"
                             >
                               <Minus className="h-3 w-3" />
@@ -243,6 +245,7 @@ export function CategorySection({
                               onClick={() =>
                                 onSetQuantity(card.id, card.quantity + 1)
                               }
+                              aria-label={`Increase quantity for ${card.card_name}`}
                               className="p-1 rounded hover:bg-secondary transition-colors"
                             >
                               <Plus className="h-3 w-3" />

@@ -25,8 +25,11 @@ OffMeta is a React 19 + Vite app that translates natural-language Magic: The Gat
 
 1. User input enters the search UI.
 2. The semantic-search edge function applies deterministic rules first.
-3. AI translation is used only as fallback.
-4. Scryfall returns cards, which the UI renders.
+3. If the request is non-English or otherwise needs translation, the pipeline pre-translates into English before deterministic/AI search continues.
+4. AI translation is used only as fallback after deterministic handling.
+5. Scryfall returns cards, which the UI renders.
+
+The deterministic rule set is still written around English MTG phrasing, so the multilingual experience depends on the pre-translation stage to bridge user locale and rule-based search behavior.
 
 ## Directory map
 

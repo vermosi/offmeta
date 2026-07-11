@@ -1,5 +1,7 @@
+import { useEffect, useRef } from 'react';
 import { Keyboard } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 interface DeckEditorShortcutsModalProps {
   isOpen: boolean;
@@ -41,6 +43,23 @@ export function DeckEditorShortcutsModal({
   onClose,
 }: DeckEditorShortcutsModalProps) {
   const { t } = useTranslation();
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useFocusTrap(modalRef, isOpen);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -50,19 +69,27 @@ export function DeckEditorShortcutsModal({
       onClick={onClose}
     >
       <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="deck-editor-shortcuts-title"
         className="bg-popover border border-border rounded-xl shadow-2xl p-5 w-72 space-y-3"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold flex items-center gap-2">
+          <h3
+            id="deck-editor-shortcuts-title"
+            className="text-sm font-semibold flex items-center gap-2"
+          >
             <Keyboard className="h-4 w-4 text-muted-foreground" />
             {t('deckEditor.shortcuts.title')}
           </h3>
           <button
             onClick={onClose}
+            aria-label={t('deckEditor.shortcuts.toggleHelp')}
             className="text-muted-foreground hover:text-foreground transition-colors text-xs"
           >
-            ✕
+            ×
           </button>
         </div>
         <ul className="space-y-2 text-xs">
@@ -95,3 +122,4 @@ export function DeckEditorShortcutsModal({
     </div>
   );
 }
+

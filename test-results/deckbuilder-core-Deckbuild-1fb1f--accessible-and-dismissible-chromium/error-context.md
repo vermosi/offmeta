@@ -1,0 +1,75 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - heading "OffMeta — Natural Language Magic Card Search" [level=1] [ref=e3]
+    - paragraph [ref=e4]: "OffMeta is a natural language Magic: The Gathering card search tool. It lets players describe cards the way they talk and translates that into real Scryfall searches. No syntax knowledge required."
+  - generic [ref=e5]:
+    - region "Notifications (F8)":
+      - list
+    - region "Notifications alt+T"
+    - generic [ref=e6]:
+      - banner [ref=e7]:
+        - generic [ref=e8]:
+          - link "OffMeta - Home" [ref=e9] [cursor=pointer]:
+            - /url: /
+            - img [ref=e10]
+            - generic [ref=e15]: OffMeta
+          - navigation "Main navigation" [ref=e16]:
+            - button "Decks" [ref=e17] [cursor=pointer]
+            - link "Guides" [ref=e18] [cursor=pointer]:
+              - /url: /guides
+            - link "Combos" [ref=e19] [cursor=pointer]:
+              - /url: /combos
+            - link "About" [ref=e20] [cursor=pointer]:
+              - /url: /about
+          - generic [ref=e21]:
+            - link "Join our Discord (opens in new tab)" [ref=e22] [cursor=pointer]:
+              - /url: https://discord.gg/9UEv6vrTD4
+              - img [ref=e23]
+            - button "Language" [ref=e25] [cursor=pointer]:
+              - img
+            - button "Switch to light theme" [pressed] [ref=e26] [cursor=pointer]:
+              - img
+            - button "Sign In" [ref=e27] [cursor=pointer]:
+              - img [ref=e28]
+              - text: Sign In
+      - generic [ref=e31]:
+        - generic [ref=e33]:
+          - link "Back to Decks" [ref=e34] [cursor=pointer]:
+            - /url: /deckbuilder
+            - img [ref=e35]
+          - button "Keyboard Deck" [ref=e37] [cursor=pointer]:
+            - heading "Keyboard Deck" [level=2] [ref=e38]
+          - generic [ref=e39]:
+            - generic [ref=e40]: Commander
+            - generic [ref=e41]: 0/100
+        - generic [ref=e42]:
+          - paragraph [ref=e47]: This deck has no cards
+          - generic [ref=e49]:
+            - paragraph [ref=e52]: deckEditor.preview.clickToPreview
+            - generic [ref=e54]:
+              - heading "Combos" [level=3] [ref=e55]:
+                - img [ref=e56]
+                - text: Combos
+              - paragraph [ref=e58]: Add 10+ cards to auto-detect combos.
+            - generic [ref=e60]:
+              - generic [ref=e61]:
+                - heading "AI Suggestions" [level=3] [ref=e62]:
+                  - img [ref=e63]
+                  - text: AI Suggestions
+                - button "Suggest" [disabled]:
+                  - img
+                  - text: Suggest
+              - paragraph [ref=e71]: Add at least 5 cards to get suggestions
+            - generic [ref=e73]:
+              - generic [ref=e74]:
+                - heading "AI Critique" [level=4] [ref=e75]:
+                  - img [ref=e76]
+                  - text: AI Critique
+                - button "Get Critique" [disabled]:
+                  - img
+                  - text: Get Critique
+              - paragraph [ref=e78]: Get AI-powered feedback on what to cut and add to sharpen your deck.
+```

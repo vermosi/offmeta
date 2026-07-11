@@ -183,6 +183,7 @@ export default function DeckEditor() {
           onTogglePublic={h.handleTogglePublic}
           onAddCard={h.handleAddCard}
           onPreview={h.setPreviewCard}
+          onOpenShortcuts={() => h.setShortcutsOpen(true)}
           searchInputRef={h.searchInputRef}
         />
 

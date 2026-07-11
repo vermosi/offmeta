@@ -66,23 +66,25 @@ export function MaybeboardSection({
                     ) : null;
                   })()}
                   {!isReadOnly && (
-                    <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity">
                       <PrintingPickerPopover
                         cardName={card.card_name}
                         currentScryfallId={card.scryfall_id}
                         onSelect={(p) => onChangePrinting(card.id, p)}
                       />
                       <button onClick={() => onMoveToMainboard(card.id)}
+                        aria-label={`Move ${card.card_name} to mainboard`}
                         className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
                         title={t('deckEditor.moveToMainboard')}><ChevronUp className="h-3 w-3" /></button>
                       <button onClick={() => onMoveToSideboard(card.id)}
+                        aria-label={`Move ${card.card_name} to sideboard`}
                         className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
                         title={t('deckEditor.moveToSideboard')}><ArrowRightLeft className="h-3 w-3" /></button>
-                      <button onClick={() => onSetQuantity(card.id, card.quantity - 1)} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
+                      <button onClick={() => onSetQuantity(card.id, card.quantity - 1)} aria-label={`Decrease quantity for ${card.card_name}`} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
                         <Minus className="h-3 w-3" /></button>
-                      <button onClick={() => onSetQuantity(card.id, card.quantity + 1)} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
+                      <button onClick={() => onSetQuantity(card.id, card.quantity + 1)} aria-label={`Increase quantity for ${card.card_name}`} className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
                         <Plus className="h-3 w-3" /></button>
-                      <button onClick={() => onRemove(card.id)} className="p-1 rounded text-muted-foreground hover:text-destructive transition-colors">
+                      <button onClick={() => onRemove(card.id)} aria-label={`Remove ${card.card_name}`} className="p-1 rounded text-muted-foreground hover:text-destructive transition-colors">
                         <Trash2 className="h-3 w-3" /></button>
                     </div>
                   )}
