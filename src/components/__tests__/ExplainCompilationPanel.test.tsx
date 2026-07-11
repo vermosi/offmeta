@@ -40,7 +40,7 @@ describe('ExplainCompilationPanel', () => {
 
   it('shows detected count when collapsed and fields have values', () => {
     render(<ExplainCompilationPanel intent={mockIntent} />);
-    expect(screen.getByText(/4 detected/)).toBeInTheDocument();
+    expect(screen.getByText(/4 signals detected/)).toBeInTheDocument();
   });
 
   it('does not show detected count when no fields have values', () => {
