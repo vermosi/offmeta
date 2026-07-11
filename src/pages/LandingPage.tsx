@@ -3,10 +3,16 @@
  * Uses only plain markup and a simple form so the root route stays lean.
  */
 
-import type { FormEvent } from 'react';
+import { lazy, Suspense, useState, type FormEvent } from 'react';
 import { queryToSlug } from '@/lib/search-slug';
 
+const AuthModal = lazy(() =>
+  import('@/components/AuthModal').then((m) => ({ default: m.AuthModal })),
+);
+
 export default function LandingPage() {
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
@@ -22,6 +28,15 @@ export default function LandingPage() {
           className="pointer-events-none absolute inset-0 bg-gradient-to-b from-accent/10 via-transparent to-transparent"
           aria-hidden="true"
         />
+        <div className="fixed right-4 top-4 z-20 sm:right-6 sm:top-6">
+          <button
+            type="button"
+            onClick={() => setAuthModalOpen(true)}
+            className="focus-ring rounded-full border border-border/80 bg-card/90 px-4 py-2 text-sm font-medium text-foreground shadow-md backdrop-blur-sm transition-colors hover:bg-card"
+          >
+            Sign in
+          </button>
+        </div>
         <div className="container-main relative z-10 text-center">
           <div className="mx-auto mb-4 inline-flex items-center rounded-full border border-accent/30 bg-accent/10 px-4 py-1.5 text-xs font-medium text-accent backdrop-blur-sm">
             AI-powered MTG discovery engine
@@ -74,6 +89,12 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {authModalOpen && (
+        <Suspense fallback={null}>
+          <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
+        </Suspense>
+      )}
     </main>
   );
 }

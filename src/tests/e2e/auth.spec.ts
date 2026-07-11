@@ -14,7 +14,7 @@ test.describe('Auth modal flows', () => {
   test('signup happy path (deterministic mocked equivalent)', async ({
     page,
   }) => {
-    await page.goto('/');
+    await page.goto('/about');
 
     await page
       .getByRole('button', { name: /sign in/i })
@@ -34,7 +34,7 @@ test.describe('Auth modal flows', () => {
   });
 
   test('signin happy path @e2e-smoke', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/about');
 
     await page
       .getByRole('button', { name: /sign in/i })
@@ -50,7 +50,7 @@ test.describe('Auth modal flows', () => {
   });
 
   test('password reset request flow', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/about');
 
     await page
       .getByRole('button', { name: /sign in/i })
