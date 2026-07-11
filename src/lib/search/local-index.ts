@@ -9,7 +9,7 @@ export interface LocalSearchHit {
 type SearchIndex = Index;
 
 export function createCardSearchIndex(cards: ScryfallCard[]): SearchIndex {
-  const index = new FlexSearch.Index({
+  const index = new Index({
     preset: 'match',
     tokenize: 'forward',
     cache: true,
