@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { parseDecklist } from '@/lib/decklist-parser';
 import Uppy from '@uppy/core';
+// @ts-expect-error - sortablejs has no bundled types
 import Sortable from 'sortablejs';
 import { toast } from '@/hooks';
 import { cn } from '@/lib/core/utils';
