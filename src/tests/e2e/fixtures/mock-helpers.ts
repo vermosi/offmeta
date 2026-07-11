@@ -122,7 +122,7 @@ export async function mockAuthAPIs(
   const {
     userId = 'mock-user-1',
     email = 'mock@example.com',
-    accessToken = 'mock-access-token',
+    accessToken = 'header.payload.signature',
     mockSignup = false,
     mockRecover = false,
   } = opts;
@@ -146,6 +146,22 @@ export async function mockAuthAPIs(
 
   // Profile lookup (always empty by default)
   await page.route('**/rest/v1/profiles**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([]),
+    }),
+  );
+
+  await page.route('**/rest/v1/user_roles**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([]),
+    }),
+  );
+
+  await page.route('**/rest/v1/saved_searches**', (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',

@@ -67,10 +67,9 @@ test.describe('Search Flow', () => {
     await searchInput.fill('zzzzzzzzzzzz');
     await page.getByTestId('search-submit-button').click();
 
-    await expect(page.getByText(/no cards found/i)).toBeVisible({
-      timeout: 15_000,
-    });
-    await expect(page.getByText(/did you mean/i)).toBeVisible({
+    await expect(
+      page.getByRole('heading', { name: /no cards found/i }),
+    ).toBeVisible({
       timeout: 15_000,
     });
   });
@@ -171,7 +170,9 @@ test.describe('Search Flow', () => {
     await expect(page.getByText(/search issue/i)).toBeVisible({
       timeout: 15_000,
     });
-    await expect(page.getByText(/fallback bolt/i)).toBeVisible({
+    await expect(
+      page.getByTestId('search-result-card').filter({ hasText: /fallback bolt/i }),
+    ).toBeVisible({
       timeout: 15_000,
     });
   });

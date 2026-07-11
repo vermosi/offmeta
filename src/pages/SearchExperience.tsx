@@ -845,14 +845,18 @@ const Index = () => {
           </Suspense>
         )}
 
-        <ReportIssueDialog
-          open={reportDialogOpen}
-          onOpenChange={setReportDialogOpen}
-          originalQuery={originalQuery}
-          compiledQuery={lastSearchResult?.scryfallQuery || searchQuery}
-          filters={activeFilters}
-          requestId={currentRequestId || undefined}
-        />
+        {reportDialogOpen && (
+          <Suspense fallback={null}>
+            <ReportIssueDialog
+              open={reportDialogOpen}
+              onOpenChange={setReportDialogOpen}
+              originalQuery={originalQuery}
+              compiledQuery={lastSearchResult?.scryfallQuery || searchQuery}
+              filters={activeFilters}
+              requestId={currentRequestId || undefined}
+            />
+          </Suspense>
+        )}
 
         <CompareBar
           cards={compareCards}
