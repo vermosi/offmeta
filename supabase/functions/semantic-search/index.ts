@@ -43,7 +43,7 @@ import {
   extractAIContent,
   parseAIContent,
 } from './schemas.ts';
-import { validateAgainstScryfall, repairQuery } from './pipeline/repair.ts';
+import { validateWithScryfall as validateAgainstScryfall, repairQuery } from './pipeline/repair.ts';
 import { relaxSpeculativeClauses } from './scryfall.ts';
 import { VALID_SEARCH_KEYS } from './constants.ts';
 import {
