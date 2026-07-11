@@ -408,6 +408,22 @@ export function getCardImage(
 }
 
 /**
+ * Build a responsive `srcset` for card art so the browser can pick a smaller
+ * asset for compact tiles while keeping full-resolution art available where
+ * it matters.
+ */
+export function getCardImageSrcSet(
+  card: ScryfallCard,
+  faceIndex: number = 0,
+): string {
+  const small = getCardImage(card, 'small', faceIndex);
+  const normal = getCardImage(card, 'normal', faceIndex);
+  const large = getCardImage(card, 'large', faceIndex);
+
+  return `${small} 146w, ${normal} 488w, ${large} 672w`;
+}
+
+/**
  * Check if a card is double-faced (transform, modal, etc.)
  * @param card - The card to check
  * @returns True if the card has multiple faces with separate images

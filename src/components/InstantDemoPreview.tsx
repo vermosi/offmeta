@@ -142,10 +142,12 @@ export function InstantDemoPreview({ onTrySearch }: InstantDemoPreviewProps) {
             >
               <div className="relative aspect-[488/680] w-full overflow-hidden rounded-xl border border-border/40 bg-muted shadow-md transition-all duration-500 group-hover:shadow-2xl group-hover:shadow-accent/10 group-hover:-translate-y-2 demo-card-3d">
                 <img
-                  src={card.imageUri}
+                  src={card.imageUri.replace('/normal/', '/small/')}
+                  srcSet={`${card.imageUri.replace('/normal/', '/small/')} 146w, ${card.imageUri} 488w, ${card.imageUri.replace('/normal/', '/large/')} 672w`}
+                  sizes="(min-width: 640px) 200px, 161px"
                   alt={card.name}
-                  width={488}
-                  height={680}
+                  width={146}
+                  height={204}
                   loading={index === 0 ? 'eager' : 'lazy'}
                   decoding={index === 0 ? 'sync' : 'async'}
                   fetchPriority={index === 0 ? 'high' : undefined}

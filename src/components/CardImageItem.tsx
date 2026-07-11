@@ -22,7 +22,8 @@ export const CardImageItem = memo(function CardImageItem({
   tabIndex = 0,
   isOwned,
 }: CardImageItemProps) {
-  const imageUrl = getCardImage(card, 'normal');
+  const imageUrl = getCardImage(card, 'small');
+  const imageSrcSet = `${getCardImage(card, 'small')} 146w, ${getCardImage(card, 'normal')} 488w, ${getCardImage(card, 'large')} 672w`;
   const { locale } = useTranslation();
   const displayName = getLocalizedName(card, locale);
   return (
@@ -53,6 +54,8 @@ export const CardImageItem = memo(function CardImageItem({
       )}
       <img
         src={imageUrl}
+        srcSet={imageSrcSet}
+        sizes="(min-width: 1280px) 280px, (min-width: 768px) 240px, 161px"
         alt={displayName}
         loading="lazy"
         decoding="async"

@@ -59,40 +59,6 @@
       hreflang can be emitted with a real localized href.
     -->
 
-    <!-- Preconnect to Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- Preload critical font files to break the dependency chain -->
-    <link
-      rel="preload"
-      href="https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-      fetchpriority="high"
-    />
-    <link
-      rel="preload"
-      href="https://fonts.gstatic.com/s/spacegrotesk/v22/V8mDoQDjQSkFtoMM3T6r8E7mPbF4C_k3HqU.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-      fetchpriority="high"
-    />
-    <!-- Non-render-blocking font loading -->
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
-      media="print"
-      onload="this.media='all'"
-    />
-    <noscript>
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
-      />
-    </noscript>
-
     <!-- DNS prefetch for external APIs -->
     <link rel="dns-prefetch" href="https://api.scryfall.com" />
     <link rel="preconnect" href="https://cards.scryfall.io" crossorigin />
@@ -337,10 +303,25 @@
         line-height: 1.65;
       }
       .shell-actions {
-        display: flex;
+        display: grid;
         gap: 0.75rem;
         justify-content: center;
+      }
+      .shell-form {
+        display: flex;
+        gap: 0.75rem;
         flex-wrap: wrap;
+        justify-content: center;
+      }
+      .shell-input {
+        min-width: min(42rem, 100%);
+        min-height: 44px;
+        padding: 0.8rem 1rem;
+        border-radius: 9999px;
+        border: 1px solid hsla(0, 0%, 100%, 0.12);
+        background: hsla(0, 0%, 100%, 0.04);
+        color: var(--fg);
+        font: inherit;
       }
       .shell-button {
         display: inline-flex;
@@ -411,7 +392,7 @@
 
     <!-- Pre-hydration background placeholder (no text — avoids a flash of
          different content before React renders the real HeroSection). -->
-    <div class="shell" id="static-shell" aria-hidden="true">
+    <main class="shell" id="static-shell">
       <div class="shell-inner">
         <span class="shell-kicker">AI-powered MTG discovery engine</span>
         <h1 class="shell-title">
@@ -421,18 +402,82 @@
           Describe the card you need. OffMeta translates intent into a real
           Scryfall search, instantly and transparently, without the syntax.
         </p>
-        <div class="shell-actions">
-          <a class="shell-button shell-button-primary" href="#root">
+        <form class="shell-actions" action="/search/" method="get">
+          <div class="shell-form">
+            <label for="shell-query" class="sr-only">Search Magic cards</label>
+            <input
+              id="shell-query"
+              name="query"
+              class="shell-input"
+              type="text"
+              placeholder="budget board wipes under $5"
+              autocomplete="off"
+            />
+            <button class="shell-button shell-button-primary" type="submit">
             Start searching
-          </a>
+            </button>
+          </div>
           <a class="shell-button shell-button-secondary" href="/archetypes">
             Explore archetypes
           </a>
-        </div>
+        </form>
       </div>
-    </div>
+    </main>
 
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module">
+      const isRootPath = window.location.pathname === '/';
+      const loadAppFonts = () => {
+        const preloadInter = document.createElement('link');
+        preloadInter.rel = 'preload';
+        preloadInter.as = 'font';
+        preloadInter.type = 'font/woff2';
+        preloadInter.crossOrigin = 'anonymous';
+        preloadInter.href =
+          'https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2';
+        document.head.appendChild(preloadInter);
+
+        const preloadSpaceGrotesk = document.createElement('link');
+        preloadSpaceGrotesk.rel = 'preload';
+        preloadSpaceGrotesk.as = 'font';
+        preloadSpaceGrotesk.type = 'font/woff2';
+        preloadSpaceGrotesk.crossOrigin = 'anonymous';
+        preloadSpaceGrotesk.href =
+          'https://fonts.gstatic.com/s/spacegrotesk/v22/V8mDoQDjQSkFtoMM3T6r8E7mPbF4C_k3HqU.woff2';
+        document.head.appendChild(preloadSpaceGrotesk);
+
+        const fontSheet = document.createElement('link');
+        fontSheet.rel = 'stylesheet';
+        fontSheet.href =
+          'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap';
+        document.head.appendChild(fontSheet);
+      };
+      if (!isRootPath) {
+        loadAppFonts();
+        await import('/src/main.tsx');
+      }
+
+      if (isRootPath) {
+        const shell = document.getElementById('static-shell');
+        const form = shell?.querySelector('form');
+        const input = shell?.querySelector('input[name="query"]');
+        if (form && input instanceof HTMLInputElement) {
+          form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const value = input.value.trim().toLowerCase();
+            if (!value) return;
+            const slug = value
+              .replace(/['']/g, '')
+              .replace(/[^a-z0-9\s-]/g, '')
+              .trim()
+              .replace(/\s+/g, '-')
+              .replace(/-+/g, '-')
+              .slice(0, 80)
+              .replace(/-$/, '');
+            window.location.assign(`/search/${slug}`);
+          });
+        }
+      }
+    </script>
   </body>
 </html>

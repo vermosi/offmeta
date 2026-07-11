@@ -6,9 +6,10 @@
  */
 
 import { lazy, Suspense, type ReactElement } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom';
 import FullAppProviders from '@/components/FullAppProviders';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import LandingPage from './pages/LandingPage';
 
 const GuidesIndex = lazy(() => import('./pages/GuidesIndex'));
 const GuidePage = lazy(() => import('./pages/GuidePage'));
@@ -51,41 +52,49 @@ const withFullApp = (element: ReactElement) => (
 
 export default function AppRoutes() {
   return (
-    <FullAppProviders>
+    <BrowserRouter>
       <Suspense fallback={routeFallback}>
         <Routes>
-          <Route path="/" element={withFullApp(<SearchExperience />)} />
-          <Route path="/search/:slug" element={withFullApp(<SearchExperience />)} />
-          <Route path="/docs" element={withFullApp(<DocsIndex />)} />
-          <Route path="/docs/syntax" element={withFullApp(<SyntaxCheatSheet />)} />
-          <Route path="/guides" element={withFullApp(<GuidesIndex />)} />
-          <Route path="/guides/:slug" element={withFullApp(<GuidePage />)} />
-          <Route path="/saved" element={withFullApp(<SavedSearches />)} />
-          <Route path="/reset-password" element={withFullApp(<ResetPassword />)} />
-          <Route path="/profile" element={withFullApp(<ProfileSettings />)} />
-          <Route path="/admin/analytics" element={withFullApp(<AdminAnalytics />)} />
-          <Route path="/admin/curated-searches" element={withFullApp(<AdminCuratedSearches />)} />
-          <Route path="/deck-recs" element={withFullApp(<DeckRecommendations />)} />
-          <Route path="/combos" element={withFullApp(<FindMyCombos />)} />
-          <Route path="/archetypes" element={withFullApp(<ArchetypesIndex />)} />
-          <Route path="/archetypes/:slug" element={withFullApp(<ArchetypePage />)} />
-          <Route path="/deckbuilder" element={withFullApp(<DeckBuilder />)} />
-          <Route path="/deckbuilder/:id" element={withFullApp(<DeckEditor />)} />
-          <Route path="/deck/:id" element={withFullApp(<PublicDeckView />)} />
-          <Route path="/decks" element={withFullApp(<BrowseDecks />)} />
-          <Route path="/browse-searches" element={withFullApp(<BrowseSearches />)} />
-          <Route path="/about" element={withFullApp(<About />)} />
-          <Route path="/collection" element={withFullApp(<Collection />)} />
-          <Route path="/market" element={withFullApp(<MarketTrends />)} />
-          <Route path="/cards/:slug" element={withFullApp(<CardPage />)} />
-          <Route path="/user/:userId" element={withFullApp(<PublicProfile />)} />
-          <Route path="/ai" element={withFullApp(<AiIndex />)} />
-          <Route path="/ai/:slug" element={withFullApp(<AiPage />)} />
-          <Route path="/admin/seo-pages" element={withFullApp(<AdminSeoPages />)} />
-          <Route path="/.lovable/oauth/consent" element={withFullApp(<OAuthConsent />)} />
-          <Route path="*" element={withFullApp(<NotFound />)} />
+          <Route path="/" element={<LandingPage />} />
+          <Route
+            element={
+              <FullAppProviders>
+                <Outlet />
+              </FullAppProviders>
+            }
+          >
+            <Route path="/search/:slug" element={withFullApp(<SearchExperience />)} />
+            <Route path="/docs" element={withFullApp(<DocsIndex />)} />
+            <Route path="/docs/syntax" element={withFullApp(<SyntaxCheatSheet />)} />
+            <Route path="/guides" element={withFullApp(<GuidesIndex />)} />
+            <Route path="/guides/:slug" element={withFullApp(<GuidePage />)} />
+            <Route path="/saved" element={withFullApp(<SavedSearches />)} />
+            <Route path="/reset-password" element={withFullApp(<ResetPassword />)} />
+            <Route path="/profile" element={withFullApp(<ProfileSettings />)} />
+            <Route path="/admin/analytics" element={withFullApp(<AdminAnalytics />)} />
+            <Route path="/admin/curated-searches" element={withFullApp(<AdminCuratedSearches />)} />
+            <Route path="/deck-recs" element={withFullApp(<DeckRecommendations />)} />
+            <Route path="/combos" element={withFullApp(<FindMyCombos />)} />
+            <Route path="/archetypes" element={withFullApp(<ArchetypesIndex />)} />
+            <Route path="/archetypes/:slug" element={withFullApp(<ArchetypePage />)} />
+            <Route path="/deckbuilder" element={withFullApp(<DeckBuilder />)} />
+            <Route path="/deckbuilder/:id" element={withFullApp(<DeckEditor />)} />
+            <Route path="/deck/:id" element={withFullApp(<PublicDeckView />)} />
+            <Route path="/decks" element={withFullApp(<BrowseDecks />)} />
+            <Route path="/browse-searches" element={withFullApp(<BrowseSearches />)} />
+            <Route path="/about" element={withFullApp(<About />)} />
+            <Route path="/collection" element={withFullApp(<Collection />)} />
+            <Route path="/market" element={withFullApp(<MarketTrends />)} />
+            <Route path="/cards/:slug" element={withFullApp(<CardPage />)} />
+            <Route path="/user/:userId" element={withFullApp(<PublicProfile />)} />
+            <Route path="/ai" element={withFullApp(<AiIndex />)} />
+            <Route path="/ai/:slug" element={withFullApp(<AiPage />)} />
+            <Route path="/admin/seo-pages" element={withFullApp(<AdminSeoPages />)} />
+            <Route path="/.lovable/oauth/consent" element={withFullApp(<OAuthConsent />)} />
+            <Route path="*" element={withFullApp(<NotFound />)} />
+          </Route>
         </Routes>
       </Suspense>
-    </FullAppProviders>
+    </BrowserRouter>
   );
 }
