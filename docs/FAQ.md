@@ -20,7 +20,15 @@ Use the "Report Issue" or feedback dialogs in the UI to submit corrections. Feed
 
 ## Can I search in languages other than English?
 
-Yes. OffMeta supports 11 languages (en, es, fr, de, it, pt, ja, ko, ru, zhs, zht), but the deterministic search layer is English-centric. Non-English queries are automatically pre-translated to English before they reach the Scryfall translation pipeline, so users can search in their preferred UI language while the translation engine still works from English-like search intent.
+Yes. OffMeta supports 11 languages (en, es, fr, de, it, pt, ja, ko, ru, zhs, zht), but the deterministic search layer itself is still English-centric.
+
+If you search in a non-English UI, the query is first translated to English before it reaches the Scryfall translation pipeline. That means the visible interface can be localized, while the rule-based search logic still works from English-like intent.
+
+What this means in practice:
+
+- Straightforward MTG phrases often work after pre-translation.
+- Very idiomatic or region-specific phrasing may still need the fallback AI translation path.
+- The best results still come from MTG terms that map cleanly to colors, types, formats, keywords, or common archetypes.
 
 ## What is the translation pipeline architecture?
 

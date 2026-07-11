@@ -29,7 +29,13 @@ OffMeta is a React 19 + Vite app that translates natural-language Magic: The Gat
 4. AI translation is used only as fallback after deterministic handling.
 5. Scryfall returns cards, which the UI renders.
 
-The deterministic rule set is still written around English MTG phrasing, so the multilingual experience depends on the pre-translation stage to bridge user locale and rule-based search behavior.
+The deterministic rule set is still written around English MTG phrasing. Multilingual support therefore depends on the pre-translation stage to bridge user locale and the rule-based search behavior.
+
+This also means:
+
+- Locale affects the UI and translation input, not the underlying Scryfall syntax.
+- The deterministic layer should be documented as English-first, not language-neutral.
+- When translation is ambiguous, the AI fallback becomes more important for preserving intent.
 
 ## Directory map
 

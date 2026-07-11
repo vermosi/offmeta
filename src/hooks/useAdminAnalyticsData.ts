@@ -10,6 +10,18 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAdminAnalyticsFilters } from '@/hooks/useAdminAnalyticsFilters';
 import { logger } from '@/lib/core/logger';
+import { fetchAdminJson, getAdminAccessToken } from '@/lib/admin/admin-analytics-api';
+import {
+  patchFeedbackRuleSyntax,
+  removeArchivedRule,
+  toggleRuleActiveInFeedback,
+  toggleRuleActiveInRules,
+  updateRuleArchivedAt,
+} from '@/lib/admin/admin-analytics-optimistic';
+import {
+  createOrUpdateTranslationRule,
+  processFeedbackItem,
+} from '@/lib/admin/admin-analytics-actions';
 import type {
   AnalyticsData,
   FeedbackFilter,
@@ -78,26 +90,11 @@ export function useAdminAnalyticsData(user: { id: string } | null, isAdmin: bool
   const fetchAnalytics = useCallback(async () => {
     setIsLoading(true);
     try {
-      const session = await supabase.auth.getSession();
-      const token = session.data.session?.access_token;
-      if (!token) throw new Error('Not authenticated');
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-analytics?days=${days}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          },
-        },
+      const token = await getAdminAccessToken();
+      const analyticsData = await fetchAdminJson<AnalyticsData>(
+        `admin-analytics?days=${days}`,
+        token,
       );
-
-      if (!response.ok) {
-        const errBody = await response.text();
-        throw new Error(errBody || `HTTP ${response.status}`);
-      }
-
-      const analyticsData = await response.json();
       setData(analyticsData);
     } catch (e) {
       void e;
@@ -137,26 +134,11 @@ export function useAdminAnalyticsData(user: { id: string } | null, isAdmin: bool
   const fetchRepairQueue = useCallback(async () => {
     setRepairQueueLoading(true);
     try {
-      const session = await supabase.auth.getSession();
-      const token = session.data.session?.access_token;
-      if (!token) throw new Error('Not authenticated');
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-search-quality-repair?days=${days}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          },
-        },
+      const token = await getAdminAccessToken();
+      const payload = await fetchAdminJson<{ queue: QueryRepairItem[] }>(
+        `admin-search-quality-repair?days=${days}`,
+        token,
       );
-
-      if (!response.ok) {
-        const errBody = await response.text();
-        throw new Error(errBody || `HTTP ${response.status}`);
-      }
-
-      const payload = (await response.json()) as { queue: QueryRepairItem[] };
       setRepairQueue(payload.queue ?? []);
     } catch (error) {
       void error;
@@ -169,26 +151,11 @@ export function useAdminAnalyticsData(user: { id: string } | null, isAdmin: bool
   const fetchQueryDetail = useCallback(async (query: string) => {
     setQueryDetailLoading(true);
     try {
-      const session = await supabase.auth.getSession();
-      const token = session.data.session?.access_token;
-      if (!token) throw new Error('Not authenticated');
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-search-quality-repair?query=${encodeURIComponent(query)}&days=${days}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          },
-        },
+      const token = await getAdminAccessToken();
+      const payload = await fetchAdminJson<{ detail: QueryDetail }>(
+        `admin-search-quality-repair?query=${encodeURIComponent(query)}&days=${days}`,
+        token,
       );
-
-      if (!response.ok) {
-        const errBody = await response.text();
-        throw new Error(errBody || `HTTP ${response.status}`);
-      }
-
-      const payload = (await response.json()) as { detail: QueryDetail };
       setQueryDetail(payload.detail);
       setQueryDetailOpen(true);
     } catch {
@@ -232,26 +199,24 @@ export function useAdminAnalyticsData(user: { id: string } | null, isAdmin: bool
     async (ruleId: string, isCurrentlyArchived: boolean) => {
       setArchivingRuleId(ruleId);
       const newArchivedAt = isCurrentlyArchived ? null : new Date().toISOString();
-      setRules((prev) =>
-        prev.map((r) => (r.id === ruleId ? { ...r, archived_at: newArchivedAt } : r)),
-      );
+      setRules((prev) => updateRuleArchivedAt(prev, ruleId, newArchivedAt));
       const { error } = await supabase
         .from('translation_rules')
         .update({ archived_at: newArchivedAt })
         .eq('id', ruleId);
       if (error) {
         setRules((prev) =>
-          prev.map((r) =>
-            r.id === ruleId
-              ? { ...r, archived_at: isCurrentlyArchived ? new Date().toISOString() : null }
-              : r,
+          updateRuleArchivedAt(
+            prev,
+            ruleId,
+            isCurrentlyArchived ? new Date().toISOString() : null,
           ),
         );
         toast.error('Failed to update rule');
       } else {
         toast.success(isCurrentlyArchived ? 'Rule restored' : 'Rule archived');
         if (!showArchivedRulesRef.current && !isCurrentlyArchived) {
-          setTimeout(() => setRules((prev) => prev.filter((r) => r.id !== ruleId)), 600);
+          setTimeout(() => setRules((prev) => removeArchivedRule(prev, ruleId)), 600);
         }
       }
       setArchivingRuleId(null);
@@ -324,13 +289,7 @@ export function useAdminAnalyticsData(user: { id: string } | null, isAdmin: bool
         setRules((prev) =>
           prev.map((r) => (r.id === ruleId ? { ...r, scryfall_syntax: trimmed } : r)),
         );
-        setFeedback((prev) =>
-          prev.map((f) =>
-            f.generated_rule_id === ruleId && f.translation_rules
-              ? { ...f, translation_rules: { ...f.translation_rules, scryfall_syntax: trimmed } }
-              : f,
-          ),
-        );
+        setFeedback((prev) => patchFeedbackRuleSyntax(prev, ruleId, trimmed));
         toast.success(`Rule updated · ${validationCount.toLocaleString()} cards found`);
         setEditingRuleId(null);
         setEditingSyntax('');
@@ -360,27 +319,7 @@ export function useAdminAnalyticsData(user: { id: string } | null, isAdmin: bool
     }) => {
       setEditSaving(true);
       try {
-        const session = await supabase.auth.getSession();
-        const token = session.data.session?.access_token;
-        if (!token) throw new Error('Not authenticated');
-
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-search-quality-repair`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            },
-            body: JSON.stringify(input),
-          },
-        );
-
-        const result = (await response.json()) as { success?: boolean; error?: string };
-        if (!response.ok || result.success === false) {
-          throw new Error(result.error || `HTTP ${response.status}`);
-        }
+        await createOrUpdateTranslationRule(input);
 
         toast.success(input.id ? 'Rule updated' : 'Rule created');
         await fetchRules(showArchivedRulesRef.current);
@@ -416,31 +355,15 @@ export function useAdminAnalyticsData(user: { id: string } | null, isAdmin: bool
   const toggleRuleDirect = useCallback(
     async (ruleId: string, currentActive: boolean) => {
       setRuleDirectTogglingId(ruleId);
-      setRules((prev) =>
-        prev.map((r) => (r.id === ruleId ? { ...r, is_active: !currentActive } : r)),
-      );
-      setFeedback((prev) =>
-        prev.map((f) =>
-          f.generated_rule_id === ruleId && f.translation_rules
-            ? { ...f, translation_rules: { ...f.translation_rules, is_active: !currentActive } }
-            : f,
-        ),
-      );
+      setRules((prev) => toggleRuleActiveInRules(prev, ruleId, !currentActive));
+      setFeedback((prev) => toggleRuleActiveInFeedback(prev, ruleId, !currentActive));
       const { error } = await supabase
         .from('translation_rules')
         .update({ is_active: !currentActive })
         .eq('id', ruleId);
       if (error) {
-        setRules((prev) =>
-          prev.map((r) => (r.id === ruleId ? { ...r, is_active: currentActive } : r)),
-        );
-        setFeedback((prev) =>
-          prev.map((f) =>
-            f.generated_rule_id === ruleId && f.translation_rules
-              ? { ...f, translation_rules: { ...f.translation_rules, is_active: currentActive } }
-              : f,
-          ),
-        );
+        setRules((prev) => toggleRuleActiveInRules(prev, ruleId, currentActive));
+        setFeedback((prev) => toggleRuleActiveInFeedback(prev, ruleId, currentActive));
         toast.error('Failed to update rule');
       } else {
         toast.success(currentActive ? 'Rule deactivated' : 'Rule activated');
@@ -490,23 +413,7 @@ export function useAdminAnalyticsData(user: { id: string } | null, isAdmin: bool
         prev.map((f) => (f.id === feedbackId ? { ...f, processing_status: 'processing' } : f)),
       );
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        const res = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-feedback`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${session?.access_token ?? ''}`,
-              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            },
-            body: JSON.stringify({ feedbackId }),
-          },
-        );
-        const result = await res.json();
-        if (!res.ok) throw new Error(result.error ?? `HTTP ${res.status}`);
+        const result = await processFeedbackItem(feedbackId);
         toast.success(`Re-processed: ${result.status ?? 'done'}`);
         await fetchFeedback();
       } catch (e) {
@@ -534,30 +441,10 @@ export function useAdminAnalyticsData(user: { id: string } | null, isAdmin: bool
     let successCount = 0;
     let failCount = 0;
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      if (!token) {
-        toast.error('Not authenticated');
-        return;
-      }
       for (const item of pendingItems) {
         try {
-          const res = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-feedback`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-                apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-              },
-              body: JSON.stringify({ feedbackId: item.id }),
-            },
-          );
-          if (res.ok) successCount++;
-          else failCount++;
+          await processFeedbackItem(item.id);
+          successCount++;
         } catch {
           failCount++;
         }
