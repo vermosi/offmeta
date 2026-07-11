@@ -1,4 +1,5 @@
 import { getAdminAccessToken } from '@/lib/admin/admin-analytics-api';
+import { env } from '@/lib/core/env';
 
 export async function createOrUpdateTranslationRule(input: {
   id?: string;
@@ -11,13 +12,13 @@ export async function createOrUpdateTranslationRule(input: {
 }): Promise<{ success?: boolean; error?: string }> {
   const token = await getAdminAccessToken();
   const response = await fetch(
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-search-quality-repair`,
+    `${env.VITE_SUPABASE_URL}/functions/v1/admin-search-quality-repair`,
     {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
-        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        apikey: env.VITE_SUPABASE_PUBLISHABLE_KEY,
       },
       body: JSON.stringify(input),
     },
@@ -34,13 +35,13 @@ export async function createOrUpdateTranslationRule(input: {
 export async function processFeedbackItem(feedbackId: string): Promise<{ status?: string }> {
   const token = await getAdminAccessToken();
   const response = await fetch(
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-feedback`,
+    `${env.VITE_SUPABASE_URL}/functions/v1/process-feedback`,
     {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
-        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        apikey: env.VITE_SUPABASE_PUBLISHABLE_KEY,
       },
       body: JSON.stringify({ feedbackId }),
     },

@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { env } from '@/lib/core/env';
 
 export async function getAdminAccessToken(): Promise<string> {
   const session = await supabase.auth.getSession();
@@ -14,11 +15,11 @@ export async function fetchAdminJson<T>(
   token: string,
 ): Promise<T> {
   const response = await fetch(
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${path}`,
+    `${env.VITE_SUPABASE_URL}/functions/v1/${path}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
-        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        apikey: env.VITE_SUPABASE_PUBLISHABLE_KEY,
       },
     },
   );

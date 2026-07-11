@@ -11,9 +11,10 @@ describe('validateEnv', () => {
     expect(env.VITE_SUPABASE_URL).toBe('https://example.supabase.co');
   });
 
-  it('throws when required values are missing', () => {
-    expect(() => validateEnv({})).toThrow(
-      /Missing required environment variables/i,
-    );
+  it('falls back to bundled values when required values are missing', () => {
+    const env = validateEnv({});
+
+    expect(env.VITE_SUPABASE_URL).toBe('https://nxmzyykkzwomkcentctt.supabase.co');
+    expect(env.VITE_SUPABASE_PUBLISHABLE_KEY).toContain('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9');
   });
 });

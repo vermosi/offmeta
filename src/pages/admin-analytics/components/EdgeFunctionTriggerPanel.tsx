@@ -16,6 +16,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks';
+import { env } from '@/lib/core/env';
 
 
 type FnMethod = 'GET' | 'POST';
@@ -114,7 +115,7 @@ export function EdgeFunctionTriggerPanel() {
 
     try {
       const token = session?.access_token;
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${fn.name}`;
+      const url = `${env.VITE_SUPABASE_URL}/functions/v1/${fn.name}`;
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',

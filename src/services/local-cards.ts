@@ -11,6 +11,7 @@
 import type { ScryfallCard } from '@/types/card';
 import { logger } from '@/lib/core/logger';
 import { recordHit } from '@/services/hit-rate-tracker';
+import { env } from '@/lib/core/env';
 
 // ── In-memory caches ────────────────────────────────────────────────────────
 
@@ -26,10 +27,7 @@ function hasSupabaseConfig(): boolean {
     ) {
       return false;
     }
-    return Boolean(
-      import.meta.env.VITE_SUPABASE_URL &&
-        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-    );
+    return Boolean(env.VITE_SUPABASE_URL && env.VITE_SUPABASE_PUBLISHABLE_KEY);
   } catch {
     return false;
   }

@@ -17,6 +17,7 @@
 
 import { trackEventDirect } from '@/hooks/useAnalytics';
 import { classifyTraffic } from '@/lib/analytics/traffic';
+import { env } from '@/lib/core/env';
 
 const PING_INTERVAL_MS = 15_000; // send an engaged ping every 15s of active time
 const TICK_MS = 1_000; // accrue engaged time in 1s steps
@@ -49,11 +50,8 @@ function sendKeepaliveEvent(
   payload: Record<string, number | string | boolean>,
 ): void {
   try {
-    const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-    const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as
-      | string
-      | undefined;
-    if (!url || !key) return;
+    const url = env.VITE_SUPABASE_URL;
+    const key = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
     const body = JSON.stringify({
       event_type: eventType,
