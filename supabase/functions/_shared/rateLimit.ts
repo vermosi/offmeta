@@ -135,14 +135,15 @@ async function getSharedRateLimitClient(): Promise<SupabaseClientLike | null> {
   if (sharedRateLimitClientPromise) return sharedRateLimitClientPromise;
 
   sharedRateLimitClientPromise = (async () => {
-    if (typeof Deno === 'undefined') return null;
+    const DenoRef = (globalThis as { Deno?: { env: { get: (k: string) => string | undefined } } }).Deno;
+    if (typeof DenoRef === 'undefined') return null;
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const supabaseUrl = DenoRef.env.get('SUPABASE_URL');
+    const serviceRoleKey = DenoRef.env.get('SUPABASE_SERVICE_ROLE_KEY');
     if (!supabaseUrl || !serviceRoleKey) return null;
 
     const { createClient } = (await import(
-      'https://esm.sh/@supabase/supabase-js@2'
+      /* @vite-ignore */ 'https://esm.sh/@supabase/supabase-js@2' as string
     )) as {
       createClient: SupabaseClientFactory;
     };
