@@ -52,6 +52,7 @@ export default function LandingPage() {
             />
             <button
               type="submit"
+              data-testid="search-submit-button"
               className="min-h-12 rounded-full bg-accent px-6 text-sm font-medium text-accent-foreground shadow-lg shadow-accent/20 transition-colors hover:shadow-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               Start searching

@@ -65,7 +65,7 @@ test.describe('Search Flow', () => {
     await expect(searchInput).toBeVisible({ timeout: 15_000 });
 
     await searchInput.fill('zzzzzzzzzzzz');
-    await page.getByTestId('search-submit-button').click();
+    await searchInput.press('Enter');
 
     await expect(
       page.getByRole('heading', { name: /no cards found/i }),
@@ -165,7 +165,7 @@ test.describe('Search Flow', () => {
     await expect(searchInput).toBeVisible({ timeout: 15_000 });
 
     await searchInput.fill('broken search');
-    await page.getByTestId('search-submit-button').click();
+    await searchInput.press('Enter');
 
     await expect(page.getByText(/search issue/i)).toBeVisible({
       timeout: 15_000,

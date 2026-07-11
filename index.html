@@ -293,7 +293,7 @@
         letter-spacing: -0.04em;
       }
       .shell-accent {
-        color: hsl(195 95% 65%);
+        color: hsl(var(--accent));
       }
       .shell-copy {
         margin: 0 auto;
@@ -404,9 +404,9 @@
         </p>
         <form class="shell-actions" action="/search/" method="get">
           <div class="shell-form">
-            <label for="shell-query" class="sr-only">Search Magic cards</label>
+            <label for="search-input" class="sr-only">Search Magic cards</label>
             <input
-              id="shell-query"
+              id="search-input"
               name="query"
               class="shell-input"
               type="text"
