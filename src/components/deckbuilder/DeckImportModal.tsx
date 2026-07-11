@@ -57,8 +57,8 @@ export function DeckImportModal({ open, onOpenChange, onImport }: DeckImportModa
     });
 
     uppy.on('file-added', async (file) => {
-      const data = file.data;
-      if (!(data instanceof File)) return;
+      const data = file.data as Blob | File;
+      if (!(data instanceof Blob)) return;
       const text = await data.text();
       setUploadedFileName(file.name);
       setUploadedText(text);
