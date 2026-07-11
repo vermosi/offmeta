@@ -22,7 +22,7 @@
 
 ---
 
-## ?? Documentation
+## Documentation
 
 Start with the centralized index: [docs/README.md](docs/README.md).
 
@@ -42,7 +42,7 @@ Core references:
 
 ---
 
-## ?? Legal
+## Legal
 
 | Document                  | Description             |
 | ------------------------- | ----------------------- |

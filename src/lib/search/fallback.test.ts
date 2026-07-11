@@ -167,6 +167,32 @@ describe('buildClientFallbackQuery', () => {
     expect(q).toContain('o:"add"');
   });
 
+  it('translates mana fixing', () => {
+    const q = buildClientFallbackQuery('mana fixing');
+    expect(q).toMatch(/t:land|t:artifact/);
+    expect(q).toMatch(/add|search|any color/i);
+  });
+
+  it('translates vintage cube staples', () => {
+    const q = buildClientFallbackQuery('vintage cube staples');
+    expect(q).toContain('f:vintage');
+    expect(q).toMatch(/otag:(ramp|draw|removal|counter|boardwipe)/);
+  });
+
+  it('translates draw a card', () => {
+    expect(buildClientFallbackQuery('draw a card')).toContain('otag:draw');
+  });
+
+  it('translates draw three cards', () => {
+    expect(buildClientFallbackQuery('draw three cards')).toContain('otag:draw');
+  });
+
+  it('translates toughness greater than power', () => {
+    expect(buildClientFallbackQuery('toughness greater than power')).toContain(
+      'tou>pow',
+    );
+  });
+
   // Pre-translated mana patterns
   it('returns pre-translated "artifacts that tap for blue"', () => {
     expect(buildClientFallbackQuery('artifacts that tap for blue'))

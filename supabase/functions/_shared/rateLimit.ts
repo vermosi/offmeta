@@ -135,6 +135,8 @@ async function getSharedRateLimitClient(): Promise<SupabaseClientLike | null> {
   if (sharedRateLimitClientPromise) return sharedRateLimitClientPromise;
 
   sharedRateLimitClientPromise = (async () => {
+    if (typeof Deno === 'undefined') return null;
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     if (!supabaseUrl || !serviceRoleKey) return null;
@@ -415,5 +417,8 @@ export function maybeCleanup(): void {
 export function cleanupRateLimiter(): void {
   rateLimiter.clear();
   sessionLimiter.clear();
+  globalRequestCount = 0;
+  globalResetTime = Date.now() + 60000;
+  sharedRateLimitClientPromise = null;
   cleanupCounter = 0;
 }

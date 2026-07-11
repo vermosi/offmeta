@@ -348,6 +348,20 @@ Deno.test('translates low toughness creatures', async () => {
   );
 });
 
+Deno.test('translates toughness greater than power', async () => {
+  const result = await callSemanticSearch(
+    'creatures with toughness greater than power',
+  );
+
+  assertEquals(result.success, true);
+  const query = result.scryfallQuery.toLowerCase();
+  assertEquals(
+    query.includes('tou>pow') || query.includes('toughness>power'),
+    true,
+    'Should compare toughness > power',
+  );
+});
+
 Deno.test('translates total stats comparisons', async () => {
   const result = await callSemanticSearch(
     'creatures with total power and toughness 10 or more',
@@ -490,6 +504,20 @@ Deno.test('combines type, color, and effect constraints', async () => {
     hasGreen || hasCreature || hasDraw,
     true,
     `Should include at least one constraint, got: ${result.scryfallQuery}`,
+  );
+});
+
+Deno.test('translates draw three cards', async () => {
+  const result = await callSemanticSearch('cards that draw three cards');
+
+  assertEquals(result.success, true);
+  const query = result.scryfallQuery.toLowerCase();
+  assertEquals(
+    query.includes('otag:draw') ||
+      query.includes('draw three cards') ||
+      query.includes('o:/draw'),
+    true,
+    'Should include draw-three-cards search',
   );
 });
 

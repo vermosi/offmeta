@@ -271,13 +271,19 @@ export function parseOraclePatterns(query: string, ir: SearchIR): string {
     remaining = remaining.replace(/\b(?:draw cards?|card\s+draw)\b/gi, '').trim();
   }
 
-  if (/\bdraws?\s+(?:a|one)\s+card\b/i.test(remaining)) {
+  if (
+    /\bdraws?\s+(?:a|one|1)\s+card\b/i.test(remaining) ||
+    /\bdraw\s+a\s+card\b/i.test(remaining)
+  ) {
     if (KNOWN_OTAGS.has('draw')) {
       ir.tags.push('otag:draw');
     } else {
       ir.oracle.push('o:"draw a card"');
     }
-    remaining = remaining.replace(/\bdraws?\s+(?:a|one)\s+card\b/gi, '').trim();
+    remaining = remaining
+      .replace(/\bdraws?\s+(?:a|one|1)\s+card\b/gi, '')
+      .replace(/\bdraw\s+a\s+card\b/gi, '')
+      .trim();
   }
 
   if (/\bdraws?\s+(?:two|2)\s+cards?\b/i.test(remaining)) {
@@ -287,6 +293,43 @@ export function parseOraclePatterns(query: string, ir: SearchIR): string {
       ir.oracle.push('o:"draw two cards"');
     }
     remaining = remaining.replace(/\bdraws?\s+(?:two|2)\s+cards?\b/gi, '').trim();
+  }
+
+  if (/\bdraws?\s+(?:three|3)\s+cards?\b/i.test(remaining)) {
+    if (KNOWN_OTAGS.has('draw')) {
+      ir.tags.push('otag:draw');
+    } else {
+      ir.oracle.push('o:"draw three cards"');
+    }
+    remaining = remaining.replace(/\bdraws?\s+(?:three|3)\s+cards?\b/gi, '').trim();
+  }
+
+  if (
+    /\bpower\s+(?:greater\s+than|more\s+than|over|above)\s+toughness\b/i.test(
+      remaining,
+    )
+  ) {
+    ir.specials.push('pow>tou');
+    remaining = remaining
+      .replace(
+        /\bpower\s+(?:greater\s+than|more\s+than|over|above)\s+toughness\b/gi,
+        '',
+      )
+      .trim();
+  }
+
+  if (
+    /\btoughness\s+(?:greater\s+than|more\s+than|over|above)\s+power\b/i.test(
+      remaining,
+    )
+  ) {
+    ir.specials.push('tou>pow');
+    remaining = remaining
+      .replace(
+        /\btoughness\s+(?:greater\s+than|more\s+than|over|above)\s+power\b/gi,
+        '',
+      )
+      .trim();
   }
 
   if (/\bparty\s+tribal\b/i.test(remaining)) {

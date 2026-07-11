@@ -164,9 +164,26 @@ describe('Deterministic MTG query translation', () => {
     expect(query).toMatch(/otag:draw|o:"draw a card"|o:\/draw/i);
   });
 
+  it('T16f2: cards that draw three cards', () => {
+    const query = getQuery('cards that draw three cards');
+    expect(query).toMatch(/otag:draw|o:"draw three cards"|o:\/draw/i);
+  });
+
   it('T16g: cards that draw two cards', () => {
     const query = getQuery('cards that draw two cards');
     expect(query).toMatch(/otag:draw|o:"draw two cards"|o:\/draw/i);
+  });
+
+  it('T16i: mana fixing lands', () => {
+    const query = getQuery('mana fixing');
+    expect(query).toMatch(/t:land|t:artifact/);
+    expect(query).toMatch(/add|search|any color/i);
+  });
+
+  it('T16j: vintage cube staples', () => {
+    const query = getQuery('vintage cube staples');
+    expect(query).toContain('f:vintage');
+    expect(query).toMatch(/otag:(ramp|draw|removal|counter|boardwipe)/);
   });
 
   it('T16h: lands that produce any color of mana', () => {
@@ -174,6 +191,12 @@ describe('Deterministic MTG query translation', () => {
     expect(query).toContain('t:land');
     expect(query).toContain('o:"add"');
     expect(query).toContain('o:"any color"');
+  });
+
+  it('T16k: creatures with toughness greater than power', () => {
+    const query = getQuery('creatures with toughness greater than power');
+    expect(query).toContain('t:creature');
+    expect(query).toContain('tou>pow');
   });
 
   // ── Phase 6: New keyword tests ──

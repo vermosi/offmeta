@@ -18,6 +18,18 @@ vi.mock('@/hooks/useAuth', () => ({
   AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+vi.mock('@/components/Header', () => ({
+  Header: () => <header data-testid="mock-header">Header</header>,
+}));
+
+vi.mock('@/components/Footer', () => ({
+  Footer: () => <footer data-testid="mock-footer">Footer</footer>,
+}));
+
+vi.mock('@/components/SkipLinks', () => ({
+  SkipLinks: () => null,
+}));
+
 function renderNotFound() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },

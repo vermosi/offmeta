@@ -1,6 +1,6 @@
 import { describe, it } from 'vitest';
 import type { TranslationTestCase } from './translation-golden.shared';
-import { expectGoldenCoverage, validateTranslation } from './translation-golden.shared';
+import { expectGoldenCoverage } from './translation-golden.shared';
 
 describe('Translation Golden Tests - Card Draw', () => {
   const drawCases: TranslationTestCase[] = [

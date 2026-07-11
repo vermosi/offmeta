@@ -58,6 +58,13 @@ export const PRETRANSLATED: Record<string, string> = {
   'azorius counterspells or board wipes or removal for commander': 'id<=wu (otag:counter or otag:boardwipe or otag:removal) f:commander',
   'artifacts that tap for blue': 't:artifact o:"add" o:"{U}"',
   'lands that add any color': 't:land o:"add" o:"any color"',
+  'mana fixing': '(t:land or t:artifact) (o:"add" or o:"search" or o:"any color")',
+  'vintage cube staples': 'f:vintage (otag:ramp or otag:draw or otag:removal or otag:counter or otag:boardwipe)',
+  'draw a card': 'otag:draw',
+  'draw two cards': 'otag:draw',
+  'draw three cards': 'otag:draw',
+  'power greater than toughness': 'pow>tou',
+  'toughness greater than power': 'tou>pow',
 };
 
 /** Common MTG slang → Scryfall syntax fragments */
@@ -66,6 +73,13 @@ const SLANG_MAP: Record<string, string> = {
   'mana rock': 't:artifact o:"add" o:"{"',
   'mana dorks': 't:creature o:"add" o:"{"',
   'mana dork': 't:creature o:"add" o:"{"',
+  'mana fixing': '(t:land or t:artifact) (o:"add" or o:"search" or o:"any color")',
+  'vintage cube staples': 'f:vintage (otag:ramp or otag:draw or otag:removal or otag:counter or otag:boardwipe)',
+  'draw a card': 'otag:draw',
+  'draw two cards': 'otag:draw',
+  'draw three cards': 'otag:draw',
+  'power greater than toughness': 'pow>tou',
+  'toughness greater than power': 'tou>pow',
   'board wipes': 'otag:boardwipe',
   'board wipe': 'otag:boardwipe',
   'boardwipe': 'otag:boardwipe',

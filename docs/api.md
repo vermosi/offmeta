@@ -1225,6 +1225,10 @@ Promotes high-frequency, high-confidence natural-language searches into `curated
 
 **Auth**: Valid API auth required via `validateAuth`.
 
+This endpoint is documented as an authenticated maintenance action. The repository currently
+does not include a migration-backed cron schedule for it, so any scheduling is treated as
+external/manual until a source-controlled job is added.
+
 #### Request body
 
 ```json

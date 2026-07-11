@@ -768,8 +768,16 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
   // Mana fixing
   {
     pattern: /\bmana\s+fixing\b/gi,
-    syntax: 'produces>=2',
-    description: 'Cards that fix mana (produce multiple colors)',
+    syntax: '(t:land or t:artifact) (o:"add" or o:"search" or o:"any color")',
+    description: 'Mana fixing lands and artifacts',
+  },
+
+  // Vintage cube staples
+  {
+    pattern: /\bvintage\s+cube\s+staples?\b/gi,
+    syntax:
+      'f:vintage (otag:ramp or otag:draw or otag:removal or otag:counter or otag:boardwipe)',
+    description: 'High-utility cards for vintage cube',
   },
 
   // Topdeck manipulation
