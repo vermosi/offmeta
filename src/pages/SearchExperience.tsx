@@ -81,6 +81,11 @@ const ResultsToolbar = lazy(() =>
     default: m.ResultsToolbar,
   })),
 );
+const SearchNextActions = lazy(() =>
+  import('@/components/SearchNextActions').then((m) => ({
+    default: m.SearchNextActions,
+  })),
+);
 const SearchResultsArea = lazy(() =>
   import('@/components/SearchResultsArea').then((m) => ({
     default: m.SearchResultsArea,
@@ -439,6 +444,7 @@ const Index = () => {
   const showSimilarTab = hasSearched && !isSearching;
   const showDeckIdeasTab = hasSearched && !isSearching && isDeckQuery;
   const showExplanationTab = hasSearched && !isSearching;
+  const showResultsMode = hasSearched || isSearching;
   const translationSource = lastSearchResult?.source ?? 'ai';
   const translationConfidence = lastSearchResult?.explanation?.confidence;
   const translationSourceLabel =
@@ -535,6 +541,51 @@ const Index = () => {
           role="main"
         >
           <div className="container-main space-y-3 sm:space-y-6">
+            {showResultsMode && (
+              <div className="sticky top-16 z-20 -mx-3 sm:-mx-4 lg:-mx-6 px-3 sm:px-4 lg:px-6">
+                <div className="animate-reveal rounded-2xl border border-border/70 bg-card/85 backdrop-blur-xl shadow-lg shadow-black/5 px-3 py-2 sm:px-4 sm:py-3">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                          {t('results.summaryTitle', 'Search results')}
+                        </span>
+                        {hasSearched && totalCards > 0 && (
+                          <span className="text-xs text-muted-foreground tabular-nums">
+                            {t('results.summaryCards', '{count} cards').replace('{count}', totalCards.toLocaleString())}
+                          </span>
+                        )}
+                        {isSearching && (
+                          <span className="text-xs text-muted-foreground">
+                            {t('results.updating', 'Updating results')}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 truncate text-sm font-medium text-foreground">
+                        {originalQuery || searchQuery || t('search.placeholder')}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <a
+                        href="#search-results"
+                        className="inline-flex items-center justify-center rounded-full border border-border/70 bg-background/70 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-background"
+                      >
+                        {t('results.jumpToResults', 'Jump to results')}
+                      </a>
+                      {hasSearched && (
+                        <a
+                          href="#main-content"
+                          className="inline-flex items-center justify-center rounded-full border border-transparent px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                          {t('results.backToSearch', 'Back to search')}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div>
               <UnifiedSearchBar
                 ref={searchBarRef}
@@ -552,7 +603,7 @@ const Index = () => {
               </Suspense>
             )}
 
-            {(hasSearched || isSearching) && (
+            {showResultsMode && (
               <div className="animate-reveal flex items-start gap-2">
                 <div className="flex-1 min-w-0 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
@@ -563,8 +614,7 @@ const Index = () => {
                       )}
                       {hasSearched && totalCards > 0 && (
                         <span className="text-muted-foreground font-normal ml-1.5">
-                          ({totalCards.toLocaleString()}{' '}
-                          {t('search.cards', 'cards')})
+                          ({t('results.summaryCards', '{count} cards').replace('{count}', totalCards.toLocaleString())})
                         </span>
                       )}
                     </h1>
@@ -642,20 +692,36 @@ const Index = () => {
               <div className="space-y-2">
                 {refinementCount > 0 && (
                   <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-foreground">
-                    Narrow results like this? Save this refinement as a reusable
-                    workflow.
+                    {t(
+                      'results.refinementHint',
+                      'Narrow results like this? Save this refinement as a reusable workflow.',
+                    )}
                   </div>
                 )}
                 {shouldShowProUpsell && (
                   <div className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-foreground">
-                    Better results with Pro: advanced explainability + priority
-                    ranking.
+                    {t(
+                      'results.proUpsell',
+                      'Better results with Pro: advanced explainability + priority ranking.',
+                    )}
                   </div>
                 )}
               </div>
             )}
 
             {/* Toolbar row — only show for Cards tab */}
+            {hasSearched && !isSearching && totalCards > 0 && (
+              <Suspense fallback={null}>
+                <SearchNextActions
+                  intent={lastSearchResult?.intent || lastIntent}
+                  originalQuery={originalQuery}
+                  totalCards={totalCards}
+                  isDeckQuery={isDeckQuery}
+                  queryQualityScore={queryQualityScore}
+                />
+              </Suspense>
+            )}
+
             {cards.length > 0 && !isSearching && activeTab === 'cards' && (
               <ResultsToolbar
                 cards={cards}
@@ -681,6 +747,7 @@ const Index = () => {
           {hasSearched && (
             <Suspense fallback={null}>
               <SearchResultsArea
+                id="search-results"
                 activeSort={activeFilters?.sortBy}
                 activeTab={activeTab}
                 cards={cards}

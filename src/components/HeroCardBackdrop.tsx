@@ -60,6 +60,7 @@ const CARD_POOL = [
 ] as const;
 
 const CARD_COUNT = 6;
+const CARD_ORIGIN = 'https://cards.scryfall.io';
 
 function shuffleAndPick<T>(pool: readonly T[], count: number): T[] {
   const copy = [...pool];
@@ -127,6 +128,13 @@ export function HeroCardBackdrop() {
     const prefetchedLinks: HTMLLinkElement[] = [];
     const warmupSources = cards.filter((_, i) => CENTER_INDEXES.has(i));
 
+    const preconnect = document.createElement('link');
+    preconnect.rel = 'preconnect';
+    preconnect.href = CARD_ORIGIN;
+    preconnect.crossOrigin = 'anonymous';
+    document.head.appendChild(preconnect);
+    prefetchedLinks.push(preconnect);
+
     const schedule =
       (window as unknown as {
         requestIdleCallback?: (
@@ -139,7 +147,7 @@ export function HeroCardBackdrop() {
       () => {
         warmupSources.forEach((src) => {
           const link = document.createElement('link');
-          link.rel = 'prefetch';
+          link.rel = 'preload';
           link.as = 'image';
           link.href = src;
           document.head.appendChild(link);
@@ -197,13 +205,13 @@ export function HeroCardBackdrop() {
                 width={200}
                 height={280}
                 loading={isCenter ? 'eager' : 'lazy'}
-                fetchPriority={isCenter ? 'auto' : 'low'}
-                decoding="async"
+                fetchPriority={isCenter ? 'high' : 'low'}
+                decoding={isCenter ? 'sync' : 'async'}
                 onError={handleError(i)}
                 onLoad={handleLoad(i)}
                 style={{
-                  opacity: isLoaded ? 1 : 0,
-                  transition: 'opacity 500ms ease-out',
+                  opacity: isCenter || isLoaded ? 1 : 0,
+                  transition: isCenter ? 'none' : 'opacity 500ms ease-out',
                 }}
                 className="w-full h-full object-cover rounded-xl"
               />

@@ -34,6 +34,10 @@ export function ExplanationPanel({ card, isLoading: externalLoading }: Explanati
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+        <BookOpen className="h-3.5 w-3.5" />
+        <span>{t('explanation.whyPlayed')}</span>
+      </div>
       {/* Card header */}
       <div className="p-4 rounded-xl bg-muted/30 border border-border/30">
         <div className="flex items-start justify-between gap-3">

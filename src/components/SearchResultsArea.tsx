@@ -40,6 +40,7 @@ const ArtLightbox = lazy(() =>
 );
 
 interface SearchResultsAreaProps {
+  id?: string;
   /** Current sort key from filters — when non-default, skip intelligence reranking */
   activeSort?: string;
   activeTab: ResultsTab;
@@ -92,6 +93,7 @@ interface SearchResultsAreaProps {
 }
 
 export function SearchResultsArea({
+  id,
   activeSort,
   activeTab,
   cards,
@@ -185,7 +187,7 @@ export function SearchResultsArea({
   );
 
   return (
-    <div className="space-y-6">
+    <div id={id} className="space-y-6">
       {/* Cards tab */}
       {activeTab === 'cards' && (
         <>

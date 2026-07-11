@@ -43,14 +43,15 @@ export function ExplainCompilationPanel({
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <CollapsibleTrigger asChild>
         <button
-          className="w-full flex items-center justify-center gap-2 py-2 px-4 text-xs text-muted-foreground hover:text-foreground transition-colors focus-ring rounded-lg bg-secondary/50 hover:bg-secondary border border-border/50 max-w-xs mx-auto"
+          className="w-full flex items-center justify-center gap-2 py-2 px-4 text-xs text-muted-foreground hover:text-foreground transition-colors focus-ring rounded-lg bg-secondary/50 hover:bg-secondary border border-border/50 max-w-md mx-auto"
           aria-expanded={isOpen}
+          aria-label={isOpen ? t('explain.hideDetails') : t('explain.showDetails')}
         >
-          <span>
-            {isOpen ? t('explain.hideDetails') : t('explain.showDetails')}
+          <span className="flex flex-wrap items-center justify-center gap-x-1">
+            <span>{isOpen ? t('explain.hideDetails') : t('explain.showDetails')}</span>
             {!isOpen && activeFields > 0 && (
-              <span className="ml-1 text-accent font-medium">
-                ({t('explain.detected', `${activeFields} detected`).replace('{count}', String(activeFields))})
+              <span className="text-accent font-medium">
+                {t('explain.detected', '{count} signals detected').replace('{count}', String(activeFields))}
               </span>
             )}
           </span>
@@ -65,6 +66,12 @@ export function ExplainCompilationPanel({
 
       <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
         <section className="mt-2 w-full max-w-3xl mx-auto rounded-xl border border-border/50 bg-muted/30 p-4 space-y-3">
+          <div className="rounded-lg border border-border/40 bg-background/60 px-3 py-2 text-xs text-muted-foreground">
+            {t(
+              'explain.summary',
+              'OffMeta mapped your wording into concrete search signals, then translated those signals into Scryfall syntax.',
+            )}
+          </div>
           <div className="grid gap-3 sm:grid-cols-2 text-sm">
             <div className="space-y-0.5">
               <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
