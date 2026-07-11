@@ -1,4 +1,4 @@
-import FlexSearch from 'flexsearch';
+import { Index } from 'flexsearch';
 import type { ScryfallCard } from '@/types/card';
 
 export interface LocalSearchHit {
@@ -6,7 +6,7 @@ export interface LocalSearchHit {
   name: string;
 }
 
-type SearchIndex = FlexSearch.Index<LocalSearchHit['id']>;
+type SearchIndex = Index;
 
 export function createCardSearchIndex(cards: ScryfallCard[]): SearchIndex {
   const index = new FlexSearch.Index({
