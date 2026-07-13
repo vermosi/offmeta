@@ -48,7 +48,7 @@ jobs:
       - name: Run tests with coverage
         run: npm run test -- --coverage
       - name: Upload coverage (lcov + json-summary)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage
           path: coverage
@@ -63,7 +63,7 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm run build
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist
@@ -128,7 +128,7 @@ jobs:
         run: npx playwright test --project=chromium --grep @e2e-smoke
       - name: Upload E2E smoke report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-e2e-smoke-report
           path: playwright-report
@@ -150,7 +150,7 @@ jobs:
         run: npx playwright test --project=chromium --grep @a11y-smoke
       - name: Upload a11y smoke report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-a11y-smoke-report
           path: playwright-report

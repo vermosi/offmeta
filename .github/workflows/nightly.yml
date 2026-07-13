@@ -29,7 +29,7 @@ jobs:
         run: npx playwright test --project=chromium --grep-invert @a11y
       - name: Upload E2E report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-e2e-report
           path: playwright-report
@@ -50,7 +50,7 @@ jobs:
         run: npx playwright test --project=chromium --grep @a11y
       - name: Upload a11y report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-a11y-report
           path: playwright-report
