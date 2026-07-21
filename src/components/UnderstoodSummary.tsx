@@ -339,10 +339,21 @@ export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummary
               const state = isExcluded
                 ? 'border-dashed border-border/60 bg-background/40 opacity-60 line-through'
                 : 'border-border/60 bg-background/70 hover:bg-background';
-              return interactive ? (
+              const rationale = extractRationale(sig.token, originalQuery);
+              const description = categoryDescription(rationale.category, t);
+              const triggersLine =
+                rationale.triggers.length > 0
+                  ? t('understood.rationale.matched', 'Matched from: {words}').replace(
+                      '{words}',
+                      rationale.triggers.map((w) => `"${w}"`).join(', '),
+                    )
+                  : t(
+                      'understood.rationale.default',
+                      'Inferred from the overall wording of your query.',
+                    );
+              const trigger = interactive ? (
                 <button
                   type="button"
-                  key={`${sig.label}-${sig.token}-${i}`}
                   onClick={() => toggleChip(sig.token)}
                   aria-pressed={isExcluded}
                   aria-label={
@@ -362,12 +373,25 @@ export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummary
                 </button>
               ) : (
                 <span
-                  key={`${sig.label}-${sig.token}-${i}`}
-                  className={`${base} ${state}`}
+                  tabIndex={0}
+                  className={`${base} ${state} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background`}
                 >
                   <span className="text-muted-foreground">{sig.label}</span>
                   <span className="font-mono text-foreground">{sig.token}</span>
                 </span>
+              );
+              return (
+                <Tooltip key={`${sig.label}-${sig.token}-${i}`} delayDuration={150}>
+                  <TooltipTrigger asChild>{trigger}</TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs text-xs leading-relaxed">
+                    <p className="font-medium mb-1">
+                      {sig.label}
+                      <span className="font-mono ml-1 text-muted-foreground">{sig.token}</span>
+                    </p>
+                    <p className="text-muted-foreground mb-1">{description}</p>
+                    <p className="text-muted-foreground">{triggersLine}</p>
+                  </TooltipContent>
+                </Tooltip>
               );
             })}
           </div>
