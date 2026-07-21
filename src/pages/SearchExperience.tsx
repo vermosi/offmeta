@@ -58,6 +58,11 @@ const HowItWorksSection = lazy(() =>
     default: m.HowItWorksSection,
   })),
 );
+const ScryfallComparison = lazy(() =>
+  import('@/components/ScryfallComparison').then((m) => ({
+    default: m.ScryfallComparison,
+  })),
+);
 const StickySearchNudge = lazy(() =>
   import('@/components/StickySearchNudge').then((m) => ({
     default: m.StickySearchNudge,
@@ -750,6 +755,16 @@ const Index = () => {
         {!hasSearched && (
           <Suspense fallback={null}>
             <HowItWorksSection />
+          </Suspense>
+        )}
+        {!hasSearched && (
+          <div className="container-main" aria-hidden="true">
+            <div className="section-divider" />
+          </div>
+        )}
+        {!hasSearched && (
+          <Suspense fallback={null}>
+            <ScryfallComparison onTrySearch={handleTryExample} />
           </Suspense>
         )}
         {!hasSearched && (
