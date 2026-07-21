@@ -221,11 +221,20 @@ export function ExampleQueriesCarousel({
             aria-labelledby={`${reactId}-tab-${active.key}`}
             aria-describedby={`${reactId}-hint`}
           >
-            {active.examples.map((example) => (
+            {active.examples.map((example, index) => (
               <button
                 key={example}
                 type="button"
-                onClick={() => onTrySearch(example)}
+                onClick={() => {
+                  trackExampleQueryClick({
+                    query: example,
+                    category: active.key,
+                    position: index,
+                    visible_count: active.examples.length,
+                  });
+                  onTrySearch(example);
+                }}
+
                 onFocus={(e) => {
                   e.currentTarget.scrollIntoView({
                     behavior: 'smooth',
