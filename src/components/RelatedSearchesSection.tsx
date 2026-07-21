@@ -98,10 +98,11 @@ function buildSuggestions(
     });
   }
 
-  const cmc = intent?.cmcRange;
+  const cmc = intent?.cmc;
   if (!cmc && !/\bcmc|mana value|mv\b/i.test(lower)) {
     push({ label: `${q} 2 mana or less`, query: `${q} 2 mana or less`, reason: 'cmc' });
   }
+
 
   if (topCard?.name && !/\b(similar|like)\b/i.test(lower)) {
     push({
