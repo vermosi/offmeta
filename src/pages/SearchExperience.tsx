@@ -96,6 +96,11 @@ const SearchNextActions = lazy(() =>
     default: m.SearchNextActions,
   })),
 );
+const SearchNextStepsBar = lazy(() =>
+  import('@/components/SearchNextStepsBar').then((m) => ({
+    default: m.SearchNextStepsBar,
+  })),
+);
 const SearchResultsArea = lazy(() =>
   import('@/components/SearchResultsArea').then((m) => ({
     default: m.SearchResultsArea,
@@ -685,6 +690,26 @@ const Index = () => {
                   </div>
                 )}
               </div>
+            )}
+
+            {/* Toolbar row — only show for Cards tab */}
+            {hasSearched && !isSearching && totalCards > 0 && (
+              <Suspense fallback={null}>
+                <SearchNextStepsBar
+                  originalQuery={originalQuery}
+                  intent={lastSearchResult?.intent || lastIntent}
+                  totalCards={totalCards}
+                  onJumpToSimilar={() => {
+                    handleTabChange('similar');
+                    if (typeof document !== 'undefined') {
+                      document
+                        .getElementById('search-results')
+                        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }}
+                  onRelatedSearchClick={handleTryExample}
+                />
+              </Suspense>
             )}
 
             {/* Toolbar row — only show for Cards tab */}
