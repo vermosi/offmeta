@@ -34,6 +34,8 @@ interface CardItemProps {
   tabIndex?: number;
   isOwned?: boolean;
   sparklineData?: SparklinePoint[];
+  /** Short reasons explaining why this card matched the current query. */
+  matchReasons?: string[];
 }
 
 /** Format a price string to a compact display. */
@@ -56,6 +58,7 @@ export const CardItem = memo(function CardItem({
   tabIndex = 0,
   isOwned,
   sparklineData,
+  matchReasons,
 }: CardItemProps) {
   const imageUrl = getCardImage(card, 'small');
   const imageSrcSet = `${getCardImage(card, 'small')} 146w, ${getCardImage(card, 'normal')} 488w, ${getCardImage(card, 'large')} 672w`;
