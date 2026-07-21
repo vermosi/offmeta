@@ -2,8 +2,14 @@
  * ExampleQueriesCarousel — a horizontally scrollable carousel of example
  * queries grouped by the three "How it works" steps (Ask → Translate → Browse).
  * Each example runs a search with one click.
+ *
+ * Keyboard support:
+ *  - Tabs (WAI-ARIA tabs pattern): ←/→ move between tabs, Home/End jump to
+ *    first/last, roving tabindex so only the active tab is in the tab order.
+ *  - Chips: standard Tab navigation; Enter/Space activates via native <button>.
+ *    Chip scrolled into view on focus so keyboard users see the focus ring.
  */
-import { useState } from 'react';
+import { useCallback, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { MessageSquare, Sparkles, LayoutGrid, ArrowRight } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { cn } from '@/lib/utils';
@@ -19,6 +25,12 @@ export function ExampleQueriesCarousel({
 }: ExampleQueriesCarouselProps) {
   const { t } = useTranslation();
   const [activeStep, setActiveStep] = useState<StepKey>('ask');
+  const tabRefs = useRef<Record<StepKey, HTMLButtonElement | null>>({
+    ask: null,
+    translate: null,
+    browse: null,
+  });
+  const reactId = useId();
 
   const steps: Array<{
     key: StepKey;
@@ -78,6 +90,41 @@ export function ExampleQueriesCarousel({
   ];
 
   const active = steps.find((s) => s.key === activeStep) ?? steps[0];
+  const trySearchLabel = t('examples.trySearchLabel', 'Try search:');
+
+  const focusTab = useCallback((key: StepKey) => {
+    setActiveStep(key);
+    // Defer focus so React commits the tabindex change first.
+    requestAnimationFrame(() => {
+      tabRefs.current[key]?.focus();
+    });
+  }, []);
+
+  const handleTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    const currentIndex = steps.findIndex((s) => s.key === activeStep);
+    if (currentIndex < 0) return;
+    let nextIndex: number | null = null;
+    switch (event.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+        nextIndex = (currentIndex + 1) % steps.length;
+        break;
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        nextIndex = (currentIndex - 1 + steps.length) % steps.length;
+        break;
+      case 'Home':
+        nextIndex = 0;
+        break;
+      case 'End':
+        nextIndex = steps.length - 1;
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    focusTab(steps[nextIndex].key);
+  };
 
   return (
     <section
@@ -102,19 +149,29 @@ export function ExampleQueriesCarousel({
           className="mb-4 flex items-center justify-center gap-1.5 sm:gap-2"
           role="tablist"
           aria-label={t('examples.tabsLabel', 'Example categories')}
+          aria-orientation="horizontal"
         >
           {steps.map(({ key, icon: Icon, label }) => {
             const isActive = key === activeStep;
+            const tabId = `${reactId}-tab-${key}`;
+            const panelId = `${reactId}-panel-${key}`;
             return (
               <button
                 key={key}
+                ref={(el) => {
+                  tabRefs.current[key] = el;
+                }}
                 type="button"
                 role="tab"
+                id={tabId}
                 aria-selected={isActive}
+                aria-controls={panelId}
+                tabIndex={isActive ? 0 : -1}
                 onClick={() => setActiveStep(key)}
+                onKeyDown={handleTabKeyDown}
                 className={cn(
                   'flex min-h-9 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                   isActive
                     ? 'border-primary bg-primary text-primary-foreground shadow-sm'
                     : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground',
@@ -127,7 +184,7 @@ export function ExampleQueriesCarousel({
           })}
         </div>
 
-        <p className="mb-3 text-center text-xs text-muted-foreground">
+        <p className="mb-3 text-center text-xs text-muted-foreground" id={`${reactId}-hint`}>
           {active.hint}
         </p>
 
@@ -136,17 +193,27 @@ export function ExampleQueriesCarousel({
           <div
             className="flex gap-2 overflow-x-auto scroll-smooth pb-2 sm:gap-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             role="tabpanel"
-            aria-label={active.label}
+            id={`${reactId}-panel-${active.key}`}
+            aria-labelledby={`${reactId}-tab-${active.key}`}
+            aria-describedby={`${reactId}-hint`}
           >
             {active.examples.map((example) => (
               <button
                 key={example}
                 type="button"
                 onClick={() => onTrySearch(example)}
+                onFocus={(e) => {
+                  e.currentTarget.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                    inline: 'nearest',
+                  });
+                }}
+                aria-label={`${trySearchLabel} ${example}`}
                 className={cn(
                   'group flex min-h-9 shrink-0 items-center gap-2 rounded-full border border-border bg-card/70 px-4 py-2 text-xs font-medium text-foreground backdrop-blur-sm transition-all sm:text-sm',
                   'hover:-translate-y-0.5 hover:border-primary/50 hover:bg-card hover:shadow-md hover:shadow-primary/10',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                 )}
               >
                 <span className="max-w-[220px] truncate sm:max-w-none">
