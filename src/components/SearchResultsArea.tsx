@@ -155,7 +155,8 @@ export function SearchResultsArea({
   const hadFastClick =
     sessionStorage.getItem('offmeta_fast_click_query') === originalQuery;
   const hadRefinement = sessionStorage.getItem('offmeta_once:first_refinement') === '1';
-  const hasCustomSort = !!activeSort && activeSort !== 'name-asc';
+  const hasCustomSort =
+    !!activeSort && activeSort !== 'relevance-desc' && activeSort !== 'name-asc';
   const rankedCards = useMemo(
     () =>
       hasCustomSort
@@ -168,6 +169,7 @@ export function SearchResultsArea({
             hadFastClick,
             hadRefinement,
             isAuthenticated: !!user,
+            intent,
           }),
     [
       displayCards,
@@ -179,6 +181,7 @@ export function SearchResultsArea({
       hadFastClick,
       hadRefinement,
       user,
+      intent,
     ],
   );
   const virtualizedGridKey = useMemo(
