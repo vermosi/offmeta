@@ -287,6 +287,8 @@ const ALLOWED_EVENT_TYPES = [
   'next_steps_jump_similar',
   'next_steps_related_shown',
   'next_steps_related_clicked',
+  'similar_panel_refine_clicked',
+
 ] as const;
 
 type EventType = (typeof ALLOWED_EVENT_TYPES)[number];
