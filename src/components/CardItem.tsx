@@ -28,6 +28,8 @@ import {
   wrapAffiliateUrl,
 } from '@/hooks/useAffiliateConfig';
 
+import type { MatchReason } from '@/lib/search/matchExplanation';
+
 interface CardItemProps {
   card: ScryfallCard;
   onClick: () => void;
@@ -35,7 +37,13 @@ interface CardItemProps {
   isOwned?: boolean;
   sparklineData?: SparklinePoint[];
   /** Short reasons explaining why this card matched the current query. */
-  matchReasons?: string[];
+  matchReasons?: MatchReason[];
+  /**
+   * Optional handler invoked when the user clicks a match reason chip that
+   * carries a Scryfall refine token. Receives the token to append to the
+   * current query (e.g. `otag:treasure`).
+   */
+  onRefineWithMatch?: (token: string, label: string) => void;
 }
 
 /** Format a price string to a compact display. */
