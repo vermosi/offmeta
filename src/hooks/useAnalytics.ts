@@ -264,6 +264,7 @@ const ALLOWED_EVENT_TYPES = [
   'rerun_edited_query',
   'card_click',
   'card_modal_view',
+  'card_page_view', // Dedicated /cards/:slug route view (distinct from in-app modal)
   'deck_click', // NEW: click into a public deck from any surface (browse, archetype, similar)
   'share_clicked', // NEW: fired by SharePageButton / ShareSearchButton on click
   'affiliate_click',
