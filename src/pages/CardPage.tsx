@@ -141,8 +141,10 @@ const CardPage = () => {
     if (card) activate();
   }, [card, activate]);
 
-  // SEO meta
-  const pageUrl = `https://offmeta.app/cards/${slug}`;
+  // SEO meta — canonical URL uses the card's canonical slug (from its real name),
+  // so alternate spellings/slugs collapse to a single indexable URL.
+  const canonicalSlug = card ? cardNameToSlug(card.name) : slug;
+  const pageUrl = `https://offmeta.app/cards/${canonicalSlug}`;
   useEffect(() => {
     if (!card) return;
 
