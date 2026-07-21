@@ -299,7 +299,21 @@ const CardPage = () => {
   }
 
 
-  if (error || !card) {
+  if (error || (!isLoading && !card)) {
+    // Invalid/unknown card slug — mark noindex so crawlers drop it, but keep
+    // the response accessible for users who followed a broken link.
+    if (typeof document !== 'undefined') {
+      document.title = `Card not found | OffMeta`;
+      let robots = document.querySelector('meta[name="robots"]') as HTMLMetaElement | null;
+      if (!robots) {
+        robots = document.createElement('meta');
+        robots.setAttribute('name', 'robots');
+        document.head.appendChild(robots);
+      }
+      robots.setAttribute('content', 'noindex, follow');
+      const canonical = document.querySelector('link[rel="canonical"]');
+      canonical?.remove();
+    }
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
