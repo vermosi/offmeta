@@ -411,6 +411,20 @@ interface CardModalViewEventData {
   tab_viewed?: string;
 }
 
+interface CardPageViewEventData {
+  /** URL slug used to reach the page (may differ from canonical). */
+  slug: string;
+  /** Canonical slug derived from the resolved card's real name. */
+  canonical_slug?: string;
+  card_id?: string;
+  card_name?: string;
+  set_code?: string;
+  /** True when the visited slug does not match the canonical one. */
+  is_alias?: boolean;
+  /** Referring surface, e.g. 'direct', 'internal-link', 'search'. */
+  referrer_source?: string;
+}
+
 interface AffiliateClickEventData {
   card_id?: string;
   card_name?: string;
