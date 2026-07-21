@@ -238,6 +238,7 @@ const ALLOWED_EVENT_TYPES = [
   'search',
   'search_started', // NEW: fired the moment a query is submitted (before results/failure resolve)
   'search_results',
+  'search_success', // Search returned >=1 result, includes latency bucket + data source
   'search_failure', // Track 0-result and error searches
   'first_search_start',
   'first_search_success',
