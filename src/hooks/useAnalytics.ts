@@ -498,6 +498,7 @@ interface SearchStartedEventData {
 
 type EventData =
   | SearchEventData
+  | SearchSuccessEventData
   | SearchFailureEventData
   | CardClickEventData
   | CardModalViewEventData
