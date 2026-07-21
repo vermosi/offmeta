@@ -9,7 +9,7 @@ import { lazy, Suspense, type ReactElement } from 'react';
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom';
 import FullAppProviders from '@/components/FullAppProviders';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import LandingPage from './pages/LandingPage';
+import Index from './pages/Index';
 
 const GuidesIndex = lazy(() => import('./pages/GuidesIndex'));
 const GuidePage = lazy(() => import('./pages/GuidePage'));
