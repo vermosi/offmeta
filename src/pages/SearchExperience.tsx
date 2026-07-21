@@ -106,6 +106,11 @@ const SimilarToTopResultPanel = lazy(() =>
     default: m.SimilarToTopResultPanel,
   })),
 );
+const RelatedSearchesSection = lazy(() =>
+  import('@/components/RelatedSearchesSection').then((m) => ({
+    default: m.RelatedSearchesSection,
+  })),
+);
 
 const SearchResultsArea = lazy(() =>
   import('@/components/SearchResultsArea').then((m) => ({
@@ -769,6 +774,18 @@ const Index = () => {
                   originalQuery={originalQuery}
                   onRefine={handleTryExample}
                   onCardClick={handleCardClick}
+                />
+              </Suspense>
+            )}
+
+            {/* Related searches — always-visible follow-up suggestions */}
+            {hasSearched && !isSearching && totalCards > 0 && activeTab === 'cards' && (
+              <Suspense fallback={null}>
+                <RelatedSearchesSection
+                  originalQuery={originalQuery}
+                  intent={lastSearchResult?.intent || lastIntent}
+                  topCard={cards[0]}
+                  onRefine={handleTryExample}
                 />
               </Suspense>
             )}
