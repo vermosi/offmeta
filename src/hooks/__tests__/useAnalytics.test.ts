@@ -49,6 +49,7 @@ describe('useAnalytics', () => {
     expect(result.current.trackPagination).toBeTypeOf('function');
     expect(result.current.trackFeedback).toBeTypeOf('function');
     expect(result.current.trackLandingPageView).toBeTypeOf('function');
+    expect(result.current.trackHomePageView).toBeTypeOf('function');
     expect(result.current.trackRouteView).toBeTypeOf('function');
     expect(result.current.trackExampleQueryImpression).toBeTypeOf('function');
     expect(result.current.trackExampleQueryClick).toBeTypeOf('function');
@@ -125,6 +126,20 @@ describe('useAnalytics', () => {
 
     expect(mockInsert).toHaveBeenCalledWith([
       expect.objectContaining({ event_type: 'landing_page_view' }),
+    ]);
+  });
+
+  it('trackHomePageView sends homepage_view event', async () => {
+    const { result } = renderHook(() => useAnalytics());
+
+    await act(async () => {
+      result.current.trackHomePageView({
+        path: '/',
+      });
+    });
+
+    expect(mockInsert).toHaveBeenCalledWith([
+      expect.objectContaining({ event_type: 'homepage_view' }),
     ]);
   });
 

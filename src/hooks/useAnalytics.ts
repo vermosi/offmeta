@@ -269,6 +269,7 @@ const ALLOWED_EVENT_TYPES = [
   'pagination',
   'feedback_submitted',
   'landing_page_view',
+  'homepage_view',
   'route_view',
   'example_query_impression',
   'example_query_click',
@@ -717,6 +718,13 @@ export function useAnalytics() {
     [trackEvent],
   );
 
+  const trackHomePageView = useCallback(
+    (data: RouteViewEventData) => {
+      trackEvent('homepage_view', data);
+    },
+    [trackEvent],
+  );
+
   const trackRouteView = useCallback(
     (data: RouteViewEventData) => {
       trackEvent('route_view', data);
@@ -819,6 +827,7 @@ export function useAnalytics() {
     trackPagination,
     trackFeedback,
     trackLandingPageView,
+    trackHomePageView,
     trackRouteView,
     trackExampleQueryImpression,
     trackExampleQueryClick,

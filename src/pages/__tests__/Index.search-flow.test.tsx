@@ -73,6 +73,7 @@ vi.mock('@/hooks/useAnalytics', () => ({
     trackPagination: vi.fn(),
     shouldLogCacheEvent: vi.fn(),
     trackLandingPageView: mockTrackLandingPageView,
+    trackHomePageView: vi.fn(),
     trackRouteView: mockTrackRouteView,
     trackExampleQueryImpression: vi.fn(),
     trackExampleQueryClick: vi.fn(),
