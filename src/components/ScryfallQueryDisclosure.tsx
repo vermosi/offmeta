@@ -23,7 +23,6 @@ export function ScryfallQueryDisclosure({
   children,
 }: ScryfallQueryDisclosureProps) {
   const { t } = useTranslation();
-  const { trackEvent } = useAnalytics();
 
   const [open, setOpen] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
@@ -36,14 +35,7 @@ export function ScryfallQueryDisclosure({
   }, [open]);
 
   const handleToggle = () => {
-    setOpen((prev) => {
-      const next = !prev;
-      trackEvent('scryfall_query_disclosure_toggle', {
-        open: next,
-        query_length: scryfallQuery.length,
-      });
-      return next;
-    });
+    setOpen((prev) => !prev);
   };
 
   const preview =
