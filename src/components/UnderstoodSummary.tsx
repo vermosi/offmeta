@@ -271,6 +271,8 @@ export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummary
   // Reset exclusions whenever the underlying query changes (new search).
   useEffect(() => {
     setExcluded(new Set());
+    setCopied(false);
+    expandedChipsRef.current = new Set();
   }, [originalQuery]);
 
   // Fire a one-time "view" event per unique query so we can measure how often
