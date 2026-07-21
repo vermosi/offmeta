@@ -14,6 +14,7 @@ interface SearchNextStepsBarProps {
   originalQuery: string;
   intent: SearchIntent | null;
   totalCards: number;
+  activeTab?: string;
   onJumpToSimilar: () => void;
   onRelatedSearchClick: (query: string) => void;
 }
@@ -83,6 +84,7 @@ export function SearchNextStepsBar({
   originalQuery,
   intent,
   totalCards,
+  activeTab,
   onJumpToSimilar,
   onRelatedSearchClick,
 }: SearchNextStepsBarProps) {
@@ -96,16 +98,33 @@ export function SearchNextStepsBar({
     [originalQuery, intent],
   );
 
-  const shareUrl = useMemo(() => {
+  /**
+   * Build a shareable URL that preserves the exact search intent
+   * (query + all filters currently in the URL), the active results
+   * tab, and the current scroll position so recipients land at the
+   * same spot the sender is viewing.
+   */
+  const buildShareUrl = useCallback((): string => {
     if (typeof window === 'undefined') return '';
-    return window.location.href;
-  }, []);
+    const url = new URL(window.location.href);
+    if (activeTab && activeTab !== 'cards') {
+      url.searchParams.set('tab', activeTab);
+    } else {
+      url.searchParams.delete('tab');
+    }
+    const scrollY = Math.max(0, Math.round(window.scrollY || 0));
+    url.hash = scrollY > 200 ? `pos=${scrollY}` : '';
+    return url.toString();
+  }, [activeTab]);
 
   const handleShare = useCallback(async () => {
+    const shareUrl = buildShareUrl();
     if (!shareUrl) return;
     trackEvent('share_clicked', {
       query: originalQuery,
       surface: 'next_steps_bar',
+      has_scroll_anchor: shareUrl.includes('#pos='),
+      tab: activeTab ?? 'cards',
     });
     const shareData = {
       title: `OffMeta — ${originalQuery}`,
@@ -134,7 +153,8 @@ export function SearchNextStepsBar({
     } catch {
       toast.error(t('results.nextSteps.copyFailed', 'Could not copy link'));
     }
-  }, [shareUrl, originalQuery, trackEvent, t]);
+  }, [buildShareUrl, originalQuery, activeTab, trackEvent, t]);
+
 
   const handleJumpToSimilar = useCallback(() => {
     trackEvent('next_steps_jump_similar', {

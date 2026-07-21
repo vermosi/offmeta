@@ -193,14 +193,22 @@ const Index = () => {
   // View mode toggle
   const [viewMode, setViewMode] = useState<ViewMode>(getStoredViewMode);
 
-  // Results tab state
+  // Results tab state — initial tab may come from a shared `?tab=` link.
   const [tabState, setTabState] = useState<{ query: string; tab: ResultsTab }>(
-    () => ({
-      query: originalQuery,
-      tab: 'cards',
-    }),
+    () => {
+      const initialTab = (() => {
+        if (typeof window === 'undefined') return 'cards' as ResultsTab;
+        const raw = new URLSearchParams(window.location.search).get('tab');
+        const allowed: ResultsTab[] = ['cards', 'similar', 'deck-ideas', 'explanation'];
+        return (allowed as string[]).includes(raw ?? '')
+          ? (raw as ResultsTab)
+          : ('cards' as ResultsTab);
+      })();
+      return { query: originalQuery, tab: initialTab };
+    },
   );
   const activeTab = tabState.query === originalQuery ? tabState.tab : 'cards';
+
   const showSimilarTab = hasSearched && !isSearching;
   const isDeckQuery =
     /\b(deck|build|commander|strategy|brew|edh)\b/i.test(originalQuery);
@@ -342,16 +350,36 @@ const Index = () => {
     );
   }, [hasSearched, isSearching, queryQualityScore, upsellEvaluationNowMs]);
 
-  // Handle hash-based scroll
+  // Handle hash-based scroll: supports `#pos=<pixels>` for shared
+  // deep-links that restore the sender's scroll position after
+  // results render, and `#<element-id>` for anchor navigation.
+  const scrollAnchorAppliedRef = useRef(false);
   useEffect(() => {
+    if (scrollAnchorAppliedRef.current) return;
     const hash = window.location.hash;
     if (!hash) return;
+    const isPos = hash.startsWith('#pos=');
+    if (isPos) {
+      if (!hasSearched || isSearching || cards.length === 0) return;
+      const y = parseInt(hash.slice(5), 10);
+      if (Number.isFinite(y) && y >= 0) {
+        const timeout = setTimeout(() => {
+          window.scrollTo({ top: y, behavior: 'smooth' });
+          scrollAnchorAppliedRef.current = true;
+        }, 400);
+        return () => clearTimeout(timeout);
+      }
+      scrollAnchorAppliedRef.current = true;
+      return;
+    }
     const timeout = setTimeout(() => {
       const el = document.getElementById(hash.slice(1));
       el?.scrollIntoView({ behavior: 'smooth' });
+      scrollAnchorAppliedRef.current = true;
     }, 300);
     return () => clearTimeout(timeout);
-  }, []);
+  }, [hasSearched, isSearching, cards.length]);
+
 
   // Preload search-result chunks after idle or on first user interaction
   // with the search input. Keeps initial paint lean while ensuring results
@@ -699,6 +727,8 @@ const Index = () => {
                   originalQuery={originalQuery}
                   intent={lastSearchResult?.intent || lastIntent}
                   totalCards={totalCards}
+                  activeTab={activeTab}
+
                   onJumpToSimilar={() => {
                     handleTabChange('similar');
                     if (typeof document !== 'undefined') {
