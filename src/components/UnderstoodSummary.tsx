@@ -244,6 +244,7 @@ function splitTokens(query: string): string[] {
 
 export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummaryProps) {
   const { t } = useTranslation();
+  const { trackEvent } = useAnalytics();
 
   const { preview, signals } = useMemo(() => {
     const preview = buildClientFallbackQuery(originalQuery).trim();
@@ -270,6 +271,45 @@ export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummary
     setExcluded(new Set());
   }, [originalQuery]);
 
+  // Fire a one-time "view" event per unique query so we can measure how often
+  // the summary is actually surfaced to users.
+  const viewedQueryRef = useRef<string | null>(null);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!originalQuery.trim()) return;
+    const node = sectionRef.current;
+    if (!node) return;
+    if (viewedQueryRef.current === originalQuery) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      viewedQueryRef.current = originalQuery;
+      trackEvent('understood_summary_view', {
+        query: originalQuery,
+        signal_count: signals.length,
+        preview,
+      });
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting && viewedQueryRef.current !== originalQuery) {
+            viewedQueryRef.current = originalQuery;
+            trackEvent('understood_summary_view', {
+              query: originalQuery,
+              signal_count: signals.length,
+              preview,
+            });
+            observer.disconnect();
+            break;
+          }
+        }
+      },
+      { threshold: 0.4 },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [originalQuery, signals.length, preview, trackEvent]);
+
   const interactive = typeof onAdjust === 'function';
 
   const refinedQuery = useMemo(() => {
@@ -284,14 +324,29 @@ export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummary
     if (!interactive) return;
     setExcluded((prev) => {
       const next = new Set(prev);
-      if (next.has(token)) next.delete(token);
+      const wasExcluded = next.has(token);
+      if (wasExcluded) next.delete(token);
       else next.add(token);
+      trackEvent('understood_summary_changed', {
+        query: originalQuery,
+        token,
+        action: wasExcluded ? 'restore' : 'remove',
+        excluded_count: next.size,
+        signal_count: signals.length,
+      });
       return next;
     });
   };
 
   const applyAdjustment = () => {
     if (!interactive || !refinedQuery || refinedQuery === preview) return;
+    trackEvent('understood_summary_accepted', {
+      query: originalQuery,
+      original_preview: preview,
+      refined_query: refinedQuery,
+      excluded_count: excluded.size,
+      signal_count: signals.length,
+    });
     onAdjust?.(refinedQuery);
   };
 
@@ -301,6 +356,7 @@ export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummary
 
   return (
     <section
+      ref={sectionRef}
       className="animate-reveal rounded-2xl border border-border/60 bg-card/70 backdrop-blur-xl px-4 py-3 sm:px-5 sm:py-4 shadow-sm"
       aria-live="polite"
       aria-label={t('understood.label', 'What OffMeta understood')}
