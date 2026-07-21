@@ -31,7 +31,7 @@ function AppShell() {
       <I18nProvider>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
           <ErrorBoundary>
-            <LandingPage />
+            <Index />
           </ErrorBoundary>
         </ThemeProvider>
       </I18nProvider>
