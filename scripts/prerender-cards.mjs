@@ -1,16 +1,24 @@
-// Generates static per-card HTML at public/cards/<slug>/index.html for the top-N
-// popular cards. Lovable static hosting serves matching files before falling back
-// to the SPA index.html, so crawlers (and social scrapers that don't run JS) see
-// card-specific <title>, <meta description>, <h1>, and oracle text.
+// Postbuild: generates per-card static HTML at dist/cards/<slug>/index.html for
+// the top-N popular cards. Each file:
+//   - reuses the built index.html (with correct hashed script/link tags) so
+//     humans landing directly get the full SPA
+//   - swaps <title>, meta description, canonical, og:*, twitter:*, and JSON-LD
+//     to be card-specific so crawlers and social scrapers see the right thing
+//   - embeds <h1> + oracle text inside <noscript> for non-JS crawlers
 //
-// Runs via `prebuild`. Failures degrade gracefully — the SPA shell continues to
-// render the same page client-side via React Router.
+// Lovable static hosting serves files that match the request path before
+// falling back to the SPA index.html, so /cards/<slug>/ is served from the
+// prerendered file when present.
+//
+// Runs via `postbuild`. Failures degrade gracefully — the SPA shell continues
+// to render the same page client-side via React Router.
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
 const SITE_URL = 'https://offmeta.app';
-const OUTPUT_DIR = 'public/cards';
+const DIST_DIR = 'dist';
+const OUTPUT_DIR = path.join(DIST_DIR, 'cards');
 const MAX_CARDS = Number(process.env.PRERENDER_CARD_LIMIT ?? 300);
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
@@ -92,7 +100,7 @@ function buildDescription(card) {
   return truncate(base, 160);
 }
 
-function buildProductJsonLd(card, slug, canonicalUrl, image) {
+function buildProductJsonLd(card, canonicalUrl, image) {
   const additionalProperty = [];
   if (card.rarity) additionalProperty.push({ '@type': 'PropertyValue', name: 'Rarity', value: card.rarity });
   if (card.mana_cost) additionalProperty.push({ '@type': 'PropertyValue', name: 'Mana Cost', value: card.mana_cost });
@@ -115,12 +123,14 @@ function buildProductJsonLd(card, slug, canonicalUrl, image) {
   };
 }
 
-function buildHtml(card, slug) {
+// Rewrites the built index.html <head> for a specific card and injects a
+// <noscript> block with the h1/oracle text right after <body>.
+function customizeHtmlForCard(templateHtml, card, slug) {
   const canonicalUrl = `${SITE_URL}/cards/${slug}`;
   const title = buildTitle(card.name);
   const description = buildDescription(card);
   const image = card.image_url || `${SITE_URL}/og-image.png`;
-  const jsonLd = JSON.stringify(buildProductJsonLd(card, slug, canonicalUrl, image));
+  const jsonLd = JSON.stringify(buildProductJsonLd(card, canonicalUrl, image));
 
   const legalFormats = card.legalities && typeof card.legalities === 'object'
     ? Object.entries(card.legalities)
@@ -132,60 +142,77 @@ function buildHtml(card, slug) {
     .split(/\n+/)
     .filter(Boolean)
     .map((p) => `<p>${escapeHtml(p)}</p>`)
-    .join('\n        ');
+    .join('');
 
-  // Root div stays empty for hydration — client bundle takes over. Prerendered
-  // <article> lives inside <noscript> for crawlers and non-JS scrapers so it
-  // never conflicts with React's mount point.
-  return `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>${escapeHtml(title)}</title>
-  <meta name="description" content="${escapeHtml(description)}" />
-  <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />
-  <meta name="robots" content="index, follow" />
+  let html = templateHtml;
 
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="OffMeta" />
-  <meta property="og:url" content="${escapeHtml(canonicalUrl)}" />
-  <meta property="og:title" content="${escapeHtml(title)}" />
-  <meta property="og:description" content="${escapeHtml(description)}" />
-  <meta property="og:image" content="${escapeHtml(image)}" />
+  // Replace <title>
+  html = html.replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(title)}</title>`);
 
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="${escapeHtml(title)}" />
-  <meta name="twitter:description" content="${escapeHtml(description)}" />
-  <meta name="twitter:image" content="${escapeHtml(image)}" />
+  // Replace/insert meta description
+  const descTag = `<meta name="description" content="${escapeHtml(description)}" />`;
+  if (/<meta\s+name=["']description["'][^>]*>/i.test(html)) {
+    html = html.replace(/<meta\s+name=["']description["'][^>]*>/i, descTag);
+  } else {
+    html = html.replace(/<\/head>/i, `${descTag}\n  </head>`);
+  }
 
-  <script type="application/ld+json">${jsonLd}</script>
+  // Strip existing canonical/og/twitter/JSON-LD from template so we can inject
+  // card-specific ones cleanly.
+  html = html.replace(/<link\s+rel=["']canonical["'][^>]*>\s*/gi, '');
+  html = html.replace(/<meta\s+property=["']og:[^"']+["'][^>]*>\s*/gi, '');
+  html = html.replace(/<meta\s+name=["']twitter:[^"']+["'][^>]*>\s*/gi, '');
+  html = html.replace(
+    /<script\s+type=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>\s*/gi,
+    '',
+  );
 
-  <link rel="icon" type="image/svg+xml" href="${SITE_URL}/favicon.svg" />
-  <link rel="stylesheet" href="/src/index.css" />
-  <script type="module" src="/src/main.tsx"></script>
-</head>
-<body>
-  <div id="root"></div>
-  <noscript>
-    <article>
-      <h1>${escapeHtml(card.name)}</h1>
-      ${card.type_line ? `<p><strong>Type:</strong> ${escapeHtml(card.type_line)}</p>` : ''}
-      ${card.mana_cost ? `<p><strong>Mana Cost:</strong> ${escapeHtml(card.mana_cost)}</p>` : ''}
-      ${card.rarity ? `<p><strong>Rarity:</strong> ${escapeHtml(card.rarity)}</p>` : ''}
-      ${oracleParagraphs}
-      ${legalFormats.length > 0 ? `<p><strong>Legal in:</strong> ${escapeHtml(legalFormats.join(', '))}</p>` : ''}
-      <p><a href="${escapeHtml(canonicalUrl)}">Open ${escapeHtml(card.name)} on OffMeta</a></p>
-    </article>
-  </noscript>
-</body>
-</html>
-`;
+  const seoBlock = `
+    <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="OffMeta" />
+    <meta property="og:url" content="${escapeHtml(canonicalUrl)}" />
+    <meta property="og:title" content="${escapeHtml(title)}" />
+    <meta property="og:description" content="${escapeHtml(description)}" />
+    <meta property="og:image" content="${escapeHtml(image)}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${escapeHtml(title)}" />
+    <meta name="twitter:description" content="${escapeHtml(description)}" />
+    <meta name="twitter:image" content="${escapeHtml(image)}" />
+    <script type="application/ld+json">${jsonLd}</script>
+  `;
+  html = html.replace(/<\/head>/i, `${seoBlock}\n  </head>`);
+
+  // Inject noscript with the card body — right after <body ...>
+  const noscript = `
+    <noscript>
+      <article>
+        <h1>${escapeHtml(card.name)}</h1>
+        ${card.type_line ? `<p><strong>Type:</strong> ${escapeHtml(card.type_line)}</p>` : ''}
+        ${card.mana_cost ? `<p><strong>Mana Cost:</strong> ${escapeHtml(card.mana_cost)}</p>` : ''}
+        ${card.rarity ? `<p><strong>Rarity:</strong> ${escapeHtml(card.rarity)}</p>` : ''}
+        ${oracleParagraphs}
+        ${legalFormats.length > 0 ? `<p><strong>Legal in:</strong> ${escapeHtml(legalFormats.join(', '))}</p>` : ''}
+        <p><a href="${escapeHtml(canonicalUrl)}">Open ${escapeHtml(card.name)} on OffMeta</a></p>
+      </article>
+    </noscript>
+  `;
+  html = html.replace(/<body([^>]*)>/i, `<body$1>${noscript}`);
+
+  return html;
 }
 
 async function main() {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     console.warn('[prerender-cards] Skipping — VITE_SUPABASE_URL / key not set.');
+    return;
+  }
+
+  let templateHtml;
+  try {
+    templateHtml = await fs.readFile(path.join(DIST_DIR, 'index.html'), 'utf8');
+  } catch (err) {
+    console.warn('[prerender-cards] Skipping — dist/index.html not found:', err.message);
     return;
   }
 
@@ -206,11 +233,17 @@ async function main() {
 
     const dir = path.join(OUTPUT_DIR, slug);
     await fs.mkdir(dir, { recursive: true });
-    await fs.writeFile(path.join(dir, 'index.html'), buildHtml(card, slug), 'utf8');
+    await fs.writeFile(
+      path.join(dir, 'index.html'),
+      customizeHtmlForCard(templateHtml, card, slug),
+      'utf8',
+    );
     written += 1;
   }
 
-  console.log(`[prerender-cards] Wrote ${written} card HTML files to ${OUTPUT_DIR}/<slug>/index.html`);
+  console.log(
+    `[prerender-cards] Wrote ${written} card HTML files to ${OUTPUT_DIR}/<slug>/index.html`,
+  );
 }
 
 main().catch((err) => {
