@@ -262,6 +262,7 @@ export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummary
 
   // Track which chips the user has excluded before results arrive.
   const [excluded, setExcluded] = useState<Set<string>>(new Set());
+  const [showRaw, setShowRaw] = useState<boolean>(false);
 
   // Reset exclusions whenever the underlying query changes (new search).
   useEffect(() => {
@@ -435,6 +436,60 @@ export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummary
           <p className="font-mono text-xs text-foreground break-words">
             {hasChanges ? refinedQuery : preview}
           </p>
+        </div>
+      )}
+
+      {preview && (
+        <div className="mt-2">
+          <button
+            type="button"
+            onClick={() => setShowRaw((v) => !v)}
+            aria-expanded={showRaw}
+            aria-controls="understood-raw-interpretation"
+            className="text-[11px] text-muted-foreground underline underline-offset-2 hover:text-foreground min-h-9"
+          >
+            {showRaw
+              ? t('understood.hideRaw', 'Hide raw interpretation')
+              : t('understood.showRaw', 'Show raw interpretation')}
+          </button>
+
+          {showRaw && (
+            <div
+              id="understood-raw-interpretation"
+              className="mt-2 space-y-2 rounded-lg border border-border/50 bg-muted/30 px-3 py-2"
+            >
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1">
+                  {t('understood.rawSignals', 'Parsed signals')}
+                </p>
+                <pre className="font-mono text-[11px] text-foreground whitespace-pre-wrap break-words">
+{JSON.stringify(
+  signals.map((s) => {
+    const r = extractRationale(s.token, originalQuery);
+    return {
+      label: s.label,
+      token: s.token,
+      category: r.category,
+      value: r.value,
+      triggers: r.triggers,
+      excluded: excluded.has(s.token),
+    };
+  }),
+  null,
+  2,
+)}
+                </pre>
+              </div>
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1">
+                  {t('understood.rawDerived', 'Final derived Scryfall query')}
+                </p>
+                <p className="font-mono text-[11px] text-foreground break-words">
+                  {refinedQuery || preview}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </section>
