@@ -36,6 +36,12 @@ function countTag(html: string, tag: string): number {
   return (html.match(new RegExp(`<${tag}[\\s>]`, 'gi')) ?? []).length;
 }
 
+function extractFirstH1(html: string): string {
+  const m = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+  if (!m) return '';
+  return m[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+}
+
 async function fetchAsGooglebot(path: string): Promise<{
   status: number;
   html: string;
