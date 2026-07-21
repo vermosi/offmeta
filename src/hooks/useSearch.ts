@@ -497,6 +497,7 @@ export function useSearch() {
     trackEvent,
     trackFirstSearchSuccess,
     trackSearchFailure,
+    trackSearchSuccess,
     currentRequestId,
     hasSearched,
     isSearching,
