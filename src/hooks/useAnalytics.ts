@@ -291,6 +291,7 @@ const ALLOWED_EVENT_TYPES = [
   'related_searches_clicked',
   'how_it_works_step_view',
   'first_time_to_results',
+  'understood_summary_adjust',
 
 
 ] as const;

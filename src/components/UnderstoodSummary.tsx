@@ -2,16 +2,27 @@
  * "What OffMeta understood" — client-side preview of the structured
  * interpretation of a natural-language query, shown while a search is
  * in flight so users see how their wording is being parsed before results load.
+ *
+ * Signal chips are interactive: users can click any chip to exclude it from
+ * the interpreted intent, then apply the adjustment to re-run the search
+ * against a refined Scryfall query without waiting for the pending results.
  * @module components/UnderstoodSummary
  */
 
-import { useMemo } from 'react';
-import { Loader2, Sparkles } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Loader2, Sparkles, X } from 'lucide-react';
 import { buildClientFallbackQuery } from '@/lib/search/fallback';
 import { useTranslation } from '@/lib/i18n';
+import { Button } from '@/components/ui/button';
 
 interface UnderstoodSummaryProps {
   originalQuery: string;
+  /**
+   * Called when the user removes one or more chips and applies the
+   * adjustment. Receives the refined Scryfall query string. When omitted,
+   * chips remain informational only.
+   */
+  onAdjust?: (refinedScryfallQuery: string) => void;
 }
 
 interface Signal {
@@ -84,7 +95,7 @@ function splitTokens(query: string): string[] {
   return tokens;
 }
 
-export function UnderstoodSummary({ originalQuery }: UnderstoodSummaryProps) {
+export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummaryProps) {
   const { t } = useTranslation();
 
   const { preview, signals } = useMemo(() => {
@@ -103,7 +114,42 @@ export function UnderstoodSummary({ originalQuery }: UnderstoodSummaryProps) {
     return { preview, signals };
   }, [originalQuery, t]);
 
+  // Track which chips the user has excluded before results arrive.
+  const [excluded, setExcluded] = useState<Set<string>>(new Set());
+
+  // Reset exclusions whenever the underlying query changes (new search).
+  useEffect(() => {
+    setExcluded(new Set());
+  }, [originalQuery]);
+
+  const interactive = typeof onAdjust === 'function';
+
+  const refinedQuery = useMemo(() => {
+    if (!excluded.size) return preview;
+    return splitTokens(preview)
+      .filter((tok) => !excluded.has(tok))
+      .join(' ')
+      .trim();
+  }, [preview, excluded]);
+
+  const toggleChip = (token: string) => {
+    if (!interactive) return;
+    setExcluded((prev) => {
+      const next = new Set(prev);
+      if (next.has(token)) next.delete(token);
+      else next.add(token);
+      return next;
+    });
+  };
+
+  const applyAdjustment = () => {
+    if (!interactive || !refinedQuery || refinedQuery === preview) return;
+    onAdjust?.(refinedQuery);
+  };
+
   if (!originalQuery.trim()) return null;
+
+  const hasChanges = excluded.size > 0 && refinedQuery.length > 0;
 
   return (
     <section
@@ -130,17 +176,76 @@ export function UnderstoodSummary({ originalQuery }: UnderstoodSummaryProps) {
       </p>
 
       {signals.length > 0 ? (
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          {signals.map((sig, i) => (
-            <span
-              key={`${sig.label}-${sig.token}-${i}`}
-              className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/70 px-2.5 py-1 text-[11px]"
-            >
-              <span className="text-muted-foreground">{sig.label}</span>
-              <span className="font-mono text-foreground">{sig.token}</span>
-            </span>
-          ))}
-        </div>
+        <>
+          {interactive && (
+            <p className="text-[11px] text-muted-foreground mb-2">
+              {t(
+                'understood.adjustHint',
+                'Not quite right? Tap a chip to drop it, then apply to refine the search.',
+              )}
+            </p>
+          )}
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {signals.map((sig, i) => {
+              const isExcluded = excluded.has(sig.token);
+              const base =
+                'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] transition-colors';
+              const state = isExcluded
+                ? 'border-dashed border-border/60 bg-background/40 opacity-60 line-through'
+                : 'border-border/60 bg-background/70 hover:bg-background';
+              return interactive ? (
+                <button
+                  type="button"
+                  key={`${sig.label}-${sig.token}-${i}`}
+                  onClick={() => toggleChip(sig.token)}
+                  aria-pressed={isExcluded}
+                  aria-label={
+                    isExcluded
+                      ? t('understood.restore', 'Restore {label} {token}')
+                          .replace('{label}', sig.label)
+                          .replace('{token}', sig.token)
+                      : t('understood.remove', 'Remove {label} {token}')
+                          .replace('{label}', sig.label)
+                          .replace('{token}', sig.token)
+                  }
+                  className={`${base} ${state} min-h-9 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background`}
+                >
+                  <span className="text-muted-foreground">{sig.label}</span>
+                  <span className="font-mono text-foreground">{sig.token}</span>
+                  <X className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                </button>
+              ) : (
+                <span
+                  key={`${sig.label}-${sig.token}-${i}`}
+                  className={`${base} ${state}`}
+                >
+                  <span className="text-muted-foreground">{sig.label}</span>
+                  <span className="font-mono text-foreground">{sig.token}</span>
+                </span>
+              );
+            })}
+          </div>
+
+          {interactive && hasChanges && (
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <Button
+                type="button"
+                size="sm"
+                onClick={applyAdjustment}
+                className="h-8"
+              >
+                {t('understood.applyAdjust', 'Apply adjustments & search')}
+              </Button>
+              <button
+                type="button"
+                onClick={() => setExcluded(new Set())}
+                className="text-[11px] text-muted-foreground underline underline-offset-2 hover:text-foreground"
+              >
+                {t('understood.resetAdjust', 'Reset')}
+              </button>
+            </div>
+          )}
+        </>
       ) : (
         <p className="text-xs text-muted-foreground mb-3 italic">
           {t(
@@ -153,9 +258,13 @@ export function UnderstoodSummary({ originalQuery }: UnderstoodSummaryProps) {
       {preview && (
         <div className="rounded-lg border border-border/50 bg-muted/40 px-3 py-2">
           <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1">
-            {t('understood.previewQuery', 'Preview Scryfall query')}
+            {hasChanges
+              ? t('understood.refinedQuery', 'Refined Scryfall query')
+              : t('understood.previewQuery', 'Preview Scryfall query')}
           </p>
-          <p className="font-mono text-xs text-foreground break-words">{preview}</p>
+          <p className="font-mono text-xs text-foreground break-words">
+            {hasChanges ? refinedQuery : preview}
+          </p>
         </div>
       )}
     </section>
