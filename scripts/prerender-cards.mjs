@@ -259,18 +259,21 @@ async function main() {
     if (!slug || writtenSlugs.has(slug)) continue;
     writtenSlugs.add(slug);
 
+    const html = customizeHtmlForCard(templateHtml, card, slug);
+
+    // Write both resolution paths so the static host serves prerendered HTML
+    // regardless of whether it looks up "/cards/<slug>" or "/cards/<slug>/".
     const dir = path.join(OUTPUT_DIR, slug);
     await fs.mkdir(dir, { recursive: true });
-    await fs.writeFile(
-      path.join(dir, 'index.html'),
-      customizeHtmlForCard(templateHtml, card, slug),
-      'utf8',
-    );
+    await Promise.all([
+      fs.writeFile(path.join(dir, 'index.html'), html, 'utf8'),
+      fs.writeFile(path.join(OUTPUT_DIR, `${slug}.html`), html, 'utf8'),
+    ]);
     written += 1;
   }
 
   console.log(
-    `[prerender-cards] Wrote ${written} card HTML files to ${OUTPUT_DIR}/<slug>/index.html`,
+    `[prerender-cards] Wrote ${written} card HTML files to ${OUTPUT_DIR}/<slug>{.html,/index.html}`,
   );
 }
 
