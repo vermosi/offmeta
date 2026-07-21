@@ -216,6 +216,25 @@ export function buildCardJsonLd(card: ScryfallCard, pageUrl: string): Record<str
   if (card.power != null && card.toughness != null) {
     additionalProperty.push({ '@type': 'PropertyValue', name: 'Power/Toughness', value: `${card.power}/${card.toughness}` });
   }
+  if (card.loyalty != null) {
+    additionalProperty.push({ '@type': 'PropertyValue', name: 'Loyalty', value: String(card.loyalty) });
+  }
+  if (card.color_identity?.length) {
+    additionalProperty.push({ '@type': 'PropertyValue', name: 'Color Identity', value: card.color_identity.join(', ') });
+  }
+  if (card.collector_number) {
+    additionalProperty.push({ '@type': 'PropertyValue', name: 'Collector Number', value: card.collector_number });
+  }
+
+  // Format legality — helps AI/search engines answer "is X legal in commander"
+  if (card.legalities) {
+    const legalIn = Object.entries(card.legalities)
+      .filter(([, status]) => status === 'legal')
+      .map(([format]) => format);
+    if (legalIn.length) {
+      additionalProperty.push({ '@type': 'PropertyValue', name: 'Legal Formats', value: legalIn.join(', ') });
+    }
+  }
 
   const product: Record<string, unknown> = {
     '@context': 'https://schema.org',
@@ -227,7 +246,12 @@ export function buildCardJsonLd(card: ScryfallCard, pageUrl: string): Record<str
     brand: { '@type': 'Brand', name: 'Magic: The Gathering' },
     category: card.type_line,
     sku: card.id,
-    mpn: card.collector_number ?? undefined,
+    ...(card.collector_number && { mpn: card.collector_number }),
+    ...(card.artist && { creator: { '@type': 'Person', name: card.artist } }),
+    ...(card.released_at && { releaseDate: card.released_at }),
+    ...(card.set_name && { isPartOf: { '@type': 'CreativeWorkSeries', name: card.set_name } }),
+    audience: { '@type': 'PeopleAudience', name: 'Magic: The Gathering players' },
+    inLanguage: card.lang ?? 'en',
     ...(additionalProperty.length > 0 && { additionalProperty }),
     ...(offers.length === 1 && { offers: offers[0] }),
     ...(offers.length > 1 && { offers: { '@type': 'AggregateOffer', lowPrice: usd, highPrice: foil, priceCurrency: 'USD', offerCount: offers.length, offers } }),
