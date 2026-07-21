@@ -110,9 +110,14 @@ export function HowItWorksSection() {
           return (
             <Fragment key={number}>
               <li
+                ref={(el) => {
+                  stepRefs.current[i] = el;
+                }}
+                data-step-number={number}
                 className="flex flex-col items-center text-center flex-1 min-w-0 stagger-children"
                 aria-labelledby={titleId}
               >
+
                 {/* Number badge */}
                 <div
                   className="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-bold mb-4 bg-gradient-to-br from-accent to-accent/50 text-accent-foreground shadow-lg shadow-accent/20"
