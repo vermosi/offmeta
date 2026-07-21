@@ -142,6 +142,35 @@ const CardPage = () => {
     if (card) activate();
   }, [card, activate]);
 
+  // Dedicated route-level analytics — distinct from `card_modal_view` (in-app modal).
+  const { trackCardPageView } = useAnalytics();
+  useEffect(() => {
+    if (!slug) return;
+    const canonicalSlug = card ? cardNameToSlug(card.name) : undefined;
+    const referrerSource =
+      typeof document !== 'undefined' && document.referrer
+        ? (() => {
+            try {
+              const ref = new URL(document.referrer);
+              return ref.origin === window.location.origin ? 'internal' : 'external';
+            } catch {
+              return 'direct';
+            }
+          })()
+        : 'direct';
+    trackCardPageView({
+      slug,
+      canonical_slug: canonicalSlug,
+      card_id: card?.id,
+      card_name: card?.name,
+      set_code: card?.set,
+      is_alias: canonicalSlug ? canonicalSlug !== slug : undefined,
+      referrer_source: referrerSource,
+    });
+    // Fire once per slug/card resolution.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, card?.id]);
+
   // SEO meta — canonical URL uses the card's canonical slug (from its real name),
   // so alternate spellings/slugs collapse to a single indexable URL.
   const canonicalSlug = card ? cardNameToSlug(card.name) : slug;
