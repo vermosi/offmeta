@@ -95,6 +95,27 @@ export function ExampleQueriesCarousel({
   const active = steps.find((s) => s.key === activeStep) ?? steps[0];
   const trySearchLabel = t('examples.trySearchLabel', 'Try search:');
 
+  // Fire an impression event whenever a category (tab) becomes active. Guarded
+  // by a sessionStorage set so the same category-per-session emits once.
+  useEffect(() => {
+    try {
+      const key = 'offmeta_hiw_examples_seen';
+      const raw = sessionStorage.getItem(key);
+      const seen: string[] = raw ? JSON.parse(raw) : [];
+      if (seen.includes(active.key)) return;
+      seen.push(active.key);
+      sessionStorage.setItem(key, JSON.stringify(seen));
+    } catch {
+      /* fall through; still track */
+    }
+    trackExampleQueryImpression({
+      query: active.key,
+      category: active.key,
+      visible_count: active.examples.length,
+    });
+  }, [active.key, active.examples.length, trackExampleQueryImpression]);
+
+
   const focusTab = useCallback((key: StepKey) => {
     setActiveStep(key);
     // Defer focus so React commits the tabindex change first.
