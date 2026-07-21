@@ -27,6 +27,12 @@ import {
   useAffiliateConfig,
   wrapAffiliateUrl,
 } from '@/hooks/useAffiliateConfig';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+
 
 import type { MatchReason } from '@/lib/search/matchExplanation';
 
