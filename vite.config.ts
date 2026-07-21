@@ -16,6 +16,8 @@ export default defineConfig(() => ({
     },
   },
   build: {
+    assetsDir: 'assets',
+    cssCodeSplit: true,
     // Filter the modulepreload list down to chunks the entry actually
     // needs synchronously. Without this, Rolldown's manualChunks can leak
     // dynamic chunks (search engine, vendor-misc) into the entry's
@@ -41,6 +43,9 @@ export default defineConfig(() => ({
     },
     rollupOptions: {
       output: {
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash][extname]',
         manualChunks(id: string) {
           if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/') || id.includes('node_modules/react-router-dom')) return 'vendor-react';
           if (id.includes('node_modules/@radix-ui')) return 'vendor-radix';
