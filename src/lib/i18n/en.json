@@ -34,6 +34,7 @@
  "filters.clearAll": "Clear all filters",
  "filters.label": "Filters",
  "filters.sort": "Sort...",
+ "filters.sortRelevance": "Best match",
  "filters.sortNameAsc": "Name (A→Z)",
  "filters.sortNameDesc": "Name (Z→A)",
  "filters.sortCmcAsc": "CMC (Low → High)",
