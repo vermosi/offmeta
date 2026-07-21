@@ -19,7 +19,7 @@ import path from 'node:path';
 const SITE_URL = 'https://offmeta.app';
 const DIST_DIR = 'dist';
 const OUTPUT_DIR = path.join(DIST_DIR, 'cards');
-const MAX_CARDS = Number(process.env.PRERENDER_CARD_LIMIT ?? 300);
+const MAX_CARDS = Number(process.env.PRERENDER_CARD_LIMIT ?? 5000);
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY =
