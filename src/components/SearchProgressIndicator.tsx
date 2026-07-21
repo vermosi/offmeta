@@ -9,7 +9,7 @@
  */
 import { useEffect, useState } from 'react';
 import { Check, Loader2 } from 'lucide-react';
-import { useTranslation } from '@/hooks/useTranslation';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { cn } from '@/lib/utils';
 
 type StepStatus = 'pending' | 'active' | 'done';
