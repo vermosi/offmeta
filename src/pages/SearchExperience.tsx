@@ -161,6 +161,7 @@ const Index = () => {
   const location = useLocation();
   const {
     trackLandingPageView,
+    trackHomePageView,
     trackFirstSave,
     trackFirstReturnVisit,
     trackEvent,
@@ -541,11 +542,13 @@ const Index = () => {
     lastTrackedRouteRef.current = routeKey;
 
     if (location.pathname === '/' && !location.search && !hasSearched) {
-      trackLandingPageView({
+      const routeData = {
         path: location.pathname,
         search: location.search || undefined,
         referrer: document.referrer || undefined,
-      });
+      };
+      trackLandingPageView(routeData);
+      trackHomePageView(routeData);
     }
   }, [
     hasSearched,
@@ -553,6 +556,7 @@ const Index = () => {
     location.pathname,
     location.search,
     trackLandingPageView,
+    trackHomePageView,
   ]);
 
   const showResultsMode = hasSearched || isSearching;
