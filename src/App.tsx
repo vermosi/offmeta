@@ -8,7 +8,7 @@ import { lazy, Suspense, useEffect } from 'react';
 import { ThemeProvider } from 'next-themes';
 import { I18nProvider } from '@/lib/i18n';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import LandingPage from '@/pages/LandingPage';
+import Index from '@/pages/Index';
 const AppRoutes = lazy(() => import('./AppRoutes'));
 
 const routeFallback = <div className="min-h-screen bg-background" />;
