@@ -55,7 +55,6 @@ export default function AppRoutes() {
     <BrowserRouter>
       <Suspense fallback={routeFallback}>
         <Routes>
-          <Route path="/" element={<Index />} />
           <Route
             element={
               <FullAppProviders>
@@ -63,6 +62,7 @@ export default function AppRoutes() {
               </FullAppProviders>
             }
           >
+            <Route path="/" element={withFullApp(<Index />)} />
             <Route path="/search/:slug" element={withFullApp(<SearchExperience />)} />
             <Route path="/docs" element={withFullApp(<DocsIndex />)} />
             <Route path="/docs/syntax" element={withFullApp(<SyntaxCheatSheet />)} />
