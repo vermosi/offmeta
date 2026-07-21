@@ -295,6 +295,7 @@ const ALLOWED_EVENT_TYPES = [
   'understood_summary_view',
   'understood_summary_changed',
   'understood_summary_accepted',
+  'why_matches_refine_clicked',
 
 
 ] as const;

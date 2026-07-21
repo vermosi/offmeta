@@ -249,6 +249,32 @@ const Index = () => {
     [handleRerunEditedQuery, originalQuery, trackEvent],
   );
 
+  /**
+   * Append a matched-concept token from the "Why this matches" badge to the
+   * current Scryfall query and rerun the search. No-op if the token is already
+   * present, so repeated clicks don't duplicate constraints.
+   */
+  const handleRefineWithMatch = useCallback(
+    (token: string, label: string) => {
+      if (!token) return;
+      const base = (searchQuery || '').trim();
+      const alreadyIncluded = base
+        .split(/\s+/)
+        .some((tok) => tok.toLowerCase() === token.toLowerCase());
+      const nextQuery = alreadyIncluded ? base : `${base} ${token}`.trim();
+      trackEvent('why_matches_refine_clicked', {
+        query: originalQuery,
+        scryfall_query: base,
+        refine_token: token,
+        refine_label: label,
+        already_included: alreadyIncluded,
+      });
+      if (alreadyIncluded) return;
+      handleRerunEditedQuery(nextQuery);
+    },
+    [searchQuery, originalQuery, handleRerunEditedQuery, trackEvent],
+  );
+
   const handleTabChange = useCallback(
     (tab: ResultsTab) => {
       if (tab === activeTab) return;
@@ -922,6 +948,7 @@ const Index = () => {
                 onApplyFilterPatch={applyFilterPatch}
                 onClearAllFilters={clearAllFilters}
                 intent={lastSearchResult?.intent || lastIntent}
+                onRefineWithMatch={handleRefineWithMatch}
               />
             </Suspense>
 

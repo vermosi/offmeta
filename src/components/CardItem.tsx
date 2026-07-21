@@ -28,6 +28,8 @@ import {
   wrapAffiliateUrl,
 } from '@/hooks/useAffiliateConfig';
 
+import type { MatchReason } from '@/lib/search/matchExplanation';
+
 interface CardItemProps {
   card: ScryfallCard;
   onClick: () => void;
@@ -35,7 +37,13 @@ interface CardItemProps {
   isOwned?: boolean;
   sparklineData?: SparklinePoint[];
   /** Short reasons explaining why this card matched the current query. */
-  matchReasons?: string[];
+  matchReasons?: MatchReason[];
+  /**
+   * Optional handler invoked when the user clicks a match reason chip that
+   * carries a Scryfall refine token. Receives the token to append to the
+   * current query (e.g. `otag:treasure`).
+   */
+  onRefineWithMatch?: (token: string, label: string) => void;
 }
 
 /** Format a price string to a compact display. */
@@ -59,6 +67,7 @@ export const CardItem = memo(function CardItem({
   isOwned,
   sparklineData,
   matchReasons,
+  onRefineWithMatch,
 }: CardItemProps) {
   const imageUrl = getCardImage(card, 'small');
   const imageSrcSet = `${getCardImage(card, 'small')} 146w, ${getCardImage(card, 'normal')} 488w, ${getCardImage(card, 'large')} 672w`;
@@ -159,23 +168,63 @@ export const CardItem = memo(function CardItem({
             type="button"
             onClick={(e) => e.stopPropagation()}
             className="h-5 min-w-5 px-1.5 rounded-full bg-accent/90 text-accent-foreground text-[9px] font-semibold shadow-sm hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            aria-label={`Why this matches: ${matchReasons.join('; ')}`}
-            title={`Why this matches:\n• ${matchReasons.join('\n• ')}`}
+            aria-label={`Why this matches: ${matchReasons.map((r) => r.label).join('; ')}`}
+            title={`Why this matches:\n• ${matchReasons.map((r) => r.label).join('\n• ')}`}
           >
             {matchReasons.length}× {t('cardItem.whyBadge', 'why')}
           </button>
           <div
             role="tooltip"
-            className="pointer-events-none absolute right-0 top-full mt-1 w-56 rounded-lg border border-border/70 bg-popover/95 backdrop-blur-md shadow-xl p-2.5 opacity-0 group-hover/why:opacity-100 group-focus-within/why:opacity-100 transition-opacity duration-150 z-20"
+            className="pointer-events-auto absolute right-0 top-full mt-1 w-64 rounded-lg border border-border/70 bg-popover/95 backdrop-blur-md shadow-xl p-2.5 opacity-0 group-hover/why:opacity-100 group-focus-within/why:opacity-100 transition-opacity duration-150 z-20"
           >
-            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
               {t('cardItem.whyMatches', 'Why this matches')}
             </p>
-            <ul className="text-[11px] text-foreground space-y-0.5 list-disc pl-4">
-              {matchReasons.slice(0, 5).map((r, i) => (
-                <li key={`${i}-${r}`}>{r}</li>
-              ))}
+            <ul className="text-[11px] text-foreground space-y-1">
+              {matchReasons.slice(0, 5).map((r, i) => {
+                const canRefine = !!(onRefineWithMatch && r.token);
+                if (canRefine) {
+                  return (
+                    <li key={`${i}-${r.label}`}>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          onRefineWithMatch!(r.token!, r.label);
+                        }}
+                        className="w-full text-left flex items-start gap-1.5 rounded-md px-1.5 py-1 hover:bg-accent/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                        aria-label={t(
+                          'cardItem.refineWith',
+                          'Refine search with {label}',
+                        ).replace('{label}', r.label)}
+                        title={t(
+                          'cardItem.refineWithHint',
+                          'Add to search: {token}',
+                        ).replace('{token}', r.token!)}
+                      >
+                        <span className="text-accent leading-4">+</span>
+                        <span className="flex-1 leading-4">{r.label}</span>
+                      </button>
+                    </li>
+                  );
+                }
+                return (
+                  <li
+                    key={`${i}-${r.label}`}
+                    className="flex items-start gap-1.5 px-1.5 py-1"
+                  >
+                    <span className="text-muted-foreground leading-4">•</span>
+                    <span className="flex-1 leading-4">{r.label}</span>
+                  </li>
+                );
+              })}
             </ul>
+            {onRefineWithMatch && matchReasons.some((r) => r.token) && (
+              <p className="text-[10px] text-muted-foreground mt-2 pt-2 border-t border-border/50">
+                {t('cardItem.whyRefineHint', 'Tap a concept to refine your search.')}
+              </p>
+            )}
           </div>
         </div>
       )}
