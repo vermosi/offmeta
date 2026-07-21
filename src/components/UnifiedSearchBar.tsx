@@ -130,14 +130,21 @@ export interface UnifiedSearchBarHandle {
   ) => void;
 }
 
+// Ordered to lead with discovery-flavored queries (see docs/product-audit.md).
+// Tested queries — `budget board wipes under $5`, `cards that protect my commander`,
+// `mana rocks that cost 2` — must remain present so existing suites keep passing.
 const EXAMPLE_QUERIES = [
+  'cards that punish treasure decks',
+  'budget alternatives to Rhystic Study',
+  'cards similar to Seedborn Muse',
+  'hidden finishers under $5',
   'budget board wipes under $5',
   'cards that protect my commander',
+  'mono-white card draw that is not a staple',
+  'creatures that reward opponents attacking each other',
   'cheap graveyard hate for EDH',
   'mana rocks that cost 2',
   'best black removal for commander',
-  'cards that double ETB triggers',
-  'cheap white protection spells',
   'sacrifice outlets',
 ] as const;
 

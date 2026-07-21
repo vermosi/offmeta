@@ -28,16 +28,16 @@ export function HeroSection() {
           id="hero-heading"
           className="mb-3 sm:mb-5 text-foreground text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-semibold tracking-tight leading-[1.05]"
         >
-          {t('hero.title', 'Search Magic cards')}{' '}
+          {t('hero.title', 'Find Magic cards, synergies, and')}{' '}
           <span className="text-accent">
-            {t('hero.titleAccent', 'in plain English')}
+            {t('hero.titleAccent', 'hidden gems in plain English')}
           </span>
         </h1>
 
         <p className="text-sm sm:text-lg text-muted-foreground max-w-2xl mx-auto text-center leading-relaxed">
           {t(
             'hero.subtitleCompact',
-            'Describe the card you need. OffMeta translates intent into a real Scryfall search instantly and transparently, without the syntax.',
+            'Describe the card, effect, or archetype you want — OffMeta turns plain English into a real Scryfall search and surfaces alternatives, synergies, and hidden gems you would never find with raw syntax.',
           )}
         </p>
 
