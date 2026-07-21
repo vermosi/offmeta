@@ -10,7 +10,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Loader2, Sparkles, X } from 'lucide-react';
+import { Check, Copy, Loader2, Sparkles, X } from 'lucide-react';
 import { buildClientFallbackQuery } from '@/lib/search/fallback';
 import { useTranslation } from '@/lib/i18n';
 import { useAnalytics } from '@/hooks/useAnalytics';
@@ -265,10 +265,14 @@ export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummary
   // Track which chips the user has excluded before results arrive.
   const [excluded, setExcluded] = useState<Set<string>>(new Set());
   const [showRaw, setShowRaw] = useState<boolean>(false);
+  const [copied, setCopied] = useState<boolean>(false);
+  const expandedChipsRef = useRef<Set<string>>(new Set());
 
   // Reset exclusions whenever the underlying query changes (new search).
   useEffect(() => {
     setExcluded(new Set());
+    setCopied(false);
+    expandedChipsRef.current = new Set();
   }, [originalQuery]);
 
   // Fire a one-time "view" event per unique query so we can measure how often
@@ -439,7 +443,24 @@ export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummary
                 </span>
               );
               return (
-                <Tooltip key={`${sig.label}-${sig.token}-${i}`} delayDuration={150}>
+                <Tooltip
+                  key={`${sig.label}-${sig.token}-${i}`}
+                  delayDuration={150}
+                  onOpenChange={(open) => {
+                    if (!open) return;
+                    const key = `${originalQuery}::${sig.token}`;
+                    if (expandedChipsRef.current.has(key)) return;
+                    expandedChipsRef.current.add(key);
+                    trackEvent('understood_summary_chip_expanded', {
+                      query: originalQuery,
+                      token: sig.token,
+                      label: sig.label,
+                      category: rationale.category,
+                      trigger_count: rationale.triggers.length,
+                    });
+                  }}
+                >
+
                   <TooltipTrigger asChild>{trigger}</TooltipTrigger>
                   <TooltipContent side="top" className="max-w-xs text-xs leading-relaxed">
                     <p className="font-medium mb-1">
@@ -485,11 +506,48 @@ export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummary
 
       {preview && (
         <div className="rounded-lg border border-border/50 bg-muted/40 px-3 py-2">
-          <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1">
-            {hasChanges
-              ? t('understood.refinedQuery', 'Refined Scryfall query')
-              : t('understood.previewQuery', 'Preview Scryfall query')}
-          </p>
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              {hasChanges
+                ? t('understood.refinedQuery', 'Refined Scryfall query')
+                : t('understood.previewQuery', 'Preview Scryfall query')}
+            </p>
+            <button
+              type="button"
+              onClick={async () => {
+                const value = hasChanges ? refinedQuery : preview;
+                if (!value) return;
+                try {
+                  await navigator.clipboard.writeText(value);
+                  setCopied(true);
+                  window.setTimeout(() => setCopied(false), 1500);
+                } catch {
+                  // Clipboard may be unavailable (insecure context) — still log the intent.
+                }
+                trackEvent('understood_summary_query_copied', {
+                  query: originalQuery,
+                  copied_query: value,
+                  is_refined: hasChanges,
+                  signal_count: signals.length,
+                  excluded_count: excluded.size,
+                });
+              }}
+              aria-label={t('understood.copyQuery', 'Copy Scryfall query')}
+              className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-background/60 px-2 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-h-8"
+            >
+              {copied ? (
+                <>
+                  <Check className="h-3 w-3" aria-hidden="true" />
+                  {t('understood.copied', 'Copied')}
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3 w-3" aria-hidden="true" />
+                  {t('understood.copy', 'Copy')}
+                </>
+              )}
+            </button>
+          </div>
           <p className="font-mono text-xs text-foreground break-words">
             {hasChanges ? refinedQuery : preview}
           </p>
@@ -500,7 +558,17 @@ export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummary
         <div className="mt-2">
           <button
             type="button"
-            onClick={() => setShowRaw((v) => !v)}
+            onClick={() => {
+              setShowRaw((v) => {
+                const next = !v;
+                trackEvent('understood_summary_raw_toggled', {
+                  query: originalQuery,
+                  action: next ? 'show' : 'hide',
+                  signal_count: signals.length,
+                });
+                return next;
+              });
+            }}
             aria-expanded={showRaw}
             aria-controls="understood-raw-interpretation"
             className="text-[11px] text-muted-foreground underline underline-offset-2 hover:text-foreground min-h-9"
@@ -509,6 +577,7 @@ export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummary
               ? t('understood.hideRaw', 'Hide raw interpretation')
               : t('understood.showRaw', 'Show raw interpretation')}
           </button>
+
 
           {showRaw && (
             <div

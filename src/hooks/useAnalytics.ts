@@ -298,6 +298,9 @@ const ALLOWED_EVENT_TYPES = [
   'understood_summary_view',
   'understood_summary_changed',
   'understood_summary_accepted',
+  'understood_summary_chip_expanded',
+  'understood_summary_raw_toggled',
+  'understood_summary_query_copied',
   'why_matches_refine_clicked',
   'matched_concept_chip_clicked',
 
