@@ -443,7 +443,24 @@ export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummary
                 </span>
               );
               return (
-                <Tooltip key={`${sig.label}-${sig.token}-${i}`} delayDuration={150}>
+                <Tooltip
+                  key={`${sig.label}-${sig.token}-${i}`}
+                  delayDuration={150}
+                  onOpenChange={(open) => {
+                    if (!open) return;
+                    const key = `${originalQuery}::${sig.token}`;
+                    if (expandedChipsRef.current.has(key)) return;
+                    expandedChipsRef.current.add(key);
+                    trackEvent('understood_summary_chip_expanded', {
+                      query: originalQuery,
+                      token: sig.token,
+                      label: sig.label,
+                      category: rationale.category,
+                      trigger_count: rationale.triggers.length,
+                    });
+                  }}
+                >
+
                   <TooltipTrigger asChild>{trigger}</TooltipTrigger>
                   <TooltipContent side="top" className="max-w-xs text-xs leading-relaxed">
                     <p className="font-medium mb-1">
