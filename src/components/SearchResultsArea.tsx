@@ -135,6 +135,7 @@ export function SearchResultsArea({
   onApplyFilterPatch,
   onClearAllFilters,
   intent,
+  onRefineWithMatch,
 }: SearchResultsAreaProps) {
   const { t } = useTranslation();
 
