@@ -47,11 +47,10 @@ export function Header() {
       .from('saved_searches')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id)
-      .then(({ count }) => {
-        if (isMounted) setSavedCount(count ?? 0);
-      })
-      .catch(() => {
-        if (isMounted) setSavedCount(0);
+      .then(({ count, error }) => {
+        if (!isMounted) return;
+        if (error) setSavedCount(0);
+        else setSavedCount(count ?? 0);
       });
 
     return () => {
