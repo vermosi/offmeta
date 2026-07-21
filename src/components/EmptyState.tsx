@@ -24,6 +24,7 @@ interface EmptyStateProps {
 
 // Labels for common sort keys → i18n keys defined in SearchFilters.
 const SORT_LABEL_KEYS: Record<string, string> = {
+  'relevance-desc': 'filters.sortRelevance',
   'name-asc': 'filters.sortNameAsc',
   'name-desc': 'filters.sortNameDesc',
   'cmc-asc': 'filters.sortCmcAsc',
@@ -112,12 +113,12 @@ function buildAppliedChips(
       patch: { ownedOnly: false },
     });
   }
-  if (filters.sortBy && filters.sortBy !== 'name-asc') {
+  if (filters.sortBy && filters.sortBy !== 'relevance-desc' && filters.sortBy !== 'name-asc') {
     chips.push({
       key: `sort-${filters.sortBy}`,
       // Sort chip label rendered separately via t() in the JSX (kept generic here).
       label: `Sort: ${filters.sortBy}`,
-      patch: { sortBy: 'name-asc' },
+      patch: { sortBy: 'relevance-desc' },
     });
   }
   return chips;

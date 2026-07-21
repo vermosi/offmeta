@@ -97,6 +97,7 @@ const FORMAT_OPTIONS = [
 
 // Sort options
 const SORT_OPTIONS = [
+  { value: 'relevance-desc', labelKey: 'filters.sortRelevance' },
   { value: 'name-asc', labelKey: 'filters.sortNameAsc' },
   { value: 'name-desc', labelKey: 'filters.sortNameDesc' },
   { value: 'cmc-asc', labelKey: 'filters.sortCmcAsc' },

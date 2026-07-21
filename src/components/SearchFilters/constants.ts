@@ -57,6 +57,7 @@ export const CARD_TYPES = [
 ] as const;
 
 export const SORT_OPTIONS = [
+  { value: 'relevance-desc', labelKey: 'filters.sortRelevance' },
   { value: 'name-asc', labelKey: 'filters.sortNameAsc' },
   { value: 'name-desc', labelKey: 'filters.sortNameDesc' },
   { value: 'cmc-asc', labelKey: 'filters.sortCmcAsc' },
@@ -68,6 +69,9 @@ export const SORT_OPTIONS = [
   { value: 'edhrec-asc', labelKey: 'filters.sortEdhrecAsc' },
   { value: 'edhrec-desc', labelKey: 'filters.sortEdhrecDesc' },
 ] as const;
+
+/** Default sort key. Preserves upstream match-strength ordering. */
+export const DEFAULT_SORT = 'relevance-desc';
 
 export const RARITY_ORDER = {
   common: 0,
@@ -82,5 +86,5 @@ export const buildDefaultFilters = (maxCmc: number): FilterState => ({
   colors: [],
   types: [],
   cmcRange: [0, maxCmc],
-  sortBy: 'name-asc',
+  sortBy: DEFAULT_SORT,
 });

@@ -504,7 +504,7 @@ export function useSearch() {
   }, [currentPageCount, originalQuery, trackPagination]);
 
   const hasSortOverride =
-    activeFilters?.sortBy && activeFilters.sortBy !== 'name-asc';
+    activeFilters?.sortBy && activeFilters.sortBy !== 'relevance-desc' && activeFilters.sortBy !== 'name-asc';
   const displayCards =
     hasActiveFilters || hasSortOverride ? filteredCards : cards;
 

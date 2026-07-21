@@ -28,6 +28,7 @@
   "filters.clearAll": "すべてのフィルターをクリア",
   "filters.label": "フィルター",
   "filters.sort": "並べ替え...",
+ "filters.sortRelevance": "関連度順",
   "filters.sortNameAsc": "名前 (A→Z)",
   "filters.sortNameDesc": "名前 (Z→A)",
   "filters.sortCmcAsc": "CMC (低い順)",

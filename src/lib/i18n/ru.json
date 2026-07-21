@@ -28,6 +28,7 @@
   "filters.clearAll": "Сбросить все фильтры",
   "filters.label": "Фильтры",
   "filters.sort": "Сортировка...",
+ "filters.sortRelevance": "Наилучшее совпадение",
   "filters.sortNameAsc": "Имя (А→Я)",
   "filters.sortNameDesc": "Имя (Я→А)",
   "filters.sortCmcAsc": "CMC (По возрастанию)",
