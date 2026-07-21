@@ -16,7 +16,8 @@
     "test:watch": "vitest",
     "check": "npm run lint && npm run typecheck && npm run test",
     "prepare": "husky install",
-    "prebuild": "node scripts/generate-sitemap.mjs"
+    "prebuild": "node scripts/generate-sitemap.mjs",
+    "postbuild": "node scripts/prerender-cards.mjs"
   },
   "dependencies": {
     "@lovable.dev/cloud-auth-js": "^1.0.0",
