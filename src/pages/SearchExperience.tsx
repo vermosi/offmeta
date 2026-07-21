@@ -679,7 +679,16 @@ const Index = () => {
 
             {isSearching && originalQuery && (
               <Suspense fallback={null}>
-                <UnderstoodSummary originalQuery={originalQuery} />
+                <UnderstoodSummary
+                  originalQuery={originalQuery}
+                  onAdjust={(refined) => {
+                    trackEvent('understood_summary_adjust', {
+                      query: originalQuery,
+                      refined_query: refined,
+                    });
+                    handleRerunEditedQuery(refined);
+                  }}
+                />
               </Suspense>
             )}
 
