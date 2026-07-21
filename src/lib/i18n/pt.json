@@ -540,6 +540,7 @@
   "filters.removeColor": "Remover filtro {name}",
   "filters.removeType": "Remover filtro {type}",
   "filters.sort": "Ordenar...",
+ "filters.sortRelevance": "Melhor correspondência",
   "filters.sortCmcAsc": "CMC (Menor ? Maior)",
   "filters.sortCmcDesc": "CMC (Maior ? Menor)",
   "filters.sortEdhrecAsc": "EDHREC (Popular primeiro)",

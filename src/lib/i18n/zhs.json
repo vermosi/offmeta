@@ -28,6 +28,7 @@
   "filters.clearAll": "清除所有筛选",
   "filters.label": "筛选",
   "filters.sort": "排序...",
+ "filters.sortRelevance": "最佳匹配",
   "filters.sortNameAsc": "名称 (A→Z)",
   "filters.sortNameDesc": "名称 (Z→A)",
   "filters.sortCmcAsc": "法力值 (从低到高)",

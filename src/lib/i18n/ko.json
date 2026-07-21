@@ -28,6 +28,7 @@
   "filters.clearAll": "모든 필터 지우기",
   "filters.label": "필터",
   "filters.sort": "정렬...",
+ "filters.sortRelevance": "관련도순",
   "filters.sortNameAsc": "이름 (A→Z)",
   "filters.sortNameDesc": "이름 (Z→A)",
   "filters.sortCmcAsc": "CMC (낮은순)",
