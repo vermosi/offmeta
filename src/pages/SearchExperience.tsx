@@ -96,6 +96,11 @@ const SearchNextActions = lazy(() =>
     default: m.SearchNextActions,
   })),
 );
+const SearchNextStepsBar = lazy(() =>
+  import('@/components/SearchNextStepsBar').then((m) => ({
+    default: m.SearchNextStepsBar,
+  })),
+);
 const SearchResultsArea = lazy(() =>
   import('@/components/SearchResultsArea').then((m) => ({
     default: m.SearchResultsArea,
