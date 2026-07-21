@@ -67,6 +67,7 @@ export const CardItem = memo(function CardItem({
   isOwned,
   sparklineData,
   matchReasons,
+  onRefineWithMatch,
 }: CardItemProps) {
   const imageUrl = getCardImage(card, 'small');
   const imageSrcSet = `${getCardImage(card, 'small')} 146w, ${getCardImage(card, 'normal')} 488w, ${getCardImage(card, 'large')} 672w`;
