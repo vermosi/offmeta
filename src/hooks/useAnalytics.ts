@@ -289,9 +289,12 @@ const ALLOWED_EVENT_TYPES = [
   'next_steps_related_clicked',
   'similar_panel_refine_clicked',
   'related_searches_clicked',
+  'how_it_works_step_view',
+  'first_time_to_results',
 
 
 ] as const;
+
 
 type EventType = (typeof ALLOWED_EVENT_TYPES)[number];
 
