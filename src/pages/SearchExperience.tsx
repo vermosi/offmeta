@@ -127,6 +127,7 @@ const CompareModal = lazy(() =>
 );
 import { SkipLinks } from '@/components/SkipLinks';
 import { SearchProgressIndicator } from '@/components/SearchProgressIndicator';
+import { ScryfallQueryDisclosure } from '@/components/ScryfallQueryDisclosure';
 
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useAuth } from '@/hooks/useAuth';
