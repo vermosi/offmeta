@@ -716,6 +716,13 @@ export function useAnalytics() {
     [trackEvent],
   );
 
+  const trackCardPageView = useCallback(
+    (data: CardPageViewEventData) => {
+      trackEvent('card_page_view', data);
+    },
+    [trackEvent],
+  );
+
   const trackAffiliateClick = useCallback(
     (data: AffiliateClickEventData) => {
       trackEvent('affiliate_click', data);
