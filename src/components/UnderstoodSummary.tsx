@@ -9,10 +9,11 @@
  * @module components/UnderstoodSummary
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Loader2, Sparkles, X } from 'lucide-react';
 import { buildClientFallbackQuery } from '@/lib/search/fallback';
 import { useTranslation } from '@/lib/i18n';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
