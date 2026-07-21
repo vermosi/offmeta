@@ -127,6 +127,7 @@ const CompareModal = lazy(() =>
 );
 import { SkipLinks } from '@/components/SkipLinks';
 import { SearchProgressIndicator } from '@/components/SearchProgressIndicator';
+import { ScryfallQueryDisclosure } from '@/components/ScryfallQueryDisclosure';
 
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useAuth } from '@/hooks/useAuth';
@@ -661,22 +662,28 @@ const Index = () => {
                       )}
                     </div>
                   </div>
-                  <EditableQueryBar
+                  <ScryfallQueryDisclosure
                     scryfallQuery={(
                       lastSearchResult?.scryfallQuery || searchQuery
                     ).trim()}
-                    confidence={lastSearchResult?.explanation?.confidence}
-                    isLoading={isSearching}
-                    originalQuery={originalQuery}
-                    onRerun={handleRerunEditedQuery}
-                    onRegenerate={handleRegenerateTranslation}
-                    onReportIssue={() => setReportDialogOpen(true)}
-                    validationError={
-                      lastSearchResult?.validationIssues?.length
-                        ? lastSearchResult.validationIssues.join(' • ')
-                        : null
-                    }
-                  />
+                  >
+                    <EditableQueryBar
+                      scryfallQuery={(
+                        lastSearchResult?.scryfallQuery || searchQuery
+                      ).trim()}
+                      confidence={lastSearchResult?.explanation?.confidence}
+                      isLoading={isSearching}
+                      originalQuery={originalQuery}
+                      onRerun={handleRerunEditedQuery}
+                      onRegenerate={handleRegenerateTranslation}
+                      onReportIssue={() => setReportDialogOpen(true)}
+                      validationError={
+                        lastSearchResult?.validationIssues?.length
+                          ? lastSearchResult.validationIssues.join(' • ')
+                          : null
+                      }
+                    />
+                  </ScryfallQueryDisclosure>
                 </div>
                 <div className="pt-[26px]">
                   <SaveSearchButton
