@@ -727,6 +727,8 @@ const Index = () => {
                   originalQuery={originalQuery}
                   intent={lastSearchResult?.intent || lastIntent}
                   totalCards={totalCards}
+                  activeTab={activeTab}
+
                   onJumpToSimilar={() => {
                     handleTabChange('similar');
                     if (typeof document !== 'undefined') {
