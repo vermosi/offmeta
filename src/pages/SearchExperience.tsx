@@ -48,6 +48,11 @@ const InstantDemoPreview = lazy(() =>
     default: m.InstantDemoPreview,
   })),
 );
+const ExampleQueriesCarousel = lazy(() =>
+  import('@/components/ExampleQueriesCarousel').then((m) => ({
+    default: m.ExampleQueriesCarousel,
+  })),
+);
 const ValuePropStrip = lazy(() =>
   import('@/components/ValuePropStrip').then((m) => ({
     default: m.ValuePropStrip,
@@ -621,6 +626,12 @@ const Index = () => {
             {!hasSearched && (
               <Suspense fallback={null}>
                 <HowItWorksSection />
+              </Suspense>
+            )}
+
+            {!hasSearched && (
+              <Suspense fallback={null}>
+                <ExampleQueriesCarousel onTrySearch={handleTryExample} />
               </Suspense>
             )}
 
