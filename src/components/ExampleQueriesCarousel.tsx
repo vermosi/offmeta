@@ -9,10 +9,11 @@
  *  - Chips: standard Tab navigation; Enter/Space activates via native <button>.
  *    Chip scrolled into view on focus so keyboard users see the focus ring.
  */
-import { useCallback, useId, useRef, useState, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { MessageSquare, Sparkles, LayoutGrid, ArrowRight } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { cn } from '@/lib/utils';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface ExampleQueriesCarouselProps {
   onTrySearch: (query: string) => void;
@@ -24,7 +25,9 @@ export function ExampleQueriesCarousel({
   onTrySearch,
 }: ExampleQueriesCarouselProps) {
   const { t } = useTranslation();
+  const { trackExampleQueryImpression, trackExampleQueryClick } = useAnalytics();
   const [activeStep, setActiveStep] = useState<StepKey>('ask');
+
   const tabRefs = useRef<Record<StepKey, HTMLButtonElement | null>>({
     ask: null,
     translate: null,
@@ -91,6 +94,27 @@ export function ExampleQueriesCarousel({
 
   const active = steps.find((s) => s.key === activeStep) ?? steps[0];
   const trySearchLabel = t('examples.trySearchLabel', 'Try search:');
+
+  // Fire an impression event whenever a category (tab) becomes active. Guarded
+  // by a sessionStorage set so the same category-per-session emits once.
+  useEffect(() => {
+    try {
+      const key = 'offmeta_hiw_examples_seen';
+      const raw = sessionStorage.getItem(key);
+      const seen: string[] = raw ? JSON.parse(raw) : [];
+      if (seen.includes(active.key)) return;
+      seen.push(active.key);
+      sessionStorage.setItem(key, JSON.stringify(seen));
+    } catch {
+      /* fall through; still track */
+    }
+    trackExampleQueryImpression({
+      query: active.key,
+      category: active.key,
+      visible_count: active.examples.length,
+    });
+  }, [active.key, active.examples.length, trackExampleQueryImpression]);
+
 
   const focusTab = useCallback((key: StepKey) => {
     setActiveStep(key);
@@ -197,11 +221,20 @@ export function ExampleQueriesCarousel({
             aria-labelledby={`${reactId}-tab-${active.key}`}
             aria-describedby={`${reactId}-hint`}
           >
-            {active.examples.map((example) => (
+            {active.examples.map((example, index) => (
               <button
                 key={example}
                 type="button"
-                onClick={() => onTrySearch(example)}
+                onClick={() => {
+                  trackExampleQueryClick({
+                    query: example,
+                    category: active.key,
+                    position: index,
+                    visible_count: active.examples.length,
+                  });
+                  onTrySearch(example);
+                }}
+
                 onFocus={(e) => {
                   e.currentTarget.scrollIntoView({
                     behavior: 'smooth',

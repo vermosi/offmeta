@@ -4,12 +4,57 @@
  * @module components/HowItWorksSection
  */
 
-import { Fragment } from 'react';
+import { Fragment, useEffect, useRef } from 'react';
 import { MessageSquare, Sparkles, LayoutGrid } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import { trackEventDirect } from '@/hooks/useAnalytics';
+
+const SEEN_STEPS_KEY = 'offmeta_how_it_works_seen_steps';
+
+function markStepSeen(step: string): boolean {
+  try {
+    const raw = sessionStorage.getItem(SEEN_STEPS_KEY);
+    const seen: string[] = raw ? JSON.parse(raw) : [];
+    if (seen.includes(step)) return false;
+    seen.push(step);
+    sessionStorage.setItem(SEEN_STEPS_KEY, JSON.stringify(seen));
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export function HowItWorksSection() {
   const { t } = useTranslation();
+  const stepRefs = useRef<Array<HTMLElement | null>>([]);
+
+  useEffect(() => {
+    if (typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting || entry.intersectionRatio < 0.5) continue;
+          const step = (entry.target as HTMLElement).dataset.stepNumber;
+          if (!step) continue;
+          if (!markStepSeen(step)) {
+            observer.unobserve(entry.target);
+            continue;
+          }
+          trackEventDirect('how_it_works_step_view', {
+            step_number: Number(step),
+            viewport: window.innerWidth < 640 ? 'mobile' : 'desktop',
+          });
+          observer.unobserve(entry.target);
+        }
+      },
+      { threshold: [0.5] },
+    );
+    for (const el of stepRefs.current) {
+      if (el) observer.observe(el);
+    }
+    return () => observer.disconnect();
+  }, []);
+
   const STEPS = [
     {
       icon: MessageSquare,
@@ -65,9 +110,14 @@ export function HowItWorksSection() {
           return (
             <Fragment key={number}>
               <li
+                ref={(el) => {
+                  stepRefs.current[i] = el;
+                }}
+                data-step-number={number}
                 className="flex flex-col items-center text-center flex-1 min-w-0 stagger-children"
                 aria-labelledby={titleId}
               >
+
                 {/* Number badge */}
                 <div
                   className="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-bold mb-4 bg-gradient-to-br from-accent to-accent/50 text-accent-foreground shadow-lg shadow-accent/20"
@@ -118,14 +168,22 @@ export function HowItWorksSection() {
         />
 
         <div className="space-y-8">
-          {STEPS.map(({ icon: Icon, number, title, detail }) => {
+          {STEPS.map(({ icon: Icon, number, title, detail }, i) => {
             const titleId = `how-it-works-mobile-step-${number}-title`;
             return (
               <li
                 key={number}
+                ref={(el) => {
+                  // Store mobile refs in the second half of the array; only
+                  // one layout is visible per breakpoint so both can register.
+                  stepRefs.current[STEPS.length + i] = el;
+                }}
+                data-step-number={number}
                 className="relative"
                 aria-labelledby={titleId}
               >
+
+
                 {/* Node on the line */}
                 <div
                   className="absolute -left-10 top-0 w-8 h-8 rounded-full bg-gradient-to-br from-accent to-accent/50 flex items-center justify-center text-xs font-bold text-accent-foreground shadow-md shadow-accent/20"

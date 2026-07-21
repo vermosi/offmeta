@@ -448,6 +448,42 @@ const Index = () => {
     trackFirstReturnVisit();
   }, [trackFirstReturnVisit]);
 
+  // Time-to-first-results (once per user). Measures ms from initial page mount
+  // to the moment the first non-empty result set renders, capturing the
+  // real perceived latency for a first-time visitor.
+  const mountedAtRef = useRef<number>(
+    typeof performance !== 'undefined' ? performance.now() : Date.now(),
+  );
+  const firstResultsTrackedRef = useRef(false);
+  useEffect(() => {
+    if (firstResultsTrackedRef.current) return;
+    if (isSearching || !hasSearched || cards.length === 0) return;
+    firstResultsTrackedRef.current = true;
+    const flagKey = 'offmeta_once:first_time_to_results';
+    try {
+      if (localStorage.getItem(flagKey) === '1') return;
+      localStorage.setItem(flagKey, '1');
+    } catch {
+      /* best-effort — proceed without persistence */
+    }
+    const now =
+      typeof performance !== 'undefined' ? performance.now() : Date.now();
+    trackEvent('first_time_to_results', {
+      duration_ms: Math.round(now - mountedAtRef.current),
+      results_count: cards.length,
+      query: originalQuery,
+      source: lastSearchResult?.source ?? 'ai',
+    });
+  }, [
+    cards.length,
+    hasSearched,
+    isSearching,
+    lastSearchResult?.source,
+    originalQuery,
+    trackEvent,
+  ]);
+
+
   useEffect(() => {
     if (!shouldShowProUpsell) return;
     trackEvent('pro_upgrade_impression', {
