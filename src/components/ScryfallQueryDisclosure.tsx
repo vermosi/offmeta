@@ -9,7 +9,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { ChevronDown, Code2 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
-import { useAnalytics } from '@/hooks/useAnalytics';
 import { cn } from '@/lib/utils';
 
 const STORAGE_KEY = 'offmeta_scryfall_disclosure_open';
