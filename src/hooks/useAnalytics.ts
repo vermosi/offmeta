@@ -284,6 +284,9 @@ const ALLOWED_EVENT_TYPES = [
   'web_vital',
   'engaged_session_ping',
   'session_end',
+  'next_steps_jump_similar',
+  'next_steps_related_shown',
+  'next_steps_related_clicked',
 ] as const;
 
 type EventType = (typeof ALLOWED_EVENT_TYPES)[number];
