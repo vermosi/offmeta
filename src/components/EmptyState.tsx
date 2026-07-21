@@ -24,6 +24,7 @@ interface EmptyStateProps {
 
 // Labels for common sort keys → i18n keys defined in SearchFilters.
 const SORT_LABEL_KEYS: Record<string, string> = {
+  'relevance-desc': 'filters.sortRelevance',
   'name-asc': 'filters.sortNameAsc',
   'name-desc': 'filters.sortNameDesc',
   'cmc-asc': 'filters.sortCmcAsc',
