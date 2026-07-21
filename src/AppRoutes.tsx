@@ -9,7 +9,7 @@ import { lazy, Suspense, type ReactElement } from 'react';
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom';
 import FullAppProviders from '@/components/FullAppProviders';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import LandingPage from './pages/LandingPage';
+import Index from './pages/Index';
 
 const GuidesIndex = lazy(() => import('./pages/GuidesIndex'));
 const GuidePage = lazy(() => import('./pages/GuidePage'));
@@ -55,7 +55,7 @@ export default function AppRoutes() {
     <BrowserRouter>
       <Suspense fallback={routeFallback}>
         <Routes>
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<Index />} />
           <Route
             element={
               <FullAppProviders>
