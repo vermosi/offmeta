@@ -174,14 +174,15 @@ export function HowItWorksSection() {
               <li
                 key={number}
                 ref={(el) => {
-                  // Mobile refs share the same array slot as desktop; only one
-                  // layout is mounted at a time (hidden sm:flex vs sm:hidden).
-                  stepRefs.current[i] = el;
+                  // Store mobile refs in the second half of the array; only
+                  // one layout is visible per breakpoint so both can register.
+                  stepRefs.current[STEPS.length + i] = el;
                 }}
                 data-step-number={number}
                 className="relative"
                 aria-labelledby={titleId}
               >
+
 
                 {/* Node on the line */}
                 <div
