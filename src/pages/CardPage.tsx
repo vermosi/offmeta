@@ -21,6 +21,7 @@ import {
   buildCardFaqs,
 } from '@/lib/seo';
 import { useSimilarCards } from '@/hooks';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { ManaSymbol } from '@/components/ManaSymbol';
