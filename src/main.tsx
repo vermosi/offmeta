@@ -9,8 +9,9 @@ import App from './App.tsx';
 import './index.css';
 
 // Auto-recover from stale dynamic-import chunks after a redeploy.
-// Reload once (guarded via sessionStorage) so users don't see a blank screen.
+// Bounded reloads are tracked in sessionStorage to prevent infinite loops.
 const RELOAD_KEY = '__offmeta_chunk_reload__';
+const MAX_CHUNK_RELOAD_ATTEMPTS = 2;
 function handleChunkError(reason: unknown) {
   const msg = String((reason as { message?: string })?.message ?? reason ?? '');
   if (
@@ -18,9 +19,13 @@ function handleChunkError(reason: unknown) {
       msg,
     )
   ) {
-    if (!sessionStorage.getItem(RELOAD_KEY)) {
-      sessionStorage.setItem(RELOAD_KEY, '1');
+    const count = parseInt(sessionStorage.getItem(RELOAD_KEY) ?? '0', 10);
+    if (count < MAX_CHUNK_RELOAD_ATTEMPTS) {
+      sessionStorage.setItem(RELOAD_KEY, String(count + 1));
       window.location.reload();
+    } else {
+      // eslint-disable-next-line no-console
+      console.warn('OffMeta chunk reload limit reached; manual refresh may be needed.');
     }
   }
 }
