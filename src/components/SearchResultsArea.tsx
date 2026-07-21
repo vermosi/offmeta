@@ -93,6 +93,11 @@ interface SearchResultsAreaProps {
   onClearAllFilters?: () => void;
   /** Parsed intent from the translation pipeline, used to explain matches. */
   intent?: SearchIntent | null;
+  /**
+   * Handler for one-click refinement from the "Why this matches" badge.
+   * Receives the Scryfall token (e.g. `otag:treasure`) to append to the query.
+   */
+  onRefineWithMatch?: (token: string, label: string) => void;
 }
 
 export function SearchResultsArea({
