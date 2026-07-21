@@ -14,6 +14,152 @@ import { Loader2, Sparkles, X } from 'lucide-react';
 import { buildClientFallbackQuery } from '@/lib/search/fallback';
 import { useTranslation } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+
+type Translate = (k: string, f?: string) => string;
+
+/**
+ * Keyword catalogs used to explain *why* a signal chip was inferred.
+ * Each entry maps a category to the natural-language triggers that produce
+ * the corresponding Scryfall token, so we can surface the specific words from
+ * the user's query that led to the inference.
+ */
+const RATIONALE_KEYWORDS: Record<string, string[]> = {
+  colors: [
+    'white', 'blue', 'black', 'red', 'green', 'colorless', 'multicolor', 'multicolored',
+    'mono', 'wubrg', 'azorius', 'dimir', 'rakdos', 'gruul', 'selesnya', 'orzhov',
+    'izzet', 'golgari', 'boros', 'simic', 'bant', 'esper', 'grixis', 'jund', 'naya',
+    'mardu', 'temur', 'abzan', 'jeskai', 'sultai',
+  ],
+  type: [
+    'creature', 'creatures', 'artifact', 'artifacts', 'enchantment', 'enchantments',
+    'instant', 'instants', 'sorcery', 'sorceries', 'planeswalker', 'planeswalkers',
+    'land', 'lands', 'battle', 'battles', 'tribal', 'legendary', 'token', 'tokens',
+    'dragon', 'goblin', 'elf', 'zombie', 'angel', 'demon', 'wizard', 'knight',
+    'saga', 'equipment', 'aura', 'vehicle',
+  ],
+  manaValue: [
+    'mana value', 'cmc', 'converted mana cost', 'cheap', 'expensive', 'costs',
+    'one mana', 'two mana', 'three mana', 'four mana', 'five mana', 'six mana',
+    'low cost', 'high cost', 'mv', 'free',
+  ],
+  power: ['power', 'attack', 'strong', 'big creature', 'beefy'],
+  toughness: ['toughness', 'defensive', 'wall'],
+  price: [
+    'budget', 'cheap', 'affordable', 'under $', 'under 5', 'expensive',
+    'dollar', 'dollars', 'usd', 'eur', 'price', 'cost',
+  ],
+  rarity: ['common', 'uncommon', 'rare', 'mythic', 'rarity'],
+  format: [
+    'commander', 'edh', 'standard', 'modern', 'legacy', 'vintage', 'pioneer',
+    'pauper', 'brawl', 'historic', 'penny', 'oathbreaker', 'legal',
+  ],
+  property: [
+    'foil', 'promo', 'reprint', 'reserved', 'digital', 'paper', 'first printing',
+    'nonfoil', 'unique', 'oldschool',
+  ],
+  oracle: [
+    'draw', 'discard', 'sacrifice', 'destroy', 'exile', 'counter', 'ramp',
+    'treasure', 'token', 'lifelink', 'flying', 'trample', 'haste', 'vigilance',
+    'first strike', 'double strike', 'menace', 'reach', 'deathtouch', 'hexproof',
+    'ward', 'flash', 'defender', 'indestructible', 'protection', 'etb',
+    'enters the battlefield', 'dies', 'attack', 'blocks', 'tutor', 'search your library',
+    'gain life', 'lose life', 'mill', 'proliferate', 'scry',
+  ],
+  card: ['named', 'card named', 'the card'],
+};
+
+/**
+ * Human-readable summary of what each Scryfall category means, shown in the
+ * tooltip alongside the specific keywords detected in the user's query.
+ */
+function categoryDescription(key: string, t: Translate): string {
+  switch (key) {
+    case 'colors':
+      return t('understood.rationale.colors', 'Colors or color identity that cards must match.');
+    case 'type':
+      return t('understood.rationale.type', 'Card type line filter (creature, artifact, etc.).');
+    case 'manaValue':
+      return t('understood.rationale.manaValue', 'Converted mana cost / mana value constraint.');
+    case 'power':
+      return t('understood.rationale.power', 'Creature power constraint.');
+    case 'toughness':
+      return t('understood.rationale.toughness', 'Creature toughness constraint.');
+    case 'price':
+      return t('understood.rationale.price', 'Price ceiling or budget constraint.');
+    case 'rarity':
+      return t('understood.rationale.rarity', 'Card rarity constraint.');
+    case 'format':
+      return t('understood.rationale.format', 'Format legality filter.');
+    case 'property':
+      return t('understood.rationale.property', 'Card property flag (foil, promo, reprint, etc.).');
+    case 'oracle':
+      return t('understood.rationale.oracle', 'Oracle-text keyword or ability the card must mention.');
+    case 'card':
+      return t('understood.rationale.card', 'Exact card name lookup.');
+    default:
+      return t('understood.rationale.filter', 'General Scryfall filter derived from your wording.');
+  }
+}
+
+/** Map a token to its rationale category key (matches RATIONALE_KEYWORDS). */
+function tokenCategory(token: string): string {
+  const lower = token.toLowerCase();
+  if (lower.startsWith('c:') || lower.startsWith('c=') || lower.startsWith('ci:') || lower.startsWith('ci=')) return 'colors';
+  if (lower.startsWith('t:') || lower.startsWith('-t:')) return 'type';
+  if (lower.startsWith('mv') || lower.startsWith('cmc')) return 'manaValue';
+  if (lower.startsWith('pow')) return 'power';
+  if (lower.startsWith('tou')) return 'toughness';
+  if (lower.startsWith('usd') || lower.startsWith('eur') || lower.startsWith('tix')) return 'price';
+  if (lower.startsWith('r:') || lower.startsWith('rarity')) return 'rarity';
+  if (lower.startsWith('f:') || lower.startsWith('format')) return 'format';
+  if (lower.startsWith('is:') || lower.startsWith('not:')) return 'property';
+  if (lower.startsWith('o:') || lower.startsWith('-o:') || lower.startsWith('otag:') || lower.startsWith('oracle')) return 'oracle';
+  if (lower.startsWith('!"')) return 'card';
+  return 'filter';
+}
+
+/**
+ * Find which words from the original query most likely triggered this token,
+ * plus the literal value the token filters on (e.g. `treasure` for `o:treasure`).
+ */
+function extractRationale(token: string, originalQuery: string): {
+  category: string;
+  triggers: string[];
+  value: string | null;
+} {
+  const category = tokenCategory(token);
+  const lowerQuery = ` ${originalQuery.toLowerCase()} `;
+  const triggers = new Set<string>();
+
+  // Match category-wide keywords.
+  const keywordPool = RATIONALE_KEYWORDS[category] ?? [];
+  for (const kw of keywordPool) {
+    if (lowerQuery.includes(` ${kw} `) || lowerQuery.includes(` ${kw},`) || lowerQuery.includes(` ${kw}.`)) {
+      triggers.add(kw);
+    }
+  }
+
+  // Extract the literal value inside the token so users understand *what* it filters on.
+  const valueMatch = token.match(/[:=<>!](.+)$/);
+  const rawValue = valueMatch ? valueMatch[1].replace(/^"|"$/g, '') : null;
+
+  // If the literal token value itself appears in the query, surface it too.
+  if (rawValue && rawValue.length > 1 && lowerQuery.includes(rawValue.toLowerCase())) {
+    triggers.add(rawValue.toLowerCase());
+  }
+
+  return {
+    category,
+    triggers: Array.from(triggers).slice(0, 4),
+    value: rawValue,
+  };
+}
+
 
 interface UnderstoodSummaryProps {
   originalQuery: string;
