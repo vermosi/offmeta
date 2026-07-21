@@ -80,6 +80,7 @@ export function useSearch() {
   const {
     trackSearch,
     trackSearchFailure,
+    trackSearchSuccess,
     trackCardClick,
     trackPagination,
     trackFirstSearchStart,
