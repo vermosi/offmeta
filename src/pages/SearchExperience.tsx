@@ -896,6 +896,17 @@ const Index = () => {
             )}
 
 
+            {hasSearched && !isSearching && cards.length > 0 && activeTab === 'cards' && (
+              <Suspense fallback={null}>
+                <MatchedConceptChips
+                  cards={displayCards.length > 0 ? displayCards : cards}
+                  intent={lastSearchResult?.intent || lastIntent}
+                  searchQuery={searchQuery}
+                  originalQuery={originalQuery}
+                  onRefine={handleRefineWithMatch}
+                />
+              </Suspense>
+            )}
 
             {cards.length > 0 && !isSearching && activeTab === 'cards' && (
               <ResultsToolbar
