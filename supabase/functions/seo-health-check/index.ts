@@ -98,12 +98,14 @@ function checkPage(
   const robots = extractMeta(html, 'robots')?.toLowerCase() ?? '';
   const xRobots = (headers.get('x-robots-tag') ?? '').toLowerCase();
   const h1Count = countTag(html, 'h1');
+  const h1Text = extractFirstH1(html);
   const bodyText = html
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<style[\s\S]*?<\/style>/gi, '');
-  const nameInBody = expectedName
-    ? bodyText.toLowerCase().includes(expectedName.toLowerCase())
-    : true;
+  const expectedLower = expectedName?.toLowerCase() ?? '';
+  const nameInBody = expectedName ? bodyText.toLowerCase().includes(expectedLower) : true;
+  const nameInTitle = expectedName ? title.toLowerCase().includes(expectedLower) : true;
+  const nameInH1 = expectedName ? h1Text.toLowerCase().includes(expectedLower) : true;
   const isHomepageClone =
     path !== '/' &&
     (html.length === baseline.bytes || title === baseline.title);
@@ -117,11 +119,13 @@ function checkPage(
   if (softFour04) failures.push('soft_404');
   if (isHomepageClone) failures.push('homepage_clone');
   if (!nameInBody) failures.push('card_name_missing');
+  if (!nameInTitle) failures.push('title_mismatch');
+  if (!nameInH1) failures.push('h1_mismatch');
   if (h1Count === 0) failures.push('no_h1');
   if (h1Count > 1) failures.push('multiple_h1');
 
   const criticalFailures = failures.filter((f) =>
-    ['status_404', 'status_500', 'noindex', 'soft_404', 'homepage_clone', 'card_name_missing'].some(
+    ['status_404', 'status_500', 'noindex', 'soft_404', 'homepage_clone', 'card_name_missing', 'title_mismatch', 'h1_mismatch'].some(
       (c) => f.startsWith(c),
     ),
   );
@@ -140,6 +144,7 @@ function checkPage(
     details: {
       status,
       title,
+      h1_text: h1Text,
       h1_count: h1Count,
       bytes: html.length,
       failures,
