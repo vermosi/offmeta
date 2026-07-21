@@ -9,10 +9,11 @@
  *  - Chips: standard Tab navigation; Enter/Space activates via native <button>.
  *    Chip scrolled into view on focus so keyboard users see the focus ring.
  */
-import { useCallback, useId, useRef, useState, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { MessageSquare, Sparkles, LayoutGrid, ArrowRight } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { cn } from '@/lib/utils';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface ExampleQueriesCarouselProps {
   onTrySearch: (query: string) => void;
@@ -24,7 +25,9 @@ export function ExampleQueriesCarousel({
   onTrySearch,
 }: ExampleQueriesCarouselProps) {
   const { t } = useTranslation();
+  const { trackExampleQueryImpression, trackExampleQueryClick } = useAnalytics();
   const [activeStep, setActiveStep] = useState<StepKey>('ask');
+
   const tabRefs = useRef<Record<StepKey, HTMLButtonElement | null>>({
     ask: null,
     translate: null,
