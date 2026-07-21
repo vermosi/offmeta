@@ -292,6 +292,9 @@ const ALLOWED_EVENT_TYPES = [
   'how_it_works_step_view',
   'first_time_to_results',
   'understood_summary_adjust',
+  'understood_summary_view',
+  'understood_summary_changed',
+  'understood_summary_accepted',
 
 
 ] as const;
