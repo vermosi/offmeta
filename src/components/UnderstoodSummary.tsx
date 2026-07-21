@@ -506,23 +506,6 @@ export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummary
 
       {preview && (
         <div className="rounded-lg border border-border/50 bg-muted/40 px-3 py-2">
-          <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1">
-            {hasChanges
-              ? t('understood.refinedQuery', 'Refined Scryfall query')
-              : t('understood.previewQuery', 'Preview Scryfall query')}
-          </p>
-          <p className="font-mono text-xs text-foreground break-words">
-            {hasChanges ? refinedQuery : preview}
-          </p>
-        </div>
-      )}
-
-      {preview && (
-        <div className="mt-2">
-          <button
-            type="button"
-      {preview && (
-        <div className="rounded-lg border border-border/50 bg-muted/40 px-3 py-2">
           <div className="flex items-start justify-between gap-2 mb-1">
             <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
               {hasChanges
