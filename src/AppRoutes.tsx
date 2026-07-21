@@ -55,7 +55,7 @@ export default function AppRoutes() {
     <BrowserRouter>
       <Suspense fallback={routeFallback}>
         <Routes>
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<Index />} />
           <Route
             element={
               <FullAppProviders>
