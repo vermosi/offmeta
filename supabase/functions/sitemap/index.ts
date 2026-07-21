@@ -72,19 +72,13 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch curated search pages, top cards, and SEO pages in parallel
-    const [curatedResult, cardsResult, seoResult] = await Promise.all([
+    // Fetch curated search pages and SEO pages
+    const [curatedResult, seoResult] = await Promise.all([
       supabase
         .from('curated_searches')
         .select('slug, priority, updated_at')
         .eq('is_active', true)
         .order('priority', { ascending: false }),
-      supabase
-        .from('cards')
-        .select('name, updated_at')
-        .not('image_url', 'is', null)
-        .order('updated_at', { ascending: false })
-        .limit(500),
       supabase
         .from('seo_pages')
         .select('slug, updated_at')
@@ -92,9 +86,28 @@ serve(async (req) => {
         .order('updated_at', { ascending: false }),
     ]);
 
+    // Fetch ALL cards with images in paginated batches — Supabase caps a
+    // single select at 1000 rows, so we loop with .range() until exhausted.
+    // Every /cards/<slug> URL belongs in the sitemap so Google can discover
+    // the full catalogue (~32k cards), not just a 500-row snapshot.
+    const cards: Array<{ name: string; updated_at: string | null }> = [];
+    const PAGE = 1000;
+    for (let from = 0; ; from += PAGE) {
+      const { data, error } = await supabase
+        .from('cards')
+        .select('name, updated_at')
+        .not('image_url', 'is', null)
+        .order('name', { ascending: true })
+        .range(from, from + PAGE - 1);
+      if (error) throw error;
+      if (!data || data.length === 0) break;
+      cards.push(...data);
+      if (data.length < PAGE) break;
+    }
+
     const curatedSearches = curatedResult.data;
-    const cards = cardsResult.data;
     const seoPages = seoResult.data;
+
     const today = new Date().toISOString().split('T')[0];
 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
