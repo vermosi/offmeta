@@ -4,12 +4,57 @@
  * @module components/HowItWorksSection
  */
 
-import { Fragment } from 'react';
+import { Fragment, useEffect, useRef } from 'react';
 import { MessageSquare, Sparkles, LayoutGrid } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import { trackEventDirect } from '@/hooks/useAnalytics';
+
+const SEEN_STEPS_KEY = 'offmeta_how_it_works_seen_steps';
+
+function markStepSeen(step: string): boolean {
+  try {
+    const raw = sessionStorage.getItem(SEEN_STEPS_KEY);
+    const seen: string[] = raw ? JSON.parse(raw) : [];
+    if (seen.includes(step)) return false;
+    seen.push(step);
+    sessionStorage.setItem(SEEN_STEPS_KEY, JSON.stringify(seen));
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export function HowItWorksSection() {
   const { t } = useTranslation();
+  const stepRefs = useRef<Array<HTMLElement | null>>([]);
+
+  useEffect(() => {
+    if (typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting || entry.intersectionRatio < 0.5) continue;
+          const step = (entry.target as HTMLElement).dataset.stepNumber;
+          if (!step) continue;
+          if (!markStepSeen(step)) {
+            observer.unobserve(entry.target);
+            continue;
+          }
+          trackEventDirect('how_it_works_step_view', {
+            step_number: Number(step),
+            viewport: window.innerWidth < 640 ? 'mobile' : 'desktop',
+          });
+          observer.unobserve(entry.target);
+        }
+      },
+      { threshold: [0.5] },
+    );
+    for (const el of stepRefs.current) {
+      if (el) observer.observe(el);
+    }
+    return () => observer.disconnect();
+  }, []);
+
   const STEPS = [
     {
       icon: MessageSquare,
