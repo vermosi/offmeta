@@ -303,12 +303,26 @@ export function useSearch() {
     if (!lastSearchResult || !hasSearched) return;
 
     if (totalCards > 0) {
+      const startedAt = searchStartMsRef.current;
+      const latencyMs = startedAt != null ? Math.max(0, Date.now() - startedAt) : 0;
+      const source = lastSearchResult.source || 'ai';
       trackEvent('search_results', {
         query: originalQuery,
         translated_query: lastSearchResult.scryfallQuery,
         results_count: totalCards,
         request_id: currentRequestId ?? undefined,
       });
+      trackSearchSuccess({
+        query: originalQuery,
+        translated_query: lastSearchResult.scryfallQuery,
+        results_count: totalCards,
+        latency_ms: Math.round(latencyMs),
+        latency_bucket: toLatencyBucket(latencyMs),
+        source,
+        request_id: currentRequestId ?? undefined,
+      });
+      // Only attribute latency to the first success per handleSearch invocation.
+      searchStartMsRef.current = null;
       trackFirstSearchSuccess({
         query: originalQuery,
         request_id: currentRequestId ?? undefined,
