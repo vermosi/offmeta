@@ -865,6 +865,7 @@ export function useAnalytics() {
     trackSearch,
     trackSearchStarted,
     trackSearchFailure,
+    trackSearchSuccess,
     trackCardClick,
     trackCardModalView,
     trackAffiliateClick,
