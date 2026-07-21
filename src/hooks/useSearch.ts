@@ -21,7 +21,7 @@ import type { ScryfallCard } from '@/types/card';
 import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';
 import { buildFilterQuery, validateScryfallQuery } from '@/lib/scryfall/query';
-import { useAnalytics } from '@/hooks/useAnalytics';
+import { useAnalytics, toLatencyBucket } from '@/hooks/useAnalytics';
 import { CLIENT_CONFIG } from '@/lib/config';
 import { useTranslation } from '@/lib/i18n';
 import { LOCALE_TO_SCRYFALL_LANG } from '@/lib/i18n/constants';
@@ -80,6 +80,7 @@ export function useSearch() {
   const {
     trackSearch,
     trackSearchFailure,
+    trackSearchSuccess,
     trackCardClick,
     trackPagination,
     trackFirstSearchStart,
@@ -302,12 +303,26 @@ export function useSearch() {
     if (!lastSearchResult || !hasSearched) return;
 
     if (totalCards > 0) {
+      const startedAt = searchStartMsRef.current;
+      const latencyMs = startedAt != null ? Math.max(0, Date.now() - startedAt) : 0;
+      const source = lastSearchResult.source || 'ai';
       trackEvent('search_results', {
         query: originalQuery,
         translated_query: lastSearchResult.scryfallQuery,
         results_count: totalCards,
         request_id: currentRequestId ?? undefined,
       });
+      trackSearchSuccess({
+        query: originalQuery,
+        translated_query: lastSearchResult.scryfallQuery,
+        results_count: totalCards,
+        latency_ms: Math.round(latencyMs),
+        latency_bucket: toLatencyBucket(latencyMs),
+        source,
+        request_id: currentRequestId ?? undefined,
+      });
+      // Only attribute latency to the first success per handleSearch invocation.
+      searchStartMsRef.current = null;
       trackFirstSearchSuccess({
         query: originalQuery,
         request_id: currentRequestId ?? undefined,
@@ -482,6 +497,7 @@ export function useSearch() {
     trackEvent,
     trackFirstSearchSuccess,
     trackSearchFailure,
+    trackSearchSuccess,
     currentRequestId,
     hasSearched,
     isSearching,
