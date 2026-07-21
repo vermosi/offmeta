@@ -117,6 +117,14 @@ const RelatedSearchesSection = lazy(() =>
   })),
 );
 
+const MatchedConceptChips = lazy(() =>
+  import('@/components/MatchedConceptChips').then((m) => ({
+    default: m.MatchedConceptChips,
+  })),
+);
+
+
+
 const SearchResultsArea = lazy(() =>
   import('@/components/SearchResultsArea').then((m) => ({
     default: m.SearchResultsArea,
