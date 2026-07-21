@@ -167,9 +167,6 @@ export const CardItem = memo(function CardItem({
         </div>
       )}
 
-      {/* Why this matches badge */}
-      {matchReasons && matchReasons.length > 0 && (
-        <div className="absolute top-1.5 right-1.5 z-10 group/why">
       {/* Why this matches badge — keyboard-accessible Popover */}
       {matchReasons && matchReasons.length > 0 && (() => {
         const summary = matchReasons.map((r) => r.label).join('; ');
