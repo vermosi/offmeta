@@ -264,6 +264,7 @@ const ALLOWED_EVENT_TYPES = [
   'rerun_edited_query',
   'card_click',
   'card_modal_view',
+  'card_page_view', // Dedicated /cards/:slug route view (distinct from in-app modal)
   'deck_click', // NEW: click into a public deck from any surface (browse, archetype, similar)
   'share_clicked', // NEW: fired by SharePageButton / ShareSearchButton on click
   'affiliate_click',
@@ -410,6 +411,20 @@ interface CardModalViewEventData {
   tab_viewed?: string;
 }
 
+interface CardPageViewEventData {
+  /** URL slug used to reach the page (may differ from canonical). */
+  slug: string;
+  /** Canonical slug derived from the resolved card's real name. */
+  canonical_slug?: string;
+  card_id?: string;
+  card_name?: string;
+  set_code?: string;
+  /** True when the visited slug does not match the canonical one. */
+  is_alias?: boolean;
+  /** Referring surface, e.g. 'direct', 'internal-link', 'search'. */
+  referrer_source?: string;
+}
+
 interface AffiliateClickEventData {
   card_id?: string;
   card_name?: string;
@@ -502,6 +517,7 @@ type EventData =
   | SearchFailureEventData
   | CardClickEventData
   | CardModalViewEventData
+  | CardPageViewEventData
   | AffiliateClickEventData
   | PaginationEventData
   | FeedbackEventData
@@ -700,6 +716,13 @@ export function useAnalytics() {
     [trackEvent],
   );
 
+  const trackCardPageView = useCallback(
+    (data: CardPageViewEventData) => {
+      trackEvent('card_page_view', data);
+    },
+    [trackEvent],
+  );
+
   const trackAffiliateClick = useCallback(
     (data: AffiliateClickEventData) => {
       trackEvent('affiliate_click', data);
@@ -868,6 +891,7 @@ export function useAnalytics() {
     trackSearchSuccess,
     trackCardClick,
     trackCardModalView,
+    trackCardPageView,
     trackAffiliateClick,
     trackShareClicked,
     trackDeckClick,
