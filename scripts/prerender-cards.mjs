@@ -19,7 +19,7 @@ import path from 'node:path';
 const SITE_URL = 'https://offmeta.app';
 const DIST_DIR = 'dist';
 const OUTPUT_DIR = path.join(DIST_DIR, 'cards');
-const MAX_CARDS = Number(process.env.PRERENDER_CARD_LIMIT ?? 300);
+const MAX_CARDS = Number(process.env.PRERENDER_CARD_LIMIT ?? 5000);
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY =
@@ -58,28 +58,56 @@ async function pgrest(pathAndQuery) {
 }
 
 async function fetchTopCards(limit) {
+  // 1) Prefer cards ranked by real engagement signals (trend / search volume).
   const signals = await pgrest(
     `card_signals?select=card_id,trend_score,search_count&order=trend_score.desc.nullslast,search_count.desc.nullslast&limit=${limit}`,
   );
-  if (!Array.isArray(signals) || signals.length === 0) return [];
 
-  const ids = signals.map((s) => s.card_id).filter(Boolean);
-  if (ids.length === 0) return [];
-
-  const CHUNK = 100;
   const cardByOracleId = new Map();
-  for (let i = 0; i < ids.length; i += CHUNK) {
-    const chunk = ids.slice(i, i + CHUNK);
-    const inList = chunk.map((id) => `"${id}"`).join(',');
-    const rows = await pgrest(
-      `cards?select=oracle_id,name,mana_cost,type_line,oracle_text,colors,image_url,rarity,legalities&oracle_id=in.(${inList})`,
-    );
-    if (Array.isArray(rows)) {
-      for (const row of rows) cardByOracleId.set(row.oracle_id, row);
+  const orderedIds = [];
+
+  if (Array.isArray(signals) && signals.length > 0) {
+    const ids = signals.map((s) => s.card_id).filter(Boolean);
+    const CHUNK = 100;
+    for (let i = 0; i < ids.length; i += CHUNK) {
+      const chunk = ids.slice(i, i + CHUNK);
+      const inList = chunk.map((id) => `"${id}"`).join(',');
+      const rows = await pgrest(
+        `cards?select=oracle_id,name,mana_cost,type_line,oracle_text,colors,image_url,rarity,legalities&oracle_id=in.(${inList})`,
+      );
+      if (Array.isArray(rows)) {
+        for (const row of rows) cardByOracleId.set(row.oracle_id, row);
+      }
     }
+    for (const id of ids) if (cardByOracleId.has(id)) orderedIds.push(id);
   }
 
-  return ids
+  // 2) Backfill with the general cards table so we don't leave the long tail
+  //    of /cards/* URLs (the ones Googlebot has been seeing as SPA shells)
+  //    without a prerendered document. Paginates PostgREST's 1000-row cap.
+  if (orderedIds.length < limit) {
+    const remaining = limit - orderedIds.length;
+    const PAGE = 1000;
+    let offset = 0;
+    while (orderedIds.length < limit) {
+      const take = Math.min(PAGE, limit - orderedIds.length);
+      const rows = await pgrest(
+        `cards?select=oracle_id,name,mana_cost,type_line,oracle_text,colors,image_url,rarity,legalities&order=name.asc&limit=${take}&offset=${offset}`,
+      );
+      if (!Array.isArray(rows) || rows.length === 0) break;
+      for (const row of rows) {
+        if (!row?.oracle_id || cardByOracleId.has(row.oracle_id)) continue;
+        cardByOracleId.set(row.oracle_id, row);
+        orderedIds.push(row.oracle_id);
+        if (orderedIds.length >= limit) break;
+      }
+      offset += rows.length;
+      if (rows.length < take) break;
+    }
+    void remaining;
+  }
+
+  return orderedIds
     .map((id) => cardByOracleId.get(id))
     .filter((row) => row && typeof row.name === 'string' && row.name.length > 1);
 }
@@ -231,18 +259,21 @@ async function main() {
     if (!slug || writtenSlugs.has(slug)) continue;
     writtenSlugs.add(slug);
 
+    const html = customizeHtmlForCard(templateHtml, card, slug);
+
+    // Write both resolution paths so the static host serves prerendered HTML
+    // regardless of whether it looks up "/cards/<slug>" or "/cards/<slug>/".
     const dir = path.join(OUTPUT_DIR, slug);
     await fs.mkdir(dir, { recursive: true });
-    await fs.writeFile(
-      path.join(dir, 'index.html'),
-      customizeHtmlForCard(templateHtml, card, slug),
-      'utf8',
-    );
+    await Promise.all([
+      fs.writeFile(path.join(dir, 'index.html'), html, 'utf8'),
+      fs.writeFile(path.join(OUTPUT_DIR, `${slug}.html`), html, 'utf8'),
+    ]);
     written += 1;
   }
 
   console.log(
-    `[prerender-cards] Wrote ${written} card HTML files to ${OUTPUT_DIR}/<slug>/index.html`,
+    `[prerender-cards] Wrote ${written} card HTML files to ${OUTPUT_DIR}/<slug>{.html,/index.html}`,
   );
 }
 
