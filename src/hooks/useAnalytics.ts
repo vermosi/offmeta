@@ -517,6 +517,7 @@ type EventData =
   | SearchFailureEventData
   | CardClickEventData
   | CardModalViewEventData
+  | CardPageViewEventData
   | AffiliateClickEventData
   | PaginationEventData
   | FeedbackEventData
