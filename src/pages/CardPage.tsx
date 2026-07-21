@@ -299,7 +299,7 @@ const CardPage = () => {
   }
 
 
-  if (error || (!isLoading && !card)) {
+  if (error || !card) {
     // Invalid/unknown card slug — mark noindex so crawlers drop it, but keep
     // the response accessible for users who followed a broken link.
     if (typeof document !== 'undefined') {
