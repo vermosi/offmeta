@@ -168,14 +168,21 @@ export function HowItWorksSection() {
         />
 
         <div className="space-y-8">
-          {STEPS.map(({ icon: Icon, number, title, detail }) => {
+          {STEPS.map(({ icon: Icon, number, title, detail }, i) => {
             const titleId = `how-it-works-mobile-step-${number}-title`;
             return (
               <li
                 key={number}
+                ref={(el) => {
+                  // Mobile refs share the same array slot as desktop; only one
+                  // layout is mounted at a time (hidden sm:flex vs sm:hidden).
+                  stepRefs.current[i] = el;
+                }}
+                data-step-number={number}
                 className="relative"
                 aria-labelledby={titleId}
               >
+
                 {/* Node on the line */}
                 <div
                   className="absolute -left-10 top-0 w-8 h-8 rounded-full bg-gradient-to-br from-accent to-accent/50 flex items-center justify-center text-xs font-bold text-accent-foreground shadow-md shadow-accent/20"
