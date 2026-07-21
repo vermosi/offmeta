@@ -562,6 +562,12 @@ const Index = () => {
 
             {!hasSearched && (
               <Suspense fallback={null}>
+                <HowItWorksSection />
+              </Suspense>
+            )}
+
+            {!hasSearched && (
+              <Suspense fallback={null}>
                 <InstantDemoPreview onTrySearch={handleTryExample} />
               </Suspense>
             )}
@@ -747,16 +753,6 @@ const Index = () => {
           )}
         </main>
 
-        {!hasSearched && (
-          <div className="container-main" aria-hidden="true">
-            <div className="section-divider" />
-          </div>
-        )}
-        {!hasSearched && (
-          <Suspense fallback={null}>
-            <HowItWorksSection />
-          </Suspense>
-        )}
         {!hasSearched && (
           <div className="container-main" aria-hidden="true">
             <div className="section-divider" />

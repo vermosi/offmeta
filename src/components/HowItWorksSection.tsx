@@ -14,20 +14,29 @@ export function HowItWorksSection() {
     {
       icon: MessageSquare,
       number: '1',
-      title: t('howItWorks.step1Title', 'Describe what you need'),
-      detail: t('howItWorks.step1Detail', '"budget board wipes under $5"'),
+      title: t('howItWorks.step1Title', 'Ask in plain English'),
+      detail: t(
+        'howItWorks.step1Detail',
+        'Describe what you want — e.g. "budget alternatives to Rhystic Study" or "cards that punish treasure decks."',
+      ),
     },
     {
       icon: Sparkles,
       number: '2',
-      title: t('howItWorks.step2Title', 'We translate it'),
-      detail: t('howItWorks.step2Detail', 'AI converts to precise Scryfall syntax'),
+      title: t('howItWorks.step2Title', 'We translate it — and show our work'),
+      detail: t(
+        'howItWorks.step2Detail',
+        'OffMeta builds the exact Scryfall query, shows it above the results, and lets you tweak it if you want to.',
+      ),
     },
     {
       icon: LayoutGrid,
       number: '3',
-      title: t('howItWorks.step3Title', 'Get real results'),
-      detail: t('howItWorks.step3Detail', 'Instant cards from the full MTG database'),
+      title: t('howItWorks.step3Title', 'Browse results and discover more'),
+      detail: t(
+        'howItWorks.step3Detail',
+        'Get real cards from Scryfall, then jump to similar cards, budget alternatives, or related archetypes.',
+      ),
     },
   ] as const;
 
