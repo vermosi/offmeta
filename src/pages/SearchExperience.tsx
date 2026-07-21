@@ -101,6 +101,12 @@ const SearchNextStepsBar = lazy(() =>
     default: m.SearchNextStepsBar,
   })),
 );
+const SimilarToTopResultPanel = lazy(() =>
+  import('@/components/SimilarToTopResultPanel').then((m) => ({
+    default: m.SimilarToTopResultPanel,
+  })),
+);
+
 const SearchResultsArea = lazy(() =>
   import('@/components/SearchResultsArea').then((m) => ({
     default: m.SearchResultsArea,
