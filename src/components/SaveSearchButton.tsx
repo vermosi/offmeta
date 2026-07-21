@@ -75,7 +75,7 @@ export function SaveSearchButton({
         const hasActiveFilters = filters && (
           filters.colors.length > 0 ||
           filters.types.length > 0 ||
-          filters.sortBy !== 'name-asc' ||
+          (filters.sortBy !== 'relevance-desc' && filters.sortBy !== 'name-asc') ||
           filters.cmcRange[0] > 0 ||
           filters.cmcRange[1] < 16
         );
