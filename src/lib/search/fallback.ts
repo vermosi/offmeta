@@ -600,10 +600,18 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
     .replace(/\s+/g, ' ')
     .trim();
 
-  // 11. If there's meaningful residual, add as oracle text search
-  if (residual.length > 2) {
-    parts.push(`o:"${residual}"`);
+  // 11. Only emit residual as oracle-text search when it's a single meaningful
+  // word. Multi-word residuals (e.g. "punish decks", "artifact hate") almost
+  // never appear verbatim in oracle text and produce zero-result or misleading
+  // searches. Drop them — the extracted parts already carry intent.
+  const residualWords = residual.split(/\s+/).filter(Boolean);
+  const isSingleContentWord =
+    residualWords.length === 1 &&
+    /^[a-z][a-z'-]{3,}$/i.test(residualWords[0]);
+  if (isSingleContentWord) {
+    parts.push(`o:"${residualWords[0]}"`);
   }
+
 
   // If nothing was extracted, return original as a name search
   if (parts.length === 0) {
