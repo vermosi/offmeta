@@ -562,6 +562,12 @@ const Index = () => {
 
             {!hasSearched && (
               <Suspense fallback={null}>
+                <HowItWorksSection />
+              </Suspense>
+            )}
+
+            {!hasSearched && (
+              <Suspense fallback={null}>
                 <InstantDemoPreview onTrySearch={handleTryExample} />
               </Suspense>
             )}
