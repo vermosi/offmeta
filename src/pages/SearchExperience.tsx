@@ -761,6 +761,20 @@ const Index = () => {
               </Suspense>
             )}
 
+            {/* Similar-to-top-result discovery panel (Cards tab only) */}
+            {hasSearched && !isSearching && activeTab === 'cards' && cards[0] && (
+              <Suspense fallback={null}>
+                <SimilarToTopResultPanel
+                  topCard={cards[0]}
+                  originalQuery={originalQuery}
+                  onRefine={handleTryExample}
+                  onCardClick={handleCardClick}
+                />
+              </Suspense>
+            )}
+
+
+
             {cards.length > 0 && !isSearching && activeTab === 'cards' && (
               <ResultsToolbar
                 cards={cards}
