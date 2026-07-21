@@ -344,6 +344,43 @@ interface SearchEventData {
   source?: string; // 'deterministic' | 'ai' | 'cache'
 }
 
+/**
+ * Bucketed latency for aggregation in dashboards.
+ * Aligns with common web-vitals-style tiers so we can chart p50/p95 shifts.
+ */
+export type LatencyBucket =
+  | '<200ms'
+  | '200-500ms'
+  | '500-1000ms'
+  | '1-2s'
+  | '2-5s'
+  | '5-10s'
+  | '>10s';
+
+export function toLatencyBucket(durationMs: number): LatencyBucket {
+  if (!Number.isFinite(durationMs) || durationMs < 0) return '<200ms';
+  if (durationMs < 200) return '<200ms';
+  if (durationMs < 500) return '200-500ms';
+  if (durationMs < 1000) return '500-1000ms';
+  if (durationMs < 2000) return '1-2s';
+  if (durationMs < 5000) return '2-5s';
+  if (durationMs < 10000) return '5-10s';
+  return '>10s';
+}
+
+interface SearchSuccessEventData {
+  query: string;
+  translated_query?: string;
+  results_count: number;
+  /** End-to-end latency from submit to results paint. */
+  latency_ms: number;
+  /** Coarse latency bucket for dashboard aggregation. */
+  latency_bucket: LatencyBucket;
+  /** Which pipeline produced the results (deterministic | cache | ai | ai_recovered | concept_match | client_recovery | fuzzy). */
+  source: string;
+  request_id?: string;
+}
+
 interface SearchFailureEventData {
   query: string;
   translated_query?: string;
