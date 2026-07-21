@@ -262,6 +262,7 @@ export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummary
 
   // Track which chips the user has excluded before results arrive.
   const [excluded, setExcluded] = useState<Set<string>>(new Set());
+  const [showRaw, setShowRaw] = useState<boolean>(false);
 
   // Reset exclusions whenever the underlying query changes (new search).
   useEffect(() => {
