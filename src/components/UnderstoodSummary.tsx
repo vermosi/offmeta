@@ -10,7 +10,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Loader2, Sparkles, X } from 'lucide-react';
+import { Check, Copy, Loader2, Sparkles, X } from 'lucide-react';
 import { buildClientFallbackQuery } from '@/lib/search/fallback';
 import { useTranslation } from '@/lib/i18n';
 import { useAnalytics } from '@/hooks/useAnalytics';
