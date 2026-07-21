@@ -80,7 +80,7 @@ export function useSearchFilterState({
       const isDefaultRange =
         prev.colors.length === 0 &&
         prev.types.length === 0 &&
-        prev.sortBy === 'name-asc' &&
+        (prev.sortBy === 'relevance-desc' || prev.sortBy === 'name-asc') &&
         prev.cmcRange[0] === 0 &&
         prev.cmcRange[1] === lastDefaultMaxCmc.current;
 
