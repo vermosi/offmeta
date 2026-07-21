@@ -21,7 +21,9 @@ import { ExplanationPanel } from '@/components/ExplanationPanel';
 import { CLIENT_CONFIG } from '@/lib/config';
 import { useTranslation } from '@/lib/i18n';
 import { rerankCardsWithIntelligence } from '@/lib/search/intelligence-ranking';
+import { explainCardMatch } from '@/lib/search/matchExplanation';
 import type { ScryfallCard } from '@/types/card';
+import type { SearchIntent } from '@/types/search';
 import type { FilterState } from '@/types/filters';
 import type { ViewMode } from '@/lib/view-mode-storage';
 import type { ResultsTab } from '@/components/ResultsTabs';
@@ -89,6 +91,8 @@ interface SearchResultsAreaProps {
   onApplyFilterPatch?: (patch: Partial<FilterState>) => void;
   /** Reset all client-side filters to defaults. */
   onClearAllFilters?: () => void;
+  /** Parsed intent from the translation pipeline, used to explain matches. */
+  intent?: SearchIntent | null;
 }
 
 export function SearchResultsArea({
@@ -125,6 +129,7 @@ export function SearchResultsArea({
   activeFilters,
   onApplyFilterPatch,
   onClearAllFilters,
+  intent,
 }: SearchResultsAreaProps) {
   const { t } = useTranslation();
 
@@ -322,7 +327,9 @@ export function SearchResultsArea({
                             tabIndex={rovingProps.tabIndex}
                             isOwned={collectionLookup.has(card.name)}
                             sparklineData={sparklineMap?.get(card.name)}
+                            matchReasons={explainCardMatch(card, intent)}
                           />
+
                         </div>
                       );
                     })}

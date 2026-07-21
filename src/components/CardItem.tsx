@@ -34,6 +34,8 @@ interface CardItemProps {
   tabIndex?: number;
   isOwned?: boolean;
   sparklineData?: SparklinePoint[];
+  /** Short reasons explaining why this card matched the current query. */
+  matchReasons?: string[];
 }
 
 /** Format a price string to a compact display. */
@@ -56,11 +58,12 @@ export const CardItem = memo(function CardItem({
   tabIndex = 0,
   isOwned,
   sparklineData,
+  matchReasons,
 }: CardItemProps) {
   const imageUrl = getCardImage(card, 'small');
   const imageSrcSet = `${getCardImage(card, 'small')} 146w, ${getCardImage(card, 'normal')} 488w, ${getCardImage(card, 'large')} 672w`;
   const [imgError, setImgError] = useState(false);
-  const { locale } = useTranslation();
+  const { locale, t } = useTranslation();
   const displayName = getLocalizedName(card, locale);
   const displayType = getLocalizedTypeLine(card, locale);
   const { trackAffiliateClick } = useAnalytics();
@@ -148,6 +151,35 @@ export const CardItem = memo(function CardItem({
           </svg>
         </div>
       )}
+
+      {/* Why this matches badge */}
+      {matchReasons && matchReasons.length > 0 && (
+        <div className="absolute top-1.5 right-1.5 z-10 group/why">
+          <button
+            type="button"
+            onClick={(e) => e.stopPropagation()}
+            className="h-5 min-w-5 px-1.5 rounded-full bg-accent/90 text-accent-foreground text-[9px] font-semibold shadow-sm hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={`Why this matches: ${matchReasons.join('; ')}`}
+            title={`Why this matches:\n• ${matchReasons.join('\n• ')}`}
+          >
+            {matchReasons.length}× {t('cardItem.whyBadge', 'why')}
+          </button>
+          <div
+            role="tooltip"
+            className="pointer-events-none absolute right-0 top-full mt-1 w-56 rounded-lg border border-border/70 bg-popover/95 backdrop-blur-md shadow-xl p-2.5 opacity-0 group-hover/why:opacity-100 group-focus-within/why:opacity-100 transition-opacity duration-150 z-20"
+          >
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1">
+              {t('cardItem.whyMatches', 'Why this matches')}
+            </p>
+            <ul className="text-[11px] text-foreground space-y-0.5 list-disc pl-4">
+              {matchReasons.slice(0, 5).map((r, i) => (
+                <li key={`${i}-${r}`}>{r}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
 
       {/* Info overlay — always visible on mobile, hover on desktop */}
       <div

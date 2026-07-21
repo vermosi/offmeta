@@ -758,6 +758,7 @@ const Index = () => {
                 activeFilters={activeFilters}
                 onApplyFilterPatch={applyFilterPatch}
                 onClearAllFilters={clearAllFilters}
+                intent={lastSearchResult?.intent || lastIntent}
               />
             </Suspense>
 
