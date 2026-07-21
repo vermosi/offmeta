@@ -878,6 +878,36 @@ export type Database = {
           },
         ]
       }
+      seo_health_checks: {
+        Row: {
+          check_type: string
+          details: Json
+          id: number
+          passed: boolean
+          ran_at: string
+          severity: string
+          target_url: string
+        }
+        Insert: {
+          check_type: string
+          details?: Json
+          id?: number
+          passed: boolean
+          ran_at?: string
+          severity?: string
+          target_url: string
+        }
+        Update: {
+          check_type?: string
+          details?: Json
+          id?: number
+          passed?: boolean
+          ran_at?: string
+          severity?: string
+          target_url?: string
+        }
+        Relationships: []
+      }
       seo_pages: {
         Row: {
           content_json: Json
@@ -1227,6 +1257,7 @@ export type Database = {
           total: number
         }[]
       }
+      get_seo_health_summary: { Args: never; Returns: Json }
       get_signature_cards: {
         Args: { target_format?: string }
         Returns: {
@@ -1277,6 +1308,7 @@ export type Database = {
         Returns: number
       }
       prune_old_price_snapshots: { Args: never; Returns: undefined }
+      prune_old_seo_health_checks: { Args: never; Returns: undefined }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {

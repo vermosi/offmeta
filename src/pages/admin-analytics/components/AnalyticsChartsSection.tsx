@@ -23,6 +23,7 @@ import { EngagementMetricsPanel } from '@/pages/admin-analytics/components/Engag
 import { ConversionFunnelPanel } from '@/pages/admin-analytics/components/ConversionFunnelPanel';
 import { EdgeFunctionTriggerPanel } from '@/pages/admin-analytics/components/EdgeFunctionTriggerPanel';
 import { SystemStatusPanel } from '@/pages/admin-analytics/components/SystemStatusPanel';
+import { SeoHealthPanel } from '@/pages/admin-analytics/components/SeoHealthPanel';
 import { HitRatePanel } from '@/pages/admin-analytics/components/HitRatePanel';
 import { AICostPanel } from '@/pages/admin-analytics/components/AICostPanel';
 import { AuthFailuresPanel } from '@/pages/admin-analytics/components/AuthFailuresPanel';
@@ -119,6 +120,7 @@ export function AnalyticsChartsSection({ data, days }: AnalyticsChartsSectionPro
       <ConversionFunnelPanel days={days} />
       <EdgeFunctionTriggerPanel />
       <SystemStatusPanel />
+      <SeoHealthPanel />
       <HitRatePanel days={days} />
       <AICostPanel days={days} />
       <AuthFailuresPanel days={days} />
