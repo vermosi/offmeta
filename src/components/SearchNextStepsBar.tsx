@@ -14,6 +14,7 @@ interface SearchNextStepsBarProps {
   originalQuery: string;
   intent: SearchIntent | null;
   totalCards: number;
+  activeTab?: string;
   onJumpToSimilar: () => void;
   onRelatedSearchClick: (query: string) => void;
 }
