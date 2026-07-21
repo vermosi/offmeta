@@ -288,6 +288,8 @@ const ALLOWED_EVENT_TYPES = [
   'next_steps_related_shown',
   'next_steps_related_clicked',
   'similar_panel_refine_clicked',
+  'related_searches_clicked',
+
 
 ] as const;
 
