@@ -610,6 +610,13 @@ const Index = () => {
               />
             </div>
 
+            <SearchProgressIndicator
+              isSearching={isSearching}
+              hasSearched={hasSearched}
+              scryfallQuery={lastSearchResult?.scryfallQuery}
+              cardCount={cards.length}
+            />
+
             {!hasSearched && (
               <Suspense fallback={null}>
                 <HowItWorksSection />
