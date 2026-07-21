@@ -126,6 +126,7 @@ const CompareModal = lazy(() =>
   })),
 );
 import { SkipLinks } from '@/components/SkipLinks';
+import { SearchProgressIndicator } from '@/components/SearchProgressIndicator';
 
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useAuth } from '@/hooks/useAuth';
@@ -608,6 +609,13 @@ const Index = () => {
                 isCardFetching={isSearching}
               />
             </div>
+
+            <SearchProgressIndicator
+              isSearching={isSearching}
+              hasSearched={hasSearched}
+              scryfallQuery={lastSearchResult?.scryfallQuery}
+              cardCount={cards.length}
+            />
 
             {!hasSearched && (
               <Suspense fallback={null}>
