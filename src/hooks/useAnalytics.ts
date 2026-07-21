@@ -750,6 +750,13 @@ export function useAnalytics() {
     [trackEvent],
   );
 
+  const trackSearchSuccess = useCallback(
+    (data: SearchSuccessEventData) => {
+      trackEvent('search_success', data);
+    },
+    [trackEvent],
+  );
+
   const trackLandingPageView = useCallback(
     (data: RouteViewEventData) => {
       trackEvent('landing_page_view', data);
