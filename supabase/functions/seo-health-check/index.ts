@@ -36,6 +36,12 @@ function countTag(html: string, tag: string): number {
   return (html.match(new RegExp(`<${tag}[\\s>]`, 'gi')) ?? []).length;
 }
 
+function extractFirstH1(html: string): string {
+  const m = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+  if (!m) return '';
+  return m[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+}
+
 async function fetchAsGooglebot(path: string): Promise<{
   status: number;
   html: string;
@@ -92,12 +98,14 @@ function checkPage(
   const robots = extractMeta(html, 'robots')?.toLowerCase() ?? '';
   const xRobots = (headers.get('x-robots-tag') ?? '').toLowerCase();
   const h1Count = countTag(html, 'h1');
+  const h1Text = extractFirstH1(html);
   const bodyText = html
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<style[\s\S]*?<\/style>/gi, '');
-  const nameInBody = expectedName
-    ? bodyText.toLowerCase().includes(expectedName.toLowerCase())
-    : true;
+  const expectedLower = expectedName?.toLowerCase() ?? '';
+  const nameInBody = expectedName ? bodyText.toLowerCase().includes(expectedLower) : true;
+  const nameInTitle = expectedName ? title.toLowerCase().includes(expectedLower) : true;
+  const nameInH1 = expectedName ? h1Text.toLowerCase().includes(expectedLower) : true;
   const isHomepageClone =
     path !== '/' &&
     (html.length === baseline.bytes || title === baseline.title);
@@ -111,11 +119,13 @@ function checkPage(
   if (softFour04) failures.push('soft_404');
   if (isHomepageClone) failures.push('homepage_clone');
   if (!nameInBody) failures.push('card_name_missing');
+  if (!nameInTitle) failures.push('title_mismatch');
+  if (!nameInH1) failures.push('h1_mismatch');
   if (h1Count === 0) failures.push('no_h1');
   if (h1Count > 1) failures.push('multiple_h1');
 
   const criticalFailures = failures.filter((f) =>
-    ['status_404', 'status_500', 'noindex', 'soft_404', 'homepage_clone', 'card_name_missing'].some(
+    ['status_404', 'status_500', 'noindex', 'soft_404', 'homepage_clone', 'card_name_missing', 'title_mismatch', 'h1_mismatch'].some(
       (c) => f.startsWith(c),
     ),
   );
@@ -134,6 +144,7 @@ function checkPage(
     details: {
       status,
       title,
+      h1_text: h1Text,
       h1_count: h1Count,
       bytes: html.length,
       failures,
@@ -243,7 +254,47 @@ Deno.serve(async (req) => {
   // Fire-and-forget retention
   await supabase.rpc('prune_old_seo_health_checks').catch(() => undefined);
 
-  const criticals = rows.filter((r) => r.severity === 'critical').length;
+  const criticalRows = rows.filter((r) => r.severity === 'critical');
+  const criticals = criticalRows.length;
+
+  // Alert admins on critical regressions (one notification per run, deduped by day)
+  if (criticals > 0) {
+    try {
+      const { data: admins } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin');
+      const adminIds = (admins ?? []).map((a: { user_id: string }) => a.user_id);
+      if (adminIds.length > 0) {
+        const today = new Date().toISOString().slice(0, 10);
+        const summary = criticalRows
+          .slice(0, 5)
+          .map((r) => {
+            const fails = (r.details as { failures?: string[] }).failures ?? [];
+            return `${r.target_url.replace(SITE_ORIGIN, '')} — ${fails.join(', ')}`;
+          })
+          .join('\n');
+        const body =
+          `${criticals} critical SEO regression${criticals === 1 ? '' : 's'} detected on prerendered card pages.\n\n${summary}` +
+          (criticals > 5 ? `\n\n…and ${criticals - 5} more.` : '');
+        const notifications = adminIds.map((user_id) => ({
+          user_id,
+          type: 'seo_regression',
+          title: `SEO regression: ${criticals} critical issue${criticals === 1 ? '' : 's'}`,
+          body,
+          metadata: {
+            run_date: today,
+            critical_count: criticals,
+            urls: criticalRows.map((r) => r.target_url),
+          },
+        }));
+        await supabase.from('user_notifications').insert(notifications);
+      }
+    } catch (err) {
+      console.error('seo-health-check: alert dispatch failed', err);
+    }
+  }
+
   return new Response(
     JSON.stringify({
       inserted: rows.length,
