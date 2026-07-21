@@ -216,9 +216,6 @@ export function buildCardJsonLd(card: ScryfallCard, pageUrl: string): Record<str
   if (card.power != null && card.toughness != null) {
     additionalProperty.push({ '@type': 'PropertyValue', name: 'Power/Toughness', value: `${card.power}/${card.toughness}` });
   }
-  if (card.loyalty != null) {
-    additionalProperty.push({ '@type': 'PropertyValue', name: 'Loyalty', value: String(card.loyalty) });
-  }
   if (card.color_identity?.length) {
     additionalProperty.push({ '@type': 'PropertyValue', name: 'Color Identity', value: card.color_identity.join(', ') });
   }
