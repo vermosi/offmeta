@@ -113,12 +113,12 @@ function buildAppliedChips(
       patch: { ownedOnly: false },
     });
   }
-  if (filters.sortBy && filters.sortBy !== 'name-asc') {
+  if (filters.sortBy && filters.sortBy !== 'relevance-desc' && filters.sortBy !== 'name-asc') {
     chips.push({
       key: `sort-${filters.sortBy}`,
       // Sort chip label rendered separately via t() in the JSX (kept generic here).
       label: `Sort: ${filters.sortBy}`,
-      patch: { sortBy: 'name-asc' },
+      patch: { sortBy: 'relevance-desc' },
     });
   }
   return chips;
