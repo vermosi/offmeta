@@ -58,6 +58,9 @@ export function applyCardSort(
   cards: ScryfallCard[],
   sortBy: string,
 ): ScryfallCard[] {
+  // 'relevance-desc' preserves upstream ordering (match-strength ranker runs downstream).
+  if (!sortBy || sortBy === 'relevance-desc') return [...cards];
+
   const [sortField, sortDir] = sortBy.split('-') as [string, 'asc' | 'desc'];
 
   return [...cards].sort((a, b) => {
