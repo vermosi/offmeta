@@ -334,6 +334,7 @@ export function SearchResultsArea({
                             isOwned={collectionLookup.has(card.name)}
                             sparklineData={sparklineMap?.get(card.name)}
                             matchReasons={explainCardMatch(card, intent)}
+                            onRefineWithMatch={onRefineWithMatch}
                           />
 
                         </div>
