@@ -58,6 +58,11 @@ const HowItWorksSection = lazy(() =>
     default: m.HowItWorksSection,
   })),
 );
+const UnderstoodSummary = lazy(() =>
+  import('@/components/UnderstoodSummary').then((m) => ({
+    default: m.UnderstoodSummary,
+  })),
+);
 const ScryfallComparison = lazy(() =>
   import('@/components/ScryfallComparison').then((m) => ({
     default: m.ScryfallComparison,
@@ -569,6 +574,12 @@ const Index = () => {
             {!hasSearched && (
               <Suspense fallback={null}>
                 <InstantDemoPreview onTrySearch={handleTryExample} />
+              </Suspense>
+            )}
+
+            {isSearching && originalQuery && (
+              <Suspense fallback={null}>
+                <UnderstoodSummary originalQuery={originalQuery} />
               </Suspense>
             )}
 
