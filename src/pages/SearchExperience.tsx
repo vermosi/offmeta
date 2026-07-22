@@ -43,11 +43,6 @@ const Footer = lazy(() =>
 );
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
-const InstantDemoPreview = lazy(() =>
-  import('@/components/InstantDemoPreview').then((m) => ({
-    default: m.InstantDemoPreview,
-  })),
-);
 const UnderstoodSummary = lazy(() =>
   import('@/components/UnderstoodSummary').then((m) => ({
     default: m.UnderstoodSummary,
@@ -684,11 +679,6 @@ const Index = () => {
 
 
 
-            {!hasSearched && (
-              <Suspense fallback={null}>
-                <InstantDemoPreview onTrySearch={handleTryExample} />
-              </Suspense>
-            )}
 
             {isSearching && originalQuery && (
               <Suspense fallback={null}>
