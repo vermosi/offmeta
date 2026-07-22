@@ -996,4 +996,98 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     syntax: 'o:"deals 1 damage"',
     description: 'Cards that deal 1 damage',
   },
+
+  // ── Grant/Gain keyword patterns ──
+  // "permanents gain X" / "creatures gain X" / "grant X" should find cards that
+  // GRANT the keyword to others, not cards that HAVE the keyword.
+  // Prefer Scryfall's *-granter otags where they exist, with oracle-text fallback.
+  {
+    pattern: /\b(?:permanents?|creatures?|things?)\s+(?:that\s+)?(?:gain|get|grant|have)\s+indestructible\b/gi,
+    syntax: '(otag:indestructibility-granter or o:"gain indestructible" or o:"gains indestructible" or o:"have indestructible")',
+    description: 'Cards that grant indestructible to permanents',
+  },
+  {
+    pattern: /\b(?:grant(?:s|ing)?|give(?:s|n)?)\s+indestructible\b/gi,
+    syntax: '(otag:indestructibility-granter or o:"gain indestructible" or o:"gains indestructible")',
+    description: 'Cards that grant indestructible',
+  },
+  {
+    pattern: /\b(?:permanents?|creatures?|things?)\s+(?:that\s+)?(?:gain|get|grant|have)\s+hexproof\b/gi,
+    syntax: '(otag:hexproof-granter or o:"gain hexproof" or o:"gains hexproof" or o:"have hexproof")',
+    description: 'Cards that grant hexproof to permanents',
+  },
+  {
+    pattern: /\b(?:grant(?:s|ing)?|give(?:s|n)?)\s+hexproof\b/gi,
+    syntax: '(otag:hexproof-granter or o:"gain hexproof" or o:"gains hexproof")',
+    description: 'Cards that grant hexproof',
+  },
+  {
+    pattern: /\b(?:permanents?|creatures?)\s+(?:that\s+)?(?:gain|get|grant|have)\s+shroud\b/gi,
+    syntax: '(o:"gain shroud" or o:"gains shroud" or o:"have shroud")',
+    description: 'Cards that grant shroud',
+  },
+  {
+    pattern: /\b(?:permanents?|creatures?)\s+(?:that\s+)?(?:gain|get|grant|have)\s+ward\b/gi,
+    syntax: '(o:"gain ward" or o:"gains ward" or o:"have ward")',
+    description: 'Cards that grant ward',
+  },
+  {
+    pattern: /\b(?:creatures?|things?)\s+(?:that\s+)?(?:gain|get|grant|have)\s+(?:flying|evasion)\b/gi,
+    syntax: '(otag:evasion-granter or otag:flying-granter or o:"gain flying" or o:"gains flying" or o:"have flying")',
+    description: 'Cards that grant flying/evasion',
+  },
+  {
+    pattern: /\b(?:grant(?:s|ing)?|give(?:s|n)?)\s+(?:flying|evasion)\b/gi,
+    syntax: '(otag:evasion-granter or otag:flying-granter or o:"gain flying" or o:"gains flying")',
+    description: 'Cards that grant flying/evasion',
+  },
+  {
+    pattern: /\b(?:creatures?)\s+(?:that\s+)?(?:gain|get|grant|have)\s+trample\b/gi,
+    syntax: '(otag:trample-granter or o:"gain trample" or o:"gains trample" or o:"have trample")',
+    description: 'Cards that grant trample',
+  },
+  {
+    pattern: /\b(?:creatures?)\s+(?:that\s+)?(?:gain|get|grant|have)\s+haste\b/gi,
+    syntax: '(otag:haste-granter or o:"gain haste" or o:"gains haste" or o:"have haste")',
+    description: 'Cards that grant haste',
+  },
+  {
+    pattern: /\b(?:creatures?)\s+(?:that\s+)?(?:gain|get|grant|have)\s+(?:menace|lifelink|vigilance|first strike|double strike|deathtouch|reach)\b/gi,
+    syntax: '(o:"gain" or o:"gains" or o:"have")',
+    description: 'Cards that grant a keyword ability',
+  },
+
+  // ── Creature subtype retention ──
+  // Common tribal subtypes that should map to t:<subtype> when mentioned as adjectives.
+  {
+    pattern: /\beldrazi\b/gi,
+    syntax: 't:eldrazi',
+    description: 'Eldrazi creature type',
+  },
+  {
+    pattern: /\bweirds?\b/gi,
+    syntax: 't:weird',
+    description: 'Weird creature type',
+  },
+  {
+    pattern: /\bsphinx(?:es)?\b/gi,
+    syntax: 't:sphinx',
+    description: 'Sphinx creature type',
+  },
+  {
+    pattern: /\bhydras?\b/gi,
+    syntax: 't:hydra',
+    description: 'Hydra creature type',
+  },
+  {
+    pattern: /\bshapeshifters?\b/gi,
+    syntax: 't:shapeshifter',
+    description: 'Shapeshifter creature type',
+  },
+  {
+    pattern: /\bleviathans?\b/gi,
+    syntax: 't:leviathan',
+    description: 'Leviathan creature type',
+  },
 ];
+
