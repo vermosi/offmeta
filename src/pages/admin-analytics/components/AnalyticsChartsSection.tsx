@@ -120,6 +120,7 @@ export function AnalyticsChartsSection({ data, days }: AnalyticsChartsSectionPro
       <EngagementMetricsPanel days={days} />
       <ConversionFunnelPanel days={days} />
       <EdgeFunctionTriggerPanel />
+      <EdgeFunctionStatusPanel />
       <SystemStatusPanel />
       <SeoHealthPanel />
       <HitRatePanel days={days} />
