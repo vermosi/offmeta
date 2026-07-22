@@ -48,11 +48,6 @@ const InstantDemoPreview = lazy(() =>
     default: m.InstantDemoPreview,
   })),
 );
-const ExampleQueriesCarousel = lazy(() =>
-  import('@/components/ExampleQueriesCarousel').then((m) => ({
-    default: m.ExampleQueriesCarousel,
-  })),
-);
 const UnderstoodSummary = lazy(() =>
   import('@/components/UnderstoodSummary').then((m) => ({
     default: m.UnderstoodSummary,
