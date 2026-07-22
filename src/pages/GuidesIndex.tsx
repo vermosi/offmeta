@@ -3,7 +3,7 @@
  */
 
 import { useEffect } from 'react';
-import { applySeoMeta } from '@/lib/seo';
+import { applySeoMeta, injectJsonLd, buildBreadcrumbJsonLd } from '@/lib/seo';
 import { Link } from 'react-router-dom';
 import { GUIDES } from '@/data/guides';
 import { Footer } from '@/components/Footer';
@@ -38,7 +38,7 @@ export default function GuidesIndex() {
   const { t } = useTranslation();
 
   useEffect(() => {
-    return applySeoMeta({
+    const cleanupMeta = applySeoMeta({
       title: 'MTG Search Guides — Learn to Find Any Magic Card | OffMeta',
       description:
         'Master MTG card search with 10 progressive guides — from basic type searches to multi-constraint queries, all in natural language.',
@@ -55,6 +55,44 @@ export default function GuidesIndex() {
         'OffMeta guides',
       ],
     });
+
+    const sortedGuides = [...GUIDES].sort((a, b) => a.level - b.level);
+    const cleanupLd = injectJsonLd({
+      '@context': 'https://schema.org',
+      '@graph': [
+        buildBreadcrumbJsonLd([
+          { name: 'OffMeta', url: 'https://offmeta.app/' },
+          { name: 'Guides', url: 'https://offmeta.app/guides' },
+        ]),
+        {
+          '@type': 'CollectionPage',
+          '@id': 'https://offmeta.app/guides#collection',
+          name: 'MTG Search Guides',
+          description:
+            '10 progressive guides teaching natural-language Magic: The Gathering card search on OffMeta.',
+          url: 'https://offmeta.app/guides',
+          inLanguage: 'en',
+          isPartOf: { '@type': 'WebSite', name: 'OffMeta', url: 'https://offmeta.app/' },
+        },
+        {
+          '@type': 'ItemList',
+          name: 'OffMeta Search Guides',
+          numberOfItems: sortedGuides.length,
+          itemListOrder: 'https://schema.org/ItemListOrderAscending',
+          itemListElement: sortedGuides.map((g, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            url: `https://offmeta.app/guides/${g.slug}`,
+            name: g.title,
+          })),
+        },
+      ],
+    });
+
+    return () => {
+      cleanupLd();
+      cleanupMeta();
+    };
   }, []);
 
   const sorted = [...GUIDES].sort((a, b) => a.level - b.level);
