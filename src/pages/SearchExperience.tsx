@@ -48,11 +48,6 @@ const InstantDemoPreview = lazy(() =>
     default: m.InstantDemoPreview,
   })),
 );
-const ExampleQueriesCarousel = lazy(() =>
-  import('@/components/ExampleQueriesCarousel').then((m) => ({
-    default: m.ExampleQueriesCarousel,
-  })),
-);
 const UnderstoodSummary = lazy(() =>
   import('@/components/UnderstoodSummary').then((m) => ({
     default: m.UnderstoodSummary,
@@ -688,11 +683,6 @@ const Index = () => {
             />
 
 
-            {!hasSearched && (
-              <Suspense fallback={null}>
-                <ExampleQueriesCarousel onTrySearch={handleTryExample} />
-              </Suspense>
-            )}
 
             {!hasSearched && (
               <Suspense fallback={null}>
