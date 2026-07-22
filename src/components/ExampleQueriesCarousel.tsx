@@ -160,12 +160,12 @@ export function ExampleQueriesCarousel({
           <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             {t('examples.eyebrow', 'Try it now')}
           </span>
-          <h3 className="text-base font-semibold text-foreground sm:text-lg">
+          <h2 className="text-base font-semibold text-foreground sm:text-lg">
             {t(
               'examples.heading',
               'One-click examples for each step',
             )}
-          </h3>
+          </h2>
         </div>
 
         {/* Step tabs */}
