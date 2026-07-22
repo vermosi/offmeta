@@ -295,6 +295,100 @@
    ======================================== */
 
 @layer utilities {
+  /* Spatial grid ambience — dark orbs + masked grid used behind the
+     homepage hero. Uses semantic tokens so light/dark themes both work. */
+  .bg-spatial-grid {
+    position: relative;
+  }
+  .bg-spatial-grid::before,
+  .bg-spatial-grid::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .bg-spatial-grid::before {
+    background-image:
+      radial-gradient(
+        40% 40% at 8% 0%,
+        hsl(var(--accent) / 0.22) 0%,
+        transparent 70%
+      ),
+      radial-gradient(
+        40% 40% at 100% 100%,
+        hsl(var(--primary) / 0.18) 0%,
+        transparent 70%
+      );
+    filter: blur(40px);
+  }
+  .bg-spatial-grid::after {
+    background-image:
+      linear-gradient(
+        to right,
+        hsl(var(--foreground) / 0.06) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        hsl(var(--foreground) / 0.06) 1px,
+        transparent 1px
+      );
+    background-size: 4rem 4rem;
+    -webkit-mask-image: radial-gradient(
+      ellipse 60% 55% at 50% 0%,
+      #000 60%,
+      transparent 100%
+    );
+    mask-image: radial-gradient(
+      ellipse 60% 55% at 50% 0%,
+      #000 60%,
+      transparent 100%
+    );
+  }
+  .bg-spatial-grid > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Aurora headline — gradient across accent → primary → accent tokens */
+  .text-aurora {
+    background-image: linear-gradient(
+      90deg,
+      hsl(var(--accent)),
+      hsl(var(--primary) / 0.9),
+      hsl(var(--accent))
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Soft glowing halo behind the search bar */
+  .search-halo {
+    position: relative;
+  }
+  .search-halo::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: linear-gradient(
+      120deg,
+      hsl(var(--accent) / 0.6),
+      hsl(var(--primary) / 0.5),
+      hsl(var(--accent) / 0.6)
+    );
+    filter: blur(14px);
+    opacity: 0.35;
+    z-index: -1;
+    transition: opacity 400ms ease;
+  }
+  .search-halo:hover::before,
+  .search-halo:focus-within::before {
+    opacity: 0.7;
+  }
+
   .overlay-backdrop {
     background-color: hsl(var(--background) / 0.9);
   }
