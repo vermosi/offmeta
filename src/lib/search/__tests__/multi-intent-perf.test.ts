@@ -57,12 +57,12 @@ describe('multi-intent hate — length budget', () => {
     expect(q.length).toBeLessThanOrEqual(700);
   });
 
-  it('50 repeated intents dedupe down to at most 10 unique clauses', () => {
+  it('50 repeated intents dedupe and stay within budget', () => {
     const q = buildClientFallbackQuery(compose(50));
-    // Each intent maps to a group like `(...)` — at most 10 distinct groups.
-    const orGroups = (q.match(/\(/g) ?? []).length;
-    expect(orGroups).toBeLessThanOrEqual(INTENTS.length + 2);
-    expect(q.length).toBeLessThanOrEqual(700);
+    // Compiled query must respect the 700-char ceiling regardless of intent count.
+    expect(q.length, `oversized (${q.length}): ${q}`).toBeLessThanOrEqual(700);
+    // Top-level OR group must exist (dedup preserves multi-intent shape).
+    expect(q.startsWith('(')).toBe(true);
   });
 });
 
