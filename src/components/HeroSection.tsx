@@ -28,6 +28,7 @@ export function HeroSection() {
           id="hero-heading"
           className="mb-3 sm:mb-5 text-foreground text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-semibold tracking-tight leading-[1.05]"
         >
+          <span className="sr-only">OffMeta — Natural Language MTG Search. </span>
           {t('hero.title', 'Find Magic cards, synergies, and')}{' '}
           <span className="text-accent">
             {t('hero.titleAccent', 'hidden gems in plain English')}
