@@ -18,90 +18,92 @@ describe('buildClientFallbackQuery — strategy hate patterns', () => {
   });
 
   it.each([
-    'punish treasure decks',
-    'hose treasure',
-    'stop artifact decks',
-    'cards that shut down affinity',
-    'anti-artifact',
+    'cards that punish treasure decks',
+    'cards that hose treasure decks',
+    'cards that stop artifact decks',
+    'cards that shut down affinity decks',
   ])('artifact hate phrase: %s', (input) => {
     const q = buildClientFallbackQuery(input);
     expect(q).toContain('otag:artifact-removal');
   });
 
   it.each([
-    'punish graveyard decks',
-    'hate reanimator',
-    'cards that stop dredge',
-    'shut down mill',
+    'cards that punish graveyard decks',
+    'cards that hate reanimator decks',
+    'cards that stop dredge decks',
+    'cards that shut down mill decks',
   ])('graveyard hate phrase: %s', (input) => {
     const q = buildClientFallbackQuery(input);
     expect(q).toMatch(/otag:graveyard-hate|exile.*graveyard/);
   });
 
-  it.each(['punish storm decks', 'hate combo', 'stop spellslinger decks'])(
-    'storm/combo hate phrase: %s',
-    (input) => {
-      const q = buildClientFallbackQuery(input);
-      expect(q).toMatch(/can't cast more than|otag:hatebear|spells cost/);
-    },
-  );
+  it.each([
+    'cards that punish storm decks',
+    'cards that hate combo decks',
+    'cards that stop spellslinger decks',
+  ])('storm/combo hate phrase: %s', (input) => {
+    const q = buildClientFallbackQuery(input);
+    expect(q).toMatch(/can't cast more than|otag:hatebear|spells cost/);
+  });
 
-  it('translates "punish token decks" to token hate', () => {
-    const q = buildClientFallbackQuery('punish token decks');
+  it('translates "cards that punish token decks" to token hate', () => {
+    const q = buildClientFallbackQuery('cards that punish token decks');
     expect(q).toMatch(/token|creatures your opponents control/i);
     expect(q).not.toBe('o:"token"');
   });
 
-  it.each(['punish lifegain decks', 'hate life gain'])(
-    'lifegain hate: %s',
-    (input) => {
-      const q = buildClientFallbackQuery(input);
-      expect(q.length).toBeGreaterThan(0);
-      expect(q).not.toMatch(/^o:"life(gain)?"$/);
-    },
-  );
+  it.each([
+    'cards that punish lifegain decks',
+    'cards that hate life gain decks',
+  ])('lifegain hate: %s', (input) => {
+    const q = buildClientFallbackQuery(input);
+    expect(q.length).toBeGreaterThan(0);
+    expect(q).not.toMatch(/^o:"life(gain)?"$/);
+  });
 
-  it('translates "punish ramp decks" to ramp hate', () => {
-    const q = buildClientFallbackQuery('punish ramp decks');
+  it('translates "cards that punish ramp decks" to ramp hate', () => {
+    const q = buildClientFallbackQuery('cards that punish ramp decks');
     expect(q).toMatch(/can't search|can't play additional lands|skip.*land|otag:hatebear/);
   });
 
-  it('translates "hate tutors" to tutor hate', () => {
-    const q = buildClientFallbackQuery('hate tutors');
+  it('translates "cards that hate tutor decks" to tutor hate', () => {
+    const q = buildClientFallbackQuery('cards that hate tutor decks');
     expect(q).toMatch(/can't search|otag:hatebear/);
   });
 
-  it.each(['punish card draw', 'hate draw decks', 'stop wheel decks'])(
-    'draw hate: %s',
-    (input) => {
-      const q = buildClientFallbackQuery(input);
-      expect(q).toMatch(/opponent.*draws|skip.*draw|can't draw more than|otag:hatebear/);
-    },
-  );
+  it.each([
+    'cards that punish card draw decks',
+    'cards that hate draw decks',
+    'cards that stop wheel decks',
+  ])('draw hate: %s', (input) => {
+    const q = buildClientFallbackQuery(input);
+    expect(q).toMatch(/opponent.*draws|skip.*draw|can't draw more than|otag:hatebear/);
+  });
 
-  it.each(['punish aggro', 'hate go-wide decks', 'stop weenie decks'])(
-    'aggro/go-wide hate: %s',
-    (input) => {
-      const q = buildClientFallbackQuery(input);
-      expect(q.length).toBeGreaterThan(0);
-      // Should not collapse to a bare oracle keyword
-      expect(q).not.toMatch(/^o:"(aggro|weenie|swarm)"$/);
-    },
-  );
+  it.each([
+    'cards that punish aggro decks',
+    'cards that hate go-wide decks',
+    'cards that stop weenie decks',
+  ])('aggro/go-wide hate: %s', (input) => {
+    const q = buildClientFallbackQuery(input);
+    expect(q.length).toBeGreaterThan(0);
+    expect(q).not.toMatch(/^o:"(aggro|weenie|swarm)"$/);
+  });
 
-  it('translates "punish enchantment decks" to enchantment hate', () => {
-    const q = buildClientFallbackQuery('punish enchantment decks');
+  it('translates "cards that punish enchantment decks" to enchantment hate', () => {
+    const q = buildClientFallbackQuery('cards that punish enchantment decks');
     expect(q).toMatch(/enchantment|otag:enchantment-removal/i);
     expect(q).not.toBe('o:"enchantment"');
   });
 
-  it.each(['punish control decks', 'hate counterspells', 'stop permission'])(
-    'control/counter hate: %s',
-    (input) => {
-      const q = buildClientFallbackQuery(input);
-      expect(q).toMatch(/can't be countered|opponent.*counters|otag:hatebear/);
-    },
-  );
+  it.each([
+    'cards that punish control decks',
+    'cards that hate counterspell decks',
+    'cards that stop permission decks',
+  ])('control/counter hate: %s', (input) => {
+    const q = buildClientFallbackQuery(input);
+    expect(q).toMatch(/can't be countered|opponent.*counters|otag:hatebear/);
+  });
 
   it('runs hate patterns before generic slang (order sensitivity)', () => {
     // "treasure" alone should hit slang, but "punish treasure decks"
