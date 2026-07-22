@@ -858,7 +858,9 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
 
   // If nothing was extracted, return original as a name search
   if (parts.length === 0) {
-    return `!"${naturalQuery.trim()}"`;
+    const safe = naturalQuery.trim().replace(/["()]/g, '').trim();
+    if (safe) return `!"${safe}"`;
+    return '';
   }
 
   return parts.join(' ');
