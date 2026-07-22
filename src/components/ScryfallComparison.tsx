@@ -81,37 +81,36 @@ export function ScryfallComparison({ onTrySearch }: ScryfallComparisonProps) {
           </p>
         </div>
 
-        <div className="grid gap-3 sm:gap-4 max-w-4xl mx-auto">
+        <div className="grid gap-4 max-w-4xl mx-auto">
           {ROWS.map((row) => (
-            <article
-              key={row.natural}
-              className="rounded-2xl border border-border/60 bg-card/50 p-4 sm:p-5"
-            >
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground/80 mb-3">
+            <article key={row.natural} className="group">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground/80 mb-2 pl-1">
                 {row.intent}
               </p>
               <div className="grid gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-stretch">
                 {/* Raw Scryfall column */}
-                <div className="rounded-xl border border-border/50 bg-background/40 p-3">
-                  <div className="flex items-center gap-1.5 mb-2 text-[11px] font-medium text-muted-foreground">
+                <div className="rounded-2xl border border-border/60 bg-card/40 p-5 transition-colors group-hover:bg-card/60">
+                  <div className="flex items-center gap-1.5 mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">
                     <Type className="h-3 w-3" aria-hidden="true" />
                     {t('compare.rawLabel', 'Raw Scryfall')}
                   </div>
-                  <code className="block font-mono text-xs sm:text-[13px] text-foreground/90 leading-relaxed break-words">
+                  <code className="block font-mono text-xs sm:text-[13px] text-warning/90 leading-relaxed break-words">
                     {row.scryfall}
                   </code>
                 </div>
 
                 <div
-                  className="hidden sm:flex items-center justify-center text-muted-foreground/60"
+                  className="hidden sm:flex items-center justify-center"
                   aria-hidden="true"
                 >
-                  <ArrowRight className="h-4 w-4" />
+                  <div className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-[10px] font-bold text-muted-foreground">
+                    VS
+                  </div>
                 </div>
 
                 {/* OffMeta column */}
-                <div className="rounded-xl border border-accent/30 bg-accent/5 p-3">
-                  <div className="flex items-center gap-1.5 mb-2 text-[11px] font-medium text-accent">
+                <div className="rounded-2xl border border-accent/25 bg-accent/[0.06] p-5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.04)] transition-colors group-hover:border-accent/50 group-hover:bg-accent/10">
+                  <div className="flex items-center gap-1.5 mb-3 text-[10px] font-bold uppercase tracking-widest text-accent">
                     <Search className="h-3 w-3" aria-hidden="true" />
                     {t('compare.offmetaLabel', 'OffMeta')}
                   </div>
@@ -125,13 +124,14 @@ export function ScryfallComparison({ onTrySearch }: ScryfallComparisonProps) {
                       row.natural,
                     )}
                   >
-                    "{row.natural}"
+                    &ldquo;{row.natural}&rdquo;
                   </button>
                 </div>
               </div>
             </article>
           ))}
         </div>
+
 
         <p className="mt-6 text-center text-xs text-muted-foreground/80 max-w-xl mx-auto">
           {t(
