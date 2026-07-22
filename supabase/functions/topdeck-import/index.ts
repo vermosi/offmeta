@@ -14,7 +14,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, requireServiceRole } from '../_shared/auth.ts';
-import { createLogger } from '../_shared/logger.ts';
+import { createLogger, withLogging } from '../_shared/logger.ts';
 
 const log = createLogger('topdeck-import');
 const SCRYFALL_DELAY_MS = 100;
@@ -332,7 +332,7 @@ async function fetchTopdeckFormat(
   return Array.isArray(data) ? data : [];
 }
 
-serve(async (req: Request): Promise<Response> => {
+serve(withLogging('topdeck-import', async (req: Request): Promise<Response> => {
   const corsHeaders = getCorsHeaders(req);
   const headers = { ...corsHeaders, 'Content-Type': 'application/json' };
 
@@ -552,4 +552,4 @@ serve(async (req: Request): Promise<Response> => {
       { status: 500, headers },
     );
   }
-});
+}));

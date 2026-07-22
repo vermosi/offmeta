@@ -7,6 +7,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
 import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
+import { withLogging } from '../_shared/logger.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -232,7 +233,7 @@ function buildBudgetQuery(
   return parts.join(' ');
 }
 
-serve(async (req: Request): Promise<Response> => {
+serve(withLogging('card-similarity', async (req: Request): Promise<Response> => {
   const corsHeaders = getCorsHeaders(req);
   const headers = { ...corsHeaders, 'Content-Type': 'application/json' };
 
@@ -399,4 +400,4 @@ serve(async (req: Request): Promise<Response> => {
       { status: 500, headers },
     );
   }
-});
+}));

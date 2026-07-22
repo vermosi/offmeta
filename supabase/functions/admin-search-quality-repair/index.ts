@@ -7,6 +7,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, logAuthFailure } from '../_shared/auth.ts';
+import { withLogging } from '../_shared/logger.ts';
 
 type QueryRow = {
   normalized_query: string;
@@ -24,7 +25,7 @@ type QueryRow = {
   updated_at: string;
 };
 
-serve(async (req) => {
+serve(withLogging('admin-search-quality-repair', async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
   const headers = { ...corsHeaders, 'Content-Type': 'application/json' };
@@ -160,4 +161,4 @@ serve(async (req) => {
   });
 
   return new Response(JSON.stringify({ queue }), { headers });
-});
+}));

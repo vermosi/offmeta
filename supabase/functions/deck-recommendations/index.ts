@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
 import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
+import { withLogging } from '../_shared/logger.ts';
 
 /** Minimal Scryfall card shape for type safety in this function. */
 interface ScryfallCardData {
@@ -92,7 +93,7 @@ async function resolveCards(
   return result;
 }
 
-serve(async (req) => {
+serve(withLogging('deck-recommendations', async (req) => {
   const corsHeaders = getCorsHeaders(req);
 
   if (req.method === 'OPTIONS') {
@@ -384,4 +385,4 @@ ${cardList}`;
       },
     );
   }
-});
+}));

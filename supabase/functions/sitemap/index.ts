@@ -10,6 +10,7 @@
  */
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { withLogging } from '../_shared/logger.ts';
 
 const BASE_URL = 'https://offmeta.app';
 
@@ -57,7 +58,7 @@ function escapeXml(str: string): string {
     .replace(/'/g, '&apos;');
 }
 
-serve(async (req) => {
+serve(withLogging('sitemap', async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       headers: {
@@ -199,4 +200,4 @@ serve(async (req) => {
     console.error('Sitemap error:', e);
     return new Response('Internal error', { status: 500 });
   }
-});
+}));

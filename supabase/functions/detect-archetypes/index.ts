@@ -16,7 +16,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, requireServiceOrPipelineKey } from '../_shared/auth.ts';
-import { createLogger } from '../_shared/logger.ts';
+import { createLogger, withLogging } from '../_shared/logger.ts';
 
 const log = createLogger('detect-archetypes');
 
@@ -438,7 +438,7 @@ function detectDeck(cards: CardInfo[], colors: string[], format: string): Detect
 
 // ── Main handler ──
 
-serve(async (req: Request): Promise<Response> => {
+serve(withLogging('detect-archetypes', async (req: Request): Promise<Response> => {
   const corsHeaders = getCorsHeaders(req);
   const headers = { ...corsHeaders, 'Content-Type': 'application/json' };
 
@@ -608,4 +608,4 @@ serve(async (req: Request): Promise<Response> => {
       { status: 500, headers },
     );
   }
-});
+}));

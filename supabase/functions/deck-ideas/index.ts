@@ -5,6 +5,7 @@
 
 import { runRequestGuard } from '../_shared/requestGuard.ts';
 import { callAIWithTools, aiErrorResponse } from '../_shared/aiClient.ts';
+import { withLogging } from '../_shared/logger.ts';
 
 declare const Deno: {
   env: { get(key: string): string | undefined };
@@ -25,7 +26,7 @@ interface DeckIdeaResponse {
   error?: string;
 }
 
-serve(async (req: Request): Promise<Response> => {
+serve(withLogging('deck-ideas', async (req: Request): Promise<Response> => {
   const guard = await runRequestGuard(req, { method: 'POST', rateLimit: 10, globalLimit: 300 });
   if (!guard.ok) return guard.response;
   const { corsHeaders, headers, apiKey } = guard.ctx;
@@ -91,4 +92,4 @@ serve(async (req: Request): Promise<Response> => {
   } catch (e) {
     return aiErrorResponse(e, corsHeaders, 'Could not generate deck idea');
   }
-});
+}));

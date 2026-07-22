@@ -11,7 +11,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, requireServiceRole } from '../_shared/auth.ts';
-import { createLogger } from '../_shared/logger.ts';
+import { createLogger, withLogging } from '../_shared/logger.ts';
 import {
   buildRoleProfile,
   findSimilarRolePairs,
@@ -389,7 +389,7 @@ async function runBudgetAlternative(
 
 // ─── Main handler ────────────────────────────────────────────────────
 
-serve(async (req: Request): Promise<Response> => {
+serve(withLogging('compute-cooccurrence', async (req: Request): Promise<Response> => {
   const corsHeaders = getCorsHeaders(req);
   const headers = { ...corsHeaders, 'Content-Type': 'application/json' };
 
@@ -452,4 +452,4 @@ serve(async (req: Request): Promise<Response> => {
     log.error('compute-cooccurrence error', e);
     return new Response(JSON.stringify({ error: 'Internal error' }), { status: 500, headers });
   }
-});
+}));

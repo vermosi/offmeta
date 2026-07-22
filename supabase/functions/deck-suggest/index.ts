@@ -1,10 +1,11 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
 import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
+import { withLogging } from '../_shared/logger.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
-serve(async (req) => {
+serve(withLogging('deck-suggest', async (req) => {
   const corsHeaders = getCorsHeaders(req);
 
   if (req.method === 'OPTIONS') {
@@ -239,4 +240,4 @@ What cards should be added to improve this deck?`;
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-});
+}));

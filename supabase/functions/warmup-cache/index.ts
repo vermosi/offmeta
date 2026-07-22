@@ -13,7 +13,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders } from '../_shared/auth.ts';
 import { validateEnv } from '../_shared/env.ts';
-import { createLogger } from '../_shared/logger.ts';
+import { createLogger, withLogging } from '../_shared/logger.ts';
 import { applyJobRateLimit, requireAdminJob } from '../_shared/jobGuards.ts';
 
 const { SUPABASE_URL, SUPABASE_ANON_KEY } = validateEnv([
@@ -330,7 +330,7 @@ const FALLBACK_NATURAL_LANGUAGE_QUERIES = [
   'staple cards',
 ];
 
-serve(async (req) => {
+serve(withLogging('warmup-cache', async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -508,4 +508,4 @@ serve(async (req) => {
       },
     );
   }
-});
+}));
