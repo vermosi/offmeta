@@ -614,50 +614,8 @@ const Index = () => {
           role="main"
         >
           <div className="container-main space-y-3 sm:space-y-6">
-            {showResultsMode && (
-              <div className="sticky top-16 z-20 -mx-3 sm:-mx-4 lg:-mx-6 px-3 sm:px-4 lg:px-6">
-                <div className="animate-reveal rounded-2xl border border-border/70 bg-card/85 backdrop-blur-xl shadow-lg shadow-black/5 px-3 py-2 sm:px-4 sm:py-3">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-                          {t('results.summaryTitle', 'Search results')}
-                        </span>
-                        {hasSearched && totalCards > 0 && (
-                          <span className="text-xs text-muted-foreground tabular-nums">
-                            {t('results.summaryCards', '{count} cards').replace('{count}', totalCards.toLocaleString())}
-                          </span>
-                        )}
-                        {isSearching && (
-                          <span className="text-xs text-muted-foreground">
-                            {t('results.updating', 'Updating results')}
-                          </span>
-                        )}
-                      </div>
-                      <p className="mt-1 truncate text-sm font-medium text-foreground">
-                        {originalQuery || searchQuery || t('search.placeholder')}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <a
-                        href="#search-results"
-                        className="inline-flex items-center justify-center rounded-full border border-border/70 bg-background/70 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-background"
-                      >
-                        {t('results.jumpToResults', 'Jump to results')}
-                      </a>
-                      {hasSearched && (
-                        <a
-                          href="#main-content"
-                          className="inline-flex items-center justify-center rounded-full border border-transparent px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-                        >
-                          {t('results.backToSearch', 'Back to search')}
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Sticky summary bar removed — redundant with the header and results below. */}
+
 
             <div>
               <UnifiedSearchBar
