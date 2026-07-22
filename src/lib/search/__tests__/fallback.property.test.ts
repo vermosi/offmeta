@@ -33,20 +33,25 @@ function quotesBalanced(q: string): boolean {
   return count % 2 === 0;
 }
 
+/** Strip quoted regions before scanning for structural issues. */
+function stripQuoted(q: string): string {
+  return q.replace(/"[^"]*"/g, '""');
+}
+
 /**
  * No dangling operator token like `c:`, `t:`, `o:`, `mv<`, `usd<=`
- * followed by whitespace or end-of-string with no value.
+ * followed by whitespace or end-of-string with no value. Ignores
+ * text inside quoted regions (which is opaque literal input).
  */
 function hasNoDanglingOperator(q: string): boolean {
-  // Match `word:` or `word<`/`<=`/`>`/`>=`/`=` NOT followed by a valid value.
-  // Valid value = letter, digit, `"`, `(`, `!`, `-`, `+`, `{`, `$`.
-  return !/[a-z][a-z_]*(?:[:]|<=?|>=?|=)(?:\s|$)/i.test(q);
+  return !/[a-z][a-z_]*(?:[:]|<=?|>=?|=)(?:\s|$)/i.test(stripQuoted(q));
 }
 
 /** Never emits an empty quoted oracle clause like `o:""`. */
 function hasNoEmptyOracle(q: string): boolean {
   return !/o:""/.test(q) && !/o:"\s+"/.test(q);
 }
+
 
 /** Length must remain within the project's 700-char Scryfall ceiling. */
 function withinLengthBudget(q: string): boolean {
