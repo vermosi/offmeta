@@ -39,10 +39,10 @@ export function HeroSection() {
           </span>
         </h1>
 
-        <p className="text-sm sm:text-lg text-muted-foreground max-w-xl mx-auto text-center leading-relaxed">
+        <p className="text-sm sm:text-lg text-muted-foreground max-w-xl mx-auto text-center leading-relaxed whitespace-pre-line">
           {t(
             'hero.subtitleCompact',
-            'Search Magic: The Gathering cards using natural language. No more regex, no more cryptic operators — just describe what you want.',
+            'Search Magic: The Gathering cards using natural language.\nNo more regex, no more cryptic operators.',
           )}
         </p>
 
