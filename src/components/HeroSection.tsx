@@ -1,7 +1,10 @@
 /**
  * Hero section for the landing page.
- * Keeps the presentation premium but static, with no decorative animation
- * stack competing with the search experience.
+ *
+ * Editorial, awwwards-style spatial-grid treatment: masked grid + orb
+ * ambience behind an oversized headline with a gradient accent phrase.
+ * Purely presentational — the actual search bar lives in the page shell
+ * beneath this hero, and its halo is applied there via `.search-halo`.
  */
 
 import { ArrowRight, Compass, Sparkles } from 'lucide-react';
@@ -13,12 +16,12 @@ export function HeroSection() {
 
   return (
     <section
-      className="relative pt-8 sm:pt-16 lg:pt-20 pb-6 sm:pb-8 overflow-x-hidden"
+      className="bg-spatial-grid relative pt-10 sm:pt-20 lg:pt-24 pb-8 sm:pb-12 overflow-x-hidden"
       aria-labelledby="hero-heading"
     >
-      <div className="container-main text-center relative z-10">
-        <div className="flex justify-center mb-4 sm:mb-6">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium border border-accent/30 bg-accent/10 text-accent backdrop-blur-sm">
+      <div className="container-main text-center">
+        <div className="flex justify-center mb-5 sm:mb-7">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-medium border border-accent/30 bg-accent/10 text-accent backdrop-blur-sm">
             <Sparkles className="h-3 w-3" aria-hidden="true" />
             {t('hero.taglinePill', 'AI-powered MTG discovery engine')}
           </span>
@@ -26,23 +29,24 @@ export function HeroSection() {
 
         <h1
           id="hero-heading"
-          className="mb-3 sm:mb-5 text-foreground text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-semibold tracking-tight leading-[1.05]"
+          className="mb-4 sm:mb-6 text-foreground text-4xl sm:text-6xl lg:text-7xl xl:text-[5.25rem] font-semibold tracking-tighter leading-[1.02]"
         >
           <span className="sr-only">OffMeta — Natural Language MTG Search. </span>
-          {t('hero.title', 'Find Magic cards, synergies, and')}{' '}
-          <span className="text-accent">
-            {t('hero.titleAccent', 'hidden gems in plain English')}
+          {t('hero.title', 'Find the card,')}
+          <br className="hidden sm:block" />{' '}
+          <span className="text-aurora font-bold">
+            {t('hero.titleAccent', 'forget the syntax.')}
           </span>
         </h1>
 
-        <p className="text-sm sm:text-lg text-muted-foreground max-w-2xl mx-auto text-center leading-relaxed">
+        <p className="text-sm sm:text-lg text-muted-foreground max-w-xl mx-auto text-center leading-relaxed">
           {t(
             'hero.subtitleCompact',
-            'Describe the card, effect, or archetype you want — OffMeta turns plain English into a real Scryfall search and surfaces alternatives, synergies, and hidden gems you would never find with raw syntax.',
+            'Search Magic: The Gathering cards using natural language. No more regex, no more cryptic operators — just describe what you want.',
           )}
         </p>
 
-        <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <div className="mt-7 sm:mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
           <button
             type="button"
             onClick={() => {
@@ -51,10 +55,10 @@ export function HeroSection() {
               input.focus();
               input.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }}
-            className="group inline-flex items-center justify-center gap-2 min-h-11 px-6 rounded-full bg-accent text-accent-foreground font-medium text-sm shadow-lg shadow-accent/20 hover:shadow-accent/35 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="group inline-flex items-center justify-center gap-2 min-h-11 px-6 rounded-full bg-accent text-accent-foreground font-medium text-sm shadow-lg shadow-accent/25 hover:shadow-accent/40 transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             {t('hero.ctaPrimary', 'Start searching')}
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
           </button>
 
           <Link
