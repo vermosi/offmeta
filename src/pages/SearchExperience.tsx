@@ -654,74 +654,74 @@ const Index = () => {
             )}
 
             {showResultsMode && (
-              <div className="animate-reveal flex items-start gap-2">
-                <div className="flex-1 min-w-0 space-y-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="text-lg sm:text-xl font-semibold text-foreground tracking-tight">
-                      {t('search.resultsFor', 'Results for "{query}"').replace(
-                        '{query}',
-                        originalQuery || searchQuery || '',
-                      )}
-                      {hasSearched && totalCards > 0 && (
-                        <span className="text-muted-foreground font-normal ml-1.5">
-                          ({t('results.summaryCards', '{count} cards').replace('{count}', totalCards.toLocaleString())})
-                        </span>
-                      )}
-                    </h1>
-                    <div className="flex items-center gap-1.5">
-                      <Badge variant="secondary" className="text-[10px] uppercase tracking-wide">
-                        {translationSourceLabel}
-                      </Badge>
-                      {typeof translationConfidence === 'number' && (
-                        <Badge variant="outline" className="text-[10px] tabular-nums">
-                          {Math.round(translationConfidence * 100)}%
-                        </Badge>
-                      )}
-                    </div>
+              <div className="animate-reveal space-y-2">
+                {/* One tight header line: count · query · source · save · view query */}
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <h1 className="text-base sm:text-lg font-medium text-foreground tracking-tight min-w-0">
+                    {hasSearched && totalCards > 0 && (
+                      <span className="tabular-nums text-muted-foreground mr-2">
+                        {totalCards.toLocaleString()}
+                      </span>
+                    )}
+                    <span className="text-foreground">
+                      {originalQuery || searchQuery || ''}
+                    </span>
+                  </h1>
+                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                    <span className="uppercase tracking-[0.14em]">{translationSourceLabel}</span>
+                    {typeof translationConfidence === 'number' && (
+                      <span className="tabular-nums">
+                        · {Math.round(translationConfidence * 100)}%
+                      </span>
+                    )}
                   </div>
-                  <ScryfallQueryDisclosure
+                  <div className="ml-auto flex items-center gap-1">
+                    <Suspense fallback={null}>
+                      <SaveSearchButton
+                        naturalQuery={originalQuery}
+                        scryfallQuery={
+                          lastSearchResult?.scryfallQuery || searchQuery
+                        }
+                        filters={activeFilters}
+                        onSaved={() =>
+                          trackFirstSave({
+                            query: originalQuery,
+                            request_id: currentRequestId ?? undefined,
+                          })
+                        }
+                      />
+                    </Suspense>
+                  </div>
+                </div>
+
+                {/* Scryfall query stays fully collapsed by default */}
+                <ScryfallQueryDisclosure
+                  scryfallQuery={(
+                    lastSearchResult?.scryfallQuery || searchQuery
+                  ).trim()}
+                >
+                  <EditableQueryBar
                     scryfallQuery={(
                       lastSearchResult?.scryfallQuery || searchQuery
                     ).trim()}
-                  >
-                    <EditableQueryBar
-                      scryfallQuery={(
-                        lastSearchResult?.scryfallQuery || searchQuery
-                      ).trim()}
-                      confidence={lastSearchResult?.explanation?.confidence}
-                      isLoading={isSearching}
-                      originalQuery={originalQuery}
-                      onRerun={handleRerunEditedQuery}
-                      onRegenerate={handleRegenerateTranslation}
-                      onReportIssue={() => setReportDialogOpen(true)}
-                      validationError={
-                        lastSearchResult?.validationIssues?.length
-                          ? lastSearchResult.validationIssues.join(' • ')
-                          : null
-                      }
-                    />
-                  </ScryfallQueryDisclosure>
-                </div>
-                <div className="pt-[26px]">
-                  <SaveSearchButton
-                    naturalQuery={originalQuery}
-                    scryfallQuery={
-                      lastSearchResult?.scryfallQuery || searchQuery
-                    }
-                    filters={activeFilters}
-                    onSaved={() =>
-                      trackFirstSave({
-                        query: originalQuery,
-                        request_id: currentRequestId ?? undefined,
-                      })
+                    confidence={lastSearchResult?.explanation?.confidence}
+                    isLoading={isSearching}
+                    originalQuery={originalQuery}
+                    onRerun={handleRerunEditedQuery}
+                    onRegenerate={handleRegenerateTranslation}
+                    onReportIssue={() => setReportDialogOpen(true)}
+                    validationError={
+                      lastSearchResult?.validationIssues?.length
+                        ? lastSearchResult.validationIssues.join(' • ')
+                        : null
                     }
                   />
-                </div>
+                </ScryfallQueryDisclosure>
               </div>
             )}
 
-            {/* Results Tabs */}
-            {hasSearched && !isSearching && (
+            {/* Results Tabs — only show when there's more than one tab to switch to */}
+            {hasSearched && !isSearching && (showSimilarTab || showDeckIdeasTab || showExplanationTab) && (
               <div className="animate-reveal">
                 <ResultsTabs
                   activeTab={activeTab}
@@ -732,6 +732,7 @@ const Index = () => {
                 />
               </div>
             )}
+
 
             {/* Primary toolbar: filters, sort, view — kept adjacent to results */}
             {cards.length > 0 && !isSearching && activeTab === 'cards' && (
