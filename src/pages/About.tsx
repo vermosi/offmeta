@@ -86,10 +86,35 @@ export default function About() {
     breadcrumb.id = 'about-breadcrumb-jsonld';
     breadcrumb.textContent = JSON.stringify({
       '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'OffMeta', item: 'https://offmeta.app/' },
-        { '@type': 'ListItem', position: 2, name: 'About', item: 'https://offmeta.app/about' },
+      '@graph': [
+        {
+          '@type': 'Organization',
+          '@id': 'https://offmeta.app/#organization',
+          name: 'OffMeta',
+          url: 'https://offmeta.app/',
+          logo: 'https://offmeta.app/offmeta-logo.png',
+          description:
+            'Transparent AI-powered natural language search engine for Magic: The Gathering cards.',
+          sameAs: ['https://offmeta.app/'],
+        },
+        {
+          '@type': 'AboutPage',
+          '@id': 'https://offmeta.app/about#aboutpage',
+          url: 'https://offmeta.app/about',
+          name: ABOUT_META.title,
+          description: ABOUT_META.description,
+          inLanguage: 'en',
+          isPartOf: { '@type': 'WebSite', name: 'OffMeta', url: 'https://offmeta.app/' },
+          about: { '@id': 'https://offmeta.app/#organization' },
+          primaryImageOfPage: { '@type': 'ImageObject', url: ABOUT_META.image },
+        },
+        {
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'OffMeta', item: 'https://offmeta.app/' },
+            { '@type': 'ListItem', position: 2, name: 'About', item: 'https://offmeta.app/about' },
+          ],
+        },
       ],
     });
     document.head.appendChild(breadcrumb);
