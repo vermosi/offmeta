@@ -648,9 +648,11 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
   const lower = naturalQuery.toLowerCase().trim();
   if (!lower) return '';
 
-  // Check pre-translated queries first (exact match)
-  if (PRETRANSLATED[lower]) {
-    return PRETRANSLATED[lower];
+  // Check pre-translated queries first (exact match). Use `hasOwn` so inputs
+  // like "__proto__" or "toString" don't resolve to inherited object members.
+  if (Object.prototype.hasOwnProperty.call(PRETRANSLATED, lower)) {
+    const pre = PRETRANSLATED[lower];
+    if (typeof pre === 'string') return pre;
   }
 
   // Check if this looks like a card name — use exact name search.
