@@ -114,3 +114,134 @@ describe('buildClientFallbackQuery — strategy hate patterns', () => {
     expect(hate).toContain('otag:artifact-removal');
   });
 });
+
+describe('buildClientFallbackQuery — extended archetype hate patterns', () => {
+  it.each([
+    'cards that punish planeswalker decks',
+    'cards that hate superfriends decks',
+  ])('planeswalker hate: %s', (input) => {
+    const q = buildClientFallbackQuery(input);
+    expect(q).toMatch(/destroy target planeswalker|otag:planeswalker-removal|planeswalker/);
+  });
+
+  it.each([
+    'cards that punish hand decks',
+    'cards that hate discard decks',
+    'cards that stop 8-rack decks',
+  ])('discard/hand hate: %s', (input) => {
+    const q = buildClientFallbackQuery(input);
+    expect(q).toMatch(/otag:discard|discards a card|maximum hand size|reveal your hand/);
+  });
+
+  it.each([
+    'cards that punish flying decks',
+    'cards that hate dragon decks',
+    'cards that stop angel decks',
+  ])('flying/evasion hate: %s', (input) => {
+    const q = buildClientFallbackQuery(input);
+    expect(q).toMatch(/flying|creatures with flying/);
+  });
+
+  it.each([
+    'cards that punish elf decks',
+    'cards that hate goblin decks',
+    'cards that stop zombie decks',
+    'cards that shut down merfolk decks',
+  ])('tribal hate: %s', (input) => {
+    const q = buildClientFallbackQuery(input);
+    expect(q).toMatch(/otag:boardwipe|destroy all creatures|protection from/);
+  });
+
+  it.each([
+    'cards that punish eldrazi decks',
+    'cards that hate big mana decks',
+    'cards that stop reanimate decks',
+  ])('big-mana/cheat hate: %s', (input) => {
+    const q = buildClientFallbackQuery(input);
+    expect(q).toMatch(/can't be cast|put onto the battlefield|otag:stax|otag:hatebear/);
+  });
+
+  it.each([
+    'cards that punish infect decks',
+    'cards that hate poison decks',
+    'cards that stop proliferate decks',
+  ])('infect/poison hate: %s', (input) => {
+    const q = buildClientFallbackQuery(input);
+    expect(q).toMatch(/poison|prevent all damage/);
+  });
+
+  it.each([
+    'cards that punish voltron decks',
+    'cards that hate equipment decks',
+    'cards that stop aura decks',
+  ])('voltron/equipment/aura hate: %s', (input) => {
+    const q = buildClientFallbackQuery(input);
+    expect(q).toMatch(/destroy target equipment|destroy all equipment|destroy all auras|equipment/);
+  });
+
+  it.each([
+    'cards that punish aristocrats decks',
+    'cards that hate sacrifice decks',
+  ])('aristocrats/sacrifice hate: %s', (input) => {
+    const q = buildClientFallbackQuery(input);
+    expect(q).toMatch(/can't be sacrificed|exile it instead|leyline of the void/);
+  });
+
+  it.each([
+    'cards that punish blink decks',
+    'cards that hate flicker decks',
+    'cards that stop etb decks',
+  ])('blink/flicker/etb hate: %s', (input) => {
+    const q = buildClientFallbackQuery(input);
+    expect(q).toMatch(/enter the battlefield|can't enter the battlefield|otag:stax/);
+  });
+
+  it.each([
+    'cards that punish landfall decks',
+    'cards that hate lands-matter decks',
+  ])('landfall/lands hate: %s', (input) => {
+    const q = buildClientFallbackQuery(input);
+    expect(q).toMatch(/destroy target land|can't play additional lands|otag:land-destruction/);
+  });
+
+  it.each([
+    'cards that punish extra turns decks',
+    'cards that hate group hug decks',
+  ])('extra-turns/group-hug hate: %s', (input) => {
+    const q = buildClientFallbackQuery(input);
+    expect(q).toMatch(/can't take extra turns|skip.*turn|can't draw more than/);
+  });
+
+  it.each([
+    'cards that punish stax decks',
+    'cards that hate prison decks',
+    'cards that stop mld decks',
+  ])('stax/prison hate: %s', (input) => {
+    const q = buildClientFallbackQuery(input);
+    expect(q).toMatch(/destroy all.*artifacts|destroy all.*enchantments|otag:(enchantment|artifact)-removal/);
+  });
+
+  it.each([
+    'cards that punish enchantress decks',
+    'cards that hate bogles decks',
+  ])('enchantress/bogles hate: %s', (input) => {
+    const q = buildClientFallbackQuery(input);
+    expect(q).toMatch(/otag:enchantment-removal|destroy all enchantments|exile all enchantments/);
+  });
+
+  it.each([
+    'cards that punish +1/+1 counter decks',
+    'cards that hate counters decks',
+  ])('counters/+1/+1 hate: %s', (input) => {
+    const q = buildClientFallbackQuery(input);
+    expect(q).toMatch(/remove all counters|can't have counters|counters can't be put/);
+  });
+
+  it.each([
+    'cards that punish madness decks',
+    'cards that hate cycling decks',
+  ])('madness/cycling hate: %s', (input) => {
+    const q = buildClientFallbackQuery(input);
+    expect(q).toMatch(/exile it instead|otag:graveyard-hate/);
+  });
+});
