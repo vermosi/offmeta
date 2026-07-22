@@ -1,8 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { runRequestGuard } from '../_shared/requestGuard.ts';
 import { callAIWithTools, aiErrorResponse } from '../_shared/aiClient.ts';
+import { withLogging } from '../_shared/logger.ts';
 
-serve(async (req) => {
+serve(withLogging('deck-critique', async (req) => {
   const guard = await runRequestGuard(req, { rateLimit: 5, globalLimit: 200 });
   if (!guard.ok) return guard.response;
   const { corsHeaders, headers, apiKey } = guard.ctx;
@@ -91,4 +92,4 @@ serve(async (req) => {
   } catch (e) {
     return aiErrorResponse(e, corsHeaders, 'AI critique failed');
   }
-});
+}));

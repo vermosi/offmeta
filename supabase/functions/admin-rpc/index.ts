@@ -16,6 +16,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { requireAdminOrService } from '../_shared/auth.ts';
+import { withLogging } from '../_shared/logger.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -36,7 +37,7 @@ function jsonResponse(status: number, body: unknown) {
   });
 }
 
-Deno.serve(async (req) => {
+Deno.serve(withLogging('admin-rpc', async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (req.method !== 'POST') return jsonResponse(405, { error: 'Method not allowed' });
 
@@ -78,4 +79,4 @@ Deno.serve(async (req) => {
     return jsonResponse(500, { error: error.message });
   }
   return jsonResponse(200, { data });
-});
+}));

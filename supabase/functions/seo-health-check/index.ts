@@ -5,6 +5,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { withLogging } from '../_shared/logger.ts';
 
 const GOOGLEBOT_UA =
   'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)';
@@ -194,7 +195,7 @@ async function pickTopCardPaths(supabase: ReturnType<typeof createClient>): Prom
   ];
 }
 
-Deno.serve(async (req) => {
+Deno.serve(withLogging('seo-health-check', async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   // Pipeline key gate — matches project convention for cron-invoked functions.
@@ -308,4 +309,4 @@ Deno.serve(async (req) => {
     }),
     { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
   );
-});
+}));

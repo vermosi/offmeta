@@ -54,6 +54,7 @@ import {
   PRE_TRANSLATION_TIMEOUT_MS,
 } from './config.ts';
 import {
+import { withLogging } from '../_shared/logger.ts';
   enforceRequestGuards,
   handleCorsPreflight,
   parseJsonBody,
@@ -250,7 +251,7 @@ async function withTimeoutFallback<T>(
 /**
  * Main Edge Function Handler
  */
-serve(async (req) => {
+serve(withLogging('semantic-search', async (req) => {
   // Trigger periodic in-memory cache cleanup (serverless-safe)
   maybeCacheCleanup();
 
@@ -1089,7 +1090,7 @@ serve(async (req) => {
             deadlineMs: requestBudget.deadlineMs,
           },
         ),
-      );
+      ));
 
       if (!aiResponse.ok)
         throw new Error(`AI Gateway error: ${aiResponse.status}`);

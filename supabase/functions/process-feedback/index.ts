@@ -18,7 +18,7 @@ import {
   logAuthFailure,
 } from '../_shared/auth.ts';
 import { validateEnv } from '../_shared/env.ts';
-import { createLogger } from '../_shared/logger.ts';
+import { createLogger, withLogging } from '../_shared/logger.ts';
 
 const { LOVABLE_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } =
   validateEnv(['LOVABLE_API_KEY', 'SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY']);
@@ -109,7 +109,7 @@ function sanitizeForPrompt(input: string | null | undefined): string {
   return s;
 }
 
-serve(async (req) => {
+serve(withLogging('process-feedback', async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -923,4 +923,4 @@ Respond in this EXACT JSON format only (no other text):
       },
     );
   }
-});
+}));

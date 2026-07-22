@@ -8,7 +8,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, requireServiceOrPipelineKey } from '../_shared/auth.ts';
-import { createLogger } from '../_shared/logger.ts';
+import { createLogger, withLogging } from '../_shared/logger.ts';
 
 const log = createLogger('mtgjson-import');
 const SCRYFALL_DELAY_MS = 100;
@@ -109,7 +109,7 @@ function extractColors(cards: Array<{ colors?: string[] }>): string[] {
   return Array.from(colorSet);
 }
 
-serve(async (req: Request): Promise<Response> => {
+serve(withLogging('mtgjson-import', async (req: Request): Promise<Response> => {
   const corsHeaders = getCorsHeaders(req);
   const headers = { ...corsHeaders, 'Content-Type': 'application/json' };
 
@@ -317,4 +317,4 @@ serve(async (req: Request): Promise<Response> => {
       headers,
     });
   }
-});
+}));

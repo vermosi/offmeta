@@ -14,7 +14,7 @@ import {
   callAIWithToolsTracked,
   aiErrorResponse,
 } from '../_shared/aiClient.ts';
-import { logEvent } from '../_shared/logger.ts';
+import { logEvent, withLogging } from '../_shared/logger.ts';
 import { runRequestGuard } from '../_shared/requestGuard.ts';
 import { requireAdminOrService } from '../_shared/auth.ts';
 
@@ -101,7 +101,7 @@ async function validateCards(
   return validated;
 }
 
-Deno.serve(async (req: Request) => {
+Deno.serve(withLogging('generate-seo-page', async (req: Request) => {
   const guard = await runRequestGuard(req, {
     method: 'POST',
     rateLimit: 5,
@@ -288,4 +288,4 @@ Include:
   } catch (err) {
     return aiErrorResponse(err, ctx.corsHeaders, 'Failed to generate SEO page');
   }
-});
+}));

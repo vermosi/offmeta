@@ -7,6 +7,7 @@
 
 import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
 import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
+import { withLogging } from '../_shared/logger.ts';
 
 declare const Deno: {
   env: { get(key: string): string | undefined };
@@ -46,7 +47,7 @@ function hashCardName(name: string): string {
   return `meta_${Math.abs(hash).toString(36)}`;
 }
 
-serve(async (req: Request): Promise<Response> => {
+serve(withLogging('card-meta-context', async (req: Request): Promise<Response> => {
   const corsHeaders = getCorsHeaders(req);
   const headers = { ...corsHeaders, 'Content-Type': 'application/json' };
 
@@ -346,4 +347,4 @@ Explain why this card is played in competitive and casual Magic, what archetypes
       { status: 500, headers },
     );
   }
-});
+}));

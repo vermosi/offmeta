@@ -9,11 +9,11 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, validateAuth } from '../_shared/auth.ts';
-import { createLogger } from '../_shared/logger.ts';
+import { createLogger, withLogging } from '../_shared/logger.ts';
 
 const log = createLogger('card-recommendations');
 
-serve(async (req: Request): Promise<Response> => {
+serve(withLogging('card-recommendations', async (req: Request): Promise<Response> => {
   const corsHeaders = getCorsHeaders(req);
   const headers = { ...corsHeaders, 'Content-Type': 'application/json' };
 
@@ -78,4 +78,4 @@ serve(async (req: Request): Promise<Response> => {
       { status: 500, headers }
     );
   }
-});
+}));

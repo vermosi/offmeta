@@ -1,13 +1,14 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
 import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
+import { withLogging } from '../_shared/logger.ts';
 
 /**
  * Proxy edge function to fetch a Moxfield deck by public ID.
  * Avoids CORS issues from calling Moxfield API directly from the browser.
  * Requires authentication to prevent abuse / Moxfield API exhaustion.
  */
-serve(async (req) => {
+serve(withLogging('fetch-moxfield-deck', async (req) => {
   const corsHeaders = getCorsHeaders(req);
 
   if (req.method === 'OPTIONS') {
@@ -172,4 +173,4 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-});
+}));

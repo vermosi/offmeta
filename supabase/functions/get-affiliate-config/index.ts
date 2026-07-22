@@ -1,4 +1,5 @@
 /**
+import { withLogging } from '../_shared/logger.ts';
  * Returns the affiliate base URL for TCGPlayer Impact links.
  * Reads from the NEXT_PUBLIC_TCGPLAYER_IMPACT_BASE secret.
  */
@@ -8,7 +9,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-Deno.serve(async (req) => {
+Deno.serve(withLogging('get-affiliate-config', async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -25,4 +26,4 @@ Deno.serve(async (req) => {
       },
     },
   );
-});
+}));

@@ -2,6 +2,7 @@ declare const Deno: { env: { get(key: string): string | undefined }; serve: (han
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { GUIDES_META, getGuideMetaBySlug } from '../_shared/guides-meta.ts';
+import { withLogging } from '../_shared/logger.ts';
 
 /**
  * Prerender edge function — returns SEO-enriched HTML for /cards/:slug and /search/:slug.
@@ -398,7 +399,7 @@ function buildFullHtml(opts: FullHtmlOptions): string {
 
 // ── Request handler ──────────────────────────────────────────────────────────
 
-Deno.serve(async (req: Request) => {
+Deno.serve(withLogging('prerender', async (req: Request) => {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -667,4 +668,4 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-});
+}));

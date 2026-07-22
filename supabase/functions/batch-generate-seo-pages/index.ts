@@ -10,7 +10,7 @@ declare const Deno: {
 };
 
 import { getCorsHeaders } from '../_shared/auth.ts';
-import { logEvent } from '../_shared/logger.ts';
+import { logEvent, withLogging } from '../_shared/logger.ts';
 import { requireServiceJob } from '../_shared/jobGuards.ts';
 
 const SEED_QUERIES = [
@@ -36,7 +36,7 @@ const SEED_QUERIES = [
   'cards that draw when creatures die mtg',
 ];
 
-Deno.serve(async (req: Request) => {
+Deno.serve(withLogging('batch-generate-seo-pages', async (req: Request) => {
   const corsHeaders = getCorsHeaders(req);
   const headers = { ...corsHeaders, 'Content-Type': 'application/json' };
 
@@ -125,4 +125,4 @@ Deno.serve(async (req: Request) => {
     JSON.stringify({ total: queries.length, succeeded, failed, results }),
     { status: 200, headers },
   );
-});
+}));

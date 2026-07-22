@@ -11,8 +11,9 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders } from '../_shared/auth.ts';
 import { requireAdminJob } from '../_shared/jobGuards.ts';
+import { withLogging } from '../_shared/logger.ts';
 
-serve(async (req) => {
+serve(withLogging('admin-analytics', async (req) => {
   const corsHeaders = getCorsHeaders(req);
 
   if (req.method === 'OPTIONS') {
@@ -70,4 +71,4 @@ serve(async (req) => {
       { status: 500, headers },
     );
   }
-});
+}));

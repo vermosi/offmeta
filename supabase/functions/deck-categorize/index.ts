@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { runRequestGuard } from '../_shared/requestGuard.ts';
 import { callAIWithTools, aiErrorResponse } from '../_shared/aiClient.ts';
+import { withLogging } from '../_shared/logger.ts';
 
 const SYSTEM_PROMPT = `Classify each MTG card into ONE category by functional role (not card type).
 
@@ -10,7 +11,7 @@ Priority examples: Sol Ring→Ramp, Swords to Plowshares→Removal, Rhystic Stud
 
 Return JSON: {cardName: category}. No explanation.`;
 
-serve(async (req) => {
+serve(withLogging('deck-categorize', async (req) => {
   const guard = await runRequestGuard(req, { rateLimit: 10, globalLimit: 200 });
   if (!guard.ok) return guard.response;
   const { corsHeaders, headers, apiKey } = guard.ctx;
@@ -68,4 +69,4 @@ serve(async (req) => {
   } catch (e) {
     return aiErrorResponse(e, corsHeaders, 'AI categorization failed');
   }
-});
+}));

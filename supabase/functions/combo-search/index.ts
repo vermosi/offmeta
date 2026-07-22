@@ -12,6 +12,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { validateAuth, getCorsHeaders, logAuthFailure } from '../_shared/auth.ts';
 import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
+import { withLogging } from '../_shared/logger.ts';
 
 const SPELLBOOK_BASE = 'https://backend.commanderspellbook.com';
 const FETCH_TIMEOUT_MS = 15000;
@@ -114,7 +115,7 @@ function json(
   });
 }
 
-serve(async (req) => {
+serve(withLogging('combo-search', async (req) => {
   const corsHeaders = getCorsHeaders(req);
 
   if (req.method === 'OPTIONS') {
@@ -300,4 +301,4 @@ serve(async (req) => {
       corsHeaders,
     );
   }
-});
+}));
