@@ -762,15 +762,6 @@ const Index = () => {
               </div>
             )}
 
-            {/* Explain panel — hidden on mobile */}
-            {hasSearched && (
-              <div className="hidden sm:block animate-reveal">
-                <ExplainCompilationPanel
-                  intent={lastSearchResult?.intent || lastIntent}
-                />
-              </div>
-            )}
-
             {/* Results Tabs */}
             {hasSearched && !isSearching && (
               <div className="animate-reveal">
@@ -784,99 +775,7 @@ const Index = () => {
               </div>
             )}
 
-            {hasSearched && !isSearching && (
-              <div className="space-y-2">
-                {refinementCount > 0 && (
-                  <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-foreground">
-                    {t(
-                      'results.refinementHint',
-                      'Narrow results like this? Save this refinement as a reusable workflow.',
-                    )}
-                  </div>
-                )}
-                {shouldShowProUpsell && (
-                  <div className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-foreground">
-                    {t(
-                      'results.proUpsell',
-                      'Better results with Pro: advanced explainability + priority ranking.',
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Toolbar row — only show for Cards tab */}
-            {hasSearched && !isSearching && totalCards > 0 && (
-              <Suspense fallback={null}>
-                <SearchNextStepsBar
-                  originalQuery={originalQuery}
-                  intent={lastSearchResult?.intent || lastIntent}
-                  totalCards={totalCards}
-                  activeTab={activeTab}
-
-                  onJumpToSimilar={() => {
-                    handleTabChange('similar');
-                    if (typeof document !== 'undefined') {
-                      document
-                        .getElementById('search-results')
-                        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                  }}
-                  onRelatedSearchClick={handleTryExample}
-                />
-              </Suspense>
-            )}
-
-            {/* Toolbar row — only show for Cards tab */}
-            {hasSearched && !isSearching && totalCards > 0 && (
-              <Suspense fallback={null}>
-                <SearchNextActions
-                  intent={lastSearchResult?.intent || lastIntent}
-                  originalQuery={originalQuery}
-                  totalCards={totalCards}
-                  isDeckQuery={isDeckQuery}
-                  queryQualityScore={queryQualityScore}
-                />
-              </Suspense>
-            )}
-
-            {/* Similar-to-top-result discovery panel (Cards tab only) */}
-            {hasSearched && !isSearching && activeTab === 'cards' && cards[0] && (
-              <Suspense fallback={null}>
-                <SimilarToTopResultPanel
-                  topCard={cards[0]}
-                  originalQuery={originalQuery}
-                  onRefine={handleTryExample}
-                  onCardClick={handleCardClick}
-                />
-              </Suspense>
-            )}
-
-            {/* Related searches — always-visible follow-up suggestions */}
-            {hasSearched && !isSearching && totalCards > 0 && activeTab === 'cards' && (
-              <Suspense fallback={null}>
-                <RelatedSearchesSection
-                  originalQuery={originalQuery}
-                  intent={lastSearchResult?.intent || lastIntent}
-                  topCard={cards[0]}
-                  onRefine={handleTryExample}
-                />
-              </Suspense>
-            )}
-
-
-            {hasSearched && !isSearching && cards.length > 0 && activeTab === 'cards' && (
-              <Suspense fallback={null}>
-                <MatchedConceptChips
-                  cards={displayCards.length > 0 ? displayCards : cards}
-                  intent={lastSearchResult?.intent || lastIntent}
-                  searchQuery={searchQuery}
-                  originalQuery={originalQuery}
-                  onRefine={handleRefineWithMatch}
-                />
-              </Suspense>
-            )}
-
+            {/* Primary toolbar: filters, sort, view — kept adjacent to results */}
             {cards.length > 0 && !isSearching && activeTab === 'cards' && (
               <ResultsToolbar
                 cards={cards}
@@ -894,9 +793,9 @@ const Index = () => {
                 pendingFilterOverride={pendingFilterOverride}
                 filterOverrideKey={filterOverrideKey}
               />
-
             )}
           </div>
+
 
           {/* Tab content area */}
           {hasSearched && (
