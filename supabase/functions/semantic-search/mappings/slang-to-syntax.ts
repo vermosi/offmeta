@@ -64,6 +64,94 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     description: 'Blood Moon-style land type changing effects',
   },
 
+  // =====================================================================
+  // STRATEGY HATE / HOSERS (CRITICAL - domain knowledge)
+  // "cards that punish/hate/hose/counter/stop/beat/shut down X decks"
+  // These must run BEFORE single-word concepts (like "treasure") capture
+  // the strategy noun and reduce the query to that theme itself.
+  // A player asking to "punish treasure decks" wants ARTIFACT HATE and
+  // activation prevention (e.g. Collector Ouphe, Null Rod, Stony Silence),
+  // NOT cards that make treasure.
+  // =====================================================================
+  {
+    // treasure / artifact-token strategies → artifact hate + prevent activated abilities
+    pattern: /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:treasure|artifact(?:\s+token)?|affinity|mud|urza)\s+(?:decks?|strateg(?:y|ies)|players?|based|token)?\b/gi,
+    syntax:
+      '(otag:artifact-removal or o:"activated abilities of artifacts" or o:"artifacts your opponents control" or o:"noncreature artifacts" or o:"can\'t cast artifact")',
+    description:
+      'Anti-artifact / anti-treasure hate: prevents activated abilities and removes artifacts',
+  },
+  {
+    // graveyard / reanimator / dredge strategies → graveyard hate
+    pattern: /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:graveyard|reanimator|reanimation|dredge|mill|self[- ]?mill)\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
+    syntax:
+      '(otag:graveyard-hate or o:"exile" o:"graveyard" or o:"cards in graveyards" or o:"can\'t be cast from")',
+    description: 'Anti-graveyard / anti-reanimator hate',
+  },
+  {
+    // storm / spellslinger strategies → limit spell casting
+    pattern: /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:storm|spellslinger|spells?|instants?\s+and\s+sorceries?|combo)\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
+    syntax:
+      '(o:"can\'t cast more than" or o:"whenever" o:"opponent" o:"casts" or otag:hatebear or o:"spells cost" o:"more")',
+    description: 'Anti-storm / anti-spellslinger / anti-combo hate',
+  },
+  {
+    // token strategies → destroy tokens / prevent token creation
+    pattern: /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?tokens?\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
+    syntax:
+      '(o:"destroy all tokens" or o:"exile all tokens" or o:"can\'t create" or o:"tokens can\'t")',
+    description: 'Anti-token hate',
+  },
+  {
+    // lifegain strategies → prevent life gain
+    pattern: /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:life\s?gain|life)\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
+    syntax: '(o:"can\'t gain life" or o:"lose life" o:"instead of gaining")',
+    description: 'Anti-lifegain hate',
+  },
+  {
+    // ramp / land strategies → prevent extra lands & tutoring
+    pattern: /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:ramp|land[- ]?ramp|lands|mana)\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
+    syntax:
+      '(o:"can\'t search" or o:"can\'t play additional lands" or o:"skip" o:"land" or otag:hatebear)',
+    description: 'Anti-ramp / anti-land hate',
+  },
+  {
+    // tutor strategies → tax or prevent library searches
+    pattern: /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?tutors?\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
+    syntax:
+      '(o:"can\'t search" or o:"search your library" o:"pay" or o:"whenever" o:"search")',
+    description: 'Anti-tutor hate',
+  },
+  {
+    // draw / wheel strategies → punish opponent draw
+    pattern: /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:draw|card[- ]?draw|wheel|blue)\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
+    syntax:
+      '(o:"whenever" o:"opponent" o:"draws" or o:"skip" o:"draw" or o:"can\'t draw more than" or otag:hatebear)',
+    description: 'Anti-draw / anti-wheel hate',
+  },
+  {
+    // creature / aggro strategies → sweepers & pillow fort
+    pattern: /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:aggro|creature|go[- ]?wide|weenie|swarm)\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
+    syntax: '(otag:boardwipe or otag:pillowfort or o:"can\'t attack")',
+    description: 'Anti-aggro / anti-creature hate',
+  },
+  {
+    // enchantment strategies
+    pattern: /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?enchantments?\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
+    syntax:
+      '(otag:enchantment-removal or o:"destroy all enchantments" or o:"can\'t cast enchantment")',
+    description: 'Anti-enchantment hate',
+  },
+  {
+    // counterspell / control strategies → uncounterable & pressure
+    pattern: /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:control|counterspell|counter\s?magic|permission)\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
+    syntax:
+      '(o:"can\'t be countered" or o:"whenever" o:"opponent" o:"counters" or otag:hatebear)',
+    description: 'Anti-control / anti-counterspell hate',
+  },
+
+
+
   // EDHREC rank ordering — high rank = most popular = desc
   {
     pattern: /\bhigh(?:est)?\s+(?:edhrec\s+)?rank(?:ed)?\b/gi,
