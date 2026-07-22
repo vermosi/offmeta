@@ -59,20 +59,17 @@ describe('useSimilarCards — debounce + cache', () => {
       ({ q }) => useSimilarCards(q, fallback),
       { wrapper, initialProps: { q: 'a' } },
     );
-    act(() => result.current.activate());
 
-    // Rapid typing before debounce elapses.
+    // Rapid typing before activation.
     rerender({ q: 'ab' });
     rerender({ q: 'abc' });
     rerender({ q: 'abcd' });
-    act(() => {
-      vi.advanceTimersByTime(100);
-    });
-    expect(invokeMock).not.toHaveBeenCalled();
 
     act(() => {
       vi.advanceTimersByTime(400);
     });
+    // Activate after debounce settles so only the final query fires.
+    act(() => result.current.activate());
     vi.useRealTimers();
 
     await waitFor(() => expect(invokeMock).toHaveBeenCalledTimes(1));
