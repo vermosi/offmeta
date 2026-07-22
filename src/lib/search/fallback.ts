@@ -365,6 +365,115 @@ const STRATEGY_HATE_PATTERNS: Array<{ regex: RegExp; syntax: string }> = [
   },
 ];
 
+/**
+ * Spanish strategy-hate patterns.
+ * Mirrors the English STRATEGY_HATE_PATTERNS above so users can type
+ * "cartas que castigan mazos de fichas" and still get proper hate syntax.
+ * Verbs: castigar/odiar/detener/parar/contrarrestar/anti
+ * Suffixes: "de mazos", "de estrategias", "de jugadores", or bare noun.
+ */
+const HATE_VERB_ES = String.raw`(?:castig(?:a|an|ar|ando)|odi(?:a|an|ar)|detien(?:e|en)|detener|par(?:a|an|ar)|contrarrest(?:a|an|ar)|anti-?)`;
+const HATE_SUFFIX_ES = String.raw`(?:\s+(?:de\s+)?(?:mazos?|estrategias?|jugadores?|fichas?))?`;
+const HATE_PREFIX_ES = String.raw`(?:cartas?\s+que\s+)?`;
+// Optional article ("el/la/los/las") OR "mazos/estrategias/jugadores de" wrapper
+// before the archetype noun, e.g. "castigan mazos de tesoros".
+const HATE_ARTICLE_ES = String.raw`(?:\s+(?:el|la|los|las|al|a\s+los|a\s+las|(?:mazos?|estrategias?|jugadores?)\s+de(?:\s+(?:el|la|los|las))?))?`;
+
+const SPANISH_STRATEGY_HATE_PATTERNS: Array<{ regex: RegExp; syntax: string }> = [
+  // Treasure / artifacts (tesoro/artefacto)
+  {
+    regex: new RegExp(
+      String.raw`\b${HATE_PREFIX_ES}${HATE_VERB_ES}${HATE_ARTICLE_ES}\s+(?:tesoros?|artefactos?)${HATE_SUFFIX_ES}\b`,
+      'i',
+    ),
+    syntax:
+      '(otag:artifact-removal or o:"activated abilities of artifacts" or o:"artifacts your opponents control" or o:"noncreature artifacts")',
+  },
+  // Graveyard (cementerio)
+  {
+    regex: new RegExp(
+      String.raw`\b${HATE_PREFIX_ES}${HATE_VERB_ES}${HATE_ARTICLE_ES}\s+(?:cementerios?|reanimaci[oó]n|molido)${HATE_SUFFIX_ES}\b`,
+      'i',
+    ),
+    syntax:
+      '(otag:graveyard-hate or (o:"exile" o:"graveyard") or o:"can\'t be cast from")',
+  },
+  // Storm / spells (tormenta/hechizos)
+  {
+    regex: new RegExp(
+      String.raw`\b${HATE_PREFIX_ES}${HATE_VERB_ES}${HATE_ARTICLE_ES}\s+(?:tormenta|hechizos?|combo)${HATE_SUFFIX_ES}\b`,
+      'i',
+    ),
+    syntax:
+      '(o:"can\'t cast more than" or (o:"whenever" o:"opponent" o:"casts") or otag:hatebear or (o:"spells cost" o:"more"))',
+  },
+  // Tokens (fichas)
+  {
+    regex: new RegExp(
+      String.raw`\b${HATE_PREFIX_ES}${HATE_VERB_ES}${HATE_ARTICLE_ES}\s+fichas?${HATE_SUFFIX_ES}\b`,
+      'i',
+    ),
+    syntax: '(o:"tokens can\'t" or o:"exile all tokens" or o:"destroy all tokens")',
+  },
+  // Lifegain (ganancia de vida / ganar vida / vida)
+  {
+    regex: new RegExp(
+      String.raw`\b${HATE_PREFIX_ES}${HATE_VERB_ES}${HATE_ARTICLE_ES}\s+(?:ganancia\s+de\s+vida|ganar\s+vida|vida)${HATE_SUFFIX_ES}\b`,
+      'i',
+    ),
+    syntax:
+      '(o:"can\'t gain life" or o:"lose life instead" or (o:"whenever" o:"gains life"))',
+  },
+  // Control / counterspells (control / contrahechizos / contramagia)
+  {
+    regex: new RegExp(
+      String.raw`\b${HATE_PREFIX_ES}${HATE_VERB_ES}${HATE_ARTICLE_ES}\s+(?:control|contrahechizos?|contramagia|permiso)${HATE_SUFFIX_ES}\b`,
+      'i',
+    ),
+    syntax:
+      '(o:"can\'t be countered" or (o:"whenever" o:"opponent" o:"counters") or otag:hatebear)',
+  },
+  // Ramp / lands (rampa / tierras)
+  {
+    regex: new RegExp(
+      String.raw`\b${HATE_PREFIX_ES}${HATE_VERB_ES}${HATE_ARTICLE_ES}\s+(?:rampa|tierras?|man[aá])${HATE_SUFFIX_ES}\b`,
+      'i',
+    ),
+    syntax:
+      '(o:"can\'t search" or o:"can\'t play additional lands" or (o:"skip" o:"land") or otag:hatebear)',
+  },
+  // Card draw (robo de cartas / robar)
+  {
+    regex: new RegExp(
+      String.raw`\b${HATE_PREFIX_ES}${HATE_VERB_ES}${HATE_ARTICLE_ES}\s+(?:robo(?:\s+de\s+cartas)?|robar(?:\s+cartas)?)${HATE_SUFFIX_ES}\b`,
+      'i',
+    ),
+    syntax:
+      '((o:"whenever" o:"opponent" o:"draws") or (o:"skip" o:"draw") or o:"can\'t draw more than" or otag:hatebear)',
+  },
+  // Enchantments (encantamientos)
+  {
+    regex: new RegExp(
+      String.raw`\b${HATE_PREFIX_ES}${HATE_VERB_ES}${HATE_ARTICLE_ES}\s+encantamientos?${HATE_SUFFIX_ES}\b`,
+      'i',
+    ),
+    syntax: '(o:"destroy" o:"enchantment" or o:"exile" o:"enchantment")',
+  },
+  // Planeswalkers (caminantes de planos)
+  {
+    regex: new RegExp(
+      String.raw`\b${HATE_PREFIX_ES}${HATE_VERB_ES}${HATE_ARTICLE_ES}\s+(?:planeswalkers?|caminantes?\s+de\s+planos?)${HATE_SUFFIX_ES}\b`,
+      'i',
+    ),
+    syntax:
+      '(o:"destroy target planeswalker" or o:"deals damage to" o:"planeswalker" or otag:planeswalker-removal)',
+  },
+];
+
+// Merge Spanish patterns into the main list so buildClientFallbackQuery
+// picks them up without any additional call-site changes.
+STRATEGY_HATE_PATTERNS.push(...SPANISH_STRATEGY_HATE_PATTERNS);
+
 
 const COLOR_WORDS: Record<string, string> = {
   white: 'c:w',
