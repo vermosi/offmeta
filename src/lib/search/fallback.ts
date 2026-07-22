@@ -375,7 +375,9 @@ const STRATEGY_HATE_PATTERNS: Array<{ regex: RegExp; syntax: string }> = [
 const HATE_VERB_ES = String.raw`(?:castig(?:a|an|ar|ando)|odi(?:a|an|ar)|detien(?:e|en)|detener|par(?:a|an|ar)|contrarrest(?:a|an|ar)|anti[- ]?)`;
 const HATE_SUFFIX_ES = String.raw`(?:\s+(?:de\s+)?(?:mazos?|estrategias?|jugadores?|fichas?))?`;
 const HATE_PREFIX_ES = String.raw`(?:cartas?\s+que\s+)?`;
-const HATE_ARTICLE_ES = String.raw`(?:\s+(?:el|la|los|las|al|a\s+los|a\s+las))?`;
+// Optional article ("el/la/los/las") OR "mazos/estrategias/jugadores de" wrapper
+// before the archetype noun, e.g. "castigan mazos de tesoros".
+const HATE_ARTICLE_ES = String.raw`(?:\s+(?:el|la|los|las|al|a\s+los|a\s+las|(?:mazos?|estrategias?|jugadores?)\s+de(?:\s+(?:el|la|los|las))?))?`;
 
 const SPANISH_STRATEGY_HATE_PATTERNS: Array<{ regex: RegExp; syntax: string }> = [
   // Treasure / artifacts (tesoro/artefacto)
