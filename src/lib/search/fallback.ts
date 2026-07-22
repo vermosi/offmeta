@@ -229,6 +229,140 @@ const STRATEGY_HATE_PATTERNS: Array<{ regex: RegExp; syntax: string }> = [
     syntax:
       '(o:"can\'t be countered" or (o:"whenever" o:"opponent" o:"counters") or otag:hatebear)',
   },
+  // Planeswalker hate
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:planeswalkers?|superfriends|walkers?)${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax:
+      '(o:"destroy target planeswalker" or o:"deals damage to" o:"planeswalker" or otag:planeswalker-removal)',
+  },
+  // Discard / hand hate
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:hand|hand\s+size|discard|8[- ]?rack|rack)${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax:
+      '(otag:discard or o:"discards a card" or o:"maximum hand size" or o:"reveal your hand")',
+  },
+  // Flying / evasion hate
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:flying|fliers?|flyers?|air|dragons?|angels?)${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax:
+      '(o:"destroy all creatures with flying" or o:"damage to each creature with flying" or o:"creatures with flying can\'t")',
+  },
+  // Tribal / creature-type hate (generic)
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:tribal|humans?|elf|elves|elfs|goblins?|zombies?|vampires?|merfolk|slivers?|dinosaurs?|cats?|wizards?|warriors?|soldiers?)${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax: '(otag:boardwipe or o:"destroy all creatures" or o:"protection from")',
+  },
+  // Big mana / Eldrazi / ramp payoff hate
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:eldrazi|big\s+mana|tron|cheat(?:ing)?(?:\s+into\s+play)?|reanimate)${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax:
+      '(o:"can\'t be cast" or o:"put onto the battlefield" or otag:stax or otag:hatebear)',
+  },
+  // Infect / poison hate
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:infect|poison|toxic|proliferate)${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax:
+      '(o:"remove all poison" or o:"you can\'t get poison counters" or o:"prevent all damage")',
+  },
+  // Voltron / equipment / auras hate
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:voltron|equipment|equipped|auras?|enchanted\s+creature)${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax:
+      '(o:"destroy target equipment" or o:"destroy all equipment" or o:"destroy all auras" or o:"return" o:"equipment")',
+  },
+  // Aristocrats / sacrifice hate
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:aristocrats?|sacrifice|sac(?:\s+outlets?)?|death\s?trigger)${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax:
+      '(o:"can\'t be sacrificed" or o:"if a creature would die" o:"exile it instead" or o:"leyline of the void")',
+  },
+  // Blink / flicker / etb hate
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:blink|flicker|flash|etb|enter[- ]?the[- ]?battlefield)${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax:
+      '(o:"enter the battlefield" o:"don\'t" or o:"can\'t enter the battlefield" or otag:stax)',
+  },
+  // Landfall / lands-matter hate
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:landfall|lands?[- ]?matter)${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax:
+      '(o:"destroy target land" or o:"can\'t play additional lands" or otag:land-destruction)',
+  },
+  // Group hug / extra cards / extra turns hate
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:group\s?hug|extra\s+turns?|time\s?walk|chain\s+of\s+turns?)${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax:
+      '(o:"can\'t take extra turns" or o:"skip" o:"turn" or o:"opponents can\'t draw more than")',
+  },
+  // Stax / prison hate (players hating stax)
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:stax|prison|lock(?:down)?|mld|mass\s+land\s+destruction)${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax:
+      '(o:"destroy all" o:"artifacts" or o:"destroy all" o:"enchantments" or otag:enchantment-removal or otag:artifact-removal)',
+  },
+  // Enchantress / enchantments-matter hate
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:enchantress|enchantments?[- ]?matter|bogles?)${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax:
+      '(otag:enchantment-removal or o:"destroy all enchantments" or o:"exile all enchantments")',
+  },
+  // Counters / proliferate / +1/+1 hate
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:\+1\/\+1|plus\s*one|counters?|counter[s]?[- ]?matter)${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax:
+      '(o:"remove all counters" or o:"can\'t have counters" or o:"counters can\'t be put")',
+  },
+  // Madness / cycling / discard-payoff hate
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:madness|cycling|hollow\s+one)${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax:
+      '(o:"if a card would be put into" o:"graveyard" o:"exile it instead" or otag:graveyard-hate)',
+  },
 ];
 
 
