@@ -648,9 +648,11 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
   const lower = naturalQuery.toLowerCase().trim();
   if (!lower) return '';
 
-  // Check pre-translated queries first (exact match)
-  if (PRETRANSLATED[lower]) {
-    return PRETRANSLATED[lower];
+  // Check pre-translated queries first (exact match). Use `hasOwn` so inputs
+  // like "__proto__" or "toString" don't resolve to inherited object members.
+  if (Object.prototype.hasOwnProperty.call(PRETRANSLATED, lower)) {
+    const pre = PRETRANSLATED[lower];
+    if (typeof pre === 'string') return pre;
   }
 
   // Check if this looks like a card name — use exact name search.
@@ -666,11 +668,22 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
 
   // 0. Strategy-hate / hoser phrases MUST run before SLANG_MAP so
   //    "punish treasure decks" doesn't collapse to o:"treasure".
+  //    Multi-intent requests like "punish treasure decks and stop tokens"
+  //    collect every matching hate clause, then combine them with OR so
+  //    the compound query surfaces cards that hit either strategy.
+  const hateMatches: string[] = [];
   for (const { regex, syntax } of STRATEGY_HATE_PATTERNS) {
     if (regex.test(residual)) {
-      parts.push(syntax);
+      if (!hateMatches.includes(syntax)) {
+        hateMatches.push(syntax);
+      }
       residual = residual.replace(regex, ' ').trim();
     }
+  }
+  if (hateMatches.length === 1) {
+    parts.push(hateMatches[0]);
+  } else if (hateMatches.length > 1) {
+    parts.push(`(${hateMatches.join(' or ')})`);
   }
 
   // 1. Check multi-word keyword phrases first
@@ -837,7 +850,7 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
   // 11. Clean up filler words from residual
   residual = residual
     .replace(
-      /\b(that|the|with|for|and|or|a|an|in|of|to|make|spells?|bonuses?|reward|casting|gives?|when|dies?|deal|drain|legal|cards?|pieces?|fit|into|style|deck|is|mono|theme|build|strategy|let|me|my|your|from|library)\b/gi,
+      /\b(that|the|with|for|and|or|plus|also|as|well|a|an|in|of|to|make|spells?|bonuses?|reward|casting|gives?|when|dies?|deal|drain|legal|cards?|pieces?|fit|into|style|deck|is|mono|theme|build|strategy|let|me|my|your|from|library)\b/gi,
       ' ',
     )
     .replace(/\s+/g, ' ')
