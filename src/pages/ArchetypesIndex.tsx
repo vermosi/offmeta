@@ -223,7 +223,7 @@ export default function ArchetypesIndex() {
                                 {sig?.imageUrl ? (
                                   <img
                                     src={sig.imageUrl}
-                                    alt=""
+                                    alt={`${sig.cardName ?? deck.deckName} — signature card art`}
                                     loading="lazy"
                                     className="absolute inset-0 h-full w-full object-cover object-top"
                                   />
