@@ -656,7 +656,7 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
   // Check if this looks like a card name — use exact name search.
   // Strip characters that would break Scryfall's `!"..."` exact-name syntax.
   if (isLikelyCardName(naturalQuery)) {
-    const safe = naturalQuery.trim().replace(/["()]/g, '').trim();
+    const safe = naturalQuery.trim().replace(/["()]/g, '').replace(/\s+/g, ' ').trim();
     if (safe) return `!"${safe}"`;
     return '';
   }
