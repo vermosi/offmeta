@@ -53,11 +53,6 @@ const ExampleQueriesCarousel = lazy(() =>
     default: m.ExampleQueriesCarousel,
   })),
 );
-const ValuePropStrip = lazy(() =>
-  import('@/components/ValuePropStrip').then((m) => ({
-    default: m.ValuePropStrip,
-  })),
-);
 const HowItWorksSection = lazy(() =>
   import('@/components/HowItWorksSection').then((m) => ({
     default: m.HowItWorksSection,
@@ -992,11 +987,6 @@ const Index = () => {
           <div className="container-main" aria-hidden="true">
             <div className="section-divider" />
           </div>
-        )}
-        {!hasSearched && (
-          <Suspense fallback={null}>
-            <ValuePropStrip />
-          </Suspense>
         )}
 
         <Suspense fallback={null}>
