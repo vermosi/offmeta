@@ -1,6 +1,7 @@
 declare const Deno: { env: { get(key: string): string | undefined }; serve: (handler: (req: Request) => Promise<Response>) => void };
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { GUIDES_META, getGuideMetaBySlug } from '../_shared/guides-meta.ts';
 
 /**
  * Prerender edge function — returns SEO-enriched HTML for /cards/:slug and /search/:slug.
