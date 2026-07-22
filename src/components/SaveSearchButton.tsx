@@ -143,13 +143,15 @@ export function SaveSearchButton({
       disabled={loading || !naturalQuery.trim()}
       className="h-10 px-2.5 gap-1.5"
       title={savedId ? 'Remove from saved' : 'Save this search'}
+      aria-label={savedId ? 'Remove search from saved' : 'Save this search'}
+      aria-pressed={!!savedId}
     >
       {loading ? (
-        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
       ) : savedId ? (
-        <BookmarkCheck className="h-3.5 w-3.5 text-primary" />
+        <BookmarkCheck className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
       ) : (
-        <Bookmark className="h-3.5 w-3.5" />
+        <Bookmark className="h-3.5 w-3.5" aria-hidden="true" />
       )}
       <span className="hidden sm:inline">{savedId ? 'Saved' : 'Save'}</span>
     </Button>
