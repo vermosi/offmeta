@@ -5,6 +5,8 @@
  * @module lib/search/fallback
  */
 
+import { recordStrategyHate } from './diagnostics';
+
 /**
  * Pre-translated queries for known guide and archetype searches.
  * These bypass all parsing and return the exact Scryfall query.
@@ -981,9 +983,12 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
   // If nothing was extracted, return original as a name search
   if (parts.length === 0) {
     const safe = naturalQuery.trim().replace(/["()]/g, '').replace(/\s+/g, ' ').trim();
-    if (safe) return `!"${safe}"`;
-    return '';
+    const fallback = safe ? `!"${safe}"` : '';
+    recordStrategyHate(naturalQuery, hateMatches, fallback);
+    return fallback;
   }
 
-  return parts.join(' ');
+  const compiled = parts.join(' ');
+  recordStrategyHate(naturalQuery, hateMatches, compiled);
+  return compiled;
 }

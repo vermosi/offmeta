@@ -11,6 +11,11 @@ import { getCardByName, searchCards } from '@/lib/scryfall/client';
 import type { ScryfallCard, SearchResult } from '@/types/card';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { logger } from '@/lib/core/logger';
+import {
+  recordSimilarError,
+  recordSimilarNoSource,
+  friendlySimilarErrorMessage,
+} from '@/lib/search/diagnostics';
 
 export interface SynergyCard {
   name: string;
@@ -123,6 +128,7 @@ export function useSimilarCards(query: string, fallbackCard?: ScryfallCard | nul
       const sourceCard =
         (await detectCardName(debouncedQuery)) ?? fallbackCard ?? null;
       if (!sourceCard) {
+        recordSimilarNoSource(debouncedQuery);
         writeCache(key, null);
         return null;
       }
@@ -144,9 +150,15 @@ export function useSimilarCards(query: string, fallbackCard?: ScryfallCard | nul
       );
 
       if (fnError || !data?.success) {
+        const reason =
+          fnError?.message ||
+          (typeof data?.error === 'string' ? data.error : null) ||
+          'Similarity edge function returned an error';
         logger.warn('Card similarity fetch failed', fnError || data?.error);
-        // Don't cache transient failures — allow a retry on next activation.
-        return null;
+        recordSimilarError(debouncedQuery, fallbackId, reason, fnError || data?.error);
+        // Throw so react-query surfaces `error` to the UI. We deliberately
+        // don't cache transient failures — retry on next activation.
+        throw new Error(reason);
       }
 
       // Fetch similar and budget results from Scryfall
@@ -180,10 +192,17 @@ export function useSimilarCards(query: string, fallbackCard?: ScryfallCard | nul
     });
   }, [query, trackEvent]);
 
+  const errorMessage = error
+    ? friendlySimilarErrorMessage(
+        error instanceof Error ? error.message : String(error),
+      )
+    : null;
+
   return {
     similarityData,
     isLoading,
     error,
+    errorMessage,
     activate,
     isDetected: similarityData?.sourceCard != null,
   };
