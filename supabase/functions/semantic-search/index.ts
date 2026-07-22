@@ -1378,5 +1378,5 @@ serve(withLogging('semantic-search', async (req) => {
       { status: 500, headers: jsonHeaders },
     );
   }
-});
+}));
 
