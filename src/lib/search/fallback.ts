@@ -791,10 +791,15 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
       residual = residual.replace(regex, ' ').trim();
     }
   }
-  if (hateMatches.length === 1) {
-    parts.push(hateMatches[0]);
-  } else if (hateMatches.length > 1) {
-    parts.push(`(${hateMatches.join(' or ')})`);
+  // Cap combined hate clauses so the compiled OR group stays within
+  // Scryfall's 700-char query ceiling even when a user throws many intents
+  // at us (each syntax averages ~80 chars once wrapped).
+  const MAX_HATE_CLAUSES = 6;
+  const cappedHate = hateMatches.slice(0, MAX_HATE_CLAUSES);
+  if (cappedHate.length === 1) {
+    parts.push(cappedHate[0]);
+  } else if (cappedHate.length > 1) {
+    parts.push(`(${cappedHate.join(' or ')})`);
   }
 
   // Normalize connector punctuation (`&`, `,`, `;`, `/`) into spaces so
