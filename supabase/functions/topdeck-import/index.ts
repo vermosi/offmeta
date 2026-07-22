@@ -332,7 +332,7 @@ async function fetchTopdeckFormat(
   return Array.isArray(data) ? data : [];
 }
 
-serve(async (req: Request): Promise<Response> => {
+serve(withLogging('topdeck-import', async (req: Request): Promise<Response> => {
   const corsHeaders = getCorsHeaders(req);
   const headers = { ...corsHeaders, 'Content-Type': 'application/json' };
 
