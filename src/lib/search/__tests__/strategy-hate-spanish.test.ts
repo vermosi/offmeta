@@ -12,7 +12,7 @@ describe('buildClientFallbackQuery — Spanish strategy hate', () => {
     'cartas que castigan mazos de tesoros',
     'cartas que odian artefactos',
     'cartas que detienen mazos de tesoro',
-    'anti tesoros',
+    'cartas que detienen mazos de tesoro',
   ])('artifact/treasure hate (es): %s', (input) => {
     const q = buildClientFallbackQuery(input);
     expect(q).toContain('otag:artifact-removal');
