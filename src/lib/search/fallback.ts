@@ -797,6 +797,11 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
     parts.push(`(${hateMatches.join(' or ')})`);
   }
 
+  // Normalize connector punctuation (`&`, `,`, `;`, `/`) into spaces so
+  // downstream tokenizers don't treat them as content and leak them into
+  // oracle-text clauses.
+  residual = residual.replace(/[&,;/]+/g, ' ').replace(/\s+/g, ' ').trim();
+
   // 1. Check multi-word keyword phrases first
 
   for (const [phrase, syntax] of Object.entries(KEYWORD_WORDS)) {
