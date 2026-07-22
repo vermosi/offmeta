@@ -53,11 +53,6 @@ const ExampleQueriesCarousel = lazy(() =>
     default: m.ExampleQueriesCarousel,
   })),
 );
-const HowItWorksSection = lazy(() =>
-  import('@/components/HowItWorksSection').then((m) => ({
-    default: m.HowItWorksSection,
-  })),
-);
 const UnderstoodSummary = lazy(() =>
   import('@/components/UnderstoodSummary').then((m) => ({
     default: m.UnderstoodSummary,
@@ -692,11 +687,6 @@ const Index = () => {
               cardCount={cards.length}
             />
 
-            {!hasSearched && (
-              <Suspense fallback={null}>
-                <HowItWorksSection />
-              </Suspense>
-            )}
 
             {!hasSearched && (
               <Suspense fallback={null}>
