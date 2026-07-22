@@ -527,7 +527,17 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
   const parts: string[] = [];
   let residual = lower;
 
+  // 0. Strategy-hate / hoser phrases MUST run before SLANG_MAP so
+  //    "punish treasure decks" doesn't collapse to o:"treasure".
+  for (const { regex, syntax } of STRATEGY_HATE_PATTERNS) {
+    if (regex.test(residual)) {
+      parts.push(syntax);
+      residual = residual.replace(regex, ' ').trim();
+    }
+  }
+
   // 1. Check multi-word keyword phrases first
+
   for (const [phrase, syntax] of Object.entries(KEYWORD_WORDS)) {
     if (phrase.includes(' ') && residual.includes(phrase)) {
       parts.push(syntax);
