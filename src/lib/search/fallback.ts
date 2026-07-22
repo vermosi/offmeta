@@ -797,6 +797,11 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
     parts.push(`(${hateMatches.join(' or ')})`);
   }
 
+  // Normalize connector punctuation (`&`, `,`, `;`, `/`) into spaces so
+  // downstream tokenizers don't treat them as content and leak them into
+  // oracle-text clauses.
+  residual = residual.replace(/[&,;/]+/g, ' ').replace(/\s+/g, ' ').trim();
+
   // 1. Check multi-word keyword phrases first
 
   for (const [phrase, syntax] of Object.entries(KEYWORD_WORDS)) {
@@ -961,7 +966,7 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
   // 11. Clean up filler words from residual
   residual = residual
     .replace(
-      /\b(that|the|with|for|and|or|plus|also|as|well|a|an|in|of|to|make|spells?|bonuses?|reward|casting|gives?|when|dies?|deal|drain|legal|cards?|pieces?|fit|into|style|deck|is|mono|theme|build|strategy|let|me|my|your|from|library)\b/gi,
+      /\b(that|the|with|for|and|or|plus|also|as|well|along|together|combined|besides|coupled|alongside|addition|top|a|an|in|of|to|make|spells?|bonuses?|reward|casting|gives?|when|dies?|deal|drain|legal|cards?|pieces?|fit|into|style|deck|is|mono|theme|build|strategy|let|me|my|your|from|library)\b/gi,
       ' ',
     )
     .replace(/\s+/g, ' ')
