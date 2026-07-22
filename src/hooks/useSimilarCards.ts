@@ -192,10 +192,17 @@ export function useSimilarCards(query: string, fallbackCard?: ScryfallCard | nul
     });
   }, [query, trackEvent]);
 
+  const errorMessage = error
+    ? friendlySimilarErrorMessage(
+        error instanceof Error ? error.message : String(error),
+      )
+    : null;
+
   return {
     similarityData,
     isLoading,
     error,
+    errorMessage,
     activate,
     isDetected: similarityData?.sourceCard != null,
   };
