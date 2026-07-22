@@ -53,8 +53,8 @@ import {
   REQUEST_STAGE_MIN_BUDGET_MS,
   PRE_TRANSLATION_TIMEOUT_MS,
 } from './config.ts';
-import {
 import { withLogging } from '../_shared/logger.ts';
+import {
   enforceRequestGuards,
   handleCorsPreflight,
   parseJsonBody,
@@ -1090,7 +1090,7 @@ serve(withLogging('semantic-search', async (req) => {
             deadlineMs: requestBudget.deadlineMs,
           },
         ),
-      ));
+      );
 
       if (!aiResponse.ok)
         throw new Error(`AI Gateway error: ${aiResponse.status}`);
