@@ -252,7 +252,7 @@ Deno.serve(async (req) => {
   }
 
   // Fire-and-forget retention
-  await supabase.rpc('prune_old_seo_health_checks').catch(() => undefined);
+  try { await supabase.rpc('prune_old_seo_health_checks'); } catch { /* best effort */ }
 
   const criticalRows = rows.filter((r) => r.severity === 'critical');
   const criticals = criticalRows.length;
