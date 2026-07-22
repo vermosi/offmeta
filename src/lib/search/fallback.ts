@@ -259,7 +259,7 @@ const STRATEGY_HATE_PATTERNS: Array<{ regex: RegExp; syntax: string }> = [
   // Tribal / creature-type hate (generic)
   {
     regex: new RegExp(
-      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:tribal|humans?|elves?|goblins?|zombies?|vampires?|merfolk|slivers?|dinosaurs?|cats?|wizards?|warriors?|soldiers?)${HATE_SUFFIX}\b`,
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:tribal|humans?|elf|elves|elfs|goblins?|zombies?|vampires?|merfolk|slivers?|dinosaurs?|cats?|wizards?|warriors?|soldiers?)${HATE_SUFFIX}\b`,
       'i',
     ),
     syntax: '(otag:boardwipe or o:"destroy all creatures" or o:"protection from")',
