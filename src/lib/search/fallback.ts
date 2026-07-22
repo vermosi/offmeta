@@ -372,7 +372,7 @@ const STRATEGY_HATE_PATTERNS: Array<{ regex: RegExp; syntax: string }> = [
  * Verbs: castigar/odiar/detener/parar/contrarrestar/anti
  * Suffixes: "de mazos", "de estrategias", "de jugadores", or bare noun.
  */
-const HATE_VERB_ES = String.raw`(?:castig(?:a|an|ar|ando)|odi(?:a|an|ar)|detien(?:e|en)|detener|par(?:a|an|ar)|contrarrest(?:a|an|ar)|anti[- ]?)`;
+const HATE_VERB_ES = String.raw`(?:castig(?:a|an|ar|ando)|odi(?:a|an|ar)|detien(?:e|en)|detener|par(?:a|an|ar)|contrarrest(?:a|an|ar)|anti-?)`;
 const HATE_SUFFIX_ES = String.raw`(?:\s+(?:de\s+)?(?:mazos?|estrategias?|jugadores?|fichas?))?`;
 const HATE_PREFIX_ES = String.raw`(?:cartas?\s+que\s+)?`;
 // Optional article ("el/la/los/las") OR "mazos/estrategias/jugadores de" wrapper
