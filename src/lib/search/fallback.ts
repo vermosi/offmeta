@@ -666,11 +666,22 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
 
   // 0. Strategy-hate / hoser phrases MUST run before SLANG_MAP so
   //    "punish treasure decks" doesn't collapse to o:"treasure".
+  //    Multi-intent requests like "punish treasure decks and stop tokens"
+  //    collect every matching hate clause, then combine them with OR so
+  //    the compound query surfaces cards that hit either strategy.
+  const hateMatches: string[] = [];
   for (const { regex, syntax } of STRATEGY_HATE_PATTERNS) {
     if (regex.test(residual)) {
-      parts.push(syntax);
+      if (!hateMatches.includes(syntax)) {
+        hateMatches.push(syntax);
+      }
       residual = residual.replace(regex, ' ').trim();
     }
+  }
+  if (hateMatches.length === 1) {
+    parts.push(hateMatches[0]);
+  } else if (hateMatches.length > 1) {
+    parts.push(`(${hateMatches.join(' or ')})`);
   }
 
   // 1. Check multi-word keyword phrases first
