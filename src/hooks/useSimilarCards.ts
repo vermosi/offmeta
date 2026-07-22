@@ -128,6 +128,7 @@ export function useSimilarCards(query: string, fallbackCard?: ScryfallCard | nul
       const sourceCard =
         (await detectCardName(debouncedQuery)) ?? fallbackCard ?? null;
       if (!sourceCard) {
+        recordSimilarNoSource(debouncedQuery);
         writeCache(key, null);
         return null;
       }
