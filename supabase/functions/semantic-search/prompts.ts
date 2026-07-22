@@ -201,7 +201,44 @@ RULE: For stax, use AT MOST one o: clause. Prefer otag:hatebear or otag:pillowfo
 - "extra turn" = otag:extra-turn
 - "untap" / "untapper" / "untap permanents" = otag:untapper
 - "gives flash" / "flash enabler" = otag:gives-flash
-- "sacrifice synergy" / "sac payoffs" = otag:synergy-sacrifice`;
+- "sacrifice synergy" / "sac payoffs" = otag:synergy-sacrifice
+
+=== STRATEGY HATE / HOSERS (CRITICAL - domain reasoning) ===
+When users say "punish/hate/hose/counter/stop/shut down [STRATEGY] decks", they want
+HOSERS for that archetype — NOT cards that ENABLE it. Reason from MTG domain knowledge
+about what mechanic the strategy depends on, then block that mechanic.
+
+Reference mappings (extend by analogy — do NOT just echo the strategy noun):
+- "punish/hate treasure decks" (Treasure = artifact tokens, played for mana via activated abilities)
+  → (otag:artifact-removal or o:"activated abilities of artifacts" or o:"artifacts your opponents control")
+  ✅ Examples: Collector Ouphe, Null Rod, Stony Silence, Vandalblast
+  ❌ NEVER: o:"treasure" alone (that returns treasure MAKERS, the opposite intent)
+- "punish artifact decks" → same as treasure hate above
+- "punish graveyard/reanimator/dredge decks" → (otag:graveyard-hate or o:"exile" o:"graveyard")
+  ✅ Rest in Peace, Leyline of the Void, Bojuka Bog
+- "punish storm/spellslinger/combo decks" → (o:"can\'t cast more than" or o:"whenever" o:"opponent" o:"casts" or otag:hatebear)
+  ✅ Rule of Law, Eidolon of Rhetoric, Damping Sphere
+- "punish token decks" → (o:"destroy all tokens" or o:"exile all tokens" or o:"can\'t create")
+  ✅ Cleansing Nova + token-specific hosers
+- "punish lifegain decks" → o:"can\'t gain life"
+  ✅ Rain of Gore, Erebos
+- "punish ramp/land decks" → (o:"can\'t search" or o:"can\'t play additional lands")
+  ✅ Aven Mindcensor, Archon of Emeria
+- "punish draw/wheel decks" → (o:"whenever" o:"opponent" o:"draws" or o:"skip" o:"draw")
+  ✅ Notion Thief, Narset, Alms Collector
+- "punish tutor decks" → (o:"can\'t search" or o:"search your library" o:"pay")
+  ✅ Aven Mindcensor, Opposition Agent
+- "punish aggro/creature/go-wide decks" → (otag:boardwipe or otag:pillowfort or o:"can\'t attack")
+  ✅ Ghostly Prison, Propaganda, Wrath of God
+- "punish enchantment decks" → otag:enchantment-removal
+- "punish control/counterspell decks" → (o:"can\'t be countered" or otag:hatebear)
+  ✅ Vexing Shusher, Cavern of Souls
+- "punish [tribal — elves/goblins/zombies/etc.] decks" → (o:"destroy all [tribe]" or o:"[tribe]s can\'t")
+  ✅ Engineered Plague-style effects
+
+RULE: The strategy name in a "punish/hate X" query is the TARGET, not the theme.
+Emit hate cards, not enabler cards. If you cannot map the strategy to a hate mechanic,
+prefer otag:hatebear over echoing the strategy word as an o: clause.`;
 
   if (tier === 'simple') {
     return `${coreRules}
