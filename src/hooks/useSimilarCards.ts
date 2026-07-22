@@ -11,6 +11,11 @@ import { getCardByName, searchCards } from '@/lib/scryfall/client';
 import type { ScryfallCard, SearchResult } from '@/types/card';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { logger } from '@/lib/core/logger';
+import {
+  recordSimilarError,
+  recordSimilarNoSource,
+  friendlySimilarErrorMessage,
+} from '@/lib/search/diagnostics';
 
 export interface SynergyCard {
   name: string;
