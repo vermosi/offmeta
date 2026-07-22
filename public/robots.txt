@@ -1,11 +1,26 @@
 # OffMeta - Natural Language Magic Card Search
 # https://offmeta.app
+#
+# Grouping rule: robots.txt parsers pick the single most-specific User-agent
+# group per crawler and many do NOT merge duplicate groups. So every rule for
+# a given UA must live in ONE block below (previously GPTBot / Google-Extended
+# / PerplexityBot had a second "Allow: /ai/" block that most crawlers ignored,
+# leaving the site fully blocked for them).
 
-# Block AI/LLM training crawlers (keeps site accessible for search/browsing agents)
+# Block AI/LLM training crawlers, but keep /ai/ open for AEO on the ones that
+# also power answer engines.
 User-agent: GPTBot
+Allow: /ai/
 Disallow: /
 
 User-agent: Google-Extended
+Allow: /ai/
+Disallow: /
+
+# PerplexityBot does both training + search; keeping /ai/ open preserves
+# answer-engine visibility while blocking training scrapes.
+User-agent: PerplexityBot
+Allow: /ai/
 Disallow: /
 
 User-agent: CCBot
@@ -38,36 +53,19 @@ Disallow: /
 User-agent: Diffbot
 Disallow: /
 
-# PerplexityBot does both training + search; blocking stops both.
-# Remove this block if you want Perplexity search visibility.
-User-agent: PerplexityBot
-Disallow: /
-
-# Allow all other crawlers (Google, Bing, ChatGPT-User, OAI-SearchBot, etc.)
+# Default policy for every other crawler (Googlebot, Bingbot, DuckDuckBot,
+# ChatGPT-User, OAI-SearchBot, etc.)
 User-agent: *
 Allow: /
-Allow: /cards/
-Allow: /search/
-Allow: /ai/
 Disallow: /api/
 # Block legacy parameterised search URLs — redirected to /search/:slug
 Disallow: /?q=
 Disallow: /?*q=
-# Block admin routes from crawlers
+# Block private/admin surface
 Disallow: /admin/
 Disallow: /profile/
 Disallow: /saved/
 Disallow: /reset-password/
-
-# Allow AI crawlers specifically on /ai/ pages for AEO
-User-agent: GPTBot
-Allow: /ai/
-
-User-agent: Google-Extended
-Allow: /ai/
-
-User-agent: PerplexityBot
-Allow: /ai/
 
 # Sitemap location
 Sitemap: https://offmeta.app/sitemap.xml
