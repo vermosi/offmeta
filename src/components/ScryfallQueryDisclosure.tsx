@@ -1,10 +1,8 @@
 /**
  * Collapsible disclosure that hides the generated Scryfall query behind a
- * visible toggle on the results page. Users click "Show Scryfall query" to
- * reveal the underlying compiled query and its editor controls.
- *
- * Toggle state is persisted to localStorage so returning users keep their
- * preference across searches.
+ * subtle inline toggle on the results page. Collapsed state renders as a
+ * quiet, textual affordance (not a boxed row) so it disappears into the
+ * surrounding meta-header until the user asks for it.
  */
 import { useEffect, useState, type ReactNode } from 'react';
 import { ChevronDown, Code2 } from 'lucide-react';
@@ -34,51 +32,43 @@ export function ScryfallQueryDisclosure({
     window.localStorage.setItem(STORAGE_KEY, open ? '1' : '0');
   }, [open]);
 
-  const handleToggle = () => {
-    setOpen((prev) => !prev);
-  };
+  const handleToggle = () => setOpen((prev) => !prev);
 
   const preview =
-    scryfallQuery.length > 64
-      ? `${scryfallQuery.slice(0, 64).trim()}…`
+    scryfallQuery.length > 72
+      ? `${scryfallQuery.slice(0, 72).trim()}…`
       : scryfallQuery;
 
   return (
-    <div className="rounded-lg border border-border/70 bg-card/60">
+    <div className={cn(open && 'rounded-lg border border-border/60 bg-card/40')}>
       <button
         type="button"
         onClick={handleToggle}
         aria-expanded={open}
         aria-controls="scryfall-query-panel"
         className={cn(
-          'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left transition-colors',
-          'hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+          'group inline-flex max-w-full items-center gap-1.5 text-left transition-colors rounded',
+          'text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+          open ? 'w-full px-3 py-2' : 'py-0.5',
         )}
       >
-        <Code2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          {t('search.scryfallQuery.label', 'Scryfall query')}
-        </span>
-        {!open && scryfallQuery && (
-          <code className="min-w-0 flex-1 truncate rounded bg-muted/60 px-1.5 py-0.5 font-mono text-[11px] text-foreground/80">
+        <Code2 className="h-3 w-3 shrink-0" aria-hidden="true" />
+        {!open && scryfallQuery ? (
+          <code className="min-w-0 truncate font-mono text-[11px] text-foreground/70 group-hover:text-foreground/90">
             {preview}
           </code>
+        ) : (
+          <span className="text-[11px] font-medium">
+            {t('search.scryfallQuery.label', 'Scryfall query')}
+          </span>
         )}
-        <span className="ml-auto flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
-          {open
-            ? t('search.scryfallQuery.hide', 'Hide')
-            : t('search.scryfallQuery.show', 'Show')}
-          <ChevronDown
-            className={cn(
-              'h-3.5 w-3.5 transition-transform',
-              open && 'rotate-180',
-            )}
-            aria-hidden="true"
-          />
-        </span>
+        <ChevronDown
+          className={cn('h-3 w-3 shrink-0 transition-transform', open && 'rotate-180')}
+          aria-hidden="true"
+        />
       </button>
       {open && (
-        <div id="scryfall-query-panel" className="border-t border-border/70 p-2 sm:p-3">
+        <div id="scryfall-query-panel" className="border-t border-border/60 p-2 sm:p-3">
           {children}
         </div>
       )}

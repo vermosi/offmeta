@@ -614,50 +614,8 @@ const Index = () => {
           role="main"
         >
           <div className="container-main space-y-3 sm:space-y-6">
-            {showResultsMode && (
-              <div className="sticky top-16 z-20 -mx-3 sm:-mx-4 lg:-mx-6 px-3 sm:px-4 lg:px-6">
-                <div className="animate-reveal rounded-2xl border border-border/70 bg-card/85 backdrop-blur-xl shadow-lg shadow-black/5 px-3 py-2 sm:px-4 sm:py-3">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-                          {t('results.summaryTitle', 'Search results')}
-                        </span>
-                        {hasSearched && totalCards > 0 && (
-                          <span className="text-xs text-muted-foreground tabular-nums">
-                            {t('results.summaryCards', '{count} cards').replace('{count}', totalCards.toLocaleString())}
-                          </span>
-                        )}
-                        {isSearching && (
-                          <span className="text-xs text-muted-foreground">
-                            {t('results.updating', 'Updating results')}
-                          </span>
-                        )}
-                      </div>
-                      <p className="mt-1 truncate text-sm font-medium text-foreground">
-                        {originalQuery || searchQuery || t('search.placeholder')}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <a
-                        href="#search-results"
-                        className="inline-flex items-center justify-center rounded-full border border-border/70 bg-background/70 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-background"
-                      >
-                        {t('results.jumpToResults', 'Jump to results')}
-                      </a>
-                      {hasSearched && (
-                        <a
-                          href="#main-content"
-                          className="inline-flex items-center justify-center rounded-full border border-transparent px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-                        >
-                          {t('results.backToSearch', 'Back to search')}
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Sticky summary bar removed — redundant with the header and results below. */}
+
 
             <div>
               <UnifiedSearchBar
@@ -696,74 +654,74 @@ const Index = () => {
             )}
 
             {showResultsMode && (
-              <div className="animate-reveal flex items-start gap-2">
-                <div className="flex-1 min-w-0 space-y-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="text-lg sm:text-xl font-semibold text-foreground tracking-tight">
-                      {t('search.resultsFor', 'Results for "{query}"').replace(
-                        '{query}',
-                        originalQuery || searchQuery || '',
-                      )}
-                      {hasSearched && totalCards > 0 && (
-                        <span className="text-muted-foreground font-normal ml-1.5">
-                          ({t('results.summaryCards', '{count} cards').replace('{count}', totalCards.toLocaleString())})
-                        </span>
-                      )}
-                    </h1>
-                    <div className="flex items-center gap-1.5">
-                      <Badge variant="secondary" className="text-[10px] uppercase tracking-wide">
-                        {translationSourceLabel}
-                      </Badge>
-                      {typeof translationConfidence === 'number' && (
-                        <Badge variant="outline" className="text-[10px] tabular-nums">
-                          {Math.round(translationConfidence * 100)}%
-                        </Badge>
-                      )}
-                    </div>
+              <div className="animate-reveal space-y-2">
+                {/* One tight header line: count · query · source · save · view query */}
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <h1 className="text-base sm:text-lg font-medium text-foreground tracking-tight min-w-0">
+                    {hasSearched && totalCards > 0 && (
+                      <span className="tabular-nums text-muted-foreground mr-2">
+                        {totalCards.toLocaleString()}
+                      </span>
+                    )}
+                    <span className="text-foreground">
+                      {originalQuery || searchQuery || ''}
+                    </span>
+                  </h1>
+                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                    <span className="uppercase tracking-[0.14em]">{translationSourceLabel}</span>
+                    {typeof translationConfidence === 'number' && (
+                      <span className="tabular-nums">
+                        · {Math.round(translationConfidence * 100)}%
+                      </span>
+                    )}
                   </div>
-                  <ScryfallQueryDisclosure
+                  <div className="ml-auto flex items-center gap-1">
+                    <Suspense fallback={null}>
+                      <SaveSearchButton
+                        naturalQuery={originalQuery}
+                        scryfallQuery={
+                          lastSearchResult?.scryfallQuery || searchQuery
+                        }
+                        filters={activeFilters}
+                        onSaved={() =>
+                          trackFirstSave({
+                            query: originalQuery,
+                            request_id: currentRequestId ?? undefined,
+                          })
+                        }
+                      />
+                    </Suspense>
+                  </div>
+                </div>
+
+                {/* Scryfall query stays fully collapsed by default */}
+                <ScryfallQueryDisclosure
+                  scryfallQuery={(
+                    lastSearchResult?.scryfallQuery || searchQuery
+                  ).trim()}
+                >
+                  <EditableQueryBar
                     scryfallQuery={(
                       lastSearchResult?.scryfallQuery || searchQuery
                     ).trim()}
-                  >
-                    <EditableQueryBar
-                      scryfallQuery={(
-                        lastSearchResult?.scryfallQuery || searchQuery
-                      ).trim()}
-                      confidence={lastSearchResult?.explanation?.confidence}
-                      isLoading={isSearching}
-                      originalQuery={originalQuery}
-                      onRerun={handleRerunEditedQuery}
-                      onRegenerate={handleRegenerateTranslation}
-                      onReportIssue={() => setReportDialogOpen(true)}
-                      validationError={
-                        lastSearchResult?.validationIssues?.length
-                          ? lastSearchResult.validationIssues.join(' • ')
-                          : null
-                      }
-                    />
-                  </ScryfallQueryDisclosure>
-                </div>
-                <div className="pt-[26px]">
-                  <SaveSearchButton
-                    naturalQuery={originalQuery}
-                    scryfallQuery={
-                      lastSearchResult?.scryfallQuery || searchQuery
-                    }
-                    filters={activeFilters}
-                    onSaved={() =>
-                      trackFirstSave({
-                        query: originalQuery,
-                        request_id: currentRequestId ?? undefined,
-                      })
+                    confidence={lastSearchResult?.explanation?.confidence}
+                    isLoading={isSearching}
+                    originalQuery={originalQuery}
+                    onRerun={handleRerunEditedQuery}
+                    onRegenerate={handleRegenerateTranslation}
+                    onReportIssue={() => setReportDialogOpen(true)}
+                    validationError={
+                      lastSearchResult?.validationIssues?.length
+                        ? lastSearchResult.validationIssues.join(' • ')
+                        : null
                     }
                   />
-                </div>
+                </ScryfallQueryDisclosure>
               </div>
             )}
 
-            {/* Results Tabs */}
-            {hasSearched && !isSearching && (
+            {/* Results Tabs — only show when there's more than one tab to switch to */}
+            {hasSearched && !isSearching && (showSimilarTab || showDeckIdeasTab || showExplanationTab) && (
               <div className="animate-reveal">
                 <ResultsTabs
                   activeTab={activeTab}
@@ -774,6 +732,7 @@ const Index = () => {
                 />
               </div>
             )}
+
 
             {/* Primary toolbar: filters, sort, view — kept adjacent to results */}
             {cards.length > 0 && !isSearching && activeTab === 'cards' && (
