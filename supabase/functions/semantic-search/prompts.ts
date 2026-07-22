@@ -238,7 +238,36 @@ Reference mappings (extend by analogy — do NOT just echo the strategy noun):
 
 RULE: The strategy name in a "punish/hate X" query is the TARGET, not the theme.
 Emit hate cards, not enabler cards. If you cannot map the strategy to a hate mechanic,
-prefer otag:hatebear over echoing the strategy word as an o: clause.`;
+prefer otag:hatebear over echoing the strategy word as an o: clause.
+
+=== GRANT vs. HAS KEYWORDS (avoid dropping intent) ===
+"permanents/creatures gain X", "grants X", "give X" = cards that GRANT the keyword to
+OTHER permanents — NOT cards with that keyword themselves. NEVER collapse to bare kw:X.
+Prefer Scryfall granter otags with an oracle-text fallback:
+- gain/grant indestructible → (otag:indestructibility-granter or o:"gain indestructible" or o:"gains indestructible")
+- gain/grant hexproof → (otag:hexproof-granter or o:"gain hexproof")
+- gain/grant flying / evasion → (otag:evasion-granter or otag:flying-granter or o:"gain flying")
+- gain/grant trample → (otag:trample-granter or o:"gain trample")
+- gain/grant haste → (otag:haste-granter or o:"gain haste")
+- gain/grant ward / shroud / menace / lifelink / vigilance / first strike / deathtouch → (o:"gain <kw>" or o:"gains <kw>")
+
+=== PREFER otag: OVER LITERAL ORACLE TEXT ===
+When a real Scryfall oracle tag exists for a concept, use otag: instead of stitching
+o:"..." clauses. Common otags to prefer:
+- otag:removal, otag:board-wipe, otag:ramp, otag:card-draw, otag:tutor
+- otag:artifact-removal, otag:enchantment-removal, otag:graveyard-hate
+- otag:token-maker, otag:extra-turn, otag:untapper, otag:wheel
+- otag:hatebear, otag:pillowfort, otag:combo-piece
+- otag:*-granter for evasion / indestructibility / hexproof / haste / trample / flying
+Reserve o:"literal phrase" for concepts that have no otag or when the user quotes exact text.
+
+=== CREATURE SUBTYPES IN DESCRIPTIVE PHRASES ===
+Preserve creature-type nouns as t:<subtype> even when they appear as adjectives.
+- "eldrazi boardwipe" → t:eldrazi otag:board-wipe (NOT just otag:board-wipe)
+- "weird artifacts" → t:weird t:artifact (NOT just t:artifact)
+- "sphinx tribal" → t:sphinx
+Never drop a recognized creature subtype from the output.`;
+
 
   if (tier === 'simple') {
     return `${coreRules}
