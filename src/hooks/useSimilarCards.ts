@@ -94,7 +94,7 @@ export function useSimilarCards(query: string, fallbackCard?: ScryfallCard | nul
         synergyCards: data.synergyCards || [],
       };
     },
-    enabled: enabled && !!query.trim(),
+    enabled: enabled && (!!query.trim() || !!fallbackCard),
     staleTime: 10 * 60 * 1000, // 10 min
     gcTime: 30 * 60 * 1000,
     retry: false,
