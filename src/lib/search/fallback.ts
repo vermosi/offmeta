@@ -5,6 +5,8 @@
  * @module lib/search/fallback
  */
 
+import { recordStrategyHate } from './diagnostics';
+
 /**
  * Pre-translated queries for known guide and archetype searches.
  * These bypass all parsing and return the exact Scryfall query.
