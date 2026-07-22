@@ -270,11 +270,14 @@ describe('buildClientFallbackQuery — property-based invariants', () => {
         fc.oneof(hatePhraseArb, composedPhraseArb, adversarialArb),
         (input) => {
           const q = buildClientFallbackQuery(input);
-          // Split on whitespace outside quotes and parens — cheap heuristic
-          // by stripping quoted/parenthesized regions first.
-          const stripped = q
-            .replace(/\([^()]*\)/g, ' ')
-            .replace(/"[^"]*"/g, ' ');
+          // Recursively strip all quoted regions and parenthesized groups
+          // (Boolean connectives are only allowed inside those regions).
+          let stripped = q.replace(/"[^"]*"/g, ' ');
+          let prev: string;
+          do {
+            prev = stripped;
+            stripped = stripped.replace(/\([^()]*\)/g, ' ');
+          } while (stripped !== prev);
           const tokens = stripped.split(/\s+/).filter(Boolean);
           for (const t of tokens) {
             expect(['or', 'and', 'not'], `bare boolean token in ${q}`).not.toContain(t.toLowerCase());
@@ -284,4 +287,5 @@ describe('buildClientFallbackQuery — property-based invariants', () => {
       { numRuns: 300 },
     );
   });
+
 });
