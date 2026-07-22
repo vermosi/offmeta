@@ -44,7 +44,7 @@ async function detectCardName(query: string): Promise<ScryfallCard | null> {
   }
 }
 
-export function useSimilarCards(query: string) {
+export function useSimilarCards(query: string, fallbackCard?: ScryfallCard | null) {
   const { trackEvent } = useAnalytics();
   const [enabled, setEnabled] = useState(false);
 
@@ -53,10 +53,12 @@ export function useSimilarCards(query: string) {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['similar-cards', query],
+    queryKey: ['similar-cards', query, fallbackCard?.id ?? null],
     queryFn: async (): Promise<SimilarityData | null> => {
-      const sourceCard = await detectCardName(query);
+      const sourceCard = (await detectCardName(query)) ?? fallbackCard ?? null;
       if (!sourceCard) return null;
+
+
 
       // Call edge function for similarity queries + AI synergy
       const { data, error: fnError } = await supabase.functions.invoke(
