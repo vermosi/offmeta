@@ -1090,7 +1090,7 @@ serve(withLogging('semantic-search', async (req) => {
             deadlineMs: requestBudget.deadlineMs,
           },
         ),
-      ));
+      );
 
       if (!aiResponse.ok)
         throw new Error(`AI Gateway error: ${aiResponse.status}`);
