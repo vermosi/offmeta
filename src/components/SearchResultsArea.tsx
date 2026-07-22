@@ -418,9 +418,11 @@ export function SearchResultsArea({
             query={originalQuery}
             active={activeTab === 'similar'}
             onCardClick={handleCardClick}
+            fallbackCard={cards[0] ?? null}
           />
         </Suspense>
       )}
+
 
       {/* Deck Ideas tab */}
       {activeTab === 'deck-ideas' && (
