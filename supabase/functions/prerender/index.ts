@@ -576,6 +576,87 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    // Match /guides/:slug
+    const guideMatch = path.match(/^\/guides\/([a-z0-9-]+)$/);
+    if (guideMatch) {
+      const slug = guideMatch[1];
+      const guide = getGuideMetaBySlug(slug);
+      if (!guide) {
+        return new Response(buildFullHtml({
+          title: 'Guide not found | OffMeta',
+          description: 'This OffMeta search guide could not be found.',
+          canonicalUrl: `${SITE_URL}/guides`,
+          image: OG_IMAGE_DEFAULT,
+          jsonLd: '{}',
+          bodyContent: '<h1>Guide not found</h1><p><a href="' + SITE_URL + '/guides">Browse all guides</a></p>',
+          noindex: true,
+        }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300' },
+        });
+      }
+      const canonicalUrl = `${SITE_URL}/guides/${slug}`;
+      const jsonLd = JSON.stringify({
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'Article',
+            headline: guide.heading,
+            description: guide.description,
+            url: canonicalUrl,
+            author: { '@type': 'Organization', name: 'OffMeta' },
+            publisher: { '@type': 'Organization', name: 'OffMeta', url: SITE_URL },
+          },
+          {
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'OffMeta', item: SITE_URL },
+              { '@type': 'ListItem', position: 2, name: 'Guides', item: `${SITE_URL}/guides` },
+              { '@type': 'ListItem', position: 3, name: guide.heading, item: canonicalUrl },
+            ],
+          },
+        ],
+      });
+      return new Response(buildFullHtml({
+        title: guide.title,
+        description: guide.description,
+        canonicalUrl,
+        image: OG_IMAGE_DEFAULT,
+        jsonLd,
+        bodyContent: `
+          <nav aria-label="Breadcrumb"><a href="${SITE_URL}">OffMeta</a> / <a href="${SITE_URL}/guides">Guides</a> / <span>${escapeHtml(guide.heading)}</span></nav>
+          <h1>${escapeHtml(guide.heading)}</h1>
+          <p>${escapeHtml(guide.description)}</p>
+          <p><a href="${canonicalUrl}">Read the full guide on OffMeta →</a></p>
+        `,
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600, s-maxage=86400' },
+      });
+    }
+
+    // Match /guides (index)
+    if (path === '/guides' || path === '/guides/') {
+      const canonicalUrl = `${SITE_URL}/guides`;
+      const title = 'MTG Search Guides — Natural Language Card Finder | OffMeta';
+      const description = 'Learn how to search Magic: The Gathering cards in plain English. 10 free guides covering colors, tribes, formats, budget, keywords, ramp, aristocrats and more.';
+      const listHtml = GUIDES_META.map((g) => `<li><a href="${SITE_URL}/guides/${g.slug}">${escapeHtml(g.heading)}</a> — ${escapeHtml(g.description)}</li>`).join('');
+      const jsonLd = JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        itemListElement: GUIDES_META.map((g, i) => ({
+          '@type': 'ListItem', position: i + 1, name: g.heading, url: `${SITE_URL}/guides/${g.slug}`,
+        })),
+      });
+      return new Response(buildFullHtml({
+        title, description, canonicalUrl, image: OG_IMAGE_DEFAULT, jsonLd,
+        bodyContent: `<h1>OffMeta Search Guides</h1><p>${escapeHtml(description)}</p><ul>${listHtml}</ul>`,
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600, s-maxage=86400' },
+      });
+    }
+
     return new Response(JSON.stringify({ error: 'Unknown path' }), {
       status: 404,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
