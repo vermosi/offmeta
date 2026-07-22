@@ -1203,6 +1203,22 @@ export type Database = {
       }
       get_conversion_funnel: { Args: { days_back?: number }; Returns: Json }
       get_deck_vote_count: { Args: { target_deck_id: string }; Returns: number }
+      get_edge_function_status: {
+        Args: never
+        Returns: {
+          active: boolean
+          function_name: string
+          jobid: number
+          jobname: string
+          last_http_at: string
+          last_http_error: string
+          last_http_status_code: number
+          last_return_message: string
+          last_run_at: string
+          last_run_status: string
+          schedule: string
+        }[]
+      }
       get_missing_oracle_ids: {
         Args: never
         Returns: {

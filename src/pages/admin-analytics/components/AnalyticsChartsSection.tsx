@@ -22,6 +22,7 @@ import { BarRow, StatCard } from '@/pages/admin-analytics/components/AnalyticsPr
 import { EngagementMetricsPanel } from '@/pages/admin-analytics/components/EngagementMetricsPanel';
 import { ConversionFunnelPanel } from '@/pages/admin-analytics/components/ConversionFunnelPanel';
 import { EdgeFunctionTriggerPanel } from '@/pages/admin-analytics/components/EdgeFunctionTriggerPanel';
+import { EdgeFunctionStatusPanel } from '@/pages/admin-analytics/components/EdgeFunctionStatusPanel';
 import { SystemStatusPanel } from '@/pages/admin-analytics/components/SystemStatusPanel';
 import { SeoHealthPanel } from '@/pages/admin-analytics/components/SeoHealthPanel';
 import { HitRatePanel } from '@/pages/admin-analytics/components/HitRatePanel';
@@ -119,6 +120,7 @@ export function AnalyticsChartsSection({ data, days }: AnalyticsChartsSectionPro
       <EngagementMetricsPanel days={days} />
       <ConversionFunnelPanel days={days} />
       <EdgeFunctionTriggerPanel />
+      <EdgeFunctionStatusPanel />
       <SystemStatusPanel />
       <SeoHealthPanel />
       <HitRatePanel days={days} />
