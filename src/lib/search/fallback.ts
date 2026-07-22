@@ -136,6 +136,102 @@ const SLANG_MAP: Record<string, string> = {
   'mono green': 'id<=g',
 };
 
+/**
+ * Strategy-hate / hoser patterns.
+ * Match "cards that punish/hate/hose/stop/shut down X decks" BEFORE
+ * SLANG_MAP so we don't collapse "punish treasure decks" → o:"treasure".
+ * These are used by the client-side fallback when the AI edge times out.
+ */
+const HATE_VERB = String.raw`(?:punish(?:es|ing)?|hate|hates|hoses?|hosed|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)`;
+const HATE_SUFFIX = String.raw`(?:\s+(?:decks?|strateg(?:y|ies)|players?|based|token))?`;
+const STRATEGY_HATE_PATTERNS: Array<{ regex: RegExp; syntax: string }> = [
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:treasure|artifact(?:\s+token)?|affinity|mud|urza)${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax:
+      '(otag:artifact-removal or o:"activated abilities of artifacts" or o:"artifacts your opponents control" or o:"noncreature artifacts")',
+  },
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:graveyard|reanimator|reanimation|dredge|mill|self[- ]?mill)${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax:
+      '(otag:graveyard-hate or (o:"exile" o:"graveyard") or o:"can\'t be cast from")',
+  },
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:storm|spellslinger|spells?|instants?\s+and\s+sorceries?|combo)${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax:
+      '(o:"can\'t cast more than" or (o:"whenever" o:"opponent" o:"casts") or otag:hatebear or (o:"spells cost" o:"more"))',
+  },
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?tokens?${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax: '(o:"tokens can\'t" or o:"exile all tokens" or o:"destroy all tokens")',
+  },
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:life\s?gain|life)${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax:
+      '(o:"can\'t gain life" or o:"lose life instead" or (o:"whenever" o:"gains life"))',
+  },
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:ramp|land[- ]?ramp|lands|mana)${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax:
+      '(o:"can\'t search" or o:"can\'t play additional lands" or (o:"skip" o:"land") or otag:hatebear)',
+  },
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?tutors?${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax: '(o:"can\'t search" or otag:hatebear)',
+  },
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:draw|card[- ]?draw|wheel|blue)${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax:
+      '((o:"whenever" o:"opponent" o:"draws") or (o:"skip" o:"draw") or o:"can\'t draw more than" or otag:hatebear)',
+  },
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:aggro|creature|go[- ]?wide|weenie|swarm)${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax: '(otag:boardwipe or o:"deals damage to each creature")',
+  },
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?enchantments?${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax: '(o:"destroy" o:"enchantment" or o:"exile" o:"enchantment")',
+  },
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:control|counterspell|counter\s?magic|permission)${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax:
+      '(o:"can\'t be countered" or (o:"whenever" o:"opponent" o:"counters") or otag:hatebear)',
+  },
+];
+
+
 const COLOR_WORDS: Record<string, string> = {
   white: 'c:w',
   blue: 'c:u',
@@ -431,7 +527,17 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
   const parts: string[] = [];
   let residual = lower;
 
+  // 0. Strategy-hate / hoser phrases MUST run before SLANG_MAP so
+  //    "punish treasure decks" doesn't collapse to o:"treasure".
+  for (const { regex, syntax } of STRATEGY_HATE_PATTERNS) {
+    if (regex.test(residual)) {
+      parts.push(syntax);
+      residual = residual.replace(regex, ' ').trim();
+    }
+  }
+
   // 1. Check multi-word keyword phrases first
+
   for (const [phrase, syntax] of Object.entries(KEYWORD_WORDS)) {
     if (phrase.includes(' ') && residual.includes(phrase)) {
       parts.push(syntax);
