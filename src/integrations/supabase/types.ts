@@ -1283,6 +1283,7 @@ export type Database = {
           image_url: string
         }[]
       }
+      get_system_status: { Args: never; Returns: Json }
       get_zero_result_candidates: {
         Args: {
           max_results?: number
