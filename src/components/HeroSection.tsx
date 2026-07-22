@@ -31,7 +31,7 @@ export function HeroSection() {
           id="hero-heading"
           className="mb-4 sm:mb-6 text-foreground text-4xl sm:text-6xl lg:text-7xl xl:text-[5.25rem] font-semibold tracking-tighter leading-[1.02]"
         >
-          <span className="sr-only">OffMeta — Natural Language MTG Search. </span>
+          
           {t('hero.title', 'Find the card,')}
           <br className="hidden sm:block" />{' '}
           <span className="text-aurora font-bold">
