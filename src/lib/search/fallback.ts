@@ -653,9 +653,12 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
     return PRETRANSLATED[lower];
   }
 
-  // Check if this looks like a card name — use exact name search
+  // Check if this looks like a card name — use exact name search.
+  // Strip characters that would break Scryfall's `!"..."` exact-name syntax.
   if (isLikelyCardName(naturalQuery)) {
-    return `!"${naturalQuery.trim()}"`;
+    const safe = naturalQuery.trim().replace(/["()]/g, '').replace(/\s+/g, ' ').trim();
+    if (safe) return `!"${safe}"`;
+    return '';
   }
 
   const parts: string[] = [];
@@ -855,7 +858,9 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
 
   // If nothing was extracted, return original as a name search
   if (parts.length === 0) {
-    return `!"${naturalQuery.trim()}"`;
+    const safe = naturalQuery.trim().replace(/["()]/g, '').replace(/\s+/g, ' ').trim();
+    if (safe) return `!"${safe}"`;
+    return '';
   }
 
   return parts.join(' ');
