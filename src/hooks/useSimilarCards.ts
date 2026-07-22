@@ -150,9 +150,15 @@ export function useSimilarCards(query: string, fallbackCard?: ScryfallCard | nul
       );
 
       if (fnError || !data?.success) {
+        const reason =
+          fnError?.message ||
+          (typeof data?.error === 'string' ? data.error : null) ||
+          'Similarity edge function returned an error';
         logger.warn('Card similarity fetch failed', fnError || data?.error);
-        // Don't cache transient failures — allow a retry on next activation.
-        return null;
+        recordSimilarError(debouncedQuery, fallbackId, reason, fnError || data?.error);
+        // Throw so react-query surfaces `error` to the UI. We deliberately
+        // don't cache transient failures — retry on next activation.
+        throw new Error(reason);
       }
 
       // Fetch similar and budget results from Scryfall
