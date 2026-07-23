@@ -115,8 +115,27 @@ async function provisionNonAdminUser(): Promise<string | null> {
   return pwJson?.access_token ?? null;
 }
 
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
+  // Restrict this diagnostic harness to service-role callers only. Without
+  // this gate, any anonymous caller could trigger provisionNonAdminUser()
+  // and spam the auth system with junk accounts.
+  const authHeader = req.headers.get('Authorization') ?? '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  if (!token || !timingSafeEqual(token, SERVICE_ROLE_KEY)) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
 
   const results: CheckResult[] = [];
 
