@@ -61,7 +61,7 @@ export function ScryfallComparison({ onTrySearch }: ScryfallComparisonProps) {
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-medium border border-border/60 bg-card/50 text-muted-foreground mb-3">
             {t(
               'compare.pill',
-              'Scryfall power, without the syntax',
+              'Scryfall power, plain English',
             )}
           </span>
           <h2
@@ -76,7 +76,7 @@ export function ScryfallComparison({ onTrySearch }: ScryfallComparisonProps) {
           <p className="mt-3 text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
             {t(
               'compare.subheading',
-              'Scryfall is the source of truth we search — but its query language rewards experts. OffMeta lets anyone ask the same questions in plain English, then shows the exact query it built.',
+              'Scryfall is the source of truth — but its query language rewards experts. OffMeta lets anyone ask in plain English, then shows the exact query it built.',
             )}
           </p>
         </div>

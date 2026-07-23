@@ -22,7 +22,7 @@ const ABOUT_META = {
 const DEFAULT_META = {
   title: 'OffMeta — Natural Language MTG Card Search',
   description:
-    'Type what you mean and find Magic cards instantly. No syntax required.',
+    'Find Magic cards by typing what you mean. No syntax required.',
   url: 'https://offmeta.app/',
   image: 'https://offmeta.app/og-image.png',
 } as const;

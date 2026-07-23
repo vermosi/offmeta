@@ -45,7 +45,7 @@ export function SeoManager({
       applySeoMeta({
         title: 'Natural Language MTG Card Search | OffMeta',
         description:
-          "Search Magic: The Gathering cards in plain English. Type what you mean — 'cheap green ramp', 'commander wipes under $5' — and get real Scryfall results.",
+          'Search Magic: The Gathering cards in plain English. Type what you mean and get real Scryfall results.',
         url: 'https://offmeta.app/',
         type: 'website',
         image: 'https://offmeta.app/og-image.png',
