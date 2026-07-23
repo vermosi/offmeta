@@ -69,7 +69,7 @@ export function ExplainCompilationPanel({
           <div className="rounded-lg border border-border/40 bg-background/60 px-3 py-2 text-xs text-muted-foreground">
             {t(
               'explain.summary',
-              'OffMeta mapped your wording into concrete search signals, then translated those signals into Scryfall syntax.',
+              'OffMeta mapped your wording into search signals, then built the exact Scryfall query.',
             )}
           </div>
           <div className="grid gap-3 sm:grid-cols-2 text-sm">

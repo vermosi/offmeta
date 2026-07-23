@@ -62,10 +62,10 @@ export function ExampleQueriesCarousel({
       key: 'translate',
       icon: Sparkles,
       label: t('examples.step2Label', 'Translate'),
-      hint: t(
-        'examples.step2Hint',
-        'See how slang and concepts compile to Scryfall syntax.',
-      ),
+        hint: t(
+          'examples.step2Hint',
+          'See how slang and concepts become Scryfall queries.',
+        ),
       examples: [
         'ramp spells in green',
         'ETB creatures under 3 mana',
