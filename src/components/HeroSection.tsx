@@ -39,11 +39,20 @@ export function HeroSection() {
           </span>
         </h1>
 
-        <p className="text-sm sm:text-lg text-muted-foreground max-w-xl mx-auto text-center leading-relaxed whitespace-pre-line">
-          {t(
-            'hero.subtitleCompact',
-            'Search Magic: The Gathering cards using natural language.\nNo more regex, no more cryptic operators.',
-          )}
+        <p
+          id="hero-subtitle"
+          aria-describedby="hero-heading"
+          className="text-base sm:text-lg text-foreground/85 max-w-xl mx-auto text-center leading-relaxed"
+        >
+          <span className="block">
+            {t(
+              'hero.subtitleLine1',
+              'Search Magic: The Gathering cards using natural language.',
+            )}
+          </span>
+          <span className="block">
+            {t('hero.subtitleAccent', 'No more regex, no more cryptic operators.')}
+          </span>
         </p>
 
         <div className="mt-7 sm:mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
