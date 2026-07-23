@@ -61,9 +61,9 @@ export default function LandingPage() {
             <span className="text-accent">plain English</span>
           </h1>
 
-          <p className="mx-auto max-w-3xl text-sm leading-relaxed text-muted-foreground sm:text-lg">
+          <p className="mx-auto max-w-3xl whitespace-pre-line text-sm leading-relaxed text-muted-foreground sm:text-lg">
             Describe what you want, see the exact Scryfall query, and jump
-            straight to real card results. OffMeta helps you search faster
+            straight to real card results.{'\n'}OffMeta helps you search faster
             without giving up control.
           </p>
 
@@ -88,8 +88,7 @@ export default function LandingPage() {
                 See the real query
               </h2>
               <p className="text-sm text-muted-foreground">
-                OffMeta shows the Scryfall syntax it generated so you can edit
-                it yourself.
+                OffMeta shows the query it built so you can edit it yourself.
               </p>
             </div>
 
@@ -100,7 +99,7 @@ export default function LandingPage() {
               </h2>
               <p className="text-sm text-muted-foreground">
                 Search, refine, and open card results without memorizing
-                Scryfall operators.
+                operators.
               </p>
             </div>
           </div>
