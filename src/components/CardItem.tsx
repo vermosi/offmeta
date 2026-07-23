@@ -121,7 +121,7 @@ export const CardItem = memo(function CardItem({
         onClick={onClick}
         tabIndex={tabIndex}
         aria-label={`View details for ${displayName}`}
-        className="absolute inset-0 z-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-transform duration-200 hover:scale-[1.02]"
+        className="absolute inset-0 z-10 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-transform duration-200 hover:scale-[1.02]"
       />
       {imgError ? (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4 text-center">
