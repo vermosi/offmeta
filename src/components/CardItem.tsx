@@ -84,12 +84,7 @@ export const CardItem = memo(function CardItem({
   const { trackAffiliateClick } = useAnalytics();
   const { tcgplayerAffiliateBase } = useAffiliateConfig();
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      onClick();
-    }
-  };
+  // Native <button> handles Enter/Space activation.
 
   const manaCost = getManaCost(card);
   const price = formatPrice(card);
