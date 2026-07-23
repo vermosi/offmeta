@@ -243,6 +243,7 @@ export function SearchFilters({
         }
       >
         <SelectTrigger
+          aria-label={t('filters.format', 'Format')}
           className={cn(
             'w-[110px] sm:w-[140px] h-8 sm:h-9 text-xs sm:text-sm',
             filters.format && 'border-primary/50 bg-primary/5',
