@@ -21,7 +21,7 @@ export function SearchFeedback({
       <Button
         variant="ghost"
         size="sm"
-        className="h-8 px-2 gap-1.5 text-xs text-muted-foreground hover:text-foreground rounded-full"
+        className="h-8 px-2 gap-1.5 text-xs text-foreground/80 hover:text-foreground rounded-full"
         aria-label={t('feedback.reportSearchIssue', 'Report search issue')}
         title={t('feedback.reportSearchIssue', 'Report search issue')}
         data-testid="search-feedback-trigger"
