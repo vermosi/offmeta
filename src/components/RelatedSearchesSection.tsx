@@ -161,7 +161,7 @@ export function RelatedSearchesSection({
         <Compass className="h-4 w-4 text-accent" aria-hidden="true" />
         <h2 className="text-sm font-semibold text-foreground">
           {t('results.relatedSearches.title', 'Related searches')}
-        </h3>
+        </h2>
         <span className="text-xs text-muted-foreground">
           {t('results.relatedSearches.subtitle', 'One-click refine')}
         </span>
