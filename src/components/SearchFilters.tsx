@@ -453,7 +453,7 @@ export function SearchFilters({
           setFilters((prev) => ({ ...prev, sortBy: value }))
         }
       >
-        <SelectTrigger className="w-[130px] sm:w-[160px] h-8 sm:h-9 text-xs sm:text-sm">
+        <SelectTrigger aria-label={t('filters.sort')} className="w-[130px] sm:w-[160px] h-8 sm:h-9 text-xs sm:text-sm">
           <ArrowUpDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2 opacity-50 shrink-0" />
           <SelectValue placeholder={t('filters.sort')} />
         </SelectTrigger>
