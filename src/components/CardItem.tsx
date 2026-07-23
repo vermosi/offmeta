@@ -139,7 +139,7 @@ export const CardItem = memo(function CardItem({
           decoding="async"
           width={488}
           height={680}
-          className="pointer-events-none absolute inset-0 w-full h-full object-cover"
+          className="pointer-events-none absolute inset-0 z-0 w-full h-full object-cover"
           onError={() => setImgError(true)}
         />
       )}
