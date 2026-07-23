@@ -54,7 +54,7 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
         <Button
           variant="ghost"
           size="sm"
-          className="h-8 px-2 gap-1.5 text-xs rounded-full text-muted-foreground hover:text-foreground"
+          className="h-8 px-2 gap-1.5 text-xs rounded-full text-foreground/80 hover:text-foreground"
           aria-label={t('help.ariaLabel', 'Search help')}
           data-testid="search-help-trigger"
         >
