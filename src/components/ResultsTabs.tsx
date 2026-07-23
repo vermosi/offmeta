@@ -4,7 +4,7 @@
  * @module components/ResultsTabs
  */
 
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 import { Search, Sparkles, Lightbulb, BookOpen } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 
