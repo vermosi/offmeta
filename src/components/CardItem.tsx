@@ -118,16 +118,19 @@ export const CardItem = memo(function CardItem({
 
   return (
     <div
-      onClick={onClick}
-      onKeyDown={handleKeyDown}
-      role="button"
-      tabIndex={tabIndex}
       data-testid="search-result-card"
-      className="group relative w-full aspect-[2.5/3.5] rounded-xl overflow-hidden bg-secondary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-transform duration-200 hover:scale-[1.02]"
-      aria-label={`View details for ${displayName}`}
+      className="group relative w-full aspect-[2.5/3.5] rounded-xl overflow-hidden bg-secondary"
     >
+      <button
+        type="button"
+        onClick={onClick}
+        onKeyDown={handleKeyDown}
+        tabIndex={tabIndex}
+        aria-label={`View details for ${displayName}`}
+        className="absolute inset-0 z-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-transform duration-200 hover:scale-[1.02]"
+      />
       {imgError ? (
-        <div className="w-full h-full flex items-center justify-center p-4 text-center">
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4 text-center">
           <span className="text-sm text-muted-foreground font-medium">
             {displayName}
           </span>
@@ -137,12 +140,12 @@ export const CardItem = memo(function CardItem({
           src={imageUrl}
           srcSet={imageSrcSet}
           sizes="(min-width: 1280px) 280px, (min-width: 768px) 240px, 161px"
-          alt={displayName}
+          alt=""
           loading="lazy"
           decoding="async"
           width={488}
           height={680}
-          className="w-full h-full object-cover"
+          className="pointer-events-none absolute inset-0 w-full h-full object-cover"
           onError={() => setImgError(true)}
         />
       )}
