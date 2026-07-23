@@ -159,7 +159,7 @@ export function RelatedSearchesSection({
     >
       <div className="flex items-center gap-2">
         <Compass className="h-4 w-4 text-accent" aria-hidden="true" />
-        <h3 className="text-sm font-semibold text-foreground">
+        <h2 className="text-sm font-semibold text-foreground">
           {t('results.relatedSearches.title', 'Related searches')}
         </h3>
         <span className="text-xs text-muted-foreground">
