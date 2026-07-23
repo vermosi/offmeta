@@ -258,8 +258,7 @@ export const CardItem = memo(function CardItem({
 
       {/* Info overlay — always visible on mobile, hover on desktop */}
       <div
-        className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-overlay/85 via-overlay/50 to-transparent pt-6 sm:pt-8 pb-1.5 sm:pb-2 px-2 sm:px-2.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100 transition-opacity duration-200 pointer-events-none"
-        aria-hidden="true"
+        className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-overlay/85 via-overlay/50 to-transparent pt-6 sm:pt-8 pb-1.5 sm:pb-2 px-2 sm:px-2.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity duration-200 pointer-events-none"
       >
         <div className="flex items-end justify-between gap-1">
           <div className="min-w-0 flex-1">
