@@ -42,7 +42,7 @@ export function HeroSection() {
         <p
           id="hero-subtitle"
           aria-describedby="hero-heading"
-          className="text-base sm:text-lg text-foreground/85 max-w-xl mx-auto text-center leading-relaxed"
+          className="text-base sm:text-lg text-foreground/90 max-w-xl mx-auto text-center leading-relaxed"
         >
           <span className="block">
             {t(
