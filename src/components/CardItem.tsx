@@ -119,7 +119,6 @@ export const CardItem = memo(function CardItem({
       <button
         type="button"
         onClick={onClick}
-        onKeyDown={handleKeyDown}
         tabIndex={tabIndex}
         aria-label={`View details for ${displayName}`}
         className="absolute inset-0 z-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-transform duration-200 hover:scale-[1.02]"
