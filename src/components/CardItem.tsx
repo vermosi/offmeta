@@ -5,7 +5,7 @@
  */
 
 import { memo, useState, useCallback } from 'react';
-import type { KeyboardEvent, MouseEvent } from 'react';
+import type { MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import type { ScryfallCard } from '@/types/card';
 import { getCardImage } from '@/lib/scryfall/client';
@@ -84,12 +84,7 @@ export const CardItem = memo(function CardItem({
   const { trackAffiliateClick } = useAnalytics();
   const { tcgplayerAffiliateBase } = useAffiliateConfig();
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      onClick();
-    }
-  };
+  // Native <button> handles Enter/Space activation.
 
   const manaCost = getManaCost(card);
   const price = formatPrice(card);
@@ -118,16 +113,18 @@ export const CardItem = memo(function CardItem({
 
   return (
     <div
-      onClick={onClick}
-      onKeyDown={handleKeyDown}
-      role="button"
-      tabIndex={tabIndex}
       data-testid="search-result-card"
-      className="group relative w-full aspect-[2.5/3.5] rounded-xl overflow-hidden bg-secondary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-transform duration-200 hover:scale-[1.02]"
-      aria-label={`View details for ${displayName}`}
+      className="group relative w-full aspect-[2.5/3.5] rounded-xl overflow-hidden bg-secondary"
     >
+      <button
+        type="button"
+        onClick={onClick}
+        tabIndex={tabIndex}
+        aria-label={`View details for ${displayName}`}
+        className="absolute inset-0 z-10 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-transform duration-200 hover:scale-[1.02]"
+      />
       {imgError ? (
-        <div className="w-full h-full flex items-center justify-center p-4 text-center">
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4 text-center">
           <span className="text-sm text-muted-foreground font-medium">
             {displayName}
           </span>
@@ -137,12 +134,12 @@ export const CardItem = memo(function CardItem({
           src={imageUrl}
           srcSet={imageSrcSet}
           sizes="(min-width: 1280px) 280px, (min-width: 768px) 240px, 161px"
-          alt={displayName}
+          alt=""
           loading="lazy"
           decoding="async"
           width={488}
           height={680}
-          className="w-full h-full object-cover"
+          className="pointer-events-none absolute inset-0 z-0 w-full h-full object-cover"
           onError={() => setImgError(true)}
         />
       )}
@@ -150,7 +147,7 @@ export const CardItem = memo(function CardItem({
       {/* Owned badge */}
       {isOwned && (
         <div
-          className="absolute top-1.5 left-1.5 z-10 h-5 w-5 rounded-full bg-success/90 flex items-center justify-center shadow-sm"
+          className="absolute top-1.5 left-1.5 z-20 h-5 w-5 rounded-full bg-success/90 flex items-center justify-center shadow-sm"
           aria-label="Owned"
         >
           <svg
@@ -177,7 +174,7 @@ export const CardItem = memo(function CardItem({
           .replace('{count}', String(matchReasons.length))
           + ` ${summary}`;
         return (
-          <div className="absolute top-1.5 right-1.5 z-10">
+          <div className="absolute top-1.5 right-1.5 z-20">
             <Popover>
               <PopoverTrigger asChild>
                 <button
@@ -261,8 +258,7 @@ export const CardItem = memo(function CardItem({
 
       {/* Info overlay — always visible on mobile, hover on desktop */}
       <div
-        className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-overlay/85 via-overlay/50 to-transparent pt-6 sm:pt-8 pb-1.5 sm:pb-2 px-2 sm:px-2.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100 transition-opacity duration-200 pointer-events-none"
-        aria-hidden="true"
+        className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-overlay/85 via-overlay/50 to-transparent pt-6 sm:pt-8 pb-1.5 sm:pb-2 px-2 sm:px-2.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity duration-200 pointer-events-none"
       >
         <div className="flex items-end justify-between gap-1">
           <div className="min-w-0 flex-1">

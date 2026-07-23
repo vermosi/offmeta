@@ -4,7 +4,7 @@
  * @module components/ResultsTabs
  */
 
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 import { Search, Sparkles, Lightbulb, BookOpen } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 
@@ -44,26 +44,39 @@ export function ResultsTabs({
   if (visibleTabs.length <= 1) return null;
 
   return (
-    <Tabs
-      value={activeTab}
-      onValueChange={(v) => onTabChange(v as ResultsTab)}
-      className="w-full"
+    <div
+      role="tablist"
+      aria-label={t('results.tabs.label', 'Result views')}
+      className="w-full flex items-center justify-start bg-muted/30 border border-border/30 h-9 rounded-md p-1 gap-1"
     >
-      <TabsList className="w-full justify-start bg-muted/30 border border-border/30 h-9">
-        {visibleTabs.map(({ id, label, icon: Icon, loading }) => (
-          <TabsTrigger
+      {visibleTabs.map(({ id, label, icon: Icon, loading }) => {
+        const active = activeTab === id;
+        return (
+          <button
             key={id}
-            value={id}
-            className="flex items-center gap-1.5 text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm"
+            type="button"
+            role="tab"
+            aria-selected={active}
+            tabIndex={active ? 0 : -1}
+            onClick={() => onTabChange(id)}
+            className={cn(
+              'flex items-center gap-1.5 text-xs px-3 h-7 rounded-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              active
+                ? 'bg-background shadow-sm text-foreground'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
           >
-            <Icon className="h-3.5 w-3.5" />
+            <Icon className="h-3.5 w-3.5" aria-hidden="true" />
             <span>{label}</span>
             {loading && (
-              <span className="ml-1 h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+              <span
+                className="ml-1 h-1.5 w-1.5 rounded-full bg-primary animate-pulse"
+                aria-hidden="true"
+              />
             )}
-          </TabsTrigger>
-        ))}
-      </TabsList>
-    </Tabs>
+          </button>
+        );
+      })}
+    </div>
   );
 }

@@ -280,6 +280,7 @@ export const UnifiedSearchBar = forwardRef<
                 ref={inputRef}
                 id="search-input"
                 type="search"
+                aria-label={t('search.inputLabel')}
                 placeholder={placeholder}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
