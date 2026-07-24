@@ -70,8 +70,8 @@ export const SORT_OPTIONS = [
   { value: 'edhrec-desc', labelKey: 'filters.sortEdhrecDesc' },
 ] as const;
 
-/** Default sort key. Preserves upstream match-strength ordering. */
-export const DEFAULT_SORT = 'relevance-desc';
+/** Default sort key for client-side browsing. Keeps results stable and scannable. */
+export const DEFAULT_SORT = 'name-asc';
 
 export const RARITY_ORDER = {
   common: 0,

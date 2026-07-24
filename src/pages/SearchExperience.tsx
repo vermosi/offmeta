@@ -17,6 +17,9 @@ import {
 import { useLocation } from 'react-router-dom';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 import { Badge } from '@/components/ui/badge';
+import { SearchRefinementStrip } from '@/components/SearchRefinementStrip';
+import { ResultFacetAggregationStrip } from '@/components/ResultFacetAggregationStrip';
+import { SearchRoleGuidancePanel } from '@/components/SearchRoleGuidancePanel';
 const EditableQueryBar = lazy(() =>
   import('@/components/EditableQueryBar').then((m) => ({
     default: m.EditableQueryBar,
@@ -43,6 +46,26 @@ const Footer = lazy(() =>
 );
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
+const InstantDemoPreview = lazy(() =>
+  import('@/components/InstantDemoPreview').then((m) => ({
+    default: m.InstantDemoPreview,
+  })),
+);
+const ExampleQueriesCarousel = lazy(() =>
+  import('@/components/ExampleQueriesCarousel').then((m) => ({
+    default: m.ExampleQueriesCarousel,
+  })),
+);
+const ValuePropStrip = lazy(() =>
+  import('@/components/ValuePropStrip').then((m) => ({
+    default: m.ValuePropStrip,
+  })),
+);
+const HowItWorksSection = lazy(() =>
+  import('@/components/HowItWorksSection').then((m) => ({
+    default: m.HowItWorksSection,
+  })),
+);
 const UnderstoodSummary = lazy(() =>
   import('@/components/UnderstoodSummary').then((m) => ({
     default: m.UnderstoodSummary,
@@ -102,8 +125,6 @@ const MatchedConceptChips = lazy(() =>
     default: m.MatchedConceptChips,
   })),
 );
-
-
 
 const SearchResultsArea = lazy(() =>
   import('@/components/SearchResultsArea').then((m) => ({
@@ -206,7 +227,12 @@ const Index = () => {
       const initialTab = (() => {
         if (typeof window === 'undefined') return 'cards' as ResultsTab;
         const raw = new URLSearchParams(window.location.search).get('tab');
-        const allowed: ResultsTab[] = ['cards', 'similar', 'deck-ideas', 'explanation'];
+        const allowed: ResultsTab[] = [
+          'cards',
+          'similar',
+          'deck-ideas',
+          'explanation',
+        ];
         return (allowed as string[]).includes(raw ?? '')
           ? (raw as ResultsTab)
           : ('cards' as ResultsTab);
@@ -217,10 +243,10 @@ const Index = () => {
   const activeTab = tabState.query === originalQuery ? tabState.tab : 'cards';
 
   const showSimilarTab = hasSearched && !isSearching;
-  const isDeckQuery =
-    /\b(deck|build|commander|strategy|brew|edh)\b/i.test(originalQuery);
-  const showDeckIdeasTab =
-    hasSearched && !isSearching && isDeckQuery;
+  const isDeckQuery = /\b(deck|build|commander|strategy|brew|edh)\b/i.test(
+    originalQuery,
+  );
+  const showDeckIdeasTab = hasSearched && !isSearching && isDeckQuery;
   const showExplanationTab = hasSearched && !isSearching;
 
   // Prevent indexing of zero-result search pages
@@ -413,7 +439,6 @@ const Index = () => {
     return () => clearTimeout(timeout);
   }, [hasSearched, isSearching, cards.length]);
 
-
   // Preload search-result chunks after idle or on first user interaction
   // with the search input. Keeps initial paint lean while ensuring results
   // render instantly when the user submits.
@@ -497,7 +522,6 @@ const Index = () => {
     originalQuery,
     trackEvent,
   ]);
-
 
   useEffect(() => {
     if (!shouldShowProUpsell) return;
@@ -614,8 +638,55 @@ const Index = () => {
           role="main"
         >
           <div className="container-main space-y-3 sm:space-y-6">
-            {/* Sticky summary bar removed — redundant with the header and results below. */}
-
+            {showResultsMode && (
+              <div className="sticky top-16 z-20 -mx-3 sm:-mx-4 lg:-mx-6 px-3 sm:px-4 lg:px-6">
+                <div className="animate-reveal rounded-2xl border border-border/70 bg-card/85 backdrop-blur-xl shadow-lg shadow-black/5 px-3 py-2 sm:px-4 sm:py-3">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                          {t('results.summaryTitle', 'Search results')}
+                        </span>
+                        {hasSearched && totalCards > 0 && (
+                          <span className="text-xs text-muted-foreground tabular-nums">
+                            {t('results.summaryCards', '{count} cards').replace(
+                              '{count}',
+                              totalCards.toLocaleString(),
+                            )}
+                          </span>
+                        )}
+                        {isSearching && (
+                          <span className="text-xs text-muted-foreground">
+                            {t('results.updating', 'Updating results')}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 truncate text-sm font-medium text-foreground">
+                        {originalQuery ||
+                          searchQuery ||
+                          t('search.placeholder')}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <a
+                        href="#search-results"
+                        className="inline-flex items-center justify-center rounded-full border border-border/70 bg-background/70 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-background"
+                      >
+                        {t('results.jumpToResults', 'Jump to results')}
+                      </a>
+                      {hasSearched && (
+                        <a
+                          href="#main-content"
+                          className="inline-flex items-center justify-center rounded-full border border-transparent px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                          {t('results.backToSearch', 'Back to search')}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div>
               <UnifiedSearchBar
@@ -635,8 +706,23 @@ const Index = () => {
               cardCount={cards.length}
             />
 
+            {!hasSearched && (
+              <Suspense fallback={null}>
+                <HowItWorksSection />
+              </Suspense>
+            )}
 
+            {!hasSearched && (
+              <Suspense fallback={null}>
+                <ExampleQueriesCarousel onTrySearch={handleTryExample} />
+              </Suspense>
+            )}
 
+            {!hasSearched && (
+              <Suspense fallback={null}>
+                <InstantDemoPreview onTrySearch={handleTryExample} />
+              </Suspense>
+            )}
 
             {isSearching && originalQuery && (
               <Suspense fallback={null}>
@@ -654,74 +740,127 @@ const Index = () => {
             )}
 
             {showResultsMode && (
-              <div className="animate-reveal space-y-2">
-                {/* One tight header line: count · query · source · save · view query */}
-                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                  <h1 className="text-base sm:text-lg font-medium text-foreground tracking-tight min-w-0">
-                    {hasSearched && totalCards > 0 && (
-                      <span className="tabular-nums text-muted-foreground mr-2">
-                        {totalCards.toLocaleString()}
-                      </span>
-                    )}
-                    <span className="text-foreground">
-                      {originalQuery || searchQuery || ''}
-                    </span>
-                  </h1>
-                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                    <span className="uppercase tracking-[0.14em]">{translationSourceLabel}</span>
-                    {typeof translationConfidence === 'number' && (
-                      <span className="tabular-nums">
-                        · {Math.round(translationConfidence * 100)}%
-                      </span>
-                    )}
+              <div className="animate-reveal flex items-start gap-2">
+                <div className="flex-1 min-w-0 space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="text-lg sm:text-xl font-semibold text-foreground tracking-tight">
+                      {t('search.resultsFor', 'Results for "{query}"').replace(
+                        '{query}',
+                        originalQuery || searchQuery || '',
+                      )}
+                      {hasSearched && totalCards > 0 && (
+                        <span className="text-muted-foreground font-normal ml-1.5">
+                          (
+                          {t('results.summaryCards', '{count} cards').replace(
+                            '{count}',
+                            totalCards.toLocaleString(),
+                          )}
+                          )
+                        </span>
+                      )}
+                    </h1>
+                    <div className="flex items-center gap-1.5">
+                      <Badge
+                        variant="secondary"
+                        className="text-[10px] uppercase tracking-wide"
+                      >
+                        {translationSourceLabel}
+                      </Badge>
+                      {typeof translationConfidence === 'number' && (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] tabular-nums"
+                        >
+                          {Math.round(translationConfidence * 100)}%
+                        </Badge>
+                      )}
+                    </div>
                   </div>
-                  <div className="ml-auto flex items-center gap-1">
-                    <Suspense fallback={null}>
-                      <SaveSearchButton
-                        naturalQuery={originalQuery}
-                        scryfallQuery={
-                          lastSearchResult?.scryfallQuery || searchQuery
-                        }
-                        filters={activeFilters}
-                        onSaved={() =>
-                          trackFirstSave({
-                            query: originalQuery,
-                            request_id: currentRequestId ?? undefined,
-                          })
-                        }
-                      />
-                    </Suspense>
-                  </div>
-                </div>
-
-                {/* Scryfall query stays fully collapsed by default */}
-                <ScryfallQueryDisclosure
-                  scryfallQuery={(
-                    lastSearchResult?.scryfallQuery || searchQuery
-                  ).trim()}
-                >
-                  <EditableQueryBar
+                  <ScryfallQueryDisclosure
                     scryfallQuery={(
                       lastSearchResult?.scryfallQuery || searchQuery
                     ).trim()}
-                    confidence={lastSearchResult?.explanation?.confidence}
-                    isLoading={isSearching}
-                    originalQuery={originalQuery}
-                    onRerun={handleRerunEditedQuery}
-                    onRegenerate={handleRegenerateTranslation}
-                    onReportIssue={() => setReportDialogOpen(true)}
-                    validationError={
-                      lastSearchResult?.validationIssues?.length
-                        ? lastSearchResult.validationIssues.join(' • ')
-                        : null
+                  >
+                    <EditableQueryBar
+                      scryfallQuery={(
+                        lastSearchResult?.scryfallQuery || searchQuery
+                      ).trim()}
+                      confidence={lastSearchResult?.explanation?.confidence}
+                      isLoading={isSearching}
+                      originalQuery={originalQuery}
+                      onRerun={handleRerunEditedQuery}
+                      onRegenerate={handleRegenerateTranslation}
+                      onReportIssue={() => setReportDialogOpen(true)}
+                      validationError={
+                        lastSearchResult?.validationIssues?.length
+                          ? lastSearchResult.validationIssues.join(' • ')
+                          : null
+                      }
+                    />
+                  </ScryfallQueryDisclosure>
+                </div>
+                <div className="pt-[26px]">
+                  <SaveSearchButton
+                    naturalQuery={originalQuery}
+                    scryfallQuery={
+                      lastSearchResult?.scryfallQuery || searchQuery
+                    }
+                    filters={activeFilters}
+                    onSaved={() =>
+                      trackFirstSave({
+                        query: originalQuery,
+                        request_id: currentRequestId ?? undefined,
+                      })
                     }
                   />
-                </ScryfallQueryDisclosure>
+                </div>
               </div>
             )}
 
-            {/* Results Tabs — only show when there's more than one tab to switch to */}
-            {hasSearched && !isSearching && (showSimilarTab || showDeckIdeasTab || showExplanationTab) && (
+            {hasSearched && !isSearching && (
+              <div className="animate-reveal">
+                <SearchRefinementStrip
+                  originalQuery={originalQuery}
+                  searchQuery={searchQuery}
+                  activeFilters={activeFilters}
+                  onRefineQuery={handleRerunEditedQuery}
+                  onRemoveFilter={applyFilterPatch}
+                  onClearAllFilters={clearAllFilters}
+                />
+              </div>
+            )}
+
+            {hasSearched && !isSearching && displayCards.length > 0 && (
+              <div className="animate-reveal">
+                <ResultFacetAggregationStrip
+                  cards={displayCards}
+                  searchQuery={searchQuery}
+                  onRefine={handleRerunEditedQuery}
+                />
+              </div>
+            )}
+
+            {hasSearched && !isSearching && displayCards.length > 0 && (
+              <div className="animate-reveal">
+                <SearchRoleGuidancePanel
+                  cards={displayCards}
+                  searchQuery={searchQuery}
+                  onRefine={handleRerunEditedQuery}
+                />
+              </div>
+            )}
+
+            {/* Explain panel — hidden on mobile */}
+            {hasSearched && (
+              <div className="hidden sm:block animate-reveal">
+                <ExplainCompilationPanel
+                  intent={lastSearchResult?.intent || lastIntent}
+                />
+              </div>
+            )}
+
+            {/* Results Tabs */}
+            {hasSearched && !isSearching && (
               <div className="animate-reveal">
                 <ResultsTabs
                   activeTab={activeTab}
@@ -733,8 +872,109 @@ const Index = () => {
               </div>
             )}
 
+            {hasSearched && !isSearching && (
+              <div className="space-y-2">
+                {refinementCount > 0 && (
+                  <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-foreground">
+                    {t(
+                      'results.refinementHint',
+                      'Narrow results like this? Save this refinement as a reusable workflow.',
+                    )}
+                  </div>
+                )}
+                {shouldShowProUpsell && (
+                  <div className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-foreground">
+                    {t(
+                      'results.proUpsell',
+                      'Better results with Pro: advanced explainability + priority ranking.',
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
-            {/* Primary toolbar: filters, sort, view — kept adjacent to results */}
+            {/* Toolbar row — only show for Cards tab */}
+            {hasSearched && !isSearching && totalCards > 0 && (
+              <Suspense fallback={null}>
+                <SearchNextStepsBar
+                  originalQuery={originalQuery}
+                  intent={lastSearchResult?.intent || lastIntent}
+                  totalCards={totalCards}
+                  activeTab={activeTab}
+                  onJumpToSimilar={() => {
+                    handleTabChange('similar');
+                    if (typeof document !== 'undefined') {
+                      document
+                        .getElementById('search-results')
+                        ?.scrollIntoView({
+                          behavior: 'smooth',
+                          block: 'start',
+                        });
+                    }
+                  }}
+                  onRelatedSearchClick={handleTryExample}
+                />
+              </Suspense>
+            )}
+
+            {/* Toolbar row — only show for Cards tab */}
+            {hasSearched && !isSearching && totalCards > 0 && (
+              <Suspense fallback={null}>
+                <SearchNextActions
+                  intent={lastSearchResult?.intent || lastIntent}
+                  originalQuery={originalQuery}
+                  totalCards={totalCards}
+                  isDeckQuery={isDeckQuery}
+                  queryQualityScore={queryQualityScore}
+                />
+              </Suspense>
+            )}
+
+            {/* Similar-to-top-result discovery panel (Cards tab only) */}
+            {hasSearched &&
+              !isSearching &&
+              activeTab === 'cards' &&
+              cards[0] && (
+                <Suspense fallback={null}>
+                  <SimilarToTopResultPanel
+                    topCard={cards[0]}
+                    originalQuery={originalQuery}
+                    onRefine={handleTryExample}
+                    onCardClick={handleCardClick}
+                  />
+                </Suspense>
+              )}
+
+            {/* Related searches — always-visible follow-up suggestions */}
+            {hasSearched &&
+              !isSearching &&
+              totalCards > 0 &&
+              activeTab === 'cards' && (
+                <Suspense fallback={null}>
+                  <RelatedSearchesSection
+                    originalQuery={originalQuery}
+                    intent={lastSearchResult?.intent || lastIntent}
+                    topCard={cards[0]}
+                    onRefine={handleTryExample}
+                  />
+                </Suspense>
+              )}
+
+            {hasSearched &&
+              !isSearching &&
+              cards.length > 0 &&
+              activeTab === 'cards' && (
+                <Suspense fallback={null}>
+                  <MatchedConceptChips
+                    cards={displayCards.length > 0 ? displayCards : cards}
+                    intent={lastSearchResult?.intent || lastIntent}
+                    searchQuery={searchQuery}
+                    originalQuery={originalQuery}
+                    onRefine={handleRefineWithMatch}
+                  />
+                </Suspense>
+              )}
+
             {cards.length > 0 && !isSearching && activeTab === 'cards' && (
               <ResultsToolbar
                 cards={cards}
@@ -754,7 +994,6 @@ const Index = () => {
               />
             )}
           </div>
-
 
           {/* Tab content area */}
           {hasSearched && (
@@ -797,98 +1036,8 @@ const Index = () => {
                 onRefineWithMatch={handleRefineWithMatch}
               />
             </Suspense>
-
-          )}
-
-          {/* Post-results discovery — moved below the grid so results are unobstructed */}
-          {hasSearched && !isSearching && totalCards > 0 && activeTab === 'cards' && (
-            <div className="container-main mt-10 space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="h-px flex-1 bg-border/60" />
-                <span className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                  {t('results.keepExploring', 'Keep exploring')}
-                </span>
-                <div className="h-px flex-1 bg-border/60" />
-              </div>
-
-              <Suspense fallback={null}>
-                <MatchedConceptChips
-                  cards={displayCards.length > 0 ? displayCards : cards}
-                  intent={lastSearchResult?.intent || lastIntent}
-                  searchQuery={searchQuery}
-                  originalQuery={originalQuery}
-                  onRefine={handleRefineWithMatch}
-                />
-              </Suspense>
-
-              <Suspense fallback={null}>
-                <RelatedSearchesSection
-                  originalQuery={originalQuery}
-                  intent={lastSearchResult?.intent || lastIntent}
-                  topCard={cards[0]}
-                  onRefine={handleTryExample}
-                />
-              </Suspense>
-
-              {cards[0] && (
-                <Suspense fallback={null}>
-                  <SimilarToTopResultPanel
-                    topCard={cards[0]}
-                    originalQuery={originalQuery}
-                    onRefine={handleTryExample}
-                    onCardClick={handleCardClick}
-                  />
-                </Suspense>
-              )}
-
-              <Suspense fallback={null}>
-                <SearchNextActions
-                  intent={lastSearchResult?.intent || lastIntent}
-                  originalQuery={originalQuery}
-                  totalCards={totalCards}
-                  isDeckQuery={isDeckQuery}
-                  queryQualityScore={queryQualityScore}
-                />
-              </Suspense>
-
-              <Suspense fallback={null}>
-                <SearchNextStepsBar
-                  originalQuery={originalQuery}
-                  intent={lastSearchResult?.intent || lastIntent}
-                  totalCards={totalCards}
-                  activeTab={activeTab}
-                  onJumpToSimilar={() => {
-                    handleTabChange('similar');
-                    if (typeof document !== 'undefined') {
-                      document
-                        .getElementById('search-results')
-                        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                  }}
-                  onRelatedSearchClick={handleTryExample}
-                />
-              </Suspense>
-
-              <details className="group rounded-xl border border-border/60 bg-card/40 backdrop-blur-sm">
-                <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-foreground/90 flex items-center justify-between">
-                  <span>{t('results.howWeCompiled', 'How we compiled this search')}</span>
-                  <span className="text-xs text-muted-foreground group-open:hidden">
-                    {t('common.show', 'Show')}
-                  </span>
-                  <span className="text-xs text-muted-foreground hidden group-open:inline">
-                    {t('common.hide', 'Hide')}
-                  </span>
-                </summary>
-                <div className="px-4 pb-4">
-                  <ExplainCompilationPanel
-                    intent={lastSearchResult?.intent || lastIntent}
-                  />
-                </div>
-              </details>
-            </div>
           )}
         </main>
-
 
         {!hasSearched && (
           <div className="container-main" aria-hidden="true">
@@ -904,6 +1053,11 @@ const Index = () => {
           <div className="container-main" aria-hidden="true">
             <div className="section-divider" />
           </div>
+        )}
+        {!hasSearched && (
+          <Suspense fallback={null}>
+            <ValuePropStrip />
+          </Suspense>
         )}
 
         <Suspense fallback={null}>
