@@ -1,461 +1,529 @@
 # Page snapshot
 
 ```yaml
-- generic [ref=e1]:
-  - complementary "About OffMeta" [ref=e2]:
-    - heading "OffMeta — Natural Language Magic Card Search" [level=1] [ref=e3]
-    - paragraph [ref=e4]: "OffMeta is a natural language Magic: The Gathering card search tool. It lets players describe cards the way they talk and translates that into real Scryfall searches. No syntax knowledge required."
-  - generic [ref=e5]:
-    - region "Notifications (F8)":
-      - list
+- generic:
+  - complementary:
+    - heading [level=1]: OffMeta — Natural Language Magic Card Search
+    - paragraph: "OffMeta is a natural language Magic: The Gathering card search tool. It lets players describe cards the way they talk and translates that into real Scryfall searches. No syntax knowledge required."
+  - generic:
+    - list
     - region "Notifications alt+T"
-    - navigation "Skip links" [ref=e6]:
-      - link "Skip to main content" [ref=e7] [cursor=pointer]:
+    - navigation:
+      - link:
         - /url: "#main-content"
-      - link "Skip to search" [ref=e8] [cursor=pointer]:
+        - text: Skip to main content
+      - link:
         - /url: "#search-input"
-    - generic [ref=e9]:
-      - banner [ref=e10]:
-        - generic [ref=e11]:
-          - link "OffMeta - Home" [ref=e12] [cursor=pointer]:
+        - text: Skip to search
+    - generic:
+      - banner:
+        - generic:
+          - link:
             - /url: /
-            - img [ref=e13]
-            - generic [ref=e18]: OffMeta
-          - navigation "Main navigation" [ref=e19]:
-            - link "Guides" [ref=e20] [cursor=pointer]:
+            - img
+            - generic: OffMeta
+          - navigation:
+            - link:
               - /url: /guides
-            - link "Combos" [ref=e21] [cursor=pointer]:
+              - text: Guides
+            - link:
               - /url: /combos
-            - link "About" [ref=e22] [cursor=pointer]:
+              - text: Combos
+            - link:
               - /url: /about
-          - generic [ref=e23]:
-            - link "Join our Discord (opens in new tab)" [ref=e24] [cursor=pointer]:
+              - text: About
+          - generic:
+            - link:
               - /url: https://discord.gg/9UEv6vrTD4
-              - img [ref=e25]
-            - button "Language" [ref=e27] [cursor=pointer]:
               - img
-            - button "Switch to light theme" [pressed] [ref=e28] [cursor=pointer]:
+            - button:
               - img
-            - button "Sign In" [ref=e29] [cursor=pointer]:
-              - img [ref=e30]
+            - button [pressed]:
+              - img
+            - button:
+              - img
               - text: Sign In
-      - region "OffMeta — Natural Language MTG Search. Search Magic cards in plain English" [ref=e33]:
-        - generic [ref=e34]:
-          - generic [ref=e36]:
-            - img [ref=e37]
-            - text: AI-powered MTG discovery engine
-          - heading "OffMeta — Natural Language MTG Search. Search Magic cards in plain English" [level=1] [ref=e40]:
-            - generic [ref=e41]: OffMeta — Natural Language MTG Search.
+      - region:
+        - generic:
+          - generic:
+            - generic:
+              - img
+              - text: AI-powered MTG discovery engine
+          - heading [level=1]:
+            - generic: OffMeta — Natural Language MTG Search.
             - text: Search Magic cards in plain English
-          - paragraph [ref=e42]: "Search Magic: The Gathering cards using natural language. No more regex, no more cryptic operators."
-          - generic [ref=e43]:
-            - button "Start searching" [ref=e44] [cursor=pointer]:
+          - paragraph: "Search Magic: The Gathering cards using natural language. No more regex, no more cryptic operators."
+          - generic:
+            - button:
               - text: Start searching
-              - img [ref=e45]
-            - link "Explore archetypes" [ref=e47] [cursor=pointer]:
+              - img
+            - link:
               - /url: /archetypes
-              - img [ref=e48]
+              - img
               - text: Explore archetypes
-          - generic [ref=e51]:
-            - link "Learn syntax" [ref=e52] [cursor=pointer]:
+          - generic:
+            - link:
               - /url: /docs/syntax
-            - link "Browse guides" [ref=e53] [cursor=pointer]:
+              - text: Learn syntax
+            - link:
               - /url: /guides
-            - link "Saved searches" [ref=e54] [cursor=pointer]:
+              - text: Browse guides
+            - link:
               - /url: /saved
-      - generic [ref=e56]:
-        - generic [ref=e57]:
-          - generic [ref=e58]:
-            - paragraph [ref=e59]: Good starting points
-            - heading "Choose your path into OffMeta" [level=2] [ref=e60]
-          - paragraph [ref=e61]: Each route is designed to help a different kind of Magic player move from curiosity to action.
-        - generic [ref=e62]:
-          - link "Start with a search Turn a deck idea into real cards and refinements." [ref=e63] [cursor=pointer]:
-            - /url: /search/commander%20ramp
-            - generic [ref=e64]:
-              - generic [ref=e65]:
-                - img [ref=e67]
-                - generic [ref=e70]:
-                  - heading "Start with a search" [level=3] [ref=e71]
-                  - paragraph [ref=e72]: Turn a deck idea into real cards and refinements.
-              - img [ref=e73]
-          - link "Learn the basics Browse focused guides and syntax examples." [ref=e75] [cursor=pointer]:
-            - /url: /guides
-            - generic [ref=e76]:
-              - generic [ref=e77]:
-                - img [ref=e79]
-                - generic [ref=e81]:
-                  - heading "Learn the basics" [level=3] [ref=e82]
-                  - paragraph [ref=e83]: Browse focused guides and syntax examples.
-              - img [ref=e84]
-          - link "Reopen saved work Pick up recurring searches and workflows fast." [ref=e86] [cursor=pointer]:
-            - /url: /saved
-            - generic [ref=e87]:
-              - generic [ref=e88]:
-                - img [ref=e90]
-                - generic [ref=e93]:
-                  - heading "Reopen saved work" [level=3] [ref=e94]
-                  - paragraph [ref=e95]: Pick up recurring searches and workflows fast.
-              - img [ref=e96]
-          - link "Track prices See market movers and card trends at a glance." [ref=e98] [cursor=pointer]:
-            - /url: /market
-            - generic [ref=e99]:
-              - generic [ref=e100]:
-                - img [ref=e102]
-                - generic [ref=e105]:
-                  - heading "Track prices" [level=3] [ref=e106]
-                  - paragraph [ref=e107]: See market movers and card trends at a glance.
-              - img [ref=e108]
-      - status [ref=e110]
-      - main [ref=e111]:
-        - generic [ref=e112]:
-          - search "Card search" [ref=e114]:
-            - generic [ref=e115]:
-              - generic [ref=e117]:
-                - generic [ref=e118]: Search for Magic cards using natural language
-                - searchbox "Search for Magic cards using natural language" [active] [ref=e120]
-                - button "Start voice search" [ref=e121] [cursor=pointer]:
-                  - img
-                - button "Search for cards" [disabled]:
-                  - img
-                  - generic: Search
-                - generic [ref=e122]:
-                  - button "Report search issue" [ref=e123] [cursor=pointer]:
+              - text: Saved searches
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - paragraph: Good starting points
+              - heading [level=2]: Choose your path into OffMeta
+            - paragraph: Each route is designed to help a different kind of Magic player move from curiosity to action.
+          - generic:
+            - link:
+              - /url: /search/commander%20ramp
+              - generic:
+                - generic:
+                  - generic:
                     - img
-                    - generic [ref=e124]: Feedback
-                  - button "Search help" [ref=e125] [cursor=pointer]:
-                    - img
-                    - generic [ref=e126]: Help
-              - paragraph [ref=e127]: Type your search query and press Enter or click Search
-            - generic [ref=e128]:
-              - generic [ref=e129]: ✦ Free to use
-              - generic [ref=e130]: ✦ Powered by Scryfall
-              - generic [ref=e131]: ✦ No account required
-            - group "Try searching for" [ref=e132]:
-              - generic [ref=e133]:
-                - img [ref=e134]
-                - generic [ref=e137]: Try searching for
-              - generic [ref=e138]:
-                - button "Search for cards that punish treasure decks" [ref=e139] [cursor=pointer]:
-                  - img [ref=e140]
-                  - generic [ref=e143]: cards that punish treasure decks
-                - button "Search for budget alternatives to Rhystic Study" [ref=e144] [cursor=pointer]:
-                  - img [ref=e145]
-                  - generic [ref=e148]: budget alternatives to Rhystic Study
-                - button "Search for cards similar to Seedborn Muse" [ref=e149] [cursor=pointer]:
-                  - img [ref=e150]
-                  - generic [ref=e153]: cards similar to Seedborn Muse
-                - button "Search for hidden finishers under $5" [ref=e154] [cursor=pointer]:
-                  - img [ref=e155]
-                  - generic [ref=e158]: hidden finishers under $5
-                - button "Search for budget board wipes under $5" [ref=e159] [cursor=pointer]:
-                  - img [ref=e160]
-                  - generic [ref=e163]: budget board wipes under $5
-                - button "Search for cards that protect my commander" [ref=e164] [cursor=pointer]:
-                  - img [ref=e165]
-                  - generic [ref=e168]: cards that protect my commander
-                - button "Search for mono-white card draw that is not a staple" [ref=e169] [cursor=pointer]:
-                  - img [ref=e170]
-                  - generic [ref=e173]: mono-white card draw that is not a staple
-                - button "Search for creatures that reward opponents attacking each other" [ref=e174] [cursor=pointer]:
-                  - img [ref=e175]
-                  - generic [ref=e178]: creatures that reward opponents attacking each other
-                - button "Search for cheap graveyard hate for EDH" [ref=e179] [cursor=pointer]:
-                  - img [ref=e180]
-                  - generic [ref=e183]: cheap graveyard hate for EDH
-                - button "Search for mana rocks that cost 2" [ref=e184] [cursor=pointer]:
-                  - img [ref=e185]
-                  - generic [ref=e188]: mana rocks that cost 2
-                - button "Search for best black removal for commander" [ref=e189] [cursor=pointer]:
-                  - img [ref=e190]
-                  - generic [ref=e193]: best black removal for commander
-                - button "Search for sacrifice outlets" [ref=e194] [cursor=pointer]:
-                  - img [ref=e195]
-                  - generic [ref=e198]: sacrifice outlets
-          - region "How It Works" [ref=e199]:
-            - heading "How It Works" [level=2] [ref=e200]
-            - list "How it works" [ref=e201]:
-              - listitem "Describe what you're looking for" [ref=e202]:
-                - generic [ref=e203]:
-                  - generic [ref=e204]: Step 1
-                  - generic [ref=e205]: "1"
-                - img [ref=e206]
-                - heading "Describe what you're looking for" [level=3] [ref=e208]
-                - paragraph [ref=e209]: Describe what you want — e.g. "budget alternatives to Rhystic Study" or "cards that punish treasure decks."
-              - listitem [ref=e210]
-              - listitem "Review the translation" [ref=e212]:
-                - generic [ref=e213]:
-                  - generic [ref=e214]: Step 2
-                  - generic [ref=e215]: "2"
-                - img [ref=e216]
-                - heading "Review the translation" [level=3] [ref=e219]
-                - paragraph [ref=e220]: OffMeta builds the exact Scryfall query, shows it above the results, and lets you tweak it if you want to.
-              - listitem [ref=e221]
-              - listitem "Browse your results" [ref=e223]:
-                - generic [ref=e224]:
-                  - generic [ref=e225]: Step 3
-                  - generic [ref=e226]: "3"
-                - img [ref=e227]
-                - heading "Browse your results" [level=3] [ref=e232]
-                - paragraph [ref=e233]: Get real cards from Scryfall, then jump to similar cards, budget alternatives, or related archetypes.
-          - region "Try an example query" [ref=e234]:
-            - generic [ref=e235]:
-              - generic [ref=e236]:
-                - generic [ref=e237]: Try it now
-                - heading "One-click examples for each step" [level=2] [ref=e238]
-              - tablist "Example categories" [ref=e239]:
-                - tab "Ask" [selected] [ref=e240] [cursor=pointer]:
-                  - img [ref=e241]
-                  - text: Ask
-                - tab "Translate" [ref=e243] [cursor=pointer]:
-                  - img [ref=e244]
-                  - text: Translate
-                - tab "Browse" [ref=e247] [cursor=pointer]:
-                  - img [ref=e248]
-                  - text: Browse
-              - paragraph [ref=e253]: Describe what you want in plain English.
-              - tabpanel "Ask" [ref=e255]:
-                - 'button "Try search: cheap red treasure cards" [ref=e256] [cursor=pointer]':
-                  - generic [ref=e257]: cheap red treasure cards
-                  - img [ref=e258]
-                - 'button "Try search: budget alternatives to Rhystic Study" [ref=e260] [cursor=pointer]':
-                  - generic [ref=e261]: budget alternatives to Rhystic Study
-                  - img [ref=e262]
-                - 'button "Try search: commander legal tutors under $10" [ref=e264] [cursor=pointer]':
-                  - generic [ref=e265]: commander legal tutors under $10
-                  - img [ref=e266]
-                - 'button "Try search: mono black sacrifice outlets" [ref=e268] [cursor=pointer]':
-                  - generic [ref=e269]: mono black sacrifice outlets
-                  - img [ref=e270]
-                - 'button "Try search: artifacts that tap for blue mana" [ref=e272] [cursor=pointer]':
-                  - generic [ref=e273]: artifacts that tap for blue mana
-                  - img [ref=e274]
-          - generic [ref=e278]:
-            - generic [ref=e279]:
-              - generic [ref=e280]:
-                - generic [ref=e281]:
-                  - img [ref=e282]
-                  - generic [ref=e285]: See it in action
-                - paragraph [ref=e286]:
-                  - text: “budget board wipes under $5”
-                  - generic [ref=e287]:
-                    - text: →
-                    - code [ref=e288]: otag:board-wipe usd<5
-              - button "Try this search" [ref=e289] [cursor=pointer]:
+                  - generic:
+                    - heading [level=3]: Start with a search
+                    - paragraph: Turn a deck idea into real cards and refinements.
                 - img
-                - text: Try this search
-            - generic [ref=e290]:
-              - button "Blasphemous Act Blasphemous Act $2.00" [ref=e291] [cursor=pointer]:
-                - img "Blasphemous Act" [ref=e293]
-                - generic [ref=e294]:
-                  - paragraph [ref=e295]: Blasphemous Act
-                  - paragraph [ref=e296]: $2.00
-              - button "Austere Command Austere Command $0.49" [ref=e297] [cursor=pointer]:
-                - img "Austere Command" [ref=e299]
-                - generic [ref=e300]:
-                  - paragraph [ref=e301]: Austere Command
-                  - paragraph [ref=e302]: $0.49
-              - button "Damn Damn $2.18" [ref=e303] [cursor=pointer]:
-                - img "Damn" [ref=e305]
-                - generic [ref=e306]:
-                  - paragraph [ref=e307]: Damn
-                  - paragraph [ref=e308]: $2.18
-              - button "Supreme Verdict Supreme Verdict $2.79" [ref=e309] [cursor=pointer]:
-                - img "Supreme Verdict" [ref=e311]
-                - generic [ref=e312]:
-                  - paragraph [ref=e313]: Supreme Verdict
-                  - paragraph [ref=e314]: $2.79
-      - region "What you would type in Scryfall vs. OffMeta" [ref=e316]:
-        - generic [ref=e317]:
-          - generic [ref=e318]:
-            - generic [ref=e319]: Scryfall power, plain English
-            - heading "What you would type in Scryfall vs. OffMeta" [level=2] [ref=e320]
-            - paragraph [ref=e321]: Scryfall is the source of truth — but its query language rewards experts. OffMeta lets anyone ask in plain English, then shows the exact query it built.
-          - generic [ref=e322]:
-            - article [ref=e323]:
-              - paragraph [ref=e324]: Budget alternatives to a staple
-              - generic [ref=e325]:
-                - generic [ref=e326]:
-                  - generic [ref=e327]:
-                    - img [ref=e328]
+            - link:
+              - /url: /guides
+              - generic:
+                - generic:
+                  - generic:
+                    - img
+                  - generic:
+                    - heading [level=3]: Learn the basics
+                    - paragraph: Browse focused guides and syntax examples.
+                - img
+            - link:
+              - /url: /saved
+              - generic:
+                - generic:
+                  - generic:
+                    - img
+                  - generic:
+                    - heading [level=3]: Reopen saved work
+                    - paragraph: Pick up recurring searches and workflows fast.
+                - img
+            - link:
+              - /url: /market
+              - generic:
+                - generic:
+                  - generic:
+                    - img
+                  - generic:
+                    - heading [level=3]: Track prices
+                    - paragraph: See market movers and card trends at a glance.
+                - img
+      - status
+      - main:
+        - generic:
+          - generic:
+            - search:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic: Search for Magic cards using natural language
+                    - generic:
+                      - searchbox
+                    - button:
+                      - img
+                    - button [disabled]:
+                      - img
+                      - generic: Search
+                    - generic:
+                      - button:
+                        - img
+                        - generic: Feedback
+                      - button:
+                        - img
+                        - generic: Help
+                - paragraph: Type your search query and press Enter or click Search
+              - generic:
+                - generic: ✦ Free to use
+                - generic: ✦ Powered by Scryfall
+                - generic: ✦ No account required
+              - group:
+                - generic:
+                  - img
+                  - generic: Try searching for
+                - generic:
+                  - button:
+                    - img
+                    - generic: cards that punish treasure decks
+                  - button:
+                    - img
+                    - generic: budget alternatives to Rhystic Study
+                  - button:
+                    - img
+                    - generic: cards similar to Seedborn Muse
+                  - button:
+                    - img
+                    - generic: hidden finishers under $5
+                  - button:
+                    - img
+                    - generic: budget board wipes under $5
+                  - button:
+                    - img
+                    - generic: cards that protect my commander
+                  - button:
+                    - img
+                    - generic: mono-white card draw that is not a staple
+                  - button:
+                    - img
+                    - generic: creatures that reward opponents attacking each other
+                  - button:
+                    - img
+                    - generic: cheap graveyard hate for EDH
+                  - button:
+                    - img
+                    - generic: mana rocks that cost 2
+                  - button:
+                    - img
+                    - generic: best black removal for commander
+                  - button:
+                    - img
+                    - generic: sacrifice outlets
+          - region:
+            - heading [level=2]: How It Works
+            - list:
+              - listitem:
+                - generic:
+                  - generic: Step 1
+                  - generic: "1"
+                - img
+                - heading [level=3]: Describe what you're looking for
+                - paragraph: Describe what you want — e.g. "budget alternatives to Rhystic Study" or "cards that punish treasure decks."
+              - listitem
+              - listitem:
+                - generic:
+                  - generic: Step 2
+                  - generic: "2"
+                - img
+                - heading [level=3]: Review the translation
+                - paragraph: OffMeta builds the exact Scryfall query, shows it above the results, and lets you tweak it if you want to.
+              - listitem
+              - listitem:
+                - generic:
+                  - generic: Step 3
+                  - generic: "3"
+                - img
+                - heading [level=3]: Browse your results
+                - paragraph: Get real cards from Scryfall, then jump to similar cards, budget alternatives, or related archetypes.
+          - region:
+            - generic:
+              - generic:
+                - generic: Try it now
+                - heading [level=2]: One-click examples for each step
+              - tablist:
+                - tab [selected]:
+                  - img
+                  - text: Ask
+                - tab:
+                  - img
+                  - text: Translate
+                - tab:
+                  - img
+                  - text: Browse
+              - paragraph: Describe what you want in plain English.
+              - generic:
+                - tabpanel:
+                  - button:
+                    - generic: cheap red treasure cards
+                    - img
+                  - button:
+                    - generic: budget alternatives to Rhystic Study
+                    - img
+                  - button:
+                    - generic: commander legal tutors under $10
+                    - img
+                  - button:
+                    - generic: mono black sacrifice outlets
+                    - img
+                  - button:
+                    - generic: artifacts that tap for blue mana
+                    - img
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - img
+                    - generic: See it in action
+                  - paragraph:
+                    - text: “budget board wipes under $5”
+                    - generic:
+                      - text: →
+                      - code: otag:board-wipe usd<5
+                - button:
+                  - img
+                  - text: Try this search
+              - generic:
+                - button:
+                  - generic:
+                    - img
+                  - generic:
+                    - paragraph: Blasphemous Act
+                    - paragraph: $2.00
+                - button:
+                  - generic:
+                    - img
+                  - generic:
+                    - paragraph: Austere Command
+                    - paragraph: $0.49
+                - button:
+                  - generic:
+                    - img
+                  - generic:
+                    - paragraph: Damn
+                    - paragraph: $2.18
+                - button:
+                  - generic:
+                    - img
+                  - generic:
+                    - paragraph: Supreme Verdict
+                    - paragraph: $2.79
+      - region:
+        - generic:
+          - generic:
+            - generic: Scryfall power, plain English
+            - heading [level=2]: What you would type in Scryfall vs. OffMeta
+            - paragraph: Scryfall is the source of truth — but its query language rewards experts. OffMeta lets anyone ask in plain English, then shows the exact query it built.
+          - generic:
+            - article:
+              - paragraph: Budget alternatives to a staple
+              - generic:
+                - generic:
+                  - generic:
+                    - img
                     - text: Raw Scryfall
-                  - code [ref=e330]: o:"whenever an opponent casts" o:draw usd<5 -name:"Rhystic Study"
-                - generic [ref=e332]: VS
-                - generic [ref=e333]:
-                  - generic [ref=e334]:
-                    - img [ref=e335]
+                  - code: o:"whenever an opponent casts" o:draw usd<5 -name:"Rhystic Study"
+                - generic:
+                  - generic: VS
+                - generic:
+                  - generic:
+                    - img
                     - text: OffMeta
-                  - button "Try this search" [ref=e338] [cursor=pointer]: “budget alternatives to Rhystic Study”
-            - article [ref=e339]:
-              - paragraph [ref=e340]: Cards that punish a strategy
-              - generic [ref=e341]:
-                - generic [ref=e342]:
-                  - generic [ref=e343]:
-                    - img [ref=e344]
+                  - button: “budget alternatives to Rhystic Study”
+            - article:
+              - paragraph: Cards that punish a strategy
+              - generic:
+                - generic:
+                  - generic:
+                    - img
                     - text: Raw Scryfall
-                  - code [ref=e346]: o:treasure (o:sacrifice or o:destroy or o:exile or o:"can't")
-                - generic [ref=e348]: VS
-                - generic [ref=e349]:
-                  - generic [ref=e350]:
-                    - img [ref=e351]
+                  - code: o:treasure (o:sacrifice or o:destroy or o:exile or o:"can't")
+                - generic:
+                  - generic: VS
+                - generic:
+                  - generic:
+                    - img
                     - text: OffMeta
-                  - button "Try this search" [ref=e354] [cursor=pointer]: “cards that punish treasure decks”
-            - article [ref=e355]:
-              - paragraph [ref=e356]: Functional similars to a card
-              - generic [ref=e357]:
-                - generic [ref=e358]:
-                  - generic [ref=e359]:
-                    - img [ref=e360]
+                  - button: “cards that punish treasure decks”
+            - article:
+              - paragraph: Functional similars to a card
+              - generic:
+                - generic:
+                  - generic:
+                    - img
                     - text: Raw Scryfall
-                  - code [ref=e362]: o:"untap all" o:"during each" -name:"Seedborn Muse"
-                - generic [ref=e364]: VS
-                - generic [ref=e365]:
-                  - generic [ref=e366]:
-                    - img [ref=e367]
+                  - code: o:"untap all" o:"during each" -name:"Seedborn Muse"
+                - generic:
+                  - generic: VS
+                - generic:
+                  - generic:
+                    - img
                     - text: OffMeta
-                  - button "Try this search" [ref=e370] [cursor=pointer]: “cards similar to Seedborn Muse”
-            - article [ref=e371]:
-              - paragraph [ref=e372]: Hidden gems by price ceiling
-              - generic [ref=e373]:
-                - generic [ref=e374]:
-                  - generic [ref=e375]:
-                    - img [ref=e376]
+                  - button: “cards similar to Seedborn Muse”
+            - article:
+              - paragraph: Hidden gems by price ceiling
+              - generic:
+                - generic:
+                  - generic:
+                    - img
                     - text: Raw Scryfall
-                  - code [ref=e378]: o:"win the game" or o:"lose the game" usd<5 f:commander
-                - generic [ref=e380]: VS
-                - generic [ref=e381]:
-                  - generic [ref=e382]:
-                    - img [ref=e383]
+                  - code: o:"win the game" or o:"lose the game" usd<5 f:commander
+                - generic:
+                  - generic: VS
+                - generic:
+                  - generic:
+                    - img
                     - text: OffMeta
-                  - button "Try this search" [ref=e386] [cursor=pointer]: “hidden finishers under $5”
-          - paragraph [ref=e387]: Every result comes from Scryfall — the source of truth for card data. OffMeta only translates intent and adds discovery layers on top.
-      - region "Key benefits" [ref=e389]:
-        - generic [ref=e391]:
-          - generic [ref=e392]:
-            - generic [ref=e393]:
-              - img [ref=e394]
-              - generic [ref=e397]: Describe the card you want
-            - paragraph [ref=e398]: Type plain English and let OffMeta translate the intent.
-          - generic [ref=e399]:
-            - generic [ref=e400]:
-              - img [ref=e401]
-              - generic [ref=e404]: Get a precise Scryfall query
-            - paragraph [ref=e405]: See the exact search syntax before you commit to it.
-          - generic [ref=e406]:
-            - generic [ref=e407]:
-              - img [ref=e408]
-              - generic [ref=e411]: Find better follow-up cards
-            - paragraph [ref=e412]: Surface similar, budget, and synergy ideas instantly.
-      - contentinfo [ref=e413]:
-        - generic [ref=e414]:
-          - generic [ref=e415]:
-            - generic [ref=e416]: O
-            - generic [ref=e417]: OffMeta
-            - generic [ref=e418]: · © 2026
-          - generic [ref=e420]:
-            - generic [ref=e421]:
-              - heading "Explore" [level=3] [ref=e422]
-              - list [ref=e423]:
-                - listitem [ref=e424]:
-                  - link "Combo Finder" [ref=e425] [cursor=pointer]:
-                    - /url: /combos
-                - listitem [ref=e426]:
-                  - link "Archetypes" [ref=e427] [cursor=pointer]:
-                    - /url: /archetypes
-                - listitem [ref=e428]:
-                  - link "Guides" [ref=e429] [cursor=pointer]:
-                    - /url: /guides
-                - listitem [ref=e430]:
-                  - link "Syntax Cheat Sheet" [ref=e431] [cursor=pointer]:
-                    - /url: /docs/syntax
-                - listitem [ref=e432]:
-                  - link "About" [ref=e433] [cursor=pointer]:
-                    - /url: /about
-            - generic [ref=e434]:
-              - heading "Guides" [level=3] [ref=e435]
-              - list [ref=e436]:
-                - listitem [ref=e437]:
-                  - link "Search by Creature Type" [ref=e438] [cursor=pointer]:
-                    - /url: /guides/search-by-creature-type
-                - listitem [ref=e439]:
-                  - link "Filter by Color" [ref=e440] [cursor=pointer]:
-                    - /url: /guides/filter-by-color
-                - listitem [ref=e441]:
-                  - link "Budget & Price Filters" [ref=e442] [cursor=pointer]:
-                    - /url: /guides/budget-price-filters
-                - listitem [ref=e443]:
-                  - link "Format Legality Search" [ref=e444] [cursor=pointer]:
-                    - /url: /guides/format-legality-search
-                - listitem [ref=e445]:
-                  - link "Keyword Ability Search" [ref=e446] [cursor=pointer]:
-                    - /url: /guides/keyword-ability-search
-                - listitem [ref=e447]:
-                  - link "All guides →" [ref=e448] [cursor=pointer]:
-                    - /url: /guides
-            - generic [ref=e449]:
-              - heading "Data Sources" [level=3] [ref=e450]
-              - list [ref=e451]:
-                - listitem [ref=e452]:
-                  - link "Scryfall" [ref=e453] [cursor=pointer]:
-                    - /url: https://scryfall.com
-                    - text: Scryfall
-                    - img [ref=e454]
-                - listitem [ref=e458]:
-                  - link "Moxfield" [ref=e459] [cursor=pointer]:
-                    - /url: https://www.moxfield.com
-                    - text: Moxfield
-                    - img [ref=e460]
-                - listitem [ref=e464]:
-                  - link "Commander Spellbook" [ref=e465] [cursor=pointer]:
-                    - /url: https://commanderspellbook.com
-                    - text: Commander Spellbook
-                    - img [ref=e466]
-                - listitem [ref=e470]:
-                  - link "TopDeck.gg" [ref=e471] [cursor=pointer]:
-                    - /url: https://topdeck.gg
-                    - text: TopDeck.gg
-                    - img [ref=e472]
-            - generic [ref=e476]:
-              - heading "Built With" [level=3] [ref=e477]
-              - list [ref=e478]:
-                - listitem [ref=e479]:
-                  - link "React" [ref=e480] [cursor=pointer]:
-                    - /url: https://react.dev
-                    - text: React
-                    - img [ref=e481]
-                - listitem [ref=e485]:
-                  - link "TypeScript" [ref=e486] [cursor=pointer]:
-                    - /url: https://www.typescriptlang.org
-                    - text: TypeScript
-                    - img [ref=e487]
-                - listitem [ref=e491]:
-                  - link "Tailwind CSS" [ref=e492] [cursor=pointer]:
-                    - /url: https://tailwindcss.com
-                    - text: Tailwind CSS
-                    - img [ref=e493]
-                - listitem [ref=e497]:
-                  - link "Vite" [ref=e498] [cursor=pointer]:
-                    - /url: https://vitejs.dev
-                    - text: Vite
-                    - img [ref=e499]
-                - listitem [ref=e503]:
-                  - link "Lovable" [ref=e504] [cursor=pointer]:
-                    - /url: https://lovable.dev
-                    - text: Lovable
-                    - img [ref=e505]
-          - generic [ref=e509]:
-            - link "Join our Discord community (opens in new tab)" [ref=e510] [cursor=pointer]:
+                  - button: “hidden finishers under $5”
+          - paragraph: Every result comes from Scryfall — the source of truth for card data. OffMeta only translates intent and adds discovery layers on top.
+      - region:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - img
+                - generic: Describe the card you want
+              - paragraph: Type plain English and let OffMeta translate the intent.
+            - generic:
+              - generic:
+                - img
+                - generic: Get a precise Scryfall query
+              - paragraph: See the exact search syntax before you commit to it.
+            - generic:
+              - generic:
+                - img
+                - generic: Find better follow-up cards
+              - paragraph: Surface similar, budget, and synergy ideas instantly.
+      - contentinfo:
+        - generic:
+          - generic:
+            - generic: O
+            - generic: OffMeta
+            - generic: · © 2026
+          - generic:
+            - generic:
+              - generic:
+                - heading [level=3]: Explore
+                - list:
+                  - listitem:
+                    - link:
+                      - /url: /combos
+                      - text: Combo Finder
+                  - listitem:
+                    - link:
+                      - /url: /archetypes
+                      - text: Archetypes
+                  - listitem:
+                    - link:
+                      - /url: /guides
+                      - text: Guides
+                  - listitem:
+                    - link:
+                      - /url: /docs/syntax
+                      - text: Syntax Cheat Sheet
+                  - listitem:
+                    - link:
+                      - /url: /about
+                      - text: About
+              - generic:
+                - heading [level=3]: Guides
+                - list:
+                  - listitem:
+                    - link:
+                      - /url: /guides/search-by-creature-type
+                      - text: Search by Creature Type
+                  - listitem:
+                    - link:
+                      - /url: /guides/filter-by-color
+                      - text: Filter by Color
+                  - listitem:
+                    - link:
+                      - /url: /guides/budget-price-filters
+                      - text: Budget & Price Filters
+                  - listitem:
+                    - link:
+                      - /url: /guides/format-legality-search
+                      - text: Format Legality Search
+                  - listitem:
+                    - link:
+                      - /url: /guides/keyword-ability-search
+                      - text: Keyword Ability Search
+                  - listitem:
+                    - link:
+                      - /url: /guides
+                      - text: All guides →
+              - generic:
+                - heading [level=3]: Data Sources
+                - list:
+                  - listitem:
+                    - link:
+                      - /url: https://scryfall.com
+                      - text: Scryfall
+                      - img
+                  - listitem:
+                    - link:
+                      - /url: https://www.moxfield.com
+                      - text: Moxfield
+                      - img
+                  - listitem:
+                    - link:
+                      - /url: https://commanderspellbook.com
+                      - text: Commander Spellbook
+                      - img
+                  - listitem:
+                    - link:
+                      - /url: https://topdeck.gg
+                      - text: TopDeck.gg
+                      - img
+              - generic:
+                - heading [level=3]: Built With
+                - list:
+                  - listitem:
+                    - link:
+                      - /url: https://react.dev
+                      - text: React
+                      - img
+                  - listitem:
+                    - link:
+                      - /url: https://www.typescriptlang.org
+                      - text: TypeScript
+                      - img
+                  - listitem:
+                    - link:
+                      - /url: https://tailwindcss.com
+                      - text: Tailwind CSS
+                      - img
+                  - listitem:
+                    - link:
+                      - /url: https://vitejs.dev
+                      - text: Vite
+                      - img
+                  - listitem:
+                    - link:
+                      - /url: https://lovable.dev
+                      - text: Lovable
+                      - img
+          - generic:
+            - link:
               - /url: https://discord.gg/9UEv6vrTD4
-              - img [ref=e511]
+              - img
               - text: Discord
-            - generic [ref=e513]: ·
-            - link "View source on GitHub (opens in new tab)" [ref=e514] [cursor=pointer]:
+            - generic: ·
+            - link:
               - /url: https://github.com/vermosi/offmeta
-              - img [ref=e515]
+              - img
               - text: Source
-          - paragraph [ref=e518]:
-            - text: Unofficial Fan Content per
-            - link "WotC Fan Content Policy" [ref=e519] [cursor=pointer]:
-              - /url: https://company.wizards.com/en/legal/fancontentpolicy
-            - text: ". Magic: The Gathering © Wizards of the Coast."
+          - generic:
+            - paragraph:
+              - text: Unofficial Fan Content per
+              - link:
+                - /url: https://company.wizards.com/en/legal/fancontentpolicy
+                - text: WotC Fan Content Policy
+              - text: ". Magic: The Gathering © Wizards of the Coast."
+  - dialog "Create Account" [ref=e2]:
+    - heading "Create Account" [level=2] [ref=e4]
+    - generic [ref=e5]:
+      - button "Continue with Google" [ref=e6] [cursor=pointer]:
+        - img
+        - text: Continue with Google
+      - generic [ref=e11]: or
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - generic [ref=e14]:
+            - img [ref=e15]
+            - textbox "Email" [ref=e18]:
+              - /placeholder: you@example.com
+        - generic [ref=e19]:
+          - text: Password
+          - generic [ref=e20]:
+            - img [ref=e21]
+            - textbox "Password" [ref=e24]:
+              - /placeholder: Min 6 characters
+        - button "Create Account" [ref=e25] [cursor=pointer]
+        - generic [ref=e26]:
+          - text: Already have an account?
+          - button "Sign In" [active] [ref=e27] [cursor=pointer]
+    - button "Close" [ref=e28] [cursor=pointer]:
+      - img [ref=e29]
+      - generic [ref=e32]: Close
 ```

@@ -21,7 +21,7 @@ test.describe('Auth modal flows', () => {
     await page.goto('/');
 
     await openAuthDialog(page);
-    const dialog = page.getByRole('dialog').first();
+    const dialog = page.getByRole('dialog', { name: /sign in/i });
     await expect(dialog).toBeVisible({ timeout: 15_000 });
 
     await dialog.getByRole('button', { name: /^sign up$/i }).click();
@@ -38,7 +38,8 @@ test.describe('Auth modal flows', () => {
     await page.goto('/');
 
     await openAuthDialog(page);
-    const dialog = page.getByRole('dialog').first();
+    const dialog = page.getByRole('dialog', { name: /sign in/i });
+    await expect(dialog).toBeVisible({ timeout: 15_000 });
 
     await dialog.getByLabel('Email').fill('existing@example.com');
     await dialog.getByLabel('Password').fill('password123');
@@ -51,7 +52,8 @@ test.describe('Auth modal flows', () => {
     await page.goto('/');
 
     await openAuthDialog(page);
-    const dialog = page.getByRole('dialog').first();
+    const dialog = page.getByRole('dialog', { name: /sign in/i });
+    await expect(dialog).toBeVisible({ timeout: 15_000 });
 
     await dialog.getByRole('button', { name: /forgot password\?/i }).click();
     await dialog.getByLabel('Email').fill('existing@example.com');
