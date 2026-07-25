@@ -8,7 +8,7 @@
  */
 
 import { useEffect, useMemo, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getCardByName } from '@/lib/scryfall/client';
 import { slugToCardName, cardNameToSlug } from '@/lib/card-slug';
@@ -372,6 +372,15 @@ const CardPage = () => {
   const displayName = activeFace?.name ?? card.name;
   const displayTypeLine = activeFace?.type_line ?? card.type_line;
   const displayManaCost = activeFace?.mana_cost ?? card.mana_cost;
+
+  // Alias slug → canonical redirect. If the URL slug doesn't match the
+  // canonical slug derived from the resolved card name (e.g. missing
+  // punctuation, diacritics, older/misspelled variants that resolved via
+  // fuzzy lookup), send the client to the canonical /cards/:slug URL so
+  // links, analytics, and SEO consolidate on a single path.
+  if (card && canonicalSlug && canonicalSlug !== slug) {
+    return <Navigate to={`/cards/${canonicalSlug}`} replace />;
+  }
 
   return (
     <ErrorBoundary>
