@@ -11,6 +11,7 @@ import {
   MOCK_SCRYFALL_SEARCH_RESPONSE,
   MOCK_BOLT_SEARCH_RESPONSE,
 } from './mock-responses';
+import { resetSearchRateLimitState } from '@/hooks/useSearchQuery';
 
 const SEARCH_INPUT_SELECTOR = '#search-input:visible';
 const SEARCH_RESULT_CARD_SELECTOR = '[role="button"][aria-label^="View details for"]';
@@ -64,6 +65,8 @@ export async function mockBoltSearchAPIs(page: Page) {
  * Fill the search input, press Enter, and wait for card results to render.
  */
 export async function searchForCard(page: Page, query: string) {
+  resetSearchRateLimitState();
+
   const searchForm = page.getByRole('search');
   const searchInput = searchForm.getByRole('searchbox', {
     name: /search for magic cards using natural language/i,
@@ -289,10 +292,22 @@ export async function signInViaDialog(
 ) {
   const { email = 'mock@example.com', password = 'password123' } = opts;
 
-  await page
-    .getByRole('button', { name: /sign in/i })
-    .first()
-    .click();
+  const visibleSignInButton = page
+    .locator('button:visible')
+    .filter({ hasText: /^sign in$/i })
+    .first();
+
+  if (await visibleSignInButton.isVisible().catch(() => false)) {
+    await visibleSignInButton.click();
+  } else {
+    const hamburgerButton = page.getByTestId('hamburger-button');
+    if (!(await hamburgerButton.isVisible().catch(() => false))) {
+      throw new Error('No visible sign in entrypoint found');
+    }
+
+    await hamburgerButton.click();
+    await page.getByRole('button', { name: /^sign in$/i }).last().click();
+  }
 
   const authDialog = page.getByRole('dialog').first();
   await expect(authDialog).toBeVisible({ timeout: 5_000 });

@@ -21,6 +21,12 @@ const recentSearches = new Map<string, number>(); // query -> timestamp
 let searchCountThisMinute = 0;
 let minuteWindowStart = Date.now();
 
+export function resetSearchRateLimitState() {
+  recentSearches.clear();
+  searchCountThisMinute = 0;
+  minuteWindowStart = Date.now();
+}
+
 export interface TranslationResult {
   edgeSource?: string;
   edgeResponseTimeMs?: number;

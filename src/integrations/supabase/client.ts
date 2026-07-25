@@ -11,7 +11,14 @@ export const supabase = createClient<Database>(
   env.VITE_SUPABASE_PUBLISHABLE_KEY,
   {
     auth: {
-      storage: localStorage,
+      storage:
+        typeof window !== 'undefined' && window.localStorage
+          ? window.localStorage
+          : {
+              getItem: () => null,
+              setItem: () => {},
+              removeItem: () => {},
+            },
       persistSession: true,
       autoRefreshToken: true,
     },

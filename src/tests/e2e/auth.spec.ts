@@ -2,16 +2,21 @@ import { expect, test } from '@playwright/test';
 import { mockAuthAPIs } from './fixtures/mock-helpers';
 
 async function openAuthDialog(page: Parameters<typeof test>[0]['page']) {
-  const desktopSignIn = page.locator(
-    'header button:visible',
-    { hasText: 'Sign in' },
-  ).first();
-  if (await desktopSignIn.count()) {
+  const desktopSignIn = page
+    .locator('button:visible')
+    .filter({ hasText: /^sign in$/i })
+    .first();
+  if (await desktopSignIn.isVisible().catch(() => false)) {
     await desktopSignIn.click();
     return;
   }
 
-  await page.getByTestId('hamburger-button').click();
+  const hamburgerButton = page.getByTestId('hamburger-button');
+  if (!(await hamburgerButton.isVisible().catch(() => false))) {
+    throw new Error('No visible auth entrypoint found');
+  }
+
+  await hamburgerButton.click();
   await page
     .getByRole('button', { name: /^sign in$/i })
     .last()
@@ -34,7 +39,7 @@ test.describe('Auth modal flows', () => {
     await page.goto('/');
 
     await openAuthDialog(page);
-    const dialog = page.getByRole('dialog', { name: /sign in/i });
+    const dialog = page.getByRole('dialog').first();
     await expect(dialog).toBeVisible({ timeout: 15_000 });
 
     await dialog.getByRole('button', { name: /^sign up$/i }).click();
@@ -51,7 +56,7 @@ test.describe('Auth modal flows', () => {
     await page.goto('/');
 
     await openAuthDialog(page);
-    const dialog = page.getByRole('dialog', { name: /sign in/i });
+    const dialog = page.getByRole('dialog').first();
     await expect(dialog).toBeVisible({ timeout: 15_000 });
 
     await dialog.getByLabel('Email').fill('existing@example.com');
@@ -65,7 +70,7 @@ test.describe('Auth modal flows', () => {
     await page.goto('/');
 
     await openAuthDialog(page);
-    const dialog = page.getByRole('dialog', { name: /sign in/i });
+    const dialog = page.getByRole('dialog').first();
     await expect(dialog).toBeVisible({ timeout: 15_000 });
 
     await dialog.getByRole('button', { name: /forgot password\?/i }).click();

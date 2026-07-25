@@ -8,7 +8,7 @@ const FALLBACK_SUPABASE_PUBLISHABLE_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54bXp5eWtrendvbWtjZW50Y3R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyMzgwOTYsImV4cCI6MjA4MDgxNDA5Nn0.sJbaqJuvKqIMYV0D2Q4iWgTRlzVGih7OXRRkGmDsGPY';
 
 export function validateEnv(
-  rawEnv: Record<string, unknown> = import.meta.env,
+  rawEnv: Record<string, unknown> = import.meta.env ?? {},
 ): AppEnv {
   const url =
     typeof rawEnv['VITE_SUPABASE_URL'] === 'string' &&

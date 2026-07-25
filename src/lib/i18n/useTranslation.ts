@@ -13,7 +13,7 @@
 
 import { useContext, useMemo } from 'react';
 import { I18nContext } from './context';
-import enDictionary from './en.json';
+import enDictionary from './en.json' with { type: 'json' };
 
 const EN_DICT = enDictionary as Record<string, string>;
 
