@@ -465,16 +465,6 @@ export function UnderstoodSummary({
   const [copied, setCopied] = useState<boolean>(false);
   const expandedChipsRef = useRef<Set<string>>(new Set());
 
-  // Reset exclusions whenever the underlying query changes (new search).
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      setExcluded(new Set());
-      setCopied(false);
-      expandedChipsRef.current = new Set();
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [originalQuery]);
-
   // Fire a one-time "view" event per unique query so we can measure how often
   // the summary is actually surfaced to users.
   const viewedQueryRef = useRef<string | null>(null);
