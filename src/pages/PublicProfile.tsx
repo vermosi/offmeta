@@ -10,12 +10,20 @@ import { useTranslation } from '@/lib/i18n';
 import { useParams, Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { User, Package, Layers, ArrowLeft, Crown, ExternalLink } from 'lucide-react';
+import {
+  User,
+  Package,
+  Layers,
+  ArrowLeft,
+  Crown,
+  ExternalLink,
+} from 'lucide-react';
 import { ManaCost } from '@/components/ManaSymbol';
 import { FORMAT_LABELS } from '@/data/formats';
 import { SkipLinks } from '@/components/SkipLinks';
@@ -44,7 +52,12 @@ interface PublicDeck {
 export default function PublicProfile() {
   const { userId } = useParams<{ userId: string }>();
 
-  const { data: profile, isLoading: profileLoading } = useQuery({
+  const {
+    data: profile,
+    isLoading: profileLoading,
+    error: profileError,
+    refetch: refetchProfile,
+  } = useQuery({
     queryKey: ['public-profile', userId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -56,14 +69,22 @@ export default function PublicProfile() {
       return data as PublicProfile;
     },
     enabled: !!userId,
+    retry: false,
   });
 
-  const { data: decks = [], isLoading: decksLoading } = useQuery({
+  const {
+    data: decks = [],
+    isLoading: decksLoading,
+    error: decksError,
+    refetch: refetchDecks,
+  } = useQuery({
     queryKey: ['public-profile-decks', userId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('decks')
-        .select('id, name, format, commander_name, color_identity, card_count, created_at, updated_at, description')
+        .select(
+          'id, name, format, commander_name, color_identity, card_count, created_at, updated_at, description',
+        )
         .eq('user_id', userId!)
         .eq('is_public', true)
         .order('updated_at', { ascending: false });
@@ -71,6 +92,7 @@ export default function PublicProfile() {
       return data as PublicDeck[];
     },
     enabled: !!userId,
+    retry: false,
   });
 
   const memberSince = useMemo(() => {
@@ -82,6 +104,10 @@ export default function PublicProfile() {
   }, [profile]);
 
   const { t } = useTranslation();
+  const profileLoadError =
+    profileError instanceof Error ? profileError.message : null;
+  const decksLoadError =
+    decksError instanceof Error ? decksError.message : null;
 
   useEffect(() => {
     if (!userId) return;
@@ -98,12 +124,14 @@ export default function PublicProfile() {
     });
   }, [userId, profile?.display_name, profile?.avatar_url, decks.length]);
 
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SkipLinks />
       <Header />
-      <main id="main-content" className="flex-1 w-full max-w-4xl mx-auto px-4 py-6 space-y-6">
+      <main
+        id="main-content"
+        className="flex-1 w-full max-w-4xl mx-auto px-4 py-6 space-y-6"
+      >
         <Link
           to="/"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -139,26 +167,47 @@ export default function PublicProfile() {
                 {profile.display_name || t('publicProfile.anonymousUser')}
               </h1>
               <p className="text-sm text-muted-foreground">
-                {t('publicProfile.memberSince').replace('{date}', memberSince || '')}
+                {t('publicProfile.memberSince').replace(
+                  '{date}',
+                  memberSince || '',
+                )}
               </p>
             </div>
           </div>
         ) : (
           <div className="text-center py-16">
             <User className="h-12 w-12 mx-auto text-muted-foreground/30" />
-            <p className="text-muted-foreground mt-2">{t('publicProfile.userNotFound')}</p>
+            <p className="text-muted-foreground mt-2">
+              {t('publicProfile.userNotFound')}
+            </p>
+          </div>
+        )}
+
+        {profileLoadError && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive space-y-3">
+            <p>Failed to load this profile: {profileLoadError}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void refetchProfile()}
+            >
+              Retry
+            </Button>
           </div>
         )}
 
         {/* Stats */}
         {profile && (
           <div className="space-y-3">
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Layers className="h-4 w-4" />
                 {decks.length === 1
                   ? t('publicProfile.publicDeckCount').replace('{count}', '1')
-                  : t('publicProfile.publicDeckCountPlural').replace('{count}', String(decks.length))}
+                  : t('publicProfile.publicDeckCountPlural').replace(
+                      '{count}',
+                      String(decks.length),
+                    )}
               </div>
             </div>
             <PublicCollectionStats userId={userId!} />
@@ -184,7 +233,7 @@ export default function PublicProfile() {
                 to={`/deck/${deck.id}`}
                 className="block p-4 rounded-lg border border-border/50 bg-card/50 hover:bg-muted/50 transition-colors"
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-foreground truncate">
@@ -206,9 +255,11 @@ export default function PublicProfile() {
                       </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0 flex-wrap sm:justify-end">
                     {deck.color_identity.length > 0 && (
-                      <ManaCost cost={deck.color_identity.map((c) => `{${c}}`).join('')} />
+                      <ManaCost
+                        cost={deck.color_identity.map((c) => `{${c}}`).join('')}
+                      />
                     )}
                     <span className="text-xs text-muted-foreground">
                       {deck.card_count} {t('deck.cards')}
@@ -227,6 +278,19 @@ export default function PublicProfile() {
             </p>
           </div>
         ) : null}
+
+        {decksLoadError && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive space-y-3">
+            <p>Failed to load public decks: {decksLoadError}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void refetchDecks()}
+            >
+              Retry
+            </Button>
+          </div>
+        )}
       </main>
       <Footer />
     </div>
