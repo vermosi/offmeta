@@ -18,6 +18,12 @@ import { useMarketTrends, type PriceMover } from '@/hooks';
 import { useNoIndex } from '@/hooks';
 import { cardNameToSlug } from '@/lib/card-slug';
 import {
+  applyFilters,
+  countActiveFilters,
+  sortMovers,
+  type MarketFilters,
+} from './market-trends-utils';
+import {
   TrendingUp,
   TrendingDown,
   AlertTriangle,
@@ -86,18 +92,6 @@ const MIN_CHANGE_OPTIONS = [
   { label: '>= 50%', value: 50 },
 ] as const;
 
-type SortField = 'change' | 'current' | 'previous' | 'name';
-type SortDir = 'asc' | 'desc';
-
-interface MarketFilters {
-  direction: string;
-  format: string;
-  rarity: string;
-  cardType: string;
-  priceRange: number;
-  minChange: number;
-}
-
 const DEFAULT_FILTERS: MarketFilters = {
   direction: 'all',
   format: '',
@@ -106,62 +100,6 @@ const DEFAULT_FILTERS: MarketFilters = {
   priceRange: 0,
   minChange: 0,
 };
-
-function countActiveFilters(filters: MarketFilters): number {
-  let count = 0;
-  if (filters.direction !== 'all') count++;
-  if (filters.format) count++;
-  if (filters.rarity) count++;
-  if (filters.cardType) count++;
-  if (filters.priceRange > 0) count++;
-  if (filters.minChange > 0) count++;
-  return count;
-}
-
-function applyFilters(movers: PriceMover[], filters: MarketFilters): PriceMover[] {
-  return movers.filter((m) => {
-    if (filters.direction !== 'all' && m.direction !== filters.direction) return false;
-    if (filters.format && m.legalities) {
-      const legality = (m.legalities as Record<string, string>)[filters.format];
-      if (legality !== 'legal' && legality !== 'restricted') return false;
-    } else if (filters.format && !m.legalities) {
-      return false;
-    }
-    if (filters.rarity && m.rarity !== filters.rarity) return false;
-    if (filters.cardType && m.type_line) {
-      if (!m.type_line.includes(filters.cardType)) return false;
-    } else if (filters.cardType && !m.type_line) {
-      return false;
-    }
-    const range = PRICE_RANGES[filters.priceRange];
-    if (range && (m.current_price < range.min || m.current_price > range.max)) return false;
-    if (filters.minChange > 0 && Math.abs(m.change_percent) < filters.minChange) return false;
-    return true;
-  });
-}
-
-function sortMovers(movers: PriceMover[], field: SortField, dir: SortDir): PriceMover[] {
-  const sorted = [...movers];
-  sorted.sort((a, b) => {
-    let cmp = 0;
-    switch (field) {
-      case 'change':
-        cmp = Math.abs(b.change_percent) - Math.abs(a.change_percent);
-        break;
-      case 'current':
-        cmp = b.current_price - a.current_price;
-        break;
-      case 'previous':
-        cmp = b.previous_price - a.previous_price;
-        break;
-      case 'name':
-        cmp = a.card_name.localeCompare(b.card_name);
-        break;
-    }
-    return dir === 'asc' ? -cmp : cmp;
-  });
-  return sorted;
-}
 
 function FilterSelect({
   label,
@@ -175,12 +113,12 @@ function FilterSelect({
   onChange: (v: string) => void;
 }) {
   return (
-    <div className="relative">
+    <div className="relative min-w-[10rem]">
       <label className="sr-only">{label}</label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="appearance-none rounded-lg border border-border bg-card text-foreground text-xs font-medium pl-3 pr-7 py-2 cursor-pointer hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/30"
+        className="w-full appearance-none rounded-lg border border-border bg-card text-foreground text-xs font-medium pl-3 pr-7 py-2 cursor-pointer hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/30"
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
@@ -211,12 +149,20 @@ function SortButton({
     <button
       onClick={() => onSort(field)}
       className={`text-xs font-medium transition-colors flex items-center gap-1 ${
-        isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+        isActive
+          ? 'text-foreground'
+          : 'text-muted-foreground hover:text-foreground'
       }`}
     >
       {label}
-      <ArrowUpDown className={`h-3 w-3 ${isActive ? 'text-primary' : 'opacity-40'}`} />
-      {isActive && <span className="text-[10px] text-primary">{activeDir === 'asc' ? '↑' : '↓'}</span>}
+      <ArrowUpDown
+        className={`h-3 w-3 ${isActive ? 'text-primary' : 'opacity-40'}`}
+      />
+      {isActive && (
+        <span className="text-[10px] text-primary">
+          {activeDir === 'asc' ? '↑' : '↓'}
+        </span>
+      )}
     </button>
   );
 }
@@ -226,7 +172,7 @@ function MoverRow({ mover }: { mover: PriceMover }) {
   const slug = cardNameToSlug(mover.card_name);
 
   return (
-    <div className="grid grid-cols-[1fr_auto_auto_auto] sm:grid-cols-[1fr_80px_60px_60px_60px] items-center gap-2 sm:gap-3 rounded-lg border border-border bg-card/50 px-3 sm:px-4 py-2.5 transition-colors hover:bg-muted/40">
+    <div className="grid grid-cols-[1fr_auto_auto_auto] sm:grid-cols-[1fr_80px_60px_60px_60px] items-center gap-2 sm:gap-3 rounded-lg border border-border bg-card/50 px-3 sm:px-4 py-3 sm:py-2.5 transition-colors hover:bg-muted/40">
       <div className="min-w-0">
         <Link
           to={`/cards/${slug}`}
@@ -234,7 +180,7 @@ function MoverRow({ mover }: { mover: PriceMover }) {
         >
           {mover.card_name}
         </Link>
-        <div className="flex items-center gap-1.5 mt-0.5">
+        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
           {mover.rarity && (
             <span
               className={`text-[10px] capitalize ${
@@ -266,7 +212,11 @@ function MoverRow({ mover }: { mover: PriceMover }) {
       <span className="text-xs font-medium text-foreground tabular-nums text-right">
         ${mover.current_price.toFixed(2)}
       </span>
-      <Badge variant={isUp ? 'success' : 'destructive'} size="sm" className="shrink-0 tabular-nums justify-center">
+      <Badge
+        variant={isUp ? 'success' : 'destructive'}
+        size="sm"
+        className="shrink-0 min-w-[4.5rem] tabular-nums justify-center"
+      >
         {isUp ? '+' : ''}
         {mover.change_percent.toFixed(1)}%
       </Badge>
@@ -314,9 +264,12 @@ export default function MarketTrends() {
     return sortMovers(filtered, sortField, sortDir);
   }, [allMovers, filters, sortField, sortDir]);
 
-  const updateFilter = useCallback(<K extends keyof MarketFilters>(key: K, value: MarketFilters[K]) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-  }, []);
+  const updateFilter = useCallback(
+    <K extends keyof MarketFilters>(key: K, value: MarketFilters[K]) => {
+      setFilters((prev) => ({ ...prev, [key]: value }));
+    },
+    [],
+  );
 
   const clearFilters = useCallback(() => setFilters(DEFAULT_FILTERS), []);
 
@@ -341,14 +294,18 @@ export default function MarketTrends() {
         </div>
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Market Trends</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+              Market Trends
+            </h1>
             <p className="text-sm text-muted-foreground mt-1">
               Biggest price movers over the last {daysBack} days
-              {filteredMovers.length > 0 && <span className="ml-1">· {filteredMovers.length} cards</span>}
+              {filteredMovers.length > 0 && (
+                <span className="ml-1">· {filteredMovers.length} cards</span>
+              )}
             </p>
           </div>
-          <div className="flex items-center gap-2 self-start">
-            <div className="flex items-center gap-1 rounded-lg border border-border p-1 bg-muted/30">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 self-stretch sm:self-start w-full sm:w-auto">
+            <div className="flex items-center gap-1 rounded-lg border border-border p-1 bg-muted/30 overflow-x-auto max-w-full">
               {TIME_RANGES.map((range) => (
                 <button
                   key={range.value}
@@ -384,7 +341,9 @@ export default function MarketTrends() {
         {showFilters && (
           <div className="rounded-xl border border-border bg-card/50 p-4 mb-6 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-foreground">Filters</span>
+              <span className="text-xs font-semibold text-foreground">
+                Filters
+              </span>
               {activeFilterCount > 0 && (
                 <button
                   onClick={clearFilters}
@@ -395,7 +354,7 @@ export default function MarketTrends() {
                 </button>
               )}
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               <div className="flex items-center gap-1 rounded-lg border border-border p-0.5 bg-muted/30">
                 {DIRECTION_OPTIONS.map((opt) => (
                   <button
@@ -411,40 +370,98 @@ export default function MarketTrends() {
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
-                    {opt.value === 'up' && <TrendingUp className="h-3 w-3 inline mr-1" />}
-                    {opt.value === 'down' && <TrendingDown className="h-3 w-3 inline mr-1" />}
+                    {opt.value === 'up' && (
+                      <TrendingUp className="h-3 w-3 inline mr-1" />
+                    )}
+                    {opt.value === 'down' && (
+                      <TrendingDown className="h-3 w-3 inline mr-1" />
+                    )}
                     {opt.label}
                   </button>
                 ))}
               </div>
-              <FilterSelect label="Format" value={filters.format} options={FORMAT_OPTIONS} onChange={(v) => updateFilter('format', v)} />
-              <FilterSelect label="Rarity" value={filters.rarity} options={RARITY_OPTIONS} onChange={(v) => updateFilter('rarity', v)} />
-              <FilterSelect label="Card Type" value={filters.cardType} options={TYPE_OPTIONS} onChange={(v) => updateFilter('cardType', v)} />
+              <FilterSelect
+                label="Format"
+                value={filters.format}
+                options={FORMAT_OPTIONS}
+                onChange={(v) => updateFilter('format', v)}
+              />
+              <FilterSelect
+                label="Rarity"
+                value={filters.rarity}
+                options={RARITY_OPTIONS}
+                onChange={(v) => updateFilter('rarity', v)}
+              />
+              <FilterSelect
+                label="Card Type"
+                value={filters.cardType}
+                options={TYPE_OPTIONS}
+                onChange={(v) => updateFilter('cardType', v)}
+              />
               <FilterSelect
                 label="Price Range"
                 value={String(filters.priceRange)}
-                options={PRICE_RANGES.map((r, i) => ({ label: r.label, value: String(i) }))}
+                options={PRICE_RANGES.map((r, i) => ({
+                  label: r.label,
+                  value: String(i),
+                }))}
                 onChange={(v) => updateFilter('priceRange', Number(v))}
               />
               <FilterSelect
                 label="Min % Change"
                 value={String(filters.minChange)}
-                options={MIN_CHANGE_OPTIONS.map((o) => ({ label: o.label, value: String(o.value) }))}
+                options={MIN_CHANGE_OPTIONS.map((o) => ({
+                  label: o.label,
+                  value: String(o.value),
+                }))}
                 onChange={(v) => updateFilter('minChange', Number(v))}
               />
             </div>
             {activeFilterCount > 0 && (
               <div className="flex flex-wrap gap-1.5 pt-1">
                 {filters.direction !== 'all' && (
-                  <FilterChip label={filters.direction === 'up' ? 'Gainers only' : 'Losers only'} onRemove={() => updateFilter('direction', 'all')} />
+                  <FilterChip
+                    label={
+                      filters.direction === 'up'
+                        ? 'Gainers only'
+                        : 'Losers only'
+                    }
+                    onRemove={() => updateFilter('direction', 'all')}
+                  />
                 )}
                 {filters.format && (
-                  <FilterChip label={FORMAT_OPTIONS.find((f) => f.value === filters.format)?.label ?? filters.format} onRemove={() => updateFilter('format', '')} />
+                  <FilterChip
+                    label={
+                      FORMAT_OPTIONS.find((f) => f.value === filters.format)
+                        ?.label ?? filters.format
+                    }
+                    onRemove={() => updateFilter('format', '')}
+                  />
                 )}
-                {filters.rarity && <FilterChip label={filters.rarity} onRemove={() => updateFilter('rarity', '')} />}
-                {filters.cardType && <FilterChip label={filters.cardType} onRemove={() => updateFilter('cardType', '')} />}
-                {filters.priceRange > 0 && <FilterChip label={PRICE_RANGES[filters.priceRange].label} onRemove={() => updateFilter('priceRange', 0)} />}
-                {filters.minChange > 0 && <FilterChip label={`>= ${filters.minChange}%`} onRemove={() => updateFilter('minChange', 0)} />}
+                {filters.rarity && (
+                  <FilterChip
+                    label={filters.rarity}
+                    onRemove={() => updateFilter('rarity', '')}
+                  />
+                )}
+                {filters.cardType && (
+                  <FilterChip
+                    label={filters.cardType}
+                    onRemove={() => updateFilter('cardType', '')}
+                  />
+                )}
+                {filters.priceRange > 0 && (
+                  <FilterChip
+                    label={PRICE_RANGES[filters.priceRange].label}
+                    onRemove={() => updateFilter('priceRange', 0)}
+                  />
+                )}
+                {filters.minChange > 0 && (
+                  <FilterChip
+                    label={`>= ${filters.minChange}%`}
+                    onRemove={() => updateFilter('minChange', 0)}
+                  />
+                )}
               </div>
             )}
           </div>
@@ -452,24 +469,58 @@ export default function MarketTrends() {
         {isDemo && !isLoading && (
           <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-4 py-3 mb-4 text-sm text-muted-foreground">
             <AlertTriangle className="h-4 w-4 shrink-0" />
-            <span>Showing sample data - real trends will appear as price history accumulates.</span>
+            <span>
+              Showing sample data - real trends will appear as price history
+              accumulates.
+            </span>
           </div>
         )}
         <div className="grid grid-cols-[1fr_auto_auto_auto] sm:grid-cols-[1fr_80px_60px_60px_60px] items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 mb-1">
-          <SortButton label="Card" field="name" activeField={sortField} activeDir={sortDir} onSort={handleSort} />
-          <span className="text-[10px] text-muted-foreground hidden sm:block">Trend</span>
-          <SortButton label="Old" field="previous" activeField={sortField} activeDir={sortDir} onSort={handleSort} />
-          <SortButton label="New" field="current" activeField={sortField} activeDir={sortDir} onSort={handleSort} />
-          <SortButton label="%" field="change" activeField={sortField} activeDir={sortDir} onSort={handleSort} />
+          <SortButton
+            label="Card"
+            field="name"
+            activeField={sortField}
+            activeDir={sortDir}
+            onSort={handleSort}
+          />
+          <span className="text-[10px] text-muted-foreground hidden sm:block">
+            Trend
+          </span>
+          <SortButton
+            label="Old"
+            field="previous"
+            activeField={sortField}
+            activeDir={sortDir}
+            onSort={handleSort}
+          />
+          <SortButton
+            label="New"
+            field="current"
+            activeField={sortField}
+            activeDir={sortDir}
+            onSort={handleSort}
+          />
+          <SortButton
+            label="%"
+            field="change"
+            activeField={sortField}
+            activeDir={sortDir}
+            onSort={handleSort}
+          />
         </div>
         <div className="space-y-1.5">
           {isLoading ? (
             Array.from({ length: 10 }).map((_, i) => <MoverSkeleton key={i} />)
           ) : filteredMovers.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-sm text-muted-foreground">No cards match the current filters.</p>
+              <p className="text-sm text-muted-foreground">
+                No cards match the current filters.
+              </p>
               {activeFilterCount > 0 && (
-                <button onClick={clearFilters} className="mt-2 text-xs text-primary hover:text-primary/80 transition-colors">
+                <button
+                  onClick={clearFilters}
+                  className="mt-2 text-xs text-primary hover:text-primary/80 transition-colors"
+                >
                   Clear all filters
                 </button>
               )}
@@ -484,11 +535,20 @@ export default function MarketTrends() {
   );
 }
 
-function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
+function FilterChip({
+  label,
+  onRemove,
+}: {
+  label: string;
+  onRemove: () => void;
+}) {
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-medium capitalize">
       {label}
-      <button onClick={onRemove} className="hover:text-primary/70 transition-colors">
+      <button
+        onClick={onRemove}
+        className="hover:text-primary/70 transition-colors"
+      >
         <X className="h-2.5 w-2.5" />
       </button>
     </span>
