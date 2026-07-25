@@ -15,7 +15,9 @@ vi.mock('@/hooks/useAuth', () => ({
     loading: false,
     signOut: vi.fn(),
   }),
-  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  AuthProvider: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
 }));
 
 vi.mock('@/components/Header', () => ({
@@ -59,5 +61,21 @@ describe('NotFound', () => {
     const link = screen.getByText(/back to home/i);
     expect(link).toBeInTheDocument();
     expect(link.closest('a')?.getAttribute('href')).toBe('/');
+  });
+
+  it('offers alternate recovery links', () => {
+    renderNotFound();
+
+    expect(
+      screen.getByRole('link', { name: /browse searches/i }),
+    ).toHaveAttribute('href', '/browse-searches');
+    expect(screen.getByRole('link', { name: /read guides/i })).toHaveAttribute(
+      'href',
+      '/guides',
+    );
+    expect(screen.getByRole('link', { name: /browse decks/i })).toHaveAttribute(
+      'href',
+      '/decks',
+    );
   });
 });

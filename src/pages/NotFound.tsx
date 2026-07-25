@@ -35,20 +35,34 @@ const NotFound = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background relative">
-      <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
-      <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
+      <div
+        className="fixed inset-0 pointer-events-none bg-page-gradient"
+        aria-hidden="true"
+      />
+      <div
+        className="fixed inset-0 pointer-events-none bg-page-noise"
+        aria-hidden="true"
+      />
 
       <SkipLinks />
       <Header />
 
-      <main id="main-content" className="relative flex-1 flex items-center justify-center px-4">
+      <main
+        id="main-content"
+        className="relative flex-1 flex items-center justify-center px-4"
+      >
         <div className="text-center max-w-md space-y-6">
-          <h1 className="text-8xl font-black text-primary/45 select-none">404</h1>
+          <h1 className="text-8xl font-black text-primary/45 select-none">
+            404
+          </h1>
           <h1 className="text-2xl font-bold text-foreground">
             {t('notFound.title')}
           </h1>
           <p className="text-muted-foreground text-sm leading-relaxed">
-            {t('notFound.description', "The page you're looking for doesn't exist or has been moved.")}
+            {t(
+              'notFound.description',
+              "The page you're looking for doesn't exist or has been moved.",
+            )}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Button asChild variant="default" className="gap-2">
@@ -63,6 +77,51 @@ const NotFound = () => {
                 {t('notFound.backHome')}
               </Link>
             </Button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-left">
+            <Link
+              to="/browse-searches"
+              className="rounded-lg border border-border/70 bg-card/70 p-4 transition-colors hover:border-border"
+            >
+              <p className="text-sm font-medium text-foreground">
+                {t('notFound.browseSearches', 'Browse searches')}
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                {t(
+                  'notFound.browseSearchesDescription',
+                  'See curated and recent search patterns that can help you get back on track.',
+                )}
+              </p>
+            </Link>
+            <Link
+              to="/guides"
+              className="rounded-lg border border-border/70 bg-card/70 p-4 transition-colors hover:border-border"
+            >
+              <p className="text-sm font-medium text-foreground">
+                {t('notFound.readGuides', 'Read guides')}
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                {t(
+                  'notFound.readGuidesDescription',
+                  'Explore practical deckbuilding and search tips for the next step.',
+                )}
+              </p>
+            </Link>
+            <Link
+              to="/decks"
+              className="rounded-lg border border-border/70 bg-card/70 p-4 transition-colors hover:border-border"
+            >
+              <p className="text-sm font-medium text-foreground">
+                {t('notFound.browseDecks', 'Browse decks')}
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                {t(
+                  'notFound.browseDecksDescription',
+                  'Jump into community decks and use cases for inspiration.',
+                )}
+              </p>
+            </Link>
           </div>
         </div>
       </main>
