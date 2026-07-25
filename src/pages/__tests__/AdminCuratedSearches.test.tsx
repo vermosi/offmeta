@@ -78,7 +78,7 @@ vi.mock('@/components/ui/dialog', () => ({
 }));
 
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<ReactRouterDom>('react-router-dom');
+  const actual = await vi.importActual<typeof ReactRouterDom>('react-router-dom');
   return {
     ...actual,
     useNavigate: () => vi.fn(),
