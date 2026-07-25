@@ -30,7 +30,7 @@ const DEBUG_ENABLED = (() => {
 })();
 
 function emit(level: LogLevel, payload: Record<string, unknown>): void {
-  const serialized = JSON.stringify(payload);
+  const serialized = safeStringify(payload);
   if (level === 'error') {
     console.error(serialized);
   } else if (level === 'warn') {
@@ -40,6 +40,24 @@ function emit(level: LogLevel, payload: Record<string, unknown>): void {
     else console.log(serialized);
   } else {
     console.log(serialized);
+  }
+}
+
+function safeStringify(value: unknown): string {
+  const seen = new WeakSet<object>();
+  try {
+    return JSON.stringify(value, (_key, current) => {
+      if (typeof current === 'bigint') return current.toString();
+      if (current && typeof current === 'object') {
+        if (seen.has(current as object)) return '[Circular]';
+        seen.add(current as object);
+      }
+      return current;
+    });
+  } catch {
+    return JSON.stringify({
+      serialization_error: 'unserializable_payload',
+    });
   }
 }
 
@@ -85,7 +103,7 @@ export function formatError(err: unknown): StructuredLogData {
   if (err && typeof err === 'object') {
     const rec = err as Record<string, unknown>;
     return {
-      error_message: String(rec.message ?? JSON.stringify(rec)),
+      error_message: String(rec.message ?? safeStringify(rec)),
       ...(rec.code !== undefined ? { error_code: String(rec.code) } : {}),
     };
   }
