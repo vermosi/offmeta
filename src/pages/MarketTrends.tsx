@@ -24,8 +24,6 @@ import {
   type MarketFilters,
 } from './market-trends-utils';
 
-type SortField = 'change' | 'current' | 'name' | 'previous';
-type SortDir = 'asc' | 'desc';
 import {
   TrendingUp,
   TrendingDown,
