@@ -76,7 +76,7 @@ describe('CardItem', () => {
       <CardItem card={mockCard} onClick={vi.fn()} />,
     );
     const img = container.querySelector('img');
-    fireEvent.error(img);
+    fireEvent.error(img!);
     expect(container.querySelector('img')).not.toBeInTheDocument();
     const matches = screen.getAllByText('Lightning Bolt');
     expect(matches.length).toBeGreaterThanOrEqual(1);
