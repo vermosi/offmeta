@@ -177,7 +177,7 @@ export default function GuidesIndex() {
                         {t(group.label)}
                       </h2>
                       <p className="text-sm text-muted-foreground">
-                        {group.min === group.max
+                        {(group.min as number) === (group.max as number)
                           ? `Level ${group.min}`
                           : `Levels ${group.min}-${group.max}`}{' '}
                         • {group.guides.length} guides
