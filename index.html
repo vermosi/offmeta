@@ -2,9 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
+    <!--
+      No cache-busting meta tags. `Cache-Control: no-store` at the document
+      level defeats browser caching of the HTML shell and hurts LCP on
+      repeat views. Cache invalidation is handled by Vite's hashed asset
+      filenames and the auto-recovery loader in src/main.tsx.
+    -->
+
     <meta name="google-site-verification" content="BFbOUBW-CLUbLmfgd3BS6GYFS2tLjT0hCgdkFY-cH3o" />
     <meta
       name="viewport"
