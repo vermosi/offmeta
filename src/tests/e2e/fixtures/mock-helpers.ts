@@ -5,7 +5,6 @@
 
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
-import { queryToSlug } from '@/lib/search-slug';
 import {
   MOCK_SEMANTIC_SEARCH_RESPONSE,
   MOCK_LIGHTNING_BOLT_SEMANTIC_RESPONSE,
@@ -65,7 +64,13 @@ export async function mockBoltSearchAPIs(page: Page) {
  * Fill the search input, press Enter, and wait for card results to render.
  */
 export async function searchForCard(page: Page, query: string) {
-  await page.goto(`/search/${queryToSlug(query)}`);
+  const searchInput = page.getByRole('searchbox', {
+    name: /search for magic cards using natural language/i,
+  });
+  await expect(searchInput).toBeVisible({ timeout: 15_000 });
+
+  await searchInput.fill(query);
+  await searchInput.press('Enter');
 
   await expect(
     page.locator(SEARCH_RESULT_CARD_SELECTOR).first(),

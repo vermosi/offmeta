@@ -1,0 +1,179 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - complementary "About OffMeta" [ref=e2]:
+    - heading "OffMeta — Natural Language Magic Card Search" [level=1] [ref=e3]
+    - paragraph [ref=e4]: "OffMeta is a natural language Magic: The Gathering card search tool. It lets players describe cards the way they talk and translates that into real Scryfall searches. No syntax knowledge required."
+  - generic [ref=e5]:
+    - region "Notifications (F8)":
+      - list
+    - region "Notifications alt+T"
+    - generic [ref=e6]:
+      - navigation "Skip links" [ref=e7]:
+        - link "Skip to main content" [ref=e8] [cursor=pointer]:
+          - /url: "#main-content"
+      - banner [ref=e9]:
+        - generic [ref=e10]:
+          - link "OffMeta - Home" [ref=e11] [cursor=pointer]:
+            - /url: /
+            - img [ref=e12]
+            - generic [ref=e17]: OffMeta
+          - navigation "Main navigation" [ref=e18]:
+            - link "Guides" [ref=e19] [cursor=pointer]:
+              - /url: /guides
+            - link "Combos" [ref=e20] [cursor=pointer]:
+              - /url: /combos
+            - link "About" [ref=e21] [cursor=pointer]:
+              - /url: /about
+          - generic [ref=e22]:
+            - link "Join our Discord (opens in new tab)" [ref=e23] [cursor=pointer]:
+              - /url: https://discord.gg/9UEv6vrTD4
+              - img [ref=e24]
+            - button "Language" [ref=e26] [cursor=pointer]:
+              - img
+            - button "Switch to light theme" [pressed] [ref=e27] [cursor=pointer]:
+              - img
+            - button "Sign In" [ref=e28] [cursor=pointer]:
+              - img [ref=e29]
+              - text: Sign In
+      - main [ref=e32]:
+        - generic [ref=e33]:
+          - heading "404" [level=1] [ref=e34]
+          - heading "Page Not Found" [level=1] [ref=e35]
+          - paragraph [ref=e36]: The page you're looking for doesn't exist or has been moved.
+          - generic [ref=e37]:
+            - link "Search Cards" [ref=e38] [cursor=pointer]:
+              - /url: /
+              - img
+              - text: Search Cards
+            - link "Back to Home" [ref=e39] [cursor=pointer]:
+              - /url: /
+              - img
+              - text: Back to Home
+          - generic [ref=e40]:
+            - link "Browse searches See curated and recent search patterns that can help you get back on track." [ref=e41] [cursor=pointer]:
+              - /url: /browse-searches
+              - paragraph [ref=e42]: Browse searches
+              - paragraph [ref=e43]: See curated and recent search patterns that can help you get back on track.
+            - link "Read guides Explore practical deckbuilding and search tips for the next step." [ref=e44] [cursor=pointer]:
+              - /url: /guides
+              - paragraph [ref=e45]: Read guides
+              - paragraph [ref=e46]: Explore practical deckbuilding and search tips for the next step.
+            - link "Browse decks Jump into community decks and use cases for inspiration." [ref=e47] [cursor=pointer]:
+              - /url: /decks
+              - paragraph [ref=e48]: Browse decks
+              - paragraph [ref=e49]: Jump into community decks and use cases for inspiration.
+      - contentinfo [ref=e50]:
+        - generic [ref=e51]:
+          - generic [ref=e52]:
+            - generic [ref=e53]: O
+            - generic [ref=e54]: OffMeta
+            - generic [ref=e55]: · © 2026
+          - generic [ref=e57]:
+            - generic [ref=e58]:
+              - heading "Explore" [level=3] [ref=e59]
+              - list [ref=e60]:
+                - listitem [ref=e61]:
+                  - link "Combo Finder" [ref=e62] [cursor=pointer]:
+                    - /url: /combos
+                - listitem [ref=e63]:
+                  - link "Archetypes" [ref=e64] [cursor=pointer]:
+                    - /url: /archetypes
+                - listitem [ref=e65]:
+                  - link "Guides" [ref=e66] [cursor=pointer]:
+                    - /url: /guides
+                - listitem [ref=e67]:
+                  - link "Syntax Cheat Sheet" [ref=e68] [cursor=pointer]:
+                    - /url: /docs/syntax
+                - listitem [ref=e69]:
+                  - link "About" [ref=e70] [cursor=pointer]:
+                    - /url: /about
+            - generic [ref=e71]:
+              - heading "Guides" [level=3] [ref=e72]
+              - list [ref=e73]:
+                - listitem [ref=e74]:
+                  - link "Search by Creature Type" [ref=e75] [cursor=pointer]:
+                    - /url: /guides/search-by-creature-type
+                - listitem [ref=e76]:
+                  - link "Filter by Color" [ref=e77] [cursor=pointer]:
+                    - /url: /guides/filter-by-color
+                - listitem [ref=e78]:
+                  - link "Budget & Price Filters" [ref=e79] [cursor=pointer]:
+                    - /url: /guides/budget-price-filters
+                - listitem [ref=e80]:
+                  - link "Format Legality Search" [ref=e81] [cursor=pointer]:
+                    - /url: /guides/format-legality-search
+                - listitem [ref=e82]:
+                  - link "Keyword Ability Search" [ref=e83] [cursor=pointer]:
+                    - /url: /guides/keyword-ability-search
+                - listitem [ref=e84]:
+                  - link "All guides →" [ref=e85] [cursor=pointer]:
+                    - /url: /guides
+            - generic [ref=e86]:
+              - heading "Data Sources" [level=3] [ref=e87]
+              - list [ref=e88]:
+                - listitem [ref=e89]:
+                  - link "Scryfall" [ref=e90] [cursor=pointer]:
+                    - /url: https://scryfall.com
+                    - text: Scryfall
+                    - img [ref=e91]
+                - listitem [ref=e95]:
+                  - link "Moxfield" [ref=e96] [cursor=pointer]:
+                    - /url: https://www.moxfield.com
+                    - text: Moxfield
+                    - img [ref=e97]
+                - listitem [ref=e101]:
+                  - link "Commander Spellbook" [ref=e102] [cursor=pointer]:
+                    - /url: https://commanderspellbook.com
+                    - text: Commander Spellbook
+                    - img [ref=e103]
+                - listitem [ref=e107]:
+                  - link "TopDeck.gg" [ref=e108] [cursor=pointer]:
+                    - /url: https://topdeck.gg
+                    - text: TopDeck.gg
+                    - img [ref=e109]
+            - generic [ref=e113]:
+              - heading "Built With" [level=3] [ref=e114]
+              - list [ref=e115]:
+                - listitem [ref=e116]:
+                  - link "React" [ref=e117] [cursor=pointer]:
+                    - /url: https://react.dev
+                    - text: React
+                    - img [ref=e118]
+                - listitem [ref=e122]:
+                  - link "TypeScript" [ref=e123] [cursor=pointer]:
+                    - /url: https://www.typescriptlang.org
+                    - text: TypeScript
+                    - img [ref=e124]
+                - listitem [ref=e128]:
+                  - link "Tailwind CSS" [ref=e129] [cursor=pointer]:
+                    - /url: https://tailwindcss.com
+                    - text: Tailwind CSS
+                    - img [ref=e130]
+                - listitem [ref=e134]:
+                  - link "Vite" [ref=e135] [cursor=pointer]:
+                    - /url: https://vitejs.dev
+                    - text: Vite
+                    - img [ref=e136]
+                - listitem [ref=e140]:
+                  - link "Lovable" [ref=e141] [cursor=pointer]:
+                    - /url: https://lovable.dev
+                    - text: Lovable
+                    - img [ref=e142]
+          - generic [ref=e146]:
+            - link "Join our Discord community (opens in new tab)" [ref=e147] [cursor=pointer]:
+              - /url: https://discord.gg/9UEv6vrTD4
+              - img [ref=e148]
+              - text: Discord
+            - generic [ref=e150]: ·
+            - link "View source on GitHub (opens in new tab)" [ref=e151] [cursor=pointer]:
+              - /url: https://github.com/vermosi/offmeta
+              - img [ref=e152]
+              - text: Source
+          - paragraph [ref=e155]:
+            - text: Unofficial Fan Content per
+            - link "WotC Fan Content Policy" [ref=e156] [cursor=pointer]:
+              - /url: https://company.wizards.com/en/legal/fancontentpolicy
+            - text: ". Magic: The Gathering © Wizards of the Coast."
+```
