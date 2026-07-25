@@ -54,7 +54,12 @@ export default function AdminSeoPages() {
   const [search, setSearch] = useState('');
   const [newQuery, setNewQuery] = useState('');
 
-  const { data: pages, isLoading } = useQuery({
+  const {
+    data: pages,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ['admin-seo-pages'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -83,7 +88,8 @@ export default function AdminSeoPages() {
       queryClient.invalidateQueries({ queryKey: ['admin-seo-pages'] });
       toast.success(t('common.statusUpdated', 'Status updated'));
     },
-    onError: () => toast.error(t('common.updateFailed', 'Failed to update status')),
+    onError: () =>
+      toast.error(t('common.updateFailed', 'Failed to update status')),
   });
 
   const deletePage = useMutation({
@@ -111,9 +117,15 @@ export default function AdminSeoPages() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-seo-pages'] });
-      toast.success(t('adminSeo.regenerated', 'Regenerated: {slug}').replace('{slug}', data?.slug ?? ''));
+      toast.success(
+        t('adminSeo.regenerated', 'Regenerated: {slug}').replace(
+          '{slug}',
+          data?.slug ?? '',
+        ),
+      );
     },
-    onError: () => toast.error(t('adminSeo.regenerateFailed', 'Failed to regenerate')),
+    onError: () =>
+      toast.error(t('adminSeo.regenerateFailed', 'Failed to regenerate')),
   });
 
   const generateNew = useCallback(async () => {
@@ -186,11 +198,14 @@ export default function AdminSeoPages() {
         </div>
 
         {/* Generate new */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex flex-col sm:flex-row gap-2 mb-6">
           <Input
             value={newQuery}
             onChange={(e) => setNewQuery(e.target.value)}
-            placeholder={t('adminSeo.generatePlaceholder', 'Enter query to generate new page...')}
+            placeholder={t(
+              'adminSeo.generatePlaceholder',
+              'Enter query to generate new page...',
+            )}
             className="flex-1"
             onKeyDown={(e) => e.key === 'Enter' && generateNew()}
           />
@@ -198,6 +213,7 @@ export default function AdminSeoPages() {
             onClick={generateNew}
             disabled={regeneratePage.isPending || newQuery.length < 3}
             size="sm"
+            className="shrink-0"
           >
             {regeneratePage.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin mr-1" />
@@ -219,17 +235,37 @@ export default function AdminSeoPages() {
           />
         </div>
 
+        {(error || pages?.length === 0) && !isLoading && (
+          <div className="mb-4 rounded-lg border border-border/60 bg-muted/30 p-4 text-sm">
+            {error ? (
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <p className="text-destructive">
+                  Failed to load SEO pages.
+                  {error instanceof Error ? ` ${error.message}` : ''}
+                </p>
+                <Button size="sm" variant="outline" onClick={() => refetch()}>
+                  Retry
+                </Button>
+              </div>
+            ) : (
+              <div className="text-muted-foreground">
+                No SEO pages have been generated yet.
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Table */}
         <div className="space-y-2">
           {filtered.map((page) => (
             <div
               key={page.id}
-              className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-card/50 hover:border-border transition-colors"
+              className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg border border-border/50 bg-card/50 hover:border-border transition-colors"
             >
               {/* Status badge */}
               <Badge
                 variant={page.status === 'published' ? 'default' : 'outline'}
-                className="shrink-0 text-[10px] w-16 justify-center"
+                className="shrink-0 text-[10px] w-16 justify-center self-start"
               >
                 {page.status}
               </Badge>
@@ -244,7 +280,7 @@ export default function AdminSeoPages() {
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="flex items-center gap-1 shrink-0 self-start">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -300,6 +336,11 @@ export default function AdminSeoPages() {
               </div>
             </div>
           ))}
+          {!isLoading && filtered.length === 0 && pages && pages.length > 0 && (
+            <div className="rounded-lg border border-border/60 bg-muted/30 p-4 text-sm text-muted-foreground">
+              No SEO pages match your filter.
+            </div>
+          )}
         </div>
       </main>
     </div>
