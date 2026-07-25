@@ -1,5 +1,5 @@
 /**
- * SEO Health Panel — surfaces prerender/sitemap/noindex regressions detected by
+ * SEO Health Panel - surfaces prerender/sitemap/noindex regressions detected by
  * the seo-health-check edge function. Data comes from the get_seo_health_summary()
  * RPC (admin-guarded). Shows the latest run's per-URL verdicts and any failures
  * in the last 7 days so traffic-killing regressions are caught within days.
@@ -53,18 +53,20 @@ function formatRelative(iso: string | null): string {
 }
 
 function severityBadge(sev: Severity) {
-  if (sev === 'critical')
+  if (sev === 'critical') {
     return (
       <Badge variant="destructive" className="uppercase tracking-wide">
         Critical
       </Badge>
     );
-  if (sev === 'warning')
+  }
+  if (sev === 'warning') {
     return (
       <Badge className="bg-warning/20 text-warning border-warning/40 uppercase tracking-wide">
         Warning
       </Badge>
     );
+  }
   return (
     <Badge variant="secondary" className="uppercase tracking-wide">
       OK
@@ -80,22 +82,26 @@ export function SeoHealthPanel() {
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const { data, error: rpcError } = await supabase.rpc(
-      'get_seo_health_summary',
-    );
-    if (rpcError) {
-      setError(rpcError.message);
-    } else if (data) {
-      setSummary(data as unknown as SeoHealthSummary);
+    try {
+      const { data, error: rpcError } = await supabase.rpc(
+        'get_seo_health_summary',
+      );
+      if (rpcError) {
+        setError(rpcError.message);
+        return;
+      }
+      setSummary((data as SeoHealthSummary | null) ?? null);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to load SEO health',
+      );
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      void load();
-    });
-    return () => window.cancelAnimationFrame(frame);
+    void load();
   }, [load]);
 
   const criticalCount =
@@ -123,90 +129,116 @@ export function SeoHealthPanel() {
         </Button>
       </div>
 
-      {error && (
-        <div className="text-sm text-destructive mb-3">
-          Failed to load: {error}
+      {loading && !summary ? (
+        <div className="space-y-2 animate-pulse" aria-live="polite">
+          <div className="h-4 w-40 rounded bg-muted" />
+          <div className="h-10 rounded bg-muted/70" />
+          <div className="h-10 rounded bg-muted/70" />
         </div>
-      )}
-
-      {!summary?.last_run && !loading && (
-        <p className="text-sm text-muted-foreground">
-          No health checks have run yet. The daily check runs at 09:00 UTC — or
-          trigger the <code>seo-health-check</code> function manually to seed
-          data.
-        </p>
-      )}
-
-      {summary?.last_run && (
+      ) : (
         <>
-          <div className="flex items-center gap-3 mb-4 text-sm">
-            {criticalCount > 0 ? (
-              <span className="flex items-center gap-1.5 text-destructive font-medium">
-                <AlertTriangle className="h-4 w-4" /> {criticalCount} critical
-              </span>
-            ) : (
-              <span className="flex items-center gap-1.5 text-success font-medium">
-                <CheckCircle2 className="h-4 w-4" /> All checks passing
-              </span>
-            )}
-            {warningCount > 0 && (
-              <span className="text-warning">{warningCount} warning</span>
-            )}
-            <span className="text-muted-foreground">
-              · {summary.latest_results.length} URLs checked
-            </span>
-          </div>
-
-          <div className="space-y-1 max-h-72 overflow-auto text-sm">
-            {summary.latest_results.map((r) => (
-              <div
-                key={r.target_url}
-                className="flex items-start justify-between gap-3 py-1.5 border-b border-border/40 last:border-0"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <a
-                      href={r.target_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="truncate hover:underline text-foreground/90"
-                    >
-                      {new URL(r.target_url).pathname}
-                    </a>
-                    <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
-                  </div>
-                  {!r.passed &&
-                    Array.isArray(
-                      (r.details as { failures?: string[] }).failures,
-                    ) && (
-                      <div className="text-xs text-destructive mt-0.5">
-                        {(r.details as { failures: string[] }).failures.join(
-                          ', ',
-                        )}
-                      </div>
-                    )}
-                </div>
-                {severityBadge(r.severity)}
+          {error && (
+            <div className="mb-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+              <div className="flex items-start justify-between gap-3">
+                <span>Failed to load SEO health summary: {error}</span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={load}
+                  disabled={loading}
+                  className="shrink-0"
+                >
+                  Retry
+                </Button>
               </div>
-            ))}
-          </div>
+            </div>
+          )}
 
-          {summary.recent_failures.length > 0 && (
-            <details className="mt-4 text-xs">
-              <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-                Recent failures (7d) — {summary.recent_failures.length}
-              </summary>
-              <ul className="mt-2 space-y-1 text-muted-foreground">
-                {summary.recent_failures.slice(0, 20).map((f, i) => (
-                  <li key={`${f.target_url}-${i}`}>
-                    <span className="text-destructive">{f.severity}</span>{' '}
-                    <span className="text-foreground/80">{f.check_type}</span>{' '}
-                    {new URL(f.target_url).pathname} — {f.failures}× ·{' '}
-                    {formatRelative(f.last_failure_at)}
-                  </li>
+          {!summary?.last_run && !loading && !error && (
+            <div className="rounded-lg border border-border/60 bg-muted/30 p-3 text-sm text-muted-foreground">
+              <p>No SEO health checks have run yet.</p>
+              <p className="mt-1">
+                The daily check runs at 09:00 UTC or you can trigger the{' '}
+                <code>seo-health-check</code> function manually to seed data.
+              </p>
+            </div>
+          )}
+
+          {summary?.last_run && (
+            <>
+              <div className="flex flex-wrap items-center gap-3 mb-4 text-sm">
+                {criticalCount > 0 ? (
+                  <span className="flex items-center gap-1.5 text-destructive font-medium">
+                    <AlertTriangle className="h-4 w-4" /> {criticalCount}{' '}
+                    critical
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5 text-success font-medium">
+                    <CheckCircle2 className="h-4 w-4" /> All checks passing
+                  </span>
+                )}
+                {warningCount > 0 && (
+                  <span className="text-warning">{warningCount} warning</span>
+                )}
+                <span className="text-muted-foreground">
+                  · {summary.latest_results.length} URLs checked
+                </span>
+              </div>
+
+              <div className="space-y-1 max-h-72 overflow-auto text-sm">
+                {summary.latest_results.map((r) => (
+                  <div
+                    key={r.target_url}
+                    className="flex items-start justify-between gap-3 py-1.5 border-b border-border/40 last:border-0"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={r.target_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="truncate hover:underline text-foreground/90"
+                        >
+                          {new URL(r.target_url).pathname}
+                        </a>
+                        <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
+                      </div>
+                      {!r.passed &&
+                        Array.isArray(
+                          (r.details as { failures?: string[] }).failures,
+                        ) && (
+                          <div className="text-xs text-destructive mt-0.5">
+                            {(
+                              r.details as { failures: string[] }
+                            ).failures.join(', ')}
+                          </div>
+                        )}
+                    </div>
+                    {severityBadge(r.severity)}
+                  </div>
                 ))}
-              </ul>
-            </details>
+              </div>
+
+              {summary.recent_failures.length > 0 && (
+                <details className="mt-4 text-xs">
+                  <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                    Recent failures (7d) - {summary.recent_failures.length}
+                  </summary>
+                  <ul className="mt-2 space-y-1 text-muted-foreground">
+                    {summary.recent_failures.slice(0, 20).map((f, i) => (
+                      <li key={`${f.target_url}-${i}`}>
+                        <span className="text-destructive">{f.severity}</span>{' '}
+                        <span className="text-foreground/80">
+                          {f.check_type}
+                        </span>{' '}
+                        {new URL(f.target_url).pathname} - {f.failures}x ·{' '}
+                        {formatRelative(f.last_failure_at)}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </>
           )}
         </>
       )}
