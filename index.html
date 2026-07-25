@@ -499,36 +499,10 @@
 
     <div id="root"></div>
     <script type="module">
+      // Fonts are preloaded + linked statically in <head> for LCP.
       const isRootPath = window.location.pathname === '/';
-      const loadAppFonts = () => {
-        const preloadInter = document.createElement('link');
-        preloadInter.rel = 'preload';
-        preloadInter.as = 'font';
-        preloadInter.type = 'font/woff2';
-        preloadInter.crossOrigin = 'anonymous';
-        preloadInter.setAttribute('fetchpriority', 'high');
-        preloadInter.href =
-          'https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2';
-        document.head.appendChild(preloadInter);
-
-        const preloadSpaceGrotesk = document.createElement('link');
-        preloadSpaceGrotesk.rel = 'preload';
-        preloadSpaceGrotesk.as = 'font';
-        preloadSpaceGrotesk.type = 'font/woff2';
-        preloadSpaceGrotesk.crossOrigin = 'anonymous';
-        preloadSpaceGrotesk.setAttribute('fetchpriority', 'high');
-        preloadSpaceGrotesk.href =
-          'https://fonts.gstatic.com/s/spacegrotesk/v22/V8mDoQDjQSkFtoMM3T6r8E7mPbF4C_k3HqU.woff2';
-        document.head.appendChild(preloadSpaceGrotesk);
-
-        const fontSheet = document.createElement('link');
-        fontSheet.rel = 'stylesheet';
-        fontSheet.href =
-          'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap';
-        document.head.appendChild(fontSheet);
-      };
-      loadAppFonts();
       await import('/src/main.tsx');
+
 
       if (isRootPath) {
         const shell = document.getElementById('static-shell');
