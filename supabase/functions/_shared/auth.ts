@@ -75,12 +75,14 @@ type SupabaseClientFactory = (
   options?: CreateClientOptions,
 ) => unknown;
 
-const importSupabase = (): Promise<{
+const importSupabase = async (): Promise<{
   createClient: SupabaseClientFactory;
-}> =>
-  import(
-    /* @vite-ignore */ 'https://esm.sh/@supabase/supabase-js@2' as string
-  ) as Promise<{ createClient: SupabaseClientFactory }>;
+}> => {
+  // Relative dynamic import: Deno resolves the underlying esm.sh module at
+  // deploy time (so it's whitelisted), and Vitest never triggers this path.
+  const mod = await import('./supabaseAdminClient.ts');
+  return { createClient: mod.createClient as unknown as SupabaseClientFactory };
+};
 
 /**
  * Validates that the request has a valid authorization header.
