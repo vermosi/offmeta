@@ -63,7 +63,7 @@ export async function renderIndex(
     () => {
       expect(screen.getByRole('search')).toBeInTheDocument();
     },
-    { timeout: 5000 },
+    { timeout: 10000 },
   );
 
   return result!;

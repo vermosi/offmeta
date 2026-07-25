@@ -20,6 +20,7 @@ import { useTranslation } from '@/lib/i18n';
 import { FORMATS, FORMAT_LABELS } from '@/data/formats';
 import { type Deck, type DeckTag, useNoIndex } from '@/hooks';
 import { SunsetBanner } from '@/components/SunsetBanner';
+import { buildActiveDeckFilters } from '@/pages/browse-decks-utils';
 
 const COLORS = ['W', 'U', 'B', 'R', 'G'] as const;
 const PAGE_SIZE = 25;
@@ -81,6 +82,16 @@ export default function BrowseDecks() {
     initialTag ? [initialTag] : [],
   );
   const [sortBy, setSortBy] = useState<SortMode>('newest');
+  const activeFilters = useMemo(
+    () =>
+      buildActiveDeckFilters({
+        nameFilter,
+        formatFilter,
+        colorFilter,
+        tagFilter,
+      }),
+    [nameFilter, formatFilter, colorFilter, tagFilter],
+  );
 
   // Build tag map: deckId -> tags[]
   const tagsByDeck = useMemo(() => {
@@ -164,6 +175,15 @@ export default function BrowseDecks() {
     });
   };
 
+  const clearFilters = () => {
+    setNameFilter('');
+    setFormatFilter('');
+    setColorFilter([]);
+    setTagFilter([]);
+    searchParams.delete('tag');
+    setSearchParams(searchParams);
+  };
+
   useNoIndex(true);
 
   useEffect(() => {
@@ -191,71 +211,116 @@ export default function BrowseDecks() {
         </div>
 
         {/* Filter Bar */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative flex-1 min-w-[180px] max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={nameFilter}
-              onChange={(e) => setNameFilter(e.target.value)}
-              placeholder={t('browse.searchPlaceholder', 'Search decks...')}
-              className="pl-9 h-9 text-sm"
-            />
+        <section className="rounded-2xl border border-border bg-card/80 p-3 sm:p-4 space-y-3 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                Filters
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Narrow the deck pool with a few quick taps.
+              </p>
+            </div>
+            {activeFilters.length > 0 && (
+              <Button variant="ghost" size="sm" onClick={clearFilters}>
+                Clear all
+              </Button>
+            )}
           </div>
 
-          <select
-            value={formatFilter}
-            onChange={(e) => setFormatFilter(e.target.value)}
-            className="h-9 rounded-lg border border-input bg-background px-3 text-sm text-foreground"
-          >
-            <option value="">{t('browse.allFormats', 'All Formats')}</option>
-            {FORMATS.map((f) => (
-              <option key={f.value} value={f.value}>
-                {f.label}
+          <div className="grid gap-2 sm:grid-cols-[minmax(0,1.8fr)_minmax(12rem,0.9fr)] lg:grid-cols-[minmax(0,2fr)_minmax(12rem,1fr)_auto_auto]">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={nameFilter}
+                onChange={(e) => setNameFilter(e.target.value)}
+                placeholder={t('browse.searchPlaceholder', 'Search decks...')}
+                className="pl-9 h-10 text-sm"
+              />
+            </div>
+
+            <select
+              value={formatFilter}
+              onChange={(e) => setFormatFilter(e.target.value)}
+              className="h-10 rounded-lg border border-input bg-background px-3 text-sm text-foreground"
+              aria-label={t('browse.allFormats', 'All Formats')}
+            >
+              <option value="">{t('browse.allFormats', 'All Formats')}</option>
+              {FORMATS.map((f) => (
+                <option key={f.value} value={f.value}>
+                  {f.label}
+                </option>
+              ))}
+            </select>
+
+            <div
+              className="flex items-center gap-1 overflow-x-auto pb-1 sm:overflow-visible"
+              aria-label="Color filters"
+            >
+              {COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => toggleColor(c)}
+                  title={c}
+                  aria-pressed={colorFilter.includes(c)}
+                  className={cn(
+                    'h-9 w-9 rounded-full border-2 flex items-center justify-center transition-all shrink-0',
+                    colorFilter.includes(c)
+                      ? 'border-accent ring-1 ring-accent/30'
+                      : 'border-border opacity-60 hover:opacity-100',
+                  )}
+                >
+                  <img
+                    src={`https://svgs.scryfall.io/card-symbols/${c}.svg`}
+                    alt={c}
+                    className="h-4 w-4"
+                  />
+                </button>
+              ))}
+            </div>
+
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortMode)}
+              className="h-10 rounded-lg border border-input bg-background px-3 text-sm text-foreground"
+            >
+              <option value="newest">{t('browse.sortNewest', 'Newest')}</option>
+              <option value="cards">
+                {t('browse.sortCards', 'Most Cards')}
               </option>
-            ))}
-          </select>
-
-          <div className="flex items-center gap-1">
-            {COLORS.map((c) => (
-              <button
-                key={c}
-                onClick={() => toggleColor(c)}
-                className={cn(
-                  'h-7 w-7 rounded-full border-2 flex items-center justify-center transition-all',
-                  colorFilter.includes(c)
-                    ? 'border-accent ring-1 ring-accent/30'
-                    : 'border-border opacity-50 hover:opacity-100',
-                )}
-              >
-                <img
-                  src={`https://svgs.scryfall.io/card-symbols/${c}.svg`}
-                  alt={c}
-                  className="h-4 w-4"
-                />
-              </button>
-            ))}
+              <option value="alpha">{t('browse.sortAlpha', 'A-Z')}</option>
+            </select>
           </div>
 
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as SortMode)}
-            className="h-9 rounded-lg border border-input bg-background px-3 text-sm text-foreground"
-          >
-            <option value="newest">{t('browse.sortNewest', 'Newest')}</option>
-            <option value="cards">{t('browse.sortCards', 'Most Cards')}</option>
-            <option value="alpha">{t('browse.sortAlpha', 'A-Z')}</option>
-          </select>
-        </div>
+          {activeFilters.length > 0 && (
+            <div className="flex flex-wrap gap-2 pt-1 border-t border-border/60">
+              <span className="text-xs font-medium text-muted-foreground self-center">
+                Active:
+              </span>
+              {activeFilters.map((filter) => (
+                <Badge
+                  key={filter}
+                  variant="outline"
+                  className="rounded-full px-2.5 py-1 text-xs"
+                >
+                  {filter}
+                </Badge>
+              ))}
+            </div>
+          )}
+        </section>
 
         {/* Tag Chips */}
         {uniqueTags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 sm:flex-wrap sm:overflow-visible sm:px-0 sm:mx-0">
             {uniqueTags.slice(0, 20).map((tag) => (
               <button
                 key={tag}
+                type="button"
                 onClick={() => toggleTag(tag)}
                 className={cn(
-                  'px-2.5 py-1 rounded-full text-xs font-medium border transition-colors',
+                  'shrink-0 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors',
                   tagFilter.includes(tag)
                     ? 'bg-accent/10 text-accent border-accent/30'
                     : 'bg-secondary/50 text-muted-foreground border-border hover:border-muted-foreground/30',
