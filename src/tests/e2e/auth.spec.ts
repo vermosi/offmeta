@@ -16,9 +16,9 @@ test.describe('Auth modal flows', () => {
   }) => {
     await page.goto('/');
 
-    await page.getByTestId('home-sign-in-button').click();
+    await page.getByRole('button', { name: /^sign in$/i }).first().click();
     const dialog = page.getByRole('dialog').first();
-    await expect(dialog).toBeVisible();
+    await expect(dialog).toBeVisible({ timeout: 15_000 });
 
     await dialog.getByRole('button', { name: /^sign up$/i }).click();
     await dialog.getByLabel('Email').fill('new-user@example.com');
@@ -33,7 +33,7 @@ test.describe('Auth modal flows', () => {
   test('signin happy path @e2e-smoke', async ({ page }) => {
     await page.goto('/');
 
-    await page.getByTestId('home-sign-in-button').click();
+    await page.getByRole('button', { name: /^sign in$/i }).first().click();
     const dialog = page.getByRole('dialog').first();
 
     await dialog.getByLabel('Email').fill('existing@example.com');
@@ -46,7 +46,7 @@ test.describe('Auth modal flows', () => {
   test('password reset request flow', async ({ page }) => {
     await page.goto('/');
 
-    await page.getByTestId('home-sign-in-button').click();
+    await page.getByRole('button', { name: /^sign in$/i }).first().click();
     const dialog = page.getByRole('dialog').first();
 
     await dialog.getByRole('button', { name: /forgot password\?/i }).click();

@@ -119,10 +119,8 @@ export function HowItWorksSection() {
               >
 
                 {/* Number badge */}
-                <div
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-bold mb-4 bg-gradient-to-br from-accent to-accent/50 text-accent-foreground shadow-lg shadow-accent/20"
-                  aria-label={`${stepLabel} ${number}`}
-                >
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-bold mb-4 bg-gradient-to-br from-accent to-accent/50 text-accent-foreground shadow-lg shadow-accent/20">
+                  <span className="sr-only">{stepLabel} {number}</span>
                   <span aria-hidden="true">{number}</span>
                 </div>
 
@@ -185,10 +183,8 @@ export function HowItWorksSection() {
 
 
                 {/* Node on the line */}
-                <div
-                  className="absolute -left-10 top-0 w-8 h-8 rounded-full bg-gradient-to-br from-accent to-accent/50 flex items-center justify-center text-xs font-bold text-accent-foreground shadow-md shadow-accent/20"
-                  aria-label={`${stepLabel} ${number}`}
-                >
+                <div className="absolute -left-10 top-0 w-8 h-8 rounded-full bg-gradient-to-br from-accent to-accent/50 flex items-center justify-center text-xs font-bold text-accent-foreground shadow-md shadow-accent/20">
+                  <span className="sr-only">{stepLabel} {number}</span>
                   <span aria-hidden="true">{number}</span>
                 </div>
 

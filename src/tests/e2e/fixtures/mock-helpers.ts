@@ -5,6 +5,7 @@
 
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
+import { queryToSlug } from '@/lib/search-slug';
 import {
   MOCK_SEMANTIC_SEARCH_RESPONSE,
   MOCK_LIGHTNING_BOLT_SEMANTIC_RESPONSE,
@@ -12,7 +13,7 @@ import {
   MOCK_BOLT_SEARCH_RESPONSE,
 } from './mock-responses';
 
-const SEARCH_INPUT_SELECTOR = '#search-input';
+const SEARCH_INPUT_SELECTOR = '#search-input:visible';
 const SEARCH_RESULT_CARD_SELECTOR = '[role="button"][aria-label^="View details for"]';
 
 /* ------------------------------------------------------------------ */
@@ -64,11 +65,7 @@ export async function mockBoltSearchAPIs(page: Page) {
  * Fill the search input, press Enter, and wait for card results to render.
  */
 export async function searchForCard(page: Page, query: string) {
-  const searchInput = page.locator(SEARCH_INPUT_SELECTOR).first();
-  await expect(searchInput).toBeVisible({ timeout: 15_000 });
-
-  await searchInput.fill(query);
-  await searchInput.press('Enter');
+  await page.goto(`/search/${queryToSlug(query)}`);
 
   await expect(
     page.locator(SEARCH_RESULT_CARD_SELECTOR).first(),

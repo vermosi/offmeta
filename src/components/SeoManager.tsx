@@ -38,10 +38,14 @@ export function SeoManager({
     jsonLdCleanup.current?.();
     jsonLdCleanup.current = null;
 
-    // Homepage / pre-search state — restore the sitewide OG + Twitter defaults
+    const canonicalUrl = compiledQuery
+      ? buildSearchCanonical(compiledQuery)
+      : 'https://offmeta.app/';
+
+    // Homepage / pre-search state - restore the sitewide OG + Twitter defaults
     // so navigating back from a card or search page doesn't leave stale
     // per-route tags in the head (which would mis-attribute link previews).
-    if (!hasSearched || isSearching || displayCards.length === 0) {
+    if (!hasSearched || isSearching) {
       applySeoMeta({
         title: 'Natural Language MTG Card Search | OffMeta',
         description:
@@ -50,6 +54,26 @@ export function SeoManager({
         type: 'website',
         image: 'https://offmeta.app/og-image.png',
         twitterCard: 'summary_large_image',
+      });
+      return;
+    }
+
+    if (displayCards.length === 0) {
+      const title = `${originalQuery} - No cards found | OffMeta`;
+      const desc = `No Magic: The Gathering cards matched "${originalQuery}". Try a broader search or adjust the wording.`;
+      applySeoMeta({
+        title,
+        description: desc,
+        url: canonicalUrl,
+        type: 'website',
+        image: 'https://offmeta.app/og-image.png',
+        twitterCard: 'summary_large_image',
+        extraMeta: {
+          'twitter:label1': 'Results',
+          'twitter:data1': '0 cards',
+          'twitter:label2': 'Query',
+          'twitter:data2': originalQuery.slice(0, 60),
+        },
       });
       return;
     }
@@ -64,26 +88,23 @@ export function SeoManager({
       displayCards[0]?.image_uris?.art_crop ??
       displayCards[0]?.card_faces?.[0]?.image_uris?.art_crop;
 
-    // Canonical dedup: base canonical on compiled Scryfall query slug
-    const canonicalUrl = compiledQuery
-      ? buildSearchCanonical(compiledQuery)
-      : 'https://offmeta.app/';
-
-    // SEO title + description — must stay within 60 chars including suffix.
+    // SEO title + description - must stay within 60 chars including suffix.
     const MAX_TITLE = 60;
     const candidates = [
-      `${originalQuery} — MTG Card Search | OffMeta`,
-      `${originalQuery} — MTG Search | OffMeta`,
-      `${originalQuery} — OffMeta`,
+      `${originalQuery} - MTG Card Search | OffMeta`,
+      `${originalQuery} - MTG Search | OffMeta`,
+      `${originalQuery} - OffMeta`,
       `${originalQuery}`,
     ];
-    let title = candidates.find((c) => c.length <= MAX_TITLE) ?? candidates[candidates.length - 1];
+    let title =
+      candidates.find((c) => c.length <= MAX_TITLE) ??
+      candidates[candidates.length - 1];
     if (title.length > MAX_TITLE) {
       const suffix = ' | OffMeta';
       const budget = MAX_TITLE - suffix.length - 1;
-      title = `${originalQuery.slice(0, Math.max(1, budget)).trimEnd()}…${suffix}`;
+      title = `${originalQuery.slice(0, Math.max(1, budget)).trimEnd()}...${suffix}`;
     }
-    const desc = `Find ${totalCards} Magic: The Gathering cards matching "${originalQuery}" — off-meta picks, alternatives & synergies.`;
+    const desc = `Find ${totalCards} Magic: The Gathering cards matching "${originalQuery}" - off-meta picks, alternatives & synergies.`;
     applySeoMeta({
       title,
       description: desc.slice(0, 160),
