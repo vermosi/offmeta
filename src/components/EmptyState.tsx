@@ -1,4 +1,12 @@
-import { SearchX, Lightbulb, RefreshCw, Sparkles, Loader2, X, SlidersHorizontal } from 'lucide-react';
+import {
+  SearchX,
+  Lightbulb,
+  RefreshCw,
+  Sparkles,
+  Loader2,
+  X,
+  SlidersHorizontal,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n';
 import { type QuerySuggestion } from '@/hooks';
@@ -65,15 +73,22 @@ const COLOR_LABEL: Record<string, string> = {
   C: 'Colorless',
 };
 
+const QUICK_REFINEMENTS = [
+  { label: 'Commander', token: 'f:commander' },
+  { label: 'Creatures', token: 't:creature' },
+  { label: 'Instants', token: 't:instant' },
+  { label: 'Removal', token: 'otag:removal' },
+  { label: 'Ramp', token: 'otag:ramp' },
+  { label: 'Budget', token: 'usd<5' },
+] as const;
+
 interface Chip {
   key: string;
   label: string;
   patch: Partial<FilterState>;
 }
 
-function buildAppliedChips(
-  filters: FilterState | null | undefined,
-): Chip[] {
+function buildAppliedChips(filters: FilterState | null | undefined): Chip[] {
   if (!filters) return [];
   const chips: Chip[] = [];
 
@@ -113,7 +128,11 @@ function buildAppliedChips(
       patch: { ownedOnly: false },
     });
   }
-  if (filters.sortBy && filters.sortBy !== 'relevance-desc' && filters.sortBy !== 'name-asc') {
+  if (
+    filters.sortBy &&
+    filters.sortBy !== 'relevance-desc' &&
+    filters.sortBy !== 'name-asc'
+  ) {
     chips.push({
       key: `sort-${filters.sortBy}`,
       // Sort chip label rendered separately via t() in the JSX (kept generic here).
@@ -217,7 +236,10 @@ export const EmptyState = ({
                 disabled={!onApplyFilterPatch}
                 aria-label={`${t('empty.removeFilter', 'Remove filter')}: ${
                   chip.key.startsWith('sort-')
-                    ? t(SORT_LABEL_KEYS[activeFilters!.sortBy] ?? '', chip.label)
+                    ? t(
+                        SORT_LABEL_KEYS[activeFilters!.sortBy] ?? '',
+                        chip.label,
+                      )
                     : chip.label
                 }`}
                 className="group inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full
@@ -290,7 +312,10 @@ export const EmptyState = ({
                     </p>
                   </div>
                   <span className="shrink-0 text-xs font-medium text-primary/70 group-hover:text-primary tabular-nums">
-                    {t('empty.cardCount').replace('{count}', s.totalCards.toLocaleString())}
+                    {t('empty.cardCount').replace(
+                      '{count}',
+                      s.totalCards.toLocaleString(),
+                    )}
                   </span>
                 </button>
               ))}
@@ -302,6 +327,45 @@ export const EmptyState = ({
               {t('empty.checkingAlternatives')}
             </p>
           )}
+        </div>
+      )}
+
+      {/* Quick recoveries */}
+      {query && onTrySuggestion && (
+        <div className="surface-elevated p-5 max-w-md w-full mb-6 text-left">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-foreground">
+              {t('empty.quickRefine', 'Quick refine')}
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">
+            {t(
+              'empty.quickRefineHint',
+              'Try a common tag or filter without rebuilding the whole query.',
+            )}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {QUICK_REFINEMENTS.map((item) => {
+              const existingTokens = query.trim().split(/\s+/);
+              const nextQuery = existingTokens.some(
+                (part) => part.toLowerCase() === item.token.toLowerCase(),
+              )
+                ? query.trim()
+                : `${query.trim()} ${item.token}`.trim();
+
+              return (
+                <button
+                  key={item.token}
+                  type="button"
+                  onClick={() => onTrySuggestion(nextQuery)}
+                  className="rounded-full border border-border/60 bg-background/70 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-foreground"
+                >
+                  + {item.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 

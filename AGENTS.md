@@ -38,3 +38,23 @@ npm run test -- src/lib/security # Security suite only (canonical)
 - [ ] Error states handled gracefully
 
 ## Prefer small, focused changes with clear commit messages.
+
+## Autonomous Improvement Mode
+
+When assigned an autonomous improvement task, do not interpret completion of one feature, fix, test, or commit as completion of the overall assignment.
+
+Continue selecting and completing work from `docs/autonomous-improvement-backlog.md` until the current task’s explicit iteration target is met, the execution environment ends the turn, or all safe and meaningful work is exhausted.
+
+After each completed improvement:
+
+- Verify the change.
+- Commit it separately when appropriate.
+- Update the backlog.
+- Select the next highest-impact unblocked item.
+- Continue without requesting approval.
+
+Never end an autonomous improvement task with “let me know if you want me to continue.” Continue automatically.
+
+Passing checks and creating a commit are checkpoints, not stopping conditions.
+
+Do not make superficial changes to simulate progress. Every iteration must have a clear user, business, reliability, security, performance, accessibility, or maintainability benefit.

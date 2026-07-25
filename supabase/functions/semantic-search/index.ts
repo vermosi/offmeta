@@ -43,7 +43,10 @@ import {
   extractAIContent,
   parseAIContent,
 } from './schemas.ts';
-import { validateWithScryfall as validateAgainstScryfall, repairQuery } from './pipeline/repair.ts';
+import {
+  validateWithScryfall as validateAgainstScryfall,
+  repairQuery,
+} from './pipeline/repair.ts';
 import { relaxSpeculativeClauses } from './scryfall.ts';
 import { VALID_SEARCH_KEYS } from './constants.ts';
 import {
@@ -251,651 +254,841 @@ async function withTimeoutFallback<T>(
 /**
  * Main Edge Function Handler
  */
-serve(withLogging('semantic-search', async (req) => {
-  // Trigger periodic in-memory cache cleanup (serverless-safe)
-  maybeCacheCleanup();
+serve(
+  withLogging('semantic-search', async (req) => {
+    // Trigger periodic in-memory cache cleanup (serverless-safe)
+    maybeCacheCleanup();
 
-  const corsHeaders = getCorsHeaders(req);
+    const corsHeaders = getCorsHeaders(req);
 
-  const preflightResponse = handleCorsPreflight(req, corsHeaders);
-  if (preflightResponse) {
-    return preflightResponse;
-  }
-
-  const diagnosticsResponse = createDiagnosticsResponse(req, {
-    ...corsHeaders,
-    'Content-Type': 'application/json',
-  });
-  if (diagnosticsResponse) {
-    return diagnosticsResponse;
-  }
-
-  const requestStartTime = Date.now();
-  const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
-  const { logInfo, logWarn } = createLogger(requestId);
-  const stageDurationsMs: Partial<Record<StageName, number>> = {};
-
-  const markStage = async <T>(
-    stage: StageName,
-    task: () => Promise<T> | T,
-  ): Promise<T> => {
-    const stageStartTime = Date.now();
-    try {
-      return await task();
-    } finally {
-      stageDurationsMs[stage] = Date.now() - stageStartTime;
+    const preflightResponse = handleCorsPreflight(req, corsHeaders);
+    if (preflightResponse) {
+      return preflightResponse;
     }
-  };
 
-  const jsonHeaders = {
-    ...corsHeaders,
-    'Content-Type': 'application/json',
-    'x-request-id': requestId,
-  };
+    const diagnosticsResponse = createDiagnosticsResponse(req, {
+      ...corsHeaders,
+      'Content-Type': 'application/json',
+    });
+    if (diagnosticsResponse) {
+      return diagnosticsResponse;
+    }
 
-  const guardFailureResponse = await enforceRequestGuards(
-    req,
-    jsonHeaders,
-    logWarn,
-  );
-  if (guardFailureResponse) {
-    return guardFailureResponse;
-  }
+    const requestStartTime = Date.now();
+    const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
+    const { logInfo, logWarn } = createLogger(requestId);
+    const stageDurationsMs: Partial<Record<StageName, number>> = {};
 
-  const parsedBody = await parseJsonBody(req, jsonHeaders, logWarn);
-  if ('response' in parsedBody) {
-    return parsedBody.response;
-  }
-  const validatedRequest = validateSearchRequest(
-    parsedBody.requestBody as Record<string, unknown>,
-    jsonHeaders,
-  );
-  if (!validatedRequest.ok) {
-    return validatedRequest.response;
-  }
-  const requestBody = validatedRequest.data;
-
-  try {
-    const { query, filters, debug, useCache, cacheSalt, locale } = requestBody;
-    const requestBudget = parseRequestBudget(
-      req,
-      requestStartTime,
-      REQUEST_BUDGET_MS,
-    );
-
-    const createBudgetExceededResponse = (): Response => {
-      const fallback = buildFallbackQuery(query, filters);
-      return new Response(
-        JSON.stringify({
-          originalQuery: query,
-          scryfallQuery: fallback.sanitized,
-          explanation: {
-            readable: `Searching for: ${query}`,
-            assumptions: ['Request budget exceeded - using fallback'],
-            confidence: 0.5,
-          },
-          success: true,
-          fallback: true,
-          source: 'budget_fallback',
-        }),
-        { headers: jsonHeaders },
-      );
+    const markStage = async <T>(
+      stage: StageName,
+      task: () => Promise<T> | T,
+    ): Promise<T> => {
+      const stageStartTime = Date.now();
+      try {
+        return await task();
+      } finally {
+        stageDurationsMs[stage] = Date.now() - stageStartTime;
+      }
     };
 
-    // Type-safe debug options
-    const debugOptions: DebugOptions =
-      debug && typeof debug === 'object' ? (debug as DebugOptions) : {};
-    const shouldForceFallback = Boolean(
-      debugOptions.forceFallback || debugOptions.simulateAiFailure,
+    const jsonHeaders = {
+      ...corsHeaders,
+      'Content-Type': 'application/json',
+      'x-request-id': requestId,
+    };
+
+    const guardFailureResponse = await enforceRequestGuards(
+      req,
+      jsonHeaders,
+      logWarn,
     );
-    const overlyBroadThreshold =
-      debugOptions.overlyBroadThreshold ?? DEFAULT_OVERLY_BROAD_THRESHOLD;
-
-    // 2. Forced Fallback / Core Tests (Debug Mode)
-    if (shouldForceFallback) {
-      const fallbackResult = await markStage('fallback', () =>
-        Promise.resolve(buildFallbackQuery(query, filters)),
-      );
-      const responseTimeMs = Date.now() - requestStartTime;
-      logInfo(
-        'request_completed',
-        buildPerfLogFields(stageDurationsMs, 'forced_fallback', responseTimeMs),
-      );
-      return createSearchFallbackResponse(
-        query,
-        fallbackResult.sanitized,
-        `Searching for: ${query}`,
-        ['Using forced fallback translation'],
-        responseTimeMs,
-        'forced_fallback',
-        jsonHeaders,
-        { validationIssues: fallbackResult.issues },
-      );
+    if (guardFailureResponse) {
+      return guardFailureResponse;
     }
 
-    // 2.5a. Check hardcoded patterns FIRST (before card name detection)
-    // Hardcoded otag translations like "elf lords" must take priority over card name heuristics
-    const earlyHardcodedMatch0 = getHardcodedPatternMatch(query);
-    if (earlyHardcodedMatch0) {
-      const filteredQuery = applyFiltersToQuery(
-        earlyHardcodedMatch0.scryfallQuery,
-        filters,
-      );
-      const responsePayload = filteredQuery
-        ? { ...earlyHardcodedMatch0, scryfallQuery: filteredQuery }
-        : earlyHardcodedMatch0;
-      const responseTimeMs = Date.now() - requestStartTime;
-      logInfo('pattern_match_hit', {
-        query: query.substring(0, 50),
-        responseTimeMs,
-      });
-      logInfo(
-        'request_completed',
-        buildPerfLogFields(stageDurationsMs, 'pattern_match', responseTimeMs),
-      );
-
-      setCachedResult(query, filters, responsePayload, cacheSalt);
-      logTranslation(
-        query,
-        responsePayload.scryfallQuery,
-        responsePayload.explanation?.confidence ?? 0.95,
-        responseTimeMs,
-        [],
-        [],
-        filters,
-        false,
-        'pattern_match',
-      );
-      flushLogQueue();
-
-      return createSearchSuccessResponse(
-        query,
-        responsePayload,
-        responseTimeMs,
-        'pattern_match',
-        jsonHeaders,
-      );
+    const parsedBody = await parseJsonBody(req, jsonHeaders, logWarn);
+    if ('response' in parsedBody) {
+      return parsedBody.response;
     }
+    const validatedRequest = validateSearchRequest(
+      parsedBody.requestBody as Record<string, unknown>,
+      jsonHeaders,
+    );
+    if (!validatedRequest.ok) {
+      return validatedRequest.response;
+    }
+    const requestBody = validatedRequest.data;
 
-    // 2.5b. Fast-path for card-name queries (skip cache/pattern/AI entirely)
-    // First check DB for known card names, then fall back to Scryfall fuzzy + heuristic.
-    const queryWords = query.trim().split(/\s+/);
-    const hasSearchKeywords =
-      /\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries)\b/i.test(
-        query,
+    try {
+      const { query, filters, debug, useCache, cacheSalt, locale } =
+        requestBody;
+      const requestBudget = parseRequestBudget(
+        req,
+        requestStartTime,
+        REQUEST_BUDGET_MS,
       );
 
-    // DB lookup: exact card name match (async, ~1ms from in-memory cache)
-    let isKnownCard =
-      !hasSearchKeywords && queryWords.length <= 6
-        ? await markStage('card_name_lookup', () => lookupCardName(query))
-        : false;
-
-    // Scryfall fuzzy name fallback: if DB misses and query is 2-5 words without
-    // search keywords, try Scryfall's fuzzy name endpoint as a secondary check.
-    if (
-      !isKnownCard &&
-      !hasSearchKeywords &&
-      queryWords.length >= 2 &&
-      queryWords.length <= 5
-    ) {
-      try {
-        const fuzzyResp = await fetchWithTimeout(
-          `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(query.trim())}`,
-          {},
-          2000,
+      const createBudgetExceededResponse = (): Response => {
+        const fallback = buildFallbackQuery(query, filters);
+        return new Response(
+          JSON.stringify({
+            originalQuery: query,
+            scryfallQuery: fallback.sanitized,
+            explanation: {
+              readable: `Searching for: ${query}`,
+              assumptions: ['Request budget exceeded - using fallback'],
+              confidence: 0.5,
+            },
+            success: true,
+            fallback: true,
+            source: 'budget_fallback',
+          }),
+          { headers: jsonHeaders },
         );
-        if (fuzzyResp.ok) {
-          const cardData = await fuzzyResp.json();
-          if (cardData.name) {
-            isKnownCard = true;
-            logInfo('scryfall_fuzzy_card_name_hit', {
-              query: query.substring(0, 50),
-              matchedName: cardData.name,
-            });
-          }
-        }
-      } catch {
-        // Fuzzy lookup failed — proceed without it
-      }
-    }
+      };
 
-    // Heuristic fallback for capitalized queries not in DB
-    const isFastNameCandidate =
-      !isKnownCard &&
-      queryWords.length <= 6 &&
-      queryWords.length >= 1 &&
-      queryWords.every(
-        (w: string) =>
-          /^[A-Z]/.test(w) || /^(of|the|and|to|in|for|a|an)$/i.test(w),
-      ) &&
-      !hasSearchKeywords;
+      // Type-safe debug options
+      const debugOptions: DebugOptions =
+        debug && typeof debug === 'object' ? (debug as DebugOptions) : {};
+      const shouldForceFallback = Boolean(
+        debugOptions.forceFallback || debugOptions.simulateAiFailure,
+      );
+      const overlyBroadThreshold =
+        debugOptions.overlyBroadThreshold ?? DEFAULT_OVERLY_BROAD_THRESHOLD;
 
-    if (isKnownCard || isFastNameCandidate) {
-      const fastResult = await markStage('deterministic', () =>
-        Promise.resolve(
-          buildDeterministicIntent(query, { isKnownCardName: isKnownCard }),
-        ),
-      );
-      const fastQuery = applyFiltersToQuery(
-        fastResult.deterministicQuery,
-        filters,
-      );
-      if (fastQuery && !fastResult.intent.remainingQuery) {
-        const validation = validateQuery(fastQuery);
+      // 2. Forced Fallback / Core Tests (Debug Mode)
+      if (shouldForceFallback) {
+        const fallbackResult = await markStage('fallback', () =>
+          Promise.resolve(buildFallbackQuery(query, filters)),
+        );
         const responseTimeMs = Date.now() - requestStartTime;
+        logInfo(
+          'request_completed',
+          buildPerfLogFields(
+            stageDurationsMs,
+            'forced_fallback',
+            responseTimeMs,
+          ),
+        );
+        return createSearchFallbackResponse(
+          query,
+          fallbackResult.sanitized,
+          `Searching for: ${query}`,
+          ['Using forced fallback translation'],
+          responseTimeMs,
+          'forced_fallback',
+          jsonHeaders,
+          { validationIssues: fallbackResult.issues },
+        );
+      }
+
+      // 2.5a. Check hardcoded patterns FIRST (before card name detection)
+      // Hardcoded otag translations like "elf lords" must take priority over card name heuristics
+      const earlyHardcodedMatch0 = getHardcodedPatternMatch(query);
+      if (earlyHardcodedMatch0) {
+        const filteredQuery = applyFiltersToQuery(
+          earlyHardcodedMatch0.scryfallQuery,
+          filters,
+        );
+        const responsePayload = filteredQuery
+          ? { ...earlyHardcodedMatch0, scryfallQuery: filteredQuery }
+          : earlyHardcodedMatch0;
+        const responseTimeMs = Date.now() - requestStartTime;
+        logInfo('pattern_match_hit', {
+          query: query.substring(0, 50),
+          responseTimeMs,
+        });
+        logInfo(
+          'request_completed',
+          buildPerfLogFields(stageDurationsMs, 'pattern_match', responseTimeMs),
+        );
+
+        setCachedResult(query, filters, responsePayload, cacheSalt);
         logTranslation(
           query,
-          validation.sanitized,
-          isKnownCard ? 0.95 : 0.9,
+          responsePayload.scryfallQuery,
+          responsePayload.explanation?.confidence ?? 0.95,
           responseTimeMs,
           [],
           [],
           filters,
           false,
-          'deterministic',
+          'pattern_match',
         );
         flushLogQueue();
 
         return createSearchSuccessResponse(
           query,
-          {
-            scryfallQuery: validation.sanitized,
-            explanation: {
-              readable: `Searching for: ${query}`,
-              assumptions: fastResult.intent.warnings,
-              confidence: isKnownCard ? 0.95 : 0.9,
-            },
-          },
+          responsePayload,
           responseTimeMs,
-          'deterministic',
+          'pattern_match',
           jsonHeaders,
         );
       }
-    }
 
-    // 2.6. New Pipeline Mode (opt-in via debug flag)
-    const usePipeline = Boolean(debugOptions.usePipeline);
-    if (usePipeline) {
-      const pipelineContext: PipelineContext = {
-        requestId,
-        startTime: requestStartTime,
-        options: {
-          useCache,
-          cacheSalt,
-          validateWithScryfall: Boolean(debugOptions.validateScryfall),
-          overlyBroadThreshold,
-          debug: true,
-        },
-        filters: filters as RequestFilters,
-      };
+      // 2.5b. Fast-path for card-name queries (skip cache/pattern/AI entirely)
+      // First check DB for known card names, then fall back to Scryfall fuzzy + heuristic.
+      const queryWords = query.trim().split(/\s+/);
+      const hasSearchKeywords =
+        /\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries)\b/i.test(
+          query,
+        );
 
-      const pipelineResult = await runPipeline(query, pipelineContext);
+      // DB lookup: exact card name match (async, ~1ms from in-memory cache)
+      let isKnownCard =
+        !hasSearchKeywords && queryWords.length <= 6
+          ? await markStage('card_name_lookup', () => lookupCardName(query))
+          : false;
 
-      // Cache successful results
-      if (useCache && pipelineResult.explanation.confidence >= 0.8) {
-        const cachePayload = {
-          scryfallQuery: pipelineResult.finalQuery,
-          explanation: pipelineResult.explanation,
-          showAffiliate: true,
-        };
-        setCachedResult(query, filters, cachePayload, cacheSalt);
-        setPersistentCache(query, filters, cachePayload, cacheSalt);
+      // Scryfall fuzzy name fallback: if DB misses and query is 2-5 words without
+      // search keywords, try Scryfall's fuzzy name endpoint as a secondary check.
+      if (
+        !isKnownCard &&
+        !hasSearchKeywords &&
+        queryWords.length >= 2 &&
+        queryWords.length <= 5
+      ) {
+        try {
+          const fuzzyResp = await fetchWithTimeout(
+            `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(query.trim())}`,
+            {},
+            2000,
+          );
+          if (fuzzyResp.ok) {
+            const cardData = await fuzzyResp.json();
+            if (cardData.name) {
+              isKnownCard = true;
+              logInfo('scryfall_fuzzy_card_name_hit', {
+                query: query.substring(0, 50),
+                matchedName: cardData.name,
+              });
+            }
+          }
+        } catch {
+          // Fuzzy lookup failed — proceed without it
+        }
       }
 
-      return createPipelineResponse(query, pipelineResult, jsonHeaders);
-    }
+      // Heuristic fallback for capitalized queries not in DB
+      const isFastNameCandidate =
+        !isKnownCard &&
+        queryWords.length <= 6 &&
+        queryWords.length >= 1 &&
+        queryWords.every(
+          (w: string) =>
+            /^[A-Z]/.test(w) || /^(of|the|and|to|in|for|a|an)$/i.test(w),
+        ) &&
+        !hasSearchKeywords;
 
-    // 3. Start cache lookup in parallel, but do not block deterministic fast-paths on it.
-    const cacheLookupPromise = markStage('cache', () =>
-      useCache
-        ? Promise.all([
-            getCachedResult(query, filters, cacheSalt),
-            getPersistentCache(query, filters, cacheSalt),
-          ]).then(([mem, persistent]) => mem || persistent)
-        : Promise.resolve(null),
-    ).catch(() => null);
+      if (isKnownCard || isFastNameCandidate) {
+        const fastResult = await markStage('deterministic', () =>
+          Promise.resolve(
+            buildDeterministicIntent(query, { isKnownCardName: isKnownCard }),
+          ),
+        );
+        const fastQuery = applyFiltersToQuery(
+          fastResult.deterministicQuery,
+          filters,
+        );
+        if (fastQuery && !fastResult.intent.remainingQuery) {
+          const validation = validateQuery(fastQuery);
+          const responseTimeMs = Date.now() - requestStartTime;
+          logTranslation(
+            query,
+            validation.sanitized,
+            isKnownCard ? 0.95 : 0.9,
+            responseTimeMs,
+            [],
+            [],
+            filters,
+            false,
+            'deterministic',
+          );
+          flushLogQueue();
 
-    // 4. Deterministic build first (fast and CPU-only)
-    const deterministicResult = await markStage('deterministic', () =>
-      Promise.resolve(
-        buildDeterministicIntent(query, { isKnownCardName: isKnownCard }),
-      ),
-    );
+          return createSearchSuccessResponse(
+            query,
+            {
+              scryfallQuery: validation.sanitized,
+              explanation: {
+                readable: `Searching for: ${query}`,
+                assumptions: fastResult.intent.warnings,
+                confidence: isKnownCard ? 0.95 : 0.9,
+              },
+            },
+            responseTimeMs,
+            'deterministic',
+            jsonHeaders,
+          );
+        }
+      }
 
-    const deterministicQuery = applyFiltersToQuery(
-      deterministicResult.deterministicQuery,
-      filters,
-    );
-
-    // Strip noise words from residual so deterministic queries don't fall through to slower stages.
-    const FAST_PATH_NOISE_WORDS =
-      /\b(in|that|the|a|an|and|or|for|with|of|to|from|are|is|be|my|your|its|cards?|spells?|good|best|great|nice|cool|top|find|some|any|also|really|very|most|all|every|each|other)\b/gi;
-    const deterministicRemaining = (
-      deterministicResult.intent.remainingQuery || ''
-    )
-      .replace(FAST_PATH_NOISE_WORDS, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    // Hardcoded patterns already checked at step 2.5a above
-
-    // Deterministic fast-path: never wait on cache/DB for this case.
-    if (deterministicQuery && deterministicRemaining.length < 3) {
-      const validation = validateQuery(deterministicQuery || query);
-      const responseTimeMs = Date.now() - requestStartTime;
-      logInfo(
-        'request_completed',
-        buildPerfLogFields(stageDurationsMs, 'deterministic', responseTimeMs),
-      );
-      logTranslation(
-        query,
-        validation.sanitized,
-        0.9,
-        responseTimeMs,
-        [],
-        [],
-        filters,
-        false,
-        'deterministic',
-      );
-      flushLogQueue(); // fire-and-forget
-
-      return new Response(
-        JSON.stringify({
-          originalQuery: query,
-          scryfallQuery: validation.sanitized,
-          explanation: {
-            readable: `Searching for: ${query}`,
-            assumptions: deterministicResult.intent.warnings,
-            confidence: 0.9,
+      // 2.6. New Pipeline Mode (opt-in via debug flag)
+      const usePipeline = Boolean(debugOptions.usePipeline);
+      if (usePipeline) {
+        const pipelineContext: PipelineContext = {
+          requestId,
+          startTime: requestStartTime,
+          options: {
+            useCache,
+            cacheSalt,
+            validateWithScryfall: Boolean(debugOptions.validateScryfall),
+            overlyBroadThreshold,
+            debug: true,
           },
-          success: true,
-          source: 'deterministic',
-        }),
-        { headers: jsonHeaders },
-      );
-    }
+          filters: filters as RequestFilters,
+        };
 
-    // Hardcoded patterns already checked at step 2.5a above
+        const pipelineResult = await runPipeline(query, pipelineContext);
 
-    if (useCache) {
-      const CACHE_LOOKUP_TIMEOUT_MS = 900;
-      const cacheLookupResult = await withTimeoutFallback(
-        cacheLookupPromise.then((value) => ({ value, timedOut: false })),
-        CACHE_LOOKUP_TIMEOUT_MS,
-        { value: null, timedOut: true },
-      );
+        // Cache successful results
+        if (useCache && pipelineResult.explanation.confidence >= 0.8) {
+          const cachePayload = {
+            scryfallQuery: pipelineResult.finalQuery,
+            explanation: pipelineResult.explanation,
+            showAffiliate: true,
+          };
+          setCachedResult(query, filters, cachePayload, cacheSalt);
+          setPersistentCache(query, filters, cachePayload, cacheSalt);
+        }
 
-      if (cacheLookupResult.timedOut) {
-        logWarn('cache_lookup_timeout', {
-          query: query.substring(0, 50),
-          timeoutMs: CACHE_LOOKUP_TIMEOUT_MS,
-        });
+        return createPipelineResponse(query, pipelineResult, jsonHeaders);
       }
 
-      const cached = cacheLookupResult.value;
-      if (cached) {
+      // 3. Start cache lookup in parallel, but do not block deterministic fast-paths on it.
+      const cacheLookupPromise = markStage('cache', () =>
+        useCache
+          ? Promise.all([
+              getCachedResult(query, filters, cacheSalt),
+              getPersistentCache(query, filters, cacheSalt),
+            ]).then(([mem, persistent]) => mem || persistent)
+          : Promise.resolve(null),
+      ).catch(() => null);
+
+      // 4. Deterministic build first (fast and CPU-only)
+      const deterministicResult = await markStage('deterministic', () =>
+        Promise.resolve(
+          buildDeterministicIntent(query, { isKnownCardName: isKnownCard }),
+        ),
+      );
+
+      const deterministicQuery = applyFiltersToQuery(
+        deterministicResult.deterministicQuery,
+        filters,
+      );
+
+      // Strip noise words from residual so deterministic queries don't fall through to slower stages.
+      const FAST_PATH_NOISE_WORDS =
+        /\b(in|that|the|a|an|and|or|for|with|of|to|from|are|is|be|my|your|its|cards?|spells?|good|best|great|nice|cool|top|find|some|any|also|really|very|most|all|every|each|other)\b/gi;
+      const deterministicRemaining = (
+        deterministicResult.intent.remainingQuery || ''
+      )
+        .replace(FAST_PATH_NOISE_WORDS, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      // Hardcoded patterns already checked at step 2.5a above
+
+      // Deterministic fast-path: never wait on cache/DB for this case.
+      if (deterministicQuery && deterministicRemaining.length < 3) {
+        const validation = validateQuery(deterministicQuery || query);
         const responseTimeMs = Date.now() - requestStartTime;
-        logInfo('cache_hit', { query: query.substring(0, 50), responseTimeMs });
         logInfo(
           'request_completed',
-          buildPerfLogFields(stageDurationsMs, 'cache', responseTimeMs),
+          buildPerfLogFields(stageDurationsMs, 'deterministic', responseTimeMs),
         );
         logTranslation(
           query,
-          cached.scryfallQuery,
-          cached.explanation?.confidence ?? 0.9,
+          validation.sanitized,
+          0.9,
           responseTimeMs,
           [],
           [],
           filters,
           false,
-          'cache',
+          'deterministic',
         );
-        flushLogQueue(); // fire-and-forget — don't block the response
+        flushLogQueue(); // fire-and-forget
+
+        return new Response(
+          JSON.stringify({
+            originalQuery: query,
+            scryfallQuery: validation.sanitized,
+            explanation: {
+              readable: `Searching for: ${query}`,
+              assumptions: deterministicResult.intent.warnings,
+              confidence: 0.9,
+            },
+            success: true,
+            source: 'deterministic',
+          }),
+          { headers: jsonHeaders },
+        );
+      }
+
+      // Hardcoded patterns already checked at step 2.5a above
+
+      if (useCache) {
+        const CACHE_LOOKUP_TIMEOUT_MS = 900;
+        const cacheLookupResult = await withTimeoutFallback(
+          cacheLookupPromise.then((value) => ({ value, timedOut: false })),
+          CACHE_LOOKUP_TIMEOUT_MS,
+          { value: null, timedOut: true },
+        );
+
+        if (cacheLookupResult.timedOut) {
+          logWarn('cache_lookup_timeout', {
+            query: query.substring(0, 50),
+            timeoutMs: CACHE_LOOKUP_TIMEOUT_MS,
+          });
+        }
+
+        const cached = cacheLookupResult.value;
+        if (cached) {
+          const responseTimeMs = Date.now() - requestStartTime;
+          logInfo('cache_hit', {
+            query: query.substring(0, 50),
+            responseTimeMs,
+          });
+          logInfo(
+            'request_completed',
+            buildPerfLogFields(stageDurationsMs, 'cache', responseTimeMs),
+          );
+          logTranslation(
+            query,
+            cached.scryfallQuery,
+            cached.explanation?.confidence ?? 0.9,
+            responseTimeMs,
+            [],
+            [],
+            filters,
+            false,
+            'cache',
+          );
+          flushLogQueue(); // fire-and-forget — don't block the response
+
+          return createSearchSuccessResponse(
+            query,
+            { ...cached, cached: true },
+            responseTimeMs,
+            'cache',
+            jsonHeaders,
+          );
+        }
+      }
+
+      // 5. Pattern Matching (Known queries)
+      const patternMatch = await markStage('pattern', () =>
+        checkPatternMatch(query, filters),
+      );
+      if (patternMatch) {
+        const filteredQuery = applyFiltersToQuery(
+          patternMatch.scryfallQuery,
+          filters,
+        );
+        const responsePayload = filteredQuery
+          ? { ...patternMatch, scryfallQuery: filteredQuery }
+          : patternMatch;
+        const responseTimeMs = Date.now() - requestStartTime;
+        logInfo('pattern_match_hit', {
+          query: query.substring(0, 50),
+          responseTimeMs,
+        });
+        logInfo(
+          'request_completed',
+          buildPerfLogFields(stageDurationsMs, 'pattern_match', responseTimeMs),
+        );
+
+        setCachedResult(query, filters, responsePayload, cacheSalt);
+        logTranslation(
+          query,
+          responsePayload.scryfallQuery,
+          responsePayload.explanation?.confidence ?? 0.85,
+          responseTimeMs,
+          [],
+          [],
+          filters,
+          false,
+          'pattern_match',
+        );
+        flushLogQueue(); // fire-and-forget
 
         return createSearchSuccessResponse(
           query,
-          { ...cached, cached: true },
+          responsePayload,
           responseTimeMs,
-          'cache',
+          'pattern_match',
           jsonHeaders,
         );
       }
-    }
 
-    // 5. Pattern Matching (Known queries)
-    const patternMatch = await markStage('pattern', () =>
-      checkPatternMatch(query, filters),
-    );
-    if (patternMatch) {
-      const filteredQuery = applyFiltersToQuery(patternMatch.scryfallQuery, filters);
-      const responsePayload = filteredQuery
-        ? { ...patternMatch, scryfallQuery: filteredQuery }
-        : patternMatch;
-      const responseTimeMs = Date.now() - requestStartTime;
-      logInfo('pattern_match_hit', {
-        query: query.substring(0, 50),
-        responseTimeMs,
-      });
-      logInfo(
-        'request_completed',
-        buildPerfLogFields(stageDurationsMs, 'pattern_match', responseTimeMs),
+      // 5. Circuit Breaker / AI Availability Check
+      if (isCircuitOpen() || !LOVABLE_API_KEY) {
+        logWarn('ai_unavailable', {
+          reason: isCircuitOpen() ? 'circuit_open' : 'missing_api_key',
+        });
+        const fallback = await markStage('fallback', () =>
+          Promise.resolve(buildFallbackQuery(query, filters)),
+        );
+        const responseTimeMs = Date.now() - requestStartTime;
+        logInfo(
+          'request_completed',
+          buildPerfLogFields(stageDurationsMs, 'fallback', responseTimeMs),
+        );
+        return createSearchFallbackResponse(
+          query,
+          fallback.sanitized,
+          `Searching for: ${query}`,
+          ['AI temporarily unavailable - using simplified search'],
+          responseTimeMs,
+          'fallback',
+          jsonHeaders,
+        );
+      }
+
+      // 6. Raw Scryfall syntax detection (skip AI for already-valid queries)
+      // No Scryfall validation here — raw syntax is trusted, validation adds latency with no benefit.
+      const trimmedQuery = query.trim();
+      if (isRawScryfallSyntax(trimmedQuery)) {
+        const validation = validateQuery(trimmedQuery);
+        const filteredQuery = applyFiltersToQuery(
+          validation.sanitized,
+          filters,
+        );
+        const finalQuery = filteredQuery || validation.sanitized;
+        const responseTimeMs = Date.now() - requestStartTime;
+        logInfo('raw_syntax_passthrough', {
+          query: trimmedQuery.substring(0, 50),
+          responseTimeMs,
+        });
+        logInfo(
+          'request_completed',
+          buildPerfLogFields(stageDurationsMs, 'raw_syntax', responseTimeMs),
+        );
+        logTranslation(
+          query,
+          finalQuery,
+          0.95,
+          responseTimeMs,
+          [],
+          [],
+          filters,
+          false,
+          'raw_syntax',
+        );
+        flushLogQueue(); // fire-and-forget
+
+        const rawResult = {
+          scryfallQuery: finalQuery,
+          explanation: {
+            readable: `Direct Scryfall syntax: ${trimmedQuery}`,
+            assumptions: [],
+            confidence: 0.95,
+          },
+          showAffiliate: true,
+        };
+
+        setCachedResult(query, filters, rawResult, cacheSalt);
+
+        return createSearchSuccessResponse(
+          query,
+          rawResult,
+          responseTimeMs,
+          'raw_syntax',
+          jsonHeaders,
+        );
+      }
+
+      // 6b. Concept Matching (known MTG concepts — skip AI if high-confidence match)
+      const residualForConcepts =
+        deterministicResult.intent.remainingQuery || query;
+      const meaningfulResidual = residualForConcepts
+        .replace(FAST_PATH_NOISE_WORDS, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      const deterministicHandledWords = new Set(
+        (deterministicQuery || '')
+          .toLowerCase()
+          .replace(/[^a-z\s]/g, ' ')
+          .split(/\s+/)
+          .filter((w) => w.length >= 3),
       );
 
-      setCachedResult(query, filters, responsePayload, cacheSalt);
-      logTranslation(
+      const conceptResponse = await tryConceptStage({
         query,
-        responsePayload.scryfallQuery,
-        responsePayload.explanation?.confidence ?? 0.85,
-        responseTimeMs,
-        [],
-        [],
         filters,
-        false,
-        'pattern_match',
-      );
-      flushLogQueue(); // fire-and-forget
-
-      return createSearchSuccessResponse(
-        query,
-        responsePayload,
-        responseTimeMs,
-        'pattern_match',
+        cacheSalt,
+        deterministicQuery,
+        deterministicHandledWords,
+        meaningfulResidual,
+        residualForConcepts,
+        requestStartTime,
+        stageDurationsMs,
+        logInfo,
+        logWarn,
         jsonHeaders,
-      );
-    }
-
-    // 5. Circuit Breaker / AI Availability Check
-    if (isCircuitOpen() || !LOVABLE_API_KEY) {
-      logWarn('ai_unavailable', {
-        reason: isCircuitOpen() ? 'circuit_open' : 'missing_api_key',
-      });
-      const fallback = await markStage('fallback', () =>
-        Promise.resolve(buildFallbackQuery(query, filters)),
-      );
-      const responseTimeMs = Date.now() - requestStartTime;
-      logInfo(
-        'request_completed',
-        buildPerfLogFields(stageDurationsMs, 'fallback', responseTimeMs),
-      );
-      return createSearchFallbackResponse(
-        query,
-        fallback.sanitized,
-        `Searching for: ${query}`,
-        ['AI temporarily unavailable - using simplified search'],
-        responseTimeMs,
-        'fallback',
-        jsonHeaders,
-      );
-    }
-
-    // 6. Raw Scryfall syntax detection (skip AI for already-valid queries)
-    // No Scryfall validation here — raw syntax is trusted, validation adds latency with no benefit.
-    const trimmedQuery = query.trim();
-    if (isRawScryfallSyntax(trimmedQuery)) {
-      const validation = validateQuery(trimmedQuery);
-      const filteredQuery = applyFiltersToQuery(validation.sanitized, filters);
-      const finalQuery = filteredQuery || validation.sanitized;
-      const responseTimeMs = Date.now() - requestStartTime;
-      logInfo('raw_syntax_passthrough', {
-        query: trimmedQuery.substring(0, 50),
-        responseTimeMs,
-      });
-      logInfo(
-        'request_completed',
-        buildPerfLogFields(stageDurationsMs, 'raw_syntax', responseTimeMs),
-      );
-      logTranslation(
-        query,
-        finalQuery,
-        0.95,
-        responseTimeMs,
-        [],
-        [],
-        filters,
-        false,
-        'raw_syntax',
-      );
-      flushLogQueue(); // fire-and-forget
-
-      const rawResult = {
-        scryfallQuery: finalQuery,
-        explanation: {
-          readable: `Direct Scryfall syntax: ${trimmedQuery}`,
-          assumptions: [],
-          confidence: 0.95,
-        },
-        showAffiliate: true,
-      };
-
-      setCachedResult(query, filters, rawResult, cacheSalt);
-
-      return createSearchSuccessResponse(
-        query,
-        rawResult,
-        responseTimeMs,
-        'raw_syntax',
-        jsonHeaders,
-      );
-    }
-
-    // 6b. Concept Matching (known MTG concepts — skip AI if high-confidence match)
-    const residualForConcepts =
-      deterministicResult.intent.remainingQuery || query;
-    const meaningfulResidual = residualForConcepts
-      .replace(FAST_PATH_NOISE_WORDS, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-    const deterministicHandledWords = new Set(
-      (deterministicQuery || '')
-        .toLowerCase()
-        .replace(/[^a-z\s]/g, ' ')
-        .split(/\s+/)
-        .filter((w) => w.length >= 3),
-    );
-
-    const conceptResponse = await tryConceptStage({
-      query,
-      filters,
-      cacheSalt,
-      deterministicQuery,
-      deterministicHandledWords,
-      meaningfulResidual,
-      residualForConcepts,
-      requestStartTime,
-      stageDurationsMs,
-      logInfo,
-      logWarn,
-      jsonHeaders,
-      setCachedResult,
-      flushLogQueue,
-      findConceptMatches: async (
-        residual,
-        maxConcepts,
-        threshold,
-        skipLLMClassification,
-      ) => {
-        const { findConceptMatches } = await import('./pipeline/concepts.ts');
-        return findConceptMatches(
+        setCachedResult,
+        flushLogQueue,
+        findConceptMatches: async (
           residual,
           maxConcepts,
           threshold,
           skipLLMClassification,
-        );
-      },
-    });
-    if (conceptResponse) {
-      return conceptResponse;
-    }
-
-    const buildBudgetExceededResponse = (
-      stage: BudgetStage,
-      confidence: number,
-      assumptions: string[],
-    ): Response => {
-      const fallback = buildFallbackQuery(query, filters);
-      const responseTimeMs = Date.now() - requestStartTime;
-      const remainingBudgetMs = requestBudget.remainingMs();
-      logWarn('budget_exceeded', {
-        stage,
-        responseTimeMs,
-        remainingBudgetMs,
-        deadlineMs: requestBudget.deadlineMs,
+        ) => {
+          const { findConceptMatches } = await import('./pipeline/concepts.ts');
+          return findConceptMatches(
+            residual,
+            maxConcepts,
+            threshold,
+            skipLLMClassification,
+          );
+        },
       });
+      if (conceptResponse) {
+        return conceptResponse;
+      }
 
-      return createSearchFallbackResponse(
-        query,
-        fallback.sanitized,
-        `Searching for: ${query}`,
-        assumptions,
-        responseTimeMs,
-        'budget_fallback',
-        jsonHeaders,
-        { budgetExceededAtStage: stage },
-        confidence,
-      );
-    };
+      const buildBudgetExceededResponse = (
+        stage: BudgetStage,
+        confidence: number,
+        assumptions: string[],
+      ): Response => {
+        const fallback = buildFallbackQuery(query, filters);
+        const responseTimeMs = Date.now() - requestStartTime;
+        const remainingBudgetMs = requestBudget.remainingMs();
+        logWarn('budget_exceeded', {
+          stage,
+          responseTimeMs,
+          remainingBudgetMs,
+          deadlineMs: requestBudget.deadlineMs,
+        });
 
-    // 7. Pre-translate non-English queries to English for better AI accuracy
-    const remainingQuery = deterministicResult.intent.remainingQuery || '';
-    let queryForAI = remainingQuery;
-    let preTranslationAttempted = false;
-    let preTranslationSkippedReason: string | null = null;
-    const normalizedLocale = locale?.toLowerCase();
-    const localePrefersTranslation =
-      normalizedLocale !== undefined && normalizedLocale !== 'en';
+        return createSearchFallbackResponse(
+          query,
+          fallback.sanitized,
+          `Searching for: ${query}`,
+          assumptions,
+          responseTimeMs,
+          'budget_fallback',
+          jsonHeaders,
+          { budgetExceededAtStage: stage },
+          confidence,
+        );
+      };
 
-    // Detect non-Latin scripts or common non-English patterns
-    const hasNonLatin =
-      /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Cyrillic}\p{Script=Arabic}\p{Script=Devanagari}]/u.test(
+      // 7. Pre-translate non-English queries to English for better AI accuracy
+      const remainingQuery = deterministicResult.intent.remainingQuery || '';
+      let queryForAI = remainingQuery;
+      let preTranslationAttempted = false;
+      let preTranslationSkippedReason: string | null = null;
+      const normalizedLocale = locale?.toLowerCase();
+      const localePrefersTranslation =
+        normalizedLocale !== undefined && normalizedLocale !== 'en';
+
+      // Detect non-Latin scripts or common non-English patterns
+      const hasNonLatin =
+        /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Cyrillic}\p{Script=Arabic}\p{Script=Devanagari}]/u.test(
+          remainingQuery,
+        );
+      const hasAccentedLatin = /[àáâãäåæçèéêëìíîïðñòóôõöùúûüýþÿ]/i.test(
         remainingQuery,
       );
-    const hasAccentedLatin = /[àáâãäåæçèéêëìíîïðñòóôõöùúûüýþÿ]/i.test(
-      remainingQuery,
-    );
-    const deterministicConfidence =
-      ((deterministicResult.intent as unknown as Record<string, unknown>)
-        .confidence as number) ?? 0;
-    const shouldPreTranslateAccentedLatin =
-      hasAccentedLatin &&
-      !hasNonLatin &&
-      deterministicConfidence >= ACCENTED_LATIN_HIGH_CONFIDENCE_THRESHOLD;
-    const looksNonEnglish =
-      hasNonLatin || shouldPreTranslateAccentedLatin || localePrefersTranslation;
+      const deterministicConfidence =
+        ((deterministicResult.intent as unknown as Record<string, unknown>)
+          .confidence as number) ?? 0;
+      const shouldPreTranslateAccentedLatin =
+        hasAccentedLatin &&
+        !hasNonLatin &&
+        deterministicConfidence >= ACCENTED_LATIN_HIGH_CONFIDENCE_THRESHOLD;
+      const looksNonEnglish =
+        hasNonLatin ||
+        shouldPreTranslateAccentedLatin ||
+        localePrefersTranslation;
 
-    if (looksNonEnglish && remainingQuery.trim().length > 0) {
-      const remainingBudgetMs = requestBudget.deadlineMs - Date.now();
+      if (looksNonEnglish && remainingQuery.trim().length > 0) {
+        const remainingBudgetMs = requestBudget.deadlineMs - Date.now();
 
-      if (remainingBudgetMs < REQUEST_STAGE_MIN_BUDGET_MS.preTranslation) {
-        return buildBudgetExceededResponse('pre_translation', 0.58, [
-          'Skipped pre-translation due to low remaining request budget',
-        ]);
+        if (remainingBudgetMs < REQUEST_STAGE_MIN_BUDGET_MS.preTranslation) {
+          return buildBudgetExceededResponse('pre_translation', 0.58, [
+            'Skipped pre-translation due to low remaining request budget',
+          ]);
+        } else {
+          preTranslationAttempted = true;
+          try {
+            const preTranslateResponse = await fetchWithTimeout(
+              'https://ai.gateway.lovable.dev/v1/chat/completions',
+              {
+                method: 'POST',
+                headers: {
+                  Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  model: 'google/gemini-2.5-flash-lite',
+                  messages: [
+                    {
+                      role: 'system',
+                      content: `You are a translator. Translate the following Magic: The Gathering card search query into English. Preserve all MTG-specific intent (counter, destroy, exile, ramp, etc.). The user's UI locale is ${normalizedLocale || 'unknown'}, so use that as a hint about the input language when helpful. Output ONLY the English translation, nothing else.`,
+                    },
+                    { role: 'user', content: remainingQuery },
+                  ],
+                  temperature: 0.0,
+                }),
+              },
+              PRE_TRANSLATION_TIMEOUT_MS,
+            );
+
+            if (preTranslateResponse.ok) {
+              const preTranslateData = await preTranslateResponse.json();
+              const translated =
+                preTranslateData?.choices?.[0]?.message?.content?.trim();
+              if (translated && translated.length > 0) {
+                logInfo('pre_translation_applied', {
+                  preTranslationAttempted,
+                  preTranslationSkippedReason,
+                });
+                queryForAI = translated;
+              } else {
+                preTranslationSkippedReason = 'empty_translation';
+              }
+            } else {
+              preTranslationSkippedReason = 'gateway_non_ok';
+            }
+          } catch (e) {
+            // Pre-translation failed, proceed with original query without retries.
+            preTranslationSkippedReason =
+              e instanceof Error && e.name === 'AbortError'
+                ? 'pre_translation_timeout'
+                : 'pre_translation_failure';
+            logWarn('pre_translation_failed', {
+              error: sanitizeError(e),
+              preTranslationAttempted,
+              preTranslationSkippedReason,
+            });
+          }
+        }
+      } else if (remainingQuery.trim().length === 0) {
+        preTranslationSkippedReason = 'empty_remaining_query';
+      } else if (hasAccentedLatin && !shouldPreTranslateAccentedLatin) {
+        preTranslationSkippedReason = 'accented_latin_low_confidence';
       } else {
-        preTranslationAttempted = true;
-        try {
-          const preTranslateResponse = await fetchWithTimeout(
+        preTranslationSkippedReason = 'no_strong_non_english_signal';
+      }
+
+      if (!requestBudget.hasBudgetFor(1)) {
+        logWarn('request_budget_exceeded_after_pretranslate');
+        return createBudgetExceededResponse();
+      }
+
+      // 7.5. Card Name Synergy Detection
+      // Detect queries like "cards that help trigger Blanka's ability" and fetch the card's oracle text
+      const synergyPatterns = [
+        /\b(?:cards?|spells?|permanents?)\s+(?:that\s+)?(?:help|synergize|work|combo|pair|go|interact)\s+(?:with\s+)?(.+?)(?:'s?\s+(?:ability|abilities|effect|trigger|activated|static)|\s+deck|\s+strategy)?$/i,
+        /\b(?:support|enable|trigger|activate)\s+(.+?)(?:'s?\s+(?:ability|abilities|effect|trigger))?$/i,
+        /\b(?:synergy|synergies|synergize)\s+(?:with|for)\s+(.+?)$/i,
+        /\b(?:build around|built around|around)\s+(.+?)$/i,
+        /\b(?:goes? well with|pairs? with|combos? with)\s+(.+?)$/i,
+      ];
+
+      let cardSynergyContext = '';
+      let detectedCardName: string | null = null;
+
+      for (const pattern of synergyPatterns) {
+        const match = queryForAI.match(pattern);
+        if (match && match[1]) {
+          const candidateName = match[1]
+            .replace(/['"]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+          // Skip if too short or looks like a generic type
+          if (
+            candidateName.length >= 3 &&
+            !/^(creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries|spells?|planeswalkers?)$/i.test(
+              candidateName,
+            )
+          ) {
+            try {
+              const cardLookup = await fetchWithTimeout(
+                `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(candidateName)}`,
+                {},
+                3000,
+              );
+              if (cardLookup.ok) {
+                const cardData = await cardLookup.json();
+                if (cardData.oracle_text && cardData.name) {
+                  detectedCardName = cardData.name;
+                  const colorId =
+                    cardData.color_identity?.join('').toLowerCase() || '';
+                  cardSynergyContext = `\n\nCARD CONTEXT: The user is looking for cards that synergize with "${cardData.name}" (${cardData.type_line}). Its oracle text is: "${cardData.oracle_text}". Color identity: ${colorId || 'colorless'}. Generate a Scryfall query for cards that ENABLE or SYNERGIZE with this card's mechanics. Use id<=${colorId || 'c'} if the query implies commander format. Do NOT put the card name in o:"" — other cards don't mention this card by name.`;
+                  logInfo('card_synergy_detected', {
+                    cardName: cardData.name,
+                    candidateName,
+                  });
+                }
+              }
+            } catch {
+              // Card lookup failed, proceed without context
+            }
+            break;
+          }
+        }
+      }
+
+      // 8. AI Translation (with tiered model selection)
+      // Fetch dynamic rules in parallel with building context (non-blocking)
+      const queryWordCount = query.trim().split(/\s+/).length;
+      const isLikelyName =
+        deterministicResult.intent.warnings.includes('likely_card_name');
+      // Use medium tier for synergy queries since they need more reasoning
+      const tier: QueryTier = cardSynergyContext
+        ? 'medium'
+        : queryWordCount > 8
+          ? 'complex'
+          : queryWordCount > 4
+            ? 'medium'
+            : 'simple';
+
+      // Use stronger model for card name queries or synergy queries
+      const aiModel =
+        isLikelyName || cardSynergyContext
+          ? 'google/gemini-2.5-flash'
+          : tier === 'simple'
+            ? 'google/gemini-2.5-flash-lite'
+            : 'google/gemini-3-flash-preview';
+
+      // Deterministic fallback guard: skip optional dynamic rules if remaining budget
+      // drops below the stage floor derived from REQUEST_BUDGET_MS.
+      if (
+        !requestBudget.hasBudgetFor(REQUEST_STAGE_MIN_BUDGET_MS.dynamicRules)
+      ) {
+        return buildBudgetExceededResponse('dynamic_rules', 0.57, [
+          'Skipped dynamic rules fetch due to low remaining request budget',
+        ]);
+      }
+
+      const dynamicRules = await fetchDynamicRules();
+      if (!requestBudget.hasBudgetFor(1)) {
+        logWarn('request_budget_exceeded_before_ai_translate');
+        return createBudgetExceededResponse();
+      }
+      const systemPrompt = buildSystemPrompt(tier, dynamicRules, '');
+      const cardNameHint = isLikelyName
+        ? ' (IMPORTANT: This is likely a Magic: The Gathering card name, not a search description. Output ONLY the exact Scryfall name search like !"Gray Merchant of Asphodel" using the correct card name. Fix common misspellings: grey→gray, etc. If unsure of full name, use name: syntax like name:merchant.)'
+        : '';
+      const userMessage = `Translate to Scryfall search syntax: "${queryForAI}"${cardNameHint}${cardSynergyContext} ${deterministicQuery ? `(must include: ${deterministicQuery})` : ''}`;
+
+      // Deterministic fallback guard: never start the AI call unless there is
+      // enough time budget remaining for it to complete.
+      if (!requestBudget.hasBudgetFor(REQUEST_STAGE_MIN_BUDGET_MS.aiCall)) {
+        return buildBudgetExceededResponse('ai_call', 0.56, [
+          'Skipped AI translation due to low remaining request budget',
+        ]);
+      }
+
+      try {
+        const aiResponse = await markStage('ai', () =>
+          fetchWithRetry(
             'https://ai.gateway.lovable.dev/v1/chat/completions',
             {
               method: 'POST',
@@ -904,479 +1097,311 @@ serve(withLogging('semantic-search', async (req) => {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                model: 'google/gemini-2.5-flash-lite',
+                model: aiModel,
                 messages: [
-                  {
-                    role: 'system',
-                    content:
-                      `You are a translator. Translate the following Magic: The Gathering card search query into English. Preserve all MTG-specific intent (counter, destroy, exile, ramp, etc.). The user's UI locale is ${normalizedLocale || 'unknown'}, so use that as a hint about the input language when helpful. Output ONLY the English translation, nothing else.`,
-                  },
-                  { role: 'user', content: remainingQuery },
+                  { role: 'system', content: systemPrompt },
+                  { role: 'user', content: userMessage },
                 ],
-                temperature: 0.0,
+                temperature: 0.1,
               }),
             },
-            PRE_TRANSLATION_TIMEOUT_MS,
-          );
-
-          if (preTranslateResponse.ok) {
-            const preTranslateData = await preTranslateResponse.json();
-            const translated =
-              preTranslateData?.choices?.[0]?.message?.content?.trim();
-            if (translated && translated.length > 0) {
-              logInfo('pre_translation_applied', {
-                preTranslationAttempted,
-                preTranslationSkippedReason,
-              });
-              queryForAI = translated;
-            } else {
-              preTranslationSkippedReason = 'empty_translation';
-            }
-          } else {
-            preTranslationSkippedReason = 'gateway_non_ok';
-          }
-        } catch (e) {
-          // Pre-translation failed, proceed with original query without retries.
-          preTranslationSkippedReason =
-            e instanceof Error && e.name === 'AbortError'
-              ? 'pre_translation_timeout'
-              : 'pre_translation_failure';
-          logWarn('pre_translation_failed', {
-            error: sanitizeError(e),
-            preTranslationAttempted,
-            preTranslationSkippedReason,
-          });
-        }
-      }
-    } else if (remainingQuery.trim().length === 0) {
-      preTranslationSkippedReason = 'empty_remaining_query';
-    } else if (hasAccentedLatin && !shouldPreTranslateAccentedLatin) {
-      preTranslationSkippedReason = 'accented_latin_low_confidence';
-    } else {
-      preTranslationSkippedReason = 'no_strong_non_english_signal';
-    }
-
-    if (!requestBudget.hasBudgetFor(1)) {
-      logWarn('request_budget_exceeded_after_pretranslate');
-      return createBudgetExceededResponse();
-    }
-
-    // 7.5. Card Name Synergy Detection
-    // Detect queries like "cards that help trigger Blanka's ability" and fetch the card's oracle text
-    const synergyPatterns = [
-      /\b(?:cards?|spells?|permanents?)\s+(?:that\s+)?(?:help|synergize|work|combo|pair|go|interact)\s+(?:with\s+)?(.+?)(?:'s?\s+(?:ability|abilities|effect|trigger|activated|static)|\s+deck|\s+strategy)?$/i,
-      /\b(?:support|enable|trigger|activate)\s+(.+?)(?:'s?\s+(?:ability|abilities|effect|trigger))?$/i,
-      /\b(?:synergy|synergies|synergize)\s+(?:with|for)\s+(.+?)$/i,
-      /\b(?:build around|built around|around)\s+(.+?)$/i,
-      /\b(?:goes? well with|pairs? with|combos? with)\s+(.+?)$/i,
-    ];
-
-    let cardSynergyContext = '';
-    let detectedCardName: string | null = null;
-
-    for (const pattern of synergyPatterns) {
-      const match = queryForAI.match(pattern);
-      if (match && match[1]) {
-        const candidateName = match[1]
-          .replace(/['"]/g, '')
-          .replace(/\s+/g, ' ')
-          .trim();
-
-        // Skip if too short or looks like a generic type
-        if (
-          candidateName.length >= 3 &&
-          !/^(creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries|spells?|planeswalkers?)$/i.test(
-            candidateName,
-          )
-        ) {
-          try {
-            const cardLookup = await fetchWithTimeout(
-              `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(candidateName)}`,
-              {},
-              3000,
-            );
-            if (cardLookup.ok) {
-              const cardData = await cardLookup.json();
-              if (cardData.oracle_text && cardData.name) {
-                detectedCardName = cardData.name;
-                const colorId =
-                  cardData.color_identity?.join('').toLowerCase() || '';
-                cardSynergyContext = `\n\nCARD CONTEXT: The user is looking for cards that synergize with "${cardData.name}" (${cardData.type_line}). Its oracle text is: "${cardData.oracle_text}". Color identity: ${colorId || 'colorless'}. Generate a Scryfall query for cards that ENABLE or SYNERGIZE with this card's mechanics. Use id<=${colorId || 'c'} if the query implies commander format. Do NOT put the card name in o:"" — other cards don't mention this card by name.`;
-                logInfo('card_synergy_detected', {
-                  cardName: cardData.name,
-                  candidateName,
-                });
-              }
-            }
-          } catch {
-            // Card lookup failed, proceed without context
-          }
-          break;
-        }
-      }
-    }
-
-    // 8. AI Translation (with tiered model selection)
-    // Fetch dynamic rules in parallel with building context (non-blocking)
-    const queryWordCount = query.trim().split(/\s+/).length;
-    const isLikelyName =
-      deterministicResult.intent.warnings.includes('likely_card_name');
-    // Use medium tier for synergy queries since they need more reasoning
-    const tier: QueryTier = cardSynergyContext
-      ? 'medium'
-      : queryWordCount > 8
-        ? 'complex'
-        : queryWordCount > 4
-          ? 'medium'
-          : 'simple';
-
-    // Use stronger model for card name queries or synergy queries
-    const aiModel =
-      isLikelyName || cardSynergyContext
-        ? 'google/gemini-2.5-flash'
-        : tier === 'simple'
-          ? 'google/gemini-2.5-flash-lite'
-          : 'google/gemini-3-flash-preview';
-
-    // Deterministic fallback guard: skip optional dynamic rules if remaining budget
-    // drops below the stage floor derived from REQUEST_BUDGET_MS.
-    if (!requestBudget.hasBudgetFor(REQUEST_STAGE_MIN_BUDGET_MS.dynamicRules)) {
-      return buildBudgetExceededResponse('dynamic_rules', 0.57, [
-        'Skipped dynamic rules fetch due to low remaining request budget',
-      ]);
-    }
-
-    const dynamicRules = await fetchDynamicRules();
-    if (!requestBudget.hasBudgetFor(1)) {
-      logWarn('request_budget_exceeded_before_ai_translate');
-      return createBudgetExceededResponse();
-    }
-    const systemPrompt = buildSystemPrompt(tier, dynamicRules, '');
-    const cardNameHint = isLikelyName
-      ? ' (IMPORTANT: This is likely a Magic: The Gathering card name, not a search description. Output ONLY the exact Scryfall name search like !"Gray Merchant of Asphodel" using the correct card name. Fix common misspellings: grey→gray, etc. If unsure of full name, use name: syntax like name:merchant.)'
-      : '';
-    const userMessage = `Translate to Scryfall search syntax: "${queryForAI}"${cardNameHint}${cardSynergyContext} ${deterministicQuery ? `(must include: ${deterministicQuery})` : ''}`;
-
-    // Deterministic fallback guard: never start the AI call unless there is
-    // enough time budget remaining for it to complete.
-    if (!requestBudget.hasBudgetFor(REQUEST_STAGE_MIN_BUDGET_MS.aiCall)) {
-      return buildBudgetExceededResponse('ai_call', 0.56, [
-        'Skipped AI translation due to low remaining request budget',
-      ]);
-    }
-
-    try {
-      const aiResponse = await markStage('ai', () =>
-        fetchWithRetry(
-          'https://ai.gateway.lovable.dev/v1/chat/completions',
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${LOVABLE_API_KEY}`,
-              'Content-Type': 'application/json',
+            {
+              timeoutMs: AI_FETCH_TIMEOUT_MS,
+              retries: AI_MAX_RETRIES,
+              deadlineMs: requestBudget.deadlineMs,
             },
-            body: JSON.stringify({
-              model: aiModel,
-              messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: userMessage },
-              ],
-              temperature: 0.1,
-            }),
-          },
-          {
-            timeoutMs: AI_FETCH_TIMEOUT_MS,
-            retries: AI_MAX_RETRIES,
-            deadlineMs: requestBudget.deadlineMs,
-          },
-        ),
-      );
-
-      if (!aiResponse.ok)
-        throw new Error(`AI Gateway error: ${aiResponse.status}`);
-
-      const aiData = await aiResponse.json();
-
-      // Validate AI response structure
-      const validatedResponse = validateAIResponse(aiData);
-      const rawContent = extractAIContent(validatedResponse);
-
-      // Parse AI response (expecting JSON-like block or raw scryfall)
-      const parsedContent = parseAIContent(rawContent);
-      let scryfallQuery = parsedContent.scryfallQuery;
-      const explanationText =
-        parsedContent.explanation || `Translated: ${query}`;
-      const confidence = parsedContent.confidence || 0.75;
-
-      // Step 2: Guard against empty AI responses
-      if (!scryfallQuery || !scryfallQuery.trim()) {
-        logWarn('ai_empty_response_guard', { query: query.substring(0, 50) });
-        // Fall back to exact name search or deterministic query
-        scryfallQuery = deterministicQuery || `!"${query.trim()}"`;
-      }
-
-      // 8. Post-Processing & Validation
-      const qualityFlags = detectQualityFlags(scryfallQuery);
-      const { correctedQuery, corrections } = applyAutoCorrections(
-        scryfallQuery,
-        qualityFlags,
-      );
-      const validation = validateQuery(correctedQuery);
-
-      // Step 3: Scryfall validation and recovery
-      let finalQuery = validation.sanitized;
-      let resultCount: number | null = null;
-      let aiValidationNote: string | null = null;
-      let scryfallStatus: number | null = null;
-
-      const probeScryfall = async (candidateQuery: string): Promise<void> => {
-        const probe = await validateAgainstScryfall(
-          candidateQuery,
-          overlyBroadThreshold,
+          ),
         );
-        scryfallStatus = probe.status;
-        if (probe.status === 200 || probe.status === 404) {
-          resultCount = probe.totalCards ?? 0;
-        } else {
-          resultCount = null;
+
+        if (!aiResponse.ok)
+          throw new Error(`AI Gateway error: ${aiResponse.status}`);
+
+        const aiData = await aiResponse.json();
+
+        // Validate AI response structure
+        const validatedResponse = validateAIResponse(aiData);
+        const rawContent = extractAIContent(validatedResponse);
+
+        // Parse AI response (expecting JSON-like block or raw scryfall)
+        const parsedContent = parseAIContent(rawContent);
+        let scryfallQuery = parsedContent.scryfallQuery;
+        const explanationText =
+          parsedContent.explanation || `Translated: ${query}`;
+        const confidence = parsedContent.confidence || 0.75;
+
+        // Step 2: Guard against empty AI responses
+        if (!scryfallQuery || !scryfallQuery.trim()) {
+          logWarn('ai_empty_response_guard', { query: query.substring(0, 50) });
+          // Fall back to exact name search or deterministic query
+          scryfallQuery = deterministicQuery || `!"${query.trim()}"`;
         }
-      };
 
-      await probeScryfall(finalQuery);
-
-      if (scryfallStatus !== null && scryfallStatus >= 400) {
-        const repair = await repairQuery(
-          finalQuery,
-          undefined,
-          overlyBroadThreshold,
+        // 8. Post-Processing & Validation
+        const qualityFlags = detectQualityFlags(scryfallQuery);
+        const { correctedQuery, corrections } = applyAutoCorrections(
+          scryfallQuery,
+          qualityFlags,
         );
-        if (repair.success && repair.repairedQuery !== finalQuery) {
-          const repairedQuery = repair.repairedQuery;
-          await probeScryfall(repairedQuery);
-          if ((resultCount ?? 0) > 0) {
-            finalQuery = repairedQuery;
-            aiValidationNote = `AI translation repaired for Scryfall compatibility using: ${repair.steps.join(', ')}`;
-            logInfo('ai_scryfall_repaired', {
-              query: query.substring(0, 50),
-              status: scryfallStatus,
-              repairedQuery: finalQuery,
-              steps: repair.steps,
-            });
+        const validation = validateQuery(correctedQuery);
+
+        // Step 3: Scryfall validation and recovery
+        let finalQuery = validation.sanitized;
+        let resultCount: number | null = null;
+        let aiValidationNote: string | null = null;
+        let scryfallStatus: number | null = null;
+
+        const probeScryfall = async (candidateQuery: string): Promise<void> => {
+          const probe = await validateAgainstScryfall(
+            candidateQuery,
+            overlyBroadThreshold,
+          );
+          scryfallStatus = probe.status;
+          if (probe.status === 200 || probe.status === 404) {
+            resultCount = probe.totalCards ?? 0;
+          } else {
+            resultCount = null;
           }
-        }
-      }
+        };
 
-      // If AI translation returned zero results, try fallback strategies
-      if (resultCount === 0) {
-        logWarn('ai_zero_results_detected', {
-          query: query.substring(0, 50),
-          aiQuery: finalQuery,
-          scryfallStatus,
-        });
+        await probeScryfall(finalQuery);
 
-        // Strategy 1: Try deterministic query
-        if (deterministicQuery && deterministicQuery !== finalQuery) {
-          try {
-            const detResp = await fetchWithTimeout(
-              `https://api.scryfall.com/cards/search?q=${encodeURIComponent(deterministicQuery)}&page=1`,
-              {},
-              2000,
-            );
-            if (detResp.status === 200) {
-              const detData = await detResp.json();
-              if (detData.total_cards > 0) {
-                finalQuery = deterministicQuery;
-                resultCount = detData.total_cards;
-                aiValidationNote =
-                  'AI translation returned 0 results — using deterministic fallback';
-                logInfo('ai_zero_results_recovered_deterministic', {
-                  query: query.substring(0, 50),
-                  recoveredCount: resultCount,
-                });
-              }
+        if (scryfallStatus !== null && scryfallStatus >= 400) {
+          const repair = await repairQuery(
+            finalQuery,
+            undefined,
+            overlyBroadThreshold,
+          );
+          if (repair.success && repair.repairedQuery !== finalQuery) {
+            const repairedQuery = repair.repairedQuery;
+            await probeScryfall(repairedQuery);
+            if ((resultCount ?? 0) > 0) {
+              finalQuery = repairedQuery;
+              aiValidationNote = `AI translation repaired for Scryfall compatibility using: ${repair.steps.join(', ')}`;
+              logInfo('ai_scryfall_repaired', {
+                query: query.substring(0, 50),
+                status: scryfallStatus,
+                repairedQuery: finalQuery,
+                steps: repair.steps,
+              });
             }
-          } catch {
-            // Deterministic validation failed — proceed
           }
         }
 
-        // Strategy 2: Try relaxed query (strip speculative clauses)
+        // If AI translation returned zero results, try fallback strategies
         if (resultCount === 0) {
-          const { relaxedQuery, removed } = relaxSpeculativeClauses(finalQuery);
-          if (removed.length > 0) {
+          logWarn('ai_zero_results_detected', {
+            query: query.substring(0, 50),
+            aiQuery: finalQuery,
+            scryfallStatus,
+          });
+
+          // Strategy 1: Try deterministic query
+          if (deterministicQuery && deterministicQuery !== finalQuery) {
             try {
-              const relaxResp = await fetchWithTimeout(
-                `https://api.scryfall.com/cards/search?q=${encodeURIComponent(relaxedQuery)}&page=1`,
+              const detResp = await fetchWithTimeout(
+                `https://api.scryfall.com/cards/search?q=${encodeURIComponent(deterministicQuery)}&page=1`,
                 {},
                 2000,
               );
-              if (relaxResp.status === 200) {
-                const relaxData = await relaxResp.json();
-                if (relaxData.total_cards > 0) {
-                  finalQuery = relaxedQuery;
-                  resultCount = relaxData.total_cards;
-                  aiValidationNote = `AI translation returned 0 results — relaxed by removing: ${removed.join(', ')}`;
-                  logInfo('ai_zero_results_recovered_relaxed', {
+              if (detResp.status === 200) {
+                const detData = await detResp.json();
+                if (detData.total_cards > 0) {
+                  finalQuery = deterministicQuery;
+                  resultCount = detData.total_cards;
+                  aiValidationNote =
+                    'AI translation returned 0 results — using deterministic fallback';
+                  logInfo('ai_zero_results_recovered_deterministic', {
                     query: query.substring(0, 50),
-                    removed,
                     recoveredCount: resultCount,
                   });
                 }
               }
             } catch {
-              // Relaxed validation failed — proceed
+              // Deterministic validation failed — proceed
             }
           }
-        }
 
-        // Strategy 3: Fall back to name search as last resort
-        if (resultCount === 0) {
-          const nameQuery = `!"${query.trim()}"`;
-          try {
-            const nameResp = await fetchWithTimeout(
-              `https://api.scryfall.com/cards/search?q=${encodeURIComponent(nameQuery)}&page=1`,
-              {},
-              2000,
-            );
-            if (nameResp.status === 200) {
-              const nameData = await nameResp.json();
-              if (nameData.total_cards > 0) {
-                finalQuery = nameQuery;
-                resultCount = nameData.total_cards;
-                aiValidationNote =
-                  'AI translation returned 0 results — matched as card name';
+          // Strategy 2: Try relaxed query (strip speculative clauses)
+          if (resultCount === 0) {
+            const { relaxedQuery, removed } =
+              relaxSpeculativeClauses(finalQuery);
+            if (removed.length > 0) {
+              try {
+                const relaxResp = await fetchWithTimeout(
+                  `https://api.scryfall.com/cards/search?q=${encodeURIComponent(relaxedQuery)}&page=1`,
+                  {},
+                  2000,
+                );
+                if (relaxResp.status === 200) {
+                  const relaxData = await relaxResp.json();
+                  if (relaxData.total_cards > 0) {
+                    finalQuery = relaxedQuery;
+                    resultCount = relaxData.total_cards;
+                    aiValidationNote = `AI translation returned 0 results — relaxed by removing: ${removed.join(', ')}`;
+                    logInfo('ai_zero_results_recovered_relaxed', {
+                      query: query.substring(0, 50),
+                      removed,
+                      recoveredCount: resultCount,
+                    });
+                  }
+                }
+              } catch {
+                // Relaxed validation failed — proceed
               }
             }
-          } catch {
-            // Name search failed — proceed with original
+          }
+
+          // Strategy 3: Fall back to name search as last resort
+          if (resultCount === 0) {
+            const nameQuery = `!"${query.trim()}"`;
+            try {
+              const nameResp = await fetchWithTimeout(
+                `https://api.scryfall.com/cards/search?q=${encodeURIComponent(nameQuery)}&page=1`,
+                {},
+                2000,
+              );
+              if (nameResp.status === 200) {
+                const nameData = await nameResp.json();
+                if (nameData.total_cards > 0) {
+                  finalQuery = nameQuery;
+                  resultCount = nameData.total_cards;
+                  aiValidationNote =
+                    'AI translation returned 0 results — matched as card name';
+                }
+              }
+            } catch {
+              // Name search failed — proceed with original
+            }
           }
         }
-      }
 
-      const readableExplanation = detectedCardName
-        ? `Finding cards that synergize with ${detectedCardName}`
-        : explanationText;
+        const readableExplanation = detectedCardName
+          ? `Finding cards that synergize with ${detectedCardName}`
+          : explanationText;
 
-      const allCorrections = aiValidationNote
-        ? [...corrections, aiValidationNote]
-        : corrections;
+        const allCorrections = aiValidationNote
+          ? [...corrections, aiValidationNote]
+          : corrections;
 
-      const finalResult = {
-        scryfallQuery: finalQuery,
-        explanation: {
-          readable: readableExplanation,
-          assumptions: detectedCardName
-            ? [`Detected card: ${detectedCardName}`, ...allCorrections]
-            : allCorrections,
-          confidence: aiValidationNote
-            ? Math.max(confidence - 0.1, 0.5)
-            : confidence,
-        },
-        showAffiliate: true,
-      };
+        const finalResult = {
+          scryfallQuery: finalQuery,
+          explanation: {
+            readable: readableExplanation,
+            assumptions: detectedCardName
+              ? [`Detected card: ${detectedCardName}`, ...allCorrections]
+              : allCorrections,
+            confidence: aiValidationNote
+              ? Math.max(confidence - 0.1, 0.5)
+              : confidence,
+          },
+          showAffiliate: true,
+        };
 
-      // 9. Success Housekeeping
-      recordCircuitSuccess();
-      const responseTimeMs = Date.now() - requestStartTime;
-      logInfo(
-        'request_completed',
-        buildPerfLogFields(stageDurationsMs, 'ai', responseTimeMs),
-      );
-
-      // Cache AI results more aggressively (>= 0.65 instead of 0.8) to prevent duplicate AI calls
-      if (useCache && finalResult.explanation.confidence >= 0.65) {
-        setCachedResult(query, filters, finalResult, cacheSalt);
-        setPersistentCache(query, filters, finalResult, cacheSalt);
-      }
-
-      // Auto-seed high-confidence AI translations into translation_rules for future pattern matches
-      if (finalResult.explanation.confidence >= 0.8 && finalQuery.length > 0) {
-        runInBackground(
-          seedTranslationRule(
-            query,
-            finalQuery,
-            finalResult.explanation.confidence,
-          ),
+        // 9. Success Housekeeping
+        recordCircuitSuccess();
+        const responseTimeMs = Date.now() - requestStartTime;
+        logInfo(
+          'request_completed',
+          buildPerfLogFields(stageDurationsMs, 'ai', responseTimeMs),
         );
-      }
 
-      // Step 4: Populate result_count in translation_logs
-      logTranslation(
-        query,
-        finalQuery,
-        finalResult.explanation.confidence,
-        responseTimeMs,
-        validation.issues,
-        qualityFlags,
-        filters,
-        false,
-        aiValidationNote ? 'ai_recovered' : 'ai',
-        resultCount,
-        {
+        // Cache AI results more aggressively (>= 0.65 instead of 0.8) to prevent duplicate AI calls
+        if (useCache && finalResult.explanation.confidence >= 0.65) {
+          setCachedResult(query, filters, finalResult, cacheSalt);
+          setPersistentCache(query, filters, finalResult, cacheSalt);
+        }
+
+        // Auto-seed high-confidence AI translations into translation_rules for future pattern matches
+        if (
+          finalResult.explanation.confidence >= 0.8 &&
+          finalQuery.length > 0
+        ) {
+          runInBackground(
+            seedTranslationRule(
+              query,
+              finalQuery,
+              finalResult.explanation.confidence,
+            ),
+          );
+        }
+
+        // Step 4: Populate result_count in translation_logs
+        logTranslation(
+          query,
+          finalQuery,
+          finalResult.explanation.confidence,
+          responseTimeMs,
+          validation.issues,
+          qualityFlags,
+          filters,
+          false,
+          aiValidationNote ? 'ai_recovered' : 'ai',
+          resultCount,
+          {
+            preTranslationAttempted,
+            preTranslationSkippedReason,
+          },
+        );
+        logInfo('ai_translation_success', {
+          responseTimeMs,
           preTranslationAttempted,
           preTranslationSkippedReason,
-        },
-      );
-      logInfo('ai_translation_success', {
-        responseTimeMs,
-        preTranslationAttempted,
-        preTranslationSkippedReason,
-        resultCount,
-      });
-      flushLogQueue(); // fire-and-forget
+          resultCount,
+        });
+        flushLogQueue(); // fire-and-forget
 
-      return createSearchSuccessResponse(
-        query,
-        {
-          ...finalResult,
-          ...(detectedCardName ? { detectedCardName } : {}),
-          validationIssues: validation.issues,
-        },
-        responseTimeMs,
-        aiValidationNote ? 'ai_recovered' : 'ai',
-        jsonHeaders,
-      );
-    } catch (e) {
-      if (!requestBudget.hasBudgetFor(1)) {
-        logWarn('request_budget_exceeded_during_ai_translate');
-        return createBudgetExceededResponse();
-      }
-
-      recordCircuitFailure();
-      logWarn('ai_failure', { error: sanitizeError(e) });
-      const fallback = await markStage('fallback', () =>
-        Promise.resolve(buildFallbackQuery(query, filters)),
-      );
-      const responseTimeMs = Date.now() - requestStartTime;
-      logInfo(
-        'request_completed',
-        buildPerfLogFields(
-          stageDurationsMs,
-          'ai_failure_fallback',
+        return createSearchSuccessResponse(
+          query,
+          {
+            ...finalResult,
+            ...(detectedCardName ? { detectedCardName } : {}),
+            validationIssues: validation.issues,
+          },
           responseTimeMs,
-        ),
+          aiValidationNote ? 'ai_recovered' : 'ai',
+          jsonHeaders,
+        );
+      } catch (e) {
+        if (!requestBudget.hasBudgetFor(1)) {
+          logWarn('request_budget_exceeded_during_ai_translate');
+          return createBudgetExceededResponse();
+        }
+
+        recordCircuitFailure();
+        logWarn('ai_failure', { error: sanitizeError(e) });
+        const fallback = await markStage('fallback', () =>
+          Promise.resolve(buildFallbackQuery(query, filters)),
+        );
+        const responseTimeMs = Date.now() - requestStartTime;
+        logInfo(
+          'request_completed',
+          buildPerfLogFields(
+            stageDurationsMs,
+            'ai_failure_fallback',
+            responseTimeMs,
+          ),
+        );
+        return createSearchFallbackResponse(
+          query,
+          fallback.sanitized,
+          `Searching for: ${query}`,
+          ['AI failed - using fallback'],
+          responseTimeMs,
+          'ai_failure_fallback',
+          jsonHeaders,
+        );
+      }
+    } catch {
+      // Errors are logged via structured logging in individual handlers
+      const responseTimeMs = Date.now() - requestStartTime;
+      logWarn(
+        'request_completed',
+        buildPerfLogFields(stageDurationsMs, 'internal_error', responseTimeMs),
       );
-      return createSearchFallbackResponse(
-        query,
-        fallback.sanitized,
-        `Searching for: ${query}`,
-        ['AI failed - using fallback'],
-        responseTimeMs,
-        'ai_failure_fallback',
-        jsonHeaders,
+      return new Response(
+        JSON.stringify({ error: 'Internal search error', success: false }),
+        { status: 500, headers: jsonHeaders },
       );
     }
-  } catch {
-    // Errors are logged via structured logging in individual handlers
-    const responseTimeMs = Date.now() - requestStartTime;
-    logWarn(
-      'request_completed',
-      buildPerfLogFields(stageDurationsMs, 'internal_error', responseTimeMs),
-    );
-    return new Response(
-      JSON.stringify({ error: 'Internal search error', success: false }),
-      { status: 500, headers: jsonHeaders },
-    );
-  }
-}));
-
+  }),
+);

@@ -14,11 +14,16 @@ export interface StructuredLogData {
   [key: string]: unknown;
 }
 
-declare const Deno: { env: { get(key: string): string | undefined } } | undefined;
+declare const Deno:
+  | { env: { get(key: string): string | undefined } }
+  | undefined;
 
 const DEBUG_ENABLED = (() => {
   try {
-    return (typeof Deno !== 'undefined' && Deno?.env.get('LOG_LEVEL') === 'debug') || false;
+    return (
+      (typeof Deno !== 'undefined' && Deno?.env.get('LOG_LEVEL') === 'debug') ||
+      false
+    );
   } catch {
     return false;
   }
@@ -31,7 +36,8 @@ function emit(level: LogLevel, payload: Record<string, unknown>): void {
   } else if (level === 'warn') {
     console.warn(serialized);
   } else if (level === 'debug') {
-    console.debug?.(serialized) ?? console.log(serialized);
+    if (typeof console.debug === 'function') console.debug(serialized);
+    else console.log(serialized);
   } else {
     console.log(serialized);
   }
@@ -62,12 +68,17 @@ export function formatError(err: unknown): StructuredLogData {
       error_message: err.message,
     };
     if (err.stack) out.stack = err.stack.split('\n').slice(0, 12).join('\n');
-    const anyErr = err as unknown as { code?: unknown; cause?: unknown; status?: unknown };
+    const anyErr = err as unknown as {
+      code?: unknown;
+      cause?: unknown;
+      status?: unknown;
+    };
     if (anyErr.code !== undefined) out.error_code = String(anyErr.code);
     if (anyErr.status !== undefined) out.error_status = anyErr.status;
     if (anyErr.cause !== undefined) {
       const c = anyErr.cause;
-      out.cause = c instanceof Error ? { name: c.name, message: c.message } : String(c);
+      out.cause =
+        c instanceof Error ? { name: c.name, message: c.message } : String(c);
     }
     return out;
   }
@@ -81,7 +92,9 @@ export function formatError(err: unknown): StructuredLogData {
   return { error_message: err === undefined ? 'unknown_error' : String(err) };
 }
 
-function coerceMetadata(metadata: StructuredLogData | unknown): StructuredLogData {
+function coerceMetadata(
+  metadata: StructuredLogData | unknown,
+): StructuredLogData {
   if (metadata instanceof Error) return formatError(metadata);
   if (!metadata || typeof metadata !== 'object') {
     return metadata !== undefined ? { detail: String(metadata) } : {};
@@ -104,8 +117,11 @@ export interface ScopedLogger {
 }
 
 function makeLogger(bindings: StructuredLogData): ScopedLogger {
-  const emitWith = (level: LogLevel, event: string, metadata: StructuredLogData | unknown = {}) =>
-    logEvent(level, event, { ...bindings, ...coerceMetadata(metadata) });
+  const emitWith = (
+    level: LogLevel,
+    event: string,
+    metadata: StructuredLogData | unknown = {},
+  ) => logEvent(level, event, { ...bindings, ...coerceMetadata(metadata) });
   return {
     info: (event, metadata = {}) => emitWith('info', event, metadata),
     warn: (event, metadata = {}) => emitWith('warn', event, metadata),
@@ -123,13 +139,17 @@ function makeLogger(bindings: StructuredLogData): ScopedLogger {
   };
 }
 
-export function createLogger(scope: string, bindings: StructuredLogData = {}): ScopedLogger {
+export function createLogger(
+  scope: string,
+  bindings: StructuredLogData = {},
+): ScopedLogger {
   return makeLogger({ scope, ...bindings });
 }
 
 /** Generate a request id, honoring inbound `x-request-id` if provided. */
 export function newRequestId(req?: Request): string {
-  const inbound = req?.headers.get('x-request-id') || req?.headers.get('x-correlation-id');
+  const inbound =
+    req?.headers.get('x-request-id') || req?.headers.get('x-correlation-id');
   if (inbound && /^[\w.\-:]{6,128}$/.test(inbound)) return inbound;
   try {
     return crypto.randomUUID();
@@ -171,7 +191,11 @@ export function withLogging(
     const requestId = newRequestId(req);
     const startedAt = performance.now();
     const url = (() => {
-      try { return new URL(req.url); } catch { return null; }
+      try {
+        return new URL(req.url);
+      } catch {
+        return null;
+      }
     })();
     const log = createLogger(scope, {
       requestId,
@@ -188,7 +212,8 @@ export function withLogging(
       const res = await handler(req, { log, requestId, startedAt });
       const durationMs = Math.round(performance.now() - startedAt);
       if (req.method !== 'OPTIONS') {
-        const level: LogLevel = res.status >= 500 ? 'error' : res.status >= 400 ? 'warn' : 'info';
+        const level: LogLevel =
+          res.status >= 500 ? 'error' : res.status >= 400 ? 'warn' : 'info';
         logEvent(level, 'request_completed', {
           scope,
           requestId,

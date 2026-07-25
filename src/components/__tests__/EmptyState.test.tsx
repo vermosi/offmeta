@@ -184,6 +184,28 @@ describe('EmptyState', () => {
     expect(screen.getByText('empty.tryOne')).toBeInTheDocument();
   });
 
+  it('renders quick refine chips when a query is available', () => {
+    const handler = vi.fn();
+    render(<EmptyState query="dragon tokens" onTrySuggestion={handler} />);
+
+    expect(screen.getByText('Quick refine')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '+ Commander' }));
+    expect(handler).toHaveBeenCalledWith('dragon tokens f:commander');
+  });
+
+  it('does not duplicate an existing quick refine token', () => {
+    const handler = vi.fn();
+    render(
+      <EmptyState
+        query="dragon tokens f:commander"
+        onTrySuggestion={handler}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '+ Commander' }));
+    expect(handler).toHaveBeenCalledWith('dragon tokens f:commander');
+  });
+
   it('does not call onTrySuggestion when handler is not provided', () => {
     const suggestions = [
       { query: 'o:treasure', label: 'Test', totalCards: 5, score: 0.9 },

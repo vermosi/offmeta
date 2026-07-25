@@ -31,45 +31,171 @@ type Translate = (k: string, f?: string) => string;
  */
 const RATIONALE_KEYWORDS: Record<string, string[]> = {
   colors: [
-    'white', 'blue', 'black', 'red', 'green', 'colorless', 'multicolor', 'multicolored',
-    'mono', 'wubrg', 'azorius', 'dimir', 'rakdos', 'gruul', 'selesnya', 'orzhov',
-    'izzet', 'golgari', 'boros', 'simic', 'bant', 'esper', 'grixis', 'jund', 'naya',
-    'mardu', 'temur', 'abzan', 'jeskai', 'sultai',
+    'white',
+    'blue',
+    'black',
+    'red',
+    'green',
+    'colorless',
+    'multicolor',
+    'multicolored',
+    'mono',
+    'wubrg',
+    'azorius',
+    'dimir',
+    'rakdos',
+    'gruul',
+    'selesnya',
+    'orzhov',
+    'izzet',
+    'golgari',
+    'boros',
+    'simic',
+    'bant',
+    'esper',
+    'grixis',
+    'jund',
+    'naya',
+    'mardu',
+    'temur',
+    'abzan',
+    'jeskai',
+    'sultai',
   ],
   type: [
-    'creature', 'creatures', 'artifact', 'artifacts', 'enchantment', 'enchantments',
-    'instant', 'instants', 'sorcery', 'sorceries', 'planeswalker', 'planeswalkers',
-    'land', 'lands', 'battle', 'battles', 'tribal', 'legendary', 'token', 'tokens',
-    'dragon', 'goblin', 'elf', 'zombie', 'angel', 'demon', 'wizard', 'knight',
-    'saga', 'equipment', 'aura', 'vehicle',
+    'creature',
+    'creatures',
+    'artifact',
+    'artifacts',
+    'enchantment',
+    'enchantments',
+    'instant',
+    'instants',
+    'sorcery',
+    'sorceries',
+    'planeswalker',
+    'planeswalkers',
+    'land',
+    'lands',
+    'battle',
+    'battles',
+    'tribal',
+    'legendary',
+    'token',
+    'tokens',
+    'dragon',
+    'goblin',
+    'elf',
+    'zombie',
+    'angel',
+    'demon',
+    'wizard',
+    'knight',
+    'saga',
+    'equipment',
+    'aura',
+    'vehicle',
   ],
   manaValue: [
-    'mana value', 'cmc', 'converted mana cost', 'cheap', 'expensive', 'costs',
-    'one mana', 'two mana', 'three mana', 'four mana', 'five mana', 'six mana',
-    'low cost', 'high cost', 'mv', 'free',
+    'mana value',
+    'cmc',
+    'converted mana cost',
+    'cheap',
+    'expensive',
+    'costs',
+    'one mana',
+    'two mana',
+    'three mana',
+    'four mana',
+    'five mana',
+    'six mana',
+    'low cost',
+    'high cost',
+    'mv',
+    'free',
   ],
   power: ['power', 'attack', 'strong', 'big creature', 'beefy'],
   toughness: ['toughness', 'defensive', 'wall'],
   price: [
-    'budget', 'cheap', 'affordable', 'under $', 'under 5', 'expensive',
-    'dollar', 'dollars', 'usd', 'eur', 'price', 'cost',
+    'budget',
+    'cheap',
+    'affordable',
+    'under $',
+    'under 5',
+    'expensive',
+    'dollar',
+    'dollars',
+    'usd',
+    'eur',
+    'price',
+    'cost',
   ],
   rarity: ['common', 'uncommon', 'rare', 'mythic', 'rarity'],
   format: [
-    'commander', 'edh', 'standard', 'modern', 'legacy', 'vintage', 'pioneer',
-    'pauper', 'brawl', 'historic', 'penny', 'oathbreaker', 'legal',
+    'commander',
+    'edh',
+    'standard',
+    'modern',
+    'legacy',
+    'vintage',
+    'pioneer',
+    'pauper',
+    'brawl',
+    'historic',
+    'penny',
+    'oathbreaker',
+    'legal',
   ],
   property: [
-    'foil', 'promo', 'reprint', 'reserved', 'digital', 'paper', 'first printing',
-    'nonfoil', 'unique', 'oldschool',
+    'foil',
+    'promo',
+    'reprint',
+    'reserved',
+    'digital',
+    'paper',
+    'first printing',
+    'nonfoil',
+    'unique',
+    'oldschool',
   ],
   oracle: [
-    'draw', 'discard', 'sacrifice', 'destroy', 'exile', 'counter', 'ramp',
-    'treasure', 'token', 'lifelink', 'flying', 'trample', 'haste', 'vigilance',
-    'first strike', 'double strike', 'menace', 'reach', 'deathtouch', 'hexproof',
-    'ward', 'flash', 'defender', 'indestructible', 'protection', 'etb',
-    'enters the battlefield', 'dies', 'attack', 'blocks', 'tutor', 'search your library',
-    'gain life', 'lose life', 'mill', 'proliferate', 'scry',
+    'draw',
+    'discard',
+    'sacrifice',
+    'destroy',
+    'exile',
+    'counter',
+    'ramp',
+    'treasure',
+    'token',
+    'lifelink',
+    'flying',
+    'trample',
+    'haste',
+    'vigilance',
+    'first strike',
+    'double strike',
+    'menace',
+    'reach',
+    'deathtouch',
+    'hexproof',
+    'ward',
+    'flash',
+    'defender',
+    'indestructible',
+    'protection',
+    'etb',
+    'enters the battlefield',
+    'dies',
+    'attack',
+    'blocks',
+    'tutor',
+    'search your library',
+    'gain life',
+    'lose life',
+    'mill',
+    'proliferate',
+    'scry',
   ],
   card: ['named', 'card named', 'the card'],
 };
@@ -81,45 +207,86 @@ const RATIONALE_KEYWORDS: Record<string, string[]> = {
 function categoryDescription(key: string, t: Translate): string {
   switch (key) {
     case 'colors':
-      return t('understood.rationale.colors', 'Colors or color identity that cards must match.');
+      return t(
+        'understood.rationale.colors',
+        'Colors or color identity that cards must match.',
+      );
     case 'type':
-      return t('understood.rationale.type', 'Card type line filter (creature, artifact, etc.).');
+      return t(
+        'understood.rationale.type',
+        'Card type line filter (creature, artifact, etc.).',
+      );
     case 'manaValue':
-      return t('understood.rationale.manaValue', 'Converted mana cost / mana value constraint.');
+      return t(
+        'understood.rationale.manaValue',
+        'Converted mana cost / mana value constraint.',
+      );
     case 'power':
       return t('understood.rationale.power', 'Creature power constraint.');
     case 'toughness':
-      return t('understood.rationale.toughness', 'Creature toughness constraint.');
+      return t(
+        'understood.rationale.toughness',
+        'Creature toughness constraint.',
+      );
     case 'price':
-      return t('understood.rationale.price', 'Price ceiling or budget constraint.');
+      return t(
+        'understood.rationale.price',
+        'Price ceiling or budget constraint.',
+      );
     case 'rarity':
       return t('understood.rationale.rarity', 'Card rarity constraint.');
     case 'format':
       return t('understood.rationale.format', 'Format legality filter.');
     case 'property':
-      return t('understood.rationale.property', 'Card property flag (foil, promo, reprint, etc.).');
+      return t(
+        'understood.rationale.property',
+        'Card property flag (foil, promo, reprint, etc.).',
+      );
     case 'oracle':
-      return t('understood.rationale.oracle', 'Oracle-text keyword or ability the card must mention.');
+      return t(
+        'understood.rationale.oracle',
+        'Oracle-text keyword or ability the card must mention.',
+      );
     case 'card':
       return t('understood.rationale.card', 'Exact card name lookup.');
     default:
-      return t('understood.rationale.filter', 'General Scryfall filter derived from your wording.');
+      return t(
+        'understood.rationale.filter',
+        'General Scryfall filter derived from your wording.',
+      );
   }
 }
 
 /** Map a token to its rationale category key (matches RATIONALE_KEYWORDS). */
 function tokenCategory(token: string): string {
   const lower = token.toLowerCase();
-  if (lower.startsWith('c:') || lower.startsWith('c=') || lower.startsWith('ci:') || lower.startsWith('ci=')) return 'colors';
+  if (
+    lower.startsWith('c:') ||
+    lower.startsWith('c=') ||
+    lower.startsWith('ci:') ||
+    lower.startsWith('ci=')
+  )
+    return 'colors';
   if (lower.startsWith('t:') || lower.startsWith('-t:')) return 'type';
   if (lower.startsWith('mv') || lower.startsWith('cmc')) return 'manaValue';
   if (lower.startsWith('pow')) return 'power';
   if (lower.startsWith('tou')) return 'toughness';
-  if (lower.startsWith('usd') || lower.startsWith('eur') || lower.startsWith('tix')) return 'price';
+  if (
+    lower.startsWith('usd') ||
+    lower.startsWith('eur') ||
+    lower.startsWith('tix')
+  )
+    return 'price';
   if (lower.startsWith('r:') || lower.startsWith('rarity')) return 'rarity';
   if (lower.startsWith('f:') || lower.startsWith('format')) return 'format';
   if (lower.startsWith('is:') || lower.startsWith('not:')) return 'property';
-  if (lower.startsWith('o:') || lower.startsWith('-o:') || lower.startsWith('otag:') || lower.startsWith('oracle')) return 'oracle';
+  if (
+    lower.startsWith('o:') ||
+    lower.startsWith('-o:') ||
+    lower.startsWith('otag:') ||
+    lower.startsWith('oracle')
+  )
+    return 'oracle';
   if (lower.startsWith('!"')) return 'card';
   return 'filter';
 }
@@ -128,7 +295,10 @@ function tokenCategory(token: string): string {
  * Find which words from the original query most likely triggered this token,
  * plus the literal value the token filters on (e.g. `treasure` for `o:treasure`).
  */
-function extractRationale(token: string, originalQuery: string): {
+function extractRationale(
+  token: string,
+  originalQuery: string,
+): {
   category: string;
   triggers: string[];
   value: string | null;
@@ -140,7 +310,11 @@ function extractRationale(token: string, originalQuery: string): {
   // Match category-wide keywords.
   const keywordPool = RATIONALE_KEYWORDS[category] ?? [];
   for (const kw of keywordPool) {
-    if (lowerQuery.includes(` ${kw} `) || lowerQuery.includes(` ${kw},`) || lowerQuery.includes(` ${kw}.`)) {
+    if (
+      lowerQuery.includes(` ${kw} `) ||
+      lowerQuery.includes(` ${kw},`) ||
+      lowerQuery.includes(` ${kw}.`)
+    ) {
       triggers.add(kw);
     }
   }
@@ -150,7 +324,11 @@ function extractRationale(token: string, originalQuery: string): {
   const rawValue = valueMatch ? valueMatch[1].replace(/^"|"$/g, '') : null;
 
   // If the literal token value itself appears in the query, surface it too.
-  if (rawValue && rawValue.length > 1 && lowerQuery.includes(rawValue.toLowerCase())) {
+  if (
+    rawValue &&
+    rawValue.length > 1 &&
+    lowerQuery.includes(rawValue.toLowerCase())
+  ) {
     triggers.add(rawValue.toLowerCase());
   }
 
@@ -160,7 +338,6 @@ function extractRationale(token: string, originalQuery: string): {
     value: rawValue,
   };
 }
-
 
 interface UnderstoodSummaryProps {
   originalQuery: string;
@@ -178,11 +355,19 @@ interface Signal {
 }
 
 /** Turn a raw Scryfall token into a human-readable signal chip. */
-function tokenToSignal(token: string, t: (k: string, f?: string) => string): Signal | null {
+function tokenToSignal(
+  token: string,
+  t: (k: string, f?: string) => string,
+): Signal | null {
   if (!token) return null;
   const lower = token.toLowerCase();
 
-  if (lower.startsWith('c:') || lower.startsWith('c=') || lower.startsWith('ci:') || lower.startsWith('ci=')) {
+  if (
+    lower.startsWith('c:') ||
+    lower.startsWith('c=') ||
+    lower.startsWith('ci:') ||
+    lower.startsWith('ci=')
+  ) {
     return { label: t('understood.colors', 'Colors'), token };
   }
   if (lower.startsWith('t:') || lower.startsWith('-t:')) {
@@ -197,7 +382,11 @@ function tokenToSignal(token: string, t: (k: string, f?: string) => string): Sig
   if (lower.startsWith('tou')) {
     return { label: t('understood.toughness', 'Toughness'), token };
   }
-  if (lower.startsWith('usd') || lower.startsWith('eur') || lower.startsWith('tix')) {
+  if (
+    lower.startsWith('usd') ||
+    lower.startsWith('eur') ||
+    lower.startsWith('tix')
+  ) {
     return { label: t('understood.price', 'Price'), token };
   }
   if (lower.startsWith('r:') || lower.startsWith('rarity')) {
@@ -209,7 +398,12 @@ function tokenToSignal(token: string, t: (k: string, f?: string) => string): Sig
   if (lower.startsWith('is:') || lower.startsWith('not:')) {
     return { label: t('understood.property', 'Property'), token };
   }
-  if (lower.startsWith('o:') || lower.startsWith('-o:') || lower.startsWith('otag:') || lower.startsWith('oracle')) {
+  if (
+    lower.startsWith('o:') ||
+    lower.startsWith('-o:') ||
+    lower.startsWith('otag:') ||
+    lower.startsWith('oracle')
+  ) {
     return { label: t('understood.oracle', 'Oracle text'), token };
   }
   if (lower.startsWith('!"')) {
@@ -242,7 +436,10 @@ function splitTokens(query: string): string[] {
   return tokens;
 }
 
-export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummaryProps) {
+export function UnderstoodSummary({
+  originalQuery,
+  onAdjust,
+}: UnderstoodSummaryProps) {
   const { t } = useTranslation();
   const { trackEvent } = useAnalytics();
 
@@ -270,9 +467,12 @@ export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummary
 
   // Reset exclusions whenever the underlying query changes (new search).
   useEffect(() => {
-    setExcluded(new Set());
-    setCopied(false);
-    expandedChipsRef.current = new Set();
+    const frame = window.requestAnimationFrame(() => {
+      setExcluded(new Set());
+      setCopied(false);
+      expandedChipsRef.current = new Set();
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [originalQuery]);
 
   // Fire a one-time "view" event per unique query so we can measure how often
@@ -296,7 +496,10 @@ export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummary
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting && viewedQueryRef.current !== originalQuery) {
+          if (
+            entry.isIntersecting &&
+            viewedQueryRef.current !== originalQuery
+          ) {
             viewedQueryRef.current = originalQuery;
             trackEvent('understood_summary_view', {
               query: originalQuery,
@@ -405,7 +608,10 @@ export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummary
               const description = categoryDescription(rationale.category, t);
               const triggersLine =
                 rationale.triggers.length > 0
-                  ? t('understood.rationale.matched', 'Matched from: {words}').replace(
+                  ? t(
+                      'understood.rationale.matched',
+                      'Matched from: {words}',
+                    ).replace(
                       '{words}',
                       rationale.triggers.map((w) => `"${w}"`).join(', '),
                     )
@@ -431,7 +637,10 @@ export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummary
                 >
                   <span className="text-muted-foreground">{sig.label}</span>
                   <span className="font-mono text-foreground">{sig.token}</span>
-                  <X className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                  <X
+                    className="h-3 w-3 text-muted-foreground"
+                    aria-hidden="true"
+                  />
                 </button>
               ) : (
                 <span
@@ -460,12 +669,16 @@ export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummary
                     });
                   }}
                 >
-
                   <TooltipTrigger asChild>{trigger}</TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-xs text-xs leading-relaxed">
+                  <TooltipContent
+                    side="top"
+                    className="max-w-xs text-xs leading-relaxed"
+                  >
                     <p className="font-medium mb-1">
                       {sig.label}
-                      <span className="font-mono ml-1 text-muted-foreground">{sig.token}</span>
+                      <span className="font-mono ml-1 text-muted-foreground">
+                        {sig.token}
+                      </span>
                     </p>
                     <p className="text-muted-foreground mb-1">{description}</p>
                     <p className="text-muted-foreground">{triggersLine}</p>
@@ -578,7 +791,6 @@ export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummary
               : t('understood.showRaw', 'Show raw interpretation')}
           </button>
 
-
           {showRaw && (
             <div
               id="understood-raw-interpretation"
@@ -589,21 +801,21 @@ export function UnderstoodSummary({ originalQuery, onAdjust }: UnderstoodSummary
                   {t('understood.rawSignals', 'Parsed signals')}
                 </p>
                 <pre className="font-mono text-[11px] text-foreground whitespace-pre-wrap break-words">
-{JSON.stringify(
-  signals.map((s) => {
-    const r = extractRationale(s.token, originalQuery);
-    return {
-      label: s.label,
-      token: s.token,
-      category: r.category,
-      value: r.value,
-      triggers: r.triggers,
-      excluded: excluded.has(s.token),
-    };
-  }),
-  null,
-  2,
-)}
+                  {JSON.stringify(
+                    signals.map((s) => {
+                      const r = extractRationale(s.token, originalQuery);
+                      return {
+                        label: s.label,
+                        token: s.token,
+                        category: r.category,
+                        value: r.value,
+                        triggers: r.triggers,
+                        excluded: excluded.has(s.token),
+                      };
+                    }),
+                    null,
+                    2,
+                  )}
                 </pre>
               </div>
               <div>

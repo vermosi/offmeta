@@ -80,7 +80,9 @@ export function SeoHealthPanel() {
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const { data, error: rpcError } = await supabase.rpc('get_seo_health_summary');
+    const { data, error: rpcError } = await supabase.rpc(
+      'get_seo_health_summary',
+    );
     if (rpcError) {
       setError(rpcError.message);
     } else if (data) {
@@ -90,11 +92,15 @@ export function SeoHealthPanel() {
   }, []);
 
   useEffect(() => {
-    void load();
+    const frame = window.requestAnimationFrame(() => {
+      void load();
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [load]);
 
   const criticalCount =
-    summary?.latest_results.filter((r) => r.severity === 'critical').length ?? 0;
+    summary?.latest_results.filter((r) => r.severity === 'critical').length ??
+    0;
   const warningCount =
     summary?.latest_results.filter((r) => r.severity === 'warning').length ?? 0;
 
@@ -111,18 +117,23 @@ export function SeoHealthPanel() {
           )}
         </h2>
         <Button size="sm" variant="ghost" onClick={load} disabled={loading}>
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw
+            className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`}
+          />
         </Button>
       </div>
 
       {error && (
-        <div className="text-sm text-destructive mb-3">Failed to load: {error}</div>
+        <div className="text-sm text-destructive mb-3">
+          Failed to load: {error}
+        </div>
       )}
 
       {!summary?.last_run && !loading && (
         <p className="text-sm text-muted-foreground">
           No health checks have run yet. The daily check runs at 09:00 UTC — or
-          trigger the <code>seo-health-check</code> function manually to seed data.
+          trigger the <code>seo-health-check</code> function manually to seed
+          data.
         </p>
       )}
 
@@ -165,9 +176,13 @@ export function SeoHealthPanel() {
                     <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
                   </div>
                   {!r.passed &&
-                    Array.isArray((r.details as { failures?: string[] }).failures) && (
+                    Array.isArray(
+                      (r.details as { failures?: string[] }).failures,
+                    ) && (
                       <div className="text-xs text-destructive mt-0.5">
-                        {(r.details as { failures: string[] }).failures.join(', ')}
+                        {(r.details as { failures: string[] }).failures.join(
+                          ', ',
+                        )}
                       </div>
                     )}
                 </div>

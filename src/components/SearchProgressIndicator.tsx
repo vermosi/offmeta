@@ -46,22 +46,18 @@ export function SearchProgressIndicator({
       : 'pending';
 
   const resultsStatus: StepStatus =
-    finished && cardCount > 0
-      ? 'done'
-      : finished
-        ? 'active'
-        : 'pending';
+    finished && cardCount > 0 ? 'done' : finished ? 'active' : 'pending';
 
   // Show whenever a search is running; keep briefly after completion so
   // users see the final "done" state, then fade out.
   useEffect(() => {
     if (isSearching) {
-      setVisible(true);
-      return;
+      const frame = window.requestAnimationFrame(() => setVisible(true));
+      return () => window.cancelAnimationFrame(frame);
     }
     if (!hasSearched) {
-      setVisible(false);
-      return;
+      const frame = window.requestAnimationFrame(() => setVisible(false));
+      return () => window.cancelAnimationFrame(frame);
     }
     const timeout = window.setTimeout(() => setVisible(false), 1200);
     return () => window.clearTimeout(timeout);
