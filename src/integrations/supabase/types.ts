@@ -796,6 +796,90 @@ export type Database = {
         }
         Relationships: []
       }
+      query_intelligence_agg: {
+        Row: {
+          avg_time_to_click_ms: number | null
+          confidence: number
+          feedback_reports: number
+          no_results: number
+          normalized_query: string
+          recoveries: number
+          refinements: number
+          result_clicks: number
+          sample_size: number
+          search_quality_score: number
+          successful_searches: number
+          total_searches: number
+          updated_at: string
+        }
+        Insert: {
+          avg_time_to_click_ms?: number | null
+          confidence?: number
+          feedback_reports?: number
+          no_results?: number
+          normalized_query: string
+          recoveries?: number
+          refinements?: number
+          result_clicks?: number
+          sample_size?: number
+          search_quality_score?: number
+          successful_searches?: number
+          total_searches?: number
+          updated_at?: string
+        }
+        Update: {
+          avg_time_to_click_ms?: number | null
+          confidence?: number
+          feedback_reports?: number
+          no_results?: number
+          normalized_query?: string
+          recoveries?: number
+          refinements?: number
+          result_clicks?: number
+          sample_size?: number
+          search_quality_score?: number
+          successful_searches?: number
+          total_searches?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      query_signal_events: {
+        Row: {
+          created_at: string
+          dedupe_hash: string
+          event_type: string
+          id: string
+          metadata: Json
+          normalized_query: string
+          session_id: string | null
+          time_to_click_ms: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          dedupe_hash: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          normalized_query: string
+          session_id?: string | null
+          time_to_click_ms?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          dedupe_hash?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          normalized_query?: string
+          session_id?: string | null
+          time_to_click_ms?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       saved_searches: {
         Row: {
           created_at: string
@@ -1172,8 +1256,35 @@ export type Database = {
       }
     }
     Functions: {
+      apply_query_signal: {
+        Args: {
+          p_event_type: string
+          p_metadata: Json
+          p_query: string
+          p_session_id: string
+          p_time_to_click_ms: number
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       check_price_alerts: { Args: never; Returns: undefined }
       cleanup_expired_cache: { Args: never; Returns: undefined }
+      compute_query_quality: {
+        Args: {
+          avg_time_to_click_ms: number
+          feedback_reports: number
+          no_results: number
+          recoveries: number
+          refinements: number
+          result_clicks: number
+          successful_searches: number
+          total_searches: number
+        }
+        Returns: {
+          confidence: number
+          score: number
+        }[]
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -1257,6 +1368,22 @@ export type Database = {
       get_public_collection_stats: {
         Args: { target_user_id: string }
         Returns: Json
+      }
+      get_query_intelligence: {
+        Args: { p_query: string }
+        Returns: {
+          confidence: number
+          feedback_reports: number
+          no_results: number
+          normalized_query: string
+          recoveries: number
+          refinements: number
+          result_clicks: number
+          search_quality_score: number
+          successful_searches: number
+          total_searches: number
+          updated_at: string
+        }[]
       }
       get_search_analytics: {
         Args: { max_low_confidence?: number; since_date: string }
