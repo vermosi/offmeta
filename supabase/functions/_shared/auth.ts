@@ -79,7 +79,7 @@ const importSupabase = async (): Promise<{
   createClient: SupabaseClientFactory;
 }> => {
   const mod = await import(
-    /* @vite-ignore */ 'https://esm.sh/@supabase/supabase-js@2.45.4' as string
+    /* @vite-ignore */ 'npm:@supabase/supabase-js@2.45.4' as string
   );
   return mod as { createClient: SupabaseClientFactory };
 };
