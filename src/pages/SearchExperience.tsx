@@ -46,6 +46,7 @@ const Footer = lazy(() =>
 );
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
+import { HomepageQuickPaths } from '@/components/HomepageQuickPaths';
 const InstantDemoPreview = lazy(() =>
   import('@/components/InstantDemoPreview').then((m) => ({
     default: m.InstantDemoPreview,
@@ -598,6 +599,7 @@ const Index = () => {
         <Header />
 
         {!hasSearched && <HeroSection />}
+        {!hasSearched && <HomepageQuickPaths />}
 
         {/* Floating particles — hero area */}
         <Suspense fallback={null}>
