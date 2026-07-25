@@ -6,7 +6,16 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Sword, DollarSign, Users, Sparkles, Palette, Shield, Crown } from 'lucide-react';
+import {
+  Search,
+  Sword,
+  DollarSign,
+  Users,
+  Sparkles,
+  Palette,
+  Shield,
+  Crown,
+} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { applySeoMeta, injectJsonLd } from '@/lib/seo';
@@ -21,7 +30,10 @@ interface CuratedSearch {
   natural_query: string;
 }
 
-const CATEGORY_CONFIG: Record<string, { label: string; icon: typeof Search; order: number }> = {
+const CATEGORY_CONFIG: Record<
+  string,
+  { label: string; icon: typeof Search; order: number }
+> = {
   commander: { label: 'Commander / EDH', icon: Crown, order: 1 },
   budget: { label: 'Budget Picks', icon: DollarSign, order: 2 },
   tribal: { label: 'Tribal', icon: Users, order: 3 },
@@ -52,11 +64,16 @@ export default function BrowseSearches() {
           logger.error('[BrowseSearches] fetch error:', err.message, err.code);
           setError(new Error(err.message));
         } else {
-          logger.info('[BrowseSearches] fetched', data?.length, 'curated searches');
+          logger.info(
+            '[BrowseSearches] fetched',
+            data?.length,
+            'curated searches',
+          );
           setSearches((data ?? []) as CuratedSearch[]);
         }
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e : new Error('Unknown error'));
+        if (!cancelled)
+          setError(e instanceof Error ? e : new Error('Unknown error'));
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -75,9 +92,20 @@ export default function BrowseSearches() {
       groups.set(s.category, list);
     }
     return Array.from(groups.entries()).sort(
-      ([a], [b]) => (CATEGORY_CONFIG[a]?.order ?? 99) - (CATEGORY_CONFIG[b]?.order ?? 99),
+      ([a], [b]) =>
+        (CATEGORY_CONFIG[a]?.order ?? 99) - (CATEGORY_CONFIG[b]?.order ?? 99),
     );
   }, [searches]);
+
+  const categoryJumpLinks = useMemo(
+    () =>
+      grouped.map(([category, items]) => ({
+        category,
+        label: CATEGORY_CONFIG[category]?.label ?? category,
+        count: items.length,
+      })),
+    [grouped],
+  );
 
   useEffect(() => {
     const cleanupSeo = applySeoMeta({
@@ -112,26 +140,63 @@ export default function BrowseSearches() {
             </p>
           </div>
 
+          {categoryJumpLinks.length > 1 && (
+            <div className="mb-8">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">
+                Jump to section
+              </p>
+              <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+                {categoryJumpLinks.map((item) => (
+                  <a
+                    key={item.category}
+                    href={`#category-${item.category}`}
+                    className="shrink-0 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:border-primary/40 hover:text-primary transition-colors"
+                  >
+                    {item.label}
+                    <span className="ml-1 text-muted-foreground tabular-nums">
+                      {item.count}
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-24 rounded-lg bg-muted animate-pulse" />
+                <div
+                  key={i}
+                  className="h-24 rounded-lg bg-muted animate-pulse"
+                />
               ))}
             </div>
           ) : error ? (
             <div className="text-center py-12">
-              <p className="text-sm text-destructive mb-2">{t('browse.error')}</p>
+              <p className="text-sm text-destructive mb-2">
+                {t('browse.error')}
+              </p>
               <p className="text-xs text-muted-foreground">{error.message}</p>
             </div>
           ) : searches.length === 0 ? (
-            <p className="text-center text-muted-foreground py-12">{t('browse.empty')}</p>
+            <p className="text-center text-muted-foreground py-12">
+              {t('browse.empty')}
+            </p>
           ) : (
             <div className="space-y-10">
               {grouped.map(([category, items]) => {
-                const config = CATEGORY_CONFIG[category] ?? { label: category, icon: Search, order: 99 };
+                const config = CATEGORY_CONFIG[category] ?? {
+                  label: category,
+                  icon: Search,
+                  order: 99,
+                };
                 const Icon = config.icon;
                 return (
-                  <section key={category}>
+                  <section
+                    key={category}
+                    id={`category-${category}`}
+                    className="scroll-mt-24"
+                  >
                     <h2 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-4">
                       <Icon className="h-5 w-5 text-primary" />
                       {config.label}
