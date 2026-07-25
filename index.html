@@ -343,6 +343,9 @@
         line-height: 1.02;
         font-weight: 700;
         letter-spacing: -0.04em;
+        /* Use system font stack so LCP paints without waiting on webfonts.
+           React swaps in the real HeroSection (with Inter) after hydration. */
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       }
       .shell-accent {
         color: hsl(var(--accent));
