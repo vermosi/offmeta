@@ -18,7 +18,10 @@ import {
   BarChart3,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { BarRow, StatCard } from '@/pages/admin-analytics/components/AnalyticsPrimitives';
+import {
+  BarRow,
+  StatCard,
+} from '@/pages/admin-analytics/components/AnalyticsPrimitives';
 import { EngagementMetricsPanel } from '@/pages/admin-analytics/components/EngagementMetricsPanel';
 import { ConversionFunnelPanel } from '@/pages/admin-analytics/components/ConversionFunnelPanel';
 import { EdgeFunctionTriggerPanel } from '@/pages/admin-analytics/components/EdgeFunctionTriggerPanel';
@@ -29,6 +32,7 @@ import { HitRatePanel } from '@/pages/admin-analytics/components/HitRatePanel';
 import { AICostPanel } from '@/pages/admin-analytics/components/AICostPanel';
 import { AuthFailuresPanel } from '@/pages/admin-analytics/components/AuthFailuresPanel';
 import { RumPanel } from '@/pages/admin-analytics/components/RumPanel';
+import { ActionableInsightsPanel } from '@/pages/admin-analytics/components/ActionableInsightsPanel';
 import type { AnalyticsData } from '@/pages/admin-analytics/types';
 
 interface AnalyticsChartsSectionProps {
@@ -36,8 +40,15 @@ interface AnalyticsChartsSectionProps {
   days: number;
 }
 
-export function AnalyticsChartsSection({ data, days }: AnalyticsChartsSectionProps) {
-  const confidenceBuckets = data.confidenceBuckets ?? { high: 0, medium: 0, low: 0 };
+export function AnalyticsChartsSection({
+  data,
+  days,
+}: AnalyticsChartsSectionProps) {
+  const confidenceBuckets = data.confidenceBuckets ?? {
+    high: 0,
+    medium: 0,
+    low: 0,
+  };
   const deterministicCoverage = data.deterministicCoverage ?? {};
   const eventBreakdown = data.eventBreakdown ?? {};
   const lowConfidenceQueries = data.lowConfidenceQueries ?? [];
@@ -117,6 +128,7 @@ export function AnalyticsChartsSection({ data, days }: AnalyticsChartsSectionPro
       )}
 
       <RumPanel days={days} />
+      <ActionableInsightsPanel data={data} />
       <EngagementMetricsPanel days={days} />
       <ConversionFunnelPanel days={days} />
       <EdgeFunctionTriggerPanel />
@@ -165,9 +177,24 @@ export function AnalyticsChartsSection({ data, days }: AnalyticsChartsSectionPro
             Confidence Distribution
           </h2>
           <div className="space-y-3">
-            <BarRow label="High (≥80%)" value={confidenceBuckets.high} total={data.summary.totalSearches} color="bg-success" />
-            <BarRow label="Medium (60-79%)" value={confidenceBuckets.medium} total={data.summary.totalSearches} color="bg-warning" />
-            <BarRow label="Low (<60%)" value={confidenceBuckets.low} total={data.summary.totalSearches} color="bg-destructive" />
+            <BarRow
+              label="High (≥80%)"
+              value={confidenceBuckets.high}
+              total={data.summary.totalSearches}
+              color="bg-success"
+            />
+            <BarRow
+              label="Medium (60-79%)"
+              value={confidenceBuckets.medium}
+              total={data.summary.totalSearches}
+              color="bg-warning"
+            />
+            <BarRow
+              label="Low (<60%)"
+              value={confidenceBuckets.low}
+              total={data.summary.totalSearches}
+              color="bg-destructive"
+            />
           </div>
         </div>
       </div>
@@ -180,18 +207,26 @@ export function AnalyticsChartsSection({ data, days }: AnalyticsChartsSectionPro
             Deterministic Coverage Trend
           </h2>
           <p className="text-xs text-muted-foreground mb-3">
-            Percentage of queries handled without AI (deterministic + pattern match)
+            Percentage of queries handled without AI (deterministic + pattern
+            match)
           </p>
           <div className="space-y-2">
             {Object.entries(deterministicCoverage)
               .sort(([a], [b]) => a.localeCompare(b))
               .map(([day, pct]) => (
                 <div key={day} className="flex items-center gap-3">
-                  <span className="text-xs text-muted-foreground w-20 tabular-nums flex-shrink-0">{day}</span>
+                  <span className="text-xs text-muted-foreground w-20 tabular-nums flex-shrink-0">
+                    {day}
+                  </span>
                   <div className="flex-1 h-5 bg-muted rounded overflow-hidden">
-                    <div className="h-full bg-success/60 rounded" style={{ width: `${pct}%` }} />
+                    <div
+                      className="h-full bg-success/60 rounded"
+                      style={{ width: `${pct}%` }}
+                    />
                   </div>
-                  <span className="text-xs text-muted-foreground tabular-nums w-10 text-right">{pct}%</span>
+                  <span className="text-xs text-muted-foreground tabular-nums w-10 text-right">
+                    {pct}%
+                  </span>
                 </div>
               ))}
           </div>
@@ -211,14 +246,20 @@ export function AnalyticsChartsSection({ data, days }: AnalyticsChartsSectionPro
               const maxCount = Math.max(...Object.values(data.dailyVolume));
               return (
                 <div key={day} className="flex items-center gap-3">
-                  <span className="text-xs text-muted-foreground w-20 tabular-nums flex-shrink-0">{day}</span>
+                  <span className="text-xs text-muted-foreground w-20 tabular-nums flex-shrink-0">
+                    {day}
+                  </span>
                   <div className="flex-1 h-5 bg-muted rounded overflow-hidden">
                     <div
                       className="h-full bg-primary/70 rounded"
-                      style={{ width: `${maxCount > 0 ? (count / maxCount) * 100 : 0}%` }}
+                      style={{
+                        width: `${maxCount > 0 ? (count / maxCount) * 100 : 0}%`,
+                      }}
                     />
                   </div>
-                  <span className="text-xs text-muted-foreground tabular-nums w-10 text-right">{count}</span>
+                  <span className="text-xs text-muted-foreground tabular-nums w-10 text-right">
+                    {count}
+                  </span>
                 </div>
               );
             })}
@@ -236,18 +277,35 @@ export function AnalyticsChartsSection({ data, days }: AnalyticsChartsSectionPro
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">#</th>
-                  <th className="text-left py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Query</th>
-                  <th className="text-right py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Count</th>
-                  <th className="text-right py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Avg Conf</th>
-                  <th className="text-right py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Source</th>
+                  <th className="text-left py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    #
+                  </th>
+                  <th className="text-left py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Query
+                  </th>
+                  <th className="text-right py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Count
+                  </th>
+                  <th className="text-right py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Avg Conf
+                  </th>
+                  <th className="text-right py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Source
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {data.popularQueries.map((pq, i) => (
-                  <tr key={i} className="border-b border-border/30 hover:bg-muted/20">
-                    <td className="py-2 text-muted-foreground tabular-nums">{i + 1}</td>
-                    <td className="py-2 font-medium truncate max-w-[300px]">{pq.query}</td>
+                  <tr
+                    key={i}
+                    className="border-b border-border/30 hover:bg-muted/20"
+                  >
+                    <td className="py-2 text-muted-foreground tabular-nums">
+                      {i + 1}
+                    </td>
+                    <td className="py-2 font-medium truncate max-w-[300px]">
+                      {pq.query}
+                    </td>
                     <td className="py-2 text-right tabular-nums">{pq.count}</td>
                     <td className="py-2 text-right">
                       <Badge
@@ -263,7 +321,9 @@ export function AnalyticsChartsSection({ data, days }: AnalyticsChartsSectionPro
                         {Math.round(pq.avg_confidence * 100)}%
                       </Badge>
                     </td>
-                    <td className="py-2 text-right text-xs text-muted-foreground">{pq.primary_source}</td>
+                    <td className="py-2 text-right text-xs text-muted-foreground">
+                      {pq.primary_source}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -275,14 +335,22 @@ export function AnalyticsChartsSection({ data, days }: AnalyticsChartsSectionPro
       {/* Event type breakdown */}
       {Object.keys(eventBreakdown).length > 0 && (
         <div className="surface-elevated p-5 border border-border">
-          <h2 className="text-sm font-semibold text-foreground mb-4">Event Types</h2>
+          <h2 className="text-sm font-semibold text-foreground mb-4">
+            Event Types
+          </h2>
           <div className="flex flex-wrap gap-2">
             {Object.entries(eventBreakdown)
               .sort(([, a], [, b]) => b - a)
               .map(([type, count]) => (
-                <Badge key={type} variant="secondary" className="text-xs gap-1.5 py-1">
+                <Badge
+                  key={type}
+                  variant="secondary"
+                  className="text-xs gap-1.5 py-1"
+                >
                   {type}
-                  <span className="text-muted-foreground tabular-nums">{count}</span>
+                  <span className="text-muted-foreground tabular-nums">
+                    {count}
+                  </span>
                 </Badge>
               ))}
           </div>
@@ -298,9 +366,14 @@ export function AnalyticsChartsSection({ data, days }: AnalyticsChartsSectionPro
           </h2>
           <div className="space-y-3 max-h-96 overflow-y-auto">
             {lowConfidenceQueries.map((q, i) => (
-              <div key={i} className="p-3 rounded-lg bg-muted/30 border border-border/50 space-y-1">
+              <div
+                key={i}
+                className="p-3 rounded-lg bg-muted/30 border border-border/50 space-y-1"
+              >
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-medium text-foreground truncate">"{q.query}"</p>
+                  <p className="text-sm font-medium text-foreground truncate">
+                    "{q.query}"
+                  </p>
                   <Badge
                     variant="secondary"
                     className={`text-[10px] flex-shrink-0 ${
@@ -312,7 +385,9 @@ export function AnalyticsChartsSection({ data, days }: AnalyticsChartsSectionPro
                     {Math.round((q.confidence || 0) * 100)}%
                   </Badge>
                 </div>
-                <p className="text-xs text-muted-foreground font-mono truncate">→ {q.translated}</p>
+                <p className="text-xs text-muted-foreground font-mono truncate">
+                  → {q.translated}
+                </p>
                 <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                   <span>{q.source}</span>
                   <span>·</span>
