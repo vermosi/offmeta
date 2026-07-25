@@ -64,13 +64,14 @@ export async function mockBoltSearchAPIs(page: Page) {
  * Fill the search input, press Enter, and wait for card results to render.
  */
 export async function searchForCard(page: Page, query: string) {
-  const searchInput = page.getByRole('searchbox', {
+  const searchForm = page.getByRole('search');
+  const searchInput = searchForm.getByRole('searchbox', {
     name: /search for magic cards using natural language/i,
   });
   await expect(searchInput).toBeVisible({ timeout: 15_000 });
 
   await searchInput.fill(query);
-  await searchInput.press('Enter');
+  await searchForm.getByTestId('search-submit-button').click();
 
   await expect(
     page.locator(SEARCH_RESULT_CARD_SELECTOR).first(),

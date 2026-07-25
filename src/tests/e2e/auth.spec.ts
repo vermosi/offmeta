@@ -2,7 +2,20 @@ import { expect, test } from '@playwright/test';
 import { mockAuthAPIs } from './fixtures/mock-helpers';
 
 async function openAuthDialog(page: Parameters<typeof test>[0]['page']) {
-  await page.locator('button:visible', { hasText: 'Sign in' }).first().click();
+  const desktopSignIn = page.locator(
+    'header button:visible',
+    { hasText: 'Sign in' },
+  ).first();
+  if (await desktopSignIn.count()) {
+    await desktopSignIn.click();
+    return;
+  }
+
+  await page.getByTestId('hamburger-button').click();
+  await page
+    .getByRole('button', { name: /^sign in$/i })
+    .last()
+    .click();
 }
 
 test.describe('Auth modal flows', () => {
