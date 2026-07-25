@@ -34,6 +34,9 @@ import {
   X,
 } from 'lucide-react';
 
+type SortField = 'change' | 'current' | 'name' | 'previous';
+type SortDir = 'asc' | 'desc';
+
 const TIME_RANGES = [
   { label: '7d', value: 7 },
   { label: '14d', value: 14 },
