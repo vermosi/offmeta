@@ -103,12 +103,10 @@ export function useSimilarCards(query: string, fallbackCard?: ScryfallCard | nul
   const [debouncedQuery, setDebouncedQuery] = useState(query);
   useEffect(() => {
     const trimmed = query.trim();
-    // Empty query → apply immediately so the tab clears without delay.
-    if (!trimmed) {
-      setDebouncedQuery(query);
-      return;
-    }
-    const timer = setTimeout(() => setDebouncedQuery(query), SIMILAR_DEBOUNCE_MS);
+    // Keep the debounce path uniform so we don't set state synchronously in
+    // the effect body and trigger an avoidable render cascade.
+    const delay = trimmed ? SIMILAR_DEBOUNCE_MS : 0;
+    const timer = setTimeout(() => setDebouncedQuery(query), delay);
     return () => clearTimeout(timer);
   }, [query]);
 
@@ -199,7 +197,7 @@ export function useSimilarCards(query: string, fallbackCard?: ScryfallCard | nul
     : null;
 
   return {
-    similarityData,
+    similarityData: error ? null : similarityData,
     isLoading,
     error,
     errorMessage,

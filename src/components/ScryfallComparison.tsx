@@ -10,7 +10,7 @@
  * stacks. See docs/product-audit.md (PR2) for scope rationale.
  */
 
-import { ArrowRight, Search, Type } from 'lucide-react';
+import { Search, Type } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 
 interface ScryfallComparisonProps {

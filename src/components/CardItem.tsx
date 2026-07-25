@@ -5,7 +5,7 @@
  */
 
 import { memo, useState, useCallback } from 'react';
-import type { MouseEvent } from 'react';
+import type { KeyboardEvent, MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import type { ScryfallCard } from '@/types/card';
 import { getCardImage } from '@/lib/scryfall/client';
@@ -84,7 +84,8 @@ export const CardItem = memo(function CardItem({
   const { trackAffiliateClick } = useAnalytics();
   const { tcgplayerAffiliateBase } = useAffiliateConfig();
 
-  // Native <button> handles Enter/Space activation.
+  // Native <button> handles Enter/Space activation in the browser, but we
+  // also mirror it explicitly so tests and assistive tech see consistent behavior.
 
   const manaCost = getManaCost(card);
   const price = formatPrice(card);
@@ -111,6 +112,16 @@ export const CardItem = memo(function CardItem({
     [card, tcgplayerAffiliateBase, trackAffiliateClick],
   );
 
+  const handleCardKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLButtonElement>) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onClick();
+      }
+    },
+    [onClick],
+  );
+
   return (
     <div
       data-testid="search-result-card"
@@ -119,6 +130,7 @@ export const CardItem = memo(function CardItem({
       <button
         type="button"
         onClick={onClick}
+        onKeyDown={handleCardKeyDown}
         tabIndex={tabIndex}
         aria-label={`View details for ${displayName}`}
         className="absolute inset-0 z-10 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-transform duration-200 hover:scale-[1.02]"
