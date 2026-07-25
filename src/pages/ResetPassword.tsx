@@ -2,7 +2,7 @@
  * Password reset page — user lands here from the email reset link.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -14,6 +14,7 @@ import { Lock, Loader2, CheckCircle2 } from 'lucide-react';
 import { SkipLinks } from '@/components/SkipLinks';
 import { useTranslation } from '@/lib/i18n';
 import { applySeoMeta } from '@/lib/seo';
+import { Link } from 'react-router-dom';
 
 const ResetPassword = () => {
   const { t } = useTranslation();
@@ -29,19 +30,17 @@ const ResetPassword = () => {
   useEffect(() => {
     return applySeoMeta({
       title: 'Reset Password | OffMeta',
-      description: 'Choose a new password for your OffMeta account. This page is reached from a password-reset email link.',
+      description:
+        'Choose a new password for your OffMeta account. This page is reached from a password-reset email link.',
       url: 'https://offmeta.app/reset-password',
       extraMeta: { robots: 'noindex, nofollow' },
     });
   }, []);
 
-  // Check that we arrived via a recovery link
-  useEffect(() => {
+  const invalidLink = useMemo(() => {
     const hash = window.location.hash;
-    if (!hash.includes('type=recovery') && !session) {
-      navigate('/', { replace: true });
-    }
-  }, [session, navigate]);
+    return !hash.includes('type=recovery') && !session;
+  }, [session]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,6 +76,23 @@ const ResetPassword = () => {
             {t('resetPassword.title')}
           </h1>
 
+          {invalidLink && !done ? (
+            <div className="space-y-4 rounded-lg border border-border/60 bg-muted/30 p-4 text-sm text-muted-foreground">
+              <p>
+                This password reset link is missing recovery context or has
+                already been used.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button asChild className="w-full sm:w-auto">
+                  <Link to="/">Go to OffMeta</Link>
+                </Button>
+                <Button variant="outline" asChild className="w-full sm:w-auto">
+                  <Link to="/#auth">Sign in instead</Link>
+                </Button>
+              </div>
+            </div>
+          ) : null}
+
           {done ? (
             <div className="flex flex-col items-center gap-3 py-6 text-center">
               <CheckCircle2 className="h-10 w-10 text-success" />
@@ -87,7 +103,7 @@ const ResetPassword = () => {
                 {t('resetPassword.goHome')}
               </Button>
             </div>
-          ) : (
+          ) : !invalidLink ? (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="new-pw">{t('resetPassword.newPassword')}</Label>
@@ -129,7 +145,7 @@ const ResetPassword = () => {
                 {t('resetPassword.update')}
               </Button>
             </form>
-          )}
+          ) : null}
         </div>
       </main>
       <Footer />
