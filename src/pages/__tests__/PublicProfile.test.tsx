@@ -81,7 +81,7 @@ vi.mock('@/lib/i18n', () => ({
 }));
 
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<ReactRouterDom>('react-router-dom');
+  const actual = await vi.importActual<typeof ReactRouterDom>('react-router-dom');
   return {
     ...actual,
     useParams: () => ({ userId: 'user-1' }),

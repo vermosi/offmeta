@@ -16,7 +16,7 @@ const movers: PriceMover[] = [
     rarity: 'rare',
     type_line: 'Creature — Dragon',
     legalities: { commander: 'legal' },
-  } as PriceMover,
+  } as unknown as PriceMover,
   {
     card_name: 'Card B',
     direction: 'down',
@@ -26,7 +26,7 @@ const movers: PriceMover[] = [
     rarity: 'common',
     type_line: 'Sorcery',
     legalities: { commander: 'legal' },
-  } as PriceMover,
+  } as unknown as PriceMover,
 ];
 
 describe('MarketTrends helpers', () => {
