@@ -31,13 +31,15 @@ export default function ProfileSettings() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Per-route SEO + noindex (private route)
   useEffect(() => {
     return applySeoMeta({
       title: 'Profile Settings | OffMeta',
-      description: 'Update your OffMeta display name and avatar. Private account settings — sign-in required.',
+      description:
+        'Update your OffMeta display name and avatar. Private account settings — sign-in required.',
       url: 'https://offmeta.app/profile',
       extraMeta: { robots: 'noindex, nofollow' },
     });
@@ -54,13 +56,17 @@ export default function ProfileSettings() {
   useEffect(() => {
     if (!user) return;
     const fetchProfile = async () => {
+      setIsLoading(true);
+      setLoadError(null);
       const { data, error } = await supabase
         .from('profiles')
         .select('display_name, avatar_url')
         .eq('id', user.id)
         .single();
 
-      if (!error && data) {
+      if (error) {
+        setLoadError(error.message);
+      } else if (data) {
         setDisplayName(data.display_name || '');
         setAvatarUrl(data.avatar_url || null);
       }
@@ -98,7 +104,9 @@ export default function ProfileSettings() {
       return;
     }
 
-    const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
+    const { data: urlData } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(filePath);
     const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
 
     const { error: updateError } = await supabase
@@ -173,14 +181,23 @@ export default function ProfileSettings() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background relative">
-      <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
-      <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
+      <div
+        className="fixed inset-0 pointer-events-none bg-page-gradient"
+        aria-hidden="true"
+      />
+      <div
+        className="fixed inset-0 pointer-events-none bg-page-noise"
+        aria-hidden="true"
+      />
 
       <SkipLinks />
       <Header />
 
       <main id="main-content" className="relative flex-1 pt-6 sm:pt-10 pb-16">
-        <div className="container-main" style={{ maxWidth: 'clamp(320px, 90vw, 480px)' }}>
+        <div
+          className="container-main"
+          style={{ maxWidth: 'clamp(320px, 90vw, 480px)' }}
+        >
           <Link
             to="/"
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
@@ -190,11 +207,24 @@ export default function ProfileSettings() {
           </Link>
 
           <div className="space-y-1 mb-8">
-            <h1 className="text-xl font-semibold text-foreground">{t('profile.title')}</h1>
+            <h1 className="text-xl font-semibold text-foreground">
+              {t('profile.title')}
+            </h1>
             <p className="text-sm text-muted-foreground">{user.email}</p>
           </div>
 
-          {isLoading ? (
+          {loadError ? (
+            <div className="space-y-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+              <p>Failed to load your profile settings: {loadError}</p>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => window.location.reload()}
+              >
+                Retry
+              </Button>
+            </div>
+          ) : isLoading ? (
             <div className="flex justify-center py-12">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
@@ -231,7 +261,9 @@ export default function ProfileSettings() {
                       disabled={isUploadingAvatar}
                     >
                       <Camera className="h-4 w-4 mr-1.5" />
-                      {avatarUrl ? t('profile.avatarChange') : t('profile.avatarUpload')}
+                      {avatarUrl
+                        ? t('profile.avatarChange')
+                        : t('profile.avatarUpload')}
                     </Button>
                     {avatarUrl && (
                       <Button
@@ -263,9 +295,14 @@ export default function ProfileSettings() {
               {/* Display name form */}
               <form onSubmit={handleSave} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="display-name">{t('profile.displayName')}</Label>
+                  <Label htmlFor="display-name">
+                    {t('profile.displayName')}
+                  </Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                    <User
+                      className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                      aria-hidden="true"
+                    />
                     <Input
                       id="display-name"
                       value={displayName}
@@ -280,11 +317,7 @@ export default function ProfileSettings() {
                   </p>
                 </div>
 
-                <Button
-                  type="submit"
-                  disabled={isSaving}
-                  className="w-full"
-                >
+                <Button type="submit" disabled={isSaving} className="w-full">
                   {isSaving ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
