@@ -75,12 +75,14 @@ type SupabaseClientFactory = (
   options?: CreateClientOptions,
 ) => unknown;
 
-const importSupabase = (): Promise<{
+const importSupabase = async (): Promise<{
   createClient: SupabaseClientFactory;
-}> =>
-  import(
-    /* @vite-ignore */ 'https://esm.sh/@supabase/supabase-js@2' as string
-  ) as Promise<{ createClient: SupabaseClientFactory }>;
+}> => {
+  const mod = await import(
+    /* @vite-ignore */ 'https://esm.sh/@supabase/supabase-js@2.45.4' as string
+  );
+  return mod as { createClient: SupabaseClientFactory };
+};
 
 /**
  * Validates that the request has a valid authorization header.
