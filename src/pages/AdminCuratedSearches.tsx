@@ -104,6 +104,7 @@ export default function AdminCuratedSearches() {
 
   const [searches, setSearches] = useState<CuratedSearch[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [searchFilter, setSearchFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [sourceFilter, setSourceFilter] = useState<string>('all');
@@ -124,13 +125,18 @@ export default function AdminCuratedSearches() {
 
   const fetchSearches = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     const { data, error } = await supabase
       .from('curated_searches')
       .select('*')
       .order('priority', { ascending: false });
 
     if (error) {
-      toast.error(t('adminCurated.loadFailed', 'Failed to load curated searches'));
+      setSearches([]);
+      setLoadError(error.message);
+      toast.error(
+        t('adminCurated.loadFailed', 'Failed to load curated searches'),
+      );
     } else {
       setSearches((data ?? []) as CuratedSearch[]);
     }
@@ -159,7 +165,9 @@ export default function AdminCuratedSearches() {
   // Toggle active
   const toggleActive = async (id: string, current: boolean) => {
     const prev = [...searches];
-    setSearches((s) => s.map((x) => (x.id === id ? { ...x, is_active: !current } : x)));
+    setSearches((s) =>
+      s.map((x) => (x.id === id ? { ...x, is_active: !current } : x)),
+    );
 
     const { error } = await supabase
       .from('curated_searches')
@@ -171,7 +179,9 @@ export default function AdminCuratedSearches() {
       setSearches(prev);
     } else {
       toast.success(
-        !current ? t('adminCurated.activated', 'Activated') : t('adminCurated.deactivated', 'Deactivated'),
+        !current
+          ? t('adminCurated.activated', 'Activated')
+          : t('adminCurated.deactivated', 'Deactivated'),
       );
     }
   };
@@ -289,7 +299,9 @@ export default function AdminCuratedSearches() {
   if (!user || !isAdmin) return null;
 
   const autoCount = searches.filter((s) => s.source === 'auto').length;
-  const editorialCount = searches.filter((s) => s.source === 'editorial').length;
+  const editorialCount = searches.filter(
+    (s) => s.source === 'editorial',
+  ).length;
   const activeCount = searches.filter((s) => s.is_active).length;
 
   return (
@@ -299,7 +311,11 @@ export default function AdminCuratedSearches() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/admin/analytics')}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/admin/analytics')}
+            >
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
@@ -319,9 +335,22 @@ export default function AdminCuratedSearches() {
               </p>
             </div>
           </div>
-          <Button onClick={openCreate} size="sm" className="gap-1.5">
-            <Plus className="h-4 w-4" /> {t('adminCurated.newSearch', 'New Search')}
-          </Button>
+          <div className="flex items-center gap-2">
+            {loadError && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchSearches}
+                disabled={loading}
+              >
+                Retry
+              </Button>
+            )}
+            <Button onClick={openCreate} size="sm" className="gap-1.5">
+              <Plus className="h-4 w-4" />{' '}
+              {t('adminCurated.newSearch', 'New Search')}
+            </Button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -362,15 +391,25 @@ export default function AdminCuratedSearches() {
           </Select>
         </div>
 
+        {loadError && !loading && (
+          <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+            <p>Failed to load curated searches: {loadError}</p>
+          </div>
+        )}
+
         {/* Table */}
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground">
+          <div className="text-center py-16 text-muted-foreground border border-dashed border-border rounded-lg">
             <FileText className="h-10 w-10 mx-auto mb-3 opacity-40" />
-            <p className="text-sm">No curated searches match your filters.</p>
+            <p className="text-sm">
+              {searches.length === 0
+                ? 'No curated searches have been created yet.'
+                : 'No curated searches match your filters.'}
+            </p>
           </div>
         ) : (
           <div className="border border-border rounded-lg overflow-hidden">
@@ -379,19 +418,36 @@ export default function AdminCuratedSearches() {
                 <thead>
                   <tr className="bg-muted/50 text-muted-foreground text-left">
                     <th className="px-4 py-2.5 font-medium">Title</th>
-                    <th className="px-3 py-2.5 font-medium hidden md:table-cell">Category</th>
-                    <th className="px-3 py-2.5 font-medium hidden lg:table-cell">Source</th>
-                    <th className="px-3 py-2.5 font-medium text-center">Priority</th>
-                    <th className="px-3 py-2.5 font-medium text-center">Status</th>
-                    <th className="px-3 py-2.5 font-medium text-right">Actions</th>
+                    <th className="px-3 py-2.5 font-medium hidden md:table-cell">
+                      Category
+                    </th>
+                    <th className="px-3 py-2.5 font-medium hidden lg:table-cell">
+                      Source
+                    </th>
+                    <th className="px-3 py-2.5 font-medium text-center">
+                      Priority
+                    </th>
+                    <th className="px-3 py-2.5 font-medium text-center">
+                      Status
+                    </th>
+                    <th className="px-3 py-2.5 font-medium text-right">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {filtered.map((s) => (
-                    <tr key={s.id} className={`transition-colors hover:bg-muted/30 ${!s.is_active ? 'opacity-50' : ''}`}>
+                    <tr
+                      key={s.id}
+                      className={`transition-colors hover:bg-muted/30 ${!s.is_active ? 'opacity-50' : ''}`}
+                    >
                       <td className="px-4 py-3">
-                        <div className="font-medium text-foreground text-sm">{s.title}</div>
-                        <div className="text-xs text-muted-foreground mt-0.5 font-mono">/{s.slug}</div>
+                        <div className="font-medium text-foreground text-sm">
+                          {s.title}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-0.5 font-mono">
+                          /{s.slug}
+                        </div>
                       </td>
                       <td className="px-3 py-3 hidden md:table-cell">
                         <Badge variant="outline" className="text-xs capitalize">
@@ -400,7 +456,9 @@ export default function AdminCuratedSearches() {
                       </td>
                       <td className="px-3 py-3 hidden lg:table-cell">
                         <Badge
-                          variant={s.source === 'editorial' ? 'default' : 'secondary'}
+                          variant={
+                            s.source === 'editorial' ? 'default' : 'secondary'
+                          }
                           className="text-xs"
                         >
                           {s.source}
@@ -413,20 +471,30 @@ export default function AdminCuratedSearches() {
                         <button
                           onClick={() => toggleActive(s.id, s.is_active)}
                           className="inline-flex items-center gap-1 text-xs hover:opacity-80 transition-opacity"
-                          title={s.is_active ? 'Click to deactivate' : 'Click to activate'}
+                          title={
+                            s.is_active
+                              ? 'Click to deactivate'
+                              : 'Click to activate'
+                          }
                         >
                           {s.is_active ? (
                             <Eye className="h-3.5 w-3.5 text-primary" />
                           ) : (
                             <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
                           )}
-                          <span className={s.is_active ? 'text-primary' : 'text-muted-foreground'}>
+                          <span
+                            className={
+                              s.is_active
+                                ? 'text-primary'
+                                : 'text-muted-foreground'
+                            }
+                          >
                             {s.is_active ? 'Active' : 'Inactive'}
                           </span>
                         </button>
                       </td>
                       <td className="px-3 py-3">
-                        <div className="flex items-center justify-end gap-1">
+                        <div className="flex flex-wrap items-center justify-end gap-1">
                           <Button
                             variant="ghost"
                             size="icon"
@@ -470,12 +538,16 @@ export default function AdminCuratedSearches() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>{editingId ? 'Edit Curated Search' : 'New Curated Search'}</DialogTitle>
+              <DialogTitle>
+                {editingId ? 'Edit Curated Search' : 'New Curated Search'}
+              </DialogTitle>
             </DialogHeader>
 
             <div className="space-y-4 py-2">
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Natural Query</label>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                  Natural Query
+                </label>
                 <Input
                   value={form.natural_query}
                   onChange={(e) => updateNaturalQuery(e.target.value)}
@@ -485,40 +557,57 @@ export default function AdminCuratedSearches() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Slug</label>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                    Slug
+                  </label>
                   <Input
                     value={form.slug}
-                    onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, slug: e.target.value }))
+                    }
                     placeholder="best-lifegain-cards"
                     className="font-mono text-xs"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Title</label>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                    Title
+                  </label>
                   <Input
                     value={form.title}
-                    onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, title: e.target.value }))
+                    }
                     placeholder="Best Lifegain Cards for MTG"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Description</label>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                  Description
+                </label>
                 <Input
                   value={form.description}
-                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, description: e.target.value }))
+                  }
                   placeholder="SEO description…"
                 />
               </div>
 
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                  Scryfall Query <span className="text-muted-foreground">(optional — auto-translated if blank)</span>
+                  Scryfall Query{' '}
+                  <span className="text-muted-foreground">
+                    (optional — auto-translated if blank)
+                  </span>
                 </label>
                 <Input
                   value={form.scryfall_query}
-                  onChange={(e) => setForm((f) => ({ ...f, scryfall_query: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, scryfall_query: e.target.value }))
+                  }
                   placeholder="o:life o:gain f:commander"
                   className="font-mono text-xs"
                 />
@@ -526,10 +615,14 @@ export default function AdminCuratedSearches() {
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Category</label>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                    Category
+                  </label>
                   <Select
                     value={form.category}
-                    onValueChange={(v) => setForm((f) => ({ ...f, category: v }))}
+                    onValueChange={(v) =>
+                      setForm((f) => ({ ...f, category: v }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -544,7 +637,9 @@ export default function AdminCuratedSearches() {
                   </Select>
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Source</label>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                    Source
+                  </label>
                   <Select
                     value={form.source}
                     onValueChange={(v) => setForm((f) => ({ ...f, source: v }))}
@@ -559,25 +654,40 @@ export default function AdminCuratedSearches() {
                   </Select>
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Priority</label>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                    Priority
+                  </label>
                   <Input
                     type="number"
                     step="0.1"
                     min="0"
                     max="1"
                     value={form.priority}
-                    onChange={(e) => setForm((f) => ({ ...f, priority: parseFloat(e.target.value) || 0 }))}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        priority: parseFloat(e.target.value) || 0,
+                      }))
+                    }
                   />
                 </div>
               </div>
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={saving}>
+              <Button
+                variant="outline"
+                onClick={() => setDialogOpen(false)}
+                disabled={saving}
+              >
                 <X className="h-4 w-4 mr-1" /> Cancel
               </Button>
               <Button onClick={handleSave} disabled={saving}>
-                {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+                {saving ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                ) : (
+                  <Save className="h-4 w-4 mr-1" />
+                )}
                 {editingId ? 'Update' : 'Create'}
               </Button>
             </DialogFooter>
@@ -591,11 +701,16 @@ export default function AdminCuratedSearches() {
               <DialogTitle>Delete Curated Search?</DialogTitle>
             </DialogHeader>
             <p className="text-sm text-muted-foreground">
-              This will permanently remove this curated search page. This action cannot be undone.
+              This will permanently remove this curated search page. This action
+              cannot be undone.
             </p>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDeleteId(null)}>Cancel</Button>
-              <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+              <Button variant="outline" onClick={() => setDeleteId(null)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleDelete}>
+                Delete
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
