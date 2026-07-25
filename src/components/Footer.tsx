@@ -5,7 +5,6 @@
 import { Link } from 'react-router-dom';
 import { ExternalLink, Github } from 'lucide-react';
 import { GUIDE_SUMMARIES as GUIDES } from '@/data/guide-summaries';
-import { Logo } from '@/components/Logo';
 import { useTranslation } from '@/lib/i18n';
 
 const MAX_MOBILE_GUIDES = 5;
@@ -55,7 +54,12 @@ export function Footer() {
       <div className="container-main py-6 sm:py-8 space-y-5">
         {/* Brand row */}
         <div className="flex items-center justify-center sm:justify-start gap-2">
-          <Logo variant="mono" className="h-5 w-5 sm:h-6 sm:w-6 text-foreground" />
+          <div
+            className="h-5 w-5 sm:h-6 sm:w-6 rounded-full border border-border/70 bg-muted/50 flex items-center justify-center text-[10px] font-semibold text-foreground"
+            aria-hidden="true"
+          >
+            O
+          </div>
           <span className="text-xs sm:text-sm font-medium text-foreground">
             {t('footer.brand', 'OffMeta')}
           </span>

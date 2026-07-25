@@ -216,24 +216,24 @@ Reference mappings (extend by analogy — do NOT just echo the strategy noun):
 - "punish artifact decks" → same as treasure hate above
 - "punish graveyard/reanimator/dredge decks" → (otag:graveyard-hate or o:"exile" o:"graveyard")
   ✅ Rest in Peace, Leyline of the Void, Bojuka Bog
-- "punish storm/spellslinger/combo decks" → (o:"can\'t cast more than" or o:"whenever" o:"opponent" o:"casts" or otag:hatebear)
+- "punish storm/spellslinger/combo decks" → (o:"can't cast more than" or o:"whenever" o:"opponent" o:"casts" or otag:hatebear)
   ✅ Rule of Law, Eidolon of Rhetoric, Damping Sphere
-- "punish token decks" → (o:"destroy all tokens" or o:"exile all tokens" or o:"can\'t create")
+- "punish token decks" → (o:"destroy all tokens" or o:"exile all tokens" or o:"can't create")
   ✅ Cleansing Nova + token-specific hosers
-- "punish lifegain decks" → o:"can\'t gain life"
+- "punish lifegain decks" → o:"can't gain life"
   ✅ Rain of Gore, Erebos
-- "punish ramp/land decks" → (o:"can\'t search" or o:"can\'t play additional lands")
+- "punish ramp/land decks" → (o:"can't search" or o:"can't play additional lands")
   ✅ Aven Mindcensor, Archon of Emeria
 - "punish draw/wheel decks" → (o:"whenever" o:"opponent" o:"draws" or o:"skip" o:"draw")
   ✅ Notion Thief, Narset, Alms Collector
-- "punish tutor decks" → (o:"can\'t search" or o:"search your library" o:"pay")
+- "punish tutor decks" → (o:"can't search" or o:"search your library" o:"pay")
   ✅ Aven Mindcensor, Opposition Agent
-- "punish aggro/creature/go-wide decks" → (otag:boardwipe or otag:pillowfort or o:"can\'t attack")
+- "punish aggro/creature/go-wide decks" → (otag:boardwipe or otag:pillowfort or o:"can't attack")
   ✅ Ghostly Prison, Propaganda, Wrath of God
 - "punish enchantment decks" → otag:enchantment-removal
-- "punish control/counterspell decks" → (o:"can\'t be countered" or otag:hatebear)
+- "punish control/counterspell decks" → (o:"can't be countered" or otag:hatebear)
   ✅ Vexing Shusher, Cavern of Souls
-- "punish [tribal — elves/goblins/zombies/etc.] decks" → (o:"destroy all [tribe]" or o:"[tribe]s can\'t")
+- "punish [tribal — elves/goblins/zombies/etc.] decks" → (o:"destroy all [tribe]" or o:"[tribe]s can't")
   ✅ Engineered Plague-style effects
 
 RULE: The strategy name in a "punish/hate X" query is the TARGET, not the theme.

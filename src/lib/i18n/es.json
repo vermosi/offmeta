@@ -1,4 +1,4 @@
-{
+Ôªø{
     "a11y.cardsCount":  "{count} cartas",
     "a11y.close":  "Cerrar",
     "a11y.foundCards":  "Se encontraron {count} cartas",
@@ -1243,10 +1243,10 @@
     "ai.priceNote":  ". Prices are approximate and subject to change.",
     "ai.viewCardDetails":  "View {name} details",
     "ai.seoTitle":  "{query} - MTG Card Guide | OffMeta",
-    "hero.subtitleCompact":  "Olv-date de la sintaxis de Scryfall. Solo describe lo que necesitas - OffMeta lo traduce al instante.",
-    "hero.subtitleLine1":  "Olv-date de la sintaxis de Scryfall. Solo describe lo que necesitas -",
+    "hero.subtitleCompact":  "Olv√≠date de la sintaxis de Scryfall. Solo describe lo que necesitas - OffMeta lo traduce al instante.",
+    "hero.subtitleLine1":  "Olv√≠date de la sintaxis de Scryfall. Solo describe lo que necesitas -",
     "compare.pill":  "Poder de Scryfall, en lenguaje natural",
-    "compare.subheading":  "Scryfall es la fuente de verdad, pero su lenguaje de consulta recompensa a los expertos. OffMeta permite preguntar en lenguaje natural y muestra la consulta exacta que construyÛ.",
-    "examples.step2Hint":  "Mira cÛmo la jerga y los conceptos se convierten en consultas de Scryfall.",
-    "explain.summary":  "OffMeta transformÛ tu redacciÛn en seÒales de b˙squeda y luego construyÛ la consulta exacta de Scryfall."
+    "compare.subheading":  "Scryfall es la fuente de verdad, pero su lenguaje de consulta recompensa a los expertos. OffMeta permite preguntar en lenguaje natural y muestra la consulta exacta que construy√≥.",
+    "examples.step2Hint":  "Mira c√≥mo la jerga y los conceptos se convierten en consultas de Scryfall.",
+    "explain.summary":  "OffMeta transform√≥ tu redacci√≥n en se√±ales de b√∫squeda y luego construy√≥ la consulta exacta de Scryfall."
 }
