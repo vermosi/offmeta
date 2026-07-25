@@ -23,6 +23,9 @@ import {
   sortMovers,
   type MarketFilters,
 } from './market-trends-utils';
+
+type SortField = 'card' | 'current' | 'old' | 'change';
+type SortDir = 'asc' | 'desc';
 import {
   TrendingUp,
   TrendingDown,
