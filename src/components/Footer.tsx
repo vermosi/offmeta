@@ -3,7 +3,7 @@
  */
 
 import { Link } from 'react-router-dom';
-import { ExternalLink, Github } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { GUIDE_SUMMARIES as GUIDES } from '@/data/guide-summaries';
 import { useTranslation } from '@/lib/i18n';
 
@@ -175,7 +175,14 @@ export function Footer() {
               'View source on GitHub (opens in new tab)',
             )}
           >
-            <Github className="h-3.5 w-3.5" aria-hidden="true" />
+            <svg
+              className="h-3.5 w-3.5"
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.865 8.37 6.839 9.72.5.09.683-.22.683-.49 0-.24-.01-1.04-.015-1.89-2.782.62-3.369-1.21-3.369-1.21-.455-1.18-1.11-1.49-1.11-1.49-.907-.64.069-.63.069-.63 1.003.07 1.531 1.05 1.531 1.05.89 1.56 2.336 1.11 2.904.85.09-.66.35-1.11.635-1.36-2.22-.26-4.555-1.14-4.555-5.08 0-1.12.39-2.03 1.029-2.75-.103-.26-.446-1.31.098-2.73 0 0 .84-.27 2.75 1.05A9.31 9.31 0 0 1 12 6.84c.85.004 1.705.12 2.505.35 1.91-1.32 2.75-1.05 2.75-1.05.544 1.42.201 2.47.098 2.73.64.72 1.028 1.63 1.028 2.75 0 3.95-2.34 4.82-4.566 5.08.359.32.679.94.679 1.89 0 1.36-.012 2.46-.012 2.79 0 .27.18.58.688.48A10.25 10.25 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z" />
+            </svg>
             {t('footer.source')}
           </a>
         </div>
