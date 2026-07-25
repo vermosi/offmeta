@@ -2,9 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
+    <!--
+      No cache-busting meta tags. `Cache-Control: no-store` at the document
+      level defeats browser caching of the HTML shell and hurts LCP on
+      repeat views. Cache invalidation is handled by Vite's hashed asset
+      filenames and the auto-recovery loader in src/main.tsx.
+    -->
+
     <meta name="google-site-verification" content="BFbOUBW-CLUbLmfgd3BS6GYFS2tLjT0hCgdkFY-cH3o" />
     <meta
       name="viewport"
@@ -72,6 +76,37 @@
       crossorigin
     />
     <link rel="dns-prefetch" href="https://nxmzyykkzwomkcentctt.supabase.co" />
+
+    <!-- Preload webfonts statically so the browser's preload scanner
+         discovers them during HTML parse, not after main.tsx executes. -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+      fetchpriority="high"
+      href="https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2"
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+      fetchpriority="high"
+      href="https://fonts.gstatic.com/s/spacegrotesk/v22/V8mDoQDjQSkFtoMM3T6r8E7mPbF4C_k3HqU.woff2"
+    />
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
 
     <!-- Open Graph (homepage defaults; per-route pages override og:url/title/desc via applySeoMeta) -->
     <meta property="og:type" content="website" />
@@ -308,6 +343,9 @@
         line-height: 1.02;
         font-weight: 700;
         letter-spacing: -0.04em;
+        /* Use system font stack so LCP paints without waiting on webfonts.
+           React swaps in the real HeroSection (with Inter) after hydration. */
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       }
       .shell-accent {
         color: hsl(var(--accent));
@@ -461,36 +499,10 @@
 
     <div id="root"></div>
     <script type="module">
+      // Fonts are preloaded + linked statically in <head> for LCP.
       const isRootPath = window.location.pathname === '/';
-      const loadAppFonts = () => {
-        const preloadInter = document.createElement('link');
-        preloadInter.rel = 'preload';
-        preloadInter.as = 'font';
-        preloadInter.type = 'font/woff2';
-        preloadInter.crossOrigin = 'anonymous';
-        preloadInter.setAttribute('fetchpriority', 'high');
-        preloadInter.href =
-          'https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2';
-        document.head.appendChild(preloadInter);
-
-        const preloadSpaceGrotesk = document.createElement('link');
-        preloadSpaceGrotesk.rel = 'preload';
-        preloadSpaceGrotesk.as = 'font';
-        preloadSpaceGrotesk.type = 'font/woff2';
-        preloadSpaceGrotesk.crossOrigin = 'anonymous';
-        preloadSpaceGrotesk.setAttribute('fetchpriority', 'high');
-        preloadSpaceGrotesk.href =
-          'https://fonts.gstatic.com/s/spacegrotesk/v22/V8mDoQDjQSkFtoMM3T6r8E7mPbF4C_k3HqU.woff2';
-        document.head.appendChild(preloadSpaceGrotesk);
-
-        const fontSheet = document.createElement('link');
-        fontSheet.rel = 'stylesheet';
-        fontSheet.href =
-          'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap';
-        document.head.appendChild(fontSheet);
-      };
-      loadAppFonts();
       await import('/src/main.tsx');
+
 
       if (isRootPath) {
         const shell = document.getElementById('static-shell');
