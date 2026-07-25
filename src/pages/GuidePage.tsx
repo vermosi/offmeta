@@ -13,10 +13,12 @@ import { ScrollToTop } from '@/components/ScrollToTop';
 import {
   Search,
   ArrowRight,
+  ArrowLeft,
   Lightbulb,
   HelpCircle,
   BookOpen,
   Sparkles,
+  List,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n';
@@ -58,16 +60,41 @@ export default function GuidePage() {
   if (!guide) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center space-y-4">
+        <Header />
+        <main
+          id="main-content"
+          className="flex-1 container-main py-12 sm:py-16"
+        >
+          <div className="max-w-lg mx-auto rounded-2xl border border-border bg-card p-6 sm:p-8 text-center space-y-6">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <BookOpen className="h-6 w-6" />
+            </div>
             <h1 className="text-2xl font-semibold text-foreground">
               {t('guide.notFound')}
             </h1>
-            <Link to="/" className="text-primary hover:underline">
-              {t('nav.backToSearch')}
-            </Link>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              We could not find that guide, but you can still keep learning or
+              jump straight back into search.
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-3">
+              <Link
+                to="/guides"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground hover:border-primary/30 hover:text-primary transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                {t('nav.guides')}
+              </Link>
+              <Link
+                to="/"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
+              >
+                <Search className="h-4 w-4" />
+                {t('nav.backToSearch')}
+              </Link>
+            </div>
           </div>
-        </div>
+        </main>
+        <Footer />
       </div>
     );
   }
@@ -75,6 +102,16 @@ export default function GuidePage() {
   const relatedGuides = guide.relatedGuides
     .map((s) => GUIDES.find((g) => g.slug === s))
     .filter(Boolean);
+  const sortedGuides = [...GUIDES].sort((a, b) => a.level - b.level);
+  const currentGuideIndex = sortedGuides.findIndex(
+    (item) => item.slug === guide.slug,
+  );
+  const previousGuide =
+    currentGuideIndex > 0 ? sortedGuides[currentGuideIndex - 1] : undefined;
+  const nextGuide =
+    currentGuideIndex >= 0 && currentGuideIndex < sortedGuides.length - 1
+      ? sortedGuides[currentGuideIndex + 1]
+      : undefined;
 
   const handleSearchClick = () => {
     navigate(`/?q=${encodeURIComponent(guide.searchQuery)}`);
@@ -181,7 +218,48 @@ export default function GuidePage() {
             </p>
           </header>
 
-          <div className="rounded-xl border border-border bg-card p-5 sm:p-6 space-y-3 overflow-hidden">
+          <section
+            aria-label="On this page"
+            className="rounded-xl border border-border bg-card p-4 sm:p-5 space-y-4"
+          >
+            <div className="flex items-center gap-2">
+              <List className="h-5 w-5 text-primary" />
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+                On this page
+              </h2>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <a
+                href="#search"
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground hover:border-primary/30 hover:text-primary transition-colors"
+              >
+                Search this guide
+              </a>
+              <a
+                href="#tips"
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground hover:border-primary/30 hover:text-primary transition-colors"
+              >
+                Tips & strategy
+              </a>
+              <a
+                href="#faq"
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground hover:border-primary/30 hover:text-primary transition-colors"
+              >
+                FAQ
+              </a>
+              <a
+                href="#related"
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground hover:border-primary/30 hover:text-primary transition-colors"
+              >
+                Related guides
+              </a>
+            </div>
+          </section>
+
+          <div
+            id="search"
+            className="rounded-xl border border-border bg-card p-5 sm:p-6 space-y-3 overflow-hidden"
+          >
             <p className="text-sm text-muted-foreground">
               {t('guide.searchInstantly')}
             </p>
@@ -234,7 +312,7 @@ export default function GuidePage() {
             </section>
           )}
 
-          <section className="space-y-4">
+          <section id="tips" className="space-y-4">
             <div className="flex items-center gap-2">
               <Lightbulb className="h-5 w-5 text-primary" />
               <h2 className="text-xl font-semibold text-foreground">
@@ -256,7 +334,7 @@ export default function GuidePage() {
             </ul>
           </section>
 
-          <section className="space-y-4">
+          <section id="faq" className="space-y-4">
             <div className="flex items-center gap-2">
               <HelpCircle className="h-5 w-5 text-primary" />
               <h2 className="text-xl font-semibold text-foreground">
@@ -281,7 +359,7 @@ export default function GuidePage() {
           </section>
 
           {relatedGuides.length > 0 && (
-            <section className="space-y-4">
+            <section id="related" className="space-y-4">
               <div className="flex items-center gap-2">
                 <BookOpen className="h-5 w-5 text-primary" />
                 <h2 className="text-xl font-semibold text-foreground">
@@ -309,6 +387,71 @@ export default function GuidePage() {
               </div>
             </section>
           )}
+
+          <section className="grid gap-3 sm:grid-cols-2">
+            {previousGuide ? (
+              <Link
+                to={`/guides/${previousGuide.slug}`}
+                className="group rounded-xl border border-border bg-card p-4 hover:border-primary/30 transition-colors"
+              >
+                <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  Previous guide
+                </div>
+                <h2 className="mt-2 font-medium text-foreground group-hover:text-primary transition-colors">
+                  {t(`guide.title.${previousGuide.slug}`, previousGuide.title)}
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {t(
+                    `guide.sub.${previousGuide.slug}`,
+                    previousGuide.subheading,
+                  )}
+                </p>
+              </Link>
+            ) : (
+              <div className="rounded-xl border border-border bg-card p-4 opacity-80">
+                <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Starting point
+                </div>
+                <h2 className="mt-2 font-medium text-foreground">
+                  This is the first guide
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Begin here, then move through the rest in order.
+                </p>
+              </div>
+            )}
+
+            {nextGuide ? (
+              <Link
+                to={`/guides/${nextGuide.slug}`}
+                className="group rounded-xl border border-border bg-card p-4 hover:border-primary/30 transition-colors"
+              >
+                <div className="flex items-center justify-between gap-2 text-xs uppercase tracking-wide text-muted-foreground">
+                  <span>Next guide</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </div>
+                <h2 className="mt-2 font-medium text-foreground group-hover:text-primary transition-colors">
+                  {t(`guide.title.${nextGuide.slug}`, nextGuide.title)}
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {t(`guide.sub.${nextGuide.slug}`, nextGuide.subheading)}
+                </p>
+              </Link>
+            ) : (
+              <div className="rounded-xl border border-border bg-card p-4 opacity-80">
+                <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Finished the path
+                </div>
+                <h2 className="mt-2 font-medium text-foreground">
+                  You&apos;ve reached the final guide
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Return to search and try combining everything you learned.
+                </p>
+              </div>
+            )}
+          </section>
 
           <div className="rounded-xl border border-primary/20 bg-primary/5 p-6 text-center space-y-3">
             <h2 className="text-lg font-semibold text-foreground">

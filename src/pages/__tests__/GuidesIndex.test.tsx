@@ -36,16 +36,35 @@ describe('GuidesIndex', () => {
 
   it('renders 10 guide cards', () => {
     renderGuidesIndex();
-    const links = screen.getAllByRole('link').filter((el) =>
-      el.getAttribute('href')?.startsWith('/guides/'),
-    );
+    const links = screen
+      .getAllByRole('link')
+      .filter((el) => el.getAttribute('href')?.startsWith('/guides/'));
     expect(links).toHaveLength(10);
+  });
+
+  it('renders grouped level sections with jump links', () => {
+    renderGuidesIndex();
+    expect(
+      screen.getByRole('link', { name: /beginner \(3\)/i }),
+    ).toHaveAttribute('href', '#guides.levelBeginner');
+    expect(
+      screen.getByRole('link', { name: /intermediate \(3\)/i }),
+    ).toHaveAttribute('href', '#guides.levelIntermediate');
+    expect(
+      screen.getByRole('link', { name: /advanced \(2\)/i }),
+    ).toHaveAttribute('href', '#guides.levelAdvanced');
+    expect(screen.getByRole('link', { name: /expert \(2\)/i })).toHaveAttribute(
+      'href',
+      '#guides.levelExpert',
+    );
   });
 
   it('renders difficulty badges for all guides', () => {
     renderGuidesIndex();
     expect(screen.getAllByText(/Beginner/i).length).toBeGreaterThanOrEqual(3);
-    expect(screen.getAllByText(/Intermediate/i).length).toBeGreaterThanOrEqual(3);
+    expect(screen.getAllByText(/Intermediate/i).length).toBeGreaterThanOrEqual(
+      3,
+    );
     expect(screen.getAllByText(/Advanced/i).length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText(/Expert/i).length).toBeGreaterThanOrEqual(2);
   });
@@ -54,7 +73,9 @@ describe('GuidesIndex', () => {
     renderGuidesIndex();
     expect(screen.getByText('Search by Creature Type')).toBeInTheDocument();
     expect(screen.getByText('Filter by Color')).toBeInTheDocument();
-    expect(screen.getByText('Multi-Constraint Complex Search')).toBeInTheDocument();
+    expect(
+      screen.getByText('Multi-Constraint Complex Search'),
+    ).toBeInTheDocument();
   });
 
   it('renders example search queries', () => {
@@ -90,7 +111,9 @@ describe('GuidesIndex', () => {
 
   it('sets the document title', () => {
     renderGuidesIndex();
-    expect(document.title).toBe('MTG Search Guides — Learn to Find Any Magic Card | OffMeta');
+    expect(document.title).toBe(
+      'MTG Search Guides — Learn to Find Any Magic Card | OffMeta',
+    );
   });
 
   it('renders Header and Footer', () => {

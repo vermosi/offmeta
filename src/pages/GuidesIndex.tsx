@@ -14,25 +14,34 @@ import { Badge } from '@/components/ui/badge';
 import { useTranslation } from '@/lib/i18n';
 import { SkipLinks } from '@/components/SkipLinks';
 
-const LEVEL_LABEL_KEYS: Record<number, string> = {
-  1: 'guides.levelBeginner',
-  2: 'guides.levelBeginner',
-  3: 'guides.levelBeginner',
-  4: 'guides.levelIntermediate',
-  5: 'guides.levelIntermediate',
-  6: 'guides.levelIntermediate',
-  7: 'guides.levelAdvanced',
-  8: 'guides.levelAdvanced',
-  9: 'guides.levelExpert',
-  10: 'guides.levelExpert',
-};
-
 const LEVEL_COLORS: Record<string, string> = {
   'guides.levelBeginner': 'bg-success/10 text-success border-success/20',
   'guides.levelIntermediate': 'bg-info/10 text-info border-info/20',
   'guides.levelAdvanced': 'bg-warning/10 text-warning border-warning/20',
   'guides.levelExpert': 'bg-accent/10 text-accent border-accent/20',
 };
+
+const LEVEL_GROUPS = [
+  {
+    key: 'guides.levelBeginner',
+    label: 'guides.levelBeginner',
+    min: 1,
+    max: 3,
+  },
+  {
+    key: 'guides.levelIntermediate',
+    label: 'guides.levelIntermediate',
+    min: 4,
+    max: 6,
+  },
+  {
+    key: 'guides.levelAdvanced',
+    label: 'guides.levelAdvanced',
+    min: 7,
+    max: 8,
+  },
+  { key: 'guides.levelExpert', label: 'guides.levelExpert', min: 9, max: 10 },
+] as const;
 
 export default function GuidesIndex() {
   const { t } = useTranslation();
@@ -96,6 +105,12 @@ export default function GuidesIndex() {
   }, []);
 
   const sorted = [...GUIDES].sort((a, b) => a.level - b.level);
+  const grouped = LEVEL_GROUPS.map((group) => ({
+    ...group,
+    guides: sorted.filter(
+      (guide) => guide.level >= group.min && guide.level <= group.max,
+    ),
+  }));
 
   return (
     <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
@@ -114,7 +129,10 @@ export default function GuidesIndex() {
         </ol>
       </nav>
 
-      <main id="main-content" className="flex-1 container-main py-8 sm:py-10 lg:py-12">
+      <main
+        id="main-content"
+        className="flex-1 container-main py-8 sm:py-10 lg:py-12"
+      >
         <div className="max-w-4xl mx-auto space-y-8 sm:space-y-10 min-w-0">
           <header className="text-center space-y-4">
             <div className="flex items-center justify-center gap-2.5 text-primary">
@@ -130,47 +148,88 @@ export default function GuidesIndex() {
             <p className="text-sm text-muted-foreground">{t('guides.count')}</p>
           </header>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            {sorted.map((guide) => {
-              const labelKey = LEVEL_LABEL_KEYS[guide.level] || 'guides.levelBeginner';
-              const colorClass = LEVEL_COLORS[labelKey] || LEVEL_COLORS['guides.levelBeginner'];
+          <div className="flex flex-wrap justify-center gap-2">
+            {grouped.map((group) => (
+              <a
+                key={group.key}
+                href={`#${group.key}`}
+                className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:border-primary/30 hover:text-primary transition-colors"
+              >
+                {t(group.label)}
+                <span className="text-muted-foreground">
+                  ({group.guides.length})
+                </span>
+              </a>
+            ))}
+          </div>
+
+          <div className="space-y-8">
+            {grouped.map((group) => {
+              const labelKey = group.label;
+              const colorClass =
+                LEVEL_COLORS[labelKey] || LEVEL_COLORS['guides.levelBeginner'];
 
               return (
-                <Link
-                  key={guide.slug}
-                  to={`/guides/${guide.slug}`}
-                  className="group relative rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-lg transition-all duration-200 p-5 sm:p-6 flex flex-col min-w-0 overflow-hidden"
-                >
-                  <div className="flex items-center justify-between mb-3">
+                <section key={group.key} id={group.key} className="space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="space-y-1">
+                      <h2 className="text-lg sm:text-xl font-semibold text-foreground">
+                        {t(group.label)}
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        {group.min === group.max
+                          ? `Level ${group.min}`
+                          : `Levels ${group.min}-${group.max}`}{' '}
+                        • {group.guides.length} guides
+                      </p>
+                    </div>
                     <Badge
                       variant="outline"
                       className={`text-[10px] font-semibold uppercase tracking-wide ${colorClass}`}
                     >
-                      {t(labelKey)} • {t('guides.level')} {guide.level}
+                      {t(labelKey)}
                     </Badge>
                   </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {group.guides.map((guide) => (
+                      <Link
+                        key={guide.slug}
+                        to={`/guides/${guide.slug}`}
+                        className="group relative rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-lg transition-all duration-200 p-5 sm:p-6 flex flex-col min-w-0 overflow-hidden"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] font-semibold uppercase tracking-wide ${colorClass}`}
+                          >
+                            {t(labelKey)} • {t('guides.level')} {guide.level}
+                          </Badge>
+                        </div>
 
-                  <h2 className="text-base sm:text-lg font-semibold text-foreground group-hover:text-primary transition-colors mb-1.5">
-                    {t(`guide.title.${guide.slug}`, guide.title)}
-                  </h2>
-                  <p className="text-sm text-muted-foreground mb-4 flex-1">
-                    {t(`guide.sub.${guide.slug}`, guide.subheading)}
-                  </p>
+                        <h3 className="text-base sm:text-lg font-semibold text-foreground group-hover:text-primary transition-colors mb-1.5">
+                          {t(`guide.title.${guide.slug}`, guide.title)}
+                        </h3>
+                        <p className="text-sm text-muted-foreground mb-4 flex-1">
+                          {t(`guide.sub.${guide.slug}`, guide.subheading)}
+                        </p>
 
-                  <div className="rounded-lg bg-muted/40 border border-border/50 px-3 py-2 mb-4 min-w-0 overflow-hidden">
-                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
-                      {t('guides.exampleSearch')}
-                    </p>
-                    <p className="text-sm font-mono text-foreground/80 truncate">
-                      "{guide.searchQuery}"
-                    </p>
+                        <div className="rounded-lg bg-muted/40 border border-border/50 px-3 py-2 mb-4 min-w-0 overflow-hidden">
+                          <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
+                            {t('guides.exampleSearch')}
+                          </p>
+                          <p className="text-sm font-mono text-foreground/80 truncate">
+                            "{guide.searchQuery}"
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-1 text-sm text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                          {t('guides.readGuide')}{' '}
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </div>
+                      </Link>
+                    ))}
                   </div>
-
-                  <div className="flex items-center gap-1 text-sm text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                    {t('guides.readGuide')}{' '}
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </div>
-                </Link>
+                </section>
               );
             })}
           </div>
@@ -179,7 +238,9 @@ export default function GuidesIndex() {
             <h2 className="text-lg font-semibold text-foreground">
               {t('guides.readyToSearch')}
             </h2>
-            <p className="text-sm text-muted-foreground">{t('guides.readyToSearchDesc')}</p>
+            <p className="text-sm text-muted-foreground">
+              {t('guides.readyToSearchDesc')}
+            </p>
             <Link
               to="/"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity"

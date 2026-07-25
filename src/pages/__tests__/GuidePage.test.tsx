@@ -3,14 +3,12 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import GuidePage from '@/pages/GuidePage';
 
-// Mock navigation
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
-// Mock Header and Footer
 vi.mock('@/components/Header', () => ({
   Header: () => <header data-testid="mock-header">Header</header>,
 }));
@@ -42,7 +40,6 @@ describe('GuidePage', () => {
     it('renders the guide heading', () => {
       renderGuidePage('search-by-creature-type');
       const headings = screen.getAllByText('Search by Creature Type');
-      // Should appear in breadcrumb + h1
       expect(headings.length).toBeGreaterThanOrEqual(2);
       const h1 = headings.find((el) => el.tagName === 'H1');
       expect(h1).toBeTruthy();
@@ -55,7 +52,9 @@ describe('GuidePage', () => {
 
     it('renders the intro text', () => {
       renderGuidePage('search-by-creature-type');
-      expect(screen.getByText(/simplest search you can do/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/simplest search you can do/i),
+      ).toBeInTheDocument();
     });
 
     it('renders the search CTA button', () => {
@@ -65,14 +64,30 @@ describe('GuidePage', () => {
 
     it('navigates to search when CTA is clicked', () => {
       renderGuidePage('search-by-creature-type');
-      const button = screen.getByText(/Search "dragons"/);
-      fireEvent.click(button);
+      fireEvent.click(screen.getByText(/Search "dragons"/));
       expect(mockNavigate).toHaveBeenCalledWith('/?q=dragons');
     });
 
     it('renders the "How OffMeta Helps" section', () => {
       renderGuidePage('search-by-creature-type');
       expect(screen.getByText('How OffMeta Helps')).toBeInTheDocument();
+    });
+
+    it('renders the on-page navigation links', () => {
+      renderGuidePage('search-by-creature-type');
+      expect(
+        screen.getByRole('link', { name: 'Search this guide' }),
+      ).toHaveAttribute('href', '#search');
+      expect(
+        screen.getByRole('link', { name: 'Tips & strategy' }),
+      ).toHaveAttribute('href', '#tips');
+      expect(screen.getByRole('link', { name: 'FAQ' })).toHaveAttribute(
+        'href',
+        '#faq',
+      );
+      expect(
+        screen.getByRole('link', { name: 'Related guides' }),
+      ).toHaveAttribute('href', '#related');
     });
 
     it('shows the user input and translated query', () => {
@@ -89,15 +104,29 @@ describe('GuidePage', () => {
 
     it('renders FAQ section', () => {
       renderGuidePage('search-by-creature-type');
-      expect(screen.getByText('Frequently Asked Questions')).toBeInTheDocument();
-      expect(screen.getByText(/creature types does OffMeta recognize/i)).toBeInTheDocument();
+      expect(
+        screen.getByText('Frequently Asked Questions'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/creature types does OffMeta recognize/i),
+      ).toBeInTheDocument();
     });
 
     it('renders related guides section', () => {
       renderGuidePage('search-by-creature-type');
       expect(screen.getByText('Related Guides')).toBeInTheDocument();
-      // Should link to filter-by-color and tribal-synergies
-      expect(screen.getByText('Filter by Color')).toBeInTheDocument();
+      expect(
+        screen.getAllByText('Filter by Color').length,
+      ).toBeGreaterThanOrEqual(1);
+    });
+
+    it('renders previous and next guide navigation', () => {
+      renderGuidePage('search-by-creature-type');
+      expect(screen.getByText('Starting point')).toBeInTheDocument();
+      expect(screen.getByText('Next guide')).toBeInTheDocument();
+      expect(
+        screen.getAllByText('Filter by Color').length,
+      ).toBeGreaterThanOrEqual(1);
     });
 
     it('renders breadcrumb with Home, Guides, and current title', () => {
@@ -105,19 +134,22 @@ describe('GuidePage', () => {
       const breadcrumb = screen.getByLabelText('Breadcrumb');
       expect(breadcrumb).toBeInTheDocument();
       expect(screen.getByText('Home')).toBeInTheDocument();
-      // There are multiple "Guides" texts (breadcrumb + related) — just verify breadcrumb exists
       expect(breadcrumb).toHaveTextContent('Guides');
     });
 
     it('sets the document title for SEO', () => {
       renderGuidePage('search-by-creature-type');
-      expect(document.title).toBe('MTG Tribe Search — Find Dragons, Elves & More | OffMeta');
+      expect(document.title).toBe(
+        'MTG Tribe Search — Find Dragons, Elves & More | OffMeta',
+      );
     });
 
     it('renders JSON-LD structured data', () => {
       const { container } = renderGuidePage('search-by-creature-type');
-      const scripts = container.querySelectorAll('script[type="application/ld+json"]');
-      expect(scripts.length).toBe(3); // Article + FAQPage + BreadcrumbList
+      const scripts = container.querySelectorAll(
+        'script[type="application/ld+json"]',
+      );
+      expect(scripts.length).toBe(3);
       const articleLd = JSON.parse(scripts[0].textContent || '{}');
       expect(articleLd['@type']).toBe('Article');
       const faqLd = JSON.parse(scripts[1].textContent || '{}');
@@ -156,12 +188,11 @@ describe('GuidePage', () => {
     for (const slug of slugs) {
       it(`renders guide "${slug}" without errors`, () => {
         const { container } = renderGuidePage(slug);
-        // Should render the main article
         expect(container.querySelector('article')).toBeInTheDocument();
-        // Should have Tips & Strategy
         expect(screen.getByText('Tips & Strategy')).toBeInTheDocument();
-        // Should have FAQ
-        expect(screen.getByText('Frequently Asked Questions')).toBeInTheDocument();
+        expect(
+          screen.getByText('Frequently Asked Questions'),
+        ).toBeInTheDocument();
       });
     }
   });
@@ -172,9 +203,15 @@ describe('GuidePage', () => {
       expect(screen.getByText('Guide not found')).toBeInTheDocument();
     });
 
-    it('shows a back link when guide is not found', () => {
+    it('shows recovery links when guide is not found', () => {
       renderGuidePage('non-existent-guide');
-      expect(screen.getByText('← Back to search')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Guides' })).toHaveAttribute(
+        'href',
+        '/guides',
+      );
+      expect(
+        screen.getByRole('link', { name: /back to search/i }),
+      ).toHaveAttribute('href', '/');
     });
 
     it('does not render article for non-existent guide', () => {
@@ -186,7 +223,9 @@ describe('GuidePage', () => {
   describe('guide-specific content', () => {
     it('Level 10 guide mentions multi-constraint search', () => {
       renderGuidePage('multi-constraint-complex-search');
-      expect(screen.getByText(/FIVE distinct constraints/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/FIVE distinct constraints/i),
+      ).toBeInTheDocument();
     });
 
     it('Level 3 guide mentions budget/price', () => {
