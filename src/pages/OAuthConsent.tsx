@@ -9,13 +9,14 @@
  * sign-in method so the user always lands back on this consent page.
  */
 
-import { useCallback, useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useCallback, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Lock, Mail, ShieldCheck } from 'lucide-react';
+import { Loader2, Lock, Mail, ShieldCheck, ArrowLeft } from 'lucide-react';
 
 // The Supabase JS `auth.oauth` namespace is beta; type it locally rather than
 // depending on typings in @supabase/supabase-js catching up.
@@ -34,7 +35,10 @@ type OAuthResult = {
 type OAuthNamespace = {
   getAuthorizationDetails(
     id: string,
-  ): Promise<{ data: OAuthAuthorizationDetails | null; error: { message: string } | null }>;
+  ): Promise<{
+    data: OAuthAuthorizationDetails | null;
+    error: { message: string } | null;
+  }>;
   approveAuthorization(id: string): Promise<OAuthResult>;
   denyAuthorization(id: string): Promise<OAuthResult>;
 };
@@ -48,9 +52,6 @@ export default function OAuthConsent() {
   const authorizationId = params.get('authorization_id') ?? '';
   const returnTo = window.location.pathname + window.location.search;
 
-  const [authed, setAuthed] = useState<boolean | null>(null);
-  const [details, setDetails] = useState<OAuthAuthorizationDetails | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const [email, setEmail] = useState('');
@@ -58,43 +59,49 @@ export default function OAuthConsent() {
   const [signInBusy, setSignInBusy] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
 
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      if (!authorizationId) {
-        setError('Missing authorization_id in URL.');
-        return;
-      }
+  const {
+    data: authorizationState,
+    error,
+    refetch: refetchAuthorization,
+    isLoading,
+    isFetching,
+  } = useQuery({
+    queryKey: ['oauth-consent', authorizationId],
+    enabled: Boolean(authorizationId),
+    queryFn: async () => {
       const { data: sess } = await supabase.auth.getSession();
-      if (!active) return;
       if (!sess.session) {
-        setAuthed(false);
-        return;
+        return { authed: false as const, details: null };
       }
-      setAuthed(true);
+
       const { data, error: detailsError } =
         await getOAuthApi().getAuthorizationDetails(authorizationId);
-      if (!active) return;
       if (detailsError) {
-        setError(detailsError.message);
-        return;
+        throw new Error(detailsError.message);
       }
+
       const immediate = data?.redirect_url ?? data?.redirect_to;
       if (immediate && !data?.client) {
         window.location.href = immediate;
-        return;
+        return { authed: true as const, details: null };
       }
-      setDetails(data);
-    })();
-    return () => {
-      active = false;
-    };
-  }, [authorizationId]);
+
+      return { authed: true as const, details: data };
+    },
+    retry: false,
+  });
+
+  const authed = authorizationState?.authed ?? (authorizationId ? null : false);
+  const details = authorizationState?.details ?? null;
+  const errorMessage = !authorizationId
+    ? 'Missing authorization_id in URL.'
+    : error instanceof Error
+      ? error.message
+      : null;
 
   const handlePasswordSignIn = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      setError(null);
       setSignInBusy(true);
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
@@ -102,7 +109,7 @@ export default function OAuthConsent() {
       });
       setSignInBusy(false);
       if (signInError) {
-        setError(signInError.message);
+        // The user stays on the consent page so they can retry sign-in.
         return;
       }
       // Reload the same consent URL so the authorization flow resumes.
@@ -112,7 +119,6 @@ export default function OAuthConsent() {
   );
 
   const handleGoogleSignIn = useCallback(async () => {
-    setError(null);
     setGoogleBusy(true);
     const redirectTo = `${window.location.origin}${returnTo}`;
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
@@ -121,27 +127,23 @@ export default function OAuthConsent() {
     });
     if (oauthError) {
       setGoogleBusy(false);
-      setError(oauthError.message);
     }
   }, [returnTo]);
 
   const decide = useCallback(
     async (approve: boolean) => {
       setBusy(true);
-      setError(null);
       const api = getOAuthApi();
       const { data, error: decisionError } = approve
         ? await api.approveAuthorization(authorizationId)
         : await api.denyAuthorization(authorizationId);
       if (decisionError) {
         setBusy(false);
-        setError(decisionError.message);
         return;
       }
       const target = data?.redirect_url ?? data?.redirect_to;
       if (!target) {
         setBusy(false);
-        setError('No redirect returned by the authorization server.');
         return;
       }
       window.location.href = target;
@@ -149,9 +151,14 @@ export default function OAuthConsent() {
     [authorizationId],
   );
 
+  const scopeList = (details?.scope ?? '')
+    .split(/\s+/)
+    .map((scope) => scope.trim())
+    .filter(Boolean);
+
   return (
     <main className="min-h-screen flex items-center justify-center p-6 bg-background">
-      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-lg">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-lg space-y-4">
         <div className="flex items-center gap-2 mb-4">
           <ShieldCheck className="h-5 w-5 text-primary" aria-hidden="true" />
           <h1 className="text-lg font-semibold text-foreground">
@@ -159,19 +166,33 @@ export default function OAuthConsent() {
           </h1>
         </div>
 
-        {error && (
-          <p className="mb-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {error}
-          </p>
+        {errorMessage && (
+          <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive space-y-2">
+            <p>{errorMessage}</p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => void refetchAuthorization()}
+            >
+              Retry
+            </Button>
+          </div>
         )}
 
-        {authed === null && (
+        {isLoading && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" /> Loading…
           </div>
         )}
 
-        {authed === false && (
+        {isFetching && !isLoading && !errorMessage && (
+          <div className="rounded-lg border border-border/60 bg-muted/30 p-4 text-sm text-muted-foreground">
+            Fetching authorization details…
+          </div>
+        )}
+
+        {authed === false && !errorMessage && (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
               Sign in to authorize this MCP client to act as you on OffMeta.
@@ -228,20 +249,28 @@ export default function OAuthConsent() {
                 </div>
               </div>
               <Button type="submit" className="w-full" disabled={signInBusy}>
-                {signInBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                {signInBusy && (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                )}
                 Sign in
               </Button>
             </form>
+            <Button asChild variant="ghost" className="w-full gap-2">
+              <Link to="/">
+                <ArrowLeft className="h-4 w-4" />
+                Back to OffMeta
+              </Link>
+            </Button>
           </div>
         )}
 
-        {authed === true && !details && !error && (
+        {authed === true && !details && !errorMessage && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" /> Loading authorization…
           </div>
         )}
 
-        {authed === true && details && (
+        {authed === true && details && !errorMessage && (
           <div className="space-y-4">
             <p className="text-sm text-foreground">
               <span className="font-medium">
@@ -251,6 +280,21 @@ export default function OAuthConsent() {
               use the tools this app exposes (search cards, read your decks,
               saved searches, and collection).
             </p>
+            {scopeList.length > 0 && (
+              <div className="rounded-lg border border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground">
+                <p className="font-medium text-foreground mb-2">
+                  Requested access
+                </p>
+                <ul className="space-y-1">
+                  {scopeList.map((scope) => (
+                    <li key={scope} className="flex items-start gap-2">
+                      <span aria-hidden="true">•</span>
+                      <span className="min-w-0 break-words">{scope}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <div className="flex gap-2">
               <Button
                 type="button"
@@ -271,6 +315,12 @@ export default function OAuthConsent() {
                 Approve
               </Button>
             </div>
+            <Button asChild variant="ghost" className="w-full gap-2">
+              <Link to="/">
+                <ArrowLeft className="h-4 w-4" />
+                Return to OffMeta
+              </Link>
+            </Button>
           </div>
         )}
       </div>
