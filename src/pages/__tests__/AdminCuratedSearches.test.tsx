@@ -6,7 +6,6 @@ import type {
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import AdminCuratedSearches from '@/pages/AdminCuratedSearches';
-import type * as ReactRouterDom from 'react-router-dom';
 
 const queryState = vi.hoisted(() => ({
   rows: [] as Array<{
@@ -78,7 +77,7 @@ vi.mock('@/components/ui/dialog', () => ({
 }));
 
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof ReactRouterDom>('react-router-dom');
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
   return {
     ...actual,
     useNavigate: () => vi.fn(),

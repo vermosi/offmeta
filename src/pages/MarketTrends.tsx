@@ -24,8 +24,6 @@ import {
   type MarketFilters,
 } from './market-trends-utils';
 
-type SortField = 'change' | 'current' | 'name' | 'previous';
-type SortDir = 'asc' | 'desc';
 import {
   TrendingUp,
   TrendingDown,
@@ -35,6 +33,9 @@ import {
   ChevronDown,
   X,
 } from 'lucide-react';
+
+type SortField = 'change' | 'current' | 'name' | 'previous';
+type SortDir = 'asc' | 'desc';
 
 const TIME_RANGES = [
   { label: '7d', value: 7 },

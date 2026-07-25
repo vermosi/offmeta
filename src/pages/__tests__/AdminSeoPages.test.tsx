@@ -6,7 +6,6 @@ import type {
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import AdminSeoPages from '@/pages/AdminSeoPages';
-import type * as ReactRouterDom from 'react-router-dom';
 
 const queryState = vi.hoisted(() => ({
   data: [] as Array<{
@@ -64,7 +63,7 @@ vi.mock('@/lib/i18n', () => ({
 }));
 
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof ReactRouterDom>('react-router-dom');
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
   return {
     ...actual,
     useNavigate: () => vi.fn(),
