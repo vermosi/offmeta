@@ -116,38 +116,56 @@ export function useAuthProvider(): AuthContextValue {
   }, [state.user, fetchProfile]);
 
   useEffect(() => {
+    let cancelled = false;
+
+    const applySession = (session: Session | null) => {
+      // Update session synchronously first — never await inside the auth
+      // callback, it can deadlock the Supabase auth client.
+      setState((prev) => ({
+        ...prev,
+        user: session?.user ?? null,
+        session,
+        isLoading: false,
+        // Clear profile immediately on sign-out; keep prior values until
+        // the deferred fetch resolves on sign-in.
+        displayName: session?.user ? prev.displayName : null,
+        avatarUrl: session?.user ? prev.avatarUrl : null,
+      }));
+
+      const userId = session?.user?.id;
+      if (!userId) return;
+
+      // Defer any Supabase calls out of the auth callback stack.
+      setTimeout(async () => {
+        const profile = await fetchProfile(userId);
+        if (cancelled) return;
+        setState((prev) => {
+          if (prev.user?.id !== userId) return prev;
+          return {
+            ...prev,
+            displayName: profile.displayName,
+            avatarUrl: profile.avatarUrl,
+          };
+        });
+      }, 0);
+    };
+
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const userId = session?.user?.id;
-      const profile = userId
-        ? await fetchProfile(userId)
-        : { displayName: null, avatarUrl: null };
-      setState({
-        user: session?.user ?? null,
-        session,
-        isLoading: false,
-        displayName: profile.displayName,
-        avatarUrl: profile.avatarUrl,
-      });
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      applySession(session);
     });
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      const userId = session?.user?.id;
-      const profile = userId
-        ? await fetchProfile(userId)
-        : { displayName: null, avatarUrl: null };
-      setState({
-        user: session?.user ?? null,
-        session,
-        isLoading: false,
-        displayName: profile.displayName,
-        avatarUrl: profile.avatarUrl,
-      });
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!cancelled) applySession(session);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, [fetchProfile]);
+
 
   const signIn = useCallback(async (email: string, password: string) => {
     const emailValidation = validateEmailAddress(email);
