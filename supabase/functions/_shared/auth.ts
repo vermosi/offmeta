@@ -75,14 +75,14 @@ type SupabaseClientFactory = (
   options?: CreateClientOptions,
 ) => unknown;
 
-// Static import so the Supabase edge-runtime whitelists the module at build time.
-// Dynamic imports bypass the whitelist and fail with ERR_MODULE_NOT_FOUND at runtime.
-// @ts-ignore -- resolved by Deno at deploy time
-import { createClient as _createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
-
 const importSupabase = async (): Promise<{
   createClient: SupabaseClientFactory;
-}> => ({ createClient: _createClient as unknown as SupabaseClientFactory });
+}> => {
+  // Relative dynamic import: Deno resolves the underlying esm.sh module at
+  // deploy time (so it's whitelisted), and Vitest never triggers this path.
+  const mod = await import('./supabaseAdminClient.ts');
+  return { createClient: mod.createClient as unknown as SupabaseClientFactory };
+};
 
 /**
  * Validates that the request has a valid authorization header.
