@@ -373,6 +373,15 @@ const CardPage = () => {
   const displayTypeLine = activeFace?.type_line ?? card.type_line;
   const displayManaCost = activeFace?.mana_cost ?? card.mana_cost;
 
+  // Alias slug → canonical redirect. If the URL slug doesn't match the
+  // canonical slug derived from the resolved card name (e.g. missing
+  // punctuation, diacritics, older/misspelled variants that resolved via
+  // fuzzy lookup), send the client to the canonical /cards/:slug URL so
+  // links, analytics, and SEO consolidate on a single path.
+  if (card && canonicalSlug && canonicalSlug !== slug) {
+    return <Navigate to={`/cards/${canonicalSlug}`} replace />;
+  }
+
   return (
     <ErrorBoundary>
       <div className="min-h-screen flex flex-col bg-background relative">
