@@ -338,9 +338,11 @@ export function getCorsHeaders(req: Request) {
   const effectiveOrigins =
     allowedOrigins.length > 0 ? allowedOrigins : firstPartyOrigins;
 
-  // Allow Lovable preview domains for non-sensitive endpoints
-  const allowPreviewOrigin =
-    isLovablePreview && !sensitiveEndpoints.has(endpoint ?? '');
+  // Allow Lovable preview/localhost origins across all endpoints. Sensitive
+  // endpoints still enforce admin/service-role checks in-code, so relaxing the
+  // preview CORS gate lets the admin panel load from the Lovable preview and
+  // localhost without leaking data (auth is verified separately).
+  const allowPreviewOrigin = isLovablePreview;
 
   const corsOrigin =
     origin && effectiveOrigins.includes(origin)
@@ -348,6 +350,7 @@ export function getCorsHeaders(req: Request) {
       : allowPreviewOrigin
         ? origin!
         : effectiveOrigins[0];
+
 
   return {
     'Access-Control-Allow-Origin': corsOrigin,
