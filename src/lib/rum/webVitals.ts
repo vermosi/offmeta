@@ -111,21 +111,39 @@ function flush() {
 }
 
 function observeLCP() {
+  // Per web.dev: stop taking new LCP candidates after the first user
+  // interaction or when the tab is hidden. Otherwise a tab left open in
+  // the background reports an LCP of tens of minutes and skews p95.
   try {
     const po = new PerformanceObserver((list) => {
       const entries = list.getEntries();
       const last = entries[entries.length - 1];
       if (!last) return;
       const value = Math.round(last.startTime);
-      // Don't queue final until page hide; keep updating
+      // Ignore obviously-bogus values (backgrounded tabs, clock jumps).
+      // 60s is well beyond any real LCP; anything above is noise.
+      if (!isFinite(value) || value < 0 || value > 60_000) return;
       reported.delete('LCP');
-      pending.splice(
-        pending.findIndex((p) => p.name === 'LCP'),
-        pending.findIndex((p) => p.name === 'LCP') >= 0 ? 1 : 0,
-      );
+      const idx = pending.findIndex((p) => p.name === 'LCP');
+      if (idx >= 0) pending.splice(idx, 1);
       queue({ name: 'LCP', value, rating: rate('LCP', value) });
     });
     po.observe({ type: 'largest-contentful-paint', buffered: true });
+
+    const stop = () => {
+      try { po.takeRecords(); } catch { /* ignore */ }
+      try { po.disconnect(); } catch { /* ignore */ }
+    };
+    // Freeze LCP on first interaction or first hide — whichever comes first.
+    addEventListener('keydown', stop, { once: true, capture: true });
+    addEventListener('pointerdown', stop, { once: true, capture: true });
+    addEventListener('click', stop, { once: true, capture: true });
+    document.addEventListener('visibilitychange', function onVis() {
+      if (document.visibilityState === 'hidden') {
+        document.removeEventListener('visibilitychange', onVis);
+        stop();
+      }
+    });
   } catch {
     /* unsupported */
   }
