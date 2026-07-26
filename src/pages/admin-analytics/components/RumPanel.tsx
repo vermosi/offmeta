@@ -84,12 +84,22 @@ async function fetchRumStats(days: number): Promise<{
   const buckets: Record<VitalName, number[]> = { LCP: [], CLS: [], INP: [], FID: [] };
   const sessions = new Set<string>();
 
+  // Sanity caps per metric — filters clock-jump / backgrounded-tab outliers
+  // that would otherwise dominate p95 (e.g. an LCP of 47 minutes).
+  const MAX: Record<VitalName, number> = {
+    LCP: 60_000,   // 60s
+    INP: 60_000,   // 60s
+    FID: 60_000,   // 60s
+    CLS: 10,       // CLS is unitless; >10 is nonsensical
+  };
+
   for (const row of data as VitalRow[]) {
     const d = row.event_data;
     if (!d || d.is_internal) continue;
     const name = d.name as VitalName | undefined;
     if (!name || !(name in buckets)) continue;
     if (typeof d.value !== 'number' || !isFinite(d.value)) continue;
+    if (d.value < 0 || d.value > MAX[name]) continue;
     buckets[name].push(d.value);
     if (row.session_id) sessions.add(row.session_id);
   }
