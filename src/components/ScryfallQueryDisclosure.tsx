@@ -7,7 +7,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { ChevronDown, Code2 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/core/utils';
 
 const STORAGE_KEY = 'offmeta_scryfall_disclosure_open';
 

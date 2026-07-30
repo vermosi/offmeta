@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react';
 import { Check, Loader2 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { MTG_COPY } from '@/lib/i18n/copy';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/core/utils';
 
 type StepStatus = 'pending' | 'active' | 'done';
 

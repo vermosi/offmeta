@@ -10,6 +10,12 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+tmp/
+tmp-*/
+tmp-lighthouse/
+tmp-lighthouse-*/
+lighthouse-*.json
+public/reports/*.zip
 *.local
 .env
 .env.*

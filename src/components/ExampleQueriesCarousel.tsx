@@ -12,7 +12,7 @@
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { MessageSquare, Sparkles, LayoutGrid, ArrowRight } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/core/utils';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface ExampleQueriesCarouselProps {

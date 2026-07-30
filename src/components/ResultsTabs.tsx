@@ -4,7 +4,7 @@
  * @module components/ResultsTabs
  */
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/core/utils';
 import { Search, Sparkles, Lightbulb, BookOpen } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 
