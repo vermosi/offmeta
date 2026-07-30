@@ -191,4 +191,71 @@ export const VALID_SEARCH_KEYS = new Set([
   'function',
 ]);
 
+export const RAW_SCRYFALL_OPERATORS = new Set([
+  ...VALID_SEARCH_KEYS,
+  'kw',
+  'otag',
+  'atag',
+  'in',
+  'is',
+  'not',
+  'has',
+  'set',
+  'cn',
+  'year',
+  'game',
+  'banned',
+  'restricted',
+  'unique',
+  'order',
+  'direction',
+  'prefer',
+  'prints',
+  'new',
+  'cheapest',
+  'usd',
+  'eur',
+  'tix',
+  'border',
+  'frame',
+  'stamp',
+  'watermark',
+  'art',
+  'flavor',
+  'lore',
+  'include',
+  'language',
+  'date',
+  'mana',
+  'wildpair',
+]);
+
+export function isRawScryfallSyntax(query: string): boolean {
+  const operatorPattern = /\b([a-zA-Z]+)[:=<>]/;
+  if (!operatorPattern.test(query)) return false;
+
+  const tokens = query.split(/\s+/);
+  const operatorTokens = tokens.filter((t) => /^-?[a-zA-Z]+[:=<>]/.test(t));
+  if (operatorTokens.length === 0) return false;
+
+  for (const token of operatorTokens) {
+    const keyMatch = token.match(/^-?([a-zA-Z]+)[:=<>]/);
+    if (keyMatch && !RAW_SCRYFALL_OPERATORS.has(keyMatch[1].toLowerCase())) {
+      return false;
+    }
+  }
+
+  const nonOperatorTokens = tokens.filter(
+    (t) =>
+      !/^-?[a-zA-Z]+[:=<>]/.test(t) &&
+      !['or', 'and', 'not', '-'].includes(t.toLowerCase()) &&
+      !t.startsWith('(') &&
+      !t.startsWith(')') &&
+      !t.startsWith('"'),
+  );
+
+  return nonOperatorTokens.length <= tokens.length * 0.3;
+}
+
 export const DEFAULT_OVERLY_BROAD_THRESHOLD = 1500;
+export const MAX_QUERY_LENGTH = 500;

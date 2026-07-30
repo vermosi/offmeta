@@ -20,7 +20,11 @@ import {
 import { checkPatternMatch, getHardcodedPatternMatch } from './matching.ts';
 import { fetchDynamicRules } from './rules.ts';
 
-import { DEFAULT_OVERLY_BROAD_THRESHOLD } from './constants.ts';
+import {
+  DEFAULT_OVERLY_BROAD_THRESHOLD,
+  isRawScryfallSyntax,
+  MAX_QUERY_LENGTH,
+} from './constants.ts';
 import {
   validateQuery,
   detectQualityFlags,
@@ -48,7 +52,6 @@ import {
   repairQuery,
 } from './pipeline/repair.ts';
 import { relaxSpeculativeClauses } from './scryfall.ts';
-import { VALID_SEARCH_KEYS } from './constants.ts';
 import {
   AI_FETCH_TIMEOUT_MS,
   AI_MAX_RETRIES,
@@ -68,86 +71,6 @@ import {
 type BudgetStage = 'dynamic_rules' | 'pre_translation' | 'ai_call';
 
 /**
- * Check if a query is already valid Scryfall syntax (no AI needed).
- * Detects queries that use Scryfall operators like t:, c:, o:, mv, pow, etc.
- */
-function isRawScryfallSyntax(query: string): boolean {
-  // Must contain at least one Scryfall operator
-  const operatorPattern = /\b([a-zA-Z]+)[:=<>]/;
-  if (!operatorPattern.test(query)) return false;
-
-  // Extract all tokens that look like operators
-  const tokens = query.split(/\s+/);
-  const operatorTokens = tokens.filter((t) => /^-?[a-zA-Z]+[:=<>]/.test(t));
-
-  // If most tokens are operator-based, it's raw syntax
-  if (operatorTokens.length === 0) return false;
-
-  // Check that the operators are valid Scryfall keys
-  for (const token of operatorTokens) {
-    const keyMatch = token.match(/^-?([a-zA-Z]+)[:=<>]/);
-    if (keyMatch) {
-      const key = keyMatch[1].toLowerCase();
-      if (
-        !VALID_SEARCH_KEYS.has(key) &&
-        ![
-          'kw',
-          'otag',
-          'atag',
-          'in',
-          'is',
-          'not',
-          'has',
-          'set',
-          'cn',
-          'year',
-          'game',
-          'banned',
-          'restricted',
-          'unique',
-          'order',
-          'direction',
-          'prefer',
-          'prints',
-          'new',
-          'cheapest',
-          'usd',
-          'eur',
-          'tix',
-          'border',
-          'frame',
-          'stamp',
-          'watermark',
-          'art',
-          'flavor',
-          'lore',
-          'include',
-          'language',
-          'date',
-          'mana',
-          'wildpair',
-        ].includes(key)
-      ) {
-        return false; // Contains invalid operator
-      }
-    }
-  }
-
-  // Non-operator words should be minimal (allow OR, AND, NOT, parens, quotes)
-  const nonOperatorTokens = tokens.filter(
-    (t) =>
-      !/^-?[a-zA-Z]+[:=<>]/.test(t) &&
-      !['or', 'and', 'not', '-'].includes(t.toLowerCase()) &&
-      !t.startsWith('(') &&
-      !t.startsWith(')') &&
-      !t.startsWith('"'),
-  );
-
-  // If more than 30% of tokens are natural language, it's not raw syntax
-  return nonOperatorTokens.length <= tokens.length * 0.3;
-}
-
-/**
  * Auto-seed high-confidence AI translations into translation_rules
  * so future identical queries hit the pattern match layer instead of AI.
  */
@@ -159,7 +82,7 @@ async function seedTranslationRule(
   try {
     const normalized = query.toLowerCase().trim().replace(/\s+/g, ' ');
     // Don't seed very short or very long queries
-    if (normalized.length < 5 || normalized.length > 200) return;
+    if (normalized.length < 5 || normalized.length > MAX_QUERY_LENGTH) return;
 
     await supabase
       .from('translation_rules')
@@ -750,12 +673,8 @@ serve(
       // No Scryfall validation here — raw syntax is trusted, validation adds latency with no benefit.
       const trimmedQuery = query.trim();
       if (isRawScryfallSyntax(trimmedQuery)) {
-        const validation = validateQuery(trimmedQuery);
-        const filteredQuery = applyFiltersToQuery(
-          validation.sanitized,
-          filters,
-        );
-        const finalQuery = filteredQuery || validation.sanitized;
+        const finalQuery =
+          applyFiltersToQuery(trimmedQuery, filters) || trimmedQuery;
         const responseTimeMs = Date.now() - requestStartTime;
         logInfo('raw_syntax_passthrough', {
           query: trimmedQuery.substring(0, 50),

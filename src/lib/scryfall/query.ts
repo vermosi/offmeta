@@ -386,6 +386,11 @@ export function validateScryfallQuery(query: string): {
     issues.push('Removed unsupported power+toughness math');
   }
 
+  if (sanitized.length > 500) {
+    sanitized = sanitized.substring(0, 500);
+    issues.push('Query truncated to 500 characters');
+  }
+
   const keyPattern = /\b([a-zA-Z]+)[:=<>]/g;
   const unknownKeys: string[] = [];
   let keyMatch;
@@ -426,12 +431,15 @@ export function validateScryfallQuery(query: string): {
   // These are clearly broken queries from legacy fallback — strip the broken o: clause
   const nestedQuotePattern = /\bo:"[^"]*(?:t:|o:)[^"]*"[^"]*"/g;
   if (nestedQuotePattern.test(sanitized)) {
-    // Remove the broken nested-quote oracle clauses entirely
     sanitized = sanitized
       .replace(/\bo:"[^"]*(?:t:|o:)[^"]*"[^"]*"/g, '')
       .replace(/\s+/g, ' ')
       .trim();
     issues.push('Removed malformed nested-quote oracle clause');
+  }
+
+  if (sanitized.length > 500) {
+    sanitized = sanitized.substring(0, 500);
   }
 
   sanitized = sanitized.replace(/\s+/g, ' ').trim();

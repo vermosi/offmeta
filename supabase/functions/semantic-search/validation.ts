@@ -44,9 +44,9 @@ export const VALIDATION_CASES: ValidationCase[] = [
     name: 'oversized_query',
     query: `t:creature ${'o:"draw" '.repeat(60)}`.trim(),
     expectedValid: false,
-    expectedIssues: ['Query truncated to 400 characters'],
+    expectedIssues: ['Query truncated to 500 characters'],
     expectedSanitizedPrefix: 't:creature o:"draw"',
-    expectedSanitizedMaxLength: 400,
+    expectedSanitizedMaxLength: 500,
     expectSanitizedValid: true,
   },
   {
@@ -221,9 +221,9 @@ export function validateQuery(query: string): {
   }
 
   // Enforce max length
-  if (sanitized.length > 400) {
-    sanitized = sanitized.substring(0, 400);
-    issues.push('Query truncated to 400 characters');
+  if (sanitized.length > 500) {
+    sanitized = sanitized.substring(0, 500);
+    issues.push('Query truncated to 500 characters');
   }
 
   // Remove potentially unsafe characters (keep common Scryfall syntax + regex for oracle/name searches)
@@ -306,6 +306,17 @@ export function validateQuery(query: string): {
       .trim();
   }
 
+  // Detect malformed nested quotes (e.g. o:"t: o:"2 mana"")
+  // These are clearly broken queries from legacy fallback — strip the broken o: clause
+  const nestedQuotePattern = /\bo:"[^"]*(?:t:|o:)[^"]*"[^"]*"/g;
+  if (nestedQuotePattern.test(sanitized)) {
+    sanitized = sanitized
+      .replace(/\bo:"[^"]*(?:t:|o:)[^"]*"[^"]*"/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    issues.push('Removed malformed nested-quote oracle clause');
+  }
+
   // Check for balanced parentheses
   let parenCount = 0;
   for (const char of sanitized) {
@@ -334,6 +345,10 @@ export function validateQuery(query: string): {
   if (nonApostropheSingleQuotes % 2 !== 0) {
     sanitized = sanitized + "'";
     issues.push('Added missing closing quote');
+  }
+
+  if (sanitized.length > 500) {
+    sanitized = sanitized.substring(0, 500);
   }
 
   sanitized = sanitized.replace(/\s+/g, ' ').trim();

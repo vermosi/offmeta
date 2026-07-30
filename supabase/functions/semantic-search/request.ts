@@ -1,4 +1,5 @@
 import { getCardNameDiagnostics } from './card-name-lookup.ts';
+import { MAX_QUERY_LENGTH } from './constants.ts';
 import { sanitizeInputQuery } from './validation.ts';
 
 type SearchRequestBody = {
@@ -75,7 +76,7 @@ export function validateSearchRequest(
     };
   }
 
-  if (query.length > 500) {
+  if (query.length > MAX_QUERY_LENGTH) {
     return {
       ok: false,
       response: new Response(

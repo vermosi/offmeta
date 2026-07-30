@@ -9,14 +9,14 @@ import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { queryToSlug, slugToQuery } from '@/lib/search-slug';
-import { buildClientFallbackQuery } from '@/lib/search/fallback';
-import { extractCardNameCandidate } from '@/lib/search/fallback';
 import { classifyFailureReason } from '@/lib/search/classifyFailure';
+import { handleZeroResultRecovery } from '@/hooks/search-recovery';
+import { extractCardNameCandidate } from '@/lib/search/fallback';
 import type {
   SearchResult,
   UnifiedSearchBarHandle,
 } from '@/components/UnifiedSearchBar';
-import { searchCards, resolveFuzzyCardName } from '@/lib/scryfall/client';
+import { searchCards } from '@/lib/scryfall/client';
 import type { ScryfallCard } from '@/types/card';
 import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';
@@ -343,152 +343,55 @@ export function useSearch() {
         });
       }
     } else if (totalCards === 0 && !isSearching && validatedSearchQuery) {
-      // Client-side no-results recovery: auto-retry with broader query
-      const source = lastSearchResult.source || 'ai';
-      const hasAttemptedRecovery = sessionStorage.getItem('offmeta_recovery_in_progress') === '1';
-
-      if (!hasAttemptedRecovery && (source === 'ai' || source === 'ai_recovered' || source === 'concept_match' || source === 'client_recovery')) {
-        // Step 1: fuzzy card-name recovery — handles typos like
-        // "atraxia" → "Atraxa, Praetors' Voice" or "cards like eterna witness"
-        // → "Eternal Witness". This is the dominant zero-result failure class.
-        const nameCandidate = extractCardNameCandidate(originalQuery);
-        if (nameCandidate && source !== 'client_recovery') {
-          sessionStorage.setItem('offmeta_recovery_in_progress', '1');
-          trackEvent('fuzzy_recovery_attempted', {
-            query: originalQuery,
-            candidate: nameCandidate,
-            request_id: currentRequestId ?? undefined,
-          });
-          void (async () => {
-            const resolved = await resolveFuzzyCardName(nameCandidate);
-            if (resolved) {
-              const fuzzyQuery = `!"${resolved}"`;
-              if (fuzzyQuery !== lastSearchResult.scryfallQuery) {
-                trackEvent('fuzzy_recovery_resolved', {
-                  query: originalQuery,
-                  candidate: nameCandidate,
-                  resolved_name: resolved,
-                  request_id: currentRequestId ?? undefined,
-                });
-                const applyFuzzy = () => {
-                  setSearchQuery(fuzzyQuery);
-                  setLastSearchResult(prev => prev ? {
-                    ...prev,
-                    scryfallQuery: fuzzyQuery,
-                    explanation: {
-                      readable: `Did you mean: ${resolved}`,
-                      assumptions: [`Fuzzy-matched "${nameCandidate}" to "${resolved}"`],
-                      confidence: 0.85,
-                    },
-                    source: 'client_recovery',
-                  } : prev);
-                  queryClient.invalidateQueries({
-                    queryKey: ['cards', fuzzyQuery, scryfallLang],
-                  });
-                };
-
-                toast.info(`Did you mean “${resolved}”?`, {
-                  description: `We couldn't find "${nameCandidate}". Switching to ${fuzzyQuery}`,
-                  duration: 7000,
-                  action: {
-                    label: 'Show results',
-                    onClick: applyFuzzy,
-                  },
-                });
-                applyFuzzy();
-                return;
-              }
-            }
-
-            trackEvent('fuzzy_recovery_failed', {
-              query: originalQuery,
-              candidate: nameCandidate,
-              request_id: currentRequestId ?? undefined,
-            });
-
-            // Fuzzy failed — fall through to broaden-and-retry
-            sessionStorage.removeItem('offmeta_recovery_in_progress');
-            const fallbackQuery = buildClientFallbackQuery(originalQuery);
-            if (fallbackQuery && fallbackQuery !== lastSearchResult.scryfallQuery) {
-              sessionStorage.setItem('offmeta_recovery_in_progress', '1');
-              toast.info('Trying a broader search...', {
-                description: 'The initial translation returned no results.',
-                duration: 4000,
-              });
-              setSearchQuery(fallbackQuery);
-              setLastSearchResult(prev => prev ? {
-                ...prev,
-                scryfallQuery: fallbackQuery,
-                explanation: {
-                  readable: `Broadened search for: ${originalQuery}`,
-                  assumptions: ['Original AI translation returned 0 results — using simplified search'],
-                  confidence: 0.6,
-                },
-                source: 'client_recovery',
-              } : prev);
-              queryClient.invalidateQueries({
-                queryKey: ['cards', fallbackQuery, scryfallLang],
-              });
-            }
-          })();
-          return; // Skip tracking — will re-trigger when results arrive
+      const hasAttemptedRecovery =
+        sessionStorage.getItem('offmeta_recovery_in_progress') === '1';
+      void (async () => {
+        const handled = await handleZeroResultRecovery(
+          {
+            originalQuery,
+            currentResult: lastSearchResult,
+            currentRequestId,
+            scryfallLang,
+            queryClient,
+            setSearchQuery,
+            setLastSearchResult,
+            trackEvent,
+          },
+          hasAttemptedRecovery,
+        );
+        if (handled.handled || !hasAttemptedRecovery) {
+          return;
         }
 
-        const fallbackQuery = buildClientFallbackQuery(originalQuery);
-        if (fallbackQuery && fallbackQuery !== lastSearchResult.scryfallQuery) {
-          sessionStorage.setItem('offmeta_recovery_in_progress', '1');
-          toast.info('Trying a broader search...', {
-            description: 'The initial translation returned no results.',
-            duration: 4000,
-          });
-          // Re-execute with the fallback query — deferred to avoid synchronous setState in effect
-          queueMicrotask(() => {
-            setSearchQuery(fallbackQuery);
-            setLastSearchResult(prev => prev ? {
-              ...prev,
-              scryfallQuery: fallbackQuery,
-              explanation: {
-                readable: `Broadened search for: ${originalQuery}`,
-                assumptions: ['Original AI translation returned 0 results — using simplified search'],
-                confidence: 0.6,
-              },
-              source: 'client_recovery',
-            } : prev);
-            queryClient.invalidateQueries({
-              queryKey: ['cards', fallbackQuery, scryfallLang],
-            });
-          });
-          return; // Skip tracking — will re-trigger when results arrive
-        }
-      }
-
-      const failureReason = classifyFailureReason(originalQuery);
-      const fuzzyAttempted = extractCardNameCandidate(originalQuery) !== null;
-      trackSearchFailure({
-        query: originalQuery,
-        translated_query: lastSearchResult.scryfallQuery,
-        error_type: 'zero_results',
-        failure_reason: failureReason,
-        fuzzy_attempted: fuzzyAttempted,
-        // If we reached the terminal failure event after a fuzzy attempt,
-        // the resolver did not rescue this query.
-        fuzzy_resolved: false,
-      });
-      trackEvent('search_no_result_shown', {
-        query: originalQuery,
-        failure_reason: failureReason,
-        request_id: currentRequestId ?? undefined,
-      });
-      queueMicrotask(() => {
-        setStruggleCount((count) => {
-          const nextCount = count + 1;
-          trackEvent('guided_suggestion_shown', {
-            query: originalQuery,
-            struggle_count: nextCount,
-          });
-          return nextCount;
+        const failureReason = classifyFailureReason(originalQuery);
+        const fuzzyAttempted = extractCardNameCandidate(originalQuery) !== null;
+        trackSearchFailure({
+          query: originalQuery,
+          translated_query: lastSearchResult.scryfallQuery,
+          error_type: 'zero_results',
+          failure_reason: failureReason,
+          fuzzy_attempted: fuzzyAttempted,
+          // If we reached the terminal failure event after a fuzzy attempt,
+          // the resolver did not rescue this query.
+          fuzzy_resolved: false,
         });
-      });
+        trackEvent('search_no_result_shown', {
+          query: originalQuery,
+          failure_reason: failureReason,
+          request_id: currentRequestId ?? undefined,
+        });
+        queueMicrotask(() => {
+          setStruggleCount((count) => {
+            const nextCount = count + 1;
+            trackEvent('guided_suggestion_shown', {
+              query: originalQuery,
+              struggle_count: nextCount,
+            });
+            return nextCount;
+          });
+        });
+      })();
+      return;
     }
   }, [
     totalCards,
