@@ -96,16 +96,6 @@ export function DeckIdeasPanel({ data, isLoading, query: _query }: DeckIdeasPane
       <CardList title="Synergy Pieces" icon={Puzzle} cards={data.synergyPieces} />
       <CardList title="Budget Options" icon={DollarSign} cards={data.budgetOptions} />
 
-      {/* CTA to build in deckbuilder */}
-      <div className="text-center pt-2">
-        <a
-          href="/deckbuilder"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
-        >
-          <Puzzle className="h-4 w-4" />
-          Start Building This Deck
-        </a>
-      </div>
     </div>
   );
 }

@@ -108,21 +108,7 @@ const NotFound = () => {
                 )}
               </p>
             </Link>
-            <Link
-              to="/decks"
-              className="rounded-lg border border-border/70 bg-card/70 p-4 transition-colors hover:border-border"
-            >
-              <p className="text-sm font-medium text-foreground">
-                {t('notFound.browseDecks', 'Browse decks')}
-              </p>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                {t(
-                  'notFound.browseDecksDescription',
-                  'Jump into community decks and use cases for inspiration.',
-                )}
-              </p>
-            </Link>
-          </div>
+                      </div>
         </div>
       </main>
 

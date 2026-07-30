@@ -29,7 +29,6 @@ export default function DocsIndex() {
         'Scryfall syntax cheat sheet',
         'natural language MTG search',
         'Magic: The Gathering search reference',
-        'MTG deckbuilder docs',
       ],
     });
     const cleanupLd = injectJsonLd({
@@ -77,24 +76,6 @@ export default function DocsIndex() {
         ),
         href: '/market',
         icon: TrendingUp,
-      },
-      {
-        title: t('docs.deckBuilderTitle', 'Deck Builder'),
-        description: t(
-          'docs.deckBuilderDesc',
-          'Build, save, and share MTG decks with full format validation and card suggestions.',
-        ),
-        href: '/deckbuilder',
-        icon: FileText,
-      },
-      {
-        title: t('docs.communityDecksTitle', 'Browse Community Decks'),
-        description: t(
-          'docs.communityDecksDesc',
-          'Explore tournament and community-submitted decks across all formats.',
-        ),
-        href: '/decks',
-        icon: BookOpen,
       },
       {
         title: t('docs.comboFinderTitle', 'Combo Finder'),
