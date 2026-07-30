@@ -10,7 +10,7 @@ import { ShoppingCart, Loader2, Sparkles, Monitor } from 'lucide-react';
 import { getTCGPlayerUrl, getCardmarketUrl } from '@/lib/scryfall/printings';
 import type { CardModalPurchaseLinksProps } from './types';
 import { useTranslation } from '@/lib/i18n';
-import { PriceSparkline } from '@/components/PriceSparkline';
+import { CardPriceSparkline } from '@/components/CardPriceSparkline';
 
 export function CardModalPurchaseLinks({
   card,
@@ -43,7 +43,7 @@ export function CardModalPurchaseLinks({
           <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
             {buyLabel}
           </h3>
-          <PriceSparkline cardName={card.name} />
+          <CardPriceSparkline cardName={card.name} />
         </div>
         <div className="grid grid-cols-2 gap-2">
           {displayPrices.usd && (
@@ -150,7 +150,7 @@ export function CardModalPurchaseLinks({
         <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
           {buyLabel}
         </h3>
-        <PriceSparkline cardName={card.name} />
+        <CardPriceSparkline cardName={card.name} />
       </div>
       <div className="space-y-1.5">
         {displayPrices.usd && (

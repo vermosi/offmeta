@@ -179,7 +179,7 @@ export function SearchResultsArea({
       queryQualityScore,
       queryConfidence,
       querySampleSize,
-      collectionLookup = EMPTY_COLLECTION_LOOKUP,
+      collectionLookup,
       hadFastClick,
       hadRefinement,
       user,

@@ -13,7 +13,7 @@ import { Footer } from '@/components/Footer';
 import { SunsetBanner } from '@/components/SunsetBanner';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PriceSparkline } from '@/components/PriceSparkline';
+import { CardPriceSparkline } from '@/components/CardPriceSparkline';
 import { useMarketTrends, type PriceMover } from '@/hooks';
 import { useNoIndex } from '@/hooks';
 import { cardNameToSlug } from '@/lib/card-slug';
@@ -208,7 +208,7 @@ function MoverRow({ mover }: { mover: PriceMover }) {
         </div>
       </div>
       <div className="hidden sm:block">
-        <PriceSparkline cardName={mover.card_name} demo />
+        <CardPriceSparkline cardName={mover.card_name} />
       </div>
       <span className="text-xs text-muted-foreground tabular-nums text-right hidden sm:block">
         ${mover.previous_price.toFixed(2)}
