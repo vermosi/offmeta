@@ -178,10 +178,7 @@ serve(withLogging('price-snapshot', async (req: Request): Promise<Response> => {
       JSON.stringify({
         success: true,
         snapshotCount: snapshots.length,
-        0,
         sources: {
-          collection: collectionCards?.length ?? 0,
-          alerts: alertCards?.length ?? 0,
           uniqueTracked: cardList.length,
         },
       }),
