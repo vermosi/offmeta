@@ -4,11 +4,16 @@ import {
   mockBoltSearchAPIs,
   searchForCard,
   SEARCH_INPUT_SELECTOR,
+  resetSearchRateLimitState,
 } from './fixtures/mock-helpers';
 
 const CARD_SELECTOR = '[data-testid="search-result-card"]';
 
 test.describe('Search Flow', () => {
+  test.beforeEach(() => {
+    resetSearchRateLimitState();
+  });
+
   test('page loads and search input is visible @e2e-smoke', async ({ page }) => {
     await page.goto('/');
     const searchInput = page.locator(SEARCH_INPUT_SELECTOR).first();

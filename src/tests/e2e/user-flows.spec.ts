@@ -3,6 +3,7 @@ import {
   mockBoltSearchAPIs,
   mockSearchAPIs,
   searchForCard,
+  resetSearchRateLimitState,
 } from './fixtures/mock-helpers';
 
 const SEARCH_INPUT_SELECTOR = '#search-input';
@@ -13,6 +14,10 @@ const CARD_SELECTOR = '[data-testid="search-result-card"]';
 /* ------------------------------------------------------------------ */
 
 test.describe('User Flows', () => {
+  test.beforeEach(() => {
+    resetSearchRateLimitState();
+  });
+
   test('clicking an example chip fills the input and triggers search', async ({
     page,
   }) => {
@@ -45,6 +50,7 @@ test.describe('User Flows', () => {
     const searchInput = page.locator(SEARCH_INPUT_SELECTOR).first();
     await expect(searchInput).toBeVisible({ timeout: 15_000 });
 
+    await searchInput.click();
     await searchInput.fill('test query');
     await expect(searchInput).toHaveValue('test query');
 
@@ -66,6 +72,7 @@ test.describe('User Flows', () => {
     await expect(searchButton).toBeVisible();
 
     // Button is disabled when input is empty; type something to enable it
+    await searchInput.click();
     await searchInput.fill('test');
     await expect(searchButton).toBeEnabled({ timeout: 3_000 });
   });

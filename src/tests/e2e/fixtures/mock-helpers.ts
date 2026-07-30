@@ -13,6 +13,8 @@ import {
 } from './mock-responses';
 import { resetSearchRateLimitState } from '@/hooks/useSearchQuery';
 
+export { resetSearchRateLimitState };
+
 const SEARCH_INPUT_SELECTOR = '#search-input:visible';
 const SEARCH_RESULT_CARD_SELECTOR = '[role="button"][aria-label^="View details for"]';
 
@@ -73,6 +75,7 @@ export async function searchForCard(page: Page, query: string) {
   });
   await expect(searchInput).toBeVisible({ timeout: 15_000 });
 
+  await searchInput.click();
   await searchInput.fill(query);
   await searchForm.getByTestId('search-submit-button').click();
 
