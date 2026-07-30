@@ -19,6 +19,7 @@ export default function LandingPage() {
       __openAuthModal?: () => void;
     };
     win.__openAuthModal = () => setAuthModalOpen(true);
+    document.body.style.overflow = '';
     return () => {
       delete win.__openAuthModal;
     };
@@ -34,7 +35,7 @@ export default function LandingPage() {
 
   return (
     <main className="min-h-screen bg-background">
-      <section className="relative overflow-hidden pb-12 pt-10 sm:pb-16 sm:pt-16 lg:pt-20">
+      <section className="relative overflow-visible pb-12 pt-10 sm:pb-16 sm:pt-16 lg:pt-20">
         <div
           className="pointer-events-none absolute inset-0 bg-gradient-to-b from-accent/10 via-transparent to-transparent"
           aria-hidden="true"
@@ -56,7 +57,7 @@ export default function LandingPage() {
             AI-powered MTG discovery engine
           </div>
 
-          <h1 className="mx-auto mb-4 max-w-5xl text-4xl font-semibold tracking-tight text-foreground sm:text-6xl lg:text-7xl">
+          <h1 className="mx-auto mb-4 max-w-4xl text-4xl font-semibold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
             Search Magic cards in{' '}
             <span className="text-aurora">plain English</span>
           </h1>

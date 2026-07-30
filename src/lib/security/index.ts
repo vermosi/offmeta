@@ -22,7 +22,7 @@ export const SECURITY_LIMITS = Object.freeze({
   /** IP-based rate limit per minute */
   IP_RATE_LIMIT: 30,
   /** Session-based rate limit per minute */
-  SESSION_RATE_LIMIT: 20,
+  SESSION_RATE_LIMIT: 60,
   /** Global rate limit per minute */
   GLOBAL_RATE_LIMIT: 1000,
   /** Rate limit window in milliseconds */

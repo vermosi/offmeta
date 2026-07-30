@@ -71,7 +71,7 @@ let globalResetTime = Date.now() + 60000;
 let sharedRateLimitClientPromise: Promise<SupabaseClientLike | null> | null = null;
 
 // Session rate limiting: stricter limits per session to prevent abuse loops
-const SESSION_LIMIT = 20; // 20 requests per minute per session
+const SESSION_LIMIT = 60; // Keep session limit looser than client UX throttling
 const SESSION_WINDOW_MS = 60000;
 
 /**

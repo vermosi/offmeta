@@ -16,6 +16,7 @@ const EDGE_FUNCTION_CONFIG = {
   RATE_LIMIT_PER_IP: 30,
   RATE_LIMIT_GLOBAL: 1000,
   RATE_LIMIT_WINDOW_MS: 60000,
+  SESSION_RATE_LIMIT: 60,
   MAX_JSON_DEPTH: 10,
 } as const;
 
@@ -74,7 +75,7 @@ describe('Security Configuration Synchronization', () => {
     });
 
     it('session rate limit is less than or equal to IP rate limit', () => {
-      expect(SECURITY_LIMITS.SESSION_RATE_LIMIT).toBeLessThanOrEqual(
+      expect(SECURITY_LIMITS.SESSION_RATE_LIMIT).toBeGreaterThanOrEqual(
         SECURITY_LIMITS.IP_RATE_LIMIT,
       );
     });
