@@ -14,42 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      ai_usage_logs: {
-        Row: {
-          completion_tokens: number
-          created_at: string
-          duration_ms: number
-          function_name: string
-          id: string
-          model: string
-          prompt_tokens: number
-          retries: number
-          total_tokens: number
-        }
-        Insert: {
-          completion_tokens?: number
-          created_at?: string
-          duration_ms?: number
-          function_name: string
-          id?: string
-          model: string
-          prompt_tokens?: number
-          retries?: number
-          total_tokens?: number
-        }
-        Update: {
-          completion_tokens?: number
-          created_at?: string
-          duration_ms?: number
-          function_name?: string
-          id?: string
-          model?: string
-          prompt_tokens?: number
-          retries?: number
-          total_tokens?: number
-        }
-        Relationships: []
-      }
       analytics_events: {
         Row: {
           created_at: string
@@ -233,39 +197,6 @@ export type Database = {
         }
         Relationships: []
       }
-      collection_cards: {
-        Row: {
-          card_name: string
-          created_at: string
-          foil: boolean
-          id: string
-          quantity: number
-          scryfall_id: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          card_name: string
-          created_at?: string
-          foil?: boolean
-          id?: string
-          quantity?: number
-          scryfall_id?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          card_name?: string
-          created_at?: string
-          foil?: boolean
-          id?: string
-          quantity?: number
-          scryfall_id?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       community_deck_cards: {
         Row: {
           board: string
@@ -394,312 +325,6 @@ export type Database = {
           source?: string
           title?: string
           updated_at?: string
-        }
-        Relationships: []
-      }
-      deck_cards: {
-        Row: {
-          board: string
-          card_name: string
-          category: string | null
-          created_at: string
-          deck_id: string
-          id: string
-          is_commander: boolean
-          is_companion: boolean
-          quantity: number
-          scryfall_id: string | null
-        }
-        Insert: {
-          board?: string
-          card_name: string
-          category?: string | null
-          created_at?: string
-          deck_id: string
-          id?: string
-          is_commander?: boolean
-          is_companion?: boolean
-          quantity?: number
-          scryfall_id?: string | null
-        }
-        Update: {
-          board?: string
-          card_name?: string
-          category?: string | null
-          created_at?: string
-          deck_id?: string
-          id?: string
-          is_commander?: boolean
-          is_companion?: boolean
-          quantity?: number
-          scryfall_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "deck_cards_deck_id_fkey"
-            columns: ["deck_id"]
-            isOneToOne: false
-            referencedRelation: "decks"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "deck_cards_deck_id_fkey"
-            columns: ["deck_id"]
-            isOneToOne: false
-            referencedRelation: "decks_public"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      deck_comments: {
-        Row: {
-          body: string
-          created_at: string
-          deck_id: string
-          id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          body: string
-          created_at?: string
-          deck_id: string
-          id?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          body?: string
-          created_at?: string
-          deck_id?: string
-          id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      deck_tags: {
-        Row: {
-          created_at: string
-          deck_id: string
-          id: string
-          tag: string
-        }
-        Insert: {
-          created_at?: string
-          deck_id: string
-          id?: string
-          tag: string
-        }
-        Update: {
-          created_at?: string
-          deck_id?: string
-          id?: string
-          tag?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "deck_tags_deck_id_fkey"
-            columns: ["deck_id"]
-            isOneToOne: false
-            referencedRelation: "decks"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "deck_tags_deck_id_fkey"
-            columns: ["deck_id"]
-            isOneToOne: false
-            referencedRelation: "decks_public"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      deck_votes: {
-        Row: {
-          created_at: string
-          deck_id: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          deck_id: string
-          id?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          deck_id?: string
-          id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      decks: {
-        Row: {
-          card_count: number
-          color_identity: string[]
-          commander_name: string | null
-          companion_name: string | null
-          created_at: string
-          description: string | null
-          format: string
-          id: string
-          is_public: boolean
-          name: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          card_count?: number
-          color_identity?: string[]
-          commander_name?: string | null
-          companion_name?: string | null
-          created_at?: string
-          description?: string | null
-          format?: string
-          id?: string
-          is_public?: boolean
-          name?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          card_count?: number
-          color_identity?: string[]
-          commander_name?: string | null
-          companion_name?: string | null
-          created_at?: string
-          description?: string | null
-          format?: string
-          id?: string
-          is_public?: boolean
-          name?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      email_send_log: {
-        Row: {
-          created_at: string
-          error_message: string | null
-          id: string
-          message_id: string | null
-          metadata: Json | null
-          recipient_email: string
-          status: string
-          template_name: string
-        }
-        Insert: {
-          created_at?: string
-          error_message?: string | null
-          id?: string
-          message_id?: string | null
-          metadata?: Json | null
-          recipient_email: string
-          status: string
-          template_name: string
-        }
-        Update: {
-          created_at?: string
-          error_message?: string | null
-          id?: string
-          message_id?: string | null
-          metadata?: Json | null
-          recipient_email?: string
-          status?: string
-          template_name?: string
-        }
-        Relationships: []
-      }
-      email_send_state: {
-        Row: {
-          auth_email_ttl_minutes: number
-          batch_size: number
-          id: number
-          retry_after_until: string | null
-          send_delay_ms: number
-          transactional_email_ttl_minutes: number
-          updated_at: string
-        }
-        Insert: {
-          auth_email_ttl_minutes?: number
-          batch_size?: number
-          id?: number
-          retry_after_until?: string | null
-          send_delay_ms?: number
-          transactional_email_ttl_minutes?: number
-          updated_at?: string
-        }
-        Update: {
-          auth_email_ttl_minutes?: number
-          batch_size?: number
-          id?: number
-          retry_after_until?: string | null
-          send_delay_ms?: number
-          transactional_email_ttl_minutes?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      email_unsubscribe_tokens: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          token: string
-          used_at: string | null
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-          token: string
-          used_at?: string | null
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          token?: string
-          used_at?: string | null
-        }
-        Relationships: []
-      }
-      price_alerts: {
-        Row: {
-          card_name: string
-          created_at: string
-          direction: string
-          id: string
-          is_active: boolean
-          scryfall_id: string | null
-          target_price: number
-          triggered_at: string | null
-          user_id: string
-        }
-        Insert: {
-          card_name: string
-          created_at?: string
-          direction?: string
-          id?: string
-          is_active?: boolean
-          scryfall_id?: string | null
-          target_price: number
-          triggered_at?: string | null
-          user_id: string
-        }
-        Update: {
-          card_name?: string
-          created_at?: string
-          direction?: string
-          id?: string
-          is_active?: boolean
-          scryfall_id?: string | null
-          target_price?: number
-          triggered_at?: string | null
-          user_id?: string
         }
         Relationships: []
       }
@@ -880,44 +505,6 @@ export type Database = {
         }
         Relationships: []
       }
-      saved_searches: {
-        Row: {
-          created_at: string
-          filters_snapshot: Json | null
-          id: string
-          label: string | null
-          natural_query: string
-          scryfall_query: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          filters_snapshot?: Json | null
-          id?: string
-          label?: string | null
-          natural_query: string
-          scryfall_query?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          filters_snapshot?: Json | null
-          id?: string
-          label?: string | null
-          natural_query?: string
-          scryfall_query?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "saved_searches_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       search_feedback: {
         Row: {
           created_at: string
@@ -1025,30 +612,6 @@ export type Database = {
         }
         Relationships: []
       }
-      suppressed_emails: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          metadata: Json | null
-          reason: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-          metadata?: Json | null
-          reason: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          metadata?: Json | null
-          reason?: string
-        }
-        Relationships: []
-      }
       translation_logs: {
         Row: {
           confidence_score: number | null
@@ -1147,39 +710,6 @@ export type Database = {
           },
         ]
       }
-      user_notifications: {
-        Row: {
-          body: string | null
-          created_at: string
-          id: string
-          metadata: Json | null
-          read: boolean
-          title: string
-          type: string
-          user_id: string
-        }
-        Insert: {
-          body?: string | null
-          created_at?: string
-          id?: string
-          metadata?: Json | null
-          read?: boolean
-          title: string
-          type?: string
-          user_id: string
-        }
-        Update: {
-          body?: string | null
-          created_at?: string
-          id?: string
-          metadata?: Json | null
-          read?: boolean
-          title?: string
-          type?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_roles: {
         Row: {
           id: string
@@ -1212,48 +742,6 @@ export type Database = {
         }
         Relationships: []
       }
-      decks_public: {
-        Row: {
-          card_count: number | null
-          color_identity: string[] | null
-          commander_name: string | null
-          companion_name: string | null
-          created_at: string | null
-          description: string | null
-          format: string | null
-          id: string | null
-          is_public: boolean | null
-          name: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          card_count?: number | null
-          color_identity?: string[] | null
-          commander_name?: string | null
-          companion_name?: string | null
-          created_at?: string | null
-          description?: string | null
-          format?: string | null
-          id?: string | null
-          is_public?: boolean | null
-          name?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          card_count?: number | null
-          color_identity?: string[] | null
-          commander_name?: string | null
-          companion_name?: string | null
-          created_at?: string | null
-          description?: string | null
-          format?: string | null
-          id?: string | null
-          is_public?: boolean | null
-          name?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
     }
     Functions: {
       apply_query_signal: {
@@ -1267,7 +755,6 @@ export type Database = {
         }
         Returns: undefined
       }
-      check_price_alerts: { Args: never; Returns: undefined }
       cleanup_expired_cache: { Args: never; Returns: undefined }
       compute_query_quality: {
         Args: {
@@ -1289,7 +776,6 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
-      email_queue_dispatch: { Args: never; Returns: undefined }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
@@ -1313,7 +799,6 @@ export type Database = {
         }[]
       }
       get_conversion_funnel: { Args: { days_back?: number }; Returns: Json }
-      get_deck_vote_count: { Args: { target_deck_id: string }; Returns: number }
       get_edge_function_status: {
         Args: never
         Returns: {
@@ -1364,10 +849,6 @@ export type Database = {
           query: string
           top_translation: string
         }[]
-      }
-      get_public_collection_stats: {
-        Args: { target_user_id: string }
-        Returns: Json
       }
       get_query_intelligence: {
         Args: { p_query: string }
