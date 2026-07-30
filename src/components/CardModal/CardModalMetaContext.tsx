@@ -19,9 +19,6 @@ import {
 
 export interface CardModalMetaContextProps {
   card: ScryfallCard;
-  oracleId?: string;
-  onCardClick?: (cardName: string) => void;
-  isMobile?: boolean;
 }
 
 const TIER_BADGE_VARIANT: Record<string, 'default' | 'success' | 'warning' | 'info' | 'secondary' | 'outline'> = {
@@ -43,7 +40,7 @@ const FORMAT_DISPLAY: Record<string, string> = {
   brawl: 'Brawl',
 };
 
-export function CardModalMetaContext({ card, oracleId, onCardClick, isMobile }: CardModalMetaContextProps) {
+export function CardModalMetaContext({ card }: CardModalMetaContextProps) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(true);
 

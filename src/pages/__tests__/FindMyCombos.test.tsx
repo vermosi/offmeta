@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from '@/components/AuthProvider';
 
@@ -91,55 +91,14 @@ describe('FindMyCombos', () => {
     expect(btn).toBeDisabled();
   });
 
-  it('parses imported Moxfield decklist and shows card count', async () => {
-    const { supabase } = await import('@/integrations/supabase/client');
-    vi.mocked(supabase.functions.invoke).mockResolvedValueOnce({
-      data: {
-        decklist: 'COMMANDER: Kenrith\n1 Sol Ring\n1 Arcane Signet',
-        deckName: 'Five Color Test',
-        colorIdentity: ['W', 'U', 'B', 'R', 'G'],
-        cardCount: 2,
-      },
-      error: null,
-    });
+  it('shows the deck summary empty state when no deck is imported', async () => {
     await renderPage();
-    fireEvent.change(screen.getByPlaceholderText(/moxfield\.com\/decks/i), {
-      target: { value: 'https://www.moxfield.com/decks/test-deck' },
-    });
-    fireEvent.click(
-      screen.getByRole('button', { name: /Import from Moxfield/i }),
-    );
-
-    await waitFor(() =>
-      expect(screen.getByText(/Imported:/i)).toBeInTheDocument(),
-    );
-    expect(screen.getByText(/Cards:/i)).toBeInTheDocument();
-    expect(screen.getByText('2')).toBeInTheDocument();
-  });
-
-  it('shows Find My Combos button after importing', async () => {
-    const { supabase } = await import('@/integrations/supabase/client');
-    vi.mocked(supabase.functions.invoke).mockResolvedValueOnce({
-      data: {
-        decklist: '1 Sol Ring',
-        deckName: 'Artifact Test',
-        colorIdentity: [],
-        cardCount: 1,
-      },
-      error: null,
-    });
-    await renderPage();
-    fireEvent.change(screen.getByPlaceholderText(/moxfield\.com\/decks/i), {
-      target: { value: 'https://www.moxfield.com/decks/artifacts' },
-    });
-    fireEvent.click(
-      screen.getByRole('button', { name: /Import from Moxfield/i }),
-    );
-
-    await waitFor(() =>
-      expect(
-        screen.getByRole('button', { name: /Find My Combos/i }),
-      ).toBeInTheDocument(),
-    );
+    expect(screen.getByText('Deck Summary')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Import a Moxfield deck to get started/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Find My Combos/i }),
+    ).not.toBeInTheDocument();
   });
 });

@@ -9,6 +9,21 @@
 import { describe, it, expect } from 'vitest';
 import { buildMockCards } from './index';
 
+function buildVirtualizedRowKey(
+  sourceCards: ReturnType<typeof buildMockCards>,
+  sourceColumns: number,
+  sourceCardHeight: number,
+  index: number,
+): string {
+  const startIndex = index * sourceColumns;
+  const rowCardIds = sourceCards
+    .slice(startIndex, startIndex + sourceColumns)
+    .map((card) => card.id)
+    .join('|');
+
+  return `${sourceColumns}-${sourceCardHeight}-${index}-${rowCardIds}`;
+}
+
 // ============================================================================
 // UI_VIRT Tests: Virtualized Card Grid
 // ============================================================================
@@ -72,21 +87,6 @@ describe('Regression: UI_VIRT - Virtualization', () => {
       const cards = buildMockCards(8);
       const columns = 4;
       const cardHeight = 280;
-
-      const buildVirtualizedRowKey = (
-        sourceCards: typeof cards,
-        sourceColumns: number,
-        sourceCardHeight: number,
-        index: number,
-      ): string => {
-        const startIndex = index * sourceColumns;
-        const rowCardIds = sourceCards
-          .slice(startIndex, startIndex + sourceColumns)
-          .map((card) => card.id)
-          .join('|');
-
-        return `${sourceColumns}-${sourceCardHeight}-${index}-${rowCardIds}`;
-      };
 
       const originalRow0Key = buildVirtualizedRowKey(cards, columns, cardHeight, 0);
       const originalRow1Key = buildVirtualizedRowKey(cards, columns, cardHeight, 1);

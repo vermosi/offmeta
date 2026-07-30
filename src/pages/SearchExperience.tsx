@@ -161,7 +161,7 @@ const Index = () => {
     trackFirstReturnVisit,
     trackEvent,
   } = useAnalytics();
-  const { user } = useAuth();
+  useAuth();
   const lastTrackedRouteRef = useRef<string | null>(null);
 
   const {

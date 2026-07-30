@@ -58,6 +58,7 @@ export function createMockTranslation(
   };
 }
 
+/**
  * Create a valid FilterState object for filter tests.
  * Override any field via the `overrides` parameter.
  */

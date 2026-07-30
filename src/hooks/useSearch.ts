@@ -7,10 +7,9 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import { queryToSlug, slugToQuery } from '@/lib/search-slug';
 import { classifyFailureReason } from '@/lib/search/classifyFailure';
-import { handleZeroResultRecovery } from '@/hooks/search-recovery';
+import { handleZeroResultRecovery } from '@/hooks/searchRecovery';
 import { extractCardNameCandidate } from '@/lib/search/fallback';
 import type {
   SearchResult,
