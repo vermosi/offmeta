@@ -58,7 +58,7 @@ export function ScryfallComparison({ onTrySearch }: ScryfallComparisonProps) {
     >
       <div className="container-main">
         <div className="text-center mb-8 sm:mb-10">
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-medium border border-border/60 bg-card/50 text-muted-foreground mb-3">
+          <span className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/80 px-3 py-1 text-[11px] font-medium text-muted-foreground mb-3">
             {t(
               'compare.pill',
               'Scryfall power, plain English',
@@ -89,7 +89,7 @@ export function ScryfallComparison({ onTrySearch }: ScryfallComparisonProps) {
               </p>
               <div className="grid gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-stretch">
                 {/* Raw Scryfall column */}
-                <div className="rounded-2xl border border-border/60 bg-card/40 p-5 transition-colors group-hover:bg-card/60">
+                <div className="rounded-2xl border border-border/70 bg-card/80 p-5 transition-colors group-hover:bg-card">
                   <div className="flex items-center gap-1.5 mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">
                     <Type className="h-3 w-3" aria-hidden="true" />
                     {t('compare.rawLabel', 'Raw Scryfall')}
@@ -103,13 +103,13 @@ export function ScryfallComparison({ onTrySearch }: ScryfallComparisonProps) {
                   className="hidden sm:flex items-center justify-center"
                   aria-hidden="true"
                 >
-                  <div className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-[10px] font-bold text-muted-foreground">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full border border-border/70 bg-card text-[10px] font-bold text-muted-foreground">
                     VS
                   </div>
                 </div>
 
                 {/* OffMeta column */}
-                <div className="rounded-2xl border border-accent/25 bg-accent/[0.06] p-5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.04)] transition-colors group-hover:border-accent/50 group-hover:bg-accent/10">
+                <div className="rounded-2xl border border-accent/25 bg-accent/[0.08] p-5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.04)] transition-colors group-hover:border-accent/50 group-hover:bg-accent/12">
                   <div className="flex items-center gap-1.5 mb-3 text-[10px] font-bold uppercase tracking-widest text-accent">
                     <Search className="h-3 w-3" aria-hidden="true" />
                     {t('compare.offmetaLabel', 'OffMeta')}

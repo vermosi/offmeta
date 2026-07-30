@@ -124,17 +124,17 @@ export default function DocsIndex() {
       <Header />
 
       <main id="main-content" className="flex-1 container-main py-10 sm:py-14 lg:py-20">
-        <div className="max-w-2xl mx-auto space-y-10">
+        <div className="mx-auto max-w-2xl space-y-10">
           <header className="space-y-4 text-center">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-foreground">
+            <h1 className="text-3xl font-semibold text-foreground sm:text-4xl lg:text-5xl">
               {t('docs.pageTitle', 'OffMeta Documentation')}
             </h1>
-            <p className="text-lg text-muted-foreground max-w-lg mx-auto">
+            <p className="mx-auto max-w-lg text-lg text-muted-foreground">
               {t('docs.subtitle')}
             </p>
           </header>
 
-          <section className="prose prose-sm prose-invert max-w-none text-muted-foreground space-y-3 text-sm leading-relaxed border-b border-border/30 pb-8">
+          <section className="prose prose-sm prose-invert max-w-none space-y-3 border-b border-border/30 pb-8 text-sm leading-relaxed text-muted-foreground">
             <p>
               {t(
                 'docs.intro1',
@@ -177,20 +177,20 @@ export default function DocsIndex() {
                 <Link
                   key={section.href}
                   to={section.href}
-                  className="group flex items-start gap-4 p-5 rounded-xl border border-border/50 bg-card hover:border-primary/30 hover:bg-primary/5 transition-all duration-200"
+                  className="group flex items-start gap-4 rounded-xl border border-border/70 bg-card/85 p-5 transition-colors hover:border-primary/30 hover:bg-primary/5"
                 >
-                  <div className="mt-0.5 flex-shrink-0 h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                  <div className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors">
+                    <h2 className="text-base font-semibold text-foreground transition-colors group-hover:text-primary">
                       {section.title}
                     </h2>
-                    <p className="text-sm text-muted-foreground mt-0.5">
+                    <p className="mt-0.5 text-sm text-muted-foreground">
                       {section.description}
                     </p>
                   </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground/50 group-hover:text-primary transition-colors mt-1 flex-shrink-0" />
+                  <ChevronRight className="mt-1 h-5 w-5 flex-shrink-0 text-muted-foreground/50 transition-colors group-hover:text-primary" />
                 </Link>
               );
             })}
@@ -198,12 +198,12 @@ export default function DocsIndex() {
 
           <section className="space-y-3">
             <h2 className="text-lg font-semibold text-foreground">{t('docs.allGuides')}</h2>
-            <div className="grid sm:grid-cols-2 gap-2">
+            <div className="grid gap-2 sm:grid-cols-2">
               {GUIDES.map((guide) => (
                 <Link
                   key={guide.slug}
                   to={`/guides/${guide.slug}`}
-                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground"
                 >
                   <span>{t(`guide.title.${guide.slug}`, guide.title)}</span>
                 </Link>

@@ -245,14 +245,14 @@ export function SearchFilters({
         <SelectTrigger
           aria-label={t('filters.format', 'Format')}
           className={cn(
-            'w-[110px] sm:w-[140px] h-8 sm:h-9 text-xs sm:text-sm',
+            'h-8 w-[110px] text-xs sm:h-9 sm:w-[140px] sm:text-sm',
             filters.format && 'border-primary/50 bg-primary/5',
           )}
         >
           <Shield className="h-3.5 w-3.5 mr-1 opacity-50 shrink-0" />
           <SelectValue placeholder="Format" />
         </SelectTrigger>
-        <SelectContent className="z-50 bg-popover border border-border shadow-lg">
+        <SelectContent className="z-50 border border-border/70 bg-popover shadow-lg">
           <SelectItem value="__none__" className="text-xs sm:text-sm text-muted-foreground">
             All Formats
           </SelectItem>
@@ -293,7 +293,7 @@ export function SearchFilters({
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-80 p-4 z-50 bg-popover border border-border shadow-lg"
+          className="z-50 w-80 border border-border/70 bg-popover p-4 shadow-lg"
           align="start"
           sideOffset={8}
         >
@@ -453,7 +453,7 @@ export function SearchFilters({
           setFilters((prev) => ({ ...prev, sortBy: value }))
         }
       >
-        <SelectTrigger aria-label={t('filters.sort')} className="w-[130px] sm:w-[160px] h-8 sm:h-9 text-xs sm:text-sm">
+        <SelectTrigger aria-label={t('filters.sort')} className="h-8 w-[130px] text-xs sm:h-9 sm:w-[160px] sm:text-sm">
           <ArrowUpDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2 opacity-50 shrink-0" />
           <SelectValue placeholder={t('filters.sort')} />
         </SelectTrigger>

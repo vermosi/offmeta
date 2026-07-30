@@ -57,7 +57,7 @@ export function ResultsToolbar({
 
   return (
     <div className="animate-reveal">
-      <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
+      <div className="flex flex-wrap items-center gap-1 sm:gap-1.5">
         {/* Primary controls — always visible */}
         <SearchFilters
           cards={cards}
@@ -77,8 +77,8 @@ export function ResultsToolbar({
           onClick={onToggleCompareMode}
           className={`flex items-center gap-1 py-1 px-1.5 sm:px-2.5 text-xs rounded-md transition-colors ${
             compareMode
-              ? 'bg-primary/10 text-primary border border-primary/30'
-              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+              ? 'border border-primary/30 bg-primary/10 text-primary'
+              : 'border border-border/70 text-muted-foreground hover:bg-muted/60 hover:text-foreground'
           }`}
           aria-pressed={compareMode}
           aria-label={t('compare.label')}
@@ -92,7 +92,7 @@ export function ResultsToolbar({
         {/* Card count — compact */}
         {totalCards > 0 && (
           <span
-            className="text-[10px] text-muted-foreground tabular-nums flex-shrink-0"
+            className="flex-shrink-0 text-[10px] tabular-nums text-muted-foreground"
             role="status"
             aria-live="polite"
           >
@@ -113,7 +113,7 @@ export function ResultsToolbar({
         <Popover>
           <PopoverTrigger asChild>
             <button
-              className="sm:hidden flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-border/70 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground sm:hidden"
               aria-label="More options"
             >
               <MoreHorizontal className="h-4 w-4" />

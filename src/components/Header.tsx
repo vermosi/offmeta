@@ -184,27 +184,27 @@ export function Header() {
         className={cn(
           'sticky top-0 z-50 safe-top backdrop-blur-xl transition-colors',
           isScrolled
-            ? 'border-b border-border/50 bg-background/80'
-            : 'border-b border-transparent bg-background/40',
+            ? 'border-b border-border/60 bg-background/88 shadow-sm'
+            : 'border-b border-transparent bg-background/55',
         )}
         role="banner"
       >
-        <div className="container-main py-3 sm:py-4 flex items-center justify-between">
+        <div className="container-main flex items-center justify-between py-3 sm:py-4">
           <Link
             to="/"
-            className="group flex items-center gap-2.5 min-h-0 focus-ring rounded-lg -ml-2 px-2 py-1"
+            className="group -ml-2 flex min-h-0 items-center gap-2.5 rounded-lg px-2 py-1 focus-ring"
             aria-label={t('header.home')}
           >
             <Logo variant="gradient" className="h-7 w-7 sm:h-8 sm:w-8 transition-transform duration-200 group-hover:scale-105" />
             <span className="text-lg font-semibold tracking-tight">OffMeta</span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-0.5" aria-label="Main navigation">
+          <nav className="hidden items-center gap-0.5 md:flex" aria-label="Main navigation">
             {CORE_LINKS.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
-                className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary/50 focus-ring"
+                className="rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary/70 hover:text-foreground focus-ring"
               >
                 {link.label}
               </Link>
@@ -225,7 +225,7 @@ export function Header() {
 
           <button
             type="button"
-            className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors focus-ring"
+            className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-secondary/70 hover:text-foreground focus-ring md:hidden"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
             aria-label={mobileMenuOpen ? t('header.closeMenu') : t('header.openMenu')}
             aria-expanded={mobileMenuOpen}

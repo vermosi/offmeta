@@ -178,9 +178,9 @@ export const EmptyState = ({
   return (
     <div
       role="status"
-      className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-center animate-reveal"
+      className="flex flex-col items-center justify-center px-4 py-16 text-center animate-reveal sm:py-20"
     >
-      <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-secondary flex items-center justify-center mb-5">
+      <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-border/70 bg-card/85 shadow-sm sm:h-16 sm:w-16">
         <SearchX className="h-6 w-6 sm:h-7 sm:w-7 text-muted-foreground" />
       </div>
 
@@ -210,7 +210,7 @@ export const EmptyState = ({
 
       {/* Applied filters summary + broaden chips */}
       {hasAppliedFilters && (
-        <div className="surface-elevated p-5 max-w-md w-full mb-6 text-left">
+        <div className="surface-elevated mb-6 w-full max-w-md p-5 text-left">
           <div className="flex items-center gap-2 mb-3">
             <SlidersHorizontal className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-foreground">
@@ -242,10 +242,7 @@ export const EmptyState = ({
                       )
                     : chip.label
                 }`}
-                className="group inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full
-                  bg-secondary text-secondary-foreground text-xs font-medium
-                  border border-border/60 hover:border-primary/40 hover:bg-primary/5
-                  transition-colors disabled:opacity-70 disabled:cursor-default"
+                className="group inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 disabled:cursor-default disabled:opacity-70"
               >
                 <span className="min-w-0 truncate max-w-[160px]">
                   {chip.key.startsWith('sort-')
@@ -258,9 +255,7 @@ export const EmptyState = ({
                 {onApplyFilterPatch && (
                   <span
                     aria-hidden="true"
-                    className="inline-flex items-center justify-center h-4 w-4 rounded-full
-                      text-muted-foreground group-hover:text-primary
-                      group-hover:bg-primary/10 transition-colors"
+                    className="inline-flex h-4 w-4 items-center justify-center rounded-full text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary"
                   >
                     <X className="h-3 w-3" />
                   </span>
@@ -280,7 +275,7 @@ export const EmptyState = ({
 
       {/* Did you mean? suggestions */}
       {(hasSuggestions || isCheckingSuggestions) && (
-        <div className="surface-elevated p-5 max-w-md w-full mb-6 text-left">
+        <div className="surface-elevated mb-6 w-full max-w-md p-5 text-left">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-foreground">
@@ -298,12 +293,10 @@ export const EmptyState = ({
                   key={s.query}
                   type="button"
                   onClick={() => onTrySuggestion?.(s.query)}
-                  className="w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg
-                    bg-primary/5 hover:bg-primary/10 border border-primary/10 hover:border-primary/20
-                    transition-colors text-left group"
+                className="group flex w-full items-center justify-between gap-3 rounded-lg border border-primary/10 bg-primary/5 px-3 py-2.5 text-left transition-colors hover:border-primary/20 hover:bg-primary/10"
                 >
                   <div className="min-w-0">
-                    <code className="text-xs font-mono text-foreground break-all leading-relaxed">
+                    <code className="break-all text-xs font-mono leading-relaxed text-foreground">
                       {s.query}
                     </code>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -311,7 +304,7 @@ export const EmptyState = ({
                       {s === suggestions![0] ? ' • Best match' : ''}
                     </p>
                   </div>
-                  <span className="shrink-0 text-xs font-medium text-primary/70 group-hover:text-primary tabular-nums">
+                  <span className="shrink-0 text-xs font-medium tabular-nums text-primary/70 group-hover:text-primary">
                     {t('empty.cardCount').replace(
                       '{count}',
                       s.totalCards.toLocaleString(),
@@ -332,7 +325,7 @@ export const EmptyState = ({
 
       {/* Quick recoveries */}
       {query && onTrySuggestion && (
-        <div className="surface-elevated p-5 max-w-md w-full mb-6 text-left">
+        <div className="surface-elevated mb-6 w-full max-w-md p-5 text-left">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-foreground">
@@ -359,7 +352,7 @@ export const EmptyState = ({
                   key={item.token}
                   type="button"
                   onClick={() => onTrySuggestion(nextQuery)}
-                  className="rounded-full border border-border/60 bg-background/70 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-foreground"
+                className="rounded-full border border-border/70 bg-background/80 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-foreground"
                 >
                   + {item.label}
                 </button>
@@ -370,14 +363,14 @@ export const EmptyState = ({
       )}
 
       {/* Tips section */}
-      <div className="surface-elevated p-5 max-w-md w-full mb-8">
+      <div className="surface-elevated mb-8 w-full max-w-md p-5">
         <div className="flex items-center gap-2 mb-3">
           <Lightbulb className="h-4 w-4 text-accent" />
           <span className="text-sm font-medium text-foreground">
             {t('empty.tips')}
           </span>
         </div>
-        <ul className="text-sm text-muted-foreground space-y-2 text-left">
+        <ul className="space-y-2 text-left text-sm text-muted-foreground">
           {tips.map((tip, i) => (
             <li key={i} className="flex items-start gap-2">
               <span className="text-accent mt-0.5">•</span>

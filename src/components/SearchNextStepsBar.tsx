@@ -192,14 +192,14 @@ export function SearchNextStepsBar({
 
   return (
     <section
-      className="rounded-2xl border border-border/60 bg-card/60 p-3 sm:p-4 animate-reveal"
+      className="animate-reveal rounded-2xl border border-border/70 bg-card/85 p-3 shadow-sm sm:p-4"
       aria-label={t('results.nextSteps.ariaLabel', 'Next steps')}
     >
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
           onClick={handleShare}
-          className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border/60 bg-background/60 px-3 py-1.5 text-sm text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5"
+          className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border/70 bg-background/70 px-3 py-1.5 text-sm text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5"
         >
           {justCopied ? (
             <Check className="h-4 w-4 text-accent" aria-hidden="true" />
@@ -216,7 +216,7 @@ export function SearchNextStepsBar({
         <button
           type="button"
           onClick={handleJumpToSimilar}
-          className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border/60 bg-background/60 px-3 py-1.5 text-sm text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5"
+          className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border/70 bg-background/70 px-3 py-1.5 text-sm text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5"
         >
           <Sparkles className="h-4 w-4 text-accent" aria-hidden="true" />
           <span>
@@ -230,7 +230,7 @@ export function SearchNextStepsBar({
           disabled={related.length === 0}
           aria-expanded={showRelated}
           aria-controls="next-steps-related-list"
-          className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border/60 bg-background/60 px-3 py-1.5 text-sm text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border/70 bg-background/70 px-3 py-1.5 text-sm text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Compass className="h-4 w-4 text-accent" aria-hidden="true" />
           <span>
@@ -253,7 +253,7 @@ export function SearchNextStepsBar({
               key={suggestion}
               type="button"
               onClick={() => handleRelated(suggestion)}
-              className="inline-flex min-h-8 items-center rounded-full border border-border/60 bg-background/40 px-3 py-1 text-xs text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5 hover:text-accent"
+              className="inline-flex min-h-8 items-center rounded-full border border-border/70 bg-background/60 px-3 py-1 text-xs text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5 hover:text-accent"
             >
               {suggestion}
             </button>

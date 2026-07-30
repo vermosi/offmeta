@@ -147,23 +147,22 @@ export default function About() {
       <Header />
 
       <main id="main-content" className="flex-1">
-        <section className="relative py-20 sm:py-28 px-4 border-b border-border/40">
+        <section className="relative border-b border-border/40 px-4 py-20 sm:py-28">
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[620px] h-[320px] rounded-full bg-accent/10 blur-3xl" />
           </div>
-          <div className="relative max-w-4xl mx-auto text-center">
-            <p className="inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-6">
+          <div className="relative mx-auto max-w-4xl text-center">
+            <p className="mb-6 inline-flex items-center rounded-full border border-border/70 bg-card/80 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               {t('about.badge', 'About OffMeta')}
             </p>
             <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-foreground leading-tight mb-6">
-              {t('about.heroTitle', 'Search Magic cards in plain English.')}
-              {' '}
+              {t('about.heroTitle', 'Search Magic cards in plain English.')} {' '}
               <br className="hidden sm:block" />
               <span className="text-accent">
                 {t('about.heroAccent', 'Get a real Scryfall query you can edit.')}
               </span>
             </h1>
-            <p className="max-w-3xl mx-auto text-lg sm:text-xl text-muted-foreground leading-relaxed mb-10">
+            <p className="mx-auto mb-10 max-w-3xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
               {t(
                 'about.heroBody',
                 'OffMeta is a transparent AI-powered MTG search tool, not a decklist site, not an EDH content brand, and not a black-box AI toy. We help you search the way you naturally think, then show the exact Scryfall syntax behind the result so you stay in control.',
@@ -172,7 +171,7 @@ export default function About() {
             <div className="flex flex-wrap justify-center gap-3">
               <Link
                 to="/"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
+                className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
               >
                 <Search className="h-4 w-4" />
                 {t('about.trySearch', 'Try OffMeta Search')}
@@ -181,7 +180,7 @@ export default function About() {
                 href="https://scryfall.com/docs/syntax"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm font-medium hover:bg-card/80 transition-colors"
+                className="inline-flex items-center gap-2 rounded-xl border border-border/70 bg-card px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-card/80"
               >
                 <Code2 className="h-4 w-4" />
                 {t('about.learnSyntax', 'Learn Scryfall Syntax')}
@@ -190,7 +189,7 @@ export default function About() {
           </div>
         </section>
 
-        <section className="py-16 sm:py-20 px-4 border-b border-border/30">
+        <section className="border-b border-border/30 px-4 py-16 sm:py-20">
           <div className="max-w-3xl mx-auto space-y-5">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
               {t('about.whatDoes', 'What OffMeta does')}
@@ -204,7 +203,7 @@ export default function About() {
           </div>
         </section>
 
-        <section className="py-16 sm:py-20 px-4 border-b border-border/30 bg-card/20">
+        <section className="border-b border-border/30 bg-card/20 px-4 py-16 sm:py-20">
           <div className="max-w-3xl mx-auto space-y-5">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
               {t('about.why', 'Why OffMeta exists')}
@@ -218,7 +217,7 @@ export default function About() {
           </div>
         </section>
 
-        <section className="py-16 sm:py-20 px-4 border-b border-border/30">
+        <section className="border-b border-border/30 px-4 py-16 sm:py-20">
           <div className="max-w-3xl mx-auto space-y-5">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
               {t('about.different', 'What makes it different')}
@@ -243,7 +242,7 @@ export default function About() {
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
               {t('about.demoTitle', 'Plain English in, real Scryfall query out')}
             </h2>
-            <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-4">
+            <div className="space-y-4 rounded-2xl border border-border/70 bg-card/85 p-5 sm:p-6">
               <div>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">
                   {t('about.demoInputLabel', 'Natural language input')}
@@ -273,7 +272,7 @@ export default function About() {
           </div>
         </section>
 
-        <section className="py-16 sm:py-20 px-4 border-b border-border/30">
+        <section className="border-b border-border/30 px-4 py-16 sm:py-20">
           <div className="max-w-3xl mx-auto space-y-5">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
               {t('about.who', 'Who it is for')}
@@ -287,7 +286,7 @@ export default function About() {
           </div>
         </section>
 
-        <section className="py-16 sm:py-20 px-4 border-b border-border/30 bg-card/20">
+        <section className="border-b border-border/30 bg-card/20 px-4 py-16 sm:py-20">
           <div className="max-w-3xl mx-auto space-y-5">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
               {t('about.roadmap', 'Where we are going')}

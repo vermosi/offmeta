@@ -125,7 +125,7 @@ export const CardItem = memo(function CardItem({
   return (
     <div
       data-testid="search-result-card"
-      className="group relative w-full aspect-[2.5/3.5] rounded-xl overflow-hidden bg-secondary"
+      className="group relative w-full aspect-[2.5/3.5] overflow-hidden rounded-xl bg-secondary shadow-sm ring-1 ring-border/70"
     >
       <button
         type="button"
@@ -159,7 +159,7 @@ export const CardItem = memo(function CardItem({
       {/* Owned badge */}
       {isOwned && (
         <div
-          className="absolute top-1.5 left-1.5 z-20 h-5 w-5 rounded-full bg-success/90 flex items-center justify-center shadow-sm"
+          className="absolute left-1.5 top-1.5 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-success/90 shadow-sm ring-1 ring-background/60"
           aria-label="Owned"
         >
           <svg
@@ -193,7 +193,7 @@ export const CardItem = memo(function CardItem({
                   type="button"
                   onClick={(e) => e.stopPropagation()}
                   onKeyDown={(e) => e.stopPropagation()}
-                  className="h-5 min-w-5 px-1.5 rounded-full bg-accent/90 text-accent-foreground text-[9px] font-semibold shadow-sm hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background"
+                  className="h-5 min-w-5 rounded-full bg-foreground/92 px-1.5 text-[9px] font-semibold text-background shadow-sm transition-colors hover:bg-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background"
                   aria-label={badgeLabel}
                 >
                   <span aria-hidden="true">
@@ -270,7 +270,7 @@ export const CardItem = memo(function CardItem({
 
       {/* Info overlay — always visible on mobile, hover on desktop */}
       <div
-        className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-overlay/85 via-overlay/50 to-transparent pt-6 sm:pt-8 pb-1.5 sm:pb-2 px-2 sm:px-2.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity duration-200 pointer-events-none"
+        className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-overlay/88 via-overlay/56 to-transparent px-2 pb-1.5 pt-6 opacity-100 transition-opacity duration-200 pointer-events-none sm:px-2.5 sm:pt-8 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
       >
         <div className="flex items-end justify-between gap-1">
           <div className="min-w-0 flex-1">
