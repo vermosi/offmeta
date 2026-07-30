@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import GuidesIndex from '@/pages/GuidesIndex';
+import { GUIDES } from '@/data/guides';
 
-// Mock Header and Footer to isolate GuidesIndex
 vi.mock('@/components/Header', () => ({
   Header: () => <header data-testid="mock-header">Header</header>,
 }));
@@ -38,8 +38,15 @@ describe('GuidesIndex', () => {
     renderGuidesIndex();
     const links = screen
       .getAllByRole('link')
-      .filter((el) => el.getAttribute('href')?.startsWith('/guides/'));
-    expect(links).toHaveLength(10);
+      .filter((el) =>
+        GUIDES.some(
+          (guide) =>
+            el.getAttribute('href') === `/guides/${guide.slug}` &&
+            el.textContent?.includes(guide.title),
+        ),
+      );
+    const uniqueGuideLinks = new Set(links.map((el) => el.getAttribute('href')));
+    expect(uniqueGuideLinks.size).toBe(10);
   });
 
   it('renders grouped level sections with jump links', () => {
@@ -112,7 +119,7 @@ describe('GuidesIndex', () => {
   it('sets the document title', () => {
     renderGuidesIndex();
     expect(document.title).toBe(
-      'MTG Search Guides — Learn to Find Any Magic Card | OffMeta',
+      'MTG Search Guides - Learn to Find Any Magic Card | OffMeta',
     );
   });
 

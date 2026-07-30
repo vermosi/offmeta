@@ -1,17 +1,19 @@
-// Postbuild: generates per-card static HTML at dist/cards/<slug>/index.html for
-// the top-N popular cards. Each file:
-//   - reuses the built index.html (with correct hashed script/link tags) so
-//     humans landing directly get the full SPA
-//   - swaps <title>, meta description, canonical, og:*, twitter:*, and JSON-LD
-//     to be card-specific so crawlers and social scrapers see the right thing
-//   - embeds <h1> + oracle text inside <noscript> for non-JS crawlers
-//
-// Lovable static hosting serves files that match the request path before
-// falling back to the SPA index.html, so /cards/<slug>/ is served from the
-// prerendered file when present.
-//
-// Runs via `postbuild`. Failures degrade gracefully — the SPA shell continues
-// to render the same page client-side via React Router.
+/**
+ * Postbuild: generates per-card static HTML at dist/cards/<slug>/index.html for
+ * the top-N popular cards. Each file:
+ *   - reuses the built index.html (with correct hashed script/link tags) so
+ *     humans landing directly get the full SPA
+ *   - swaps <title>, meta description, canonical, og:*, twitter:*, and JSON-LD
+ *     to be card-specific so crawlers and social scrapers see the right thing
+ *   - embeds <h1> + oracle text inside <noscript> for non-JS crawlers
+ *
+ * Lovable static hosting serves files that match the request path before
+ * falling back to the SPA index.html, so /cards/<slug>/ is served from the
+ * prerendered file when present.
+ *
+ * Runs via `postbuild`. Failures degrade gracefully - the SPA shell continues
+ * to render the same page client-side via React Router.
+ */
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -211,7 +213,7 @@ function customizeHtmlForCard(templateHtml, card, slug) {
   `;
   html = html.replace(/<\/head>/i, `${seoBlock}\n  </head>`);
 
-  // Inject noscript with the card body — right after <body ...>
+  // Inject noscript with the card body - right after <body ...>
   const noscript = `
     <noscript>
       <article>
@@ -232,7 +234,7 @@ function customizeHtmlForCard(templateHtml, card, slug) {
 
 async function main() {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
-    console.warn('[prerender-cards] Skipping — VITE_SUPABASE_URL / key not set.');
+    console.warn('[prerender-cards] Skipping - VITE_SUPABASE_URL / key not set.');
     return;
   }
 
@@ -240,7 +242,7 @@ async function main() {
   try {
     templateHtml = await fs.readFile(path.join(DIST_DIR, 'index.html'), 'utf8');
   } catch (err) {
-    console.warn('[prerender-cards] Skipping — dist/index.html not found:', err.message);
+    console.warn('[prerender-cards] Skipping - dist/index.html not found:', err.message);
     return;
   }
 
@@ -279,6 +281,6 @@ async function main() {
 
 main().catch((err) => {
   console.error('[prerender-cards] Failed:', err);
-  // Never break the build — the SPA shell still serves the page.
+  // Never break the build - the SPA shell still serves the page.
   process.exit(0);
 });

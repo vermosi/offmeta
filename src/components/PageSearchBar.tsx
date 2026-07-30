@@ -4,7 +4,7 @@
  * inbound SEO traffic into additional searches.
  */
 
-import { useState, useId, type FormEvent } from 'react';
+import { useEffect, useState, useId, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, ArrowRight } from 'lucide-react';
 
@@ -23,6 +23,10 @@ export function PageSearchBar({
   const [value, setValue] = useState(initialValue);
   const navigate = useNavigate();
   const inputId = useId();
+
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();

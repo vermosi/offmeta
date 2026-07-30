@@ -1,5 +1,5 @@
 /**
- * Build-time sitemap generator — writes public/sitemap.xml.
+ * Build-time sitemap generator - writes public/sitemap.xml.
  *
  * IMPORTANT: Lovable hosting does NOT process public/_redirects, so
  * /sitemap.xml is always served from this static file (not from the
@@ -8,7 +8,7 @@
  * curated + AI + guides + static), or search engines will only see
  * whatever we bake in here.
  *
- * Search-first focus (mem://product/core-focus) — Tier-3 routes
+ * Search-first focus (mem://product/core-focus) - Tier-3 routes
  * (deckbuilder, market, decks, collection, archetypes, deck-recs)
  * are excluded intentionally.
  */
@@ -42,7 +42,7 @@ const GUIDE_SLUGS = [
   'multi-constraint-complex-search',
 ];
 
-// Truly-offline fallback — only used when SUPABASE env vars are absent.
+// Truly-offline fallback - only used when SUPABASE env vars are absent.
 // If env is present but a request fails, we throw so CI/build surfaces it.
 const OFFLINE_FALLBACK_CARDS = [
   'Sol Ring', 'Rhystic Study', 'Swords to Plowshares', 'Counterspell',
@@ -174,7 +174,7 @@ try {
 } catch (err) {
   if (HAS_SUPABASE) {
     console.error('[sitemap] Supabase fetch failed:', err);
-    process.exit(1); // fail loud — never ship a stub sitemap when env is set
+    process.exit(1); // fail loud - never ship a stub sitemap when env is set
   }
   console.warn('[sitemap] No Supabase env; writing static+guides only.');
 }
@@ -227,11 +227,11 @@ console.log(
     `supabase=${HAS_SUPABASE ? 'on' : 'off'}).`,
 );
 
-// Fail loud if env was present but coverage is suspiciously small — likely
+// Fail loud if env was present but coverage is suspiciously small - likely
 // means a query silently returned []. Prevents another 28-URL regression.
 if (HAS_SUPABASE && cards.length < 100) {
   console.error(
-    `[sitemap] Only ${cards.length} cards fetched with Supabase env set — ` +
+    `[sitemap] Only ${cards.length} cards fetched with Supabase env set - ` +
       `refusing to publish a stub sitemap.`,
   );
   process.exit(1);

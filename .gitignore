@@ -32,3 +32,10 @@ skills-lock.json
 # Non-canonical package manager lockfiles
 bun.lock
 bun.lockb
+
+# Generated test and temp outputs
+test-results/
+tmp/
+tmp-lighthouse/
+tmp-lighthouse-3/
+
