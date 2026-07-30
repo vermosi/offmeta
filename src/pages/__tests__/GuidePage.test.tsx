@@ -1,9 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import GuidePage from '@/pages/GuidePage';
 
 const mockNavigate = vi.fn();
+const mockWriteText = vi.fn();
+const mockShare = vi.fn();
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return { ...actual, useNavigate: () => mockNavigate };
@@ -34,6 +36,10 @@ function renderGuidePage(slug: string) {
 describe('GuidePage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    Object.assign(navigator, {
+      clipboard: { writeText: mockWriteText },
+      share: mockShare,
+    });
   });
 
   describe('valid guide rendering', () => {
@@ -62,10 +68,43 @@ describe('GuidePage', () => {
       expect(screen.getByText(/Search "dragons"/)).toBeInTheDocument();
     });
 
+    it('renders the copy and share actions', () => {
+      renderGuidePage('search-by-creature-type');
+      expect(
+        screen.getByRole('button', { name: 'Copy link' }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Share guide' }),
+      ).toBeInTheDocument();
+    });
+
     it('navigates to search when CTA is clicked', () => {
       renderGuidePage('search-by-creature-type');
       fireEvent.click(screen.getByText(/Search "dragons"/));
       expect(mockNavigate).toHaveBeenCalledWith('/?q=dragons');
+    });
+
+    it('copies the guide link when Copy link is clicked', async () => {
+      mockWriteText.mockResolvedValueOnce(undefined);
+      renderGuidePage('search-by-creature-type');
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Copy link' }));
+      });
+      expect(mockWriteText).toHaveBeenCalledWith(
+        'https://offmeta.app/guides/search-by-creature-type',
+      );
+    });
+
+    it('uses the Web Share API when available', async () => {
+      mockShare.mockResolvedValueOnce(undefined);
+      renderGuidePage('search-by-creature-type');
+      fireEvent.click(screen.getByRole('button', { name: 'Share guide' }));
+      expect(mockShare).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Search by Creature Type',
+          url: 'https://offmeta.app/guides/search-by-creature-type',
+        }),
+      );
     });
 
     it('renders the "How OffMeta Helps" section', () => {

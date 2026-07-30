@@ -23,6 +23,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n';
 import { SkipLinks } from '@/components/SkipLinks';
+import { useToast } from '@/hooks';
+import { Copy, Share2 } from 'lucide-react';
 
 const GUIDE_PUBLISHED_AT = '2025-01-15T00:00:00Z';
 const GUIDE_MODIFIED_AT = '2026-07-07T00:00:00Z';
@@ -32,6 +34,7 @@ export default function GuidePage() {
   const navigate = useNavigate();
   const guide = slug ? getGuideBySlug(slug) : undefined;
   const { t } = useTranslation();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!guide) return;
@@ -115,6 +118,38 @@ export default function GuidePage() {
 
   const handleSearchClick = () => {
     navigate(`/?q=${encodeURIComponent(guide.searchQuery)}`);
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(pageUrl);
+      toast({
+        title: 'Link copied',
+        description: 'Guide link copied to your clipboard.',
+      });
+    } catch {
+      toast({
+        title: 'Copy failed',
+        description: 'Your browser blocked clipboard access.',
+      });
+    }
+  };
+
+  const handleShare = async () => {
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({
+          title: guide.title,
+          text: guide.metaDescription,
+          url: pageUrl,
+        });
+        return;
+      } catch {
+        // Fall through to copy-to-clipboard.
+      }
+    }
+
+    await handleCopyLink();
   };
 
   const pageUrl = `https://offmeta.app/guides/${guide.slug}`;
@@ -216,6 +251,28 @@ export default function GuidePage() {
             <p className="text-lg text-muted-foreground break-words">
               {t(`guide.sub.${guide.slug}`, guide.subheading)}
             </p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void handleCopyLink()}
+                className="gap-2"
+              >
+                <Copy className="h-4 w-4" />
+                Copy link
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void handleShare()}
+                className="gap-2"
+              >
+                <Share2 className="h-4 w-4" />
+                Share guide
+              </Button>
+            </div>
           </header>
 
           <section

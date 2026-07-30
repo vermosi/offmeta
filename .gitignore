@@ -27,6 +27,8 @@ coverage
 *.njsproj
 *.sln
 *.sw?
+.agents/
+skills-lock.json
 # Non-canonical package manager lockfiles
 bun.lock
 bun.lockb

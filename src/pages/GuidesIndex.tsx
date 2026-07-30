@@ -13,6 +13,9 @@ import { BookOpen, ArrowRight, Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useTranslation } from '@/lib/i18n';
 import { SkipLinks } from '@/components/SkipLinks';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks';
+import { Copy } from 'lucide-react';
 
 const LEVEL_COLORS: Record<string, string> = {
   'guides.levelBeginner': 'bg-success/10 text-success border-success/20',
@@ -45,6 +48,23 @@ const LEVEL_GROUPS = [
 
 export default function GuidesIndex() {
   const { t } = useTranslation();
+  const { toast } = useToast();
+
+  const copyGuideUrl = async (slug: string, title: string) => {
+    const url = `https://offmeta.app/guides/${slug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({
+        title: 'Link copied',
+        description: `Copied ${title} to your clipboard.`,
+      });
+    } catch {
+      toast({
+        title: 'Copy failed',
+        description: 'Your browser blocked clipboard access.',
+      });
+    }
+  };
 
   useEffect(() => {
     const cleanupMeta = applySeoMeta({
@@ -192,26 +212,30 @@ export default function GuidesIndex() {
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2">
                     {group.guides.map((guide) => (
-                      <Link
+                      <div
                         key={guide.slug}
-                        to={`/guides/${guide.slug}`}
                         className="group relative rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-lg transition-all duration-200 p-5 sm:p-6 flex flex-col min-w-0 overflow-hidden"
                       >
-                        <div className="flex items-center justify-between mb-3">
-                          <Badge
-                            variant="outline"
-                            className={`text-[10px] font-semibold uppercase tracking-wide ${colorClass}`}
-                          >
-                            {t(labelKey)} • {t('guides.level')} {guide.level}
-                          </Badge>
-                        </div>
+                        <Link
+                          to={`/guides/${guide.slug}`}
+                          className="contents"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <Badge
+                              variant="outline"
+                              className={`text-[10px] font-semibold uppercase tracking-wide ${colorClass}`}
+                            >
+                              {t(labelKey)} • {t('guides.level')} {guide.level}
+                            </Badge>
+                          </div>
 
-                        <h3 className="text-base sm:text-lg font-semibold text-foreground group-hover:text-primary transition-colors mb-1.5">
-                          {t(`guide.title.${guide.slug}`, guide.title)}
-                        </h3>
-                        <p className="text-sm text-muted-foreground mb-4 flex-1">
-                          {t(`guide.sub.${guide.slug}`, guide.subheading)}
-                        </p>
+                          <h3 className="text-base sm:text-lg font-semibold text-foreground group-hover:text-primary transition-colors mb-1.5">
+                            {t(`guide.title.${guide.slug}`, guide.title)}
+                          </h3>
+                          <p className="text-sm text-muted-foreground mb-4 flex-1">
+                            {t(`guide.sub.${guide.slug}`, guide.subheading)}
+                          </p>
+                        </Link>
 
                         <div className="rounded-lg bg-muted/40 border border-border/50 px-3 py-2 mb-4 min-w-0 overflow-hidden">
                           <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
@@ -222,11 +246,28 @@ export default function GuidesIndex() {
                           </p>
                         </div>
 
-                        <div className="flex items-center gap-1 text-sm text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                          {t('guides.readGuide')}{' '}
-                          <ArrowRight className="h-3.5 w-3.5" />
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                          <Link
+                            to={`/guides/${guide.slug}`}
+                            className="flex items-center gap-1 text-sm text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            {t('guides.readGuide')}{' '}
+                            <ArrowRight className="h-3.5 w-3.5" />
+                          </Link>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="sm:self-end gap-2"
+                            onClick={() => {
+                              void copyGuideUrl(guide.slug, guide.title);
+                            }}
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                            Copy link
+                          </Button>
                         </div>
-                      </Link>
+                      </div>
                     ))}
                   </div>
                 </section>
