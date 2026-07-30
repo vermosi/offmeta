@@ -133,11 +133,8 @@ export default function LandingPage() {
           </form>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3 text-sm text-muted-foreground">
-            <a
-              className="hover:text-foreground transition-colors"
-              href="/archetypes"
-            >
-              Explore archetypes
+            <a className="hover:text-foreground transition-colors" href="/guides">
+              Search guides
             </a>
             <span aria-hidden="true">•</span>
             <a className="hover:text-foreground transition-colors" href="/about">

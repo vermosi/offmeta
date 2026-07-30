@@ -182,19 +182,9 @@ export function CardModalMetaContext({ card, oracleId, onCardClick, isMobile }: 
           {matchedArchetypes.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {matchedArchetypes.map((arch) => (
-                <a
-                  key={arch.slug}
-                  href={`/archetypes/${arch.slug}`}
-                  className="no-underline"
-                >
-                  <Badge
-                    variant="secondary"
-                    size="sm"
-                    className="cursor-pointer hover:bg-primary/10 transition-colors"
-                  >
-                    {arch.name}
-                  </Badge>
-                </a>
+                <Badge key={arch.slug} variant="secondary" size="sm">
+                  {arch.name}
+                </Badge>
               ))}
             </div>
           )}
