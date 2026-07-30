@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import PublicProfile from '@/pages/PublicProfile';
+import type * as ReactRouterDom from 'react-router-dom';
 
 const queryState = vi.hoisted(() => ({
   profileError: null as Error | null,
@@ -80,7 +81,7 @@ vi.mock('@/lib/i18n', () => ({
 }));
 
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  const actual = await vi.importActual<typeof ReactRouterDom>('react-router-dom');
   return {
     ...actual,
     useParams: () => ({ userId: 'user-1' }),

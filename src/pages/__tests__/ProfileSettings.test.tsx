@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import ProfileSettings from '@/pages/ProfileSettings';
+import type * as ReactRouterDom from 'react-router-dom';
 
 const fromMock = vi.fn();
 
@@ -48,7 +49,7 @@ vi.mock('@/lib/i18n/useTranslation', () => ({
 }));
 
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  const actual = await vi.importActual<typeof ReactRouterDom>('react-router-dom');
   return {
     ...actual,
     useNavigate: () => vi.fn(),
