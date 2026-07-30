@@ -10,10 +10,7 @@ type SupabaseClientLike = {
   from: (table: 'rate_limits') => RateLimitTableQueryBuilder;
 };
 
-type SupabaseClientFactory = (
-  url: string,
-  key: string,
-) => SupabaseClientLike;
+type SupabaseClientFactory = (url: string, key: string) => SupabaseClientLike;
 
 type QueryResult<TData> = PromiseLike<{
   data: TData | null;
@@ -68,10 +65,11 @@ const rateLimiter = new Map<string, RateLimitEntry>();
 const sessionLimiter = new Map<string, RateLimitEntry>();
 let globalRequestCount = 0;
 let globalResetTime = Date.now() + 60000;
-let sharedRateLimitClientPromise: Promise<SupabaseClientLike | null> | null = null;
+let sharedRateLimitClientPromise: Promise<SupabaseClientLike | null> | null =
+  null;
 
 // Session rate limiting: stricter limits per session to prevent abuse loops
-const SESSION_LIMIT = 60; // Keep session limit looser than client UX throttling
+const SESSION_LIMIT = 20; // 20 requests per minute per session
 const SESSION_WINDOW_MS = 60000;
 
 /**
@@ -135,7 +133,11 @@ async function getSharedRateLimitClient(): Promise<SupabaseClientLike | null> {
   if (sharedRateLimitClientPromise) return sharedRateLimitClientPromise;
 
   sharedRateLimitClientPromise = (async () => {
-    const DenoRef = (globalThis as { Deno?: { env: { get: (k: string) => string | undefined } } }).Deno;
+    const DenoRef = (
+      globalThis as {
+        Deno?: { env: { get: (k: string) => string | undefined } };
+      }
+    ).Deno;
     if (typeof DenoRef === 'undefined') return null;
 
     const supabaseUrl = DenoRef.env.get('SUPABASE_URL');

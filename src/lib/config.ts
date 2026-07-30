@@ -19,7 +19,7 @@ export const CLIENT_CONFIG = {
 
   // Rate limiting
   SEARCH_RATE_LIMIT: {
-    maxPerMinute: 60,
+    maxPerMinute: 20,
     cooldownMs: 2000, // 2 second cooldown between identical searches
   },
 

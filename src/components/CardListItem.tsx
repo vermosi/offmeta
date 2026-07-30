@@ -54,7 +54,7 @@ export const CardListItem = memo(function CardListItem({
       role="button"
       tabIndex={tabIndex}
       data-testid="search-result-card"
-      className="flex cursor-pointer items-center gap-3 rounded-lg border border-border/70 bg-card/80 px-3 py-2 transition-colors hover:border-border hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/50 bg-card/50 hover:bg-muted/50 hover:border-border cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       aria-label={`View details for ${displayName}`}
     >
       {/* Owned indicator */}

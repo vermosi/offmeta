@@ -24,7 +24,7 @@ describe('CLIENT_CONFIG', () => {
   });
 
   it('exports rate limiting settings', () => {
-    expect(CLIENT_CONFIG.SEARCH_RATE_LIMIT.maxPerMinute).toBe(60);
+    expect(CLIENT_CONFIG.SEARCH_RATE_LIMIT.maxPerMinute).toBe(20);
     expect(CLIENT_CONFIG.SEARCH_RATE_LIMIT.cooldownMs).toBe(2000);
   });
 

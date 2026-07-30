@@ -19,7 +19,6 @@ export default function LandingPage() {
       __openAuthModal?: () => void;
     };
     win.__openAuthModal = () => setAuthModalOpen(true);
-    document.body.style.overflow = '';
     return () => {
       delete win.__openAuthModal;
     };
@@ -35,7 +34,7 @@ export default function LandingPage() {
 
   return (
     <main className="min-h-screen bg-background">
-      <section className="relative overflow-visible pb-12 pt-10 sm:pb-16 sm:pt-16 lg:pt-20">
+      <section className="relative overflow-hidden pb-12 pt-10 sm:pb-16 sm:pt-16 lg:pt-20">
         <div
           className="pointer-events-none absolute inset-0 bg-gradient-to-b from-accent/10 via-transparent to-transparent"
           aria-hidden="true"
@@ -52,35 +51,35 @@ export default function LandingPage() {
         </div>
 
         <div className="container-main relative z-10 text-center">
-          <div className="mx-auto mb-4 inline-flex items-center gap-2 rounded-full border border-accent/25 bg-accent/12 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-accent backdrop-blur-sm">
+          <div className="mx-auto mb-4 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1.5 text-xs font-medium text-accent backdrop-blur-sm">
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
             AI-powered MTG discovery engine
           </div>
 
-          <h1 className="mx-auto mb-4 max-w-4xl text-4xl font-semibold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+          <h1 className="mx-auto mb-4 max-w-5xl text-4xl font-semibold tracking-tight text-foreground sm:text-6xl lg:text-7xl">
             Search Magic cards in{' '}
-            <span className="text-aurora">plain English</span>
+            <span className="text-accent">plain English</span>
           </h1>
 
-          <p className="mx-auto max-w-3xl text-sm leading-relaxed text-muted-foreground sm:text-lg">
+          <p className="mx-auto max-w-3xl whitespace-pre-line text-sm leading-relaxed text-muted-foreground sm:text-lg">
             Describe what you want, see the exact Scryfall query, and jump
-            straight to real card results. OffMeta helps you search faster
+            straight to real card results.{'\n'}OffMeta helps you search faster
             without giving up control.
           </p>
 
           <div className="mx-auto mt-6 grid max-w-4xl gap-3 text-left sm:grid-cols-3">
-            <div className="rounded-2xl border border-border/60 bg-card/80 p-4 shadow-sm backdrop-blur-sm">
+            <div className="rounded-2xl border border-border/60 bg-card/70 p-4 shadow-sm backdrop-blur-sm">
               <Search className="mb-3 h-5 w-5 text-accent" aria-hidden="true" />
               <h2 className="mb-1 text-sm font-semibold text-foreground">
                 Search naturally
               </h2>
               <p className="text-sm text-muted-foreground">
-                Type things like "cheap green ramp spells" or "board wipes
-                under $5".
+                Type things like "cheap green ramp spells" or "board wipes under
+                $5".
               </p>
             </div>
 
-            <div className="rounded-2xl border border-border/60 bg-card/80 p-4 shadow-sm backdrop-blur-sm">
+            <div className="rounded-2xl border border-border/60 bg-card/70 p-4 shadow-sm backdrop-blur-sm">
               <SlidersHorizontal
                 className="mb-3 h-5 w-5 text-accent"
                 aria-hidden="true"
@@ -93,8 +92,11 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-border/60 bg-card/80 p-4 shadow-sm backdrop-blur-sm">
-              <ArrowRight className="mb-3 h-5 w-5 text-accent" aria-hidden="true" />
+            <div className="rounded-2xl border border-border/60 bg-card/70 p-4 shadow-sm backdrop-blur-sm">
+              <ArrowRight
+                className="mb-3 h-5 w-5 text-accent"
+                aria-hidden="true"
+              />
               <h2 className="mb-1 text-sm font-semibold text-foreground">
                 Go from idea to cards
               </h2>
@@ -107,8 +109,8 @@ export default function LandingPage() {
 
           <p className="mx-auto mt-6 max-w-3xl text-xs leading-relaxed text-muted-foreground sm:text-sm">
             OffMeta is built for players who think in game concepts first and
-            filters second. It is fast enough for casual brewing and
-            transparent enough for power users.
+            filters second. It is fast enough for casual brewing and transparent
+            enough for power users.
           </p>
 
           <form
@@ -127,7 +129,7 @@ export default function LandingPage() {
             <button
               type="submit"
               data-testid="search-submit-button"
-              className="min-h-12 rounded-full bg-accent px-6 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/15 transition-transform transition-colors hover:-translate-y-0.5 hover:shadow-accent/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              className="min-h-12 rounded-full bg-accent px-6 text-sm font-medium text-accent-foreground shadow-lg shadow-accent/20 transition-colors hover:shadow-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               Start searching
             </button>
@@ -141,7 +143,10 @@ export default function LandingPage() {
               Explore archetypes
             </a>
             <span aria-hidden="true">•</span>
-            <a className="hover:text-foreground transition-colors" href="/about">
+            <a
+              className="hover:text-foreground transition-colors"
+              href="/about"
+            >
               Why OffMeta
             </a>
             <span aria-hidden="true">•</span>

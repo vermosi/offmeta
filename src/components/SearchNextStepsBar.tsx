@@ -42,7 +42,12 @@ function buildRelatedSearches(
   }
 
   const colorValues = intent?.colors?.values ?? [];
-  if (colorValues.length === 0 && !/\b(mono|white|blue|black|red|green|colorless|azorius|dimir|rakdos|gruul|selesnya)\b/i.test(lower)) {
+  if (
+    colorValues.length === 0 &&
+    !/\b(mono|white|blue|black|red|green|colorless|azorius|dimir|rakdos|gruul|selesnya)\b/i.test(
+      lower,
+    )
+  ) {
     suggestions.push(`mono blue ${q}`);
     suggestions.push(`mono green ${q}`);
   } else if (colorValues.length === 1) {
@@ -155,7 +160,6 @@ export function SearchNextStepsBar({
     }
   }, [buildShareUrl, originalQuery, activeTab, trackEvent, t]);
 
-
   const handleJumpToSimilar = useCallback(() => {
     trackEvent('next_steps_jump_similar', {
       query: originalQuery,
@@ -192,14 +196,14 @@ export function SearchNextStepsBar({
 
   return (
     <section
-      className="animate-reveal rounded-2xl border border-border/70 bg-card/85 p-3 shadow-sm sm:p-4"
+      className="rounded-2xl border border-border/60 bg-card/60 p-3 sm:p-4 animate-reveal"
       aria-label={t('results.nextSteps.ariaLabel', 'Next steps')}
     >
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
           onClick={handleShare}
-          className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border/70 bg-background/70 px-3 py-1.5 text-sm text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5"
+          className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border/60 bg-background/60 px-3 py-1.5 text-sm text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5"
         >
           {justCopied ? (
             <Check className="h-4 w-4 text-accent" aria-hidden="true" />
@@ -216,12 +220,10 @@ export function SearchNextStepsBar({
         <button
           type="button"
           onClick={handleJumpToSimilar}
-          className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border/70 bg-background/70 px-3 py-1.5 text-sm text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5"
+          className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border/60 bg-background/60 px-3 py-1.5 text-sm text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5"
         >
           <Sparkles className="h-4 w-4 text-accent" aria-hidden="true" />
-          <span>
-            {t('results.nextSteps.jumpSimilar', 'Jump to similar')}
-          </span>
+          <span>{t('results.nextSteps.jumpSimilar', 'Jump to similar')}</span>
         </button>
 
         <button
@@ -230,7 +232,7 @@ export function SearchNextStepsBar({
           disabled={related.length === 0}
           aria-expanded={showRelated}
           aria-controls="next-steps-related-list"
-          className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border/70 bg-background/70 px-3 py-1.5 text-sm text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border/60 bg-background/60 px-3 py-1.5 text-sm text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Compass className="h-4 w-4 text-accent" aria-hidden="true" />
           <span>
@@ -244,16 +246,13 @@ export function SearchNextStepsBar({
       </div>
 
       {showRelated && related.length > 0 && (
-        <div
-          id="next-steps-related-list"
-          className="mt-3 flex flex-wrap gap-2"
-        >
+        <div id="next-steps-related-list" className="mt-3 flex flex-wrap gap-2">
           {related.map((suggestion) => (
             <button
               key={suggestion}
               type="button"
               onClick={() => handleRelated(suggestion)}
-              className="inline-flex min-h-8 items-center rounded-full border border-border/70 bg-background/60 px-3 py-1 text-xs text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5 hover:text-accent"
+              className="inline-flex min-h-8 items-center rounded-full border border-border/60 bg-background/40 px-3 py-1 text-xs text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5 hover:text-accent"
             >
               {suggestion}
             </button>

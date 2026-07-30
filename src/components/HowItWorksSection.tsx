@@ -95,14 +95,14 @@ export function HowItWorksSection() {
     >
       <h2
         id={headingId}
-        className="mb-10 text-center text-xl font-semibold tracking-tight text-foreground sm:mb-14 sm:text-2xl lg:text-3xl"
+        className="text-center text-xl sm:text-2xl lg:text-3xl font-semibold text-foreground mb-10 sm:mb-14 tracking-tight"
       >
         {t('howItWorks.heading', 'How it works')}
       </h2>
 
       {/* Desktop: horizontal timeline */}
       <ol
-        className="mx-auto hidden max-w-4xl list-none items-start justify-center gap-4 p-0 lg:gap-6 sm:flex"
+        className="hidden sm:flex items-start justify-center gap-4 lg:gap-6 max-w-4xl mx-auto list-none p-0"
         aria-label={t('howItWorks.label', 'How it works')}
       >
         {STEPS.map(({ icon: Icon, number, title, detail }, i) => {
@@ -114,24 +114,28 @@ export function HowItWorksSection() {
                   stepRefs.current[i] = el;
                 }}
                 data-step-number={number}
-                className="stagger-children flex min-w-0 flex-1 flex-col items-center text-center"
+                className="flex flex-col items-center text-center flex-1 min-w-0 stagger-children"
                 aria-labelledby={titleId}
               >
-
                 {/* Number badge */}
-                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-accent to-accent/50 text-lg font-bold text-accent-foreground shadow-lg shadow-accent/15">
-                  <span className="sr-only">{stepLabel} {number}</span>
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-bold mb-4 bg-gradient-to-br from-accent to-accent/50 text-accent-foreground shadow-lg shadow-accent/20">
+                  <span className="sr-only">
+                    {stepLabel} {number}
+                  </span>
                   <span aria-hidden="true">{number}</span>
                 </div>
 
-                <Icon className="mb-3 h-7 w-7 flex-shrink-0 text-accent" aria-hidden="true" />
+                <Icon
+                  className="h-7 w-7 text-accent mb-3 flex-shrink-0"
+                  aria-hidden="true"
+                />
                 <h3
                   id={titleId}
-                  className="mb-2 text-base font-semibold text-foreground"
+                  className="text-base font-semibold text-foreground mb-2"
                 >
                   {title}
                 </h3>
-                <p className="max-w-[200px] text-sm leading-relaxed text-muted-foreground">
+                <p className="text-sm text-muted-foreground leading-relaxed max-w-[200px]">
                   {detail}
                 </p>
               </li>
@@ -139,7 +143,7 @@ export function HowItWorksSection() {
               {/* Connector line */}
               {i < STEPS.length - 1 && (
                 <li
-                  className="mt-7 w-12 flex-shrink-0 list-none lg:w-20"
+                  className="flex-shrink-0 w-12 lg:w-20 mt-7 list-none"
                   aria-hidden="true"
                 >
                   <div className="h-[2px] w-full bg-gradient-to-r from-accent/60 to-accent/10 rounded-full" />
@@ -150,14 +154,14 @@ export function HowItWorksSection() {
         })}
       </ol>
 
-
       {/* Mobile: vertical timeline */}
-      <ol className="relative m-0 list-none p-0 pl-10 sm:hidden">
+      <ol className="sm:hidden relative pl-10 list-none p-0 m-0">
         {/* Gradient vertical line */}
         <div
-          className="absolute bottom-2 left-4 top-2 w-[2px] rounded-full"
+          className="absolute left-4 top-2 bottom-2 w-[2px] rounded-full"
           style={{
-            background: 'linear-gradient(to bottom, hsl(var(--accent)), hsl(var(--accent) / 0.1))',
+            background:
+              'linear-gradient(to bottom, hsl(var(--accent)), hsl(var(--accent) / 0.1))',
           }}
           aria-hidden="true"
         />
@@ -177,22 +181,30 @@ export function HowItWorksSection() {
                 className="relative"
                 aria-labelledby={titleId}
               >
-
-
                 {/* Node on the line */}
-                <div className="absolute -left-10 top-0 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent/50 text-xs font-bold text-accent-foreground shadow-md shadow-accent/15">
-                  <span className="sr-only">{stepLabel} {number}</span>
+                <div className="absolute -left-10 top-0 w-8 h-8 rounded-full bg-gradient-to-br from-accent to-accent/50 flex items-center justify-center text-xs font-bold text-accent-foreground shadow-md shadow-accent/20">
+                  <span className="sr-only">
+                    {stepLabel} {number}
+                  </span>
                   <span aria-hidden="true">{number}</span>
                 </div>
 
                 <div>
-                  <div className="mb-1 flex items-center gap-2">
-                    <Icon className="h-5 w-5 flex-shrink-0 text-accent" aria-hidden="true" />
-                    <h3 id={titleId} className="text-sm font-semibold text-foreground">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Icon
+                      className="h-5 w-5 text-accent flex-shrink-0"
+                      aria-hidden="true"
+                    />
+                    <h3
+                      id={titleId}
+                      className="text-sm font-semibold text-foreground"
+                    >
                       {title}
                     </h3>
                   </div>
-                  <p className="text-xs leading-relaxed text-muted-foreground">{detail}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {detail}
+                  </p>
                 </div>
               </li>
             );

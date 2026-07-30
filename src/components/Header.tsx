@@ -104,7 +104,10 @@ export function Header() {
           aria-modal="true"
           aria-label="Mobile navigation"
         >
-          <nav className="container-main py-6 flex flex-col gap-1 pb-safe" aria-label="Main navigation links">
+          <nav
+            className="container-main py-6 flex flex-col gap-1 pb-safe"
+            aria-label="Main navigation links"
+          >
             {CORE_LINKS.map((link) => (
               <Link
                 key={link.href}
@@ -136,17 +139,33 @@ export function Header() {
             <div className="mt-4 pt-4 border-t border-border/50">
               {user ? (
                 <>
-                  <Link to="/saved" onClick={() => setMobileMenuOpen(false)} className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring">
+                  <Link
+                    to="/saved"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring"
+                  >
                     {t('nav.savedSearches', 'Saved Searches')}
                   </Link>
-                  <Link to="/collection" onClick={() => setMobileMenuOpen(false)} className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring">
+                  <Link
+                    to="/collection"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring"
+                  >
                     {t('nav.collection', 'My Collection')}
                   </Link>
-                  <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring">
+                  <Link
+                    to="/profile"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring"
+                  >
                     {t('nav.profileSettings')}
                   </Link>
                   {isAdmin && (
-                    <Link to="/admin/analytics" onClick={() => setMobileMenuOpen(false)} className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring">
+                    <Link
+                      to="/admin/analytics"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring"
+                    >
                       {t('nav.adminDashboard')}
                     </Link>
                   )}
@@ -184,27 +203,35 @@ export function Header() {
         className={cn(
           'sticky top-0 z-50 safe-top backdrop-blur-xl transition-colors',
           isScrolled
-            ? 'border-b border-border/60 bg-background/88 shadow-sm'
-            : 'border-b border-transparent bg-background/55',
+            ? 'border-b border-border/50 bg-background/80'
+            : 'border-b border-transparent bg-background/40',
         )}
         role="banner"
       >
-        <div className="container-main flex items-center justify-between py-3 sm:py-4">
+        <div className="container-main py-3 sm:py-4 flex items-center justify-between">
           <Link
             to="/"
-            className="group -ml-2 flex min-h-0 items-center gap-2.5 rounded-lg px-2 py-1 focus-ring"
+            className="group flex items-center gap-2.5 min-h-0 focus-ring rounded-lg -ml-2 px-2 py-1"
             aria-label={t('header.home')}
           >
-            <Logo variant="gradient" className="h-7 w-7 sm:h-8 sm:w-8 transition-transform duration-200 group-hover:scale-105" />
-            <span className="text-lg font-semibold tracking-tight">OffMeta</span>
+            <Logo
+              variant="gradient"
+              className="h-7 w-7 sm:h-8 sm:w-8 transition-transform duration-200 group-hover:scale-105"
+            />
+            <span className="text-lg font-semibold tracking-tight">
+              OffMeta
+            </span>
           </Link>
 
-          <nav className="hidden items-center gap-0.5 md:flex" aria-label="Main navigation">
+          <nav
+            className="hidden md:flex items-center gap-0.5"
+            aria-label="Main navigation"
+          >
             {CORE_LINKS.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
-                className="rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary/70 hover:text-foreground focus-ring"
+                className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary/50 focus-ring"
               >
                 {link.label}
               </Link>
@@ -225,14 +252,20 @@ export function Header() {
 
           <button
             type="button"
-            className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-secondary/70 hover:text-foreground focus-ring md:hidden"
+            className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors focus-ring"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
-            aria-label={mobileMenuOpen ? t('header.closeMenu') : t('header.openMenu')}
+            aria-label={
+              mobileMenuOpen ? t('header.closeMenu') : t('header.openMenu')
+            }
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-nav-menu"
             data-testid="hamburger-button"
           >
-            {mobileMenuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
+            {mobileMenuOpen ? (
+              <X className="h-5 w-5" aria-hidden="true" />
+            ) : (
+              <Menu className="h-5 w-5" aria-hidden="true" />
+            )}
           </button>
         </div>
       </header>

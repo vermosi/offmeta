@@ -12,38 +12,39 @@
 @layer base {
   :root {
     /* 
-     * LIGHT MODE - Editorial slate with warm signal accents
+     * LIGHT MODE - Mystic oracle theme
+     * Deep purples with vibrant gradients
      */
 
     /* Surfaces */
-    --background: 220 20% 98%;
-    --foreground: 222 25% 12%;
+    --background: 270 30% 98%;
+    --foreground: 270 50% 15%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 25% 12%;
+    --card: 270 30% 100%;
+    --card-foreground: 270 50% 15%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 25% 12%;
+    --popover: 270 30% 100%;
+    --popover-foreground: 270 50% 15%;
 
-    /* Primary - ink */
-    --primary: 222 25% 12%;
-    --primary-foreground: 0 0% 98%;
+    /* Primary - Deep purple */
+    --primary: 270 50% 25%;
+    --primary-foreground: 270 30% 98%;
 
-    /* Secondary - paper slate */
-    --secondary: 220 16% 94%;
-    --secondary-foreground: 222 25% 16%;
+    /* Secondary - Soft purple */
+    --secondary: 270 25% 94%;
+    --secondary-foreground: 270 50% 20%;
 
-    /* Muted - cool gray */
-    --muted: 220 14% 94%;
-    --muted-foreground: 220 10% 42%;
+    /* Muted - Light purple gray */
+    --muted: 270 20% 94%;
+    --muted-foreground: 270 15% 45%;
 
-    /* Accent - warm brass */
-    --accent: 32 95% 54%;
-    --accent-foreground: 20 25% 10%;
+    /* Accent - Magenta */
+    --accent: 300 85% 55%;
+    --accent-foreground: 0 0% 100%;
 
     /* Gradient colors */
-    --gradient-start: 32 95% 54%;
-    --gradient-end: 198 88% 45%;
+    --gradient-start: 300 85% 55%;
+    --gradient-end: 195 90% 55%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -95,64 +96,65 @@
     --contrast-foreground: 270 45% 6%;
 
     /* Borders */
-    --border: 220 14% 86%;
-    --input: 220 14% 86%;
-    --ring: 32 95% 54%;
+    --border: 270 20% 88%;
+    --input: 270 20% 88%;
+    --ring: 300 85% 55%;
 
     /* Radius */
     --radius: 0.625rem;
 
     /* Brand gradient */
-    --brand: 222 25% 12%;
-    --brand-foreground: 0 0% 98%;
+    --brand: 300 85% 55%;
+    --brand-foreground: 0 0% 100%;
 
     /* Shadows - Purple tinted */
-    --shadow-sm: 0 1px 2px 0 hsl(222 25% 12% / 0.06);
+    --shadow-sm: 0 1px 2px 0 hsl(270 50% 20% / 0.05);
     --shadow-md:
-      0 4px 6px -1px hsl(222 25% 12% / 0.08),
-      0 2px 4px -2px hsl(222 25% 12% / 0.05);
+      0 4px 6px -1px hsl(270 50% 20% / 0.08),
+      0 2px 4px -2px hsl(270 50% 20% / 0.05);
     --shadow-lg:
-      0 10px 15px -3px hsl(222 25% 12% / 0.1),
-      0 4px 6px -4px hsl(222 25% 12% / 0.05);
+      0 10px 15px -3px hsl(270 50% 20% / 0.1),
+      0 4px 6px -4px hsl(270 50% 20% / 0.05);
     --shadow-xl:
-      0 20px 25px -5px hsl(222 25% 12% / 0.12),
-      0 8px 10px -6px hsl(222 25% 12% / 0.05);
-    --shadow-hover: 0 20px 40px -12px hsl(32 95% 54% / 0.18);
+      0 20px 25px -5px hsl(270 50% 20% / 0.12),
+      0 8px 10px -6px hsl(270 50% 20% / 0.05);
+    --shadow-hover: 0 20px 40px -12px hsl(300 85% 55% / 0.25);
   }
 
   .dark {
     /* 
-     * DARK MODE - Ink void with brass + cyan accents
+     * DARK MODE - Deep void with oracle glow
+     * Rich purple-black, vibrant gradient accents
      */
 
-    /* Surfaces */
-    --background: 224 35% 6%;
-    --foreground: 220 20% 96%;
+    /* Surfaces — Midnight Arcane: deep indigo void */
+    --background: 250 45% 5%;
+    --foreground: 260 25% 96%;
 
-    --card: 224 28% 9%;
-    --card-foreground: 220 20% 96%;
+    --card: 250 40% 8%;
+    --card-foreground: 260 25% 96%;
 
-    --popover: 224 28% 9%;
-    --popover-foreground: 220 20% 96%;
+    --popover: 250 40% 9%;
+    --popover-foreground: 260 25% 96%;
 
-    /* Primary */
-    --primary: 220 20% 96%;
-    --primary-foreground: 224 35% 7%;
+    /* Primary — bright violet, the spell-glow */
+    --primary: 260 25% 96%;
+    --primary-foreground: 250 45% 7%;
 
-    /* Secondary */
-    --secondary: 224 22% 13%;
-    --secondary-foreground: 220 20% 92%;
+    /* Secondary — deep arcane stone */
+    --secondary: 252 32% 13%;
+    --secondary-foreground: 260 22% 92%;
 
-    /* Muted */
-    --muted: 224 22% 13%;
-    --muted-foreground: 220 12% 70%;
+    /* Muted — twilight haze */
+    --muted: 252 30% 13%;
+    --muted-foreground: 258 18% 70%;
 
-    /* Accent */
-    --accent: 32 95% 62%;
-    --accent-foreground: 224 35% 7%;
+    /* Accent — luminous violet (the signature) */
+    --accent: 265 90% 85%;
+    --accent-foreground: 250 60% 6%;
 
-    /* Gradient */
-    --gradient-start: 32 95% 62%;
+    /* Gradient — violet → cyan, restrained magical glow */
+    --gradient-start: 265 85% 76%;
     --gradient-end: 195 90% 60%;
 
     --destructive: 0 78% 62%;
@@ -205,23 +207,23 @@
     --contrast-foreground: 250 50% 5%;
 
     /* Borders — barely-there indigo */
-    --border: 224 18% 16%;
-    --input: 224 18% 16%;
-    --ring: 32 95% 62%;
+    --border: 252 28% 16%;
+    --input: 252 28% 16%;
+    --ring: 265 85% 70%;
 
     /* Brand */
-    --brand: 220 20% 96%;
-    --brand-foreground: 224 35% 7%;
+    --brand: 265 85% 70%;
+    --brand-foreground: 250 50% 8%;
 
     /* Shadows — violet-tinted depth */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.38);
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
     --shadow-md:
-      0 4px 6px -1px rgb(0 0 0 / 0.48), 0 2px 4px -2px rgb(0 0 0 / 0.36);
+      0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.4);
     --shadow-lg:
-      0 10px 15px -3px rgb(0 0 0 / 0.48), 0 4px 6px -4px rgb(0 0 0 / 0.36);
+      0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4);
     --shadow-xl:
-      0 20px 25px -5px rgb(0 0 0 / 0.58), 0 8px 10px -6px rgb(0 0 0 / 0.4);
-    --shadow-hover: 0 25px 60px -12px hsl(32 95% 62% / 0.22);
+      0 20px 25px -5px rgb(0 0 0 / 0.6), 0 8px 10px -6px rgb(0 0 0 / 0.4);
+    --shadow-hover: 0 25px 60px -12px hsl(265 85% 70% / 0.35);
   }
 }
 
@@ -245,7 +247,12 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family:
+      'Inter',
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      sans-serif;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     overscroll-behavior-y: contain;
   }
@@ -305,12 +312,12 @@
     background-image:
       radial-gradient(
         40% 40% at 8% 0%,
-        hsl(var(--accent) / 0.18) 0%,
+        hsl(var(--accent) / 0.22) 0%,
         transparent 70%
       ),
       radial-gradient(
         40% 40% at 100% 100%,
-        hsl(var(--primary) / 0.12) 0%,
+        hsl(var(--primary) / 0.18) 0%,
         transparent 70%
       );
     filter: blur(40px);
@@ -319,12 +326,12 @@
     background-image:
       linear-gradient(
         to right,
-        hsl(var(--foreground) / 0.05) 1px,
+        hsl(var(--foreground) / 0.06) 1px,
         transparent 1px
       ),
       linear-gradient(
         to bottom,
-        hsl(var(--foreground) / 0.05) 1px,
+        hsl(var(--foreground) / 0.06) 1px,
         transparent 1px
       );
     background-size: 4rem 4rem;
@@ -350,7 +357,6 @@
       90deg,
       hsl(var(--accent)),
       hsl(var(--primary) / 0.9),
-      hsl(var(--gradient-end)),
       hsl(var(--accent))
     );
     -webkit-background-clip: text;
@@ -369,9 +375,9 @@
     border-radius: inherit;
     background: linear-gradient(
       120deg,
-      hsl(var(--accent) / 0.5),
-      hsl(var(--primary) / 0.4),
-      hsl(var(--gradient-end) / 0.35)
+      hsl(var(--accent) / 0.6),
+      hsl(var(--primary) / 0.5),
+      hsl(var(--accent) / 0.6)
     );
     filter: blur(14px);
     opacity: 0.35;
@@ -384,16 +390,16 @@
   }
 
   .overlay-backdrop {
-      background-color: hsl(var(--background) / 0.88);
+    background-color: hsl(var(--background) / 0.9);
   }
 
   .overlay-control {
-      background-color: hsl(var(--background) / 0.5);
+    background-color: hsl(var(--background) / 0.55);
     color: hsl(var(--foreground));
   }
 
   .overlay-control:hover {
-      background-color: hsl(var(--background) / 0.7);
+    background-color: hsl(var(--background) / 0.72);
   }
 
   .overlay-counter {
@@ -563,7 +569,9 @@
 
   /* 3D hover for demo cards */
   .demo-card-3d {
-    transition: transform 0.5s ease, box-shadow 0.5s ease;
+    transition:
+      transform 0.5s ease,
+      box-shadow 0.5s ease;
   }
   .demo-card-3d:hover {
     transform: perspective(800px) rotateX(2deg) rotateY(-3deg) scale(1.02);
@@ -571,7 +579,10 @@
 
   /* ---- Value card hover glow ---- */
   .value-card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    transition:
+      transform 0.3s ease,
+      box-shadow 0.3s ease,
+      border-color 0.3s ease;
   }
   .value-card:hover {
     transform: translateY(-4px);
@@ -584,7 +595,12 @@
   /* ---- Section divider ---- */
   .section-divider {
     height: 1px;
-    background: linear-gradient(to right, transparent, hsl(var(--accent) / 0.3), transparent);
+    background: linear-gradient(
+      to right,
+      transparent,
+      hsl(var(--accent) / 0.3),
+      transparent
+    );
   }
 
   /* Page background — single elegant gradient shared across every route. */
@@ -598,8 +614,6 @@
     );
     z-index: -10;
   }
-
-
 
   .bg-page-noise {
     opacity: 0.03;
@@ -624,7 +638,9 @@
       0 0 0 1px hsl(var(--accent) / 0.05),
       var(--shadow-md),
       inset 0 1px 0 hsl(var(--contrast) / 0.03);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition:
+      transform 0.3s ease,
+      box-shadow 0.3s ease;
   }
 
   .glass-card:hover {
@@ -654,8 +670,12 @@
   }
 
   @keyframes gradientRotate {
-    0% { --gradient-angle: 0deg; }
-    100% { --gradient-angle: 360deg; }
+    0% {
+      --gradient-angle: 0deg;
+    }
+    100% {
+      --gradient-angle: 360deg;
+    }
   }
 
   @property --gradient-angle {
@@ -663,7 +683,6 @@
     initial-value: 0deg;
     inherits: false;
   }
-
 }
 
 /* ========================================
