@@ -58,7 +58,6 @@ const EDGE_FUNCTIONS: EdgeFnDef[] = [
   // Maintenance
   { name: 'admin-analytics', label: 'Admin Analytics', description: 'Fetch admin analytics data', method: 'GET', category: 'maintenance' },
   { name: 'cleanup-logs', label: 'Cleanup Logs', description: 'Delete old translation logs (30-day retention)', method: 'POST', category: 'maintenance', dangerous: true },
-  { name: 'generate-retention-triggers', label: 'Retention Triggers', description: 'Run retention trigger jobs', method: 'POST', category: 'maintenance' },
   { name: 'get-affiliate-config', label: 'Affiliate Config', description: 'Get affiliate link configuration', method: 'GET', category: 'other' },
   { name: 'process-email-queue', label: 'Process Email Queue', description: 'Process pending email queue', method: 'POST', category: 'maintenance' },
 ];
