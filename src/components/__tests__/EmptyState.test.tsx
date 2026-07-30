@@ -188,7 +188,7 @@ describe('EmptyState', () => {
     const handler = vi.fn();
     render(<EmptyState query="dragon tokens" onTrySuggestion={handler} />);
 
-    expect(screen.getByText('Quick refine')).toBeInTheDocument();
+    expect(screen.getByText('Broaden this search')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '+ Commander' }));
     expect(handler).toHaveBeenCalledWith('dragon tokens f:commander');
   });
