@@ -8,7 +8,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n';
-import { supabase } from '@/integrations/supabase/client';
 
 const AuthModal = lazy(() =>
   import('@/components/AuthModal').then((m) => ({ default: m.AuthModal })),
@@ -25,7 +24,6 @@ export function Header() {
   const { hasRole: isAdmin } = useUserRole('admin');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [savedCount, setSavedCount] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
@@ -34,29 +32,6 @@ export function Header() {
     { label: t('nav.combos', 'Combos'), href: '/combos' },
     { label: t('header.about', 'About'), href: '/about' },
   ];
-
-  useEffect(() => {
-    let isMounted = true;
-    if (!user) {
-      return () => {
-        isMounted = false;
-      };
-    }
-
-    supabase
-      .from('saved_searches')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .then(({ count, error }) => {
-        if (!isMounted) return;
-        if (error) setSavedCount(0);
-        else setSavedCount(count ?? 0);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [user]);
 
   useEffect(() => {
     let raf = 0;
@@ -136,12 +111,6 @@ export function Header() {
             <div className="mt-4 pt-4 border-t border-border/50">
               {user ? (
                 <>
-                  <Link to="/saved" onClick={() => setMobileMenuOpen(false)} className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring">
-                    {t('nav.savedSearches', 'Saved Searches')}
-                  </Link>
-                  <Link to="/collection" onClick={() => setMobileMenuOpen(false)} className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring">
-                    {t('nav.collection', 'My Collection')}
-                  </Link>
                   <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring">
                     {t('nav.profileSettings')}
                   </Link>
@@ -216,7 +185,6 @@ export function Header() {
               user={user}
               displayName={displayName}
               avatarUrl={avatarUrl}
-              savedCount={savedCount}
               isAdmin={isAdmin}
               onSignOut={signOut}
               onOpenAuth={() => setAuthModalOpen(true)}

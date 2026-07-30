@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { LogIn, LogOut, Bookmark, User, Settings, Shield, Package } from 'lucide-react';
+import { LogIn, LogOut, User, Settings, Shield } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import {
@@ -17,7 +17,6 @@ interface HeaderDesktopActionsProps {
   } | null;
   displayName?: string | null;
   avatarUrl?: string | null;
-  savedCount: number;
   isAdmin: boolean;
   onSignOut: () => void;
   onOpenAuth: () => void;
@@ -27,7 +26,6 @@ export function HeaderDesktopActions({
   user,
   displayName,
   avatarUrl,
-  savedCount,
   isAdmin,
   onSignOut,
   onOpenAuth,
