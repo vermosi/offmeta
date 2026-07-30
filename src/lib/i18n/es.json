@@ -1249,4 +1249,8 @@
     "compare.subheading":  "Scryfall es la fuente de verdad, pero su lenguaje de consulta recompensa a los expertos. OffMeta permite preguntar en lenguaje natural y muestra la consulta exacta que construyó.",
     "examples.step2Hint":  "Mira cómo la jerga y los conceptos se convierten en consultas de Scryfall.",
     "explain.summary":  "OffMeta transformó tu redacción en señales de búsqueda y luego construyó la consulta exacta de Scryfall."
+,    "hero.helpText":  "Try “budget board wipes under $5” or “cards similar to Seedborn Muse”.",
+    "compare.heading":  "What OffMeta builds from your words",
+    "examples.step1Hint":  "Start with the card, effect, price, or format you need.",
+    "examples.step3Hint":  "Use search results to refine, compare, or keep browsing."
 }

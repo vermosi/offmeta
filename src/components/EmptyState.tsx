@@ -82,6 +82,32 @@ const QUICK_REFINEMENTS = [
   { label: 'Budget', token: 'usd<5' },
 ] as const;
 
+function buildRecoveryActions(
+  query: string | undefined,
+  filters: FilterState | null | undefined,
+): Array<{ label: string; token?: string; patch?: Partial<FilterState> }> {
+  const actions: Array<{ label: string; token?: string; patch?: Partial<FilterState> }> = [];
+  const text = (query ?? '').toLowerCase();
+
+  if (text.includes('budget') || text.includes('cheap') || text.includes('$')) {
+    actions.push({ label: 'Drop the price limit', token: 'usd<5' });
+  }
+  if (text.includes('commander') || text.includes('edh')) {
+    actions.push({ label: 'Search all formats', patch: { format: undefined } });
+  }
+  if (text.includes('white') || text.includes('blue') || text.includes('black') || text.includes('red') || text.includes('green')) {
+    actions.push({ label: 'Broaden color identity', patch: { colors: [] } });
+  }
+  if (text.includes('creature') || text.includes('artifact') || text.includes('enchantment') || text.includes('instant') || text.includes('sorcery')) {
+    actions.push({ label: 'Remove the type filter', patch: { types: [] } });
+  }
+  if (filters?.cmcRange && (filters.cmcRange[0] > 0 || filters.cmcRange[1] < 16)) {
+    actions.push({ label: 'Remove mana value limit', patch: { cmcRange: [0, 16] } });
+  }
+
+  return actions.slice(0, 4);
+}
+
 interface Chip {
   key: string;
   label: string;
@@ -174,6 +200,7 @@ export const EmptyState = ({
   const hasSuggestions = suggestions && suggestions.length > 0;
   const appliedChips = buildAppliedChips(activeFilters);
   const hasAppliedFilters = appliedChips.length > 0;
+  const recoveryActions = buildRecoveryActions(query, activeFilters);
 
   return (
     <div
@@ -336,32 +363,53 @@ export const EmptyState = ({
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-foreground">
-              {t('empty.quickRefine', 'Quick refine')}
+              {t('empty.quickRefine', 'Broaden this search')}
             </span>
           </div>
           <p className="text-xs text-muted-foreground mb-3">
             {t(
               'empty.quickRefineHint',
-              'Try a common tag or filter without rebuilding the whole query.',
+              'Try a smaller change first. These are the quickest ways to get more results.',
             )}
           </p>
           <div className="flex flex-wrap gap-2">
-            {QUICK_REFINEMENTS.map((item) => {
+            {(recoveryActions.length > 0
+              ? recoveryActions
+              : QUICK_REFINEMENTS.map((item) => ({
+                  label: item.label,
+                  token: item.token,
+                }))
+            ).map((item) => {
+              if (item.patch) {
+                return (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={() => onApplyFilterPatch?.(item.patch!)}
+                    disabled={!onApplyFilterPatch}
+                    className="rounded-full border border-border/60 bg-background/70 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-foreground disabled:cursor-default disabled:opacity-60"
+                  >
+                    {item.label}
+                  </button>
+                );
+              }
+
+              const token = item.token ?? '';
               const existingTokens = query.trim().split(/\s+/);
               const nextQuery = existingTokens.some(
-                (part) => part.toLowerCase() === item.token.toLowerCase(),
+                (part) => part.toLowerCase() === token.toLowerCase(),
               )
                 ? query.trim()
-                : `${query.trim()} ${item.token}`.trim();
+                : `${query.trim()} ${token}`.trim();
 
               return (
                 <button
-                  key={item.token}
+                  key={item.label}
                   type="button"
                   onClick={() => onTrySuggestion(nextQuery)}
                   className="rounded-full border border-border/60 bg-background/70 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-foreground"
                 >
-                  + {item.label}
+                  {item.label}
                 </button>
               );
             })}

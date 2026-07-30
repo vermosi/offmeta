@@ -1,50 +1,46 @@
 /**
  * Hero section for the landing page.
- * Keeps the presentation premium but static, with no decorative animation
- * stack competing with the search experience.
+ * Kept small so the first screen stays focused on the search action.
  */
 
-import { ArrowRight, Compass, Sparkles } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ArrowRight, Search, Sparkles } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import { MTG_COPY } from '@/lib/i18n/copy';
 
 export function HeroSection() {
   const { t } = useTranslation();
 
   return (
     <section
-      className="relative pt-8 sm:pt-16 lg:pt-20 pb-6 sm:pb-8 overflow-x-hidden"
+      className="relative overflow-x-hidden pb-6 pt-8 sm:pb-8 sm:pt-14 lg:pt-18"
       aria-labelledby="hero-heading"
     >
-      <div className="container-main text-center relative z-10">
-        <div className="flex justify-center mb-4 sm:mb-6">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium border border-accent/30 bg-accent/10 text-accent backdrop-blur-sm">
+      <div className="container-main relative z-10 text-center">
+        <div className="mb-4 flex justify-center sm:mb-5">
+          <span className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1.5 text-xs font-medium text-accent backdrop-blur-sm">
             <Sparkles className="h-3 w-3" aria-hidden="true" />
-            {t('hero.taglinePill', 'AI-powered MTG discovery engine')}
+            {t('hero.taglinePill', 'Plain-English Magic search')}
           </span>
         </div>
 
         <h1
           id="hero-heading"
-          className="mb-3 sm:mb-5 text-foreground text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-semibold tracking-tight leading-[1.05]"
+          className="mb-3 text-3xl font-semibold tracking-tight leading-[1.05] text-foreground sm:text-5xl lg:text-6xl xl:text-7xl"
         >
           <span className="sr-only">
-            OffMeta — Natural Language MTG Search.{' '}
+            OffMeta. Search Magic cards in plain English.{' '}
           </span>
-          {t('hero.title', 'Find Magic cards, synergies, and')}{' '}
+          {t('hero.title', MTG_COPY.heroTitle)}{' '}
           <span className="text-accent">
-            {t('hero.titleAccent', 'hidden gems in plain English')}
+            {t('hero.titleAccent', 'Scryfall syntax')}
           </span>
         </h1>
 
-        <p className="text-sm sm:text-lg text-muted-foreground max-w-2xl mx-auto text-center leading-relaxed">
-          {t(
-            'hero.subtitleCompact',
-            'Describe the card, effect, or archetype you want — OffMeta turns plain English into a real Scryfall search and surfaces alternatives, synergies, and hidden gems you would never find with raw syntax.',
-          )}
+        <p className="mx-auto max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-lg">
+          {t('hero.subtitleCompact', MTG_COPY.heroSubtitle)}
         </p>
 
-        <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:mt-8 sm:flex-row">
           <button
             type="button"
             onClick={() => {
@@ -53,43 +49,16 @@ export function HeroSection() {
               input.focus();
               input.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }}
-            className="group inline-flex items-center justify-center gap-2 min-h-11 px-6 rounded-full bg-accent text-accent-foreground font-medium text-sm shadow-lg shadow-accent/20 hover:shadow-accent/35 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="group inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-accent px-6 text-sm font-medium text-accent-foreground shadow-lg shadow-accent/20 transition-colors hover:shadow-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             {t('hero.ctaPrimary', 'Start searching')}
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </button>
-
-          <Link
-            to="/archetypes"
-            className="group inline-flex items-center justify-center gap-2 min-h-11 px-6 rounded-full border border-border/80 bg-card/40 text-foreground font-medium text-sm backdrop-blur-md hover:bg-card/70 hover:border-accent/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-          >
-            <Compass
-              className="h-4 w-4 text-muted-foreground group-hover:text-accent transition-colors"
-              aria-hidden="true"
-            />
-            {t('hero.ctaSecondary', 'Explore archetypes')}
-          </Link>
         </div>
 
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground">
-          <Link
-            to="/docs/syntax"
-            className="rounded-full border border-border/70 bg-background/70 px-3 py-1.5 font-medium text-foreground transition-colors hover:border-accent/40 hover:text-accent"
-          >
-            {t('hero.learnSyntax', 'Learn syntax')}
-          </Link>
-          <Link
-            to="/guides"
-            className="rounded-full border border-border/70 bg-background/70 px-3 py-1.5 font-medium text-foreground transition-colors hover:border-accent/40 hover:text-accent"
-          >
-            {t('hero.browseGuides', 'Browse guides')}
-          </Link>
-          <Link
-            to="/saved"
-            className="rounded-full border border-border/70 bg-background/70 px-3 py-1.5 font-medium text-foreground transition-colors hover:border-accent/40 hover:text-accent"
-          >
-            {t('hero.savedSearches', 'Saved searches')}
-          </Link>
+        <div className="mt-4 inline-flex max-w-2xl items-center gap-2 rounded-full border border-border/60 bg-card/50 px-3 py-1.5 text-xs text-muted-foreground">
+          <Search className="h-3.5 w-3.5 shrink-0 text-accent" aria-hidden="true" />
+          {t('hero.helpText', MTG_COPY.heroHint)}
         </div>
       </div>
     </section>

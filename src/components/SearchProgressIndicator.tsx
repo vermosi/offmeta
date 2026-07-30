@@ -10,6 +10,7 @@
 import { useEffect, useState } from 'react';
 import { Check, Loader2 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
+import { MTG_COPY } from '@/lib/i18n/copy';
 import { cn } from '@/lib/utils';
 
 type StepStatus = 'pending' | 'active' | 'done';
@@ -85,6 +86,15 @@ export function SearchProgressIndicator({
 
   const completedCount = steps.filter((s) => s.status === 'done').length;
   const progressPercent = (completedCount / steps.length) * 100;
+  const statusText = isSearching
+    ? hasTranslation
+      ? t('search.progress.statusTranslating', MTG_COPY.interpretingAndFetching)
+      : t('search.progress.statusStarting', MTG_COPY.interpretingStatus)
+    : hasSearched
+      ? cardCount > 0
+        ? t('search.progress.statusDone', MTG_COPY.interpretedReady)
+        : t('search.progress.statusEmpty', MTG_COPY.interpretedEmpty)
+      : '';
 
   return (
     <div
@@ -132,6 +142,11 @@ export function SearchProgressIndicator({
           </div>
         ))}
       </div>
+      {statusText && (
+        <p className="mt-1 text-[11px] text-muted-foreground sm:text-xs">
+          {statusText}
+        </p>
+      )}
       <div className="mt-1.5 h-0.5 w-full overflow-hidden rounded-full bg-muted">
         <div
           className="h-full rounded-full bg-primary transition-all duration-500 ease-out"

@@ -63,7 +63,9 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
-vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock('sonner', () => ({
+  toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() },
+}));
 vi.mock('@/hooks/useAnalytics', () => ({
   useAnalytics: () => ({
     trackSearch: vi.fn(),
@@ -180,7 +182,7 @@ describe('Index – example queries', () => {
   it('clicking an example query triggers search and click attribution', async () => {
     await renderIndex(IndexPage);
     const exampleBtn = screen.getByRole('button', {
-      name: /search for cards that protect my commander/i,
+      name: /search for budget alternatives to rhystic study/i,
     });
     await act(async () => {
       fireEvent.click(exampleBtn);
@@ -189,12 +191,12 @@ describe('Index – example queries', () => {
     await waitFor(() => {
       expect(mockTranslateQueryWithDedup).toHaveBeenCalledWith(
         expect.objectContaining({
-          query: 'cards that protect my commander',
+          query: 'budget alternatives to Rhystic Study',
         }),
       );
       expect(mockTrackExampleQueryClick).toHaveBeenCalledWith(
         expect.objectContaining({
-          query: 'cards that protect my commander',
+          query: 'budget alternatives to Rhystic Study',
           category: 'flat',
         }),
       );

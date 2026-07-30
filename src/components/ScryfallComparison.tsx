@@ -12,6 +12,7 @@
 
 import { Search, Type } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import { MTG_COPY } from '@/lib/i18n/copy';
 
 interface ScryfallComparisonProps {
   onTrySearch?: (query: string) => void;
@@ -27,24 +28,24 @@ interface ComparisonRow {
 // against the current Scryfall grammar (verified via Scryfall docs).
 const ROWS: ReadonlyArray<ComparisonRow> = [
   {
-    intent: 'Budget alternatives to a staple',
-    natural: 'budget alternatives to Rhystic Study',
-    scryfall: 'o:"whenever an opponent casts" o:draw usd<5 -name:"Rhystic Study"',
+    intent: 'Budget board wipes',
+    natural: 'budget board wipes under $5',
+    scryfall: 't:sorcery o:destroy usd<5',
   },
   {
     intent: 'Cards that punish a strategy',
     natural: 'cards that punish treasure decks',
-    scryfall: 'o:treasure (o:sacrifice or o:destroy or o:exile or o:"can\'t")',
+    scryfall: 'o:treasure (o:sacrifice or o:destroy or o:exile)',
   },
   {
-    intent: 'Functional similars to a card',
+    intent: 'Cards similar to a known staple',
     natural: 'cards similar to Seedborn Muse',
     scryfall: 'o:"untap all" o:"during each" -name:"Seedborn Muse"',
   },
   {
-    intent: 'Hidden gems by price ceiling',
-    natural: 'hidden finishers under $5',
-    scryfall: 'o:"win the game" or o:"lose the game" usd<5 f:commander',
+    intent: 'Commander card draw',
+    natural: 'mono-white card draw for Commander',
+    scryfall: 'c:w o:draw f:commander',
   },
 ];
 
@@ -59,25 +60,16 @@ export function ScryfallComparison({ onTrySearch }: ScryfallComparisonProps) {
       <div className="container-main">
         <div className="text-center mb-8 sm:mb-10">
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-medium border border-border/60 bg-card/50 text-muted-foreground mb-3">
-            {t(
-              'compare.pill',
-              'Scryfall power, plain English',
-            )}
+            {t('compare.pill', MTG_COPY.comparisonPill)}
           </span>
           <h2
             id="scryfall-comparison-heading"
             className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-foreground"
           >
-            {t(
-              'compare.heading',
-              'What you would type in Scryfall vs. OffMeta',
-            )}
+            {t('compare.heading', MTG_COPY.comparisonHeading)}
           </h2>
           <p className="mt-3 text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
-            {t(
-              'compare.subheading',
-              'Scryfall is the source of truth — but its query language rewards experts. OffMeta lets anyone ask in plain English, then shows the exact query it built.',
-            )}
+            {t('compare.subheading', MTG_COPY.comparisonSubheading)}
           </p>
         </div>
 

@@ -10,7 +10,7 @@ vi.mock('@/lib/i18n', () => ({
 }));
 
 describe('HeroSection', () => {
-  it('renders primary and secondary navigation links', () => {
+  it('renders the primary search prompt and hint', () => {
     render(
       <MemoryRouter>
         <HeroSection />
@@ -18,18 +18,15 @@ describe('HeroSection', () => {
     );
 
     expect(
-      screen.getByRole('link', { name: 'Explore archetypes' }),
+      screen.getByRole('heading', {
+        name: /search magic cards without learning scryfall syntax/i,
+      }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Learn syntax' })).toHaveAttribute(
-      'href',
-      '/docs/syntax',
-    );
-    expect(screen.getByRole('link', { name: 'Browse guides' })).toHaveAttribute(
-      'href',
-      '/guides',
-    );
     expect(
-      screen.getByRole('link', { name: 'Saved searches' }),
-    ).toHaveAttribute('href', '/saved');
+      screen.getByRole('button', { name: /start searching/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/budget board wipes under \$5/i),
+    ).toBeInTheDocument();
   });
 });

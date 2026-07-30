@@ -4,7 +4,7 @@
  */
 
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookOpen, GitBranch, Lightbulb, Zap } from 'lucide-react';
+import { ArrowRight, BookOpen, Compass } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import type { SearchIntent } from '@/types/search';
 
@@ -38,13 +38,7 @@ function chooseActions({
       to: '/deck-recs',
       labelKey: 'results.nextActions.deckRecs.label',
       descriptionKey: 'results.nextActions.deckRecs.description',
-      icon: Lightbulb,
-    });
-    actions.push({
-      to: '/combos',
-      labelKey: 'results.nextActions.combos.label',
-      descriptionKey: 'results.nextActions.combos.description',
-      icon: Zap,
+      icon: Compass,
     });
   } else if (text.includes('tribe') || text.includes('dragon') || text.includes('elf') || text.includes('goblin')) {
     actions.push({
@@ -53,31 +47,25 @@ function chooseActions({
       descriptionKey: 'results.nextActions.guides.description',
       icon: BookOpen,
     });
-    actions.push({
-      to: '/archetypes',
-      labelKey: 'results.nextActions.archetypes.label',
-      descriptionKey: 'results.nextActions.archetypes.description',
-      icon: GitBranch,
-    });
   } else if (totalCards > 50 && queryQualityScore >= 0.5) {
-    actions.push({
-      to: '/combos',
-      labelKey: 'results.nextActions.combos.label',
-      descriptionKey: 'results.nextActions.combos.descriptionBroad',
-      icon: Zap,
-    });
     actions.push({
       to: '/guides',
       labelKey: 'results.nextActions.guides.label',
       descriptionKey: 'results.nextActions.guides.descriptionBroad',
       icon: BookOpen,
     });
+    actions.push({
+      to: '/archetypes',
+      labelKey: 'results.nextActions.archetypes.label',
+      descriptionKey: 'results.nextActions.archetypes.description',
+      icon: Compass,
+    });
   } else {
     actions.push({
       to: '/deck-recs',
       labelKey: 'results.nextActions.deckRecs.label',
       descriptionKey: 'results.nextActions.deckRecs.descriptionFallback',
-      icon: Lightbulb,
+      icon: Compass,
     });
     actions.push({
       to: '/guides',
@@ -87,14 +75,7 @@ function chooseActions({
     });
   }
 
-  actions.push({
-    to: '/archetypes',
-    labelKey: 'results.nextActions.archetypes.label',
-    descriptionKey: 'results.nextActions.archetypes.descriptionFallback',
-    icon: GitBranch,
-  });
-
-  return actions.slice(0, 3);
+  return actions.slice(0, 2);
 }
 
 export function SearchNextActions(props: SearchNextActionsProps) {
@@ -106,17 +87,17 @@ export function SearchNextActions(props: SearchNextActionsProps) {
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            {t('results.nextActions.title', 'What next?')}
+            {t('results.nextActions.title', 'Next step')}
           </p>
           <p className="mt-1 text-sm text-foreground">
             {t(
               'results.nextActions.subtitle',
-              'Pick a next move from the cards you just found.',
+              'Choose one follow-up from the cards you just found.',
             )}
           </p>
         </div>
       </div>
-      <div className="mt-3 grid gap-2 sm:grid-cols-3">
+      <div className="mt-3 grid gap-2 sm:grid-cols-2">
         {actions.map(({ to, labelKey, descriptionKey, icon: Icon }) => (
           <Link
             key={to}

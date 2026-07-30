@@ -1249,4 +1249,8 @@
     "compare.subheading":  "Scryfall is the source of truth — but its query language rewards experts. OffMeta lets anyone ask in plain English, then shows the exact query it built.",
     "examples.step2Hint":  "See how slang and concepts become Scryfall queries.",
     "explain.summary":  "OffMeta mapped your wording into search signals, then built the exact Scryfall query."
+,    "hero.helpText":  "Try “budget board wipes under $5” or “cards similar to Seedborn Muse”.",
+    "compare.heading":  "What OffMeta builds from your words",
+    "examples.step1Hint":  "Start with the card, effect, price, or format you need.",
+    "examples.step3Hint":  "Use search results to refine, compare, or keep browsing."
 }

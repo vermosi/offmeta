@@ -26,7 +26,7 @@ const SearchFeedback = lazy(() =>
   })),
 );
 const SearchHelpModal = lazy(() =>
-  import('@/components/SearchHelpModal').then((m) => ({
+  import('@/components/SearchHelpModal/SearchHelpModal').then((m) => ({
     default: m.SearchHelpModal,
   })),
 );
