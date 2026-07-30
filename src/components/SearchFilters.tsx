@@ -252,7 +252,7 @@ export function SearchFilters({
           <Shield className="h-3.5 w-3.5 mr-1 opacity-50 shrink-0" />
           <SelectValue placeholder="Format" />
         </SelectTrigger>
-        <SelectContent className="z-50 border border-border/70 bg-popover shadow-lg">
+        <SelectContent className="z-50 border border-border bg-popover shadow-lg">
           <SelectItem value="__none__" className="text-xs sm:text-sm text-muted-foreground">
             All Formats
           </SelectItem>
@@ -293,7 +293,7 @@ export function SearchFilters({
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className="z-50 w-80 border border-border/70 bg-popover p-4 shadow-lg"
+          className="z-50 w-80 border border-border bg-popover p-4 shadow-lg"
           align="start"
           sideOffset={8}
         >

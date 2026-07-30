@@ -25,6 +25,7 @@ const BUILT_WITH = [
   { name: 'TypeScript', href: 'https://www.typescriptlang.org' },
   { name: 'Tailwind CSS', href: 'https://tailwindcss.com' },
   { name: 'Vite', href: 'https://vitejs.dev' },
+  { name: 'Lovable', href: 'https://lovable.dev' },
 ] as const;
 
 function ExternalAnchor({ href, children }: { href: string; children: React.ReactNode }) {
@@ -83,7 +84,7 @@ export function Footer() {
                 {GUIDES.length > MAX_MOBILE_GUIDES && (
                   <li>
                     <Link to="/guides" className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground">
-                      {t('footer.allGuides', 'All guides')}
+                      {t('footer.allGuides', 'All guides →')}
                     </Link>
                   </li>
                 )}

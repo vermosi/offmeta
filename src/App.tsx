@@ -1,16 +1,13 @@
 /**
  * Root application component. Always mounts the full router so the homepage
  * (SearchExperience) has BrowserRouter, providers, and the same shell as
- * every other route — matching the published production behavior.
+ * every other route - matching the published production behavior.
  */
 
-import { useEffect } from 'react';
 import { ThemeProvider } from 'next-themes';
 import { I18nProvider } from '@/lib/i18n';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import AppRoutes from './AppRoutes';
-
-const routeFallback = <div className="min-h-screen bg-background" />;
 
 const App = () => <AppShell />;
 
