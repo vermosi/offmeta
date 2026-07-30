@@ -258,42 +258,8 @@ Deno.serve(withLogging('seo-health-check', async (req) => {
   const criticalRows = rows.filter((r) => r.severity === 'critical');
   const criticals = criticalRows.length;
 
-  // Alert admins on critical regressions (one notification per run, deduped by day)
   if (criticals > 0) {
-    try {
-      const { data: admins } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .eq('role', 'admin');
-      const adminIds = (admins ?? []).map((a: { user_id: string }) => a.user_id);
-      if (adminIds.length > 0) {
-        const today = new Date().toISOString().slice(0, 10);
-        const summary = criticalRows
-          .slice(0, 5)
-          .map((r) => {
-            const fails = (r.details as { failures?: string[] }).failures ?? [];
-            return `${r.target_url.replace(SITE_ORIGIN, '')} — ${fails.join(', ')}`;
-          })
-          .join('\n');
-        const body =
-          `${criticals} critical SEO regression${criticals === 1 ? '' : 's'} detected on prerendered card pages.\n\n${summary}` +
-          (criticals > 5 ? `\n\n…and ${criticals - 5} more.` : '');
-        const notifications = adminIds.map((user_id) => ({
-          user_id,
-          type: 'seo_regression',
-          title: `SEO regression: ${criticals} critical issue${criticals === 1 ? '' : 's'}`,
-          body,
-          metadata: {
-            run_date: today,
-            critical_count: criticals,
-            urls: criticalRows.map((r) => r.target_url),
-          },
-        }));
-        await supabase.from('user_notifications').insert(notifications);
-      }
-    } catch (err) {
-      console.error('seo-health-check: alert dispatch failed', err);
-    }
+    console.warn(`seo-health-check: ${criticals} critical SEO regression(s) detected`);
   }
 
   return new Response(
