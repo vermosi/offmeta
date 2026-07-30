@@ -158,7 +158,6 @@ const Index = () => {
   const {
     trackLandingPageView,
     trackHomePageView,
-    trackFirstSave,
     trackFirstReturnVisit,
     trackEvent,
   } = useAnalytics();
