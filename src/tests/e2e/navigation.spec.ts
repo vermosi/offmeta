@@ -77,7 +77,6 @@ test.describe('Navigation Flow', () => {
 
     // Check a subset of important links exist
     await expect(footer.locator('a[href="/about"]')).toBeVisible();
-    await expect(footer.locator('a[href="/archetypes"]')).toBeVisible();
   });
 
   test('404 page renders and has return home link', async ({ page }) => {

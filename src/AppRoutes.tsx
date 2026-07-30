@@ -21,8 +21,6 @@ const AdminAnalytics = lazy(() => import('./pages/AdminAnalytics'));
 const AdminCuratedSearches = lazy(() => import('./pages/AdminCuratedSearches'));
 const DeckRecommendations = lazy(() => import('./pages/DeckRecommendations'));
 const FindMyCombos = lazy(() => import('./pages/FindMyCombos'));
-const ArchetypesIndex = lazy(() => import('./pages/ArchetypesIndex'));
-const ArchetypePage = lazy(() => import('./pages/ArchetypePage'));
 const BrowseSearches = lazy(() => import('./pages/BrowseSearches'));
 const About = lazy(() => import('./pages/About'));
 const MarketTrends = lazy(() => import('./pages/MarketTrends'));
@@ -68,8 +66,6 @@ export default function AppRoutes() {
             <Route path="/admin/curated-searches" element={withFullApp(<AdminCuratedSearches />)} />
             <Route path="/deck-recs" element={withFullApp(<DeckRecommendations />)} />
             <Route path="/combos" element={withFullApp(<FindMyCombos />)} />
-            <Route path="/archetypes" element={withFullApp(<ArchetypesIndex />)} />
-            <Route path="/archetypes/:slug" element={withFullApp(<ArchetypePage />)} />
             <Route path="/browse-searches" element={withFullApp(<BrowseSearches />)} />
             <Route path="/about" element={withFullApp(<About />)} />
             <Route path="/market" element={withFullApp(<MarketTrends />)} />

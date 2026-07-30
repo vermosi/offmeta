@@ -7,15 +7,6 @@ export { useAdminAnalyticsData } from './useAdminAnalyticsData';
 export { useAdminAnalyticsFilters } from './useAdminAnalyticsFilters';
 export { useAffiliateConfig, wrapAffiliateUrl } from './useAffiliateConfig';
 export { useAnalytics } from './useAnalytics';
-export {
-  useArchetypeData,
-  useArchetypeDeckCounts,
-  useArchetypeTrends,
-  type ArchetypeEntry,
-  type MacroGroup,
-  type ArchetypesByFormat,
-  type TrendData,
-} from './useArchetypeData';
 export { useAuth, useAuthProvider, AuthContext } from './useAuth';
 export { useBatchPriceHistory } from './useBatchPriceHistory';
 export { useCompare } from './useCompare';
@@ -35,7 +26,6 @@ export { useSearchContext } from './useSearchContext';
 export { useSearchHandler, type SearchPhase } from './useSearchHandler';
 export { useSearchHistory } from './useSearchHistory';
 export { useTranslateQuery, usePrefetchPopularQueries, type TranslationResult } from './useSearchQuery';
-export { useSignatureCards, type SignatureCard } from './useSignatureCards';
 export { useSimilarCards, type SynergyCard, type SimilarityData } from './useSimilarCards';
 export { useToast, toast } from './useToast';
 export { useUndoRedo, type UndoableAction } from './useUndoRedo';

@@ -60,15 +60,6 @@ export default function DocsIndex() {
         icon: BookOpen,
       },
       {
-        title: t('docs.archetypesTitle', 'Archetypes & Metagame'),
-        description: t(
-          'docs.archetypesDesc',
-          'Browse MTG archetypes across formats with meta share percentages and signature cards.',
-        ),
-        href: '/archetypes',
-        icon: BookOpen,
-      },
-      {
         title: t('docs.marketTrendsTitle', 'Market Trends'),
         description: t(
           'docs.marketTrendsDesc',
