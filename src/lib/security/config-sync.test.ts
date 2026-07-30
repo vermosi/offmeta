@@ -80,9 +80,7 @@ describe('Security Configuration Synchronization', () => {
     });
 
     it('rate limit window is at least 30 seconds', () => {
-      expect(SECURITY_LIMITS.RATE_LIMIT_WINDOW_MS).toBeGreaterThanOrEqual(
-        30000,
-      );
+      expect(SECURITY_LIMITS.RATE_LIMIT_WINDOW_MS).toBeGreaterThanOrEqual(30000);
     });
 
     it('rate limit window is at most 5 minutes', () => {
@@ -95,9 +93,7 @@ describe('Security Configuration Synchronization', () => {
     });
 
     it('MIN_ALPHANUMERIC_RATIO catches spam queries', () => {
-      expect(SECURITY_LIMITS.MIN_ALPHANUMERIC_RATIO).toBeGreaterThanOrEqual(
-        0.3,
-      );
+      expect(SECURITY_LIMITS.MIN_ALPHANUMERIC_RATIO).toBeGreaterThanOrEqual(0.3);
       expect(SECURITY_LIMITS.MIN_ALPHANUMERIC_RATIO).toBeLessThanOrEqual(0.8);
     });
 
@@ -114,8 +110,7 @@ describe('Security Configuration Synchronization', () => {
 
     it('cannot modify SECURITY_LIMITS values', () => {
       expect(() => {
-        (SECURITY_LIMITS as { MAX_QUERY_LENGTH: number }).MAX_QUERY_LENGTH =
-          9999;
+        (SECURITY_LIMITS as { MAX_QUERY_LENGTH: number }).MAX_QUERY_LENGTH = 9999;
       }).toThrow();
     });
 
@@ -142,9 +137,7 @@ describe('Security Configuration Synchronization', () => {
 
       for (const limit of expectedLimits) {
         expect(SECURITY_LIMITS).toHaveProperty(limit);
-        expect(typeof (SECURITY_LIMITS as Record<string, unknown>)[limit]).toBe(
-          'number',
-        );
+        expect(typeof (SECURITY_LIMITS as Record<string, unknown>)[limit]).toBe('number');
       }
     });
 

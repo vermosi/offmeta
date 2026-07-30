@@ -74,8 +74,8 @@ export default function LandingPage() {
                 Search naturally
               </h2>
               <p className="text-sm text-muted-foreground">
-                Type things like "cheap green ramp spells" or "board wipes under
-                $5".
+                Type things like "cheap green ramp spells" or "board wipes
+                under $5".
               </p>
             </div>
 
@@ -93,10 +93,7 @@ export default function LandingPage() {
             </div>
 
             <div className="rounded-2xl border border-border/60 bg-card/70 p-4 shadow-sm backdrop-blur-sm">
-              <ArrowRight
-                className="mb-3 h-5 w-5 text-accent"
-                aria-hidden="true"
-              />
+              <ArrowRight className="mb-3 h-5 w-5 text-accent" aria-hidden="true" />
               <h2 className="mb-1 text-sm font-semibold text-foreground">
                 Go from idea to cards
               </h2>
@@ -109,8 +106,8 @@ export default function LandingPage() {
 
           <p className="mx-auto mt-6 max-w-3xl text-xs leading-relaxed text-muted-foreground sm:text-sm">
             OffMeta is built for players who think in game concepts first and
-            filters second. It is fast enough for casual brewing and transparent
-            enough for power users.
+            filters second. It is fast enough for casual brewing and
+            transparent enough for power users.
           </p>
 
           <form
@@ -143,10 +140,7 @@ export default function LandingPage() {
               Explore archetypes
             </a>
             <span aria-hidden="true">•</span>
-            <a
-              className="hover:text-foreground transition-colors"
-              href="/about"
-            >
+            <a className="hover:text-foreground transition-colors" href="/about">
               Why OffMeta
             </a>
             <span aria-hidden="true">•</span>

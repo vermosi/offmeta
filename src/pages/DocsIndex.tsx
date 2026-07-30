@@ -7,13 +7,7 @@ import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { GUIDE_SUMMARIES as GUIDES } from '@/data/guide-summaries';
-import {
-  BookOpen,
-  FileText,
-  Sparkles,
-  ChevronRight,
-  TrendingUp,
-} from 'lucide-react';
+import { BookOpen, FileText, Sparkles, ChevronRight, TrendingUp } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { SkipLinks } from '@/components/SkipLinks';
 import { applySeoMeta, injectJsonLd } from '@/lib/seo';
@@ -42,18 +36,8 @@ export default function DocsIndex() {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        {
-          '@type': 'ListItem',
-          position: 1,
-          name: 'OffMeta',
-          item: 'https://offmeta.app/',
-        },
-        {
-          '@type': 'ListItem',
-          position: 2,
-          name: 'Docs',
-          item: 'https://offmeta.app/docs',
-        },
+        { '@type': 'ListItem', position: 1, name: 'OffMeta', item: 'https://offmeta.app/' },
+        { '@type': 'ListItem', position: 2, name: 'Docs', item: 'https://offmeta.app/docs' },
       ],
     });
     return () => {
@@ -66,10 +50,7 @@ export default function DocsIndex() {
     () => [
       {
         title: t('docs.syntaxTitle', 'Search Syntax Cheat Sheet'),
-        description: t(
-          'docs.syntaxDesc',
-          'Translate common natural phrases into Scryfall operators.',
-        ),
+        description: t('docs.syntaxDesc', 'Translate common natural phrases into Scryfall operators.'),
         href: '/docs/syntax',
         icon: Sparkles,
       },
@@ -136,22 +117,13 @@ export default function DocsIndex() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background relative overflow-x-hidden">
-      <div
-        className="fixed inset-0 pointer-events-none bg-page-gradient"
-        aria-hidden="true"
-      />
-      <div
-        className="fixed inset-0 pointer-events-none bg-page-noise"
-        aria-hidden="true"
-      />
+      <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
+      <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
 
       <SkipLinks />
       <Header />
 
-      <main
-        id="main-content"
-        className="flex-1 container-main py-10 sm:py-14 lg:py-20"
-      >
+      <main id="main-content" className="flex-1 container-main py-10 sm:py-14 lg:py-20">
         <div className="max-w-2xl mx-auto space-y-10">
           <header className="space-y-4 text-center">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-foreground">
@@ -166,7 +138,7 @@ export default function DocsIndex() {
             <p>
               {t(
                 'docs.intro1',
-                "OffMeta is a natural language Magic: The Gathering card search engine. Instead of learning Scryfall's query syntax, you describe what you need in plain English -",
+                'OffMeta is a natural language Magic: The Gathering card search engine. Instead of learning Scryfall\'s query syntax, you describe what you need in plain English -',
               )}{' '}
               <em>
                 {t(
@@ -184,10 +156,7 @@ export default function DocsIndex() {
                 'docs.intro2',
                 'This documentation covers everything you need to get the most out of OffMeta: a full Search Syntax Cheat Sheet mapping natural phrases to Scryfall operators,',
               )}{' '}
-              <strong>
-                {GUIDES.length}{' '}
-                {t('docs.progressiveGuides', 'progressive search guides')}
-              </strong>{' '}
+              <strong>{GUIDES.length} {t('docs.progressiveGuides', 'progressive search guides')}</strong>{' '}
               {t(
                 'docs.intro2Tail',
                 'from beginner creature-type searches to expert multi-constraint queries, and a FAQ answering common questions about how the translation engine works.',
@@ -228,9 +197,7 @@ export default function DocsIndex() {
           </div>
 
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-foreground">
-              {t('docs.allGuides')}
-            </h2>
+            <h2 className="text-lg font-semibold text-foreground">{t('docs.allGuides')}</h2>
             <div className="grid sm:grid-cols-2 gap-2">
               {GUIDES.map((guide) => (
                 <Link

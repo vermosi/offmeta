@@ -117,11 +117,10 @@ export function HowItWorksSection() {
                 className="flex flex-col items-center text-center flex-1 min-w-0 stagger-children"
                 aria-labelledby={titleId}
               >
+
                 {/* Number badge */}
                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-bold mb-4 bg-gradient-to-br from-accent to-accent/50 text-accent-foreground shadow-lg shadow-accent/20">
-                  <span className="sr-only">
-                    {stepLabel} {number}
-                  </span>
+                  <span className="sr-only">{stepLabel} {number}</span>
                   <span aria-hidden="true">{number}</span>
                 </div>
 
@@ -154,14 +153,14 @@ export function HowItWorksSection() {
         })}
       </ol>
 
+
       {/* Mobile: vertical timeline */}
       <ol className="sm:hidden relative pl-10 list-none p-0 m-0">
         {/* Gradient vertical line */}
         <div
           className="absolute left-4 top-2 bottom-2 w-[2px] rounded-full"
           style={{
-            background:
-              'linear-gradient(to bottom, hsl(var(--accent)), hsl(var(--accent) / 0.1))',
+            background: 'linear-gradient(to bottom, hsl(var(--accent)), hsl(var(--accent) / 0.1))',
           }}
           aria-hidden="true"
         />
@@ -181,30 +180,22 @@ export function HowItWorksSection() {
                 className="relative"
                 aria-labelledby={titleId}
               >
+
+
                 {/* Node on the line */}
                 <div className="absolute -left-10 top-0 w-8 h-8 rounded-full bg-gradient-to-br from-accent to-accent/50 flex items-center justify-center text-xs font-bold text-accent-foreground shadow-md shadow-accent/20">
-                  <span className="sr-only">
-                    {stepLabel} {number}
-                  </span>
+                  <span className="sr-only">{stepLabel} {number}</span>
                   <span aria-hidden="true">{number}</span>
                 </div>
 
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <Icon
-                      className="h-5 w-5 text-accent flex-shrink-0"
-                      aria-hidden="true"
-                    />
-                    <h3
-                      id={titleId}
-                      className="text-sm font-semibold text-foreground"
-                    >
+                    <Icon className="h-5 w-5 text-accent flex-shrink-0" aria-hidden="true" />
+                    <h3 id={titleId} className="text-sm font-semibold text-foreground">
                       {title}
                     </h3>
                   </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    {detail}
-                  </p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{detail}</p>
                 </div>
               </li>
             );

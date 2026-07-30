@@ -35,28 +35,20 @@ export function ValuePropStrip() {
     >
       <div className="container-main">
         <div className="grid gap-3 md:grid-cols-3">
-          {VALUE_PROPS.map(
-            ({
-              icon: Icon,
-              titleKey,
-              titleFallback,
-              bodyKey,
-              bodyFallback,
-            }) => (
-              <div
-                key={titleKey}
-                className="rounded-2xl border border-border/60 bg-card/60 p-4 shadow-sm"
-              >
-                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <Icon className="h-4 w-4 text-accent" aria-hidden="true" />
-                  <span>{t(titleKey, titleFallback)}</span>
-                </div>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {t(bodyKey, bodyFallback)}
-                </p>
+          {VALUE_PROPS.map(({ icon: Icon, titleKey, titleFallback, bodyKey, bodyFallback }) => (
+            <div
+              key={titleKey}
+              className="rounded-2xl border border-border/60 bg-card/60 p-4 shadow-sm"
+            >
+              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <Icon className="h-4 w-4 text-accent" aria-hidden="true" />
+                <span>{t(titleKey, titleFallback)}</span>
               </div>
-            ),
-          )}
+              <p className="mt-2 text-sm text-muted-foreground">
+                {t(bodyKey, bodyFallback)}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
     </section>

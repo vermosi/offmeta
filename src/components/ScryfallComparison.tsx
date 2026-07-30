@@ -29,8 +29,7 @@ const ROWS: ReadonlyArray<ComparisonRow> = [
   {
     intent: 'Budget alternatives to a staple',
     natural: 'budget alternatives to Rhystic Study',
-    scryfall:
-      'o:"whenever an opponent casts" o:draw usd<5 -name:"Rhystic Study"',
+    scryfall: 'o:"whenever an opponent casts" o:draw usd<5 -name:"Rhystic Study"',
   },
   {
     intent: 'Cards that punish a strategy',
@@ -60,7 +59,10 @@ export function ScryfallComparison({ onTrySearch }: ScryfallComparisonProps) {
       <div className="container-main">
         <div className="text-center mb-8 sm:mb-10">
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-medium border border-border/60 bg-card/50 text-muted-foreground mb-3">
-            {t('compare.pill', 'Scryfall power, plain English')}
+            {t(
+              'compare.pill',
+              'Scryfall power, plain English',
+            )}
           </span>
           <h2
             id="scryfall-comparison-heading"
@@ -117,10 +119,10 @@ export function ScryfallComparison({ onTrySearch }: ScryfallComparisonProps) {
                     onClick={() => onTrySearch?.(row.natural)}
                     disabled={!onTrySearch}
                     className="text-left w-full text-sm sm:text-[15px] text-foreground hover:text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-                    aria-label={t(
-                      'compare.tryQuery',
-                      'Try this search',
-                    ).replace('{query}', row.natural)}
+                    aria-label={t('compare.tryQuery', 'Try this search').replace(
+                      '{query}',
+                      row.natural,
+                    )}
                   >
                     &ldquo;{row.natural}&rdquo;
                   </button>
@@ -129,6 +131,7 @@ export function ScryfallComparison({ onTrySearch }: ScryfallComparisonProps) {
             </article>
           ))}
         </div>
+
 
         <p className="mt-6 text-center text-xs text-muted-foreground/80 max-w-xl mx-auto">
           {t(

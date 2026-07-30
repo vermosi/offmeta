@@ -569,9 +569,7 @@
 
   /* 3D hover for demo cards */
   .demo-card-3d {
-    transition:
-      transform 0.5s ease,
-      box-shadow 0.5s ease;
+    transition: transform 0.5s ease, box-shadow 0.5s ease;
   }
   .demo-card-3d:hover {
     transform: perspective(800px) rotateX(2deg) rotateY(-3deg) scale(1.02);
@@ -579,10 +577,7 @@
 
   /* ---- Value card hover glow ---- */
   .value-card {
-    transition:
-      transform 0.3s ease,
-      box-shadow 0.3s ease,
-      border-color 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
   }
   .value-card:hover {
     transform: translateY(-4px);
@@ -595,12 +590,7 @@
   /* ---- Section divider ---- */
   .section-divider {
     height: 1px;
-    background: linear-gradient(
-      to right,
-      transparent,
-      hsl(var(--accent) / 0.3),
-      transparent
-    );
+    background: linear-gradient(to right, transparent, hsl(var(--accent) / 0.3), transparent);
   }
 
   /* Page background — single elegant gradient shared across every route. */
@@ -614,6 +604,8 @@
     );
     z-index: -10;
   }
+
+
 
   .bg-page-noise {
     opacity: 0.03;
@@ -638,9 +630,7 @@
       0 0 0 1px hsl(var(--accent) / 0.05),
       var(--shadow-md),
       inset 0 1px 0 hsl(var(--contrast) / 0.03);
-    transition:
-      transform 0.3s ease,
-      box-shadow 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
 
   .glass-card:hover {
@@ -670,12 +660,8 @@
   }
 
   @keyframes gradientRotate {
-    0% {
-      --gradient-angle: 0deg;
-    }
-    100% {
-      --gradient-angle: 360deg;
-    }
+    0% { --gradient-angle: 0deg; }
+    100% { --gradient-angle: 360deg; }
   }
 
   @property --gradient-angle {
@@ -683,6 +669,7 @@
     initial-value: 0deg;
     inherits: false;
   }
+
 }
 
 /* ========================================

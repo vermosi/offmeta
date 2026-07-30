@@ -21,7 +21,8 @@ const ABOUT_META = {
 
 const DEFAULT_META = {
   title: 'OffMeta — Natural Language MTG Card Search',
-  description: 'Find Magic cards by typing what you mean. No syntax required.',
+  description:
+    'Find Magic cards by typing what you mean. No syntax required.',
   url: 'https://offmeta.app/',
   image: 'https://offmeta.app/og-image.png',
 } as const;
@@ -61,8 +62,7 @@ export default function About() {
           .querySelector('meta[name="description"]')
           ?.getAttribute('content') ?? '',
       canonical:
-        document.querySelector('link[rel="canonical"]')?.getAttribute('href') ??
-        '',
+        document.querySelector('link[rel="canonical"]')?.getAttribute('href') ?? '',
     };
 
     document.title = ABOUT_META.title;
@@ -104,29 +104,15 @@ export default function About() {
           name: ABOUT_META.title,
           description: ABOUT_META.description,
           inLanguage: 'en',
-          isPartOf: {
-            '@type': 'WebSite',
-            name: 'OffMeta',
-            url: 'https://offmeta.app/',
-          },
+          isPartOf: { '@type': 'WebSite', name: 'OffMeta', url: 'https://offmeta.app/' },
           about: { '@id': 'https://offmeta.app/#organization' },
           primaryImageOfPage: { '@type': 'ImageObject', url: ABOUT_META.image },
         },
         {
           '@type': 'BreadcrumbList',
           itemListElement: [
-            {
-              '@type': 'ListItem',
-              position: 1,
-              name: 'OffMeta',
-              item: 'https://offmeta.app/',
-            },
-            {
-              '@type': 'ListItem',
-              position: 2,
-              name: 'About',
-              item: 'https://offmeta.app/about',
-            },
+            { '@type': 'ListItem', position: 1, name: 'OffMeta', item: 'https://offmeta.app/' },
+            { '@type': 'ListItem', position: 2, name: 'About', item: 'https://offmeta.app/about' },
           ],
         },
       ],
@@ -170,13 +156,11 @@ export default function About() {
               {t('about.badge', 'About OffMeta')}
             </p>
             <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-foreground leading-tight mb-6">
-              {t('about.heroTitle', 'Search Magic cards in plain English.')}{' '}
+              {t('about.heroTitle', 'Search Magic cards in plain English.')}
+              {' '}
               <br className="hidden sm:block" />
               <span className="text-accent">
-                {t(
-                  'about.heroAccent',
-                  'Get a real Scryfall query you can edit.',
-                )}
+                {t('about.heroAccent', 'Get a real Scryfall query you can edit.')}
               </span>
             </h1>
             <p className="max-w-3xl mx-auto text-lg sm:text-xl text-muted-foreground leading-relaxed mb-10">
@@ -257,10 +241,7 @@ export default function About() {
         <section className="py-16 sm:py-20 px-4 border-b border-border/30 bg-card/20">
           <div className="max-w-3xl mx-auto space-y-6">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-              {t(
-                'about.demoTitle',
-                'Plain English in, real Scryfall query out',
-              )}
+              {t('about.demoTitle', 'Plain English in, real Scryfall query out')}
             </h2>
             <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-4">
               <div>

@@ -4,19 +4,29 @@
  * every other route — matching the published production behavior.
  */
 
+import { Suspense, useEffect } from 'react';
 import { ThemeProvider } from 'next-themes';
 import { I18nProvider } from '@/lib/i18n';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import AppRoutes from './AppRoutes';
 
+const routeFallback = <div className="min-h-screen bg-background" />;
+
 const App = () => <AppShell />;
 
 function AppShell() {
+  useEffect(() => {
+    const shell = document.getElementById('static-shell');
+    if (shell) shell.style.display = 'none';
+  }, []);
+
   return (
     <I18nProvider>
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
         <ErrorBoundary>
-          <AppRoutes />
+          <Suspense fallback={routeFallback}>
+            <AppRoutes />
+          </Suspense>
         </ErrorBoundary>
       </ThemeProvider>
     </I18nProvider>

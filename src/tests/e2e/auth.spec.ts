@@ -2,7 +2,10 @@ import { expect, test } from '@playwright/test';
 import { mockAuthAPIs } from './fixtures/mock-helpers';
 
 async function openAuthDialog(page: Parameters<typeof test>[0]['page']) {
-  const desktopSignIn = page.getByRole('button', { name: /^sign in$/i }).first();
+  const desktopSignIn = page
+    .locator('button:visible')
+    .filter({ hasText: /^sign in$/i })
+    .first();
   if (await desktopSignIn.isVisible().catch(() => false)) {
     await desktopSignIn.click();
     return;

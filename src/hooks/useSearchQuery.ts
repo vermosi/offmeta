@@ -27,11 +27,6 @@ export function resetSearchRateLimitState() {
   minuteWindowStart = Date.now();
 }
 
-if (typeof window !== 'undefined') {
-  (window as Window & { __resetOffMetaSearchRateLimitState?: () => void }).__resetOffMetaSearchRateLimitState =
-    resetSearchRateLimitState;
-}
-
 export interface TranslationResult {
   edgeSource?: string;
   edgeResponseTimeMs?: number;

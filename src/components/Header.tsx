@@ -104,10 +104,7 @@ export function Header() {
           aria-modal="true"
           aria-label="Mobile navigation"
         >
-          <nav
-            className="container-main py-6 flex flex-col gap-1 pb-safe"
-            aria-label="Main navigation links"
-          >
+          <nav className="container-main py-6 flex flex-col gap-1 pb-safe" aria-label="Main navigation links">
             {CORE_LINKS.map((link) => (
               <Link
                 key={link.href}
@@ -139,33 +136,17 @@ export function Header() {
             <div className="mt-4 pt-4 border-t border-border/50">
               {user ? (
                 <>
-                  <Link
-                    to="/saved"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring"
-                  >
+                  <Link to="/saved" onClick={() => setMobileMenuOpen(false)} className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring">
                     {t('nav.savedSearches', 'Saved Searches')}
                   </Link>
-                  <Link
-                    to="/collection"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring"
-                  >
+                  <Link to="/collection" onClick={() => setMobileMenuOpen(false)} className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring">
                     {t('nav.collection', 'My Collection')}
                   </Link>
-                  <Link
-                    to="/profile"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring"
-                  >
+                  <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring">
                     {t('nav.profileSettings')}
                   </Link>
                   {isAdmin && (
-                    <Link
-                      to="/admin/analytics"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring"
-                    >
+                    <Link to="/admin/analytics" onClick={() => setMobileMenuOpen(false)} className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring">
                       {t('nav.adminDashboard')}
                     </Link>
                   )}
@@ -214,19 +195,11 @@ export function Header() {
             className="group flex items-center gap-2.5 min-h-0 focus-ring rounded-lg -ml-2 px-2 py-1"
             aria-label={t('header.home')}
           >
-            <Logo
-              variant="gradient"
-              className="h-7 w-7 sm:h-8 sm:w-8 transition-transform duration-200 group-hover:scale-105"
-            />
-            <span className="text-lg font-semibold tracking-tight">
-              OffMeta
-            </span>
+            <Logo variant="gradient" className="h-7 w-7 sm:h-8 sm:w-8 transition-transform duration-200 group-hover:scale-105" />
+            <span className="text-lg font-semibold tracking-tight">OffMeta</span>
           </Link>
 
-          <nav
-            className="hidden md:flex items-center gap-0.5"
-            aria-label="Main navigation"
-          >
+          <nav className="hidden md:flex items-center gap-0.5" aria-label="Main navigation">
             {CORE_LINKS.map((link) => (
               <Link
                 key={link.href}
@@ -254,18 +227,12 @@ export function Header() {
             type="button"
             className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors focus-ring"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
-            aria-label={
-              mobileMenuOpen ? t('header.closeMenu') : t('header.openMenu')
-            }
+            aria-label={mobileMenuOpen ? t('header.closeMenu') : t('header.openMenu')}
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-nav-menu"
             data-testid="hamburger-button"
           >
-            {mobileMenuOpen ? (
-              <X className="h-5 w-5" aria-hidden="true" />
-            ) : (
-              <Menu className="h-5 w-5" aria-hidden="true" />
-            )}
+            {mobileMenuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
           </button>
         </div>
       </header>

@@ -42,12 +42,7 @@ function buildRelatedSearches(
   }
 
   const colorValues = intent?.colors?.values ?? [];
-  if (
-    colorValues.length === 0 &&
-    !/\b(mono|white|blue|black|red|green|colorless|azorius|dimir|rakdos|gruul|selesnya)\b/i.test(
-      lower,
-    )
-  ) {
+  if (colorValues.length === 0 && !/\b(mono|white|blue|black|red|green|colorless|azorius|dimir|rakdos|gruul|selesnya)\b/i.test(lower)) {
     suggestions.push(`mono blue ${q}`);
     suggestions.push(`mono green ${q}`);
   } else if (colorValues.length === 1) {
@@ -160,6 +155,7 @@ export function SearchNextStepsBar({
     }
   }, [buildShareUrl, originalQuery, activeTab, trackEvent, t]);
 
+
   const handleJumpToSimilar = useCallback(() => {
     trackEvent('next_steps_jump_similar', {
       query: originalQuery,
@@ -223,7 +219,9 @@ export function SearchNextStepsBar({
           className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border/60 bg-background/60 px-3 py-1.5 text-sm text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5"
         >
           <Sparkles className="h-4 w-4 text-accent" aria-hidden="true" />
-          <span>{t('results.nextSteps.jumpSimilar', 'Jump to similar')}</span>
+          <span>
+            {t('results.nextSteps.jumpSimilar', 'Jump to similar')}
+          </span>
         </button>
 
         <button
@@ -246,7 +244,10 @@ export function SearchNextStepsBar({
       </div>
 
       {showRelated && related.length > 0 && (
-        <div id="next-steps-related-list" className="mt-3 flex flex-wrap gap-2">
+        <div
+          id="next-steps-related-list"
+          className="mt-3 flex flex-wrap gap-2"
+        >
           {related.map((suggestion) => (
             <button
               key={suggestion}

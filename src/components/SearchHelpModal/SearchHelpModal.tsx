@@ -62,14 +62,11 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
           <span className="hidden sm:inline">{t('help.label', 'Help')}</span>
         </Button>
       </DialogTrigger>
-      <DialogContent
-        className="max-w-2xl max-h-[85vh] p-0 gap-0"
-        aria-describedby={undefined}
-      >
+      <DialogContent className="max-w-2xl max-h-[85vh] p-0 gap-0" aria-describedby={undefined}>
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="flex items-center gap-2 text-xl">
             <BookOpen className="h-5 w-5 text-primary" />
-            {t('help.title', 'Search Help')}
+          {t('help.title', 'Search Help')}
           </DialogTitle>
         </DialogHeader>
 
@@ -78,39 +75,26 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
             <TabsList className="w-full grid grid-cols-4">
               <TabsTrigger value="examples" className="gap-2">
                 <Lightbulb className="h-4 w-4" />
-                <span className="hidden sm:inline">
-                  {t('help.tabs.examples', 'Examples')}
-                </span>
+                <span className="hidden sm:inline">{t('help.tabs.examples', 'Examples')}</span>
               </TabsTrigger>
               <TabsTrigger value="advanced" className="gap-2">
                 <Zap className="h-4 w-4" />
-                <span className="hidden sm:inline">
-                  {t('help.tabs.advanced', 'Advanced')}
-                </span>
+                <span className="hidden sm:inline">{t('help.tabs.advanced', 'Advanced')}</span>
               </TabsTrigger>
               <TabsTrigger value="confidence" className="gap-2">
                 <Target className="h-4 w-4" />
-                <span className="hidden sm:inline">
-                  {t('help.tabs.confidence', 'Confidence')}
-                </span>
+                <span className="hidden sm:inline">{t('help.tabs.confidence', 'Confidence')}</span>
               </TabsTrigger>
               <TabsTrigger value="tips" className="gap-2">
                 <Sparkles className="h-4 w-4" />
-                <span className="hidden sm:inline">
-                  {t('help.tabs.tips', 'Tips')}
-                </span>
+                <span className="hidden sm:inline">{t('help.tabs.tips', 'Tips')}</span>
               </TabsTrigger>
             </TabsList>
           </div>
 
           <ScrollArea className="h-[400px] px-6 py-4">
             <TabsContent value="examples" className="mt-0 space-y-6">
-              <p className="text-sm text-muted-foreground">
-                {t(
-                  'help.examples.intro',
-                  'Start with these examples to get the hang of natural-language search.',
-                )}
-              </p>
+              <p className="text-sm text-muted-foreground">{t('help.examples.intro', 'Start with these examples to get the hang of natural-language search.')}</p>
 
               {EXAMPLE_QUERIES.map((category) => (
                 <div key={category.categoryKey} className="space-y-3">
@@ -147,12 +131,7 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
             </TabsContent>
 
             <TabsContent value="advanced" className="mt-0 space-y-6">
-              <p className="text-sm text-muted-foreground">
-                {t(
-                  'help.advanced.intro',
-                  'Use these advanced patterns when you want precise control over the query.',
-                )}
-              </p>
+              <p className="text-sm text-muted-foreground">{t('help.advanced.intro', 'Use these advanced patterns when you want precise control over the query.')}</p>
 
               {ADVANCED_FEATURES.map((feature) => (
                 <div key={feature.categoryKey} className="space-y-2">
@@ -179,12 +158,7 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
                     <p className="text-sm font-medium text-foreground">
                       {t('help.shareable.title', 'Shareable searches')}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {t(
-                        'help.shareable.body',
-                        'Copy a query link and send it anywhere.',
-                      )}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{t('help.shareable.body', 'Copy a query link and send it anywhere.')}</p>
                   </div>
                 </div>
               </div>
@@ -194,12 +168,7 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
                   <Zap className="h-4 w-4 text-primary" />
                   {t('help.syntax.title', 'Scryfall syntax')}
                 </h3>
-                <p className="text-sm text-muted-foreground">
-                  {t(
-                    'help.syntax.intro',
-                    'These operators help you narrow searches quickly.',
-                  )}
-                </p>
+                <p className="text-sm text-muted-foreground">{t('help.syntax.intro', 'These operators help you narrow searches quickly.')}</p>
                 <div className="space-y-2">
                   {SCRYFALL_SYNTAX_TIPS.map((tip) => (
                     <div
@@ -214,12 +183,8 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
                           {t(tip.meaningKey)}
                         </span>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {t(tip.descriptionKey)}
-                      </p>
-                      <p className="text-xs text-muted-foreground italic">
-                        {t(tip.example)}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{t(tip.descriptionKey)}</p>
+                      <p className="text-xs text-muted-foreground italic">{t(tip.example)}</p>
                     </div>
                   ))}
                 </div>
@@ -229,22 +194,13 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
                 <h3 className="text-sm font-medium text-foreground">
                   {t('help.docs.title', 'Documentation')}
                 </h3>
-                <p className="text-sm text-muted-foreground">
-                  {t(
-                    'help.docs.body',
-                    'Read the full syntax guide for deeper examples and edge cases.',
-                  )}
-                </p>
+                <p className="text-sm text-muted-foreground">{t('help.docs.body', 'Read the full syntax guide for deeper examples and edge cases.')}</p>
                 <Button
                   variant="outline"
                   size="sm"
                   className="gap-2"
                   onClick={() =>
-                    window.open(
-                      'https://scryfall.com/docs/syntax',
-                      '_blank',
-                      'noopener,noreferrer',
-                    )
+                    window.open('https://scryfall.com/docs/syntax', '_blank', 'noopener,noreferrer')
                   }
                 >
                   <ExternalLink className="h-4 w-4" />
@@ -255,20 +211,10 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
 
             <TabsContent value="confidence" className="mt-0 space-y-6">
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  {t(
-                    'help.confidence.intro',
-                    'Confidence tells you how sure OffMeta is about the translation.',
-                  )}
-                </p>
+                <p className="text-sm text-muted-foreground">{t('help.confidence.intro', 'Confidence tells you how sure OffMeta is about the translation.')}</p>
                 <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
                   <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                  <p className="text-xs text-muted-foreground">
-                    {t(
-                      'help.confidence.note',
-                      'Low confidence usually means the query is ambiguous or very broad.',
-                    )}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t('help.confidence.note', 'Low confidence usually means the query is ambiguous or very broad.')}</p>
                 </div>
               </div>
 
@@ -276,10 +222,7 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
                 {CONFIDENCE_LEVELS.map((level) => (
                   <div key={level.levelKey} className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Badge
-                        variant="outline"
-                        className={cn('font-medium', level.color)}
-                      >
+                      <Badge variant="outline" className={cn('font-medium', level.color)}>
                         {t(level.levelKey)}
                       </Badge>
                     </div>
@@ -308,29 +251,25 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
                   <li className="flex items-start gap-2">
                     <span className="text-primary">•</span>
                     <span>
-                      <strong>{t('help.confidence.clarityLabel')}</strong>{' '}
-                      {t('help.confidence.clarityBody')}
+                      <strong>{t('help.confidence.clarityLabel')}</strong> {t('help.confidence.clarityBody')}
                     </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary">•</span>
                     <span>
-                      <strong>{t('help.confidence.termsLabel')}</strong>{' '}
-                      {t('help.confidence.termsBody')}
+                      <strong>{t('help.confidence.termsLabel')}</strong> {t('help.confidence.termsBody')}
                     </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary">•</span>
                     <span>
-                      <strong>{t('help.confidence.ambiguityLabel')}</strong>{' '}
-                      {t('help.confidence.ambiguityBody')}
+                      <strong>{t('help.confidence.ambiguityLabel')}</strong> {t('help.confidence.ambiguityBody')}
                     </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary">•</span>
                     <span>
-                      <strong>{t('help.confidence.complexityLabel')}</strong>{' '}
-                      {t('help.confidence.complexityBody')}
+                      <strong>{t('help.confidence.complexityLabel')}</strong> {t('help.confidence.complexityBody')}
                     </span>
                   </li>
                 </ul>
@@ -338,9 +277,7 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
             </TabsContent>
 
             <TabsContent value="tips" className="mt-0 space-y-6">
-              <p className="text-sm text-muted-foreground">
-                {t('help.tips.intro')}
-              </p>
+              <p className="text-sm text-muted-foreground">{t('help.tips.intro')}</p>
 
               <div className="space-y-3">
                 {TIPS.map((tip, index) => (
@@ -360,19 +297,13 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
                 <h3 className="text-sm font-medium text-foreground">
                   {t('help.syntax.advancedTitle')}
                 </h3>
-                <p className="text-sm text-muted-foreground">
-                  {t('help.syntax.advancedBody')}
-                </p>
+                <p className="text-sm text-muted-foreground">{t('help.syntax.advancedBody')}</p>
                 <Button
                   variant="outline"
                   size="sm"
                   className="gap-2"
                   onClick={() =>
-                    window.open(
-                      'https://scryfall.com/docs/syntax',
-                      '_blank',
-                      'noopener,noreferrer',
-                    )
+                    window.open('https://scryfall.com/docs/syntax', '_blank', 'noopener,noreferrer')
                   }
                 >
                   <ExternalLink className="h-4 w-4" />
@@ -384,9 +315,7 @@ export function SearchHelpModal({ onTryExample }: SearchHelpModalProps) {
         </Tabs>
 
         <div className="p-4 border-t border-border bg-muted/30">
-          <p className="text-xs text-center text-muted-foreground">
-            {t('help.footer')}
-          </p>
+          <p className="text-xs text-center text-muted-foreground">{t('help.footer')}</p>
         </div>
       </DialogContent>
     </Dialog>

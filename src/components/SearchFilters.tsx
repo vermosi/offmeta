@@ -22,14 +22,7 @@ import {
 import type { ScryfallCard } from '@/types/card';
 import type { FilterState } from '@/types/filters';
 import { cn } from '@/lib/core/utils';
-import {
-  Filter,
-  ArrowUpDown,
-  X,
-  ChevronDown,
-  Package,
-  Shield,
-} from 'lucide-react';
+import { Filter, ArrowUpDown, X, ChevronDown, Package, Shield } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { useAuth } from '@/hooks';
 import { useSearchFilterState } from '@/components/SearchFilters/useSearchFilterState';
@@ -195,6 +188,7 @@ export function SearchFilters({
     syncCmcRangeIfPristine();
   }, [syncCmcRangeIfPristine]);
 
+
   const toggleColor = useCallback(
     (colorId: string) => {
       setFilters((prev) => ({
@@ -234,9 +228,7 @@ export function SearchFilters({
   }, [defaultFilters, setFilters]);
 
   const activeFilterCount = countActiveFilters(filters, defaultMaxCmc);
-  const activeFormatLabel = FORMAT_OPTIONS.find(
-    (f) => f.value === filters.format,
-  )?.label;
+  const activeFormatLabel = FORMAT_OPTIONS.find((f) => f.value === filters.format)?.label;
 
   return (
     <div className="contents">
@@ -261,10 +253,7 @@ export function SearchFilters({
           <SelectValue placeholder="Format" />
         </SelectTrigger>
         <SelectContent className="z-50 bg-popover border border-border shadow-lg">
-          <SelectItem
-            value="__none__"
-            className="text-xs sm:text-sm text-muted-foreground"
-          >
+          <SelectItem value="__none__" className="text-xs sm:text-sm text-muted-foreground">
             All Formats
           </SelectItem>
           {FORMAT_OPTIONS.map((fmt) => (
@@ -464,10 +453,7 @@ export function SearchFilters({
           setFilters((prev) => ({ ...prev, sortBy: value }))
         }
       >
-        <SelectTrigger
-          aria-label={t('filters.sort')}
-          className="w-[130px] sm:w-[160px] h-8 sm:h-9 text-xs sm:text-sm"
-        >
+        <SelectTrigger aria-label={t('filters.sort')} className="w-[130px] sm:w-[160px] h-8 sm:h-9 text-xs sm:text-sm">
           <ArrowUpDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2 opacity-50 shrink-0" />
           <SelectValue placeholder={t('filters.sort')} />
         </SelectTrigger>
@@ -475,8 +461,7 @@ export function SearchFilters({
           {SORT_OPTIONS.map((option) => {
             const isEdhrec = option.value.startsWith('edhrec');
             const edhrecCoverage = isEdhrec
-              ? cards.filter((c) => c.edhrec_rank != null).length /
-                Math.max(cards.length, 1)
+              ? cards.filter((c) => c.edhrec_rank != null).length / Math.max(cards.length, 1)
               : 1;
             return (
               <SelectItem
@@ -486,9 +471,7 @@ export function SearchFilters({
               >
                 {t(option.labelKey)}
                 {isEdhrec && edhrecCoverage < 0.5 && (
-                  <span className="ml-1 text-[10px] text-muted-foreground">
-                    ⚠ limited data
-                  </span>
+                  <span className="ml-1 text-[10px] text-muted-foreground">⚠ limited data</span>
                 )}
               </SelectItem>
             );
@@ -503,9 +486,7 @@ export function SearchFilters({
             <Badge
               variant="secondary"
               className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20 text-xs"
-              onClick={() =>
-                setFilters((prev) => ({ ...prev, format: undefined }))
-              }
+              onClick={() => setFilters((prev) => ({ ...prev, format: undefined }))}
               role="button"
               tabIndex={0}
               onKeyDown={(e: React.KeyboardEvent) => {

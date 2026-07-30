@@ -29,11 +29,7 @@ interface ResultsToolbarProps {
   filtersResetKey: number;
   initialUrlFilters: Partial<FilterState> | null | undefined;
   collectionLookup: Map<string, number> | undefined;
-  onFilteredCards: (
-    cards: ScryfallCard[],
-    hasActiveFilters: boolean,
-    filters: FilterState,
-  ) => void;
+  onFilteredCards: (cards: ScryfallCard[], hasActiveFilters: boolean, filters: FilterState) => void;
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
   compareMode: boolean;

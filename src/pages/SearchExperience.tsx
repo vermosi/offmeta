@@ -152,6 +152,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { useRovingTabIndex } from '@/hooks/useRovingTabIndex';
 import { useSearch } from '@/hooks/useSearch';
+import { useSearchRenderProfiler } from '@/hooks/useSearchRenderProfiler';
 import { useTranslation } from '@/lib/i18n';
 const CardModal = lazy(() => import('@/components/CardModal'));
 
@@ -210,24 +211,13 @@ const Index = () => {
     initialUrlFilters,
   } = useSearch();
 
-  useEffect(() => {
-    const w = window as Window & {
-      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
-      cancelIdleCallback?: (id: number) => void;
-    };
-    const run = () => trackFirstReturnVisit();
-    const idleId =
-      typeof w.requestIdleCallback === 'function'
-        ? w.requestIdleCallback(run, { timeout: 2000 })
-        : window.setTimeout(run, 0);
-    return () => {
-      if (typeof w.cancelIdleCallback === 'function' && typeof idleId === 'number') {
-        w.cancelIdleCallback(idleId);
-      } else {
-        window.clearTimeout(idleId as number);
-      }
-    };
-  }, [trackFirstReturnVisit]);
+  // Profile the render side of the search flow. No-op unless
+  // `localStorage.offmeta_profile_search === '1'` (auto-on in dev).
+  useSearchRenderProfiler({
+    scryfallQuery: lastSearchResult?.scryfallQuery ?? searchQuery,
+    cardCount: cards.length,
+    isSearching,
+  });
 
   // View mode toggle
   const [viewMode, setViewMode] = useState<ViewMode>(getStoredViewMode);
@@ -321,7 +311,6 @@ const Index = () => {
     isCardSelected,
   } = useCompare();
   const [compareMode, setCompareMode] = useState(false);
-  const [showHydratedHero, setShowHydratedHero] = useState(false);
 
   const handleToggleCompareMode = useCallback(() => {
     setCompareMode((m) => {
@@ -336,25 +325,6 @@ const Index = () => {
     input?.focus();
   }, []);
   useKeyboardShortcuts({ onFocusSearch: focusSearch });
-
-  useEffect(() => {
-    const w = window as Window & {
-      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
-      cancelIdleCallback?: (id: number) => void;
-    };
-    const markReady = () => setShowHydratedHero(true);
-    const idleId =
-      typeof w.requestIdleCallback === 'function'
-        ? w.requestIdleCallback(markReady, { timeout: 1500 })
-        : window.setTimeout(markReady, 0);
-    return () => {
-      if (typeof w.cancelIdleCallback === 'function' && typeof idleId === 'number') {
-        w.cancelIdleCallback(idleId);
-      } else {
-        window.clearTimeout(idleId as number);
-      }
-    };
-  }, []);
 
   // Art lightbox
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -582,25 +552,8 @@ const Index = () => {
         search: location.search || undefined,
         referrer: document.referrer || undefined,
       };
-      const w = window as Window & {
-        requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
-        cancelIdleCallback?: (id: number) => void;
-      };
-      const fire = () => {
-        trackLandingPageView(routeData);
-        trackHomePageView(routeData);
-      };
-      const idleId =
-        typeof w.requestIdleCallback === 'function'
-          ? w.requestIdleCallback(fire, { timeout: 2000 })
-          : window.setTimeout(fire, 0);
-      return () => {
-        if (typeof w.cancelIdleCallback === 'function' && typeof idleId === 'number') {
-          w.cancelIdleCallback(idleId);
-        } else {
-          window.clearTimeout(idleId as number);
-        }
-      };
+      trackLandingPageView(routeData);
+      trackHomePageView(routeData);
     }
   }, [
     hasSearched,
@@ -645,8 +598,8 @@ const Index = () => {
 
         <Header />
 
-        {!hasSearched && showHydratedHero && <HeroSection />}
-        {!hasSearched && showHydratedHero && <HomepageQuickPaths />}
+        {!hasSearched && <HeroSection />}
+        {!hasSearched && <HomepageQuickPaths />}
 
         {/* Floating particles — hero area */}
         <Suspense fallback={null}>

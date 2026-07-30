@@ -66,10 +66,7 @@ export function sanitizeErrorForClient(error: unknown): string {
   message = message.replace(/Bearer\s+[^\s]+/gi, '[TOKEN]');
 
   // Remove API keys (common patterns)
-  message = message.replace(
-    /(?:sk_live_|sk_test_|api_key[=:]?\s*)[^\s]+/gi,
-    '[REDACTED]',
-  );
+  message = message.replace(/(?:sk_live_|sk_test_|api_key[=:]?\s*)[^\s]+/gi, '[REDACTED]');
 
   // Remove line:column numbers
   message = message.replace(/:\d+:\d+/g, '');
@@ -264,8 +261,7 @@ export function measureTimingVariance(
   }
 
   const mean = times.reduce((a, b) => a + b, 0) / times.length;
-  const variance =
-    times.reduce((sum, t) => sum + Math.pow(t - mean, 2), 0) / times.length;
+  const variance = times.reduce((sum, t) => sum + Math.pow(t - mean, 2), 0) / times.length;
 
   return {
     mean,
@@ -289,7 +285,7 @@ export function buildMaliciousQuery(
     sql: [
       "'; DROP TABLE users; --",
       "1' OR '1'='1",
-      '1; SELECT * FROM cards; --',
+      "1; SELECT * FROM cards; --",
       "' UNION SELECT * FROM auth.users --",
       "1' AND (SELECT COUNT(*) FROM users) > 0 --",
     ],
@@ -339,7 +335,7 @@ export function getAllMaliciousPayloads(
     sql: [
       "'; DROP TABLE users; --",
       "1' OR '1'='1",
-      '1; SELECT * FROM cards; --',
+      "1; SELECT * FROM cards; --",
       "' UNION SELECT * FROM auth.users --",
       "1' AND (SELECT COUNT(*) FROM users) > 0 --",
       "admin'--",
@@ -393,12 +389,7 @@ export function getAllMaliciousPayloads(
  * Build an invalid JWT token for testing authentication.
  */
 export function buildInvalidToken(
-  type:
-    | 'expired'
-    | 'malformed'
-    | 'modified'
-    | 'missing_claims'
-    | 'wrong_issuer',
+  type: 'expired' | 'malformed' | 'modified' | 'missing_claims' | 'wrong_issuer',
 ): string {
   const now = Math.floor(Date.now() / 1000);
 
@@ -582,10 +573,7 @@ export function sanitizeInput(input: string): string {
 /**
  * Check for repetitive character patterns (spam indicator).
  */
-export function hasRepetitiveChars(
-  input: string,
-  threshold: number = 6,
-): boolean {
+export function hasRepetitiveChars(input: string, threshold: number = 6): boolean {
   const pattern = new RegExp(`(.)\\1{${threshold - 1},}`);
   return pattern.test(input);
 }
@@ -593,10 +581,7 @@ export function hasRepetitiveChars(
 /**
  * Check if input has sufficient alphanumeric content.
  */
-export function hasMinimumAlphanumeric(
-  input: string,
-  ratio: number = 0.5,
-): boolean {
+export function hasMinimumAlphanumeric(input: string, ratio: number = 0.5): boolean {
   if (input.length <= 10) return true; // Skip check for short inputs
   const alphanumericCount = (input.match(/[a-zA-Z0-9]/g) || []).length;
   return alphanumericCount >= input.length * ratio;
@@ -782,10 +767,7 @@ export function createMockRateLimiter(limit: number, windowMs: number) {
  */
 export function setupFetchMock(responses: Map<string, MockResponse>) {
   const mockFetch = vi.fn(async (url: string) => {
-    const response = responses.get(url) || {
-      status: 404,
-      body: { error: 'Not found' },
-    };
+    const response = responses.get(url) || { status: 404, body: { error: 'Not found' } };
     return {
       ok: response.status >= 200 && response.status < 300,
       status: response.status,
