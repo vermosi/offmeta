@@ -15,7 +15,6 @@ const GuidesIndex = lazy(() => import('./pages/GuidesIndex'));
 const GuidePage = lazy(() => import('./pages/GuidePage'));
 const DocsIndex = lazy(() => import('./pages/DocsIndex'));
 const SyntaxCheatSheet = lazy(() => import('./pages/SyntaxCheatSheet'));
-const SavedSearches = lazy(() => import('./pages/SavedSearches'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
 const AdminAnalytics = lazy(() => import('./pages/AdminAnalytics'));
@@ -24,13 +23,8 @@ const DeckRecommendations = lazy(() => import('./pages/DeckRecommendations'));
 const FindMyCombos = lazy(() => import('./pages/FindMyCombos'));
 const ArchetypesIndex = lazy(() => import('./pages/ArchetypesIndex'));
 const ArchetypePage = lazy(() => import('./pages/ArchetypePage'));
-const DeckBuilder = lazy(() => import('./pages/DeckBuilder'));
-const DeckEditor = lazy(() => import('./pages/DeckEditor'));
-const PublicDeckView = lazy(() => import('./pages/PublicDeckView'));
-const BrowseDecks = lazy(() => import('./pages/BrowseDecks'));
 const BrowseSearches = lazy(() => import('./pages/BrowseSearches'));
 const About = lazy(() => import('./pages/About'));
-const Collection = lazy(() => import('./pages/Collection'));
 const MarketTrends = lazy(() => import('./pages/MarketTrends'));
 const CardPage = lazy(() => import('./pages/CardPage'));
 const PublicProfile = lazy(() => import('./pages/PublicProfile'));
@@ -68,7 +62,6 @@ export default function AppRoutes() {
             <Route path="/docs/syntax" element={withFullApp(<SyntaxCheatSheet />)} />
             <Route path="/guides" element={withFullApp(<GuidesIndex />)} />
             <Route path="/guides/:slug" element={withFullApp(<GuidePage />)} />
-            <Route path="/saved" element={withFullApp(<SavedSearches />)} />
             <Route path="/reset-password" element={withFullApp(<ResetPassword />)} />
             <Route path="/profile" element={withFullApp(<ProfileSettings />)} />
             <Route path="/admin/analytics" element={withFullApp(<AdminAnalytics />)} />
@@ -77,13 +70,8 @@ export default function AppRoutes() {
             <Route path="/combos" element={withFullApp(<FindMyCombos />)} />
             <Route path="/archetypes" element={withFullApp(<ArchetypesIndex />)} />
             <Route path="/archetypes/:slug" element={withFullApp(<ArchetypePage />)} />
-            <Route path="/deckbuilder" element={withFullApp(<DeckBuilder />)} />
-            <Route path="/deckbuilder/:id" element={withFullApp(<DeckEditor />)} />
-            <Route path="/deck/:id" element={withFullApp(<PublicDeckView />)} />
-            <Route path="/decks" element={withFullApp(<BrowseDecks />)} />
             <Route path="/browse-searches" element={withFullApp(<BrowseSearches />)} />
             <Route path="/about" element={withFullApp(<About />)} />
-            <Route path="/collection" element={withFullApp(<Collection />)} />
             <Route path="/market" element={withFullApp(<MarketTrends />)} />
             <Route path="/cards/:slug" element={withFullApp(<CardPage />)} />
             <Route path="/user/:userId" element={withFullApp(<PublicProfile />)} />

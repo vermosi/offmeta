@@ -11,8 +11,6 @@ export { CardModalLegalities } from './CardModalLegalities';
 export { CardModalPrintings } from './CardModalPrintings';
 export { CardModalToolbox } from './CardModalToolbox';
 export { CardModalCombos } from './CardModalCombos';
-export { CardModalAddToDeck } from './CardModalAddToDeck';
 export { CardModalMetaContext } from './CardModalMetaContext';
-export { CardModalCollection } from './CardModalCollection';
 export { CardModalRecommendations } from './CardModalRecommendations';
 export * from './types';
