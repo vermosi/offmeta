@@ -1,5 +1,5 @@
 /**
- * Root guides index page - lists all 10 guides as visual cards.
+ * Root guides index page - lists all guides as visual cards.
  */
 
 import { useEffect } from 'react';
@@ -70,7 +70,7 @@ export default function GuidesIndex() {
     const cleanupMeta = applySeoMeta({
       title: 'MTG Search Guides - Learn to Find Any Magic Card | OffMeta',
       description:
-        'Master MTG card search with 10 progressive guides - from basic type searches to multi-constraint queries, all in natural language.',
+        `Master MTG card search with ${GUIDES.length} progressive guides - from basic type searches to multi-constraint queries, all in natural language.`,
       url: 'https://offmeta.app/guides',
       type: 'website',
       section: 'Guides',
@@ -98,7 +98,7 @@ export default function GuidesIndex() {
           '@id': 'https://offmeta.app/guides#collection',
           name: 'MTG Search Guides',
           description:
-            '10 progressive guides teaching natural-language Magic: The Gathering card search on OffMeta.',
+            `${GUIDES.length} progressive guides teaching natural-language Magic: The Gathering card search on OffMeta.`,
           url: 'https://offmeta.app/guides',
           inLanguage: 'en',
           isPartOf: { '@type': 'WebSite', name: 'OffMeta', url: 'https://offmeta.app/' },

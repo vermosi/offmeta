@@ -10,6 +10,7 @@ import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom';
 import FullAppProviders from '@/components/FullAppProviders';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import Index from './pages/Index';
+import SearchExperience from './pages/SearchExperience';
 
 const GuidesIndex = lazy(() => import('./pages/GuidesIndex'));
 const GuidePage = lazy(() => import('./pages/GuidePage'));
@@ -38,7 +39,6 @@ const AiIndex = lazy(() => import('./pages/AiIndex'));
 const AiPage = lazy(() => import('./pages/AiPage'));
 const AdminSeoPages = lazy(() => import('./pages/AdminSeoPages'));
 const NotFound = lazy(() => import('./pages/NotFound'));
-const SearchExperience = lazy(() => import('./pages/SearchExperience'));
 const OAuthConsent = lazy(() => import('./pages/OAuthConsent'));
 
 const routeFallback = <div className="min-h-screen bg-background" />;

@@ -32,5 +32,30 @@ function handleChunkError(reason: unknown) {
 window.addEventListener('error', (e) => handleChunkError(e.error ?? e.message));
 window.addEventListener('unhandledrejection', (e) => handleChunkError(e.reason));
 
-createRoot(document.getElementById('root')!).render(<App />);
+const mount = () => {
+  if (document.getElementById('root')?.dataset.mounted === '1') return;
+  const rootEl = document.getElementById('root');
+  if (rootEl) rootEl.dataset.mounted = '1';
+  createRoot(document.getElementById('root')!).render(<App />);
+};
+
+const onFirstInteraction = () => {
+  mount();
+  window.removeEventListener('pointerdown', onFirstInteraction);
+  window.removeEventListener('keydown', onFirstInteraction);
+  window.removeEventListener('focusin', onFirstInteraction);
+};
+
+const w = window as Window & {
+  requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+};
+if (typeof w.requestIdleCallback === 'function') {
+  w.requestIdleCallback(mount, { timeout: 1500 });
+} else {
+  window.setTimeout(mount, 1500);
+}
+
+window.addEventListener('pointerdown', onFirstInteraction, { once: true });
+window.addEventListener('keydown', onFirstInteraction, { once: true });
+window.addEventListener('focusin', onFirstInteraction, { once: true });
 

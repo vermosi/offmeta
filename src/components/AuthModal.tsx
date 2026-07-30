@@ -13,8 +13,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks';
-import { lovable } from '@/integrations/lovable/index';
+import { createLovableAuth } from '@lovable.dev/cloud-auth-js';
+import { supabase } from '@/integrations/supabase/client';
 import { Mail, Lock, Loader2, CheckCircle2, ArrowLeft } from 'lucide-react';
+
+const lovableAuth = createLovableAuth();
 
 type AuthView = 'signin' | 'signup' | 'forgot';
 
@@ -44,12 +47,21 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
   const handleGoogleSignIn = useCallback(async () => {
     setError(null);
     setGoogleLoading(true);
-    const { error } = await lovable.auth.signInWithOAuth('google', {
+    const result = await lovableAuth.signInWithOAuth('google', {
       redirect_uri: window.location.origin,
     });
     setGoogleLoading(false);
-    if (error) {
-      setError(error.message || 'Google sign-in failed');
+    if (result.redirected || result.error) {
+      if (result.error) {
+        setError(result.error.message || 'Google sign-in failed');
+      }
+      return;
+    }
+
+    try {
+      await supabase.auth.setSession(result.tokens);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
     }
   }, []);
 

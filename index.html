@@ -280,6 +280,11 @@
     <!-- Critical inline CSS: prevents render-blocking on the main stylesheet -->
     <style>
       html, body { overscroll-behavior-y: contain; margin: 0; }
+      #root {
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+      }
       body {
         font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         -webkit-font-smoothing: antialiased;
@@ -470,11 +475,13 @@
       <div class="shell-inner">
         <span class="shell-kicker">AI-powered MTG discovery engine</span>
         <h1 class="shell-title">
-          Search Magic cards <span class="shell-accent">in plain English</span>
+          Find Magic cards, synergies, and
+          <span class="shell-accent">hidden gems in plain English</span>
         </h1>
         <p class="shell-copy">
-          Describe the card you need. OffMeta translates intent into a real
-          Scryfall search, instantly and transparently, without the syntax.
+          Describe the card, effect, or archetype you want - OffMeta turns
+          plain English into a real Scryfall search and surfaces alternatives,
+          synergies, and hidden gems you would never find with raw syntax.
         </p>
         <form class="shell-actions" action="/search/" method="get">
           <div class="shell-form">
@@ -488,11 +495,20 @@
               autocomplete="off"
             />
             <button class="shell-button shell-button-primary" type="submit">
-            Start searching
+              Start searching
             </button>
           </div>
           <a class="shell-button shell-button-secondary" href="/archetypes">
             Explore archetypes
+          </a>
+          <a class="shell-button shell-button-secondary" href="/docs/syntax">
+            Learn syntax
+          </a>
+          <a class="shell-button shell-button-secondary" href="/guides">
+            Browse guides
+          </a>
+          <a class="shell-button shell-button-secondary" href="/saved">
+            Saved searches
           </a>
         </form>
       </div>

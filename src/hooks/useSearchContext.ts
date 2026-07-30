@@ -1,8 +1,8 @@
 /**
- * Hook for persisting search context (previous query/Scryfall result) in session storage.
+ * Tiny sessionStorage helper for search context.
  */
 
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 
 const SEARCH_CONTEXT_KEY = 'lastSearchContext';
 
@@ -12,11 +12,8 @@ interface SearchContext {
 }
 
 export function useSearchContext() {
-  const [context, setContext] = useState<SearchContext | null>(null);
-
   const saveContext = useCallback((query: string, scryfall: string) => {
     const newContext = { previousQuery: query, previousScryfall: scryfall };
-    setContext(newContext);
     try {
       sessionStorage.setItem(SEARCH_CONTEXT_KEY, JSON.stringify(newContext));
     } catch {
@@ -24,7 +21,14 @@ export function useSearchContext() {
     }
   }, []);
 
-  const getContext = useCallback(() => context, [context]);
+  const getContext = useCallback((): SearchContext | null => {
+    try {
+      const raw = sessionStorage.getItem(SEARCH_CONTEXT_KEY);
+      return raw ? (JSON.parse(raw) as SearchContext) : null;
+    } catch {
+      return null;
+    }
+  }, []);
 
   return { saveContext, getContext };
 }

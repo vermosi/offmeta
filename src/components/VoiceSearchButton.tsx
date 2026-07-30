@@ -4,7 +4,6 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-  TooltipProvider,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n';
@@ -30,51 +29,49 @@ export function VoiceSearchButton({
   }
 
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant={isListening ? 'default' : 'outline'}
-            size="icon"
-            onClick={onToggle}
-            disabled={isProcessing}
-            aria-label={
-              isListening
-                ? t('voice.stopListening', 'Stop listening')
-                : t('voice.start', 'Start voice search')
-            }
-            className={cn(
-              'h-12 w-12 rounded-full relative transition-all duration-300',
-              isListening &&
-                'bg-destructive hover:bg-destructive/90 animate-pulse-ring',
-              className,
-            )}
-          >
-            {isProcessing ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : isListening ? (
-              <Mic className="h-5 w-5" />
-            ) : (
-              <Mic className="h-5 w-5" />
-            )}
-
-            {/* Animated rings when listening */}
-            {isListening && (
-              <>
-                <span className="absolute inset-0 rounded-full animate-ping-slow bg-destructive/30" />
-                <span className="absolute inset-[-4px] rounded-full border-2 border-destructive/40 animate-pulse" />
-              </>
-            )}
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>
-            {isListening
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant={isListening ? 'default' : 'outline'}
+          size="icon"
+          onClick={onToggle}
+          disabled={isProcessing}
+          aria-label={
+            isListening
               ? t('voice.stopListening', 'Stop listening')
-              : t('voice.start', 'Start voice search')}
-          </p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+              : t('voice.start', 'Start voice search')
+          }
+          className={cn(
+            'h-12 w-12 rounded-full relative transition-all duration-300',
+            isListening &&
+              'bg-destructive hover:bg-destructive/90 animate-pulse-ring',
+            className,
+          )}
+        >
+          {isProcessing ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : isListening ? (
+            <Mic className="h-5 w-5" />
+          ) : (
+            <Mic className="h-5 w-5" />
+          )}
+
+          {/* Animated rings when listening */}
+          {isListening && (
+            <>
+              <span className="absolute inset-0 rounded-full animate-ping-slow bg-destructive/30" />
+              <span className="absolute inset-[-4px] rounded-full border-2 border-destructive/40 animate-pulse" />
+            </>
+          )}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p>
+          {isListening
+            ? t('voice.stopListening', 'Stop listening')
+            : t('voice.start', 'Start voice search')}
+        </p>
+      </TooltipContent>
+    </Tooltip>
   );
 }
