@@ -58,16 +58,12 @@ const EDGE_FUNCTIONS: EdgeFnDef[] = [
   { name: 'card-recommendations', label: 'Card Recommendations', description: 'Get AI card recommendations', method: 'POST', body: { oracleId: 'test', format: 'commander' }, category: 'ai' },
   { name: 'card-similarity', label: 'Card Similarity', description: 'Find similar cards using AI', method: 'POST', body: { cardName: 'Lightning Bolt' }, category: 'ai' },
   { name: 'combo-search', label: 'Combo Search', description: 'Search for card combos', method: 'POST', body: { cards: ['Sol Ring'] }, category: 'ai' },
-  { name: 'deck-categorize', label: 'Deck Categorize', description: 'AI-categorize deck cards', method: 'POST', category: 'ai' },
-  { name: 'deck-critique', label: 'Deck Critique', description: 'Get AI critique of a deck', method: 'POST', category: 'ai' },
   { name: 'deck-ideas', label: 'Deck Ideas', description: 'Get AI deck building ideas', method: 'POST', category: 'ai' },
   { name: 'deck-recommendations', label: 'Deck Recommendations', description: 'Get AI deck recommendations', method: 'POST', category: 'ai' },
-  { name: 'deck-suggest', label: 'Deck Suggest', description: 'Get AI card suggestions for a deck', method: 'POST', category: 'ai' },
 
   // Maintenance
   { name: 'admin-analytics', label: 'Admin Analytics', description: 'Fetch admin analytics data', method: 'GET', category: 'maintenance' },
   { name: 'cleanup-logs', label: 'Cleanup Logs', description: 'Delete old translation logs (30-day retention)', method: 'POST', category: 'maintenance', dangerous: true },
-  { name: 'generate-retention-triggers', label: 'Retention Triggers', description: 'Run retention trigger jobs', method: 'POST', category: 'maintenance' },
   { name: 'get-affiliate-config', label: 'Affiliate Config', description: 'Get affiliate link configuration', method: 'GET', category: 'other' },
   { name: 'process-email-queue', label: 'Process Email Queue', description: 'Process pending email queue', method: 'POST', category: 'maintenance' },
 ];

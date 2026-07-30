@@ -34,7 +34,7 @@ describe('validateAuth edge helper', () => {
     });
     vi.stubGlobal('fetch', fetchMock as unknown as typeof fetch);
 
-    const req = new Request('https://functions.example/deck-critique', {
+    const req = new Request('https://functions.example/semantic-search', {
       headers: {
         Authorization: 'Bearer valid.jwt.token',
       },
@@ -61,7 +61,7 @@ describe('validateAuth edge helper', () => {
       SUPABASE_ANON_KEY: 'anon-key',
     });
 
-    const req = new Request('https://functions.example/deck-critique');
+    const req = new Request('https://functions.example/semantic-search');
     const result = await validateAuth(req);
 
     expect(result).toEqual({
