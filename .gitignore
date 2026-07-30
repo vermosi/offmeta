@@ -21,6 +21,7 @@ public/reports/*.zip
 .env.*
 coverage
 .eslintcache
+test-results/
 
 # Editor directories and files
 .lovable/*
