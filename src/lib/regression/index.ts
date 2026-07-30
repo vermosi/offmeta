@@ -72,7 +72,7 @@ export function buildMockCard(overrides: Partial<MockCard> = {}): MockCard {
       usd: '0.25',
       usd_foil: '1.00',
       eur: '0.20',
-      tix: null,
+      tix: undefined,
     },
     ...overrides,
   };
