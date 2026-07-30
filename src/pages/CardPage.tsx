@@ -626,31 +626,6 @@ const CardPage = () => {
               </section>
             ) : null}
 
-            {/* Synergy Cards */}
-            {similarityData?.synergyCards?.length ? (
-              <section className="space-y-4">
-                <h2 className="text-lg sm:text-xl font-bold text-foreground">
-                  Pairs Well With
-                </h2>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {similarityData.synergyCards.map((syn) => (
-                    <div
-                      key={syn.name}
-                      className="bg-card/60 border border-border/40 rounded-lg p-4 space-y-1"
-                    >
-                      <Link
-                        to={`/cards/${cardNameToSlug(syn.name)}`}
-                        className="text-sm font-semibold text-foreground hover:text-primary transition-colors"
-                      >
-                        {syn.name}
-                      </Link>
-                      <p className="text-xs text-muted-foreground">{syn.reason}</p>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            ) : null}
-
             {/* Related Searches — SEO internal links */}
             {card && (
               <section className="space-y-3">

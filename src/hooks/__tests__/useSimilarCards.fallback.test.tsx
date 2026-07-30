@@ -78,7 +78,6 @@ describe('useSimilarCards + buildClientFallbackQuery integration', () => {
         success: true,
         similarQuery: 't:creature o:"add {g}"',
         budgetQuery: 't:creature o:"add {g}" usd<=1',
-        synergyCards: [{ name: 'Priest of Titania', reason: 'Elf synergy' }],
       },
       error: null,
     });
@@ -111,7 +110,6 @@ describe('useSimilarCards + buildClientFallbackQuery integration', () => {
     expect(data.sourceCard.name).toBe('Llanowar Elves');
     expect(data.similarResults?.data[0].name).toBe('Elvish Mystic');
     expect(data.budgetResults?.data[0].name).toBe('Fyndhorn Elves');
-    expect(data.synergyCards).toHaveLength(1);
     expect(result.current.isDetected).toBe(true);
   });
 
@@ -128,7 +126,6 @@ describe('useSimilarCards + buildClientFallbackQuery integration', () => {
         success: true,
         similarQuery: 'otag:artifact-hate',
         budgetQuery: null,
-        synergyCards: [],
       },
       error: null,
     });

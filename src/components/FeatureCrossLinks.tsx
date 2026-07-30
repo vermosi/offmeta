@@ -1,5 +1,5 @@
 /**
- * Cross-link banner promoting /combos, /deck-recs, and /guides.
+ * Cross-link banner promoting search, combos, and guides.
  * Shown on search results and card pages to increase feature discovery.
  */
 
@@ -24,7 +24,7 @@ const FEATURES = [
     to: '/combos',
     icon: Zap,
     label: 'Find Combos',
-    description: 'Discover infinite combos for your deck',
+    description: 'Discover card combos and packages',
   },
   {
     to: '/guides',

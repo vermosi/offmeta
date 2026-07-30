@@ -69,15 +69,6 @@ export default function DocsIndex() {
         icon: TrendingUp,
       },
       {
-        title: t('docs.comboFinderTitle', 'Combo Finder'),
-        description: t(
-          'docs.comboFinderDesc',
-          'Discover card combos and synergy packages for your deck or commander.',
-        ),
-        href: '/combos',
-        icon: Sparkles,
-      },
-      {
         title: t('docs.faqTitle'),
         description: t('docs.faqDesc'),
         href: '/#faq',

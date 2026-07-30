@@ -1,6 +1,5 @@
 /**
- * card-similarity — Generates similar cards, budget alternatives, and AI synergy suggestions.
- * Uses Scryfall data for similarity matching + Lovable AI for synergy analysis.
+ * card-similarity — Builds deterministic Scryfall queries for similar cards.
  * @module functions/card-similarity
  */
 
@@ -36,16 +35,10 @@ interface SimilarityRequest {
   prices?: { usd?: string | null };
 }
 
-interface SynergyCard {
-  name: string;
-  reason: string;
-}
-
 interface SimilarityResponse {
   success: boolean;
   similarQuery?: string;
   budgetQuery?: string;
-  synergyCards?: SynergyCard[];
   cached?: boolean;
   error?: string;
 }
@@ -290,105 +283,11 @@ serve(withLogging('card-similarity', async (req: Request): Promise<Response> => 
     const similarQuery = buildSimilarQuery(body, mechanics);
     const budgetQuery = buildBudgetQuery(body, mechanics);
 
-    // Generate synergy suggestions via AI
-    let synergyCards: SynergyCard[] = [];
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-
-    if (LOVABLE_API_KEY) {
-      try {
-        const aiResponse = await fetch(
-          'https://ai.gateway.lovable.dev/v1/chat/completions',
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${LOVABLE_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: 'google/gemini-2.5-flash-lite',
-              messages: [
-                {
-                  role: 'system',
-                  content:
-                    'You are an MTG deckbuilding expert. Given a card, suggest 6 real cards that synergize well with it. Only suggest cards that actually exist in Magic: The Gathering. Focus on practical synergies for Commander/EDH format.',
-                },
-                {
-                  role: 'user',
-                  content: `Card: ${cardName}\nType: ${typeLine}\nOracle Text: ${body.oracleText || 'N/A'}\nColors: ${body.colorIdentity?.join('') || 'colorless'}\n\nSuggest 6 cards that synergize well with this card.`,
-                },
-              ],
-              tools: [
-                {
-                  type: 'function',
-                  function: {
-                    name: 'suggest_synergy_cards',
-                    description:
-                      'Suggest cards that synergize with the given card.',
-                    parameters: {
-                      type: 'object',
-                      properties: {
-                        cards: {
-                          type: 'array',
-                          items: {
-                            type: 'object',
-                            properties: {
-                              name: {
-                                type: 'string',
-                                description: 'Exact card name',
-                              },
-                              reason: {
-                                type: 'string',
-                                description:
-                                  'One sentence explaining the synergy',
-                              },
-                            },
-                            required: ['name', 'reason'],
-                            additionalProperties: false,
-                          },
-                        },
-                      },
-                      required: ['cards'],
-                      additionalProperties: false,
-                    },
-                  },
-                },
-              ],
-              tool_choice: {
-                type: 'function',
-                function: { name: 'suggest_synergy_cards' },
-              },
-            }),
-          },
-        );
-
-        if (aiResponse.ok) {
-          const aiData = await aiResponse.json();
-          const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-          if (toolCall?.function?.arguments) {
-            const args =
-              typeof toolCall.function.arguments === 'string'
-                ? JSON.parse(toolCall.function.arguments)
-                : toolCall.function.arguments;
-            synergyCards = (args.cards || []).slice(0, 6);
-          }
-        } else {
-          if (aiResponse.status === 429 || aiResponse.status === 402) {
-            await aiResponse.text(); // consume body
-          } else {
-            await aiResponse.text();
-          }
-        }
-      } catch (e) {
-        console.warn('AI synergy generation failed, continuing without:', e);
-      }
-    }
-
     return new Response(
       JSON.stringify({
         success: true,
         similarQuery,
         budgetQuery,
-        synergyCards,
         cached: false,
       } satisfies SimilarityResponse),
       { status: 200, headers },

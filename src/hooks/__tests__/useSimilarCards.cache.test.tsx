@@ -41,15 +41,14 @@ function wrapper({ children }: { children: ReactNode }) {
 beforeEach(() => {
   vi.clearAllMocks();
   __clearSimilarityCache();
-  invokeMock.mockResolvedValue({
-    data: {
-      success: true,
-      similarQuery: 'o:artifact',
-      budgetQuery: 'usd<1',
-      synergyCards: [],
-    },
-    error: null,
-  });
+    invokeMock.mockResolvedValue({
+      data: {
+        success: true,
+        similarQuery: 'o:artifact',
+        budgetQuery: 'usd<1',
+      },
+      error: null,
+    });
 });
 
 describe('useSimilarCards — debounce + cache', () => {

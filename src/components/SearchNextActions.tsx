@@ -35,9 +35,9 @@ function chooseActions({
 
   if (isDeckQuery || text.includes('commander') || text.includes('edh')) {
     actions.push({
-      to: '/deck-recs',
-      labelKey: 'results.nextActions.deckRecs.label',
-      descriptionKey: 'results.nextActions.deckRecs.description',
+      to: '/combos',
+      labelKey: 'results.nextActions.combos.label',
+      descriptionKey: 'results.nextActions.combos.description',
       icon: Compass,
     });
   } else if (text.includes('tribe') || text.includes('dragon') || text.includes('elf') || text.includes('goblin')) {
@@ -55,16 +55,16 @@ function chooseActions({
       icon: BookOpen,
     });
     actions.push({
-      to: '/archetypes',
-      labelKey: 'results.nextActions.archetypes.label',
-      descriptionKey: 'results.nextActions.archetypes.description',
+      to: '/combos',
+      labelKey: 'results.nextActions.combos.label',
+      descriptionKey: 'results.nextActions.combos.descriptionFallback',
       icon: Compass,
     });
   } else {
     actions.push({
-      to: '/deck-recs',
-      labelKey: 'results.nextActions.deckRecs.label',
-      descriptionKey: 'results.nextActions.deckRecs.descriptionFallback',
+      to: '/combos',
+      labelKey: 'results.nextActions.combos.label',
+      descriptionKey: 'results.nextActions.combos.descriptionFallback',
       icon: Compass,
     });
     actions.push({

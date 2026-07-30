@@ -45,7 +45,6 @@ const EDGE_FUNCTIONS: EdgeFnDef[] = [
   { name: 'bulk-data-sync', label: 'Bulk Data Sync', description: 'Sync card data from external sources', method: 'POST', category: 'data-sync', dangerous: true },
   { name: 'sync-card-names', label: 'Sync Card Names', description: 'Update the card_names lookup table', method: 'POST', category: 'data-sync' },
   { name: 'price-snapshot', label: 'Price Snapshot', description: 'Take a snapshot of current card prices', method: 'POST', category: 'data-sync' },
-
   // SEO
   { name: 'generate-seo-page', label: 'Generate SEO Page', description: 'Generate a single SEO page from a query', method: 'POST', body: { query: 'best mana rocks for commander', publish: false }, category: 'seo' },
   { name: 'batch-generate-seo-pages', label: 'Batch Generate SEO Pages', description: 'Generate multiple SEO pages from seed queries (service-role only)', method: 'POST', body: { publish: false }, category: 'seo', dangerous: true, serviceRoleOnly: true },
@@ -53,16 +52,8 @@ const EDGE_FUNCTIONS: EdgeFnDef[] = [
   { name: 'sitemap', label: 'Sitemap', description: 'Generate the XML sitemap', method: 'GET', category: 'seo' },
   { name: 'prerender', label: 'Prerender', description: 'Pre-render a page for SEO crawlers', method: 'GET', category: 'seo' },
 
-  // AI
-  { name: 'card-meta-context', label: 'Card Meta Context', description: 'Get AI-generated meta context for a card', method: 'POST', body: { cardName: 'Sol Ring' }, category: 'ai' },
-  { name: 'card-recommendations', label: 'Card Recommendations', description: 'Get AI card recommendations', method: 'POST', body: { oracleId: 'test', format: 'commander' }, category: 'ai' },
-  { name: 'card-similarity', label: 'Card Similarity', description: 'Find similar cards using AI', method: 'POST', body: { cardName: 'Lightning Bolt' }, category: 'ai' },
-  { name: 'combo-search', label: 'Combo Search', description: 'Search for card combos', method: 'POST', body: { cards: ['Sol Ring'] }, category: 'ai' },
-  { name: 'deck-categorize', label: 'Deck Categorize', description: 'AI-categorize deck cards', method: 'POST', category: 'ai' },
-  { name: 'deck-critique', label: 'Deck Critique', description: 'Get AI critique of a deck', method: 'POST', category: 'ai' },
-  { name: 'deck-ideas', label: 'Deck Ideas', description: 'Get AI deck building ideas', method: 'POST', category: 'ai' },
-  { name: 'deck-recommendations', label: 'Deck Recommendations', description: 'Get AI deck recommendations', method: 'POST', category: 'ai' },
-  { name: 'deck-suggest', label: 'Deck Suggest', description: 'Get AI card suggestions for a deck', method: 'POST', category: 'ai' },
+  // Search / similarity
+  { name: 'card-similarity', label: 'Card Similarity', description: 'Find similar cards', method: 'POST', body: { cardName: 'Lightning Bolt' }, category: 'ai' },
 
   // Maintenance
   { name: 'admin-analytics', label: 'Admin Analytics', description: 'Fetch admin analytics data', method: 'GET', category: 'maintenance' },
@@ -288,3 +279,4 @@ export function EdgeFunctionTriggerPanel() {
     </section>
   );
 }
+

@@ -28,7 +28,6 @@ const authMatrix: Record<string, AuthLevel> = {
   'deck-ideas': 'anon-authenticated',
   'deck-recommendations': 'anon-authenticated',
   'deck-suggest': 'anon-authenticated',
-  'fetch-moxfield-deck': 'anon-authenticated',
   'fix-zero-results': 'anon-authenticated',
   'generate-patterns': 'service/admin-only',
   'generate-retention-triggers': 'service/admin-only',
@@ -115,3 +114,4 @@ Deno.test(
     }
   },
 );
+

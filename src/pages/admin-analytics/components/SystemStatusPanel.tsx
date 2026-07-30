@@ -89,7 +89,6 @@ function cronHumanReadable(schedule: string): string {
 }
 
 const TABLE_LABELS: Record<string, string> = {
-  community_decks: 'Community Decks',
   cards: 'Card Catalog',
   card_cooccurrence: 'Co-occurrence Data',
   translation_logs: 'Translation Logs',

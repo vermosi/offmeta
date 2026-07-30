@@ -17,17 +17,10 @@ import {
   friendlySimilarErrorMessage,
 } from '@/lib/search/diagnostics';
 
-export interface SynergyCard {
-  name: string;
-  reason: string;
-  scryfallData?: ScryfallCard;
-}
-
 export interface SimilarityData {
   sourceCard: ScryfallCard;
   similarResults: SearchResult | null;
   budgetResults: SearchResult | null;
-  synergyCards: SynergyCard[];
 }
 
 /**
@@ -131,7 +124,7 @@ export function useSimilarCards(query: string, fallbackCard?: ScryfallCard | nul
         return null;
       }
 
-      // Call edge function for similarity queries + AI synergy
+      // Call edge function for deterministic similarity queries.
       const { data, error: fnError } = await supabase.functions.invoke(
         'card-similarity',
         {
@@ -169,7 +162,6 @@ export function useSimilarCards(query: string, fallbackCard?: ScryfallCard | nul
         sourceCard,
         similarResults: similarResults.status === 'fulfilled' ? similarResults.value : null,
         budgetResults: budgetResults.status === 'fulfilled' ? budgetResults.value : null,
-        synergyCards: data.synergyCards || [],
       };
       writeCache(key, result);
       return result;

@@ -7,7 +7,7 @@
  */
 
 import { useEffect, useMemo } from 'react';
-import { Sparkles, DollarSign, Zap, ArrowRight } from 'lucide-react';
+import { Sparkles, DollarSign, ArrowRight } from 'lucide-react';
 import { useSimilarCards } from '@/hooks/useSimilarCards';
 import { CardItem } from '@/components/CardItem';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -64,20 +64,8 @@ export function SimilarToTopResultPanel({
         icon: DollarSign,
       });
     }
-    // Always offer a "played with" refine using synergy signals if present.
-    if ((similarityData?.synergyCards?.length ?? 0) > 0) {
-      items.push({
-        key: 'synergy',
-        label: t('similar.refine.playedWith', 'Cards played with {name}').replace(
-          '{name}',
-          topCard.name,
-        ),
-        query: `cards played with ${topCard.name}`,
-        icon: Zap,
-      });
-    }
     return items;
-  }, [similarCards.length, budgetCards.length, similarityData?.synergyCards?.length, topCard.name, t]);
+  }, [similarCards.length, budgetCards.length, topCard.name, t]);
 
   const handleRefine = (chipKey: string, query: string) => {
     trackEvent('similar_panel_refine_clicked', {

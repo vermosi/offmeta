@@ -164,32 +164,7 @@ export default function FindMyCombos() {
   };
 
   const handleFetchMoxfield = async () => {
-    if (!moxfieldUrl.trim()) return;
-    setFetchingDeck(true);
-    setMoxfieldDeckName(null);
-    try {
-      const { data, error } = await supabase.functions.invoke(
-        'fetch-moxfield-deck',
-        {
-          body: { url: moxfieldUrl.trim() },
-        },
-      );
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      setMoxfieldDeckName(data.deckName);
-      setColorIdentity(data.colorIdentity ?? []);
-      const p = parseDecklist(data.decklist);
-      setCommander(p.commander);
-      setCardNames(p.cards.map((c) => c.name));
-      setResults(null);
-      setError(null);
-      toast.success(`Imported "${data.deckName}" (${data.cardCount} cards)`);
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Failed to fetch deck');
-    } finally {
-      setFetchingDeck(false);
-    }
+    toast.error('Deck import is unavailable right now');
   };
 
   const handleFindCombos = async () => {

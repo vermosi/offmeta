@@ -31,19 +31,17 @@ import {
 } from '@/hooks';
 import { useTranslation } from '@/lib/i18n';
 
-import {
-  CardModalImage,
-  CardModalDetails,
-  CardModalPurchaseLinks,
-  CardModalRulings,
-  CardModalLegalities,
-  CardModalPrintings,
-  CardModalToolbox,
-  CardModalCombos,
-  CardModalMetaContext,
-  CardModalRecommendations,
-  type DisplayPrices,
-} from './CardModal/index';
+import { CardModalImage } from './CardModal/CardModalImage';
+import { CardModalDetails } from './CardModal/CardModalDetails';
+import { CardModalPurchaseLinks } from './CardModal/CardModalPurchaseLinks';
+import { CardModalRulings } from './CardModal/CardModalRulings';
+import { CardModalLegalities } from './CardModal/CardModalLegalities';
+import { CardModalPrintings } from './CardModal/CardModalPrintings';
+import { CardModalToolbox } from './CardModal/CardModalToolbox';
+import { CardModalCombos } from './CardModal/CardModalCombos';
+import { CardModalMetaContext } from './CardModal/CardModalMetaContext';
+import { CardModalRecommendations } from './CardModal/CardModalRecommendations';
+import type { DisplayPrices } from './CardModal/types';
 
 interface CardModalProps {
   card: ScryfallCard | null;
@@ -321,8 +319,6 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
         />
 
         <CardModalMetaContext card={card} oracleId={card.oracle_id} onCardClick={handleCardClick} isMobile />
-
-
         <CardModalRulings
           rulings={rulings}
           isLoading={isLoadingRulings}
@@ -333,8 +329,6 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
         <CardModalCombos cardName={card.name} isMobile />
 
         <CardModalRecommendations oracleId={card.oracle_id} cardName={card.name} onCardClick={handleCardClick} isMobile />
-
-
         <CardModalPurchaseLinks
           card={card}
           displayPrices={displayPrices}
@@ -433,8 +427,6 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
           />
 
           <CardModalMetaContext card={card} oracleId={card.oracle_id} onCardClick={handleCardClick} />
-
-
           <CardModalRulings
             rulings={rulings}
             isLoading={isLoadingRulings}
@@ -445,8 +437,6 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
           <CardModalCombos cardName={card.name} />
 
           <CardModalRecommendations oracleId={card.oracle_id} cardName={card.name} onCardClick={handleCardClick} />
-
-
           <CardModalLegalities legalities={card.legalities} />
 
           <CardModalPrintings
