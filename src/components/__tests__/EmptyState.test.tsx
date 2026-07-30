@@ -188,8 +188,8 @@ describe('EmptyState', () => {
     const handler = vi.fn();
     render(<EmptyState query="dragon tokens" onTrySuggestion={handler} />);
 
-    expect(screen.getByText('Quick refine')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: '+ Commander' }));
+    expect(screen.getByText('Broaden this search')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Commander' }));
     expect(handler).toHaveBeenCalledWith('dragon tokens f:commander');
   });
 
@@ -202,8 +202,12 @@ describe('EmptyState', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: '+ Commander' }));
-    expect(handler).toHaveBeenCalledWith('dragon tokens f:commander');
+    expect(
+      screen.queryByRole('button', { name: 'Commander' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /search all formats/i }),
+    ).toBeInTheDocument();
   });
 
   it('does not call onTrySuggestion when handler is not provided', () => {

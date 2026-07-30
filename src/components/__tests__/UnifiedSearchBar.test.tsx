@@ -23,7 +23,7 @@ vi.mock('@/components/SearchFeedback', () => ({
   SearchFeedback: () => <div data-testid="search-feedback" />,
 }));
 
-vi.mock('@/components/SearchHelpModal', () => ({
+vi.mock('@/components/SearchHelpModal/SearchHelpModal', () => ({
   SearchHelpModal: () => <div data-testid="search-help" />,
 }));
 

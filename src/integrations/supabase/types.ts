@@ -38,36 +38,6 @@ export type Database = {
         }
         Relationships: []
       }
-      archetype_snapshots: {
-        Row: {
-          created_at: string
-          deck_count: number
-          deck_name: string
-          format: string
-          id: string
-          macro_archetype: string
-          snapshot_date: string
-        }
-        Insert: {
-          created_at?: string
-          deck_count?: number
-          deck_name: string
-          format: string
-          id?: string
-          macro_archetype: string
-          snapshot_date?: string
-        }
-        Update: {
-          created_at?: string
-          deck_count?: number
-          deck_name?: string
-          format?: string
-          id?: string
-          macro_archetype?: string
-          snapshot_date?: string
-        }
-        Relationships: []
-      }
       card_cooccurrence: {
         Row: {
           card_a_oracle_id: string
@@ -194,92 +164,6 @@ export type Database = {
           rarity?: string | null
           type_line?: string | null
           updated_at?: string
-        }
-        Relationships: []
-      }
-      community_deck_cards: {
-        Row: {
-          board: string
-          card_name: string
-          deck_id: string
-          id: string
-          quantity: number
-          scryfall_oracle_id: string | null
-        }
-        Insert: {
-          board?: string
-          card_name: string
-          deck_id: string
-          id?: string
-          quantity?: number
-          scryfall_oracle_id?: string | null
-        }
-        Update: {
-          board?: string
-          card_name?: string
-          deck_id?: string
-          id?: string
-          quantity?: number
-          scryfall_oracle_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "community_deck_cards_deck_id_fkey"
-            columns: ["deck_id"]
-            isOneToOne: false
-            referencedRelation: "community_decks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      community_decks: {
-        Row: {
-          archetype: string | null
-          colors: string[]
-          commander: string | null
-          created_at: string
-          deck_name: string | null
-          event_date: string | null
-          event_name: string | null
-          format: string
-          id: string
-          macro_archetype: string | null
-          name: string
-          source: string
-          source_id: string | null
-          source_url: string | null
-        }
-        Insert: {
-          archetype?: string | null
-          colors?: string[]
-          commander?: string | null
-          created_at?: string
-          deck_name?: string | null
-          event_date?: string | null
-          event_name?: string | null
-          format?: string
-          id?: string
-          macro_archetype?: string | null
-          name: string
-          source: string
-          source_id?: string | null
-          source_url?: string | null
-        }
-        Update: {
-          archetype?: string | null
-          colors?: string[]
-          commander?: string | null
-          created_at?: string
-          deck_name?: string | null
-          event_date?: string | null
-          event_name?: string | null
-          format?: string
-          id?: string
-          macro_archetype?: string | null
-          name?: string
-          source?: string
-          source_id?: string | null
-          source_url?: string | null
         }
         Relationships: []
       }
@@ -730,18 +614,7 @@ export type Database = {
       }
     }
     Views: {
-      archetype_stats: {
-        Row: {
-          all_colors: string[] | null
-          archetype: string | null
-          deck_count: number | null
-          deck_name: string | null
-          format: string | null
-          macro_archetype: string | null
-          meta_percentage: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       apply_query_signal: {
@@ -815,12 +688,6 @@ export type Database = {
           schedule: string
         }[]
       }
-      get_missing_oracle_ids: {
-        Args: never
-        Returns: {
-          oracle_id: string
-        }[]
-      }
       get_price_movers: {
         Args: { days_back?: number; limit_count?: number }
         Returns: {
@@ -882,15 +749,6 @@ export type Database = {
         }[]
       }
       get_seo_health_summary: { Args: never; Returns: Json }
-      get_signature_cards: {
-        Args: { target_format?: string }
-        Returns: {
-          appearances: number
-          card_name: string
-          deck_name: string
-          image_url: string
-        }[]
-      }
       get_system_status: { Args: never; Returns: Json }
       get_zero_result_candidates: {
         Args: {
@@ -942,7 +800,6 @@ export type Database = {
           read_ct: number
         }[]
       }
-      refresh_archetype_stats: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
