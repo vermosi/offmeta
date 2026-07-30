@@ -170,14 +170,6 @@ export async function mockAuthAPIs(
     }),
   );
 
-  await page.route('**/rest/v1/saved_searches**', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify([]),
-    }),
-  );
-
   if (mockSignup) {
     await page.route('**/auth/v1/signup**', (route) =>
       route.fulfill({

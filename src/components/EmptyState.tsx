@@ -375,10 +375,12 @@ export const EmptyState = ({
           <div className="flex flex-wrap gap-2">
             {(recoveryActions.length > 0
               ? recoveryActions
-              : QUICK_REFINEMENTS.map((item) => ({
-                  label: item.label,
-                  token: item.token,
-                }))
+              : QUICK_REFINEMENTS.map(
+                  (item): { label: string; token?: string; patch?: Partial<FilterState> } => ({
+                    label: item.label,
+                    token: item.token,
+                  }),
+                )
             ).map((item) => {
               if (item.patch) {
                 return (

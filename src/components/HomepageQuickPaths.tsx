@@ -22,10 +22,10 @@ const QUICK_PATHS = [
     description: 'Browse focused guides and syntax examples.',
   },
   {
-    href: '/saved',
+    href: '/combos',
     icon: Sparkles,
-    title: 'Reopen saved work',
-    description: 'Pick up recurring searches and workflows fast.',
+    title: 'Find combos',
+    description: 'Discover infinite and synergy combos for your cards.',
   },
   {
     href: '/market',

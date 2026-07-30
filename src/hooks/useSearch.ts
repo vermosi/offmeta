@@ -355,7 +355,10 @@ export function useSearch() {
             queryClient,
             setSearchQuery,
             setLastSearchResult,
-            trackEvent,
+            trackEvent: trackEvent as unknown as (
+              event: string,
+              payload: Record<string, unknown>,
+            ) => void,
           },
           hasAttemptedRecovery,
         );

@@ -40,9 +40,7 @@ import {
   CardModalPrintings,
   CardModalToolbox,
   CardModalCombos,
-  CardModalAddToDeck,
   CardModalMetaContext,
-  CardModalCollection,
   CardModalRecommendations,
   type DisplayPrices,
 } from './CardModal/index';
@@ -324,7 +322,6 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
 
         <CardModalMetaContext card={card} oracleId={card.oracle_id} onCardClick={handleCardClick} isMobile />
 
-        <CardModalCollection cardName={card.name} isMobile />
 
         <CardModalRulings
           rulings={rulings}
@@ -337,7 +334,6 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
 
         <CardModalRecommendations oracleId={card.oracle_id} cardName={card.name} onCardClick={handleCardClick} isMobile />
 
-        <CardModalAddToDeck card={card} isMobile />
 
         <CardModalPurchaseLinks
           card={card}
@@ -438,7 +434,6 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
 
           <CardModalMetaContext card={card} oracleId={card.oracle_id} onCardClick={handleCardClick} />
 
-          <CardModalCollection cardName={card.name} />
 
           <CardModalRulings
             rulings={rulings}
@@ -451,7 +446,6 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
 
           <CardModalRecommendations oracleId={card.oracle_id} cardName={card.name} onCardClick={handleCardClick} />
 
-          <CardModalAddToDeck card={card} />
 
           <CardModalLegalities legalities={card.legalities} />
 
