@@ -25,11 +25,6 @@ const EditableQueryBar = lazy(() =>
     default: m.EditableQueryBar,
   })),
 );
-const SaveSearchButton = lazy(() =>
-  import('@/components/SaveSearchButton').then((m) => ({
-    default: m.SaveSearchButton,
-  })),
-);
 const ExplainCompilationPanel = lazy(() =>
   import('@/components/ExplainCompilationPanel').then((m) => ({
     default: m.ExplainCompilationPanel,
@@ -146,7 +141,6 @@ import { ScryfallQueryDisclosure } from '@/components/ScryfallQueryDisclosure';
 
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useAuth } from '@/hooks/useAuth';
-import { useCollectionLookup } from '@/hooks/useCollection';
 import { useCompare } from '@/hooks/useCompare';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -169,7 +163,6 @@ const Index = () => {
     trackEvent,
   } = useAnalytics();
   const { user } = useAuth();
-  const collectionLookup = useCollectionLookup();
   const lastTrackedRouteRef = useRef<string | null>(null);
 
   const {
@@ -802,21 +795,6 @@ const Index = () => {
                     />
                   </ScryfallQueryDisclosure>
                 </div>
-                <div className="pt-[26px]">
-                  <SaveSearchButton
-                    naturalQuery={originalQuery}
-                    scryfallQuery={
-                      lastSearchResult?.scryfallQuery || searchQuery
-                    }
-                    filters={activeFilters}
-                    onSaved={() =>
-                      trackFirstSave({
-                        query: originalQuery,
-                        request_id: currentRequestId ?? undefined,
-                      })
-                    }
-                  />
-                </div>
               </div>
             )}
 
@@ -986,7 +964,6 @@ const Index = () => {
                 activeFilters={activeFilters}
                 filtersResetKey={filtersResetKey}
                 initialUrlFilters={initialUrlFilters}
-                collectionLookup={user ? collectionLookup : undefined}
                 onFilteredCards={handleFilteredCards}
                 viewMode={viewMode}
                 onViewModeChange={setViewMode}
@@ -1024,7 +1001,6 @@ const Index = () => {
                 compareMode={compareMode}
                 toggleCompareCard={toggleCompareCard}
                 isCardSelected={isCardSelected}
-                collectionLookup={collectionLookup}
                 loadMoreRef={loadMoreRef}
                 getRovingProps={getRovingProps}
                 lightboxIndex={lightboxIndex}
