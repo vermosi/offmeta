@@ -5,6 +5,8 @@
 
 import { vi } from 'vitest';
 
+import type { ScryfallCard } from '@/types/card';
+
 /** Default timeout for regression tests (ms). */
 export const TEST_TIMEOUT = 10000;
 
@@ -32,28 +34,7 @@ export interface ValidationTestCase {
   description: string;
 }
 
-export interface MockCard {
-  id: string;
-  oracle_id: string;
-  name: string;
-  mana_cost: string;
-  cmc: number;
-  type_line: string;
-  oracle_text: string;
-  colors: string[];
-  color_identity: string[];
-  set: string;
-  set_name: string;
-  rarity: string;
-  image_uris?: {
-    small: string;
-    normal: string;
-    large: string;
-    art_crop: string;
-  };
-  legalities: Record<string, string>;
-  prices: Record<string, string | null>;
-}
+export type MockCard = ScryfallCard;
 
 let cardCounter = 0;
 
@@ -73,11 +54,14 @@ export function buildMockCard(overrides: Partial<MockCard> = {}): MockCard {
     set: 'TST',
     set_name: 'Test Set',
     rarity: 'common',
+    scryfall_uri: 'https://scryfall.com/card/tst/1/test-card',
     image_uris: {
       small: 'https://example.com/small.jpg',
       normal: 'https://example.com/normal.jpg',
       large: 'https://example.com/large.jpg',
+      png: 'https://example.com/card.png',
       art_crop: 'https://example.com/art_crop.jpg',
+      border_crop: 'https://example.com/border_crop.jpg',
     },
     legalities: {
       commander: 'legal',
