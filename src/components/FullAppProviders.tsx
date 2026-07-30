@@ -1,7 +1,6 @@
 /**
  * Providers needed by the full interactive app.
- * Kept out of the `/` homepage shell so first paint does not download auth,
- * query-cache, tooltip, toast, or backend client bundles.
+ * Kept separate so the shared app chrome stays centralized.
  */
 
 import { Suspense, type ReactNode } from 'react';

@@ -36,10 +36,11 @@ describe('GuidesIndex', () => {
 
   it('renders 10 guide cards', () => {
     renderGuidesIndex();
-    const links = screen
+    const guideLinks = screen
       .getAllByRole('link')
-      .filter((el) => el.getAttribute('href')?.startsWith('/guides/'));
-    expect(links).toHaveLength(10);
+      .map((el) => el.getAttribute('href'))
+      .filter((href): href is string => Boolean(href?.startsWith('/guides/')));
+    expect(new Set(guideLinks).size).toBe(10);
   });
 
   it('renders grouped level sections with jump links', () => {

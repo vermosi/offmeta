@@ -83,9 +83,8 @@ function useRumInit() {
 }
 
 export default function AppInitializer() {
-  // Search-first focus: only prefetch the popular search queries that feed
-  // the homepage. Deck/market/archetype/signature-card prefetches were
-  // removed because those routes are de-prioritized (see mem://product/core-focus).
+  // Search-first focus: keep the prefetch list small and only warm the
+  // queries that most help the main search flow.
   usePrefetchPopularQueries();
   useRealtimeCache();
   useEdgeFunctionWarmup();
