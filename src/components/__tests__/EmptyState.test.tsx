@@ -189,7 +189,7 @@ describe('EmptyState', () => {
     render(<EmptyState query="dragon tokens" onTrySuggestion={handler} />);
 
     expect(screen.getByText('Broaden this search')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: '+ Commander' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Commander' }));
     expect(handler).toHaveBeenCalledWith('dragon tokens f:commander');
   });
 
@@ -202,7 +202,7 @@ describe('EmptyState', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: '+ Commander' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Commander' }));
     expect(handler).toHaveBeenCalledWith('dragon tokens f:commander');
   });
 
