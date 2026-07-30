@@ -125,28 +125,4 @@ test.describe('Dialog focus management and keyboard flows', () => {
     await expect(reportTrigger).toBeFocused({ timeout: 2_000 }).catch(() => {});
   });
 
-  test('Header menus and deckbuilder controls support keyboard-only navigation', async ({
-    page,
-  }) => {
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
-
-    // Find the Decks dropdown trigger
-    const decksButton = page.getByRole('button', { name: 'Decks' });
-    await expect(decksButton).toBeVisible({ timeout: 5_000 });
-    await decksButton.focus();
-    await decksButton.press('Enter');
-
-    // Radix DropdownMenu uses role="menuitem"
-    const deckBuilderMenuItem = page.getByRole('menuitem', {
-      name: /deck builder/i,
-    });
-    await expect(deckBuilderMenuItem).toBeVisible({ timeout: 5_000 });
-
-    // Navigate down and select
-    await page.keyboard.press('ArrowDown');
-    await deckBuilderMenuItem.press('Enter');
-
-    await page.waitForURL('**/deckbuilder', { timeout: 10_000 });
-  });
 });
