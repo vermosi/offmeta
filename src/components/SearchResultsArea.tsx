@@ -28,6 +28,8 @@ import type { FilterState } from '@/types/filters';
 import type { ViewMode } from '@/lib/view-mode-storage';
 import type { ResultsTab } from '@/components/ResultsTabs';
 
+const EMPTY_COLLECTION_LOOKUP = new Map<string, number>();
+
 const ArtLightbox = lazy(() =>
   import('@/components/ArtLightbox').then((m) => ({ default: m.ArtLightbox })),
 );
@@ -71,7 +73,7 @@ interface SearchResultsAreaProps {
   compareMode: boolean;
   toggleCompareCard: (card: ScryfallCard) => void;
   isCardSelected: (id: string) => boolean;
-  collectionLookup: Map<string, number>;
+  collectionLookup?: Map<string, number>;
   loadMoreRef: React.RefObject<HTMLDivElement | null>;
   getRovingProps: (index: number) => {
     ref: (el: HTMLDivElement | null) => void;
@@ -123,7 +125,7 @@ export function SearchResultsArea({
   compareMode,
   toggleCompareCard,
   isCardSelected,
-  collectionLookup,
+  collectionLookup = EMPTY_COLLECTION_LOOKUP,
   loadMoreRef,
   getRovingProps,
   lightboxIndex,
@@ -177,7 +179,7 @@ export function SearchResultsArea({
       queryQualityScore,
       queryConfidence,
       querySampleSize,
-      collectionLookup,
+      collectionLookup = EMPTY_COLLECTION_LOOKUP,
       hadFastClick,
       hadRefinement,
       user,

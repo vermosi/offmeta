@@ -4,8 +4,7 @@
  */
 
 import type { ScryfallCard } from '@/types/card';
-import { type TranslationResult, type DeckCard, type Deck } from '@/hooks';
-import type { CritiqueResult } from '@/components/deckbuilder/critique-cache';
+import { type TranslationResult } from '@/hooks';
 import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';
 
@@ -55,66 +54,6 @@ export function createMockTranslation(
     },
     showAffiliate: false,
     source: 'deterministic',
-    ...overrides,
-  };
-}
-
-/**
- * Create a valid DeckCard object for deckbuilder tests.
- * Override any field via the `overrides` parameter.
- */
-export function createTestCard(
-  overrides?: Partial<DeckCard>,
-): DeckCard {
-  return {
-    id: overrides?.id ?? `card-id-${Math.random()}`,
-    deck_id: 'deck-123',
-    card_name: 'Test Card',
-    quantity: 1,
-    board: 'main',
-    category: null,
-    is_commander: false,
-    is_companion: false,
-    scryfall_id: null,
-    created_at: new Date().toISOString(),
-    ...overrides,
-  };
-}
-
-/**
- * Create a mock CritiqueResult for deck critique tests.
- * Override any field via the `overrides` parameter.
- */
-export function createMockCritiqueResult(
-  overrides?: Partial<CritiqueResult>,
-): CritiqueResult {
-  return {
-    summary: 'Test critique summary',
-    cuts: [],
-    additions: [],
-    confidence: 0.75,
-    ...overrides,
-  };
-}
-
-/**
- * Create a valid Deck object for deck-related tests.
- * Override any field via the `overrides` parameter.
- */
-export function createMockDeck(overrides?: Partial<Deck>): Deck {
-  return {
-    id: overrides?.id ?? `deck-${Math.random().toString(36).slice(2, 9)}`,
-    user_id: 'user-123',
-    name: 'Test Deck',
-    format: 'commander',
-    commander_name: 'Sol Ring',
-    companion_name: null,
-    color_identity: ['W', 'U'],
-    description: 'A test deck for unit tests',
-    is_public: false,
-    card_count: 100,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
     ...overrides,
   };
 }

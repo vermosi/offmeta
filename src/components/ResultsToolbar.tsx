@@ -28,7 +28,7 @@ interface ResultsToolbarProps {
   activeFilters: FilterState | null;
   filtersResetKey: number;
   initialUrlFilters: Partial<FilterState> | null | undefined;
-  collectionLookup: Map<string, number> | undefined;
+  collectionLookup?: Map<string, number> | undefined;
   onFilteredCards: (cards: ScryfallCard[], hasActiveFilters: boolean, filters: FilterState) => void;
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
