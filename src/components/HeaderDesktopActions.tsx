@@ -72,19 +72,6 @@ export function HeaderDesktopActions({
               <p className="text-xs text-muted-foreground truncate">{user.email}</p>
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate('/saved')}>
-              <Bookmark className="h-4 w-4 mr-2" />
-              {t('nav.savedSearches', 'Saved Searches')}
-              {savedCount > 0 && (
-                <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
-                  {savedCount}
-                </span>
-              )}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/collection')}>
-              <Package className="h-4 w-4 mr-2" />
-              {t('nav.collection', 'My Collection')}
-            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/profile')}>
               <Settings className="h-4 w-4 mr-2" />
               {t('nav.profileSettings')}
