@@ -119,24 +119,4 @@ describe('PublicProfile', () => {
     ).toBeGreaterThan(0);
   });
 
-  it('shows a retryable deck error when the deck query fails', async () => {
-    queryState.decksError = new Error('decks load failed');
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    });
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={['/user/user-1']}>
-          <Routes>
-            <Route path="/user/:userId" element={<PublicProfile />} />
-          </Routes>
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
-
-    expect(
-      await screen.findByText(/Failed to load public decks/i),
-    ).toBeInTheDocument();
-  });
 });

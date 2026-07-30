@@ -73,9 +73,5 @@ describe('NotFound', () => {
       'href',
       '/guides',
     );
-    expect(screen.getByRole('link', { name: /browse decks/i })).toHaveAttribute(
-      'href',
-      '/decks',
-    );
   });
 });

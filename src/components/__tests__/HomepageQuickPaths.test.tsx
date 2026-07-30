@@ -32,9 +32,9 @@ describe('HomepageQuickPaths', () => {
     ).toHaveAttribute('href', '/guides');
     expect(
       screen.getByRole('link', {
-        name: /reopen saved work pick up recurring searches and workflows fast\./i,
+        name: /find combos discover infinite and synergy combos for your cards\./i,
       }),
-    ).toHaveAttribute('href', '/saved');
+    ).toHaveAttribute('href', '/combos');
     expect(
       screen.getByRole('link', {
         name: /track prices see market movers and card trends at a glance\./i,
