@@ -16,7 +16,7 @@ import { resetSearchRateLimitState } from '@/hooks/useSearchQuery';
 export { resetSearchRateLimitState };
 
 const SEARCH_INPUT_SELECTOR = '#search-input:visible';
-const SEARCH_RESULT_CARD_SELECTOR = '[role="button"][aria-label^="View details for"]';
+const SEARCH_RESULT_CARD_SELECTOR = '[data-testid="search-result-card"]';
 
 /* ------------------------------------------------------------------ */
 /*  Search mocks                                                      */
@@ -79,9 +79,9 @@ export async function searchForCard(page: Page, query: string) {
   await searchInput.fill(query);
   await searchForm.getByTestId('search-submit-button').click();
 
-  await expect(
-    page.locator(SEARCH_RESULT_CARD_SELECTOR).first(),
-  ).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator(SEARCH_RESULT_CARD_SELECTOR).first()).toBeVisible({
+    timeout: 15_000,
+  });
 }
 
 /* ------------------------------------------------------------------ */
@@ -287,21 +287,31 @@ export async function signInViaDialog(
 ) {
   const { email = 'mock@example.com', password = 'password123' } = opts;
 
-  const visibleSignInButton = page
+  const desktopSignInButton = page
     .locator('button:visible')
     .filter({ hasText: /^sign in$/i })
     .first();
 
-  if (await visibleSignInButton.isVisible().catch(() => false)) {
-    await visibleSignInButton.click();
+  if (await desktopSignInButton.isVisible().catch(() => false)) {
+    await desktopSignInButton.click();
   } else {
     const hamburgerButton = page.getByTestId('hamburger-button');
-    if (!(await hamburgerButton.isVisible().catch(() => false))) {
-      throw new Error('No visible sign in entrypoint found');
+    if (await hamburgerButton.isVisible().catch(() => false)) {
+      await hamburgerButton.click();
+      const mobileSignInButton = page
+        .locator('button:visible')
+        .filter({ hasText: /^sign in$/i })
+        .last();
+      await mobileSignInButton.click();
+    } else {
+      const signInButtons = page
+        .getByRole('button', { name: /^sign in$/i });
+      if (await signInButtons.first().isVisible().catch(() => false)) {
+        await signInButtons.first().click();
+      } else {
+        throw new Error('No visible sign in entrypoint found');
+      }
     }
-
-    await hamburgerButton.click();
-    await page.getByRole('button', { name: /^sign in$/i }).last().click();
   }
 
   const authDialog = page.getByRole('dialog').first();

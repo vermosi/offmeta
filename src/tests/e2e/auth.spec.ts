@@ -2,25 +2,10 @@ import { expect, test } from '@playwright/test';
 import { mockAuthAPIs } from './fixtures/mock-helpers';
 
 async function openAuthDialog(page: Parameters<typeof test>[0]['page']) {
-  const desktopSignIn = page
-    .locator('button:visible')
-    .filter({ hasText: /^sign in$/i })
-    .first();
-  if (await desktopSignIn.isVisible().catch(() => false)) {
-    await desktopSignIn.click();
-    return;
-  }
-
-  const hamburgerButton = page.getByTestId('hamburger-button');
-  if (!(await hamburgerButton.isVisible().catch(() => false))) {
-    throw new Error('No visible auth entrypoint found');
-  }
-
-  await hamburgerButton.click();
-  await page
-    .getByRole('button', { name: /^sign in$/i })
-    .last()
-    .click();
+  const signInButton = page.getByRole('button', { name: /^sign in$/i }).first();
+  await expect(signInButton).toBeVisible({ timeout: 15_000 });
+  await signInButton.click();
+  await expect(page.getByRole('dialog')).toBeVisible({ timeout: 15_000 });
 }
 
 test.describe('Auth modal flows', () => {

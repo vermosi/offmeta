@@ -34,7 +34,7 @@ test.describe('Report issue dialog', () => {
 
     await page.goto('/');
 
-    await searchForCard(page, 'counterspell');
+    await searchForCard(page, 'cheap green ramp spells smoke');
 
     const reportTrigger = page
       .getByRole('button', { name: /report issue/i })

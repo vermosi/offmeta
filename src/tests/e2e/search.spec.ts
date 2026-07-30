@@ -25,7 +25,7 @@ test.describe('Search Flow', () => {
   }) => {
     await mockSearchAPIs(page);
     await page.goto('/');
-    await searchForCard(page, 'cheap green ramp spells');
+    await searchForCard(page, 'cheap green ramp spells smoke');
   });
 
   test('searching for a nonexistent card shows the empty state', async ({
