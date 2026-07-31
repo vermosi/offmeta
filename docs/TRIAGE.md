@@ -1,4 +1,4 @@
-# Triage Guide
+# Triage
 
 ## Labels
 

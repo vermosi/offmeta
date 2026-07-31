@@ -1,4 +1,4 @@
-# Security
+# Security Guide
 
 This page is the short index for the security model.
 

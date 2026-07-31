@@ -1,8 +1,25 @@
 # API
 
-All edge functions are deployed to `supabase/functions/`. Authentication is handled by the shared `_shared/auth.ts` helper, which accepts the Supabase anon key, authenticated user JWTs, the service role key, or the `OFFMETA_API_SECRET` custom secret.
+This page documents the main edge functions and client-side service contracts that matter to the app. The repo keeps most privileged logic in Supabase edge functions, while the browser talks to those functions through a smaller set of validated request and response shapes.
 
----
+## Shared Authentication
+
+All edge functions are deployed under `supabase/functions/`.
+
+Authentication is handled by the shared `_shared/auth.ts` helper, which accepts:
+
+- the Supabase anon key
+- authenticated user JWTs
+- the service role key
+- the `OFFMETA_API_SECRET` custom secret
+
+That gives the app a consistent auth story across user-facing endpoints and admin or maintenance routes.
+
+## Semantics To Keep In Mind
+
+- Requests should be treated as contracts, not ad hoc payloads.
+- Response shapes are intentionally stable so the frontend, tests, and edge functions can agree on the same expectations.
+- Many endpoints are maintained as internal tools even when they are reachable from the public app.
 
 ## Edge Functions
 
@@ -10,12 +27,12 @@ All edge functions are deployed to `supabase/functions/`. Authentication is hand
 
 **Endpoint**: `POST supabase/functions/semantic-search`
 
-Translates a natural-language Magic: The Gathering query into valid Scryfall syntax via a 4-layer pipeline:
+This is the core translation engine. It turns a natural-language Magic: The Gathering query into valid Scryfall syntax through a four-stage pipeline:
 
-1. **In-memory LRU cache** — very fast repeat hits within the same function instance
-2. **Persistent DB cache** (`query_cache` table, 48h TTL) — shared across instances
-3. **Deterministic / pattern match** — rule-based translation for common archetypes and slang
-4. **AI fallback** — Gemini Flash for novel/complex queries (circuit-breaker protected)
+1. In-memory LRU cache for very fast repeat hits within the same function instance
+2. Persistent DB cache in `query_cache` with a 48 hour TTL
+3. Deterministic pattern matching for common archetypes and slang
+4. AI fallback for novel or complex queries, protected by a circuit breaker
 
 #### Request body
 
@@ -38,7 +55,7 @@ Translates a natural-language Magic: The Gathering query into valid Scryfall syn
 }
 ```
 
-#### Response body (success)
+#### Response body
 
 ```json
 {
@@ -56,15 +73,15 @@ Translates a natural-language Magic: The Gathering query into valid Scryfall syn
 }
 ```
 
-#### `source` values
+#### Source values
 
-| Value           | Meaning                                 |
-| --------------- | --------------------------------------- |
-| `cache`         | Returned from persistent DB cache       |
-| `deterministic` | Pattern/rules-based match, no AI used   |
-| `pattern_match` | Matched a seeded translation rule       |
-| `ai`            | AI (Gemini Flash) was invoked           |
-| `raw_syntax`    | Input was already valid Scryfall syntax |
+| Value | Meaning |
+| --- | --- |
+| `cache` | Returned from persistent DB cache |
+| `deterministic` | Pattern or rules-based match, no AI used |
+| `pattern_match` | Matched a seeded translation rule |
+| `ai` | AI was invoked |
+| `raw_syntax` | Input was already valid Scryfall syntax |
 
 #### Headers
 
@@ -73,19 +90,17 @@ Translates a natural-language Magic: The Gathering query into valid Scryfall syn
 
 #### Shared contract helpers
 
-The app-side semantic-search contract helpers are implemented in [`src/lib/search/semantic-contract.ts`](../src/lib/search/semantic-contract.ts) and covered by [`src/lib/search/__tests__/edge-contract.test.ts`](../src/lib/search/__tests__/edge-contract.test.ts). They mirror the request validation and JSON response envelopes used by the edge function so local tests can validate the shape without calling the deployed service.
+The app-side semantic-search contract helpers live in [`src/lib/search/semantic-contract.ts`](../src/lib/search/semantic-contract.ts) and are covered by [`src/lib/search/__tests__/edge-contract.test.ts`](../src/lib/search/__tests__/edge-contract.test.ts). They mirror the request validation and response envelopes used by the edge function so local tests can validate shape without calling the deployed service.
 
 #### Cache bypass
 
-Set `useCache: false` in the request body to skip all cache layers. Useful for debugging translation accuracy.
-
----
+Set `useCache: false` to skip all cache layers. This is useful when you need to debug translation accuracy or confirm a pipeline change.
 
 ### Deck Categorize
 
 **Endpoint**: `POST supabase/functions/deck-categorize`
 
-Uses Gemini Flash to assign functional categories to a list of card names based on their oracle text and the deck's commander/strategy context. Returns a map of `card_name → category`.
+Uses Gemini Flash to assign functional categories to a list of card names based on oracle text and commander or strategy context.
 
 #### Request body
 
@@ -97,7 +112,7 @@ Uses Gemini Flash to assign functional categories to a list of card names based 
 }
 ```
 
-#### Response body (success)
+#### Response body
 
 ```json
 {
@@ -112,13 +127,11 @@ Uses Gemini Flash to assign functional categories to a list of card names based 
 
 Available categories: `Commander`, `Creatures`, `Instants`, `Sorceries`, `Artifacts`, `Enchantments`, `Planeswalkers`, `Lands`, `Ramp`, `Removal`, `Draw`, `Protection`, `Combo`, `Recursion`, `Utility`, `Finisher`, `Other`.
 
----
-
 ### Deck Suggest
 
 **Endpoint**: `POST supabase/functions/deck-suggest`
 
-Analyzes the current deck state and suggests high-priority cards to fill open slots, ranked by synergy with the commander and overall strategy.
+Analyzes the current deck state and suggests high-priority cards to fill open slots, ranked by synergy with the commander and the overall strategy.
 
 #### Request body
 
@@ -130,7 +143,7 @@ Analyzes the current deck state and suggests high-priority cards to fill open sl
 }
 ```
 
-#### Response body (success)
+#### Response body
 
 ```json
 {
@@ -147,15 +160,13 @@ Analyzes the current deck state and suggests high-priority cards to fill open sl
 }
 ```
 
----
-
 ### Combo Search
 
 **Endpoint**: `POST supabase/functions/combo-search`
 
-Proxies requests to the Commander Spellbook API to find combos. Supports both commander lookup and full deck analysis.
+Proxies requests to the Commander Spellbook API to find combos. It supports both commander lookup and full deck analysis.
 
-#### Request body (commander mode)
+#### Request body, commander mode
 
 ```json
 {
@@ -163,7 +174,7 @@ Proxies requests to the Commander Spellbook API to find combos. Supports both co
 }
 ```
 
-#### Request body (deck mode)
+#### Request body, deck mode
 
 ```json
 {
@@ -173,20 +184,17 @@ Proxies requests to the Commander Spellbook API to find combos. Supports both co
 }
 ```
 
-#### Response body (deck mode)
+#### Response body, deck mode
 
 ```json
 {
   "success": true,
-  "included": [...],
-  "almostIncluded": [...]
+  "included": [],
+  "almostIncluded": []
 }
 ```
 
-`included` = combos where all cards are present in the deck.  
-`almostIncluded` = combos missing 1–2 cards (shown as "Almost There").
-
----
+`included` means all combo cards are present in the deck. `almostIncluded` means the combo is missing one or two cards.
 
 ### Deck Recommendations
 
@@ -204,17 +212,15 @@ Uses Gemini Flash to analyze a full decklist and generate categorized improvemen
 }
 ```
 
-#### Response body (success)
+#### Response body
 
-Returns categorized recommendations: **High Synergy**, **Upgrades**, **Budget Picks**, and **Sideboard**, each with `card_name`, `reason`, and `category`.
-
----
+Returns categorized recommendations in groups such as High Synergy, Upgrades, Budget Picks, and Sideboard. Each entry includes `card_name`, `reason`, and `category`.
 
 ### Fetch Moxfield Deck
 
 **Endpoint**: `POST supabase/functions/fetch-moxfield-deck`
 
-Proxies Moxfield API requests to extract decklists from Moxfield URLs, bypassing browser CORS restrictions.
+Proxies Moxfield API requests to extract decklists from Moxfield URLs and bypass browser CORS restrictions.
 
 #### Request body
 
@@ -224,27 +230,23 @@ Proxies Moxfield API requests to extract decklists from Moxfield URLs, bypassing
 }
 ```
 
-#### Response body (success)
+#### Response body
 
-Returns the deck's `commander` name and `cards` array (name + quantity) extracted from the Moxfield API.
-
----
+Returns the deck's commander name and the `cards` array with card names and quantities.
 
 ### Admin Analytics
 
 **Endpoint**: `GET supabase/functions/admin-analytics?days=7`
 
-Returns aggregated search analytics. **Requires admin role** (JWT must belong to a user with `admin` in `user_roles`).
+Returns aggregated search analytics. This endpoint requires admin role, which means the JWT must belong to a user with `admin` in `user_roles`.
 
-Returns: summary stats, daily volume, source breakdown, confidence buckets, response percentiles, popular queries, low-confidence queries, and deterministic coverage trend.
-
----
+The response includes summary stats, daily volume, source breakdown, confidence buckets, response percentiles, popular queries, low-confidence queries, and deterministic coverage trends.
 
 ### Search Quality Repair
 
 **Endpoint**: `GET supabase/functions/admin-search-quality-repair?days=7`
 
-Returns ranked repair candidates for the admin analytics workflow. **Requires admin role**.
+Returns ranked repair candidates for the admin analytics workflow. This endpoint requires admin role.
 
 Each row includes quality score, no-result counts, refinement counts, confidence, sample size, and flags for existing or active translation rules.
 
@@ -256,1068 +258,14 @@ Returns a query detail payload with analytics, feedback, existing translation ru
 
 Creates or updates a `translation_rules` row through the admin-safe service-role path.
 
-Request body:
-
-```json
-{
-  "id": "optional-rule-id",
-  "pattern": "ramp spells",
-  "scryfall_syntax": "otag:ramp (t:instant or t:sorcery)",
-  "description": "optional note",
-  "confidence": 0.92,
-  "is_active": true,
-  "source_feedback_id": null
-}
-```
-
----
-
-### Process Feedback
-
-**Endpoint**: `POST supabase/functions/process-feedback`
-
-Processes a pending `search_feedback` row: validates the issue, uses Gemini 2.5 Flash Lite to generate a corrected Scryfall query, optionally inserts a new `translation_rules` entry, and updates the feedback row's `processing_status`.
-
-**Auth**: `verify_jwt = false` — accepts requests without a JWT (anon callers can submit corrections).
-
-**Rate limit**: 5 requests per 60 seconds per session.
-
-#### Request body
-
-```json
-{ "feedbackId": "uuid-of-the-search_feedback-row" }
-```
-
-#### Response body (success)
-
-```json
-{
-  "success": true,
-  "status": "completed",
-  "ruleId": "uuid-of-created-translation_rules-row"
-}
-```
-
-#### `status` values
-
-| Value              | Meaning                                                               |
-| ------------------ | --------------------------------------------------------------------- |
-| `completed`        | AI generated a new rule; rule inserted and linked to the feedback row |
-| `updated_existing` | Pattern already existed; existing rule confidence updated             |
-| `duplicate`        | Feedback query identical to an existing rule; no write performed      |
-| `skipped`          | AI returned a low-confidence or empty result; no rule created         |
-| `failed`           | Unrecoverable error (timeout, AI error); feedback row marked `failed` |
-
-> A 25-second safety timeout resets any feedback row still in `processing` state to `failed` on the next invocation, preventing permanently stuck rows.
-
----
-
-### Generate Patterns
-
-**Endpoint**: `POST supabase/functions/generate-patterns`
-
-Scans `translation_logs` for the last 30 days and batch-promotes high-frequency, high-confidence queries into `translation_rules`. Triggered nightly by the `generate-patterns-nightly` pg_cron job at 03:00 UTC.
-
-**Auth**: Anon JWT (Bearer token) accepted by `validateAuth`. `verify_jwt` is not set to `false` — the anon JWT passes the standard validator.
-
-#### Request body
-
-```json
-{ "source": "cron" }
-```
-
-`source` is optional and used only for log tracing. Omitting it is valid.
-
-#### Response body (success)
-
-```json
-{
-  "success": true,
-  "patternsCreated": 3,
-  "analyzed": 120,
-  "timeMs": 450
-}
-```
-
-| Field             | Description                                     |
-| ----------------- | ----------------------------------------------- |
-| `patternsCreated` | Number of new `translation_rules` rows inserted |
-| `analyzed`        | Number of candidate log entries examined        |
-| `timeMs`          | Total wall-clock time for the run               |
-
-#### Promotion criteria
-
-A log entry is promoted to a rule when **all** of the following hold:
-
-- Seen ≥ 2 times in the last 30 days (lowered from 3 to catch faster-rising patterns)
-- Average confidence ≥ 0.8
-- Returned ≥ 1 Scryfall result across all occurrences (guards against zero-result noise)
-- No existing `translation_rules` row matches the normalized query form
-
-Up to 50 rules are inserted per run. Once promoted, those patterns are picked up by `fetchDynamicRules()` in `semantic-search/rules.ts` within its 10-minute TTL cache, after which identical queries resolve without any AI call.
-
----
-
-### TopDeck.gg Import
-
-**Endpoint**: `POST supabase/functions/topdeck-import`
-
-Fetches tournament decklists from the TopDeck.gg API and stores them in `community_decks`. Resolves Moxfield deck URLs via the Moxfield API and batch-resolves card oracle IDs via Scryfall.
-
-**Auth**: Anon JWT accepted. Requires `TOPDECK_API_KEY` secret to be configured.
-
-#### Request body
-
-```json
-{
-  "num_days": 7,
-  "event_format": "MODERN"
-}
-```
-
-| Field          | Type   | Default | Description                                                                                                                                                                                                   |
-| -------------- | ------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `num_days`     | number | `14`    | Number of days of tournament data to fetch                                                                                                                                                                    |
-| `event_format` | string | `null`  | Optional filter: `STANDARD`, `MODERN`, `PIONEER`, `LEGACY`, `VINTAGE`, `COMMANDER2`, `PAUPER`, `HISTORIC`, `EXPLORER`, `TIMELESS`, `DUEL`, `OATHBREAKER`, `PREMODERN`, `GLADIATOR`, `STANDARD_BRAWL`, `PREDH` |
-
-#### Response body (success)
-
-```json
-{
-  "success": true,
-  "imported": 42,
-  "skipped": 108,
-  "tournaments": 12
-}
-```
-
-| Field         | Description                                        |
-| ------------- | -------------------------------------------------- |
-| `imported`    | Number of new decks inserted                       |
-| `skipped`     | Decks skipped (already imported or empty decklist) |
-| `tournaments` | Number of tournaments processed                    |
-
-#### Cron schedule
-
-Runs daily at **06:00 UTC** via `pg_cron` job `topdeck-import-daily` with `{"num_days": 1}` to fetch the previous day's tournaments.
-
----
-
-### Card Sync
-
-**Endpoint**: `POST supabase/functions/card-sync`
-
-Populates the `cards` table with Scryfall metadata for all unique oracle IDs found in `community_deck_cards` that don't yet have entries.
-
-**Auth**: Anon JWT accepted.
-
-#### Request body
-
-```json
-{}
-```
-
-No parameters required.
-
-#### Response body (success)
-
-```json
-{
-  "success": true,
-  "synced": 150,
-  "total": 200
-}
-```
-
-#### Cron schedule
-
-Runs daily at **07:00 UTC** via `pg_cron` job `card-sync-daily`.
-
----
-
-### Compute Cooccurrence
-
-**Endpoint**: `POST supabase/functions/compute-cooccurrence`
-
-Computes card co-occurrence statistics from `community_decks` and stores pairwise relationships in `card_cooccurrence` for the recommendation engine.
-
-**Auth**: Anon JWT accepted.
-
-#### Request body
-
-```json
-{
-  "format": "all",
-  "full_rebuild": false
-}
-```
-
-| Field          | Type    | Default | Description                                                                 |
-| -------------- | ------- | ------- | --------------------------------------------------------------------------- |
-| `format`       | string  | `"all"` | Format to compute cooccurrence for (or `"all"`)                             |
-| `full_rebuild` | boolean | `false` | If true, deletes existing cooccurrence data for the format before computing |
-
-#### Response body (success)
-
-```json
-{
-  "success": true,
-  "decksProcessed": 500,
-  "upserted": 12500,
-  "format": "all"
-}
-```
-
-#### Cron schedule
-
-Runs daily at **08:00 UTC** via `pg_cron` job `compute-cooccurrence-daily`.
-
----
-
-### Deck Critique
-
-**Endpoint**: `POST supabase/functions/deck-critique`
-
-AI-powered deck analysis that suggests cuts and additions with reasoning. Uses Gemini 3 Flash with structured tool output.
-
-**Auth**: Anon JWT accepted.
-
-**Rate limit**: 5 requests per 200 seconds per IP.
-
-#### Request body
-
-```json
-{
-  "commander": "Atraxa, Praetors' Voice",
-  "cards": [
-    { "name": "Sol Ring", "category": "Ramp", "quantity": 1 },
-    { "name": "Command Tower", "category": "Lands", "quantity": 1 }
-  ],
-  "color_identity": ["W", "U", "B", "G"],
-  "format": "commander"
-}
-```
-
-| Field            | Type     | Required | Description                           |
-| ---------------- | -------- | -------- | ------------------------------------- |
-| `commander`      | string   | No       | Commander name for context            |
-| `cards`          | array    | Yes      | Array of card objects (5–200 cards)   |
-| `color_identity` | string[] | No       | Color identity for legality checking  |
-| `format`         | string   | No       | Format context (default: `commander`) |
-
-#### Response body (success)
-
-```json
-{
-  "success": true,
-  "summary": "Your deck has a solid mana base but lacks sufficient card draw...",
-  "cuts": [
-    {
-      "card_name": "Temple of the False God",
-      "reason": "Inconsistent in early game without enough lands",
-      "severity": "underperforming"
-    }
-  ],
-  "additions": [
-    {
-      "card_name": "Rhystic Study",
-      "reason": "Provides consistent card advantage in multiplayer games",
-      "replaces": "Temple of the False God",
-      "category": "Draw"
-    }
-  ],
-  "mana_curve_notes": "Curve is slightly heavy at 4+ CMC",
-  "confidence": 0.85
-}
-```
-
----
-
-### Price Snapshot
-
-**Endpoint**: `POST supabase/functions/price-snapshot`
-
-Captures daily price snapshots from Scryfall for tracked cards. Sources include user collections, popular community deck cards, and a curated staples watchlist (~90 high-value cards).
-
-**Auth**: Anon JWT accepted.
-
-#### Request body
-
-```json
-{}
-```
-
-No parameters required.
-
-#### Response body (success)
-
-```json
-{
-  "success": true,
-  "snapshotCount": 1250,
-  "sources": {
-    "collection": 800,
-    "community": 200,
-    "watchlist": 90,
-    "uniqueTracked": 950
-  }
-}
-```
-
-#### Cron schedule
-
-Runs daily at **01:00 UTC** via `pg_cron` job `price-snapshot-nightly`.
-
-#### Data retention
-
-Snapshots older than 90 days are automatically deleted during each run.
-
----
-
-### Card Meta Context
-
-**Endpoint**: `POST supabase/functions/card-meta-context`
-
-AI-powered "Why This Card Is Played" rationale generator. Returns strategic reasoning and archetype tags for a card.
-
-**Auth**: Anon JWT accepted.
-
-**Rate limit**: 15 requests per 500 seconds per IP.
-
-#### Request body
-
-```json
-{
-  "cardName": "Rhystic Study",
-  "typeLine": "Enchantment",
-  "oracleText": "Whenever an opponent casts a spell...",
-  "colorIdentity": ["U"],
-  "edhrecRank": 5,
-  "legalities": { "commander": "legal", "modern": "not_legal" }
-}
-```
-
-| Field           | Type     | Required | Description             |
-| --------------- | -------- | -------- | ----------------------- |
-| `cardName`      | string   | Yes      | Card name               |
-| `typeLine`      | string   | Yes      | Card type line          |
-| `oracleText`    | string   | No       | Oracle text for context |
-| `colorIdentity` | string[] | No       | Color identity          |
-| `edhrecRank`    | number   | No       | EDHREC popularity rank  |
-| `legalities`    | object   | No       | Format legality map     |
-
-#### Response body (success)
-
-```json
-{
-  "success": true,
-  "rationale": "Rhystic Study is a premier card advantage engine in Commander. It punishes opponents who don't pay the tax and provides consistent draw in multiplayer games.",
-  "archetypes": ["Control", "Draw-Go", "Enchantress"],
-  "cached": false
-}
-```
-
-Results are cached for 7 days.
-
----
-
-### Card Similarity
-
-**Endpoint**: `POST supabase/functions/card-similarity`
-
-Generates Scryfall queries for similar cards and budget alternatives, plus AI-powered synergy suggestions.
-
-**Auth**: Anon JWT accepted.
-
-**Rate limit**: 15 requests per 500 seconds per IP.
-
-#### Request body
-
-```json
-{
-  "cardName": "Rhystic Study",
-  "typeLine": "Enchantment",
-  "oracleText": "Whenever an opponent casts a spell...",
-  "colorIdentity": ["U"],
-  "keywords": ["draw"],
-  "cmc": 3,
-  "prices": { "usd": "45.00" }
-}
-```
-
-#### Response body (success)
-
-```json
-{
-  "success": true,
-  "similarQuery": "t:enchantment id<=U mv>=2 mv<=4 o:\"draw\" -!\"Rhystic Study\"",
-  "budgetQuery": "t:enchantment id<=U o:\"draw\" -!\"Rhystic Study\" usd<22",
-  "synergyCards": [
-    {
-      "name": "Mystic Remora",
-      "reason": "Similar tax effect for early game card draw"
-    },
-    {
-      "name": "Consecrated Sphinx",
-      "reason": "Powerful draw engine that scales with opponents"
-    }
-  ],
-  "cached": false
-}
-```
-
----
-
-### Card Recommendations
-
-**Endpoint**: `POST supabase/functions/card-recommendations`
-
-Returns cards commonly played alongside a given card, powered by the `card_cooccurrence` table built from tournament data.
-
-**Auth**: Anon JWT accepted.
-
-#### Request body
-
-```json
-{
-  "oracle_id": "abc123-def456",
-  "format": "all",
-  "limit": 20
-}
-```
-
-| Field       | Type   | Default  | Description                    |
-| ----------- | ------ | -------- | ------------------------------ |
-| `oracle_id` | string | required | Scryfall oracle ID of the card |
-| `format`    | string | `"all"`  | Format filter                  |
-| `limit`     | number | `20`     | Max results (capped at 50)     |
-
-#### Response body (success)
-
-```json
-{
-  "success": true,
-  "oracle_id": "abc123-def456",
-  "format": "all",
-  "recommendations": [
-    {
-      "oracle_id": "xyz789",
-      "card_name": "Sol Ring",
-      "cooccurrence_count": 450,
-      "mana_cost": "{1}",
-      "type_line": "Artifact",
-      "image_url": "https://..."
-    }
-  ]
-}
-```
-
----
-
-### Deck Ideas
-
-**Endpoint**: `POST supabase/functions/deck-ideas`
-
-AI-powered deck concept generator. Returns archetype, strategy, key cards, synergy pieces, and budget options from a natural language query.
-
-**Auth**: Anon JWT accepted.
-
-**Rate limit**: 10 requests per 300 seconds per IP.
-
-#### Request body
-
-```json
-{
-  "query": "aristocrats deck with treasure tokens"
-}
-```
-
-#### Response body (success)
-
-```json
-{
-  "success": true,
-  "archetype": "Rakdos Treasure Aristocrats",
-  "strategy": "Sacrifice treasure tokens and creatures for value, draining opponents with blood artist effects while generating card advantage.",
-  "keyCards": [
-    "Korvold, Fae-Cursed King",
-    "Dockside Extortionist",
-    "Pitiless Plunderer"
-  ],
-  "synergyPieces": ["Revel in Riches", "Marionette Master", "Xorn"],
-  "budgetOptions": ["Mayhem Devil", "Deadly Dispute", "Treasure Keeper"]
-}
-```
-
----
-
-### Detect Archetypes
-
-**Endpoint**: `POST supabase/functions/detect-archetypes`
-
-Analyzes community decks and assigns archetype labels based on card text patterns. Processes up to 200 untagged decks per invocation.
-
-**Auth**: Service role key required.
-
-#### Request body
-
-```json
-{}
-```
-
-#### Response body (success)
-
-```json
-{
-  "success": true,
-  "tagged": 45,
-  "total": 200
-}
-```
-
-#### Detected archetypes
-
-`tokens`, `aristocrats`, `treasure`, `blink`, `graveyard`, `artifacts`, `spellslinger`, `ramp`, `aggro`, `control`, `voltron`, `tribal`, `combo`, `stax`
-
----
-
-### Cleanup Logs
-
-**Endpoint**: `POST supabase/functions/cleanup-logs`
-
-Deletes `translation_logs` and `analytics_events` older than 30 days to prevent database bloat.
-
-**Auth**: Admin role required.
-
-**Rate limit**: 1 request per 10 seconds.
-
-#### Request body
-
-```json
-{}
-```
-
-#### Response body (success)
-
-```json
-{
-  "success": true,
-  "deletedLogs": 1250,
-  "deletedAnalytics": 340,
-  "cutoffDate": "2025-02-07T00:00:00.000Z",
-  "retentionDays": 30,
-  "responseTimeMs": 450
-}
-```
-
-#### Cron schedule
-
-Runs daily at **02:00 UTC** via `pg_cron` job `cleanup-logs-nightly`.
-
----
-
-### Warmup Cache
-
-**Endpoint**: `POST supabase/functions/warmup-cache`
-
-Pre-populates the `query_cache` with common MTG search patterns (~330 queries including staples, archetypes, and tribal searches). Run after deployment to boost cache hit rate.
-
-**Auth**: Admin role required.
-
-**Rate limit**: 1 request per 10 seconds.
-
-#### Request body (optional)
-
-```json
-{
-  "queries": ["custom query 1", "simic landfall"]
-}
-```
-
-If `queries` is provided, only those queries are warmed. Otherwise, the built-in list of ~330 common queries is used.
-
-#### Response body (success)
-
-```json
-{
-  "success": true,
-  "message": "Cache warmup complete",
-  "results": {
-    "total": 330,
-    "newlyCached": 280,
-    "alreadyCached": 45,
-    "failed": 5
-  },
-  "durationMs": 45000
-}
-```
-
----
-
-### Auto Generate SEO Pages
-
-**Endpoint**: `POST supabase/functions/auto-generate-seo-pages`
-
-Automatically selects popular untranslated/unused queries and generates up to 5 new published SEO pages by internally calling `generate-seo-page`.
-
-**Auth**: Service role required (`requireServiceRole`).
-
-#### Request body
-
-```json
-{}
-```
-
-No request fields are required.
-
-#### Response body (success)
-
-```json
-{
-  "total": 5,
-  "succeeded": 4,
-  "results": [
-    {
-      "query": "best mana rocks commander",
-      "status": "success",
-      "slug": "best-mana-rocks-commander"
-    }
-  ]
-}
-```
-
-Source of truth: `supabase/functions/auto-generate-seo-pages/index.ts`.
-
----
-
-### Batch Generate SEO Pages
-
-**Endpoint**: `POST supabase/functions/batch-generate-seo-pages`
-
-Batch-generates SEO pages from a default seed list or caller-provided query list.
-
-**Auth**: Service role required (`requireServiceRole`).
-
-#### Request body
-
-```json
-{
-  "queries": [
-    "best mana rocks for commander",
-    "token doublers magic the gathering"
-  ],
-  "publish": true,
-  "regenerate": false
-}
-```
-
-| Field        | Type     | Default            | Description                       |
-| ------------ | -------- | ------------------ | --------------------------------- |
-| `queries`    | string[] | built-in seed list | Queries to generate               |
-| `publish`    | boolean  | `true`             | Publish immediately when true     |
-| `regenerate` | boolean  | `false`            | Regenerate existing pages by slug |
-
-#### Response body (success)
-
-```json
-{
-  "total": 2,
-  "succeeded": 2,
-  "failed": 0,
-  "results": [
-    {
-      "query": "best mana rocks for commander",
-      "status": "success",
-      "slug": "best-mana-rocks-for-commander"
-    }
-  ]
-}
-```
-
-Source of truth: `supabase/functions/batch-generate-seo-pages/index.ts`.
-
----
-
-### Bulk Data Sync
-
-**Endpoint**: `POST supabase/functions/bulk-data-sync`
-
-Chunked Scryfall sync that upserts card metadata and writes price snapshots in paginated batches.
-
-**Auth**: Valid API auth required via `validateAuth` (anon JWT, user JWT, service role, or API secret accepted by shared auth helper).
-
-#### Request body
-
-```json
-{
-  "page": 1,
-  "cleanup": true
-}
-```
-
-| Field     | Type    | Default | Description                                |
-| --------- | ------- | ------- | ------------------------------------------ |
-| `page`    | number  | `1`     | Starting Scryfall page for this invocation |
-| `cleanup` | boolean | `false` | Forces old price snapshot cleanup          |
-
-#### Response body (success)
-
-```json
-{
-  "success": true,
-  "startPage": 1,
-  "pagesProcessed": 20,
-  "totalCardsInBatch": 3500,
-  "cardsUpserted": 3400,
-  "cardErrors": 0,
-  "pricesInserted": 2800,
-  "priceErrors": 0,
-  "skipped": 12,
-  "hasMore": true,
-  "nextPage": 21
-}
-```
-
-Source of truth: `supabase/functions/bulk-data-sync/index.ts`.
-
----
-
-### Fix Zero Results
-
-**Endpoint**: `POST supabase/functions/fix-zero-results`
-
-Analyzes frequent zero-result searches, generates improved Scryfall syntax, validates against Scryfall, and either auto-promotes or flags for review.
-
-**Auth**: Valid API auth required via `validateAuth`.
-
-#### Request body
-
-```json
-{}
-```
-
-No request fields are required.
-
-#### Response body (success)
-
-```json
-{
-  "success": true,
-  "processed": 10,
-  "autoPromoted": 3,
-  "flaggedForReview": 4,
-  "results": [
-    {
-      "query": "good white draw",
-      "status": "auto_promoted",
-      "newSyntax": "id<=w otag:draw",
-      "confidence": 0.9,
-      "scryfallResults": 128
-    }
-  ],
-  "responseTimeMs": 1400
-}
-```
-
-Source of truth: `supabase/functions/fix-zero-results/index.ts`.
-
----
-
-### Generate Retention Triggers
-
-**Endpoint**: `POST supabase/functions/generate-retention-triggers`
-
-Runs retention trigger jobs via the `run_retention_trigger_jobs` RPC.
-
-**Auth**: `validateAuth` must authorize and role must be `service` or `api`.
-
-#### Request body
-
-```json
-{}
-```
-
-No request fields are required.
-
-#### Response body (success)
-
-```json
-{
-  "ok": true,
-  "data": {}
-}
-```
-
-Source of truth: `supabase/functions/generate-retention-triggers/index.ts`.
-
----
-
-### Generate SEO Page
-
-**Endpoint**: `POST supabase/functions/generate-seo-page`
-
-Generates a structured SEO page from a query, validates card names against local card data, and stores a `draft` or `published` record in `seo_pages`.
-
-**Auth**: Admin or service role required (`requireAdminOrService`).
-
-#### Request body
-
-```json
-{
-  "query": "best budget board wipes",
-  "publish": false,
-  "regenerate": false
-}
-```
-
-| Field        | Type    | Required | Description                       |
-| ------------ | ------- | -------- | --------------------------------- |
-| `query`      | string  | Yes      | Seed query (3–200 chars)          |
-| `publish`    | boolean | No       | Publishes immediately when true   |
-| `regenerate` | boolean | No       | Rebuilds existing slug if present |
-
-#### Response body (success)
-
-```json
-{
-  "success": true,
-  "slug": "best-budget-board-wipes",
-  "status": "draft",
-  "validatedCards": 10,
-  "totalCardsGenerated": 12
-}
-```
-
-Source of truth: `supabase/functions/generate-seo-page/index.ts`.
-
----
-
-### Get Affiliate Config
-
-**Endpoint**: `GET supabase/functions/get-affiliate-config`
-
-Returns public affiliate-link base configuration used by the frontend.
-
-**Auth**: No auth required.
-
-#### Request fields
-
-None.
-
-#### Response body (success)
-
-```json
-{
-  "tcgplayerAffiliateBase": "https://..."
-}
-```
-
-Source of truth: `supabase/functions/get-affiliate-config/index.ts`.
-
----
-
-### MTGJSON Import
-
-**Endpoint**: `POST supabase/functions/mtgjson-import`
-
-Imports community decks from MTGJSON in chunks and resolves oracle IDs for deck cards.
-
-**Auth**: Valid API auth required via `validateAuth`.
-
-#### Request body
-
-```json
-{
-  "offset": 0,
-  "limit": 50
-}
-```
-
-| Field    | Type   | Default | Description                         |
-| -------- | ------ | ------- | ----------------------------------- |
-| `offset` | number | `0`     | DeckList start index                |
-| `limit`  | number | `50`    | Number of decks to process this run |
-
-#### Response body (success)
-
-```json
-{
-  "success": true,
-  "imported": 32,
-  "skipped": 18,
-  "errors": 1,
-  "errorDetails": ["insert:SomeDeck"],
-  "total": 2400,
-  "nextOffset": 50,
-  "hasMore": true
-}
-```
-
-Source of truth: `supabase/functions/mtgjson-import/index.ts`.
-
----
-
-### Prerender
-
-**Endpoint**: `GET supabase/functions/prerender?path=<route>`
-
-Returns prerendered HTML for `/cards/:slug`, `/search/:slug`, and `/ai/:slug` routes for crawlers and social previews.
-
-**Auth**: No auth required.
-
-#### Request fields
-
-| Field  | Location     | Required | Description                                             |
-| ------ | ------------ | -------- | ------------------------------------------------------- |
-| `path` | query string | Yes      | Route path to prerender (for example `/cards/sol-ring`) |
-
-#### Response shape
-
-- Returns `text/html` on success with SEO metadata, structured data, and cache headers.
-- Returns JSON error shapes for invalid requests (for example `{ "error": "Missing path parameter" }`).
-
-Source of truth: `supabase/functions/prerender/index.ts`.
-
----
-
-### Process Email Queue
-
-**Endpoint**: `POST supabase/functions/process-email-queue`
-
-Processes queued auth and transactional emails, handling retries, DLQ routing, and rate-limit backoff.
-
-**Auth**: Requires `Authorization: Bearer <jwt>` with `service_role` claim.
-
-#### Request body
-
-```json
-{}
-```
-
-No request fields are required.
-
-#### Response body (success)
-
-```json
-{
-  "processed": 10
-}
-```
-
-Possible partial-success response during rate limiting:
-
-```json
-{
-  "processed": 4,
-  "stopped": "rate_limited"
-}
-```
-
-Source of truth: `supabase/functions/process-email-queue/index.ts`.
-
----
-
-### Promote Searches
-
-**Endpoint**: `POST supabase/functions/promote-searches`
-
-Promotes high-frequency, high-confidence natural-language searches into `curated_searches`.
-
-**Auth**: Valid API auth required via `validateAuth`.
-
-This endpoint is documented as an authenticated maintenance action. The repository currently
-does not include a migration-backed cron schedule for it, so any scheduling is treated as
-external/manual until a source-controlled job is added.
-
-#### Request body
-
-```json
-{}
-```
-
-No request fields are required.
-
-#### Response body (success)
-
-```json
-{
-  "success": true,
-  "promoted": 3,
-  "entries": [
-    {
-      "slug": "best-mono-red-draw",
-      "title": "Best Mono Red Draw for MTG",
-      "category": "colors"
-    }
-  ],
-  "responseTimeMs": 420
-}
-```
-
-Source of truth: `supabase/functions/promote-searches/index.ts`.
-
----
-
-### Sitemap
-
-**Endpoint**: `GET supabase/functions/sitemap`
-
-Generates dynamic sitemap XML that includes static pages, curated searches, cards, public decks, and published AI SEO pages.
-
-**Auth**: No auth required.
-
-#### Request fields
-
-None.
-
-#### Response shape
-
-- Returns `application/xml` sitemap payload.
-- On failure returns plain-text `Internal error` with HTTP 500.
-
-Source of truth: `supabase/functions/sitemap/index.ts`.
-
----
-
-### Sync Card Names
-
-**Endpoint**: `POST supabase/functions/sync-card-names`
-
-Syncs the `card_names` table from Scryfall's card-name catalog endpoint.
-
-**Auth**: Valid API auth required via `validateAuth`.
-
-#### Request body
-
-```json
-{}
-```
-
-No request fields are required.
-
-#### Response body (success)
-
-```json
-{
-  "success": true,
-  "totalNames": 30000,
-  "upserted": 30000,
-  "errors": 0
-}
-```
-
-Source of truth: `supabase/functions/sync-card-names/index.ts`.
-
----
-
 ## Client-Side Scryfall
 
-The frontend Scryfall client (`src/lib/scryfall/client.ts`) automatically appends `-is:rebalanced` to all queries to exclude Alchemy rebalanced cards from results.
+The frontend Scryfall client in [`src/lib/scryfall/client.ts`](../src/lib/scryfall/client.ts) automatically appends `-is:rebalanced` to queries so Alchemy rebalanced cards stay out of normal results.
 
 ### Printings
 
-`src/lib/scryfall/printings.ts` — fetches all printings for a card name, sorted by release date. Used by the `PrintingPickerPopover` in the deck editor. Results are cached module-level per card name for the lifetime of the deck editor session.
+[`src/lib/scryfall/printings.ts`](../src/lib/scryfall/printings.ts) fetches all printings for a card name, sorted by release date. It is used by the `PrintingPickerPopover` in the deck editor and cached module-level for the lifetime of the session.
 
 ### Collection price lookup
 
-`src/hooks/useDeckPrice.ts` — batches up to 75 card names per request against the Scryfall `/cards/collection` endpoint to compute total mainboard USD value. Uses the shared Scryfall ref-cache so already-fetched cards cost zero additional requests.
+[`src/hooks/useDeckPrice.ts`](../src/hooks/useDeckPrice.ts) batches up to 75 card names per request against the Scryfall `/cards/collection` endpoint to compute total mainboard USD value. It reuses the shared Scryfall ref cache so already-fetched cards do not cost extra requests.

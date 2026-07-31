@@ -1,24 +1,25 @@
 # Deployment
 
-This guide covers the shortest path to deploy OffMeta with Supabase for data/edge functions and a static hosting provider for the frontend.
+This guide covers the shortest path to deploying OffMeta with Supabase for the backend and a static host for the frontend.
 
 ## Overview
 
 OffMeta has two deployable surfaces:
 
-- The React + Vite frontend
+- the React + Vite frontend
 - Supabase Edge Functions and database schema
 
-The frontend reads public Supabase values at runtime, while privileged operations stay in Edge Functions.
+The frontend reads public Supabase values at runtime, while privileged operations stay in edge functions.
 
-## Prerequisites
+## Before You Deploy
 
-- A Supabase project with database access
-- A frontend host that can serve a Vite build
-- The environment variables documented in [Configuration](./configuration.md)
-- The `npm` toolchain for local build verification
+- Confirm the branch is green locally.
+- Run `npm run typecheck`.
+- Run `npm run test`.
+- Run `npm run build`.
+- Make sure the configuration documented in [Configuration](./configuration.md) is correct for the target environment.
 
-## Supabase setup
+## Supabase Setup
 
 1. Create or select a Supabase project.
 2. Apply the database migrations and schema from the repo.
@@ -30,20 +31,14 @@ The frontend reads public Supabase values at runtime, while privileged operation
    - `LOVABLE_API_KEY`
 5. Verify the semantic-search function responds to a known query.
 
-## Frontend setup
+## Frontend Setup
 
 1. Set the frontend environment variables used by the app.
 2. Build the app with `npm run build`.
 3. Publish the `dist/` output to your hosting provider.
 4. Confirm the deployed site can reach the Supabase project and edge functions.
 
-## Local verification before deploy
-
-- `npm run typecheck`
-- `npm run test`
-- `npm run build`
-
-## Deployment checklist
+## Deployment Checklist
 
 - Public env vars are correct in the frontend host.
 - Supabase secrets are present and match the deployed project.
@@ -68,3 +63,4 @@ Recommended release flow:
 - If search fails, confirm the semantic-search function is deployed and the URL matches the frontend env vars.
 - If edge requests return 401, confirm the anon key and auth headers are set correctly.
 - If the frontend builds locally but fails in production, compare the host env values against `.env.local`.
+- If deployment works in one environment but not another, check whether the app is using the correct prefix on each side of the boundary.
