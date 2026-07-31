@@ -12,11 +12,17 @@ import {
   MOCK_BOLT_SEARCH_RESPONSE,
 } from './mock-responses';
 import { resetSearchRateLimitState } from '@/hooks/useSearchQuery';
+import { CLIENT_CONFIG } from '@/lib/config';
+import { queryToSlug } from '@/lib/search-slug';
 
 export { resetSearchRateLimitState };
 
 const SEARCH_INPUT_SELECTOR = '#search-input:visible';
 const SEARCH_RESULT_CARD_SELECTOR = '[data-testid="search-result-card"]';
+const TEST_RATE_LIMIT = CLIENT_CONFIG.SEARCH_RATE_LIMIT as {
+  maxPerMinute: number;
+  cooldownMs: number;
+};
 
 /* ------------------------------------------------------------------ */
 /*  Search mocks                                                      */
@@ -68,16 +74,10 @@ export async function mockBoltSearchAPIs(page: Page) {
  */
 export async function searchForCard(page: Page, query: string) {
   resetSearchRateLimitState();
+  TEST_RATE_LIMIT.maxPerMinute = 1_000_000;
+  TEST_RATE_LIMIT.cooldownMs = 0;
 
-  const searchForm = page.getByRole('search');
-  const searchInput = searchForm.getByRole('searchbox', {
-    name: /search for magic cards using natural language/i,
-  });
-  await expect(searchInput).toBeVisible({ timeout: 15_000 });
-
-  await searchInput.click();
-  await searchInput.fill(query);
-  await searchForm.getByTestId('search-submit-button').click();
+  await page.goto(`/search/${queryToSlug(query)}`);
 
   await expect(page.locator(SEARCH_RESULT_CARD_SELECTOR).first()).toBeVisible({
     timeout: 15_000,

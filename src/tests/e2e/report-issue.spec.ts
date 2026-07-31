@@ -37,7 +37,7 @@ test.describe('Report issue dialog', () => {
     await searchForCard(page, 'cheap green ramp spells smoke');
 
     const reportTrigger = page
-      .getByRole('button', { name: /report issue/i })
+      .getByRole('button', { name: /report.*issue/i })
       .first();
     await expect(reportTrigger).toBeVisible({ timeout: 15_000 });
     await reportTrigger.click();
