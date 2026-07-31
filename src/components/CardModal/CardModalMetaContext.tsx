@@ -55,11 +55,6 @@ export function CardModalMetaContext({ card }: CardModalMetaContextProps) {
     .filter((f) => FORMAT_DISPLAY[f])
     .slice(0, 6);
 
-  // Don't render if card has no useful meta data
-  if (!edhrecRank && legalFormats.length === 0) {
-    return null;
-  }
-
   return (
     <div className="space-y-2">
       <button
