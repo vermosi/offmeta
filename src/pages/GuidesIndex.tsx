@@ -15,7 +15,7 @@ import { useTranslation } from '@/lib/i18n';
 import { SkipLinks } from '@/components/SkipLinks';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks';
-import { Copy } from 'lucide-react';
+import { Copy, Share2 } from 'lucide-react';
 import { buildGuideUrl, copyTextToClipboard } from '@/lib/guide-actions';
 
 const LEVEL_COLORS: Record<string, string> = {
@@ -62,7 +62,28 @@ export default function GuidesIndex() {
 
   const copyGuideUrl = async (slug: string, title: string) => {
     await copyTextToClipboard(
-      buildGuideUrl(slug),
+      GUIDES.find((guide) => guide.slug === slug)?.searchQuery ?? buildGuideUrl(slug),
+      toast,
+      'Link copied',
+      `Copied ${title} to your clipboard.`,
+      'Copy failed',
+      'Your browser blocked clipboard access.',
+    );
+  };
+
+  const shareGuide = async (slug: string, title: string) => {
+    const url = buildGuideUrl(slug);
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({ title, url });
+        return;
+      } catch {
+        // Fall through to clipboard.
+      }
+    }
+
+    await copyTextToClipboard(
+      url,
       toast,
       'Link copied',
       `Copied ${title} to your clipboard.`,
@@ -282,18 +303,32 @@ export default function GuidesIndex() {
                             {t('guides.readGuide')}{' '}
                             <ArrowRight className="h-3.5 w-3.5" />
                           </Link>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="sm:self-end gap-2"
-                            onClick={() => {
-                              void copyGuideUrl(guide.slug, guide.title);
-                            }}
-                          >
-                            <Copy className="h-3.5 w-3.5" />
-                            Copy link
-                          </Button>
+                          <div className="flex flex-wrap gap-2 sm:self-end">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="gap-2"
+                              onClick={() => {
+                                void copyGuideUrl(guide.slug, guide.title);
+                              }}
+                            >
+                              <Copy className="h-3.5 w-3.5" />
+                              Copy query
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="gap-2"
+                              onClick={() => {
+                                void shareGuide(guide.slug, guide.title);
+                              }}
+                            >
+                              <Share2 className="h-3.5 w-3.5" />
+                              Share guide
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     ))}

@@ -587,8 +587,12 @@ const CardPage = () => {
                     label="Share"
                   />
                 </div>
+                <FeatureCrossLinks compact />
               </div>
             </div>
+
+            {/* Internal SEO links â€” co-played cards build topical clusters for Google */}
+            <RelatedCardLinks oracleId={card.oracle_id} cardName={card.name} />
 
             {/* Off-Meta Alternatives section */}
             <section className="space-y-4">
@@ -648,13 +652,8 @@ const CardPage = () => {
                 </div>
               </section>
             )}
-
-            {/* Internal SEO links — co-played cards build topical clusters for Google */}
-            <RelatedCardLinks oracleId={card.oracle_id} cardName={card.name} />
-
-            {/* Cross-links to other tools */}
-            <FeatureCrossLinks cardName={card.name} />
           </div>
+
         </main>
 
         <Footer />

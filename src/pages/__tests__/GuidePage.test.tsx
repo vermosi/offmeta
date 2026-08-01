@@ -129,6 +129,11 @@ describe('GuidePage', () => {
       ).toHaveAttribute('href', '#related');
     });
 
+    it('renders copy actions for on-page sections', () => {
+      renderGuidePage('search-by-creature-type');
+      expect(screen.getAllByRole('button', { name: 'Copy' }).length).toBe(4);
+    });
+
     it('shows the user input and translated query', () => {
       renderGuidePage('search-by-creature-type');
       expect(screen.getByText('dragons')).toBeInTheDocument();

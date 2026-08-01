@@ -3,7 +3,7 @@
  */
 
 import { useEffect } from 'react';
-import { applySeoMeta, buildFaqJsonLd, buildBreadcrumbJsonLd, buildGuideArticleJsonLd, injectJsonLd } from '@/lib/seo';
+import { applySeoMeta, buildFaqJsonLd, buildBreadcrumbJsonLd, buildGuideArticleJsonLd } from '@/lib/seo';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getGuideBySlug, GUIDES } from '@/data/guides';
 import { Footer } from '@/components/Footer';
@@ -132,6 +132,17 @@ export default function GuidePage() {
     );
   };
 
+  const handleCopySectionLink = async (sectionId: string, sectionLabel: string) => {
+    await copyTextToClipboard(
+      `${pageUrl}#${sectionId}`,
+      toast,
+      'Section link copied',
+      `Copied ${sectionLabel} to your clipboard.`,
+      'Copy failed',
+      'Your browser blocked clipboard access.',
+    );
+  };
+
   const handleShare = async () => {
     if (typeof navigator.share === 'function') {
       try {
@@ -255,30 +266,36 @@ export default function GuidePage() {
               </h2>
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
-              <a
-                href="#search"
-                className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground hover:border-primary/30 hover:text-primary transition-colors"
-              >
-                Search this guide
-              </a>
-              <a
-                href="#tips"
-                className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground hover:border-primary/30 hover:text-primary transition-colors"
-              >
-                Tips & strategy
-              </a>
-              <a
-                href="#faq"
-                className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground hover:border-primary/30 hover:text-primary transition-colors"
-              >
-                FAQ
-              </a>
-              <a
-                href="#related"
-                className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground hover:border-primary/30 hover:text-primary transition-colors"
-              >
-                Related guides
-              </a>
+              {[
+                ['search', 'Search this guide'],
+                ['tips', 'Tips & strategy'],
+                ['faq', 'FAQ'],
+                ['related', 'Related guides'],
+              ].map(([sectionId, sectionLabel]) => (
+                <div
+                  key={sectionId}
+                  className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2"
+                >
+                  <a
+                    href={`#${sectionId}`}
+                    className="min-w-0 flex-1 text-sm text-foreground hover:text-primary transition-colors"
+                  >
+                    {sectionLabel}
+                  </a>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2 gap-1.5 text-muted-foreground hover:text-foreground"
+                    onClick={() => {
+                      void handleCopySectionLink(sectionId, sectionLabel);
+                    }}
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                    Copy
+                  </Button>
+                </div>
+              ))}
             </div>
           </section>
 

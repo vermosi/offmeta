@@ -3,6 +3,9 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import GuidesIndex from '@/pages/GuidesIndex';
 
+const mockWriteText = vi.fn();
+const mockShare = vi.fn();
+
 // Mock Header and Footer to isolate GuidesIndex
 vi.mock('@/components/Header', () => ({
   Header: () => <header data-testid="mock-header">Header</header>,
@@ -26,7 +29,11 @@ function renderGuidesIndex() {
 
 describe('GuidesIndex', () => {
   beforeEach(() => {
-    vi.restoreAllMocks();
+    vi.clearAllMocks();
+    Object.assign(navigator, {
+      clipboard: { writeText: mockWriteText },
+      share: mockShare,
+    });
   });
 
   it('renders the page title', () => {
@@ -83,6 +90,16 @@ describe('GuidesIndex', () => {
     renderGuidesIndex();
     expect(screen.getByText(/"dragons"/)).toBeInTheDocument();
     expect(screen.getByText(/"mono red creatures"/)).toBeInTheDocument();
+  });
+
+  it('renders copy and share actions on guide cards', () => {
+    renderGuidesIndex();
+    expect(
+      screen.getAllByRole('button', { name: /copy query/i }).length,
+    ).toBeGreaterThanOrEqual(10);
+    expect(
+      screen.getAllByRole('button', { name: /share guide/i }).length,
+    ).toBeGreaterThanOrEqual(10);
   });
 
   it('renders the breadcrumb with Home link', () => {
