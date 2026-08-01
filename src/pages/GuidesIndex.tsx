@@ -2,7 +2,7 @@
  * Root guides index page - lists all 10 guides as visual cards.
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { applySeoMeta, injectJsonLd, buildBreadcrumbJsonLd } from '@/lib/seo';
 import { Link } from 'react-router-dom';
 import { GUIDES } from '@/data/guides';
@@ -16,6 +16,7 @@ import { SkipLinks } from '@/components/SkipLinks';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks';
 import { Copy } from 'lucide-react';
+import { buildGuideUrl, copyTextToClipboard } from '@/lib/guide-actions';
 
 const LEVEL_COLORS: Record<string, string> = {
   'guides.levelBeginner': 'bg-success/10 text-success border-success/20',
@@ -46,24 +47,28 @@ const LEVEL_GROUPS = [
   { key: 'guides.levelExpert', label: 'guides.levelExpert', min: 9, max: 10 },
 ] as const;
 
+const GUIDE_FILTERS = [
+  { key: 'all', label: 'All guides', min: 1, max: 10 },
+  { key: 'beginner', label: 'Beginner', min: 1, max: 3 },
+  { key: 'intermediate', label: 'Intermediate', min: 4, max: 6 },
+  { key: 'advanced', label: 'Advanced', min: 7, max: 8 },
+  { key: 'expert', label: 'Expert', min: 9, max: 10 },
+] as const;
+
 export default function GuidesIndex() {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const [activeFilter, setActiveFilter] = useState<(typeof GUIDE_FILTERS)[number]['key']>('all');
 
   const copyGuideUrl = async (slug: string, title: string) => {
-    const url = `https://offmeta.app/guides/${slug}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      toast({
-        title: 'Link copied',
-        description: `Copied ${title} to your clipboard.`,
-      });
-    } catch {
-      toast({
-        title: 'Copy failed',
-        description: 'Your browser blocked clipboard access.',
-      });
-    }
+    await copyTextToClipboard(
+      buildGuideUrl(slug),
+      toast,
+      'Link copied',
+      `Copied ${title} to your clipboard.`,
+      'Copy failed',
+      'Your browser blocked clipboard access.',
+    );
   };
 
   useEffect(() => {
@@ -125,12 +130,18 @@ export default function GuidesIndex() {
   }, []);
 
   const sorted = [...GUIDES].sort((a, b) => a.level - b.level);
+  const activeBounds =
+    GUIDE_FILTERS.find((filter) => filter.key === activeFilter) ?? GUIDE_FILTERS[0];
   const grouped = LEVEL_GROUPS.map((group) => ({
     ...group,
     guides: sorted.filter(
-      (guide) => guide.level >= group.min && guide.level <= group.max,
+      (guide) =>
+        guide.level >= group.min &&
+        guide.level <= group.max &&
+        guide.level >= activeBounds.min &&
+        guide.level <= activeBounds.max,
     ),
-  }));
+  })).filter((group) => group.guides.length > 0);
 
   return (
     <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
@@ -167,6 +178,23 @@ export default function GuidesIndex() {
             </p>
             <p className="text-sm text-muted-foreground">{t('guides.count')}</p>
           </header>
+
+          <div className="flex flex-wrap justify-center gap-2">
+            {GUIDE_FILTERS.map((filter) => (
+              <button
+                key={filter.key}
+                type="button"
+                onClick={() => setActiveFilter(filter.key)}
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  activeFilter === filter.key
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border bg-card text-foreground hover:border-primary/30 hover:text-primary'
+                }`}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
 
           <div className="flex flex-wrap justify-center gap-2">
             {grouped.map((group) => (

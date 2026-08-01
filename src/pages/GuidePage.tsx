@@ -3,7 +3,7 @@
  */
 
 import { useEffect } from 'react';
-import { applySeoMeta } from '@/lib/seo';
+import { applySeoMeta, buildFaqJsonLd, buildBreadcrumbJsonLd, buildGuideArticleJsonLd, injectJsonLd } from '@/lib/seo';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getGuideBySlug, GUIDES } from '@/data/guides';
 import { Footer } from '@/components/Footer';
@@ -25,6 +25,7 @@ import { useTranslation } from '@/lib/i18n';
 import { SkipLinks } from '@/components/SkipLinks';
 import { useToast } from '@/hooks';
 import { Copy, Share2 } from 'lucide-react';
+import { buildGuideUrl, copyTextToClipboard } from '@/lib/guide-actions';
 
 const GUIDE_PUBLISHED_AT = '2025-01-15T00:00:00Z';
 const GUIDE_MODIFIED_AT = '2026-07-07T00:00:00Z';
@@ -121,18 +122,14 @@ export default function GuidePage() {
   };
 
   const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(pageUrl);
-      toast({
-        title: 'Link copied',
-        description: 'Guide link copied to your clipboard.',
-      });
-    } catch {
-      toast({
-        title: 'Copy failed',
-        description: 'Your browser blocked clipboard access.',
-      });
-    }
+    await copyTextToClipboard(
+      pageUrl,
+      toast,
+      'Link copied',
+      'Guide link copied to your clipboard.',
+      'Copy failed',
+      'Your browser blocked clipboard access.',
+    );
   };
 
   const handleShare = async () => {
@@ -152,48 +149,20 @@ export default function GuidePage() {
     await handleCopyLink();
   };
 
-  const pageUrl = `https://offmeta.app/guides/${guide.slug}`;
-
-  const articleJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: guide.metaTitle,
+  const pageUrl = buildGuideUrl(guide.slug);
+  const articleJsonLd = buildGuideArticleJsonLd({
+    title: guide.metaTitle,
     description: guide.metaDescription,
     url: pageUrl,
-    mainEntityOfPage: pageUrl,
-    author: { '@type': 'Organization', name: 'OffMeta' },
-    publisher: { '@type': 'Organization', name: 'OffMeta' },
-  };
-
-  const faqJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: guide.faq.map((f) => ({
-      '@type': 'Question',
-      name: f.question,
-      acceptedAnswer: { '@type': 'Answer', text: f.answer },
-    })),
-  };
-
-  const breadcrumbJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      {
-        '@type': 'ListItem',
-        position: 1,
-        name: 'Home',
-        item: 'https://offmeta.app/',
-      },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: 'Guides',
-        item: 'https://offmeta.app/guides',
-      },
-      { '@type': 'ListItem', position: 3, name: guide.title, item: pageUrl },
-    ],
-  };
+    publishedTime: GUIDE_PUBLISHED_AT,
+    modifiedTime: GUIDE_MODIFIED_AT,
+  });
+  const faqJsonLd = buildFaqJsonLd(guide.faq);
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: 'Home', url: 'https://offmeta.app/' },
+    { name: 'Guides', url: 'https://offmeta.app/guides' },
+    { name: guide.title, url: pageUrl },
+  ]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">

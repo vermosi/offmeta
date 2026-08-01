@@ -336,6 +336,30 @@ export function buildFaqJsonLd(
 }
 
 /**
+ * Build Article JSON-LD for guide pages.
+ */
+export function buildGuideArticleJsonLd(opts: {
+  title: string;
+  description: string;
+  url: string;
+  publishedTime: string;
+  modifiedTime: string;
+}): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: opts.title,
+    description: opts.description,
+    url: opts.url,
+    mainEntityOfPage: opts.url,
+    author: { '@type': 'Organization', name: 'OffMeta' },
+    publisher: { '@type': 'Organization', name: 'OffMeta' },
+    datePublished: opts.publishedTime,
+    dateModified: opts.modifiedTime,
+  };
+}
+
+/**
  * Build card-specific FAQ entries from card data for rich snippets.
  */
 export function buildCardFaqs(card: ScryfallCard): Array<{ question: string; answer: string }> {

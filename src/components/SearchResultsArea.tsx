@@ -22,6 +22,7 @@ import { CLIENT_CONFIG } from '@/lib/config';
 import { useTranslation } from '@/lib/i18n';
 import { rerankCardsWithIntelligence } from '@/lib/search/intelligence-ranking';
 import { explainCardMatch } from '@/lib/search/matchExplanation';
+import { getSearchRankingSignals } from '@/lib/search-ranking-signals';
 import type { ScryfallCard } from '@/types/card';
 import type { SearchIntent } from '@/types/search';
 import type { FilterState } from '@/types/filters';
@@ -141,7 +142,6 @@ export function SearchResultsArea({
 }: SearchResultsAreaProps) {
   const { t } = useTranslation();
 
-  // Memoize the top source card for the related strip
   const topSourceCard = useMemo(
     () => (cards.length > 0 ? cards[0] : null),
     [cards],
@@ -154,9 +154,7 @@ export function SearchResultsArea({
   );
   const { data: sparklineMap } = useBatchPriceHistory(sparklineNames);
   const { user } = useAuth();
-  const hadFastClick =
-    sessionStorage.getItem('offmeta_fast_click_query') === originalQuery;
-  const hadRefinement = sessionStorage.getItem('offmeta_once:first_refinement') === '1';
+  const { hadFastClick, hadRefinement } = getSearchRankingSignals(originalQuery);
   const hasCustomSort =
     !!activeSort && activeSort !== 'relevance-desc' && activeSort !== 'name-asc';
   const rankedCards = useMemo(
