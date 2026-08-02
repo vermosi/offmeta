@@ -226,7 +226,8 @@ export function VirtualizedCardGrid({
                 boxSizing: 'border-box',
                 transform: `translateY(${virtualRow.start - scrollMargin}px)`,
                 display: 'grid',
-                gridTemplateColumns: `repeat(${columns}, 1fr)`,
+                gridTemplateColumns: `repeat(${columns}, minmax(0, ${cardWidth}px))`,
+                justifyContent: 'start',
                 gap: `${GAP}px`,
               }}
             >
