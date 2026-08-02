@@ -115,6 +115,7 @@ import { useRovingTabIndex } from '@/hooks/useRovingTabIndex';
 import { useSearch } from '@/hooks/useSearch';
 import { useSearchRenderProfiler } from '@/hooks/useSearchRenderProfiler';
 import { useTranslation } from '@/lib/i18n';
+import { parseViewMode } from '@/lib/search/url-params';
 const CardModal = lazy(() => import('@/components/CardModal'));
 
 const IS_TEST_MODE = import.meta.env.MODE === 'test';
