@@ -64,7 +64,11 @@ interface SearchResultsAreaProps {
   querySampleSize: number;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
+  isFetchNextPageError?: boolean;
+  error?: Error | null;
+  isError?: boolean;
   fetchNextPage: () => void;
+  retryNextPage?: () => void;
   handleCardClick: (card: ScryfallCard, index: number) => void;
   handleTryExample: (query: string) => void;
   collectionLookup?: Map<string, number>;
