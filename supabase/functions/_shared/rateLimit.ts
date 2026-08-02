@@ -1,3 +1,5 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
 // Minimal type for Supabase client to avoid deep type instantiation
 type SupabaseClientLike = {
   rpc: (
@@ -142,13 +144,8 @@ async function getSharedRateLimitClient(): Promise<SupabaseClientLike | null> {
     const serviceRoleKey = DenoRef.env.get('SUPABASE_SERVICE_ROLE_KEY');
     if (!supabaseUrl || !serviceRoleKey) return null;
 
-    const { createClient } = (await import(
-      /* @vite-ignore */ 'https://esm.sh/@supabase/supabase-js@2' as string
-    )) as {
-      createClient: SupabaseClientFactory;
-    };
-
-    return createClient(supabaseUrl, serviceRoleKey);
+    const factory = createClient as unknown as SupabaseClientFactory;
+    return factory(supabaseUrl, serviceRoleKey);
   })();
 
   return sharedRateLimitClientPromise;
