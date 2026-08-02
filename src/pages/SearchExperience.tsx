@@ -17,8 +17,6 @@ import {
 import { useLocation } from 'react-router-dom';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 import { Badge } from '@/components/ui/badge';
-import { SearchRefinementStrip } from '@/components/SearchRefinementStrip';
-import { ResultFacetAggregationStrip } from '@/components/ResultFacetAggregationStrip';
 const EditableQueryBar = lazy(() =>
   import('@/components/EditableQueryBar').then((m) => ({
     default: m.EditableQueryBar,
@@ -75,11 +73,6 @@ const ScrollToTop = lazy(() =>
   import('@/components/ScrollToTop').then((m) => ({ default: m.ScrollToTop })),
 );
 import { type ViewMode, getStoredViewMode } from '@/lib/view-mode-storage';
-const ResultsTabs = lazy(() =>
-  import('@/components/ResultsTabs').then((m) => ({
-    default: m.ResultsTabs,
-  })),
-);
 import type { ResultsTab } from '@/components/ResultsTabs';
 const SeoManager = lazy(() =>
   import('@/components/SeoManager').then((m) => ({ default: m.SeoManager })),
