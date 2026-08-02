@@ -14,7 +14,7 @@ import {
   useMemo,
   useRef,
 } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 import { Badge } from '@/components/ui/badge';
 const EditableQueryBar = lazy(() =>
@@ -72,7 +72,11 @@ const StickySearchNudge = lazy(() =>
 const ScrollToTop = lazy(() =>
   import('@/components/ScrollToTop').then((m) => ({ default: m.ScrollToTop })),
 );
-import { type ViewMode, getStoredViewMode } from '@/lib/view-mode-storage';
+import {
+  type ViewMode,
+  getStoredViewMode,
+  storeViewMode,
+} from '@/lib/view-mode-storage';
 import type { ResultsTab } from '@/components/ResultsTabs';
 const SeoManager = lazy(() =>
   import('@/components/SeoManager').then((m) => ({ default: m.SeoManager })),
@@ -173,8 +177,32 @@ const Index = () => {
     isSearching,
   });
 
-  // View mode toggle
-  const [viewMode, setViewMode] = useState<ViewMode>(getStoredViewMode);
+  // View mode toggle — URL wins over the stored preference so a shared
+  // link reproduces the exact layout.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [viewMode, setViewModeState] = useState<ViewMode>(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get('view');
+    if (fromUrl === 'grid' || fromUrl === 'list') return fromUrl;
+    return getStoredViewMode();
+  });
+
+  const setViewMode = useCallback(
+    (mode: ViewMode) => {
+      setViewModeState(mode);
+      storeViewMode(mode);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (mode === 'grid') next.delete('view');
+          else next.set('view', mode);
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+  void searchParams;
 
   // Cards is the only results view — Similar / Deck Ideas / Explain removed.
   const activeTab: ResultsTab = 'cards';
