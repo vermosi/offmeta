@@ -36,6 +36,7 @@ import {
 import { createCardSearchIndex, searchCardIndex } from '@/lib/search';
 import {
   encodeFiltersToUrl,
+  filterParamsSignature,
   generateRequestId,
   incrementSearchesPerSession,
   parseFiltersFromUrl,
@@ -703,6 +704,34 @@ export function useSearch() {
     });
   }, [originalQuery]);
 
+  // --- Browser back/forward for filter params ---
+  // `lastFilterSignatureRef` tracks the last filter signature *we* wrote, so a
+  // history navigation (which changes the URL without going through
+  // `handleFilteredCards`) can be detected and pushed back into filter state.
+  const lastFilterSignatureRef = useRef(filterParamsSignature(searchParams));
+  const shouldPushFilterHistoryRef = useRef(false);
+  const currentFilterSignature = filterParamsSignature(searchParams);
+
+  useEffect(() => {
+    if (currentFilterSignature === lastFilterSignatureRef.current) return;
+    lastFilterSignatureRef.current = currentFilterSignature;
+    // Only react to genuine history navigations; PUSH/REPLACE come from us.
+    if (navigationType !== 'POP') return;
+
+    const parsed = parseFiltersFromUrl(searchParams);
+    // Send a complete state (not a sparse patch) so params removed by going
+    // back are reset to their defaults instead of lingering.
+    setPendingFilterOverride({
+      colors: parsed?.colors ?? [],
+      types: parsed?.types ?? [],
+      sortBy: parsed?.sortBy ?? DEFAULT_SORT,
+      format: parsed?.format,
+      ownedOnly: parsed?.ownedOnly ?? false,
+      cmcRange: parsed?.cmcRange ?? [0, MAX_CMC],
+    });
+    setFilterOverrideKey((k) => k + 1);
+  }, [currentFilterSignature, navigationType, searchParams]);
+
   const handleFilteredCards = useCallback(
     (
       filtered: ScryfallCard[],
@@ -713,16 +742,21 @@ export function useSearch() {
       setHasActiveFilters(filtersActive);
       setActiveFilters(filters);
 
-      // Sync filters to URL
+      // Sync filters to URL. A real change pushes a history entry so browser
+      // back/forward steps through filter states; no-op writes replace.
       setSearchParams(
         (prev) => {
           const next = new URLSearchParams(prev);
           // Always encode: sort is not counted as an "active filter"
           // but must still survive refresh/share.
           encodeFiltersToUrl(next, filters);
+          const signature = filterParamsSignature(next);
+          shouldPushFilterHistoryRef.current =
+            signature !== lastFilterSignatureRef.current;
+          lastFilterSignatureRef.current = signature;
           return next;
         },
-        { replace: true },
+        { replace: !shouldPushFilterHistoryRef.current },
       );
     },
     [setSearchParams],
@@ -755,6 +789,7 @@ export function useSearch() {
       (prev) => {
         const next = new URLSearchParams(prev);
         encodeFiltersToUrl(next, null);
+        lastFilterSignatureRef.current = filterParamsSignature(next);
         return next;
       },
       { replace: true },
