@@ -92,7 +92,7 @@ function ListSkeleton({ count }: { count: number }) {
 function GridSkeleton({ count }: { count: number }) {
   return (
     <div
-      className="grid grid-cols-2 min-[480px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5 lg:gap-6"
+      className="grid grid-cols-2 min-[480px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5 lg:gap-6"
       aria-hidden="true"
     >
       {Array.from({ length: count }).map((_, i) => (
