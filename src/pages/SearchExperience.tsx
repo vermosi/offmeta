@@ -732,7 +732,11 @@ const Index = () => {
                 querySampleSize={queryQualitySampleSize}
                 hasNextPage={hasNextPage}
                 isFetchingNextPage={isFetchingNextPage}
+                isFetchNextPageError={isFetchNextPageError}
+                error={error}
+                isError={isError}
                 fetchNextPage={fetchNextPage}
+                retryNextPage={retryNextPage}
                 handleCardClick={handleCardClick}
                 handleTryExample={handleTryExample}
                 loadMoreRef={loadMoreRef}
