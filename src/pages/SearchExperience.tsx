@@ -115,6 +115,7 @@ import { useRovingTabIndex } from '@/hooks/useRovingTabIndex';
 import { useSearch } from '@/hooks/useSearch';
 import { useSearchRenderProfiler } from '@/hooks/useSearchRenderProfiler';
 import { useTranslation } from '@/lib/i18n';
+import { parseViewMode } from '@/lib/search/url-params';
 const CardModal = lazy(() => import('@/components/CardModal'));
 
 const IS_TEST_MODE = import.meta.env.MODE === 'test';
@@ -185,9 +186,10 @@ const Index = () => {
   // link reproduces the exact layout.
   const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewModeState] = useState<ViewMode>(() => {
-    const fromUrl = new URLSearchParams(window.location.search).get('view');
-    if (fromUrl === 'grid' || fromUrl === 'list') return fromUrl;
-    return getStoredViewMode();
+    const fromUrl = parseViewMode(
+      new URLSearchParams(window.location.search).get('view'),
+    );
+    return fromUrl ?? getStoredViewMode();
   });
 
   const setViewMode = useCallback(
