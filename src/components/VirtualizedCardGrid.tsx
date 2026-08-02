@@ -221,13 +221,13 @@ export function VirtualizedCardGrid({
                 left: 0,
                 width: '100%',
                 height: `${rowHeight}px`,
-                paddingBottom: `${GAP}px`,
+                paddingBottom: `${gap}px`,
                 boxSizing: 'border-box',
                 transform: `translateY(${virtualRow.start - scrollMargin}px)`,
                 display: 'grid',
                 gridTemplateColumns: `repeat(${columns}, minmax(0, ${cardWidth}px))`,
                 justifyContent: 'center',
-                gap: `${GAP}px`,
+                gap: `${gap}px`,
               }}
             >
               {Array.from({ length: columns }).map((_, colIndex) => {
