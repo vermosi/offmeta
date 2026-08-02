@@ -318,7 +318,7 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
           isMobile
         />
 
-        <CardModalMetaContext card={card} oracleId={card.oracle_id} onCardClick={handleCardClick} isMobile />
+        <CardModalMetaContext card={card} />
         <CardModalRulings
           rulings={rulings}
           isLoading={isLoadingRulings}
@@ -426,7 +426,7 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
             cardId={card.id}
           />
 
-          <CardModalMetaContext card={card} oracleId={card.oracle_id} onCardClick={handleCardClick} />
+          <CardModalMetaContext card={card} />
           <CardModalRulings
             rulings={rulings}
             isLoading={isLoadingRulings}
