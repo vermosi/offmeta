@@ -764,6 +764,20 @@ export function useAnalytics() {
     [trackEvent],
   );
 
+  const trackPaginationErrorShown = useCallback(
+    (data: { query: string; page_count: number; error_message?: string }) => {
+      trackEvent('pagination_error_shown', data as EventData);
+    },
+    [trackEvent],
+  );
+
+  const trackPaginationRetryClicked = useCallback(
+    (data: { query: string; page_count: number }) => {
+      trackEvent('pagination_retry_clicked', data as EventData);
+    },
+    [trackEvent],
+  );
+
   const trackFeedback = useCallback(
     (data: FeedbackEventData) => {
       trackEvent('feedback_submitted', data);
