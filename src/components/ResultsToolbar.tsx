@@ -11,7 +11,7 @@ import type { ReactNode } from 'react';
 import { SearchFilters } from '@/components/SearchFilters';
 import { ViewToggle } from '@/components/ViewToggle';
 import { ExportResults } from '@/components/ExportResults';
-import { ShareSearchButton } from '@/components/ShareSearchButton';
+import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { ResultsStats } from '@/components/ResultsStats';
 import { MoreHorizontal } from 'lucide-react';
 import {
@@ -45,6 +45,7 @@ export function ResultsToolbar({
   cards,
   displayCards,
   totalCards,
+  activeFilters,
   filtersResetKey,
   initialUrlFilters,
   collectionLookup,
@@ -108,7 +109,7 @@ export function ResultsToolbar({
           />
 
           <div className="hidden items-center gap-1 sm:flex">
-            <ShareSearchButton />
+            <CopyLinkButton activeFilters={activeFilters} />
             <ResultsStats cards={displayCards} />
             <ExportResults cards={displayCards} />
           </div>
@@ -129,7 +130,7 @@ export function ResultsToolbar({
               sideOffset={4}
             >
               <div className="flex items-center gap-1">
-                <ShareSearchButton />
+                <CopyLinkButton activeFilters={activeFilters} />
                 <ResultsStats cards={displayCards} />
                 <ExportResults cards={displayCards} />
               </div>
