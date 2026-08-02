@@ -277,8 +277,10 @@ export function SearchFilters({
             variant="outline"
             size="sm"
             className={cn(
-              'gap-1.5 sm:gap-2 h-8 sm:h-9 px-2.5 sm:px-3 text-xs sm:text-sm',
-              hasActiveFilters && 'border-primary/50 bg-primary/5',
+              'gap-1.5 sm:gap-2 h-8 sm:h-9 px-2.5 sm:px-3 text-xs sm:text-sm transition-all',
+              hasActiveFilters
+                ? 'border-primary bg-primary/10 text-primary font-medium ring-1 ring-primary/20 shadow-sm'
+                : '',
             )}
           >
             <Filter className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
