@@ -77,16 +77,21 @@ interface VirtualizedCardGridProps {
   isFetchingNextPage?: boolean;
 }
 
-const GAP = 16;
-// Magic card aspect ratio: width / height = 2.5 / 3.5 ≈ 0.714
 const CARD_ASPECT_RATIO = 2.5 / 3.5;
 // Max card width to prevent cards from growing too large when filtering
 const MAX_CARD_WIDTH = 280;
+
+const BREAKPOINTS = [
+  { minWidth: 1024, columns: 4, gap: 20 }, // lg+
+  { minWidth: 768, columns: 3, gap: 16 },  // md
+  { minWidth: 0, columns: 2, gap: 12 },    // mobile
+];
 
 function buildVirtualizedRowKey(
   cards: ScryfallCard[],
   columns: number,
   cardHeight: number,
+  gap: number,
   index: number,
 ): string {
   const startIndex = index * columns;
@@ -95,15 +100,8 @@ function buildVirtualizedRowKey(
     .map((card) => card.id)
     .join('|');
 
-  return `${columns}-${cardHeight}-${index}-${rowCardIds}`;
+  return `${columns}-${cardHeight}-${gap}-${index}-${rowCardIds}`;
 }
-
-// Responsive column breakpoints (max 4 columns)
-const BREAKPOINTS = [
-  { minWidth: 1024, columns: 4 }, // lg+
-  { minWidth: 768, columns: 3 }, // md
-  { minWidth: 0, columns: 2 },   // mobile
-];
 
 export function VirtualizedCardGrid({
   cards,
@@ -113,7 +111,7 @@ export function VirtualizedCardGrid({
   isFetchingNextPage,
 }: VirtualizedCardGridProps) {
   const parentRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ columns: 4, cardWidth: 200 });
+  const [dimensions, setDimensions] = useState({ columns: 4, cardWidth: 200, gap: 16 });
   const [scrollMargin, setScrollMargin] = useState(0);
 
   const { focusIndex, setFocusIndex, handleKeyDown } = useGridKeyboardNav(
@@ -133,10 +131,11 @@ export function VirtualizedCardGrid({
       BREAKPOINTS.find((bp) => containerWidth >= bp.minWidth) ||
       BREAKPOINTS[BREAKPOINTS.length - 1];
     const columns = breakpoint.columns;
+    const gap = breakpoint.gap;
     // Calculate fluid width but cap it
-    const fluidWidth = (containerWidth - GAP * (columns - 1)) / columns;
+    const fluidWidth = (containerWidth - gap * (columns - 1)) / columns;
     const cardWidth = Math.min(fluidWidth, MAX_CARD_WIDTH);
-    setDimensions({ columns, cardWidth });
+    setDimensions({ columns, cardWidth, gap });
   }, []);
 
   // Update on mount and resize
@@ -160,10 +159,10 @@ export function VirtualizedCardGrid({
     return () => window.removeEventListener('resize', updateScrollMargin);
   }, []);
 
-  const { columns, cardWidth } = dimensions;
+  const { columns, cardWidth, gap } = dimensions;
   // Use ceil to avoid underestimated row heights (which can cause overlap).
   const cardHeight = Math.ceil(cardWidth / CARD_ASPECT_RATIO);
-  const rowHeight = cardHeight + GAP;
+  const rowHeight = cardHeight + gap;
   const rowCount = Math.ceil(cards.length / columns);
 
   const rowVirtualizer = useWindowVirtualizer({
@@ -171,7 +170,7 @@ export function VirtualizedCardGrid({
     estimateSize: () => rowHeight,
     overscan: 3,
     scrollMargin,
-    getItemKey: (index) => buildVirtualizedRowKey(cards, columns, cardHeight, index),
+    getItemKey: (index) => buildVirtualizedRowKey(cards, columns, cardHeight, gap, index),
   });
 
   // Load more when near bottom
@@ -222,13 +221,13 @@ export function VirtualizedCardGrid({
                 left: 0,
                 width: '100%',
                 height: `${rowHeight}px`,
-                paddingBottom: `${GAP}px`,
+                paddingBottom: `${gap}px`,
                 boxSizing: 'border-box',
                 transform: `translateY(${virtualRow.start - scrollMargin}px)`,
                 display: 'grid',
                 gridTemplateColumns: `repeat(${columns}, minmax(0, ${cardWidth}px))`,
                 justifyContent: 'center',
-                gap: `${GAP}px`,
+                gap: `${gap}px`,
               }}
             >
               {Array.from({ length: columns }).map((_, colIndex) => {
