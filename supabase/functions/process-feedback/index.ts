@@ -12,6 +12,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 import { checkRateLimit, resolveRateLimitKey } from '../_shared/rateLimit.ts';
+import { rateLimitedResponse } from '../_shared/rateLimitTelemetry.ts';
 import {
   getCorsHeaders,
   validateAuth,
@@ -137,7 +138,7 @@ serve(withLogging('process-feedback', async (req) => {
 
   // Rate limiting to prevent AI cost abuse
   const rateLimitKey = await resolveRateLimitKey(req);
-  const { allowed, retryAfter, statusCode } = await checkRateLimit(
+  const rateCheck = await checkRateLimit(
     rateLimitKey,
     supabase,
     5, // Stricter limit: 5 requests per 60 seconds
@@ -145,29 +146,17 @@ serve(withLogging('process-feedback', async (req) => {
     60000,
     { failOpen: false },
   );
-  if (!allowed) {
-    const status = statusCode ?? 429;
-    const retry = retryAfter ?? 1;
-
-    return new Response(
-      JSON.stringify({
-        error:
-          status === 503
-            ? 'Rate limiter temporarily unavailable. Please retry shortly.'
-            : 'Too many feedback submissions. Please try again later.',
-        success: false,
-        retryAfter: retry,
-      }),
-      {
-        status,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-          'Retry-After': String(retry),
-        },
-      },
+  if (!rateCheck.allowed) {
+    return rateLimitedResponse(
+      'process-feedback',
+      req,
+      rateLimitKey,
+      rateCheck,
+      { ...corsHeaders },
+      { costClass: 'ai' },
     );
   }
+
 
   try {
     // SECURITY: Require feedbackId to process only a single specific item

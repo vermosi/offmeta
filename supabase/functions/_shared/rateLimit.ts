@@ -60,10 +60,24 @@ interface RateLimitOptions {
   failOpen?: boolean;
 }
 
-interface RateLimitResult {
+export type RateLimitReason =
+  | 'global_limit'
+  | 'bucket_limit'
+  | 'session_limit'
+  | 'limiter_error';
+
+export type RateLimitBackend = 'distributed' | 'memory' | 'none';
+
+export interface RateLimitResult {
   allowed: boolean;
   retryAfter?: number;
   statusCode?: 429 | 503;
+  /** Why the request was rejected (absent when allowed). */
+  reason?: RateLimitReason;
+  /** Which counter store produced the decision. */
+  backend?: RateLimitBackend;
+  /** The limit that was exceeded, for metrics. */
+  limit?: number;
 }
 
 const rateLimiter = new Map<string, RateLimitEntry>();
@@ -241,6 +255,9 @@ export async function checkRateLimit(
               allowed: false,
               retryAfter: Math.ceil((windowStartedAt + windowMs - now) / 1000),
               statusCode: 429,
+              reason: 'global_limit',
+              backend: 'distributed',
+              limit: globalLimit,
             };
           }
           await sharedClient
@@ -271,6 +288,9 @@ export async function checkRateLimit(
           allowed: false,
           retryAfter: Math.ceil((globalResetTime - now) / 1000),
           statusCode: 429,
+          reason: 'global_limit',
+          backend: 'memory',
+          limit: globalLimit,
         };
       }
       globalRequestCount++;
@@ -295,6 +315,9 @@ export async function checkRateLimit(
             allowed: false,
             retryAfter: data.retry_after,
             statusCode: 429,
+            reason: 'bucket_limit',
+            backend: 'distributed',
+            limit: ipLimit,
           };
         }
         return { allowed: true };
@@ -319,6 +342,9 @@ export async function checkRateLimit(
                   (windowStartedAt + windowMs - now) / 1000,
                 ),
                 statusCode: 429,
+                reason: 'bucket_limit',
+                backend: 'distributed',
+                limit: ipLimit,
               };
             }
             // Increment
@@ -364,6 +390,9 @@ export async function checkRateLimit(
         allowed: false,
         retryAfter: Math.ceil((entry.resetTime - now) / 1000),
         statusCode: 429,
+        reason: 'bucket_limit',
+        backend: 'memory',
+        limit: ipLimit,
       };
     }
 
@@ -374,7 +403,13 @@ export async function checkRateLimit(
     if (shouldFailOpen) {
       return { allowed: true };
     }
-    return { allowed: false, retryAfter: 1, statusCode: 503 };
+    return {
+      allowed: false,
+      retryAfter: 1,
+      statusCode: 503,
+      reason: 'limiter_error',
+      backend: 'none',
+    };
   }
 }
 

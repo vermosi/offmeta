@@ -1,5 +1,6 @@
-/**
 import { withLogging } from '../_shared/logger.ts';
+
+/**
  * Returns the affiliate base URL for TCGPlayer Impact links.
  * Reads from the NEXT_PUBLIC_TCGPLAYER_IMPACT_BASE secret.
  */

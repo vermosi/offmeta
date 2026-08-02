@@ -1,3 +1,4 @@
+import { rateLimitedResponse } from '../../_shared/rateLimitTelemetry.ts';
 import {
   checkRateLimit,
   checkSessionRateLimit,
@@ -94,55 +95,29 @@ export async function enforceRequestGuards(
     { failOpen: false },
   );
   if (!rateCheck.allowed) {
-    const status = rateCheck.statusCode ?? 429;
-    const retryAfter = rateCheck.retryAfter ?? 1;
-
-    logWarn('rate_limit_exceeded', {
-      bucket: rateLimitKey.slice(0, 20),
-      retryAfter,
-      status,
-    });
-
-    return new Response(
-      JSON.stringify({
-        error:
-          status === 503
-            ? 'Service temporarily unavailable. Please retry shortly.'
-            : 'Too many requests. Please slow down.',
-        retryAfter,
-        success: false,
-      }),
-      {
-        status,
-        headers: {
-          ...jsonHeaders,
-          'Retry-After': String(retryAfter),
-        },
-      },
+    return rateLimitedResponse(
+      'semantic-search',
+      req,
+      rateLimitKey,
+      rateCheck,
+      jsonHeaders,
+      { hasSession: Boolean(sessionId) },
     );
   }
 
   const sessionCheck = checkSessionRateLimit(sessionId);
   if (!sessionCheck.allowed) {
-    logWarn('session_rate_limit_exceeded', {
-      sessionId: sessionId?.substring(0, 20),
-      retryAfter: sessionCheck.retryAfter,
-    });
-
-    return new Response(
-      JSON.stringify({
-        error:
-          'Session rate limit exceeded. Please wait before searching again.',
-        retryAfter: sessionCheck.retryAfter,
-        success: false,
-      }),
+    return rateLimitedResponse(
+      'semantic-search',
+      req,
+      `session:${sessionId ?? 'unknown'}`,
       {
-        status: 429,
-        headers: {
-          ...jsonHeaders,
-          'Retry-After': String(sessionCheck.retryAfter),
-        },
+        statusCode: 429,
+        retryAfter: sessionCheck.retryAfter,
+        reason: 'session_limit',
+        backend: 'memory',
       },
+      jsonHeaders,
     );
   }
 
