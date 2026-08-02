@@ -16,7 +16,7 @@ function renderWithProviders(ui: React.ReactElement) {
 }
 
 describe('ViewToggle', () => {
-  it('renders three toggle options', () => {
+  it('renders two toggle options', () => {
     const onChange = vi.fn();
     renderWithProviders(<ViewToggle value="grid" onChange={onChange} />);
     expect(screen.getByRole('group')).toBeInTheDocument();
@@ -28,11 +28,11 @@ describe('ViewToggle', () => {
     expect(screen.getByRole('group')).toHaveAttribute('aria-label', 'view.label');
   });
 
-  it('renders all three toggle items', () => {
+  it('renders both toggle items', () => {
     const onChange = vi.fn();
     renderWithProviders(<ViewToggle value="list" onChange={onChange} />);
-    // Should have 3 toggle items for grid, list, images
+    // Should have 2 toggle items for grid and list
     const items = screen.getAllByRole('radio');
-    expect(items.length).toBe(3);
+    expect(items.length).toBe(2);
   });
 });
