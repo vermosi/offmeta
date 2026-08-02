@@ -744,20 +744,17 @@ export function useSearch() {
 
       // Sync filters to URL. A real change pushes a history entry so browser
       // back/forward steps through filter states; no-op writes replace.
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev);
-          // Always encode: sort is not counted as an "active filter"
-          // but must still survive refresh/share.
-          encodeFiltersToUrl(next, filters);
-          const signature = filterParamsSignature(next);
-          shouldPushFilterHistoryRef.current =
-            signature !== lastFilterSignatureRef.current;
-          lastFilterSignatureRef.current = signature;
-          return next;
-        },
-        { replace: !shouldPushFilterHistoryRef.current },
-      );
+      // Params are computed eagerly (not via the functional updater) because
+      // the `replace` option is evaluated before the updater runs.
+      const next = new URLSearchParams(window.location.search);
+      // Always encode: sort is not counted as an "active filter"
+      // but must still survive refresh/share.
+      encodeFiltersToUrl(next, filters);
+      const signature = filterParamsSignature(next);
+      const isChange = signature !== lastFilterSignatureRef.current;
+      lastFilterSignatureRef.current = signature;
+      setSearchParams(next, { replace: !isChange });
+
     },
     [setSearchParams],
   );
