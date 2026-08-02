@@ -78,8 +78,6 @@ interface VirtualizedCardGridProps {
   onLoadMore?: () => void;
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
-  isFetchNextPageError?: boolean;
-  error?: Error | null;
   isError?: boolean;
   onRetry?: () => void;
 }
