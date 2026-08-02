@@ -179,7 +179,7 @@ export function SearchResultsArea({
   );
 
   return (
-    <div id={id} className="space-y-6">
+    <div id={id} className="space-y-6 pt-4 sm:pt-5 lg:pt-6">
       {/* Cards tab */}
       {activeTab === 'cards' && (
         <>
