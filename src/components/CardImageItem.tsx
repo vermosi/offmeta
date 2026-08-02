@@ -4,7 +4,6 @@
  */
 
 import { memo } from 'react';
-import { Maximize2 } from 'lucide-react';
 import type { ScryfallCard } from '@/types/card';
 import { getCardImage } from '@/lib/scryfall/client';
 import { getLocalizedName } from '@/lib/scryfall/localized';
@@ -13,7 +12,6 @@ import { useTranslation } from '@/lib/i18n';
 interface CardImageItemProps {
   card: ScryfallCard;
   onClick: () => void;
-  onZoom?: () => void;
   tabIndex?: number;
   isOwned?: boolean;
 }
@@ -21,7 +19,6 @@ interface CardImageItemProps {
 export const CardImageItem = memo(function CardImageItem({
   card,
   onClick,
-  onZoom,
   tabIndex = 0,
   isOwned,
 }: CardImageItemProps) {
@@ -31,20 +28,6 @@ export const CardImageItem = memo(function CardImageItem({
   const displayName = getLocalizedName(card, locale);
   return (
     <div className="relative group">
-      {onZoom && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onZoom();
-          }}
-          tabIndex={-1}
-          className="absolute top-1.5 right-1.5 z-10 h-7 w-7 rounded-md bg-background/80 backdrop-blur-sm border border-border/60 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-          aria-label={`Enlarge image of ${displayName}`}
-        >
-          <Maximize2 className="h-3.5 w-3.5" />
-        </button>
-      )}
       <button
         onClick={onClick}
         tabIndex={tabIndex}
