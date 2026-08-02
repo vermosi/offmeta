@@ -205,9 +205,7 @@ export function SearchResultsArea({
                     }
                     hasNextPage={hasNextPage}
                     isFetchingNextPage={isFetchingNextPage}
-                    isFetchNextPageError={isFetchNextPageError}
-                    error={error}
-                    isError={isError}
+                    isError={isError || isFetchNextPageError}
                     onRetry={retryNextPage}
                   />
                 ) : viewMode === 'list' ? (
