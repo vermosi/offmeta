@@ -14,7 +14,7 @@ import {
   useMemo,
   useRef,
 } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 import { Badge } from '@/components/ui/badge';
 const EditableQueryBar = lazy(() =>
