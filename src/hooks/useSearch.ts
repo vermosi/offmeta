@@ -35,12 +35,13 @@ import {
   incrementSearchesPerSession,
   parseFiltersFromUrl,
 } from '@/lib/search/search-state';
+import { parseQueryParam } from '@/lib/search/url-params';
 
 export function useSearch() {
   const [searchParams, setSearchParams] = useSearchParams();
   const params = useParams<{ slug?: string }>();
   const navigate = useNavigate();
-  const urlQuery = searchParams.get('q') || '';
+  const urlQuery = parseQueryParam(searchParams.get('q'));
   const slugQuery = params.slug ? slugToQuery(params.slug) : '';
   const effectiveUrlQuery = slugQuery || urlQuery;
   const queryClient = useQueryClient();

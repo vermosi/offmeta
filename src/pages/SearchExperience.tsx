@@ -185,9 +185,10 @@ const Index = () => {
   // link reproduces the exact layout.
   const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewModeState] = useState<ViewMode>(() => {
-    const fromUrl = new URLSearchParams(window.location.search).get('view');
-    if (fromUrl === 'grid' || fromUrl === 'list') return fromUrl;
-    return getStoredViewMode();
+    const fromUrl = parseViewMode(
+      new URLSearchParams(window.location.search).get('view'),
+    );
+    return fromUrl ?? getStoredViewMode();
   });
 
   const setViewMode = useCallback(
