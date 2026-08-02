@@ -101,3 +101,24 @@ export function encodeFiltersToUrl(
     params.set('cmc_max', String(filters.cmcRange[1]));
   }
 }
+
+/** URL params that make up the client-side filter state. */
+export const FILTER_PARAM_KEYS = [
+  'colors',
+  'types',
+  'sort',
+  'cmc_min',
+  'cmc_max',
+  'format',
+  'owned',
+] as const;
+
+/**
+ * Stable signature of the filter-related params, used to detect when the URL
+ * changed from the outside (browser back/forward) versus from our own writes.
+ */
+export function filterParamsSignature(params: URLSearchParams): string {
+  return FILTER_PARAM_KEYS.map((key) => `${key}=${params.get(key) ?? ''}`).join(
+    '&',
+  );
+}
