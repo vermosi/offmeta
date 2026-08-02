@@ -124,8 +124,6 @@ export function SearchResultsArea({
   intent,
   onRefineWithMatch,
 }: SearchResultsAreaProps) {
-  const { t } = useTranslation();
-
   const topSourceCard = useMemo(
     () => (cards.length > 0 ? cards[0] : null),
     [cards],
