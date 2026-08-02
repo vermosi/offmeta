@@ -1,4 +1,15 @@
 import type { FilterState } from '@/types/filters';
+import {
+  MAX_CMC,
+  VALID_COLORS,
+  VALID_FORMATS,
+  VALID_SORTS,
+  VALID_TYPES,
+  parseBooleanFlag,
+  parseCmcRange,
+  parseEnum,
+  parseEnumList,
+} from '@/lib/search/url-params';
 
 export function generateRequestId(): string {
   return `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -10,34 +21,57 @@ export function incrementSearchesPerSession(): void {
   sessionStorage.setItem(key, String(current + 1));
 }
 
+/**
+ * Reads filter state from URL params, discarding any value that isn't valid.
+ * Malformed links degrade to defaults instead of corrupting the search state.
+ */
 export function parseFiltersFromUrl(
   params: URLSearchParams,
 ): Partial<FilterState> | null {
-  const colors = params.get('colors');
-  const types = params.get('types');
-  const sort = params.get('sort');
+  const rawColors = params.get('colors');
+  const rawTypes = params.get('types');
+  const rawSort = params.get('sort');
   const cmcMin = params.get('cmc_min');
   const cmcMax = params.get('cmc_max');
-  const format = params.get('format');
-  const owned = params.get('owned');
+  const rawFormat = params.get('format');
+  const rawOwned = params.get('owned');
 
-  if (!colors && !types && !sort && !cmcMin && !cmcMax && !format && !owned)
+  if (
+    !rawColors &&
+    !rawTypes &&
+    !rawSort &&
+    !cmcMin &&
+    !cmcMax &&
+    !rawFormat &&
+    !rawOwned
+  ) {
     return null;
+  }
 
   const result: Partial<FilterState> = {};
-  if (colors) result.colors = colors.split(',').filter(Boolean);
-  if (types) result.types = types.split(',').filter(Boolean);
-  if (sort) result.sortBy = sort;
+
+  const colors = parseEnumList(rawColors, VALID_COLORS);
+  if (colors.length > 0) result.colors = colors;
+
+  const types = parseEnumList(rawTypes, VALID_TYPES);
+  if (types.length > 0) result.types = types;
+
+  const sortBy = parseEnum(rawSort, VALID_SORTS);
+  if (sortBy) result.sortBy = sortBy;
+
+  const format = parseEnum(rawFormat, VALID_FORMATS);
   if (format) result.format = format;
-  if (owned === '1') result.ownedOnly = true;
-  if (cmcMin || cmcMax) {
-    result.cmcRange = [
-      cmcMin ? parseInt(cmcMin, 10) : 0,
-      cmcMax ? parseInt(cmcMax, 10) : 16,
-    ];
+
+  if (parseBooleanFlag(rawOwned)) result.ownedOnly = true;
+
+  if (cmcMin !== null || cmcMax !== null) {
+    const range = parseCmcRange(cmcMin, cmcMax);
+    if (range[0] > 0 || range[1] < MAX_CMC) result.cmcRange = range;
   }
-  return result;
+
+  return Object.keys(result).length > 0 ? result : null;
 }
+
 
 export function encodeFiltersToUrl(
   params: URLSearchParams,
