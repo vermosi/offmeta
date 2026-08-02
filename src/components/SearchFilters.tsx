@@ -488,8 +488,8 @@ export function SearchFilters({
         <div className="hidden sm:flex flex-wrap gap-1.5">
           {activeFormatLabel && (
             <Badge
-              variant="secondary"
-              className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20 text-xs"
+              variant="default"
+              className="gap-1 pr-1 cursor-pointer text-xs bg-primary text-primary-foreground border-primary hover:bg-primary/90 shadow-sm"
               onClick={() => setFilters((prev) => ({ ...prev, format: undefined }))}
               role="button"
               tabIndex={0}
@@ -511,8 +511,8 @@ export function SearchFilters({
             return (
               <Badge
                 key={colorId}
-                variant="secondary"
-                className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20 text-xs"
+                variant="default"
+                className="gap-1 pr-1 cursor-pointer text-xs bg-primary text-primary-foreground border-primary hover:bg-primary/90 shadow-sm"
                 onClick={() => toggleColor(colorId)}
                 role="button"
                 tabIndex={0}
@@ -535,8 +535,8 @@ export function SearchFilters({
           {filters.types.map((type) => (
             <Badge
               key={type}
-              variant="secondary"
-              className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20 text-xs"
+              variant="default"
+              className="gap-1 pr-1 cursor-pointer text-xs bg-primary text-primary-foreground border-primary hover:bg-primary/90 shadow-sm"
               onClick={() => toggleType(type)}
               role="button"
               tabIndex={0}
@@ -557,8 +557,8 @@ export function SearchFilters({
           ))}
           {(filters.cmcRange[0] > 0 || filters.cmcRange[1] < defaultMaxCmc) && (
             <Badge
-              variant="secondary"
-              className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20 text-xs"
+              variant="default"
+              className="gap-1 pr-1 cursor-pointer text-xs bg-primary text-primary-foreground border-primary hover:bg-primary/90 shadow-sm"
               onClick={() =>
                 setFilters((prev) => ({
                   ...prev,
