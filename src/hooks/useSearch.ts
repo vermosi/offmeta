@@ -786,7 +786,11 @@ export function useSearch() {
     isSearching,
     hasNextPage,
     isFetchingNextPage,
+    isFetchNextPageError,
+    error,
+    isError,
     fetchNextPage,
+    retryNextPage,
 
     // Refs
     searchBarRef,
