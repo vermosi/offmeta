@@ -20,11 +20,6 @@ describe('view-mode-storage', () => {
     expect(getStoredViewMode()).toBe('list');
   });
 
-  it('stores and retrieves images mode', () => {
-    storeViewMode('images');
-    expect(getStoredViewMode()).toBe('images');
-  });
-
   it('returns grid for invalid stored values', () => {
     localStorage.setItem('offmeta_view_mode', 'invalid');
     expect(getStoredViewMode()).toBe('grid');

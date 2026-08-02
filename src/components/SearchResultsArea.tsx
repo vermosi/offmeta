@@ -1,5 +1,5 @@
 /**
- * Renders the card results area: grid/list/images views, virtualized grid,
+ * Renders the card results area: grid/list views, virtualized grid,
  * load-more, empty state, skeleton loaders, and non-card tab content.
  * @module components/SearchResultsArea
  */
@@ -9,7 +9,6 @@ import { useBatchPriceHistory, useAuth } from '@/hooks';
 
 import { CardItem } from '@/components/CardItem';
 import { CardListItem } from '@/components/CardListItem';
-import { CardImageItem } from '@/components/CardImageItem';
 import {
   SearchResultsSkeleton,
 } from '@/components/SearchResultsSkeleton';
@@ -227,37 +226,6 @@ export function SearchResultsArea({
                             tabIndex={rovingProps.tabIndex}
                             isOwned={collectionLookup.has(card.name)}
                             sparklineData={sparklineMap?.get(card.name)}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : viewMode === 'images' ? (
-                  <div
-                    className="grid grid-cols-2 min-[480px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3"
-                    role="list"
-                    aria-label="Search results"
-                    data-testid="images-view"
-                  >
-                    {rankedCards.map((card, index) => {
-                      const rovingProps = getRovingProps(index);
-                      return (
-                        <div
-                          key={card.id}
-                          className="animate-reveal"
-                          role="listitem"
-                          style={{
-                            animationDelay: `${Math.min(index * 15, 200)}ms`,
-                          }}
-                          ref={rovingProps.ref}
-                          onKeyDown={rovingProps.onKeyDown}
-                          onFocus={rovingProps.onFocus}
-                        >
-                          <CardImageItem
-                            card={card}
-                            onClick={() => handleCardClick(card, index)}
-                            tabIndex={rovingProps.tabIndex}
-                            isOwned={collectionLookup.has(card.name)}
                           />
                         </div>
                       );

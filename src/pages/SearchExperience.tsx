@@ -240,7 +240,6 @@ const Index = () => {
   // Roving tabindex column count based on view mode
   const rovingColumns = useMemo(() => {
     if (viewMode === 'list') return 1;
-    if (viewMode === 'images') return 6;
     return 4;
   }, [viewMode]);
 

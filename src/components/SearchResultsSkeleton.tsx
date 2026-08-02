@@ -1,7 +1,7 @@
 /**
  * Layout-aware loading skeletons for the search results area.
  *
- * Renders skeletons that mirror the active view mode (grid / list / images)
+ * Renders skeletons that mirror the active view mode (grid / list)
  * so the eventual result swap doesn't shift layout. Also surfaces a
  * lightweight phase banner that escalates its reassurance message the
  * longer the request runs, so the user always knows something is
@@ -89,19 +89,6 @@ function ListSkeleton({ count }: { count: number }) {
   );
 }
 
-function ImagesSkeleton({ count }: { count: number }) {
-  return (
-    <div
-      className="grid grid-cols-2 min-[480px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3"
-      aria-hidden="true"
-    >
-      {Array.from({ length: count }).map((_, i) => (
-        <Skeleton key={i} className="aspect-[488/680] w-full rounded-lg" />
-      ))}
-    </div>
-  );
-}
-
 function GridSkeleton({ count }: { count: number }) {
   return (
     <div
@@ -125,8 +112,7 @@ export function SearchResultsSkeleton({
   label,
 }: SearchResultsSkeletonProps) {
   const { t } = useTranslation();
-  const resolvedCount =
-    count ?? (viewMode === 'list' ? 8 : viewMode === 'images' ? 12 : 8);
+  const resolvedCount = count ?? (viewMode === 'list' ? 8 : 8);
 
   return (
     <section
@@ -138,8 +124,6 @@ export function SearchResultsSkeleton({
       <ProgressBanner label={label} />
       {viewMode === 'list' ? (
         <ListSkeleton count={resolvedCount} />
-      ) : viewMode === 'images' ? (
-        <ImagesSkeleton count={resolvedCount} />
       ) : (
         <GridSkeleton count={resolvedCount} />
       )}
@@ -160,16 +144,6 @@ export function LoadMoreSkeletonRow({
   viewMode?: ViewMode;
 }) {
   if (viewMode === 'list') return <ListSkeleton count={3} />;
-  if (viewMode === 'images')
-    return (
-      <div
-        className="grid grid-cols-2 min-[480px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3"
-        aria-hidden="true"
-      >
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="aspect-[488/680] w-full rounded-lg" />
-        ))}
-      </div>
-    );
   return <GridSkeleton count={4} />;
 }
+
