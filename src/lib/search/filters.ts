@@ -68,8 +68,9 @@ export function buildServerSideFilterQuery(
     parts.push(`mv<=${maxCmc}`);
   }
 
-  // Sorting - append order and direction
-  if (filters.sortBy && filters.sortBy !== 'name-asc') {
+  // Sorting - append order and direction. Best match is the default and is handled
+  // client-side by the intelligence reranker, so don't append a Scryfall order clause.
+  if (filters.sortBy && filters.sortBy !== 'relevance-desc') {
     const [sortField, sortDir] = filters.sortBy.split('-') as [
       string,
       'asc' | 'desc',
@@ -134,6 +135,6 @@ export function hasActiveServerFilters(
     filters.types.length > 0 ||
     filters.cmcRange[0] > 0 ||
     filters.cmcRange[1] < defaultMaxCmc ||
-    (filters.sortBy !== 'name-asc' && filters.sortBy !== '')
+    (filters.sortBy !== 'relevance-desc' && filters.sortBy !== '')
   );
 }
