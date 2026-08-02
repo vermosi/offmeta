@@ -241,13 +241,8 @@ const Index = () => {
     [searchQuery, originalQuery, handleRerunEditedQuery, trackEvent],
   );
 
-  const handleTabChange = useCallback(
-    (tab: ResultsTab) => {
-      if (tab === activeTab) return;
-      setTabState({ query: originalQuery, tab });
-    },
-    [activeTab, originalQuery],
-  );
+
+
 
   // Card comparison
   const {
