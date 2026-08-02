@@ -192,33 +192,13 @@ const Index = () => {
   // View mode toggle
   const [viewMode, setViewMode] = useState<ViewMode>(getStoredViewMode);
 
-  // Results tab state — initial tab may come from a shared `?tab=` link.
-  const [tabState, setTabState] = useState<{ query: string; tab: ResultsTab }>(
-    () => {
-      const initialTab = (() => {
-        if (typeof window === 'undefined') return 'cards' as ResultsTab;
-        const raw = new URLSearchParams(window.location.search).get('tab');
-        const allowed: ResultsTab[] = [
-          'cards',
-          'similar',
-          'deck-ideas',
-          'explanation',
-        ];
-        return (allowed as string[]).includes(raw ?? '')
-          ? (raw as ResultsTab)
-          : ('cards' as ResultsTab);
-      })();
-      return { query: originalQuery, tab: initialTab };
-    },
-  );
-  const activeTab = tabState.query === originalQuery ? tabState.tab : 'cards';
+  // Cards is the only results view — Similar / Deck Ideas / Explain removed.
+  const activeTab: ResultsTab = 'cards';
 
-  const showSimilarTab = hasSearched && !isSearching;
   const isDeckQuery = /\b(deck|build|commander|strategy|brew|edh)\b/i.test(
     originalQuery,
   );
-  const showDeckIdeasTab = hasSearched && !isSearching && isDeckQuery;
-  const showExplanationTab = hasSearched && !isSearching;
+
 
   // Prevent indexing of zero-result search pages
   useNoIndex(hasSearched && !isSearching && totalCards === 0);
