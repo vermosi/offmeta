@@ -597,7 +597,7 @@ const Index = () => {
             )}
 
             {showResultsMode && (
-              <div className="animate-reveal flex items-start gap-2">
+              <div className="animate-reveal flex items-start gap-2 mb-5 sm:mb-7">
                 <div className="flex-1 min-w-0 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <h1 className="text-lg sm:text-xl font-semibold text-foreground tracking-tight">
