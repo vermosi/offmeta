@@ -638,6 +638,7 @@ const Index = () => {
             )}
 
             {cards.length > 0 && !isSearching && (
+              <div className="sticky top-[56px] sm:top-[68px] z-30 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-2 bg-background/80 backdrop-blur-xl border-b border-border/40">
               <ResultsToolbar
                 cards={cards}
                 displayCards={displayCards}
@@ -675,6 +676,7 @@ const Index = () => {
                   </ScryfallQueryDisclosure>
                 }
               />
+              </div>
             )}
           </div>
 
