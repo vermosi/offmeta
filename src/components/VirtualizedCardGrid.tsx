@@ -5,7 +5,7 @@
 
 import { useRef, useCallback, useEffect, useState } from 'react';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, RefreshCw, Loader2 } from 'lucide-react';
 import { CardItem } from '@/components/CardItem';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n';
