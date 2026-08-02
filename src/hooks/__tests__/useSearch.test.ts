@@ -215,7 +215,7 @@ describe('useSearch', () => {
       colors: ['G'],
       types: [],
       cmcRange: [0, 16] as [number, number],
-      sortBy: 'name-asc',
+      sortBy: 'relevance-desc',
     };
 
     act(() => {

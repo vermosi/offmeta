@@ -55,8 +55,8 @@ describe('buildServerSideFilterQuery additional branches', () => {
     expect(buildServerSideFilterQuery(filters)).toBe('order:cmc dir:asc');
   });
 
-  it('skips sort for name-asc (default)', () => {
-    const filters: FilterState = { colors: [], types: [], cmcRange: [0, 16], sortBy: 'name-asc' };
+  it('skips sort for relevance-desc (default)', () => {
+    const filters: FilterState = { colors: [], types: [], cmcRange: [0, 16], sortBy: 'relevance-desc' };
     expect(buildServerSideFilterQuery(filters)).toBe('');
   });
 
@@ -117,7 +117,7 @@ describe('hasActiveServerFilters', () => {
   });
 
   it('returns false for default filters', () => {
-    const filters: FilterState = { colors: [], types: [], cmcRange: [0, 16], sortBy: 'name-asc' };
+    const filters: FilterState = { colors: [], types: [], cmcRange: [0, 16], sortBy: 'relevance-desc' };
     expect(hasActiveServerFilters(filters)).toBe(false);
   });
 

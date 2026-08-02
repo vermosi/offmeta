@@ -28,7 +28,7 @@ describe('lib/search exports', () => {
       colors: ['R'],
       types: [],
       cmcRange: [0, 16],
-      sortBy: 'name-asc',
+      sortBy: 'relevance-desc',
     });
     expect(result).toBe('c:r');
   });

@@ -69,7 +69,7 @@ export function createMockFilterState(
     colors: [],
     types: [],
     cmcRange: [0, 16],
-    sortBy: 'name-asc',
+    sortBy: 'relevance-desc',
     ownedOnly: false,
     ...overrides,
   };
