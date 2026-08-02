@@ -199,12 +199,16 @@ export function SearchResultsArea({
                     cards={rankedCards}
                     onCardClick={handleCardClick}
                     onLoadMore={
-                      hasNextPage && !isFetchingNextPage
+                      hasNextPage && !isFetchingNextPage && !isFetchNextPageError
                         ? fetchNextPage
                         : undefined
                     }
                     hasNextPage={hasNextPage}
                     isFetchingNextPage={isFetchingNextPage}
+                    isFetchNextPageError={isFetchNextPageError}
+                    error={error}
+                    isError={isError}
+                    onRetry={retryNextPage}
                   />
                 ) : viewMode === 'list' ? (
                   <div
