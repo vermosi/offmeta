@@ -34,3 +34,10 @@ window.addEventListener('unhandledrejection', (e) => handleChunkError(e.reason))
 
 createRoot(document.getElementById('root')!).render(<App />);
 
+// The app booted successfully — clear the reload budget so a future stale
+// chunk (e.g. after another deploy or dev-server restart) can recover again
+// instead of hitting the "limit reached" branch and leaving a blank screen.
+window.addEventListener('load', () => {
+  sessionStorage.removeItem(RELOAD_KEY);
+});
+
