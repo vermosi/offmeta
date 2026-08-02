@@ -227,7 +227,9 @@ export function VirtualizedCardGrid({
                 transform: `translateY(${virtualRow.start - scrollMargin}px)`,
                 display: 'grid',
                 gridTemplateColumns: `repeat(${columns}, minmax(0, ${cardWidth}px))`,
-                justifyContent: 'center',
+                // When cards hit their max width, spread them edge-to-edge so the
+                // first/last columns line up with the toolbar's container padding.
+                justifyContent: cardWidth >= MAX_CARD_WIDTH ? 'space-between' : 'center',
                 gap: `${gap}px`,
               }}
             >
