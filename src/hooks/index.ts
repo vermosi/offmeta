@@ -26,7 +26,7 @@ export { useSearchContext } from './useSearchContext';
 export { useSearchHandler, type SearchPhase } from './useSearchHandler';
 export { useSearchHistory } from './useSearchHistory';
 export { useTranslateQuery, usePrefetchPopularQueries, type TranslationResult } from './useSearchQuery';
-export { useSimilarCards, type SynergyCard, type SimilarityData } from './useSimilarCards';
+export { useSimilarCards, type SimilarityData } from './useSimilarCards';
 export { useToast, toast } from './useToast';
 export { useUndoRedo, type UndoableAction } from './useUndoRedo';
 export { useUserRole } from './useUserRole';

@@ -19,6 +19,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Loader2,
   ArrowLeft,
+  ArrowUpRight,
   BarChart3,
   Download,
   RefreshCw,

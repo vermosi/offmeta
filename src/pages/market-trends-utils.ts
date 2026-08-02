@@ -21,7 +21,7 @@ export const DEFAULT_FILTERS: MarketFilters = {
   minChange: 0,
 };
 
-const PRICE_RANGES = [
+export const PRICE_RANGES = [
   { min: 0, max: Infinity, label: 'Any Price' },
   { min: 0, max: 1, label: 'Under $1' },
   { min: 1, max: 5, label: '$1 - $5' },

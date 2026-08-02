@@ -25,6 +25,7 @@ import {
   type SortDir,
   type SortField,
   DEFAULT_FILTERS,
+  PRICE_RANGES,
 } from './market-trends-utils';
 
 import {

@@ -19,15 +19,9 @@ import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 import { Badge } from '@/components/ui/badge';
 import { SearchRefinementStrip } from '@/components/SearchRefinementStrip';
 import { ResultFacetAggregationStrip } from '@/components/ResultFacetAggregationStrip';
-import { SearchRoleGuidancePanel } from '@/components/SearchRoleGuidancePanel';
 const EditableQueryBar = lazy(() =>
   import('@/components/EditableQueryBar').then((m) => ({
     default: m.EditableQueryBar,
-  })),
-);
-const ExplainCompilationPanel = lazy(() =>
-  import('@/components/ExplainCompilationPanel').then((m) => ({
-    default: m.ExplainCompilationPanel,
   })),
 );
 const ReportIssueDialog = lazy(() =>
@@ -100,27 +94,12 @@ const SearchNextActions = lazy(() =>
     default: m.SearchNextActions,
   })),
 );
-const SearchNextStepsBar = lazy(() =>
-  import('@/components/SearchNextStepsBar').then((m) => ({
-    default: m.SearchNextStepsBar,
-  })),
-);
-const SimilarToTopResultPanel = lazy(() =>
-  import('@/components/SimilarToTopResultPanel').then((m) => ({
-    default: m.SimilarToTopResultPanel,
-  })),
-);
 const RelatedSearchesSection = lazy(() =>
   import('@/components/RelatedSearchesSection').then((m) => ({
     default: m.RelatedSearchesSection,
   })),
 );
 
-const MatchedConceptChips = lazy(() =>
-  import('@/components/MatchedConceptChips').then((m) => ({
-    default: m.MatchedConceptChips,
-  })),
-);
 
 const SearchResultsArea = lazy(() =>
   import('@/components/SearchResultsArea').then((m) => ({
@@ -181,7 +160,6 @@ const Index = () => {
     reportDialogOpen,
     setReportDialogOpen,
     currentRequestId,
-    refinementCount,
     queryQualityScore,
     queryQualityConfidence,
     queryQualitySampleSize,
@@ -820,25 +798,6 @@ const Index = () => {
               </div>
             )}
 
-            {hasSearched && !isSearching && displayCards.length > 0 && (
-              <div className="animate-reveal">
-                <SearchRoleGuidancePanel
-                  cards={displayCards}
-                  searchQuery={searchQuery}
-                  onRefine={handleRerunEditedQuery}
-                />
-              </div>
-            )}
-
-            {/* Explain panel — hidden on mobile */}
-            {hasSearched && (
-              <div className="hidden sm:block animate-reveal">
-                <ExplainCompilationPanel
-                  intent={lastSearchResult?.intent || lastIntent}
-                />
-              </div>
-            )}
-
             {/* Results Tabs */}
             {hasSearched && !isSearching && (
               <div className="animate-reveal">
@@ -851,109 +810,6 @@ const Index = () => {
                 />
               </div>
             )}
-
-            {hasSearched && !isSearching && (
-              <div className="space-y-2">
-                {refinementCount > 0 && (
-                  <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-foreground">
-                    {t(
-                      'results.refinementHint',
-                      'Narrow results like this? Save this refinement as a reusable workflow.',
-                    )}
-                  </div>
-                )}
-                {shouldShowProUpsell && (
-                  <div className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-foreground">
-                    {t(
-                      'results.proUpsell',
-                      'Better results with Pro: advanced explainability + priority ranking.',
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Toolbar row — only show for Cards tab */}
-            {hasSearched && !isSearching && totalCards > 0 && (
-              <Suspense fallback={null}>
-                <SearchNextStepsBar
-                  originalQuery={originalQuery}
-                  intent={lastSearchResult?.intent || lastIntent}
-                  totalCards={totalCards}
-                  activeTab={activeTab}
-                  onJumpToSimilar={() => {
-                    handleTabChange('similar');
-                    if (typeof document !== 'undefined') {
-                      document
-                        .getElementById('search-results')
-                        ?.scrollIntoView({
-                          behavior: 'smooth',
-                          block: 'start',
-                        });
-                    }
-                  }}
-                  onRelatedSearchClick={handleTryExample}
-                />
-              </Suspense>
-            )}
-
-            {/* Toolbar row — only show for Cards tab */}
-            {hasSearched && !isSearching && totalCards > 0 && (
-              <Suspense fallback={null}>
-                <SearchNextActions
-                  intent={lastSearchResult?.intent || lastIntent}
-                  originalQuery={originalQuery}
-                  totalCards={totalCards}
-                  isDeckQuery={isDeckQuery}
-                  queryQualityScore={queryQualityScore}
-                />
-              </Suspense>
-            )}
-
-            {/* Similar-to-top-result discovery panel (Cards tab only) */}
-            {hasSearched &&
-              !isSearching &&
-              activeTab === 'cards' &&
-              cards[0] && (
-                <Suspense fallback={null}>
-                  <SimilarToTopResultPanel
-                    topCard={cards[0]}
-                    originalQuery={originalQuery}
-                    onRefine={handleTryExample}
-                    onCardClick={handleCardClick}
-                  />
-                </Suspense>
-              )}
-
-            {/* Related searches — always-visible follow-up suggestions */}
-            {hasSearched &&
-              !isSearching &&
-              totalCards > 0 &&
-              activeTab === 'cards' && (
-                <Suspense fallback={null}>
-                  <RelatedSearchesSection
-                    originalQuery={originalQuery}
-                    intent={lastSearchResult?.intent || lastIntent}
-                    topCard={cards[0]}
-                    onRefine={handleTryExample}
-                  />
-                </Suspense>
-              )}
-
-            {hasSearched &&
-              !isSearching &&
-              cards.length > 0 &&
-              activeTab === 'cards' && (
-                <Suspense fallback={null}>
-                  <MatchedConceptChips
-                    cards={displayCards.length > 0 ? displayCards : cards}
-                    intent={lastSearchResult?.intent || lastIntent}
-                    searchQuery={searchQuery}
-                    originalQuery={originalQuery}
-                    onRefine={handleRefineWithMatch}
-                  />
-                </Suspense>
-              )}
 
             {cards.length > 0 && !isSearching && activeTab === 'cards' && (
               <ResultsToolbar
@@ -1015,6 +871,32 @@ const Index = () => {
               />
             </Suspense>
           )}
+
+          {/* Follow-up discovery — moved below results to keep the top clean */}
+          {hasSearched &&
+            !isSearching &&
+            totalCards > 0 &&
+            activeTab === 'cards' && (
+              <div className="container-main space-y-3 pt-6">
+                <Suspense fallback={null}>
+                  <RelatedSearchesSection
+                    originalQuery={originalQuery}
+                    intent={lastSearchResult?.intent || lastIntent}
+                    topCard={cards[0]}
+                    onRefine={handleTryExample}
+                  />
+                </Suspense>
+                <Suspense fallback={null}>
+                  <SearchNextActions
+                    intent={lastSearchResult?.intent || lastIntent}
+                    originalQuery={originalQuery}
+                    totalCards={totalCards}
+                    isDeckQuery={isDeckQuery}
+                    queryQualityScore={queryQualityScore}
+                  />
+                </Suspense>
+              </div>
+            )}
         </main>
 
         {!hasSearched && (
