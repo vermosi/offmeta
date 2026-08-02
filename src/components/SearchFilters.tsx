@@ -245,8 +245,10 @@ export function SearchFilters({
         <SelectTrigger
           aria-label={t('filters.format', 'Format')}
           className={cn(
-            'w-[110px] sm:w-[140px] h-8 sm:h-9 text-xs sm:text-sm',
-            filters.format && 'border-primary/50 bg-primary/5',
+            'w-[110px] sm:w-[140px] h-8 sm:h-9 text-xs sm:text-sm transition-all',
+            filters.format
+              ? 'border-primary bg-primary/10 text-primary font-medium ring-1 ring-primary/20 shadow-sm'
+              : '',
           )}
         >
           <Shield className="h-3.5 w-3.5 mr-1 opacity-50 shrink-0" />
