@@ -77,11 +77,9 @@ export function useSearch() {
   const hasHandledInitialQuery = useRef(false);
   const hasRedirectedLegacy = useRef(false);
   const {
-    trackSearch,
-    trackSearchFailure,
-    trackSearchSuccess,
-    trackCardClick,
     trackPagination,
+    trackPaginationErrorShown,
+    trackPaginationRetryClicked,
     trackFirstSearchStart,
     trackFirstSearchSuccess,
     trackFirstResultClick,
