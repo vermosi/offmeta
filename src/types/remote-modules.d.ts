@@ -7,5 +7,6 @@ declare module 'https://esm.sh/@supabase/supabase-js@2' {
     url: string,
     key: string,
     options?: unknown,
-  ): unknown;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): any;
 }
