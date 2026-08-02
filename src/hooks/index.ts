@@ -9,7 +9,6 @@ export { useAffiliateConfig, wrapAffiliateUrl } from './useAffiliateConfig';
 export { useAnalytics } from './useAnalytics';
 export { useAuth, useAuthProvider, AuthContext } from './useAuth';
 export { useBatchPriceHistory } from './useBatchPriceHistory';
-export { useCompare } from './useCompare';
 export { useDeckIdeas, type DeckIdea } from './useDeckIdeas';
 export { useFocusTrap } from './useFocusTrap';
 export { useKeyboardShortcuts } from './useKeyboardShortcuts';
