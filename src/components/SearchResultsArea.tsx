@@ -139,8 +139,9 @@ export function SearchResultsArea({
   const { data: sparklineMap } = useBatchPriceHistory(sparklineNames);
   const { user } = useAuth();
   const { hadFastClick, hadRefinement } = getSearchRankingSignals(originalQuery);
-  const hasCustomSort =
-    !!activeSort && activeSort !== 'relevance-desc' && activeSort !== 'name-asc';
+  // Only the explicit "relevance" sort defers ordering to the intelligence reranker.
+  // Every other sort (including the default name-asc) is an explicit user ordering.
+  const hasCustomSort = !!activeSort && activeSort !== 'relevance-desc';
   const rankedCards = useMemo(
     () =>
       hasCustomSort
