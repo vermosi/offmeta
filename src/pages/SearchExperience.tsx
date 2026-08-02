@@ -19,15 +19,9 @@ import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 import { Badge } from '@/components/ui/badge';
 import { SearchRefinementStrip } from '@/components/SearchRefinementStrip';
 import { ResultFacetAggregationStrip } from '@/components/ResultFacetAggregationStrip';
-import { SearchRoleGuidancePanel } from '@/components/SearchRoleGuidancePanel';
 const EditableQueryBar = lazy(() =>
   import('@/components/EditableQueryBar').then((m) => ({
     default: m.EditableQueryBar,
-  })),
-);
-const ExplainCompilationPanel = lazy(() =>
-  import('@/components/ExplainCompilationPanel').then((m) => ({
-    default: m.ExplainCompilationPanel,
   })),
 );
 const ReportIssueDialog = lazy(() =>
@@ -100,27 +94,12 @@ const SearchNextActions = lazy(() =>
     default: m.SearchNextActions,
   })),
 );
-const SearchNextStepsBar = lazy(() =>
-  import('@/components/SearchNextStepsBar').then((m) => ({
-    default: m.SearchNextStepsBar,
-  })),
-);
-const SimilarToTopResultPanel = lazy(() =>
-  import('@/components/SimilarToTopResultPanel').then((m) => ({
-    default: m.SimilarToTopResultPanel,
-  })),
-);
 const RelatedSearchesSection = lazy(() =>
   import('@/components/RelatedSearchesSection').then((m) => ({
     default: m.RelatedSearchesSection,
   })),
 );
 
-const MatchedConceptChips = lazy(() =>
-  import('@/components/MatchedConceptChips').then((m) => ({
-    default: m.MatchedConceptChips,
-  })),
-);
 
 const SearchResultsArea = lazy(() =>
   import('@/components/SearchResultsArea').then((m) => ({
@@ -181,7 +160,6 @@ const Index = () => {
     reportDialogOpen,
     setReportDialogOpen,
     currentRequestId,
-    refinementCount,
     queryQualityScore,
     queryQualityConfidence,
     queryQualitySampleSize,
