@@ -737,34 +737,75 @@ export function useSearch() {
     setFilterOverrideKey((k) => k + 1);
   }, [currentFilterSignature, navigationType, searchParams]);
 
+  // --- Debounced URL sync for filter changes ---
+  // Rapid adjustments (dragging the mana-value slider, toggling several
+  // colors) collapse into a single URL write, and consecutive writes inside a
+  // burst reuse the same history entry instead of stacking one per tweak.
+  const URL_SYNC_DEBOUNCE_MS = 350;
+  const HISTORY_BURST_MS = 1200;
+  const pendingUrlFiltersRef = useRef<FilterState | null>(null);
+  const urlSyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastHistoryPushAtRef = useRef(0);
+
+  const flushFilterUrlSync = useCallback(() => {
+    urlSyncTimerRef.current = null;
+    const filters = pendingUrlFiltersRef.current;
+    if (!filters) return;
+    pendingUrlFiltersRef.current = null;
+
+    // Params are computed eagerly (not via the functional updater) because
+    // the `replace` option is evaluated before the updater runs.
+    const next = new URLSearchParams(window.location.search);
+    // Always encode: sort is not counted as an "active filter"
+    // but must still survive refresh/share.
+    encodeFiltersToUrl(next, filters);
+    const signature = filterParamsSignature(next);
+    // Nothing actually changed — skip the write entirely.
+    if (signature === lastFilterSignatureRef.current) return;
+
+    const now = Date.now();
+    const isRestoring = now < restoringUntilRef.current;
+    const withinBurst = now - lastHistoryPushAtRef.current < HISTORY_BURST_MS;
+    const shouldPush = !isRestoring && !withinBurst;
+
+    lastFilterSignatureRef.current = signature;
+    if (shouldPush) lastHistoryPushAtRef.current = now;
+    setSearchParams(next, { replace: !shouldPush });
+  }, [setSearchParams]);
+
+  const cancelPendingUrlSync = useCallback(() => {
+    if (urlSyncTimerRef.current !== null) {
+      clearTimeout(urlSyncTimerRef.current);
+      urlSyncTimerRef.current = null;
+    }
+    pendingUrlFiltersRef.current = null;
+  }, []);
+
+  useEffect(() => cancelPendingUrlSync, [cancelPendingUrlSync]);
+
   const handleFilteredCards = useCallback(
     (
       filtered: ScryfallCard[],
       filtersActive: boolean,
       filters: FilterState,
     ) => {
+      // Results update immediately; only the URL write is debounced.
       setFilteredCards(filtered);
       setHasActiveFilters(filtersActive);
       setActiveFilters(filters);
 
-      const isRestoring = Date.now() < restoringUntilRef.current;
-
-      // Sync filters to URL. A real change pushes a history entry so browser
-      // back/forward steps through filter states; no-op writes replace.
-      // Params are computed eagerly (not via the functional updater) because
-      // the `replace` option is evaluated before the updater runs.
-      const next = new URLSearchParams(window.location.search);
-      // Always encode: sort is not counted as an "active filter"
-      // but must still survive refresh/share.
-      encodeFiltersToUrl(next, filters);
-      const signature = filterParamsSignature(next);
-      const isChange = !isRestoring && signature !== lastFilterSignatureRef.current;
-      lastFilterSignatureRef.current = signature;
-      setSearchParams(next, { replace: !isChange });
-
+      pendingUrlFiltersRef.current = filters;
+      if (urlSyncTimerRef.current !== null) {
+        clearTimeout(urlSyncTimerRef.current);
+      }
+      urlSyncTimerRef.current = setTimeout(
+        flushFilterUrlSync,
+        URL_SYNC_DEBOUNCE_MS,
+      );
     },
-    [setSearchParams],
+    [flushFilterUrlSync],
   );
+
 
   /**
    * Patch the active filters from outside `SearchFilters` (e.g. the empty
