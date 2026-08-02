@@ -710,10 +710,10 @@ export function useSearch() {
   // `handleFilteredCards`) can be detected and pushed back into filter state.
   const lastFilterSignatureRef = useRef(filterParamsSignature(searchParams));
   const currentFilterSignature = filterParamsSignature(searchParams);
-  // Set while filter state is being restored from a history entry, so the
-  // resulting filter callbacks don't write to the URL and clobber the
-  // forward history stack.
-  const restoringFromHistoryRef = useRef(false);
+  // Timestamp until which filter state is considered "restoring" from a
+  // history entry. Writes during this window must never push, otherwise the
+  // forward stack is discarded while the toolbar catches up with the URL.
+  const restoringUntilRef = useRef(0);
 
   useEffect(() => {
     if (currentFilterSignature === lastFilterSignatureRef.current) return;
@@ -721,7 +721,7 @@ export function useSearch() {
     // Only react to genuine history navigations; PUSH/REPLACE come from us.
     if (navigationType !== 'POP') return;
 
-    restoringFromHistoryRef.current = true;
+    restoringUntilRef.current = Date.now() + 1000;
 
     const parsed = parseFiltersFromUrl(searchParams);
     // Send a complete state (not a sparse patch) so params removed by going
@@ -747,15 +747,7 @@ export function useSearch() {
       setHasActiveFilters(filtersActive);
       setActiveFilters(filters);
 
-      // While restoring a history entry the URL is already correct — writing
-      // it again would drop the forward stack.
-      if (restoringFromHistoryRef.current) {
-        restoringFromHistoryRef.current = false;
-        lastFilterSignatureRef.current = filterParamsSignature(
-          new URLSearchParams(window.location.search),
-        );
-        return;
-      }
+      const isRestoring = Date.now() < restoringUntilRef.current;
 
       // Sync filters to URL. A real change pushes a history entry so browser
       // back/forward steps through filter states; no-op writes replace.
@@ -766,7 +758,7 @@ export function useSearch() {
       // but must still survive refresh/share.
       encodeFiltersToUrl(next, filters);
       const signature = filterParamsSignature(next);
-      const isChange = signature !== lastFilterSignatureRef.current;
+      const isChange = !isRestoring && signature !== lastFilterSignatureRef.current;
       lastFilterSignatureRef.current = signature;
       setSearchParams(next, { replace: !isChange });
 
