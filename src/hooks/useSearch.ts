@@ -709,7 +709,6 @@ export function useSearch() {
   // history navigation (which changes the URL without going through
   // `handleFilteredCards`) can be detected and pushed back into filter state.
   const lastFilterSignatureRef = useRef(filterParamsSignature(searchParams));
-  const shouldPushFilterHistoryRef = useRef(false);
   const currentFilterSignature = filterParamsSignature(searchParams);
 
   useEffect(() => {
