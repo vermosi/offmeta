@@ -262,12 +262,24 @@ export function useSearch() {
       },
     );
 
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current);
-    }
+    // The sentinel mounts only once results render, so retry attaching until
+    // it exists (otherwise infinite scroll never arms on the first search).
+    let frame = 0;
+    const attach = () => {
+      if (loadMoreRef.current) {
+        observer.observe(loadMoreRef.current);
+        return;
+      }
+      frame = window.requestAnimationFrame(attach);
+    };
+    attach();
 
-    return () => observer.disconnect();
-  }, [fetchNextPage]);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+    // Re-arm whenever a new result set renders or more pages become available.
+  }, [fetchNextPage, hasNextPage, data]);
 
   // --- Flatten pages ---
   const cards = useMemo(() => {
