@@ -442,6 +442,34 @@ export function useSearch() {
     paginationPageRef.current = currentPageCount || 1;
   }, [currentPageCount, originalQuery, trackPagination]);
 
+  // --- Track pagination error (once per failure) ---
+  const paginationErrorShownRef = useRef(false);
+  useEffect(() => {
+    if (isError && hasNextPage && !isFetchingNextPage) {
+      if (paginationErrorShownRef.current) return;
+      paginationErrorShownRef.current = true;
+      trackPaginationErrorShown({
+        query: originalQuery,
+        page_count: currentPageCount,
+        error_message: error instanceof Error ? error.message : undefined,
+      });
+    } else if (!isError) {
+      paginationErrorShownRef.current = false;
+    }
+  }, [isError, hasNextPage, isFetchingNextPage, originalQuery, error, currentPageCount, trackPaginationErrorShown]);
+
+  const retryNextPage = useCallback(() => {
+    trackPaginationRetryClicked({
+      query: originalQuery,
+      page_count: currentPageCount,
+    });
+    if (hasNextPage) {
+      void fetchNextPage();
+    } else {
+      void refetch();
+    }
+  }, [fetchNextPage, refetch, hasNextPage, originalQuery, currentPageCount, trackPaginationRetryClicked]);
+
   const hasSortOverride =
     !!activeFilters?.sortBy && activeFilters.sortBy !== 'relevance-desc';
   // A sort-only override can never remove cards, so while the filter pass has not
