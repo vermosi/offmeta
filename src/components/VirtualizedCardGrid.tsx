@@ -75,6 +75,10 @@ interface VirtualizedCardGridProps {
   onLoadMore?: () => void;
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
+  isFetchNextPageError?: boolean;
+  error?: Error | null;
+  isError?: boolean;
+  onRetry?: () => void;
 }
 
 const CARD_ASPECT_RATIO = 2.5 / 3.5;
