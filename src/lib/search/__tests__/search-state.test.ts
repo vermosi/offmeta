@@ -12,8 +12,8 @@ describe('search-state helpers', () => {
     const parsed = parseFiltersFromUrl(params);
 
     expect(parsed).toEqual({
-      colors: ['g', 'u'],
-      types: ['creature', 'artifact'],
+      colors: ['G', 'U'],
+      types: ['Creature', 'Artifact'],
       sortBy: 'cmc-desc',
       format: 'commander',
       cmcRange: [2, 5],
@@ -24,8 +24,8 @@ describe('search-state helpers', () => {
       encodeFiltersToUrl(next, parsed as never);
     }
 
-    expect(next.get('colors')).toBe('g,u');
-    expect(next.get('types')).toBe('creature,artifact');
+    expect(next.get('colors')).toBe('G,U');
+    expect(next.get('types')).toBe('Creature,Artifact');
     expect(next.get('sort')).toBe('cmc-desc');
     expect(next.get('cmc_min')).toBe('2');
     expect(next.get('cmc_max')).toBe('5');
