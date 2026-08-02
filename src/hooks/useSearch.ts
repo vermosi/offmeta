@@ -6,7 +6,12 @@
 
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
-import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
+import {
+  useSearchParams,
+  useParams,
+  useNavigate,
+  useNavigationType,
+} from 'react-router-dom';
 import { queryToSlug, slugToQuery } from '@/lib/search-slug';
 import { classifyFailureReason } from '@/lib/search/classifyFailure';
 import { handleZeroResultRecovery } from '@/hooks/searchRecovery';
@@ -35,12 +40,14 @@ import {
   incrementSearchesPerSession,
   parseFiltersFromUrl,
 } from '@/lib/search/search-state';
-import { parseQueryParam } from '@/lib/search/url-params';
+import { MAX_CMC, parseQueryParam } from '@/lib/search/url-params';
+import { DEFAULT_SORT } from '@/components/SearchFilters/constants';
 
 export function useSearch() {
   const [searchParams, setSearchParams] = useSearchParams();
   const params = useParams<{ slug?: string }>();
   const navigate = useNavigate();
+  const navigationType = useNavigationType();
   const urlQuery = parseQueryParam(searchParams.get('q'));
   const slugQuery = params.slug ? slugToQuery(params.slug) : '';
   const effectiveUrlQuery = slugQuery || urlQuery;
