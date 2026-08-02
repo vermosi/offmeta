@@ -217,7 +217,7 @@ export function VirtualizedCardGrid({
       className="w-full"
       role="grid"
       aria-label="Search results"
-      aria-rowcount={rowCount}
+      aria-rowcount={virtualRowCount}
       data-testid="virtualized-grid"
       onKeyDown={handleKeyDown}
       tabIndex={0}
@@ -230,6 +230,69 @@ export function VirtualizedCardGrid({
         }}
       >
         {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+          if (showLoadMoreRow && virtualRow.index === rowCount) {
+            return (
+              <div
+                key={virtualRow.key}
+                role="row"
+                aria-rowindex={virtualRow.index + 1}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: `${loadMoreRowHeight}px`,
+                  paddingBottom: `${gap}px`,
+                  boxSizing: 'border-box',
+                  transform: `translateY(${virtualRow.start - scrollMargin}px)`,
+                }}
+                className="flex items-center justify-center"
+              >
+                <div className="w-full max-w-2xl" role="status" aria-live="polite">
+                  {isError ? (
+                    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-destructive/20 bg-destructive/5 px-6 py-4 text-center">
+                      <div className="flex items-center gap-2 text-destructive">
+                        <AlertCircle className="h-5 w-5" aria-hidden="true" />
+                        <span className="font-medium">
+                          {t('results.loadMoreErrorTitle', "Couldn't load more cards")}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {t(
+                          'results.loadMoreErrorDescription',
+                          'This is usually a temporary Scryfall connection issue.',
+                        )}
+                      </p>
+                      {onRetry && (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={onRetry}
+                          className="gap-2"
+                          aria-label={t('results.retryButton', 'Try again')}
+                        >
+                          <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                          {t('results.retryButton', 'Try again')}
+                        </Button>
+                      )}
+                    </div>
+                  ) : isFetchingNextPage ? (
+                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                      <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+                      <span>{t('results.loadingMore', 'Loading more cards...')}</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                      <span className="text-sm">
+                        {t('results.scrollToLoad', 'Scroll to load more')}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          }
+
           const startIndex = virtualRow.index * columns;
 
           return (
