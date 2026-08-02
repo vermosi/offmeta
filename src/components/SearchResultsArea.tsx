@@ -1,5 +1,5 @@
 /**
- * Renders the card results area: grid/list/images views, virtualized grid,
+ * Renders the card results area: grid/list views, virtualized grid,
  * load-more, empty state, skeleton loaders, and non-card tab content.
  * @module components/SearchResultsArea
  */
