@@ -19,14 +19,17 @@ export function parseFiltersFromUrl(
   const cmcMin = params.get('cmc_min');
   const cmcMax = params.get('cmc_max');
   const format = params.get('format');
+  const owned = params.get('owned');
 
-  if (!colors && !types && !sort && !cmcMin && !cmcMax && !format) return null;
+  if (!colors && !types && !sort && !cmcMin && !cmcMax && !format && !owned)
+    return null;
 
   const result: Partial<FilterState> = {};
   if (colors) result.colors = colors.split(',').filter(Boolean);
   if (types) result.types = types.split(',').filter(Boolean);
   if (sort) result.sortBy = sort;
   if (format) result.format = format;
+  if (owned === '1') result.ownedOnly = true;
   if (cmcMin || cmcMax) {
     result.cmcRange = [
       cmcMin ? parseInt(cmcMin, 10) : 0,
@@ -46,6 +49,7 @@ export function encodeFiltersToUrl(
   params.delete('cmc_min');
   params.delete('cmc_max');
   params.delete('format');
+  params.delete('owned');
 
   if (!filters) return;
 
@@ -55,6 +59,7 @@ export function encodeFiltersToUrl(
     params.set('sort', filters.sortBy);
   }
   if (filters.format) params.set('format', filters.format);
+  if (filters.ownedOnly) params.set('owned', '1');
   if (filters.cmcRange[0] > 0) {
     params.set('cmc_min', String(filters.cmcRange[0]));
   }

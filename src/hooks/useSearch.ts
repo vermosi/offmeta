@@ -675,11 +675,9 @@ export function useSearch() {
       setSearchParams(
         (prev) => {
           const next = new URLSearchParams(prev);
-          if (filtersActive) {
-            encodeFiltersToUrl(next, filters);
-          } else {
-            encodeFiltersToUrl(next, null);
-          }
+          // Always encode: sort is not counted as an "active filter"
+          // but must still survive refresh/share.
+          encodeFiltersToUrl(next, filters);
           return next;
         },
         { replace: true },
