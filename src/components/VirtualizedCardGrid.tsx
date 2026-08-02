@@ -115,8 +115,6 @@ export function VirtualizedCardGrid({
   onLoadMore,
   hasNextPage,
   isFetchingNextPage,
-  isFetchNextPageError,
-  error,
   isError,
   onRetry,
 }: VirtualizedCardGridProps) {
