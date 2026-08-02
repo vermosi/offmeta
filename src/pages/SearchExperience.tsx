@@ -208,7 +208,13 @@ const Index = () => {
     },
     [setSearchParams],
   );
-  void searchParams;
+
+  // Keep the toggle in sync when the URL changes from browser back/forward.
+  const urlViewMode = parseViewMode(searchParams.get('view')) ?? 'grid';
+  useEffect(() => {
+    setViewModeState((prev) => (prev === urlViewMode ? prev : urlViewMode));
+  }, [urlViewMode]);
+
 
   // Cards is the only results view — Similar / Deck Ideas / Explain removed.
   const activeTab: ResultsTab = 'cards';
