@@ -676,6 +676,7 @@ const Index = () => {
                   </ScryfallQueryDisclosure>
                 }
               />
+              </div>
             )}
           </div>
 
