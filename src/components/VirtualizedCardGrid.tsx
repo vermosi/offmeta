@@ -77,33 +77,12 @@ interface VirtualizedCardGridProps {
   isFetchingNextPage?: boolean;
 }
 
-const GAP = 16;
-// Magic card aspect ratio: width / height = 2.5 / 3.5 ≈ 0.714
-const CARD_ASPECT_RATIO = 2.5 / 3.5;
-// Max card width to prevent cards from growing too large when filtering
-const MAX_CARD_WIDTH = 280;
-
-function buildVirtualizedRowKey(
-  cards: ScryfallCard[],
-  columns: number,
-  cardHeight: number,
-  index: number,
-): string {
-  const startIndex = index * columns;
-  const rowCardIds = cards
-    .slice(startIndex, startIndex + columns)
-    .map((card) => card.id)
-    .join('|');
-
-  return `${columns}-${cardHeight}-${index}-${rowCardIds}`;
-}
-
-// Responsive column breakpoints (max 4 columns)
 const BREAKPOINTS = [
-  { minWidth: 1024, columns: 4 }, // lg+
-  { minWidth: 768, columns: 3 }, // md
-  { minWidth: 0, columns: 2 },   // mobile
+  { minWidth: 1024, columns: 4, gap: 20 }, // lg+
+  { minWidth: 768, columns: 3, gap: 16 },  // md
+  { minWidth: 0, columns: 2, gap: 12 },    // mobile
 ];
+
 
 export function VirtualizedCardGrid({
   cards,
