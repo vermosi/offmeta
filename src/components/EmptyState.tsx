@@ -154,11 +154,7 @@ function buildAppliedChips(filters: FilterState | null | undefined): Chip[] {
       patch: { ownedOnly: false },
     });
   }
-  if (
-    filters.sortBy &&
-    filters.sortBy !== 'relevance-desc' &&
-    filters.sortBy !== 'name-asc'
-  ) {
+  if (filters.sortBy && filters.sortBy !== 'relevance-desc') {
     chips.push({
       key: `sort-${filters.sortBy}`,
       // Sort chip label rendered separately via t() in the JSX (kept generic here).

@@ -138,7 +138,7 @@ export function SearchResultsArea({
   const { user } = useAuth();
   const { hadFastClick, hadRefinement } = getSearchRankingSignals(originalQuery);
   // Only the explicit "relevance" sort defers ordering to the intelligence reranker.
-  // Every other sort (including the default name-asc) is an explicit user ordering.
+  // Every other sort (including name-asc) is an explicit user ordering.
   const hasCustomSort = !!activeSort && activeSort !== 'relevance-desc';
   const rankedCards = useMemo(
     () =>
@@ -169,7 +169,7 @@ export function SearchResultsArea({
   );
   const virtualizedGridKey = useMemo(
     () =>
-      `${activeSort ?? 'name-asc'}:${rankedCards.length}:${rankedCards
+      `${activeSort ?? 'relevance-desc'}:${rankedCards.length}:${rankedCards
         .slice(0, 12)
         .map((card) => card.id)
         .join('|')}`,

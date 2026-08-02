@@ -16,7 +16,7 @@ describe('buildServerSideFilterQuery', () => {
     colors: [],
     types: [],
     cmcRange: [0, 16],
-    sortBy: 'name-asc',
+    sortBy: 'relevance-desc',
   };
 
   it('returns empty string for null/undefined filters', () => {
@@ -85,8 +85,8 @@ describe('buildServerSideFilterQuery', () => {
   });
 
   describe('sorting', () => {
-    it('ignores default sort (name-asc)', () => {
-      const filters: FilterState = { ...defaultFilters, sortBy: 'name-asc' };
+    it('ignores default sort (relevance-desc)', () => {
+      const filters: FilterState = { ...defaultFilters, sortBy: 'relevance-desc' };
       expect(buildServerSideFilterQuery(filters)).toBe('');
     });
 
@@ -161,7 +161,7 @@ describe('hasActiveServerFilters', () => {
     colors: [],
     types: [],
     cmcRange: [0, 16],
-    sortBy: 'name-asc',
+    sortBy: 'relevance-desc',
   };
 
   it('returns false for null/undefined', () => {

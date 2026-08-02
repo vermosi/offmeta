@@ -103,7 +103,7 @@ describe('SearchFilters', () => {
 
   it('renders sort dropdown with default value', () => {
     renderFilters();
-    expect(screen.getByText('Name (A→Z)')).toBeInTheDocument();
+    expect(screen.getByText('Best match')).toBeInTheDocument();
   });
 
   it('calls onFilteredCards with all cards when no filters active', () => {
@@ -234,8 +234,21 @@ describe('SearchFilters', () => {
     expect(screen.getByText('Mana Value')).toBeInTheDocument();
   });
 
-  it('sorts cards by default name A-Z', () => {
+  it('preserves input order under the default best-match sort', () => {
     const { onFilteredCards } = renderFilters();
+    const lastCall =
+      onFilteredCards.mock.calls[onFilteredCards.mock.calls.length - 1];
+    const [filteredCards] = lastCall;
+    const names = filteredCards.map((c: ScryfallCard) => c.name);
+    expect(names).toEqual(['Alpha', 'Beta', 'Gamma', 'Delta']);
+  });
+
+  it('sorts cards by name A-Z when selected', () => {
+    const { onFilteredCards } = renderFilters();
+    const sortTrigger = screen.getByRole('combobox', { name: /Sort/i });
+    fireEvent.click(sortTrigger);
+    const nameOption = screen.getByRole('option', { name: 'Name (A→Z)' });
+    fireEvent.click(nameOption);
     const lastCall =
       onFilteredCards.mock.calls[onFilteredCards.mock.calls.length - 1];
     const [filteredCards] = lastCall;
