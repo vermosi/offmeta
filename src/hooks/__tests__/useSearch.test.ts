@@ -138,7 +138,7 @@ describe('useSearch', () => {
 
     expect(result.current.initialUrlFilters).toEqual({
       colors: ['W', 'U'],
-      types: ['creature'],
+      types: ['Creature'],
       sortBy: 'price-asc',
       cmcRange: [2, 5],
     });
