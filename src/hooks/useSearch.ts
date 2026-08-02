@@ -6,7 +6,12 @@
 
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
-import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
+import {
+  useSearchParams,
+  useParams,
+  useNavigate,
+  useNavigationType,
+} from 'react-router-dom';
 import { queryToSlug, slugToQuery } from '@/lib/search-slug';
 import { classifyFailureReason } from '@/lib/search/classifyFailure';
 import { handleZeroResultRecovery } from '@/hooks/searchRecovery';
@@ -31,16 +36,19 @@ import {
 import { createCardSearchIndex, searchCardIndex } from '@/lib/search';
 import {
   encodeFiltersToUrl,
+  filterParamsSignature,
   generateRequestId,
   incrementSearchesPerSession,
   parseFiltersFromUrl,
 } from '@/lib/search/search-state';
-import { parseQueryParam } from '@/lib/search/url-params';
+import { MAX_CMC, parseQueryParam } from '@/lib/search/url-params';
+import { DEFAULT_SORT } from '@/components/SearchFilters/constants';
 
 export function useSearch() {
   const [searchParams, setSearchParams] = useSearchParams();
   const params = useParams<{ slug?: string }>();
   const navigate = useNavigate();
+  const navigationType = useNavigationType();
   const urlQuery = parseQueryParam(searchParams.get('q'));
   const slugQuery = params.slug ? slugToQuery(params.slug) : '';
   const effectiveUrlQuery = slugQuery || urlQuery;
@@ -696,6 +704,39 @@ export function useSearch() {
     });
   }, [originalQuery]);
 
+  // --- Browser back/forward for filter params ---
+  // `lastFilterSignatureRef` tracks the last filter signature *we* wrote, so a
+  // history navigation (which changes the URL without going through
+  // `handleFilteredCards`) can be detected and pushed back into filter state.
+  const lastFilterSignatureRef = useRef(filterParamsSignature(searchParams));
+  const currentFilterSignature = filterParamsSignature(searchParams);
+  // Timestamp until which filter state is considered "restoring" from a
+  // history entry. Writes during this window must never push, otherwise the
+  // forward stack is discarded while the toolbar catches up with the URL.
+  const restoringUntilRef = useRef(0);
+
+  useEffect(() => {
+    if (currentFilterSignature === lastFilterSignatureRef.current) return;
+    lastFilterSignatureRef.current = currentFilterSignature;
+    // Only react to genuine history navigations; PUSH/REPLACE come from us.
+    if (navigationType !== 'POP') return;
+
+    restoringUntilRef.current = Date.now() + 1000;
+
+    const parsed = parseFiltersFromUrl(searchParams);
+    // Send a complete state (not a sparse patch) so params removed by going
+    // back are reset to their defaults instead of lingering.
+    setPendingFilterOverride({
+      colors: parsed?.colors ?? [],
+      types: parsed?.types ?? [],
+      sortBy: parsed?.sortBy ?? DEFAULT_SORT,
+      format: parsed?.format,
+      ownedOnly: parsed?.ownedOnly ?? false,
+      cmcRange: parsed?.cmcRange ?? [0, MAX_CMC],
+    });
+    setFilterOverrideKey((k) => k + 1);
+  }, [currentFilterSignature, navigationType, searchParams]);
+
   const handleFilteredCards = useCallback(
     (
       filtered: ScryfallCard[],
@@ -706,17 +747,21 @@ export function useSearch() {
       setHasActiveFilters(filtersActive);
       setActiveFilters(filters);
 
-      // Sync filters to URL
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev);
-          // Always encode: sort is not counted as an "active filter"
-          // but must still survive refresh/share.
-          encodeFiltersToUrl(next, filters);
-          return next;
-        },
-        { replace: true },
-      );
+      const isRestoring = Date.now() < restoringUntilRef.current;
+
+      // Sync filters to URL. A real change pushes a history entry so browser
+      // back/forward steps through filter states; no-op writes replace.
+      // Params are computed eagerly (not via the functional updater) because
+      // the `replace` option is evaluated before the updater runs.
+      const next = new URLSearchParams(window.location.search);
+      // Always encode: sort is not counted as an "active filter"
+      // but must still survive refresh/share.
+      encodeFiltersToUrl(next, filters);
+      const signature = filterParamsSignature(next);
+      const isChange = !isRestoring && signature !== lastFilterSignatureRef.current;
+      lastFilterSignatureRef.current = signature;
+      setSearchParams(next, { replace: !isChange });
+
     },
     [setSearchParams],
   );
@@ -748,6 +793,7 @@ export function useSearch() {
       (prev) => {
         const next = new URLSearchParams(prev);
         encodeFiltersToUrl(next, null);
+        lastFilterSignatureRef.current = filterParamsSignature(next);
         return next;
       },
       { replace: true },
