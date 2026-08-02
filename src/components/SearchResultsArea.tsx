@@ -234,7 +234,7 @@ export function SearchResultsArea({
                   </div>
                 ) : (
                   <div
-                    className="grid grid-cols-2 min-[480px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 content-visibility-auto"
+                    className="grid grid-cols-2 min-[480px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5 lg:gap-6 content-visibility-auto"
                     role="list"
                     aria-label="Search results"
                     data-testid="standard-grid"
