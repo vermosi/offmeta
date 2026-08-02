@@ -68,9 +68,6 @@ interface SearchResultsAreaProps {
   fetchNextPage: () => void;
   handleCardClick: (card: ScryfallCard, index: number) => void;
   handleTryExample: (query: string) => void;
-  compareMode: boolean;
-  toggleCompareCard: (card: ScryfallCard) => void;
-  isCardSelected: (id: string) => boolean;
   collectionLookup?: Map<string, number>;
   loadMoreRef: React.RefObject<HTMLDivElement | null>;
   getRovingProps: (index: number) => {
@@ -117,9 +114,6 @@ export function SearchResultsArea({
   fetchNextPage,
   handleCardClick,
   handleTryExample,
-  compareMode,
-  toggleCompareCard,
-  isCardSelected,
   collectionLookup = EMPTY_COLLECTION_LOOKUP,
   loadMoreRef,
   getRovingProps,
@@ -281,49 +275,20 @@ export function SearchResultsArea({
                       return (
                         <div
                           key={card.id}
-                          className={`animate-reveal relative ${compareMode ? '' : 'contain-layout'}`}
+                          className="animate-reveal relative contain-layout"
                           role="listitem"
                           style={{
                             animationDelay: `${Math.min(index * 25, 300)}ms`,
-                            ...(compareMode
-                              ? {}
-                              : {
-                                  contentVisibility: 'auto',
-                                  containIntrinsicSize: '0 200px',
-                                }),
+                            contentVisibility: 'auto',
+                            containIntrinsicSize: '0 200px',
                           }}
                           ref={rovingProps.ref}
                           onKeyDown={rovingProps.onKeyDown}
                           onFocus={rovingProps.onFocus}
                         >
-                          {compareMode && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleCompareCard(card);
-                              }}
-                              className={`absolute top-2 left-2 z-10 h-6 w-6 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all ${
-                                isCardSelected(card.id)
-                                  ? 'bg-primary border-primary text-primary-foreground'
-                                  : 'bg-card/80 border-border/60 text-muted-foreground hover:border-primary/50'
-                              }`}
-                              aria-label={
-                                isCardSelected(card.id)
-                                  ? t('compare.removeFrom')
-                                  : t('compare.addTo')
-                              }
-                              tabIndex={-1}
-                            >
-                              {isCardSelected(card.id) ? '✓' : '+'}
-                            </button>
-                          )}
                           <CardItem
                             card={card}
-                            onClick={() =>
-                              compareMode
-                                ? toggleCompareCard(card)
-                                : handleCardClick(card, index)
-                            }
+                            onClick={() => handleCardClick(card, index)}
                             tabIndex={rovingProps.tabIndex}
                             isOwned={collectionLookup.has(card.name)}
                             sparklineData={sparklineMap?.get(card.name)}

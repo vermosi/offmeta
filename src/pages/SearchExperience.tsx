@@ -99,21 +99,12 @@ const SearchResultsArea = lazy(() =>
     default: m.SearchResultsArea,
   })),
 );
-const CompareBar = lazy(() =>
-  import('@/components/CompareBar').then((m) => ({ default: m.CompareBar })),
-);
-const CompareModal = lazy(() =>
-  import('@/components/CompareModal').then((m) => ({
-    default: m.CompareModal,
-  })),
-);
 import { SkipLinks } from '@/components/SkipLinks';
 import { SearchProgressIndicator } from '@/components/SearchProgressIndicator';
 import { ScryfallQueryDisclosure } from '@/components/ScryfallQueryDisclosure';
 
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useAuth } from '@/hooks/useAuth';
-import { useCompare } from '@/hooks/useCompare';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { useRovingTabIndex } from '@/hooks/useRovingTabIndex';
@@ -237,25 +228,6 @@ const Index = () => {
 
 
 
-  // Card comparison
-  const {
-    compareCards,
-    compareOpen,
-    toggleCompareCard,
-    removeCompareCard,
-    clearCompare,
-    openCompare,
-    closeCompare,
-    isCardSelected,
-  } = useCompare();
-  const [compareMode, setCompareMode] = useState(false);
-
-  const handleToggleCompareMode = useCallback(() => {
-    setCompareMode((m) => {
-      if (m) clearCompare();
-      return !m;
-    });
-  }, [clearCompare]);
 
   // Keyboard shortcuts
   const focusSearch = useCallback(() => {
@@ -700,8 +672,6 @@ const Index = () => {
                 onFilteredCards={handleFilteredCards}
                 viewMode={viewMode}
                 onViewModeChange={setViewMode}
-                compareMode={compareMode}
-                onToggleCompareMode={handleToggleCompareMode}
                 pendingFilterOverride={pendingFilterOverride}
                 filterOverrideKey={filterOverrideKey}
               />
@@ -731,9 +701,6 @@ const Index = () => {
                 fetchNextPage={fetchNextPage}
                 handleCardClick={handleCardClick}
                 handleTryExample={handleTryExample}
-                compareMode={compareMode}
-                toggleCompareCard={toggleCompareCard}
-                isCardSelected={isCardSelected}
                 loadMoreRef={loadMoreRef}
                 getRovingProps={getRovingProps}
                 onTrySuggestion={handleTrySuggestion}
@@ -840,17 +807,6 @@ const Index = () => {
           </Suspense>
         )}
 
-        <CompareBar
-          cards={compareCards}
-          onRemove={removeCompareCard}
-          onClear={clearCompare}
-          onCompare={openCompare}
-        />
-        <CompareModal
-          cards={compareCards}
-          open={compareOpen}
-          onClose={closeCompare}
-        />
       </div>
     </ErrorBoundary>
   );

@@ -1,6 +1,6 @@
 /**
  * Toolbar row shown above search results: filters, view toggle,
- * compare mode, share, export, and result stats.
+ * share, export, and result stats.
  * Compact single-row layout on mobile; secondary actions in overflow menu.
  * @module components/ResultsToolbar
  */
@@ -10,7 +10,7 @@ import { ViewToggle } from '@/components/ViewToggle';
 import { ExportResults } from '@/components/ExportResults';
 import { ShareSearchButton } from '@/components/ShareSearchButton';
 import { ResultsStats } from '@/components/ResultsStats';
-import { GitCompareArrows, MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
@@ -32,8 +32,6 @@ interface ResultsToolbarProps {
   onFilteredCards: (cards: ScryfallCard[], hasActiveFilters: boolean, filters: FilterState) => void;
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
-  compareMode: boolean;
-  onToggleCompareMode: () => void;
   pendingFilterOverride?: Partial<FilterState> | null;
   filterOverrideKey?: number;
 }
@@ -48,8 +46,6 @@ export function ResultsToolbar({
   onFilteredCards,
   viewMode,
   onViewModeChange,
-  compareMode,
-  onToggleCompareMode,
   pendingFilterOverride,
   filterOverrideKey,
 }: ResultsToolbarProps) {
@@ -71,21 +67,6 @@ export function ResultsToolbar({
         />
 
         <ViewToggle value={viewMode} onChange={onViewModeChange} />
-
-        {/* Compare — icon-only on mobile */}
-        <button
-          onClick={onToggleCompareMode}
-          className={`flex items-center gap-1 py-1 px-1.5 sm:px-2.5 text-xs rounded-md transition-colors ${
-            compareMode
-              ? 'bg-primary/10 text-primary border border-primary/30'
-              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-          }`}
-          aria-pressed={compareMode}
-          aria-label={t('compare.label')}
-        >
-          <GitCompareArrows className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">{t('compare.label')}</span>
-        </button>
 
         <div className="flex-1" />
 
