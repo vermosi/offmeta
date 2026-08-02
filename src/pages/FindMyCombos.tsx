@@ -10,7 +10,7 @@ import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { supabase } from '@/integrations/supabase/client';
+import { invokeComboSearch } from '@/services/combo-search';
 import { applySeoMeta, injectJsonLd } from '@/lib/seo';
 import { ManaSymbol } from '@/components/ManaSymbol';
 import { useTranslation } from '@/lib/i18n/useTranslation';
@@ -172,19 +172,21 @@ export default function FindMyCombos() {
     setError(null);
     try {
       const commanders = commander ? [commander] : [];
-      const { data, error: fnError } = await supabase.functions.invoke(
-        'combo-search',
+      const data = await invokeComboSearch<ComboResults>(
         {
-          body: {
-            action: 'deck',
-            commanders,
-            cards: cardNames,
+          action: 'deck',
+          commanders,
+          cards: cardNames,
+        },
+        {
+          onRetry: (delayMs) => {
+            toast.info(
+              `Too many requests — retrying in ${Math.ceil(delayMs / 1000)}s`,
+            );
           },
         },
       );
-      if (fnError) throw fnError;
-      if (data?.error) throw new Error(data.error);
-      setResults(data as ComboResults);
+      setResults(data);
       clearFilters();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to find combos');

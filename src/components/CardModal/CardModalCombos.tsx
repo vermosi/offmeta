@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useReducer } from 'react';
 import { useTranslation } from '@/lib/i18n';
-import { supabase } from '@/integrations/supabase/client';
+import { invokeComboSearch } from '@/services/combo-search';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -94,22 +94,22 @@ export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
     let cancelled = false;
     dispatch({ type: 'FETCH' });
 
-    supabase.functions
-      .invoke('combo-search', {
-        body: { action: 'card', cardName },
-      })
-      .then(({ data, error: fnError }) => {
+    invokeComboSearch<{ success?: boolean; combos?: Combo[]; total?: number; error?: string }>({
+      action: 'card',
+      cardName,
+    })
+      .then((data) => {
         if (cancelled) return;
-        if (fnError) {
-          logger.warn('Combo search error', fnError);
-          dispatch({ type: 'ERROR', error: 'Could not load combos' });
-          return;
-        }
         if (data?.success) {
           dispatch({ type: 'SUCCESS', combos: data.combos || [], total: data.total || 0 });
         } else {
           dispatch({ type: 'ERROR', error: data?.error || 'Unknown error' });
         }
+      })
+      .catch((fnError: unknown) => {
+        if (cancelled) return;
+        logger.warn('Combo search error', fnError);
+        dispatch({ type: 'ERROR', error: 'Could not load combos' });
       });
 
     return () => {
