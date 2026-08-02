@@ -710,12 +710,18 @@ export function useSearch() {
   // `handleFilteredCards`) can be detected and pushed back into filter state.
   const lastFilterSignatureRef = useRef(filterParamsSignature(searchParams));
   const currentFilterSignature = filterParamsSignature(searchParams);
+  // Set while filter state is being restored from a history entry, so the
+  // resulting filter callbacks don't write to the URL and clobber the
+  // forward history stack.
+  const restoringFromHistoryRef = useRef(false);
 
   useEffect(() => {
     if (currentFilterSignature === lastFilterSignatureRef.current) return;
     lastFilterSignatureRef.current = currentFilterSignature;
     // Only react to genuine history navigations; PUSH/REPLACE come from us.
     if (navigationType !== 'POP') return;
+
+    restoringFromHistoryRef.current = true;
 
     const parsed = parseFiltersFromUrl(searchParams);
     // Send a complete state (not a sparse patch) so params removed by going
@@ -740,6 +746,16 @@ export function useSearch() {
       setFilteredCards(filtered);
       setHasActiveFilters(filtersActive);
       setActiveFilters(filters);
+
+      // While restoring a history entry the URL is already correct — writing
+      // it again would drop the forward stack.
+      if (restoringFromHistoryRef.current) {
+        restoringFromHistoryRef.current = false;
+        lastFilterSignatureRef.current = filterParamsSignature(
+          new URLSearchParams(window.location.search),
+        );
+        return;
+      }
 
       // Sync filters to URL. A real change pushes a history entry so browser
       // back/forward steps through filter states; no-op writes replace.
