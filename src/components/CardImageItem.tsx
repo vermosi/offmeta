@@ -82,6 +82,8 @@ export const CardImageItem = memo(function CardImageItem({
         height={680}
         className="w-full h-full object-cover"
       />
-    </button>
+      </button>
+    </div>
+
   );
 });
