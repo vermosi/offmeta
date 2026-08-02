@@ -4,6 +4,7 @@
  */
 
 import { memo } from 'react';
+import { Maximize2 } from 'lucide-react';
 import type { ScryfallCard } from '@/types/card';
 import { getCardImage } from '@/lib/scryfall/client';
 import { getLocalizedName } from '@/lib/scryfall/localized';
@@ -12,6 +13,7 @@ import { useTranslation } from '@/lib/i18n';
 interface CardImageItemProps {
   card: ScryfallCard;
   onClick: () => void;
+  onZoom?: () => void;
   tabIndex?: number;
   isOwned?: boolean;
 }
@@ -19,6 +21,7 @@ interface CardImageItemProps {
 export const CardImageItem = memo(function CardImageItem({
   card,
   onClick,
+  onZoom,
   tabIndex = 0,
   isOwned,
 }: CardImageItemProps) {
@@ -27,13 +30,29 @@ export const CardImageItem = memo(function CardImageItem({
   const { locale } = useTranslation();
   const displayName = getLocalizedName(card, locale);
   return (
-    <button
-      onClick={onClick}
-      tabIndex={tabIndex}
-      data-testid="search-result-card"
-      className="relative aspect-[2.5/3.5] rounded-lg overflow-hidden bg-secondary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-transform duration-200 hover:scale-[1.03] w-full"
-      aria-label={`View ${displayName}`}
-    >
+    <div className="relative group">
+      {onZoom && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onZoom();
+          }}
+          tabIndex={-1}
+          className="absolute top-1.5 right-1.5 z-10 h-7 w-7 rounded-md bg-background/80 backdrop-blur-sm border border-border/60 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+          aria-label={`Enlarge image of ${displayName}`}
+        >
+          <Maximize2 className="h-3.5 w-3.5" />
+        </button>
+      )}
+      <button
+        onClick={onClick}
+        tabIndex={tabIndex}
+        data-testid="search-result-card"
+        className="relative aspect-[2.5/3.5] rounded-lg overflow-hidden bg-secondary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-transform duration-200 hover:scale-[1.03] w-full"
+        aria-label={`View details for ${displayName}`}
+      >
+
       {isOwned && (
         <div
           className="absolute top-1.5 left-1.5 z-10 h-5 w-5 rounded-full bg-success/90 flex items-center justify-center shadow-sm"
@@ -63,6 +82,8 @@ export const CardImageItem = memo(function CardImageItem({
         height={680}
         className="w-full h-full object-cover"
       />
-    </button>
+      </button>
+    </div>
+
   );
 });
