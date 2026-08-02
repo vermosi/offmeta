@@ -6,6 +6,7 @@
 import { useState, useEffect, useReducer } from 'react';
 import { useTranslation } from '@/lib/i18n';
 import { invokeComboSearch } from '@/services/combo-search';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -88,15 +89,17 @@ export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
 
   const { combos, total, isLoading, error } = state;
 
+  const debouncedCardName = useDebouncedValue(cardName, 300);
+
   useEffect(() => {
-    if (!cardName) return;
+    if (!debouncedCardName) return;
 
     let cancelled = false;
     dispatch({ type: 'FETCH' });
 
     invokeComboSearch<{ success?: boolean; combos?: Combo[]; total?: number; error?: string }>({
       action: 'card',
-      cardName,
+      cardName: debouncedCardName,
     })
       .then((data) => {
         if (cancelled) return;
@@ -115,7 +118,7 @@ export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
     return () => {
       cancelled = true;
     };
-  }, [cardName]);
+  }, [debouncedCardName]);
 
   if (isLoading) {
     return (

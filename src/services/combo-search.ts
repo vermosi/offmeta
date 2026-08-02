@@ -58,17 +58,62 @@ async function readRateLimit(error: unknown): Promise<RateLimitInfo> {
   return { isRateLimited: true, retryAfterMs };
 }
 
-/**
- * Invokes the `combo-search` edge function, retrying automatically when the
- * server responds with 429 and honouring its `retryAfter` value.
- */
-export async function invokeComboSearch<T>(
+/** Minimum spacing between outbound combo-search requests. */
+const MIN_REQUEST_INTERVAL_MS = 500;
+/** How long an identical response stays reusable. */
+const CACHE_TTL_MS = 30_000;
+const MAX_CACHE_ENTRIES = 50;
+
+const inFlight = new Map<string, Promise<unknown>>();
+const cache = new Map<string, { value: unknown; expiresAt: number }>();
+let lastRequestAt = 0;
+let throttleChain: Promise<void> = Promise.resolve();
+
+const cacheKey = (body: Record<string, unknown>) => JSON.stringify(body);
+
+/** Serialises requests so no two calls leave within MIN_REQUEST_INTERVAL_MS. */
+function throttleSlot(): Promise<void> {
+  const next = throttleChain.then(async () => {
+    const wait = MIN_REQUEST_INTERVAL_MS - (Date.now() - lastRequestAt);
+    if (wait > 0) await sleep(wait);
+    lastRequestAt = Date.now();
+  });
+  throttleChain = next.catch(() => undefined);
+  return next;
+}
+
+function readCache<T>(key: string): T | undefined {
+  const hit = cache.get(key);
+  if (!hit) return undefined;
+  if (hit.expiresAt < Date.now()) {
+    cache.delete(key);
+    return undefined;
+  }
+  return hit.value as T;
+}
+
+function writeCache(key: string, value: unknown): void {
+  if (cache.size >= MAX_CACHE_ENTRIES) {
+    const oldest = cache.keys().next().value;
+    if (oldest !== undefined) cache.delete(oldest);
+  }
+  cache.set(key, { value, expiresAt: Date.now() + CACHE_TTL_MS });
+}
+
+/** Clears cached combo-search responses (used by tests and manual refresh). */
+export function clearComboSearchCache(): void {
+  cache.clear();
+  inFlight.clear();
+}
+
+async function requestComboSearch<T>(
   body: Record<string, unknown>,
-  options: ComboSearchOptions = {},
+  options: ComboSearchOptions,
 ): Promise<T> {
   const { maxRetries = MAX_RETRIES, onRetry, signal } = options;
 
   for (let attempt = 0; ; attempt += 1) {
+    await throttleSlot();
     const { data, error } = await supabase.functions.invoke('combo-search', { body });
 
     if (!error) {
@@ -86,3 +131,36 @@ export async function invokeComboSearch<T>(
     await sleep(retryAfterMs, signal);
   }
 }
+
+/**
+ * Invokes the `combo-search` edge function with:
+ * - retries that honour the server's 429 `retryAfter` value
+ * - de-duplication of identical concurrent requests
+ * - a short-lived response cache
+ * - client-side throttling between outbound calls
+ */
+export function invokeComboSearch<T>(
+  body: Record<string, unknown>,
+  options: ComboSearchOptions = {},
+): Promise<T> {
+  const key = cacheKey(body);
+
+  const cached = readCache<T>(key);
+  if (cached !== undefined) return Promise.resolve(cached);
+
+  const pending = inFlight.get(key);
+  if (pending) return pending as Promise<T>;
+
+  const promise = requestComboSearch<T>(body, options)
+    .then((value) => {
+      writeCache(key, value);
+      return value;
+    })
+    .finally(() => {
+      inFlight.delete(key);
+    });
+
+  inFlight.set(key, promise);
+  return promise;
+}
+
