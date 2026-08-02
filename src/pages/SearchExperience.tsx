@@ -893,6 +893,32 @@ const Index = () => {
               />
             </Suspense>
           )}
+
+          {/* Follow-up discovery — moved below results to keep the top clean */}
+          {hasSearched &&
+            !isSearching &&
+            totalCards > 0 &&
+            activeTab === 'cards' && (
+              <div className="container-main space-y-3 pt-6">
+                <Suspense fallback={null}>
+                  <RelatedSearchesSection
+                    originalQuery={originalQuery}
+                    intent={lastSearchResult?.intent || lastIntent}
+                    topCard={cards[0]}
+                    onRefine={handleTryExample}
+                  />
+                </Suspense>
+                <Suspense fallback={null}>
+                  <SearchNextActions
+                    intent={lastSearchResult?.intent || lastIntent}
+                    originalQuery={originalQuery}
+                    totalCards={totalCards}
+                    isDeckQuery={isDeckQuery}
+                    queryQualityScore={queryQualityScore}
+                  />
+                </Suspense>
+              </div>
+            )}
         </main>
 
         {!hasSearched && (
