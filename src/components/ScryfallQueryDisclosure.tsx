@@ -40,30 +40,37 @@ export function ScryfallQueryDisclosure({
       : scryfallQuery;
 
   return (
-    <div className={cn(open && 'rounded-lg border border-border/60 bg-card/40')}>
+    <div
+      className={cn(
+        'overflow-hidden rounded-lg border border-border/60 bg-background/50 transition-colors',
+        'hover:border-border',
+      )}
+    >
       <button
         type="button"
         onClick={handleToggle}
         aria-expanded={open}
         aria-controls="scryfall-query-panel"
         className={cn(
-          'group inline-flex max-w-full items-center gap-1.5 text-left transition-colors rounded',
-          'text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
-          open ? 'w-full px-3 py-2' : 'py-0.5',
+          'group flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
         )}
       >
-        <Code2 className="h-3 w-3 shrink-0" aria-hidden="true" />
+        <Code2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
         {!open && scryfallQuery ? (
-          <code className="min-w-0 truncate font-mono text-[11px] text-foreground/70 group-hover:text-foreground/90">
-            {preview}
+          <code className="min-w-0 truncate font-mono text-[11px] text-primary">
+            <span className="text-muted-foreground">q:</span> {preview}
           </code>
         ) : (
-          <span className="text-[11px] font-medium">
+          <span className="text-[11px] font-medium text-muted-foreground">
             {t('search.scryfallQuery.label', 'Scryfall query')}
           </span>
         )}
         <ChevronDown
-          className={cn('h-3 w-3 shrink-0 transition-transform', open && 'rotate-180')}
+          className={cn(
+            'ml-auto h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-150',
+            open && 'rotate-180',
+          )}
           aria-hidden="true"
         />
       </button>

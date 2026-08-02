@@ -633,6 +633,24 @@ const Index = () => {
                       )}
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {cards.length > 0 && !isSearching && (
+              <ResultsToolbar
+                cards={cards}
+                displayCards={displayCards}
+                totalCards={totalCards}
+                activeFilters={activeFilters}
+                filtersResetKey={filtersResetKey}
+                initialUrlFilters={initialUrlFilters}
+                onFilteredCards={handleFilteredCards}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                pendingFilterOverride={pendingFilterOverride}
+                filterOverrideKey={filterOverrideKey}
+                queryStrip={
                   <ScryfallQueryDisclosure
                     scryfallQuery={(
                       lastSearchResult?.scryfallQuery || searchQuery
@@ -655,24 +673,7 @@ const Index = () => {
                       }
                     />
                   </ScryfallQueryDisclosure>
-                </div>
-              </div>
-            )}
-
-            {cards.length > 0 && !isSearching && (
-
-              <ResultsToolbar
-                cards={cards}
-                displayCards={displayCards}
-                totalCards={totalCards}
-                activeFilters={activeFilters}
-                filtersResetKey={filtersResetKey}
-                initialUrlFilters={initialUrlFilters}
-                onFilteredCards={handleFilteredCards}
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-                pendingFilterOverride={pendingFilterOverride}
-                filterOverrideKey={filterOverrideKey}
+                }
               />
             )}
           </div>
