@@ -749,43 +749,8 @@ const Index = () => {
               </div>
             )}
 
-            {hasSearched && !isSearching && (
-              <div className="animate-reveal">
-                <SearchRefinementStrip
-                  originalQuery={originalQuery}
-                  searchQuery={searchQuery}
-                  activeFilters={activeFilters}
-                  onRefineQuery={handleRerunEditedQuery}
-                  onRemoveFilter={applyFilterPatch}
-                  onClearAllFilters={clearAllFilters}
-                />
-              </div>
-            )}
+            {cards.length > 0 && !isSearching && (
 
-            {hasSearched && !isSearching && displayCards.length > 0 && (
-              <div className="animate-reveal">
-                <ResultFacetAggregationStrip
-                  cards={displayCards}
-                  searchQuery={searchQuery}
-                  onRefine={handleRerunEditedQuery}
-                />
-              </div>
-            )}
-
-            {/* Results Tabs */}
-            {hasSearched && !isSearching && (
-              <div className="animate-reveal">
-                <ResultsTabs
-                  activeTab={activeTab}
-                  onTabChange={handleTabChange}
-                  showSimilar={showSimilarTab}
-                  showDeckIdeas={showDeckIdeasTab}
-                  showExplanation={showExplanationTab}
-                />
-              </div>
-            )}
-
-            {cards.length > 0 && !isSearching && activeTab === 'cards' && (
               <ResultsToolbar
                 cards={cards}
                 displayCards={displayCards}
