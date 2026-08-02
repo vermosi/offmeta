@@ -61,7 +61,7 @@ async function readRateLimit(error: unknown): Promise<RateLimitInfo> {
 /** Minimum spacing between outbound combo-search requests. */
 const MIN_REQUEST_INTERVAL_MS = 500;
 /** How long an identical response stays reusable. */
-const CACHE_TTL_MS = 30_000;
+const CACHE_TTL_MS = 120_000;
 const MAX_CACHE_ENTRIES = 50;
 
 const inFlight = new Map<string, Promise<unknown>>();
@@ -69,7 +69,33 @@ const cache = new Map<string, { value: unknown; expiresAt: number }>();
 let lastRequestAt = 0;
 let throttleChain: Promise<void> = Promise.resolve();
 
-const cacheKey = (body: Record<string, unknown>) => JSON.stringify(body);
+/** Normalises a value so equivalent params produce an identical cache key. */
+function normalizeParam(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => normalizeParam(item))
+      .filter((item) => item !== undefined && item !== null && item !== "")
+      .map((item) => (typeof item === "string" ? item.trim().toLowerCase() : item))
+      .sort((a, b) => String(a).localeCompare(String(b)));
+  }
+  if (typeof value === "string") return value.trim().toLowerCase();
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .filter(([, v]) => v !== undefined)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([k, v]) => [k, normalizeParam(v)]),
+    );
+  }
+  return value;
+}
+
+/** Builds a stable cache key from the request parameters (order-insensitive). */
+export const comboSearchCacheKey = (body: Record<string, unknown>) =>
+  JSON.stringify(normalizeParam(body));
+
+const cacheKey = comboSearchCacheKey;
+
 
 /** Serialises requests so no two calls leave within MIN_REQUEST_INTERVAL_MS. */
 function throttleSlot(): Promise<void> {
