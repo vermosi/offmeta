@@ -114,6 +114,10 @@ export function VirtualizedCardGrid({
   onLoadMore,
   hasNextPage,
   isFetchingNextPage,
+  isFetchNextPageError,
+  error,
+  isError,
+  onRetry,
 }: VirtualizedCardGridProps) {
   const parentRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ columns: 4, cardWidth: 200, gap: 16 });
