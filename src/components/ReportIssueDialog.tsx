@@ -127,7 +127,7 @@ export function ReportIssueDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[85vh] w-[calc(100vw-2rem)] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t('report.title', 'Report Search Issue')}</DialogTitle>
           <DialogDescription>
@@ -137,7 +137,7 @@ export function ReportIssueDialog({
             )}
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 pt-2">
+        <div className="min-w-0 space-y-4 pt-2">
           <ReportContextPanel
             originalQuery={originalQuery}
             compiledQuery={compiledQuery}

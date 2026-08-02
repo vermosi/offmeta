@@ -31,8 +31,8 @@ export function ReportContextPanel({
   }, [contextText]);
 
   return (
-    <div className="p-3 rounded-lg border border-border bg-secondary/50 space-y-2">
-      <div className="flex items-center justify-between">
+    <div className="min-w-0 p-3 rounded-lg border border-border bg-secondary/50 space-y-2">
+      <div className="flex flex-wrap items-center justify-between gap-1">
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
           {t('report.autoContext', 'Auto-included context')}
         </span>
@@ -70,19 +70,19 @@ export function ReportContextPanel({
       </div>
 
       {!showContext && (
-        <div className="text-xs text-muted-foreground space-y-1">
-          <p>
+        <div className="min-w-0 text-xs text-muted-foreground space-y-1">
+          <p className="break-words">
             <span className="font-medium">
               {t('report.prompt', 'Prompt:')}
             </span>{' '}
             "{originalQuery.substring(0, 50)}
             {originalQuery.length > 50 ? '...' : ''}"
           </p>
-          <p>
+          <p className="break-words">
             <span className="font-medium">
               {t('report.query', 'Query:')}
             </span>{' '}
-            <code className="bg-muted px-1 rounded">
+            <code className="bg-muted px-1 rounded break-all">
               {compiledQuery.substring(0, 40)}
               {compiledQuery.length > 40 ? '...' : ''}
             </code>
@@ -91,7 +91,7 @@ export function ReportContextPanel({
       )}
 
       {showContext && (
-        <pre className="text-[10px] bg-muted p-2 rounded overflow-auto max-h-32 font-mono">
+        <pre className="max-w-full text-[10px] bg-muted p-2 rounded overflow-auto max-h-32 font-mono whitespace-pre-wrap break-all">
           {contextText}
         </pre>
       )}
