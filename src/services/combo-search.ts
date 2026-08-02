@@ -115,16 +115,22 @@ function readCache<T>(key: string): T | undefined {
     cache.delete(key);
     return undefined;
   }
+  // Refresh recency so frequently reused entries survive LRU eviction.
+  cache.delete(key);
+  cache.set(key, hit);
   return hit.value as T;
 }
 
 function writeCache(key: string, value: unknown): void {
-  if (cache.size >= MAX_CACHE_ENTRIES) {
+  cache.delete(key);
+  while (cache.size >= MAX_CACHE_ENTRIES) {
     const oldest = cache.keys().next().value;
-    if (oldest !== undefined) cache.delete(oldest);
+    if (oldest === undefined) break;
+    cache.delete(oldest);
   }
   cache.set(key, { value, expiresAt: Date.now() + CACHE_TTL_MS });
 }
+
 
 /** Clears cached combo-search responses (used by tests and manual refresh). */
 export function clearComboSearchCache(): void {
