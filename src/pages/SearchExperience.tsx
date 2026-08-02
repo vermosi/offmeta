@@ -313,14 +313,13 @@ const Index = () => {
 
   const rovingActivate = useCallback(
     (index: number) => {
-      if (viewMode === 'images') {
-        openLightbox(index);
-      } else if (displayCards[index]) {
+      if (displayCards[index]) {
         handleCardClick(displayCards[index], index);
       }
     },
-    [viewMode, displayCards, handleCardClick, openLightbox],
+    [displayCards, handleCardClick],
   );
+
 
   const { getRovingProps } = useRovingTabIndex({
     itemCount: displayCards.length,
