@@ -270,7 +270,8 @@ export function SearchResultsArea({
                         >
                           <CardImageItem
                             card={card}
-                            onClick={() => openLightbox(index)}
+                            onClick={() => handleCardClick(card, index)}
+                            onZoom={() => openLightbox(index)}
                             tabIndex={rovingProps.tabIndex}
                             isOwned={collectionLookup.has(card.name)}
                           />
