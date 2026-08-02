@@ -311,6 +311,10 @@ export function SearchResultsArea({
                 totalCards={totalCards}
                 showEndMessage={cards.length > 0}
                 viewMode={viewMode}
+                isFetchNextPageError={isFetchNextPageError}
+                error={error}
+                isError={isError}
+                onRetry={retryNextPage}
               />
 
 
