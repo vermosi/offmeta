@@ -143,7 +143,7 @@ async function getSharedRateLimitClient(): Promise<SupabaseClientLike | null> {
     if (!supabaseUrl || !serviceRoleKey) return null;
 
     const { createClient } = (await import(
-      /* @vite-ignore */ 'https://esm.sh/@supabase/supabase-js@2' as string
+      /* @vite-ignore */ 'npm:@supabase/supabase-js@2.58.0' as string
     )) as {
       createClient: SupabaseClientFactory;
     };
