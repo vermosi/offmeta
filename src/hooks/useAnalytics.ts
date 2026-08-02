@@ -269,6 +269,8 @@ const ALLOWED_EVENT_TYPES = [
   'share_clicked', // NEW: fired by SharePageButton / ShareSearchButton on click
   'affiliate_click',
   'pagination',
+  'pagination_error_shown',
+  'pagination_retry_clicked',
   'feedback_submitted',
   'landing_page_view',
   'homepage_view',
@@ -762,6 +764,20 @@ export function useAnalytics() {
     [trackEvent],
   );
 
+  const trackPaginationErrorShown = useCallback(
+    (data: { query: string; page_count: number; error_message?: string }) => {
+      trackEvent('pagination_error_shown', data as EventData);
+    },
+    [trackEvent],
+  );
+
+  const trackPaginationRetryClicked = useCallback(
+    (data: { query: string; page_count: number }) => {
+      trackEvent('pagination_retry_clicked', data as EventData);
+    },
+    [trackEvent],
+  );
+
   const trackFeedback = useCallback(
     (data: FeedbackEventData) => {
       trackEvent('feedback_submitted', data);
@@ -899,6 +915,8 @@ export function useAnalytics() {
     trackShareClicked,
     trackDeckClick,
     trackPagination,
+    trackPaginationErrorShown,
+    trackPaginationRetryClicked,
     trackFeedback,
     trackLandingPageView,
     trackHomePageView,

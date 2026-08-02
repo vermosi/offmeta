@@ -5,7 +5,10 @@
 
 import { useRef, useCallback, useEffect, useState } from 'react';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
+import { AlertCircle, RefreshCw, Loader2 } from 'lucide-react';
 import { CardItem } from '@/components/CardItem';
+import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/lib/i18n';
 import type { ScryfallCard } from '@/types/card';
 
 /** Track which card index has keyboard focus within the grid */
@@ -75,6 +78,8 @@ interface VirtualizedCardGridProps {
   onLoadMore?: () => void;
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
 }
 
 const CARD_ASPECT_RATIO = 2.5 / 3.5;
@@ -110,6 +115,8 @@ export function VirtualizedCardGrid({
   onLoadMore,
   hasNextPage,
   isFetchingNextPage,
+  isError,
+  onRetry,
 }: VirtualizedCardGridProps) {
   const parentRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ columns: 4, cardWidth: 200, gap: 16 });
@@ -161,20 +168,29 @@ export function VirtualizedCardGrid({
   }, []);
 
   const { columns, cardWidth, gap } = dimensions;
+  const { t } = useTranslation();
   // Use ceil to avoid underestimated row heights (which can cause overlap).
   const cardHeight = Math.ceil(cardWidth / CARD_ASPECT_RATIO);
   const rowHeight = cardHeight + gap;
   const rowCount = Math.ceil(cards.length / columns);
+  const showLoadMoreRow =
+    cards.length > 0 && (hasNextPage || isFetchingNextPage || isError);
+  const virtualRowCount = showLoadMoreRow ? rowCount + 1 : rowCount;
+  const loadMoreRowHeight = Math.max(rowHeight, 120);
 
   const rowVirtualizer = useWindowVirtualizer({
-    count: rowCount,
-    estimateSize: () => rowHeight,
+    count: virtualRowCount,
+    estimateSize: (index) =>
+      showLoadMoreRow && index === rowCount ? loadMoreRowHeight : rowHeight,
     overscan: 3,
     scrollMargin,
-    getItemKey: (index) => buildVirtualizedRowKey(cards, columns, cardHeight, gap, index),
+    getItemKey: (index) =>
+      showLoadMoreRow && index === rowCount
+        ? `load-more-${isError ? 'error' : isFetchingNextPage ? 'loading' : 'ready'}`
+        : buildVirtualizedRowKey(cards, columns, cardHeight, gap, index),
   });
 
-  // Load more when near bottom
+  // Load more when near bottom (but not when the error row is showing — user must retry)
   useEffect(() => {
     const virtualItems = rowVirtualizer.getVirtualItems();
     if (virtualItems.length === 0) return;
@@ -184,11 +200,12 @@ export function VirtualizedCardGrid({
       lastItem.index >= rowCount - 2 &&
       hasNextPage &&
       !isFetchingNextPage &&
+      !isError &&
       onLoadMore
     ) {
       onLoadMore();
     }
-  }, [rowVirtualizer, rowCount, hasNextPage, isFetchingNextPage, onLoadMore]);
+  }, [rowVirtualizer, rowCount, hasNextPage, isFetchingNextPage, isError, onLoadMore]);
 
   return (
     <div
@@ -196,7 +213,7 @@ export function VirtualizedCardGrid({
       className="w-full"
       role="grid"
       aria-label="Search results"
-      aria-rowcount={rowCount}
+      aria-rowcount={virtualRowCount}
       data-testid="virtualized-grid"
       onKeyDown={handleKeyDown}
       tabIndex={0}
@@ -209,6 +226,69 @@ export function VirtualizedCardGrid({
         }}
       >
         {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+          if (showLoadMoreRow && virtualRow.index === rowCount) {
+            return (
+              <div
+                key={virtualRow.key}
+                role="row"
+                aria-rowindex={virtualRow.index + 1}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: `${loadMoreRowHeight}px`,
+                  paddingBottom: `${gap}px`,
+                  boxSizing: 'border-box',
+                  transform: `translateY(${virtualRow.start - scrollMargin}px)`,
+                }}
+                className="flex items-center justify-center"
+              >
+                <div className="w-full max-w-2xl" role="status" aria-live="polite">
+                  {isError ? (
+                    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-destructive/20 bg-destructive/5 px-6 py-4 text-center">
+                      <div className="flex items-center gap-2 text-destructive">
+                        <AlertCircle className="h-5 w-5" aria-hidden="true" />
+                        <span className="font-medium">
+                          {t('results.loadMoreErrorTitle', "Couldn't load more cards")}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {t(
+                          'results.loadMoreErrorDescription',
+                          'This is usually a temporary Scryfall connection issue.',
+                        )}
+                      </p>
+                      {onRetry && (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={onRetry}
+                          className="gap-2"
+                          aria-label={t('results.retryButton', 'Try again')}
+                        >
+                          <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                          {t('results.retryButton', 'Try again')}
+                        </Button>
+                      )}
+                    </div>
+                  ) : isFetchingNextPage ? (
+                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                      <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+                      <span>{t('results.loadingMore', 'Loading more cards...')}</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                      <span className="text-sm">
+                        {t('results.scrollToLoad', 'Scroll to load more')}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          }
+
           const startIndex = virtualRow.index * columns;
 
           return (

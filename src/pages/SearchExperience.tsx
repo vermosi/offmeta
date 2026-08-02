@@ -157,7 +157,11 @@ const Index = () => {
     isSearching,
     hasNextPage,
     isFetchingNextPage,
+    isFetchNextPageError,
+    error,
+    isError,
     fetchNextPage,
+    retryNextPage,
     searchBarRef,
     loadMoreRef,
     handleSearch,
@@ -728,7 +732,11 @@ const Index = () => {
                 querySampleSize={queryQualitySampleSize}
                 hasNextPage={hasNextPage}
                 isFetchingNextPage={isFetchingNextPage}
+                isFetchNextPageError={isFetchNextPageError}
+                error={error}
+                isError={isError}
                 fetchNextPage={fetchNextPage}
+                retryNextPage={retryNextPage}
                 handleCardClick={handleCardClick}
                 handleTryExample={handleTryExample}
                 loadMoreRef={loadMoreRef}

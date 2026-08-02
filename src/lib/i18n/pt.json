@@ -914,6 +914,10 @@
     "results.endMessage":  "Você chegou ao fim · {count} cartas no total",
     "results.fallbackLangNotice":  "Mostrando resultados em inglês  nem todas as cartas estão disponíveis neste idioma.",
     "results.loadingMore":  "Carregando mais cartas...",
+  "results.loadMoreErrorTitle": "Couldn't load more cards",
+  "results.loadMoreErrorDescription": "This is usually a temporary Scryfall connection issue.",
+  "results.retryButton": "Try again",
+  "results.scrollToLoad": "Scroll to load more",
     "results.loadingResults":  "Carregando resultados",
     "results.noMatch":  "Nenhuma carta corresponde aos seus filtros.",
     "results.stats":  "Estatísticas",

@@ -64,7 +64,11 @@ interface SearchResultsAreaProps {
   querySampleSize: number;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
+  isFetchNextPageError?: boolean;
+  error?: Error | null;
+  isError?: boolean;
   fetchNextPage: () => void;
+  retryNextPage?: () => void;
   handleCardClick: (card: ScryfallCard, index: number) => void;
   handleTryExample: (query: string) => void;
   collectionLookup?: Map<string, number>;
@@ -110,7 +114,11 @@ export function SearchResultsArea({
   querySampleSize,
   hasNextPage,
   isFetchingNextPage,
+  isFetchNextPageError,
+  error,
+  isError,
   fetchNextPage,
+  retryNextPage,
   handleCardClick,
   handleTryExample,
   collectionLookup = EMPTY_COLLECTION_LOOKUP,
@@ -191,12 +199,14 @@ export function SearchResultsArea({
                     cards={rankedCards}
                     onCardClick={handleCardClick}
                     onLoadMore={
-                      hasNextPage && !isFetchingNextPage
+                      hasNextPage && !isFetchingNextPage && !isFetchNextPageError
                         ? fetchNextPage
                         : undefined
                     }
                     hasNextPage={hasNextPage}
                     isFetchingNextPage={isFetchingNextPage}
+                    isError={isError || isFetchNextPageError}
+                    onRetry={retryNextPage}
                   />
                 ) : viewMode === 'list' ? (
                   <div
@@ -299,6 +309,10 @@ export function SearchResultsArea({
                 totalCards={totalCards}
                 showEndMessage={cards.length > 0}
                 viewMode={viewMode}
+                isFetchNextPageError={isFetchNextPageError}
+                error={error}
+                isError={isError}
+                onRetry={retryNextPage}
               />
 
 
