@@ -144,13 +144,8 @@ async function getSharedRateLimitClient(): Promise<SupabaseClientLike | null> {
     const serviceRoleKey = DenoRef.env.get('SUPABASE_SERVICE_ROLE_KEY');
     if (!supabaseUrl || !serviceRoleKey) return null;
 
-    const { createClient } = (await import(
-      /* @vite-ignore */ 'npm:@supabase/supabase-js@2.58.0' as string
-    )) as {
-      createClient: SupabaseClientFactory;
-    };
-
-    return createClient(supabaseUrl, serviceRoleKey);
+    const factory = createClient as unknown as SupabaseClientFactory;
+    return factory(supabaseUrl, serviceRoleKey);
   })();
 
   return sharedRateLimitClientPromise;
