@@ -5,7 +5,10 @@
 
 import { useRef, useCallback, useEffect, useState } from 'react';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 import { CardItem } from '@/components/CardItem';
+import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/lib/i18n';
 import type { ScryfallCard } from '@/types/card';
 
 /** Track which card index has keyboard focus within the grid */
