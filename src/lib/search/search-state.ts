@@ -51,7 +51,7 @@ export function encodeFiltersToUrl(
 
   if (filters.colors.length > 0) params.set('colors', filters.colors.join(','));
   if (filters.types.length > 0) params.set('types', filters.types.join(','));
-  if (filters.sortBy && filters.sortBy !== 'name-asc') {
+  if (filters.sortBy && filters.sortBy !== 'relevance-desc') {
     params.set('sort', filters.sortBy);
   }
   if (filters.format) params.set('format', filters.format);
