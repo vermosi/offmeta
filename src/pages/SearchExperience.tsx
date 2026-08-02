@@ -17,8 +17,6 @@ import {
 import { useLocation } from 'react-router-dom';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
 import { Badge } from '@/components/ui/badge';
-import { SearchRefinementStrip } from '@/components/SearchRefinementStrip';
-import { ResultFacetAggregationStrip } from '@/components/ResultFacetAggregationStrip';
 const EditableQueryBar = lazy(() =>
   import('@/components/EditableQueryBar').then((m) => ({
     default: m.EditableQueryBar,
@@ -75,11 +73,6 @@ const ScrollToTop = lazy(() =>
   import('@/components/ScrollToTop').then((m) => ({ default: m.ScrollToTop })),
 );
 import { type ViewMode, getStoredViewMode } from '@/lib/view-mode-storage';
-const ResultsTabs = lazy(() =>
-  import('@/components/ResultsTabs').then((m) => ({
-    default: m.ResultsTabs,
-  })),
-);
 import type { ResultsTab } from '@/components/ResultsTabs';
 const SeoManager = lazy(() =>
   import('@/components/SeoManager').then((m) => ({ default: m.SeoManager })),
@@ -192,33 +185,13 @@ const Index = () => {
   // View mode toggle
   const [viewMode, setViewMode] = useState<ViewMode>(getStoredViewMode);
 
-  // Results tab state — initial tab may come from a shared `?tab=` link.
-  const [tabState, setTabState] = useState<{ query: string; tab: ResultsTab }>(
-    () => {
-      const initialTab = (() => {
-        if (typeof window === 'undefined') return 'cards' as ResultsTab;
-        const raw = new URLSearchParams(window.location.search).get('tab');
-        const allowed: ResultsTab[] = [
-          'cards',
-          'similar',
-          'deck-ideas',
-          'explanation',
-        ];
-        return (allowed as string[]).includes(raw ?? '')
-          ? (raw as ResultsTab)
-          : ('cards' as ResultsTab);
-      })();
-      return { query: originalQuery, tab: initialTab };
-    },
-  );
-  const activeTab = tabState.query === originalQuery ? tabState.tab : 'cards';
+  // Cards is the only results view — Similar / Deck Ideas / Explain removed.
+  const activeTab: ResultsTab = 'cards';
 
-  const showSimilarTab = hasSearched && !isSearching;
   const isDeckQuery = /\b(deck|build|commander|strategy|brew|edh)\b/i.test(
     originalQuery,
   );
-  const showDeckIdeasTab = hasSearched && !isSearching && isDeckQuery;
-  const showExplanationTab = hasSearched && !isSearching;
+
 
   // Prevent indexing of zero-result search pages
   useNoIndex(hasSearched && !isSearching && totalCards === 0);
@@ -261,13 +234,8 @@ const Index = () => {
     [searchQuery, originalQuery, handleRerunEditedQuery, trackEvent],
   );
 
-  const handleTabChange = useCallback(
-    (tab: ResultsTab) => {
-      if (tab === activeTab) return;
-      setTabState({ query: originalQuery, tab });
-    },
-    [activeTab, originalQuery],
-  );
+
+
 
   // Card comparison
   const {
@@ -609,55 +577,8 @@ const Index = () => {
           role="main"
         >
           <div className="container-main space-y-3 sm:space-y-6">
-            {showResultsMode && (
-              <div className="sticky top-16 z-20 -mx-3 sm:-mx-4 lg:-mx-6 px-3 sm:px-4 lg:px-6">
-                <div className="animate-reveal rounded-2xl border border-border/70 bg-card/85 backdrop-blur-xl shadow-lg shadow-black/5 px-3 py-2 sm:px-4 sm:py-3">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-                          {t('results.summaryTitle', 'Search results')}
-                        </span>
-                        {hasSearched && totalCards > 0 && (
-                          <span className="text-xs text-muted-foreground tabular-nums">
-                            {t('results.summaryCards', '{count} cards').replace(
-                              '{count}',
-                              totalCards.toLocaleString(),
-                            )}
-                          </span>
-                        )}
-                        {isSearching && (
-                          <span className="text-xs text-muted-foreground">
-                            {t('results.updating', 'Updating results')}
-                          </span>
-                        )}
-                      </div>
-                      <p className="mt-1 truncate text-sm font-medium text-foreground">
-                        {originalQuery ||
-                          searchQuery ||
-                          t('search.placeholder')}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <a
-                        href="#search-results"
-                        className="inline-flex items-center justify-center rounded-full border border-border/70 bg-background/70 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-background"
-                      >
-                        {t('results.jumpToResults', 'Jump to results')}
-                      </a>
-                      {hasSearched && (
-                        <a
-                          href="#main-content"
-                          className="inline-flex items-center justify-center rounded-full border border-transparent px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-                        >
-                          {t('results.backToSearch', 'Back to search')}
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+
+
 
             <div>
               <UnifiedSearchBar
@@ -774,43 +695,8 @@ const Index = () => {
               </div>
             )}
 
-            {hasSearched && !isSearching && (
-              <div className="animate-reveal">
-                <SearchRefinementStrip
-                  originalQuery={originalQuery}
-                  searchQuery={searchQuery}
-                  activeFilters={activeFilters}
-                  onRefineQuery={handleRerunEditedQuery}
-                  onRemoveFilter={applyFilterPatch}
-                  onClearAllFilters={clearAllFilters}
-                />
-              </div>
-            )}
+            {cards.length > 0 && !isSearching && (
 
-            {hasSearched && !isSearching && displayCards.length > 0 && (
-              <div className="animate-reveal">
-                <ResultFacetAggregationStrip
-                  cards={displayCards}
-                  searchQuery={searchQuery}
-                  onRefine={handleRerunEditedQuery}
-                />
-              </div>
-            )}
-
-            {/* Results Tabs */}
-            {hasSearched && !isSearching && (
-              <div className="animate-reveal">
-                <ResultsTabs
-                  activeTab={activeTab}
-                  onTabChange={handleTabChange}
-                  showSimilar={showSimilarTab}
-                  showDeckIdeas={showDeckIdeasTab}
-                  showExplanation={showExplanationTab}
-                />
-              </div>
-            )}
-
-            {cards.length > 0 && !isSearching && activeTab === 'cards' && (
               <ResultsToolbar
                 cards={cards}
                 displayCards={displayCards}
