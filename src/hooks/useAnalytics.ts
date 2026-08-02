@@ -269,6 +269,8 @@ const ALLOWED_EVENT_TYPES = [
   'share_clicked', // NEW: fired by SharePageButton / ShareSearchButton on click
   'affiliate_click',
   'pagination',
+  'pagination_error_shown',
+  'pagination_retry_clicked',
   'feedback_submitted',
   'landing_page_view',
   'homepage_view',
