@@ -825,6 +825,7 @@ export function useSearch() {
    * from the URL. Useful from the empty state "Clear all filters" chip.
    */
   const clearAllFilters = useCallback(() => {
+    cancelPendingUrlSync();
     setFilteredCards([]);
     setHasActiveFilters(false);
     setActiveFilters(null);
@@ -839,7 +840,7 @@ export function useSearch() {
       },
       { replace: true },
     );
-  }, [setSearchParams]);
+  }, [setSearchParams, cancelPendingUrlSync]);
 
 
   return {
