@@ -425,9 +425,15 @@ export function useSearch() {
   }, [currentPageCount, originalQuery, trackPagination]);
 
   const hasSortOverride =
-    activeFilters?.sortBy && activeFilters.sortBy !== 'relevance-desc' && activeFilters.sortBy !== 'name-asc';
+    !!activeFilters?.sortBy && activeFilters.sortBy !== 'relevance-desc';
+  // A sort-only override can never remove cards, so while the filter pass has not
+  // reported yet (filteredCards empty) keep showing the raw results.
+  const sortOnlyNotReady =
+    !hasActiveFilters && hasSortOverride && filteredCards.length === 0;
   const displayCards =
-    hasActiveFilters || hasSortOverride ? filteredCards : cards;
+    (hasActiveFilters || hasSortOverride) && !sortOnlyNotReady
+      ? filteredCards
+      : cards;
 
   // --- Callbacks ---
 
