@@ -915,6 +915,8 @@ export function useAnalytics() {
     trackShareClicked,
     trackDeckClick,
     trackPagination,
+    trackPaginationErrorShown,
+    trackPaginationRetryClicked,
     trackFeedback,
     trackLandingPageView,
     trackHomePageView,
