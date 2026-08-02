@@ -18,7 +18,7 @@ import { RelatedCardsStrip } from '@/components/RelatedCardsStrip';
 import { FeatureCrossLinks } from '@/components/FeatureCrossLinks';
 import { ExplanationPanel } from '@/components/ExplanationPanel';
 import { CLIENT_CONFIG } from '@/lib/config';
-import { useTranslation } from '@/lib/i18n';
+
 import { rerankCardsWithIntelligence } from '@/lib/search/intelligence-ranking';
 import { explainCardMatch } from '@/lib/search/matchExplanation';
 import { getSearchRankingSignals } from '@/lib/search-ranking-signals';
@@ -124,8 +124,6 @@ export function SearchResultsArea({
   intent,
   onRefineWithMatch,
 }: SearchResultsAreaProps) {
-  const { t } = useTranslation();
-
   const topSourceCard = useMemo(
     () => (cards.length > 0 ? cards[0] : null),
     [cards],
