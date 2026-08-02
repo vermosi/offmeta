@@ -82,9 +82,9 @@ const CARD_ASPECT_RATIO = 2.5 / 3.5;
 const MAX_CARD_WIDTH = 280;
 
 const BREAKPOINTS = [
-  { minWidth: 1024, columns: 4, gap: 20 }, // lg+
-  { minWidth: 768, columns: 3, gap: 16 },  // md
-  { minWidth: 0, columns: 2, gap: 12 },    // mobile
+  { minWidth: 1024, columns: 4, gap: 24 }, // lg+
+  { minWidth: 768, columns: 3, gap: 20 },  // md
+  { minWidth: 0, columns: 2, gap: 16 },    // mobile
 ];
 
 function buildVirtualizedRowKey(
