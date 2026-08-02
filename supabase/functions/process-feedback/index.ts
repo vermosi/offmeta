@@ -12,6 +12,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 import { checkRateLimit, resolveRateLimitKey } from '../_shared/rateLimit.ts';
+import { rateLimitedResponse } from '../_shared/rateLimitTelemetry.ts';
 import {
   getCorsHeaders,
   validateAuth,

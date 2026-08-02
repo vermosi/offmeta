@@ -12,6 +12,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { validateAuth, getCorsHeaders, logAuthFailure } from '../_shared/auth.ts';
 import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
+import { rateLimitedResponse } from '../_shared/rateLimitTelemetry.ts';
 import { withLogging } from '../_shared/logger.ts';
 
 const SPELLBOOK_BASE = 'https://backend.commanderspellbook.com';
@@ -139,7 +140,7 @@ serve(withLogging('combo-search', async (req) => {
   maybeCleanup();
   const clientIp =
     req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  const { allowed, retryAfter } = await checkRateLimit(
+  const rateCheck = await checkRateLimit(
     clientIp,
     undefined,
     20,
@@ -147,20 +148,13 @@ serve(withLogging('combo-search', async (req) => {
     60000,
     { failOpen: false },
   );
-  if (!allowed) {
-    return new Response(
-      JSON.stringify({
-        error: 'Too many requests. Please slow down.',
-        retryAfter,
-      }),
-      {
-        status: 429,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-          'Retry-After': String(retryAfter),
-        },
-      },
+  if (!rateCheck.allowed) {
+    return rateLimitedResponse(
+      'combo-search',
+      req,
+      `ip:${clientIp}`,
+      rateCheck,
+      corsHeaders,
     );
   }
 
