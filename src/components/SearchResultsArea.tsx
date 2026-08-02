@@ -31,9 +31,6 @@ import type { ResultsTab } from '@/components/ResultsTabs';
 
 const EMPTY_COLLECTION_LOOKUP = new Map<string, number>();
 
-const ArtLightbox = lazy(() =>
-  import('@/components/ArtLightbox').then((m) => ({ default: m.ArtLightbox })),
-);
 const SimilarTabContent = lazy(() =>
   import('@/components/SimilarTabContent').then((m) => ({
     default: m.SimilarTabContent,
@@ -82,9 +79,6 @@ interface SearchResultsAreaProps {
     onKeyDown: (e: React.KeyboardEvent) => void;
     onFocus: () => void;
   };
-  lightboxIndex: number | null;
-  openLightbox: (index: number) => void;
-  closeLightbox: () => void;
   // Tab content data
   onTrySuggestion: (scryfallQuery: string) => void;
   onRelatedCardClick?: (cardName: string) => void;
@@ -129,9 +123,6 @@ export function SearchResultsArea({
   collectionLookup = EMPTY_COLLECTION_LOOKUP,
   loadMoreRef,
   getRovingProps,
-  lightboxIndex,
-  openLightbox,
-  closeLightbox,
   onTrySuggestion,
   onRelatedCardClick,
   activeFilters,
@@ -271,7 +262,6 @@ export function SearchResultsArea({
                           <CardImageItem
                             card={card}
                             onClick={() => handleCardClick(card, index)}
-                            onZoom={() => openLightbox(index)}
                             tabIndex={rovingProps.tabIndex}
                             isOwned={collectionLookup.has(card.name)}
                           />
@@ -443,14 +433,6 @@ export function SearchResultsArea({
         />
       )}
 
-      {/* Art lightbox */}
-      {lightboxIndex !== null && displayCards.length > 0 && (
-        <ArtLightbox
-          cards={displayCards}
-          initialIndex={lightboxIndex}
-          onClose={closeLightbox}
-        />
-      )}
     </div>
   );
 }

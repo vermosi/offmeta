@@ -264,13 +264,6 @@ const Index = () => {
   }, []);
   useKeyboardShortcuts({ onFocusSearch: focusSearch });
 
-  // Art lightbox
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const openLightbox = useCallback(
-    (index: number) => setLightboxIndex(index),
-    [],
-  );
-  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
 
   // Roving tabindex column count based on view mode
   const rovingColumns = useMemo(() => {
@@ -743,9 +736,6 @@ const Index = () => {
                 isCardSelected={isCardSelected}
                 loadMoreRef={loadMoreRef}
                 getRovingProps={getRovingProps}
-                lightboxIndex={lightboxIndex}
-                openLightbox={openLightbox}
-                closeLightbox={closeLightbox}
                 onTrySuggestion={handleTrySuggestion}
                 onRelatedCardClick={handleTryExample}
                 activeFilters={activeFilters}
