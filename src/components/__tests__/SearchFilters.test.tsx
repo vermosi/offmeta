@@ -245,8 +245,10 @@ describe('SearchFilters', () => {
 
   it('sorts cards by name A-Z when selected', () => {
     const { onFilteredCards } = renderFilters();
-    const select = screen.getByRole('combobox');
-    fireEvent.change(select, { target: { value: 'name-asc' } });
+    const sortTrigger = screen.getByRole('combobox', { name: /Sort/i });
+    fireEvent.click(sortTrigger);
+    const nameOption = screen.getByRole('option', { name: 'Name (A→Z)' });
+    fireEvent.click(nameOption);
     const lastCall =
       onFilteredCards.mock.calls[onFilteredCards.mock.calls.length - 1];
     const [filteredCards] = lastCall;
