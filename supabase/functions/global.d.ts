@@ -9,5 +9,10 @@ declare module 'https://*' {
 
 // Named export shim for the Supabase JS client imported via esm.sh
 declare module 'https://esm.sh/@supabase/supabase-js@2' {
-  export function createClient(url: string, key: string, options?: unknown): any;
+  export function createClient(
+    url: string,
+    key: string,
+    options?: unknown
+  ): Record<string, unknown> & { [key: string]: never | unknown };
 }
+

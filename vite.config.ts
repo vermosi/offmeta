@@ -13,8 +13,19 @@ export default defineConfig(() => ({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // Remote ESM specifiers used by edge functions cannot be resolved by
+      // Vitest's Node ESM loader; map them to a local stub during tests.
+      ...(process.env.VITEST
+        ? {
+            'https://esm.sh/@supabase/supabase-js@2': path.resolve(
+              __dirname,
+              './src/test/stubs/supabase-esm.ts'
+            ),
+          }
+        : {}),
     },
   },
+
   build: {
     assetsDir: 'assets',
     cssCodeSplit: true,
