@@ -172,20 +172,29 @@ export function VirtualizedCardGrid({
   }, []);
 
   const { columns, cardWidth, gap } = dimensions;
+  const { t } = useTranslation();
   // Use ceil to avoid underestimated row heights (which can cause overlap).
   const cardHeight = Math.ceil(cardWidth / CARD_ASPECT_RATIO);
   const rowHeight = cardHeight + gap;
   const rowCount = Math.ceil(cards.length / columns);
+  const showLoadMoreRow =
+    cards.length > 0 && (hasNextPage || isFetchingNextPage || isError);
+  const virtualRowCount = showLoadMoreRow ? rowCount + 1 : rowCount;
+  const loadMoreRowHeight = Math.max(rowHeight, 120);
 
   const rowVirtualizer = useWindowVirtualizer({
-    count: rowCount,
-    estimateSize: () => rowHeight,
+    count: virtualRowCount,
+    estimateSize: (index) =>
+      showLoadMoreRow && index === rowCount ? loadMoreRowHeight : rowHeight,
     overscan: 3,
     scrollMargin,
-    getItemKey: (index) => buildVirtualizedRowKey(cards, columns, cardHeight, gap, index),
+    getItemKey: (index) =>
+      showLoadMoreRow && index === rowCount
+        ? `load-more-${isError ? 'error' : isFetchingNextPage ? 'loading' : 'ready'}`
+        : buildVirtualizedRowKey(cards, columns, cardHeight, gap, index),
   });
 
-  // Load more when near bottom
+  // Load more when near bottom (but not when the error row is showing — user must retry)
   useEffect(() => {
     const virtualItems = rowVirtualizer.getVirtualItems();
     if (virtualItems.length === 0) return;
@@ -195,11 +204,12 @@ export function VirtualizedCardGrid({
       lastItem.index >= rowCount - 2 &&
       hasNextPage &&
       !isFetchingNextPage &&
+      !isError &&
       onLoadMore
     ) {
       onLoadMore();
     }
-  }, [rowVirtualizer, rowCount, hasNextPage, isFetchingNextPage, onLoadMore]);
+  }, [rowVirtualizer, rowCount, hasNextPage, isFetchingNextPage, isError, onLoadMore]);
 
   return (
     <div
