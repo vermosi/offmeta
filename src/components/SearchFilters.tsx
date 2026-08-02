@@ -245,8 +245,10 @@ export function SearchFilters({
         <SelectTrigger
           aria-label={t('filters.format', 'Format')}
           className={cn(
-            'w-[110px] sm:w-[140px] h-8 sm:h-9 text-xs sm:text-sm',
-            filters.format && 'border-primary/50 bg-primary/5',
+            'w-[110px] sm:w-[140px] h-8 sm:h-9 text-xs sm:text-sm transition-all',
+            filters.format
+              ? 'border-primary bg-primary/10 text-primary font-medium ring-1 ring-primary/20 shadow-sm'
+              : '',
           )}
         >
           <Shield className="h-3.5 w-3.5 mr-1 opacity-50 shrink-0" />
@@ -275,8 +277,10 @@ export function SearchFilters({
             variant="outline"
             size="sm"
             className={cn(
-              'gap-1.5 sm:gap-2 h-8 sm:h-9 px-2.5 sm:px-3 text-xs sm:text-sm',
-              hasActiveFilters && 'border-primary/50 bg-primary/5',
+              'gap-1.5 sm:gap-2 h-8 sm:h-9 px-2.5 sm:px-3 text-xs sm:text-sm transition-all',
+              hasActiveFilters
+                ? 'border-primary bg-primary/10 text-primary font-medium ring-1 ring-primary/20 shadow-sm'
+                : '',
             )}
           >
             <Filter className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -484,8 +488,8 @@ export function SearchFilters({
         <div className="hidden sm:flex flex-wrap gap-1.5">
           {activeFormatLabel && (
             <Badge
-              variant="secondary"
-              className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20 text-xs"
+              variant="default"
+              className="gap-1 pr-1 cursor-pointer text-xs bg-primary text-primary-foreground border-primary hover:bg-primary/90 shadow-sm"
               onClick={() => setFilters((prev) => ({ ...prev, format: undefined }))}
               role="button"
               tabIndex={0}
@@ -507,8 +511,8 @@ export function SearchFilters({
             return (
               <Badge
                 key={colorId}
-                variant="secondary"
-                className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20 text-xs"
+                variant="default"
+                className="gap-1 pr-1 cursor-pointer text-xs bg-primary text-primary-foreground border-primary hover:bg-primary/90 shadow-sm"
                 onClick={() => toggleColor(colorId)}
                 role="button"
                 tabIndex={0}
@@ -531,8 +535,8 @@ export function SearchFilters({
           {filters.types.map((type) => (
             <Badge
               key={type}
-              variant="secondary"
-              className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20 text-xs"
+              variant="default"
+              className="gap-1 pr-1 cursor-pointer text-xs bg-primary text-primary-foreground border-primary hover:bg-primary/90 shadow-sm"
               onClick={() => toggleType(type)}
               role="button"
               tabIndex={0}
@@ -553,8 +557,8 @@ export function SearchFilters({
           ))}
           {(filters.cmcRange[0] > 0 || filters.cmcRange[1] < defaultMaxCmc) && (
             <Badge
-              variant="secondary"
-              className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20 text-xs"
+              variant="default"
+              className="gap-1 pr-1 cursor-pointer text-xs bg-primary text-primary-foreground border-primary hover:bg-primary/90 shadow-sm"
               onClick={() =>
                 setFilters((prev) => ({
                   ...prev,
