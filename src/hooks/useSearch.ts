@@ -226,6 +226,10 @@ export function useSearch() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    error,
+    isError,
+    refetch,
+    isFetchNextPageError,
   } = useInfiniteQuery({
     queryKey: ['cards', validatedSearchQuery, scryfallLang],
     queryFn: ({ pageParam = 1 }) =>
