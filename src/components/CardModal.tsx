@@ -34,6 +34,7 @@ import { useTranslation } from '@/lib/i18n';
 import { CardModalImage } from './CardModal/CardModalImage';
 import { CardModalDetails } from './CardModal/CardModalDetails';
 import { CardModalPurchaseLinks } from './CardModal/CardModalPurchaseLinks';
+import { CardPriceSparkline } from './CardPriceSparkline';
 import { CardModalRulings } from './CardModal/CardModalRulings';
 import { CardModalLegalities } from './CardModal/CardModalLegalities';
 import { CardModalPrintings } from './CardModal/CardModalPrintings';
@@ -305,6 +306,8 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <CardPriceSparkline cardName={card.name} />
+
         <CardModalDetails
           faceDetails={faceDetails}
           displaySetName={displaySetName}
@@ -400,12 +403,23 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
           isFlipping={isFlipping}
           onTransform={handleTransform}
         />
+
+        <CardModalPurchaseLinks
+          card={card}
+          displayPrices={displayPrices}
+          displayTix={displayTix}
+          selectedPrinting={selectedPrinting}
+          isLoadingPrintings={isLoadingPrintings}
+          onAffiliateClick={handleAffiliateClick}
+        />
       </div>
 
 
       {/* Card Details Section */}
       <div className="flex-1 overflow-y-auto">
         <div className="space-y-5 p-5">
+          <CardPriceSparkline cardName={card.name} />
+
           <CardModalDetails
             faceDetails={faceDetails}
             displaySetName={displaySetName}
@@ -416,15 +430,6 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
             englishPrintings={englishPrintings}
             selectedPrintingId={selectedPrinting?.id}
             cardId={card.id}
-          />
-
-          <CardModalPurchaseLinks
-            card={card}
-            displayPrices={displayPrices}
-            displayTix={displayTix}
-            selectedPrinting={selectedPrinting}
-            isLoadingPrintings={isLoadingPrintings}
-            onAffiliateClick={handleAffiliateClick}
           />
 
           <CardModalMetaContext card={card} />
