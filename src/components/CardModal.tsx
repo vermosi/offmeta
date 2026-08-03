@@ -34,7 +34,7 @@ import { useTranslation } from '@/lib/i18n';
 import { CardModalImage } from './CardModal/CardModalImage';
 import { CardModalDetails } from './CardModal/CardModalDetails';
 import { CardModalPurchaseLinks } from './CardModal/CardModalPurchaseLinks';
-import { CardPriceSparkline } from './CardPriceSparkline';
+import { CardPriceHistoryChart } from './CardPriceHistoryChart';
 import { CardModalRulings } from './CardModal/CardModalRulings';
 import { CardModalLegalities } from './CardModal/CardModalLegalities';
 import { CardModalPrintings } from './CardModal/CardModalPrintings';
@@ -306,7 +306,7 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        <CardPriceSparkline cardName={card.name} />
+        <CardPriceHistoryChart cardName={card.name} />
 
         <CardModalDetails
           faceDetails={faceDetails}
@@ -418,7 +418,7 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
       {/* Card Details Section */}
       <div className="flex-1 overflow-y-auto">
         <div className="space-y-5 p-5">
-          <CardPriceSparkline cardName={card.name} />
+          <CardPriceHistoryChart cardName={card.name} />
 
           <CardModalDetails
             faceDetails={faceDetails}
