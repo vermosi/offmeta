@@ -37,14 +37,11 @@ export function CardModalPurchaseLinks({
 
   if (isMobile) {
     return (
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            {buyLabel}
-          </h3>
-          <CardPriceSparkline cardName={card.name} />
-        </div>
-        <div className="grid grid-cols-2 gap-2">
+    <div className="space-y-2">
+      <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+        {buyLabel}
+      </h3>
+      <div className="grid grid-cols-2 gap-2">
           {displayPrices.usd && (
             <Button
               size="sm"
