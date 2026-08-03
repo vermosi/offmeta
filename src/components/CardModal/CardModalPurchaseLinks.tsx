@@ -34,6 +34,55 @@ export function CardModalPurchaseLinks({
   const foilLabel = t('card.foil', 'Foil');
   const tixLabel = t('card.tix', 'tix');
   const buyLabel = t('card.buyThisCard', 'Buy This Card');
+  const checkPriceLabel = t('card.checkPrice', 'Check price');
+  const hasAnyPrice = Boolean(
+    displayPrices.usd ||
+      displayPrices.eur ||
+      displayPrices.usd_foil ||
+      displayPrices.eur_foil ||
+      displayTix,
+  );
+  const showFallbackLinks = !hasAnyPrice && !isLoadingPrintings;
+
+  const openTcgplayer = () => {
+    const url =
+      selectedPrinting?.purchase_uris?.tcgplayer || getTCGPlayerUrl(card);
+    onAffiliateClick('tcgplayer', url);
+  };
+  const openCardmarket = () => {
+    const url =
+      selectedPrinting?.purchase_uris?.cardmarket || getCardmarketUrl(card);
+    onAffiliateClick('cardmarket', url);
+  };
+
+  const fallbackLinks = (
+    <div className="space-y-1.5">
+      <Button
+        size="sm"
+        className="gap-2 w-full justify-between"
+        onClick={openTcgplayer}
+      >
+        <span className="flex items-center gap-2">
+          <ShoppingCart className="h-3.5 w-3.5" />
+          TCGplayer
+        </span>
+        <span className="text-xs opacity-80">{checkPriceLabel}</span>
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        className="gap-2 w-full justify-between"
+        onClick={openCardmarket}
+      >
+        <span className="flex items-center gap-2">
+          <ShoppingCart className="h-3.5 w-3.5" />
+          Cardmarket
+        </span>
+        <span className="text-xs opacity-80">{checkPriceLabel}</span>
+      </Button>
+    </div>
+  );
+
 
   if (isMobile) {
     return (
