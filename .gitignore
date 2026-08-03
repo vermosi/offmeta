@@ -39,3 +39,6 @@ skills-lock.json
 # Non-canonical package manager lockfiles
 bun.lock
 bun.lockb
+
+# MTGJSON backfill checkpoints and archive cache
+.cache/
