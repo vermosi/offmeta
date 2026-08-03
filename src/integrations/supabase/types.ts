@@ -92,6 +92,69 @@ export type Database = {
         }
         Relationships: []
       }
+      card_printings: {
+        Row: {
+          artist: string | null
+          collector_number: string | null
+          id: string
+          identifiers: Json | null
+          image_url: string | null
+          lang: string
+          mtgjson_uuid: string | null
+          name: string
+          oracle_id: string | null
+          prices: Json | null
+          purchase_uris: Json | null
+          rarity: string | null
+          related_cards: Json | null
+          released_at: string | null
+          scryfall_id: string | null
+          set: string | null
+          set_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          artist?: string | null
+          collector_number?: string | null
+          id: string
+          identifiers?: Json | null
+          image_url?: string | null
+          lang?: string
+          mtgjson_uuid?: string | null
+          name: string
+          oracle_id?: string | null
+          prices?: Json | null
+          purchase_uris?: Json | null
+          rarity?: string | null
+          related_cards?: Json | null
+          released_at?: string | null
+          scryfall_id?: string | null
+          set?: string | null
+          set_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          artist?: string | null
+          collector_number?: string | null
+          id?: string
+          identifiers?: Json | null
+          image_url?: string | null
+          lang?: string
+          mtgjson_uuid?: string | null
+          name?: string
+          oracle_id?: string | null
+          prices?: Json | null
+          purchase_uris?: Json | null
+          rarity?: string | null
+          related_cards?: Json | null
+          released_at?: string | null
+          scryfall_id?: string | null
+          set?: string | null
+          set_name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       card_signals: {
         Row: {
           card_id: string
@@ -224,6 +287,7 @@ export type Database = {
           price_usd_foil: number | null
           recorded_at: string
           scryfall_id: string | null
+          source: string
         }
         Insert: {
           card_name: string
@@ -236,6 +300,7 @@ export type Database = {
           price_usd_foil?: number | null
           recorded_at?: string
           scryfall_id?: string | null
+          source?: string
         }
         Update: {
           card_name?: string
@@ -248,6 +313,7 @@ export type Database = {
           price_usd_foil?: number | null
           recorded_at?: string
           scryfall_id?: string | null
+          source?: string
         }
         Relationships: []
       }

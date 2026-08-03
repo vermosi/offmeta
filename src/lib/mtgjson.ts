@@ -28,8 +28,8 @@ export interface MtgjsonSetCard {
   scryfallId?: string;
   identifiers?: MtgjsonIdentifiers;
   name: string;
-  setCode: string;
-  setName: string;
+  setCode?: string;
+  setName?: string;
   collectorNumber: string;
   rarity?: string;
   artist?: string;

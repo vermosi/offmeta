@@ -5,8 +5,8 @@
 
 import { useMemo, useState } from 'react';
 import { PriceSparkline, type SparklinePoint } from '@/components/PriceSparkline';
-import { usePriceHistory } from '@/hooks/usePriceHistory';
-import { cn } from '@/lib/utils';
+import { usePriceHistory, type PriceSnapshot } from '@/hooks/usePriceHistory';
+import { cn } from '@/lib/core/utils';
 
 interface CardPriceSparklineProps {
   cardName: string;
@@ -35,7 +35,7 @@ export function CardPriceSparkline({
 
   const points = useMemo<SparklinePoint[]>(
     () => {
-      const pickPrice = (snapshot: (typeof data)[number]) => {
+      const pickPrice = (snapshot: PriceSnapshot) => {
         switch (series) {
           case 'low':
             return snapshot.price_low;

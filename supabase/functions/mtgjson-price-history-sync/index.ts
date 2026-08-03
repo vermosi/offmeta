@@ -45,28 +45,84 @@ function getPath(obj: MtgjsonPriceTree, path: string): Record<string, number> | 
   return path.split('.').reduce((acc: unknown, key) => (acc as Record<string, unknown> | undefined)?.[key], obj) as Record<string, number> | undefined;
 }
 
-function extractUuidObject(text: string, uuid: string): string | null {
-  const key = `"${uuid}":{`;
-  const start = text.indexOf(key);
-  if (start === -1) return null;
+/**
+ * Streams the (huge) AllPrices payload and extracts only the JSON objects for
+ * the requested uuids. Buffering the whole file blows the edge memory limit.
+ */
+async function streamExtractUuidObjects(
+  stream: ReadableStream<Uint8Array>,
+  uuids: string[],
+): Promise<Map<string, string>> {
+  const found = new Map<string, string>();
+  const pending = new Set(uuids);
+  const reader = stream.pipeThrough(new TextDecoderStream()).getReader();
 
-  let depth = 0;
+  let buffer = '';
+  let capturingUuid: string | null = null;
   let captured = '';
-  let started = false;
+  let depth = 0;
 
-  for (let i = start + key.length - 1; i < text.length; i += 1) {
-    const ch = text[i];
-    if (ch === '{' || started) {
-      captured += ch;
-      started = true;
+  const maxKeyLen = uuids.reduce((max, uuid) => Math.max(max, uuid.length + 4), 8);
+
+  while (pending.size > 0) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += value;
+
+    let progressed = true;
+    while (progressed) {
+      progressed = false;
+
+      if (capturingUuid === null) {
+        let bestIndex = -1;
+        let bestUuid: string | null = null;
+        for (const uuid of pending) {
+          const idx = buffer.indexOf(`"${uuid}":{`);
+          if (idx !== -1 && (bestIndex === -1 || idx < bestIndex)) {
+            bestIndex = idx;
+            bestUuid = uuid;
+          }
+        }
+        if (bestUuid === null) break;
+        buffer = buffer.slice(bestIndex + bestUuid.length + 3);
+        capturingUuid = bestUuid;
+        captured = '{';
+        depth = 1;
+        progressed = true;
+      }
+
+      if (capturingUuid !== null) {
+        let closed = false;
+        for (let i = 0; i < buffer.length; i += 1) {
+          const ch = buffer[i];
+          captured += ch;
+          if (ch === '{') depth += 1;
+          else if (ch === '}') depth -= 1;
+          if (depth === 0) {
+            found.set(capturingUuid, captured);
+            pending.delete(capturingUuid);
+            buffer = buffer.slice(i + 1);
+            capturingUuid = null;
+            captured = '';
+            closed = true;
+            progressed = true;
+            break;
+          }
+        }
+        if (!closed) buffer = '';
+      }
     }
-    if (ch === '{') depth += 1;
-    if (ch === '}') depth -= 1;
-    if (started && depth === 0) return captured;
+
+    // Keep only enough tail to match a key split across chunk boundaries.
+    if (capturingUuid === null && buffer.length > maxKeyLen * 4) {
+      buffer = buffer.slice(-maxKeyLen * 2);
+    }
   }
 
-  return null;
+  reader.cancel().catch(() => undefined);
+  return found;
 }
+
 
 async function getCardUuid(cardName: string): Promise<string | null> {
   const setResp = await fetch(`${MTGJSON_BASE_URL}/RAV.json`);
@@ -171,23 +227,42 @@ serve(withLogging('mtgjson-price-history-sync', async (req: Request): Promise<Re
       }
     }
 
+    if (uuidMap.size === 0) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          mode: scan ? 'scan' : 'targeted',
+          results: [],
+          missing,
+          scanned,
+          inserted: 0,
+          nextOffset: scan ? offset + scanned : null,
+        }),
+        { status: 200, headers },
+      );
+    }
+
     const pricesResp = await fetch(`${MTGJSON_BASE_URL}/AllPrices.json.gz`);
     if (!pricesResp.ok || !pricesResp.body) {
       return new Response(JSON.stringify({ error: 'Failed to load MTGJSON prices' }), { status: 502, headers });
     }
 
     const decompressed = pricesResp.body.pipeThrough(new DecompressionStream('gzip'));
-    const text = await new Response(decompressed).text();
+    const extracted = await streamExtractUuidObjects(
+      decompressed,
+      Array.from(uuidMap.values()),
+    );
 
     const rows: PriceSnapshotRow[] = [];
     const results: Array<{ cardName: string; uuid: string; inserted: number }> = [];
 
     for (const [cardName, uuid] of uuidMap.entries()) {
-      const raw = extractUuidObject(text, uuid);
+      const raw = extracted.get(uuid);
       if (!raw) {
         missing.push(cardName);
         continue;
       }
+
 
       const history = JSON.parse(raw) as MtgjsonPriceTree;
       const low = sliceLastDays(getPath(history, 'paper.cardmarket.retail.normal'), days);
