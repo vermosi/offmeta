@@ -236,10 +236,24 @@ async function createPgWriter(connectionString) {
   };
 }
 
+/**
+ * Postgres rejects a single INSERT ... ON CONFLICT that contains duplicate
+ * conflict keys, so collapse them here (last write wins) before chunking.
+ */
+function dedupeByKey(rows, onConflict) {
+  const keyCols = onConflict.split(',').map((c) => c.trim());
+  const seen = new Map();
+  for (const row of rows) {
+    seen.set(keyCols.map((c) => String(row[c])).join('\u0000'), row);
+  }
+  return Array.from(seen.values());
+}
+
 async function upsertChunks(writer, table, rows, onConflict) {
+  const deduped = dedupeByKey(rows, onConflict);
   let written = 0;
-  for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
-    const chunk = rows.slice(i, i + CHUNK_SIZE);
+  for (let i = 0; i < deduped.length; i += CHUNK_SIZE) {
+    const chunk = deduped.slice(i, i + CHUNK_SIZE);
     if (chunk.length === 0) continue;
     await writer.upsert(table, chunk, onConflict);
     written += chunk.length;
