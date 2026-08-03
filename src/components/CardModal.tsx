@@ -401,23 +401,23 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
           />
         </CardModalBentoTile>
 
-        <CardModalBentoTile title="Price History" icon={TrendingUp} accent="primary">
+        <CardModalBentoTile>
           <CardPriceHistoryChart cardName={card.name} />
         </CardModalBentoTile>
 
-        <CardModalBentoTile title="Why It's Played" icon={Brain} accent="accent">
+        <CardModalBentoTile>
           <CardModalMetaContext card={card} />
         </CardModalBentoTile>
 
-        <CardModalBentoTile title="Combos" icon={Zap} accent="accent">
+        <CardModalBentoTile>
           <CardModalCombos cardName={card.name} isMobile />
         </CardModalBentoTile>
 
-        <CardModalBentoTile title="You Might Also Like" icon={Sparkles} accent="accent">
+        <CardModalBentoTile>
           <CardModalRecommendations oracleId={card.oracle_id} cardName={card.name} onCardClick={handleCardClick} isMobile />
         </CardModalBentoTile>
 
-        <CardModalBentoTile title="Rulings" icon={Gavel}>
+        <CardModalBentoTile>
           <CardModalRulings
             rulings={rulings}
             isLoading={isLoadingRulings}
@@ -426,7 +426,7 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
           />
         </CardModalBentoTile>
 
-        <CardModalBentoTile title="Printings" icon={Layers}>
+        <CardModalBentoTile>
           <CardModalPrintings
             printings={englishPrintings}
             isLoading={isLoadingPrintings}
@@ -441,6 +441,7 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
       </div>
     </div>
   );
+
 
   // Desktop content
   const desktopContent = (
