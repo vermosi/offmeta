@@ -145,7 +145,7 @@ export function CardPriceHistoryChart({ cardName, className }: CardPriceHistoryC
       aria-label="Price history"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-foreground">Price History</h3>
+        <h3 className="text-sm font-semibold text-foreground">{t('priceHistory.title', 'Price History')}</h3>
         <div
           className="flex rounded-md border border-border bg-muted/60 p-0.5 text-[11px]"
           role="group"
