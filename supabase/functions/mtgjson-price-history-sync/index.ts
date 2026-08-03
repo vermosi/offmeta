@@ -128,13 +128,116 @@ async function getTargetBatch(
   };
 }
 
-async function fetchTodayPrices(): Promise<Record<string, MtgjsonPriceTree>> {
+/**
+ * Streams the daily feed and keeps only the uuids in `wanted`.
+ *
+ * The file is small gzipped but expands to hundreds of MB of JSON, so a plain
+ * JSON.parse trips the worker memory limit. Scanning keeps peak memory
+ * proportional to the batch instead of to the feed.
+ */
+async function fetchTodayPrices(
+  wanted: Set<string>,
+): Promise<Map<string, MtgjsonPriceTree>> {
   const resp = await fetch(`${MTGJSON_BASE_URL}/AllPricesToday.json.gz`);
   if (!resp.ok || !resp.body) throw new Error(`AllPricesToday failed: ${resp.status}`);
-  const decompressed = resp.body.pipeThrough(new DecompressionStream('gzip'));
-  const parsed = JSON.parse(await new Response(decompressed).text());
-  return (parsed?.data ?? parsed) as Record<string, MtgjsonPriceTree>;
+
+  const reader = resp.body
+    .pipeThrough(new DecompressionStream('gzip'))
+    .pipeThrough(new TextDecoderStream())
+    .getReader();
+
+  const found = new Map<string, MtgjsonPriceTree>();
+  const remaining = new Set(wanted);
+
+  let depth = 0;
+  let inData = false;
+  let pendingKey: string | null = null;
+  let lastString = '';
+  let strBuf: string | null = null;
+  let capture: string | null = null;
+  let captureDepth = 0;
+  let inString = false;
+  let escaped = false;
+
+  while (remaining.size > 0) {
+    const { value, done } = await reader.read();
+    if (done) break;
+
+    for (let i = 0; i < value.length; i += 1) {
+      const ch = value[i];
+
+      if (capture !== null) {
+        capture += ch;
+        if (inString) {
+          if (escaped) escaped = false;
+          else if (ch === '\\') escaped = true;
+          else if (ch === '"') inString = false;
+        } else if (ch === '"') inString = true;
+        else if (ch === '{' || ch === '[') captureDepth += 1;
+        else if (ch === '}' || ch === ']') {
+          captureDepth -= 1;
+          if (captureDepth === 0) {
+            if (pendingKey) {
+              found.set(pendingKey, JSON.parse(capture) as MtgjsonPriceTree);
+              remaining.delete(pendingKey);
+            }
+            capture = null;
+            pendingKey = null;
+          }
+        }
+        continue;
+      }
+
+      if (inString) {
+        if (escaped) {
+          strBuf += ch;
+          escaped = false;
+        } else if (ch === '\\') {
+          strBuf += ch;
+          escaped = true;
+        } else if (ch === '"') {
+          inString = false;
+          lastString = JSON.parse(`"${strBuf}"`) as string;
+          strBuf = null;
+        } else {
+          strBuf += ch;
+        }
+        continue;
+      }
+
+      if (ch === '"') {
+        inString = true;
+        strBuf = '';
+        continue;
+      }
+
+      if (ch === ':') {
+        if (depth === 1) inData = lastString === 'data';
+        else if (depth === 2 && inData) pendingKey = remaining.has(lastString) ? lastString : null;
+        continue;
+      }
+
+      if (ch === '{' || ch === '[') {
+        if (pendingKey !== null && depth === 2 && inData) {
+          capture = ch;
+          captureDepth = 1;
+          continue;
+        }
+        depth += 1;
+        continue;
+      }
+
+      if (ch === '}' || ch === ']') {
+        depth -= 1;
+        if (depth <= 1) inData = false;
+      }
+    }
+  }
+
+  reader.cancel().catch(() => undefined);
+  return found;
 }
+
 
 serve(
   withLogging('mtgjson-price-history-sync', async (req: Request): Promise<Response> => {
