@@ -400,16 +400,8 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
           isFlipping={isFlipping}
           onTransform={handleTransform}
         />
-
-        <CardModalPurchaseLinks
-          card={card}
-          displayPrices={displayPrices}
-          displayTix={displayTix}
-          selectedPrinting={selectedPrinting}
-          isLoadingPrintings={isLoadingPrintings}
-          onAffiliateClick={handleAffiliateClick}
-        />
       </div>
+
 
       {/* Card Details Section */}
       <div className="flex-1 overflow-y-auto">
@@ -426,7 +418,17 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
             cardId={card.id}
           />
 
+          <CardModalPurchaseLinks
+            card={card}
+            displayPrices={displayPrices}
+            displayTix={displayTix}
+            selectedPrinting={selectedPrinting}
+            isLoadingPrintings={isLoadingPrintings}
+            onAffiliateClick={handleAffiliateClick}
+          />
+
           <CardModalMetaContext card={card} />
+
           <CardModalRulings
             rulings={rulings}
             isLoading={isLoadingRulings}
