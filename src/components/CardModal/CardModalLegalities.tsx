@@ -65,9 +65,10 @@ function FormatGroup({
             <span className="text-xs text-foreground truncate mr-2">
               {formatFormatName(format)}
             </span>
-            <Badge variant="outline" className={statusBadgeClass(formatStatus)}>
+            <Badge data-testid="legality-status" variant="outline" className={statusBadgeClass(formatStatus)}>
               {localizeStatus(formatStatus, t)}
             </Badge>
+
           </div>
         ))}
       </div>
