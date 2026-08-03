@@ -306,12 +306,13 @@ serve(
         );
       }
 
-      const prices = await fetchTodayPrices();
+      const prices = await fetchTodayPrices(new Set(targets.values()));
 
       const rows: PriceSnapshotRow[] = [];
       const missing: string[] = [];
       for (const [cardName, uuid] of targets.entries()) {
-        const current = prices[uuid];
+        const current = prices.get(uuid);
+
         if (!current) {
           missing.push(cardName);
           continue;
