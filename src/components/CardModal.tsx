@@ -416,6 +416,8 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
       {/* Card Details Section */}
       <div className="flex-1 overflow-y-auto">
         <div className="space-y-5 p-5">
+          <CardPriceSparkline cardName={card.name} />
+
           <CardModalDetails
             faceDetails={faceDetails}
             displaySetName={displaySetName}
@@ -426,15 +428,6 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
             englishPrintings={englishPrintings}
             selectedPrintingId={selectedPrinting?.id}
             cardId={card.id}
-          />
-
-          <CardModalPurchaseLinks
-            card={card}
-            displayPrices={displayPrices}
-            displayTix={displayTix}
-            selectedPrinting={selectedPrinting}
-            isLoadingPrintings={isLoadingPrintings}
-            onAffiliateClick={handleAffiliateClick}
           />
 
           <CardModalMetaContext card={card} />
