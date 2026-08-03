@@ -72,9 +72,19 @@ export async function getCardPrintings(
 
   try {
     const localPrintings = await getLocalCardPrintings(cardName);
-    if (localPrintings.length > 0) {
-      const mapped = localPrintings.map((printing) => ({
-        id: printing.id,
+    // Local rows are only usable when they carry a Scryfall id (needed to match
+    // the active printing) plus real art/price data. The MTGJSON-backed rows are
+    // metadata-only, so fall back to Scryfall when they lack images and prices.
+    const usableLocal = localPrintings.filter((p) => Boolean(p.scryfall_id));
+    const hasRenderableData = usableLocal.some(
+      (p) =>
+        Boolean(p.image_url) ||
+        (p.prices && Object.values(p.prices).some((v) => v != null && v !== '')),
+    );
+
+    if (usableLocal.length > 0 && hasRenderableData) {
+      const mapped = usableLocal.map((printing) => ({
+        id: printing.scryfall_id as string,
         set: printing.set,
         set_name: printing.set_name,
         collector_number: printing.collector_number,
@@ -97,6 +107,7 @@ export async function getCardPrintings(
       return mapped;
     }
   } catch (error) {
+
     logger.warn('Local printings lookup failed, falling back to Scryfall', {
       error,
     });
