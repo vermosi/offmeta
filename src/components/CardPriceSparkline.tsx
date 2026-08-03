@@ -6,7 +6,7 @@
 import { useMemo, useState } from 'react';
 import { PriceSparkline, type SparklinePoint } from '@/components/PriceSparkline';
 import { usePriceHistory } from '@/hooks/usePriceHistory';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/core/utils';
 
 interface CardPriceSparklineProps {
   cardName: string;
