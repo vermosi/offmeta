@@ -31,6 +31,7 @@ import { mkdir, readFile, rename, stat, unlink, writeFile } from 'node:fs/promis
 import { pipeline } from 'node:stream/promises';
 import path from 'node:path';
 import { createClient } from '@supabase/supabase-js';
+import pg from 'pg';
 
 const MTGJSON_BASE_URL = 'https://mtgjson.com/api/v5';
 const CACHE_DIR = path.resolve('.cache');
@@ -179,12 +180,82 @@ function mapPrintingRow(setData, card) {
 
 // ------------------------------------------------------------------- writing
 
-async function upsertChunks(supabase, table, rows, onConflict) {
+/**
+ * Two write backends: the REST client when a service-role key is available,
+ * and a direct Postgres connection otherwise (the sandbox case).
+ */
+function createRestWriter(url, key) {
+  const supabase = createClient(url, key, { auth: { persistSession: false } });
+  return {
+    async upsert(table, chunk, onConflict) {
+      const { error } = await supabase.from(table).upsert(chunk, { onConflict });
+      if (error) throw new Error(`${table} upsert failed: ${error.message}`);
+    },
+    async close() {},
+  };
+}
+
+async function createPgWriter(connectionString) {
+  const client = new pg.Client({
+    connectionString,
+    ssl: { rejectUnauthorized: false },
+  });
+  await client.connect();
+
+  return {
+    async upsert(table, chunk, onConflict) {
+      const columns = Object.keys(chunk[0]);
+      const conflictCols = onConflict.split(',').map((c) => c.trim());
+      const updates = columns
+        .filter((c) => !conflictCols.includes(c))
+        .map((c) => `"${c}" = excluded."${c}"`);
+
+      const values = [];
+      const tuples = chunk.map((row) => {
+        const placeholders = columns.map((col) => {
+          const value = row[col];
+          values.push(
+            value !== null && typeof value === 'object' ? JSON.stringify(value) : value ?? null,
+          );
+          return `$${values.length}`;
+        });
+        return `(${placeholders.join(',')})`;
+      });
+
+      const sql =
+        `INSERT INTO public."${table}" (${columns.map((c) => `"${c}"`).join(',')}) ` +
+        `VALUES ${tuples.join(',')} ` +
+        `ON CONFLICT (${conflictCols.map((c) => `"${c}"`).join(',')}) ` +
+        (updates.length > 0 ? `DO UPDATE SET ${updates.join(',')}` : 'DO NOTHING');
+
+      await client.query(sql, values);
+    },
+    async close() {
+      await client.end();
+    },
+  };
+}
+
+/**
+ * Postgres rejects a single INSERT ... ON CONFLICT that contains duplicate
+ * conflict keys, so collapse them here (last write wins) before chunking.
+ */
+function dedupeByKey(rows, onConflict) {
+  const keyCols = onConflict.split(',').map((c) => c.trim());
+  const seen = new Map();
+  for (const row of rows) {
+    seen.set(keyCols.map((c) => String(row[c])).join('\u0000'), row);
+  }
+  return Array.from(seen.values());
+}
+
+async function upsertChunks(writer, table, rows, onConflict) {
+  const deduped = dedupeByKey(rows, onConflict);
   let written = 0;
-  for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
-    const chunk = rows.slice(i, i + CHUNK_SIZE);
-    const { error } = await supabase.from(table).upsert(chunk, { onConflict });
-    if (error) throw new Error(`${table} upsert failed: ${error.message}`);
+  for (let i = 0; i < deduped.length; i += CHUNK_SIZE) {
+    const chunk = deduped.slice(i, i + CHUNK_SIZE);
+    if (chunk.length === 0) continue;
+    await writer.upsert(table, chunk, onConflict);
     written += chunk.length;
   }
   return written;
@@ -410,28 +481,30 @@ async function runPricesPhase(supabase, progress) {
 
 // ---------------------------------------------------------------------- main
 
-const supabase = createClient(
-  requireEnv('SUPABASE_URL'),
-  requireEnv('SUPABASE_SERVICE_ROLE_KEY'),
-  { auth: { persistSession: false } },
-);
+const writer = process.env.SUPABASE_SERVICE_ROLE_KEY
+  ? createRestWriter(requireEnv('SUPABASE_URL'), process.env.SUPABASE_SERVICE_ROLE_KEY)
+  : await createPgWriter(requireEnv('SUPABASE_DB_URL'));
 
-const progress = await readProgress();
-const phase = process.env.BACKFILL_PHASE ?? progress.phase;
+try {
+  const progress = await readProgress();
+  const phase = process.env.BACKFILL_PHASE ?? progress.phase;
 
-if (phase === 'done') {
-  log({ done: true, message: 'Backfill complete. Set BACKFILL_RESET=1 to start over.' });
-} else if (phase === 'sets') {
-  const result = await runSetsPhase(supabase, progress);
-  log({
-    phase: 'sets',
-    ...result,
-    nextPhase: result.done ? 'prices' : 'sets',
-    message: result.done
-      ? 'Set catalog complete. Rerun to stream price history.'
-      : 'Rerun to continue paging sets.',
-  });
-} else {
-  const result = await runPricesPhase(supabase, progress);
-  log({ phase: 'prices', ...result, done: true });
+  if (phase === 'done') {
+    log({ done: true, message: 'Backfill complete. Set BACKFILL_RESET=1 to start over.' });
+  } else if (phase === 'sets') {
+    const result = await runSetsPhase(writer, progress);
+    log({
+      phase: 'sets',
+      ...result,
+      nextPhase: result.done ? 'prices' : 'sets',
+      message: result.done
+        ? 'Set catalog complete. Rerun to stream price history.'
+        : 'Rerun to continue paging sets.',
+    });
+  } else {
+    const result = await runPricesPhase(writer, progress);
+    log({ phase: 'prices', ...result, done: true });
+  }
+} finally {
+  await writer.close();
 }
