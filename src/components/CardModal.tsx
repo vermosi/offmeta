@@ -46,8 +46,9 @@ import { CardModalBentoTile } from './CardModal/CardModalBentoTile';
 import type { DisplayPrices } from './CardModal/types';
 import { ManaCost } from '@/components/ManaSymbol';
 import { Badge } from '@/components/ui/badge';
-import { Shield, FileText, Brain, TrendingUp, Zap, Sparkles, Gavel, Layers } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { getRarityVariant } from './CardModal/CardModalDetails';
+
 
 interface CardModalProps {
   card: ScryfallCard | null;
