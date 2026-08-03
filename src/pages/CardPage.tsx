@@ -28,6 +28,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FeatureCrossLinks } from '@/components/FeatureCrossLinks';
 import { CardAlternativesGrid } from '@/components/CardAlternativesGrid';
+import { CardDetailView } from '@/components/card-detail/CardDetailView';
 import { PageSearchBar } from '@/components/PageSearchBar';
 import { RelatedCardLinks } from '@/components/RelatedCardLinks';
 import { SharePageButton } from '@/components/SharePageButton';
