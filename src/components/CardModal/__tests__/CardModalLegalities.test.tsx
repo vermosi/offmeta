@@ -85,15 +85,18 @@ describe('CardModalLegalities', () => {
     });
 
     it('segments formats into legal, restricted, and not legal sections', () => {
-      const { getByRole } = render(
+      const { getAllByRole } = render(
         <CardModalLegalities legalities={defaultLegalities} isMobile={false} />,
       );
 
-      const headings = getByRole('heading', { level: 4 });
-      expect(headings.textContent).toContain('Legal In');
-      expect(headings.textContent).toContain('restricted');
-      expect(headings.textContent).toContain('not legal');
+      const headings = getAllByRole('heading', { level: 4 }).map(
+        (h) => h.textContent,
+      );
+      expect(headings).toContain('Legal In');
+      expect(headings).toContain('restricted');
+      expect(headings).toContain('not legal');
     });
+
 
   });
 
