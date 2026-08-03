@@ -17,7 +17,9 @@ function localizeStatus(
     case 'legal':
       return t('card.statusLegal', 'legal');
     case 'not_legal':
-      return t('card.statusNotLegal', 'not legal');
+      // Shown as a red "legal" chip: the color carries the negative meaning
+      // so the label stays short and never wraps.
+      return t('card.statusLegal', 'legal');
     case 'banned':
       return t('card.statusBanned', 'banned');
     case 'restricted':
@@ -74,17 +76,17 @@ export function CardModalLegalities({
             key={format}
             className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-muted/30 border border-border/30"
           >
-            <span className="text-xs text-foreground">
+            <span className="text-xs text-foreground truncate mr-2">
               {formatFormatName(format)}
             </span>
             <Badge
               variant="outline"
               className={cn(
-                'text-[10px] capitalize h-5',
+                'text-[10px] capitalize h-5 shrink-0 whitespace-nowrap',
                 status === 'legal' &&
                   'bg-success/10 text-success border-success/30',
                 status === 'not_legal' &&
-                  'bg-muted text-muted-foreground border-border',
+                  'bg-destructive/10 text-destructive border-destructive/30',
                 status === 'banned' &&
                   'bg-destructive/10 text-destructive border-destructive/30',
                 status === 'restricted' &&
