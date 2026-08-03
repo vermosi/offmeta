@@ -433,6 +433,41 @@ export const EmptyState = ({
         </ul>
       </div>
 
+      <div className="surface-elevated p-5 max-w-md w-full mb-8 text-left">
+        <div className="flex items-center gap-2 mb-3">
+          <Sparkles className="h-4 w-4 text-primary" />
+          <span className="text-sm font-medium text-foreground">
+            {t('empty.keepExploring', 'Keep exploring')}
+          </span>
+        </div>
+        <p className="text-sm text-muted-foreground mb-4">
+          {t(
+            'empty.keepExploringBody',
+            'The search index is still useful here. Try a related guide, browse curated searches, or widen the query slightly to surface nearby cards.',
+          )}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <a
+            href="/browse-searches"
+            className="rounded-full border border-border/60 bg-background/70 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5"
+          >
+            {t('empty.browseSearches', 'Browse searches')}
+          </a>
+          <a
+            href="/guides"
+            className="rounded-full border border-border/60 bg-background/70 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5"
+          >
+            {t('empty.readGuides', 'Read guides')}
+          </a>
+          <a
+            href="/combos"
+            className="rounded-full border border-border/60 bg-background/70 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5"
+          >
+            {t('empty.findCombos', 'Find combos')}
+          </a>
+        </div>
+      </div>
+
       {/* Example queries */}
       {onTryExample && (
         <div className="w-full max-w-md">

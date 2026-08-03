@@ -24,6 +24,43 @@ interface SeoOptions {
   extraMeta?: Record<string, string>;
 }
 
+const SITE_NAME = 'OffMeta';
+const SITE_URL = 'https://offmeta.app';
+
+function normalizeTitle(title: string): string {
+  const trimmed = title.trim();
+  return trimmed.endsWith(` | ${SITE_NAME}`) || trimmed.endsWith(` — ${SITE_NAME}`)
+    ? trimmed
+    : `${trimmed} | ${SITE_NAME}`;
+}
+
+export function buildSeoTitle(title: string): string {
+  return normalizeTitle(title);
+}
+
+export function buildCardLikeTitle(cardName: string): string {
+  return normalizeTitle(`Cards Like ${cardName}`);
+}
+
+export function buildSearchTitle(query: string): string {
+  return normalizeTitle(query);
+}
+
+export function buildCappedTitle(
+  base: string,
+  suffix = ` | ${SITE_NAME}`,
+  maxLength = 60,
+): string {
+  const cleanedBase = base.trim();
+  const fullTitle = normalizeTitle(cleanedBase);
+  if (fullTitle.length <= maxLength) return fullTitle;
+
+  const ellipsis = '…';
+  const budget = maxLength - suffix.length - ellipsis.length;
+  const trimmedBase = cleanedBase.slice(0, Math.max(1, budget)).trimEnd();
+  return `${trimmedBase}${ellipsis}${suffix}`;
+}
+
 /** Set or update a <meta> element in the document head. */
 function setMeta(nameOrProp: string, content: string, attr: 'name' | 'property' = 'name') {
   let el = document.querySelector(`meta[${attr}="${nameOrProp}"]`) as HTMLMetaElement | null;
@@ -82,7 +119,7 @@ export function applySeoMeta(opts: SeoOptions): () => void {
   }
 
   setMeta('og:locale', opts.locale ?? 'en_US', 'property');
-  setMeta('og:site_name', 'OffMeta', 'property');
+  setMeta('og:site_name', SITE_NAME, 'property');
 
   if ((opts.type ?? 'article') === 'article') {
     if (opts.publishedTime) setMeta('article:published_time', opts.publishedTime, 'property');
@@ -104,7 +141,7 @@ export function applySeoMeta(opts: SeoOptions): () => void {
 
   return () => {
     document.title = prevTitle;
-    setCanonical('https://offmeta.app/');
+    setCanonical(SITE_URL);
   };
 }
 

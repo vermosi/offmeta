@@ -7,6 +7,7 @@
 import { useState, useId, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, ArrowRight } from 'lucide-react';
+import { queryToSlug } from '@/lib/search-slug';
 
 interface PageSearchBarProps {
   placeholder?: string;
@@ -31,7 +32,7 @@ export function PageSearchBar({
       navigate('/');
       return;
     }
-    navigate(`/?q=${encodeURIComponent(q)}`);
+    navigate(`/search/${queryToSlug(q)}`);
   };
 
   return (

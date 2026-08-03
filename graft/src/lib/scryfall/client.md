@@ -1,0 +1,24 @@
+# src\lib\scryfall\client.ts
+
+- SearchCacheEntry · interface · L31-L34 — interface SearchCacheEntry
+- makeSearchCacheKey · function · L38-L44 — function makeSearchCacheKey( query: string, page: number, lang?: string, ): string
+- getSearchCache · function · L46-L57 — function getSearchCache(key: string): SearchResult | null
+- setSearchCache · function · L59-L66 — function setSearchCache(key: string, data: SearchResult): void
+- clearSearchCache · function · L69-L71 — function clearSearchCache(): void
+- searchCards · function · L84-L140 — async function searchCards( query: string, page: number = 1, lang?: string, ): Promise<SearchResult>
+- ScryfallCollectionResponse · interface · L142-L145 — interface ScryfallCollectionResponse
+- getCardsByExactNames · function · L151-L208 — async function getCardsByExactNames( names: string[], ): Promise<ScryfallCard[]>
+- autocomplete · function · L215-L239 — async function autocomplete(query: string): Promise<string[]>
+- getRandomCard · function · L245-L265 — async function getRandomCard(): Promise<ScryfallCard>
+- getCardByName · function · L273-L305 — async function getCardByName(name: string): Promise<ScryfallCard>
+- fuzzyCacheKey · function · L322-L324 — function fuzzyCacheKey(name: string): string
+- __resetFuzzyCardNameCache · function · L327-L329 — function __resetFuzzyCardNameCache(): void
+- resolveFuzzyCardName · function · L341-L379 — async function resolveFuzzyCardName( name: string, ): Promise<string | null>
+- getCardImage · function · L389-L408 — function getCardImage( card: ScryfallCard, size: 'small' | 'normal' | 'large' = 'normal', faceIndex: number = 0, ): string
+- getCardImageSrcSet · function · L415-L424 — function getCardImageSrcSet( card: ScryfallCard, faceIndex: number = 0, ): string
+- isDoubleFacedCard · function · L431-L437 — function isDoubleFacedCard(card: ScryfallCard): boolean
+- getCardFaceDetails · function · L445-L484 — function getCardFaceDetails( card: ScryfallCard, faceIndex: number = 0, locale: string = 'en', )
+- getRarityColor · function · L491-L502 — function getRarityColor(rarity: string): string
+- formatManaSymbols · function · L509-L513 — function formatManaSymbols(manaCost: string): string[]
+- CardRuling · interface · L518-L524 — interface CardRuling
+- getCardRulings · function · L539-L570 — async function getCardRulings(cardId: string): Promise<CardRuling[]>

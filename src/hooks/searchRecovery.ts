@@ -32,7 +32,14 @@ type RecoveryOutcome =
   | { handled: true }
   | { handled: false };
 
-const RECOVERY_SOURCES = new Set(['ai', 'ai_recovered', 'concept_match', 'client_recovery']);
+const RECOVERY_SOURCES = new Set([
+  'ai',
+  'ai_recovered',
+  'concept_match',
+  'client_recovery',
+  'deterministic',
+  'cache',
+]);
 
 function buildBroadenedResult(originalQuery: string, fallbackQuery: string): SearchResult {
   return {

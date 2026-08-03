@@ -13,6 +13,7 @@ import {
   useNavigationType,
 } from 'react-router-dom';
 import { queryToSlug, slugToQuery } from '@/lib/search-slug';
+import { cardNameToSlug } from '@/lib/card-slug';
 import { classifyFailureReason } from '@/lib/search/classifyFailure';
 import { handleZeroResultRecovery } from '@/hooks/searchRecovery';
 import { extractCardNameCandidate } from '@/lib/search/fallback';
@@ -21,6 +22,7 @@ import type {
   UnifiedSearchBarHandle,
 } from '@/components/UnifiedSearchBar';
 import { searchCards } from '@/lib/scryfall/client';
+import { getCardByName } from '@/lib/scryfall/client';
 import type { ScryfallCard } from '@/types/card';
 import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';
@@ -174,11 +176,30 @@ export function useSearch() {
       searchBarRef.current &&
       !hasHandledInitialQuery.current
     ) {
-      hasHandledInitialQuery.current = true;
-      lastUrlQueryRef.current = initialUrlQuery.current;
-      searchBarRef.current.triggerSearch(initialUrlQuery.current);
+      const run = async () => {
+        const { isLikelyCardName } = await import('@/lib/search/fallback');
+        if (isLikelyCardName(initialUrlQuery.current)) {
+          try {
+            const card = await getCardByName(initialUrlQuery.current);
+            hasHandledInitialQuery.current = true;
+            lastUrlQueryRef.current = initialUrlQuery.current;
+            navigate(`/cards/${cardNameToSlug(card.name)}`, { replace: true });
+            return;
+          } catch {
+            // Fall through to the normal search flow.
+          }
+        }
+
+        hasHandledInitialQuery.current = true;
+        lastUrlQueryRef.current = initialUrlQuery.current;
+        window.setTimeout(() => {
+          searchBarRef.current?.triggerSearch(initialUrlQuery.current);
+        }, 0);
+      };
+
+      void run();
     }
-  }, []);
+  }, [navigate]);
 
   // --- URL sync (browser back/forward for slug changes) ---
   const prevSlugQueryRef = useRef(slugQuery);

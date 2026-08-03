@@ -94,9 +94,9 @@ export default function GuidesIndex() {
 
   useEffect(() => {
     const cleanupMeta = applySeoMeta({
-      title: 'MTG Search Guides — Learn to Find Any Magic Card | OffMeta',
+      title: 'MTG Search Guides - Plain English Card Search | OffMeta',
       description:
-        'Master MTG card search with 10 progressive guides — from basic type searches to multi-constraint queries, all in natural language.',
+        'Learn how to find Magic cards faster with 10 progressive OffMeta guides, from tribe searches and budget filters to advanced multi-constraint queries.',
       url: 'https://offmeta.app/guides',
       type: 'website',
       section: 'Guides',
@@ -105,6 +105,8 @@ export default function GuidesIndex() {
         'Magic: The Gathering search',
         'Scryfall alternatives',
         'natural language MTG search',
+        'find Magic cards by tribe',
+        'budget MTG search',
         'MTG deckbuilding guides',
         'find MTG cards',
         'OffMeta guides',

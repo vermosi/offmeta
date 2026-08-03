@@ -1,0 +1,38 @@
+# src\hooks\useAnalytics.ts
+
+- isInternalTraffic · function · L21-L23 — function isInternalTraffic(): boolean
+- shouldSuppressInsert · function · L26-L28 — function shouldSuppressInsert(): boolean
+- getSessionId · function · L41-L49 — getSessionId = (): string
+- isBotSession · function · L69-L96 — function isBotSession(): boolean
+- UtmData · interface · L108-L114 — interface UtmData
+- captureUtmParams · function · L116-L144 — function captureUtmParams(): UtmData
+- RateLimitData · interface · L147-L150 — interface RateLimitData
+- getRateLimitData · function · L152-L160 — function getRateLimitData(): RateLimitData
+- checkAndUpdateRateLimit · function · L162-L192 — function checkAndUpdateRateLimit(): boolean
+- sanitizeString · function · L195-L198 — function sanitizeString(value: unknown): string
+- sanitizeEventData · function · L201-L234 — function sanitizeEventData( data: Record<string, unknown>, ): Record<string, string | number | boolean | null>
+- EventType · type · L311-L311 — type EventType = (typeof ALLOWED_EVENT_TYPES)[number];
+- isValidEventType · function · L313-L315 — function isValidEventType(type: string): type is EventType
+- shouldLogCacheEvent · function · L321-L340 — function shouldLogCacheEvent(queryHash: string): boolean
+- SearchEventData · interface · L342-L349 — interface SearchEventData
+- LatencyBucket · type · L355-L362 — type LatencyBucket = | '<200ms' | '200-500ms' | '500-1000ms' | '1-2s' | '2-5s' | '5-10s' | '>10s';
+- toLatencyBucket · function · L364-L373 — function toLatencyBucket(durationMs: number): LatencyBucket
+- SearchSuccessEventData · interface · L375-L386 — interface SearchSuccessEventData
+- SearchFailureEventData · interface · L388-L400 — interface SearchFailureEventData
+- CardClickEventData · interface · L402-L408 — interface CardClickEventData
+- CardModalViewEventData · interface · L410-L415 — interface CardModalViewEventData
+- CardPageViewEventData · interface · L417-L429 — interface CardPageViewEventData
+- AffiliateClickEventData · interface · L431-L445 — interface AffiliateClickEventData
+- PaginationEventData · interface · L447-L451 — interface PaginationEventData
+- FeedbackEventData · interface · L453-L456 — interface FeedbackEventData
+- RerunEditedQueryEventData · interface · L458-L462 — interface RerunEditedQueryEventData
+- RouteViewEventData · interface · L464-L471 — interface RouteViewEventData
+- ExampleQueryEventData · interface · L473-L482 — interface ExampleQueryEventData
+- LifecycleEventData · interface · L484-L498 — interface LifecycleEventData
+- ShareClickedEventData · interface · L500-L504 — interface ShareClickedEventData
+- DeckClickEventData · interface · L506-L510 — interface DeckClickEventData
+- SearchStartedEventData · interface · L512-L515 — interface SearchStartedEventData
+- EventData · type · L517-L533 — type EventData = | SearchEventData | SearchSuccessEventData | SearchFailureEventData | CardClickEventData | CardModalViewEventData | CardPageViewEventData | AffiliateClickEventData | PaginationEventData | FeedbackEventData | RerunEditedQueryEventData | RouteViewEventData | ExampleQueryEventData | LifecycleEventData | ShareClickedEventData | DeckClickEventData | SearchStartedEventData;
+- shouldTrackOnce · function · L535-L552 — function shouldTrackOnce(key: string): boolean
+- trackEventDirect · function · L565-L601 — async function trackEventDirect( eventType: string, eventData: Record<string, unknown> = {}, ): Promise<void>
+- useAnalytics · function · L603-L919 — function useAnalytics()

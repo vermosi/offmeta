@@ -4,6 +4,7 @@ CREATE TABLE public.price_snapshots (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   card_name text NOT NULL,
   scryfall_id text,
+  source text NOT NULL DEFAULT 'scryfall',
   price_usd numeric,
   price_usd_foil numeric,
   recorded_at timestamp with time zone NOT NULL DEFAULT now()

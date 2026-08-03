@@ -17,9 +17,9 @@ export default function DocsIndex() {
 
   useEffect(() => {
     const cleanupSeo = applySeoMeta({
-      title: 'OffMeta Docs - MTG Search Guides & Syntax',
+      title: 'MTG Search Docs, Guides, and Syntax Cheat Sheet | OffMeta',
       description:
-        'OffMeta MTG search reference - guides, Scryfall syntax cheat sheet, and FAQ for natural-language Magic: The Gathering card search.',
+        'Reference for natural-language Magic card search, Scryfall syntax, guide walkthroughs, and search tips for OffMeta.',
       url: 'https://offmeta.app/docs',
       type: 'website',
       section: 'Docs',
@@ -29,6 +29,8 @@ export default function DocsIndex() {
         'Scryfall syntax cheat sheet',
         'natural language MTG search',
         'Magic: The Gathering search reference',
+        'MTG query syntax',
+        'search card help',
       ],
     });
     const cleanupLd = injectJsonLd({

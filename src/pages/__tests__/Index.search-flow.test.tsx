@@ -66,6 +66,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('@/hooks/useAnalytics', () => ({
   useAnalytics: () => ({
+    toLatencyBucket: vi.fn(),
     trackSearch: vi.fn(),
     trackCardClick: vi.fn(),
     trackEvent: vi.fn(),
@@ -165,6 +166,15 @@ describe('Index – search flow', () => {
     );
     // route_view is now fired by global RouteTracker in App.tsx,
     // not by Index — so it's not asserted here.
+  });
+
+  it('noindexes query landing URLs', async () => {
+    await renderIndex(IndexPage, '/?q=lotus%20cobra');
+
+    await waitFor(() => {
+      const robots = document.querySelector('meta[name="robots"]');
+      expect(robots).toHaveAttribute('content', 'noindex, follow');
+    });
   });
 
   it('displays skeleton loaders while searching', async () => {

@@ -109,7 +109,18 @@ async function fetchTopCards(limit) {
 
   return orderedIds
     .map((id) => cardByOracleId.get(id))
-    .filter((row) => row && typeof row.name === 'string' && row.name.length > 1);
+    .filter(
+      (row) =>
+        row &&
+        typeof row.name === 'string' &&
+        row.name.length > 1 &&
+        typeof row.oracle_id === 'string' &&
+        row.oracle_id.trim() &&
+        typeof row.type_line === 'string' &&
+        row.type_line.trim() &&
+        typeof row.image_url === 'string' &&
+        row.image_url.trim(),
+    );
 }
 
 function buildTitle(name) {

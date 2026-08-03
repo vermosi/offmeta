@@ -63,9 +63,9 @@ export default function FindMyCombos() {
     // Previously only title/description were set — canonical/og:url were left pointing at the homepage,
     // so /combos shared on Reddit/Discord/Slack showed the homepage preview.
     const cleanupMeta = applySeoMeta({
-      title: 'MTG Combo Finder — Powered by Commander Spellbook | OffMeta',
+      title: 'MTG Combo Finder for Commander Decks | OffMeta',
       description:
-        'Find every infinite combo in your Magic: The Gathering deck. Paste a Moxfield URL and instantly see Commander Spellbook combos, prices & color identity.',
+        'Paste a decklist or Moxfield URL to find infinite combos, near-combos, prices, and color identity with Commander Spellbook data.',
       url: 'https://offmeta.app/combos',
       type: 'website',
     });

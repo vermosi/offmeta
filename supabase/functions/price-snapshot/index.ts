@@ -68,6 +68,7 @@ serve(withLogging('price-snapshot', async (req: Request): Promise<Response> => {
     const snapshots: Array<{
       card_name: string;
       scryfall_id: string | null;
+      source: string;
       price_usd: number | null;
       price_usd_foil: number | null;
     }> = [];
@@ -97,6 +98,7 @@ serve(withLogging('price-snapshot', async (req: Request): Promise<Response> => {
               snapshots.push({
                 card_name: row.card_name,
                 scryfall_id: row.scryfall_id,
+                source: 'scryfall',
                 price_usd: row.price_usd ? Number(row.price_usd) : null,
                 price_usd_foil: row.price_usd_foil ? Number(row.price_usd_foil) : null,
               });
@@ -131,6 +133,7 @@ serve(withLogging('price-snapshot', async (req: Request): Promise<Response> => {
             snapshots.push({
               card_name: card.name,
               scryfall_id: card.id,
+              source: 'scryfall',
               price_usd: card.prices?.usd ? parseFloat(card.prices.usd) : null,
               price_usd_foil: card.prices?.usd_foil ? parseFloat(card.prices.usd_foil) : null,
             });

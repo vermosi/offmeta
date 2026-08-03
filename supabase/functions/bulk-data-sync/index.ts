@@ -91,6 +91,7 @@ function processCard(card: ScryfallCard): {
     priceRow = {
       card_name: card.name,
       scryfall_id: card.id ?? null,
+      source: 'scryfall',
       price_usd: priceUsd,
       price_usd_foil: priceUsdFoil,
     };

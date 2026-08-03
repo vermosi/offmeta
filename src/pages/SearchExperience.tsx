@@ -173,6 +173,10 @@ const Index = () => {
     handleFilteredCards,
     initialUrlFilters,
   } = useSearch();
+  const [hasQueryParam] = useState(() => {
+    if (!location.search) return false;
+    return new URLSearchParams(location.search).has('q');
+  });
 
   // Profile the render side of the search flow. No-op unless
   // `localStorage.offmeta_profile_search === '1'` (auto-on in dev).
@@ -224,8 +228,10 @@ const Index = () => {
   );
 
 
-  // Prevent indexing of zero-result search pages
-  useNoIndex(hasSearched && !isSearching && totalCards === 0);
+  // Prevent indexing of query landing pages and zero-result search pages.
+  useNoIndex(
+    hasQueryParam || (hasSearched && !isSearching && totalCards === 0),
+  );
 
   const handleTrySuggestion = useCallback(
     (scryfallQuery: string) => {

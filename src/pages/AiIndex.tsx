@@ -56,9 +56,9 @@ export default function AiIndex() {
   // SEO
   useEffect(() => {
     const cleanupMeta = applySeoMeta({
-      title: 'MTG Card Guides — AI-Powered Search | OffMeta',
+      title: 'AI-Powered MTG Search Guides | OffMeta',
       description:
-        'Browse AI-generated guides for Magic: The Gathering card searches. Find the best cards by mechanic, color, format, and strategy.',
+        'Browse AI-generated Magic card search guides by mechanic, color, format, strategy, and long-tail search intent.',
       url: 'https://offmeta.app/ai',
       type: 'website',
     });
@@ -68,7 +68,7 @@ export default function AiIndex() {
       '@type': 'CollectionPage',
       name: 'MTG Card Guides',
       description:
-        'AI-generated guides for Magic: The Gathering card searches.',
+        'AI-generated guides for Magic: The Gathering card searches and long-tail intents.',
       url: 'https://offmeta.app/ai',
       publisher: { '@type': 'Organization', name: 'OffMeta' },
     });

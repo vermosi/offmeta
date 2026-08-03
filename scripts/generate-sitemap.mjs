@@ -130,6 +130,19 @@ async function fetchAllCards() {
   return all;
 }
 
+function isIndexableCardRow(card) {
+  return Boolean(
+    card &&
+      typeof card.name === 'string' &&
+      typeof card.oracle_id === 'string' &&
+      card.oracle_id.trim() &&
+      typeof card.type_line === 'string' &&
+      card.type_line.trim() &&
+      typeof card.image_url === 'string' &&
+      card.image_url.trim(),
+  );
+}
+
 async function fetchCuratedSearches() {
   const rows = await pgrest(
     'curated_searches?select=slug,updated_at&is_active=eq.true&order=priority.desc.nullslast&limit=1000',
@@ -207,6 +220,7 @@ for (const row of seoPages) {
 }
 
 for (const card of cards) {
+  if (!isIndexableCardRow(card)) continue;
   const slug = slugifyCardName(card.name);
   if (!slug) continue;
   pushUnique(`/cards/${slug}`, toLastmodDate(card.updated_at) ?? today, 'weekly', '0.6');

@@ -216,6 +216,10 @@ export type Database = {
         Row: {
           card_name: string
           id: string
+          price_average: number | null
+          price_foil: number | null
+          price_low: number | null
+          price_market: number | null
           price_usd: number | null
           price_usd_foil: number | null
           recorded_at: string
@@ -224,6 +228,10 @@ export type Database = {
         Insert: {
           card_name: string
           id?: string
+          price_average?: number | null
+          price_foil?: number | null
+          price_low?: number | null
+          price_market?: number | null
           price_usd?: number | null
           price_usd_foil?: number | null
           recorded_at?: string
@@ -232,6 +240,10 @@ export type Database = {
         Update: {
           card_name?: string
           id?: string
+          price_average?: number | null
+          price_foil?: number | null
+          price_low?: number | null
+          price_market?: number | null
           price_usd?: number | null
           price_usd_foil?: number | null
           recorded_at?: string

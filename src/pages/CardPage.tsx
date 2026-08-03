@@ -12,13 +12,12 @@ import { useParams, Link, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getCardByName } from '@/lib/scryfall/client';
 import { slugToCardName, cardNameToSlug } from '@/lib/card-slug';
+import { queryToSlug } from '@/lib/search-slug';
 import {
   applySeoMeta,
   injectJsonLd,
   buildCardJsonLd,
   buildBreadcrumbJsonLd,
-  buildFaqJsonLd,
-  buildCardFaqs,
 } from '@/lib/seo';
 import { useSimilarCards } from '@/hooks';
 import { useAnalytics } from '@/hooks/useAnalytics';
@@ -219,9 +218,6 @@ const CardPage = () => {
       },
     });
 
-    // Build FAQ structured data
-    const cardFaqs = buildCardFaqs(card);
-
     const cleanupJsonLd = injectJsonLd({
       '@graph': [
         buildCardJsonLd(card, pageUrl),
@@ -230,7 +226,6 @@ const CardPage = () => {
           { name: 'Cards', url: 'https://offmeta.app/cards' },
           { name: card.name, url: pageUrl },
         ]),
-        ...(cardFaqs.length > 0 ? [buildFaqJsonLd(cardFaqs)] : []),
       ],
     });
 
@@ -575,7 +570,7 @@ const CardPage = () => {
                     View on Scryfall <ExternalLink className="h-3.5 w-3.5" />
                   </a>
                   <Link
-                    to={`/?q=${encodeURIComponent(card.name)}`}
+                    to={`/search/${queryToSlug(card.name)}`}
                     className="text-sm text-primary hover:underline flex items-center gap-1"
                   >
                     <Search className="h-3.5 w-3.5" />
@@ -641,7 +636,7 @@ const CardPage = () => {
                   {getRelatedSearches(card).map((q) => (
                     <Link
                       key={q}
-                      to={`/?q=${encodeURIComponent(q)}`}
+                      to={`/search/${queryToSlug(q)}`}
                       className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full
                         border border-border/40 bg-card/50 hover:bg-primary/10 hover:border-primary/30
                         text-sm text-muted-foreground hover:text-foreground transition-all"

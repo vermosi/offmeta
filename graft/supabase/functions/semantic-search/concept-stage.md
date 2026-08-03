@@ -1,0 +1,7 @@
+# supabase\functions\semantic-search\concept-stage.ts
+
+- ConceptMatchLike · type · L6-L15 — type ConceptMatchLike = { conceptId: string; confidence: number; category: string; description?: string; pattern?: string; scryfallSyntax: string; matchType?: string; similarity: number; };
+- JsonHeaders · type · L17-L17 — type JsonHeaders = Record<string, string>;
+- ConceptStageArgs · type · L19-L46 — type ConceptStageArgs = { query: string; filters: Record<string, unknown> | null; cacheSalt: string | undefined; deterministicQuery: string; deterministicHandledWords: Set<string>; meaningfulResidual: string; residualForConcepts: string; requestStartTime: number; stageDurationsMs: Partial<Record<string, number>>; queryPrefix?: number; logInfo: (event: string, payload: Record<string, unknown>) => void; logWarn: (event: string, payload: Record<string, unknown>) => void; jsonHeaders: JsonHeaders; setCachedResult: ( query: string, filters: Record<string, unknown> | null, payload: Record<string, unknown>, cacheSalt: string | undefined, ) => void; flushLogQueue: () => void; findConceptMatches: ( residual: string, maxConcepts: number, threshold: number, skipLLMClassification?: boolean, ) => Promise<ConceptMatchLike[]>; };
+- buildPerfLogFields · function · L48-L65 — function buildPerfLogFields( stageDurationsMs: Partial<Record<string, number>>, source: string, responseTimeMs: number, ): Record<string, unknown>
+- tryConceptStage · function · L67-L273 — async function tryConceptStage( args: ConceptStageArgs, ): Promise<Response | null>

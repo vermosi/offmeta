@@ -14,6 +14,7 @@
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "check:mtg-copy": "node scripts/check-mtg-copy.mjs",
+    "backfill:mtgjson": "node scripts/backfill-mtgjson-price-history.mjs",
     "test:watch": "vitest",
     "check": "npm run lint && npm run typecheck && npm run test",
     "prepare": "husky install",

@@ -9,6 +9,10 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface PriceSnapshot {
   recorded_at: string;
+  price_low: number | null;
+  price_average: number | null;
+  price_market: number | null;
+  price_foil: number | null;
   price_usd: number | null;
   price_usd_foil: number | null;
 }
@@ -23,7 +27,7 @@ export function usePriceHistory(cardName: string | undefined) {
 
       const { data, error } = await supabase
         .from('price_snapshots')
-        .select('recorded_at, price_usd, price_usd_foil')
+        .select('recorded_at, price_low, price_average, price_market, price_foil, price_usd, price_usd_foil')
         .eq('card_name', cardName)
         .gte('recorded_at', thirtyDaysAgo)
         .order('recorded_at', { ascending: true });

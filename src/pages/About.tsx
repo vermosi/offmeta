@@ -8,7 +8,7 @@ import { useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Link } from 'react-router-dom';
-import { Search, Code2 } from 'lucide-react';
+import { Search, Code2, BookOpen, Sparkles, TrendingUp } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 
 const ABOUT_META = {
@@ -20,7 +20,7 @@ const ABOUT_META = {
 } as const;
 
 const DEFAULT_META = {
-  title: 'OffMeta — Natural Language MTG Card Search',
+  title: 'Search Magic cards in plain English | OffMeta',
   description:
     'Find Magic cards by typing what you mean. No syntax required.',
   url: 'https://offmeta.app/',
@@ -215,6 +215,66 @@ export default function About() {
                 'Magic card search is powerful, but syntax can slow down discovery. OffMeta exists to remove that friction for brewers, grinders, and curious players who think in game concepts first and filters second. It gives you faster first results while still respecting the precision that makes Scryfall great.',
               )}
             </p>
+          </div>
+        </section>
+
+        <section className="py-16 sm:py-20 px-4 border-b border-border/30">
+          <div className="max-w-5xl mx-auto">
+            <div className="max-w-3xl mx-auto space-y-5 text-center">
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
+                What to search for on OffMeta
+              </h2>
+              <p className="text-muted-foreground leading-relaxed">
+                The best results come from specific goals. Use OffMeta for
+                tribal searches, budget constraints, Commander staples,
+                keyword abilities, combo pieces, and search ideas that would be
+                annoying to write by hand.
+              </p>
+            </div>
+
+            <div className="mt-8 grid gap-4 md:grid-cols-3">
+              <Link
+                to="/guides"
+                className="rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-card/80"
+              >
+                <BookOpen className="h-5 w-5 text-accent" aria-hidden="true" />
+                <h3 className="mt-3 text-base font-semibold text-foreground">
+                  Guide library
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                  Learn step by step from creature types and color filters to
+                  advanced multi-constraint searches.
+                </p>
+              </Link>
+
+              <Link
+                to="/combos"
+                className="rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-card/80"
+              >
+                <Sparkles className="h-5 w-5 text-accent" aria-hidden="true" />
+                <h3 className="mt-3 text-base font-semibold text-foreground">
+                  Combo finder
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                  Find synergy loops, engines, and payoff cards for Commander
+                  and other formats.
+                </p>
+              </Link>
+
+              <Link
+                to="/browse-searches"
+                className="rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-card/80"
+              >
+                <TrendingUp className="h-5 w-5 text-accent" aria-hidden="true" />
+                <h3 className="mt-3 text-base font-semibold text-foreground">
+                  Curated searches
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                  Browse high-intent query ideas that point you toward the
+                  most useful starting points.
+                </p>
+              </Link>
+            </div>
           </div>
         </section>
 

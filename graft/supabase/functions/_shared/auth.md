@@ -1,0 +1,29 @@
+# supabase\functions\_shared\auth.ts
+
+- SupabaseAuthUser · type · L12-L14 — type SupabaseAuthUser = { id: string; };
+- SupabaseClaimsData · type · L16-L21 — type SupabaseClaimsData = { claims?: { sub?: string; role?: string; }; };
+- AuthResponse · type · L23-L26 — type AuthResponse<TData> = { data: TData; error: unknown; };
+- SupabaseUserClient · type · L28-L33 — type SupabaseUserClient = { auth: { getUser: () => Promise<AuthResponse<{ user: SupabaseAuthUser | null }>>; getClaims?: (jwt: string) => Promise<AuthResponse<SupabaseClaimsData>>; }; };
+- UserRoleQueryBuilder · type · L35-L49 — type UserRoleQueryBuilder = { select: (columns: string) => { eq: ( column: string, value: string, ) => { eq: ( secondColumn: string, secondValue: string, ) => { maybeSingle: () => Promise<AuthResponse<{ role: string } | null>>; }; }; }; };
+- AnalyticsEventsInsertBuilder · type · L51-L56 — type AnalyticsEventsInsertBuilder = { insert: (values: { event_type: string; event_data: Record<string, unknown>; }) => Promise<unknown>; };
+- SupabaseAdminClient · type · L58-L60 — type SupabaseAdminClient = { from: (table: 'user_roles') => UserRoleQueryBuilder; };
+- SupabaseLoggingClient · type · L62-L64 — type SupabaseLoggingClient = { from: (table: 'analytics_events') => AnalyticsEventsInsertBuilder; };
+- CreateClientOptions · type · L66-L70 — type CreateClientOptions = { global?: { headers?: Record<string, string>; }; };
+- SupabaseClientFactory · type · L72-L76 — type SupabaseClientFactory = ( url: string, key: string, options?: CreateClientOptions, ) => unknown;
+- importSupabase · function · L78-L85 — importSupabase = async (): Promise<{ createClient: SupabaseClientFactory; }>
+- AuthResult · type · L95-L97 — type AuthResult = | { authorized: true; role: string } | { authorized: false; error: string };
+- JwtPayload · type · L99-L105 — type JwtPayload = { iss?: string; ref?: string; role?: string; exp?: number; [key: string]: unknown; };
+- decodeJwtPayload · function · L107-L121 — function decodeJwtPayload(token: string): JwtPayload | null
+- extractProjectRef · function · L123-L133 — function extractProjectRef(supabaseUrl?: string): string | null
+- isRecord · function · L135-L137 — function isRecord(value: unknown): value is Record<string, unknown>
+- isUserClient · function · L139-L143 — function isUserClient(client: unknown): client is SupabaseUserClient
+- isAdminClient · function · L145-L147 — function isAdminClient(client: unknown): client is SupabaseAdminClient
+- isLoggingClient · function · L149-L151 — function isLoggingClient(client: unknown): client is SupabaseLoggingClient
+- validateAuth · function · L153-L282 — async function validateAuth(req: Request): Promise<AuthResult>
+- getCorsHeaders · function · L287-L364 — function getCorsHeaders(req: Request)
+- parseOrigins · function · L320-L327 — parseOrigins = (envValue?: string): string[]
+- logAuthFailure · function · L380-L413 — async function logAuthFailure( req: Request, error: string, functionName: string, ): Promise<void>
+- requireServiceRole · function · L419-L449 — function requireServiceRole( req: Request, corsHeaders: Record<string, string>, ): { authorized: true } | { authorized: false; response: Response }
+- requireServiceOrPipelineKey · function · L456-L479 — async function requireServiceOrPipelineKey( req: Request, corsHeaders: Record<string, string>, ): Promise<{ authorized: true } | { authorized: false; response: Response }>
+- requireAdmin · function · L481-L575 — async function requireAdmin( req: Request, corsHeaders: Record<string, string>, ): Promise< | { authorized: true; userId: string } | { authorized: false; response: Response } >
+- requireAdminOrService · function · L577-L595 — async function requireAdminOrService( req: Request, corsHeaders: Record<string, string>, ): Promise< | { authorized: true; mode: 'service' | 'admin'; userId?: string } | { authorized: false; response: Response } >

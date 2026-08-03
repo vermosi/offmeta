@@ -191,17 +191,6 @@ export default function AiPage() {
           mainEntityOfPage: canonicalUrl,
         },
         {
-          '@type': 'FAQPage',
-          mainEntity: content.faqs.map((faq) => ({
-            '@type': 'Question',
-            name: faq.question,
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: faq.answer,
-            },
-          })),
-        },
-        {
           '@type': 'BreadcrumbList',
           itemListElement: [
             { '@type': 'ListItem', position: 1, name: t('ai.breadcrumbHome'), item: 'https://offmeta.app' },

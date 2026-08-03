@@ -81,7 +81,7 @@ describe('GuidePage', () => {
     it('navigates to search when CTA is clicked', () => {
       renderGuidePage('search-by-creature-type');
       fireEvent.click(screen.getByText(/Search "dragons"/));
-      expect(mockNavigate).toHaveBeenCalledWith('/?q=dragons');
+      expect(mockNavigate).toHaveBeenCalledWith('/search/dragons');
     });
 
     it('copies the guide link when Copy link is clicked', async () => {
@@ -193,12 +193,10 @@ describe('GuidePage', () => {
       const scripts = container.querySelectorAll(
         'script[type="application/ld+json"]',
       );
-      expect(scripts.length).toBe(3);
+      expect(scripts.length).toBe(2);
       const articleLd = JSON.parse(scripts[0].textContent || '{}');
       expect(articleLd['@type']).toBe('Article');
-      const faqLd = JSON.parse(scripts[1].textContent || '{}');
-      expect(faqLd['@type']).toBe('FAQPage');
-      const breadcrumbLd = JSON.parse(scripts[2].textContent || '{}');
+      const breadcrumbLd = JSON.parse(scripts[1].textContent || '{}');
       expect(breadcrumbLd['@type']).toBe('BreadcrumbList');
       expect(breadcrumbLd.itemListElement).toHaveLength(3);
     });

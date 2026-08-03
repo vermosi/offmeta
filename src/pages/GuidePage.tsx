@@ -3,7 +3,7 @@
  */
 
 import { useEffect } from 'react';
-import { applySeoMeta, buildFaqJsonLd, buildBreadcrumbJsonLd, buildGuideArticleJsonLd } from '@/lib/seo';
+import { applySeoMeta, buildBreadcrumbJsonLd, buildGuideArticleJsonLd } from '@/lib/seo';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getGuideBySlug, GUIDES } from '@/data/guides';
 import { Footer } from '@/components/Footer';
@@ -26,6 +26,8 @@ import { SkipLinks } from '@/components/SkipLinks';
 import { useToast } from '@/hooks';
 import { Copy, Share2 } from 'lucide-react';
 import { buildGuideUrl, copyTextToClipboard } from '@/lib/guide-actions';
+import { useNoIndex } from '@/hooks/useNoIndex';
+import { queryToSlug } from '@/lib/search-slug';
 
 const GUIDE_PUBLISHED_AT = '2025-01-15T00:00:00Z';
 const GUIDE_MODIFIED_AT = '2026-07-07T00:00:00Z';
@@ -36,6 +38,8 @@ export default function GuidePage() {
   const guide = slug ? getGuideBySlug(slug) : undefined;
   const { t } = useTranslation();
   const { toast } = useToast();
+
+  useNoIndex(!guide);
 
   useEffect(() => {
     if (!guide) return;
@@ -118,7 +122,7 @@ export default function GuidePage() {
       : undefined;
 
   const handleSearchClick = () => {
-    navigate(`/?q=${encodeURIComponent(guide.searchQuery)}`);
+    navigate(`/search/${queryToSlug(guide.searchQuery)}`);
   };
 
   const handleCopyLink = async () => {
@@ -168,7 +172,6 @@ export default function GuidePage() {
     publishedTime: GUIDE_PUBLISHED_AT,
     modifiedTime: GUIDE_MODIFIED_AT,
   });
-  const faqJsonLd = buildFaqJsonLd(guide.faq);
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
     { name: 'Home', url: 'https://offmeta.app/' },
     { name: 'Guides', url: 'https://offmeta.app/guides' },
@@ -180,10 +183,6 @@ export default function GuidePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
       <script
         type="application/ld+json"

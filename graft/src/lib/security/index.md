@@ -1,0 +1,39 @@
+# src\lib\security\index.ts
+
+- sanitizeErrorForClient · function · L46-L83 — function sanitizeErrorForClient(error: unknown): string
+- sanitizeStackTrace · function · L89-L107 — function sanitizeStackTrace(stack: string): string
+- containsPrototypePollution · function · L123-L128 — function containsPrototypePollution(input: string): boolean
+- sanitizeObjectKeys · function · L133-L153 — function sanitizeObjectKeys<T>(obj: T): T
+- safeJsonParse · function · L158-L165 — function safeJsonParse<T = unknown>(json: string): T | null
+- testRegexPerformance · function · L185-L198 — function testRegexPerformance( fn: () => void, iterations: number = 1, ): { duration: number; averageMs: number }
+- isRegexSafe · function · L204-L223 — function isRegexSafe(pattern: RegExp): boolean
+- safeTimingCompare · function · L232-L246 — function safeTimingCompare(a: string, b: string): boolean
+- measureTimingVariance · function · L251-L272 — function measureTimingVariance( fn: () => void, iterations: number, ): { mean: number; stdDev: number; min: number; max: number }
+- buildMaliciousQuery · function · L281-L326 — function buildMaliciousQuery( type: 'sql' | 'xss' | 'nosql' | 'command' | 'template', ): string
+- getAllMaliciousPayloads · function · L331-L382 — function getAllMaliciousPayloads( type: 'sql' | 'xss' | 'nosql' | 'command' | 'template', ): string[]
+- buildInvalidToken · function · L391-L428 — function buildInvalidToken( type: 'expired' | 'malformed' | 'modified' | 'missing_claims' | 'wrong_issuer', ): string
+- createMockJWT · function · L433-L439 — function createMockJWT(payload: Record<string, unknown>): string
+- buildOversizedPayload · function · L448-L456 — function buildOversizedPayload(sizeKb: number): { query: string }
+- buildNestedObject · function · L461-L466 — function buildNestedObject(depth: number): Record<string, unknown>
+- buildCircularLikePayload · function · L472-L480 — function buildCircularLikePayload(): Record<string, unknown>
+- simulateConcurrentRequests · function · L489-L495 — async function simulateConcurrentRequests<T>( count: number, fn: () => Promise<T>, ): Promise<T[]>
+- simulateBurstRequests · function · L500-L516 — async function simulateBurstRequests<T>( count: number, fn: (index: number) => Promise<T>, delayMs: number = 0, ): Promise<{ results: T[]; totalTimeMs: number }>
+- containsXSS · function · L525-L536 — function containsXSS(input: string): boolean
+- containsSQLInjection · function · L541-L553 — function containsSQLInjection(input: string): boolean
+- sanitizeInput · function · L558-L571 — function sanitizeInput(input: string): string
+- hasRepetitiveChars · function · L576-L579 — function hasRepetitiveChars(input: string, threshold: number = 6): boolean
+- hasMinimumAlphanumeric · function · L584-L588 — function hasMinimumAlphanumeric(input: string, ratio: number = 0.5): boolean
+- countQueryParameters · function · L593-L596 — function countQueryParameters(query: string): number
+- MockResponse · interface · L602-L606 — interface MockResponse
+- RateLimitResult · interface · L608-L611 — interface RateLimitResult
+- ValidationResult · interface · L613-L619 — interface ValidationResult
+- buildMockRequest · function · L628-L648 — function buildMockRequest(options: { method?: string; url?: string; headers?: Record<string, string>; body?: unknown; }): { method: string; url: string; headers: { get: (key: string) => string | null }; json: () => Promise<unknown>; }
+- extractClientIP · function · L653-L668 — function extractClientIP( headers: { get: (key: string) => string | null }, defaultIP: string = '127.0.0.1', ): string
+- expectRejected · function · L677-L683 — function expectRejected(result: ValidationResult): void
+- expectSanitized · function · L688-L706 — function expectSanitized( input: string, result: ValidationResult, shouldNotContain?: string[], ): void
+- expectRateLimited · function · L711-L718 — function expectRateLimited(result: RateLimitResult): void
+- createMockRateLimiter · function · L727-L763 — function createMockRateLimiter(limit: number, windowMs: number)
+- check · method · L731-L749 — check(key: string): RateLimitResult
+- reset · method · L751-L757 — reset(key?: string): void
+- getCount · method · L759-L761 — getCount(key: string): number
+- setupFetchMock · function · L768-L781 — function setupFetchMock(responses: Map<string, MockResponse>)

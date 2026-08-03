@@ -7,7 +7,9 @@
 import { useEffect, useRef } from 'react';
 import {
   applySeoMeta,
+  buildCappedTitle,
   buildSearchCanonical,
+  buildSearchTitle,
   injectJsonLd,
   buildSearchResultsJsonLd,
 } from '@/lib/seo';
@@ -47,7 +49,7 @@ export function SeoManager({
     // per-route tags in the head (which would mis-attribute link previews).
     if (!hasSearched || isSearching) {
       applySeoMeta({
-        title: 'Natural Language MTG Card Search | OffMeta',
+        title: buildSearchTitle('Search Magic cards in plain English'),
         description:
           'Search Magic: The Gathering cards in plain English. Type what you mean and get real Scryfall results.',
         url: 'https://offmeta.app/',
@@ -91,19 +93,13 @@ export function SeoManager({
     // SEO title + description - must stay within 60 chars including suffix.
     const MAX_TITLE = 60;
     const candidates = [
-      `${originalQuery} - MTG Card Search | OffMeta`,
-      `${originalQuery} - MTG Search | OffMeta`,
-      `${originalQuery} - OffMeta`,
+      `${originalQuery} - MTG Card Search`,
+      `${originalQuery} - MTG Search`,
       `${originalQuery}`,
     ];
-    let title =
+    const title =
       candidates.find((c) => c.length <= MAX_TITLE) ??
-      candidates[candidates.length - 1];
-    if (title.length > MAX_TITLE) {
-      const suffix = ' | OffMeta';
-      const budget = MAX_TITLE - suffix.length - 1;
-      title = `${originalQuery.slice(0, Math.max(1, budget)).trimEnd()}...${suffix}`;
-    }
+      buildCappedTitle(originalQuery, ' | OffMeta', MAX_TITLE);
     const desc = `Find ${totalCards} Magic: The Gathering cards matching "${originalQuery}" - off-meta picks, alternatives & synergies.`;
     applySeoMeta({
       title,

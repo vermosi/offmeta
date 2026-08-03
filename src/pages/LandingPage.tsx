@@ -4,8 +4,17 @@
  */
 
 import { lazy, Suspense, useEffect, useState, type FormEvent } from 'react';
-import { ArrowRight, Search, SlidersHorizontal, Sparkles } from 'lucide-react';
+import {
+  ArrowRight,
+  Search,
+  SlidersHorizontal,
+  Sparkles,
+  BookOpen,
+  Layers3,
+  TrendingUp,
+} from 'lucide-react';
 import { queryToSlug } from '@/lib/search-slug';
+import { applySeoMeta } from '@/lib/seo';
 
 const AuthModal = lazy(() =>
   import('@/components/AuthModal').then((m) => ({ default: m.AuthModal })),
@@ -15,12 +24,21 @@ export default function LandingPage() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
   useEffect(() => {
+    const cleanupSeo = applySeoMeta({
+      title: 'Search Magic cards in plain English',
+      description:
+        'Describe what you want, see the exact Scryfall query, and jump straight to real card results.',
+      url: 'https://offmeta.app/',
+      type: 'website',
+    });
+
     const win = window as Window & {
       __openAuthModal?: () => void;
     };
     win.__openAuthModal = () => setAuthModalOpen(true);
     return () => {
       delete win.__openAuthModal;
+      cleanupSeo();
     };
   }, []);
 
@@ -144,6 +162,71 @@ export default function LandingPage() {
             <a className="hover:text-foreground transition-colors" href="/docs">
               Read docs
             </a>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-border/40 bg-card/30 px-4 py-12 sm:py-16">
+        <div className="container-main">
+          <div className="mx-auto max-w-5xl">
+            <div className="mb-6 max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                Built for search intent
+              </p>
+              <h2 className="mt-2 text-2xl sm:text-3xl font-semibold text-foreground">
+                Find the kind of card you mean, not just the words you type.
+              </h2>
+              <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed">
+                OffMeta is strongest when you know the job a card needs to do.
+                Search by tribe, format, budget, keyword, combo piece, or a
+                messy sentence like "cheap green ramp that draws a card."
+                Then refine the result instead of starting over.
+              </p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-3">
+              <a
+                href="/guides"
+                className="rounded-2xl border border-border/60 bg-background/80 p-5 transition-colors hover:border-primary/40 hover:bg-card"
+              >
+                <BookOpen className="h-5 w-5 text-accent" aria-hidden="true" />
+                <h3 className="mt-3 text-base font-semibold text-foreground">
+                  Learn faster
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                  Use progressive guides for tribes, budget searches, format
+                  legality, keywords, and complex queries.
+                </p>
+              </a>
+
+              <a
+                href="/combos"
+                className="rounded-2xl border border-border/60 bg-background/80 p-5 transition-colors hover:border-primary/40 hover:bg-card"
+              >
+                <Layers3 className="h-5 w-5 text-accent" aria-hidden="true" />
+                <h3 className="mt-3 text-base font-semibold text-foreground">
+                  Find combos
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                  Search for engines, finishers, and synergy loops when you
+                  want a shell instead of a single card.
+                </p>
+              </a>
+
+              <a
+                href="/docs"
+                className="rounded-2xl border border-border/60 bg-background/80 p-5 transition-colors hover:border-primary/40 hover:bg-card"
+              >
+                <TrendingUp className="h-5 w-5 text-accent" aria-hidden="true" />
+                <h3 className="mt-3 text-base font-semibold text-foreground">
+                  Translate intent
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                  Read syntax examples and search tips when you want to nudge
+                  the query yourself.
+                </p>
+              </a>
+            </div>
           </div>
         </div>
       </section>

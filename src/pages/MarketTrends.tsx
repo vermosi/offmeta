@@ -264,9 +264,9 @@ export default function MarketTrends() {
 
   useEffect(() => {
     return applySeoMeta({
-      title: 'MTG Price Movers & Market Trends | OffMeta',
+      title: 'MTG Price Movers and Market Trends | OffMeta',
       description:
-        'Track Magic: The Gathering price movers - biggest gainers and losers across formats, with filterable time ranges and rarity. Sunset feature on OffMeta.',
+        'Track Magic card price movers, biggest gainers and losers, with filterable time ranges, formats, and rarity.',
       url: 'https://offmeta.app/market',
       extraMeta: { robots: 'noindex, follow' },
     });

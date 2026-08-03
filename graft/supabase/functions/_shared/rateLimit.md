@@ -1,0 +1,22 @@
+# supabase\functions\_shared\rateLimit.ts
+
+- SupabaseClientLike · type · L2-L11 — type SupabaseClientLike = { rpc: ( fn: string, params: Record<string, unknown>, ) => PromiseLike<{ data: { blocked?: boolean; retry_after?: number } | null; error: unknown; }>; from: (table: 'rate_limits') => RateLimitTableQueryBuilder; };
+- SupabaseClientFactory · type · L13-L16 — type SupabaseClientFactory = ( url: string, key: string, ) => SupabaseClientLike;
+- QueryResult · type · L18-L21 — type QueryResult<TData> = PromiseLike<{ data: TData | null; error: unknown; }>;
+- RateLimitRow · type · L23-L26 — type RateLimitRow = { count: number; window_start: string; };
+- RateLimitFilterQueryBuilder · type · L28-L30 — type RateLimitFilterQueryBuilder = { eq: (column: 'ip', value: string) => QueryResult<RateLimitRow>; };
+- RateLimitTableQueryBuilder · type · L32-L50 — type RateLimitTableQueryBuilder = { select: (columns: 'count, window_start') => { eq: ( column: 'ip', value: string, ) => { single: () => QueryResult<RateLimitRow>; }; }; update: (values: { count: number; window_start?: string; }) => RateLimitFilterQueryBuilder; insert: (values: { ip: string; count: number; window_start: string; }) => PromiseLike<unknown>; };
+- RateLimitEntry · interface · L52-L55 — interface RateLimitEntry
+- RateLimitOptions · interface · L57-L59 — interface RateLimitOptions
+- RateLimitResult · interface · L61-L65 — interface RateLimitResult
+- checkSessionRateLimit · function · L80-L104 — function checkSessionRateLimit( sessionId: string | null, windowMs: number = SESSION_WINDOW_MS, limit: number = SESSION_LIMIT, ): { allowed: boolean; retryAfter?: number }
+- isValidIp · function · L113-L122 — function isValidIp(value: string): boolean
+- decodeBase64Url · function · L124-L132 — function decodeBase64Url(input: string): string | null
+- getSharedRateLimitClient · function · L134-L155 — async function getSharedRateLimitClient(): Promise<SupabaseClientLike | null>
+- getStablePrincipal · function · L157-L188 — function getStablePrincipal(req: Request): string | null
+- hashValue · function · L190-L196 — async function hashValue(value: string): Promise<string>
+- resolveRateLimitKey · function · L198-L212 — async function resolveRateLimitKey(req: Request): Promise<string>
+- checkRateLimit · function · L217-L382 — async function checkRateLimit( bucketKey: string, supabase?: SupabaseClientLike, ipLimit: number = 30, globalLimit: number = 1000, windowMs: number = 60000, options?: RateLimitOptions, ): Promise<RateLimitResult>
+- cleanupExpiredEntries · function · L388-L400 — function cleanupExpiredEntries(): void
+- maybeCleanup · function · L410-L416 — function maybeCleanup(): void
+- cleanupRateLimiter · function · L418-L425 — function cleanupRateLimiter(): void

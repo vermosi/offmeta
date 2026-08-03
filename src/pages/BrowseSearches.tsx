@@ -109,8 +109,11 @@ export default function BrowseSearches() {
 
   useEffect(() => {
     const cleanupSeo = applySeoMeta({
-      title: t('browse.title'),
-      description: t('browse.description'),
+      title: t('browse.title', 'Curated MTG Search Pages and Query Ideas | OffMeta'),
+      description: t(
+        'browse.description',
+        'Browse curated Magic card searches for commander, budget, tribal, mechanics, colors, and format staples. Each page is built to turn common search intent into results.',
+      ),
       url: 'https://offmeta.app/browse-searches',
     });
     const cleanupLd = injectJsonLd({
