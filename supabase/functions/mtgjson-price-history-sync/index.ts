@@ -227,23 +227,42 @@ serve(withLogging('mtgjson-price-history-sync', async (req: Request): Promise<Re
       }
     }
 
+    if (uuidMap.size === 0) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          mode: scan ? 'scan' : 'targeted',
+          results: [],
+          missing,
+          scanned,
+          inserted: 0,
+          nextOffset: scan ? offset + scanned : null,
+        }),
+        { status: 200, headers },
+      );
+    }
+
     const pricesResp = await fetch(`${MTGJSON_BASE_URL}/AllPrices.json.gz`);
     if (!pricesResp.ok || !pricesResp.body) {
       return new Response(JSON.stringify({ error: 'Failed to load MTGJSON prices' }), { status: 502, headers });
     }
 
     const decompressed = pricesResp.body.pipeThrough(new DecompressionStream('gzip'));
-    const text = await new Response(decompressed).text();
+    const extracted = await streamExtractUuidObjects(
+      decompressed,
+      Array.from(uuidMap.values()),
+    );
 
     const rows: PriceSnapshotRow[] = [];
     const results: Array<{ cardName: string; uuid: string; inserted: number }> = [];
 
     for (const [cardName, uuid] of uuidMap.entries()) {
-      const raw = extractUuidObject(text, uuid);
+      const raw = extracted.get(uuid);
       if (!raw) {
         missing.push(cardName);
         continue;
       }
+
 
       const history = JSON.parse(raw) as MtgjsonPriceTree;
       const low = sliceLastDays(getPath(history, 'paper.cardmarket.retail.normal'), days);
