@@ -475,12 +475,7 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
           {headerTile}
 
           <div className="grid lg:grid-cols-12 gap-4">
-            <CardModalBentoTile
-              title="Card Text"
-              icon={FileText}
-              className="lg:col-span-7"
-              accent="primary"
-            >
+            <CardModalBentoTile className="lg:col-span-7">
               <CardModalDetails
                 faceDetails={faceDetails}
                 displaySetName={displaySetName}
@@ -495,47 +490,23 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
               />
             </CardModalBentoTile>
 
-            <CardModalBentoTile
-              title="Why It's Played"
-              icon={Brain}
-              className="lg:col-span-5"
-              accent="accent"
-            >
+            <CardModalBentoTile className="lg:col-span-5">
               <CardModalMetaContext card={card} />
             </CardModalBentoTile>
 
-            <CardModalBentoTile
-              title="Price History"
-              icon={TrendingUp}
-              className="lg:col-span-12"
-              accent="primary"
-            >
+            <CardModalBentoTile className="lg:col-span-12">
               <CardPriceHistoryChart cardName={card.name} />
             </CardModalBentoTile>
 
-            <CardModalBentoTile
-              title="Combos"
-              icon={Zap}
-              className="lg:col-span-6"
-              accent="accent"
-            >
+            <CardModalBentoTile className="lg:col-span-6">
               <CardModalCombos cardName={card.name} />
             </CardModalBentoTile>
 
-            <CardModalBentoTile
-              title="You Might Also Like"
-              icon={Sparkles}
-              className="lg:col-span-6"
-              accent="accent"
-            >
+            <CardModalBentoTile className="lg:col-span-6">
               <CardModalRecommendations oracleId={card.oracle_id} cardName={card.name} onCardClick={handleCardClick} />
             </CardModalBentoTile>
 
-            <CardModalBentoTile
-              title="Rulings"
-              icon={Gavel}
-              className="lg:col-span-6"
-            >
+            <CardModalBentoTile className="lg:col-span-6">
               <CardModalRulings
                 rulings={rulings}
                 isLoading={isLoadingRulings}
@@ -544,11 +515,7 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
               />
             </CardModalBentoTile>
 
-            <CardModalBentoTile
-              title="Printings"
-              icon={Layers}
-              className="lg:col-span-6"
-            >
+            <CardModalBentoTile className="lg:col-span-6">
               <CardModalPrintings
                 printings={englishPrintings}
                 isLoading={isLoadingPrintings}
@@ -559,6 +526,7 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
             </CardModalBentoTile>
           </div>
         </div>
+
       </div>
     </div>
   );
