@@ -212,11 +212,11 @@ export function CardPriceHistoryChart({ cardName, className }: CardPriceHistoryC
           <Skeleton className="w-full" style={{ height: HEIGHT }} />
         ) : isError ? (
           <p className="py-10 text-center text-xs text-muted-foreground">
-            Price history is unavailable right now.
+            {t('priceHistory.unavailable', 'Price history is unavailable right now.')}
           </p>
         ) : !scale ? (
           <p className="py-10 text-center text-xs text-muted-foreground">
-            Not enough price data yet for this range.
+            {t('priceHistory.stillUploading', 'Still uploading price data — check back soon.')}
           </p>
         ) : (
           <svg
