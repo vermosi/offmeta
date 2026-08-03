@@ -24,10 +24,9 @@ function localizeStatus(
       return t('card.statusBanned', 'banned');
     case 'restricted':
       return t('card.statusRestricted', 'restricted');
-    default:
-      return status.replace('_', ' ');
   }
 }
+
 
 function statusBadgeClass(status: LegalityStatus): string {
   return cn(
