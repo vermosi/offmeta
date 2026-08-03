@@ -116,7 +116,6 @@ import { useSearch } from '@/hooks/useSearch';
 import { useSearchRenderProfiler } from '@/hooks/useSearchRenderProfiler';
 import { useTranslation } from '@/lib/i18n';
 import { parseViewMode } from '@/lib/search/url-params';
-const CardModal = lazy(() => import('@/components/CardModal'));
 
 const IS_TEST_MODE = import.meta.env.MODE === 'test';
 
@@ -135,8 +134,6 @@ const Index = () => {
   const {
     searchQuery,
     originalQuery,
-    selectedCard,
-    setSelectedCard,
     hasSearched,
     lastSearchResult,
     lastIntent,
@@ -401,7 +398,6 @@ const Index = () => {
       void import('@/components/ResultsTabs');
       void import('@/components/ResultsToolbar');
       void import('@/components/EditableQueryBar');
-      void import('@/components/CardModal');
     };
     const w = window as Window & {
       requestIdleCallback?: (
@@ -827,22 +823,6 @@ const Index = () => {
         {hasSearched && (
           <Suspense fallback={null}>
             <ScrollToTop threshold={800} />
-          </Suspense>
-        )}
-
-        {selectedCard && (
-          <Suspense
-            fallback={
-              <div className="sr-only" role="status">
-                Loading card details…
-              </div>
-            }
-          >
-            <CardModal
-              card={selectedCard}
-              open={true}
-              onClose={() => setSelectedCard(null)}
-            />
           </Suspense>
         )}
 

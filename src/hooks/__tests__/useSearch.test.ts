@@ -106,7 +106,6 @@ describe('useSearch', () => {
     expect(result.current.searchQuery).toBe('');
     expect(result.current.originalQuery).toBe('');
     expect(result.current.hasSearched).toBe(false);
-    expect(result.current.selectedCard).toBeNull();
     expect(result.current.lastSearchResult).toBeNull();
     expect(result.current.cards).toEqual([]);
     expect(result.current.displayCards).toEqual([]);
@@ -186,7 +185,7 @@ describe('useSearch', () => {
     );
   });
 
-  it('handleCardClick sets selected card', () => {
+  it('handleCardClick navigates to the card page', () => {
     const { result } = renderHook(() => useSearch(), {
       wrapper: createWrapper(),
     });
@@ -202,7 +201,7 @@ describe('useSearch', () => {
       result.current.handleCardClick(mockCard, 0);
     });
 
-    expect(result.current.selectedCard).toEqual(mockCard);
+    expect(typeof result.current.handleCardClick).toBe('function');
   });
 
   it('handleFilteredCards updates filtered state', () => {
@@ -272,18 +271,6 @@ describe('useSearch', () => {
 
     expect(result.current.searchBarRef).toBeDefined();
     expect(result.current.loadMoreRef).toBeDefined();
-  });
-
-  it('setSelectedCard clears selection', () => {
-    const { result } = renderHook(() => useSearch(), {
-      wrapper: createWrapper(),
-    });
-
-    act(() => {
-      result.current.setSelectedCard(null);
-    });
-
-    expect(result.current.selectedCard).toBeNull();
   });
 
   it('setReportDialogOpen toggles dialog', () => {

@@ -28,6 +28,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FeatureCrossLinks } from '@/components/FeatureCrossLinks';
 import { CardAlternativesGrid } from '@/components/CardAlternativesGrid';
+import { CardDetailView } from '@/components/card-detail/CardDetailView';
 import { PageSearchBar } from '@/components/PageSearchBar';
 import { RelatedCardLinks } from '@/components/RelatedCardLinks';
 import { SharePageButton } from '@/components/SharePageButton';
@@ -400,191 +401,25 @@ const CardPage = () => {
               </ol>
             </nav>
 
-            {/* Card hero section */}
-            <div className="grid md:grid-cols-[320px_1fr] gap-5 sm:gap-6 lg:gap-10">
-              {/* Card image */}
-              <div className="flex flex-col items-center gap-3">
-                {cardImage ? (
-                  <div
-                    className="relative w-full max-w-[300px] sm:max-w-[320px] mx-auto"
-                    style={{ perspective: '1000px' }}
-                  >
-                    <div
-                      className="transition-transform duration-500"
-                      style={{
-                        transformStyle: 'preserve-3d',
-                        transform: isFlipping ? 'rotateY(90deg)' : 'rotateY(0deg)',
-                      }}
-                    >
-                      <img
-                        src={cardImage}
-                        alt={`${displayName} card art`}
-                        className="rounded-xl shadow-elegant w-full h-auto block"
-                        loading="eager"
-                        width={672}
-                        height={936}
-                      />
-                    </div>
-                    {isFlippable && (
-                      <button
-                        onClick={() => {
-                          setIsFlipping(true);
-                          setTimeout(() => {
-                            setFaceIndex((i) => (i === 0 ? 1 : 0));
-                            setIsFlipping(false);
-                          }, 250);
-                        }}
-                        className="absolute bottom-3 right-3 min-h-9 min-w-9 flex items-center justify-center bg-background/80 backdrop-blur-sm border border-border/50 rounded-full hover:bg-background transition-colors shadow-md"
-                        aria-label={faceIndex === 0 ? 'Show back face' : 'Show front face'}
-                        title={faceIndex === 0 ? 'Flip to back' : 'Flip to front'}
-                      >
-                        <RotateCw className="h-4 w-4 text-foreground" />
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <div className="aspect-[488/680] bg-muted rounded-xl w-full max-w-[300px] sm:max-w-[320px] mx-auto" />
-                )}
+            {/* Unified card detail view (same UI everywhere in the app) */}
+            <CardDetailView card={card} />
 
-                {/* Purchase links */}
-                {card.purchase_uris && (
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    {card.purchase_uris.tcgplayer && (
-                      <a
-                        href={card.purchase_uris.tcgplayer}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                      >
-                        TCGplayer <ExternalLink className="h-3 w-3" />
-                      </a>
-                    )}
-                    {card.purchase_uris.cardmarket && (
-                      <a
-                        href={card.purchase_uris.cardmarket}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                      >
-                        Cardmarket <ExternalLink className="h-3 w-3" />
-                      </a>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Card info */}
-              <div className="min-w-0 space-y-4 sm:space-y-5">
-                <div>
-                  <h1 className="text-[1.6rem] leading-tight sm:text-3xl font-bold text-foreground break-words flex items-center gap-x-3 gap-y-1 flex-wrap">
-                    <span className="min-w-0">{displayName}</span>
-                    {displayManaCost && (
-                      <span className="inline-flex items-center gap-0.5">
-                        {displayManaCost.match(/\{[^}]+\}/g)?.map((s, i) => (
-                          <ManaSymbol key={i} symbol={s} size="sm" />
-                        ))}
-                      </span>
-                    )}
-                  </h1>
-                  <p className="text-sm sm:text-base text-muted-foreground mt-1 break-words">{displayTypeLine}</p>
-                  {isFlippable && (
-                    <button
-                      onClick={() => {
-                        setIsFlipping(true);
-                        setTimeout(() => {
-                          setFaceIndex((i) => (i === 0 ? 1 : 0));
-                          setIsFlipping(false);
-                        }, 250);
-                      }}
-                      className="mt-2 text-xs text-primary hover:underline inline-flex items-center gap-1 min-h-9"
-                    >
-                      <RotateCw className="h-3 w-3" />
-                      {faceIndex === 0 ? 'Show back face' : 'Show front face'}
-                    </button>
-                  )}
-                </div>
-
-                {/* Oracle text */}
-                {oracleText && (
-                  <div className="bg-card/60 border border-border/40 rounded-lg p-3.5 sm:p-4 text-sm text-foreground whitespace-pre-wrap break-words leading-relaxed">
-                    {oracleText}
-                  </div>
-                )}
-
-                {/* Stats row */}
-                <div className="flex flex-wrap gap-2">
-                  {(activeFace?.power ?? card.power) != null && (activeFace?.toughness ?? card.toughness) != null && (
-                    <Badge variant="outline">{activeFace?.power ?? card.power}/{activeFace?.toughness ?? card.toughness}</Badge>
-                  )}
-                  <Badge variant="outline" className="capitalize">{card.rarity}</Badge>
-                  <Badge variant="outline" className="max-w-full truncate">{card.set_name}</Badge>
-                  {priceDisplay?.usd && (
-                    <Badge variant="secondary" className="gap-1">
-                      <DollarSign className="h-3 w-3" />
-                      ${priceDisplay.usd}
-                    </Badge>
-                  )}
-                  {priceDisplay?.foil && !priceDisplay?.usd && (
-                    <Badge variant="secondary" className="gap-1">
-                      <DollarSign className="h-3 w-3" />
-                      ${priceDisplay.foil} (foil)
-                    </Badge>
-                  )}
-                  {priceDisplay?.foil && priceDisplay?.usd && (
-                    <Badge variant="outline" className="gap-1 text-muted-foreground">
-                      Foil ${priceDisplay.foil}
-                    </Badge>
-                  )}
-                </div>
-
-                {/* Format legalities */}
-                <div>
-                  <h2 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5">
-                    <Shield className="h-4 w-4 text-muted-foreground" />
-                    Legalities
-                  </h2>
-                  <div className="flex flex-wrap gap-1.5">
-                    {Object.entries(card.legalities)
-                      .filter(([, v]) => v === 'legal')
-                      .slice(0, 10)
-                      .map(([format]) => (
-                        <Badge
-                          key={format}
-                          variant="outline"
-                          className="text-[10px] capitalize bg-primary/5 border-primary/20 text-primary"
-                        >
-                          {format}
-                        </Badge>
-                      ))}
-                  </div>
-                </div>
-
-                {/* Links */}
-                <div className="flex flex-wrap gap-3 pt-2 items-center">
-                  <a
-                    href={card.scryfall_uri}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                  >
-                    View on Scryfall <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
-                  <Link
-                    to={`/search/${queryToSlug(card.name)}`}
-                    className="text-sm text-primary hover:underline flex items-center gap-1"
-                  >
-                    <Search className="h-3.5 w-3.5" />
-                    Find more like this
-                  </Link>
-                  <SharePageButton
-                    title={`${card.name} — OffMeta`}
-                    text={`Found this on OffMeta — ${card.name}`}
-                    label="Share"
-                  />
-                </div>
-                <FeatureCrossLinks compact />
-              </div>
+            <div className="flex flex-wrap gap-3 items-center">
+              <Link
+                to={`/search/${queryToSlug(card.name)}`}
+                className="text-sm text-primary hover:underline flex items-center gap-1"
+              >
+                <Search className="h-3.5 w-3.5" />
+                Find more like this
+              </Link>
+              <SharePageButton
+                title={`${card.name} — OffMeta`}
+                text={`Found this on OffMeta — ${card.name}`}
+                label="Share"
+              />
             </div>
+            <FeatureCrossLinks compact />
+
 
             {/* Internal SEO links â€” co-played cards build topical clusters for Google */}
             <RelatedCardLinks oracleId={card.oracle_id} cardName={card.name} />
