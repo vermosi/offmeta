@@ -190,7 +190,7 @@ export function CardDetailView({ card }: CardDetailViewProps) {
     );
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[340px_1fr] lg:gap-8">
+    <div className="grid gap-5 lg:grid-cols-[340px_1fr] lg:gap-8 items-start">
       {/* Sidebar: art, purchase, legality, tools */}
       <div className="space-y-5">
         <div className="flex flex-col items-center">
