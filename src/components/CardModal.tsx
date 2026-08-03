@@ -34,6 +34,7 @@ import { useTranslation } from '@/lib/i18n';
 import { CardModalImage } from './CardModal/CardModalImage';
 import { CardModalDetails } from './CardModal/CardModalDetails';
 import { CardModalPurchaseLinks } from './CardModal/CardModalPurchaseLinks';
+import { CardPriceSparkline } from './CardPriceSparkline';
 import { CardModalRulings } from './CardModal/CardModalRulings';
 import { CardModalLegalities } from './CardModal/CardModalLegalities';
 import { CardModalPrintings } from './CardModal/CardModalPrintings';
