@@ -18,26 +18,24 @@ describe('CardModalLegalities', () => {
   };
 
   describe('mobile view', () => {
-    it('renders "Legal In" header', () => {
+    it('renders "Format Legality" header', () => {
       const { getByText } = render(
         <CardModalLegalities legalities={defaultLegalities} isMobile={true} />,
       );
-      expect(getByText('Legal In')).toBeInTheDocument();
+      expect(getByText('Format Legality')).toBeInTheDocument();
     });
 
-    it('only shows legal formats on mobile', () => {
-      const { getByText, queryByText } = render(
+    it('shows all formats grouped by status on mobile', () => {
+      const { getByText } = render(
         <CardModalLegalities legalities={defaultLegalities} isMobile={true} />,
       );
-      
+
       expect(getByText('Modern')).toBeInTheDocument();
       expect(getByText('Legacy')).toBeInTheDocument();
       expect(getByText('Commander')).toBeInTheDocument();
-      
-      // Should not show non-legal formats
-      expect(queryByText('Standard')).not.toBeInTheDocument();
-      expect(queryByText('Vintage')).not.toBeInTheDocument();
-      expect(queryByText('Pauper')).not.toBeInTheDocument();
+      expect(getByText('Vintage')).toBeInTheDocument();
+      expect(getByText('Standard')).toBeInTheDocument();
+      expect(getByText('Pauper')).toBeInTheDocument();
     });
 
     it('shows "Not legal in any format" when no formats are legal', () => {
@@ -52,6 +50,7 @@ describe('CardModalLegalities', () => {
       expect(getByText('Not legal in any format')).toBeInTheDocument();
     });
   });
+
 
   describe('desktop view', () => {
     it('renders "Format Legality" header', () => {
