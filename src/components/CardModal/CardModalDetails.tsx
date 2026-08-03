@@ -13,7 +13,8 @@ import { cardNameToSlug } from '@/lib/card-slug';
 import type { CardModalDetailsProps } from './types';
 import { useTranslation } from '@/lib/i18n';
 
-function getRarityVariant(rarity: string): BadgeProps['variant'] {
+export function getRarityVariant(rarity: string): BadgeProps['variant'] {
+
   switch (rarity) {
     case 'mythic':
       return 'mythic';
@@ -39,7 +40,9 @@ export function CardModalDetails({
   selectedPrintingId,
   cardId,
   isMobile = false,
+  showHeader = true,
 }: CardModalDetailsProps) {
+
   const { t } = useTranslation();
   // Calculate special badges
   const sortedByDate = [...englishPrintings].sort(
@@ -63,75 +66,80 @@ export function CardModalDetails({
 
   return (
     <div className={cn('space-y-4', isMobile && 'text-center')}>
-      {/* Name, Mana, Type */}
-      <div className={cn('space-y-1.5', !isMobile && 'pr-8')}>
-        <h2 className="text-lg font-semibold text-foreground tracking-tight">
-          <Link
-            to={`/cards/${cardNameToSlug(faceDetails.name)}`}
-            className="hover:text-primary transition-colors"
-            title={`View ${faceDetails.name} off-meta alternatives`}
-          >
-            {faceDetails.name}
-          </Link>
-        </h2>
-        {faceDetails.mana_cost && (
-          <div className={isMobile ? 'flex justify-center' : undefined}>
-            <ManaCost cost={faceDetails.mana_cost} size="md" />
-          </div>
-        )}
-        <p className="text-sm text-muted-foreground">{faceDetails.type_line}</p>
-      </div>
+      {/* Name, Mana, Type — hidden when the parent provides its own header */}
+      {showHeader && (
+        <div className={cn('space-y-1.5', !isMobile && 'pr-8')}>
+          <h2 className="text-lg font-semibold text-foreground tracking-tight">
+            <Link
+              to={`/cards/${cardNameToSlug(faceDetails.name)}`}
+              className="hover:text-primary transition-colors"
+              title={`View ${faceDetails.name} off-meta alternatives`}
+            >
+              {faceDetails.name}
+            </Link>
+          </h2>
+          {faceDetails.mana_cost && (
+            <div className={isMobile ? 'flex justify-center' : undefined}>
+              <ManaCost cost={faceDetails.mana_cost} size="md" />
+            </div>
+          )}
+          <p className="text-sm text-muted-foreground">{faceDetails.type_line}</p>
+        </div>
+      )}
 
-      {/* Badges */}
-      <div
-        className={cn(
-          'flex items-center gap-2 flex-wrap',
-          isMobile && 'justify-center',
-        )}
-      >
-        <Badge variant={getRarityVariant(displayRarity)} className="capitalize">
-          {displayRarity}
-        </Badge>
-        <Badge variant="secondary">
-          {displaySetName}
-          {displayCollectorNumber && ` #${displayCollectorNumber}`}
-        </Badge>
-        {isReserved && (
-          <Badge
-            variant="outline"
-            className="bg-rarity-rare/10 text-rarity-rare border-rarity-rare/30 gap-1"
-          >
-            <Shield className="h-3 w-3" />
-            {t('card.reservedList', 'Reserved List')}
+      {/* Badges — hidden when the parent provides its own header */}
+      {showHeader && (
+        <div
+          className={cn(
+            'flex items-center gap-2 flex-wrap',
+            isMobile && 'justify-center',
+          )}
+        >
+          <Badge variant={getRarityVariant(displayRarity)} className="capitalize">
+            {displayRarity}
           </Badge>
-        )}
-        {isFirstPrinting && (
-          <Badge
-            variant="outline"
-            className="bg-success/10 text-success border-success/30"
-          >
-            {t('card.firstPrinting', 'First Printing')}
+          <Badge variant="secondary">
+            {displaySetName}
+            {displayCollectorNumber && ` #${displayCollectorNumber}`}
           </Badge>
-        )}
-        {isOnlyPrinting && (
-          <Badge
-            variant="outline"
-            className="bg-accent/10 text-accent border-accent/30"
-          >
-            {t('card.onlyPrinting', 'Only Printing')}
-          </Badge>
-        )}
-        {isUniqueArt && (
-          <Badge
-            variant="outline"
-            className="bg-brand/10 text-brand border-brand/30"
-          >
-            {t('card.uniqueArt', 'Unique Art')}
-          </Badge>
-        )}
-      </div>
+          {isReserved && (
+            <Badge
+              variant="outline"
+              className="bg-rarity-rare/10 text-rarity-rare border-rarity-rare/30 gap-1"
+            >
+              <Shield className="h-3 w-3" />
+              {t('card.reservedList', 'Reserved List')}
+            </Badge>
+          )}
+          {isFirstPrinting && (
+            <Badge
+              variant="outline"
+              className="bg-success/10 text-success border-success/30"
+            >
+              {t('card.firstPrinting', 'First Printing')}
+            </Badge>
+          )}
+          {isOnlyPrinting && (
+            <Badge
+              variant="outline"
+              className="bg-accent/10 text-accent border-accent/30"
+            >
+              {t('card.onlyPrinting', 'Only Printing')}
+            </Badge>
+          )}
+          {isUniqueArt && (
+            <Badge
+              variant="outline"
+              className="bg-brand/10 text-brand border-brand/30"
+            >
+              {t('card.uniqueArt', 'Unique Art')}
+            </Badge>
+          )}
+        </div>
+      )}
 
       {/* Oracle Text */}
+
       {faceDetails.oracle_text && (
         <div
           className={cn(

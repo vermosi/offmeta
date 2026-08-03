@@ -21,8 +21,9 @@ import { getCardPrintings, type CardPrinting } from '@/lib/scryfall/printings';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
-import { X, Loader2, ChevronRight } from 'lucide-react';
+import { X, Loader2, ChevronRight, Shield } from 'lucide-react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+
 import {
   useIsMobile,
   useAnalytics,
@@ -42,7 +43,13 @@ import { CardModalToolbox } from './CardModal/CardModalToolbox';
 import { CardModalCombos } from './CardModal/CardModalCombos';
 import { CardModalMetaContext } from './CardModal/CardModalMetaContext';
 import { CardModalRecommendations } from './CardModal/CardModalRecommendations';
+import { CardModalBentoTile } from './CardModal/CardModalBentoTile';
 import type { DisplayPrices } from './CardModal/types';
+import { ManaCost } from '@/components/ManaSymbol';
+import { Badge } from '@/components/ui/badge';
+import { getRarityVariant } from './CardModal/CardModalDetails';
+
+
 
 interface CardModalProps {
   card: ScryfallCard | null;
@@ -107,7 +114,6 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [open, canGoBack]);
-
 
   // Jump to a specific point in history
   const handleJumpTo = useCallback((index: number) => {
@@ -228,7 +234,7 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
     });
   }, []);
 
-  const { locale } = useTranslation();
+  const { locale, t } = useTranslation();
 
   if (!card) return null;
 
@@ -260,28 +266,65 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
         new Date(b.released_at).getTime() - new Date(a.released_at).getTime(),
     );
 
-  // Mobile content
-  const mobileContent = (
-    <div className="flex flex-col h-full relative">
-      {isNavigating && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-lg">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  const headerTile = (
+    <CardModalBentoTile className="bg-gradient-to-br from-primary/5 via-card/80 to-accent/5 border-primary/20">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-foreground leading-tight">
+            {faceDetails.name}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1.5">
+            {faceDetails.type_line}
+          </p>
+          <div className="flex items-center gap-2 flex-wrap mt-3">
+            <Badge variant={getRarityVariant(displayRarity)} className="capitalize">
+              {displayRarity}
+            </Badge>
+            <Badge variant="secondary">
+              {displaySetName}
+              {displayCollectorNumber && ` #${displayCollectorNumber}`}
+            </Badge>
+            {card.reserved && (
+              <Badge
+                variant="outline"
+                className="bg-rarity-rare/10 text-rarity-rare border-rarity-rare/30 gap-1"
+              >
+                <Shield className="h-3 w-3" />
+                {t('card.reservedList', 'Reserved List')}
+              </Badge>
+            )}
+            {displayArtist && (
+              <span className="text-xs text-muted-foreground">
+                {t('card.illustratedBy', 'Illustrated by')} {displayArtist}
+              </span>
+            )}
+
+          </div>
         </div>
-      )}
-      {/* Breadcrumb trail */}
+        {faceDetails.mana_cost && (
+          <div className="flex-shrink-0">
+            <ManaCost cost={faceDetails.mana_cost} size="md" />
+          </div>
+        )}
+      </div>
+    </CardModalBentoTile>
+  );
+
+  const breadcrumbTrail = (
+    <>
       {breadcrumbItems.length > 0 && (
-        <div className="flex items-center gap-0.5 px-4 pt-3 pb-1 overflow-x-auto text-xs">
+        <div className="flex items-center gap-0.5 pb-3 w-full overflow-x-auto text-xs">
           {breadcrumbItems.map((name, i) => {
             const isLast = i === breadcrumbItems.length - 1;
             return (
               <span key={`${name}-${i}`} className="flex items-center gap-0.5 shrink-0">
                 {i > 0 && <ChevronRight className="h-3 w-3 text-muted-foreground/50" />}
                 {isLast ? (
-                  <span className="text-foreground font-medium truncate max-w-[120px]">{name}</span>
+                  <span className="text-foreground font-medium truncate max-w-[120px] sm:max-w-[160px]">{name}</span>
                 ) : (
                   <button
                     type="button"
-                    className="text-muted-foreground hover:text-foreground transition-colors truncate max-w-[120px]"
+                    className="text-muted-foreground hover:text-foreground transition-colors truncate max-w-[120px] sm:max-w-[160px]"
                     onClick={() => handleJumpTo(i - 1)}
                   >
                     {name}
@@ -292,8 +335,48 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
           })}
         </div>
       )}
+    </>
+  );
+
+  const sharedSidebar = (
+    <div className="space-y-5">
+      <CardModalBentoTile className="bg-muted/30 border-border/30">
+        <CardModalPurchaseLinks
+          card={card}
+          displayPrices={displayPrices}
+          displayTix={displayTix}
+          selectedPrinting={selectedPrinting}
+          isLoadingPrintings={isLoadingPrintings}
+          onAffiliateClick={handleAffiliateClick}
+        />
+      </CardModalBentoTile>
+
+      <CardModalBentoTile>
+        <CardModalLegalities legalities={card.legalities} />
+      </CardModalBentoTile>
+
+      <CardModalBentoTile>
+        <CardModalToolbox
+          cardName={card.name}
+          scryfallUri={card.scryfall_uri}
+        />
+      </CardModalBentoTile>
+    </div>
+  );
+
+
+  // Mobile content
+  const mobileContent = (
+    <div className="flex flex-col h-full relative">
+      {isNavigating && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-lg">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )}
+
       {/* Card Image */}
       <div className="bg-muted/30 p-4 flex flex-col items-center">
+        {breadcrumbTrail}
         <CardModalImage
           displayImageUrl={displayImageUrl}
           cardName={faceDetails.name}
@@ -306,120 +389,7 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        <CardPriceHistoryChart cardName={card.name} />
-
-        <CardModalDetails
-          faceDetails={faceDetails}
-          displaySetName={displaySetName}
-          displayRarity={displayRarity}
-          displayCollectorNumber={displayCollectorNumber}
-          displayArtist={displayArtist}
-          isReserved={card.reserved}
-          englishPrintings={englishPrintings}
-          selectedPrintingId={selectedPrinting?.id}
-          cardId={card.id}
-          isMobile
-        />
-
-        <CardModalMetaContext card={card} />
-        <CardModalRulings
-          rulings={rulings}
-          isLoading={isLoadingRulings}
-          showRulings={showRulings}
-          onToggleRulings={() => setShowRulings(!showRulings)}
-        />
-
-        <CardModalCombos cardName={card.name} isMobile />
-
-        <CardModalRecommendations oracleId={card.oracle_id} cardName={card.name} onCardClick={handleCardClick} isMobile />
-        <CardModalPurchaseLinks
-          card={card}
-          displayPrices={displayPrices}
-          displayTix={displayTix}
-          selectedPrinting={selectedPrinting}
-          isLoadingPrintings={isLoadingPrintings}
-          onAffiliateClick={handleAffiliateClick}
-          isMobile
-        />
-
-        <CardModalLegalities legalities={card.legalities} isMobile />
-
-        <CardModalPrintings
-          printings={englishPrintings}
-          isLoading={isLoadingPrintings}
-          selectedPrintingId={selectedPrinting?.id}
-          cardId={card.id}
-          onSelectPrinting={handleSelectPrinting}
-          isMobile
-        />
-
-        <CardModalToolbox
-          cardName={card.name}
-          scryfallUri={card.scryfall_uri}
-          isMobile
-        />
-      </div>
-    </div>
-  );
-
-  // Desktop content
-  const desktopContent = (
-    <div className="grid md:grid-cols-[280px_1fr] max-h-[85vh] relative">
-      {isNavigating && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-lg">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      )}
-      {/* Card Image Section */}
-      <div className="bg-muted/30 flex flex-col items-center p-5 border-r border-border/50">
-        {/* Breadcrumb trail */}
-        {breadcrumbItems.length > 0 && (
-          <div className="flex items-center gap-0.5 pb-3 w-full overflow-x-auto text-xs">
-            {breadcrumbItems.map((name, i) => {
-              const isLast = i === breadcrumbItems.length - 1;
-              return (
-                <span key={`${name}-${i}`} className="flex items-center gap-0.5 shrink-0">
-                  {i > 0 && <ChevronRight className="h-3 w-3 text-muted-foreground/50" />}
-                  {isLast ? (
-                    <span className="text-foreground font-medium truncate max-w-[100px]">{name}</span>
-                  ) : (
-                    <button
-                      type="button"
-                      className="text-muted-foreground hover:text-foreground transition-colors truncate max-w-[100px]"
-                      onClick={() => handleJumpTo(i - 1)}
-                    >
-                      {name}
-                    </button>
-                  )}
-                </span>
-              );
-            })}
-          </div>
-        )}
-        <CardModalImage
-          displayImageUrl={displayImageUrl}
-          cardName={faceDetails.name}
-          isDoubleFaced={isDoubleFaced}
-          isFlipping={isFlipping}
-          onTransform={handleTransform}
-        />
-
-        <CardModalPurchaseLinks
-          card={card}
-          displayPrices={displayPrices}
-          displayTix={displayTix}
-          selectedPrinting={selectedPrinting}
-          isLoadingPrintings={isLoadingPrintings}
-          onAffiliateClick={handleAffiliateClick}
-        />
-      </div>
-
-
-      {/* Card Details Section */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="space-y-5 p-5">
-          <CardPriceHistoryChart cardName={card.name} />
-
+        <CardModalBentoTile>
           <CardModalDetails
             faceDetails={faceDetails}
             displaySetName={displaySetName}
@@ -430,35 +400,136 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
             englishPrintings={englishPrintings}
             selectedPrintingId={selectedPrinting?.id}
             cardId={card.id}
+            isMobile
           />
+        </CardModalBentoTile>
 
+        <CardModalBentoTile>
+          <CardPriceHistoryChart cardName={card.name} />
+        </CardModalBentoTile>
+
+        <CardModalBentoTile>
           <CardModalMetaContext card={card} />
+        </CardModalBentoTile>
 
+        <CardModalBentoTile>
+          <CardModalCombos cardName={card.name} isMobile />
+        </CardModalBentoTile>
+
+        <CardModalBentoTile>
+          <CardModalRecommendations oracleId={card.oracle_id} cardName={card.name} onCardClick={handleCardClick} isMobile />
+        </CardModalBentoTile>
+
+        <CardModalBentoTile>
           <CardModalRulings
             rulings={rulings}
             isLoading={isLoadingRulings}
             showRulings={showRulings}
             onToggleRulings={() => setShowRulings(!showRulings)}
           />
+        </CardModalBentoTile>
 
-          <CardModalCombos cardName={card.name} />
-
-          <CardModalRecommendations oracleId={card.oracle_id} cardName={card.name} onCardClick={handleCardClick} />
-          <CardModalLegalities legalities={card.legalities} />
-
+        <CardModalBentoTile>
           <CardModalPrintings
             printings={englishPrintings}
             isLoading={isLoadingPrintings}
             selectedPrintingId={selectedPrinting?.id}
             cardId={card.id}
             onSelectPrinting={handleSelectPrinting}
+            isMobile
           />
+        </CardModalBentoTile>
 
-          <CardModalToolbox
-            cardName={card.name}
-            scryfallUri={card.scryfall_uri}
+        {sharedSidebar}
+      </div>
+    </div>
+  );
+
+
+  // Desktop content
+  const desktopContent = (
+    <div className="grid lg:grid-cols-[360px_1fr] max-h-[85vh] relative">
+      {isNavigating && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-lg">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )}
+
+      {/* Left sidebar */}
+      <div className="flex flex-col h-full overflow-y-auto bg-muted/20 border-r border-border/50">
+        <div className="p-6 flex flex-col items-center">
+          {breadcrumbTrail}
+          <CardModalImage
+            displayImageUrl={displayImageUrl}
+            cardName={faceDetails.name}
+            isDoubleFaced={isDoubleFaced}
+            isFlipping={isFlipping}
+            onTransform={handleTransform}
           />
         </div>
+        <div className="px-6 pb-6">
+          {sharedSidebar}
+        </div>
+      </div>
+
+      {/* Right bento grid */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-6 space-y-6">
+          {headerTile}
+
+          <div className="grid lg:grid-cols-12 gap-4">
+            <CardModalBentoTile className="lg:col-span-7">
+              <CardModalDetails
+                faceDetails={faceDetails}
+                displaySetName={displaySetName}
+                displayRarity={displayRarity}
+                displayCollectorNumber={displayCollectorNumber}
+                displayArtist={displayArtist}
+                isReserved={card.reserved}
+                englishPrintings={englishPrintings}
+                selectedPrintingId={selectedPrinting?.id}
+                cardId={card.id}
+                showHeader={false}
+              />
+            </CardModalBentoTile>
+
+            <CardModalBentoTile className="lg:col-span-5">
+              <CardModalMetaContext card={card} />
+            </CardModalBentoTile>
+
+            <CardModalBentoTile className="lg:col-span-12">
+              <CardPriceHistoryChart cardName={card.name} />
+            </CardModalBentoTile>
+
+            <CardModalBentoTile className="lg:col-span-6">
+              <CardModalCombos cardName={card.name} />
+            </CardModalBentoTile>
+
+            <CardModalBentoTile className="lg:col-span-6">
+              <CardModalRecommendations oracleId={card.oracle_id} cardName={card.name} onCardClick={handleCardClick} />
+            </CardModalBentoTile>
+
+            <CardModalBentoTile className="lg:col-span-6">
+              <CardModalRulings
+                rulings={rulings}
+                isLoading={isLoadingRulings}
+                showRulings={showRulings}
+                onToggleRulings={() => setShowRulings(!showRulings)}
+              />
+            </CardModalBentoTile>
+
+            <CardModalBentoTile className="lg:col-span-6">
+              <CardModalPrintings
+                printings={englishPrintings}
+                isLoading={isLoadingPrintings}
+                selectedPrintingId={selectedPrinting?.id}
+                cardId={card.id}
+                onSelectPrinting={handleSelectPrinting}
+              />
+            </CardModalBentoTile>
+          </div>
+        </div>
+
       </div>
     </div>
   );
@@ -493,7 +564,7 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent
-        className="max-w-3xl w-[95vw] p-0 bg-background border-border/50 overflow-hidden max-h-[85vh] gap-0"
+        className="max-w-6xl w-[95vw] p-0 bg-background/95 border-border/50 overflow-hidden max-h-[85vh] gap-0"
         aria-describedby={undefined}
       >
         <VisuallyHidden>
@@ -506,3 +577,4 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
 }
 
 export default CardModal;
+
