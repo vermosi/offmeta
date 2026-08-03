@@ -70,25 +70,31 @@ describe('CardModalLegalities', () => {
     });
 
     it('displays correct status badges', () => {
-      const { getByText, getAllByText } = render(
+      const { getByText, getAllByTestId } = render(
         <CardModalLegalities legalities={defaultLegalities} isMobile={false} />,
       );
 
-      expect(getAllByText('legal').length).toBe(3);
-      expect(getByText('not legal')).toBeInTheDocument();
-      expect(getByText('restricted')).toBeInTheDocument();
-      expect(getByText('banned')).toBeInTheDocument();
+      const badges = getAllByTestId('legality-status');
+      const badgeText = badges.map((badge) => badge.textContent);
+
+      expect(badgeText.filter((text) => text === 'legal').length).toBe(3);
+      expect(badgeText).toContain('not legal');
+      expect(badgeText).toContain('restricted');
+      expect(badgeText).toContain('banned');
+      expect(getByText('Standard')).toBeInTheDocument();
     });
 
     it('segments formats into legal, restricted, and not legal sections', () => {
-      const { getByText } = render(
+      const { getByRole } = render(
         <CardModalLegalities legalities={defaultLegalities} isMobile={false} />,
       );
 
-      expect(getByText('Legal In')).toBeInTheDocument();
-      expect(getByText('restricted')).toBeInTheDocument();
-      expect(getByText('not legal')).toBeInTheDocument();
+      const headings = getByRole('heading', { level: 4 });
+      expect(headings.textContent).toContain('Legal In');
+      expect(headings.textContent).toContain('restricted');
+      expect(headings.textContent).toContain('not legal');
     });
+
   });
 
 
