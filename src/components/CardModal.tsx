@@ -401,6 +401,15 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
           isFlipping={isFlipping}
           onTransform={handleTransform}
         />
+
+        <CardModalPurchaseLinks
+          card={card}
+          displayPrices={displayPrices}
+          displayTix={displayTix}
+          selectedPrinting={selectedPrinting}
+          isLoadingPrintings={isLoadingPrintings}
+          onAffiliateClick={handleAffiliateClick}
+        />
       </div>
 
 
