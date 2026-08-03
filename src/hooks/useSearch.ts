@@ -65,7 +65,6 @@ export function useSearch() {
   // Don't initialize searchQuery from URL — wait for translation
   const [searchQuery, setSearchQuery] = useState('');
   const [originalQuery, setOriginalQuery] = useState(effectiveUrlQuery);
-  const [selectedCard, setSelectedCard] = useState<ScryfallCard | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [lastSearchResult, setLastSearchResult] = useState<SearchResult | null>(
     null,
@@ -708,9 +707,10 @@ export function useSearch() {
           });
         }
       }
-      setSelectedCard(card);
+      // Navigate to the canonical card page — the single card experience.
+      navigate(`/cards/${cardNameToSlug(card.name)}`);
     },
-    [originalQuery, trackCardClick, trackFirstResultClick, trackEvent],
+    [originalQuery, trackCardClick, trackFirstResultClick, trackEvent, navigate],
   );
 
   const handleTryExample = useCallback((query: string) => {
@@ -869,8 +869,6 @@ export function useSearch() {
     locale,
     searchQuery,
     originalQuery,
-    selectedCard,
-    setSelectedCard,
     hasSearched,
     lastSearchResult,
     lastIntent,
