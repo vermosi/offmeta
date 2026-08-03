@@ -1314,5 +1314,9 @@
   "hero.helpText": "Try “budget board wipes under $5” or “cards similar to Seedborn Muse”.",
   "compare.heading": "What OffMeta builds from your words",
   "examples.step1Hint": "Start with the card, effect, price, or format you need.",
-  "examples.step3Hint": "Use search results to refine, compare, or keep browsing."
+  "examples.step3Hint": "Use search results to refine, compare, or keep browsing.",
+  "priceHistory.title": "Price History",
+  "priceHistory.unavailable": "Price history is unavailable right now.",
+  "priceHistory.stillUploading": "Still uploading price data — check back soon.",
+  "priceHistory.latest": "Latest: "
 }
