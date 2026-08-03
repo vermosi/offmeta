@@ -17,13 +17,13 @@ export interface PriceSnapshot {
   price_usd_foil: number | null;
 }
 
-export function usePriceHistory(cardName: string | undefined) {
+export function usePriceHistory(cardName: string | undefined, days = 30) {
   return useQuery<PriceSnapshot[]>({
-    queryKey: ['price-history', cardName],
+    queryKey: ['price-history', cardName, days],
     queryFn: async () => {
       if (!cardName) return [];
 
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const thirtyDaysAgo = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
       const { data, error } = await supabase
         .from('price_snapshots')
