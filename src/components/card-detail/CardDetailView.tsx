@@ -266,7 +266,7 @@ export function CardDetailView({ card }: CardDetailViewProps) {
           </div>
         </CardModalBentoTile>
 
-        <div className="grid gap-4 lg:grid-cols-12">
+        <div className="grid gap-4 lg:grid-cols-12 items-start auto-rows-min">
           <CardModalBentoTile className="lg:col-span-7">
             <CardModalDetails
               faceDetails={faceDetails}
