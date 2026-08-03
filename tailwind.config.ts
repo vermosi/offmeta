@@ -37,6 +37,7 @@ export default {
     extend: {
       fontFamily: {
         sans: [
+          'Manrope',
           'Inter',
           'system-ui',
           '-apple-system',
@@ -45,9 +46,10 @@ export default {
           'Roboto',
           'sans-serif',
         ],
-        display: ['Space Grotesk', 'Inter', 'system-ui', 'sans-serif'],
+        display: ['Sora', 'Space Grotesk', 'Inter', 'system-ui', 'sans-serif'],
         mono: ['SF Mono', 'ui-monospace', 'Menlo', 'Monaco', 'monospace'],
       },
+
       fontSize: {
         display: [
           '4.5rem',

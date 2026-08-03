@@ -44,7 +44,9 @@ export interface CardModalDetailsProps {
   selectedPrintingId?: string;
   cardId: string;
   isMobile?: boolean;
+  showHeader?: boolean;
 }
+
 
 export interface CardModalPurchaseLinksProps {
   card: ScryfallCard;
