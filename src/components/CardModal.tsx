@@ -21,8 +21,9 @@ import { getCardPrintings, type CardPrinting } from '@/lib/scryfall/printings';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
-import { X, Loader2, ChevronRight } from 'lucide-react';
+import { X, Loader2, ChevronRight, Shield } from 'lucide-react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+
 import {
   useIsMobile,
   useAnalytics,
@@ -46,8 +47,8 @@ import { CardModalBentoTile } from './CardModal/CardModalBentoTile';
 import type { DisplayPrices } from './CardModal/types';
 import { ManaCost } from '@/components/ManaSymbol';
 import { Badge } from '@/components/ui/badge';
-import { Shield } from 'lucide-react';
 import { getRarityVariant } from './CardModal/CardModalDetails';
+
 
 
 interface CardModalProps {
