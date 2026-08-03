@@ -18,40 +18,35 @@ describe('CardModalLegalities', () => {
   };
 
   describe('mobile view', () => {
-    it('renders "Legal In" header', () => {
+    it('renders "Format Legality" header', () => {
       const { getByText } = render(
         <CardModalLegalities legalities={defaultLegalities} isMobile={true} />,
       );
-      expect(getByText('Legal In')).toBeInTheDocument();
+      expect(getByText('Format Legality')).toBeInTheDocument();
     });
 
-    it('only shows legal formats on mobile', () => {
-      const { getByText, queryByText } = render(
+    it('shows all formats grouped by status on mobile', () => {
+      const { getByText } = render(
         <CardModalLegalities legalities={defaultLegalities} isMobile={true} />,
       );
-      
+
       expect(getByText('Modern')).toBeInTheDocument();
       expect(getByText('Legacy')).toBeInTheDocument();
       expect(getByText('Commander')).toBeInTheDocument();
-      
-      // Should not show non-legal formats
-      expect(queryByText('Standard')).not.toBeInTheDocument();
-      expect(queryByText('Vintage')).not.toBeInTheDocument();
-      expect(queryByText('Pauper')).not.toBeInTheDocument();
+      expect(getByText('Vintage')).toBeInTheDocument();
+      expect(getByText('Standard')).toBeInTheDocument();
+      expect(getByText('Pauper')).toBeInTheDocument();
     });
 
-    it('shows "Not legal in any format" when no formats are legal', () => {
-      const noLegalFormats = {
-        standard: 'not_legal',
-        modern: 'not_legal',
-        legacy: 'banned',
-      };
+    it('shows "Not legal in any format" when there are no legalities', () => {
       const { getByText } = render(
-        <CardModalLegalities legalities={noLegalFormats} isMobile={true} />,
+        <CardModalLegalities legalities={{}} isMobile={true} />,
       );
       expect(getByText('Not legal in any format')).toBeInTheDocument();
     });
+
   });
+
 
   describe('desktop view', () => {
     it('renders "Format Legality" header', () => {
@@ -61,11 +56,11 @@ describe('CardModalLegalities', () => {
       expect(getByText('Format Legality')).toBeInTheDocument();
     });
 
-    it('shows all formats with their status', () => {
+    it('shows all formats grouped by status', () => {
       const { getByText } = render(
         <CardModalLegalities legalities={defaultLegalities} isMobile={false} />,
       );
-      
+
       expect(getByText('Standard')).toBeInTheDocument();
       expect(getByText('Modern')).toBeInTheDocument();
       expect(getByText('Legacy')).toBeInTheDocument();
@@ -75,18 +70,36 @@ describe('CardModalLegalities', () => {
     });
 
     it('displays correct status badges', () => {
-      const { getAllByText, getByText } = render(
+      const { getByText, getAllByTestId } = render(
         <CardModalLegalities legalities={defaultLegalities} isMobile={false} />,
       );
-      
-      // Legal and not-legal formats both render a short "legal" label;
-      // the chip color (green vs red) carries the distinction.
-      expect(getAllByText('legal').length).toBeGreaterThan(1);
 
-      expect(getByText('restricted')).toBeInTheDocument();
-      expect(getByText('banned')).toBeInTheDocument();
+      const badges = getAllByTestId('legality-status');
+      const badgeText = badges.map((badge) => badge.textContent);
+
+      expect(badgeText.filter((text) => text === 'legal').length).toBe(3);
+      expect(badgeText).toContain('not legal');
+      expect(badgeText).toContain('restricted');
+      expect(badgeText).toContain('banned');
+      expect(getByText('Standard')).toBeInTheDocument();
     });
+
+    it('segments formats into legal, restricted, and not legal sections', () => {
+      const { getAllByRole } = render(
+        <CardModalLegalities legalities={defaultLegalities} isMobile={false} />,
+      );
+
+      const headings = getAllByRole('heading', { level: 4 }).map(
+        (h) => h.textContent,
+      );
+      expect(headings).toContain('Legal In');
+      expect(headings).toContain('restricted');
+      expect(headings).toContain('not legal');
+    });
+
+
   });
+
 
   it('formats special format names correctly', () => {
     const specialFormats = {
