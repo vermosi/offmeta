@@ -6,11 +6,9 @@
  */
 
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Loader2, Sparkles, Monitor } from 'lucide-react';
 import { getTCGPlayerUrl, getCardmarketUrl } from '@/lib/scryfall/printings';
 import type { CardModalPurchaseLinksProps } from './types';
 import { useTranslation } from '@/lib/i18n';
-import { CardPriceSparkline } from '@/components/CardPriceSparkline';
 
 export function CardModalPurchaseLinks({
   card,
