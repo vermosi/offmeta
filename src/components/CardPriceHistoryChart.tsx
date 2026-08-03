@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePriceHistory, type PriceSnapshot } from '@/hooks/usePriceHistory';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/core/utils';
+import { useTranslation } from '@/lib/i18n';
 
 type SeriesKey = 'low' | 'average' | 'market' | 'foil';
 
