@@ -35,7 +35,7 @@ export function CardPriceSparkline({
 
   const points = useMemo<SparklinePoint[]>(
     () => {
-      const pickPrice = (snapshot: (typeof data)[number]) => {
+      const pickPrice = (snapshot: PriceSnapshot) => {
         switch (series) {
           case 'low':
             return snapshot.price_low;
