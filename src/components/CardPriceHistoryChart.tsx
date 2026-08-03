@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePriceHistory, type PriceSnapshot } from '@/hooks/usePriceHistory';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/core/utils';
+import { useTranslation } from '@/lib/i18n';
 
 type SeriesKey = 'low' | 'average' | 'market' | 'foil';
 
@@ -61,6 +62,7 @@ interface CardPriceHistoryChartProps {
 }
 
 export function CardPriceHistoryChart({ cardName, className }: CardPriceHistoryChartProps) {
+  const { t } = useTranslation();
   const [rangeIndex, setRangeIndex] = useState(1);
   const [hidden, setHidden] = useState<Set<SeriesKey>>(() => new Set<SeriesKey>(['foil']));
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
@@ -143,7 +145,7 @@ export function CardPriceHistoryChart({ cardName, className }: CardPriceHistoryC
       aria-label="Price history"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-foreground">Price History</h3>
+        <h3 className="text-sm font-semibold text-foreground">{t('priceHistory.title', 'Price History')}</h3>
         <div
           className="flex rounded-md border border-border bg-muted/60 p-0.5 text-[11px]"
           role="group"
@@ -210,11 +212,11 @@ export function CardPriceHistoryChart({ cardName, className }: CardPriceHistoryC
           <Skeleton className="w-full" style={{ height: HEIGHT }} />
         ) : isError ? (
           <p className="py-10 text-center text-xs text-muted-foreground">
-            Price history is unavailable right now.
+            {t('priceHistory.unavailable', 'Price history is unavailable right now.')}
           </p>
         ) : !scale ? (
           <p className="py-10 text-center text-xs text-muted-foreground">
-            Not enough price data yet for this range.
+            {t('priceHistory.stillUploading', 'Still uploading price data — check back soon.')}
           </p>
         ) : (
           <svg
@@ -322,7 +324,7 @@ export function CardPriceHistoryChart({ cardName, className }: CardPriceHistoryC
 
       {activeSnapshot && scale && (
         <p className="text-[11px] text-muted-foreground">
-          {hoverIndex != null ? '' : 'Latest: '}
+          {hoverIndex != null ? '' : t('priceHistory.latest', 'Latest: ')}
           {formatDate(activeSnapshot.recorded_at, true)}
         </p>
       )}
