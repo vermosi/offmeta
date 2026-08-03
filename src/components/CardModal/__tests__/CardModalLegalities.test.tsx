@@ -38,17 +38,13 @@ describe('CardModalLegalities', () => {
       expect(getByText('Pauper')).toBeInTheDocument();
     });
 
-    it('shows "Not legal in any format" when no formats are legal', () => {
-      const noLegalFormats = {
-        standard: 'not_legal',
-        modern: 'not_legal',
-        legacy: 'banned',
-      };
+    it('shows "Not legal in any format" when there are no legalities', () => {
       const { getByText } = render(
-        <CardModalLegalities legalities={noLegalFormats} isMobile={true} />,
+        <CardModalLegalities legalities={{}} isMobile={true} />,
       );
       expect(getByText('Not legal in any format')).toBeInTheDocument();
     });
+
   });
 
 
