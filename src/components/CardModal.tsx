@@ -418,7 +418,17 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
             cardId={card.id}
           />
 
+          <CardModalPurchaseLinks
+            card={card}
+            displayPrices={displayPrices}
+            displayTix={displayTix}
+            selectedPrinting={selectedPrinting}
+            isLoadingPrintings={isLoadingPrintings}
+            onAffiliateClick={handleAffiliateClick}
+          />
+
           <CardModalMetaContext card={card} />
+
           <CardModalRulings
             rulings={rulings}
             isLoading={isLoadingRulings}
