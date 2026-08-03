@@ -233,7 +233,7 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
     });
   }, []);
 
-  const { locale } = useTranslation();
+  const { locale, t } = useTranslation();
 
   if (!card) return null;
 
