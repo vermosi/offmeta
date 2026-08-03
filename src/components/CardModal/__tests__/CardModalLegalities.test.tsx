@@ -61,11 +61,11 @@ describe('CardModalLegalities', () => {
       expect(getByText('Format Legality')).toBeInTheDocument();
     });
 
-    it('shows all formats with their status', () => {
+    it('shows all formats grouped by status', () => {
       const { getByText } = render(
         <CardModalLegalities legalities={defaultLegalities} isMobile={false} />,
       );
-      
+
       expect(getByText('Standard')).toBeInTheDocument();
       expect(getByText('Modern')).toBeInTheDocument();
       expect(getByText('Legacy')).toBeInTheDocument();
@@ -75,18 +75,27 @@ describe('CardModalLegalities', () => {
     });
 
     it('displays correct status badges', () => {
-      const { getAllByText, getByText } = render(
+      const { getByText, getAllByText } = render(
         <CardModalLegalities legalities={defaultLegalities} isMobile={false} />,
       );
-      
-      // Legal and not-legal formats both render a short "legal" label;
-      // the chip color (green vs red) carries the distinction.
-      expect(getAllByText('legal').length).toBeGreaterThan(1);
 
+      expect(getAllByText('legal').length).toBe(3);
+      expect(getByText('not legal')).toBeInTheDocument();
       expect(getByText('restricted')).toBeInTheDocument();
       expect(getByText('banned')).toBeInTheDocument();
     });
+
+    it('segments formats into legal, restricted, and not legal sections', () => {
+      const { getByText } = render(
+        <CardModalLegalities legalities={defaultLegalities} isMobile={false} />,
+      );
+
+      expect(getByText('Legal In')).toBeInTheDocument();
+      expect(getByText('restricted')).toBeInTheDocument();
+      expect(getByText('not legal')).toBeInTheDocument();
+    });
   });
+
 
   it('formats special format names correctly', () => {
     const specialFormats = {
