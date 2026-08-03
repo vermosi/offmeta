@@ -62,6 +62,7 @@ interface CardPriceHistoryChartProps {
 }
 
 export function CardPriceHistoryChart({ cardName, className }: CardPriceHistoryChartProps) {
+  const { t } = useTranslation();
   const [rangeIndex, setRangeIndex] = useState(1);
   const [hidden, setHidden] = useState<Set<SeriesKey>>(() => new Set<SeriesKey>(['foil']));
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
