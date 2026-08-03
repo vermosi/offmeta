@@ -289,14 +289,15 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
                 className="bg-rarity-rare/10 text-rarity-rare border-rarity-rare/30 gap-1"
               >
                 <Shield className="h-3 w-3" />
-                Reserved List
+                {t('card.reservedList', 'Reserved List')}
               </Badge>
             )}
             {displayArtist && (
               <span className="text-xs text-muted-foreground">
-                Illustrated by {displayArtist}
+                {t('card.illustratedBy', 'Illustrated by')} {displayArtist}
               </span>
             )}
+
           </div>
         </div>
         {faceDetails.mana_cost && (
@@ -349,11 +350,11 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
         />
       </CardModalBentoTile>
 
-      <CardModalBentoTile title="Format Legality" accent="success">
+      <CardModalBentoTile>
         <CardModalLegalities legalities={card.legalities} />
       </CardModalBentoTile>
 
-      <CardModalBentoTile title="Toolbox" accent="primary">
+      <CardModalBentoTile>
         <CardModalToolbox
           cardName={card.name}
           scryfallUri={card.scryfall_uri}
@@ -361,6 +362,7 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
       </CardModalBentoTile>
     </div>
   );
+
 
   // Mobile content
   const mobileContent = (
