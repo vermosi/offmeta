@@ -306,6 +306,8 @@ export function CardModal({ card: propCard, open, onClose }: CardModalProps) {
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <CardPriceSparkline cardName={card.name} />
+
         <CardModalDetails
           faceDetails={faceDetails}
           displaySetName={displaySetName}
