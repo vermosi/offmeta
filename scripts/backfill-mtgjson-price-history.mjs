@@ -259,21 +259,19 @@ async function ensureArchive() {
  * object without materializing the whole ~2GB document.
  */
 async function* streamPriceEntries(stream) {
-  let buffer = '';
   let depth = 0;
   let inData = false;
   let pendingKey = null;
+  let lastString = '';
+  let strBuf = null; // accumulates the current string token across chunks
   let capture = null;
   let captureDepth = 0;
   let inString = false;
   let escaped = false;
 
   for await (const chunk of stream) {
-    buffer += chunk;
-    let i = 0;
-
-    while (i < buffer.length) {
-      const ch = buffer[i];
+    for (let i = 0; i < chunk.length; i += 1) {
+      const ch = chunk[i];
 
       if (capture !== null) {
         capture += ch;
@@ -290,39 +288,39 @@ async function* streamPriceEntries(stream) {
             const raw = capture;
             capture = null;
             pendingKey = null;
-            i += 1;
-            buffer = buffer.slice(i);
-            i = 0;
             yield [uuid, JSON.parse(raw)];
-            continue;
           }
         }
-        i += 1;
         continue;
       }
 
       if (inString) {
-        if (escaped) escaped = false;
-        else if (ch === '\\') escaped = true;
-        else if (ch === '"') {
+        if (escaped) {
+          strBuf += ch;
+          escaped = false;
+        } else if (ch === '\\') {
+          strBuf += ch;
+          escaped = true;
+        } else if (ch === '"') {
           inString = false;
-          const close = i;
-          const open = buffer.lastIndexOf('"', close - 1);
-          const key = buffer.slice(open + 1, close);
-          // Key at depth 1 tells us whether we're entering `data`.
-          const next = buffer[i + 1];
-          if (next === ':' || next === undefined) {
-            if (depth === 1) inData = key === 'data';
-            else if (depth === 2 && inData) pendingKey = key;
-          }
+          lastString = JSON.parse(`"${strBuf}"`);
+          strBuf = null;
+        } else {
+          strBuf += ch;
         }
-        i += 1;
         continue;
       }
 
       if (ch === '"') {
         inString = true;
-        i += 1;
+        strBuf = '';
+        continue;
+      }
+
+      if (ch === ':') {
+        // The key that just closed labels the value we are about to read.
+        if (depth === 1) inData = lastString === 'data';
+        else if (depth === 2 && inData) pendingKey = lastString;
         continue;
       }
 
@@ -330,27 +328,20 @@ async function* streamPriceEntries(stream) {
         if (pendingKey !== null && depth === 2 && inData) {
           capture = ch;
           captureDepth = 1;
-          i += 1;
           continue;
         }
         depth += 1;
-        i += 1;
         continue;
       }
 
       if (ch === '}' || ch === ']') {
         depth -= 1;
         if (depth <= 1) inData = false;
-        i += 1;
-        continue;
       }
-
-      i += 1;
     }
-
-    if (capture === null) buffer = '';
   }
 }
+
 
 async function runPricesPhase(supabase, progress) {
   const uuidNames = await readUuidMap();
