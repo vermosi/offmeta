@@ -79,9 +79,10 @@ describe('CardModalLegalities', () => {
         <CardModalLegalities legalities={defaultLegalities} isMobile={false} />,
       );
       
-      // Multiple formats are legal, so use getAllByText for "legal"
-      expect(getAllByText('legal').length).toBeGreaterThan(0);
-      expect(getByText('not legal')).toBeInTheDocument();
+      // Legal and not-legal formats both render a short "legal" label;
+      // the chip color (green vs red) carries the distinction.
+      expect(getAllByText('legal').length).toBeGreaterThan(1);
+
       expect(getByText('restricted')).toBeInTheDocument();
       expect(getByText('banned')).toBeInTheDocument();
     });
