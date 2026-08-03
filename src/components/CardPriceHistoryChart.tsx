@@ -324,7 +324,7 @@ export function CardPriceHistoryChart({ cardName, className }: CardPriceHistoryC
 
       {activeSnapshot && scale && (
         <p className="text-[11px] text-muted-foreground">
-          {hoverIndex != null ? '' : 'Latest: '}
+          {hoverIndex != null ? '' : t('priceHistory.latest', 'Latest: ')}
           {formatDate(activeSnapshot.recorded_at, true)}
         </p>
       )}
