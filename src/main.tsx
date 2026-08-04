@@ -6,8 +6,10 @@
 
 import { createRoot } from 'react-dom/client';
 import { initializeAnalytics } from '@/lib/analytics';
+import { initErrorMonitoring } from '@/lib/monitoring';
 import App from './App.tsx';
 import './index.css';
+
 
 // Initialize optional third-party analytics providers from Lovable connectors.
 // Keys are only present in the published environment; missing keys are ignored.
