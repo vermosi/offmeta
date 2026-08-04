@@ -117,33 +117,12 @@ export function useSearch() {
     total_searches: number;
     search_quality_score: number;
   } | null>(null);
+  // Server-side query intelligence is admin/service-only (RLS + revoked RPC grants),
+  // so the browser no longer fetches it. Ranking falls back to client-side signals.
   useEffect(() => {
-    const normalized = originalQuery.trim().toLowerCase();
-    if (!hasSearched || normalized.length < 2) {
-      setServerIntelligence(null);
-      return undefined;
-    }
-
-    let cancelled = false;
-    void import('@/hooks/useQueryIntelligence').then(({ fetchQueryIntelligence }) => {
-      if (cancelled) return;
-      void fetchQueryIntelligence(originalQuery)
-        .then((result) => {
-          if (!cancelled) {
-            setServerIntelligence(result);
-          }
-        })
-        .catch(() => {
-          if (!cancelled) {
-            setServerIntelligence(null);
-          }
-        });
-    });
-
-    return () => {
-      cancelled = true;
-    };
+    setServerIntelligence(null);
   }, [hasSearched, originalQuery]);
+
   const serverConfidence = serverIntelligence?.confidence ?? 0;
   const serverSampleSize = serverIntelligence?.total_searches ?? 0;
   const shouldUseServerQuality =
