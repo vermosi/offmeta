@@ -10,10 +10,20 @@ import { CardModalPurchaseLinks } from '../CardModalPurchaseLinks';
 import type { ScryfallCard } from '@/types/card';
 
 // Mock the printings module
-vi.mock('@/lib/card-printings', () => ({
+vi.mock('@/lib/scryfall/printings', () => ({
   getTCGPlayerUrl: () => 'https://tcgplayer.com/card/test',
   getCardmarketUrl: () => 'https://cardmarket.com/card/test',
 }));
+
+// Mock affiliate config
+vi.mock('@/hooks', async () => {
+  const actual = await vi.importActual<typeof import('@/hooks')>('@/hooks');
+  return {
+    ...actual,
+    useAffiliateConfig: () => ({ tcgplayerAffiliateBase: '' }),
+    wrapAffiliateUrl: (url: string) => url,
+  };
+});
 
 // Mock PriceSparkline to avoid needing real query client data
 vi.mock('@/components/collection/PriceSparkline', () => ({
@@ -176,46 +186,57 @@ describe('CardModalPurchaseLinks', () => {
     expect(container.querySelector('.animate-spin')).not.toBeInTheDocument();
   });
 
+  describe('accessible links', () => {
+    it('renders purchase links as anchors opening in a new tab', () => {
+      const { getAllByRole } = renderWithProviders(
+        <CardModalPurchaseLinks {...defaultProps} />,
+      );
+      const links = getAllByRole('link');
+      expect(links.length).toBeGreaterThan(0);
+      for (const link of links) {
+        expect(link).toHaveAttribute('target', '_blank');
+        expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+      }
+    });
+
+    it('includes an aria-label naming the card, vendor, and new-tab behavior', () => {
+      const { getByRole } = renderWithProviders(
+        <CardModalPurchaseLinks {...defaultProps} />,
+      );
+      const tcgLink = getByRole('link', {
+        name: /Buy Lightning Bolt on TCGplayer \(opens in a new tab\)/i,
+      });
+      expect(tcgLink).toBeInTheDocument();
+    });
+  });
+
   describe('mobile view', () => {
-    it('renders the same stacked layout as desktop', () => {
+    it('renders the same stacked link layout as desktop', () => {
       const mobile = renderWithProviders(
         <CardModalPurchaseLinks {...defaultProps} isMobile={true} />,
       );
-      const mobileButtons = mobile
-        .getAllByRole('button')
-        .map((b) => b.className);
+      const mobileLinks = mobile.getAllByRole('link').map((l) => l.className);
       mobile.unmount();
 
       const desktop = renderWithProviders(
         <CardModalPurchaseLinks {...defaultProps} isMobile={false} />,
       );
-      const desktopButtons = desktop
-        .getAllByRole('button')
-        .map((b) => b.className);
+      const desktopLinks = desktop.getAllByRole('link').map((l) => l.className);
 
-      expect(mobileButtons).toEqual(desktopButtons);
+      expect(mobileLinks).toEqual(desktopLinks);
     });
 
-
-    it('uses smaller button sizes', () => {
+    it('renders shopping cart icons', () => {
       const { getAllByRole } = renderWithProviders(
         <CardModalPurchaseLinks {...defaultProps} isMobile={true} />,
       );
-      const buttons = getAllByRole('button');
-      expect(buttons.length).toBeGreaterThan(0);
+      const links = getAllByRole('link');
+      expect(links.length).toBeGreaterThan(0);
     });
   });
 
   describe('desktop view', () => {
-    it('shows shopping cart icons', () => {
-      const { getAllByRole } = renderWithProviders(
-        <CardModalPurchaseLinks {...defaultProps} isMobile={false} />,
-      );
-      const buttons = getAllByRole('button');
-      expect(buttons.length).toBeGreaterThan(0);
-    });
-
-    it('renders full-width buttons', () => {
+    it('renders full-width links', () => {
       const { container } = renderWithProviders(
         <CardModalPurchaseLinks {...defaultProps} isMobile={false} />,
       );

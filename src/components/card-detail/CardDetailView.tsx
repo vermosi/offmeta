@@ -21,7 +21,7 @@ import { cardNameToSlug } from '@/lib/card-slug';
 import { Shield } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ManaCost } from '@/components/ManaSymbol';
-import { useAnalytics, useAffiliateConfig, wrapAffiliateUrl } from '@/hooks';
+import { useAnalytics, useAffiliateConfig } from '@/hooks';
 import { useTranslation } from '@/lib/i18n';
 
 import { CardModalImage } from '@/components/CardModal/CardModalImage';
@@ -145,10 +145,6 @@ export function CardDetailView({ card }: CardDetailViewProps) {
       const { tcgplayerAffiliateBase } = affiliateConfig;
       const isAffiliateLink =
         marketplace.includes('tcgplayer') && !!tcgplayerAffiliateBase;
-      const finalUrl =
-        marketplace.includes('tcgplayer') && tcgplayerAffiliateBase
-          ? wrapAffiliateUrl(url, tcgplayerAffiliateBase)
-          : url;
 
       trackAffiliateClick({
         affiliate: marketplace,
@@ -160,7 +156,6 @@ export function CardDetailView({ card }: CardDetailViewProps) {
         price_eur: marketplace.includes('cardmarket') ? price : undefined,
         price_tix: marketplace === 'cardhoarder' ? price : undefined,
       });
-      window.open(finalUrl, '_blank', 'noopener,noreferrer');
     },
     [card, trackAffiliateClick, affiliateConfig],
   );

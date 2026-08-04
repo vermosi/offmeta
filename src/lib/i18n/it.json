@@ -120,6 +120,7 @@
   "card.statusRestricted": "ristretta",
   "card.text": "Testo della Carta",
   "card.tix": "tix",
+  "card.buyLinkAriaLabel": "Acquista {cardName} su {vendor} (si apre in una nuova scheda)",
   "card.toolbox": "Strumenti",
   "card.transform": "Trasforma",
   "card.uniqueArt": "Arte Unica",

@@ -169,6 +169,7 @@
   "card.buyThisCard": "이 카드 구매",
   "card.foil": "Foil",
   "card.tix": "tix",
+  "card.buyLinkAriaLabel": "{vendor}에서 {cardName} 구매 (새 탭에서 열림)",
   "card.rulings": "규칙 ({count})",
   "card.combosLoading": "콤보 로딩 중…",
   "card.combosNone": "이 카드에 대한 알려진 콤보를 찾을 수 없습니다.",

@@ -169,6 +169,7 @@
   "card.buyThisCard": "购买此牌",
   "card.foil": "Foil",
   "card.tix": "tix",
+  "card.buyLinkAriaLabel": "在{vendor}购买{cardName}（在新标签页打开）",
   "card.rulings": "裁定 ({count})",
   "card.combosLoading": "正在加载连击…",
   "card.combosNone": "未找到此牌的已知连击。",
