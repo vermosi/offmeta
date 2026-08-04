@@ -863,41 +863,21 @@ export type Database = {
         }[]
       }
       get_error_monitor_summary: { Args: { days_back?: number }; Returns: Json }
-      get_price_movers:
-        | {
-            Args: { days_back?: number; limit_count?: number }
-            Returns: {
-              card_name: string
-              change_percent: number
-              colors: string[]
-              current_price: number
-              direction: string
-              legalities: Json
-              previous_price: number
-              rarity: string
-              scryfall_id: string
-              type_line: string
-            }[]
-          }
-        | {
-            Args: {
-              days_back?: number
-              limit_count?: number
-              min_price?: number
-            }
-            Returns: {
-              card_name: string
-              change_percent: number
-              colors: string[]
-              current_price: number
-              direction: string
-              legalities: Json
-              previous_price: number
-              rarity: string
-              scryfall_id: string
-              type_line: string
-            }[]
-          }
+      get_price_movers: {
+        Args: { days_back?: number; limit_count?: number; min_price?: number }
+        Returns: {
+          card_name: string
+          change_percent: number
+          colors: string[]
+          current_price: number
+          direction: string
+          legalities: Json
+          previous_price: number
+          rarity: string
+          scryfall_id: string
+          type_line: string
+        }[]
+      }
       get_promotion_candidates: {
         Args: {
           max_results?: number
