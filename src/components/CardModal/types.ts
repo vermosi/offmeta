@@ -64,8 +64,8 @@ export interface CardModalPurchaseLinksProps {
     url: string,
     price?: string,
   ) => void;
-  isMobile?: boolean;
 }
+
 
 export interface CardModalRulingsProps {
   rulings: CardRuling[];
