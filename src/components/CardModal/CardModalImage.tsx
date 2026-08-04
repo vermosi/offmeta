@@ -19,7 +19,7 @@ export function CardModalImage({
   isMobile = false,
 }: CardModalImageProps) {
   const { t } = useTranslation();
-  const maxWidth = isMobile ? 'max-w-[180px]' : 'max-w-[220px]';
+  const maxWidth = isMobile ? 'max-w-[180px]' : 'max-w-[300px]';
 
   return (
     <div className="flex flex-col items-center w-full">
