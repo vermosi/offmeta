@@ -197,6 +197,10 @@ export function CardDetailView({ card }: CardDetailViewProps) {
         </CardModalBentoTile>
 
         <CardModalBentoTile>
+          <CardPriceHistoryChart cardName={card.name} />
+        </CardModalBentoTile>
+
+        <CardModalBentoTile>
           <CardModalLegalities legalities={card.legalities} />
         </CardModalBentoTile>
 
@@ -264,10 +268,6 @@ export function CardDetailView({ card }: CardDetailViewProps) {
 
           <CardModalBentoTile className="lg:col-span-5">
             <CardModalMetaContext card={card} />
-          </CardModalBentoTile>
-
-          <CardModalBentoTile className="lg:col-span-12">
-            <CardPriceHistoryChart cardName={card.name} />
           </CardModalBentoTile>
 
           <CardModalBentoTile className="lg:col-span-6">
