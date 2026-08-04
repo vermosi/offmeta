@@ -232,7 +232,7 @@ export default function MarketTrends() {
   const [sortField, setSortField] = useState<SortField>('change');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [showFilters, setShowFilters] = useState(false);
-  const { allMovers, isLoading, isDemo } = useMarketTrends(daysBack);
+  const { allMovers, isLoading, isEmpty, isError } = useMarketTrends(daysBack);
   const activeFilterCount = countActiveFilters(filters);
 
   const handleSort = useCallback((field: SortField) => {
