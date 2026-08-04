@@ -16,7 +16,10 @@ const movers: PriceMover[] = [
     rarity: 'rare',
     type_line: 'Creature — Dragon',
     legalities: { commander: 'legal' },
-  } as unknown as PriceMover,
+    scryfall_id: null,
+    set_name: 'Alpha',
+    collector_number: '1',
+  },
   {
     card_name: 'Card B',
     direction: 'down',
@@ -26,7 +29,10 @@ const movers: PriceMover[] = [
     rarity: 'common',
     type_line: 'Sorcery',
     legalities: { commander: 'legal' },
-  } as unknown as PriceMover,
+    scryfall_id: null,
+    set_name: 'Beta',
+    collector_number: '2',
+  },
 ];
 
 describe('MarketTrends helpers', () => {
