@@ -291,6 +291,15 @@ export function CardDetailView({ card }: CardDetailViewProps) {
               onSelectPrinting={handleSelectPrinting}
             />
           </CardModalBentoTile>
+
+          {comboCount > 0 && (
+            <CardModalBentoTile className="lg:col-span-12">
+              <CardModalCombos
+                cardName={card.name}
+                onComboCountChange={setComboCount}
+              />
+            </CardModalBentoTile>
+          )}
         </div>
       </div>
     </div>
