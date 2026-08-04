@@ -69,15 +69,23 @@ function initGoogleAnalytics(measurementId: string): void {
 
 let posthogInstance: PostHog | null = null;
 let posthogInitialized = false;
+/** Set as soon as an init attempt begins, so re-entrant navigation-time calls
+ *  cannot run `posthog.init` (and therefore cannot double-send events). */
+let posthogInitStarted = false;
+let isFlushing = false;
 
 async function initPostHog(
   projectToken: string,
   region: string,
 ): Promise<void> {
-  if (posthogInitialized || typeof window === 'undefined') return;
+  if (posthogInitStarted || posthogInitialized) return;
+  if (typeof window === 'undefined') return;
+  posthogInitStarted = true;
   try {
     const apiHost =
       region === 'us' ? 'https://us.i.posthog.com' : 'https://eu.i.posthog.com';
+    // Assign before init so a synchronous `loaded` callback can flush.
+    posthogInstance = posthog;
     posthog.init(projectToken, {
       api_host: apiHost,
       autocapture: false, // we use explicit event tracking
@@ -89,14 +97,14 @@ async function initPostHog(
         flushPostHogQueue();
       },
     });
-    posthogInstance = posthog;
     // posthog-js buffers requests internally until it finishes loading, so we
     // can flush immediately instead of waiting for the `loaded` callback (which
     // may never fire if the remote script is blocked).
     posthogInitialized = true;
     flushPostHogQueue();
   } catch {
-    // PostHog is best-effort
+    // PostHog is best-effort; allow a later retry.
+    posthogInitStarted = false;
   }
 }
 
@@ -113,6 +121,57 @@ type QueuedCall =
 const MAX_QUEUED_CALLS = 50;
 const posthogQueue: QueuedCall[] = [];
 
+/**
+ * Short-lived fingerprint of recently sent calls. If a re-init or a duplicated
+ * navigation effect replays the exact same call within this window, we drop it
+ * instead of sending a duplicate event to PostHog.
+ */
+const DEDUPE_WINDOW_MS = 500;
+const MAX_DEDUPE_ENTRIES = 200;
+const recentCalls = new Map<string, number>();
+
+function callFingerprint(call: QueuedCall): string {
+  switch (call.kind) {
+    case 'capture':
+      return `capture:${call.name}:${safeStringify(call.properties)}`;
+    case 'register':
+      return `register:${safeStringify(call.properties)}`;
+    case 'person':
+      return `person:${safeStringify(call.properties)}`;
+    case 'identify':
+      return `identify:${call.userId}`;
+  }
+}
+
+function safeStringify(value: Record<string, unknown>): string {
+  try {
+    return JSON.stringify(value, Object.keys(value).sort());
+  } catch {
+    return '';
+  }
+}
+
+/** True when this exact call was already sent inside the dedupe window. */
+function isDuplicateCall(call: QueuedCall, now = Date.now()): boolean {
+  const key = callFingerprint(call);
+  const previous = recentCalls.get(key);
+  if (previous !== undefined && now - previous < DEDUPE_WINDOW_MS) return true;
+
+  recentCalls.set(key, now);
+  if (recentCalls.size > MAX_DEDUPE_ENTRIES) {
+    for (const [entryKey, timestamp] of recentCalls) {
+      if (now - timestamp >= DEDUPE_WINDOW_MS) recentCalls.delete(entryKey);
+    }
+    // Still oversized (all entries fresh): drop the oldest insertions.
+    while (recentCalls.size > MAX_DEDUPE_ENTRIES) {
+      const oldest = recentCalls.keys().next().value;
+      if (oldest === undefined) break;
+      recentCalls.delete(oldest);
+    }
+  }
+  return false;
+}
+
 function enqueuePostHog(call: QueuedCall): void {
   if (posthogQueue.length >= MAX_QUEUED_CALLS) return;
   posthogQueue.push(call);
@@ -120,6 +179,7 @@ function enqueuePostHog(call: QueuedCall): void {
 
 function runPostHogCall(call: QueuedCall): void {
   if (!posthogInstance) return;
+  if (isDuplicateCall(call)) return;
   switch (call.kind) {
     case 'capture':
       posthogInstance.capture(call.name, call.properties);
@@ -137,16 +197,25 @@ function runPostHogCall(call: QueuedCall): void {
 }
 
 function flushPostHogQueue(): void {
-  while (posthogQueue.length > 0) {
-    const call = posthogQueue.shift();
-    if (!call) break;
-    try {
-      runPostHogCall(call);
-    } catch {
-      /* best-effort */
+  // Guard against re-entrant flushes (e.g. `loaded` firing mid-flush), which
+  // could otherwise interleave and resend the same queued calls.
+  if (isFlushing) return;
+  isFlushing = true;
+  try {
+    while (posthogQueue.length > 0) {
+      const call = posthogQueue.shift();
+      if (!call) break;
+      try {
+        runPostHogCall(call);
+      } catch {
+        /* best-effort */
+      }
     }
+  } finally {
+    isFlushing = false;
   }
 }
+
 
 /** Run now when PostHog is ready, otherwise queue until it loads. */
 function withPostHog(call: QueuedCall): void {
