@@ -270,10 +270,6 @@ export function CardDetailView({ card }: CardDetailViewProps) {
             <CardModalMetaContext card={card} />
           </CardModalBentoTile>
 
-          <CardModalBentoTile className="lg:col-span-12">
-            <CardPriceHistoryChart cardName={card.name} />
-          </CardModalBentoTile>
-
           <CardModalBentoTile className="lg:col-span-6">
             <CardModalRulings
               rulings={rulings}
