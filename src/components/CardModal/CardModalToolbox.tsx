@@ -4,10 +4,8 @@
  * @module components/CardModal/CardModalToolbox
  */
 
-import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Sparkles } from 'lucide-react';
-import { cardNameToSlug } from '@/lib/card-slug';
+import { ExternalLink } from 'lucide-react';
 import type { CardModalToolboxProps } from './types';
 import { useTranslation } from '@/lib/i18n';
 
