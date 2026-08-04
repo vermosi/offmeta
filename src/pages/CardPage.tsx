@@ -286,14 +286,6 @@ const CardPage = () => {
     );
   }
 
-  const isFlippable = isDFC(card);
-  const activeFace = isFlippable ? card.card_faces![faceIndex] : null;
-  const oracleText = activeFace?.oracle_text ?? getOracleText(card);
-  const cardImage = getCardImage(card, 'large', faceIndex);
-  const displayName = activeFace?.name ?? card.name;
-  const displayTypeLine = activeFace?.type_line ?? card.type_line;
-  const displayManaCost = activeFace?.mana_cost ?? card.mana_cost;
-
   // Alias slug → canonical redirect. If the URL slug doesn't match the
   // canonical slug derived from the resolved card name (e.g. missing
   // punctuation, diacritics, older/misspelled variants that resolved via
