@@ -41,12 +41,10 @@ function statusBadgeClass(status: LegalityStatus): string {
 function FormatGroup({
   title,
   formats,
-  status,
   t,
 }: {
   title: string;
   formats: [string, LegalityStatus][];
-  status: LegalityStatus;
   t: (key: string, fallback?: string) => string;
 }) {
   if (formats.length === 0) return null;
@@ -104,19 +102,16 @@ export function CardModalLegalities({
           <FormatGroup
             title={t('card.legalIn', 'Legal In')}
             formats={legal}
-            status="legal"
             t={t}
           />
           <FormatGroup
             title={t('card.statusRestricted', 'restricted')}
             formats={restricted}
-            status="restricted"
             t={t}
           />
           <FormatGroup
             title={t('card.statusNotLegal', 'not legal')}
             formats={notLegal}
-            status="not_legal"
             t={t}
           />
         </div>
@@ -133,19 +128,16 @@ export function CardModalLegalities({
         <FormatGroup
           title={t('card.legalIn', 'Legal In')}
           formats={legal}
-          status="legal"
           t={t}
         />
         <FormatGroup
           title={t('card.statusRestricted', 'restricted')}
           formats={restricted}
-          status="restricted"
           t={t}
         />
         <FormatGroup
           title={t('card.statusNotLegal', 'not legal')}
           formats={notLegal}
-          status="not_legal"
           t={t}
         />
       </div>

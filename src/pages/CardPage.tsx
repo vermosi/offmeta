@@ -148,15 +148,6 @@ const CardPage = () => {
     };
   }, [card, pageUrl, slug]);
 
-  // Price display
-  const priceDisplay = useMemo(() => {
-    if (!card) return null;
-    const usd = card.prices?.usd;
-    const foil = card.prices?.usd_foil;
-    if (!usd && !foil) return null;
-    return { usd, foil };
-  }, [card]);
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-background relative">

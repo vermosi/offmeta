@@ -77,9 +77,12 @@ export function CardPriceHistoryChart({
 
   const { data, isLoading, isError } = usePriceHistory(cardName, RANGES[rangeIndex].days, scryfallId);
 
-  useEffect(() => {
+  // Reset hover selection when the printing changes (render-phase adjustment).
+  const [hoverScopeId, setHoverScopeId] = useState(scryfallId);
+  if (hoverScopeId !== scryfallId) {
+    setHoverScopeId(scryfallId);
     setHoverIndex(null);
-  }, [scryfallId]);
+  }
 
 
   useEffect(() => {
