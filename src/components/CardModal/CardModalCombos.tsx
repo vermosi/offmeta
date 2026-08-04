@@ -9,17 +9,9 @@ import { invokeComboSearch } from '@/services/combo-search';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import {
   Zap,
-  ChevronDown,
-  ChevronUp,
   ExternalLink,
   Sparkles,
   AlertTriangle,
@@ -85,7 +77,6 @@ export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
     isLoading: true,
     error: null,
   });
-  const [expandedCombo, setExpandedCombo] = useState<string | null>(null);
 
   const { combos, total, isLoading, error } = state;
 
@@ -180,142 +171,60 @@ export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
 
       <div className="space-y-2">
         {combos.map((combo) => (
-          <Collapsible
+          <div
             key={combo.id}
-            open={expandedCombo === combo.id}
-            onOpenChange={(open) =>
-              setExpandedCombo(open ? combo.id : null)
-            }
+            className="flex items-center justify-between gap-3 rounded-lg border border-border/50 bg-muted/30 p-3"
           >
-            <CollapsibleTrigger asChild>
-              <button
-                className="w-full text-left rounded-lg border border-border/50 bg-muted/30 hover:bg-muted/60 transition-colors p-3 group"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    {/* Card names in combo */}
-                    <div className="flex flex-wrap gap-1 mb-1.5">
-                      {combo.cards
-                        .filter((c) => c.name !== cardName && !c.name.startsWith('[Any]'))
-                        .slice(0, isMobile ? 3 : 5)
-                        .map((c, i) => (
-                          <Badge
-                            key={i}
-                            variant="secondary"
-                            className="text-xs font-normal"
-                          >
-                            <OracleText text={c.name} size="sm" />
-                          </Badge>
-                        ))}
-                      {combo.cards.filter((c) => c.name.startsWith('[Any]')).map((c, i) => (
-                        <Badge
-                          key={`tmpl-${i}`}
-                          variant="outline"
-                          className="text-xs font-normal italic"
-                        >
-                          <OracleText text={c.name.replace('[Any] ', '')} size="sm" />
-                        </Badge>
-                      ))}
-                    </div>
-
-                    {/* What it produces */}
-                    <div className="flex flex-wrap gap-1">
-                      {combo.produces.slice(0, 3).map((p, i) => (
-                        <span
-                          key={i}
-                          className="text-xs text-primary/80 flex items-center gap-0.5"
-                        >
-                          <Sparkles className="h-3 w-3" />
-                          <OracleText text={p} size="sm" />
-                        </span>
-                      ))}
-                      {combo.produces.length > 3 && (
-                        <span className="text-xs text-muted-foreground">
-                          +{combo.produces.length - 3} more
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1 text-muted-foreground">
-                    {combo.identity && (
-                      <span className="inline-flex items-center gap-0.5">
-                        {combo.identity.split('').filter((c: string) => 'WUBRG'.includes(c)).map((c: string, i: number) => (
-                          <img
-                            key={i}
-                            src={`https://svgs.scryfall.io/card-symbols/${c}.svg`}
-                            alt={c}
-                            className="h-4 w-4"
-                          />
-                        ))}
-                      </span>
-                    )}
-                    {expandedCombo === combo.id ? (
-                      <ChevronUp className="h-4 w-4" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4" />
-                    )}
-                  </div>
-                </div>
-              </button>
-            </CollapsibleTrigger>
-
-            <CollapsibleContent>
-              <div className="border border-t-0 border-border/50 rounded-b-lg bg-background p-3 space-y-3">
-                {/* Steps */}
-                {combo.description && (
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">
-                      {t('card.combosSteps', 'Steps')}
-                    </p>
-                    <ol className="text-xs space-y-0.5 list-decimal list-inside text-foreground/90">
-                      {combo.description.split('\n').filter(Boolean).map((step, i) => (
-                        <li key={i}><OracleText text={step.replace(/^\d+\.\s*/, '')} size="sm" /></li>
-                      ))}
-                    </ol>
-                  </div>
-                )}
-
-                {/* Prerequisites */}
-                {combo.prerequisites && (
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">
-                      {t('card.combosPrerequisites', 'Prerequisites')}
-                    </p>
-                    <ul className="text-xs space-y-0.5 list-disc list-inside text-foreground/70">
-                      {combo.prerequisites.split('\n').filter(Boolean).map((prereq, i) => (
-                        <li key={i}><OracleText text={prereq} size="sm" /></li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Price + link */}
-                <div className="flex items-center justify-between">
-                  {combo.prices?.tcgplayer && (
-                    <span className="text-xs text-muted-foreground">
-                      {t('card.combosCost', 'Combo cost: ~${price}').replace('{price}', combo.prices.tcgplayer)}
-                    </span>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 text-xs gap-1"
-                    asChild
+            <div className="flex-1 min-w-0">
+              {/* What it produces */}
+              <div className="flex flex-wrap gap-1">
+                {combo.produces.slice(0, 3).map((p, i) => (
+                  <span
+                    key={i}
+                    className="text-xs text-primary/80 flex items-center gap-0.5"
                   >
-                    <a
-                      href={`https://commanderspellbook.com/combo/${combo.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Commander Spellbook
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </Button>
-                </div>
+                    <Sparkles className="h-3 w-3" />
+                    <OracleText text={p} size="sm" />
+                  </span>
+                ))}
+                {combo.produces.length > 3 && (
+                  <span className="text-xs text-muted-foreground">
+                    +{combo.produces.length - 3} more
+                  </span>
+                )}
               </div>
-            </CollapsibleContent>
-          </Collapsible>
+            </div>
+
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {combo.identity && (
+                <span className="inline-flex items-center gap-0.5">
+                  {combo.identity.split('').filter((c: string) => 'WUBRG'.includes(c)).map((c: string, i: number) => (
+                    <img
+                      key={i}
+                      src={`https://svgs.scryfall.io/card-symbols/${c}.svg`}
+                      alt={c}
+                      className="h-4 w-4"
+                    />
+                  ))}
+                </span>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs gap-1"
+                asChild
+              >
+                <a
+                  href={`https://commanderspellbook.com/combo/${combo.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Commander Spellbook
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </Button>
+            </div>
+          </div>
         ))}
       </div>
     </div>
