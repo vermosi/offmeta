@@ -32,6 +32,7 @@ import { CardModalToolbox } from '@/components/CardModal/CardModalToolbox';
 import { CardModalMetaContext } from '@/components/CardModal/CardModalMetaContext';
 import { CardModalBentoTile } from '@/components/CardModal/CardModalBentoTile';
 import { CardPriceHistoryChart } from '@/components/CardPriceHistoryChart';
+import { CardModalCombos } from '@/components/CardModal/CardModalCombos';
 import type { DisplayPrices } from '@/components/CardModal/types';
 
 export interface CardDetailViewProps {
@@ -52,6 +53,7 @@ export function CardDetailView({ card }: CardDetailViewProps) {
   const [rulings, setRulings] = useState<CardRuling[]>([]);
   const [isLoadingRulings, setIsLoadingRulings] = useState(true);
   const [showRulings, setShowRulings] = useState(false);
+  const [comboCount, setComboCount] = useState(0);
 
   const isDoubleFaced = isDoubleFacedCard(card);
 
@@ -64,6 +66,7 @@ export function CardDetailView({ card }: CardDetailViewProps) {
     setShowRulings(false);
     setIsLoadingRulings(true);
     setIsLoadingPrintings(true);
+    setComboCount(0);
   }, [card.id]);
 
   useEffect(() => {
@@ -288,6 +291,15 @@ export function CardDetailView({ card }: CardDetailViewProps) {
               onSelectPrinting={handleSelectPrinting}
             />
           </CardModalBentoTile>
+
+          {comboCount > 0 && (
+            <CardModalBentoTile className="lg:col-span-12">
+              <CardModalCombos
+                cardName={card.name}
+                onComboCountChange={setComboCount}
+              />
+            </CardModalBentoTile>
+          )}
         </div>
       </div>
     </div>
