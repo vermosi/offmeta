@@ -320,7 +320,6 @@ export function CardPriceHistoryChart({ cardName, className }: CardPriceHistoryC
             )}
           </svg>
         )}
-      </div>
 
       {activeSnapshot && scale && (
         <p className="text-[11px] text-muted-foreground">
