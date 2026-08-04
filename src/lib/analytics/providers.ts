@@ -6,6 +6,12 @@
  */
 
 import { classifyTraffic } from './traffic';
+import {
+  allowEvent,
+  buildReplayConfig,
+  isReplayBlockedPath,
+  shouldRecordSession,
+} from './replay';
 import { posthog, type PostHog } from 'posthog-js';
 
 // ---------------------------------------------------------------------------
@@ -76,6 +82,8 @@ async function initPostHog(
       api_host: apiHost,
       autocapture: false, // we use explicit event tracking
       capture_pageview: false, // manual SPA page views
+      // Privacy-safe replay: sampled per session, all inputs masked.
+      ...buildReplayConfig(),
       loaded: () => {
         posthogInitialized = true;
         flushPostHogQueue();
@@ -150,6 +158,23 @@ function withPostHog(call: QueuedCall): void {
 }
 
 
+/**
+ * Stop replay capture when the user navigates onto a sensitive route and
+ * resume it when they leave (only if this session was sampled in).
+ */
+function syncReplayForPath(path: string): void {
+  if (!posthogInstance) return;
+  try {
+    if (isReplayBlockedPath(path)) {
+      posthogInstance.stopSessionRecording();
+    } else if (shouldRecordSession()) {
+      posthogInstance.startSessionRecording();
+    }
+  } catch {
+    /* best-effort */
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -191,6 +216,8 @@ export function trackExternalEvent(
     /* best-effort */
   }
 
+  // Client-side rate limit: protects the project quota from runaway loops.
+  if (!allowEvent()) return;
   withPostHog({ kind: 'capture', name, properties });
 }
 
@@ -222,6 +249,10 @@ export function trackExternalPageView(path: string): void {
     /* best-effort */
   }
 
+  // Never record replay on sensitive routes, even mid-session.
+  syncReplayForPath(path);
+
+  if (!allowEvent()) return;
   withPostHog({
     kind: 'capture',
     name: '$pageview',
