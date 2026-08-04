@@ -82,6 +82,10 @@
   "browse.title": "Browse MTG Card Searches | OffMeta",
   "card.addToCollection": "Zur Sammlung hinzufügen",
   "card.buyThisCard": "Diese Karte kaufen",
+  "card.priceDataAvailableBoth": "Preise von TCGplayer und Cardmarket",
+  "card.priceDataAvailableTCGplayer": "Preise von TCGplayer",
+  "card.priceDataAvailableCardmarket": "Preise von Cardmarket",
+  "card.priceDataUnavailable": "Noch keine Preisdaten verfügbar",
   "card.combos": "Combos ({count})",
   "card.combosCost": "Combo-Kosten: ~${price}",
   "card.combosLoading": "Combos werden geladen",
