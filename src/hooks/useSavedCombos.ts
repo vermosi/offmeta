@@ -5,7 +5,7 @@
  * (stateless persistence strategy). Saving is instrumented as a funnel step.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { trackFunnelStep } from '@/lib/analytics/funnels';
 import type { Combo } from '@/components/find-my-combos/types';
 
@@ -45,19 +45,37 @@ function writeSaved(combos: SavedCombo[]): void {
 /** Broadcast channel so all mounted combo items stay in sync. */
 const SYNC_EVENT = 'offmeta:saved-combos-changed';
 
-export function useSavedCombos() {
-  const [saved, setSaved] = useState<SavedCombo[]>([]);
+function subscribe(onChange: () => void): () => void {
+  window.addEventListener(SYNC_EVENT, onChange);
+  window.addEventListener('storage', onChange);
+  return () => {
+    window.removeEventListener(SYNC_EVENT, onChange);
+    window.removeEventListener('storage', onChange);
+  };
+}
 
-  useEffect(() => {
-    setSaved(readSaved());
-    const sync = () => setSaved(readSaved());
-    window.addEventListener(SYNC_EVENT, sync);
-    window.addEventListener('storage', sync);
-    return () => {
-      window.removeEventListener(SYNC_EVENT, sync);
-      window.removeEventListener('storage', sync);
-    };
-  }, []);
+/** Cached raw snapshot so useSyncExternalStore sees a stable reference. */
+let snapshotCache = '';
+function getSnapshot(): string {
+  try {
+    snapshotCache = window.localStorage.getItem(STORAGE_KEY) ?? '';
+  } catch {
+    /* keep last known snapshot */
+  }
+  return snapshotCache;
+}
+
+export function useSavedCombos() {
+  const raw = useSyncExternalStore(subscribe, getSnapshot, () => '');
+  const saved = useMemo<SavedCombo[]>(() => {
+    if (!raw) return [];
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      return Array.isArray(parsed) ? (parsed as SavedCombo[]) : [];
+    } catch {
+      return [];
+    }
+  }, [raw]);
 
   const isSaved = useCallback(
     (comboId: string) => saved.some((entry) => entry.id === comboId),
@@ -81,7 +99,6 @@ export function useSavedCombos() {
         ];
 
     writeSaved(next);
-    setSaved(next.slice(0, MAX_SAVED_COMBOS));
     window.dispatchEvent(new Event(SYNC_EVENT));
 
     if (!exists) {
