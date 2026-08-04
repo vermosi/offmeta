@@ -77,7 +77,6 @@ export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
     isLoading: true,
     error: null,
   });
-  const [expandedCombo, setExpandedCombo] = useState<string | null>(null);
 
   const { combos, total, isLoading, error } = state;
 
