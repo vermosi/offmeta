@@ -453,12 +453,13 @@ export default function MarketTrends() {
             )}
           </div>
         )}
-        {isDemo && !isLoading && (
+        {(isEmpty || isError) && !isLoading && (
           <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-4 py-3 mb-4 text-sm text-muted-foreground">
             <AlertTriangle className="h-4 w-4 shrink-0" />
             <span>
-              Showing sample data - real trends will appear as price history
-              accumulates.
+              {isError
+                ? 'Could not load price movers right now — try again shortly.'
+                : 'No significant price movers in this window yet.'}
             </span>
           </div>
         )}
