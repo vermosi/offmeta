@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import type { Dispatch, SetStateAction } from 'react';
 
 import { buildClientFallbackQuery, extractCardNameCandidate } from '@/lib/search/fallback';
+import { resolveAlternativesQuery } from '@/lib/search/alternatives';
 import { resolveFuzzyCardName } from '@/lib/scryfall/client';
 
 type SearchResult = {
