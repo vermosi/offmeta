@@ -260,7 +260,23 @@ Deno.serve(withLogging('seo-health-check', async (req) => {
 
   if (criticals > 0) {
     console.warn(`seo-health-check: ${criticals} critical SEO regression(s) detected`);
+    // Report each regression so error-auto-fix can attempt a repair
+    // (sitemap resubmission, data resync) on its next run.
+    for (const row of criticalRows) {
+      await reportEdgeError({
+        source: 'seo-health-check',
+        errorType:
+          row.check_type === 'sitemap'
+            ? 'sitemap_health_failed'
+            : `seo_page_failure_${row.check_type}`,
+        message: `Critical SEO regression on ${row.target_url} (${row.check_type})`,
+        url: row.target_url,
+        severity: 'critical',
+        context: { check_type: row.check_type, details: row.details },
+      });
+    }
   }
+
 
   return new Response(
     JSON.stringify({
