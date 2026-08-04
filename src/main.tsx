@@ -5,7 +5,7 @@
  */
 
 import { createRoot } from 'react-dom/client';
-import { initializeAnalytics } from '@/lib/analytics';
+import { initializeAnalytics, initFunnelTracking } from '@/lib/analytics';
 import { initErrorMonitoring } from '@/lib/monitoring';
 import App from './App.tsx';
 import './index.css';
@@ -19,6 +19,10 @@ initializeAnalytics({
   posthogProjectToken: import.meta.env.VITE_LOVABLE_CONNECTOR_POSTHOG_API_KEY,
   posthogRegion: import.meta.env.VITE_LOVABLE_CONNECTOR_POSTHOG_REGION,
 });
+
+// Register onboarding-cohort context and emit the daily retention signal so
+// PostHog funnels and retention views can be broken down per cohort.
+initFunnelTracking();
 
 // Capture uncaught errors / rejections into public.error_events so page-level
 // failures are reported automatically alongside backend pipeline failures.

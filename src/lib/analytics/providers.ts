@@ -78,6 +78,7 @@ async function initPostHog(
       capture_pageview: false, // manual SPA page views
       loaded: () => {
         posthogInitialized = true;
+        flushPostHogQueue();
       },
     });
     posthogInstance = posthog;
@@ -85,6 +86,69 @@ async function initPostHog(
     // PostHog is best-effort
   }
 }
+
+/**
+ * Events fired before PostHog finishes loading are queued instead of dropped,
+ * so cold-load funnel steps are not lost.
+ */
+type QueuedCall =
+  | { kind: 'capture'; name: string; properties: Record<string, unknown> }
+  | { kind: 'register'; properties: Record<string, unknown> }
+  | { kind: 'person'; properties: Record<string, unknown> }
+  | { kind: 'identify'; userId: string };
+
+const MAX_QUEUED_CALLS = 50;
+const posthogQueue: QueuedCall[] = [];
+
+function enqueuePostHog(call: QueuedCall): void {
+  if (posthogQueue.length >= MAX_QUEUED_CALLS) return;
+  posthogQueue.push(call);
+}
+
+function runPostHogCall(call: QueuedCall): void {
+  if (!posthogInstance) return;
+  switch (call.kind) {
+    case 'capture':
+      posthogInstance.capture(call.name, call.properties);
+      break;
+    case 'register':
+      posthogInstance.register(call.properties);
+      break;
+    case 'person':
+      posthogInstance.setPersonProperties(call.properties);
+      break;
+    case 'identify':
+      posthogInstance.identify(call.userId);
+      break;
+  }
+}
+
+function flushPostHogQueue(): void {
+  while (posthogQueue.length > 0) {
+    const call = posthogQueue.shift();
+    if (!call) break;
+    try {
+      runPostHogCall(call);
+    } catch {
+      /* best-effort */
+    }
+  }
+}
+
+/** Run now when PostHog is ready, otherwise queue until it loads. */
+function withPostHog(call: QueuedCall): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (posthogInitialized && posthogInstance) {
+      runPostHogCall(call);
+    } else {
+      enqueuePostHog(call);
+    }
+  } catch {
+    /* best-effort */
+  }
+}
+
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -127,13 +191,21 @@ export function trackExternalEvent(
     /* best-effort */
   }
 
-  try {
-    if (posthogInitialized && posthogInstance) {
-      posthogInstance.capture(name, properties);
-    }
-  } catch {
-    /* best-effort */
-  }
+  withPostHog({ kind: 'capture', name, properties });
+}
+
+/** Attach properties to every subsequent PostHog event (super properties). */
+export function registerExternalSuperProperties(
+  properties: Record<string, unknown>,
+): void {
+  withPostHog({ kind: 'register', properties });
+}
+
+/** Attach properties to the PostHog person profile (cohort breakdowns). */
+export function setExternalPersonProperties(
+  properties: Record<string, unknown>,
+): void {
+  withPostHog({ kind: 'person', properties });
 }
 
 export function trackExternalPageView(path: string): void {
@@ -150,26 +222,18 @@ export function trackExternalPageView(path: string): void {
     /* best-effort */
   }
 
-  try {
-    if (posthogInitialized && posthogInstance) {
-      posthogInstance.capture('$pageview', { $pathname: path });
-    }
-  } catch {
-    /* best-effort */
-  }
+  withPostHog({
+    kind: 'capture',
+    name: '$pageview',
+    properties: { $pathname: path },
+  });
 }
 
 export function identifyExternalUser(userId: string): void {
   if (typeof window === 'undefined' || !userId) return;
-
-  try {
-    if (posthogInitialized && posthogInstance) {
-      posthogInstance.identify(userId);
-    }
-  } catch {
-    /* best-effort */
-  }
+  withPostHog({ kind: 'identify', userId });
 }
+
 
 export function resetExternalUser(): void {
   if (typeof window === 'undefined') return;

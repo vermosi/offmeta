@@ -7,6 +7,7 @@
  * @module pages/CardPage
  */
 
+import { trackFunnelStep } from '@/lib/analytics/funnels';
 import { useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -80,6 +81,14 @@ const CardPage = () => {
       card_name: card?.name,
       set_code: card?.set,
       is_alias: canonicalSlug ? canonicalSlug !== slug : undefined,
+      referrer_source: referrerSource,
+    });
+    // Funnel step: card detail view.
+    trackFunnelStep('card_view', {
+      slug,
+      card_id: card?.id,
+      card_name: card?.name,
+      set_code: card?.set,
       referrer_source: referrerSource,
     });
     // Fire once per slug/card resolution.

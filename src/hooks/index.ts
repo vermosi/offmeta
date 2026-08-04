@@ -21,6 +21,7 @@ export { useQueryIntelligence, type QueryIntelligence } from './useQueryIntellig
 export { useQuerySuggestions, type QuerySuggestion } from './useQuerySuggestions';
 export { useRealtimeCache, RealtimeCacheProvider } from './useRealtimeCache';
 export { useRovingTabIndex } from './useRovingTabIndex';
+export { useSavedCombos, type SavedCombo } from './useSavedCombos';
 export { useSearch } from './useSearch';
 export { useSearchContext } from './useSearchContext';
 export { useSearchHandler, type SearchPhase } from './useSearchHandler';

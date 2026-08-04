@@ -6,7 +6,8 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { OracleText } from '@/components/ManaSymbol';
-import { ChevronDown, ChevronUp, ExternalLink, Sparkles } from 'lucide-react';
+import { Bookmark, BookmarkCheck, ChevronDown, ChevronUp, ExternalLink, Sparkles } from 'lucide-react';
+import { useSavedCombos } from '@/hooks/useSavedCombos';
 import type { Combo } from '@/components/find-my-combos/types';
 
 interface ComboItemProps {
@@ -16,6 +17,9 @@ interface ComboItemProps {
 }
 
 export function ComboItem({ combo, expanded, onToggle }: ComboItemProps) {
+  const { isSaved, toggleSave } = useSavedCombos();
+  const saved = isSaved(combo.id);
+
   return (
     <Collapsible open={expanded} onOpenChange={onToggle}>
       <CollapsibleTrigger asChild>
@@ -143,6 +147,22 @@ export function ComboItem({ combo, expanded, onToggle }: ComboItemProps) {
                 Combo cost: ~${combo.prices.tcgplayer}
               </span>
             )}
+            <div className="flex items-center gap-1">
+            <Button
+              variant={saved ? 'secondary' : 'ghost'}
+              size="sm"
+              className="h-7 text-xs gap-1"
+              aria-pressed={saved}
+              aria-label={saved ? 'Remove saved combo' : 'Save combo'}
+              onClick={() => toggleSave(combo)}
+            >
+              {saved ? (
+                <BookmarkCheck className="h-3 w-3" />
+              ) : (
+                <Bookmark className="h-3 w-3" />
+              )}
+              {saved ? 'Saved' : 'Save'}
+            </Button>
             <Button
               variant="ghost"
               size="sm"
@@ -158,6 +178,7 @@ export function ComboItem({ combo, expanded, onToggle }: ComboItemProps) {
                 <ExternalLink className="h-3 w-3" />
               </a>
             </Button>
+            </div>
           </div>
         </div>
       </CollapsibleContent>
