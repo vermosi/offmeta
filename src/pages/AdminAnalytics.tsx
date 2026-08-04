@@ -330,7 +330,11 @@ export default function AdminAnalytics() {
           )}
 
           {/* Feedback queue */}
+          {/* Error monitor + automated repairs */}
+          <ErrorMonitorPanel />
+
           <FeedbackQueuePanel
+
             pendingFeedbackCount={hook.pendingFeedbackCount}
             archivedFeedbackCount={hook.archivedFeedbackCount}
             processAllPending={hook.processAllPending}
