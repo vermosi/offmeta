@@ -42,7 +42,14 @@ export function CardModalPurchaseLinks({
   isMobile = false,
 }: CardModalPurchaseLinksProps) {
   const { t } = useTranslation();
+  const affiliateConfig = useAffiliateConfig();
+  const { tcgplayerAffiliateBase } = affiliateConfig;
   const cardNameEncoded = encodeURIComponent(card.name);
+
+  const wrapIfTcgplayer = (url: string, marketplace: string) =>
+    marketplace.includes('tcgplayer') && tcgplayerAffiliateBase
+      ? wrapAffiliateUrl(url, tcgplayerAffiliateBase)
+      : url;
 
   const getCardhoarderUrl = () => {
     const purchaseUris = card.purchase_uris;
