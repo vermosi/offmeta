@@ -34,26 +34,12 @@ const Footer = lazy(() =>
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
 import { HomepageQuickPaths } from '@/components/HomepageQuickPaths';
-const InstantDemoPreview = lazy(() =>
-  import('@/components/InstantDemoPreview').then((m) => ({
-    default: m.InstantDemoPreview,
-  })),
-);
 const ExampleQueriesCarousel = lazy(() =>
   import('@/components/ExampleQueriesCarousel').then((m) => ({
     default: m.ExampleQueriesCarousel,
   })),
 );
-const ValuePropStrip = lazy(() =>
-  import('@/components/ValuePropStrip').then((m) => ({
-    default: m.ValuePropStrip,
-  })),
-);
-const HowItWorksSection = lazy(() =>
-  import('@/components/HowItWorksSection').then((m) => ({
-    default: m.HowItWorksSection,
-  })),
-);
+
 const UnderstoodSummary = lazy(() =>
   import('@/components/UnderstoodSummary').then((m) => ({
     default: m.UnderstoodSummary,
