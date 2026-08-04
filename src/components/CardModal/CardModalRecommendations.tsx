@@ -1,20 +1,15 @@
 /**
  * "You Might Also Like" panel in CardModal.
  * Uses the discovery service for co-occurrence-based recommendations.
- * Shows relationship type labels and normalized strength indicators.
- * Includes filter tabs for relationship types.
  * @module components/CardModal/CardModalRecommendations
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Sparkles, Loader2 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { ManaCost } from '@/components/ManaSymbol';
 import { useTranslation } from '@/lib/i18n';
 import { getRelatedCards } from '@/services/discovery';
-import { getRelationshipLabel } from '@/lib/relationships/ranking';
 import type { RankedRelationship } from '@/lib/relationships/ranking';
-import type { RelationshipType } from '@/lib/relationships/scoring';
 
 interface CardModalRecommendationsProps {
   oracleId: string | undefined;
@@ -22,13 +17,6 @@ interface CardModalRecommendationsProps {
   onCardClick?: (cardName: string) => void;
   isMobile?: boolean;
 }
-
-const FILTER_TABS: { key: 'all' | RelationshipType; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'co_played', label: 'Played With' },
-  { key: 'similar_role', label: 'Similar Role' },
-  { key: 'budget_alternative', label: 'Budget Alt' },
-];
 
 export function CardModalRecommendations({
   oracleId,
@@ -40,14 +28,12 @@ export function CardModalRecommendations({
   const [recs, setRecs] = useState<RankedRelationship[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<'all' | RelationshipType>('all');
 
   useEffect(() => {
     if (!oracleId) return;
     let cancelled = false;
     setLoading(true);
     setError(false);
-    setActiveFilter('all');
 
     (async () => {
       try {
@@ -63,18 +49,7 @@ export function CardModalRecommendations({
     return () => { cancelled = true; };
   }, [oracleId]);
 
-  const filteredRecs = useMemo(() => {
-    if (activeFilter === 'all') return recs.slice(0, 10);
-    return recs
-      .filter((r) => r.relationshipType === activeFilter)
-      .slice(0, 10);
-  }, [recs, activeFilter]);
-
-  // Compute which tabs have data to show
-  const availableTypes = useMemo(() => {
-    const types = new Set(recs.map((r) => r.relationshipType));
-    return types;
-  }, [recs]);
+  const displayedRecs = recs.slice(0, 10);
 
   if (!oracleId) return null;
   if (!loading && !error && recs.length < 10) return null;
@@ -97,46 +72,38 @@ export function CardModalRecommendations({
           {t('cardModal.recsUnavailable', 'Recommendations unavailable')}
         </p>
       ) : (
-        <>
-          {filteredRecs.length === 0 ? (
-            <p className="text-xs text-muted-foreground italic py-2">
-              {t('cardModal.noRecsForFilter', 'No recommendations for this filter')}
-            </p>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-              {filteredRecs.map((rec) => (
-                <button
-                  key={rec.oracleId}
-                  type="button"
-                  className="group flex flex-col items-center gap-1 rounded-lg p-1.5 hover:bg-secondary/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  onClick={() => onCardClick?.(rec.cardName)}
-                  title={`${rec.cardName} — ${getRelationshipLabel(rec.relationshipType)}`}
-                >
-                  {rec.imageUrl ? (
-                    <img
-                      src={rec.imageUrl}
-                      alt={rec.cardName}
-                      className="w-full aspect-[2.5/3.5] rounded object-cover"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-full aspect-[2.5/3.5] rounded bg-secondary flex items-center justify-center">
-                      <span className="text-[8px] text-muted-foreground text-center line-clamp-2 px-0.5">
-                        {rec.cardName}
-                      </span>
-                    </div>
-                  )}
-                  <span className="text-[10px] text-muted-foreground leading-tight text-center line-clamp-1 w-full">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          {displayedRecs.map((rec) => (
+            <button
+              key={rec.oracleId}
+              type="button"
+              className="group flex flex-col items-center gap-1 rounded-lg p-1.5 hover:bg-secondary/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              onClick={() => onCardClick?.(rec.cardName)}
+              title={rec.cardName}
+            >
+              {rec.imageUrl ? (
+                <img
+                  src={rec.imageUrl}
+                  alt={rec.cardName}
+                  className="w-full aspect-[2.5/3.5] rounded object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="w-full aspect-[2.5/3.5] rounded bg-secondary flex items-center justify-center">
+                  <span className="text-[8px] text-muted-foreground text-center line-clamp-2 px-0.5">
                     {rec.cardName}
                   </span>
-                  {rec.manaCost && (
-                    <ManaCost cost={rec.manaCost} size="sm" />
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-        </>
+                </div>
+              )}
+              <span className="text-[10px] text-muted-foreground leading-tight text-center line-clamp-1 w-full">
+                {rec.cardName}
+              </span>
+              {rec.manaCost && (
+                <ManaCost cost={rec.manaCost} size="sm" />
+              )}
+            </button>
+          ))}
+        </div>
       )}
     </div>
   );
