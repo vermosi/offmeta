@@ -55,7 +55,16 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
-vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock('sonner', () => ({
+  toast: Object.assign(vi.fn(), {
+    success: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    warning: vi.fn(),
+    message: vi.fn(),
+    dismiss: vi.fn(),
+  }),
+}));
 vi.mock('@/hooks/useAnalytics', () => ({
   useAnalytics: () => ({
     trackSearch: vi.fn(),

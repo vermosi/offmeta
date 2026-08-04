@@ -56,8 +56,10 @@ export function CardDetailView({ card }: CardDetailViewProps) {
 
   const isDoubleFaced = isDoubleFacedCard(card);
 
-  // Reset per-card state when navigating between cards.
-  useEffect(() => {
+  // Reset per-card state when navigating between cards (render-phase adjustment).
+  const [cardScopeId, setCardScopeId] = useState(card.id);
+  if (cardScopeId !== card.id) {
+    setCardScopeId(card.id);
     setCurrentFace(0);
     setSelectedPrinting(null);
     setRefreshedPrices(null);
@@ -66,7 +68,7 @@ export function CardDetailView({ card }: CardDetailViewProps) {
     setIsLoadingRulings(true);
     setIsLoadingPrintings(true);
     setComboCount(0);
-  }, [card.id]);
+  }
 
   useEffect(() => {
     let cancelled = false;
