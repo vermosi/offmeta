@@ -159,8 +159,8 @@ export function CardDetailView({ card }: CardDetailViewProps) {
         price_usd: marketplace.includes('tcgplayer') ? price : undefined,
         price_eur: marketplace.includes('cardmarket') ? price : undefined,
         price_tix: marketplace === 'cardhoarder' ? price : undefined,
+        final_url: finalUrl,
       });
-      window.open(finalUrl, '_blank', 'noopener,noreferrer');
     },
     [card, trackAffiliateClick, affiliateConfig],
   );
