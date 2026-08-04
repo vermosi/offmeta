@@ -32,6 +32,7 @@ import { CardModalToolbox } from '@/components/CardModal/CardModalToolbox';
 import { CardModalMetaContext } from '@/components/CardModal/CardModalMetaContext';
 import { CardModalBentoTile } from '@/components/CardModal/CardModalBentoTile';
 import { CardPriceHistoryChart } from '@/components/CardPriceHistoryChart';
+import { CardModalCombos } from '@/components/CardModal/CardModalCombos';
 import type { DisplayPrices } from '@/components/CardModal/types';
 
 export interface CardDetailViewProps {
