@@ -138,6 +138,7 @@ export function CardPriceHistoryChart({ cardName, className }: CardPriceHistoryC
 
   return (
     <section
+      ref={containerRef}
       className={cn(
         'rounded-xl border border-border/60 bg-card/60 backdrop-blur-xl p-4 space-y-3',
         className,
