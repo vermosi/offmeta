@@ -176,7 +176,7 @@ export function CardDetailView({ card }: CardDetailViewProps) {
   return (
     <div className="grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-6 items-start">
       {/* Sidebar: art, purchase, price history */}
-      <div className="flex flex-col gap-4 lg:sticky lg:top-20">
+      <div className="flex flex-col gap-4">
         <div className="flex flex-col items-center">
           <CardModalImage
             displayImageUrl={displayImageUrl}
