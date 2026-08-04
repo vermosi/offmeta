@@ -22,6 +22,13 @@ interface SeoOptions {
   locale?: string;
   /** Additional meta tags to set */
   extraMeta?: Record<string, string>;
+  /**
+   * Skip emitting <link rel="canonical">. Use on routes that don't represent a
+   * real, crawlable URL (e.g. the 404 page), where a self-referencing canonical
+   * would advertise a URL that returns no content.
+   */
+  noCanonical?: boolean;
+
 }
 
 const SITE_NAME = 'OffMeta';
@@ -137,13 +144,18 @@ export function applySeoMeta(opts: SeoOptions): () => void {
     }
   }
 
-  setCanonical(opts.url);
+  if (opts.noCanonical) {
+    document.querySelector('link[rel="canonical"]')?.remove();
+  } else {
+    setCanonical(opts.url);
+  }
 
   return () => {
     document.title = prevTitle;
     setCanonical(SITE_URL);
   };
 }
+
 
 // ── Search canonical helpers ──────────────────────────────────────────────────
 

@@ -108,7 +108,9 @@ async function fetchAllCards() {
   for (let from = 0; from < MAX; from += PAGE) {
     const to = from + PAGE - 1;
     const resp = await fetch(
-      `${SUPABASE_URL}/rest/v1/cards?select=name,updated_at&image_url=not.is.null&order=name.asc`,
+      `${SUPABASE_URL}/rest/v1/cards?select=name,oracle_id,type_line,image_url,updated_at` +
+        `&image_url=not.is.null&oracle_id=not.is.null&type_line=not.is.null&order=name.asc`,
+
       {
         headers: {
           apikey: SUPABASE_KEY,
@@ -172,7 +174,10 @@ function toLastmodDate(value) {
   return d.toISOString().split('T')[0];
 }
 
-const today = new Date().toISOString().split('T')[0];
+// No build-time `today` fallback: <lastmod> is emitted only from a real,
+// page-specific timestamp. A generation-time date would make every URL look
+// freshly modified on every deploy, which crawlers learn to ignore.
+
 
 let cards = [];
 let curated = [];
@@ -204,27 +209,28 @@ const pushUnique = (path, lastmod, changefreq, priority) => {
 for (const p of STATIC_PATHS) {
   const priority = p === '/' ? '1.0' : '0.8';
   const changefreq = p === '/' ? 'daily' : 'weekly';
-  pushUnique(p, today, changefreq, priority);
+  pushUnique(p, null, changefreq, priority);
 }
 
 for (const slug of GUIDE_SLUGS) {
-  pushUnique(`/guides/${slug}`, today, 'monthly', '0.7');
+  pushUnique(`/guides/${slug}`, null, 'monthly', '0.7');
 }
 
 for (const row of curated) {
-  pushUnique(`/search/${row.slug}`, toLastmodDate(row.updated_at) ?? today, 'weekly', '0.8');
+  pushUnique(`/search/${row.slug}`, toLastmodDate(row.updated_at), 'weekly', '0.8');
 }
 
 for (const row of seoPages) {
-  pushUnique(`/ai/${row.slug}`, toLastmodDate(row.updated_at) ?? today, 'weekly', '0.9');
+  pushUnique(`/ai/${row.slug}`, toLastmodDate(row.updated_at), 'weekly', '0.9');
 }
 
 for (const card of cards) {
   if (!isIndexableCardRow(card)) continue;
   const slug = slugifyCardName(card.name);
   if (!slug) continue;
-  pushUnique(`/cards/${slug}`, toLastmodDate(card.updated_at) ?? today, 'weekly', '0.6');
+  pushUnique(`/cards/${slug}`, toLastmodDate(card.updated_at), 'weekly', '0.6');
 }
+
 
 const xml =
   `<?xml version="1.0" encoding="UTF-8"?>\n` +
