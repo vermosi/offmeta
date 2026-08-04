@@ -108,19 +108,16 @@ const CardPage = () => {
         ? ` Legal in ${legalFormats[0]}.`
         : '';
 
-    const description = `Cards like ${card.name}: similar ${colorLabel}${typeShort} picks, off-meta alternatives, prices & synergies.${priceSnippet}${formatSnippet}`;
+    const description = `${card.name} — ${colorLabel}${typeShort}. Price, legality, rulings, printings, and synergies for Magic: The Gathering.${priceSnippet}${formatSnippet}`;
 
     // Build a title that stays under 60 chars even for long card names.
-    const fullTitle = `Cards Like ${card.name} — Similar MTG Picks | OffMeta`;
-    const shortTitle = `Cards Like ${card.name} | OffMeta`;
-    const minimalTitle = `${card.name} alternatives | OffMeta`;
+    const fullTitle = `${card.name} — MTG Card | OffMeta`;
+    const shortTitle = `${card.name} | OffMeta`;
     const pickedTitle = fullTitle.length <= 60
       ? fullTitle
       : shortTitle.length <= 60
         ? shortTitle
-        : minimalTitle.length <= 60
-          ? minimalTitle
-          : `${card.name.slice(0, 60 - ' | OffMeta'.length - 1)}… | OffMeta`;
+        : `${card.name.slice(0, 60 - ' | OffMeta'.length - 1)}… | OffMeta`;
     const cleanupSeo = applySeoMeta({
       title: pickedTitle,
       description: description.slice(0, 160),
