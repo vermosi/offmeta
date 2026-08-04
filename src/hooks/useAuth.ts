@@ -12,10 +12,15 @@ import {
 } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import {
+  identifyExternalUser,
+  resetExternalUser,
+} from '@/lib/analytics/providers';
+import {
   validateEmailAddress,
   validatePasswordInput,
 } from '@/lib/validation/clientInput';
 import type { User, Session } from '@supabase/supabase-js';
+
 
 interface AuthState {
   user: User | null;
