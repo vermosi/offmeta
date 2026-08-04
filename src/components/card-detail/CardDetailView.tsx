@@ -220,62 +220,60 @@ export function CardDetailView({ card }: CardDetailViewProps) {
 
       {/* Main bento grid */}
       <div className="space-y-5 min-w-0">
-        <CardModalBentoTile className="bg-gradient-to-br from-primary/5 via-card/80 to-accent/5 border-primary/20">
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-foreground leading-tight break-words">
-                {faceDetails.name}
-              </h1>
-              <p className="text-sm text-muted-foreground mt-1.5">
-                {faceDetails.type_line}
-              </p>
-              <div className="flex items-center gap-2 flex-wrap mt-3">
-                <Badge variant={getRarityVariant(displayRarity)} className="capitalize">
-                  {displayRarity}
-                </Badge>
-                <Badge variant="secondary">
-                  {displaySetName}
-                  {displayCollectorNumber && ` #${displayCollectorNumber}`}
-                </Badge>
-                {card.reserved && (
-                  <Badge
-                    variant="outline"
-                    className="bg-rarity-rare/10 text-rarity-rare border-rarity-rare/30 gap-1"
-                  >
-                    <Shield className="h-3 w-3" />
-                    {t('card.reservedList', 'Reserved List')}
-                  </Badge>
+        <div className="grid gap-4 lg:grid-cols-12 items-start auto-rows-min">
+          <CardModalBentoTile className="lg:col-span-7 bg-gradient-to-br from-primary/5 via-card/80 to-accent/5 border-primary/20">
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-foreground leading-tight break-words">
+                    {faceDetails.name}
+                  </h1>
+                  <p className="text-sm text-muted-foreground mt-1.5">
+                    {faceDetails.type_line}
+                  </p>
+                  <div className="flex items-center gap-2 flex-wrap mt-3">
+                    <Badge variant={getRarityVariant(displayRarity)} className="capitalize">
+                      {displayRarity}
+                    </Badge>
+                    <Badge variant="secondary">
+                      {displaySetName}
+                      {displayCollectorNumber && ` #${displayCollectorNumber}`}
+                    </Badge>
+                    {card.reserved && (
+                      <Badge
+                        variant="outline"
+                        className="bg-rarity-rare/10 text-rarity-rare border-rarity-rare/30 gap-1"
+                      >
+                        <Shield className="h-3 w-3" />
+                        {t('card.reservedList', 'Reserved List')}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                {faceDetails.mana_cost && (
+                  <div className="flex-shrink-0">
+                    <ManaCost cost={faceDetails.mana_cost} size="md" />
+                  </div>
                 )}
-                {displayArtist && (
-                  <span className="text-xs text-muted-foreground">
-                    {t('card.illustratedBy', 'Illustrated by')} {displayArtist}
-                  </span>
-                )}
+              </div>
+
+              <div className="border-t border-border/40 pt-4">
+                <CardModalDetails
+                  faceDetails={faceDetails}
+                  displaySetName={displaySetName}
+                  displayRarity={displayRarity}
+                  displayCollectorNumber={displayCollectorNumber}
+                  displayArtist={displayArtist}
+                  isReserved={card.reserved}
+                  englishPrintings={englishPrintings}
+                  selectedPrintingId={selectedPrinting?.id}
+                  cardId={card.id}
+                  showHeader={false}
+                />
               </div>
             </div>
-            {faceDetails.mana_cost && (
-              <div className="flex-shrink-0">
-                <ManaCost cost={faceDetails.mana_cost} size="md" />
-              </div>
-            )}
-          </div>
-        </CardModalBentoTile>
-
-        <div className="grid gap-4 lg:grid-cols-12 items-start auto-rows-min">
-          <CardModalBentoTile className="lg:col-span-7">
-            <CardModalDetails
-              faceDetails={faceDetails}
-              displaySetName={displaySetName}
-              displayRarity={displayRarity}
-              displayCollectorNumber={displayCollectorNumber}
-              displayArtist={displayArtist}
-              isReserved={card.reserved}
-              englishPrintings={englishPrintings}
-              selectedPrintingId={selectedPrinting?.id}
-              cardId={card.id}
-              showHeader={false}
-            />
           </CardModalBentoTile>
+
 
           <CardModalBentoTile className="lg:col-span-5">
             <CardModalMetaContext card={card} />
