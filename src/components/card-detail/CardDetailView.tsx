@@ -21,7 +21,7 @@ import { cardNameToSlug } from '@/lib/card-slug';
 import { Shield } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ManaCost } from '@/components/ManaSymbol';
-import { useAnalytics, useAffiliateConfig, wrapAffiliateUrl } from '@/hooks';
+import { useAnalytics, useAffiliateConfig } from '@/hooks';
 import { useTranslation } from '@/lib/i18n';
 
 import { CardModalImage } from '@/components/CardModal/CardModalImage';
