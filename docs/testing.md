@@ -35,6 +35,7 @@ The CI setup is intentionally layered so that the most important regressions fai
 - broader browser coverage validates the end-to-end experience over time
 - live external-service checks run in the nightly workflow, not the default `npm run check`
 - workflow YAML is linted in the `Workflow Lint` job
+- `e2e-smoke` is intentionally limited to the core search path
 
 The following suites are intentionally skipped in the default test run and are covered by nightly validation instead:
 

@@ -23,6 +23,8 @@ The app uses npm as the only package manager. Keep `package-lock.json` as the si
 
 Use these commands before opening a PR or when you need to verify a change without relying on the UI alone.
 
+The default CI path is intentionally lean. Live external-service checks are covered by the nightly workflow instead of `npm run check`, and `e2e-smoke` only covers the core search path.
+
 ## Local Workflow
 
 1. Pull the latest branch state.
