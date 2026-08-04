@@ -788,7 +788,22 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      price_mover_stats: {
+        Row: {
+          card_name: string | null
+          colors: string[] | null
+          current_price: number | null
+          current_recorded_at: string | null
+          legalities: Json | null
+          price_14d: number | null
+          price_30d: number | null
+          price_7d: number | null
+          rarity: string | null
+          scryfall_id: string | null
+          type_line: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       apply_query_signal: {
@@ -864,7 +879,7 @@ export type Database = {
       }
       get_error_monitor_summary: { Args: { days_back?: number }; Returns: Json }
       get_price_movers: {
-        Args: { days_back?: number; limit_count?: number }
+        Args: { days_back?: number; limit_count?: number; min_price?: number }
         Returns: {
           card_name: string
           change_percent: number
@@ -976,6 +991,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      refresh_price_mover_stats: { Args: never; Returns: undefined }
       report_error_event: {
         Args: {
           p_context?: Json
