@@ -53,6 +53,7 @@ export function CardDetailView({ card }: CardDetailViewProps) {
   const [rulings, setRulings] = useState<CardRuling[]>([]);
   const [isLoadingRulings, setIsLoadingRulings] = useState(true);
   const [showRulings, setShowRulings] = useState(false);
+  const [comboCount, setComboCount] = useState(0);
 
   const isDoubleFaced = isDoubleFacedCard(card);
 
