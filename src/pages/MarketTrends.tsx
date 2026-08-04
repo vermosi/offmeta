@@ -469,42 +469,53 @@ export default function MarketTrends() {
             </span>
           </div>
         )}
-        <div className="grid grid-cols-[1fr_auto_auto_auto] sm:grid-cols-[1fr_80px_60px_60px_60px] items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 mb-1">
-          <SortButton
-            label="Card"
-            field="name"
-            activeField={sortField}
-            activeDir={sortDir}
-            onSort={handleSort}
-          />
-          <span className="text-[10px] text-muted-foreground hidden sm:block">
-            Trend
-          </span>
-          <SortButton
-            label="Old"
-            field="previous"
-            activeField={sortField}
-            activeDir={sortDir}
-            onSort={handleSort}
-          />
-          <SortButton
-            label="New"
-            field="current"
-            activeField={sortField}
-            activeDir={sortDir}
-            onSort={handleSort}
-          />
-          <SortButton
-            label="%"
-            field="change"
-            activeField={sortField}
-            activeDir={sortDir}
-            onSort={handleSort}
-          />
-        </div>
-        <div className="space-y-1.5">
+        <div className="rounded-xl border border-border bg-card/40 overflow-hidden">
+          <div
+            className={`${ROW_GRID} h-9 border-b border-border bg-muted/40 sticky top-0 z-10 backdrop-blur`}
+          >
+            <span className="text-[10px] text-muted-foreground text-right">
+              #
+            </span>
+            <SortButton
+              label="Card"
+              field="name"
+              activeField={sortField}
+              activeDir={sortDir}
+              onSort={handleSort}
+            />
+            <span className="text-[10px] text-muted-foreground hidden sm:block">
+              Trend
+            </span>
+            <span className="hidden sm:flex justify-end">
+              <SortButton
+                label="Old"
+                field="previous"
+                activeField={sortField}
+                activeDir={sortDir}
+                onSort={handleSort}
+              />
+            </span>
+            <span className="flex justify-end">
+              <SortButton
+                label="New"
+                field="current"
+                activeField={sortField}
+                activeDir={sortDir}
+                onSort={handleSort}
+              />
+            </span>
+            <span className="flex justify-end">
+              <SortButton
+                label="%"
+                field="change"
+                activeField={sortField}
+                activeDir={sortDir}
+                onSort={handleSort}
+              />
+            </span>
+          </div>
           {isLoading ? (
-            Array.from({ length: 10 }).map((_, i) => <MoverSkeleton key={i} />)
+            Array.from({ length: 12 }).map((_, i) => <MoverSkeleton key={i} />)
           ) : filteredMovers.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-sm text-muted-foreground">
@@ -520,9 +531,12 @@ export default function MarketTrends() {
               )}
             </div>
           ) : (
-            filteredMovers.map((m) => <MoverRow key={m.card_name} mover={m} />)
+            filteredMovers.map((m, i) => (
+              <MoverRow key={m.card_name} mover={m} rank={i + 1} />
+            ))
           )}
         </div>
+
       </main>
       <Footer />
     </div>
