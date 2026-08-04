@@ -351,12 +351,8 @@ export function CardModalPurchaseLinks({
           </Button>
         )}
         {showFallbackLinks && fallbackLinks}
-        {isLoadingPrintings && !displayPrices.usd && !displayPrices.eur && (
+        {showLoadingLinks && loadingLinks}
 
-          <div className="flex items-center justify-center py-2">
-            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-          </div>
-        )}
       </div>
     </div>
   );
