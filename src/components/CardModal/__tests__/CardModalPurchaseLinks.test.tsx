@@ -166,27 +166,20 @@ describe('CardModalPurchaseLinks', () => {
     expect(getByText('0.02 tix')).toBeInTheDocument();
   });
 
-  it('shows loading spinner when loading and no prices', () => {
-    const { container } = renderWithProviders(
+  it('renders fallback check-price buttons when no prices exist', () => {
+    const { getByText } = renderWithProviders(
       <CardModalPurchaseLinks
         {...defaultProps}
         displayPrices={{}}
-        isLoadingPrintings={true}
+        isLoadingPrintings={false}
       />,
     );
-    
-    expect(container.querySelector('.animate-spin')).toBeInTheDocument();
-  });
 
-  it('does not show loading spinner when prices exist', () => {
-    const { container } = renderWithProviders(
-      <CardModalPurchaseLinks {...defaultProps} isLoadingPrintings={true} />,
-    );
-    
-    expect(container.querySelector('.animate-spin')).not.toBeInTheDocument();
+    expect(getByText('Check price')).toBeInTheDocument();
   });
 
   describe('accessible links', () => {
+
     it('renders purchase links as anchors opening in a new tab', () => {
       const { getAllByRole } = renderWithProviders(
         <CardModalPurchaseLinks {...defaultProps} />,
