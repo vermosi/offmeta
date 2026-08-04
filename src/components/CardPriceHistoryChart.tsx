@@ -208,28 +208,27 @@ export function CardPriceHistoryChart({ cardName, className }: CardPriceHistoryC
         })}
       </div>
 
-      <div ref={containerRef} className="w-full">
-        {isLoading ? (
-          <Skeleton className="w-full" style={{ height: HEIGHT }} />
-        ) : isError ? (
-          <p className="py-10 text-center text-xs text-muted-foreground">
-            {t('priceHistory.unavailable', 'Price history is unavailable right now.')}
-          </p>
-        ) : !scale ? (
-          <p className="py-10 text-center text-xs text-muted-foreground">
-            {t('priceHistory.stillUploading', 'Still uploading price data — check back soon.')}
-          </p>
-        ) : (
-          <svg
-            width={width}
-            height={HEIGHT}
-            viewBox={`0 0 ${width} ${HEIGHT}`}
-            className="touch-none select-none"
-            role="img"
-            aria-label={`Price history chart for ${cardName}`}
-            onPointerMove={handlePointer}
-            onPointerLeave={() => setHoverIndex(null)}
-          >
+      {isLoading ? (
+        <Skeleton className="w-full" style={{ height: HEIGHT }} />
+      ) : isError ? (
+        <p className="py-10 text-center text-xs text-muted-foreground">
+          {t('priceHistory.unavailable', 'Price history is unavailable right now.')}
+        </p>
+      ) : !scale ? (
+        <p className="py-10 text-center text-xs text-muted-foreground">
+          {t('priceHistory.stillUploading', 'Still uploading price data — check back soon.')}
+        </p>
+      ) : (
+        <svg
+          width={width}
+          height={HEIGHT}
+          viewBox={`0 0 ${width} ${HEIGHT}`}
+          className="touch-none select-none"
+          role="img"
+          aria-label={`Price history chart for ${cardName}`}
+          onPointerMove={handlePointer}
+          onPointerLeave={() => setHoverIndex(null)}
+        >
             {/* Gridlines + price axis */}
             {scale.ticks.map((tick) => (
               <g key={tick}>
