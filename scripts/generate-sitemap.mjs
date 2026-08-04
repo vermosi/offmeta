@@ -207,27 +207,28 @@ const pushUnique = (path, lastmod, changefreq, priority) => {
 for (const p of STATIC_PATHS) {
   const priority = p === '/' ? '1.0' : '0.8';
   const changefreq = p === '/' ? 'daily' : 'weekly';
-  pushUnique(p, today, changefreq, priority);
+  pushUnique(p, null, changefreq, priority);
 }
 
 for (const slug of GUIDE_SLUGS) {
-  pushUnique(`/guides/${slug}`, today, 'monthly', '0.7');
+  pushUnique(`/guides/${slug}`, null, 'monthly', '0.7');
 }
 
 for (const row of curated) {
-  pushUnique(`/search/${row.slug}`, toLastmodDate(row.updated_at) ?? today, 'weekly', '0.8');
+  pushUnique(`/search/${row.slug}`, toLastmodDate(row.updated_at), 'weekly', '0.8');
 }
 
 for (const row of seoPages) {
-  pushUnique(`/ai/${row.slug}`, toLastmodDate(row.updated_at) ?? today, 'weekly', '0.9');
+  pushUnique(`/ai/${row.slug}`, toLastmodDate(row.updated_at), 'weekly', '0.9');
 }
 
 for (const card of cards) {
   if (!isIndexableCardRow(card)) continue;
   const slug = slugifyCardName(card.name);
   if (!slug) continue;
-  pushUnique(`/cards/${slug}`, toLastmodDate(card.updated_at) ?? today, 'weekly', '0.6');
+  pushUnique(`/cards/${slug}`, toLastmodDate(card.updated_at), 'weekly', '0.6');
 }
+
 
 const xml =
   `<?xml version="1.0" encoding="UTF-8"?>\n` +
