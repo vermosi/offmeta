@@ -698,6 +698,9 @@ export function useAnalytics() {
               });
             }
           });
+        // Forward to optional third-party providers without awaiting.
+        trackExternalEvent(eventType, sanitizedData);
+
       } catch {
         // Silently fail - analytics should never break the app
       }
