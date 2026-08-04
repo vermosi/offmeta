@@ -3,7 +3,11 @@ import { toast } from 'sonner';
 import type { Dispatch, SetStateAction } from 'react';
 
 import { buildClientFallbackQuery, extractCardNameCandidate } from '@/lib/search/fallback';
-import { resolveAlternativesQuery } from '@/lib/search/alternatives';
+import {
+  detectAlternativesIntent,
+  resolveAlternativesQuery,
+} from '@/lib/search/alternatives';
+import { recordRecoveryAttempt } from '@/lib/search/recoveryTelemetry';
 import { resolveFuzzyCardName } from '@/lib/scryfall/client';
 
 type SearchResult = {
@@ -68,6 +72,7 @@ async function applyFuzzyRecovery(
   if (resolved) {
     const fuzzyQuery = `!"${resolved}"`;
     if (fuzzyQuery !== ctx.currentResult?.scryfallQuery) {
+      recordRecoveryAttempt(ctx.originalQuery, { path: 'fuzzy_name' });
       ctx.trackEvent('fuzzy_recovery_resolved', {
         query: ctx.originalQuery,
         candidate: nameCandidate,
@@ -109,6 +114,7 @@ async function applyFuzzyRecovery(
     }
   }
 
+  recordRecoveryAttempt(ctx.originalQuery, { path: 'fuzzy_failed' });
   ctx.trackEvent('fuzzy_recovery_failed', {
     query: ctx.originalQuery,
     candidate: nameCandidate,
@@ -130,15 +136,33 @@ export async function handleZeroResultRecovery(
   // "budget alternatives to X" names a reference card rather than describing
   // one, so resolve it to a functional/budget similarity query before the
   // generic fuzzy-name and broadening steps.
-  const alternatives = await resolveAlternativesQuery(ctx.originalQuery);
+  const alternativesIntent = detectAlternativesIntent(ctx.originalQuery);
+  if (alternativesIntent) {
+    recordRecoveryAttempt(ctx.originalQuery, {
+      path: 'alternatives_unresolved',
+      alternativesIntent: alternativesIntent.budget
+        ? `budget_${alternativesIntent.kind}`
+        : alternativesIntent.kind,
+      alternativesCard: alternativesIntent.cardName,
+    });
+  }
+
+  const alternatives = alternativesIntent
+    ? await resolveAlternativesQuery(ctx.originalQuery)
+    : null;
   if (
     alternatives &&
     alternatives.scryfallQuery !== ctx.currentResult?.scryfallQuery
   ) {
+    recordRecoveryAttempt(ctx.originalQuery, {
+      path: 'alternatives_similarity',
+      alternativesCard: alternatives.cardName,
+    });
     ctx.trackEvent('alternatives_recovery_resolved', {
       query: ctx.originalQuery,
       card_name: alternatives.cardName,
       budget: alternatives.budget,
+      intent_kind: alternatives.kind,
       request_id: ctx.currentRequestId ?? undefined,
     });
     const readable = alternatives.budget
@@ -180,6 +204,7 @@ export async function handleZeroResultRecovery(
 
   const fallbackQuery = buildClientFallbackQuery(ctx.originalQuery);
   if (fallbackQuery && fallbackQuery !== ctx.currentResult?.scryfallQuery) {
+    recordRecoveryAttempt(ctx.originalQuery, { path: 'client_broadening' });
     sessionStorage.setItem('offmeta_recovery_in_progress', '1');
     toast.info('Trying a broader search...', {
       description: 'The initial translation returned no results.',

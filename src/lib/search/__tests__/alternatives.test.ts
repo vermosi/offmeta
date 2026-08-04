@@ -7,6 +7,7 @@ describe('detectAlternativesIntent', () => {
     expect(detectAlternativesIntent('budget alternatives to rhystic study')).toEqual({
       cardName: 'rhystic study',
       budget: true,
+      kind: 'alternatives_to',
     });
   });
 
@@ -14,6 +15,7 @@ describe('detectAlternativesIntent', () => {
     expect(detectAlternativesIntent('cards similar to smothering tithe')).toEqual({
       cardName: 'smothering tithe',
       budget: false,
+      kind: 'similar_to',
     });
   });
 
@@ -21,6 +23,7 @@ describe('detectAlternativesIntent', () => {
     expect(detectAlternativesIntent('replacements for mana crypt in commander')).toEqual({
       cardName: 'mana crypt',
       budget: false,
+      kind: 'alternatives_to',
     });
   });
 
@@ -28,6 +31,7 @@ describe('detectAlternativesIntent', () => {
     expect(detectAlternativesIntent('cyclonic rift but cheaper')).toEqual({
       cardName: 'cyclonic rift',
       budget: true,
+      kind: 'but_cheaper',
     });
   });
 
