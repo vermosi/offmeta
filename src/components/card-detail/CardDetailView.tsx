@@ -66,6 +66,7 @@ export function CardDetailView({ card }: CardDetailViewProps) {
     setShowRulings(false);
     setIsLoadingRulings(true);
     setIsLoadingPrintings(true);
+    setComboCount(0);
   }, [card.id]);
 
   useEffect(() => {
