@@ -125,7 +125,7 @@ const posthogQueue: QueuedCall[] = [];
  * navigation effect replays the exact same call within this window, we drop it
  * instead of sending a duplicate event to PostHog.
  */
-const DEDUPE_WINDOW_MS = 2000;
+const DEDUPE_WINDOW_MS = 500;
 const MAX_DEDUPE_ENTRIES = 200;
 const recentCalls = new Map<string, number>();
 
