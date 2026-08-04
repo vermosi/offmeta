@@ -57,9 +57,9 @@ describe('MarketTrends helpers', () => {
     expect(filtered[0].card_name).toBe('Card A');
   });
 
-  it('sorts movers by absolute percent change', () => {
+  it('sorts movers by signed percent change', () => {
     const sorted = sortMovers(movers, 'change', 'desc');
-    expect(sorted[0].card_name).toBe('Card B');
-    expect(sorted[1].card_name).toBe('Card A');
+    expect(sorted[0].card_name).toBe('Card A');
+    expect(sorted[1].card_name).toBe('Card B');
   });
 });
