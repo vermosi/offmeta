@@ -67,16 +67,6 @@ const CardPage = () => {
     retry: 1,
   });
 
-  const [faceIndex, setFaceIndex] = useState(0);
-  const [isFlipping, setIsFlipping] = useState(false);
-
-  // Reset face when card changes
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => setFaceIndex(0), 0);
-    return () => window.clearTimeout(timeoutId);
-  }, [card?.name]);
-
-  // Activate similar cards on load
   // Dedicated route-level analytics — distinct from `card_modal_view` (in-app modal).
   const { trackCardPageView } = useAnalytics();
   useEffect(() => {
