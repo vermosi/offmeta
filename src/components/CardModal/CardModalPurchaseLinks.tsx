@@ -83,7 +83,7 @@ export function CardModalPurchaseLinks({
       label: 'TCGplayer',
       value: `$${displayPrices.usd}`,
       primary: true,
-      href: tcgplayerUrl,
+      href: wrapIfTcgplayer(tcgplayerUrl, 'tcgplayer'),
       onClick: () =>
         onAffiliateClick('tcgplayer', tcgplayerUrl, displayPrices.usd),
     });
@@ -96,7 +96,7 @@ export function CardModalPurchaseLinks({
       label: `TCGplayer ${foilLabel}`,
       value: `$${displayPrices.usd_foil}`,
       primary: false,
-      href: foilUrl,
+      href: wrapIfTcgplayer(foilUrl, 'tcgplayer-foil'),
       onClick: () =>
         onAffiliateClick('tcgplayer-foil', foilUrl, displayPrices.usd_foil),
     });
