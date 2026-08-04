@@ -13,7 +13,10 @@ interface CardPriceSparklineProps {
   width?: number;
   height?: number;
   className?: string;
+  /** Hide the Low/Average/Market/Foil toggle for dense table rows. */
+  showSeriesToggle?: boolean;
 }
+
 
 type PriceSeries = 'low' | 'average' | 'market' | 'foil';
 
