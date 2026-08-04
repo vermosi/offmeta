@@ -29,6 +29,24 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft } from 'lucide-react';
 import type { ScryfallCard } from '@/types/card';
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function getCardImage(card: ScryfallCard, size: 'normal' | 'large' | 'art_crop' = 'normal', faceIndex = 0): string | undefined {
+  // Single-faced cards or cards where both faces share one image
+  if (card.image_uris) return card.image_uris[size];
+  // Double-faced cards with per-face images
+  return card.card_faces?.[faceIndex]?.image_uris?.[size] ?? card.card_faces?.[0]?.image_uris?.[size];
+}
+
+/** Check if a card is a true double-faced card with separate face images. */
+function isDFC(card: ScryfallCard): boolean {
+  return !!(card.card_faces && card.card_faces.length > 1 && card.card_faces[0]?.image_uris);
+}
+
+function getOracleText(card: ScryfallCard): string {
+  return card.oracle_text ?? card.card_faces?.map((f) => f.oracle_text).filter(Boolean).join('\n\n') ?? '';
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const CardPage = () => {
