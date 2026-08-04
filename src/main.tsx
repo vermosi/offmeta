@@ -5,8 +5,18 @@
  */
 
 import { createRoot } from 'react-dom/client';
+import { initializeAnalytics } from '@/lib/analytics';
 import App from './App.tsx';
 import './index.css';
+
+// Initialize optional third-party analytics providers from Lovable connectors.
+// Keys are only present in the published environment; missing keys are ignored.
+initializeAnalytics({
+  googleAnalyticsMeasurementId: import.meta.env
+    .VITE_LOVABLE_CONNECTOR_GOOGLE_ANALYTICS_API_KEY,
+  posthogProjectToken: import.meta.env.VITE_LOVABLE_CONNECTOR_POSTHOG_API_KEY,
+  posthogRegion: import.meta.env.VITE_LOVABLE_CONNECTOR_POSTHOG_REGION,
+});
 
 // Auto-recover from stale dynamic-import chunks after a redeploy.
 // Bounded reloads are tracked in sessionStorage to prevent infinite loops.
@@ -40,4 +50,5 @@ createRoot(document.getElementById('root')!).render(<App />);
 window.addEventListener('load', () => {
   sessionStorage.removeItem(RELOAD_KEY);
 });
+
 
