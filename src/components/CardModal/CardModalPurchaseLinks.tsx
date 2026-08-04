@@ -145,10 +145,6 @@ export function CardModalPurchaseLinks({
   const showFallbackLinks = !hasAnyPrice && !isLoadingPrintings;
   const showLoadingLinks = !hasAnyPrice && isLoadingPrintings;
 
-  const hasAnyPrice = links.length > 0;
-  const showFallbackLinks = !hasAnyPrice && !isLoadingPrintings;
-  const showLoadingLinks = !hasAnyPrice && isLoadingPrintings;
-
   const getBuyLinkAriaLabel = (vendor: string) =>
     t(
       'card.buyLinkAriaLabel',
