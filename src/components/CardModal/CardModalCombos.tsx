@@ -46,6 +46,7 @@ interface Combo {
 export interface CardModalCombosProps {
   cardName: string;
   isMobile?: boolean;
+  onComboCountChange?: (count: number) => void;
 }
 
 type ComboState = {
