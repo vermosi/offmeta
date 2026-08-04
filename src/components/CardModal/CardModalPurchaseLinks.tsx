@@ -35,6 +35,11 @@ export function CardModalPurchaseLinks({
   const tixLabel = t('card.tix', 'tix');
   const buyLabel = t('card.buyThisCard', 'Buy This Card');
   const checkPriceLabel = t('card.checkPrice', 'Check price');
+  const priceUnavailableLabel = t(
+    'card.priceUnavailable',
+    'Price not available',
+  );
+  const loadingPricesLabel = t('card.loadingPrices', 'Loading prices…');
   const hasAnyPrice = Boolean(
     displayPrices.usd ||
       displayPrices.eur ||
@@ -43,6 +48,7 @@ export function CardModalPurchaseLinks({
       displayTix,
   );
   const showFallbackLinks = !hasAnyPrice && !isLoadingPrintings;
+  const showLoadingLinks = !hasAnyPrice && isLoadingPrintings;
 
   const openTcgplayer = () => {
     const url =
@@ -57,6 +63,7 @@ export function CardModalPurchaseLinks({
 
   const fallbackLinks = (
     <div className="space-y-1.5">
+      <p className="text-xs text-muted-foreground">{priceUnavailableLabel}</p>
       <Button
         size="sm"
         className="gap-2 w-full justify-between"
@@ -82,6 +89,47 @@ export function CardModalPurchaseLinks({
       </Button>
     </div>
   );
+
+  const loadingLinks = (
+    <div
+      className="space-y-1.5"
+      aria-busy="true"
+      aria-live="polite"
+      data-testid="purchase-links-loading"
+    >
+      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Loader2 className="h-3 w-3 animate-spin" />
+        {loadingPricesLabel}
+      </p>
+      <Button
+        size="sm"
+        disabled
+        className="gap-2 w-full justify-between"
+        aria-label={`TCGplayer — ${loadingPricesLabel}`}
+      >
+        <span className="flex items-center gap-2">
+          <ShoppingCart className="h-3.5 w-3.5" />
+          TCGplayer
+        </span>
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        disabled
+        className="gap-2 w-full justify-between"
+        aria-label={`Cardmarket — ${loadingPricesLabel}`}
+      >
+        <span className="flex items-center gap-2">
+          <ShoppingCart className="h-3.5 w-3.5" />
+          Cardmarket
+        </span>
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+      </Button>
+    </div>
+  );
+
+
 
 
   if (isMobile) {
@@ -180,12 +228,8 @@ export function CardModalPurchaseLinks({
           </div>
         )}
         {showFallbackLinks && fallbackLinks}
-        {isLoadingPrintings && !displayPrices.usd && !displayPrices.eur && (
+        {showLoadingLinks && loadingLinks}
 
-          <div className="flex items-center justify-center py-2">
-            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-          </div>
-        )}
       </div>
     );
   }
@@ -303,12 +347,8 @@ export function CardModalPurchaseLinks({
           </Button>
         )}
         {showFallbackLinks && fallbackLinks}
-        {isLoadingPrintings && !displayPrices.usd && !displayPrices.eur && (
+        {showLoadingLinks && loadingLinks}
 
-          <div className="flex items-center justify-center py-2">
-            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-          </div>
-        )}
       </div>
     </div>
   );
