@@ -185,7 +185,9 @@ export async function resolveAlternativesQuery(
       scryfallQuery: excludeSelf(chosen, card.name),
       cardName: card.name,
       budget: intent.budget,
+      kind: intent.kind,
     };
+
   } catch (err) {
     logger.warn('Alternatives resolution threw', err);
     return null;
