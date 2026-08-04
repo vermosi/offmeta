@@ -154,41 +154,48 @@ function SortButton({
   );
 }
 
-function MoverRow({ mover }: { mover: PriceMover }) {
+/** Shared dense row template so header, rows, and skeletons stay aligned. */
+const ROW_GRID =
+  'grid grid-cols-[1.5rem_1fr_4rem_4.5rem] sm:grid-cols-[2rem_1fr_72px_4.5rem_4.5rem_4.75rem] items-center gap-2 sm:gap-3 px-2 sm:px-3';
+
+function MoverRow({ mover, rank }: { mover: PriceMover; rank: number }) {
   const isUp = mover.direction === 'up';
   const slug = cardNameToSlug(mover.card_name);
 
   return (
-    <div className="grid grid-cols-[1fr_auto_auto_auto] sm:grid-cols-[1fr_80px_60px_60px_60px] items-center gap-2 sm:gap-3 rounded-lg border border-border bg-card/50 px-3 sm:px-4 py-3 sm:py-2.5 transition-colors hover:bg-muted/40">
-      <div className="min-w-0">
+    <div
+      className={`${ROW_GRID} h-11 border-b border-border/40 last:border-0 odd:bg-muted/20 transition-colors hover:bg-muted/50`}
+    >
+      <span className="text-[11px] tabular-nums text-muted-foreground text-right">
+        {rank}
+      </span>
+      <div className="min-w-0 flex items-baseline gap-2">
         <Link
           to={`/cards/${slug}`}
-          className="text-sm font-medium text-foreground hover:text-primary transition-colors truncate block"
+          className="text-sm font-medium text-foreground hover:text-primary transition-colors truncate"
         >
           {mover.card_name}
         </Link>
-        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-          {mover.rarity && (
-            <span
-              className={`text-[10px] capitalize ${
-                mover.rarity === 'mythic'
-                  ? 'text-rarity-mythic'
-                  : mover.rarity === 'rare'
-                    ? 'text-rarity-rare'
-                    : mover.rarity === 'uncommon'
-                      ? 'text-rarity-uncommon'
-                      : 'text-muted-foreground'
-              }`}
-            >
-              {mover.rarity}
-            </span>
-          )}
-          {mover.type_line && (
-            <span className="text-[10px] text-muted-foreground truncate max-w-[120px] hidden sm:inline">
-              {mover.type_line.split('—')[0].trim()}
-            </span>
-          )}
-        </div>
+        {mover.rarity && (
+          <span
+            className={`text-[10px] capitalize shrink-0 hidden sm:inline ${
+              mover.rarity === 'mythic'
+                ? 'text-rarity-mythic'
+                : mover.rarity === 'rare'
+                  ? 'text-rarity-rare'
+                  : mover.rarity === 'uncommon'
+                    ? 'text-rarity-uncommon'
+                    : 'text-muted-foreground'
+            }`}
+          >
+            {mover.rarity}
+          </span>
+        )}
+        {mover.type_line && (
+          <span className="text-[10px] text-muted-foreground truncate hidden lg:inline">
+            {mover.type_line.split('—')[0].trim()}
+          </span>
+        )}
       </div>
       <div className="hidden sm:block">
         <CardPriceSparkline cardName={mover.card_name} />
@@ -199,32 +206,31 @@ function MoverRow({ mover }: { mover: PriceMover }) {
       <span className="text-xs font-medium text-foreground tabular-nums text-right">
         ${mover.current_price.toFixed(2)}
       </span>
-      <Badge
-        variant={isUp ? 'success' : 'destructive'}
-        size="sm"
-        className="shrink-0 min-w-[4.5rem] tabular-nums justify-center"
+      <span
+        className={`text-xs font-semibold tabular-nums text-right ${
+          isUp ? 'text-success' : 'text-destructive'
+        }`}
       >
         {isUp ? '+' : ''}
         {mover.change_percent.toFixed(1)}%
-      </Badge>
+      </span>
     </div>
   );
 }
 
 function MoverSkeleton() {
   return (
-    <div className="grid grid-cols-[1fr_auto_auto_auto] sm:grid-cols-[1fr_80px_60px_60px_60px] items-center gap-3 rounded-lg border border-border px-4 py-2.5">
-      <div className="space-y-1.5">
-        <Skeleton className="h-4 w-32" />
-        <Skeleton className="h-3 w-20" />
-      </div>
-      <Skeleton className="h-4 w-12 hidden sm:block" />
-      <Skeleton className="h-3 w-10 hidden sm:block" />
-      <Skeleton className="h-4 w-12" />
-      <Skeleton className="h-5 w-14 rounded-md" />
+    <div className={`${ROW_GRID} h-11 border-b border-border/40 last:border-0`}>
+      <Skeleton className="h-3 w-3 ml-auto" />
+      <Skeleton className="h-4 w-40 max-w-full" />
+      <Skeleton className="h-4 w-14 hidden sm:block" />
+      <Skeleton className="h-3 w-10 ml-auto hidden sm:block" />
+      <Skeleton className="h-3 w-10 ml-auto" />
+      <Skeleton className="h-3 w-12 ml-auto" />
     </div>
   );
 }
+
 
 export default function MarketTrends() {
   const [daysBack, setDaysBack] = useState(7);
