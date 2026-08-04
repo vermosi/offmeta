@@ -20,6 +20,11 @@ initializeAnalytics({
   posthogRegion: import.meta.env.VITE_LOVABLE_CONNECTOR_POSTHOG_REGION,
 });
 
+// Capture uncaught errors / rejections into public.error_events so page-level
+// failures are reported automatically alongside backend pipeline failures.
+initErrorMonitoring();
+
+
 // Auto-recover from stale dynamic-import chunks after a redeploy.
 // Bounded reloads are tracked in sessionStorage to prevent infinite loops.
 const RELOAD_KEY = '__offmeta_chunk_reload__';
