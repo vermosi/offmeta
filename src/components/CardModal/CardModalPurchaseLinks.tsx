@@ -156,7 +156,7 @@ export function CardModalPurchaseLinks({
       <p className="text-xs text-muted-foreground">{priceUnavailableLabel}</p>
       <Button size="sm" className={BUTTON_CLASS} asChild>
         <a
-          href={tcgplayerUrl}
+          href={wrapIfTcgplayer(tcgplayerUrl, 'tcgplayer')}
           target="_blank"
           rel="noopener noreferrer"
           aria-label={getBuyLinkAriaLabel('TCGplayer')}
