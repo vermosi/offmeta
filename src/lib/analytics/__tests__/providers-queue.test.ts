@@ -148,3 +148,64 @@ describe('PostHog cold-load queue', () => {
     expect(capture.mock.calls[49][0]).toBe('burst_49');
   });
 });
+
+describe('duplicate-send safeguards on re-init', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.clearAllMocks();
+    loadedCallback = undefined;
+  });
+
+  it('only initializes PostHog once across repeated navigation inits', async () => {
+    const providers = await loadProviders();
+
+    providers.initializeAnalytics({ posthogProjectToken: 'phc_test' });
+    providers.initializeAnalytics({ posthogProjectToken: 'phc_test' });
+    providers.initializeAnalytics({ posthogProjectToken: 'phc_test' });
+    await Promise.resolve();
+
+    expect(init).toHaveBeenCalledTimes(1);
+  });
+
+  it('drops an identical event replayed inside the dedupe window', async () => {
+    const providers = await loadProviders();
+    providers.initializeAnalytics({ posthogProjectToken: 'phc_test' });
+    await Promise.resolve();
+
+    providers.trackExternalEvent('funnel_search', { q: 'ramp' });
+    providers.trackExternalEvent('funnel_search', { q: 'ramp' });
+
+    expect(capture).toHaveBeenCalledTimes(1);
+  });
+
+  it('still sends distinct events and re-sends after the window elapses', async () => {
+    vi.useFakeTimers();
+    const providers = await loadProviders();
+    providers.initializeAnalytics({ posthogProjectToken: 'phc_test' });
+    await Promise.resolve();
+
+    providers.trackExternalEvent('funnel_search', { q: 'ramp' });
+    providers.trackExternalEvent('funnel_search', { q: 'draw' });
+    expect(capture).toHaveBeenCalledTimes(2);
+
+    vi.advanceTimersByTime(1000);
+    providers.trackExternalEvent('funnel_search', { q: 'ramp' });
+    expect(capture).toHaveBeenCalledTimes(3);
+    vi.useRealTimers();
+  });
+
+  it('does not double-flush queued events when loaded fires during init', async () => {
+    const providers = await loadProviders();
+    providers.trackExternalEvent('funnel_search', { q: 'ramp' });
+
+    init.mockImplementationOnce((_t: string, config: { loaded?: () => void }) => {
+      loadedCallback = config.loaded;
+      config.loaded?.(); // synchronous load, mid-init
+    });
+
+    providers.initializeAnalytics({ posthogProjectToken: 'phc_test' });
+    await Promise.resolve();
+
+    expect(capture).toHaveBeenCalledTimes(1);
+  });
+});
