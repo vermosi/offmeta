@@ -82,7 +82,8 @@ export function sortMovers(
     let cmp = 0;
     switch (field) {
       case 'change':
-        cmp = Math.abs(b.change_percent) - Math.abs(a.change_percent);
+        // Signed percentage change: biggest gainers first when descending.
+        cmp = b.change_percent - a.change_percent;
         break;
       case 'current':
         cmp = b.current_price - a.current_price;
