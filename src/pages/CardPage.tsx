@@ -7,41 +7,25 @@
  * @module pages/CardPage
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getCardByName } from '@/lib/scryfall/client';
 import { slugToCardName, cardNameToSlug } from '@/lib/card-slug';
-import { queryToSlug } from '@/lib/search-slug';
 import {
   applySeoMeta,
   injectJsonLd,
   buildCardJsonLd,
   buildBreadcrumbJsonLd,
 } from '@/lib/seo';
-import { useSimilarCards } from '@/hooks';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
-import { ManaSymbol } from '@/components/ManaSymbol';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FeatureCrossLinks } from '@/components/FeatureCrossLinks';
-import { CardAlternativesGrid } from '@/components/CardAlternativesGrid';
 import { CardDetailView } from '@/components/card-detail/CardDetailView';
 import { PageSearchBar } from '@/components/PageSearchBar';
-import { RelatedCardLinks } from '@/components/RelatedCardLinks';
-import { SharePageButton } from '@/components/SharePageButton';
-import { Badge } from '@/components/ui/badge';
-import {
-  ExternalLink,
-  ArrowLeft,
-  Search,
-  DollarSign,
-  Sparkles,
-  Shield,
-  RotateCw,
-} from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import type { ScryfallCard } from '@/types/card';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -51,55 +35,6 @@ function getCardImage(card: ScryfallCard, size: 'normal' | 'large' | 'art_crop' 
   if (card.image_uris) return card.image_uris[size];
   // Double-faced cards with per-face images
   return card.card_faces?.[faceIndex]?.image_uris?.[size] ?? card.card_faces?.[0]?.image_uris?.[size];
-}
-
-/** Check if a card is a true double-faced card with separate face images. */
-function isDFC(card: ScryfallCard): boolean {
-  return !!(card.card_faces && card.card_faces.length > 1 && card.card_faces[0]?.image_uris);
-}
-
-function getOracleText(card: ScryfallCard): string {
-  return card.oracle_text ?? card.card_faces?.map((f) => f.oracle_text).filter(Boolean).join('\n\n') ?? '';
-}
-
-/** Generate contextual search queries based on card properties for internal linking. */
-function getRelatedSearches(card: ScryfallCard): string[] {
-  const searches: string[] = [];
-  const typeLine = card.type_line ?? '';
-  const colors = card.colors ?? [];
-  const colorName = colors.length === 0 ? 'colorless'
-    : colors.length === 1 ? ({ W: 'white', U: 'blue', B: 'black', R: 'red', G: 'green' }[colors[0]] ?? '')
-    : '';
-
-  // Type-based searches
-  if (typeLine.includes('Creature')) {
-    searches.push(`best ${colorName} creatures`.trim());
-  }
-  if (typeLine.includes('Instant') || typeLine.includes('Sorcery')) {
-    searches.push(`${colorName} removal spells`.trim());
-  }
-  if (typeLine.includes('Artifact')) {
-    searches.push('best mana rocks');
-  }
-  if (typeLine.includes('Enchantment')) {
-    searches.push(`${colorName} enchantments`.trim());
-  }
-
-  // Keyword-based searches
-  const oracle = getOracleText(card).toLowerCase();
-  if (oracle.includes('draw')) searches.push('card draw engines');
-  if (oracle.includes('destroy') || oracle.includes('exile')) searches.push('board wipes');
-  if (oracle.includes('token')) searches.push('token generators');
-  if (oracle.includes('graveyard') || oracle.includes('return from')) searches.push('graveyard recursion');
-  if (oracle.includes('search your library')) searches.push('tutor effects');
-  if (oracle.includes('counter target')) searches.push('counterspells');
-
-  // Price-based
-  const price = parseFloat(card.prices?.usd ?? '0');
-  if (price > 20) searches.push(`budget alternatives to ${card.name}`);
-
-  // Dedupe and limit
-  return [...new Set(searches)].slice(0, 6);
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -121,26 +56,6 @@ const CardPage = () => {
     gcTime: 60 * 60 * 1000,
     retry: 1,
   });
-
-  const [faceIndex, setFaceIndex] = useState(0);
-  const [isFlipping, setIsFlipping] = useState(false);
-
-  // Reset face when card changes
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => setFaceIndex(0), 0);
-    return () => window.clearTimeout(timeoutId);
-  }, [card?.name]);
-
-  // Activate similar cards on load
-  const {
-    similarityData,
-    isLoading: similarLoading,
-    activate,
-  } = useSimilarCards(card?.name ?? '');
-
-  useEffect(() => {
-    if (card) activate();
-  }, [card, activate]);
 
   // Dedicated route-level analytics — distinct from `card_modal_view` (in-app modal).
   const { trackCardPageView } = useAnalytics();
@@ -361,14 +276,6 @@ const CardPage = () => {
     );
   }
 
-  const isFlippable = isDFC(card);
-  const activeFace = isFlippable ? card.card_faces![faceIndex] : null;
-  const oracleText = activeFace?.oracle_text ?? getOracleText(card);
-  const cardImage = getCardImage(card, 'large', faceIndex);
-  const displayName = activeFace?.name ?? card.name;
-  const displayTypeLine = activeFace?.type_line ?? card.type_line;
-  const displayManaCost = activeFace?.mana_cost ?? card.mana_cost;
-
   // Alias slug → canonical redirect. If the URL slug doesn't match the
   // canonical slug derived from the resolved card name (e.g. missing
   // punctuation, diacritics, older/misspelled variants that resolved via
@@ -403,85 +310,6 @@ const CardPage = () => {
 
             {/* Unified card detail view (same UI everywhere in the app) */}
             <CardDetailView card={card} />
-
-            <div className="flex flex-wrap gap-3 items-center">
-              <Link
-                to={`/search/${queryToSlug(card.name)}`}
-                className="text-sm text-primary hover:underline flex items-center gap-1"
-              >
-                <Search className="h-3.5 w-3.5" />
-                Find more like this
-              </Link>
-              <SharePageButton
-                title={`${card.name} — OffMeta`}
-                text={`Found this on OffMeta — ${card.name}`}
-                label="Share"
-              />
-            </div>
-            <FeatureCrossLinks compact />
-
-
-            {/* Internal SEO links â€” co-played cards build topical clusters for Google */}
-            <RelatedCardLinks oracleId={card.oracle_id} cardName={card.name} />
-
-            {/* Off-Meta Alternatives section */}
-            <section className="space-y-4">
-              <h2 className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary shrink-0" />
-                Off-Meta Alternatives
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Looking beyond the staples? Here are cards that fill a similar role but might fly under the radar.
-              </p>
-
-              {similarLoading ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <Skeleton key={i} className="aspect-[488/680] rounded-lg" />
-                  ))}
-                </div>
-              ) : similarityData?.similarResults?.data?.length ? (
-                <CardAlternativesGrid cards={similarityData.similarResults.data} />
-              ) : (
-                <p className="text-sm text-muted-foreground italic">
-                  No alternatives found yet. Try searching for this card to discover similar options.
-                </p>
-              )}
-            </section>
-
-            {/* Budget Alternatives */}
-            {similarityData?.budgetResults?.data?.length ? (
-              <section className="space-y-4">
-                <h2 className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-primary shrink-0" />
-                  Budget-Friendly Picks
-                </h2>
-                <CardAlternativesGrid cards={similarityData.budgetResults.data} />
-              </section>
-            ) : null}
-
-            {/* Related Searches — SEO internal links */}
-            {card && (
-              <section className="space-y-3">
-                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                  <Search className="h-4 w-4 text-primary" />
-                  Related Searches
-                </h2>
-                <div className="flex flex-wrap gap-2">
-                  {getRelatedSearches(card).map((q) => (
-                    <Link
-                      key={q}
-                      to={`/search/${queryToSlug(q)}`}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full
-                        border border-border/40 bg-card/50 hover:bg-primary/10 hover:border-primary/30
-                        text-sm text-muted-foreground hover:text-foreground transition-all"
-                    >
-                      {q}
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            )}
           </div>
 
         </main>

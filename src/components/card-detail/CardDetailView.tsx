@@ -6,7 +6,6 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import type { ScryfallCard } from '@/types/card';
 import {
   getCardImage,
@@ -16,7 +15,6 @@ import {
   type CardRuling,
 } from '@/lib/scryfall/client';
 import { getCardPrintings, type CardPrinting } from '@/lib/scryfall/printings';
-import { cardNameToSlug } from '@/lib/card-slug';
 
 import { Shield } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -31,9 +29,7 @@ import { CardModalRulings } from '@/components/CardModal/CardModalRulings';
 import { CardModalLegalities } from '@/components/CardModal/CardModalLegalities';
 import { CardModalPrintings } from '@/components/CardModal/CardModalPrintings';
 import { CardModalToolbox } from '@/components/CardModal/CardModalToolbox';
-import { CardModalCombos } from '@/components/CardModal/CardModalCombos';
 import { CardModalMetaContext } from '@/components/CardModal/CardModalMetaContext';
-import { CardModalRecommendations } from '@/components/CardModal/CardModalRecommendations';
 import { CardModalBentoTile } from '@/components/CardModal/CardModalBentoTile';
 import { CardPriceHistoryChart } from '@/components/CardPriceHistoryChart';
 import type { DisplayPrices } from '@/components/CardModal/types';
@@ -43,7 +39,6 @@ export interface CardDetailViewProps {
 }
 
 export function CardDetailView({ card }: CardDetailViewProps) {
-  const navigate = useNavigate();
   const { locale, t } = useTranslation();
   const { trackAffiliateClick } = useAnalytics();
   const affiliateConfig = useAffiliateConfig();
@@ -122,14 +117,6 @@ export function CardDetailView({ card }: CardDetailViewProps) {
       eur_foil: printing.prices?.eur_foil,
     });
   }, []);
-
-  // Card-to-card navigation now uses real routes instead of modal history.
-  const handleCardClick = useCallback(
-    (cardName: string) => {
-      navigate(`/cards/${cardNameToSlug(cardName)}`);
-    },
-    [navigate],
-  );
 
   const handleAffiliateClick = useCallback(
     (
@@ -281,18 +268,6 @@ export function CardDetailView({ card }: CardDetailViewProps) {
 
           <CardModalBentoTile className="lg:col-span-12">
             <CardPriceHistoryChart cardName={card.name} />
-          </CardModalBentoTile>
-
-          <CardModalBentoTile className="lg:col-span-12">
-            <CardModalCombos cardName={card.name} />
-          </CardModalBentoTile>
-
-          <CardModalBentoTile className="lg:col-span-12">
-            <CardModalRecommendations
-              oracleId={card.oracle_id}
-              cardName={card.name}
-              onCardClick={handleCardClick}
-            />
           </CardModalBentoTile>
 
           <CardModalBentoTile className="lg:col-span-6">
