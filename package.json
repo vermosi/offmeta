@@ -13,6 +13,7 @@
     "start": "vite preview",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
+    "typecheck:analytics": "tsc --noEmit -p tsconfig.analytics.json",
     "check:mtg-copy": "node scripts/check-mtg-copy.mjs",
     "backfill:mtgjson": "node scripts/backfill-mtgjson-price-history.mjs",
     "test:watch": "vitest",
