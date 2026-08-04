@@ -198,7 +198,11 @@ export function CardDetailView({ card }: CardDetailViewProps) {
           />
         </CardModalBentoTile>
 
-        <CardPriceHistoryChart cardName={card.name} />
+        <CardPriceHistoryChart
+          cardName={card.name}
+          scryfallId={selectedPrinting?.id ?? card.id}
+        />
+
 
         <CardModalBentoTile>
           <CardModalToolbox cardName={card.name} scryfallUri={card.scryfall_uri} />

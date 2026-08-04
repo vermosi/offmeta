@@ -58,10 +58,16 @@ const formatDate = (iso: string, long = false) =>
 
 interface CardPriceHistoryChartProps {
   cardName: string;
+  /** Scryfall id of the selected printing; scopes history to that printing. */
+  scryfallId?: string;
   className?: string;
 }
 
-export function CardPriceHistoryChart({ cardName, className }: CardPriceHistoryChartProps) {
+export function CardPriceHistoryChart({
+  cardName,
+  scryfallId,
+  className,
+}: CardPriceHistoryChartProps) {
   const { t } = useTranslation();
   const [rangeIndex, setRangeIndex] = useState(1);
   const [hidden, setHidden] = useState<Set<SeriesKey>>(() => new Set<SeriesKey>(['foil']));
@@ -69,7 +75,12 @@ export function CardPriceHistoryChart({ cardName, className }: CardPriceHistoryC
   const [width, setWidth] = useState(560);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { data, isLoading, isError } = usePriceHistory(cardName, RANGES[rangeIndex].days);
+  const { data, isLoading, isError } = usePriceHistory(cardName, RANGES[rangeIndex].days, scryfallId);
+
+  useEffect(() => {
+    setHoverIndex(null);
+  }, [scryfallId]);
+
 
   useEffect(() => {
     const element = containerRef.current;

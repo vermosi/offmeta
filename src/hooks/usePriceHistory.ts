@@ -17,21 +17,37 @@ export interface PriceSnapshot {
   price_usd_foil: number | null;
 }
 
-export function usePriceHistory(cardName: string | undefined, days = 30) {
+const SELECT_COLUMNS =
+  'recorded_at, price_low, price_average, price_market, price_foil, price_usd, price_usd_foil';
+
+/**
+ * Price history for a card. When `scryfallId` is provided, history is scoped to
+ * that specific printing, falling back to name-level history when the printing
+ * has no recorded snapshots.
+ */
+export function usePriceHistory(cardName: string | undefined, days = 30, scryfallId?: string) {
   return useQuery<PriceSnapshot[]>({
-    queryKey: ['price-history', cardName, days],
+    queryKey: ['price-history', cardName, days, scryfallId ?? 'all'],
     queryFn: async () => {
       if (!cardName) return [];
 
-      const thirtyDaysAgo = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
-      const { data, error } = await supabase
-        .from('price_snapshots')
-        .select('recorded_at, price_low, price_average, price_market, price_foil, price_usd, price_usd_foil')
-        .eq('card_name', cardName)
-        .gte('recorded_at', thirtyDaysAgo)
-        .order('recorded_at', { ascending: true });
+      const baseQuery = () =>
+        supabase
+          .from('price_snapshots')
+          .select(SELECT_COLUMNS)
+          .eq('card_name', cardName)
+          .gte('recorded_at', since)
+          .order('recorded_at', { ascending: true });
 
+      if (scryfallId) {
+        const { data, error } = await baseQuery().eq('scryfall_id', scryfallId);
+        if (error) throw error;
+        if (data && data.length > 0) return data as PriceSnapshot[];
+      }
+
+      const { data, error } = await baseQuery();
       if (error) throw error;
       return (data ?? []) as PriceSnapshot[];
     },
@@ -39,6 +55,7 @@ export function usePriceHistory(cardName: string | undefined, days = 30) {
     staleTime: 60 * 60 * 1000, // 1 hour
   });
 }
+
 
 /** Compute simple trend: positive = price going up, negative = down */
 export function computePriceTrend(snapshots: PriceSnapshot[]): {
