@@ -7,7 +7,7 @@
  * @module pages/CardPage
  */
 
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getCardByName } from '@/lib/scryfall/client';
