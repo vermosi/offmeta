@@ -61,11 +61,14 @@ Disallow: /api/
 # Block legacy parameterised search URLs — redirected to /search/:slug
 Disallow: /?q=
 Disallow: /?*q=
-# Block private/admin surface
-Disallow: /admin/
-Disallow: /profile/
-Disallow: /saved/
-Disallow: /reset-password/
+# Block private/admin surface. Paths are prefixes and the app routes have no
+# trailing slash (/profile, /reset-password), so the slashless form is required.
+Disallow: /admin
+Disallow: /profile
+Disallow: /reset-password
+Disallow: /user/
+Disallow: /.lovable/
 
 # Sitemap location
 Sitemap: https://offmeta.app/sitemap.xml
+
