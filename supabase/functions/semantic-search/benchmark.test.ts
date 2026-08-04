@@ -63,7 +63,6 @@ async function makeRequest(
   options: { useCache?: boolean; cacheSalt?: string; retries?: number } = {},
 ): Promise<BenchmarkResult & { scryfallQuery: string }> {
   const maxRetries = options.retries ?? MAX_RETRIES;
-  let lastError: Error | null = null;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -110,12 +109,12 @@ async function makeRequest(
         scryfallQuery: data.scryfallQuery ?? '',
       };
     } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
+      const message = error instanceof Error ? error.message : String(error);
 
       if (attempt < maxRetries) {
         const delay = RETRY_DELAYS[attempt] ?? 2000;
         console.log(
-          `  ⚠️ Network error, retrying in ${delay}ms: ${lastError.message}`,
+          `  ⚠️ Network error, retrying in ${delay}ms: ${message}`,
         );
         await new Promise((r) => setTimeout(r, delay));
       }
