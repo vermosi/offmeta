@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface PriceMover {
   card_name: string;
+  /** Scryfall-specific printing id (MTGJSON UUID in the price snapshots table). */
   scryfall_id: string | null;
   current_price: number;
   previous_price: number;
@@ -18,6 +19,8 @@ export interface PriceMover {
   type_line: string | null;
   colors: string[] | null;
   legalities: Record<string, string> | null;
+  set_name: string | null;
+  collector_number: string | null;
 }
 
 export function useMarketTrends(daysBack: number = 7) {

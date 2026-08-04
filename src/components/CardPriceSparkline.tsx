@@ -10,6 +10,8 @@ import { cn } from '@/lib/core/utils';
 
 interface CardPriceSparklineProps {
   cardName: string;
+  /** Specific printing id; if provided, history is scoped to that printing. */
+  scryfallId?: string;
   width?: number;
   height?: number;
   className?: string;
@@ -29,13 +31,14 @@ const SERIES_LABELS: Record<PriceSeries, string> = {
 
 export function CardPriceSparkline({
   cardName,
+  scryfallId,
   width,
   height,
   className,
   showSeriesToggle = true,
 }: CardPriceSparklineProps) {
 
-  const { data } = usePriceHistory(cardName);
+  const { data } = usePriceHistory(cardName, 30, scryfallId);
   const [series, setSeries] = useState<PriceSeries>('market');
 
   const points = useMemo<SparklinePoint[]>(

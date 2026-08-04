@@ -164,42 +164,55 @@ function MoverRow({ mover, rank }: { mover: PriceMover; rank: number }) {
 
   return (
     <div
-      className={`${ROW_GRID} h-11 border-b border-border/40 last:border-0 odd:bg-muted/20 transition-colors hover:bg-muted/50`}
+      className={`${ROW_GRID} min-h-11 border-b border-border/40 last:border-0 odd:bg-muted/20 transition-colors hover:bg-muted/50`}
     >
       <span className="text-[11px] tabular-nums text-muted-foreground text-right">
         {rank}
       </span>
-      <div className="min-w-0 flex items-baseline gap-2">
-        <Link
-          to={`/cards/${slug}`}
-          className="text-sm font-medium text-foreground hover:text-primary transition-colors truncate"
-        >
-          {mover.card_name}
-        </Link>
-        {mover.rarity && (
-          <span
-            className={`text-[10px] capitalize shrink-0 hidden sm:inline ${
-              mover.rarity === 'mythic'
-                ? 'text-rarity-mythic'
-                : mover.rarity === 'rare'
-                  ? 'text-rarity-rare'
-                  : mover.rarity === 'uncommon'
-                    ? 'text-rarity-uncommon'
-                    : 'text-muted-foreground'
-            }`}
+      <div className="min-w-0 flex flex-col justify-center py-1">
+        <div className="flex items-baseline gap-2">
+          <Link
+            to={`/cards/${slug}`}
+            className="text-sm font-medium text-foreground hover:text-primary transition-colors truncate"
           >
-            {mover.rarity}
-          </span>
-        )}
-        {mover.type_line && (
-          <span className="text-[10px] text-muted-foreground truncate hidden lg:inline">
-            {mover.type_line.split('—')[0].trim()}
-          </span>
-        )}
+            {mover.card_name}
+          </Link>
+          {mover.rarity && (
+            <span
+              className={`text-[10px] capitalize shrink-0 hidden sm:inline ${
+                mover.rarity === 'mythic'
+                  ? 'text-rarity-mythic'
+                  : mover.rarity === 'rare'
+                    ? 'text-rarity-rare'
+                    : mover.rarity === 'uncommon'
+                      ? 'text-rarity-uncommon'
+                      : 'text-muted-foreground'
+              }`}
+            >
+              {mover.rarity}
+            </span>
+          )}
+        </div>
+        <div className="flex items-baseline gap-1.5 text-[10px] text-muted-foreground truncate">
+          {mover.set_name && (
+            <span className="truncate">{mover.set_name}</span>
+          )}
+          {mover.collector_number && (
+            <span className="tabular-nums shrink-0">
+              #{mover.collector_number}
+            </span>
+          )}
+          {mover.type_line && (
+            <span className="truncate hidden lg:inline">
+              {mover.type_line.split('—')[0].trim()}
+            </span>
+          )}
+        </div>
       </div>
       <div className="hidden sm:block w-[72px] overflow-hidden">
         <CardPriceSparkline
           cardName={mover.card_name}
+          scryfallId={mover.scryfall_id ?? undefined}
           showSeriesToggle={false}
           width={68}
           height={20}
@@ -227,9 +240,12 @@ function MoverRow({ mover, rank }: { mover: PriceMover; rank: number }) {
 
 function MoverSkeleton() {
   return (
-    <div className={`${ROW_GRID} h-11 border-b border-border/40 last:border-0`}>
+    <div className={`${ROW_GRID} min-h-11 border-b border-border/40 last:border-0`}>
       <Skeleton className="h-3 w-3 ml-auto" />
-      <Skeleton className="h-4 w-40 max-w-full" />
+      <div className="flex flex-col justify-center gap-1 py-1">
+        <Skeleton className="h-4 w-40 max-w-full" />
+        <Skeleton className="h-2.5 w-28 max-w-full" />
+      </div>
       <Skeleton className="h-4 w-14 hidden sm:block" />
       <Skeleton className="h-3 w-10 ml-auto hidden sm:block" />
       <Skeleton className="h-3 w-10 ml-auto" />
