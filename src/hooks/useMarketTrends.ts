@@ -5,7 +5,10 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchPriceMovers } from '@/services/price-movers';
+
+/** Rows requested per window; paginated client-side. */
+export const MOVERS_FETCH_LIMIT = 250;
 
 export interface PriceMover {
   card_name: string;
@@ -25,16 +28,8 @@ export interface PriceMover {
 
 export function useMarketTrends(daysBack: number = 7) {
   const query = useQuery({
-    queryKey: ['market-trends', daysBack],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_price_movers', {
-        days_back: daysBack,
-        limit_count: 50,
-      });
-
-      if (error) throw error;
-      return (data ?? []) as PriceMover[];
-    },
+    queryKey: ['market-trends', daysBack, MOVERS_FETCH_LIMIT],
+    queryFn: () => fetchPriceMovers(daysBack, MOVERS_FETCH_LIMIT),
     staleTime: 30 * 60 * 1000,
   });
 

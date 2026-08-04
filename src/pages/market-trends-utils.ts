@@ -99,3 +99,23 @@ export function sortMovers(
   });
   return sorted;
 }
+
+/** Rows shown per Market Trends page. */
+export const PAGE_SIZE = 25;
+
+/** Total number of pages for a result set (minimum 1). */
+export function pageCount(total: number, pageSize: number = PAGE_SIZE): number {
+  return Math.max(1, Math.ceil(total / pageSize));
+}
+
+/** Clamps a page index into the valid range for a result set. */
+export function clampPage(page: number, total: number, pageSize: number = PAGE_SIZE): number {
+  return Math.min(Math.max(1, page), pageCount(total, pageSize));
+}
+
+/** Returns the slice of movers for the given 1-based page. */
+export function paginate<T>(items: T[], page: number, pageSize: number = PAGE_SIZE): T[] {
+  const safePage = clampPage(page, items.length, pageSize);
+  const start = (safePage - 1) * pageSize;
+  return items.slice(start, start + pageSize);
+}
