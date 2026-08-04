@@ -22,6 +22,8 @@ import {
   requireServiceOrPipelineKey,
 } from '../_shared/auth.ts';
 import { createLogger, withLogging } from '../_shared/logger.ts';
+import { reportEdgeError } from '../_shared/errorReporter.ts';
+
 
 const log = createLogger('submit-sitemap');
 
