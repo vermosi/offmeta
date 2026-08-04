@@ -29,14 +29,25 @@ export class PriceMoverError extends Error {
 interface CacheEntry {
   value: PriceMover[];
   expiresAt: number;
+  /** Epoch ms when this data was fetched from the backend. */
+  fetchedAt: number;
+}
+
+/** Where a result came from, surfaced in the UI as a cache indicator. */
+export type PriceMoverSource = 'network' | 'cache' | 'inflight';
+
+export interface PriceMoverResult {
+  movers: PriceMover[];
+  fetchedAt: number;
+  source: PriceMoverSource;
 }
 
 const cache = new Map<string, CacheEntry>();
-const inflight = new Map<string, Promise<PriceMover[]>>();
+const inflight = new Map<string, Promise<PriceMoverResult>>();
 
 const cacheKey = (daysBack: number, limit: number) => `${daysBack}:${limit}`;
 
-function readCache(key: string): PriceMover[] | null {
+function readCache(key: string): CacheEntry | null {
   const entry = cache.get(key);
   if (!entry) return null;
   if (entry.expiresAt <= Date.now()) {
@@ -46,11 +57,11 @@ function readCache(key: string): PriceMover[] | null {
   // Refresh LRU position.
   cache.delete(key);
   cache.set(key, entry);
-  return entry.value;
+  return entry;
 }
 
-function writeCache(key: string, value: PriceMover[]): void {
-  cache.set(key, { value, expiresAt: Date.now() + CACHE_TTL_MS });
+function writeCache(key: string, value: PriceMover[], fetchedAt: number): void {
+  cache.set(key, { value, fetchedAt, expiresAt: fetchedAt + CACHE_TTL_MS });
   while (cache.size > MAX_CACHE_ENTRIES) {
     const oldest = cache.keys().next().value;
     if (oldest === undefined) break;
@@ -71,14 +82,22 @@ export function clearPriceMoverCache(): void {
 export async function fetchPriceMovers(
   daysBack: number,
   limit: number,
-): Promise<PriceMover[]> {
+): Promise<PriceMoverResult> {
   const key = cacheKey(daysBack, limit);
 
   const cached = readCache(key);
-  if (cached) return cached;
+  if (cached) {
+    return {
+      movers: cached.value,
+      fetchedAt: cached.fetchedAt,
+      source: 'cache',
+    };
+  }
 
   const pending = inflight.get(key);
-  if (pending) return pending;
+  if (pending) {
+    return pending.then((result) => ({ ...result, source: 'inflight' }));
+  }
 
   const request = (async () => {
     const timeout = new Promise<never>((_, reject) => {
@@ -114,8 +133,9 @@ export async function fetchPriceMovers(
       );
     }
     const movers = (data ?? []) as PriceMover[];
-    writeCache(key, movers);
-    return movers;
+    const fetchedAt = Date.now();
+    writeCache(key, movers, fetchedAt);
+    return { movers, fetchedAt, source: 'network' as const };
   })().finally(() => {
     inflight.delete(key);
   });
