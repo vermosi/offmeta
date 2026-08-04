@@ -574,6 +574,42 @@ export type Database = {
         }
         Relationships: []
       }
+      sitemap_submissions: {
+        Row: {
+          error: string | null
+          http_status: number | null
+          id: string
+          new_url_count: number | null
+          site_url: string | null
+          sitemap_url: string
+          status: string
+          submitted_at: string
+          trigger_source: string
+        }
+        Insert: {
+          error?: string | null
+          http_status?: number | null
+          id?: string
+          new_url_count?: number | null
+          site_url?: string | null
+          sitemap_url: string
+          status: string
+          submitted_at?: string
+          trigger_source: string
+        }
+        Update: {
+          error?: string | null
+          http_status?: number | null
+          id?: string
+          new_url_count?: number | null
+          site_url?: string | null
+          sitemap_url?: string
+          status?: string
+          submitted_at?: string
+          trigger_source?: string
+        }
+        Relationships: []
+      }
       translation_logs: {
         Row: {
           confidence_score: number | null
