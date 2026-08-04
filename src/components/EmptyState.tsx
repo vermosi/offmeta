@@ -28,7 +28,12 @@ interface EmptyStateProps {
   variant?: 'server' | 'filtered';
   /** Count of server-side results before client filters, when known. */
   filteredFromCount?: number;
+  /** Generated Scryfall query — used to detect the exact-name fallback. */
+  scryfallQuery?: string;
+  /** The user's original plain-English input. */
+  originalQuery?: string;
 }
+
 
 // Labels for common sort keys → i18n keys defined in SearchFilters.
 const SORT_LABEL_KEYS: Record<string, string> = {
