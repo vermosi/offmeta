@@ -1,0 +1,155 @@
+/**
+ * "Alternatives to X" search intent.
+ *
+ * Queries like "budget alternatives to rhystic study" are not card names and
+ * are not keyword searches — they name a *reference card* and ask for
+ * functionally similar (optionally cheaper) cards. Without this handler the
+ * pipeline degrades to an exact-name search for the whole sentence
+ * (`!"budget alternatives to rhystic study"`), which always returns zero
+ * results.
+ *
+ * Resolution is deterministic: extract the reference card, resolve it on
+ * Scryfall, then reuse the existing `card-similarity` edge function to build
+ * the similar/budget query.
+ *
+ * @module lib/search/alternatives
+ */
+
+import { supabase } from '@/integrations/supabase/client';
+import { getCardByName } from '@/lib/scryfall/client';
+import { logger } from '@/lib/core/logger';
+import type { ScryfallCard } from '@/types/card';
+
+export interface AlternativesIntent {
+  /** The reference card named in the query (may contain typos). */
+  cardName: string;
+  /** True when the user asked for a cheaper option ("budget", "cheaper"). */
+  budget: boolean;
+}
+
+export interface ResolvedAlternatives {
+  /** Scryfall query returning alternatives to the reference card. */
+  scryfallQuery: string;
+  /** Canonical name of the reference card. */
+  cardName: string;
+  budget: boolean;
+}
+
+const BUDGET_WORDS = /\b(budget|cheap|cheaper|affordable|inexpensive|poor\s+man'?s)\b/i;
+
+/**
+ * Wrapper phrases that mean "cards like X". Group 1 is always the card name.
+ */
+const ALTERNATIVES_PATTERNS: RegExp[] = [
+  /^(?:what(?:'s| is| are)?\s+)?(?:the\s+)?(?:best\s+)?(?:budget|cheap|cheaper|affordable|inexpensive)?\s*(?:alternatives?|replacements?|substitutes?|swaps?|options?)\s+(?:to|for)\s+(.+)$/i,
+  /^(?:cards?\s+)?(?:similar|comparable)\s+to\s+(.+)$/i,
+  /^(?:cards?\s+)?like\s+(.+)$/i,
+  /^(.+?)\s+(?:but|except)\s+(?:cheaper|budget|less\s+expensive|more\s+affordable)$/i,
+  /^(?:budget|cheap|cheaper|affordable|inexpensive)\s+(?:version|copy)\s+of\s+(.+)$/i,
+  /^(.+?)\s+(?:budget|cheap|cheaper)?\s*(?:alternatives?|replacements?|substitutes?)$/i,
+];
+
+/** Trailing qualifiers that are not part of the card name. */
+const TRAILING_NOISE =
+  /\s+\b(?:in|for)\s+(?:commander|edh|modern|legacy|pioneer|standard|pauper|vintage|brawl)\b.*$/i;
+
+function cleanCardName(raw: string): string {
+  return raw
+    .trim()
+    .replace(TRAILING_NOISE, '')
+    .replace(/^["']|["']$/g, '')
+    .replace(/[?.!]+$/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Detects an "alternatives to <card>" intent. Returns null for ordinary
+ * keyword searches so the normal pipeline is untouched.
+ */
+export function detectAlternativesIntent(
+  query: string,
+): AlternativesIntent | null {
+  const trimmed = query.trim();
+  if (!trimmed || trimmed.length > 120) return null;
+  // Scryfall operators mean the user already wrote syntax — leave it alone.
+  if (/[():!<>=]/.test(trimmed)) return null;
+
+  for (const pattern of ALTERNATIVES_PATTERNS) {
+    const match = trimmed.match(pattern);
+    if (!match) continue;
+
+    const cardName = cleanCardName(match[1] ?? '');
+    const words = cardName.split(/\s+/).filter(Boolean);
+    // A reference card name is short and is not itself a description.
+    if (words.length < 1 || words.length > 6) continue;
+    if (cardName.length < 3) continue;
+    if (BUDGET_WORDS.test(cardName)) continue;
+
+    return { cardName, budget: BUDGET_WORDS.test(trimmed) };
+  }
+
+  return null;
+}
+
+/** Excludes the reference card from its own alternatives list. */
+function excludeSelf(query: string, cardName: string): string {
+  const safe = cardName.replace(/["()]/g, '').trim();
+  if (!safe) return query;
+  const exclusion = `-!"${safe}"`;
+  return query.includes(exclusion) ? query : `${query} ${exclusion}`.trim();
+}
+
+/**
+ * Resolves an "alternatives to X" query into a real Scryfall query.
+ * Returns null when the intent doesn't apply or the card can't be resolved,
+ * so callers can fall through to their existing behaviour.
+ */
+export async function resolveAlternativesQuery(
+  query: string,
+): Promise<ResolvedAlternatives | null> {
+  const intent = detectAlternativesIntent(query);
+  if (!intent) return null;
+
+  let card: ScryfallCard;
+  try {
+    card = await getCardByName(intent.cardName);
+  } catch {
+    // Unknown reference card — the fuzzy-name recovery path handles this.
+    return null;
+  }
+
+  try {
+    const { data, error } = await supabase.functions.invoke('card-similarity', {
+      body: {
+        cardName: card.name,
+        typeLine: card.type_line,
+        oracleText: card.oracle_text,
+        colorIdentity: card.color_identity,
+        keywords:
+          (card as unknown as { keywords?: string[] }).keywords ?? [],
+        cmc: card.cmc,
+        prices: card.prices,
+      },
+    });
+
+    if (error || !data?.success) {
+      logger.warn('Alternatives resolution failed', error || data?.error);
+      return null;
+    }
+
+    const chosen: string | undefined = intent.budget
+      ? data.budgetQuery || data.similarQuery
+      : data.similarQuery || data.budgetQuery;
+    if (!chosen) return null;
+
+    return {
+      scryfallQuery: excludeSelf(chosen, card.name),
+      cardName: card.name,
+      budget: intent.budget,
+    };
+  } catch (err) {
+    logger.warn('Alternatives resolution threw', err);
+    return null;
+  }
+}
