@@ -39,7 +39,6 @@ export interface CardDetailViewProps {
 }
 
 export function CardDetailView({ card }: CardDetailViewProps) {
-  const navigate = useNavigate();
   const { locale, t } = useTranslation();
   const { trackAffiliateClick } = useAnalytics();
   const affiliateConfig = useAffiliateConfig();
