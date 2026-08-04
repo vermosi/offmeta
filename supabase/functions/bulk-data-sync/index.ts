@@ -20,6 +20,8 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, requireServiceOrPipelineKey } from '../_shared/auth.ts';
 import { createLogger, withLogging } from '../_shared/logger.ts';
+import { pingSitemapSubmission } from '../_shared/sitemapPing.ts';
+
 
 const log = createLogger('bulk-data-sync');
 const UPSERT_BATCH = 200;
