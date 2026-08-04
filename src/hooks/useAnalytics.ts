@@ -8,6 +8,8 @@ import { useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/core/logger';
 import { classifyTraffic } from '@/lib/analytics/traffic';
+import { trackExternalEvent } from '@/lib/analytics/providers';
+
 
 // ---------------------------------------------------------------------------
 // Internal traffic detection
@@ -597,10 +599,13 @@ export async function trackEventDirect(
         session_id: getSessionId(),
       },
     ]);
+    // Forward the same event to optional third-party providers (best-effort).
+    trackExternalEvent(eventType, sanitizedData);
   } catch {
     // Analytics is best-effort; never break the caller.
   }
 }
+
 
 export function useAnalytics() {
   const sessionIdRef = useRef<string | null>(null);
@@ -693,6 +698,9 @@ export function useAnalytics() {
               });
             }
           });
+        // Forward to optional third-party providers without awaiting.
+        trackExternalEvent(eventType, sanitizedData);
+
       } catch {
         // Silently fail - analytics should never break the app
       }

@@ -14,6 +14,8 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { trackExternalPageView } from '@/lib/analytics/providers';
+
 
 export function RouteTracker() {
   const location = useLocation();
@@ -41,6 +43,10 @@ export function RouteTracker() {
       nav_index: navIndexRef.current,
       dwell_ms: dwellMs,
     });
+
+    // Forward page view to optional third-party providers (GA4 + PostHog).
+    trackExternalPageView(location.pathname);
+
 
     lastKeyRef.current = key;
     lastPathRef.current = location.pathname;
