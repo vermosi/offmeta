@@ -172,7 +172,10 @@ function toLastmodDate(value) {
   return d.toISOString().split('T')[0];
 }
 
-const today = new Date().toISOString().split('T')[0];
+// No build-time `today` fallback: <lastmod> is emitted only from a real,
+// page-specific timestamp. A generation-time date would make every URL look
+// freshly modified on every deploy, which crawlers learn to ignore.
+
 
 let cards = [];
 let curated = [];
