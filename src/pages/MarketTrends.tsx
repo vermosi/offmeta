@@ -26,6 +26,10 @@ import {
   type SortField,
   DEFAULT_FILTERS,
   PRICE_RANGES,
+  PAGE_SIZE,
+  pageCount,
+  clampPage,
+  paginate,
 } from './market-trends-utils';
 
 import {
@@ -35,6 +39,8 @@ import {
   Filter,
   ArrowUpDown,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   X,
 } from 'lucide-react';
 
@@ -261,6 +267,7 @@ export default function MarketTrends() {
   const [sortField, setSortField] = useState<SortField>('change');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [showFilters, setShowFilters] = useState(false);
+  const [page, setPage] = useState(1);
   const { allMovers, isLoading, isEmpty, isError } = useMarketTrends(daysBack);
   const activeFilterCount = countActiveFilters(filters);
 
@@ -279,6 +286,27 @@ export default function MarketTrends() {
     const filtered = applyFilters(allMovers, filters);
     return sortMovers(filtered, sortField, sortDir);
   }, [allMovers, filters, sortField, sortDir]);
+
+  const totalPages = pageCount(filteredMovers.length);
+  const currentPage = clampPage(page, filteredMovers.length);
+  const pageMovers = useMemo(
+    () => paginate(filteredMovers, currentPage),
+    [filteredMovers, currentPage],
+  );
+  const rankOffset = (currentPage - 1) * PAGE_SIZE;
+
+  // Reset to the first page whenever the result set changes.
+  useEffect(() => {
+    setPage(1);
+  }, [filters, sortField, sortDir, daysBack]);
+
+  const goToPage = useCallback(
+    (next: number) => {
+      setPage(clampPage(next, filteredMovers.length));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    [filteredMovers.length],
+  );
 
   const updateFilter = useCallback(
     <K extends keyof MarketFilters>(key: K, value: MarketFilters[K]) => {
@@ -554,11 +582,45 @@ export default function MarketTrends() {
               )}
             </div>
           ) : (
-            filteredMovers.map((m, i) => (
-              <MoverRow key={m.card_name} mover={m} rank={i + 1} />
+            pageMovers.map((m, i) => (
+              <MoverRow
+                key={m.scryfall_id ?? `${m.card_name}-${rankOffset + i}`}
+                mover={m}
+                rank={rankOffset + i + 1}
+              />
             ))
           )}
         </div>
+
+        {!isLoading && filteredMovers.length > PAGE_SIZE && (
+          <nav
+            aria-label="Market trends pagination"
+            className="mt-4 flex items-center justify-between gap-3"
+          >
+            <button
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage <= 1}
+              className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              Previous
+            </button>
+            <span className="text-xs text-muted-foreground tabular-nums">
+              Page {currentPage} of {totalPages}
+              <span className="hidden sm:inline">
+                {' '}· {filteredMovers.length} cards
+              </span>
+            </span>
+            <button
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage >= totalPages}
+              className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Next
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </nav>
+        )}
 
       </main>
       <Footer />
