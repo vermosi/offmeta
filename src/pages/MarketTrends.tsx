@@ -240,9 +240,12 @@ function MoverRow({ mover, rank }: { mover: PriceMover; rank: number }) {
 
 function MoverSkeleton() {
   return (
-    <div className={`${ROW_GRID} h-11 border-b border-border/40 last:border-0`}>
+    <div className={`${ROW_GRID} min-h-11 border-b border-border/40 last:border-0`}>
       <Skeleton className="h-3 w-3 ml-auto" />
-      <Skeleton className="h-4 w-40 max-w-full" />
+      <div className="flex flex-col justify-center gap-1 py-1">
+        <Skeleton className="h-4 w-40 max-w-full" />
+        <Skeleton className="h-2.5 w-28 max-w-full" />
+      </div>
       <Skeleton className="h-4 w-14 hidden sm:block" />
       <Skeleton className="h-3 w-10 ml-auto hidden sm:block" />
       <Skeleton className="h-3 w-10 ml-auto" />
