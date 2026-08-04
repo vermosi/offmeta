@@ -77,7 +77,7 @@ export function CardModalRecommendations({
   }, [recs]);
 
   if (!oracleId) return null;
-  if (!loading && !error && recs.length === 0) return null;
+  if (!loading && !error && recs.length < 10) return null;
 
   return (
     <div className="space-y-3">
