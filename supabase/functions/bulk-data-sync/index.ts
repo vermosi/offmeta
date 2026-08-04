@@ -244,6 +244,17 @@ serve(withLogging('bulk-data-sync', async (req: Request): Promise<Response> => {
       });
     }
 
+    // Sync finished and new card pages exist → ask Google to re-crawl the sitemap
+    if (!hasMore && cardsUpserted > 0) {
+      pingSitemapSubmission({
+        supabaseUrl,
+        serviceRoleKey,
+        source: 'bulk-data-sync',
+        newUrlCount: cardsUpserted,
+      });
+    }
+
+
     log.info('Batch complete', {
       startPage,
       pagesProcessed,
