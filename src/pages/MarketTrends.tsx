@@ -30,6 +30,7 @@ import {
   pageCount,
   clampPage,
   paginate,
+  formatUpdatedAgo,
 } from './market-trends-utils';
 
 import {
@@ -41,6 +42,8 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Database,
+  Cloud,
   RefreshCw,
   X,
 } from 'lucide-react';
@@ -277,7 +280,18 @@ export default function MarketTrends() {
     isRefetching,
     errorMessage,
     retry,
+    fetchedAt,
+    source,
   } = useMarketTrends(daysBack);
+
+  // Re-render the relative timestamp roughly once a minute.
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNowTick(Date.now()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+  const updatedLabel = formatUpdatedAgo(fetchedAt, nowTick);
+  const isCacheHit = source === 'cache' || source === 'inflight';
   const activeFilterCount = countActiveFilters(filters);
 
   const handleSort = useCallback((field: SortField) => {
@@ -356,6 +370,30 @@ export default function MarketTrends() {
                 <span className="ml-1">· {filteredMovers.length} cards</span>
               )}
             </p>
+            {updatedLabel && !isLoading && (
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                <span>Last updated {updatedLabel}</span>
+                <span
+                  title={
+                    isCacheHit
+                      ? 'Served from the in-memory session cache'
+                      : 'Freshly fetched from the backend'
+                  }
+                  className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-medium ${
+                    isCacheHit
+                      ? 'border-primary/30 bg-primary/10 text-primary'
+                      : 'border-border bg-muted/40 text-muted-foreground'
+                  }`}
+                >
+                  {isCacheHit ? (
+                    <Database className="h-3 w-3" />
+                  ) : (
+                    <Cloud className="h-3 w-3" />
+                  )}
+                  {isCacheHit ? 'Cache hit' : 'Fresh fetch'}
+                </span>
+              </div>
+            )}
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 self-stretch sm:self-start w-full sm:w-auto">
             <div className="flex items-center gap-1 rounded-lg border border-border p-1 bg-muted/30 overflow-x-auto max-w-full">
