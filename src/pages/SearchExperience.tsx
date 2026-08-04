@@ -425,7 +425,29 @@ const Index = () => {
     typeof performance !== 'undefined' ? performance.now() : Date.now(),
   );
   const firstResultsTrackedRef = useRef(false);
+
+  // Funnel step: a search produced results (fires once per query).
+  const funnelSearchQueryRef = useRef<string | null>(null);
   useEffect(() => {
+    if (isSearching || !hasSearched || !originalQuery) return;
+    if (funnelSearchQueryRef.current === originalQuery) return;
+    funnelSearchQueryRef.current = originalQuery;
+    trackFunnelStep('search', {
+      query: originalQuery.slice(0, 200),
+      results_count: cards.length,
+      has_results: cards.length > 0,
+      source: lastSearchResult?.source ?? 'ai',
+    });
+  }, [
+    cards.length,
+    hasSearched,
+    isSearching,
+    lastSearchResult?.source,
+    originalQuery,
+  ]);
+
+  useEffect(() => {
+
     if (firstResultsTrackedRef.current) return;
     if (isSearching || !hasSearched || cards.length === 0) return;
     firstResultsTrackedRef.current = true;
