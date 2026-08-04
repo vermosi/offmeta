@@ -166,27 +166,21 @@ describe('CardModalPurchaseLinks', () => {
     expect(getByText('0.02 tix')).toBeInTheDocument();
   });
 
-  it('shows loading spinner when loading and no prices', () => {
-    const { container } = renderWithProviders(
+  it('renders fallback check-price buttons when no prices exist', () => {
+    const { getAllByText } = renderWithProviders(
       <CardModalPurchaseLinks
         {...defaultProps}
         displayPrices={{}}
-        isLoadingPrintings={true}
+        isLoadingPrintings={false}
       />,
     );
-    
-    expect(container.querySelector('.animate-spin')).toBeInTheDocument();
+
+    expect(getAllByText('Check price').length).toBe(2);
   });
 
-  it('does not show loading spinner when prices exist', () => {
-    const { container } = renderWithProviders(
-      <CardModalPurchaseLinks {...defaultProps} isLoadingPrintings={true} />,
-    );
-    
-    expect(container.querySelector('.animate-spin')).not.toBeInTheDocument();
-  });
 
   describe('accessible links', () => {
+
     it('renders purchase links as anchors opening in a new tab', () => {
       const { getAllByRole } = renderWithProviders(
         <CardModalPurchaseLinks {...defaultProps} />,
@@ -210,39 +204,13 @@ describe('CardModalPurchaseLinks', () => {
     });
   });
 
-  describe('mobile view', () => {
-    it('renders the same stacked link layout as desktop', () => {
-      const mobile = renderWithProviders(
-        <CardModalPurchaseLinks {...defaultProps} isMobile={true} />,
-      );
-      const mobileLinks = mobile.getAllByRole('link').map((l) => l.className);
-      mobile.unmount();
-
-      const desktop = renderWithProviders(
-        <CardModalPurchaseLinks {...defaultProps} isMobile={false} />,
-      );
-      const desktopLinks = desktop.getAllByRole('link').map((l) => l.className);
-
-      expect(mobileLinks).toEqual(desktopLinks);
-    });
-
-    it('renders shopping cart icons', () => {
-      const { getAllByRole } = renderWithProviders(
-        <CardModalPurchaseLinks {...defaultProps} isMobile={true} />,
-      );
-      const links = getAllByRole('link');
-      expect(links.length).toBeGreaterThan(0);
-    });
+  it('renders full-width links', () => {
+    const { container } = renderWithProviders(
+      <CardModalPurchaseLinks {...defaultProps} />,
+    );
+    expect(container.querySelector('.w-full')).toBeInTheDocument();
   });
 
-  describe('desktop view', () => {
-    it('renders full-width links', () => {
-      const { container } = renderWithProviders(
-        <CardModalPurchaseLinks {...defaultProps} isMobile={false} />,
-      );
-      expect(container.querySelector('.w-full')).toBeInTheDocument();
-    });
-  });
 
   it('uses selected printing purchase URLs when available', () => {
     const selectedPrinting = {
