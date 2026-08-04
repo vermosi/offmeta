@@ -33,6 +33,14 @@ The CI setup is intentionally layered so that the most important regressions fai
 - e2e smoke coverage protects navigation and the highest-value user paths
 - accessibility checks catch regressions in the core routes
 - broader browser coverage validates the end-to-end experience over time
+- live external-service checks run in the nightly workflow, not the default `npm run check`
+- workflow YAML is linted in the `Workflow Lint` job
+
+The following suites are intentionally skipped in the default test run and are covered by nightly validation instead:
+
+- `src/tests/api/edge-function.test.ts`
+- `src/lib/scryfall-syntax-validation.test.ts`
+- `src/lib/scryfall-otag-validation.test.ts`
 
 For workflow details, inspect the active jobs in `.github/workflows/`.
 

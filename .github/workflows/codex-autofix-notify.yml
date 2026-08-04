@@ -7,10 +7,12 @@ on:
 
 jobs:
   notify-discord:
-    if: ${{ github.event.workflow_run.event == 'workflow_run' }}
     runs-on: ubuntu-latest
     permissions:
       issues: write
+    concurrency:
+      group: codex-autofix-notify-${{ github.event.workflow_run.id }}
+      cancel-in-progress: true
     steps:
       - name: Create issue on unresolved autofix
         if: ${{ github.event.workflow_run.conclusion == 'failure' }}

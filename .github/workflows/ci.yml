@@ -85,7 +85,10 @@ jobs:
           name: dist
           path: dist
       - run: npm ci
-      - run: npm run check:bundle-size
+      - name: Check bundle size
+        run: |
+          npm run check:bundle-size
+          echo "Bundle size gate passed for ${GITHUB_SHA}" >> "$GITHUB_STEP_SUMMARY"
 
   e2e-smoke:
     if: github.event_name == 'pull_request' || github.event_name == 'push'
@@ -108,6 +111,9 @@ jobs:
           name: playwright-e2e-smoke-report
           path: playwright-report
           if-no-files-found: ignore
+      - name: Summarize smoke
+        if: always()
+        run: echo "Search smoke suite completed for ${GITHUB_SHA}" >> "$GITHUB_STEP_SUMMARY"
 
   a11y-smoke:
     if: github.event_name == 'pull_request' || github.event_name == 'push'
@@ -130,3 +136,6 @@ jobs:
           name: playwright-a11y-smoke-report
           path: playwright-report
           if-no-files-found: ignore
+      - name: Summarize a11y
+        if: always()
+        run: echo "Accessibility smoke suite completed for ${GITHUB_SHA}" >> "$GITHUB_STEP_SUMMARY"

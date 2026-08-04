@@ -9,6 +9,10 @@ permissions:
   contents: write
   pull-requests: write
 
+concurrency:
+  group: codex-autofix-${{ github.event.workflow_run.head_sha }}
+  cancel-in-progress: true
+
 jobs:
   generate-fix:
     if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'failure' }}
