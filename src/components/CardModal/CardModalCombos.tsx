@@ -73,6 +73,7 @@ function comboReducer(_state: ComboState, action: ComboAction): ComboState {
 
 export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
   const { t } = useTranslation();
+  const [showCombos, setShowCombos] = useState(false);
   const [state, dispatch] = useReducer(comboReducer, {
     combos: [],
     total: 0,
