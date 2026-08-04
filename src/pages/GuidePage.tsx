@@ -28,6 +28,7 @@ import { Copy, Share2 } from 'lucide-react';
 import { buildGuideUrl, copyTextToClipboard } from '@/lib/guide-actions';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { queryToSlug } from '@/lib/search-slug';
+import { trackFunnelStep } from '@/lib/analytics/funnels';
 
 const GUIDE_PUBLISHED_AT = '2025-01-15T00:00:00Z';
 const GUIDE_MODIFIED_AT = '2026-07-07T00:00:00Z';
