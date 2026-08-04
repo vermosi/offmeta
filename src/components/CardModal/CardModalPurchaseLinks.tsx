@@ -137,7 +137,7 @@ export function CardModalPurchaseLinks({
 
   return (
     <div className="w-full">
-      <h3 className="text-center mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+      <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
         {buyLabel}
       </h3>
       <div className="space-y-2">
@@ -157,11 +157,11 @@ export function CardModalPurchaseLinks({
                 aria-label={getBuyLinkAriaLabel(label)}
                 onClick={onClick}
               >
-                <span className="flex items-center gap-2 truncate">
+                <span className={LEFT_CLASS}>
                   <Icon className={ICON_CLASS} />
                   <span className="truncate">{label}</span>
                 </span>
-                <span className="font-semibold shrink-0">{value}</span>
+                <span className={RIGHT_CLASS}>{value}</span>
               </a>
             </Button>
           ))
@@ -175,11 +175,11 @@ export function CardModalPurchaseLinks({
                 aria-label={getBuyLinkAriaLabel('TCGplayer')}
                 onClick={() => onAffiliateClick('tcgplayer', tcgplayerUrl)}
               >
-                <span className="flex items-center gap-2 truncate">
+                <span className={LEFT_CLASS}>
                   <ShoppingCart className={ICON_CLASS} />
                   TCGplayer
                 </span>
-                <span className="opacity-80">{checkPriceLabel}</span>
+                <span className={RIGHT_CLASS}>{checkPriceLabel}</span>
               </a>
             </Button>
             <Button size="sm" variant="outline" className={BUTTON_CLASS} asChild>
@@ -190,11 +190,11 @@ export function CardModalPurchaseLinks({
                 aria-label={getBuyLinkAriaLabel('Cardmarket')}
                 onClick={() => onAffiliateClick('cardmarket', cardmarketUrl)}
               >
-                <span className="flex items-center gap-2 truncate">
+                <span className={LEFT_CLASS}>
                   <ShoppingCart className={ICON_CLASS} />
                   Cardmarket
                 </span>
-                <span className="opacity-80">{checkPriceLabel}</span>
+                <span className={RIGHT_CLASS}>{checkPriceLabel}</span>
               </a>
             </Button>
           </>
@@ -202,4 +202,5 @@ export function CardModalPurchaseLinks({
       </div>
     </div>
   );
+
 }
