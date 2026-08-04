@@ -1,5 +1,5 @@
 /**
- * Tests for CardModalImage component.
+ * Card image display component for CardModal.
  * @module components/CardModal/__tests__/CardModalImage.test
  */
 
@@ -78,7 +78,7 @@ describe('CardModalImage', () => {
       <CardModalImage {...defaultProps} isMobile={false} />,
     );
     
-    const wrapper = container.querySelector('.max-w-\\[220px\\]');
+    const wrapper = container.querySelector('.max-w-\\[300px\\]');
     expect(wrapper).toBeInTheDocument();
   });
 });
