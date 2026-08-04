@@ -17,6 +17,7 @@ import { cardNameToSlug } from '@/lib/card-slug';
 import { classifyFailureReason } from '@/lib/search/classifyFailure';
 import { handleZeroResultRecovery } from '@/hooks/searchRecovery';
 import { extractCardNameCandidate } from '@/lib/search/fallback';
+import { getRecoveryAttempt } from '@/lib/search/recoveryTelemetry';
 import type {
   SearchResult,
   UnifiedSearchBarHandle,
@@ -393,6 +394,7 @@ export function useSearch() {
 
         const failureReason = classifyFailureReason(originalQuery);
         const fuzzyAttempted = extractCardNameCandidate(originalQuery) !== null;
+        const recoveryAttempt = getRecoveryAttempt(originalQuery);
         trackSearchFailure({
           query: originalQuery,
           translated_query: lastSearchResult.scryfallQuery,
@@ -402,10 +404,15 @@ export function useSearch() {
           // If we reached the terminal failure event after a fuzzy attempt,
           // the resolver did not rescue this query.
           fuzzy_resolved: false,
+          alternatives_intent: recoveryAttempt.alternativesIntent ?? 'none',
+          alternatives_card: recoveryAttempt.alternativesCard,
+          fallback_path: recoveryAttempt.path,
         });
         trackEvent('search_no_result_shown', {
           query: originalQuery,
           failure_reason: failureReason,
+          alternatives_intent: recoveryAttempt.alternativesIntent ?? 'none',
+          fallback_path: recoveryAttempt.path,
           request_id: currentRequestId ?? undefined,
         });
         queueMicrotask(() => {

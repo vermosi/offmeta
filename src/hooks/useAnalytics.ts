@@ -255,6 +255,7 @@ const ALLOWED_EVENT_TYPES = [
   'fuzzy_recovery_attempted', // fuzzy card-name resolver was called
   'fuzzy_recovery_resolved',  // resolver returned a canonical name
   'fuzzy_recovery_failed',    // resolver returned null (Scryfall miss / network)
+  'alternatives_recovery_resolved', // "alternatives to X" resolved to a similarity query
   'guided_suggestion_shown',
   'narrow_results_prompt_shown',
   'fast_click_detected',
@@ -401,6 +402,19 @@ interface SearchFailureEventData {
   fuzzy_attempted?: boolean;
   /** True if the fuzzy resolver returned a canonical card name. */
   fuzzy_resolved?: boolean;
+  /**
+   * Wrapper phrasing detected for an "alternatives to X" style query
+   * (e.g. `budget_alternatives_to`, `cards_like`), or `none`.
+   */
+  alternatives_intent?: string;
+  /** Reference card the alternatives phrasing pointed at, when detected. */
+  alternatives_card?: string;
+  /**
+   * Which rescue path ran before we gave up: `alternatives_similarity`,
+   * `alternatives_unresolved`, `fuzzy_name`, `fuzzy_failed`,
+   * `client_broadening`, or `none`.
+   */
+  fallback_path?: string;
 }
 
 interface CardClickEventData {
