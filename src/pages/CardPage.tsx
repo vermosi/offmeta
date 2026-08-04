@@ -221,16 +221,6 @@ const CardPage = () => {
               </div>
             </div>
 
-            {/* Section: similar cards */}
-            <div className="space-y-3">
-              <Skeleton className="h-5 w-40" />
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="aspect-[488/680] w-full rounded-lg" />
-                ))}
-              </div>
-            </div>
-
             <span className="sr-only">Loading card details…</span>
           </div>
         </main>
