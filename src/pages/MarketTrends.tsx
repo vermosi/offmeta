@@ -11,7 +11,7 @@ import { applySeoMeta } from '@/lib/seo';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { SunsetBanner } from '@/components/SunsetBanner';
-import { Badge } from '@/components/ui/badge';
+
 import { Skeleton } from '@/components/ui/skeleton';
 import { CardPriceSparkline } from '@/components/CardPriceSparkline';
 import { useMarketTrends, type PriceMover } from '@/hooks';
