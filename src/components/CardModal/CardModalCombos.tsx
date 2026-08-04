@@ -9,17 +9,9 @@ import { invokeComboSearch } from '@/services/combo-search';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import {
   Zap,
-  ChevronDown,
-  ChevronUp,
   ExternalLink,
   Sparkles,
   AlertTriangle,
