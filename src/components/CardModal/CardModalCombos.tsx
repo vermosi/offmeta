@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect, useReducer } from 'react';
+import { Link } from 'react-router-dom';
+import { cardNameToSlug } from '@/lib/card-slug';
 import { useTranslation } from '@/lib/i18n';
 import { invokeComboSearch } from '@/services/combo-search';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
