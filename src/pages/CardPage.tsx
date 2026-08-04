@@ -7,7 +7,7 @@
  * @module pages/CardPage
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getCardByName } from '@/lib/scryfall/client';
@@ -36,15 +36,6 @@ function getCardImage(card: ScryfallCard, size: 'normal' | 'large' | 'art_crop' 
   if (card.image_uris) return card.image_uris[size];
   // Double-faced cards with per-face images
   return card.card_faces?.[faceIndex]?.image_uris?.[size] ?? card.card_faces?.[0]?.image_uris?.[size];
-}
-
-/** Check if a card is a true double-faced card with separate face images. */
-function isDFC(card: ScryfallCard): boolean {
-  return !!(card.card_faces && card.card_faces.length > 1 && card.card_faces[0]?.image_uris);
-}
-
-function getOracleText(card: ScryfallCard): string {
-  return card.oracle_text ?? card.card_faces?.map((f) => f.oracle_text).filter(Boolean).join('\n\n') ?? '';
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
