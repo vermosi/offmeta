@@ -72,7 +72,7 @@ function comboReducer(_state: ComboState, action: ComboAction): ComboState {
   }
 }
 
-export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
+export function CardModalCombos({ cardName, isMobile, onComboCountChange }: CardModalCombosProps) {
   const { t } = useTranslation();
   const [showCombos, setShowCombos] = useState(false);
   const [state, dispatch] = useReducer(comboReducer, {
@@ -83,6 +83,10 @@ export function CardModalCombos({ cardName, isMobile }: CardModalCombosProps) {
   });
 
   const { combos, total, isLoading, error } = state;
+
+  useEffect(() => {
+    onComboCountChange?.(total);
+  }, [total, onComboCountChange]);
 
   const debouncedCardName = useDebouncedValue(cardName, 300);
 
