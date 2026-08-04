@@ -84,23 +84,22 @@ export function CardModalPurchaseLinks({
       label: 'TCGplayer',
       value: `$${displayPrices.usd}`,
       primary: true,
+      href: tcgplayerUrl,
       onClick: () =>
         onAffiliateClick('tcgplayer', tcgplayerUrl, displayPrices.usd),
     });
   }
   if (displayPrices.usd_foil) {
+    const foilUrl = withParam(tcgplayerUrl, 'Printing=Foil');
     links.push({
       key: 'tcgplayer-foil',
       icon: Sparkles,
       label: `TCGplayer ${foilLabel}`,
       value: `$${displayPrices.usd_foil}`,
       primary: false,
+      href: foilUrl,
       onClick: () =>
-        onAffiliateClick(
-          'tcgplayer-foil',
-          withParam(tcgplayerUrl, 'Printing=Foil'),
-          displayPrices.usd_foil,
-        ),
+        onAffiliateClick('tcgplayer-foil', foilUrl, displayPrices.usd_foil),
     });
   }
   if (displayPrices.eur) {
@@ -110,34 +109,35 @@ export function CardModalPurchaseLinks({
       label: 'Cardmarket',
       value: `€${displayPrices.eur}`,
       primary: false,
+      href: cardmarketUrl,
       onClick: () =>
         onAffiliateClick('cardmarket', cardmarketUrl, displayPrices.eur),
     });
   }
   if (displayPrices.eur_foil) {
+    const foilUrl = withParam(cardmarketUrl, 'isFoil=Y');
     links.push({
       key: 'cardmarket-foil',
       icon: Sparkles,
       label: `Cardmarket ${foilLabel}`,
       value: `€${displayPrices.eur_foil}`,
       primary: false,
+      href: foilUrl,
       onClick: () =>
-        onAffiliateClick(
-          'cardmarket-foil',
-          withParam(cardmarketUrl, 'isFoil=Y'),
-          displayPrices.eur_foil,
-        ),
+        onAffiliateClick('cardmarket-foil', foilUrl, displayPrices.eur_foil),
     });
   }
   if (displayTix) {
+    const cardhoarderUrl = getCardhoarderUrl();
     links.push({
       key: 'cardhoarder',
       icon: Monitor,
       label: 'Cardhoarder (MTGO)',
       value: `${displayTix} ${tixLabel}`,
       primary: false,
+      href: cardhoarderUrl,
       onClick: () =>
-        onAffiliateClick('cardhoarder', getCardhoarderUrl(), displayTix),
+        onAffiliateClick('cardhoarder', cardhoarderUrl, displayTix),
     });
   }
 
