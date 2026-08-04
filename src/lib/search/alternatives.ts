@@ -39,15 +39,22 @@ export interface AlternativesIntent {
   budget: boolean;
   /** The wrapper phrasing that matched. */
   kind: AlternativesIntentKind;
+  /**
+   * Set when the query names a card *category* ("fetch land", "board wipe")
+   * rather than a specific card. Resolved deterministically, no card lookup.
+   */
+  category?: string;
 }
 
 export interface ResolvedAlternatives {
   /** Scryfall query returning alternatives to the reference card. */
   scryfallQuery: string;
-  /** Canonical name of the reference card. */
+  /** Canonical name of the reference card, or the category phrase. */
   cardName: string;
   budget: boolean;
   kind: AlternativesIntentKind;
+  /** Present when resolution came from the category table. */
+  category?: string;
 }
 
 const BUDGET_WORDS = /\b(budget|cheap|cheaper|affordable|inexpensive|poor\s+man'?s)\b/i;
