@@ -118,14 +118,6 @@ export function CardDetailView({ card }: CardDetailViewProps) {
     });
   }, []);
 
-  // Card-to-card navigation now uses real routes instead of modal history.
-  const handleCardClick = useCallback(
-    (cardName: string) => {
-      navigate(`/cards/${cardNameToSlug(cardName)}`);
-    },
-    [navigate],
-  );
-
   const handleAffiliateClick = useCallback(
     (
       marketplace:
