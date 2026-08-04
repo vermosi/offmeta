@@ -6,11 +6,14 @@ import {
   Loader2,
   X,
   SlidersHorizontal,
+  Wand2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n';
 import { type QuerySuggestion } from '@/hooks';
+import { buildRephraseSuggestions } from '@/lib/search/rephraseSuggestions';
 import type { FilterState } from '@/types/filters';
+
 
 interface EmptyStateProps {
   query?: string;
