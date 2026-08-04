@@ -191,13 +191,21 @@ export function trackExternalEvent(
     /* best-effort */
   }
 
-  try {
-    if (posthogInitialized && posthogInstance) {
-      posthogInstance.capture(name, properties);
-    }
-  } catch {
-    /* best-effort */
-  }
+  withPostHog({ kind: 'capture', name, properties });
+}
+
+/** Attach properties to every subsequent PostHog event (super properties). */
+export function registerExternalSuperProperties(
+  properties: Record<string, unknown>,
+): void {
+  withPostHog({ kind: 'register', properties });
+}
+
+/** Attach properties to the PostHog person profile (cohort breakdowns). */
+export function setExternalPersonProperties(
+  properties: Record<string, unknown>,
+): void {
+  withPostHog({ kind: 'person', properties });
 }
 
 export function trackExternalPageView(path: string): void {
@@ -214,26 +222,18 @@ export function trackExternalPageView(path: string): void {
     /* best-effort */
   }
 
-  try {
-    if (posthogInitialized && posthogInstance) {
-      posthogInstance.capture('$pageview', { $pathname: path });
-    }
-  } catch {
-    /* best-effort */
-  }
+  withPostHog({
+    kind: 'capture',
+    name: '$pageview',
+    properties: { $pathname: path },
+  });
 }
 
 export function identifyExternalUser(userId: string): void {
   if (typeof window === 'undefined' || !userId) return;
-
-  try {
-    if (posthogInitialized && posthogInstance) {
-      posthogInstance.identify(userId);
-    }
-  } catch {
-    /* best-effort */
-  }
+  withPostHog({ kind: 'identify', userId });
 }
+
 
 export function resetExternalUser(): void {
   if (typeof window === 'undefined') return;
