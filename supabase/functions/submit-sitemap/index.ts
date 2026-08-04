@@ -91,7 +91,20 @@ serve(
         error: extra.error ?? null,
       });
       if (error) log.warn('Failed to log sitemap submission', { error: error.message });
+
+      // Surface failures to the error monitor so the auto-fix job can retry.
+      if (status === 'failed') {
+        await reportEdgeError({
+          source: 'submit-sitemap',
+          errorType: 'sitemap_submission_failed',
+          message: extra.error ?? 'Sitemap submission failed',
+          url: SITEMAP_URL,
+          severity: 'critical',
+          context: { http_status: extra.http_status ?? null, trigger_source: source },
+        });
+      }
     };
+
 
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
     const connectionApiKey = Deno.env.get('GOOGLE_SEARCH_CONSOLE_API_KEY');
