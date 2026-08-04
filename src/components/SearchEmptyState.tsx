@@ -13,6 +13,8 @@ interface SearchEmptyStateProps {
   onClearAllFilters?: () => void;
   variant?: 'server' | 'filtered';
   filteredFromCount?: number;
+  /** The user's original plain-English input, for rephrase suggestions. */
+  originalQuery?: string;
 }
 
 export function SearchEmptyState({
@@ -26,6 +28,7 @@ export function SearchEmptyState({
   onClearAllFilters,
   variant = 'server',
   filteredFromCount,
+  originalQuery,
 }: SearchEmptyStateProps) {
   const { suggestions, isChecking } = useQuerySuggestions(
     query,
@@ -45,6 +48,9 @@ export function SearchEmptyState({
       onClearAllFilters={onClearAllFilters}
       variant={variant}
       filteredFromCount={filteredFromCount}
+      scryfallQuery={query}
+      originalQuery={originalQuery}
     />
   );
 }
+
