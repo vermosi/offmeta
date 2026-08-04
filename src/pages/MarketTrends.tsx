@@ -197,9 +197,10 @@ function MoverRow({ mover, rank }: { mover: PriceMover; rank: number }) {
           </span>
         )}
       </div>
-      <div className="hidden sm:block">
+      <div className="hidden sm:block w-[72px] overflow-hidden [&_svg]:w-full [&_svg]:max-w-full [&>*]:max-w-full">
         <CardPriceSparkline cardName={mover.card_name} />
       </div>
+
       <span className="text-xs text-muted-foreground tabular-nums text-right hidden sm:block">
         ${mover.previous_price.toFixed(2)}
       </span>
