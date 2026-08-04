@@ -108,7 +108,9 @@ async function fetchAllCards() {
   for (let from = 0; from < MAX; from += PAGE) {
     const to = from + PAGE - 1;
     const resp = await fetch(
-      `${SUPABASE_URL}/rest/v1/cards?select=name,updated_at&image_url=not.is.null&order=name.asc`,
+      `${SUPABASE_URL}/rest/v1/cards?select=name,oracle_id,type_line,image_url,updated_at` +
+        `&image_url=not.is.null&oracle_id=not.is.null&type_line=not.is.null&order=name.asc`,
+
       {
         headers: {
           apikey: SUPABASE_KEY,
