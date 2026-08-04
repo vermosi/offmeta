@@ -61,10 +61,9 @@ describe('GuidesIndex', () => {
     expect(
       screen.getByRole('link', { name: /advanced\s*\(2\)/i }),
     ).toHaveAttribute('href', '#guides.levelAdvanced');
-    expect(screen.getByRole('link', { name: /expert\s*\(2\)/i })).toHaveAttribute(
-      'href',
-      '#guides.levelExpert',
-    );
+    expect(
+      screen.getByRole('link', { name: /expert\s*\(2\)/i }),
+    ).toHaveAttribute('href', '#guides.levelExpert');
   });
 
   it('renders difficulty badges for all guides', () => {
