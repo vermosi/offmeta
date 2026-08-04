@@ -105,9 +105,8 @@ export function buildReplayConfig(): Partial<PostHogConfig> {
       maskAllInputs: true,
       // Mask any element explicitly flagged as sensitive.
       maskTextSelector: '[data-private], [data-sensitive], input, textarea',
-      // Do not capture network payloads — they can contain tokens.
+      // Do not record cross-origin iframes (third-party widgets).
       recordCrossOriginIframes: false,
-takes: undefined as never,
     } as PostHogConfig['session_recording'],
   };
 }
