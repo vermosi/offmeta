@@ -10,6 +10,21 @@ import type { PriceMover } from '@/hooks/useMarketTrends';
 
 const CACHE_TTL_MS = 30 * 60 * 1000;
 const MAX_CACHE_ENTRIES = 12;
+/** Requests slower than this are surfaced as a timeout to the user. */
+export const PRICE_MOVER_TIMEOUT_MS = 12_000;
+
+export type PriceMoverErrorKind = 'timeout' | 'network' | 'server';
+
+/** Typed failure so the UI can show an accurate, friendly message. */
+export class PriceMoverError extends Error {
+  readonly kind: PriceMoverErrorKind;
+
+  constructor(kind: PriceMoverErrorKind, message: string) {
+    super(message);
+    this.name = 'PriceMoverError';
+    this.kind = kind;
+  }
+}
 
 interface CacheEntry {
   value: PriceMover[];
@@ -66,11 +81,38 @@ export async function fetchPriceMovers(
   if (pending) return pending;
 
   const request = (async () => {
-    const { data, error } = await supabase.rpc('get_price_movers', {
-      days_back: daysBack,
-      limit_count: limit,
+    const timeout = new Promise<never>((_, reject) => {
+      setTimeout(
+        () =>
+          reject(
+            new PriceMoverError(
+              'timeout',
+              'Price movers took too long to load.',
+            ),
+          ),
+        PRICE_MOVER_TIMEOUT_MS,
+      );
     });
-    if (error) throw error;
+
+    const { data, error } = await Promise.race([
+      supabase.rpc('get_price_movers', {
+        days_back: daysBack,
+        limit_count: limit,
+      }),
+      timeout,
+    ]);
+
+    if (error) {
+      const isNetwork = /fetch|network|failed to fetch/i.test(
+        error.message ?? '',
+      );
+      throw new PriceMoverError(
+        isNetwork ? 'network' : 'server',
+        isNetwork
+          ? 'Network connection lost while loading price movers.'
+          : 'Price movers are temporarily unavailable.',
+      );
+    }
     const movers = (data ?? []) as PriceMover[];
     writeCache(key, movers);
     return movers;

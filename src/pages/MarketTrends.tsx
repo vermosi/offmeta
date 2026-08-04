@@ -41,6 +41,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  RefreshCw,
   X,
 } from 'lucide-react';
 
@@ -268,7 +269,15 @@ export default function MarketTrends() {
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
-  const { allMovers, isLoading, isEmpty, isError } = useMarketTrends(daysBack);
+  const {
+    allMovers,
+    isLoading,
+    isEmpty,
+    isError,
+    isRefetching,
+    errorMessage,
+    retry,
+  } = useMarketTrends(daysBack);
   const activeFilterCount = countActiveFilters(filters);
 
   const handleSort = useCallback((field: SortField) => {
@@ -510,14 +519,40 @@ export default function MarketTrends() {
             )}
           </div>
         )}
-        {(isEmpty || isError) && !isLoading && (
+        {isError && !isLoading && (
+          <div
+            role="alert"
+            className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 mb-4 text-sm text-foreground"
+          >
+            <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />
+            <span className="flex-1">
+              {errorMessage} Your filters are still applied — retry when ready.
+            </span>
+            <button
+              onClick={() => retry()}
+              disabled={isRefetching}
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <RefreshCw
+                className={`h-3.5 w-3.5 ${isRefetching ? 'animate-spin' : ''}`}
+              />
+              {isRefetching ? 'Retrying…' : 'Try again'}
+            </button>
+          </div>
+        )}
+        {isEmpty && !isLoading && !isError && (
           <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-4 py-3 mb-4 text-sm text-muted-foreground">
             <AlertTriangle className="h-4 w-4 shrink-0" />
-            <span>
-              {isError
-                ? 'Could not load price movers right now — try again shortly.'
-                : 'No significant price movers in this window yet.'}
-            </span>
+            <span>No significant price movers in this window yet.</span>
+          </div>
+        )}
+        {isRefetching && !isError && (
+          <div
+            role="status"
+            className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-4 py-2 mb-4 text-xs text-muted-foreground"
+          >
+            <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+            Refreshing price movers…
           </div>
         )}
         <div className="rounded-xl border border-border bg-card/40 overflow-hidden">
@@ -565,7 +600,7 @@ export default function MarketTrends() {
               />
             </span>
           </div>
-          {isLoading ? (
+          {isLoading || (isError && allMovers.length === 0 && isRefetching) ? (
             Array.from({ length: 12 }).map((_, i) => <MoverSkeleton key={i} />)
           ) : filteredMovers.length === 0 ? (
             <div className="text-center py-12">
@@ -599,7 +634,7 @@ export default function MarketTrends() {
           >
             <button
               onClick={() => goToPage(currentPage - 1)}
-              disabled={currentPage <= 1}
+              disabled={currentPage <= 1 || isRefetching}
               className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
@@ -613,7 +648,7 @@ export default function MarketTrends() {
             </span>
             <button
               onClick={() => goToPage(currentPage + 1)}
-              disabled={currentPage >= totalPages}
+              disabled={currentPage >= totalPages || isRefetching}
               className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Next
