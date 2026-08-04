@@ -267,8 +267,6 @@ export function CardDetailView({ card }: CardDetailViewProps) {
             </div>
           </CardModalBentoTile>
 
-
-
           <CardModalBentoTile className="lg:col-span-6">
             <CardModalRulings
               rulings={rulings}
