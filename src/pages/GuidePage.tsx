@@ -65,6 +65,17 @@ export default function GuidePage() {
     });
   }, [guide]);
 
+  // Funnel step: guide opened.
+  useEffect(() => {
+    if (!guide) return;
+    trackFunnelStep('guide_open', {
+      guide_slug: guide.slug,
+      guide_title: guide.title,
+      guide_level: guide.level,
+    });
+  }, [guide]);
+
+
   if (!guide) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
