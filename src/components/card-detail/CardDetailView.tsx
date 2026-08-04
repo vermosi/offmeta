@@ -145,10 +145,6 @@ export function CardDetailView({ card }: CardDetailViewProps) {
       const { tcgplayerAffiliateBase } = affiliateConfig;
       const isAffiliateLink =
         marketplace.includes('tcgplayer') && !!tcgplayerAffiliateBase;
-      const finalUrl =
-        marketplace.includes('tcgplayer') && tcgplayerAffiliateBase
-          ? wrapAffiliateUrl(url, tcgplayerAffiliateBase)
-          : url;
 
       trackAffiliateClick({
         affiliate: marketplace,
