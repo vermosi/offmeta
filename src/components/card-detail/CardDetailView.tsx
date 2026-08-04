@@ -283,11 +283,11 @@ export function CardDetailView({ card }: CardDetailViewProps) {
             <CardPriceHistoryChart cardName={card.name} />
           </CardModalBentoTile>
 
-          <CardModalBentoTile className="lg:col-span-6">
+          <CardModalBentoTile className="lg:col-span-12">
             <CardModalCombos cardName={card.name} />
           </CardModalBentoTile>
 
-          <CardModalBentoTile className="lg:col-span-6">
+          <CardModalBentoTile className="lg:col-span-12">
             <CardModalRecommendations
               oracleId={card.oracle_id}
               cardName={card.name}

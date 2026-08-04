@@ -64,8 +64,10 @@ export function CardModalRecommendations({
   }, [oracleId]);
 
   const filteredRecs = useMemo(() => {
-    if (activeFilter === 'all') return recs.slice(0, 6);
-    return recs.filter((r) => r.relationshipType === activeFilter).slice(0, 6);
+    if (activeFilter === 'all') return recs.slice(0, 10);
+    return recs
+      .filter((r) => r.relationshipType === activeFilter)
+      .slice(0, 10);
   }, [recs, activeFilter]);
 
   // Compute which tabs have data to show
@@ -75,7 +77,7 @@ export function CardModalRecommendations({
   }, [recs]);
 
   if (!oracleId) return null;
-  if (!loading && !error && recs.length === 0) return null;
+  if (!loading && !error && recs.length < 10) return null;
 
   return (
     <div className="space-y-3">
@@ -126,7 +128,7 @@ export function CardModalRecommendations({
               {t('cardModal.noRecsForFilter', 'No recommendations for this filter')}
             </p>
           ) : (
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
               {filteredRecs.map((rec) => (
                 <button
                   key={rec.oracleId}
