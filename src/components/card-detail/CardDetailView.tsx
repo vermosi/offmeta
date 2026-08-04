@@ -29,7 +29,6 @@ import { CardModalRulings } from '@/components/CardModal/CardModalRulings';
 import { CardModalLegalities } from '@/components/CardModal/CardModalLegalities';
 import { CardModalPrintings } from '@/components/CardModal/CardModalPrintings';
 import { CardModalToolbox } from '@/components/CardModal/CardModalToolbox';
-import { CardModalMetaContext } from '@/components/CardModal/CardModalMetaContext';
 import { CardModalBentoTile } from '@/components/CardModal/CardModalBentoTile';
 import { CardPriceHistoryChart } from '@/components/CardPriceHistoryChart';
 import { CardModalCombos } from '@/components/CardModal/CardModalCombos';
@@ -266,11 +265,6 @@ export function CardDetailView({ card }: CardDetailViewProps) {
                 />
               </div>
             </div>
-          </CardModalBentoTile>
-
-
-          <CardModalBentoTile className="lg:col-span-5">
-            <CardModalMetaContext card={card} />
           </CardModalBentoTile>
 
           <CardModalBentoTile className="lg:col-span-6">
