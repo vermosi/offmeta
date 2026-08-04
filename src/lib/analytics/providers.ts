@@ -84,6 +84,8 @@ async function initPostHog(
   try {
     const apiHost =
       region === 'us' ? 'https://us.i.posthog.com' : 'https://eu.i.posthog.com';
+    // Assign before init so a synchronous `loaded` callback can flush.
+    posthogInstance = posthog;
     posthog.init(projectToken, {
       api_host: apiHost,
       autocapture: false, // we use explicit event tracking
@@ -95,7 +97,6 @@ async function initPostHog(
         flushPostHogQueue();
       },
     });
-    posthogInstance = posthog;
     // posthog-js buffers requests internally until it finishes loading, so we
     // can flush immediately instead of waiting for the `loaded` callback (which
     // may never fire if the remote script is blocked).
