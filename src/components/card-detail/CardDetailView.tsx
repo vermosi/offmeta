@@ -198,9 +198,8 @@ export function CardDetailView({ card }: CardDetailViewProps) {
           />
         </CardModalBentoTile>
 
-        <CardModalBentoTile>
-          <CardPriceHistoryChart cardName={card.name} />
-        </CardModalBentoTile>
+        <CardPriceHistoryChart cardName={card.name} />
+
 
         <CardModalBentoTile>
           <CardModalLegalities legalities={card.legalities} />
