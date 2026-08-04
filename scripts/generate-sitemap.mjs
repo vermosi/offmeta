@@ -74,60 +74,100 @@ function escapeXml(str) {
     .replace(/'/g, '&apos;');
 }
 
+const REQUEST_TIMEOUT_MS = 30_000;
+const MAX_ATTEMPTS = 4;
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * fetch with an abort timeout + exponential backoff. Statement timeouts
+ * (PostgREST 57014 / HTTP 500-504) and network blips are retried instead
+ * of failing the whole build.
+ */
+async function fetchWithRetry(url, { headers = {}, label = url } = {}) {
+  let lastErr;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    try {
+      const resp = await fetch(url, {
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          Accept: 'application/json',
+          ...headers,
+        },
+        signal: controller.signal,
+      });
+      if (!resp.ok) {
+        const body = await resp.text();
+        const retryable = resp.status >= 500 || resp.status === 408 || resp.status === 429;
+        const err = new Error(`${label} failed: ${resp.status} ${body}`);
+        if (!retryable) throw err;
+        lastErr = err;
+      } else {
+        return resp.json();
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message.includes('failed: 4') && !err.message.includes('408') && !err.message.includes('429')) {
+        throw err;
+      }
+      lastErr = err;
+    } finally {
+      clearTimeout(timer);
+    }
+    if (attempt < MAX_ATTEMPTS) {
+      const backoff = 500 * 2 ** (attempt - 1);
+      console.warn(`[sitemap] retry ${attempt}/${MAX_ATTEMPTS - 1} for ${label} in ${backoff}ms`);
+      await sleep(backoff);
+    }
+  }
+  throw lastErr ?? new Error(`${label} failed`);
+}
+
 /**
  * PostgREST fetch. Throws on non-2xx when env is present so a broken
  * build fails loudly instead of silently shipping a 28-URL stub.
  */
 async function pgrest(path, { headers = {} } = {}) {
   if (!HAS_SUPABASE) return null;
-  const resp = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`,
-      Accept: 'application/json',
-      ...headers,
-    },
+  return fetchWithRetry(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers,
+    label: `PostgREST ${path}`,
   });
-  if (!resp.ok) {
-    throw new Error(`PostgREST ${resp.status} on ${path}: ${await resp.text()}`);
-  }
-  return resp.json();
 }
 
 /**
- * Paginate through every card that has an image, matching the edge
- * function's filter. PostgREST caps rows per request; we page in
- * blocks of 1000 using Range headers until exhausted.
+ * Paginate through every card that has an image.
+ *
+ * Uses keyset pagination on the primary key (oracle_id) rather than
+ * Range/OFFSET: deep offsets force Postgres to scan and discard every
+ * preceding row, which blows past the statement timeout around 20k+
+ * rows. Keyset stays O(page) for every page.
  */
 async function fetchAllCards() {
   if (!HAS_SUPABASE) return OFFLINE_FALLBACK_CARDS.map((name) => ({ name }));
 
-  const PAGE = 1000;
-  const MAX = 50000; // sitemap protocol cap; well above current catalogue
+  const PAGE = 500;
+  const MAX_PAGES = 200; // 100k rows ceiling; guards against a cursor bug
   const all = [];
-  for (let from = 0; from < MAX; from += PAGE) {
-    const to = from + PAGE - 1;
-    const resp = await fetch(
-      `${SUPABASE_URL}/rest/v1/cards?select=name,oracle_id,type_line,image_url,updated_at` +
-        `&image_url=not.is.null&oracle_id=not.is.null&type_line=not.is.null&order=name.asc`,
+  let cursor = null;
 
-      {
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-          Accept: 'application/json',
-          Range: `${from}-${to}`,
-          'Range-Unit': 'items',
-        },
-      },
-    );
-    if (!resp.ok) {
-      throw new Error(`cards range ${from}-${to} failed: ${resp.status} ${await resp.text()}`);
-    }
-    const rows = await resp.json();
+  for (let page = 0; page < MAX_PAGES; page += 1) {
+    const params =
+      `select=name,oracle_id,type_line,image_url,updated_at` +
+      `&image_url=not.is.null&type_line=not.is.null` +
+      `&order=oracle_id.asc&limit=${PAGE}` +
+      (cursor ? `&oracle_id=gt.${encodeURIComponent(cursor)}` : '');
+
+    const rows = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/cards?${params}`, {
+      label: `cards page ${page} (after ${cursor ?? 'start'})`,
+    });
+
     if (!Array.isArray(rows) || rows.length === 0) break;
     all.push(...rows);
-    if (rows.length < PAGE) break;
+    cursor = rows[rows.length - 1]?.oracle_id;
+    if (!cursor || rows.length < PAGE) break;
   }
   return all;
 }
