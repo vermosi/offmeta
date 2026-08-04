@@ -69,6 +69,25 @@ export function CardModalPurchaseLinks({
   );
   const loadingPricesLabel = t('card.loadingPrices', 'Loading prices…');
 
+  const hasTCGplayerPrice = !!displayPrices.usd || !!displayPrices.usd_foil;
+  const hasCardmarketPrice = !!displayPrices.eur || !!displayPrices.eur_foil;
+  const priceDataLabel = (() => {
+    if (hasTCGplayerPrice && hasCardmarketPrice) {
+      return t(
+        'card.priceDataAvailableBoth',
+        'Prices from TCGplayer and Cardmarket',
+      );
+    }
+    if (hasTCGplayerPrice) {
+      return t('card.priceDataAvailableTCGplayer', 'Prices from TCGplayer');
+    }
+    if (hasCardmarketPrice) {
+      return t('card.priceDataAvailableCardmarket', 'Prices from Cardmarket');
+    }
+    return t('card.priceDataUnavailable', 'No price data available yet');
+  })();
+
+
   const tcgplayerUrl =
     selectedPrinting?.purchase_uris?.tcgplayer || getTCGPlayerUrl(card);
   const cardmarketUrl =
