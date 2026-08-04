@@ -23,7 +23,8 @@ import { useAnalytics, useAffiliateConfig } from '@/hooks';
 import { useTranslation } from '@/lib/i18n';
 
 import { CardModalImage } from '@/components/CardModal/CardModalImage';
-import { CardModalDetails, getRarityVariant } from '@/components/CardModal/CardModalDetails';
+import { CardModalDetails } from '@/components/CardModal/CardModalDetails';
+import { getRarityVariant } from '@/components/CardModal/rarity';
 import { CardModalPurchaseLinks } from '@/components/CardModal/CardModalPurchaseLinks';
 import { CardModalRulings } from '@/components/CardModal/CardModalRulings';
 import { CardModalLegalities } from '@/components/CardModal/CardModalLegalities';

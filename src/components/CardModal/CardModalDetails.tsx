@@ -6,28 +6,14 @@
 
 import { Link } from 'react-router-dom';
 import { ManaCost, OracleText } from '@/components/ManaSymbol';
-import { Badge, type BadgeProps } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/badge';
 import { Palette, Shield } from 'lucide-react';
 import { cn } from '@/lib/core/utils';
 import { cardNameToSlug } from '@/lib/card-slug';
 import type { CardModalDetailsProps } from './types';
+import { getRarityVariant } from './rarity';
 import { useTranslation } from '@/lib/i18n';
 
-export function getRarityVariant(rarity: string): BadgeProps['variant'] {
-
-  switch (rarity) {
-    case 'mythic':
-      return 'mythic';
-    case 'rare':
-      return 'rare';
-    case 'uncommon':
-      return 'uncommon';
-    case 'common':
-      return 'common';
-    default:
-      return 'secondary';
-  }
-}
 
 export function CardModalDetails({
   faceDetails,
