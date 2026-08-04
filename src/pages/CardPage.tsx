@@ -117,16 +117,6 @@ const CardPage = () => {
   }, [card?.name]);
 
   // Activate similar cards on load
-  const {
-    similarityData,
-    isLoading: similarLoading,
-    activate,
-  } = useSimilarCards(card?.name ?? '');
-
-  useEffect(() => {
-    if (card) activate();
-  }, [card, activate]);
-
   // Dedicated route-level analytics — distinct from `card_modal_view` (in-app modal).
   const { trackCardPageView } = useAnalytics();
   useEffect(() => {
