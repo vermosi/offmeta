@@ -247,9 +247,10 @@ export function CardModalPurchaseLinks({
 
   return (
     <div className={isMobile ? 'w-full' : 'w-full mt-3 max-w-[220px]'}>
-      <h3 className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+      <h3 className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
         {buyLabel}
       </h3>
+      <p className="mb-2 text-xs text-muted-foreground/80">{priceDataLabel}</p>
       <div className="space-y-1.5">
         {links.map(
           ({ key, icon: Icon, label, value, primary, href, onClick }) => (
