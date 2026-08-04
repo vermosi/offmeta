@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom';
 import { applySeoMeta } from '@/lib/seo';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
-import { SunsetBanner } from '@/components/SunsetBanner';
+
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { CardPriceSparkline } from '@/components/CardPriceSparkline';
@@ -356,9 +356,6 @@ export default function MarketTrends() {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main className="flex-1 container max-w-4xl mx-auto px-4 py-6 sm:py-8">
-        <div className="mb-6">
-          <SunsetBanner feature="Market Trends" />
-        </div>
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
