@@ -144,13 +144,18 @@ export function applySeoMeta(opts: SeoOptions): () => void {
     }
   }
 
-  setCanonical(opts.url);
+  if (opts.noCanonical) {
+    document.querySelector('link[rel="canonical"]')?.remove();
+  } else {
+    setCanonical(opts.url);
+  }
 
   return () => {
     document.title = prevTitle;
     setCanonical(SITE_URL);
   };
 }
+
 
 // ── Search canonical helpers ──────────────────────────────────────────────────
 
