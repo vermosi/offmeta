@@ -12,36 +12,21 @@ import { useParams, Link, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getCardByName } from '@/lib/scryfall/client';
 import { slugToCardName, cardNameToSlug } from '@/lib/card-slug';
-import { queryToSlug } from '@/lib/search-slug';
 import {
   applySeoMeta,
   injectJsonLd,
   buildCardJsonLd,
   buildBreadcrumbJsonLd,
 } from '@/lib/seo';
-import { useSimilarCards } from '@/hooks';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
-import { ManaSymbol } from '@/components/ManaSymbol';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FeatureCrossLinks } from '@/components/FeatureCrossLinks';
-import { CardAlternativesGrid } from '@/components/CardAlternativesGrid';
 import { CardDetailView } from '@/components/card-detail/CardDetailView';
 import { PageSearchBar } from '@/components/PageSearchBar';
-import { RelatedCardLinks } from '@/components/RelatedCardLinks';
-import { SharePageButton } from '@/components/SharePageButton';
 import { Badge } from '@/components/ui/badge';
-import {
-  ExternalLink,
-  ArrowLeft,
-  Search,
-  DollarSign,
-  Sparkles,
-  Shield,
-  RotateCw,
-} from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import type { ScryfallCard } from '@/types/card';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
