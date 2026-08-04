@@ -20,11 +20,25 @@ import { getCardByName } from '@/lib/scryfall/client';
 import { logger } from '@/lib/core/logger';
 import type { ScryfallCard } from '@/types/card';
 
+/**
+ * Which wrapper phrasing produced the intent. Recorded in telemetry so we can
+ * see which phrasings users actually type and which ones fail to resolve.
+ */
+export type AlternativesIntentKind =
+  | 'alternatives_to'
+  | 'similar_to'
+  | 'cards_like'
+  | 'but_cheaper'
+  | 'budget_version_of'
+  | 'trailing_alternatives';
+
 export interface AlternativesIntent {
   /** The reference card named in the query (may contain typos). */
   cardName: string;
   /** True when the user asked for a cheaper option ("budget", "cheaper"). */
   budget: boolean;
+  /** The wrapper phrasing that matched. */
+  kind: AlternativesIntentKind;
 }
 
 export interface ResolvedAlternatives {
@@ -33,6 +47,7 @@ export interface ResolvedAlternatives {
   /** Canonical name of the reference card. */
   cardName: string;
   budget: boolean;
+  kind: AlternativesIntentKind;
 }
 
 const BUDGET_WORDS = /\b(budget|cheap|cheaper|affordable|inexpensive|poor\s+man'?s)\b/i;
@@ -40,13 +55,35 @@ const BUDGET_WORDS = /\b(budget|cheap|cheaper|affordable|inexpensive|poor\s+man'
 /**
  * Wrapper phrases that mean "cards like X". Group 1 is always the card name.
  */
-const ALTERNATIVES_PATTERNS: RegExp[] = [
-  /^(?:what(?:'s| is| are)?\s+)?(?:the\s+)?(?:best\s+)?(?:budget|cheap|cheaper|affordable|inexpensive)?\s*(?:alternatives?|replacements?|substitutes?|swaps?|options?)\s+(?:to|for)\s+(.+)$/i,
-  /^(?:cards?\s+)?(?:similar|comparable)\s+to\s+(.+)$/i,
-  /^(?:cards?\s+)?like\s+(.+)$/i,
-  /^(.+?)\s+(?:but|except)\s+(?:cheaper|budget|less\s+expensive|more\s+affordable)$/i,
-  /^(?:budget|cheap|cheaper|affordable|inexpensive)\s+(?:version|copy)\s+of\s+(.+)$/i,
-  /^(.+?)\s+(?:budget|cheap|cheaper)?\s*(?:alternatives?|replacements?|substitutes?)$/i,
+const ALTERNATIVES_PATTERNS: Array<{
+  kind: AlternativesIntentKind;
+  pattern: RegExp;
+}> = [
+  {
+    kind: 'alternatives_to',
+    pattern:
+      /^(?:what(?:'s| is| are)?\s+)?(?:the\s+)?(?:best\s+)?(?:budget|cheap|cheaper|affordable|inexpensive)?\s*(?:alternatives?|replacements?|substitutes?|swaps?|options?)\s+(?:to|for)\s+(.+)$/i,
+  },
+  {
+    kind: 'similar_to',
+    pattern: /^(?:cards?\s+)?(?:similar|comparable)\s+to\s+(.+)$/i,
+  },
+  { kind: 'cards_like', pattern: /^(?:cards?\s+)?like\s+(.+)$/i },
+  {
+    kind: 'but_cheaper',
+    pattern:
+      /^(.+?)\s+(?:but|except)\s+(?:cheaper|budget|less\s+expensive|more\s+affordable)$/i,
+  },
+  {
+    kind: 'budget_version_of',
+    pattern:
+      /^(?:budget|cheap|cheaper|affordable|inexpensive)\s+(?:version|copy)\s+of\s+(.+)$/i,
+  },
+  {
+    kind: 'trailing_alternatives',
+    pattern:
+      /^(.+?)\s+(?:budget|cheap|cheaper)?\s*(?:alternatives?|replacements?|substitutes?)$/i,
+  },
 ];
 
 /** Trailing qualifiers that are not part of the card name. */
@@ -75,7 +112,7 @@ export function detectAlternativesIntent(
   // Scryfall operators mean the user already wrote syntax — leave it alone.
   if (/[():!<>=]/.test(trimmed)) return null;
 
-  for (const pattern of ALTERNATIVES_PATTERNS) {
+  for (const { kind, pattern } of ALTERNATIVES_PATTERNS) {
     const match = trimmed.match(pattern);
     if (!match) continue;
 
@@ -86,11 +123,12 @@ export function detectAlternativesIntent(
     if (cardName.length < 3) continue;
     if (BUDGET_WORDS.test(cardName)) continue;
 
-    return { cardName, budget: BUDGET_WORDS.test(trimmed) };
+    return { cardName, budget: BUDGET_WORDS.test(trimmed), kind };
   }
 
   return null;
 }
+
 
 /** Excludes the reference card from its own alternatives list. */
 function excludeSelf(query: string, cardName: string): string {
