@@ -17,6 +17,15 @@ export {
 } from './providers';
 
 export {
+  shouldRecordSession,
+  isReplayBlockedPath,
+  allowEvent,
+  getDroppedEventCount,
+  resetEventLimiter,
+  REPLAY_SAMPLE_RATE,
+} from './replay';
+
+export {
   initFunnelTracking,
   trackFunnelStep,
   trackRetentionActivity,
