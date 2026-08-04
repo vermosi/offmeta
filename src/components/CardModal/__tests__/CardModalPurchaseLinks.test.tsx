@@ -167,7 +167,7 @@ describe('CardModalPurchaseLinks', () => {
   });
 
   it('renders fallback check-price buttons when no prices exist', () => {
-    const { getByText } = renderWithProviders(
+    const { getAllByText } = renderWithProviders(
       <CardModalPurchaseLinks
         {...defaultProps}
         displayPrices={{}}
@@ -175,8 +175,9 @@ describe('CardModalPurchaseLinks', () => {
       />,
     );
 
-    expect(getByText('Check price')).toBeInTheDocument();
+    expect(getAllByText('Check price').length).toBe(2);
   });
+
 
   describe('accessible links', () => {
 
