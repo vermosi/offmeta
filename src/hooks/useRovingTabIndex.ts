@@ -62,7 +62,7 @@ export function useRovingTabIndex({
 
   const handleKeyDown = useCallback(
     (index: number, e: React.KeyboardEvent) => {
-      let nextIndex: number | null = null;
+      let nextIndex: number;
 
       switch (e.key) {
         case 'ArrowRight':
@@ -92,7 +92,7 @@ export function useRovingTabIndex({
           return;
       }
 
-      if (nextIndex !== null && nextIndex >= 0 && nextIndex < itemCount) {
+      if (nextIndex >= 0 && nextIndex < itemCount) {
         e.preventDefault();
         moveTo(nextIndex);
       }

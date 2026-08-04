@@ -127,7 +127,7 @@ export function ExampleQueriesCarousel({
   const handleTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     const currentIndex = steps.findIndex((s) => s.key === activeStep);
     if (currentIndex < 0) return;
-    let nextIndex: number | null = null;
+    let nextIndex: number;
     switch (event.key) {
       case 'ArrowRight':
       case 'ArrowDown':

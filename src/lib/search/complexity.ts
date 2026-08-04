@@ -163,7 +163,7 @@ function simplifyQuery(original: string, meaningfulWords: string[]): string {
 
   // Priority: type > color > format > keyword > cost numbers > ability > uncovered
   const prioritized: { word: string; priority: number }[] = meaningfulWords.map(w => {
-    let priority = 0;
+    let priority: number;
     if (['creature', 'creatures', 'instant', 'instants', 'sorcery', 'sorceries',
       'artifact', 'artifacts', 'enchantment', 'enchantments', 'planeswalker',
       'planeswalkers', 'legendary'].includes(w)) {

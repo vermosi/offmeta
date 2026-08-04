@@ -23,7 +23,7 @@ function useGridKeyboardNav(
     (e: React.KeyboardEvent) => {
       if (cards.length === 0) return;
 
-      let next = focusIndex;
+      let next: number;
       switch (e.key) {
         case 'ArrowRight':
           next = Math.min(focusIndex + 1, cards.length - 1);
