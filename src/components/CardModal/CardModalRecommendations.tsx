@@ -132,11 +132,6 @@ export function CardModalRecommendations({
                   {rec.manaCost && (
                     <ManaCost cost={rec.manaCost} size="sm" />
                   )}
-                  {activeFilter === 'all' && rec.relationshipType !== 'co_played' && (
-                    <Badge variant="secondary" className="text-[8px] px-1 py-0">
-                      {getRelationshipLabel(rec.relationshipType)}
-                    </Badge>
-                  )}
                 </button>
               ))}
             </div>
