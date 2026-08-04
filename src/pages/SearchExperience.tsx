@@ -5,6 +5,7 @@
  * All search state is managed via the `useSearch` hook.
  * @module pages/Index
  */
+import { trackFunnelStep } from '@/lib/analytics/funnels';
 import {
   lazy,
   Suspense,
