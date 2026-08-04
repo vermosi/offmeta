@@ -53,18 +53,17 @@ describe('GuidesIndex', () => {
   it('renders grouped level sections with jump links', () => {
     renderGuidesIndex();
     expect(
-      screen.getByRole('link', { name: /beginner \(3\)/i }),
+      screen.getByRole('link', { name: /beginner\s*\(3\)/i }),
     ).toHaveAttribute('href', '#guides.levelBeginner');
     expect(
-      screen.getByRole('link', { name: /intermediate \(3\)/i }),
+      screen.getByRole('link', { name: /intermediate\s*\(3\)/i }),
     ).toHaveAttribute('href', '#guides.levelIntermediate');
     expect(
-      screen.getByRole('link', { name: /advanced \(2\)/i }),
+      screen.getByRole('link', { name: /advanced\s*\(2\)/i }),
     ).toHaveAttribute('href', '#guides.levelAdvanced');
-    expect(screen.getByRole('link', { name: /expert \(2\)/i })).toHaveAttribute(
-      'href',
-      '#guides.levelExpert',
-    );
+    expect(
+      screen.getByRole('link', { name: /expert\s*\(2\)/i }),
+    ).toHaveAttribute('href', '#guides.levelExpert');
   });
 
   it('renders difficulty badges for all guides', () => {
