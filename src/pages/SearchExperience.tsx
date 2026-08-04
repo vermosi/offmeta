@@ -606,21 +606,10 @@ const Index = () => {
 
             {!hasSearched && (
               <Suspense fallback={null}>
-                <HowItWorksSection />
-              </Suspense>
-            )}
-
-            {!hasSearched && (
-              <Suspense fallback={null}>
                 <ExampleQueriesCarousel onTrySearch={handleTryExample} />
               </Suspense>
             )}
 
-            {!hasSearched && (
-              <Suspense fallback={null}>
-                <InstantDemoPreview onTrySearch={handleTryExample} />
-              </Suspense>
-            )}
 
             {isSearching && originalQuery && (
               <Suspense fallback={null}>
