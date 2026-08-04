@@ -236,6 +236,22 @@ export async function resolveAlternativesQuery(
   const intent = detectAlternativesIntent(query);
   if (!intent) return null;
 
+  // Category phrases resolve without touching Scryfall or the similarity
+  // function — there is no single reference card to look up.
+  if (intent.category) {
+    const categoryQuery = resolveCategoryQuery(intent.category, intent.budget);
+    if (!categoryQuery) return null;
+    return {
+      scryfallQuery: categoryQuery,
+      cardName: intent.cardName,
+      budget: intent.budget,
+      kind: intent.kind,
+      category: intent.category,
+    };
+  }
+
+
+
   let card: ScryfallCard;
   try {
     card = await getCardByName(intent.cardName);
