@@ -138,6 +138,11 @@ export function useAuthProvider(): AuthContextValue {
       }));
 
       const userId = session?.user?.id;
+      if (userId) {
+        identifyExternalUser(userId);
+      } else {
+        resetExternalUser();
+      }
       if (!userId) return;
 
       // Defer any Supabase calls out of the auth callback stack.
@@ -154,6 +159,7 @@ export function useAuthProvider(): AuthContextValue {
         });
       }, 0);
     };
+
 
     const {
       data: { subscription },
