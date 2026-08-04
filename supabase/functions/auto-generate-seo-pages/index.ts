@@ -12,6 +12,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders } from '../_shared/auth.ts';
 import { logEvent, withLogging } from '../_shared/logger.ts';
 import { requireServiceJob } from '../_shared/jobGuards.ts';
+import { pingSitemapSubmission } from '../_shared/sitemapPing.ts';
+
 
 // Increased from 5 → 15 per growth plan to expand /ai/* SEO surface daily.
 const MAX_NEW_PAGES = 15;
