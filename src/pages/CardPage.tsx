@@ -25,7 +25,6 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CardDetailView } from '@/components/card-detail/CardDetailView';
 import { PageSearchBar } from '@/components/PageSearchBar';
-import { Badge } from '@/components/ui/badge';
 import { ArrowLeft } from 'lucide-react';
 import type { ScryfallCard } from '@/types/card';
 
