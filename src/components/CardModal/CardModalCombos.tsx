@@ -198,30 +198,65 @@ export function CardModalCombos({ cardName, isMobile, onComboCountChange }: Card
               {combos.map((combo) => (
                 <div
                   key={combo.id}
-                  className="flex items-center justify-between gap-3 rounded-lg border border-border/50 bg-muted/30 p-3"
+                  className="rounded-lg border border-border/50 bg-muted/30 p-3 space-y-2"
                 >
-                  <div className="flex-1 min-w-0">
-                    {/* What it produces */}
-                    <div className="flex flex-wrap gap-1">
-                      {combo.produces.slice(0, 3).map((p, i) => (
-                        <span
-                          key={i}
-                          className="text-xs text-primary/80 flex items-center gap-0.5"
-                        >
-                          <Sparkles className="h-3 w-3" />
-                          <OracleText text={p} size="sm" />
+                  {/* Combo pieces */}
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {combo.cards.map((c, i) => {
+                      const isCurrent =
+                        c.name.toLowerCase() === cardName.toLowerCase();
+                      return (
+                        <span key={`${combo.id}-${c.name}-${i}`} className="flex items-center gap-1.5">
+                          {i > 0 && <span className="text-muted-foreground text-xs">+</span>}
+                          {isCurrent ? (
+                            <span className="text-xs font-medium text-foreground rounded-md bg-primary/10 px-2 py-0.5">
+                              {c.name}
+                            </span>
+                          ) : (
+                            <Link
+                              to={`/cards/${cardNameToSlug(c.name)}`}
+                              className="text-xs font-medium text-primary hover:underline rounded-md bg-primary/5 px-2 py-0.5"
+                            >
+                              {c.name}
+                            </Link>
+                          )}
                         </span>
-                      ))}
-                      {combo.produces.length > 3 && (
-                        <span className="text-xs text-muted-foreground">
-                          +{combo.produces.length - 3} more
-                        </span>
-                      )}
-                    </div>
+                      );
+                    })}
                   </div>
 
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {combo.identity && (
+                  {/* Produces */}
+                  <div className="flex flex-wrap gap-x-2 gap-y-1">
+                    {combo.produces.slice(0, 4).map((p, i) => (
+                      <span key={i} className="text-xs text-primary/80 flex items-center gap-0.5">
+                        <Sparkles className="h-3 w-3" />
+                        <OracleText text={p} size="sm" />
+                      </span>
+                    ))}
+                    {combo.produces.length > 4 && (
+                      <span className="text-xs text-muted-foreground">
+                        +{combo.produces.length - 4} more
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Prerequisites & steps */}
+                  {combo.prerequisites && (
+                    <p className="text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground/80">
+                        {t('card.comboPrerequisites', 'Setup')}:{' '}
+                      </span>
+                      <OracleText text={combo.prerequisites} size="sm" />
+                    </p>
+                  )}
+                  {combo.description && (
+                    <p className="text-xs text-muted-foreground whitespace-pre-line line-clamp-6">
+                      <OracleText text={combo.description} size="sm" />
+                    </p>
+                  )}
+
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    {combo.identity ? (
                       <span className="inline-flex items-center gap-0.5">
                         {combo.identity.split('').filter((c: string) => 'WUBRG'.includes(c)).map((c: string, i: number) => (
                           <img
@@ -232,13 +267,10 @@ export function CardModalCombos({ cardName, isMobile, onComboCountChange }: Card
                           />
                         ))}
                       </span>
+                    ) : (
+                      <span />
                     )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 text-xs gap-1"
-                      asChild
-                    >
+                    <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" asChild>
                       <a
                         href={`https://commanderspellbook.com/combo/${combo.id}`}
                         target="_blank"
@@ -252,6 +284,7 @@ export function CardModalCombos({ cardName, isMobile, onComboCountChange }: Card
                 </div>
               ))}
             </div>
+
           )}
         </div>
       )}
