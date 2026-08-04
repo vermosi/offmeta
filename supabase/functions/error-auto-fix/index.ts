@@ -143,7 +143,8 @@ Deno.serve(
     const headers = { ...corsHeaders, 'Content-Type': 'application/json' };
 
     const authCheck = await requireServiceOrPipelineKey(req, corsHeaders);
-    if (authCheck) return authCheck;
+    if (!authCheck.authorized) return authCheck.response;
+
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
