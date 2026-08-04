@@ -271,21 +271,14 @@ export async function getRandomCard(): Promise<ScryfallCard> {
  * @throws Error if card is not found
  */
 export async function getCardByName(name: string): Promise<ScryfallCard> {
-  // Try local DB first
-  try {
-    const local = await getLocalCardByName(name);
-    if (local) {
-      recordHit('local', 'card_by_name');
-      return localCardToScryfallShape(local) as ScryfallCard;
-    }
-  } catch {
-    // Fall through to Scryfall
-  }
-
   const encodedName = encodeURIComponent(name);
 
-  // Try exact match first, fall back to fuzzy for slug-derived names
-  // that may be missing punctuation (commas, apostrophes, etc.)
+  // Card detail pages require a complete printing record: id, set, prices,
+  // purchase URIs, and rulings all depend on fields that the local oracle-card
+  // cache intentionally does not store. Always resolve the detail payload from
+  // Scryfall instead of casting the partial local shape to ScryfallCard.
+  // Try exact match first, then fuzzy for slug-derived names that may be missing
+  // punctuation (commas, apostrophes, etc.).
   let response = await rateLimitedFetch(
     `${BASE_URL}/cards/named?exact=${encodedName}`,
   );
