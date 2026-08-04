@@ -11,6 +11,7 @@ import { ShoppingCart, Loader2, Sparkles, Monitor } from 'lucide-react';
 import { getTCGPlayerUrl, getCardmarketUrl } from '@/lib/scryfall/printings';
 import type { CardModalPurchaseLinksProps } from './types';
 import { useTranslation } from '@/lib/i18n';
+import { useAffiliateConfig, wrapAffiliateUrl } from '@/hooks';
 
 /** Shared visual contract so every buy button matches height, padding and gap. */
 const BUTTON_CLASS = 'h-9 w-full justify-between gap-2 px-3 text-xs';
@@ -24,15 +25,6 @@ interface PurchaseLink {
   primary: boolean;
   href: string;
   onClick: () => void;
-}
-
-/** Creates a new-tab anchor with proper rel attributes and opens the URL. */
-function openInNewTab(url: string): void {
-  const a = document.createElement('a');
-  a.href = url;
-  a.target = '_blank';
-  a.rel = 'noopener noreferrer';
-  a.click();
 }
 
 /** Appends a query parameter to a purchase URL, respecting an existing query string. */
