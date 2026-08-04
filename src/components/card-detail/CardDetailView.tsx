@@ -174,9 +174,9 @@ export function CardDetailView({ card }: CardDetailViewProps) {
     );
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[340px_1fr] lg:gap-8 items-start">
-      {/* Sidebar: art, purchase, legality, tools */}
-      <div className="space-y-5">
+    <div className="grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-6 items-start">
+      {/* Sidebar: art, purchase, price history */}
+      <div className="flex flex-col gap-4 lg:sticky lg:top-20">
         <div className="flex flex-col items-center">
           <CardModalImage
             displayImageUrl={displayImageUrl}
@@ -200,82 +200,86 @@ export function CardDetailView({ card }: CardDetailViewProps) {
 
         <CardPriceHistoryChart cardName={card.name} />
 
-
-        <CardModalBentoTile>
-          <CardModalLegalities legalities={card.legalities} />
-        </CardModalBentoTile>
-
         <CardModalBentoTile>
           <CardModalToolbox cardName={card.name} scryfallUri={card.scryfall_uri} />
         </CardModalBentoTile>
       </div>
 
-      {/* Main bento grid */}
-      <div className="space-y-5 min-w-0">
-        <div className="grid gap-4 lg:grid-cols-12 items-start auto-rows-min">
-          <CardModalBentoTile className="lg:col-span-7 bg-gradient-to-br from-primary/5 via-card/80 to-accent/5 border-primary/20">
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-foreground leading-tight break-words">
-                    {faceDetails.name}
-                  </h1>
-                  <p className="text-sm text-muted-foreground mt-1.5">
-                    {faceDetails.type_line}
-                  </p>
-                  <div className="flex items-center gap-2 flex-wrap mt-3">
-                    <Badge variant={getRarityVariant(displayRarity)} className="capitalize">
-                      {displayRarity}
+      {/* Main content */}
+      <div className="flex flex-col gap-4 min-w-0">
+        <CardModalBentoTile className="bg-gradient-to-br from-primary/5 via-card/80 to-accent/5 border-primary/20">
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-foreground leading-tight break-words">
+                  {faceDetails.name}
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1.5">
+                  {faceDetails.type_line}
+                </p>
+                <div className="flex items-center gap-2 flex-wrap mt-3">
+                  <Badge variant={getRarityVariant(displayRarity)} className="capitalize">
+                    {displayRarity}
+                  </Badge>
+                  <Badge variant="secondary">
+                    {displaySetName}
+                    {displayCollectorNumber && ` #${displayCollectorNumber}`}
+                  </Badge>
+                  {card.reserved && (
+                    <Badge
+                      variant="outline"
+                      className="bg-rarity-rare/10 text-rarity-rare border-rarity-rare/30 gap-1"
+                    >
+                      <Shield className="h-3 w-3" />
+                      {t('card.reservedList', 'Reserved List')}
                     </Badge>
-                    <Badge variant="secondary">
-                      {displaySetName}
-                      {displayCollectorNumber && ` #${displayCollectorNumber}`}
-                    </Badge>
-                    {card.reserved && (
-                      <Badge
-                        variant="outline"
-                        className="bg-rarity-rare/10 text-rarity-rare border-rarity-rare/30 gap-1"
-                      >
-                        <Shield className="h-3 w-3" />
-                        {t('card.reservedList', 'Reserved List')}
-                      </Badge>
-                    )}
-                  </div>
+                  )}
                 </div>
-                {faceDetails.mana_cost && (
-                  <div className="flex-shrink-0">
-                    <ManaCost cost={faceDetails.mana_cost} size="md" />
-                  </div>
-                )}
               </div>
-
-              <div className="border-t border-border/40 pt-4">
-                <CardModalDetails
-                  faceDetails={faceDetails}
-                  displaySetName={displaySetName}
-                  displayRarity={displayRarity}
-                  displayCollectorNumber={displayCollectorNumber}
-                  displayArtist={displayArtist}
-                  isReserved={card.reserved}
-                  englishPrintings={englishPrintings}
-                  selectedPrintingId={selectedPrinting?.id}
-                  cardId={card.id}
-                  showHeader={false}
-                />
-              </div>
+              {faceDetails.mana_cost && (
+                <div className="flex-shrink-0 sm:pt-1">
+                  <ManaCost cost={faceDetails.mana_cost} size="md" />
+                </div>
+              )}
             </div>
-          </CardModalBentoTile>
 
-          <CardModalBentoTile className="lg:col-span-6">
-            <CardModalRulings
-              rulings={rulings}
-              isLoading={isLoadingRulings}
-              showRulings={showRulings}
-              onToggleRulings={() => setShowRulings(!showRulings)}
+            <div className="border-t border-border/40 pt-4">
+              <CardModalDetails
+                faceDetails={faceDetails}
+                displaySetName={displaySetName}
+                displayRarity={displayRarity}
+                displayCollectorNumber={displayCollectorNumber}
+                displayArtist={displayArtist}
+                isReserved={card.reserved}
+                englishPrintings={englishPrintings}
+                selectedPrintingId={selectedPrinting?.id}
+                cardId={card.id}
+                showHeader={false}
+              />
+            </div>
+          </div>
+        </CardModalBentoTile>
+
+        <CardModalBentoTile>
+          <CardModalRulings
+            rulings={rulings}
+            isLoading={isLoadingRulings}
+            showRulings={showRulings}
+            onToggleRulings={() => setShowRulings(!showRulings)}
+          />
+        </CardModalBentoTile>
+
+        <div className={comboCount > 0 ? undefined : 'hidden'}>
+          <CardModalBentoTile>
+            <CardModalCombos
+              cardName={card.name}
+              onComboCountChange={setComboCount}
             />
           </CardModalBentoTile>
+        </div>
 
-          <CardModalBentoTile className="lg:col-span-6">
+        <div className="grid gap-4 lg:grid-cols-2 items-start">
+          <CardModalBentoTile>
             <CardModalPrintings
               printings={englishPrintings}
               isLoading={isLoadingPrintings}
@@ -285,18 +289,14 @@ export function CardDetailView({ card }: CardDetailViewProps) {
             />
           </CardModalBentoTile>
 
-          {comboCount > 0 && (
-            <CardModalBentoTile className="lg:col-span-12">
-              <CardModalCombos
-                cardName={card.name}
-                onComboCountChange={setComboCount}
-              />
-            </CardModalBentoTile>
-          )}
+          <CardModalBentoTile>
+            <CardModalLegalities legalities={card.legalities} />
+          </CardModalBentoTile>
         </div>
       </div>
     </div>
   );
 }
+
 
 export default CardDetailView;
