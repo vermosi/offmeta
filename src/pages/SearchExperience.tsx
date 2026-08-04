@@ -788,16 +788,8 @@ const Index = () => {
             <ScryfallComparison onTrySearch={handleTryExample} />
           </Suspense>
         )}
-        {!hasSearched && (
-          <div className="container-main" aria-hidden="true">
-            <div className="section-divider" />
-          </div>
-        )}
-        {!hasSearched && (
-          <Suspense fallback={null}>
-            <ValuePropStrip />
-          </Suspense>
-        )}
+
+
 
         <Suspense fallback={null}>
           <Footer />
