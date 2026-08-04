@@ -12,6 +12,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders } from '../_shared/auth.ts';
 import { logEvent, withLogging } from '../_shared/logger.ts';
 import { requireServiceJob } from '../_shared/jobGuards.ts';
+import { pingSitemapSubmission } from '../_shared/sitemapPing.ts';
+
 
 // Increased from 5 → 15 per growth plan to expand /ai/* SEO surface daily.
 const MAX_NEW_PAGES = 15;
@@ -125,6 +127,18 @@ Deno.serve(withLogging('auto-generate-seo-pages', async (req: Request) => {
       total: newQueries.length,
       succeeded,
     });
+
+    // New /ai/* pages were published → ask Google to re-crawl the sitemap
+    if (succeeded > 0) {
+      pingSitemapSubmission({
+        supabaseUrl,
+        serviceRoleKey: serviceKey,
+        source: 'auto-generate-seo-pages',
+        newUrlCount: succeeded,
+      });
+    }
+
+
 
     return new Response(
       JSON.stringify({ total: newQueries.length, succeeded, results }),

@@ -20,6 +20,8 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, requireServiceOrPipelineKey } from '../_shared/auth.ts';
 import { createLogger, withLogging } from '../_shared/logger.ts';
+import { pingSitemapSubmission } from '../_shared/sitemapPing.ts';
+
 
 const log = createLogger('bulk-data-sync');
 const UPSERT_BATCH = 200;
@@ -243,6 +245,17 @@ serve(withLogging('bulk-data-sync', async (req: Request): Promise<Response> => {
         log.warn('Failed to self-invoke next batch', { error: String(err) });
       });
     }
+
+    // Sync finished and new card pages exist → ask Google to re-crawl the sitemap
+    if (!hasMore && cardsUpserted > 0) {
+      pingSitemapSubmission({
+        supabaseUrl,
+        serviceRoleKey,
+        source: 'bulk-data-sync',
+        newUrlCount: cardsUpserted,
+      });
+    }
+
 
     log.info('Batch complete', {
       startPage,
