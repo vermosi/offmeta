@@ -25,7 +25,10 @@ const NotFound = () => {
         "The page you're looking for doesn't exist. Search Magic: The Gathering cards in plain English on OffMeta.",
       url: `https://offmeta.app${location.pathname}`,
       type: 'website',
+      // A 404 URL must not advertise itself as canonical.
+      noCanonical: true,
     });
+
     logger.error(
       '404 Error: User attempted to access non-existent route:',
       location.pathname,
