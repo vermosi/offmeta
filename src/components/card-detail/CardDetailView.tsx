@@ -28,6 +28,7 @@ import { CardModalPurchaseLinks } from '@/components/CardModal/CardModalPurchase
 import { CardModalRulings } from '@/components/CardModal/CardModalRulings';
 import { CardModalLegalities } from '@/components/CardModal/CardModalLegalities';
 import { CardModalPrintings } from '@/components/CardModal/CardModalPrintings';
+import { CardModalToolbox } from '@/components/CardModal/CardModalToolbox';
 import { CardModalBentoTile } from '@/components/CardModal/CardModalBentoTile';
 import { CardPriceHistoryChart } from '@/components/CardPriceHistoryChart';
 import { CardModalCombos } from '@/components/CardModal/CardModalCombos';
