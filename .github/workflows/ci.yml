@@ -34,7 +34,10 @@ jobs:
           node-version-file: '.nvmrc'
           cache: 'npm'
       - run: npm ci
-      - run: npm run typecheck
+      - name: Typecheck analytics module
+        run: npm run typecheck:analytics
+      - name: Typecheck full project
+        run: npm run typecheck
 
   test:
     runs-on: ubuntu-latest
