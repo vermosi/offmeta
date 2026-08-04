@@ -335,7 +335,9 @@ export function SearchResultsArea({
                 activeFilters={activeFilters}
                 onApplyFilterPatch={onApplyFilterPatch}
                 onClearAllFilters={onClearAllFilters}
+                originalQuery={originalQuery}
               />
+
             </Suspense>
           ) : null}
 

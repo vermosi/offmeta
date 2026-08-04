@@ -6,11 +6,14 @@ import {
   Loader2,
   X,
   SlidersHorizontal,
+  Wand2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n';
 import { type QuerySuggestion } from '@/hooks';
+import { buildRephraseSuggestions } from '@/lib/search/rephraseSuggestions';
 import type { FilterState } from '@/types/filters';
+
 
 interface EmptyStateProps {
   query?: string;
@@ -28,7 +31,12 @@ interface EmptyStateProps {
   variant?: 'server' | 'filtered';
   /** Count of server-side results before client filters, when known. */
   filteredFromCount?: number;
+  /** Generated Scryfall query — used to detect the exact-name fallback. */
+  scryfallQuery?: string;
+  /** The user's original plain-English input. */
+  originalQuery?: string;
 }
+
 
 // Labels for common sort keys → i18n keys defined in SearchFilters.
 const SORT_LABEL_KEYS: Record<string, string> = {
@@ -176,6 +184,8 @@ export const EmptyState = ({
   onClearAllFilters,
   variant = 'server',
   filteredFromCount,
+  scryfallQuery,
+  originalQuery,
 }: EmptyStateProps) => {
   const { t } = useTranslation();
 
@@ -197,6 +207,11 @@ export const EmptyState = ({
   const appliedChips = buildAppliedChips(activeFilters);
   const hasAppliedFilters = appliedChips.length > 0;
   const recoveryActions = buildRecoveryActions(query, activeFilters);
+  const rephrases = buildRephraseSuggestions(
+    scryfallQuery ?? query,
+    originalQuery,
+  );
+  const showRephrases = variant === 'server' && rephrases.length > 0;
 
   return (
     <div
@@ -230,6 +245,46 @@ export const EmptyState = ({
           )}
         </p>
       )}
+
+      {/* Rephrase panel — shown when we fell back to an exact-name search */}
+      {showRephrases && (
+        <div className="surface-elevated p-5 max-w-md w-full mb-6 text-left">
+          <div className="flex items-center gap-2 mb-2">
+            <Wand2 className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-foreground">
+              {t('empty.rephraseTitle', 'Try rephrasing your search')}
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">
+            {t(
+              'empty.rephraseHint',
+              'We searched for that whole phrase as a card name. Ask for alternatives instead:',
+            )}
+          </p>
+          <div className="space-y-2">
+            {rephrases.map((item) => (
+              <button
+                key={item.query}
+                type="button"
+                onClick={() => onTryExample?.(item.query)}
+                disabled={!onTryExample}
+                className="w-full flex flex-col items-start gap-0.5 px-3 py-2.5 rounded-lg
+                  bg-primary/5 hover:bg-primary/10 border border-primary/10 hover:border-primary/20
+                  transition-colors text-left disabled:cursor-default disabled:opacity-60"
+              >
+                <span className="text-sm font-medium text-foreground">
+                  {item.query}
+                </span>
+                <span className="text-[11px] text-muted-foreground">
+                  {item.label}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+
 
       {/* Applied filters summary + broaden chips */}
       {hasAppliedFilters && (
