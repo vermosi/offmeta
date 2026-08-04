@@ -36,7 +36,7 @@ interface Summary {
 
 const severityClasses: Record<Severity, string> = {
   info: 'bg-muted text-muted-foreground',
-  warning: 'bg-amber-500/15 text-amber-500',
+  warning: 'bg-warning/15 text-warning',
   error: 'bg-destructive/15 text-destructive',
   critical: 'bg-destructive/25 text-destructive',
 };
@@ -97,7 +97,7 @@ export function ErrorMonitorPanel() {
       <header className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div>
           <h2 className="text-lg font-semibold flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-amber-500" aria-hidden="true" />
+            <AlertTriangle className="h-4 w-4 text-warning" aria-hidden="true" />
             Error monitor
           </h2>
           <p className="text-sm text-muted-foreground">
@@ -151,7 +151,7 @@ export function ErrorMonitorPanel() {
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : (summary?.top_open?.length ?? 0) === 0 ? (
         <p className="text-sm text-muted-foreground flex items-center gap-2">
-          <CheckCircle2 className="h-4 w-4 text-emerald-500" aria-hidden="true" />
+          <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />
           No open errors in the last 7 days.
         </p>
       ) : (

@@ -8,6 +8,7 @@ import { render, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { CardModalPurchaseLinks } from '../CardModalPurchaseLinks';
 import type { ScryfallCard } from '@/types/card';
+import type * as HooksModule from '@/hooks';
 
 // Mock the printings module
 vi.mock('@/lib/scryfall/printings', () => ({
@@ -17,7 +18,7 @@ vi.mock('@/lib/scryfall/printings', () => ({
 
 // Mock affiliate config
 vi.mock('@/hooks', async () => {
-  const actual = await vi.importActual<typeof import('@/hooks')>('@/hooks');
+  const actual = await vi.importActual<typeof HooksModule>('@/hooks');
   return {
     ...actual,
     useAffiliateConfig: () => ({ tcgplayerAffiliateBase: '' }),

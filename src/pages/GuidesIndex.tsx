@@ -94,7 +94,7 @@ export default function GuidesIndex() {
 
   useEffect(() => {
     const cleanupMeta = applySeoMeta({
-      title: 'MTG Search Guides - Plain English Card Search | OffMeta',
+      title: 'MTG Search Guides — Learn to Find Any Magic Card | OffMeta',
       description:
         'Learn how to find Magic cards faster with 10 progressive OffMeta guides, from tribe searches and budget filters to advanced multi-constraint queries.',
       url: 'https://offmeta.app/guides',

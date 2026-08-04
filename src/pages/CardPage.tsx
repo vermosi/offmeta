@@ -7,7 +7,7 @@
  * @module pages/CardPage
  */
 
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getCardByName } from '@/lib/scryfall/client';
@@ -147,15 +147,6 @@ const CardPage = () => {
       cleanupJsonLd();
     };
   }, [card, pageUrl, slug]);
-
-  // Price display
-  const priceDisplay = useMemo(() => {
-    if (!card) return null;
-    const usd = card.prices?.usd;
-    const foil = card.prices?.usd_foil;
-    if (!usd && !foil) return null;
-    return { usd, foil };
-  }, [card]);
 
   if (isLoading) {
     return (

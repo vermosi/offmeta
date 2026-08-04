@@ -23,7 +23,8 @@ import { useAnalytics, useAffiliateConfig } from '@/hooks';
 import { useTranslation } from '@/lib/i18n';
 
 import { CardModalImage } from '@/components/CardModal/CardModalImage';
-import { CardModalDetails, getRarityVariant } from '@/components/CardModal/CardModalDetails';
+import { CardModalDetails } from '@/components/CardModal/CardModalDetails';
+import { getRarityVariant } from '@/components/CardModal/rarity';
 import { CardModalPurchaseLinks } from '@/components/CardModal/CardModalPurchaseLinks';
 import { CardModalRulings } from '@/components/CardModal/CardModalRulings';
 import { CardModalLegalities } from '@/components/CardModal/CardModalLegalities';
@@ -56,8 +57,10 @@ export function CardDetailView({ card }: CardDetailViewProps) {
 
   const isDoubleFaced = isDoubleFacedCard(card);
 
-  // Reset per-card state when navigating between cards.
-  useEffect(() => {
+  // Reset per-card state when navigating between cards (render-phase adjustment).
+  const [cardScopeId, setCardScopeId] = useState(card.id);
+  if (cardScopeId !== card.id) {
+    setCardScopeId(card.id);
     setCurrentFace(0);
     setSelectedPrinting(null);
     setRefreshedPrices(null);
@@ -66,7 +69,7 @@ export function CardDetailView({ card }: CardDetailViewProps) {
     setIsLoadingRulings(true);
     setIsLoadingPrintings(true);
     setComboCount(0);
-  }, [card.id]);
+  }
 
   useEffect(() => {
     let cancelled = false;

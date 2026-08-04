@@ -319,9 +319,12 @@ export default function MarketTrends() {
   const rankOffset = (currentPage - 1) * PAGE_SIZE;
 
   // Reset to the first page whenever the result set changes.
-  useEffect(() => {
+  const resultScope = JSON.stringify([filters, sortField, sortDir, daysBack]);
+  const [pageScope, setPageScope] = useState(resultScope);
+  if (pageScope !== resultScope) {
+    setPageScope(resultScope);
     setPage(1);
-  }, [filters, sortField, sortDir, daysBack]);
+  }
 
   const goToPage = useCallback(
     (next: number) => {
