@@ -90,6 +90,11 @@ async function initPostHog(
       },
     });
     posthogInstance = posthog;
+    // posthog-js buffers requests internally until it finishes loading, so we
+    // can flush immediately instead of waiting for the `loaded` callback (which
+    // may never fire if the remote script is blocked).
+    posthogInitialized = true;
+    flushPostHogQueue();
   } catch {
     // PostHog is best-effort
   }
