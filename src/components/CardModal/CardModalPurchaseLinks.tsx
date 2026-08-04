@@ -145,31 +145,49 @@ export function CardModalPurchaseLinks({
   const showFallbackLinks = !hasAnyPrice && !isLoadingPrintings;
   const showLoadingLinks = !hasAnyPrice && isLoadingPrintings;
 
+  const hasAnyPrice = links.length > 0;
+  const showFallbackLinks = !hasAnyPrice && !isLoadingPrintings;
+  const showLoadingLinks = !hasAnyPrice && isLoadingPrintings;
+
+  const getBuyLinkAriaLabel = (vendor: string) =>
+    t(
+      'card.buyLinkAriaLabel',
+      'Buy {cardName} on {vendor} (opens in a new tab)',
+      { cardName: card.name, vendor },
+    );
+
   const fallbackLinks = (
     <>
       <p className="text-xs text-muted-foreground">{priceUnavailableLabel}</p>
-      <Button
-        size="sm"
-        className={BUTTON_CLASS}
-        onClick={() => onAffiliateClick('tcgplayer', tcgplayerUrl)}
-      >
-        <span className="flex items-center gap-2 truncate">
-          <ShoppingCart className={ICON_CLASS} />
-          TCGplayer
-        </span>
-        <span className="opacity-80">{checkPriceLabel}</span>
+      <Button size="sm" className={BUTTON_CLASS} asChild>
+        <a
+          href={tcgplayerUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={getBuyLinkAriaLabel('TCGplayer')}
+          onClick={() => onAffiliateClick('tcgplayer', tcgplayerUrl)}
+        >
+          <span className="flex items-center gap-2 truncate">
+            <ShoppingCart className={ICON_CLASS} />
+            TCGplayer
+          </span>
+          <span className="opacity-80">{checkPriceLabel}</span>
+        </a>
       </Button>
-      <Button
-        size="sm"
-        variant="outline"
-        className={BUTTON_CLASS}
-        onClick={() => onAffiliateClick('cardmarket', cardmarketUrl)}
-      >
-        <span className="flex items-center gap-2 truncate">
-          <ShoppingCart className={ICON_CLASS} />
-          Cardmarket
-        </span>
-        <span className="opacity-80">{checkPriceLabel}</span>
+      <Button size="sm" variant="outline" className={BUTTON_CLASS} asChild>
+        <a
+          href={cardmarketUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={getBuyLinkAriaLabel('Cardmarket')}
+          onClick={() => onAffiliateClick('cardmarket', cardmarketUrl)}
+        >
+          <span className="flex items-center gap-2 truncate">
+            <ShoppingCart className={ICON_CLASS} />
+            Cardmarket
+          </span>
+          <span className="opacity-80">{checkPriceLabel}</span>
+        </a>
       </Button>
     </>
   );
@@ -219,21 +237,31 @@ export function CardModalPurchaseLinks({
         {buyLabel}
       </h3>
       <div className="space-y-1.5">
-        {links.map(({ key, icon: Icon, label, value, primary, onClick }) => (
-          <Button
-            key={key}
-            size="sm"
-            variant={primary ? 'default' : 'outline'}
-            className={BUTTON_CLASS}
-            onClick={onClick}
-          >
-            <span className="flex items-center gap-2 truncate">
-              <Icon className={ICON_CLASS} />
-              <span className="truncate">{label}</span>
-            </span>
-            <span className="font-semibold shrink-0">{value}</span>
-          </Button>
-        ))}
+        {links.map(
+          ({ key, icon: Icon, label, value, primary, href, onClick }) => (
+            <Button
+              key={key}
+              size="sm"
+              variant={primary ? 'default' : 'outline'}
+              className={BUTTON_CLASS}
+              asChild
+            >
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={getBuyLinkAriaLabel(label)}
+                onClick={onClick}
+              >
+                <span className="flex items-center gap-2 truncate">
+                  <Icon className={ICON_CLASS} />
+                  <span className="truncate">{label}</span>
+                </span>
+                <span className="font-semibold shrink-0">{value}</span>
+              </a>
+            </Button>
+          ),
+        )}
         {showFallbackLinks && fallbackLinks}
         {showLoadingLinks && loadingLinks}
       </div>
