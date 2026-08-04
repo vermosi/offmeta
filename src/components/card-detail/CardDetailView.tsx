@@ -6,7 +6,6 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import type { ScryfallCard } from '@/types/card';
 import {
   getCardImage,
@@ -16,7 +15,6 @@ import {
   type CardRuling,
 } from '@/lib/scryfall/client';
 import { getCardPrintings, type CardPrinting } from '@/lib/scryfall/printings';
-import { cardNameToSlug } from '@/lib/card-slug';
 
 import { Shield } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
