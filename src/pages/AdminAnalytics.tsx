@@ -58,6 +58,8 @@ import { PipelineHealthIndicator } from '@/pages/admin-analytics/components/Pipe
 import { AnalyticsChartsSection } from '@/pages/admin-analytics/components/AnalyticsChartsSection';
 import { FeedbackQueuePanel } from '@/pages/admin-analytics/components/FeedbackQueuePanel';
 import { TranslationRulesPanel } from '@/pages/admin-analytics/components/TranslationRulesPanel';
+import { ErrorMonitorPanel } from '@/pages/admin-analytics/components/ErrorMonitorPanel';
+
 import { exportToCsv } from '@/pages/admin-analytics/utils/exportCsv';
 
 export default function AdminAnalytics() {
@@ -330,7 +332,11 @@ export default function AdminAnalytics() {
           )}
 
           {/* Feedback queue */}
+          {/* Error monitor + automated repairs */}
+          <ErrorMonitorPanel />
+
           <FeedbackQueuePanel
+
             pendingFeedbackCount={hook.pendingFeedbackCount}
             archivedFeedbackCount={hook.archivedFeedbackCount}
             processAllPending={hook.processAllPending}

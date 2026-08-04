@@ -6,8 +6,10 @@
 
 import { createRoot } from 'react-dom/client';
 import { initializeAnalytics } from '@/lib/analytics';
+import { initErrorMonitoring } from '@/lib/monitoring';
 import App from './App.tsx';
 import './index.css';
+
 
 // Initialize optional third-party analytics providers from Lovable connectors.
 // Keys are only present in the published environment; missing keys are ignored.
@@ -17,6 +19,11 @@ initializeAnalytics({
   posthogProjectToken: import.meta.env.VITE_LOVABLE_CONNECTOR_POSTHOG_API_KEY,
   posthogRegion: import.meta.env.VITE_LOVABLE_CONNECTOR_POSTHOG_REGION,
 });
+
+// Capture uncaught errors / rejections into public.error_events so page-level
+// failures are reported automatically alongside backend pipeline failures.
+initErrorMonitoring();
+
 
 // Auto-recover from stale dynamic-import chunks after a redeploy.
 // Bounded reloads are tracked in sessionStorage to prevent infinite loops.
