@@ -101,7 +101,7 @@
     "vitest": "^4.1.10"
   },
   "engines": {
-    "node": ">=20.11.0"
+    "node": ">=22.22.2"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,css,md,json,yml,yaml}": [
