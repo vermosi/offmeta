@@ -51,17 +51,6 @@ export function CardModalToolbox({
         {t('card.toolbox', 'Toolbox')}
       </h3>
       <div className="flex flex-wrap gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-1.5 text-xs h-7 border-primary/30 text-primary hover:bg-primary/10"
-          asChild
-        >
-          <Link to={`/cards/${cardNameToSlug(cardName)}`}>
-            <Sparkles className="h-3 w-3" aria-hidden="true" />
-            {t('card.offMetaPage', 'Off-Meta Page')}
-          </Link>
-        </Button>
         {displayLinks.map((link) => (
           <Button
             key={link.name}
