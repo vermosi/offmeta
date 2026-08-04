@@ -177,12 +177,25 @@ describe('CardModalPurchaseLinks', () => {
   });
 
   describe('mobile view', () => {
-    it('renders buttons in grid layout', () => {
-      const { container } = renderWithProviders(
+    it('renders the same stacked layout as desktop', () => {
+      const mobile = renderWithProviders(
         <CardModalPurchaseLinks {...defaultProps} isMobile={true} />,
       );
-      expect(container.querySelector('.grid-cols-2')).toBeInTheDocument();
+      const mobileButtons = mobile
+        .getAllByRole('button')
+        .map((b) => b.className);
+      mobile.unmount();
+
+      const desktop = renderWithProviders(
+        <CardModalPurchaseLinks {...defaultProps} isMobile={false} />,
+      );
+      const desktopButtons = desktop
+        .getAllByRole('button')
+        .map((b) => b.className);
+
+      expect(mobileButtons).toEqual(desktopButtons);
     });
+
 
     it('uses smaller button sizes', () => {
       const { getAllByRole } = renderWithProviders(
