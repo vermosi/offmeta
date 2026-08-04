@@ -990,13 +990,26 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
   }
 
 
-  // If nothing was extracted, return original as a name search
+  // If nothing was extracted, fall back to a name search — but only on
+  // something that can plausibly BE a name. An exact-name search on a whole
+  // sentence (e.g. `!"budget alternatives to rhystic study"`) is guaranteed to
+  // return zero results, so strip the wrapper phrasing first and give up
+  // rather than emit a query that cannot match.
   if (parts.length === 0) {
-    const safe = naturalQuery.trim().replace(/["()]/g, '').replace(/\s+/g, ' ').trim();
-    const fallback = safe ? `!"${safe}"` : '';
+    const candidate =
+      extractCardNameCandidate(naturalQuery) ?? naturalQuery.trim();
+    const safe = candidate.replace(/["()]/g, '').replace(/\s+/g, ' ').trim();
+    const wordCount = safe ? safe.split(' ').length : 0;
+    const looksLikeSentence =
+      wordCount > 5 ||
+      /\b(alternatives?|replacements?|substitutes?|similar|like|instead|but|cheaper|version)\b/i.test(
+        safe,
+      );
+    const fallback = safe && !looksLikeSentence ? `!"${safe}"` : '';
     recordStrategyHate(naturalQuery, hateMatches, fallback);
     return fallback;
   }
+
 
   const compiled = parts.join(' ');
   recordStrategyHate(naturalQuery, hateMatches, compiled);
