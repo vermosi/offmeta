@@ -22,7 +22,17 @@ interface PurchaseLink {
   label: string;
   value: string;
   primary: boolean;
+  href: string;
   onClick: () => void;
+}
+
+/** Creates a new-tab anchor with proper rel attributes and opens the URL. */
+function openInNewTab(url: string): void {
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  a.click();
 }
 
 /** Appends a query parameter to a purchase URL, respecting an existing query string. */
