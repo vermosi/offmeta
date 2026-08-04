@@ -9,6 +9,7 @@ import {
   fetchPriceMovers,
   PriceMoverError,
   type PriceMoverErrorKind,
+  type PriceMoverSource,
 } from '@/services/price-movers';
 
 /** Human-readable copy for each failure mode. */
@@ -49,7 +50,7 @@ export function useMarketTrends(daysBack: number = 7) {
   const errorKind: PriceMoverErrorKind =
     query.error instanceof PriceMoverError ? query.error.kind : 'server';
 
-  const allMovers = query.data ?? [];
+  const allMovers = query.data?.movers ?? [];
   const gainers = allMovers
     .filter((m) => m.direction === 'up')
     .sort((a, b) => b.change_percent - a.change_percent);
@@ -69,6 +70,10 @@ export function useMarketTrends(daysBack: number = 7) {
     errorMessage: PRICE_MOVER_ERROR_COPY[errorKind],
     retry: query.refetch,
     isEmpty: !query.isLoading && !query.isError && allMovers.length === 0,
+    /** Epoch ms the underlying data was fetched from the backend. */
+    fetchedAt: query.data?.fetchedAt ?? null,
+    /** Whether this render's data came from the in-memory cache. */
+    source: (query.data?.source ?? null) as PriceMoverSource | null,
   };
 }
 
