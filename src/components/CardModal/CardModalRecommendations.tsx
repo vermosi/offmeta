@@ -98,31 +98,6 @@ export function CardModalRecommendations({
         </p>
       ) : (
         <>
-          {/* Filter tabs — only show if we have more than one type */}
-          {availableTypes.size > 1 && (
-            <div className="flex flex-wrap gap-1.5">
-              {FILTER_TABS.map((tab) => {
-                const isActive = activeFilter === tab.key;
-                const hasData = tab.key === 'all' || availableTypes.has(tab.key as RelationshipType);
-                if (!hasData) return null;
-                return (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    onClick={() => setActiveFilter(tab.key)}
-                    className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                      isActive
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-transparent text-muted-foreground border-border hover:text-foreground hover:border-foreground/30'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
           {filteredRecs.length === 0 ? (
             <p className="text-xs text-muted-foreground italic py-2">
               {t('cardModal.noRecsForFilter', 'No recommendations for this filter')}
