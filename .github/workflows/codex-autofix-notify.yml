@@ -1,0 +1,97 @@
+name: Codex Autofix Notify
+
+on:
+  workflow_run:
+    workflows: ['Codex Autofix']
+    types: [completed]
+
+jobs:
+  notify-discord:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Create issue on unresolved autofix
+        if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+        id: create_issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${github.event.workflow_run.id}`;
+            const failedCiRun = github.event.workflow_run.head_sha;
+            const title = `Codex autofix failed for CI (${failedCiRun.slice(0, 7)})`;
+            const body = [
+              'Codex tried to autofix a CI failure, but the fix did not verify.',
+              '',
+              `- Failed autofix run: ${github.event.workflow_run.html_url}`,
+              `- Commit: ${failedCiRun}`,
+              '',
+              '### Next steps',
+              '- [ ] Inspect the failing Codex autofix run',
+              '- [ ] Fix the root cause manually',
+              '- [ ] Close this issue when CI is green again',
+            ].join('\n');
+
+            const existing = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'ci-failure',
+              per_page: 100,
+            });
+
+            let issueNumber;
+
+            if (existing.length > 0) {
+              issueNumber = existing[0].number;
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                body: `Codex autofix failed again: ${runUrl}`,
+              });
+            } else {
+              const created = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['bug', 'area:infra', 'ci-failure'],
+              });
+              issueNumber = created.data.number;
+            }
+
+            core.setOutput('issue_number', String(issueNumber));
+
+      - name: Ping Discord on failure
+        if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          CONTENT: |-
+            [FAIL] Codex autofix could not verify in `${{ github.repository }}`
+            Issue: #${{ steps.create_issue.outputs.issue_number }}
+            Workflow: ${{ github.event.workflow_run.name }}
+            Commit: `${{ github.event.workflow_run.head_sha }}`
+            ${{ github.event.workflow_run.html_url }}
+        run: |
+          set -euo pipefail
+          MESSAGE=$(python -c "import json, os; print(json.dumps({'content': os.environ['CONTENT']}))")
+          curl -fsS -X POST "$DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            --data "$MESSAGE"
+
+      - name: Ping Discord on success
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          CONTENT: |-
+            [PASS] Codex autofix verified in `${{ github.repository }}`
+            Workflow: ${{ github.event.workflow_run.name }}
+            Commit: `${{ github.event.workflow_run.head_sha }}`
+            ${{ github.event.workflow_run.html_url }}
+        run: |
+          set -euo pipefail
+          MESSAGE=$(python -c "import json, os; print(json.dumps({'content': os.environ['CONTENT']}))")
+          curl -fsS -X POST "$DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            --data "$MESSAGE"
