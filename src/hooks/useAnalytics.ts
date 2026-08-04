@@ -599,10 +599,13 @@ export async function trackEventDirect(
         session_id: getSessionId(),
       },
     ]);
+    // Forward the same event to optional third-party providers (best-effort).
+    trackExternalEvent(eventType, sanitizedData);
   } catch {
     // Analytics is best-effort; never break the caller.
   }
 }
+
 
 export function useAnalytics() {
   const sessionIdRef = useRef<string | null>(null);
