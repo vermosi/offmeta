@@ -161,6 +161,7 @@
   "card.buyThisCard": "このカードを購入",
   "card.foil": "Foil",
   "card.tix": "tix",
+  "card.buyLinkAriaLabel": "{vendor}で{cardName}を購入（新しいタブで開きます）",
   "card.rulings": "裁定 ({count})",
   "card.combosLoading": "コンボを読み込み中…",
   "card.combosNone": "このカードの既知のコンボは見つかりません。",

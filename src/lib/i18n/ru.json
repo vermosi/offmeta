@@ -169,6 +169,7 @@
   "card.buyThisCard": "Купить эту карту",
   "card.foil": "Foil",
   "card.tix": "tix",
+  "card.buyLinkAriaLabel": "Купите {cardName} на {vendor} (открывается в новой вкладке)",
   "card.rulings": "Правила ({count})",
   "card.combosLoading": "Загрузка комбо…",
   "card.combosNone": "Известных комбо для этой карты не найдено.",

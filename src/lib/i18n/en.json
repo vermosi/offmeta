@@ -203,6 +203,7 @@
   "card.buyThisCard": "Buy This Card",
   "card.foil": "Foil",
   "card.tix": "tix",
+  "card.buyLinkAriaLabel": "Buy {cardName} on {vendor} (opens in a new tab)",
   "card.rulings": "Rulings ({count})",
   "card.combosLoading": "Loading combos…",
   "card.combosNone": "No known combos found for this card.",

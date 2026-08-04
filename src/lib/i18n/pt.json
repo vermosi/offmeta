@@ -120,6 +120,7 @@
   "card.statusRestricted": "restrita",
   "card.text": "Texto da Carta",
   "card.tix": "tix",
+  "card.buyLinkAriaLabel": "Compre {cardName} na {vendor} (abre em uma nova aba)",
   "card.toolbox": "Ferramentas",
   "card.transform": "Transformar",
   "card.uniqueArt": "Arte Única",
