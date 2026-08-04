@@ -13,7 +13,10 @@ interface CardPriceSparklineProps {
   width?: number;
   height?: number;
   className?: string;
+  /** Hide the Low/Average/Market/Foil toggle for dense table rows. */
+  showSeriesToggle?: boolean;
 }
+
 
 type PriceSeries = 'low' | 'average' | 'market' | 'foil';
 
@@ -29,7 +32,9 @@ export function CardPriceSparkline({
   width,
   height,
   className,
+  showSeriesToggle = true,
 }: CardPriceSparklineProps) {
+
   const { data } = usePriceHistory(cardName);
   const [series, setSeries] = useState<PriceSeries>('market');
 
@@ -59,24 +64,27 @@ export function CardPriceSparkline({
   );
 
   return (
-    <div className={cn('flex items-center gap-2', className)}>
-      <div className="flex rounded-md border border-border bg-muted p-0.5 text-[10px]">
-        {(Object.keys(SERIES_LABELS) as PriceSeries[]).map((item) => (
-          <button
-            key={item}
-            type="button"
-            onClick={() => setSeries(item)}
-            className={cn(
-              'rounded px-1.5 py-0.5 transition-colors',
-              series === item
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            {SERIES_LABELS[item]}
-          </button>
-        ))}
-      </div>
+    <div className={cn('flex items-center gap-2 min-w-0', className)}>
+      {showSeriesToggle && (
+        <div className="flex rounded-md border border-border bg-muted p-0.5 text-[10px]">
+          {(Object.keys(SERIES_LABELS) as PriceSeries[]).map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => setSeries(item)}
+              className={cn(
+                'rounded px-1.5 py-0.5 transition-colors',
+                series === item
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {SERIES_LABELS[item]}
+            </button>
+          ))}
+        </div>
+      )}
+
       {points.length >= 2 ? (
         <PriceSparkline data={points} width={width} height={height} />
       ) : (
