@@ -14,6 +14,8 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { trackExternalPageView } from '@/lib/analytics/providers';
+
 
 export function RouteTracker() {
   const location = useLocation();
