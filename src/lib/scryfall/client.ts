@@ -12,7 +12,6 @@ import type {
 import { logger } from '@/lib/core/logger';
 import { rateLimitedFetch, fetchWithRetry } from './fetch-utils';
 import {
-  getLocalCardByName,
   getLocalCardsByNames,
   getLocalRandomCard,
   localAutocomplete,
