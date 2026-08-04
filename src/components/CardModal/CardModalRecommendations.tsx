@@ -64,8 +64,10 @@ export function CardModalRecommendations({
   }, [oracleId]);
 
   const filteredRecs = useMemo(() => {
-    if (activeFilter === 'all') return recs.slice(0, 6);
-    return recs.filter((r) => r.relationshipType === activeFilter).slice(0, 6);
+    if (activeFilter === 'all') return recs.slice(0, 10);
+    return recs
+      .filter((r) => r.relationshipType === activeFilter)
+      .slice(0, 10);
   }, [recs, activeFilter]);
 
   // Compute which tabs have data to show
