@@ -32,7 +32,9 @@ export function CardPriceSparkline({
   width,
   height,
   className,
+  showSeriesToggle = true,
 }: CardPriceSparklineProps) {
+
   const { data } = usePriceHistory(cardName);
   const [series, setSeries] = useState<PriceSeries>('market');
 
