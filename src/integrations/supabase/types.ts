@@ -791,6 +791,7 @@ export type Database = {
       price_mover_stats: {
         Row: {
           card_name: string | null
+          collector_number: string | null
           colors: string[] | null
           current_price: number | null
           current_recorded_at: string | null
@@ -800,6 +801,7 @@ export type Database = {
           price_7d: number | null
           rarity: string | null
           scryfall_id: string | null
+          set_name: string | null
           type_line: string | null
         }
         Relationships: []
@@ -883,6 +885,7 @@ export type Database = {
         Returns: {
           card_name: string
           change_percent: number
+          collector_number: string
           colors: string[]
           current_price: number
           direction: string
@@ -890,6 +893,7 @@ export type Database = {
           previous_price: number
           rarity: string
           scryfall_id: string
+          set_name: string
           type_line: string
         }[]
       }
