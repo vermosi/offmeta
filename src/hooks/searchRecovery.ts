@@ -127,6 +127,49 @@ export async function handleZeroResultRecovery(
     return { handled: false };
   }
 
+  // "budget alternatives to X" names a reference card rather than describing
+  // one, so resolve it to a functional/budget similarity query before the
+  // generic fuzzy-name and broadening steps.
+  const alternatives = await resolveAlternativesQuery(ctx.originalQuery);
+  if (
+    alternatives &&
+    alternatives.scryfallQuery !== ctx.currentResult?.scryfallQuery
+  ) {
+    ctx.trackEvent('alternatives_recovery_resolved', {
+      query: ctx.originalQuery,
+      card_name: alternatives.cardName,
+      budget: alternatives.budget,
+      request_id: ctx.currentRequestId ?? undefined,
+    });
+    const readable = alternatives.budget
+      ? `Budget alternatives to ${alternatives.cardName}`
+      : `Cards similar to ${alternatives.cardName}`;
+    queueMicrotask(() => {
+      ctx.setSearchQuery(alternatives.scryfallQuery);
+      ctx.setLastSearchResult((prev) =>
+        prev
+          ? {
+              ...prev,
+              scryfallQuery: alternatives.scryfallQuery,
+              explanation: {
+                readable,
+                assumptions: [
+                  `Matched cards that play like ${alternatives.cardName}`,
+                  ...(alternatives.budget ? ['Filtered to cheaper printings'] : []),
+                ],
+                confidence: 0.8,
+              },
+              source: 'client_recovery',
+            }
+          : prev,
+      );
+      ctx.queryClient.invalidateQueries({
+        queryKey: ['cards', alternatives.scryfallQuery, ctx.scryfallLang],
+      });
+    });
+    return { handled: true };
+  }
+
   const nameCandidate = extractCardNameCandidate(ctx.originalQuery);
   if (nameCandidate && source !== 'client_recovery') {
     const fuzzyOutcome = await applyFuzzyRecovery(ctx, nameCandidate);
