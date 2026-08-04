@@ -15,6 +15,8 @@ import {
   ExternalLink,
   Sparkles,
   AlertTriangle,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { OracleText } from '@/components/ManaSymbol';
 import { logger } from '@/lib/core/logger';
