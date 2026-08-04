@@ -128,6 +128,18 @@ Deno.serve(withLogging('auto-generate-seo-pages', async (req: Request) => {
       succeeded,
     });
 
+    // New /ai/* pages were published → ask Google to re-crawl the sitemap
+    if (succeeded > 0) {
+      pingSitemapSubmission({
+        supabaseUrl,
+        serviceRoleKey: serviceKey,
+        source: 'auto-generate-seo-pages',
+        newUrlCount: succeeded,
+      });
+    }
+
+
+
     return new Response(
       JSON.stringify({ total: newQueries.length, succeeded, results }),
       { status: 200, headers },
