@@ -10,10 +10,20 @@ import { CardModalPurchaseLinks } from '../CardModalPurchaseLinks';
 import type { ScryfallCard } from '@/types/card';
 
 // Mock the printings module
-vi.mock('@/lib/card-printings', () => ({
+vi.mock('@/lib/scryfall/printings', () => ({
   getTCGPlayerUrl: () => 'https://tcgplayer.com/card/test',
   getCardmarketUrl: () => 'https://cardmarket.com/card/test',
 }));
+
+// Mock affiliate config
+vi.mock('@/hooks', async () => {
+  const actual = await vi.importActual<typeof import('@/hooks')>('@/hooks');
+  return {
+    ...actual,
+    useAffiliateConfig: () => ({ tcgplayerAffiliateBase: '' }),
+    wrapAffiliateUrl: (url: string) => url,
+  };
+});
 
 // Mock PriceSparkline to avoid needing real query client data
 vi.mock('@/components/collection/PriceSparkline', () => ({
