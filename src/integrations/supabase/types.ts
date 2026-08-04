@@ -275,6 +275,66 @@ export type Database = {
         }
         Relationships: []
       }
+      error_events: {
+        Row: {
+          context: Json
+          created_at: string
+          error_type: string
+          fingerprint: string
+          first_seen_at: string
+          fix_attempts: number
+          id: string
+          last_fix_at: string | null
+          last_fix_result: Json | null
+          last_seen_at: string
+          message: string
+          occurrence_count: number
+          severity: string
+          source: string
+          status: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          context?: Json
+          created_at?: string
+          error_type: string
+          fingerprint: string
+          first_seen_at?: string
+          fix_attempts?: number
+          id?: string
+          last_fix_at?: string | null
+          last_fix_result?: Json | null
+          last_seen_at?: string
+          message: string
+          occurrence_count?: number
+          severity?: string
+          source: string
+          status?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          context?: Json
+          created_at?: string
+          error_type?: string
+          fingerprint?: string
+          first_seen_at?: string
+          fix_attempts?: number
+          id?: string
+          last_fix_at?: string | null
+          last_fix_result?: Json | null
+          last_seen_at?: string
+          message?: string
+          occurrence_count?: number
+          severity?: string
+          source?: string
+          status?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
       price_snapshots: {
         Row: {
           card_name: string
@@ -802,6 +862,7 @@ export type Database = {
           schedule: string
         }[]
       }
+      get_error_monitor_summary: { Args: { days_back?: number }; Returns: Json }
       get_price_movers: {
         Args: { days_back?: number; limit_count?: number }
         Returns: {
@@ -904,6 +965,7 @@ export type Database = {
         }
         Returns: number
       }
+      prune_old_error_events: { Args: never; Returns: undefined }
       prune_old_price_snapshots: { Args: never; Returns: undefined }
       prune_old_seo_health_checks: { Args: never; Returns: undefined }
       read_email_batch: {
@@ -913,6 +975,17 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      report_error_event: {
+        Args: {
+          p_context?: Json
+          p_error_type: string
+          p_message: string
+          p_severity?: string
+          p_source: string
+          p_url?: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
