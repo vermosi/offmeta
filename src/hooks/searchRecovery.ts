@@ -155,7 +155,7 @@ export async function handleZeroResultRecovery(
     alternatives.scryfallQuery !== ctx.currentResult?.scryfallQuery
   ) {
     recordRecoveryAttempt(ctx.originalQuery, {
-      path: 'alternatives_similarity',
+      path: alternatives.category ? 'alternatives_category' : 'alternatives_similarity',
       alternativesCard: alternatives.cardName,
     });
     ctx.trackEvent('alternatives_recovery_resolved', {
@@ -163,9 +163,13 @@ export async function handleZeroResultRecovery(
       card_name: alternatives.cardName,
       budget: alternatives.budget,
       intent_kind: alternatives.kind,
+      category: alternatives.category,
       request_id: ctx.currentRequestId ?? undefined,
     });
-    const readable = alternatives.budget
+    const readable = alternatives.category
+      ? `${alternatives.budget ? 'Budget ' : ''}${alternatives.cardName} options`
+      : alternatives.budget
+
       ? `Budget alternatives to ${alternatives.cardName}`
       : `Cards similar to ${alternatives.cardName}`;
     queueMicrotask(() => {
