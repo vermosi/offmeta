@@ -6,6 +6,7 @@
  */
 
 import { classifyTraffic } from './traffic';
+import { posthog, type PostHog } from 'posthog-js';
 
 // ---------------------------------------------------------------------------
 // Google Analytics 4
@@ -60,7 +61,7 @@ function initGoogleAnalytics(measurementId: string): void {
 // PostHog
 // ---------------------------------------------------------------------------
 
-let posthogModule: typeof import('posthog-js') | null = null;
+let posthogInstance: PostHog | null = null;
 let posthogInitialized = false;
 
 async function initPostHog(
@@ -69,11 +70,9 @@ async function initPostHog(
 ): Promise<void> {
   if (posthogInitialized || typeof window === 'undefined') return;
   try {
-    const posthog = await import('posthog-js');
-    posthogModule = posthog.default ?? posthog;
     const apiHost =
       region === 'us' ? 'https://us.i.posthog.com' : 'https://eu.i.posthog.com';
-    posthogModule.init(projectToken, {
+    posthog.init(projectToken, {
       api_host: apiHost,
       autocapture: false, // we use explicit event tracking
       capture_pageview: false, // manual SPA page views
@@ -81,6 +80,7 @@ async function initPostHog(
         posthogInitialized = true;
       },
     });
+    posthogInstance = posthog;
   } catch {
     // PostHog is best-effort
   }
@@ -128,8 +128,8 @@ export function trackExternalEvent(
   }
 
   try {
-    if (posthogModule && posthogInitialized) {
-      posthogModule.capture(name, properties);
+    if (posthogInitialized && posthogInstance) {
+      posthogInstance.capture(name, properties);
     }
   } catch {
     /* best-effort */
@@ -151,8 +151,8 @@ export function trackExternalPageView(path: string): void {
   }
 
   try {
-    if (posthogModule && posthogInitialized) {
-      posthogModule.capture('$pageview', { $pathname: path });
+    if (posthogInitialized && posthogInstance) {
+      posthogInstance.capture('$pageview', { $pathname: path });
     }
   } catch {
     /* best-effort */
@@ -163,8 +163,8 @@ export function identifyExternalUser(userId: string): void {
   if (typeof window === 'undefined' || !userId) return;
 
   try {
-    if (posthogModule && posthogInitialized) {
-      posthogModule.identify(userId);
+    if (posthogInitialized && posthogInstance) {
+      posthogInstance.identify(userId);
     }
   } catch {
     /* best-effort */
@@ -175,8 +175,8 @@ export function resetExternalUser(): void {
   if (typeof window === 'undefined') return;
 
   try {
-    if (posthogModule && posthogInitialized) {
-      posthogModule.reset();
+    if (posthogInitialized && posthogInstance) {
+      posthogInstance.reset();
     }
   } catch {
     /* best-effort */
