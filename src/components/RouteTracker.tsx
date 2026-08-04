@@ -44,6 +44,10 @@ export function RouteTracker() {
       dwell_ms: dwellMs,
     });
 
+    // Forward page view to optional third-party providers (GA4 + PostHog).
+    trackExternalPageView(location.pathname);
+
+
     lastKeyRef.current = key;
     lastPathRef.current = location.pathname;
     lastEnteredAtRef.current = now;
