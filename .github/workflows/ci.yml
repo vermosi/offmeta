@@ -79,41 +79,7 @@ jobs:
         with:
           name: dist
           path: dist
-      - name: Check bundle size
-        run: |
-          echo "## Bundle Size Report" >> $GITHUB_STEP_SUMMARY
-
-          TOTAL_SIZE=$(du -sh dist | cut -f1)
-          echo "**Total dist size:** $TOTAL_SIZE" >> $GITHUB_STEP_SUMMARY
-
-          JS_FILES=$(find dist/assets -name '*.js' 2>/dev/null || true)
-          if [ -n "$JS_FILES" ]; then
-            GZIP_SIZE=0
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "| File | Raw | Gzipped |" >> $GITHUB_STEP_SUMMARY
-            echo "|------|-----|---------|" >> $GITHUB_STEP_SUMMARY
-            for f in $JS_FILES; do
-              RAW=$(wc -c < "$f")
-              GZ=$(gzip -c "$f" | wc -c)
-              RAW_KB=$((RAW / 1024))
-              GZ_KB=$((GZ / 1024))
-              GZIP_SIZE=$((GZIP_SIZE + GZ))
-              BASENAME=$(basename "$f")
-              echo "| $BASENAME | ${RAW_KB}KB | ${GZ_KB}KB |" >> $GITHUB_STEP_SUMMARY
-            done
-
-            GZIP_KB=$((GZIP_SIZE / 1024))
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Total JS gzipped:** ${GZIP_KB}KB" >> $GITHUB_STEP_SUMMARY
-
-            MAX_SIZE_KB=1024
-            if [ "$GZIP_KB" -gt "$MAX_SIZE_KB" ]; then
-              echo "::error::JS bundle size (${GZIP_KB}KB gzipped) exceeds ${MAX_SIZE_KB}KB limit"
-              exit 1
-            else
-              echo "Bundle size OK (${GZIP_KB}KB < ${MAX_SIZE_KB}KB)" >> $GITHUB_STEP_SUMMARY
-            fi
-          fi
+      - run: npm run check:bundle-size
 
   e2e-smoke:
     if: github.event_name == 'pull_request' || github.event_name == 'push'
@@ -158,67 +124,3 @@ jobs:
           name: playwright-a11y-smoke-report
           path: playwright-report
           if-no-files-found: ignore
-
-  report-ci-failure:
-    if: ${{ always() && github.ref == 'refs/heads/main' }}
-    permissions:
-      issues: write
-    needs:
-      - lint
-      - typecheck
-      - test
-      - build
-      - bundle-size
-      - e2e-smoke
-      - a11y-smoke
-    runs-on: ubuntu-latest
-    steps:
-      - name: Create issue when CI fails
-        if: ${{ contains(needs.*.result, 'failure') }}
-        uses: actions/github-script@v9
-        with:
-          script: |
-            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const sha = context.sha.slice(0, 7);
-            const title = `CI failure on main (${sha})`;
-            const body = [
-              'Automated CI failure report for `main`.',
-              '',
-              `- Workflow: ${context.workflow}`,
-              `- Run: ${runUrl}`,
-              `- Commit: ${context.sha}`,
-              `- Triggered by: @${context.actor}`,
-              '',
-              '### What to do next',
-              '- [ ] Acknowledge this issue',
-              '- [ ] Investigate failing job(s) in the workflow run',
-              '- [ ] Link the fixing PR and close this issue',
-            ].join('\n');
-
-            const existing = await github.paginate(github.rest.issues.listForRepo, {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-              labels: 'ci-failure',
-              per_page: 100,
-            });
-
-            if (existing.length > 0) {
-              const issue = existing[0];
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issue.number,
-                body: `Another CI failure detected: ${runUrl} (commit ${context.sha}).`,
-              });
-              core.info(`Updated existing issue #${issue.number}`);
-            } else {
-              const created = await github.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title,
-                body,
-                labels: ['bug', 'area:infra', 'ci-failure'],
-              });
-              core.info(`Created issue #${created.data.number}`);
-            }

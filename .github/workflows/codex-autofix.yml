@@ -1,0 +1,232 @@
+name: Codex Autofix
+
+on:
+  workflow_run:
+    workflows: ['CI']
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  generate-fix:
+    if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+    outputs:
+      has_changes: ${{ steps.diff.outputs.has_changes }}
+      branch: ${{ steps.meta.outputs.branch }}
+    steps:
+      - name: Checkout failing commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Codex prompt
+        run: |
+          cat > .github/codex/prompts/fix-ci.runtime.md <<'EOF'
+          The CI workflow "CI" failed for commit ${{ github.event.workflow_run.head_sha }}.
+          Failed run: ${{ github.event.workflow_run.html_url }}
+
+          Find the smallest change that fixes the failure.
+
+          Requirements:
+          - Reproduce the failure locally in this checkout.
+          - Make only the minimal change needed.
+          - Rerun `npm run lint`, `npm run typecheck`, `npm run test`, `npm run build`, `npm run check:bundle-size`, `npx playwright test --project=chromium --grep @e2e-smoke`, and `npx playwright test --project=chromium --grep @a11y-smoke`.
+          - Stop if the fix does not verify.
+          - Do not refactor unrelated code.
+          EOF
+
+      - name: Run Codex
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          prompt-file: .github/codex/prompts/fix-ci.runtime.md
+          sandbox: workspace-write
+          codex-args: '["--ephemeral"]'
+
+      - name: Verify fix
+        run: |
+          npm run lint
+          npm run typecheck
+          npm run test
+          npm run build
+          npm run check:bundle-size
+          npx playwright install --with-deps chromium
+          npx playwright test --project=chromium --grep @e2e-smoke
+          npx playwright test --project=chromium --grep @a11y-smoke
+
+      - name: Prepare branch metadata
+        id: meta
+        run: echo "branch=codex/autofix-${GITHUB_RUN_ID}" >> "$GITHUB_OUTPUT"
+
+      - name: Detect changes
+        id: diff
+        run: |
+          git add -N .
+          if git diff --quiet --exit-code; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit fix
+        if: steps.diff.outputs.has_changes == 'true'
+        run: |
+          git config user.name "codex[bot]"
+          git config user.email "codex[bot]@users.noreply.github.com"
+          git checkout -b "${{ steps.meta.outputs.branch }}"
+          git add -A
+          git commit -m "fix: codex autofix ci failure"
+
+      - name: Push branch
+        if: steps.diff.outputs.has_changes == 'true'
+        run: git push origin "${{ steps.meta.outputs.branch }}"
+
+  open-pr:
+    if: ${{ needs.generate-fix.result == 'success' && needs.generate-fix.outputs.has_changes == 'true' }}
+    needs: generate-fix
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create pull request
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const branch = `${{ needs.generate-fix.outputs.branch }}`;
+            const title = 'fix: codex autofix ci failure';
+            const body = [
+              'Codex proposed a fix after CI failed.',
+              '',
+              `- Failed run: ${{ github.event.workflow_run.html_url }}`,
+              `- Head SHA: ${{ github.event.workflow_run.head_sha }}`,
+              '',
+              'This PR was created after the Codex verification step passed locally in CI.',
+            ].join('\n');
+
+            const existing = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}:${branch}`,
+              state: 'open',
+            });
+
+            if (existing.data.length > 0) {
+              core.info(`PR already exists: #${existing.data[0].number}`);
+              return;
+            }
+
+            const pr = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              head: branch,
+              base: context.payload.repository.default_branch,
+              body,
+              draft: true,
+            });
+
+            core.info(`Created PR #${pr.data.number}`);
+
+  notify:
+    if: always()
+    needs: generate-fix
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Create issue and ping Discord on failure
+        if: ${{ needs.generate-fix.result != 'success' }}
+        id: create_issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const sha = '${{ github.event.workflow_run.head_sha }}';
+            const title = `Codex autofix failed for CI (${sha.slice(0, 7)})`;
+            const body = [
+              'Codex tried to autofix a CI failure, but the fix did not verify.',
+              '',
+              `- Failed CI run: ${{ github.event.workflow_run.html_url }}`,
+              `- Autofix run: ${runUrl}`,
+              `- Commit: ${sha}`,
+              '',
+              '### Next steps',
+              '- [ ] Inspect the failing Codex autofix run',
+              '- [ ] Fix the root cause manually',
+              '- [ ] Close this issue when CI is green again',
+            ].join('\n');
+
+            const existing = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'ci-failure',
+              per_page: 100,
+            });
+
+            let issueNumber;
+
+            if (existing.length > 0) {
+              issueNumber = existing[0].number;
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                body: `Codex autofix failed again: ${runUrl}`,
+              });
+            } else {
+              const created = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['bug', 'area:infra', 'ci-failure'],
+              });
+              issueNumber = created.data.number;
+            }
+            core.setOutput('issue_number', String(issueNumber));
+      - name: Ping Discord on failure
+        if: ${{ needs.generate-fix.result != 'success' }}
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          CONTENT: |-
+            [FAIL] Codex autofix could not verify in `${{ github.repository }}`
+            Issue: #${{ steps.create_issue.outputs.issue_number }}
+            Workflow: ${{ github.event.workflow_run.name }}
+            Commit: `${{ github.event.workflow_run.head_sha }}`
+            ${{ github.event.workflow_run.html_url }}
+        run: |
+          set -euo pipefail
+          MESSAGE=$(python -c "import json, os; print(json.dumps({'content': os.environ['CONTENT']}))")
+          curl -fsS -X POST "$DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            --data "$MESSAGE"
+
+      - name: Ping Discord on success
+        if: ${{ needs.generate-fix.result == 'success' }}
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          CONTENT: |-
+            [PASS] Codex autofix verified in `${{ github.repository }}`
+            Workflow: ${{ github.event.workflow_run.name }}
+            Branch: `${{ needs.generate-fix.outputs.branch }}`
+            Commit: `${{ github.event.workflow_run.head_sha }}`
+            ${{ github.event.workflow_run.html_url }}
+        run: |
+          set -euo pipefail
+          MESSAGE=$(python -c "import json, os; print(json.dumps({'content': os.environ['CONTENT']}))")
+          curl -fsS -X POST "$DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            --data "$MESSAGE"
