@@ -78,6 +78,7 @@ async function initPostHog(
       capture_pageview: false, // manual SPA page views
       loaded: () => {
         posthogInitialized = true;
+        flushPostHogQueue();
       },
     });
     posthogInstance = posthog;
@@ -85,6 +86,69 @@ async function initPostHog(
     // PostHog is best-effort
   }
 }
+
+/**
+ * Events fired before PostHog finishes loading are queued instead of dropped,
+ * so cold-load funnel steps are not lost.
+ */
+type QueuedCall =
+  | { kind: 'capture'; name: string; properties: Record<string, unknown> }
+  | { kind: 'register'; properties: Record<string, unknown> }
+  | { kind: 'person'; properties: Record<string, unknown> }
+  | { kind: 'identify'; userId: string };
+
+const MAX_QUEUED_CALLS = 50;
+const posthogQueue: QueuedCall[] = [];
+
+function enqueuePostHog(call: QueuedCall): void {
+  if (posthogQueue.length >= MAX_QUEUED_CALLS) return;
+  posthogQueue.push(call);
+}
+
+function runPostHogCall(call: QueuedCall): void {
+  if (!posthogInstance) return;
+  switch (call.kind) {
+    case 'capture':
+      posthogInstance.capture(call.name, call.properties);
+      break;
+    case 'register':
+      posthogInstance.register(call.properties);
+      break;
+    case 'person':
+      posthogInstance.setPersonProperties(call.properties);
+      break;
+    case 'identify':
+      posthogInstance.identify(call.userId);
+      break;
+  }
+}
+
+function flushPostHogQueue(): void {
+  while (posthogQueue.length > 0) {
+    const call = posthogQueue.shift();
+    if (!call) break;
+    try {
+      runPostHogCall(call);
+    } catch {
+      /* best-effort */
+    }
+  }
+}
+
+/** Run now when PostHog is ready, otherwise queue until it loads. */
+function withPostHog(call: QueuedCall): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (posthogInitialized && posthogInstance) {
+      runPostHogCall(call);
+    } else {
+      enqueuePostHog(call);
+    }
+  } catch {
+    /* best-effort */
+  }
+}
+
 
 // ---------------------------------------------------------------------------
 // Public API
