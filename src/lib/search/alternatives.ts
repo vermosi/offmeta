@@ -90,6 +90,72 @@ const ALTERNATIVES_PATTERNS: Array<{
 const TRAILING_NOISE =
   /\s+\b(?:in|for)\s+(?:commander|edh|modern|legacy|pioneer|standard|pauper|vintage|brawl)\b.*$/i;
 
+/** Leading budget adjectives ("budget fetch land alternatives"). */
+const LEADING_BUDGET = /^(?:budget|cheap|cheaper|affordable|inexpensive|poor\s+man'?s)\s+/i;
+
+/**
+ * Card *categories* people ask for alternatives to. These are not card names,
+ * so they must never reach the exact-name path — each maps to a deterministic
+ * Scryfall query instead.
+ */
+const CATEGORY_QUERIES: Record<string, string> = {
+  'fetch land': 't:land o:"search your library" o:"shuffle"',
+  'shock land': 't:land o:"2 damage to you" o:"enters"',
+  'dual land': 't:land o:"add" o:"or" -t:basic',
+  'pain land': 't:land o:"1 damage to you"',
+  'fast land': 't:land o:"unless you control two or fewer other lands"',
+  'check land': 't:land o:"unless you control a"',
+  'utility land': 't:land -t:basic',
+  'man land': 't:land o:"becomes a" o:creature',
+  'board wipe': 'otag:sweeper',
+  'mass removal': 'otag:sweeper',
+  'spot removal': 'otag:removal -otag:sweeper',
+  removal: 'otag:removal',
+  counterspell: 'otag:counterspell',
+  'mana rock': 't:artifact otag:manarock',
+  'mana dork': 't:creature otag:manadork',
+  ramp: 'otag:ramp',
+  tutor: 'otag:tutor',
+  'card draw': 'otag:draw',
+  cantrip: 'otag:cantrip',
+  'sac outlet': 'otag:sacoutlet',
+  'sacrifice outlet': 'otag:sacoutlet',
+  wrath: 'otag:sweeper',
+  'graveyard hate': 'otag:graveyard-hate',
+  'artifact removal': 'otag:removal o:artifact',
+  'enchantment removal': 'otag:removal o:enchantment',
+};
+
+/** Price ceiling applied when the user asks for a budget option. */
+const BUDGET_CEILING = 'usd<=5';
+
+function normalizeCategoryTerm(term: string): string {
+  return term
+    .toLowerCase()
+    .replace(/\b(cards?|lands?|spells?)$/i, (m) =>
+      m.toLowerCase() === 'cards' || m.toLowerCase() === 'card' ? '' : m,
+    )
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/s$/, '');
+}
+
+/** Resolves a category phrase ("fetch land") to a Scryfall query. */
+export function resolveCategoryQuery(
+  term: string,
+  budget: boolean,
+): string | null {
+  const normalized = normalizeCategoryTerm(term);
+  const base =
+    CATEGORY_QUERIES[normalized] ??
+    CATEGORY_QUERIES[normalized.replace(/\s+/g, '')] ??
+    null;
+  if (!base) return null;
+  return [base, budget ? BUDGET_CEILING : null, 'game:paper']
+    .filter(Boolean)
+    .join(' ');
+}
+
 function cleanCardName(raw: string): string {
   return raw
     .trim()
@@ -121,13 +187,27 @@ export function detectAlternativesIntent(
     // A reference card name is short and is not itself a description.
     if (words.length < 1 || words.length > 6) continue;
     if (cardName.length < 3) continue;
+
+    const budget = BUDGET_WORDS.test(trimmed);
+
+    // "budget fetch land alternatives" names a category, not a card. Strip the
+    // leading budget adjective and check the category table before rejecting.
+    const stripped = cardName.replace(LEADING_BUDGET, '').trim();
+    const category = resolveCategoryQuery(stripped, budget)
+      ? normalizeCategoryTerm(stripped)
+      : null;
+    if (category) {
+      return { cardName: stripped, budget, kind, category };
+    }
+
     if (BUDGET_WORDS.test(cardName)) continue;
 
-    return { cardName, budget: BUDGET_WORDS.test(trimmed), kind };
+    return { cardName, budget, kind };
   }
 
   return null;
 }
+
 
 
 /** Excludes the reference card from its own alternatives list. */
