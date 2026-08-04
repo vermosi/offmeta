@@ -1,33 +1,29 @@
 /**
  * Purchase links component for CardModal.
- * Displays buy buttons for TCGplayer, Cardmarket, Cardhoarder.
- * Desktop and mobile share one layout: identical spacing, icons and button heights.
+ * Displays simple, centered buy buttons for TCGplayer, Cardmarket, and Cardhoarder.
  * @module components/CardModal/CardModalPurchaseLinks
  */
 
 import type { ComponentType } from 'react';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Loader2, Sparkles, Monitor } from 'lucide-react';
+import { ShoppingCart, Sparkles, Monitor } from 'lucide-react';
 import { getTCGPlayerUrl, getCardmarketUrl } from '@/lib/scryfall/printings';
 import type { CardModalPurchaseLinksProps } from './types';
 import { useTranslation } from '@/lib/i18n';
 import { useAffiliateConfig, wrapAffiliateUrl } from '@/hooks';
 
-/** Shared visual contract so every buy button matches height, padding and gap. */
-const BUTTON_CLASS = 'h-9 w-full justify-between gap-2 px-3 text-xs';
-const ICON_CLASS = 'h-3.5 w-3.5 shrink-0';
+const BUTTON_CLASS = 'h-10 w-full justify-between gap-2 px-3 text-sm';
+const ICON_CLASS = 'h-4 w-4 shrink-0';
 
 interface PurchaseLink {
   key: string;
   icon: ComponentType<{ className?: string }>;
   label: string;
   value: string;
-  primary: boolean;
   href: string;
   onClick: () => void;
 }
 
-/** Appends a query parameter to a purchase URL, respecting an existing query string. */
 function withParam(url: string, param: string): string {
   return url.includes('?') ? `${url}&${param}` : `${url}?${param}`;
 }
@@ -37,9 +33,7 @@ export function CardModalPurchaseLinks({
   displayPrices,
   displayTix,
   selectedPrinting,
-  isLoadingPrintings,
   onAffiliateClick,
-  isMobile = false,
 }: CardModalPurchaseLinksProps) {
   const { t } = useTranslation();
   const affiliateConfig = useAffiliateConfig();
@@ -63,30 +57,6 @@ export function CardModalPurchaseLinks({
   const tixLabel = t('card.tix', 'tix');
   const buyLabel = t('card.buyThisCard', 'Buy This Card');
   const checkPriceLabel = t('card.checkPrice', 'Check price');
-  const priceUnavailableLabel = t(
-    'card.priceUnavailable',
-    'Price not available',
-  );
-  const loadingPricesLabel = t('card.loadingPrices', 'Loading prices…');
-
-  const hasTCGplayerPrice = !!displayPrices.usd || !!displayPrices.usd_foil;
-  const hasCardmarketPrice = !!displayPrices.eur || !!displayPrices.eur_foil;
-  const priceDataLabel = (() => {
-    if (hasTCGplayerPrice && hasCardmarketPrice) {
-      return t(
-        'card.priceDataAvailableBoth',
-        'Prices from TCGplayer and Cardmarket',
-      );
-    }
-    if (hasTCGplayerPrice) {
-      return t('card.priceDataAvailableTCGplayer', 'Prices from TCGplayer');
-    }
-    if (hasCardmarketPrice) {
-      return t('card.priceDataAvailableCardmarket', 'Prices from Cardmarket');
-    }
-    return t('card.priceDataUnavailable', 'No price data available yet');
-  })();
-
 
   const tcgplayerUrl =
     selectedPrinting?.purchase_uris?.tcgplayer || getTCGPlayerUrl(card);
@@ -101,7 +71,6 @@ export function CardModalPurchaseLinks({
       icon: ShoppingCart,
       label: 'TCGplayer',
       value: `$${displayPrices.usd}`,
-      primary: true,
       href: wrapIfTcgplayer(tcgplayerUrl, 'tcgplayer'),
       onClick: () =>
         onAffiliateClick('tcgplayer', tcgplayerUrl, displayPrices.usd),
@@ -114,7 +83,6 @@ export function CardModalPurchaseLinks({
       icon: Sparkles,
       label: `TCGplayer ${foilLabel}`,
       value: `$${displayPrices.usd_foil}`,
-      primary: false,
       href: wrapIfTcgplayer(foilUrl, 'tcgplayer-foil'),
       onClick: () =>
         onAffiliateClick('tcgplayer-foil', foilUrl, displayPrices.usd_foil),
@@ -126,7 +94,6 @@ export function CardModalPurchaseLinks({
       icon: ShoppingCart,
       label: 'Cardmarket',
       value: `€${displayPrices.eur}`,
-      primary: false,
       href: cardmarketUrl,
       onClick: () =>
         onAffiliateClick('cardmarket', cardmarketUrl, displayPrices.eur),
@@ -139,7 +106,6 @@ export function CardModalPurchaseLinks({
       icon: Sparkles,
       label: `Cardmarket ${foilLabel}`,
       value: `€${displayPrices.eur_foil}`,
-      primary: false,
       href: foilUrl,
       onClick: () =>
         onAffiliateClick('cardmarket-foil', foilUrl, displayPrices.eur_foil),
@@ -152,16 +118,11 @@ export function CardModalPurchaseLinks({
       icon: Monitor,
       label: 'Cardhoarder (MTGO)',
       value: `${displayTix} ${tixLabel}`,
-      primary: false,
       href: cardhoarderUrl,
       onClick: () =>
         onAffiliateClick('cardhoarder', cardhoarderUrl, displayTix),
     });
   }
-
-  const hasAnyPrice = links.length > 0;
-  const showFallbackLinks = !hasAnyPrice && !isLoadingPrintings;
-  const showLoadingLinks = !hasAnyPrice && isLoadingPrintings;
 
   const getBuyLinkAriaLabel = (vendor: string) =>
     t(
@@ -170,94 +131,18 @@ export function CardModalPurchaseLinks({
       { cardName: card.name, vendor },
     );
 
-  const fallbackLinks = (
-    <>
-      <p className="text-xs text-muted-foreground">{priceUnavailableLabel}</p>
-      <Button size="sm" className={BUTTON_CLASS} asChild>
-        <a
-          href={wrapIfTcgplayer(tcgplayerUrl, 'tcgplayer')}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={getBuyLinkAriaLabel('TCGplayer')}
-          onClick={() => onAffiliateClick('tcgplayer', tcgplayerUrl)}
-        >
-          <span className="flex items-center gap-2 truncate">
-            <ShoppingCart className={ICON_CLASS} />
-            TCGplayer
-          </span>
-          <span className="opacity-80">{checkPriceLabel}</span>
-        </a>
-      </Button>
-      <Button size="sm" variant="outline" className={BUTTON_CLASS} asChild>
-        <a
-          href={cardmarketUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={getBuyLinkAriaLabel('Cardmarket')}
-          onClick={() => onAffiliateClick('cardmarket', cardmarketUrl)}
-        >
-          <span className="flex items-center gap-2 truncate">
-            <ShoppingCart className={ICON_CLASS} />
-            Cardmarket
-          </span>
-          <span className="opacity-80">{checkPriceLabel}</span>
-        </a>
-      </Button>
-    </>
-  );
-
-  const loadingLinks = (
-    <div
-      className="space-y-1.5"
-      aria-busy="true"
-      aria-live="polite"
-      data-testid="purchase-links-loading"
-    >
-      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Loader2 className="h-3 w-3 animate-spin" />
-        {loadingPricesLabel}
-      </p>
-      <Button
-        size="sm"
-        disabled
-        className={BUTTON_CLASS}
-        aria-label={`TCGplayer — ${loadingPricesLabel}`}
-      >
-        <span className="flex items-center gap-2 truncate">
-          <ShoppingCart className={ICON_CLASS} />
-          TCGplayer
-        </span>
-        <Loader2 className={`${ICON_CLASS} animate-spin`} />
-      </Button>
-      <Button
-        size="sm"
-        variant="outline"
-        disabled
-        className={BUTTON_CLASS}
-        aria-label={`Cardmarket — ${loadingPricesLabel}`}
-      >
-        <span className="flex items-center gap-2 truncate">
-          <ShoppingCart className={ICON_CLASS} />
-          Cardmarket
-        </span>
-        <Loader2 className={`${ICON_CLASS} animate-spin`} />
-      </Button>
-    </div>
-  );
-
   return (
-    <div className={isMobile ? 'w-full' : 'w-full mt-3 max-w-[220px]'}>
-      <h3 className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+    <div className="w-full">
+      <h3 className="text-center mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
         {buyLabel}
       </h3>
-      <p className="mb-2 text-xs text-muted-foreground/80">{priceDataLabel}</p>
-      <div className="space-y-1.5">
-        {links.map(
-          ({ key, icon: Icon, label, value, primary, href, onClick }) => (
+      <div className="space-y-2">
+        {links.length > 0 ? (
+          links.map(({ key, icon: Icon, label, value, href, onClick }) => (
             <Button
               key={key}
               size="sm"
-              variant={primary ? 'default' : 'outline'}
+              variant={key === 'tcgplayer' ? 'default' : 'outline'}
               className={BUTTON_CLASS}
               asChild
             >
@@ -275,10 +160,41 @@ export function CardModalPurchaseLinks({
                 <span className="font-semibold shrink-0">{value}</span>
               </a>
             </Button>
-          ),
+          ))
+        ) : (
+          <>
+            <Button size="sm" className={BUTTON_CLASS} asChild>
+              <a
+                href={wrapIfTcgplayer(tcgplayerUrl, 'tcgplayer')}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={getBuyLinkAriaLabel('TCGplayer')}
+                onClick={() => onAffiliateClick('tcgplayer', tcgplayerUrl)}
+              >
+                <span className="flex items-center gap-2 truncate">
+                  <ShoppingCart className={ICON_CLASS} />
+                  TCGplayer
+                </span>
+                <span className="opacity-80">{checkPriceLabel}</span>
+              </a>
+            </Button>
+            <Button size="sm" variant="outline" className={BUTTON_CLASS} asChild>
+              <a
+                href={cardmarketUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={getBuyLinkAriaLabel('Cardmarket')}
+                onClick={() => onAffiliateClick('cardmarket', cardmarketUrl)}
+              >
+                <span className="flex items-center gap-2 truncate">
+                  <ShoppingCart className={ICON_CLASS} />
+                  Cardmarket
+                </span>
+                <span className="opacity-80">{checkPriceLabel}</span>
+              </a>
+            </Button>
+          </>
         )}
-        {showFallbackLinks && fallbackLinks}
-        {showLoadingLinks && loadingLinks}
       </div>
     </div>
   );
