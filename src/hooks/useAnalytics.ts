@@ -8,6 +8,8 @@ import { useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/core/logger';
 import { classifyTraffic } from '@/lib/analytics/traffic';
+import { trackExternalEvent } from '@/lib/analytics/providers';
+
 
 // ---------------------------------------------------------------------------
 // Internal traffic detection
