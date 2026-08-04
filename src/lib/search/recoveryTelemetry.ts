@@ -15,6 +15,8 @@ export type FallbackPath =
   | 'none'
   /** Alternatives intent detected and resolved to a similarity query. */
   | 'alternatives_similarity'
+  /** Alternatives intent named a card category ("fetch land alternatives"). */
+  | 'alternatives_category'
   /** Alternatives intent detected but the reference card didn't resolve. */
   | 'alternatives_unresolved'
   /** Fuzzy card-name resolver produced a canonical name. */
