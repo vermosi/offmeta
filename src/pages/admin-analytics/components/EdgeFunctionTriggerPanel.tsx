@@ -50,6 +50,8 @@ const EDGE_FUNCTIONS: EdgeFnDef[] = [
   { name: 'batch-generate-seo-pages', label: 'Batch Generate SEO Pages', description: 'Generate multiple SEO pages from seed queries (service-role only)', method: 'POST', body: { publish: false }, category: 'seo', dangerous: true, serviceRoleOnly: true },
   { name: 'auto-generate-seo-pages', label: 'Auto Generate SEO Pages', description: 'Auto-generate SEO pages from popular queries (service-role only)', method: 'POST', category: 'seo', serviceRoleOnly: true },
   { name: 'sitemap', label: 'Sitemap', description: 'Generate the XML sitemap', method: 'GET', category: 'seo' },
+  { name: 'submit-sitemap', label: 'Submit Sitemap to Google', description: 'Resubmit sitemap.xml to Search Console (service-role only)', method: 'POST', body: { source: 'admin', force: true }, category: 'seo', serviceRoleOnly: true },
+
   { name: 'prerender', label: 'Prerender', description: 'Pre-render a page for SEO crawlers', method: 'GET', category: 'seo' },
 
   // Search / similarity
