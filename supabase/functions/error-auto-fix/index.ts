@@ -202,11 +202,18 @@ Deno.serve(
       const outcomes = await repair(row);
       const ok = outcomes.every((o) => o.ok);
       const noStrategy = outcomes.some((o) => o.detail === 'no_strategy');
+      const ignored = outcomes.some((o) => o.action === 'ignore');
 
       await supabase
         .from('error_events')
         .update({
-          status: noStrategy ? 'open' : ok ? 'repaired' : 'failed',
+          status: ignored
+            ? 'ignored'
+            : noStrategy
+              ? 'open'
+              : ok
+                ? 'repaired'
+                : 'failed',
           fix_attempts: row.fix_attempts + 1,
           last_fix_at: new Date().toISOString(),
           last_fix_result: { outcomes },
