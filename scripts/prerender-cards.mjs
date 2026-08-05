@@ -21,6 +21,14 @@ const SITE_URL = 'https://offmeta.app';
 const DIST_DIR = 'dist';
 const OUTPUT_DIR = path.join(DIST_DIR, 'cards');
 const MAX_CARDS = Number(process.env.PRERENDER_CARD_LIMIT ?? 5000);
+// Committed snapshot of the card data this script needs. Production builds do
+// not always have Supabase credentials in their environment; without a local
+// fallback the whole prerender step silently no-ops and every /cards/* URL
+// ships as a bare SPA shell (which is what Googlebot flagged as a homepage
+// clone). The snapshot is refreshed automatically whenever a build *does*
+// have credentials, so it tracks the live data over time.
+const SNAPSHOT_PATH = path.join('scripts', 'data', 'prerender-cards.json');
+const SNAPSHOT_MAX = 1000;
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY =
@@ -242,12 +250,46 @@ function customizeHtmlForCard(templateHtml, card, slug) {
   return html;
 }
 
-async function main() {
-  if (!SUPABASE_URL || !SUPABASE_KEY) {
-    console.warn('[prerender-cards] Skipping — VITE_SUPABASE_URL / key not set.');
-    return;
+async function readSnapshot() {
+  try {
+    const raw = await fs.readFile(SNAPSHOT_PATH, 'utf8');
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed?.cards) ? parsed.cards : [];
+  } catch {
+    return [];
   }
+}
 
+async function writeSnapshot(cards) {
+  try {
+    await fs.mkdir(path.dirname(SNAPSHOT_PATH), { recursive: true });
+    await fs.writeFile(
+      SNAPSHOT_PATH,
+      `${JSON.stringify(
+        { generated_at: new Date().toISOString(), cards: cards.slice(0, SNAPSHOT_MAX) },
+        null,
+        0,
+      )}\n`,
+      'utf8',
+    );
+  } catch (err) {
+    console.warn('[prerender-cards] Could not refresh snapshot:', err.message);
+  }
+}
+
+async function writeBuildInfo(info) {
+  try {
+    await fs.writeFile(
+      path.join(DIST_DIR, 'build-info.json'),
+      `${JSON.stringify({ built_at: new Date().toISOString(), ...info }, null, 2)}\n`,
+      'utf8',
+    );
+  } catch {
+    /* diagnostics only */
+  }
+}
+
+async function main() {
   let templateHtml;
   try {
     templateHtml = await fs.readFile(path.join(DIST_DIR, 'index.html'), 'utf8');
@@ -256,9 +298,23 @@ async function main() {
     return;
   }
 
-  const cards = await fetchTopCards(MAX_CARDS);
+  const hasCredentials = Boolean(SUPABASE_URL && SUPABASE_KEY);
+  let cards = hasCredentials ? await fetchTopCards(MAX_CARDS) : [];
+  let source = 'live';
+
+  if (cards.length > 0) {
+    await writeSnapshot(cards);
+  } else {
+    cards = await readSnapshot();
+    source = 'snapshot';
+    console.warn(
+      `[prerender-cards] No live data (credentials: ${hasCredentials}); using committed snapshot (${cards.length} cards).`,
+    );
+  }
+
   if (cards.length === 0) {
-    console.warn('[prerender-cards] No cards returned from card_signals; skipping.');
+    console.warn('[prerender-cards] No card data available; skipping.');
+    await writeBuildInfo({ prerendered_cards: 0, source: 'none', has_credentials: hasCredentials });
     return;
   }
 
@@ -284,8 +340,10 @@ async function main() {
     written += 1;
   }
 
+  await writeBuildInfo({ prerendered_cards: written, source, has_credentials: hasCredentials });
+
   console.log(
-    `[prerender-cards] Wrote ${written} card HTML files to ${OUTPUT_DIR}/<slug>{.html,/index.html}`,
+    `[prerender-cards] Wrote ${written} card HTML files (source: ${source}) to ${OUTPUT_DIR}/<slug>{.html,/index.html}`,
   );
 }
 
