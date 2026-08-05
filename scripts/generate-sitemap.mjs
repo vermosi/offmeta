@@ -13,6 +13,7 @@
  * are excluded intentionally.
  */
 
+import './load-env.mjs';
 import fs from 'node:fs/promises';
 
 const SITE_URL = 'https://offmeta.app';

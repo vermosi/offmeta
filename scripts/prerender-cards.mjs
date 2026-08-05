@@ -13,6 +13,7 @@
 // Runs via `postbuild`. Failures degrade gracefully — the SPA shell continues
 // to render the same page client-side via React Router.
 
+import './load-env.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
