@@ -246,7 +246,14 @@ export function parseCardsLike(query: string, ir: SearchIR): string {
   const cardsLikePatterns = [
     /\b(?:cards?|spells?|creatures?)\s+(?:like|similar to)\s+([^,]+?)(?:\s+(?:in|for|that)|$)/gi,
     /\b(?:like|similar to)\s+([^,]+?)(?:\s+(?:in|for|that)|$)/gi,
-    /\b([^,]+?)\s+(?:alternatives?|replacements?|substitutes?)\b/gi,
+    // "(budget) alternatives to X" — the reference card follows "to"/"for".
+    // This must run before the trailing form below, otherwise "budget
+    // alternatives" is consumed as the card name and the actual card is left
+    // behind as loose text (e.g. "to rhystic study").
+    /\b(?:budget|cheap|cheaper|affordable|inexpensive)?\s*(?:alternatives?|replacements?|substitutes?|swaps?)\s+(?:to|for)\s+([^,]+?)(?:\s+(?:in|that)\b.*)?$/gi,
+    // Trailing form: "X alternatives". Never match when "to"/"for" follows,
+    // which is the pattern handled above.
+    /\b([^,]+?)\s+(?:alternatives?|replacements?|substitutes?)\b(?!\s+(?:to|for)\b)/gi,
   ];
 
   for (const pattern of cardsLikePatterns) {
@@ -269,19 +276,24 @@ export function parseCardsLike(query: string, ir: SearchIR): string {
         }
       }
 
-      if (!found) {
+      if (found) {
+        remaining = remaining.replace(match[0], '').trim();
+      } else {
+        // Keep the reference card in the remaining text so the AI stage (and
+        // the client's alternatives recovery) can still see what the user
+        // asked about. Dropping it produced nonsense leftovers.
         ir.warnings.push(
           `No specific mapping for "${cardName}"; AI will interpret.`,
         );
+        remaining = remaining.replace(match[0], cardName).trim();
       }
-
-      remaining = remaining.replace(match[0], '').trim();
     }
     pattern.lastIndex = 0;
   }
 
   return remaining;
 }
+
 
 /**
  * Parse archetype/strategy patterns
