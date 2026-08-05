@@ -80,13 +80,48 @@ function queue(report: VitalReport) {
 
 let flushed = false;
 
+/**
+ * Timestamp of the first moment the page was hidden (0 if it started hidden).
+ * Paint metrics recorded after this point are meaningless — a backgrounded or
+ * prerendered tab keeps painting minutes after navigation start, which is how
+ * 20s–70min "LCP" values reached the table.
+ */
+let firstHiddenTime =
+  typeof document !== 'undefined' && document.visibilityState === 'hidden'
+    ? 0
+    : Number.POSITIVE_INFINITY;
+
+if (typeof document !== 'undefined') {
+  const markHidden = () => {
+    if (document.visibilityState === 'hidden') {
+      firstHiddenTime = Math.min(firstHiddenTime, performance.now());
+    }
+  };
+  document.addEventListener('visibilitychange', markHidden, { capture: true });
+  window.addEventListener(
+    'pagehide',
+    () => {
+      firstHiddenTime = Math.min(firstHiddenTime, performance.now());
+    },
+    { capture: true },
+  );
+}
+
+/**
+ * Route the metrics belong to — captured at init (the initial navigation),
+ * not at flush time. Client-side navigation used to mis-attribute the initial
+ * load's LCP to whatever route the visitor happened to be on when leaving.
+ */
+const entryPath =
+  typeof window !== 'undefined' ? window.location.pathname : '';
+
 function flush() {
   if (flushed || pending.length === 0) return;
   flushed = true;
   if (shouldSuppressInsert()) return;
 
   const internal = isInternal();
-  const path = window.location.pathname;
+  const path = entryPath;
   const connection =
     (navigator as Navigator & { connection?: { effectiveType?: string } })
       .connection?.effectiveType ?? 'unknown';
@@ -110,6 +145,9 @@ function flush() {
   });
 }
 
+/** Beyond this, a "paint" is a backgrounded tab, not a user-visible load. */
+const MAX_PAINT_MS = 30_000;
+
 function observeLCP() {
   // Per web.dev: stop taking new LCP candidates after the first user
   // interaction or when the tab is hidden. Otherwise a tab left open in
@@ -119,10 +157,10 @@ function observeLCP() {
       const entries = list.getEntries();
       const last = entries[entries.length - 1];
       if (!last) return;
+      // Discard candidates painted after the page was first hidden.
+      if (last.startTime >= firstHiddenTime) return;
       const value = Math.round(last.startTime);
-      // Ignore obviously-bogus values (backgrounded tabs, clock jumps).
-      // 60s is well beyond any real LCP; anything above is noise.
-      if (!isFinite(value) || value < 0 || value > 60_000) return;
+      if (!isFinite(value) || value < 0 || value > MAX_PAINT_MS) return;
       reported.delete('LCP');
       const idx = pending.findIndex((p) => p.name === 'LCP');
       if (idx >= 0) pending.splice(idx, 1);
