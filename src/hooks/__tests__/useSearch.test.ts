@@ -242,7 +242,7 @@ describe('useSearch', () => {
     });
 
     // Default title
-    expect(document.title).toBe('OffMeta — Natural Language MTG Card Search');
+    expect(document.title).toBe('MTG Card Search in Plain English | OffMeta');
   });
 
   it('handleRerunEditedQuery updates search query', () => {
