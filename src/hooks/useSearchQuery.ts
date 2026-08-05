@@ -165,12 +165,12 @@ function getTranslationKey(
 /**
  * Check if we're rate limited for searches
  */
-function checkSearchRateLimit(query: string): {
+function checkSearchRateLimit(_query: string): {
   allowed: boolean;
   reason?: string;
 } {
   const now = Date.now();
-  const normalizedQuery = query.toLowerCase().trim();
+
 
   // Reset minute window if expired
   if (now - minuteWindowStart > 60000) {
