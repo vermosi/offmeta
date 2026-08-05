@@ -94,9 +94,34 @@ async function verifySitemap(): Promise<FixOutcome> {
 }
 
 /**
+ * Failures recorded from a dev server, preview sandbox, or E2E smoke run are
+ * not production incidents and have no repair path — they are closed out so
+ * the queue only ever shows actionable rows.
+ */
+function isNonProductionUrl(url: string | null): boolean {
+  if (!url) return false;
+  try {
+    const host = new URL(url).hostname;
+    return (
+      host === 'localhost' ||
+      host === '127.0.0.1' ||
+      host.endsWith('.local') ||
+      host.endsWith('.lovableproject.com') ||
+      host.startsWith('id-preview--')
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Pick and run the repair strategy for a single error row.
  */
 async function repair(row: ErrorRow): Promise<FixOutcome[]> {
+  if (isNonProductionUrl(row.url)) {
+    return [{ action: 'ignore', ok: true, detail: 'non_production_origin' }];
+  }
+
   const type = row.error_type.toLowerCase();
   const source = row.source.toLowerCase();
 
@@ -177,11 +202,18 @@ Deno.serve(
       const outcomes = await repair(row);
       const ok = outcomes.every((o) => o.ok);
       const noStrategy = outcomes.some((o) => o.detail === 'no_strategy');
+      const ignored = outcomes.some((o) => o.action === 'ignore');
 
       await supabase
         .from('error_events')
         .update({
-          status: noStrategy ? 'open' : ok ? 'repaired' : 'failed',
+          status: ignored
+            ? 'ignored'
+            : noStrategy
+              ? 'open'
+              : ok
+                ? 'repaired'
+                : 'failed',
           fix_attempts: row.fix_attempts + 1,
           last_fix_at: new Date().toISOString(),
           last_fix_result: { outcomes },
