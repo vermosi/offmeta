@@ -1,3 +1,8 @@
 import { describe, it } from 'vitest';
-import { detectAlternativesIntent } from '@/lib/search/alternatives';
-describe('alt', () => { it('x', () => { console.log(JSON.stringify(detectAlternativesIntent('budget alternatives to rhystic study'))); }); });
+import { buildClientFallbackQuery, extractCardNameCandidate, isLikelyCardName } from '@/lib/search/fallback';
+describe('alt', () => { it('x', () => {
+  const q = 'budget alternatives to rhystic study';
+  console.log('fallback:', buildClientFallbackQuery(q));
+  console.log('cardName:', extractCardNameCandidate(q));
+  console.log('isLikelyCardName:', isLikelyCardName(q));
+}); });
