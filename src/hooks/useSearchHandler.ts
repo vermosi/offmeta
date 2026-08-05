@@ -348,10 +348,10 @@ export function useSearchHandler({
           );
         } else if (
           errorMessage.includes('429') ||
-          errorMessage.includes('rate') ||
-          errorMessage.includes('Rate limit') ||
-          errorMessage.includes('Please wait')
+          /rate limit/i.test(errorMessage) ||
+          /too many (requests|searches)/i.test(errorMessage)
         ) {
+
           logger.warn('[SearchDiag] Rate limited', {
             query: queryToSearch,
             error: errorMessage,

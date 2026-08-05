@@ -165,12 +165,12 @@ function getTranslationKey(
 /**
  * Check if we're rate limited for searches
  */
-function checkSearchRateLimit(query: string): {
+function checkSearchRateLimit(_query: string): {
   allowed: boolean;
   reason?: string;
 } {
   const now = Date.now();
-  const normalizedQuery = query.toLowerCase().trim();
+
 
   // Reset minute window if expired
   if (now - minuteWindowStart > 60000) {
@@ -186,15 +186,11 @@ function checkSearchRateLimit(query: string): {
     };
   }
 
-  // Check cooldown for identical searches — only block if called multiple times in <500ms
-  // (dedup handles the rest via pendingTranslations)
-  const lastSearchTime = recentSearches.get(normalizedQuery);
-  if (lastSearchTime && now - lastSearchTime < 500) {
-    return {
-      allowed: false,
-      reason: 'Rate limited: please wait before searching again.',
-    };
-  }
+  // NOTE: identical-query bursts are handled by pendingTranslations /
+  // cross-tab dedup below — they must NOT surface as a rate-limit error,
+  // otherwise a single user search that re-fires (effect re-run, URL sync)
+  // shows a bogus "Too many searches" toast.
+
 
   return { allowed: true };
 }

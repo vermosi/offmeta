@@ -536,7 +536,7 @@ describe('useSearchHandler', () => {
 
   // 22. Multiple error variants trigger correct fallback path
   it.each([
-    ['Please wait before retrying', true], // rate-limit variant
+    ['Please wait before retrying', false], // ambiguous wording → generic fallback
     ['rate limited by server', true], // rate-limit variant
     ['Server returned 500', false], // generic error
     ['ECONNREFUSED', false], // network error
