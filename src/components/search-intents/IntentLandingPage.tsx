@@ -109,7 +109,7 @@ export function IntentLandingPage({
         <section className="space-y-4">
           <div className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/5 px-3 py-1.5 text-xs font-medium text-accent">
             {BadgeIcon ? (
-              <BadgeIcon className="h-3.5 w-3.5" aria-hidden="true" />
+              <BadgeIcon className="h-3.5 w-3.5" aria-hidden={true} />
             ) : null}
             {badgeLabel}
           </div>
@@ -135,7 +135,7 @@ export function IntentLandingPage({
               }}
               className="group rounded-2xl border border-border/60 bg-card/70 p-5 shadow-sm transition-colors hover:border-accent/30 hover:bg-card"
             >
-              <Icon className="h-5 w-5 text-accent" aria-hidden="true" />
+              <Icon className="h-5 w-5 text-accent" aria-hidden={true} />
               <h2 className="mt-3 text-lg font-semibold text-foreground group-hover:text-accent transition-colors">
                 {searchTitle}
               </h2>
@@ -149,7 +149,7 @@ export function IntentLandingPage({
               </div>
               <div className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-accent">
                 Open in search
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                <ArrowRight className="h-4 w-4" aria-hidden={true} />
               </div>
             </Link>
           ))}
