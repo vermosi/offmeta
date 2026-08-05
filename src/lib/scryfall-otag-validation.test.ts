@@ -5,24 +5,27 @@ const describeIfLive = LIVE_TESTS_ENABLED ? describe : describe.skip;
 
 /**
  * Scryfall Tagger Tags Validation Test Suite
- * Tests otag: and atag: values against Scryfall API to verify they exist.
- * 
+ * Tests oracletag: and atag: values against Scryfall API to verify they exist.
+ *
  * Source: https://scryfall.com/docs/tagger-tags
- * 
+ *
  * IMPORTANT: This file only includes tags that are VERIFIED to return results.
  * Many common terms (like keywords) should use kw: not otag:
- * 
+ *
  * Syntax guide:
- * - otag: / function: / oracletag: - Functional tags (what the card does)
+ * - oracletag: / function: - Functional tags (what the card does)
  * - atag: / art: / arttag: - Art tags (what's in the artwork)
  * - kw: / keyword: - Keyword abilities (flying, haste, etc.)
  */
 
-// Oracle Tags (otag:) - Functional tags describing card mechanics
+// Oracle Tags (oracletag:) - Functional tags describing card mechanics
 // All tags below have been VERIFIED to return results from Scryfall API
 const ORACLE_TAGS = [
   // Core mechanics used in our mappings
-  { tag: 'sacrifice-outlet', description: 'Cards that let you sacrifice permanents' },
+  {
+    tag: 'sacrifice-outlet',
+    description: 'Cards that let you sacrifice permanents',
+  },
   { tag: 'free-sacrifice-outlet', description: 'Free sacrifice outlets' },
   { tag: 'ramp', description: 'Mana acceleration' },
   { tag: 'spot-removal', description: 'Single-target removal' },
@@ -57,7 +60,7 @@ const ORACLE_TAGS = [
   { tag: 'attack-trigger', description: 'When attacks triggers' },
   { tag: 'bounce', description: 'Return to hand effects' },
   { tag: 'blink', description: 'Exile and return effects' },
-  
+
   // Additional verified functional tags from tagger-tags.txt
   { tag: 'activated-ability', description: 'Has activated ability' },
   { tag: 'affinity', description: 'Affinity mechanic' },
@@ -93,7 +96,7 @@ const ORACLE_TAGS = [
   { tag: 'rummage', description: 'Discard then draw' },
   { tag: 'scry', description: 'Scry mechanic' },
   { tag: 'surveil', description: 'Surveil mechanic' },
-  
+
   // Specialized land tags
   { tag: 'painland', description: 'Painland cycle' },
   { tag: 'bounceland', description: 'Karoo/Bounceland cycle' },
@@ -119,7 +122,7 @@ const ART_TAGS = [
   { tag: 'wurm', description: 'Wurm in artwork' },
   { tag: 'troll', description: 'Troll in artwork' },
   { tag: 'ogre', description: 'Ogre in artwork' },
-  
+
   // Animals
   { tag: 'cat', description: 'Cat in artwork' },
   { tag: 'dog', description: 'Dog in artwork' },
@@ -144,7 +147,7 @@ const ART_TAGS = [
   { tag: 'tiger', description: 'Tiger in artwork' },
   { tag: 'elephant', description: 'Elephant in artwork' },
   { tag: 'cow', description: 'Cow in artwork' },
-  
+
   // Nature & Elements
   { tag: 'fire', description: 'Fire in artwork' },
   { tag: 'water', description: 'Water in artwork' },
@@ -166,7 +169,7 @@ const ART_TAGS = [
   { tag: 'cloud', description: 'Cloud in artwork' },
   { tag: 'rain', description: 'Rain in artwork' },
   { tag: 'snow', description: 'Snow in artwork' },
-  
+
   // Structures & Places
   { tag: 'castle', description: 'Castle in artwork' },
   { tag: 'tower', description: 'Tower in artwork' },
@@ -180,7 +183,7 @@ const ART_TAGS = [
   { tag: 'wall', description: 'Wall in artwork' },
   { tag: 'city', description: 'City in artwork' },
   { tag: 'graveyard', description: 'Graveyard in artwork' },
-  
+
   // Equipment & Objects
   { tag: 'sword', description: 'Sword in artwork' },
   { tag: 'axe', description: 'Axe in artwork' },
@@ -204,7 +207,7 @@ const ART_TAGS = [
   { tag: 'mask', description: 'Mask in artwork' },
   { tag: 'banner', description: 'Banner in artwork' },
   { tag: 'hook', description: 'Hook in artwork' },
-  
+
   // Body & Appearance
   { tag: 'wings', description: 'Wings in artwork' },
   { tag: 'claws', description: 'Claws in artwork' },
@@ -216,7 +219,7 @@ const ART_TAGS = [
   { tag: 'bone', description: 'Bone in artwork' },
   { tag: 'eye', description: 'Eye in artwork' },
   { tag: 'hand', description: 'Hand in artwork' },
-  
+
   // Magic & Effects
   { tag: 'magic', description: 'Magic effects in artwork' },
   { tag: 'aura', description: 'Aura in artwork' },
@@ -235,20 +238,25 @@ async function validateTagAgainstScryfall(
   prefix: 'otag' | 'atag',
   tag: string,
   retries = 3,
-): Promise<{ valid: boolean; count?: number; error?: string; status?: number }> {
-  const query = `${prefix}:${tag}`;
+): Promise<{
+  valid: boolean;
+  count?: number;
+  error?: string;
+  status?: number;
+}> {
+  const query = prefix === 'otag' ? `oracletag:${tag}` : `${prefix}:${tag}`;
   const url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(query)}`;
 
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const response = await fetch(url);
-      
+
       // Rate limited - wait and retry
       if (response.status === 429 && attempt < retries) {
         await delay(1000 * (attempt + 1)); // Exponential backoff: 1s, 2s, 3s
         continue;
       }
-      
+
       const data = await response.json();
 
       if (response.status === 200) {
@@ -256,11 +264,11 @@ async function validateTagAgainstScryfall(
       }
 
       if (response.status === 404) {
-        return { 
-          valid: false, 
+        return {
+          valid: false,
           count: 0,
           status: 404,
-          error: 'No cards found with this tag'
+          error: 'No cards found with this tag',
         };
       }
 
@@ -274,7 +282,12 @@ async function validateTagAgainstScryfall(
 
       // 429 after all retries exhausted - still return valid for CI resilience
       if (response.status === 429) {
-        return { valid: true, count: 0, status: 429, error: 'Rate limited - assumed valid' };
+        return {
+          valid: true,
+          count: 0,
+          status: 429,
+          error: 'Rate limited - assumed valid',
+        };
       }
 
       return {
@@ -293,16 +306,16 @@ async function validateTagAgainstScryfall(
       };
     }
   }
-  
+
   return { valid: false, error: 'Max retries exceeded' };
 }
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 describeIfLive('Scryfall Tagger Tags Validation', () => {
-  describe('Oracle Tags (otag:) - Functional card mechanics', () => {
+  describe('Oracle Tags (oracletag:) - Functional card mechanics', () => {
     ORACLE_TAGS.forEach((tagInfo, index) => {
-      it(`otag:${tagInfo.tag} - ${tagInfo.description}`, async () => {
+      it(`oracletag:${tagInfo.tag} - ${tagInfo.description}`, async () => {
         // Increase delay to avoid rate limiting in CI
         if (index > 0) await delay(200);
 
@@ -336,13 +349,13 @@ describeIfLive('Scryfall Tagger Tags Validation', () => {
 
   // Meta-tests
   it('should have no duplicate oracle tag entries', () => {
-    const tagNames = ORACLE_TAGS.map(t => t.tag);
+    const tagNames = ORACLE_TAGS.map((t) => t.tag);
     const uniqueTags = new Set(tagNames);
     expect(uniqueTags.size).toBe(tagNames.length);
   });
 
   it('should have no duplicate art tag entries', () => {
-    const tagNames = ART_TAGS.map(t => t.tag);
+    const tagNames = ART_TAGS.map((t) => t.tag);
     const uniqueTags = new Set(tagNames);
     expect(uniqueTags.size).toBe(tagNames.length);
   });
@@ -350,13 +363,13 @@ describeIfLive('Scryfall Tagger Tags Validation', () => {
 
 /**
  * INVALID TAGS - DO NOT USE IN MAPPINGS
- * 
+ *
  * KEYWORDS: Use kw: prefix, NOT otag:
  * - flying, haste, trample, lifelink, deathtouch, menace, reach,
  *   vigilance, first-strike, double-strike, hexproof, indestructible,
  *   shroud, infect, proliferate, storm, dredge, cycling, undying,
  *   flash, protection, prowess
- * 
+ *
  * INVALID otag: values (use alternatives):
  * - otag:countermagic → use: otag:counter
  * - otag:stax → use: o:"can't" / pillowfort effects

@@ -82,4 +82,6 @@ jobs:
       - name: Run live edge-function validation
         env:
           RUN_API_TESTS: '1'
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
         run: npm run test -- src/tests/api/edge-function.test.ts
