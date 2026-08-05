@@ -28,7 +28,7 @@ const MAX_CARDS = Number(process.env.PRERENDER_CARD_LIMIT ?? 5000);
 // clone). The snapshot is refreshed automatically whenever a build *does*
 // have credentials, so it tracks the live data over time.
 const SNAPSHOT_PATH = path.join('scripts', 'data', 'prerender-cards.json');
-const SNAPSHOT_MAX = 1000;
+const SNAPSHOT_MAX = 5000;
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY =
