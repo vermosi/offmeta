@@ -13,6 +13,7 @@
  * are excluded intentionally.
  */
 
+import './load-env.mjs';
 import fs from 'node:fs/promises';
 
 const SITE_URL = 'https://offmeta.app';
@@ -277,6 +278,25 @@ const xml =
   `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
   lines.join('\n') +
   `\n</urlset>\n`;
+
+// Safety net: never replace a rich committed sitemap with a stub because the
+// build environment happened to lack Supabase credentials.
+if (!HAS_SUPABASE) {
+  let existingUrls = 0;
+  try {
+    const existing = await fs.readFile(OUTPUT, 'utf8');
+    existingUrls = (existing.match(/<loc>/g) ?? []).length;
+  } catch {
+    /* no existing sitemap */
+  }
+  if (existingUrls > seen.size) {
+    console.warn(
+      `[sitemap] No Supabase env; keeping existing sitemap with ` +
+        `${existingUrls} URLs instead of writing ${seen.size}.`,
+    );
+    process.exit(0);
+  }
+}
 
 await fs.writeFile(OUTPUT, xml, 'utf8');
 

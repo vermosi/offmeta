@@ -150,6 +150,40 @@ function isLoggingClient(client: unknown): client is SupabaseLoggingClient {
   return isRecord(client) && typeof client.from === 'function';
 }
 
+/**
+ * A browser client with an expired/rotated session still sends the project
+ * publishable key in the `apikey` header. Treating that as anonymous access
+ * avoids spurious 401s on public endpoints (the caller gets anon-level rights
+ * only — never authenticated or service rights).
+ */
+function anonFromApiKeyHeader(req: Request): AuthResult | null {
+  const apikey = req.headers.get('apikey')?.trim();
+  if (!apikey) return null;
+
+  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+  const supabasePublishableKey = Deno.env.get('SUPABASE_PUBLISHABLE_KEY');
+  if (
+    (supabaseAnonKey && apikey === supabaseAnonKey) ||
+    (supabasePublishableKey && apikey === supabasePublishableKey)
+  ) {
+    return { authorized: true, role: 'anon' };
+  }
+
+  const payload = decodeJwtPayload(apikey);
+  const projectRef = extractProjectRef(Deno.env.get('SUPABASE_URL'));
+  const expMs = typeof payload?.exp === 'number' ? payload.exp * 1000 : null;
+  const valid =
+    !!payload &&
+    payload.iss === 'supabase' &&
+    payload.role === 'anon' &&
+    typeof payload.ref === 'string' &&
+    (projectRef === null || payload.ref === projectRef) &&
+    expMs !== null &&
+    expMs > Date.now();
+
+  return valid ? { authorized: true, role: 'anon' } : null;
+}
+
 export async function validateAuth(req: Request): Promise<AuthResult> {
   const authHeader = req.headers.get('Authorization');
 
@@ -166,12 +200,12 @@ export async function validateAuth(req: Request): Promise<AuthResult> {
   }
 
   if (!authHeader.startsWith('Bearer ')) {
-    return { authorized: false, error: 'Invalid Authorization token' };
+    return anonFromApiKeyHeader(req) ?? { authorized: false, error: 'Invalid Authorization token' };
   }
 
   const token = authHeader.slice('Bearer '.length).trim();
   if (!token) {
-    return { authorized: false, error: 'Invalid Authorization token' };
+    return anonFromApiKeyHeader(req) ?? { authorized: false, error: 'Invalid Authorization token' };
   }
 
   // Allow machine auth tokens in controlled contexts.
@@ -245,7 +279,7 @@ export async function validateAuth(req: Request): Promise<AuthResult> {
       global: { headers: { Authorization: authHeader } },
     });
     if (!isUserClient(createdClient)) {
-      return { authorized: false, error: 'Invalid Authorization token' };
+      return anonFromApiKeyHeader(req) ?? { authorized: false, error: 'Invalid Authorization token' };
     }
     const userClient = createdClient;
 
@@ -272,12 +306,12 @@ export async function validateAuth(req: Request): Promise<AuthResult> {
     } = await userClient.auth.getUser();
 
     if (error || !user) {
-      return { authorized: false, error: 'Invalid Authorization token' };
+      return anonFromApiKeyHeader(req) ?? { authorized: false, error: 'Invalid Authorization token' };
     }
 
     return { authorized: true, role: 'authenticated' };
   } catch {
-    return { authorized: false, error: 'Invalid Authorization token' };
+    return anonFromApiKeyHeader(req) ?? { authorized: false, error: 'Invalid Authorization token' };
   }
 }
 
