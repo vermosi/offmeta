@@ -9,7 +9,7 @@ import {
   applySeoMeta,
   buildCappedTitle,
   buildSearchCanonical,
-  buildSearchTitle,
+  
   injectJsonLd,
   buildSearchResultsJsonLd,
 } from '@/lib/seo';
