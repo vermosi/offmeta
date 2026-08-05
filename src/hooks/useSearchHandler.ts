@@ -17,6 +17,7 @@ import { CLIENT_CONFIG } from '@/lib/config';
 import { generateRequestId } from '@/lib/search/search-state';
 import type { FilterState } from '@/types/filters';
 import type { SearchResult } from '@/components/UnifiedSearchBar';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 import { validateSearchInput } from '@/lib/validation/clientInput';
 import {
@@ -66,11 +67,13 @@ export function useSearchHandler({
   const [searchPhase, setSearchPhase] = useState<SearchPhase>('idle');
   const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
   const [rateLimitCountdown, setRateLimitCountdown] = useState<number>(0);
+  const [, setCurrentRequestId] = useState<string | null>(null);
   const rateLimitCountdownRef = useRef<number>(0);
   const lastSearchRef = useRef<string>('');
   const abortControllerRef = useRef<AbortController | null>(null);
   const requestTokenRef = useRef(0);
   const { locale } = useTranslation();
+  const { trackEvent, trackFirstSearchStart } = useAnalytics();
   const searchSourceStorageKey = 'offmeta_search_source';
 
   // Abort pending requests on unmount
@@ -122,8 +125,9 @@ export function useSearchHandler({
       }
 
       const sanitizedQuery = validatedInput.data.query;
+      let searchSource: string | null = null;
       try {
-        const searchSource = sessionStorage.getItem(searchSourceStorageKey);
+        searchSource = sessionStorage.getItem(searchSourceStorageKey);
         if (searchSource) {
           sessionStorage.removeItem(searchSourceStorageKey);
         }
@@ -413,6 +417,8 @@ export function useSearchHandler({
       query,
       rateLimitedUntil,
       saveContext,
+      trackEvent,
+      trackFirstSearchStart,
     ],
   );
 
