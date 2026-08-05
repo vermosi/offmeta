@@ -49,6 +49,17 @@ function currentPath(): string {
  * sandboxes, and E2E smoke runs produce failures that no automated repair can
  * act on (stale HMR modules, test-only routes), so they are dropped here.
  */
+function hostname(): string {
+  if (typeof window === 'undefined') return '';
+  const loc = window.location;
+  if (loc?.hostname) return loc.hostname;
+  try {
+    return new URL(loc?.origin ?? '').hostname;
+  } catch {
+    return '';
+  }
+}
+
 export function isMonitoredOrigin(hostname: string): boolean {
   if (!hostname) return false;
   if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') {
@@ -69,10 +80,7 @@ export async function reportClientError({
   const trimmed = (message ?? '').toString().trim();
   if (!trimmed) return;
 
-  if (
-    typeof window !== 'undefined' &&
-    !isMonitoredOrigin(window.location.hostname)
-  ) {
+  if (typeof window !== 'undefined' && !isMonitoredOrigin(hostname())) {
     return;
   }
 
