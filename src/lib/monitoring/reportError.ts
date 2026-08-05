@@ -44,6 +44,22 @@ function currentPath(): string {
   return `${window.location.origin}${window.location.pathname}`;
 }
 
+/**
+ * Only real visitor traffic is worth an error_events row. Dev servers, preview
+ * sandboxes, and E2E smoke runs produce failures that no automated repair can
+ * act on (stale HMR modules, test-only routes), so they are dropped here.
+ */
+export function isMonitoredOrigin(hostname: string): boolean {
+  if (!hostname) return false;
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') {
+    return false;
+  }
+  if (hostname.endsWith('.local')) return false;
+  if (hostname.endsWith('.lovableproject.com')) return false;
+  if (hostname.startsWith('id-preview--')) return false;
+  return true;
+}
+
 export async function reportClientError({
   errorType,
   message,
@@ -52,6 +68,13 @@ export async function reportClientError({
 }: ClientErrorReport): Promise<void> {
   const trimmed = (message ?? '').toString().trim();
   if (!trimmed) return;
+
+  if (
+    typeof window !== 'undefined' &&
+    !isMonitoredOrigin(window.location.hostname)
+  ) {
+    return;
+  }
 
   const key = `${errorType}|${trimmed.slice(0, 200)}|${currentPath()}`;
   if (!shouldReport(key)) return;
