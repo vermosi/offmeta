@@ -19,7 +19,6 @@ const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const ADMIN_FNS: Array<{ fn: string; args?: Record<string, unknown> }> = [
   { fn: 'get_system_status' },
-  { fn: 'get_ai_usage_stats', args: { days_back: 7 } },
   { fn: 'get_conversion_funnel', args: { days_back: 7 } },
   { fn: 'get_search_analytics', args: { since_date: new Date(Date.now() - 86_400_000).toISOString() } },
 ];
