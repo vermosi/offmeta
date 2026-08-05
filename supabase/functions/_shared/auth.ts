@@ -200,12 +200,12 @@ export async function validateAuth(req: Request): Promise<AuthResult> {
   }
 
   if (!authHeader.startsWith('Bearer ')) {
-    return { authorized: false, error: 'Invalid Authorization token' };
+    return anonFromApiKeyHeader(req) ?? { authorized: false, error: 'Invalid Authorization token' };
   }
 
   const token = authHeader.slice('Bearer '.length).trim();
   if (!token) {
-    return { authorized: false, error: 'Invalid Authorization token' };
+    return anonFromApiKeyHeader(req) ?? { authorized: false, error: 'Invalid Authorization token' };
   }
 
   // Allow machine auth tokens in controlled contexts.
@@ -279,7 +279,7 @@ export async function validateAuth(req: Request): Promise<AuthResult> {
       global: { headers: { Authorization: authHeader } },
     });
     if (!isUserClient(createdClient)) {
-      return { authorized: false, error: 'Invalid Authorization token' };
+      return anonFromApiKeyHeader(req) ?? { authorized: false, error: 'Invalid Authorization token' };
     }
     const userClient = createdClient;
 
@@ -306,12 +306,12 @@ export async function validateAuth(req: Request): Promise<AuthResult> {
     } = await userClient.auth.getUser();
 
     if (error || !user) {
-      return { authorized: false, error: 'Invalid Authorization token' };
+      return anonFromApiKeyHeader(req) ?? { authorized: false, error: 'Invalid Authorization token' };
     }
 
     return { authorized: true, role: 'authenticated' };
   } catch {
-    return { authorized: false, error: 'Invalid Authorization token' };
+    return anonFromApiKeyHeader(req) ?? { authorized: false, error: 'Invalid Authorization token' };
   }
 }
 
