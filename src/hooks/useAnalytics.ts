@@ -10,7 +10,6 @@ import { logger } from '@/lib/core/logger';
 import { classifyTraffic } from '@/lib/analytics/traffic';
 import { trackExternalEvent } from '@/lib/analytics/providers';
 
-
 // ---------------------------------------------------------------------------
 // Internal traffic detection
 // ---------------------------------------------------------------------------
@@ -145,7 +144,6 @@ function captureUtmParams(): UtmData {
   return utm;
 }
 
-
 interface RateLimitData {
   count: number;
   windowStart: number;
@@ -253,8 +251,8 @@ const ALLOWED_EVENT_TYPES = [
   'search_recovery_success',
   'search_quality_computed',
   'fuzzy_recovery_attempted', // fuzzy card-name resolver was called
-  'fuzzy_recovery_resolved',  // resolver returned a canonical name
-  'fuzzy_recovery_failed',    // resolver returned null (Scryfall miss / network)
+  'fuzzy_recovery_resolved', // resolver returned a canonical name
+  'fuzzy_recovery_failed', // resolver returned null (Scryfall miss / network)
   'alternatives_recovery_resolved', // "alternatives to X" resolved to a similarity query
   'guided_suggestion_shown',
   'narrow_results_prompt_shown',
@@ -308,10 +306,10 @@ const ALLOWED_EVENT_TYPES = [
   'understood_summary_query_copied',
   'why_matches_refine_clicked',
   'matched_concept_chip_clicked',
-
-
+  'quick_path_clicked',
+  'search_intent_hub_clicked',
+  'next_step_action_clicked',
 ] as const;
-
 
 type EventType = (typeof ALLOWED_EVENT_TYPES)[number];
 
@@ -358,13 +356,7 @@ interface SearchEventData {
  * Aligns with common web-vitals-style tiers so we can chart p50/p95 shifts.
  */
 export type LatencyBucket =
-  | '<200ms'
-  | '200-500ms'
-  | '500-1000ms'
-  | '1-2s'
-  | '2-5s'
-  | '5-10s'
-  | '>10s';
+  '<200ms' | '200-500ms' | '500-1000ms' | '1-2s' | '2-5s' | '5-10s' | '>10s';
 
 export function toLatencyBucket(durationMs: number): LatencyBucket {
   if (!Number.isFinite(durationMs) || durationMs < 0) return '<200ms';
@@ -620,7 +612,6 @@ export async function trackEventDirect(
   }
 }
 
-
 export function useAnalytics() {
   const sessionIdRef = useRef<string | null>(null);
   const utmRef = useRef<UtmData>({});
@@ -714,7 +705,6 @@ export function useAnalytics() {
           });
         // Forward to optional third-party providers without awaiting.
         trackExternalEvent(eventType, sanitizedData);
-
       } catch {
         // Silently fail - analytics should never break the app
       }
@@ -777,7 +767,6 @@ export function useAnalytics() {
     },
     [trackEvent],
   );
-
 
   const trackPagination = useCallback(
     (data: PaginationEventData) => {

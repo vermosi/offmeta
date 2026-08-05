@@ -13,6 +13,7 @@ import {
   type SparklinePoint,
 } from '@/components/PriceSparkline';
 import { cardNameToSlug } from '@/lib/card-slug';
+import { Search } from 'lucide-react';
 import {
   getLocalizedName,
   getLocalizedTypeLine,
@@ -22,6 +23,7 @@ import { useTranslation } from '@/lib/i18n';
 interface CardListItemProps {
   card: ScryfallCard;
   onClick: () => void;
+  onSearchSimilar?: (cardName: string) => void;
   tabIndex?: number;
   isOwned?: boolean;
   sparklineData?: SparklinePoint[];
@@ -30,6 +32,7 @@ interface CardListItemProps {
 export const CardListItem = memo(function CardListItem({
   card,
   onClick,
+  onSearchSimilar,
   tabIndex = 0,
   isOwned,
   sparklineData,
@@ -116,6 +119,22 @@ export const CardListItem = memo(function CardListItem({
         <span className="text-xs font-medium text-foreground flex-shrink-0 w-14 text-right">
           {price}
         </span>
+      )}
+
+      {onSearchSimilar && (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            onSearchSimilar(card.name);
+          }}
+          className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-background/70 px-2 py-1 text-[10px] font-medium text-foreground transition-colors hover:border-accent/40 hover:bg-accent/10"
+          aria-label={`Search cards similar to ${displayName}`}
+          title={`Search cards similar to ${displayName}`}
+        >
+          <Search className="h-3 w-3 text-accent" aria-hidden="true" />
+          Similar
+        </button>
       )}
     </div>
   );

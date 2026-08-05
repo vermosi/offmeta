@@ -16,7 +16,7 @@ import {
   type SparklinePoint,
 } from '@/components/PriceSparkline';
 import { cardNameToSlug } from '@/lib/card-slug';
-import { ShoppingCart } from 'lucide-react';
+import { Search, ShoppingCart } from 'lucide-react';
 import {
   getLocalizedName,
   getLocalizedTypeLine,
@@ -33,12 +33,12 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 
-
 import type { MatchReason } from '@/lib/search/matchExplanation';
 
 interface CardItemProps {
   card: ScryfallCard;
   onClick: () => void;
+  onSearchSimilar?: (cardName: string) => void;
   tabIndex?: number;
   isOwned?: boolean;
   sparklineData?: SparklinePoint[];
@@ -69,6 +69,7 @@ function getManaCost(card: ScryfallCard): string | undefined {
 export const CardItem = memo(function CardItem({
   card,
   onClick,
+  onSearchSimilar,
   tabIndex = 0,
   isOwned,
   sparklineData,
@@ -177,101 +178,113 @@ export const CardItem = memo(function CardItem({
       )}
 
       {/* Why this matches badge — keyboard-accessible Popover */}
-      {matchReasons && matchReasons.length > 0 && (() => {
-        const summary = matchReasons.map((r) => r.label).join('; ');
-        const badgeLabel = t(
-          'cardItem.whyBadgeAria',
-          '{count} reasons this card matches your search. Activate to view details.',
-        )
-          .replace('{count}', String(matchReasons.length))
-          + ` ${summary}`;
-        return (
-          <div className="absolute top-1.5 right-1.5 z-20">
-            <Popover>
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
+      {matchReasons &&
+        matchReasons.length > 0 &&
+        (() => {
+          const summary = matchReasons.map((r) => r.label).join('; ');
+          const badgeLabel =
+            t(
+              'cardItem.whyBadgeAria',
+              '{count} reasons this card matches your search. Activate to view details.',
+            ).replace('{count}', String(matchReasons.length)) + ` ${summary}`;
+          return (
+            <div className="absolute top-1.5 right-1.5 z-20">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    className="h-5 min-w-5 px-1.5 rounded-full bg-accent/90 text-accent-foreground text-[9px] font-semibold shadow-sm hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background"
+                    aria-label={badgeLabel}
+                  >
+                    <span aria-hidden="true">
+                      {matchReasons.length}× {t('cardItem.whyBadge', 'why')}
+                    </span>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent
+                  side="bottom"
+                  align="end"
+                  sideOffset={6}
+                  className="w-64 p-2.5"
                   onClick={(e) => e.stopPropagation()}
                   onKeyDown={(e) => e.stopPropagation()}
-                  className="h-5 min-w-5 px-1.5 rounded-full bg-accent/90 text-accent-foreground text-[9px] font-semibold shadow-sm hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background"
-                  aria-label={badgeLabel}
+                  aria-label={t('cardItem.whyMatches', 'Why this matches')}
                 >
-                  <span aria-hidden="true">
-                    {matchReasons.length}× {t('cardItem.whyBadge', 'why')}
-                  </span>
-                </button>
-              </PopoverTrigger>
-              <PopoverContent
-                side="bottom"
-                align="end"
-                sideOffset={6}
-                className="w-64 p-2.5"
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-                aria-label={t('cardItem.whyMatches', 'Why this matches')}
-              >
-                <p
-                  id={`why-matches-${card.id}`}
-                  className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1.5"
-                >
-                  {t('cardItem.whyMatches', 'Why this matches')}
-                </p>
-                <ul
-                  className="text-[11px] text-foreground space-y-1"
-                  aria-labelledby={`why-matches-${card.id}`}
-                >
-                  {matchReasons.slice(0, 5).map((r, i) => {
-                    const canRefine = !!(onRefineWithMatch && r.token);
-                    if (canRefine) {
+                  <p
+                    id={`why-matches-${card.id}`}
+                    className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1.5"
+                  >
+                    {t('cardItem.whyMatches', 'Why this matches')}
+                  </p>
+                  <ul
+                    className="text-[11px] text-foreground space-y-1"
+                    aria-labelledby={`why-matches-${card.id}`}
+                  >
+                    {matchReasons.slice(0, 5).map((r, i) => {
+                      const canRefine = !!(onRefineWithMatch && r.token);
+                      if (canRefine) {
+                        return (
+                          <li key={`${i}-${r.label}`}>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                onRefineWithMatch!(r.token!, r.label);
+                              }}
+                              className="w-full text-left flex items-start gap-1.5 rounded-md px-1.5 py-1 min-h-9 hover:bg-accent/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:bg-accent/10 transition-colors"
+                              aria-label={t(
+                                'cardItem.refineWith',
+                                'Refine search with {label}',
+                              ).replace('{label}', r.label)}
+                            >
+                              <span
+                                className="text-accent leading-4"
+                                aria-hidden="true"
+                              >
+                                +
+                              </span>
+                              <span className="flex-1 leading-4">
+                                {r.label}
+                              </span>
+                            </button>
+                          </li>
+                        );
+                      }
                       return (
-                        <li key={`${i}-${r.label}`}>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              e.preventDefault();
-                              onRefineWithMatch!(r.token!, r.label);
-                            }}
-                            className="w-full text-left flex items-start gap-1.5 rounded-md px-1.5 py-1 min-h-9 hover:bg-accent/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:bg-accent/10 transition-colors"
-                            aria-label={t(
-                              'cardItem.refineWith',
-                              'Refine search with {label}',
-                            ).replace('{label}', r.label)}
+                        <li
+                          key={`${i}-${r.label}`}
+                          className="flex items-start gap-1.5 px-1.5 py-1"
+                        >
+                          <span
+                            className="text-muted-foreground leading-4"
+                            aria-hidden="true"
                           >
-                            <span className="text-accent leading-4" aria-hidden="true">+</span>
-                            <span className="flex-1 leading-4">{r.label}</span>
-                          </button>
+                            •
+                          </span>
+                          <span className="flex-1 leading-4">{r.label}</span>
                         </li>
                       );
-                    }
-                    return (
-                      <li
-                        key={`${i}-${r.label}`}
-                        className="flex items-start gap-1.5 px-1.5 py-1"
-                      >
-                        <span className="text-muted-foreground leading-4" aria-hidden="true">•</span>
-                        <span className="flex-1 leading-4">{r.label}</span>
-                      </li>
-                    );
-                  })}
-                </ul>
-                {onRefineWithMatch && matchReasons.some((r) => r.token) && (
-                  <p className="text-[10px] text-muted-foreground mt-2 pt-2 border-t border-border/50">
-                    {t('cardItem.whyRefineHint', 'Tap a concept to refine your search.')}
-                  </p>
-                )}
-              </PopoverContent>
-            </Popover>
-          </div>
-        );
-      })()}
-
-
+                    })}
+                  </ul>
+                  {onRefineWithMatch && matchReasons.some((r) => r.token) && (
+                    <p className="text-[10px] text-muted-foreground mt-2 pt-2 border-t border-border/50">
+                      {t(
+                        'cardItem.whyRefineHint',
+                        'Tap a concept to refine your search.',
+                      )}
+                    </p>
+                  )}
+                </PopoverContent>
+              </Popover>
+            </div>
+          );
+        })()}
 
       {/* Info overlay — always visible on mobile, hover on desktop */}
-      <div
-        className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-overlay/85 via-overlay/50 to-transparent pt-6 sm:pt-8 pb-1.5 sm:pb-2 px-2 sm:px-2.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity duration-200 pointer-events-none"
-      >
+      <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-overlay/85 via-overlay/50 to-transparent pt-6 sm:pt-8 pb-1.5 sm:pb-2 px-2 sm:px-2.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity duration-200 pointer-events-none">
         <div className="flex items-end justify-between gap-1">
           <div className="min-w-0 flex-1">
             <Link
@@ -308,6 +321,20 @@ export const CardItem = memo(function CardItem({
             )}
           </div>
         </div>
+        {onSearchSimilar && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSearchSimilar(card.name);
+            }}
+            className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-background/70 px-2.5 py-1 text-[10px] font-medium text-foreground pointer-events-auto transition-colors hover:border-accent/40 hover:bg-accent/10"
+            aria-label={`Search cards similar to ${displayName}`}
+          >
+            <Search className="h-3 w-3 text-accent" aria-hidden="true" />
+            Similar
+          </button>
+        )}
       </div>
     </div>
   );

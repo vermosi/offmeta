@@ -6,6 +6,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { useTranslation } from '@/lib/i18n';
 
 const QUICK_PATHS = [
@@ -14,6 +15,12 @@ const QUICK_PATHS = [
     icon: Search,
     title: 'Start with a search',
     description: 'Turn a deck idea into real cards and refinements.',
+  },
+  {
+    href: '/search-intents',
+    icon: Sparkles,
+    title: 'Browse search intents',
+    description: 'Jump into cards like X, budget, and hate-card patterns.',
   },
   {
     href: '/guides',
@@ -37,6 +44,7 @@ const QUICK_PATHS = [
 
 export function HomepageQuickPaths() {
   const { t } = useTranslation();
+  const { trackEvent } = useAnalytics();
 
   return (
     <section className="container-main pb-10 sm:pb-14">
@@ -65,6 +73,13 @@ export function HomepageQuickPaths() {
               <Link
                 key={path.href}
                 to={path.href}
+                onClick={() =>
+                  trackEvent('quick_path_clicked', {
+                    action: path.title,
+                    placement: 'homepage_quick_paths',
+                    cta: path.href,
+                  })
+                }
                 className="group rounded-2xl border border-border/70 bg-background/70 p-4 transition-colors hover:border-primary/40 hover:bg-card/80"
               >
                 <div className="flex items-start justify-between gap-3">

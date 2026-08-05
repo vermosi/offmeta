@@ -5,6 +5,7 @@
 
 import { Link } from 'react-router-dom';
 import { ArrowRight, BookOpen, Compass } from 'lucide-react';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { useTranslation } from '@/lib/i18n';
 import type { SearchIntent } from '@/types/search';
 
@@ -30,7 +31,8 @@ function chooseActions({
   isDeckQuery,
   queryQualityScore,
 }: SearchNextActionsProps): Action[] {
-  const text = `${originalQuery} ${intent?.tags.join(' ') ?? ''} ${intent?.types.join(' ') ?? ''}`.toLowerCase();
+  const text =
+    `${originalQuery} ${intent?.tags.join(' ') ?? ''} ${intent?.types.join(' ') ?? ''}`.toLowerCase();
   const actions: Action[] = [];
 
   if (isDeckQuery || text.includes('commander') || text.includes('edh')) {
@@ -40,12 +42,29 @@ function chooseActions({
       descriptionKey: 'results.nextActions.combos.description',
       icon: Compass,
     });
-  } else if (text.includes('tribe') || text.includes('dragon') || text.includes('elf') || text.includes('goblin')) {
+    actions.push({
+      to: '/search-intents',
+      labelKey: 'results.nextActions.guides.label',
+      descriptionKey: 'results.nextActions.guides.descriptionFallback',
+      icon: BookOpen,
+    });
+  } else if (
+    text.includes('tribe') ||
+    text.includes('dragon') ||
+    text.includes('elf') ||
+    text.includes('goblin')
+  ) {
     actions.push({
       to: '/guides',
       labelKey: 'results.nextActions.guides.label',
       descriptionKey: 'results.nextActions.guides.description',
       icon: BookOpen,
+    });
+    actions.push({
+      to: '/search-intents',
+      labelKey: 'results.nextActions.combos.label',
+      descriptionKey: 'results.nextActions.combos.descriptionFallback',
+      icon: Compass,
     });
   } else if (totalCards > 50 && queryQualityScore >= 0.5) {
     actions.push({
@@ -55,14 +74,14 @@ function chooseActions({
       icon: BookOpen,
     });
     actions.push({
-      to: '/combos',
+      to: '/search-intents',
       labelKey: 'results.nextActions.combos.label',
       descriptionKey: 'results.nextActions.combos.descriptionFallback',
       icon: Compass,
     });
   } else {
     actions.push({
-      to: '/combos',
+      to: '/search-intents',
       labelKey: 'results.nextActions.combos.label',
       descriptionKey: 'results.nextActions.combos.descriptionFallback',
       icon: Compass,
@@ -81,6 +100,7 @@ function chooseActions({
 export function SearchNextActions(props: SearchNextActionsProps) {
   const actions = chooseActions(props);
   const { t } = useTranslation();
+  const { trackEvent } = useAnalytics();
 
   return (
     <section className="rounded-2xl border border-border/60 bg-card/60 p-3 sm:p-4 animate-reveal">
@@ -102,6 +122,13 @@ export function SearchNextActions(props: SearchNextActionsProps) {
           <Link
             key={to}
             to={to}
+            onClick={() =>
+              trackEvent('next_step_action_clicked', {
+                action: t(labelKey),
+                placement: 'search_next_actions',
+                cta: to,
+              })
+            }
             className="group flex items-start gap-3 rounded-xl border border-transparent bg-background/40 px-3 py-3 transition-colors hover:border-accent/25 hover:bg-accent/5"
           >
             <Icon className="mt-0.5 h-4 w-4 text-accent" aria-hidden="true" />

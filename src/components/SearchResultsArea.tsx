@@ -9,9 +9,7 @@ import { useBatchPriceHistory, useAuth } from '@/hooks';
 
 import { CardItem } from '@/components/CardItem';
 import { CardListItem } from '@/components/CardListItem';
-import {
-  SearchResultsSkeleton,
-} from '@/components/SearchResultsSkeleton';
+import { SearchResultsSkeleton } from '@/components/SearchResultsSkeleton';
 import { LoadMoreIndicator } from '@/components/LoadMoreIndicator';
 import { VirtualizedCardGrid } from '@/components/VirtualizedCardGrid';
 import { RelatedCardsStrip } from '@/components/RelatedCardsStrip';
@@ -144,7 +142,8 @@ export function SearchResultsArea({
   );
   const { data: sparklineMap } = useBatchPriceHistory(sparklineNames);
   const { user } = useAuth();
-  const { hadFastClick, hadRefinement } = getSearchRankingSignals(originalQuery);
+  const { hadFastClick, hadRefinement } =
+    getSearchRankingSignals(originalQuery);
   // Only the explicit "relevance" sort defers ordering to the intelligence reranker.
   // Every other sort (including name-asc) is an explicit user ordering.
   const hasCustomSort = !!activeSort && activeSort !== 'relevance-desc';
@@ -199,7 +198,9 @@ export function SearchResultsArea({
                     cards={rankedCards}
                     onCardClick={handleCardClick}
                     onLoadMore={
-                      hasNextPage && !isFetchingNextPage && !isFetchNextPageError
+                      hasNextPage &&
+                      !isFetchingNextPage &&
+                      !isFetchNextPageError
                         ? fetchNextPage
                         : undefined
                     }
@@ -232,6 +233,7 @@ export function SearchResultsArea({
                           <CardListItem
                             card={card}
                             onClick={() => handleCardClick(card, index)}
+                            onSearchSimilar={onRelatedCardClick}
                             tabIndex={rovingProps.tabIndex}
                             isOwned={collectionLookup.has(card.name)}
                             sparklineData={sparklineMap?.get(card.name)}
@@ -266,13 +268,13 @@ export function SearchResultsArea({
                           <CardItem
                             card={card}
                             onClick={() => handleCardClick(card, index)}
+                            onSearchSimilar={onRelatedCardClick}
                             tabIndex={rovingProps.tabIndex}
                             isOwned={collectionLookup.has(card.name)}
                             sparklineData={sparklineMap?.get(card.name)}
                             matchReasons={explainCardMatch(card, intent)}
                             onRefineWithMatch={onRefineWithMatch}
                           />
-
                         </div>
                       );
                     })}
@@ -297,7 +299,6 @@ export function SearchResultsArea({
                 </div>
               )}
 
-
               <LoadMoreIndicator
                 ref={
                   displayCards.length <= CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD
@@ -315,7 +316,6 @@ export function SearchResultsArea({
                 onRetry={retryNextPage}
               />
 
-
               <RelatedCardsStrip
                 sourceCard={topSourceCard}
                 onCardClick={onRelatedCardClick}
@@ -323,7 +323,6 @@ export function SearchResultsArea({
             </>
           ) : isSearching ? (
             <SearchResultsSkeleton viewMode={viewMode} />
-
           ) : hasSearched && totalCards === 0 ? (
             <Suspense fallback={null}>
               <SearchEmptyState
@@ -337,10 +336,8 @@ export function SearchResultsArea({
                 onClearAllFilters={onClearAllFilters}
                 originalQuery={originalQuery}
               />
-
             </Suspense>
           ) : null}
-
 
           {hasSearched && !isSearching && totalCards > 0 && (
             <div className="container-main mt-6">
@@ -362,7 +359,6 @@ export function SearchResultsArea({
         </Suspense>
       )}
 
-
       {/* Deck Ideas tab */}
       {activeTab === 'deck-ideas' && (
         <Suspense fallback={null}>
@@ -380,7 +376,6 @@ export function SearchResultsArea({
           isLoading={isSearching}
         />
       )}
-
     </div>
   );
 }

@@ -27,6 +27,10 @@ const CardPage = lazy(() => import('./pages/CardPage'));
 const PublicProfile = lazy(() => import('./pages/PublicProfile'));
 const AiIndex = lazy(() => import('./pages/AiIndex'));
 const AiPage = lazy(() => import('./pages/AiPage'));
+const SearchIntentHub = lazy(() => import('./pages/SearchIntentHub'));
+const SearchBudgetPage = lazy(() => import('./pages/SearchBudgetPage'));
+const SearchHatePage = lazy(() => import('./pages/SearchHatePage'));
+const SearchSimilarPage = lazy(() => import('./pages/SearchSimilarPage'));
 const AdminSeoPages = lazy(() => import('./pages/AdminSeoPages'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const SearchExperience = lazy(() => import('./pages/SearchExperience'));
@@ -54,25 +58,68 @@ export default function AppRoutes() {
             }
           >
             <Route path="/" element={withFullApp(<Index />)} />
-            <Route path="/search/:slug" element={withFullApp(<SearchExperience />)} />
+            <Route
+              path="/search/:slug"
+              element={withFullApp(<SearchExperience />)}
+            />
             <Route path="/docs" element={withFullApp(<DocsIndex />)} />
-            <Route path="/docs/syntax" element={withFullApp(<SyntaxCheatSheet />)} />
+            <Route
+              path="/docs/syntax"
+              element={withFullApp(<SyntaxCheatSheet />)}
+            />
             <Route path="/guides" element={withFullApp(<GuidesIndex />)} />
             <Route path="/guides/:slug" element={withFullApp(<GuidePage />)} />
-            <Route path="/reset-password" element={withFullApp(<ResetPassword />)} />
+            <Route
+              path="/reset-password"
+              element={withFullApp(<ResetPassword />)}
+            />
             <Route path="/profile" element={withFullApp(<ProfileSettings />)} />
-            <Route path="/admin/analytics" element={withFullApp(<AdminAnalytics />)} />
-            <Route path="/admin/curated-searches" element={withFullApp(<AdminCuratedSearches />)} />
+            <Route
+              path="/admin/analytics"
+              element={withFullApp(<AdminAnalytics />)}
+            />
+            <Route
+              path="/admin/curated-searches"
+              element={withFullApp(<AdminCuratedSearches />)}
+            />
             <Route path="/combos" element={withFullApp(<FindMyCombos />)} />
-            <Route path="/browse-searches" element={withFullApp(<BrowseSearches />)} />
+            <Route
+              path="/browse-searches"
+              element={withFullApp(<BrowseSearches />)}
+            />
             <Route path="/about" element={withFullApp(<About />)} />
             <Route path="/market" element={withFullApp(<MarketTrends />)} />
             <Route path="/cards/:slug" element={withFullApp(<CardPage />)} />
-            <Route path="/user/:userId" element={withFullApp(<PublicProfile />)} />
+            <Route
+              path="/user/:userId"
+              element={withFullApp(<PublicProfile />)}
+            />
             <Route path="/ai" element={withFullApp(<AiIndex />)} />
             <Route path="/ai/:slug" element={withFullApp(<AiPage />)} />
-            <Route path="/admin/seo-pages" element={withFullApp(<AdminSeoPages />)} />
-            <Route path="/.lovable/oauth/consent" element={withFullApp(<OAuthConsent />)} />
+            <Route
+              path="/search-intents"
+              element={withFullApp(<SearchIntentHub />)}
+            />
+            <Route
+              path="/search-intents/budget"
+              element={withFullApp(<SearchBudgetPage />)}
+            />
+            <Route
+              path="/search-intents/hate"
+              element={withFullApp(<SearchHatePage />)}
+            />
+            <Route
+              path="/search-intents/similar"
+              element={withFullApp(<SearchSimilarPage />)}
+            />
+            <Route
+              path="/admin/seo-pages"
+              element={withFullApp(<AdminSeoPages />)}
+            />
+            <Route
+              path="/.lovable/oauth/consent"
+              element={withFullApp(<OAuthConsent />)}
+            />
             <Route path="*" element={withFullApp(<NotFound />)} />
           </Route>
         </Routes>

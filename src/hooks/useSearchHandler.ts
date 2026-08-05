@@ -14,6 +14,7 @@ import {
 import { buildClientFallbackQuery } from '@/lib/search/fallback';
 import { estimateQueryComplexity } from '@/lib/search/complexity';
 import { CLIENT_CONFIG } from '@/lib/config';
+import { generateRequestId } from '@/lib/search/search-state';
 import type { FilterState } from '@/types/filters';
 import type { SearchResult } from '@/components/UnifiedSearchBar';
 
@@ -47,7 +48,11 @@ function trackFallbackEvent(
   query: string,
   details: Record<string, unknown>,
 ): void {
-  logger.debug('[SearchDiag] Fallback', { reason, query: query.substring(0, 80), ...details });
+  logger.debug('[SearchDiag] Fallback', {
+    reason,
+    query: query.substring(0, 80),
+    ...details,
+  });
 }
 
 export function useSearchHandler({
@@ -66,6 +71,7 @@ export function useSearchHandler({
   const abortControllerRef = useRef<AbortController | null>(null);
   const requestTokenRef = useRef(0);
   const { locale } = useTranslation();
+  const searchSourceStorageKey = 'offmeta_search_source';
 
   // Abort pending requests on unmount
   useEffect(() => {
@@ -116,6 +122,14 @@ export function useSearchHandler({
       }
 
       const sanitizedQuery = validatedInput.data.query;
+      try {
+        const searchSource = sessionStorage.getItem(searchSourceStorageKey);
+        if (searchSource) {
+          sessionStorage.removeItem(searchSourceStorageKey);
+        }
+      } catch {
+        /* ignore storage failures */
+      }
       if (rateLimitedUntil && Date.now() < rateLimitedUntil) {
         toast.error('Please wait', {
           description: `Rate limited. Try again in ${rateLimitCountdownRef.current}s`,
@@ -153,6 +167,18 @@ export function useSearchHandler({
 
       const currentToken = ++requestTokenRef.current;
       const cacheSalt = options?.cacheSalt;
+      const requestId = generateRequestId();
+      setCurrentRequestId(requestId);
+      trackEvent('search_started', {
+        query: rawQuery,
+        request_id: requestId,
+        placement: searchSource ?? 'search_bar',
+      });
+      trackFirstSearchStart({
+        query: rawQuery,
+        request_id: requestId,
+        action: searchSource ?? 'search_bar',
+      });
 
       // Cancel any pending request
       if (abortControllerRef.current) {

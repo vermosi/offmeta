@@ -35,6 +35,8 @@ const Footer = lazy(() =>
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
 import { HomepageQuickPaths } from '@/components/HomepageQuickPaths';
+import { Link } from 'react-router-dom';
+import { ArrowRight, Search, SlidersHorizontal, Sparkles } from 'lucide-react';
 const ExampleQueriesCarousel = lazy(() =>
   import('@/components/ExampleQueriesCarousel').then((m) => ({
     default: m.ExampleQueriesCarousel,
@@ -84,7 +86,6 @@ const RelatedSearchesSection = lazy(() =>
   })),
 );
 
-
 const SearchResultsArea = lazy(() =>
   import('@/components/SearchResultsArea').then((m) => ({
     default: m.SearchResultsArea,
@@ -109,6 +110,13 @@ const IS_TEST_MODE = import.meta.env.MODE === 'test';
 const Index = () => {
   const { t } = useTranslation();
   const location = useLocation();
+  const [showFirstUseHint, setShowFirstUseHint] = useState(() => {
+    try {
+      return localStorage.getItem('offmeta_home_hint_dismissed') !== '1';
+    } catch {
+      return true;
+    }
+  });
   const {
     trackLandingPageView,
     trackHomePageView,
@@ -203,14 +211,12 @@ const Index = () => {
     setViewModeState((prev) => (prev === urlViewMode ? prev : urlViewMode));
   }, [urlViewMode]);
 
-
   // Cards is the only results view — Similar / Deck Ideas / Explain removed.
   const activeTab: ResultsTab = 'cards';
 
   const isDeckQuery = /\b(deck|build|commander|strategy|brew|edh)\b/i.test(
     originalQuery,
   );
-
 
   // Prevent indexing of query landing pages and zero-result search pages.
   useNoIndex(
@@ -255,17 +261,12 @@ const Index = () => {
     [searchQuery, originalQuery, handleRerunEditedQuery, trackEvent],
   );
 
-
-
-
-
   // Keyboard shortcuts
   const focusSearch = useCallback(() => {
     const input = document.getElementById('search-input');
     input?.focus();
   }, []);
   useKeyboardShortcuts({ onFocusSearch: focusSearch });
-
 
   // Roving tabindex column count based on view mode
   const rovingColumns = useMemo(() => {
@@ -281,7 +282,6 @@ const Index = () => {
     },
     [displayCards, handleCardClick],
   );
-
 
   const { getRovingProps } = useRovingTabIndex({
     itemCount: displayCards.length,
@@ -448,7 +448,6 @@ const Index = () => {
   ]);
 
   useEffect(() => {
-
     if (firstResultsTrackedRef.current) return;
     if (isSearching || !hasSearched || cards.length === 0) return;
     firstResultsTrackedRef.current = true;
@@ -551,6 +550,85 @@ const Index = () => {
         <Header />
 
         {!hasSearched && <HeroSection />}
+        {!hasSearched && (
+          <section className="relative border-y border-border/40 bg-card/25 px-4 py-8 sm:py-10">
+            <div className="container-main">
+              <div className="mx-auto grid max-w-5xl gap-4 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
+                <div className="space-y-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                    Why OffMeta
+                  </p>
+                  <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+                    Search like a player, not like a query language.
+                  </h2>
+                  <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+                    OffMeta turns plain English into real Scryfall search, shows
+                    you exactly what it built, and keeps the query editable.
+                    That means faster first results without losing control.
+                  </p>
+                  <div className="flex flex-wrap gap-2 pt-1 text-sm">
+                    <Link
+                      to="/about"
+                      className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/70 px-4 py-2 font-medium text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5"
+                    >
+                      Learn the difference
+                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    </Link>
+                    <Link
+                      to="/guides"
+                      className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/70 px-4 py-2 font-medium text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5"
+                    >
+                      Browse guides
+                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                  <div className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm">
+                    <Search
+                      className="h-5 w-5 text-accent"
+                      aria-hidden="true"
+                    />
+                    <h3 className="mt-3 text-sm font-semibold text-foreground">
+                      Type the job
+                    </h3>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                      Start with the thing you need, like a hate card, combo
+                      piece, or budget answer.
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm">
+                    <SlidersHorizontal
+                      className="h-5 w-5 text-accent"
+                      aria-hidden="true"
+                    />
+                    <h3 className="mt-3 text-sm font-semibold text-foreground">
+                      See the query
+                    </h3>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                      Every result exposes the Scryfall syntax so you can edit
+                      or reuse it.
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm">
+                    <Sparkles
+                      className="h-5 w-5 text-accent"
+                      aria-hidden="true"
+                    />
+                    <h3 className="mt-3 text-sm font-semibold text-foreground">
+                      Keep refining
+                    </h3>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                      Jump to similar cards, related searches, and follow-up
+                      actions without starting over.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
         {!hasSearched && <HomepageQuickPaths />}
 
         {/* Floating particles — hero area */}
@@ -592,9 +670,6 @@ const Index = () => {
           role="main"
         >
           <div className="container-main space-y-3 sm:space-y-6">
-
-
-
             <div>
               <UnifiedSearchBar
                 ref={searchBarRef}
@@ -605,6 +680,41 @@ const Index = () => {
                 isCardFetching={isSearching}
               />
             </div>
+
+            {!hasSearched && showFirstUseHint && (
+              <div className="mx-auto max-w-3xl rounded-2xl border border-border/60 bg-card/60 px-4 py-3 text-sm text-muted-foreground shadow-sm">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="leading-relaxed">
+                    Try a plain-English search like{' '}
+                    <span className="font-medium text-foreground">
+                      "cards that punish treasure decks"
+                    </span>{' '}
+                    or{' '}
+                    <span className="font-medium text-foreground">
+                      "cards similar to Seedborn Muse"
+                    </span>
+                    .
+                  </p>
+                  <button
+                    type="button"
+                    className="self-start rounded-full border border-border/60 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5"
+                    onClick={() => {
+                      setShowFirstUseHint(false);
+                      try {
+                        localStorage.setItem(
+                          'offmeta_home_hint_dismissed',
+                          '1',
+                        );
+                      } catch {
+                        // ignore storage failures
+                      }
+                    }}
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            )}
 
             <SearchProgressIndicator
               isSearching={isSearching}
@@ -618,7 +728,6 @@ const Index = () => {
                 <ExampleQueriesCarousel onTrySearch={handleTryExample} />
               </Suspense>
             )}
-
 
             {isSearching && originalQuery && (
               <Suspense fallback={null}>
@@ -679,43 +788,43 @@ const Index = () => {
 
             {cards.length > 0 && !isSearching && (
               <div className="sticky top-[56px] sm:top-[68px] z-30 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-2 bg-background/80 backdrop-blur-xl border-b border-border/40">
-              <ResultsToolbar
-                cards={cards}
-                displayCards={displayCards}
-                totalCards={totalCards}
-                activeFilters={activeFilters}
-                filtersResetKey={filtersResetKey}
-                initialUrlFilters={initialUrlFilters}
-                onFilteredCards={handleFilteredCards}
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-                pendingFilterOverride={pendingFilterOverride}
-                filterOverrideKey={filterOverrideKey}
-                queryStrip={
-                  <ScryfallQueryDisclosure
-                    scryfallQuery={(
-                      lastSearchResult?.scryfallQuery || searchQuery
-                    ).trim()}
-                  >
-                    <EditableQueryBar
+                <ResultsToolbar
+                  cards={cards}
+                  displayCards={displayCards}
+                  totalCards={totalCards}
+                  activeFilters={activeFilters}
+                  filtersResetKey={filtersResetKey}
+                  initialUrlFilters={initialUrlFilters}
+                  onFilteredCards={handleFilteredCards}
+                  viewMode={viewMode}
+                  onViewModeChange={setViewMode}
+                  pendingFilterOverride={pendingFilterOverride}
+                  filterOverrideKey={filterOverrideKey}
+                  queryStrip={
+                    <ScryfallQueryDisclosure
                       scryfallQuery={(
                         lastSearchResult?.scryfallQuery || searchQuery
                       ).trim()}
-                      confidence={lastSearchResult?.explanation?.confidence}
-                      isLoading={isSearching}
-                      originalQuery={originalQuery}
-                      onRerun={handleRerunEditedQuery}
-                      onRegenerate={handleRegenerateTranslation}
-                      onReportIssue={() => setReportDialogOpen(true)}
-                      validationError={
-                        lastSearchResult?.validationIssues?.length
-                          ? lastSearchResult.validationIssues.join(' • ')
-                          : null
-                      }
-                    />
-                  </ScryfallQueryDisclosure>
-                }
-              />
+                    >
+                      <EditableQueryBar
+                        scryfallQuery={(
+                          lastSearchResult?.scryfallQuery || searchQuery
+                        ).trim()}
+                        confidence={lastSearchResult?.explanation?.confidence}
+                        isLoading={isSearching}
+                        originalQuery={originalQuery}
+                        onRerun={handleRerunEditedQuery}
+                        onRegenerate={handleRegenerateTranslation}
+                        onReportIssue={() => setReportDialogOpen(true)}
+                        validationError={
+                          lastSearchResult?.validationIssues?.length
+                            ? lastSearchResult.validationIssues.join(' • ')
+                            : null
+                        }
+                      />
+                    </ScryfallQueryDisclosure>
+                  }
+                />
               </div>
             )}
           </div>
@@ -798,8 +907,6 @@ const Index = () => {
           </Suspense>
         )}
 
-
-
         <Suspense fallback={null}>
           <Footer />
         </Suspense>
@@ -828,7 +935,6 @@ const Index = () => {
             />
           </Suspense>
         )}
-
       </div>
     </ErrorBoundary>
   );
