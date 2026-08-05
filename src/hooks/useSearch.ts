@@ -317,11 +317,12 @@ export function useSearch() {
     if (hasSearched && originalQuery) {
       document.title = `${originalQuery} — OffMeta MTG Search`;
     } else {
-      document.title = 'OffMeta — Natural Language MTG Card Search';
+      document.title = 'MTG Card Search in Plain English | OffMeta';
     }
     return () => {
-      document.title = 'OffMeta — Natural Language MTG Card Search';
+      document.title = 'MTG Card Search in Plain English | OffMeta';
     };
+
   }, [hasSearched, originalQuery]);
 
   // --- Track results count + zero-result failures ---

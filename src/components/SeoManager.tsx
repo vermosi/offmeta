@@ -9,7 +9,7 @@ import {
   applySeoMeta,
   buildCappedTitle,
   buildSearchCanonical,
-  buildSearchTitle,
+  
   injectJsonLd,
   buildSearchResultsJsonLd,
 } from '@/lib/seo';
@@ -49,9 +49,10 @@ export function SeoManager({
     // per-route tags in the head (which would mis-attribute link previews).
     if (!hasSearched || isSearching) {
       applySeoMeta({
-        title: buildSearchTitle('Search Magic cards in plain English'),
+        title: 'MTG Card Search in Plain English | OffMeta',
         description:
-          'Search Magic: The Gathering cards in plain English. Type what you mean and get real Scryfall results.',
+          'Find Magic: The Gathering cards without learning Scryfall syntax. Describe what you want in plain English and get real, filterable card results.',
+
         url: 'https://offmeta.app/',
         type: 'website',
         image: 'https://offmeta.app/og-image.png',
