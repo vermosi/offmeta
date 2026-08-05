@@ -66,6 +66,56 @@ async function pgrest(pathAndQuery) {
   return resp.json();
 }
 
+// Card pages that already receive Google traffic must always be prerendered —
+// the alphabetical backfill below can otherwise push them past the cap and
+// Googlebot sees an SPA shell (the "homepage clone" report). Mirrors the list
+// the seo-health-check function audits.
+const GSC_PRIORITY_SLUGS = [
+  'mirkwood-bats',
+  'enduring-vitality',
+  'cryptolith-rite',
+  'all-that-glitters',
+  'no-mercy',
+  'beast-whisperer',
+  'enchanted-evening',
+  'ensnaring-bridge',
+];
+
+const CARD_COLUMNS =
+  'oracle_id,name,mana_cost,type_line,oracle_text,colors,image_url,rarity,legalities';
+
+async function fetchPrioritySlugs() {
+  const slugs = new Set(GSC_PRIORITY_SLUGS);
+  const views = await pgrest(
+    `analytics_events?select=event_data&event_type=eq.page_view&created_at=gte.${new Date(
+      Date.now() - 30 * 24 * 60 * 60 * 1000,
+    ).toISOString()}&limit=2000`,
+  );
+  for (const row of Array.isArray(views) ? views : []) {
+    const viewPath = row?.event_data?.path;
+    if (typeof viewPath === 'string' && viewPath.startsWith('/cards/')) {
+      const slug = viewPath.replace('/cards/', '').split(/[/?#]/)[0];
+      if (slug) slugs.add(slug);
+    }
+  }
+  return [...slugs];
+}
+
+async function fetchCardsBySlug(slugs) {
+  const found = [];
+  for (const slug of slugs) {
+    const pattern = slug.replace(/-/g, '%');
+    const rows = await pgrest(
+      `cards?select=${CARD_COLUMNS}&name=ilike.${encodeURIComponent(pattern)}&limit=5`,
+    );
+    const match = (Array.isArray(rows) ? rows : []).find(
+      (row) => row?.name && slugifyCardName(row.name) === slug,
+    );
+    if (match) found.push(match);
+  }
+  return found;
+}
+
 async function fetchTopCards(limit) {
   // 1) Prefer cards ranked by real engagement signals (trend / search volume).
   const signals = await pgrest(
@@ -74,6 +124,13 @@ async function fetchTopCards(limit) {
 
   const cardByOracleId = new Map();
   const orderedIds = [];
+
+  // 0) Pages with existing search traffic come first, always.
+  for (const row of await fetchCardsBySlug(await fetchPrioritySlugs())) {
+    if (!row?.oracle_id || cardByOracleId.has(row.oracle_id)) continue;
+    cardByOracleId.set(row.oracle_id, row);
+    orderedIds.push(row.oracle_id);
+  }
 
   if (Array.isArray(signals) && signals.length > 0) {
     const ids = signals.map((s) => s.card_id).filter(Boolean);
