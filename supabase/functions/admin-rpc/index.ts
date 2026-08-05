@@ -25,7 +25,6 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 // (or with extra arg keys) is rejected before we hit the database.
 const ALLOWED: Record<string, readonly string[]> = {
   get_system_status: [],
-  get_ai_usage_stats: ['days_back'],
   get_conversion_funnel: ['days_back'],
   get_search_analytics: ['since_date', 'max_low_confidence'],
 };

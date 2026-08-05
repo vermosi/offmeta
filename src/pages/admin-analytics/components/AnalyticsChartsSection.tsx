@@ -29,7 +29,6 @@ import { EdgeFunctionStatusPanel } from '@/pages/admin-analytics/components/Edge
 import { SystemStatusPanel } from '@/pages/admin-analytics/components/SystemStatusPanel';
 import { SeoHealthPanel } from '@/pages/admin-analytics/components/SeoHealthPanel';
 import { HitRatePanel } from '@/pages/admin-analytics/components/HitRatePanel';
-import { AICostPanel } from '@/pages/admin-analytics/components/AICostPanel';
 import { AuthFailuresPanel } from '@/pages/admin-analytics/components/AuthFailuresPanel';
 import { RumPanel } from '@/pages/admin-analytics/components/RumPanel';
 import { ActionableInsightsPanel } from '@/pages/admin-analytics/components/ActionableInsightsPanel';
@@ -136,7 +135,6 @@ export function AnalyticsChartsSection({
       <SystemStatusPanel />
       <SeoHealthPanel />
       <HitRatePanel days={days} />
-      <AICostPanel days={days} />
       <AuthFailuresPanel days={days} />
 
       {/* Source breakdown + confidence */}
