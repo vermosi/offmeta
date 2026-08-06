@@ -6,6 +6,7 @@
  */
 
 import { classifyTraffic } from './traffic';
+import { googleAnalyticsMeasurementId } from './config';
 import {
   allowEvent,
   buildReplayConfig,
