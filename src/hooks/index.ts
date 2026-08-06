@@ -5,7 +5,7 @@
 
 export { useAdminAnalyticsData } from './useAdminAnalyticsData';
 export { useAdminAnalyticsFilters } from './useAdminAnalyticsFilters';
-export { useAffiliateConfig, wrapAffiliateUrl, isAlreadyAffiliateUrl } from './useAffiliateConfig';
+export { useAffiliateConfig, wrapAffiliateUrl, isAlreadyAffiliateUrl, extractTcgplayerDestinationUrl } from './useAffiliateConfig';
 export { useAnalytics } from './useAnalytics';
 export { useAuth, useAuthProvider, AuthContext } from './useAuth';
 export { useBatchPriceHistory } from './useBatchPriceHistory';
