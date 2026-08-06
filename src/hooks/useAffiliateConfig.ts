@@ -71,5 +71,25 @@ export function useAffiliateConfig(): AffiliateConfig {
  */
 export function wrapAffiliateUrl(url: string, affiliateBase: string): string {
   if (!affiliateBase) return url;
+  // Scryfall already returns partner/affiliate tracking links for many cards.
+  // Wrapping those again produces a malformed double-redirect URL.
+  if (isAlreadyAffiliateUrl(url)) return url;
   return `${affiliateBase}${encodeURIComponent(url)}`;
+}
+
+/** True when the URL is already an affiliate/redirect link (Impact, partner subdomains). */
+export function isAlreadyAffiliateUrl(url: string): boolean {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return (
+      host === 'partner.tcgplayer.com' ||
+      host.endsWith('.prf.hn') ||
+      host.endsWith('.sjv.io') ||
+      host.endsWith('.pxf.io') ||
+      host.endsWith('.7eer.net') ||
+      host.endsWith('.evyy.net')
+    );
+  } catch {
+    return false;
+  }
 }
