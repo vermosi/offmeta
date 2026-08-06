@@ -6,19 +6,25 @@
 
 import { createRoot } from 'react-dom/client';
 import { initializeAnalytics, initFunnelTracking } from '@/lib/analytics';
+import {
+  googleAnalyticsMeasurementId,
+  posthogProjectToken,
+  posthogRegion,
+} from '@/lib/analytics/config';
 import { initErrorMonitoring } from '@/lib/monitoring';
 import App from './App.tsx';
 import './index.css';
 
 
-// Initialize optional third-party analytics providers from Lovable connectors.
-// Keys are only present in the published environment; missing keys are ignored.
+// Initialize optional third-party analytics providers. Connector env vars win
+// when the build injects them; publishable fallbacks keep GA4 and PostHog
+// working when they are missing from the production build environment.
 initializeAnalytics({
-  googleAnalyticsMeasurementId: import.meta.env
-    .VITE_LOVABLE_CONNECTOR_GOOGLE_ANALYTICS_API_KEY,
-  posthogProjectToken: import.meta.env.VITE_LOVABLE_CONNECTOR_POSTHOG_API_KEY,
-  posthogRegion: import.meta.env.VITE_LOVABLE_CONNECTOR_POSTHOG_REGION,
+  googleAnalyticsMeasurementId,
+  posthogProjectToken,
+  posthogRegion,
 });
+
 
 // Register onboarding-cohort context and emit the daily retention signal so
 // PostHog funnels and retention views can be broken down per cohort.
