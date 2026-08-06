@@ -67,14 +67,35 @@ export function useAffiliateConfig(): AffiliateConfig {
 }
 
 /**
+ * Extracts the actual TCGPlayer product URL from a Scryfall partner redirect
+ * link. Scryfall partner links use the query parameter `u` to hold the final
+ * destination URL; without extracting it, wrapping the redirect link would keep
+ * Scryfall's affiliate attribution instead of the user's.
+ */
+export function extractTcgplayerDestinationUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname.toLowerCase() === 'partner.tcgplayer.com') {
+      const destination = parsed.searchParams.get('u');
+      if (destination) return destination;
+    }
+  } catch {
+    // Invalid URL; fall through to return original.
+  }
+  return url;
+}
+
+/**
  * Wraps a TCGPlayer URL with the affiliate base if configured.
+ * If Scryfall already provided a partner/redirect link, the destination is
+ * extracted first so the user's affiliate attribution is always used.
  */
 export function wrapAffiliateUrl(url: string, affiliateBase: string): string {
   if (!affiliateBase) return url;
-  // Scryfall already returns partner/affiliate tracking links for many cards.
-  // Wrapping those again produces a malformed double-redirect URL.
-  if (isAlreadyAffiliateUrl(url)) return url;
-  return `${affiliateBase}${encodeURIComponent(url)}`;
+  const destination = isAlreadyAffiliateUrl(url)
+    ? extractTcgplayerDestinationUrl(url)
+    : url;
+  return `${affiliateBase}${encodeURIComponent(destination)}`;
 }
 
 /** True when the URL is already an affiliate/redirect link (Impact, partner subdomains). */

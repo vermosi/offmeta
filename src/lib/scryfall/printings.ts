@@ -8,7 +8,7 @@ import type { ScryfallCard } from '@/types/card';
 import { logger } from '@/lib/core/logger';
 import { rateLimitedFetch } from './fetch-utils';
 import { getLocalCardPrintings } from '@/services/local-cards';
-import { isAlreadyAffiliateUrl } from '@/hooks/useAffiliateConfig';
+import { isAlreadyAffiliateUrl, extractTcgplayerDestinationUrl } from '@/hooks/useAffiliateConfig';
 
 const BASE_URL = 'https://api.scryfall.com';
 
@@ -185,10 +185,14 @@ export function getTCGPlayerUrl(card: ScryfallCard): string {
     tcgplayerUrl = `https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=${encodeURIComponent(card.name)}`;
   }
 
-  // If affiliate base is configured, wrap the URL — unless Scryfall already
-  // handed us a partner/affiliate redirect link (double-wrapping breaks it).
-  if (affiliateBase && !isAlreadyAffiliateUrl(tcgplayerUrl)) {
-    return `${affiliateBase}${encodeURIComponent(tcgplayerUrl)}`;
+  // If affiliate base is configured, wrap the destination URL — even when
+  // Scryfall already supplied a partner redirect link, by extracting the inner
+  // product URL so the user's affiliate attribution is always used.
+  if (affiliateBase) {
+    const destination = isAlreadyAffiliateUrl(tcgplayerUrl)
+      ? extractTcgplayerDestinationUrl(tcgplayerUrl)
+      : tcgplayerUrl;
+    return `${affiliateBase}${encodeURIComponent(destination)}`;
   }
 
   return tcgplayerUrl;

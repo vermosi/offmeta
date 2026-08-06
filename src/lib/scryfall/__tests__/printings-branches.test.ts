@@ -64,6 +64,34 @@ describe('getTCGPlayerUrl', () => {
     const url = getTCGPlayerUrl(card);
     expect(url).toContain('tcgplayer.com/search');
   });
+  it('wraps a direct TCGPlayer URL with the configured affiliate base', () => {
+    (import.meta.env as Record<string, unknown>).NEXT_PUBLIC_TCGPLAYER_IMPACT_BASE =
+      'https://partner.tcgplayer.com/r/111/222/333?u=';
+    const card = buildCard({
+      purchase_uris: {
+        tcgplayer: 'https://www.tcgplayer.com/product/12345',
+      },
+    });
+    const url = getTCGPlayerUrl(card);
+    expect(url).toBe(
+      'https://partner.tcgplayer.com/r/111/222/333?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F12345',
+    );
+  });
+
+  it('extracts the destination from a Scryfall partner link and re-wraps with the affiliate base', () => {
+    (import.meta.env as Record<string, unknown>).NEXT_PUBLIC_TCGPLAYER_IMPACT_BASE =
+      'https://partner.tcgplayer.com/r/111/222/333?u=';
+    const scryfallPartner =
+      'https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696422%3Fpage%3D1';
+    const card = buildCard({
+      purchase_uris: { tcgplayer: scryfallPartner },
+    });
+    const url = getTCGPlayerUrl(card);
+    expect(url).toBe(
+      'https://partner.tcgplayer.com/r/111/222/333?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696422%3Fpage%3D1',
+    );
+    expect(url).not.toContain('c/4931599');
+  });
 });
 
 describe('getCardmarketUrl', () => {
