@@ -4,7 +4,6 @@
  */
 import { describe, expect, it } from 'vitest';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 import { parseCardsLike } from '../../../../supabase/functions/semantic-search/deterministic/parse-mappings.ts';
 
 interface TestIR {
