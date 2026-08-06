@@ -184,8 +184,9 @@ export function getTCGPlayerUrl(card: ScryfallCard): string {
     tcgplayerUrl = `https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=${encodeURIComponent(card.name)}`;
   }
 
-  // If affiliate base is configured, wrap the URL
-  if (affiliateBase) {
+  // If affiliate base is configured, wrap the URL — unless Scryfall already
+  // handed us a partner/affiliate redirect link (double-wrapping breaks it).
+  if (affiliateBase && !isAlreadyAffiliateUrl(tcgplayerUrl)) {
     return `${affiliateBase}${encodeURIComponent(tcgplayerUrl)}`;
   }
 
