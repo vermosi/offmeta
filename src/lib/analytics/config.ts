@@ -15,7 +15,7 @@
 const GA_MEASUREMENT_ID_FALLBACK = 'G-RY9CP8J2VY';
 
 /** Publishable PostHog project token for offmeta.app. */
-const POSTHOG_PROJECT_TOKEN_FALLBACK = '__POSTHOG_TOKEN__';
+const POSTHOG_PROJECT_TOKEN_FALLBACK = 'phc_zocE62mGvWcdF8Am4XjAKQcXDCCAgh9NFwAo9TusyWGZ';
 
 /** PostHog ingest region for the project. */
 const POSTHOG_REGION_FALLBACK = 'us';
