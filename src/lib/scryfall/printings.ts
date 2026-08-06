@@ -8,7 +8,7 @@ import type { ScryfallCard } from '@/types/card';
 import { logger } from '@/lib/core/logger';
 import { rateLimitedFetch } from './fetch-utils';
 import { getLocalCardPrintings } from '@/services/local-cards';
-import { isAlreadyAffiliateUrl } from '@/hooks/useAffiliateConfig';
+import { isAlreadyAffiliateUrl, extractTcgplayerDestinationUrl } from '@/hooks/useAffiliateConfig';
 
 const BASE_URL = 'https://api.scryfall.com';
 
