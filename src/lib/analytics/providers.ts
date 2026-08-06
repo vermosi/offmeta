@@ -6,6 +6,7 @@
  */
 
 import { classifyTraffic } from './traffic';
+import { googleAnalyticsMeasurementId } from './config';
 import {
   allowEvent,
   buildReplayConfig,
@@ -312,8 +313,8 @@ export function setExternalPersonProperties(
 export function trackExternalPageView(path: string): void {
   if (typeof window === 'undefined') return;
 
-  const measurementId = import.meta.env
-    .VITE_LOVABLE_CONNECTOR_GOOGLE_ANALYTICS_API_KEY;
+  const measurementId = googleAnalyticsMeasurementId;
+
 
   try {
     if (gaInitialized && window.gtag && measurementId) {
