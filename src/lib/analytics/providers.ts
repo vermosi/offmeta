@@ -318,7 +318,16 @@ export function trackExternalPageView(path: string): void {
 
   try {
     if (gaInitialized && window.gtag && measurementId) {
-      window.gtag('config', measurementId, { page_path: path });
+      // `gtag('config', ...)` does not re-send a page_view for an already
+      // configured measurement ID (and the initial config sets
+      // send_page_view:false), so SPA page views must be sent explicitly.
+      window.gtag('set', { page_path: path });
+      window.gtag('event', 'page_view', {
+        page_path: path,
+        page_location: `${window.location.origin}${path}`,
+        page_title: document.title,
+        send_to: measurementId,
+      });
     }
   } catch {
     /* best-effort */
