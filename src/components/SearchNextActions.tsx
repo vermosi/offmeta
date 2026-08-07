@@ -104,7 +104,7 @@ export function SearchNextActions(props: SearchNextActionsProps) {
   const [primary, secondary] = actions;
 
   return (
-    <section className="rounded-2xl border border-border/60 bg-card/60 p-3 sm:p-4 animate-reveal">
+    <section className="rounded-2xl border border-border/60 bg-gradient-to-br from-card/85 to-background/70 p-3.5 sm:p-4 shadow-sm animate-reveal">
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
@@ -161,7 +161,7 @@ export function SearchNextActions(props: SearchNextActionsProps) {
                 cta: secondary.to,
               })
             }
-            className="inline-flex items-center gap-1.5 rounded-full px-1 text-xs font-medium text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
+            className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-background/50 px-3 py-1.5 text-xs font-medium text-muted-foreground underline-offset-4 transition-colors hover:border-border hover:text-foreground"
           >
             <secondary.icon
               className="h-3.5 w-3.5 text-accent"

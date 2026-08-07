@@ -216,13 +216,13 @@ export const EmptyState = ({
   return (
     <div
       role="status"
-      className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-center animate-reveal"
+      className="flex flex-col items-center justify-center py-14 sm:py-18 px-4 text-center animate-reveal"
     >
-      <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-secondary flex items-center justify-center mb-5">
-        <SearchX className="h-6 w-6 sm:h-7 sm:w-7 text-muted-foreground" />
+      <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl border border-border/60 bg-gradient-to-br from-background to-secondary/60 flex items-center justify-center mb-5 shadow-sm">
+        <SearchX className="h-6 w-6 sm:h-7 sm:w-7 text-accent" />
       </div>
 
-      <h3 className="text-lg font-semibold text-foreground mb-2">
+      <h3 className="text-lg font-semibold tracking-tight text-foreground mb-2">
         {variant === 'filtered'
           ? t('empty.filtersHideAll', 'Filters hid every result')
           : t('empty.noCards')}
@@ -248,7 +248,7 @@ export const EmptyState = ({
 
       {/* Rephrase panel — shown when we fell back to an exact-name search */}
       {showRephrases && (
-        <div className="surface-elevated p-5 max-w-md w-full mb-6 text-left">
+        <div className="surface-elevated p-5 max-w-md w-full mb-6 text-left rounded-2xl border border-border/60 bg-card/70 shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <Wand2 className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-foreground">
@@ -288,7 +288,7 @@ export const EmptyState = ({
 
       {/* Applied filters summary + broaden chips */}
       {hasAppliedFilters && (
-        <div className="surface-elevated p-5 max-w-md w-full mb-6 text-left">
+        <div className="surface-elevated p-5 max-w-md w-full mb-6 text-left rounded-2xl border border-border/60 bg-card/70 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <SlidersHorizontal className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-foreground">
@@ -358,7 +358,7 @@ export const EmptyState = ({
 
       {/* Did you mean? suggestions */}
       {(hasSuggestions || isCheckingSuggestions) && (
-        <div className="surface-elevated p-5 max-w-md w-full mb-6 text-left">
+        <div className="surface-elevated p-5 max-w-md w-full mb-6 text-left rounded-2xl border border-border/60 bg-card/70 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-foreground">
@@ -410,7 +410,7 @@ export const EmptyState = ({
 
       {/* Quick recoveries */}
       {query && onTrySuggestion && (
-        <div className="surface-elevated p-5 max-w-md w-full mb-6 text-left">
+        <div className="surface-elevated p-5 max-w-md w-full mb-6 text-left rounded-2xl border border-border/60 bg-card/70 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-foreground">
@@ -471,7 +471,7 @@ export const EmptyState = ({
       )}
 
       {/* Tips section */}
-      <div className="surface-elevated p-5 max-w-md w-full mb-8">
+      <div className="surface-elevated p-5 max-w-md w-full mb-8 rounded-2xl border border-border/60 bg-card/70 shadow-sm">
         <div className="flex items-center gap-2 mb-3">
           <Lightbulb className="h-4 w-4 text-accent" />
           <span className="text-sm font-medium text-foreground">
@@ -488,7 +488,7 @@ export const EmptyState = ({
         </ul>
       </div>
 
-      <div className="surface-elevated p-5 max-w-md w-full mb-8 text-left">
+      <div className="surface-elevated p-5 max-w-md w-full mb-8 text-left rounded-2xl border border-border/60 bg-card/70 shadow-sm">
         <div className="flex items-center gap-2 mb-3">
           <Sparkles className="h-4 w-4 text-primary" />
           <span className="text-sm font-medium text-foreground">

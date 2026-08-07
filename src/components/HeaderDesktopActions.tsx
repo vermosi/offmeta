@@ -39,7 +39,7 @@ export function HeaderDesktopActions({
         href="https://discord.gg/9UEv6vrTD4"
         target="_blank"
         rel="noopener noreferrer"
-        className="hidden sm:flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors focus-ring"
+        className="hidden sm:flex h-8 w-8 items-center justify-center rounded-full border border-border/40 bg-card/60 text-muted-foreground shadow-sm transition-colors hover:border-border/60 hover:bg-card hover:text-foreground focus-ring"
         aria-label={t('header.discordLabel', 'Join our Discord (opens in new tab)')}
       >
         <svg className="h-4 w-4" aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
@@ -53,7 +53,7 @@ export function HeaderDesktopActions({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
-              className="h-8 w-8 rounded-full bg-primary/10 border border-border flex items-center justify-center text-xs font-semibold text-primary hover:bg-primary/20 transition-colors focus-ring overflow-hidden"
+              className="h-8 w-8 overflow-hidden rounded-full border border-border/60 bg-card/80 text-xs font-semibold text-primary shadow-sm transition-colors hover:border-accent/30 hover:bg-card focus-ring"
               aria-label={t('nav.userMenu')}
             >
               {avatarUrl ? (
@@ -90,7 +90,7 @@ export function HeaderDesktopActions({
         <button
           type="button"
           onClick={onOpenAuth}
-          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary/50 focus-ring"
+          className="hidden sm:flex items-center gap-1.5 rounded-full border border-border/50 bg-card/60 px-3 py-1.5 text-sm text-muted-foreground shadow-sm transition-colors hover:border-border/70 hover:bg-card hover:text-foreground focus-ring"
         >
           <LogIn className="h-4 w-4" />
           {t('nav.signIn')}

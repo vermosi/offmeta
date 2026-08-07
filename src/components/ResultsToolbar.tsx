@@ -64,7 +64,7 @@ export function ResultsToolbar({
       : totalCards.toLocaleString();
 
   return (
-    <div className="animate-reveal rounded-2xl border border-border/50 p-1.5 shadow-lg backdrop-blur-2xl">
+    <div className="animate-reveal rounded-3xl border border-border/60 bg-card/75 p-2 shadow-xl backdrop-blur-2xl">
       {/* Row 1 — controls */}
       <div className="flex flex-wrap items-center gap-1.5 px-0.5 sm:flex-nowrap">
         {/* Refinement group: format · filters · sort */}
@@ -118,7 +118,7 @@ export function ResultsToolbar({
           <Popover>
             <PopoverTrigger asChild>
               <button
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground sm:hidden"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-border/50 bg-background/70 text-muted-foreground transition-colors hover:border-border hover:bg-background hover:text-foreground sm:hidden"
                 aria-label={t('common.moreOptions', 'More options')}
               >
                 <MoreHorizontal className="h-4 w-4" />
@@ -140,7 +140,7 @@ export function ResultsToolbar({
       </div>
 
       {/* Row 2 — generated Scryfall query */}
-      {queryStrip && <div className="mt-1.5">{queryStrip}</div>}
+      {queryStrip && <div className="mt-2">{queryStrip}</div>}
     </div>
   );
 }

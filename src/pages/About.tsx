@@ -147,15 +147,15 @@ export default function About() {
       <Header />
 
       <main id="main-content" className="flex-1">
-        <section className="relative py-20 sm:py-28 px-4 border-b border-border/40">
+        <section className="relative overflow-hidden py-20 sm:py-28 px-4 border-b border-border/40 bg-gradient-to-b from-card/30 to-background">
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[620px] h-[320px] rounded-full bg-accent/10 blur-3xl" />
+            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 h-[220px] w-[min(620px,90vw)] rounded-full bg-accent/10 blur-3xl sm:h-[320px] sm:w-[620px]" />
           </div>
           <div className="relative max-w-4xl mx-auto text-center">
-            <p className="inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-6">
+            <p className="inline-flex items-center rounded-full border border-border/60 bg-background/70 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-6 shadow-sm">
               {t('about.badge', 'About OffMeta')}
             </p>
-            <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-foreground leading-tight mb-6">
+            <h1 className="mx-auto max-w-4xl text-4xl sm:text-6xl font-semibold tracking-tight text-foreground leading-tight mb-6">
               {t('about.heroTitle', 'Search Magic cards in plain English.')}
               {' '}
               <br className="hidden sm:block" />
@@ -172,7 +172,7 @@ export default function About() {
             <div className="flex flex-wrap justify-center gap-3">
               <Link
                 to="/"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-medium shadow-sm hover:opacity-90 transition-opacity"
               >
                 <Search className="h-4 w-4" />
                 {t('about.trySearch', 'Try OffMeta Search')}
@@ -181,7 +181,7 @@ export default function About() {
                 href="https://scryfall.com/docs/syntax"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm font-medium hover:bg-card/80 transition-colors"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-border/70 bg-card text-foreground text-sm font-medium shadow-sm hover:bg-card/80 transition-colors"
               >
                 <Code2 className="h-4 w-4" />
                 {t('about.learnSyntax', 'Learn Scryfall Syntax')}
@@ -204,7 +204,7 @@ export default function About() {
           </div>
         </section>
 
-        <section className="py-16 sm:py-20 px-4 border-b border-border/30 bg-card/20">
+        <section className="py-16 sm:py-20 px-4 border-b border-border/30 bg-card/25">
           <div className="max-w-3xl mx-auto space-y-5">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
               {t('about.why', 'Why OffMeta exists')}
@@ -298,7 +298,7 @@ export default function About() {
           </div>
         </section>
 
-        <section className="py-16 sm:py-20 px-4 border-b border-border/30 bg-card/20">
+        <section className="py-16 sm:py-20 px-4 border-b border-border/30 bg-card/25">
           <div className="max-w-3xl mx-auto space-y-6">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
               {t('about.demoTitle', 'Plain English in, real Scryfall query out')}

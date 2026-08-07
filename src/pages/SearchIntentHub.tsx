@@ -15,6 +15,8 @@ import {
   Wallet,
 } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
 import { applySeoMeta, injectJsonLd, buildBreadcrumbJsonLd } from '@/lib/seo';
 
 const INTENTS = [
@@ -86,8 +88,9 @@ export default function SearchIntentHub() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
-      <main className="mx-auto max-w-5xl px-4 py-8 sm:py-12">
+    <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
+      <Header />
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:py-12">
         <nav
           className="mb-6 text-sm text-muted-foreground"
           aria-label="Breadcrumb"
@@ -103,8 +106,8 @@ export default function SearchIntentHub() {
           </ol>
         </nav>
 
-        <section className="space-y-4">
-          <div className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/5 px-3 py-1.5 text-xs font-medium text-accent">
+        <section className="rounded-3xl border border-border/60 bg-card/60 p-6 shadow-sm space-y-4">
+          <div className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/5 px-3 py-1.5 text-xs font-medium text-accent shadow-sm">
             <Search className="h-3.5 w-3.5" aria-hidden="true" />
             High-value search intents
           </div>
@@ -155,7 +158,7 @@ export default function SearchIntentHub() {
           ))}
         </section>
 
-        <section className="mt-10 rounded-2xl border border-border/60 bg-card/60 p-5 sm:p-6">
+        <section className="mt-10 rounded-2xl border border-border/60 bg-card/60 p-5 shadow-sm sm:p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             Best for
           </p>
@@ -202,6 +205,7 @@ export default function SearchIntentHub() {
           </div>
         </section>
       </main>
+      <Footer />
     </div>
   );
 }

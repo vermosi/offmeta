@@ -188,7 +188,7 @@ export default function GuidesIndex() {
         className="flex-1 container-main py-8 sm:py-10 lg:py-12"
       >
         <div className="max-w-4xl mx-auto space-y-8 sm:space-y-10 min-w-0">
-          <header className="text-center space-y-4">
+          <header className="rounded-3xl border border-border/60 bg-card/60 p-6 text-center shadow-sm space-y-4 sm:p-8">
             <div className="flex items-center justify-center gap-2.5 text-primary">
               <BookOpen className="h-6 w-6" />
               <Sparkles className="h-5 w-5" />
@@ -265,7 +265,7 @@ export default function GuidesIndex() {
                     {group.guides.map((guide) => (
                       <div
                         key={guide.slug}
-                        className="group relative rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-lg transition-all duration-200 p-5 sm:p-6 flex flex-col min-w-0 overflow-hidden"
+                      className="group relative rounded-2xl border border-border/60 bg-card/80 hover:border-primary/30 hover:shadow-lg transition-all duration-200 p-5 sm:p-6 flex flex-col min-w-0 overflow-hidden shadow-sm"
                       >
                         <Link
                           to={`/guides/${guide.slug}`}
@@ -349,7 +349,7 @@ export default function GuidesIndex() {
             </p>
             <Link
               to="/"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-medium text-sm shadow-sm hover:opacity-90 transition-opacity"
             >
               {t('guides.startSearching')}
               <ArrowRight className="h-4 w-4" />

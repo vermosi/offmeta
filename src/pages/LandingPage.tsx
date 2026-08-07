@@ -54,7 +54,7 @@ export default function LandingPage() {
     <main className="min-h-screen bg-background">
       <section className="relative overflow-hidden pb-12 pt-10 sm:pb-16 sm:pt-16 lg:pt-20">
         <div
-          className="pointer-events-none absolute inset-0 bg-gradient-to-b from-accent/10 via-transparent to-transparent"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(var(--accent-rgb),0.12),transparent_55%)]"
           aria-hidden="true"
         />
 
@@ -69,7 +69,7 @@ export default function LandingPage() {
         </div>
 
         <div className="container-main relative z-10 text-center">
-          <div className="mx-auto mb-4 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1.5 text-xs font-medium text-accent backdrop-blur-sm">
+          <div className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/5 px-4 py-1.5 text-xs font-medium text-accent shadow-sm backdrop-blur-sm">
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
             AI-powered MTG discovery engine
           </div>
@@ -86,7 +86,7 @@ export default function LandingPage() {
           </p>
 
           <div className="mx-auto mt-6 grid max-w-4xl gap-3 text-left sm:grid-cols-3">
-            <div className="rounded-2xl border border-border/60 bg-card/70 p-4 shadow-sm backdrop-blur-sm">
+            <div className="rounded-2xl border border-border/60 bg-card/75 p-4 shadow-sm backdrop-blur-sm">
               <Search className="mb-3 h-5 w-5 text-accent" aria-hidden="true" />
               <h2 className="mb-1 text-sm font-semibold text-foreground">
                 Search naturally
@@ -97,7 +97,7 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-border/60 bg-card/70 p-4 shadow-sm backdrop-blur-sm">
+            <div className="rounded-2xl border border-border/60 bg-card/75 p-4 shadow-sm backdrop-blur-sm">
               <SlidersHorizontal
                 className="mb-3 h-5 w-5 text-accent"
                 aria-hidden="true"
@@ -110,7 +110,7 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-border/60 bg-card/70 p-4 shadow-sm backdrop-blur-sm">
+            <div className="rounded-2xl border border-border/60 bg-card/75 p-4 shadow-sm backdrop-blur-sm">
               <ArrowRight className="mb-3 h-5 w-5 text-accent" aria-hidden="true" />
               <h2 className="mb-1 text-sm font-semibold text-foreground">
                 Go from idea to cards
@@ -139,7 +139,7 @@ export default function LandingPage() {
               id="search-input"
               name="query"
               placeholder="budget board wipes under $5"
-              className="min-h-12 flex-1 rounded-full border border-border bg-card px-5 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-ring/30"
+              className="min-h-12 flex-1 rounded-full border border-border/70 bg-card/90 px-5 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-ring/30"
             />
             <button
               type="submit"
@@ -166,7 +166,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="border-t border-border/40 bg-card/30 px-4 py-12 sm:py-16">
+      <section className="border-t border-border/40 bg-card/35 px-4 py-12 sm:py-16">
         <div className="container-main">
           <div className="mx-auto max-w-5xl">
             <div className="mb-6 max-w-2xl">
@@ -187,7 +187,7 @@ export default function LandingPage() {
             <div className="grid gap-4 md:grid-cols-3">
               <a
                 href="/guides"
-                className="rounded-2xl border border-border/60 bg-background/80 p-5 transition-colors hover:border-primary/40 hover:bg-card"
+                className="rounded-2xl border border-border/60 bg-background/80 p-5 shadow-sm transition-colors hover:border-primary/40 hover:bg-card"
               >
                 <BookOpen className="h-5 w-5 text-accent" aria-hidden="true" />
                 <h3 className="mt-3 text-base font-semibold text-foreground">
@@ -201,7 +201,7 @@ export default function LandingPage() {
 
               <a
                 href="/combos"
-                className="rounded-2xl border border-border/60 bg-background/80 p-5 transition-colors hover:border-primary/40 hover:bg-card"
+                className="rounded-2xl border border-border/60 bg-background/80 p-5 shadow-sm transition-colors hover:border-primary/40 hover:bg-card"
               >
                 <Layers3 className="h-5 w-5 text-accent" aria-hidden="true" />
                 <h3 className="mt-3 text-base font-semibold text-foreground">
@@ -215,7 +215,7 @@ export default function LandingPage() {
 
               <a
                 href="/docs"
-                className="rounded-2xl border border-border/60 bg-background/80 p-5 transition-colors hover:border-primary/40 hover:bg-card"
+                className="rounded-2xl border border-border/60 bg-background/80 p-5 shadow-sm transition-colors hover:border-primary/40 hover:bg-card"
               >
                 <TrendingUp className="h-5 w-5 text-accent" aria-hidden="true" />
                 <h3 className="mt-3 text-base font-semibold text-foreground">

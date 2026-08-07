@@ -57,7 +57,7 @@ export const CardListItem = memo(function CardListItem({
       role="button"
       tabIndex={tabIndex}
       data-testid="search-result-card"
-      className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/50 bg-card/50 hover:bg-muted/50 hover:border-border cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/50 bg-card/60 hover:bg-card/80 hover:border-border cursor-pointer transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       aria-label={`View details for ${displayName}`}
     >
       {/* Owned indicator */}
@@ -128,10 +128,10 @@ export const CardListItem = memo(function CardListItem({
             event.stopPropagation();
             onSearchSimilar(card.name);
           }}
-          className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-background/70 px-2 py-1 text-[10px] font-medium text-foreground transition-colors hover:border-accent/40 hover:bg-accent/10"
-          aria-label={`Search cards similar to ${displayName}`}
-          title={`Search cards similar to ${displayName}`}
-        >
+        className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-background/70 px-2 py-1 text-[10px] font-medium text-foreground transition-colors hover:border-accent/40 hover:bg-accent/10"
+        aria-label={`Search cards similar to ${displayName}`}
+        title={`Search cards similar to ${displayName}`}
+      >
           <Search className="h-3 w-3 text-accent" aria-hidden="true" />
           Similar
         </button>

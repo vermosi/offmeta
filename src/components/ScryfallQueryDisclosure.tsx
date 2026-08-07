@@ -44,7 +44,7 @@ export function ScryfallQueryDisclosure({
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-lg border border-border/60 bg-background/50 transition-colors',
+        'overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-r from-background/80 via-background/65 to-background/80 transition-colors shadow-sm',
         'hover:border-border',
       )}
     >
@@ -54,8 +54,8 @@ export function ScryfallQueryDisclosure({
         aria-expanded={open}
         aria-controls="scryfall-query-panel"
         className={cn(
-          'group flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+          'group flex w-full items-center gap-2 px-3 py-2 text-left transition-colors sm:px-3.5',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         )}
       >
         <Code2
@@ -64,11 +64,11 @@ export function ScryfallQueryDisclosure({
         />
         {!open && scryfallQuery ? (
           <>
-            <code className="min-w-0 truncate font-mono text-[11px] text-primary">
+            <code className="min-w-0 truncate font-mono text-[11px] text-foreground">
               <span className="text-muted-foreground">q:</span> {preview}
             </code>
             {metaLabel && (
-              <span className="ml-1.5 shrink-0 rounded-full border border-border/60 bg-background/70 px-2 py-0.5 text-[10px] font-medium text-foreground">
+              <span className="ml-1.5 shrink-0 rounded-full border border-accent/20 bg-accent/5 px-2 py-0.5 text-[10px] font-medium text-accent">
                 {metaLabel}
               </span>
             )}
@@ -89,7 +89,7 @@ export function ScryfallQueryDisclosure({
       {open && (
         <div
           id="scryfall-query-panel"
-          className="border-t border-border/60 p-2 sm:p-3"
+          className="border-t border-border/60 bg-background/70 p-2.5 sm:p-3"
         >
           {children}
         </div>

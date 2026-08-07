@@ -550,10 +550,10 @@ const Index = () => {
 
         {!hasSearched && <HeroSection />}
         {!hasSearched && (
-          <section className="relative border-y border-border/40 bg-card/25 px-4 py-8 sm:py-10">
+          <section className="relative border-y border-border/40 bg-card/25 px-4 py-7 sm:py-9">
             <div className="container-main">
-              <div className="mx-auto grid max-w-5xl gap-4 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
-                <div className="space-y-3">
+              <div className="mx-auto grid max-w-5xl gap-4 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
+                <div className="space-y-3 rounded-2xl border border-border/60 bg-background/70 p-5 shadow-sm">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                     Why OffMeta
                   </p>
@@ -746,27 +746,30 @@ const Index = () => {
 
             {showResultsMode && (
               <div className="animate-reveal mb-5 sm:mb-7">
-                <div className="rounded-2xl border border-border/60 bg-card/70 px-4 py-3 shadow-sm backdrop-blur">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
-                      {t('search.resultsFor', 'Results for "{query}"').replace(
-                        '{query}',
-                        originalQuery || searchQuery || '',
-                      )}
+                <div className="rounded-2xl border border-border/60 bg-gradient-to-r from-card/85 via-background/80 to-card/85 px-4 py-3.5 shadow-sm backdrop-blur">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                        Search results
+                      </p>
+                      <h1 className="mt-1 text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+                        {t('search.resultsFor', 'Results for "{query}"').replace(
+                          '{query}',
+                          originalQuery || searchQuery || '',
+                        )}
+                      </h1>
                       {hasSearched && totalCards > 0 && (
-                        <span className="ml-1.5 font-normal text-muted-foreground">
-                          (
+                        <p className="mt-1 text-sm text-muted-foreground">
                           {t('results.summaryCards', '{count} cards').replace(
                             '{count}',
                             totalCards.toLocaleString(),
                           )}
-                          )
-                        </span>
+                        </p>
                       )}
-                    </h1>
+                    </div>
                     <a
                       href="#search-results"
-                      className="text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                      className="inline-flex items-center rounded-full border border-border/60 bg-background/70 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5"
                     >
                       Jump to results
                     </a>

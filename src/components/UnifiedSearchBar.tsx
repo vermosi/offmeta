@@ -262,12 +262,12 @@ export const UnifiedSearchBar = forwardRef<
         <div className={`gradient-border-wrap ${isFocused ? 'opacity-100' : 'opacity-60 hover:opacity-80'} transition-opacity duration-300`}>
           <div
             className={`
-              relative flex items-center gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-xl bg-card
+              relative flex items-center gap-1.5 sm:gap-2 rounded-3xl border border-border/60 bg-gradient-to-r from-card/95 via-background/85 to-card/95 p-1.5 shadow-sm transition-all duration-300 sm:p-2
               transition-all duration-300
               ${
                 isFocused
                   ? 'shadow-xl shadow-accent/10'
-                  : 'shadow-md'
+                  : 'shadow-sm'
               }
             `}
           >
@@ -320,7 +320,7 @@ export const UnifiedSearchBar = forwardRef<
               <button
                 aria-label={t('search.clear')}
                 data-testid="search-clear-button"
-                className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center text-muted-foreground hover:text-foreground flex-shrink-0 rounded-lg hover:bg-secondary transition-colors"
+                className="flex min-h-[36px] min-w-[36px] flex-shrink-0 items-center justify-center rounded-full p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                 onClick={() => {
                   setQuery('');
                   inputRef.current?.focus();
@@ -355,7 +355,7 @@ export const UnifiedSearchBar = forwardRef<
               }
               variant="accent"
               size="sm"
-              className="h-10 sm:h-12 px-4 sm:px-5 rounded-xl gap-2 font-medium flex-shrink-0 shadow-lg shadow-accent/20"
+              className="h-10 flex-shrink-0 gap-2 rounded-full px-4 font-medium shadow-lg shadow-accent/20 sm:h-12 sm:px-5"
               data-testid="search-submit-button"
               aria-label={
                 rateLimitCountdown > 0
@@ -440,7 +440,7 @@ export const UnifiedSearchBar = forwardRef<
       {/* Example queries - shown when no query typed */}
       {showExamples && (
         <div
-          className="animate-reveal rounded-2xl border border-border/60 bg-card/50 p-4 sm:p-5"
+          className="animate-reveal rounded-3xl border border-border/60 bg-card/60 p-4 shadow-sm sm:p-5"
           role="group"
           aria-label={t('search.trySearchingFor')}
         >
