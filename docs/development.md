@@ -1,6 +1,6 @@
 # Development
 
-This page is the practical guide for working on OffMeta locally. It covers setup, the canonical commands, and the conventions that keep the repo predictable across contributors.
+This page is the practical guide for working on OffMeta locally. It covers setup, the canonical commands, the local workflow, and the conventions that keep the repo predictable across contributors.
 
 ## Quick Start
 
@@ -43,15 +43,6 @@ That sequence is intentionally boring. It keeps the repo stable and makes it eas
 - Do not commit Bun lockfiles.
 - Prefer small, focused changes that are easy to review.
 - Keep TypeScript strictness intact and avoid introducing `any` unless there is no reasonable alternative.
-
-## Environment Variables
-
-The repo distinguishes between frontend runtime values and server-side values:
-
-- Frontend canonical values: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`
-- Edge-function canonical values: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `LOVABLE_API_KEY`
-
-Some test and local-tooling helpers can fall back to the frontend names for convenience, but that fallback is a compatibility path rather than the production contract.
 
 ## Edge Functions
 

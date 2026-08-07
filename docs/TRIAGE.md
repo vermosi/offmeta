@@ -1,5 +1,7 @@
 # Triage
 
+Use this page as the single intake and sorting place for new issues, feedback, and backlog candidates.
+
 ## Labels
 
 - `bug`: Something is broken.

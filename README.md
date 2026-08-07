@@ -18,7 +18,32 @@
 
 > _Describe what you're looking for in plain English. No complex syntax. No guessing. Just natural conversation._
 
+OffMeta helps players find Magic cards by intent instead of memorizing Scryfall syntax. It translates plain-English searches into real Scryfall queries, shows the generated syntax back to you, and keeps the core search flow fast enough for repeated refinement.
+
 **Live site:** [offmeta.app](https://offmeta.app)
+
+## What OffMeta Does
+
+- Search by card effect, role, theme, format, color, budget, or tribe
+- Show the exact Scryfall query the app generated
+- Let you refine searches without starting over
+- Provide guides for common search patterns and syntax help
+- Support adjacent tools like card comparison and combo discovery
+
+## Repo Layout
+
+- `src/` contains the React app, components, hooks, and search flow
+- `supabase/functions/` contains translation, validation, and other privileged work
+- `docs/` contains the canonical project documentation
+- `.agents/skills/` contains local Codex skills for repo-specific workflows
+
+## Where To Start
+
+- [docs/README.md](docs/README.md) for the doc map
+- [docs/architecture.md](docs/architecture.md) for the search pipeline and data flow
+- [docs/development.md](docs/development.md) for local setup and commands
+- [docs/testing.md](docs/testing.md) for the canonical test workflow
+- [docs/roadmap.md](docs/roadmap.md) for what is being worked on now
 
 ---
 
@@ -36,9 +61,18 @@ Core references:
 - [Testing](docs/testing.md)
 - [Guides](docs/guides.md)
 - [Roadmap](docs/roadmap.md)
-- [FAQ](docs/FAQ.md)
+- [Troubleshooting](docs/troubleshooting.md)
 - [Internationalization](docs/i18n.md)
 - [Security](docs/security.md)
+
+## Quick Start
+
+```bash
+npm install
+npm run dev
+```
+
+Use `npm run test`, `npm run lint`, and `npm run build` before shipping changes.
 
 ---
 
@@ -49,4 +83,5 @@ Core references:
 | [LICENSE](LICENSE)        | AGPL-3.0 License        |
 | [SECURITY](SECURITY.md)   | Vulnerability reporting |
 | [TRADEMARK](TRADEMARK.md) | Branding guidelines     |
+
 

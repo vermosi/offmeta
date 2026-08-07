@@ -1,47 +1,51 @@
-# Documentation Hub
+# Documentation Index
 
-This directory is the written map for OffMeta. It collects the project's core references, explains where the important systems live, and points to the canonical documents for setup, testing, deployment, and product direction.
+Start here if you want the shortest path through the docs.
 
-If you are looking for the shortest route into the codebase, start here:
+## Start Here
 
-1. Read the top-level [README](../README.md) for the product pitch and live status.
-2. Open [Architecture](./architecture.md) to understand how search, translation, auth, and edge functions fit together.
-3. Use [Development](./development.md) for local setup and everyday commands.
-4. Use [Testing](./testing.md) for the canonical test workflow and CI coverage.
+| Doc | Use it for |
+| --- | --- |
+| [README](../README.md) | Product pitch, live status, and the top-level entry point |
+| [Architecture](./architecture.md) | System layout, data flow, and backend boundaries |
+| [Development](./development.md) | Local setup, commands, and contributor workflow |
+| [Testing](./testing.md) | Canonical test surface and CI expectations |
+| [Roadmap](./roadmap.md) | What we are working on now and next |
 
-## Core References
+## Build
 
-- [README](../README.md) - project overview and main entry point
-- [Architecture](./architecture.md) - system layout, data flow, and backend boundaries
-- [API](./api.md) - edge-function contracts and request/response examples
-- [Development](./development.md) - local setup, commands, and contributor workflow
-- [Testing](./testing.md) - test strategy, suites, and CI expectations
-- [Configuration](./configuration.md) - environment variables, runtime ownership, and scheduled jobs
-- [Deployment](./deployment.md) - production rollout and release process
-- [Internationalization](./i18n.md) - locale system and translation flow
-- [Guides](./guides.md) - search-guide system and editorial structure
+| Doc | Use it for |
+| --- | --- |
+| [API](./api.md) | Edge-function contracts and request/response examples |
+| [Configuration](./configuration.md) | Environment variables, runtime ownership, and scheduled jobs |
+| [Deployment](./deployment.md) | Production rollout and release process |
+| [Internationalization](./i18n.md) | Locale system and translation flow |
+| [Guides](./guides.md) | Search-guide system and editorial structure |
 
-## Project Policies
+## Operate
 
-- [CONTRIBUTING](../CONTRIBUTING.md) - contribution workflow and review expectations
-- [CODE_OF_CONDUCT](../CODE_OF_CONDUCT.md) - community standards
-- [SECURITY](../SECURITY.md) - vulnerability reporting path
-- [GOVERNANCE](../GOVERNANCE.md) - maintainer and decision policy
-- [TRADEMARK](../TRADEMARK.md) - branding rules
-- [SUPPORT](../SUPPORT.md) - where to ask for help
-- [TESTING](../TESTING.md) - policy pointer to test guidance
-- [Security](./security.md) - security implementation index
+| Doc | Use it for |
+| --- | --- |
+| [Security](./security.md) | Security implementation index |
+| [Troubleshooting](./troubleshooting.md) | Common user-facing questions and recovery paths |
+| [Triage](./TRIAGE.md) | Issue intake and prioritization workflow |
+| [Archive](./archive/product-audits.md) | Older product/search audit notes kept for reference |
 
-## Current Reference
+## Policy
 
-- [Roadmap](./roadmap.md) - active planning and future direction
-- [FAQ](./FAQ.md) - common answers and user-facing clarifications
-- [Community Issues](./community-issues.md) - current feedback tracking
-- [Triage](./TRIAGE.md) - issue intake and prioritization workflow
+| Doc | Use it for |
+| --- | --- |
+| [CONTRIBUTING](../CONTRIBUTING.md) | Contribution workflow and review expectations |
+| [CODE_OF_CONDUCT](../CODE_OF_CONDUCT.md) | Community standards |
+| [SECURITY](../SECURITY.md) | Vulnerability reporting path |
+| [GOVERNANCE](../GOVERNANCE.md) | Maintainer and decision policy |
+| [TRADEMARK](../TRADEMARK.md) | Branding rules |
+| [SUPPORT](../SUPPORT.md) | Where to ask for help |
+| [TESTING](../TESTING.md) | Policy pointer to test guidance |
 
 ## Reading Tips
 
-- Treat the docs as layered entry points, not a single linear manual.
-- Prefer the canonical source of truth in code when a docs page and implementation disagree.
-- If you are tracing search behavior, pair [Architecture](./architecture.md) with the code under `src/lib/search/` and `supabase/functions/semantic-search/`.
-- If you are tracing release or rollout behavior, pair [Deployment](./deployment.md) with the active workflows under `.github/workflows/`.
+- Treat the docs as a set of entry points, not a single linear manual.
+- If a docs page and the implementation disagree, trust the code first.
+- For search behavior, pair [Architecture](./architecture.md) with `src/lib/search/` and `supabase/functions/semantic-search/`.
+- For release behavior, pair [Deployment](./deployment.md) with `.github/workflows/`.

@@ -1,6 +1,6 @@
 # Configuration
 
-This page explains which environment variables matter, where they are used, and how the app distinguishes frontend runtime values from privileged server-side values.
+This page explains which environment variables matter, where they are used, how runtime ownership is split, and which cache/job settings affect the search pipeline.
 
 ## Environment Variables
 

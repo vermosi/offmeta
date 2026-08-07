@@ -31,7 +31,7 @@ Tracking format: `[Status: <planned|in progress|blocked|completed>] [Priority: <
 | Item | Status | Priority | Discussion |
 | --- | --- | --- | --- |
 | Mobile-first responsive design with standardized spacing system (progressive padding and margins across breakpoints). | completed | P2 | Milestone `shipped`; owner `@core-team` |
-| Home discovery section cleanup, removing low-engagement sections and keeping Recent Searches, Curated Searches, and FAQ. | completed | P2 | Milestone `shipped`; owner `@core-team` |
+| Home discovery section cleanup, removing low-engagement sections and keeping Recent Searches, Curated Searches, and Troubleshooting. | completed | P2 | Milestone `shipped`; owner `@core-team` |
 | 10 progressive search guides from beginner to expert with SEO optimization and JSON-LD. | completed | P2 | Milestone `shipped`; owner `@core-team` |
 | Card comparison view for comparing 2-4 cards side by side. | completed | P2 | Milestone `shipped`; owner `@core-team` |
 | Multiple view modes, including grid, list, and image-only, with persistent preference. | completed | P2 | Milestone `shipped`; owner `@core-team` |
@@ -72,3 +72,4 @@ Tracking format: `[Status: <planned|in progress|blocked|completed>] [Priority: <
 | Combo finder filtering and sorting by color, price, card count, relevance, and price. | completed | P1 | Milestone `shipped`; owner `@core-team` |
 | Deck recommendation sideboard suggestions. | completed | P2 | Milestone `shipped`; owner `@core-team` |
 | Collection management with bulk import, value estimates, set tracking, and CSV export. | completed | P2 | Milestone `shipped`; owner `@core-team` |
+
