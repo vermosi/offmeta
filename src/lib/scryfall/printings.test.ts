@@ -33,9 +33,6 @@ describe('card printings helpers', () => {
   });
 
   it('fetches printings, falls back to card face images, and caches results', async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2024-01-01T00:00:00Z'));
-
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       mockResponse({
         object: 'list',
@@ -91,9 +88,6 @@ describe('card printings helpers', () => {
   });
 
   it('waits for rate limiting and retries on transient errors', async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2024-01-01T00:00:00Z'));
-
     vi.spyOn(globalThis, 'fetch')
       .mockResolvedValueOnce(
         mockResponse({
@@ -120,13 +114,9 @@ describe('card printings helpers', () => {
 
     const { getCardPrintings } = await import('@/lib/scryfall/printings');
 
-    const first = getCardPrintings('Alpha');
-    await vi.runAllTimersAsync();
-    await first;
+    await getCardPrintings('Alpha');
 
-    const second = getCardPrintings('Beta');
-    await vi.runAllTimersAsync();
-    const result = await second;
+    const result = await getCardPrintings('Beta');
 
     expect(result[0].id).toBe('retry-card');
   });
@@ -143,14 +133,10 @@ describe('card printings helpers', () => {
   });
 
   it('returns an empty list when fetch fails', async () => {
-    vi.useFakeTimers();
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Network error'));
 
     const { getCardPrintings } = await import('@/lib/scryfall/printings');
-    const resultPromise = getCardPrintings('Broken Card');
-
-    await vi.runAllTimersAsync();
-    const result = await resultPromise;
+    const result = await getCardPrintings('Broken Card');
 
     expect(result).toEqual([]);
   });
