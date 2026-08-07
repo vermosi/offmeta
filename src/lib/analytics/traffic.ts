@@ -7,8 +7,15 @@ function getHostname(): string {
   return typeof window !== 'undefined' ? window.location.hostname : '';
 }
 
+/**
+ * Editor/preview hosts. Covers both the `*-preview--*.lovable.app` preview
+ * domains and the `<project-id>.lovableproject.com` in-editor preview, which
+ * was previously misclassified as production traffic and polluted analytics.
+ */
 function isPreviewHost(hostname: string): boolean {
-  return hostname.includes('-preview--') && hostname.endsWith('.lovable.app');
+  const host = hostname.toLowerCase();
+  if (host.endsWith('.lovableproject.com')) return true;
+  return host.includes('-preview--') && host.endsWith('.lovable.app');
 }
 
 function readInternalFlag(): boolean {
