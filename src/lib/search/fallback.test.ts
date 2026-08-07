@@ -35,6 +35,18 @@ describe('buildClientFallbackQuery', () => {
     expect(q).toContain('o:"treasure"');
   });
 
+  it('translates cards that give haste', () => {
+    const q = buildClientFallbackQuery('cards that give haste');
+    expect(q).toContain('kw:haste');
+    expect(q).toContain('gain haste');
+  });
+
+  it('translates cards that give flash', () => {
+    const q = buildClientFallbackQuery('cards that give flash');
+    expect(q).toContain('kw:flash');
+    expect(q).toContain('gain flash');
+  });
+
   it('falls back to oracle search for unmatched terms', () => {
     expect(buildClientFallbackQuery('xyzzy')).toBe('o:"xyzzy"');
   });
@@ -86,19 +98,29 @@ describe('buildClientFallbackQuery', () => {
 
   // New: keywords
   it('translates keyword abilities', () => {
-    expect(buildClientFallbackQuery('creatures with flying')).toContain('kw:flying');
-    expect(buildClientFallbackQuery('deathtouch creatures')).toContain('kw:deathtouch');
+    expect(buildClientFallbackQuery('creatures with flying')).toContain(
+      'kw:flying',
+    );
+    expect(buildClientFallbackQuery('deathtouch creatures')).toContain(
+      'kw:deathtouch',
+    );
     expect(buildClientFallbackQuery('haste')).toContain('kw:haste');
   });
 
   it('translates multi-word keywords', () => {
-    expect(buildClientFallbackQuery('creatures with double strike')).toContain('kw:double-strike');
-    expect(buildClientFallbackQuery('first strike creatures')).toContain('kw:first-strike');
+    expect(buildClientFallbackQuery('creatures with double strike')).toContain(
+      'kw:double-strike',
+    );
+    expect(buildClientFallbackQuery('first strike creatures')).toContain(
+      'kw:first-strike',
+    );
   });
 
   // New: formats
   it('translates format words', () => {
-    expect(buildClientFallbackQuery('commander creatures')).toContain('f:commander');
+    expect(buildClientFallbackQuery('commander creatures')).toContain(
+      'f:commander',
+    );
     expect(buildClientFallbackQuery('modern artifacts')).toContain('f:modern');
     expect(buildClientFallbackQuery('pauper removal')).toContain('f:pauper');
   });
@@ -112,26 +134,40 @@ describe('buildClientFallbackQuery', () => {
   // New: pre-translated guide queries
   it('returns pre-translated guide queries exactly', () => {
     expect(buildClientFallbackQuery('dragons')).toBe('t:dragon');
-    expect(buildClientFallbackQuery('mono red creatures')).toBe('id=r t:creature');
-    expect(buildClientFallbackQuery('landfall cards legal in commander')).toBe('otag:landfall f:commander');
-    expect(buildClientFallbackQuery('utility lands for commander in esper under $5'))
-      .toBe('t:land -t:basic id<=wub f:commander usd<5');
+    expect(buildClientFallbackQuery('mono red creatures')).toBe(
+      'id=r t:creature',
+    );
+    expect(buildClientFallbackQuery('landfall cards legal in commander')).toBe(
+      'otag:landfall f:commander',
+    );
+    expect(
+      buildClientFallbackQuery('utility lands for commander in esper under $5'),
+    ).toBe('t:land -t:basic id<=wub f:commander usd<5');
   });
 
   // New: pre-translated archetype queries
   it('returns pre-translated archetype queries exactly', () => {
-    expect(buildClientFallbackQuery('treasure token cards legal in commander'))
-      .toBe('o:"treasure" o:"token" f:commander');
-    expect(buildClientFallbackQuery('chaos cards legal in commander'))
-      .toBe('(o:"coin" or o:"random" or o:"chaos") f:commander');
+    expect(
+      buildClientFallbackQuery('treasure token cards legal in commander'),
+    ).toBe('o:"treasure" o:"token" f:commander');
+    expect(buildClientFallbackQuery('chaos cards legal in commander')).toBe(
+      '(o:"coin" or o:"random" or o:"chaos") f:commander',
+    );
   });
 
   // New: archetype slang
   it('translates archetype slang', () => {
-    expect(buildClientFallbackQuery('voltron')).toContain('(t:equipment or t:aura)');
-    expect(buildClientFallbackQuery('aristocrats')).toContain('o:"when" o:"dies"');
-    expect(buildClientFallbackQuery('cards that fit into an aristocrats style deck that is mono black'))
-      .toContain('id<=b');
+    expect(buildClientFallbackQuery('voltron')).toContain(
+      '(t:equipment or t:aura)',
+    );
+    expect(buildClientFallbackQuery('aristocrats')).toContain(
+      'o:"when" o:"dies"',
+    );
+    expect(
+      buildClientFallbackQuery(
+        'cards that fit into an aristocrats style deck that is mono black',
+      ),
+    ).toContain('id<=b');
   });
 
   // Mana production queries
@@ -195,13 +231,15 @@ describe('buildClientFallbackQuery', () => {
 
   // Pre-translated mana patterns
   it('returns pre-translated "artifacts that tap for blue"', () => {
-    expect(buildClientFallbackQuery('artifacts that tap for blue'))
-      .toBe('t:artifact o:"add" o:"{U}"');
+    expect(buildClientFallbackQuery('artifacts that tap for blue')).toBe(
+      't:artifact o:"add" o:"{U}"',
+    );
   });
 
   it('returns pre-translated "lands that add any color"', () => {
-    expect(buildClientFallbackQuery('lands that add any color'))
-      .toBe('t:land o:"add" o:"any color"');
+    expect(buildClientFallbackQuery('lands that add any color')).toBe(
+      't:land o:"add" o:"any color"',
+    );
   });
 
   // Dynamic mana color patterns
@@ -213,7 +251,9 @@ describe('buildClientFallbackQuery', () => {
   });
 
   it('handles treasure token creation via slang map', () => {
-    const q = buildClientFallbackQuery('enchantments that create treasure tokens');
+    const q = buildClientFallbackQuery(
+      'enchantments that create treasure tokens',
+    );
     expect(q).toContain('t:enchantment');
     expect(q).toContain('o:"create"');
     expect(q).toContain('o:"treasure"');
@@ -268,7 +308,9 @@ describe('buildClientFallbackQuery', () => {
 
   // Search-for-X tutor patterns
   it('translates "search for an artifact from my library"', () => {
-    const q = buildClientFallbackQuery('cards that let me search for an artifact from my library');
+    const q = buildClientFallbackQuery(
+      'cards that let me search for an artifact from my library',
+    );
     expect(q).toContain('o:"search your library"');
     expect(q).toContain('o:"artifact"');
     expect(q).not.toContain('t:artifact');
@@ -296,7 +338,9 @@ describe('buildClientFallbackQuery', () => {
 
   // Negation
   it('handles "arent creatures" negation', () => {
-    const q = buildClientFallbackQuery('green protection spells that arent creatures');
+    const q = buildClientFallbackQuery(
+      'green protection spells that arent creatures',
+    );
     expect(q).toContain('c:g');
     expect(q).toContain('-t:creature');
     expect(q).not.toContain('t:creature '); // should not have positive t:creature

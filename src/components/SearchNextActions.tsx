@@ -4,7 +4,7 @@
  */
 
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookOpen, Compass } from 'lucide-react';
+import { ArrowRight, BookOpen, Compass, Sparkles } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useTranslation } from '@/lib/i18n';
 import type { SearchIntent } from '@/types/search';
@@ -101,6 +101,7 @@ export function SearchNextActions(props: SearchNextActionsProps) {
   const actions = chooseActions(props);
   const { t } = useTranslation();
   const { trackEvent } = useAnalytics();
+  const [primary, secondary] = actions;
 
   return (
     <section className="rounded-2xl border border-border/60 bg-card/60 p-3 sm:p-4 animate-reveal">
@@ -117,34 +118,59 @@ export function SearchNextActions(props: SearchNextActionsProps) {
           </p>
         </div>
       </div>
-      <div className="mt-3 grid gap-2 sm:grid-cols-2">
-        {actions.map(({ to, labelKey, descriptionKey, icon: Icon }) => (
+      <div className="mt-3 grid gap-2">
+        {primary && (
           <Link
-            key={to}
-            to={to}
+            to={primary.to}
             onClick={() =>
               trackEvent('next_step_action_clicked', {
-                action: t(labelKey),
+                action: t(primary.labelKey),
                 placement: 'search_next_actions',
-                cta: to,
+                cta: primary.to,
               })
             }
-            className="group flex items-start gap-3 rounded-xl border border-transparent bg-background/40 px-3 py-3 transition-colors hover:border-accent/25 hover:bg-accent/5"
+            className="group flex items-start gap-3 rounded-xl border border-accent/20 bg-accent/5 px-3 py-3 transition-colors hover:border-accent/30 hover:bg-accent/10"
           >
-            <Icon className="mt-0.5 h-4 w-4 text-accent" aria-hidden="true" />
+            <primary.icon
+              className="mt-0.5 h-4 w-4 text-accent"
+              aria-hidden="true"
+            />
             <div className="min-w-0">
               <div className="flex items-center gap-1">
                 <span className="text-sm font-medium text-foreground group-hover:text-accent transition-colors">
-                  {t(labelKey)}
+                  {t(primary.labelKey)}
                 </span>
-                <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                <Sparkles
+                  className="h-3 w-3 text-muted-foreground"
+                  aria-hidden="true"
+                />
               </div>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                {t(descriptionKey)}
+                {t(primary.descriptionKey)}
               </p>
             </div>
           </Link>
-        ))}
+        )}
+        {secondary && (
+          <Link
+            to={secondary.to}
+            onClick={() =>
+              trackEvent('next_step_action_clicked', {
+                action: t(secondary.labelKey),
+                placement: 'search_next_actions',
+                cta: secondary.to,
+              })
+            }
+            className="inline-flex items-center gap-1.5 rounded-full px-1 text-xs font-medium text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
+          >
+            <secondary.icon
+              className="h-3.5 w-3.5 text-accent"
+              aria-hidden="true"
+            />
+            <span>{t(secondary.labelKey)}</span>
+            <ArrowRight className="h-3 w-3" aria-hidden="true" />
+          </Link>
+        )}
       </div>
     </section>
   );

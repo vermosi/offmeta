@@ -13,11 +13,13 @@ const STORAGE_KEY = 'offmeta_scryfall_disclosure_open';
 
 interface ScryfallQueryDisclosureProps {
   scryfallQuery: string;
+  metaLabel?: string;
   children: ReactNode;
 }
 
 export function ScryfallQueryDisclosure({
   scryfallQuery,
+  metaLabel,
   children,
 }: ScryfallQueryDisclosureProps) {
   const { t } = useTranslation();
@@ -56,11 +58,21 @@ export function ScryfallQueryDisclosure({
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
         )}
       >
-        <Code2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+        <Code2
+          className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+          aria-hidden="true"
+        />
         {!open && scryfallQuery ? (
-          <code className="min-w-0 truncate font-mono text-[11px] text-primary">
-            <span className="text-muted-foreground">q:</span> {preview}
-          </code>
+          <>
+            <code className="min-w-0 truncate font-mono text-[11px] text-primary">
+              <span className="text-muted-foreground">q:</span> {preview}
+            </code>
+            {metaLabel && (
+              <span className="ml-1.5 shrink-0 rounded-full border border-border/60 bg-background/70 px-2 py-0.5 text-[10px] font-medium text-foreground">
+                {metaLabel}
+              </span>
+            )}
+          </>
         ) : (
           <span className="text-[11px] font-medium text-muted-foreground">
             {t('search.scryfallQuery.label', 'Scryfall query')}
@@ -75,7 +87,10 @@ export function ScryfallQueryDisclosure({
         />
       </button>
       {open && (
-        <div id="scryfall-query-panel" className="border-t border-border/60 p-2 sm:p-3">
+        <div
+          id="scryfall-query-panel"
+          className="border-t border-border/60 p-2 sm:p-3"
+        >
           {children}
         </div>
       )}

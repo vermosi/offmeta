@@ -212,22 +212,29 @@ describe('Index – search flow', () => {
     });
   });
 
-  it('renders card results after successful search flow', { timeout: 15000 }, async () => {
-    await renderIndex(IndexPage);
-    const input = screen.getByRole('searchbox');
-    await act(async () => {
-      fireEvent.change(input, { target: { value: 'treasure makers' } });
-      fireEvent.keyDown(input, { key: 'Enter' });
-    });
+  it(
+    'renders card results after successful search flow',
+    { timeout: 15000 },
+    async () => {
+      await renderIndex(IndexPage);
+      const input = screen.getByRole('searchbox');
+      await act(async () => {
+        fireEvent.change(input, { target: { value: 'treasure makers' } });
+        fireEvent.keyDown(input, { key: 'Enter' });
+      });
 
-    await waitFor(() => {
-      expect(mockTranslateQueryWithDedup).toHaveBeenCalledWith(
-        expect.objectContaining({ query: 'treasure makers' }),
+      await waitFor(
+        () => {
+          expect(mockTranslateQueryWithDedup).toHaveBeenCalledWith(
+            expect.objectContaining({ query: 'treasure makers' }),
+          );
+          expect(mockSearchCards).toHaveBeenCalled();
+        },
+        { timeout: 10000 },
       );
-      expect(mockSearchCards).toHaveBeenCalled();
-    }, { timeout: 10000 });
-    expect(screen.queryByText(/no cards found/i)).not.toBeInTheDocument();
-  });
+      expect(screen.queryByText(/no cards found/i)).not.toBeInTheDocument();
+    },
+  );
 
   it('shows total cards count after search', { timeout: 15000 }, async () => {
     await renderIndex(IndexPage);
@@ -242,4 +249,27 @@ describe('Index – search flow', () => {
       expect(document.title).toContain('treasure');
     });
   });
+
+  it(
+    'shows a compact results summary with provenance and jump link',
+    { timeout: 15000 },
+    async () => {
+      await renderIndex(IndexPage);
+      const input = screen.getByRole('searchbox');
+      await act(async () => {
+        fireEvent.change(input, { target: { value: 'treasure makers' } });
+        fireEvent.keyDown(input, { key: 'Enter' });
+      });
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/results for "treasure makers"/i),
+        ).toBeInTheDocument();
+      });
+      expect(screen.getByText(/jump to results/i).closest('a')).toHaveAttribute(
+        'href',
+        '#search-results',
+      );
+    },
+  );
 });

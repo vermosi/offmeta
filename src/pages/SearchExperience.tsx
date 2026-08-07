@@ -17,7 +17,6 @@ import {
 } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { UnifiedSearchBar } from '@/components/UnifiedSearchBar';
-import { Badge } from '@/components/ui/badge';
 const EditableQueryBar = lazy(() =>
   import('@/components/EditableQueryBar').then((m) => ({
     default: m.EditableQueryBar,
@@ -746,16 +745,16 @@ const Index = () => {
             )}
 
             {showResultsMode && (
-              <div className="animate-reveal flex items-start gap-2 mb-5 sm:mb-7">
-                <div className="flex-1 min-w-0 space-y-2">
+              <div className="animate-reveal mb-5 sm:mb-7">
+                <div className="rounded-2xl border border-border/60 bg-card/70 px-4 py-3 shadow-sm backdrop-blur">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="text-lg sm:text-xl font-semibold text-foreground tracking-tight">
+                    <h1 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
                       {t('search.resultsFor', 'Results for "{query}"').replace(
                         '{query}',
                         originalQuery || searchQuery || '',
                       )}
                       {hasSearched && totalCards > 0 && (
-                        <span className="text-muted-foreground font-normal ml-1.5">
+                        <span className="ml-1.5 font-normal text-muted-foreground">
                           (
                           {t('results.summaryCards', '{count} cards').replace(
                             '{count}',
@@ -765,22 +764,12 @@ const Index = () => {
                         </span>
                       )}
                     </h1>
-                    <div className="flex items-center gap-1.5">
-                      <Badge
-                        variant="secondary"
-                        className="text-[10px] uppercase tracking-wide"
-                      >
-                        {translationSourceLabel}
-                      </Badge>
-                      {typeof translationConfidence === 'number' && (
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] tabular-nums"
-                        >
-                          {Math.round(translationConfidence * 100)}%
-                        </Badge>
-                      )}
-                    </div>
+                    <a
+                      href="#search-results"
+                      className="text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                    >
+                      Jump to results
+                    </a>
                   </div>
                 </div>
               </div>
@@ -805,6 +794,11 @@ const Index = () => {
                       scryfallQuery={(
                         lastSearchResult?.scryfallQuery || searchQuery
                       ).trim()}
+                      metaLabel={
+                        typeof translationConfidence === 'number'
+                          ? `${translationSourceLabel} · ${Math.round(translationConfidence * 100)}%`
+                          : translationSourceLabel
+                      }
                     >
                       <EditableQueryBar
                         scryfallQuery={(
@@ -815,7 +809,6 @@ const Index = () => {
                         originalQuery={originalQuery}
                         onRerun={handleRerunEditedQuery}
                         onRegenerate={handleRegenerateTranslation}
-                        onReportIssue={() => setReportDialogOpen(true)}
                         validationError={
                           lastSearchResult?.validationIssues?.length
                             ? lastSearchResult.validationIssues.join(' • ')
