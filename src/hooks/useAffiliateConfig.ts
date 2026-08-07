@@ -95,7 +95,21 @@ export function wrapAffiliateUrl(url: string, affiliateBase: string): string {
   const destination = isAlreadyAffiliateUrl(url)
     ? extractTcgplayerDestinationUrl(url)
     : url;
-  return `${affiliateBase}${encodeURIComponent(destination)}`;
+  return `${normalizeAffiliateBase(affiliateBase)}${encodeURIComponent(destination)}`;
+}
+
+/**
+ * Ensures the affiliate base ends with a query parameter the destination URL can
+ * be appended to. Short Impact links (e.g. `https://partner.tcgplayer.com/GKPVxn`)
+ * have no `?u=`, and naively concatenating the destination produces a malformed
+ * link that TCGplayer rejects.
+ */
+export function normalizeAffiliateBase(affiliateBase: string): string {
+  const base = affiliateBase.trim();
+  if (!base) return base;
+  if (base.endsWith('=')) return base;
+  if (base.endsWith('?') || base.endsWith('&')) return `${base}u=`;
+  return base.includes('?') ? `${base}&u=` : `${base}?u=`;
 }
 
 /** True when the URL is already an affiliate/redirect link (Impact, partner subdomains). */

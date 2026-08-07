@@ -8,7 +8,7 @@ import type { ScryfallCard } from '@/types/card';
 import { logger } from '@/lib/core/logger';
 import { rateLimitedFetch } from './fetch-utils';
 import { getLocalCardPrintings } from '@/services/local-cards';
-import { isAlreadyAffiliateUrl, extractTcgplayerDestinationUrl } from '@/hooks/useAffiliateConfig';
+import { wrapAffiliateUrl } from '@/hooks/useAffiliateConfig';
 
 const BASE_URL = 'https://api.scryfall.com';
 
@@ -189,10 +189,7 @@ export function getTCGPlayerUrl(card: ScryfallCard): string {
   // Scryfall already supplied a partner redirect link, by extracting the inner
   // product URL so the user's affiliate attribution is always used.
   if (affiliateBase) {
-    const destination = isAlreadyAffiliateUrl(tcgplayerUrl)
-      ? extractTcgplayerDestinationUrl(tcgplayerUrl)
-      : tcgplayerUrl;
-    return `${affiliateBase}${encodeURIComponent(destination)}`;
+    return wrapAffiliateUrl(tcgplayerUrl, affiliateBase);
   }
 
   return tcgplayerUrl;
