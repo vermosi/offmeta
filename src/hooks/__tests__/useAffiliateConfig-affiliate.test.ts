@@ -51,3 +51,27 @@ describe('wrapAffiliateUrl', () => {
     expect(wrapAffiliateUrl(url, '')).toBe(url);
   });
 });
+
+describe('wrapAffiliateUrl with short Impact bases', () => {
+  it('appends ?u= when the base has no query string', () => {
+    expect(
+      wrapAffiliateUrl(
+        'https://www.tcgplayer.com/product/504612?page=1',
+        'https://partner.tcgplayer.com/GKPVxn',
+      ),
+    ).toBe(
+      'https://partner.tcgplayer.com/GKPVxn?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F504612%3Fpage%3D1',
+    );
+  });
+
+  it('appends &u= when the base already has a query string', () => {
+    expect(
+      wrapAffiliateUrl(
+        'https://www.tcgplayer.com/product/1',
+        'https://partner.tcgplayer.com/GKPVxn?subId1=x',
+      ),
+    ).toBe(
+      'https://partner.tcgplayer.com/GKPVxn?subId1=x&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F1',
+    );
+  });
+});
