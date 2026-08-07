@@ -19,8 +19,14 @@ import { classifyTraffic } from './traffic';
 
 const REPLAY_DECISION_KEY = 'offmeta_replay_sampled';
 
-/** Fraction of eligible sessions that get a session replay. */
-export const REPLAY_SAMPLE_RATE = 0.1;
+/**
+ * Fraction of eligible sessions that get a session replay.
+ * At current traffic (~10 real visitors/day) full capture stays far under the
+ * PostHog free-tier recording quota, and partial sampling made replays
+ * effectively invisible. Lower this if traffic grows by an order of magnitude.
+ */
+export const REPLAY_SAMPLE_RATE = 1;
+
 
 /** Max custom events sent to PostHog per session (burst + steady state). */
 export const EVENT_BUCKET_CAPACITY = 120;
