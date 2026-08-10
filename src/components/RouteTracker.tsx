@@ -50,6 +50,14 @@ export function RouteTracker() {
     // Forward page view to optional third-party providers (GA4 + PostHog).
     trackExternalPageView(location.pathname);
 
+    // Onboarding milestone: the very first route this visitor ever viewed.
+    trackFunnelMilestone('first_route_view', {
+      path: location.pathname,
+      referrer: document.referrer || undefined,
+    });
+
+
+
 
     lastKeyRef.current = key;
     lastPathRef.current = location.pathname;
