@@ -62,10 +62,6 @@ const CardPage = () => {
     retry: 1,
   });
 
-  // Redirect malformed slugs before any fetch/analytics work happens.
-  if (needsSlugNormalization) {
-    return <Navigate to={`/cards/${slug}`} replace />;
-  }
 
   // Dedicated route-level analytics — distinct from `card_modal_view` (in-app modal).
   const { trackCardPageView } = useAnalytics();
