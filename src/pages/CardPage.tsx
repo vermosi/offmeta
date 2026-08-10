@@ -191,6 +191,11 @@ const CardPage = () => {
     };
   }, [card, pageUrl, slug]);
 
+  // Malformed slug → canonical slug shape (runs after hooks so hook order stays stable).
+  if (needsSlugNormalization) {
+    return <Navigate to={`/cards/${slug}`} replace />;
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-background relative">
