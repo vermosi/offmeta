@@ -43,6 +43,30 @@ function getCardImage(card: ScryfallCard, size: 'normal' | 'large' | 'art_crop' 
   return card.card_faces?.[faceIndex]?.image_uris?.[size] ?? card.card_faces?.[0]?.image_uris?.[size];
 }
 
+/**
+ * Resolve a normalized slug to a card, tolerating misspellings and extra
+ * trailing words. Order: exact/fuzzy Scryfall name lookup, then progressively
+ * shorter slug-derived candidates through the fuzzy resolver.
+ */
+async function resolveCardFromSlug(slug: string): Promise<ScryfallCard> {
+  const guessedName = slugToCardName(slug);
+  try {
+    return await getCardByName(guessedName);
+  } catch (initialError) {
+    for (const candidate of slugNameCandidates(slug)) {
+      const canonical = await resolveFuzzyCardName(candidate);
+      if (canonical) {
+        try {
+          return await getCardByName(canonical);
+        } catch {
+          // Try the next, shorter candidate.
+        }
+      }
+    }
+    throw initialError;
+  }
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const CardPage = () => {
