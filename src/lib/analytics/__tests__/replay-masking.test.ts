@@ -8,7 +8,6 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PostHogConfig } from 'posthog-js';
-import { REPLAY_SESSION_IDLE_TIMEOUT_SECONDS } from '../replay';
 
 const classifyTraffic = vi.fn(() => ({
   isInternal: false,
