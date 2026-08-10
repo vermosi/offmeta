@@ -41,13 +41,13 @@ describe('GuidesIndex', () => {
     expect(screen.getByText('Search Guides')).toBeInTheDocument();
   });
 
-  it('renders 10 guide cards', () => {
+  it('renders 11 guide cards', () => {
     renderGuidesIndex();
     const guideLinks = screen
       .getAllByRole('link')
       .map((el) => el.getAttribute('href'))
       .filter((href): href is string => Boolean(href?.startsWith('/guides/')));
-    expect(new Set(guideLinks).size).toBe(10);
+    expect(new Set(guideLinks).size).toBe(11);
   });
 
   it('renders grouped level sections with jump links', () => {
@@ -62,7 +62,7 @@ describe('GuidesIndex', () => {
       screen.getByRole('link', { name: /advanced\s*\(2\)/i }),
     ).toHaveAttribute('href', '#guides.levelAdvanced');
     expect(
-      screen.getByRole('link', { name: /expert\s*\(2\)/i }),
+      screen.getByRole('link', { name: /expert\s*\(3\)/i }),
     ).toHaveAttribute('href', '#guides.levelExpert');
   });
 
@@ -146,6 +146,6 @@ describe('GuidesIndex', () => {
 
   it('renders guide count text', () => {
     renderGuidesIndex();
-    expect(screen.getByText(/10 guides/)).toBeInTheDocument();
+    expect(screen.getByText(/11 guides/)).toBeInTheDocument();
   });
 });

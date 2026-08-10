@@ -21,4 +21,5 @@ export const GUIDE_SUMMARIES: GuideSummary[] = [
   { slug: 'token-and-sacrifice-synergies', title: 'Token & Sacrifice Synergies' },
   { slug: 'etb-and-flicker-combos', title: 'ETB & Flicker Combos' },
   { slug: 'multi-constraint-complex-search', title: 'Multi-Constraint Complex Search' },
+  { slug: 'cards-like-x', title: 'Cards Like X' },
 ];

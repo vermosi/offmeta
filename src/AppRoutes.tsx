@@ -31,6 +31,7 @@ const SearchIntentHub = lazy(() => import('./pages/SearchIntentHub'));
 const SearchBudgetPage = lazy(() => import('./pages/SearchBudgetPage'));
 const SearchHatePage = lazy(() => import('./pages/SearchHatePage'));
 const SearchSimilarPage = lazy(() => import('./pages/SearchSimilarPage'));
+const CardsLikePage = lazy(() => import('./pages/CardsLikePage'));
 const AdminSeoPages = lazy(() => import('./pages/AdminSeoPages'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const SearchExperience = lazy(() => import('./pages/SearchExperience'));
@@ -111,6 +112,14 @@ export default function AppRoutes() {
             <Route
               path="/search-intents/similar"
               element={withFullApp(<SearchSimilarPage />)}
+            />
+            <Route
+              path="/cards-like"
+              element={withFullApp(<CardsLikePage />)}
+            />
+            <Route
+              path="/cards-like/:cardSlug"
+              element={withFullApp(<CardsLikePage />)}
             />
             <Route
               path="/admin/seo-pages"

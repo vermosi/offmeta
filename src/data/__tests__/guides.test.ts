@@ -5,13 +5,13 @@ import { GUIDE_SUMMARIES } from '@/data/guide-summaries';
 
 describe('guides data', () => {
   describe('GUIDES array structure', () => {
-    it('contains exactly 10 guides', () => {
-      expect(GUIDES).toHaveLength(10);
+    it('contains exactly 11 guides', () => {
+      expect(GUIDES).toHaveLength(11);
     });
 
-    it('has levels from 1 to 10 with no gaps', () => {
+    it('has levels from 1 to 11 with no gaps', () => {
       const levels = GUIDES.map((g) => g.level).sort((a, b) => a - b);
-      expect(levels).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+      expect(levels).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
     });
 
     it('has unique slugs for every guide', () => {

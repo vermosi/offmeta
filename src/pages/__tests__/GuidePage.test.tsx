@@ -213,7 +213,7 @@ describe('GuidePage', () => {
     });
   });
 
-  describe('all 10 guides render without errors', () => {
+  describe('all 11 guides render without errors', () => {
     const slugs = [
       'search-by-creature-type',
       'filter-by-color',

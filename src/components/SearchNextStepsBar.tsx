@@ -127,7 +127,7 @@ export function SearchNextStepsBar({
       tab: activeTab ?? 'cards',
     });
     const shareData = {
-      title: `OffMeta — ${originalQuery}`,
+      title: `${originalQuery} | OffMeta`,
       text: t(
         'results.nextSteps.shareText',
         'Check out these Magic cards on OffMeta',

@@ -1,6 +1,6 @@
 /**
  * Pre-built guide data for SEO landing pages.
- * 10 guides ordered from basic → complex, based on real search patterns
+ * 11 guides ordered from basic → complex, based on real search patterns
  * from the golden translation test suite. Each guide teaches users
  * how to search on OffMeta with increasing sophistication.
  */
@@ -24,6 +24,10 @@ export interface Guide {
   tips: string[];
   relatedGuides: string[]; // slugs
   faq: Array<{ question: string; answer: string }>;
+}
+
+function clampMetaDescription(text: string): string {
+  return text.length <= 170 ? text : `${text.slice(0, 166).trimEnd()}…`;
 }
 
 export const GUIDES: Guide[] = [
@@ -384,6 +388,35 @@ export const GUIDES: Guide[] = [
         question: 'What if OffMeta translates my query wrong?',
         answer:
           'You can always edit the translated query directly in the editable query bar. You can also report issues with the feedback button. Your reports help improve translations over time.',
+      },
+    ],
+  },
+  {
+    slug: 'cards-like-x',
+    level: 11,
+    title: 'Cards Like X',
+    metaTitle: 'Cards Like X — Find Similar MTG Picks | OffMeta',
+    metaDescription: clampMetaDescription(
+      'Find cards like X in plain English. Get similar effects, close substitutes, and off-meta alternatives for staples like Rhystic Study, Sol Ring, and Seedborn Muse.',
+    ),
+    heading: 'Cards Like X',
+    subheading: 'Find similar cards, substitutes, and off-meta alternatives',
+    intro: `When you know one card you like, OffMeta helps you find the rest of the family. Search for "cards like Rhystic Study," "cards like Sol Ring," or "cards like Seedborn Muse" and we’ll translate that into similar effects, role-matched substitutes, and budget alternatives. This is the fastest way to move from a known staple to the next best option.`,
+    searchQuery: 'cards like rhystic study',
+    translatedQuery: 'o:"draw a card" o:"whenever an opponent casts"',
+    howOffmetaHelps: `OffMeta treats "cards like X" as a similarity search instead of a literal name lookup. It looks for the effect, role, and play pattern that made the original card useful, then expands to close substitutes and off-meta alternatives. That means "cards like Rhystic Study" can surface other tax-style draw engines, not just cards with the same name fragments.`,
+    tips: [
+      'Try "cards like [staple]" when you want substitutes, not exact copies.',
+      'Add a format: "cards like X for commander" narrows to legal Commander picks.',
+      'Use the exact card name if you want the closest functional replacements.',
+      'Combine with budget language to force cheaper alternatives.',
+    ],
+    relatedGuides: ['format-legality-search'],
+    faq: [
+      {
+        question: 'What does "cards like X" mean?',
+        answer:
+          'It means cards with a similar role, effect, or play pattern. OffMeta tries to find functional substitutes instead of exact name matches.',
       },
     ],
   },

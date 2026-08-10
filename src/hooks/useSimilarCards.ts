@@ -87,9 +87,14 @@ async function detectCardName(query: string): Promise<ScryfallCard | null> {
   }
 }
 
-export function useSimilarCards(query: string, fallbackCard?: ScryfallCard | null) {
+export function useSimilarCards(
+  query: string,
+  fallbackCard?: ScryfallCard | null,
+  options?: { trackActivation?: boolean },
+) {
   const { trackEvent } = useAnalytics();
   const [enabled, setEnabled] = useState(false);
+  const trackActivation = options?.trackActivation ?? true;
 
   // Debounce the query so rapid typing (or upstream state churn) doesn't
   // spawn a series of edge-function calls that all get thrown away.
@@ -174,13 +179,15 @@ export function useSimilarCards(query: string, fallbackCard?: ScryfallCard | nul
 
   const activate = useCallback(() => {
     setEnabled(true);
-    trackEvent('card_click', {
-      card_id: 'similarity_tab',
-      card_name: query,
-      set_code: '',
-      rarity: '',
-    });
-  }, [query, trackEvent]);
+    if (trackActivation) {
+      trackEvent('card_click', {
+        card_id: 'similarity_tab',
+        card_name: query,
+        set_code: '',
+        rarity: '',
+      });
+    }
+  }, [query, trackActivation, trackEvent]);
 
   const errorMessage = error
     ? friendlySimilarErrorMessage(

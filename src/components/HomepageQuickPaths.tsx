@@ -1,9 +1,7 @@
 import {
   ArrowRight,
-  BookOpen,
   Sparkles,
   Search,
-  TrendingUp,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAnalytics } from '@/hooks/useAnalytics';
@@ -17,28 +15,10 @@ const QUICK_PATHS = [
     description: 'Turn a deck idea into real cards and refinements.',
   },
   {
-    href: '/search-intents',
+    href: '/guides/cards-like-x',
     icon: Sparkles,
-    title: 'Browse search intents',
-    description: 'Jump into cards like X, budget, and hate-card patterns.',
-  },
-  {
-    href: '/guides',
-    icon: BookOpen,
-    title: 'Learn the basics',
-    description: 'Browse focused guides and syntax examples.',
-  },
-  {
-    href: '/combos',
-    icon: Sparkles,
-    title: 'Find combos',
-    description: 'Discover infinite and synergy combos for your cards.',
-  },
-  {
-    href: '/market',
-    icon: TrendingUp,
-    title: 'Track prices',
-    description: 'See market movers and card trends at a glance.',
+    title: 'Cards like X',
+    description: 'Find close substitutes for staples and favorite effects.',
   },
 ] as const;
 
@@ -66,7 +46,7 @@ export function HomepageQuickPaths() {
           </p>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
           {QUICK_PATHS.map((path) => {
             const Icon = path.icon;
             return (

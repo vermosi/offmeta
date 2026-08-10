@@ -41,6 +41,7 @@ const GUIDE_SLUGS = [
   'token-and-sacrifice-synergies',
   'etb-and-flicker-combos',
   'multi-constraint-complex-search',
+  'cards-like-x',
 ];
 
 // Truly-offline fallback — only used when SUPABASE env vars are absent.

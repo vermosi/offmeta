@@ -1,5 +1,5 @@
 /**
- * Root guides index page - lists all 10 guides as visual cards.
+ * Root guides index page - lists all 11 guides as visual cards.
  */
 
 import { useEffect, useState } from 'react';
@@ -44,15 +44,15 @@ const LEVEL_GROUPS = [
     min: 7,
     max: 8,
   },
-  { key: 'guides.levelExpert', label: 'guides.levelExpert', min: 9, max: 10 },
+  { key: 'guides.levelExpert', label: 'guides.levelExpert', min: 9, max: 11 },
 ] as const;
 
 const GUIDE_FILTERS = [
-  { key: 'all', label: 'All guides', min: 1, max: 10 },
+  { key: 'all', label: 'All guides', min: 1, max: 11 },
   { key: 'beginner', label: 'Beginner', min: 1, max: 3 },
   { key: 'intermediate', label: 'Intermediate', min: 4, max: 6 },
   { key: 'advanced', label: 'Advanced', min: 7, max: 8 },
-  { key: 'expert', label: 'Expert', min: 9, max: 10 },
+  { key: 'expert', label: 'Expert', min: 9, max: 11 },
 ] as const;
 
 export default function GuidesIndex() {

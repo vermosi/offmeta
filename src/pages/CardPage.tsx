@@ -154,8 +154,8 @@ const CardPage = () => {
     const description = `${card.name} — ${colorLabel}${typeShort}. Price, legality, rulings, printings, and synergies for Magic: The Gathering.${priceSnippet}${formatSnippet}`;
 
     // Build a title that stays under 60 chars even for long card names.
-    const fullTitle = `${card.name} — MTG Card | OffMeta`;
-    const shortTitle = `${card.name} | OffMeta`;
+    const fullTitle = `${card.name} — Rules, Price, Combos | OffMeta`;
+    const shortTitle = `${card.name} — MTG Card | OffMeta`;
     const pickedTitle = fullTitle.length <= 60
       ? fullTitle
       : shortTitle.length <= 60

@@ -40,6 +40,7 @@ const GUIDE_SLUGS = [
   'token-and-sacrifice-synergies',
   'etb-and-flicker-combos',
   'multi-constraint-complex-search',
+  'cards-like-x',
 ];
 
 function slugify(name: string): string {

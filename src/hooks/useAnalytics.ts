@@ -103,6 +103,7 @@ const UTM_PARAMS = [
   'utm_campaign',
   'utm_term',
   'utm_content',
+  'gclid',
 ] as const;
 const UTM_STORAGE_KEY = 'offmeta_utm';
 
@@ -112,6 +113,7 @@ interface UtmData {
   utm_campaign?: string;
   utm_term?: string;
   utm_content?: string;
+  gclid?: string;
 }
 
 function captureUtmParams(): UtmData {
@@ -297,6 +299,8 @@ const ALLOWED_EVENT_TYPES = [
   'related_searches_clicked',
   'how_it_works_step_view',
   'first_time_to_results',
+  'cards_like_search_completed',
+  'cards_like_second_search',
   'understood_summary_adjust',
   'understood_summary_view',
   'understood_summary_changed',
@@ -597,6 +601,7 @@ export async function trackEventDirect(
       ...(utm.utm_campaign && { utm_campaign: utm.utm_campaign }),
       ...(utm.utm_term && { utm_term: utm.utm_term }),
       ...(utm.utm_content && { utm_content: utm.utm_content }),
+      ...(utm.gclid && { gclid: utm.gclid }),
     };
     await supabase.from('analytics_events').insert([
       {
@@ -676,6 +681,7 @@ export function useAnalytics() {
           ...(utm.utm_campaign && { utm_campaign: utm.utm_campaign }),
           ...(utm.utm_term && { utm_term: utm.utm_term }),
           ...(utm.utm_content && { utm_content: utm.utm_content }),
+          ...(utm.gclid && { gclid: utm.gclid }),
         };
         const startedAt = performance.now();
         supabase

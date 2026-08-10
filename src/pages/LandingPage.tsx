@@ -25,9 +25,9 @@ export default function LandingPage() {
 
   useEffect(() => {
     const cleanupSeo = applySeoMeta({
-      title: 'Search Magic cards in plain English',
+      title: 'Search MTG cards in plain English',
       description:
-        'Describe what you want, see the exact Scryfall query, and jump straight to real card results.',
+        'Describe what you want, see the exact Scryfall query, and jump straight to real card results, guides, and card pages.',
       url: 'https://offmeta.app/',
       type: 'website',
     });
