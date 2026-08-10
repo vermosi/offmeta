@@ -5,7 +5,7 @@
  * @module pages/MarketTrends
  */
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useId } from 'react';
 import { Link } from 'react-router-dom';
 import { applySeoMeta } from '@/lib/seo';
 import { Header } from '@/components/Header';
