@@ -165,6 +165,70 @@ export function trackFunnelStep(
     funnel_step_name: step,
   });
 
+  // The first time a user reaches a step, also emit the onboarding milestone
+  // so intent is measurable even when session replay is short or missing.
+  trackFunnelMilestone(`first_${step}` as FunnelMilestone, clean);
+
   // Any funnel action also counts as activity for the retention view.
   trackRetentionActivity();
 }
+
+/* ------------------------------------------------------------------ */
+/* Onboarding milestones (once per user, persisted in localStorage)    */
+/* ------------------------------------------------------------------ */
+
+export const FUNNEL_MILESTONES = [
+  'first_route_view',
+  'first_search',
+  'first_result',
+  'first_card_view',
+  'first_guide_open',
+  'first_combo_save',
+] as const;
+
+export type FunnelMilestone = (typeof FUNNEL_MILESTONES)[number];
+
+const MILESTONE_KEY_PREFIX = 'offmeta_milestone:';
+
+/** True when the milestone has already been recorded for this browser. */
+export function hasReachedMilestone(milestone: FunnelMilestone): boolean {
+  return safeLocalStorage()?.getItem(MILESTONE_KEY_PREFIX + milestone) === '1';
+}
+
+/**
+ * Emit a one-time onboarding milestone event (`funnel_first_*`) with cohort
+ * context. Returns true when the event was emitted (first time only).
+ */
+export function trackFunnelMilestone(
+  milestone: FunnelMilestone,
+  properties: FunnelProperties = {},
+): boolean {
+  if (typeof window === 'undefined') return false;
+  if (!FUNNEL_MILESTONES.includes(milestone)) return false;
+  if (hasReachedMilestone(milestone)) return false;
+
+  try {
+    safeLocalStorage()?.setItem(MILESTONE_KEY_PREFIX + milestone, '1');
+  } catch {
+    /* private browsing — event still fires, may repeat */
+  }
+
+  const clean: FunnelProperties = {};
+  for (const [key, value] of Object.entries(properties)) {
+    if (value !== undefined) clean[key] = value;
+  }
+
+  trackExternalEvent(`funnel_${milestone}`, {
+    ...clean,
+    ...cohortProperties(),
+    milestone,
+    ms_since_first_visit: Date.now() - getFirstVisitAt(),
+  });
+
+  setExternalPersonProperties({
+    [`${milestone}_at`]: new Date().toISOString(),
+  });
+
+  return true;
+}
+
