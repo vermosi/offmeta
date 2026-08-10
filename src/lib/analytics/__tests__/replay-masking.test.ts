@@ -172,7 +172,9 @@ describe('PostHog replay masking contract', () => {
   });
 
   it('sets an explicit session idle timeout so sessions stay open during long brew sessions', async () => {
-    const config = await loadReplay().then((m) => m.buildReplayConfig());
+    const { buildReplayConfig, REPLAY_SESSION_IDLE_TIMEOUT_SECONDS } =
+      await loadReplay();
+    const config = buildReplayConfig();
     expect(config.session_idle_timeout_seconds).toBe(
       REPLAY_SESSION_IDLE_TIMEOUT_SECONDS,
     );
