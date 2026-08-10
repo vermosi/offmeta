@@ -27,6 +27,9 @@ const REPLAY_DECISION_KEY = 'offmeta_replay_sampled';
  */
 export const REPLAY_SAMPLE_RATE = 1;
 
+/** How long a tab can be inactive before PostHog starts a new session (seconds). */
+export const REPLAY_SESSION_IDLE_TIMEOUT_SECONDS = 30 * 60; // 30 minutes
+
 
 /** Max custom events sent to PostHog per session (burst + steady state). */
 export const EVENT_BUCKET_CAPACITY = 120;
@@ -85,8 +88,14 @@ export function shouldRecordSession(
   if (typeof window === 'undefined') return false;
 
   const { isInternal, shouldSuppressInsert } = classifyTraffic();
-  if (isInternal || shouldSuppressInsert) return false;
+  if (isInternal || shouldSuppressInsert) {
+    // Internal/preview traffic is excluded for the whole session.
+    storeDecision(false);
+    return false;
+  }
 
+  // Blocked paths are route-level, not session-level. Don't lock the session
+  // out of recording forever just because the user landed on /auth first.
   if (isReplayBlockedPath(window.location.pathname)) return false;
 
   const stored = readStoredDecision();
@@ -106,6 +115,7 @@ export function buildReplayConfig(): Partial<PostHogConfig> {
 
   return {
     disable_session_recording: !recordingEnabled,
+    session_idle_timeout_seconds: REPLAY_SESSION_IDLE_TIMEOUT_SECONDS,
     session_recording: {
       // Mask every input value, including search boxes and auth fields.
       maskAllInputs: true,
