@@ -115,6 +115,7 @@ export function buildReplayConfig(): Partial<PostHogConfig> {
 
   return {
     disable_session_recording: !recordingEnabled,
+    session_idle_timeout_ms: REPLAY_SESSION_IDLE_TIMEOUT_MS,
     session_recording: {
       // Mask every input value, including search boxes and auth fields.
       maskAllInputs: true,
