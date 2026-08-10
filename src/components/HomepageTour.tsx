@@ -148,40 +148,41 @@ export function HomepageTour() {
 
   /** Close the tour. `reason` distinguishes skip / completion / dismissal. */
   const closeTour = useCallback(
-    (reason: 'skip' | 'complete' | 'invite_dismissed' | 'escape') => {
-      setStepIndex((current) => {
-        const shared = {
+    (reason: 'skip' | 'escape' | 'complete' | 'invite_dismissed') => {
+      const shared = {
+        total_steps: TOUR_STEPS.length,
+        furthest_step: maxStepRef.current,
+        duration_ms: startedAtRef.current
+          ? Date.now() - startedAtRef.current
+          : 0,
+      };
+
+      if (reason === 'invite_dismissed') {
+        trackTourEvent('tour_invite_dismissed', {
           total_steps: TOUR_STEPS.length,
-          furthest_step: maxStepRef.current,
-          duration_ms: startedAtRef.current
-            ? Date.now() - startedAtRef.current
+        });
+      } else if (reason === 'complete') {
+        trackTourEvent('tour_completed', {
+          ...shared,
+          furthest_step: TOUR_STEPS.length,
+        });
+      } else {
+        trackTourEvent('tour_skipped', {
+          ...shared,
+          step_index: (stepIndex ?? 0) + 1,
+          step_title: TOUR_STEPS[stepIndex ?? 0]?.title,
+          exit_method: reason,
+          ms_on_step: stepStartedAtRef.current
+            ? Date.now() - stepStartedAtRef.current
             : 0,
-        };
+        });
+      }
 
-        if (reason === 'invite_dismissed') {
-          trackTourEvent('tour_invite_dismissed', {
-            total_steps: TOUR_STEPS.length,
-          });
-        } else if (reason === 'complete') {
-          trackTourEvent('tour_completed', shared);
-        } else {
-          trackTourEvent('tour_skipped', {
-            ...shared,
-            step_index: (current ?? 0) + 1,
-            step_title: TOUR_STEPS[current ?? 0]?.title,
-            exit_method: reason,
-            ms_on_step: stepStartedAtRef.current
-              ? Date.now() - stepStartedAtRef.current
-              : 0,
-          });
-        }
-
-        return null;
-      });
+      setStepIndex(null);
       setInvitationVisible(false);
       markSeen();
     },
-    [],
+    [stepIndex],
   );
 
   const endTour = useCallback(() => {
@@ -197,22 +198,14 @@ export function HomepageTour() {
   }, []);
 
   const next = useCallback(() => {
-    setStepIndex((current) => {
-      if (current === null) return null;
-      if (current + 1 >= TOUR_STEPS.length) {
-        markSeen();
-        trackTourEvent('tour_completed', {
-          total_steps: TOUR_STEPS.length,
-          furthest_step: TOUR_STEPS.length,
-          duration_ms: startedAtRef.current
-            ? Date.now() - startedAtRef.current
-            : 0,
-        });
-        return null;
-      }
-      return current + 1;
-    });
-  }, []);
+    if (stepIndex === null) return;
+    if (stepIndex + 1 >= TOUR_STEPS.length) {
+      closeTour('complete');
+      return;
+    }
+    setStepIndex(stepIndex + 1);
+  }, [stepIndex, closeTour]);
+
 
 
   useEffect(() => {
