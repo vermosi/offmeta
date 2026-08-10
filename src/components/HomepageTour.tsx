@@ -7,8 +7,10 @@
  * - Anchors a popover to real page elements and scrolls them into view.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, Compass, X } from 'lucide-react';
+import { trackTourEvent } from '@/lib/analytics/tour';
+
 
 interface TourStep {
   /** CSS selector of the element to highlight. */
@@ -70,14 +72,34 @@ export function HomepageTour() {
   const [invitationVisible, setInvitationVisible] = useState(false);
   const [stepIndex, setStepIndex] = useState<number | null>(null);
   const [position, setPosition] = useState<Position | null>(null);
+  const startedAtRef = useRef<number | null>(null);
+  const stepStartedAtRef = useRef<number>(0);
+  const maxStepRef = useRef(0);
 
   const step = stepIndex === null ? null : (TOUR_STEPS[stepIndex] ?? null);
 
   useEffect(() => {
     if (readSeen()) return undefined;
-    const timer = window.setTimeout(() => setInvitationVisible(true), 1500);
+    const timer = window.setTimeout(() => {
+      setInvitationVisible(true);
+      trackTourEvent('tour_offered', { total_steps: TOUR_STEPS.length });
+    }, 1500);
     return () => window.clearTimeout(timer);
   }, []);
+
+  // One `tour_step_viewed` event per step so PostHog can chart drop-off.
+  useEffect(() => {
+    if (stepIndex === null || !step) return;
+    stepStartedAtRef.current = Date.now();
+    maxStepRef.current = Math.max(maxStepRef.current, stepIndex + 1);
+    trackTourEvent('tour_step_viewed', {
+      step_index: stepIndex + 1,
+      step_title: step.title,
+      total_steps: TOUR_STEPS.length,
+      is_last_step: stepIndex + 1 === TOUR_STEPS.length,
+    });
+  }, [stepIndex, step]);
+
 
   const measure = useCallback(() => {
     if (!step) {
@@ -103,9 +125,11 @@ export function HomepageTour() {
     if (!step) return undefined;
     const el = document.querySelector(step.selector);
     if (!(el instanceof HTMLElement)) {
-      setPosition(null);
-      return undefined;
+      // Defer so the effect never triggers a synchronous cascading render.
+      const clear = window.requestAnimationFrame(() => setPosition(null));
+      return () => window.cancelAnimationFrame(clear);
     }
+
 
     el.classList.add(HIGHLIGHT_CLASS);
     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -124,36 +148,76 @@ export function HomepageTour() {
     };
   }, [step, measure]);
 
+  /** Close the tour. `reason` distinguishes skip / completion / dismissal. */
+  const closeTour = useCallback(
+    (reason: 'skip' | 'escape' | 'complete' | 'invite_dismissed') => {
+      const shared = {
+        total_steps: TOUR_STEPS.length,
+        furthest_step: maxStepRef.current,
+        duration_ms: startedAtRef.current
+          ? Date.now() - startedAtRef.current
+          : 0,
+      };
+
+      if (reason === 'invite_dismissed') {
+        trackTourEvent('tour_invite_dismissed', {
+          total_steps: TOUR_STEPS.length,
+        });
+      } else if (reason === 'complete') {
+        trackTourEvent('tour_completed', {
+          ...shared,
+          furthest_step: TOUR_STEPS.length,
+        });
+      } else {
+        trackTourEvent('tour_skipped', {
+          ...shared,
+          step_index: (stepIndex ?? 0) + 1,
+          step_title: TOUR_STEPS[stepIndex ?? 0]?.title,
+          exit_method: reason,
+          ms_on_step: stepStartedAtRef.current
+            ? Date.now() - stepStartedAtRef.current
+            : 0,
+        });
+      }
+
+      setStepIndex(null);
+      setInvitationVisible(false);
+      markSeen();
+    },
+    [stepIndex],
+  );
+
   const endTour = useCallback(() => {
-    setStepIndex(null);
-    setInvitationVisible(false);
-    markSeen();
-  }, []);
+    closeTour(stepIndex === null ? 'invite_dismissed' : 'skip');
+  }, [closeTour, stepIndex]);
 
   const startTour = useCallback(() => {
     setInvitationVisible(false);
+    startedAtRef.current = Date.now();
+    maxStepRef.current = 0;
+    trackTourEvent('tour_started', { total_steps: TOUR_STEPS.length });
     setStepIndex(0);
   }, []);
 
   const next = useCallback(() => {
-    setStepIndex((current) => {
-      if (current === null) return null;
-      if (current + 1 >= TOUR_STEPS.length) {
-        markSeen();
-        return null;
-      }
-      return current + 1;
-    });
-  }, []);
+    if (stepIndex === null) return;
+    if (stepIndex + 1 >= TOUR_STEPS.length) {
+      closeTour('complete');
+      return;
+    }
+    setStepIndex(stepIndex + 1);
+  }, [stepIndex, closeTour]);
+
+
 
   useEffect(() => {
     if (stepIndex === null) return undefined;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') endTour();
+      if (event.key === 'Escape') closeTour('escape');
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [stepIndex, endTour]);
+  }, [stepIndex, closeTour]);
 
   const popoverStyle = useMemo(() => {
     if (!position) return undefined;
