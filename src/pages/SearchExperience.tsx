@@ -735,9 +735,11 @@ const Index = () => {
             />
 
             {!hasSearched && (
-              <Suspense fallback={null}>
-                <ExampleQueriesCarousel onTrySearch={handleTryExample} />
-              </Suspense>
+              <div id="home-examples">
+                <Suspense fallback={null}>
+                  <ExampleQueriesCarousel onTrySearch={handleTryExample} />
+                </Suspense>
+              </div>
             )}
 
             {isSearching && originalQuery && (
