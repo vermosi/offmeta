@@ -211,11 +211,11 @@ export function HomepageTour() {
   useEffect(() => {
     if (stepIndex === null) return undefined;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') endTour();
+      if (event.key === 'Escape') closeTour('escape');
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [stepIndex, endTour]);
+  }, [stepIndex, closeTour]);
 
   const popoverStyle = useMemo(() => {
     if (!position) return undefined;
