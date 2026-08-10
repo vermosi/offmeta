@@ -195,6 +195,16 @@ export function HomepageTour() {
       setStepIndex(null);
       setInvitationVisible(false);
       markSeen();
+
+      // Return focus somewhere sensible: the element that opened the tour if
+      // it still exists, otherwise the search input.
+      window.requestAnimationFrame(() => {
+        const fallback = document.querySelector<HTMLElement>('#search-input');
+        const target = returnFocusRef.current?.isConnected
+          ? returnFocusRef.current
+          : fallback;
+        target?.focus({ preventScroll: true });
+      });
     },
     [stepIndex],
   );
@@ -204,12 +214,27 @@ export function HomepageTour() {
   }, [closeTour, stepIndex]);
 
   const startTour = useCallback(() => {
+    returnFocusRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     setInvitationVisible(false);
     startedAtRef.current = Date.now();
     maxStepRef.current = 0;
     trackTourEvent('tour_started', { total_steps: TOUR_STEPS.length });
     setStepIndex(0);
   }, []);
+
+  // Move focus into the popover whenever the step changes so screen readers
+  // and keyboard users follow along with the highlighted content.
+  useEffect(() => {
+    if (stepIndex === null) return;
+    const node = popoverRef.current;
+    if (!node) return;
+    node.setAttribute('tabindex', '-1');
+    node.focus({ preventScroll: true });
+  }, [stepIndex]);
+
 
   const next = useCallback(() => {
     if (stepIndex === null) return;
