@@ -165,11 +165,13 @@ export const UnifiedSearchBar = forwardRef<
     typeof window !== 'undefined' &&
     ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
-  // Auto-focus search input on desktop to encourage immediate search
+  // Auto-focus search input on desktop to encourage immediate search.
+  // `preventScroll` keeps the page at the top so the hero and intro sections
+  // stay readable instead of the viewport snapping down to the input.
   useEffect(() => {
     if (!isMobile && inputRef.current) {
       const timer = setTimeout(() => {
-        inputRef.current?.focus();
+        inputRef.current?.focus({ preventScroll: true });
       }, 600);
       return () => clearTimeout(timer);
     }

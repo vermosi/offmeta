@@ -34,6 +34,7 @@ const Footer = lazy(() =>
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
 import { HomepageQuickPaths } from '@/components/HomepageQuickPaths';
+import { HomepageTour } from '@/components/HomepageTour';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Search, SlidersHorizontal, Sparkles } from 'lucide-react';
 const ExampleQueriesCarousel = lazy(() =>
@@ -634,7 +635,12 @@ const Index = () => {
             </div>
           </section>
         )}
-        {!hasSearched && <HomepageQuickPaths />}
+        {!hasSearched && (
+          <div id="home-quick-paths">
+            <HomepageQuickPaths />
+          </div>
+        )}
+        {!hasSearched && <HomepageTour />}
 
         {/* Floating particles — hero area */}
         <Suspense fallback={null}>
@@ -729,9 +735,11 @@ const Index = () => {
             />
 
             {!hasSearched && (
-              <Suspense fallback={null}>
-                <ExampleQueriesCarousel onTrySearch={handleTryExample} />
-              </Suspense>
+              <div id="home-examples">
+                <Suspense fallback={null}>
+                  <ExampleQueriesCarousel onTrySearch={handleTryExample} />
+                </Suspense>
+              </div>
             )}
 
             {isSearching && originalQuery && (

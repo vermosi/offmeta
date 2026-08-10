@@ -773,3 +773,19 @@
     0 10px 15px -3px rgb(0 0 0 / 0.1),
     0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
+
+/* Guided homepage tour: highlight the element the current step points at. */
+.tour-highlight {
+  position: relative;
+  z-index: 45;
+  border-radius: 0.85rem;
+  outline: 2px solid hsl(var(--accent));
+  outline-offset: 6px;
+  transition: outline-color 200ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-highlight {
+    transition: none;
+  }
+}
