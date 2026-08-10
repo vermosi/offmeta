@@ -88,8 +88,14 @@ export function shouldRecordSession(
   if (typeof window === 'undefined') return false;
 
   const { isInternal, shouldSuppressInsert } = classifyTraffic();
-  if (isInternal || shouldSuppressInsert) return false;
+  if (isInternal || shouldSuppressInsert) {
+    // Internal/preview traffic is excluded for the whole session.
+    storeDecision(false);
+    return false;
+  }
 
+  // Blocked paths are route-level, not session-level. Don't lock the session
+  // out of recording forever just because the user landed on /auth first.
   if (isReplayBlockedPath(window.location.pathname)) return false;
 
   const stored = readStoredDecision();
