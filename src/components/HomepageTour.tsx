@@ -146,14 +146,53 @@ export function HomepageTour() {
     };
   }, [step, measure]);
 
+  /** Close the tour. `reason` distinguishes skip / completion / dismissal. */
+  const closeTour = useCallback(
+    (reason: 'skip' | 'complete' | 'invite_dismissed' | 'escape') => {
+      setStepIndex((current) => {
+        const shared = {
+          total_steps: TOUR_STEPS.length,
+          furthest_step: maxStepRef.current,
+          duration_ms: startedAtRef.current
+            ? Date.now() - startedAtRef.current
+            : 0,
+        };
+
+        if (reason === 'invite_dismissed') {
+          trackTourEvent('tour_invite_dismissed', {
+            total_steps: TOUR_STEPS.length,
+          });
+        } else if (reason === 'complete') {
+          trackTourEvent('tour_completed', shared);
+        } else {
+          trackTourEvent('tour_skipped', {
+            ...shared,
+            step_index: (current ?? 0) + 1,
+            step_title: TOUR_STEPS[current ?? 0]?.title,
+            exit_method: reason,
+            ms_on_step: stepStartedAtRef.current
+              ? Date.now() - stepStartedAtRef.current
+              : 0,
+          });
+        }
+
+        return null;
+      });
+      setInvitationVisible(false);
+      markSeen();
+    },
+    [],
+  );
+
   const endTour = useCallback(() => {
-    setStepIndex(null);
-    setInvitationVisible(false);
-    markSeen();
-  }, []);
+    closeTour(stepIndex === null ? 'invite_dismissed' : 'skip');
+  }, [closeTour, stepIndex]);
 
   const startTour = useCallback(() => {
     setInvitationVisible(false);
+    startedAtRef.current = Date.now();
+    maxStepRef.current = 0;
+    trackTourEvent('tour_started', { total_steps: TOUR_STEPS.length });
     setStepIndex(0);
   }, []);
 
@@ -162,11 +201,19 @@ export function HomepageTour() {
       if (current === null) return null;
       if (current + 1 >= TOUR_STEPS.length) {
         markSeen();
+        trackTourEvent('tour_completed', {
+          total_steps: TOUR_STEPS.length,
+          furthest_step: TOUR_STEPS.length,
+          duration_ms: startedAtRef.current
+            ? Date.now() - startedAtRef.current
+            : 0,
+        });
         return null;
       }
       return current + 1;
     });
   }, []);
+
 
   useEffect(() => {
     if (stepIndex === null) return undefined;
