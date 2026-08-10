@@ -422,6 +422,7 @@ export default function FindMyCombos() {
                   <div className="flex items-center gap-1">
                     <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
                     <select
+                      aria-label="Sort combos"
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value as SortMode)}
                       className="text-xs bg-secondary/60 border-none rounded px-2 py-1 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
