@@ -201,11 +201,9 @@ async function fetchSeoPages() {
   return Array.isArray(rows) ? rows.filter((r) => r.slug) : [];
 }
 
-function urlEntry(path, lastmod, changefreq, priority) {
+function urlEntry(path, lastmod) {
   const parts = [`<loc>${escapeXml(SITE_URL + path)}</loc>`];
   if (lastmod) parts.push(`<lastmod>${lastmod}</lastmod>`);
-  if (changefreq) parts.push(`<changefreq>${changefreq}</changefreq>`);
-  if (priority) parts.push(`<priority>${priority}</priority>`);
   return `  <url>${parts.join('')}</url>`;
 }
 
@@ -242,35 +240,33 @@ try {
 const seen = new Set();
 const lines = [];
 
-const pushUnique = (path, lastmod, changefreq, priority) => {
+const pushUnique = (path, lastmod) => {
   if (!path || seen.has(path)) return;
   seen.add(path);
-  lines.push(urlEntry(path, lastmod, changefreq, priority));
+  lines.push(urlEntry(path, lastmod));
 };
 
 for (const p of STATIC_PATHS) {
-  const priority = p === '/' ? '1.0' : '0.8';
-  const changefreq = p === '/' ? 'daily' : 'weekly';
-  pushUnique(p, null, changefreq, priority);
+  pushUnique(p, null);
 }
 
 for (const slug of GUIDE_SLUGS) {
-  pushUnique(`/guides/${slug}`, null, 'monthly', '0.7');
+  pushUnique(`/guides/${slug}`, null);
 }
 
 for (const row of curated) {
-  pushUnique(`/search/${row.slug}`, toLastmodDate(row.updated_at), 'weekly', '0.8');
+  pushUnique(`/search/${row.slug}`, toLastmodDate(row.updated_at));
 }
 
 for (const row of seoPages) {
-  pushUnique(`/ai/${row.slug}`, toLastmodDate(row.updated_at), 'weekly', '0.9');
+  pushUnique(`/ai/${row.slug}`, toLastmodDate(row.updated_at));
 }
 
 for (const card of cards) {
   if (!isIndexableCardRow(card)) continue;
   const slug = slugifyCardName(card.name);
   if (!slug) continue;
-  pushUnique(`/cards/${slug}`, toLastmodDate(card.updated_at), 'weekly', '0.6');
+  pushUnique(`/cards/${slug}`, toLastmodDate(card.updated_at));
 }
 
 

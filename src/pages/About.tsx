@@ -95,7 +95,6 @@ export default function About() {
           logo: 'https://offmeta.app/offmeta-logo.png',
           description:
             'Transparent AI-powered natural language search engine for Magic: The Gathering cards.',
-          sameAs: ['https://offmeta.app/'],
         },
         {
           '@type': 'AboutPage',

@@ -18,14 +18,14 @@ const BASE_URL = 'https://offmeta.app';
 // Tier-3 routes (deckbuilder, market, decks, collection, archetypes,
 // deck-recs) are excluded — see mem://product/core-focus.
 const STATIC_PAGES = [
-  { loc: '/', priority: '1.0', changefreq: 'daily' },
-  { loc: '/browse-searches', priority: '0.8', changefreq: 'weekly' },
-  { loc: '/combos', priority: '0.8', changefreq: 'weekly' },
-  { loc: '/guides', priority: '0.8', changefreq: 'weekly' },
-  { loc: '/ai', priority: '0.7', changefreq: 'weekly' },
-  { loc: '/docs', priority: '0.6', changefreq: 'weekly' },
-  { loc: '/docs/syntax', priority: '0.6', changefreq: 'monthly' },
-  { loc: '/about', priority: '0.5', changefreq: 'monthly' },
+  { loc: '/' },
+  { loc: '/browse-searches' },
+  { loc: '/combos' },
+  { loc: '/guides' },
+  { loc: '/ai' },
+  { loc: '/docs' },
+  { loc: '/docs/syntax' },
+  { loc: '/about' },
 ];
 
 // Static guide slugs — keep in sync with src/data/guides.ts
@@ -121,8 +121,6 @@ serve(withLogging('sitemap', async (req) => {
       xml += `  <url>
     <loc>${BASE_URL}${page.loc}</loc>
     <lastmod>${today}</lastmod>
-    <changefreq>${page.changefreq}</changefreq>
-    <priority>${page.priority}</priority>
   </url>
 `;
     }
@@ -132,8 +130,6 @@ serve(withLogging('sitemap', async (req) => {
       xml += `  <url>
     <loc>${BASE_URL}/guides/${escapeXml(slug)}</loc>
     <lastmod>${today}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
   </url>
 `;
     }
@@ -147,8 +143,6 @@ serve(withLogging('sitemap', async (req) => {
         xml += `  <url>
     <loc>${BASE_URL}/search/${escapeXml(search.slug)}</loc>
     <lastmod>${lastmod}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>${Math.min(Number(search.priority) || 0.7, 0.9)}</priority>
   </url>
 `;
       }
@@ -164,8 +158,6 @@ serve(withLogging('sitemap', async (req) => {
         xml += `  <url>
     <loc>${BASE_URL}/cards/${escapeXml(slug)}</loc>
     <lastmod>${lastmod}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
   </url>
 `;
       }
@@ -182,8 +174,6 @@ serve(withLogging('sitemap', async (req) => {
         xml += `  <url>
     <loc>${BASE_URL}/ai/${escapeXml(page.slug)}</loc>
     <lastmod>${lastmod}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
   </url>
 `;
       }
