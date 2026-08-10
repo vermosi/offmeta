@@ -226,10 +226,13 @@ export default function FindMyCombos() {
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-3">
             <div className="space-y-3">
-              <label className="text-sm font-medium">
+              <label className="text-sm font-medium" htmlFor="moxfield-url">
                 {t('combos.moxfieldLabel')}
               </label>
               <Input
+                id="moxfield-url"
+                type="url"
+                inputMode="url"
                 value={moxfieldUrl}
                 onChange={(e) => setMoxfieldUrl(e.target.value)}
                 placeholder="https://www.moxfield.com/decks/..."
@@ -419,6 +422,7 @@ export default function FindMyCombos() {
                   <div className="flex items-center gap-1">
                     <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
                     <select
+                      aria-label="Sort combos"
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value as SortMode)}
                       className="text-xs bg-secondary/60 border-none rounded px-2 py-1 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"

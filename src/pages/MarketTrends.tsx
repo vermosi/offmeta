@@ -5,7 +5,7 @@
  * @module pages/MarketTrends
  */
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useId } from 'react';
 import { Link } from 'react-router-dom';
 import { applySeoMeta } from '@/lib/seo';
 import { Header } from '@/components/Header';
@@ -109,10 +109,15 @@ function FilterSelect({
   options: readonly { label: string; value: string }[];
   onChange: (v: string) => void;
 }) {
+  const selectId = useId();
   return (
     <div className="relative min-w-[10rem]">
-      <label className="sr-only">{label}</label>
+      <label className="sr-only" htmlFor={selectId}>
+        {label}
+      </label>
       <select
+        id={selectId}
+        aria-label={label}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="w-full appearance-none rounded-lg border border-border bg-card text-foreground text-xs font-medium pl-3 pr-7 py-2 cursor-pointer hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/30"
