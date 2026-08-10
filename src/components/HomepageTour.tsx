@@ -7,8 +7,10 @@
  * - Anchors a popover to real page elements and scrolls them into view.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, Compass, X } from 'lucide-react';
+import { trackTourEvent } from '@/lib/analytics/tour';
+
 
 interface TourStep {
   /** CSS selector of the element to highlight. */
