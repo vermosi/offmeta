@@ -634,7 +634,12 @@ const Index = () => {
             </div>
           </section>
         )}
-        {!hasSearched && <HomepageQuickPaths />}
+        {!hasSearched && (
+          <div id="home-quick-paths">
+            <HomepageQuickPaths />
+          </div>
+        )}
+        {!hasSearched && <HomepageTour />}
 
         {/* Floating particles — hero area */}
         <Suspense fallback={null}>
