@@ -11,8 +11,13 @@ import { trackFunnelStep } from '@/lib/analytics/funnels';
 import { useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getCardByName } from '@/lib/scryfall/client';
-import { slugToCardName, cardNameToSlug } from '@/lib/card-slug';
+import { getCardByName, resolveFuzzyCardName } from '@/lib/scryfall/client';
+import {
+  slugToCardName,
+  cardNameToSlug,
+  normalizeCardSlug,
+  slugNameCandidates,
+} from '@/lib/card-slug';
 import {
   applySeoMeta,
   injectJsonLd,
@@ -38,10 +43,38 @@ function getCardImage(card: ScryfallCard, size: 'normal' | 'large' | 'art_crop' 
   return card.card_faces?.[faceIndex]?.image_uris?.[size] ?? card.card_faces?.[0]?.image_uris?.[size];
 }
 
+/**
+ * Resolve a normalized slug to a card, tolerating misspellings and extra
+ * trailing words. Order: exact/fuzzy Scryfall name lookup, then progressively
+ * shorter slug-derived candidates through the fuzzy resolver.
+ */
+async function resolveCardFromSlug(slug: string): Promise<ScryfallCard> {
+  const guessedName = slugToCardName(slug);
+  try {
+    return await getCardByName(guessedName);
+  } catch (initialError) {
+    for (const candidate of slugNameCandidates(slug)) {
+      const canonical = await resolveFuzzyCardName(candidate);
+      if (canonical) {
+        try {
+          return await getCardByName(canonical);
+        } catch {
+          // Try the next, shorter candidate.
+        }
+      }
+    }
+    throw initialError;
+  }
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const CardPage = () => {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug: rawSlug } = useParams<{ slug: string }>();
+  // Route-level slug normalization: `/cards/Sol_Ring`, `/cards/sol--ring/`, and
+  // percent-encoded variants all collapse onto the canonical slug shape.
+  const slug = rawSlug ? normalizeCardSlug(rawSlug) : '';
+  const needsSlugNormalization = Boolean(rawSlug && slug && slug !== rawSlug);
   const guessedName = slug ? slugToCardName(slug) : '';
 
   // Fetch card from Scryfall
@@ -51,12 +84,13 @@ const CardPage = () => {
     error,
   } = useQuery({
     queryKey: ['card-page', guessedName],
-    queryFn: () => getCardByName(guessedName),
-    enabled: !!guessedName,
+    queryFn: () => resolveCardFromSlug(slug),
+    enabled: !!guessedName && !needsSlugNormalization,
     staleTime: 30 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
     retry: 1,
   });
+
 
   // Dedicated route-level analytics — distinct from `card_modal_view` (in-app modal).
   const { trackCardPageView } = useAnalytics();
@@ -156,6 +190,11 @@ const CardPage = () => {
       cleanupJsonLd();
     };
   }, [card, pageUrl, slug]);
+
+  // Malformed slug → canonical slug shape (runs after hooks so hook order stays stable).
+  if (needsSlugNormalization) {
+    return <Navigate to={`/cards/${slug}`} replace />;
+  }
 
   if (isLoading) {
     return (
