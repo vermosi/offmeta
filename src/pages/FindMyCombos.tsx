@@ -226,10 +226,13 @@ export default function FindMyCombos() {
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-3">
             <div className="space-y-3">
-              <label className="text-sm font-medium">
+              <label className="text-sm font-medium" htmlFor="moxfield-url">
                 {t('combos.moxfieldLabel')}
               </label>
               <Input
+                id="moxfield-url"
+                type="url"
+                inputMode="url"
                 value={moxfieldUrl}
                 onChange={(e) => setMoxfieldUrl(e.target.value)}
                 placeholder="https://www.moxfield.com/decks/..."
