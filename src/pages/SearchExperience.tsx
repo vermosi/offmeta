@@ -5,7 +5,7 @@
  * All search state is managed via the `useSearch` hook.
  * @module pages/Index
  */
-import { trackFunnelStep } from '@/lib/analytics/funnels';
+import { trackFunnelStep, trackFunnelMilestone } from '@/lib/analytics/funnels';
 import {
   lazy,
   Suspense,
@@ -450,7 +450,13 @@ const Index = () => {
     if (firstResultsTrackedRef.current) return;
     if (isSearching || !hasSearched || cards.length === 0) return;
     firstResultsTrackedRef.current = true;
+    // Onboarding milestone: first time this visitor ever saw API results.
+    trackFunnelMilestone('first_result', {
+      results_count: cards.length,
+      source: lastSearchResult?.source ?? 'ai',
+    });
     const flagKey = 'offmeta_once:first_time_to_results';
+
     try {
       if (localStorage.getItem(flagKey) === '1') return;
       localStorage.setItem(flagKey, '1');

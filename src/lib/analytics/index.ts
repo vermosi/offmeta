@@ -28,13 +28,18 @@ export {
 export {
   initFunnelTracking,
   trackFunnelStep,
+  trackFunnelMilestone,
+  hasReachedMilestone,
   trackRetentionActivity,
   getOnboardingCohort,
   getOnboardingDay,
   toCohortWeek,
   FUNNEL_STEPS,
+  FUNNEL_MILESTONES,
   type FunnelStep,
+  type FunnelMilestone,
 } from './funnels';
+
 
 export { startSessionHeartbeat } from './sessionHeartbeat';
 export { classifyTraffic } from './traffic';

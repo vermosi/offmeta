@@ -15,6 +15,9 @@ import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { trackExternalPageView } from '@/lib/analytics/providers';
+import { trackFunnelMilestone } from '@/lib/analytics/funnels';
+
+
 
 
 export function RouteTracker() {
@@ -46,6 +49,14 @@ export function RouteTracker() {
 
     // Forward page view to optional third-party providers (GA4 + PostHog).
     trackExternalPageView(location.pathname);
+
+    // Onboarding milestone: the very first route this visitor ever viewed.
+    trackFunnelMilestone('first_route_view', {
+      path: location.pathname,
+      referrer: document.referrer || undefined,
+    });
+
+
 
 
     lastKeyRef.current = key;
