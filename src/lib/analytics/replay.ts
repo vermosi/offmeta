@@ -27,8 +27,8 @@ const REPLAY_DECISION_KEY = 'offmeta_replay_sampled';
  */
 export const REPLAY_SAMPLE_RATE = 1;
 
-/** How long a tab can be inactive before PostHog starts a new session. */
-export const REPLAY_SESSION_IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+/** How long a tab can be inactive before PostHog starts a new session (seconds). */
+export const REPLAY_SESSION_IDLE_TIMEOUT_SECONDS = 30 * 60; // 30 minutes
 
 
 /** Max custom events sent to PostHog per session (burst + steady state). */
