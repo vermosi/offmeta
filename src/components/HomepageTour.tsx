@@ -77,8 +77,18 @@ export function HomepageTour() {
   const startedAtRef = useRef<number | null>(null);
   const stepStartedAtRef = useRef<number>(0);
   const maxStepRef = useRef(0);
+  const popoverRef = useRef<HTMLDivElement | null>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+
+  const titleId = useId();
+  const bodyId = useId();
+  const inviteTextId = useId();
+
+  // Trap Tab/Shift+Tab inside the popover while a step is open.
+  useFocusTrap(popoverRef, stepIndex !== null);
 
   const step = stepIndex === null ? null : (TOUR_STEPS[stepIndex] ?? null);
+
 
   useEffect(() => {
     if (readSeen()) return undefined;
