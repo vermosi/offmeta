@@ -27,8 +27,6 @@ export function usePrefersReducedMotion(): boolean {
     const onChange = (event: MediaQueryListEvent) =>
       setPrefersReducedMotion(event.matches);
 
-    setPrefersReducedMotion(mediaQuery.matches);
-
     // Safari < 14 only supports the deprecated listener API.
     if (typeof mediaQuery.addEventListener === 'function') {
       mediaQuery.addEventListener('change', onChange);
