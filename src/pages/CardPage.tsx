@@ -41,7 +41,11 @@ function getCardImage(card: ScryfallCard, size: 'normal' | 'large' | 'art_crop' 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const CardPage = () => {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug: rawSlug } = useParams<{ slug: string }>();
+  // Route-level slug normalization: `/cards/Sol_Ring`, `/cards/sol--ring/`, and
+  // percent-encoded variants all collapse onto the canonical slug shape.
+  const slug = rawSlug ? normalizeCardSlug(rawSlug) : '';
+  const needsSlugNormalization = Boolean(rawSlug && slug && slug !== rawSlug);
   const guessedName = slug ? slugToCardName(slug) : '';
 
   // Fetch card from Scryfall
@@ -51,12 +55,17 @@ const CardPage = () => {
     error,
   } = useQuery({
     queryKey: ['card-page', guessedName],
-    queryFn: () => getCardByName(guessedName),
-    enabled: !!guessedName,
+    queryFn: () => resolveCardFromSlug(slug),
+    enabled: !!guessedName && !needsSlugNormalization,
     staleTime: 30 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
     retry: 1,
   });
+
+  // Redirect malformed slugs before any fetch/analytics work happens.
+  if (needsSlugNormalization) {
+    return <Navigate to={`/cards/${slug}`} replace />;
+  }
 
   // Dedicated route-level analytics — distinct from `card_modal_view` (in-app modal).
   const { trackCardPageView } = useAnalytics();
