@@ -5,7 +5,12 @@
  */
 
 import { createRoot } from 'react-dom/client';
-import { initializeAnalytics, initFunnelTracking } from '@/lib/analytics';
+import {
+  initializeAnalytics,
+  initFunnelTracking,
+  initAudienceContext,
+} from '@/lib/analytics';
+
 import {
   googleAnalyticsMeasurementId,
   posthogProjectToken,
@@ -25,10 +30,14 @@ initializeAnalytics({
   posthogRegion,
 });
 
+// Attribution (UTM / click ids / referrer channel) plus device + locale
+// context, registered as super/person properties so every event carries it.
+initAudienceContext();
 
 // Register onboarding-cohort context and emit the daily retention signal so
 // PostHog funnels and retention views can be broken down per cohort.
 initFunnelTracking();
+
 
 // Capture uncaught errors / rejections into public.error_events so page-level
 // failures are reported automatically alongside backend pipeline failures.

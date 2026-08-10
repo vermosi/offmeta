@@ -38,3 +38,11 @@ export {
 
 export { startSessionHeartbeat } from './sessionHeartbeat';
 export { classifyTraffic } from './traffic';
+export {
+  initAudienceContext,
+  collectEnvironmentContext,
+  resolveAttribution,
+  parseAttributionParams,
+  classifyReferrer,
+} from './context';
+
