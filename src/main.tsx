@@ -5,7 +5,12 @@
  */
 
 import { createRoot } from 'react-dom/client';
-import { initializeAnalytics, initFunnelTracking } from '@/lib/analytics';
+import {
+  initializeAnalytics,
+  initFunnelTracking,
+  initAudienceContext,
+} from '@/lib/analytics';
+
 import {
   googleAnalyticsMeasurementId,
   posthogProjectToken,
