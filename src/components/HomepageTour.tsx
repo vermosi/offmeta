@@ -72,14 +72,34 @@ export function HomepageTour() {
   const [invitationVisible, setInvitationVisible] = useState(false);
   const [stepIndex, setStepIndex] = useState<number | null>(null);
   const [position, setPosition] = useState<Position | null>(null);
+  const startedAtRef = useRef<number | null>(null);
+  const stepStartedAtRef = useRef<number>(0);
+  const maxStepRef = useRef(0);
 
   const step = stepIndex === null ? null : (TOUR_STEPS[stepIndex] ?? null);
 
   useEffect(() => {
     if (readSeen()) return undefined;
-    const timer = window.setTimeout(() => setInvitationVisible(true), 1500);
+    const timer = window.setTimeout(() => {
+      setInvitationVisible(true);
+      trackTourEvent('tour_offered', { total_steps: TOUR_STEPS.length });
+    }, 1500);
     return () => window.clearTimeout(timer);
   }, []);
+
+  // One `tour_step_viewed` event per step so PostHog can chart drop-off.
+  useEffect(() => {
+    if (stepIndex === null || !step) return;
+    stepStartedAtRef.current = Date.now();
+    maxStepRef.current = Math.max(maxStepRef.current, stepIndex + 1);
+    trackTourEvent('tour_step_viewed', {
+      step_index: stepIndex + 1,
+      step_title: step.title,
+      total_steps: TOUR_STEPS.length,
+      is_last_step: stepIndex + 1 === TOUR_STEPS.length,
+    });
+  }, [stepIndex, step]);
+
 
   const measure = useCallback(() => {
     if (!step) {
