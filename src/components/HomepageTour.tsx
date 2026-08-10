@@ -10,7 +10,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Compass, X } from 'lucide-react';
 import { trackTourEvent } from '@/lib/analytics/tour';
-import { useFocusTrap } from '@/hooks';
+import { useFocusTrap, usePrefersReducedMotion } from '@/hooks';
 
 
 
@@ -84,6 +84,8 @@ export function HomepageTour() {
   const bodyId = useId();
   const inviteTextId = useId();
 
+  const prefersReducedMotion = usePrefersReducedMotion();
+
   // Trap Tab/Shift+Tab inside the popover while a step is open.
   useFocusTrap(popoverRef, stepIndex !== null);
 
@@ -144,7 +146,10 @@ export function HomepageTour() {
 
 
     el.classList.add(HIGHLIGHT_CLASS);
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.scrollIntoView({
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+      block: 'center',
+    });
 
     const raf = window.requestAnimationFrame(measure);
     const timer = window.setTimeout(measure, 450);
@@ -158,7 +163,7 @@ export function HomepageTour() {
       window.removeEventListener('resize', measure);
       window.removeEventListener('scroll', measure);
     };
-  }, [step, measure]);
+  }, [step, measure, prefersReducedMotion]);
 
   /** Close the tour. `reason` distinguishes skip / completion / dismissal. */
   const closeTour = useCallback(
@@ -307,7 +312,9 @@ export function HomepageTour() {
     return (
       <aside
         aria-label="Homepage tour invitation"
-        className="fixed bottom-4 right-4 z-40 max-w-[calc(100vw-2rem)]"
+        className={`fixed bottom-4 right-4 z-40 max-w-[calc(100vw-2rem)] ${
+          prefersReducedMotion ? '' : 'animate-fade-in'
+        }`}
       >
         <div className="flex items-center gap-2 rounded-full border border-border/70 bg-card/95 px-3 py-2 shadow-lg backdrop-blur-sm">
           <Compass className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
@@ -346,7 +353,9 @@ export function HomepageTour() {
       aria-modal="true"
       aria-labelledby={titleId}
       aria-describedby={bodyId}
-      className="absolute z-50 rounded-2xl border border-accent/40 bg-card p-4 shadow-2xl"
+      className={`absolute z-50 rounded-2xl border border-accent/40 bg-card p-4 shadow-2xl ${
+        prefersReducedMotion ? '' : 'animate-scale-in'
+      }`}
       style={
         popoverStyle ?? {
           top: window.scrollY + 80,

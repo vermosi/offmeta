@@ -12,6 +12,7 @@ export { useBatchPriceHistory } from './useBatchPriceHistory';
 export { useDebouncedValue } from './useDebouncedValue';
 export { useDeckIdeas, type DeckIdea } from './useDeckIdeas';
 export { useFocusTrap } from './useFocusTrap';
+export { usePrefersReducedMotion } from './usePrefersReducedMotion';
 export { useKeyboardShortcuts } from './useKeyboardShortcuts';
 export { useMarketTrends, type PriceMover } from './useMarketTrends';
 export { useIsMobile } from './useMobile';
