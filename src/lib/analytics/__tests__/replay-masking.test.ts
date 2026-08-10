@@ -153,4 +153,30 @@ describe('PostHog replay masking contract', () => {
 
     expect(buildReplayConfig().disable_session_recording).toBe(true);
   });
+
+  it('does not permanently lock a session out of recording when the entry route is blocked', async () => {
+    window.history.pushState({}, '', '/auth/sign-in');
+    const { shouldRecordSession, buildReplayConfig } = await loadReplay();
+
+    // Recording is disabled on the blocked route, but no sampling decision
+    // should be persisted yet.
+    expect(shouldRecordSession()).toBe(false);
+    expect(buildReplayConfig().disable_session_recording).toBe(true);
+
+    // Simulate navigation to a public route. The session should now be
+    // eligible to sample in.
+    window.history.pushState({}, '', '/');
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+
+    expect(shouldRecordSession()).toBe(true);
+    expect(buildReplayConfig().disable_session_recording).toBe(false);
+  });
+
+  it('sets an explicit session idle timeout so sessions stay open during long brew sessions', async () => {
+    const config = await loadReplay().then((m) => m.buildReplayConfig());
+    expect(config.session_idle_timeout_seconds).toBe(
+      REPLAY_SESSION_IDLE_TIMEOUT_SECONDS,
+    );
+    expect(config.session_idle_timeout_seconds).toBe(30 * 60);
+  });
 });
