@@ -34,6 +34,7 @@ const Footer = lazy(() =>
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
 import { HomepageQuickPaths } from '@/components/HomepageQuickPaths';
+import { HomepageTour } from '@/components/HomepageTour';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Search, SlidersHorizontal, Sparkles } from 'lucide-react';
 const ExampleQueriesCarousel = lazy(() =>
