@@ -27,18 +27,9 @@ describe('HomepageQuickPaths', () => {
     ).toHaveAttribute('href', '/search/commander%20ramp');
     expect(
       screen.getByRole('link', {
-        name: /learn the basics browse focused guides and syntax examples\./i,
+        name: /cards like x find close substitutes for staples and favorite effects\./i,
       }),
-    ).toHaveAttribute('href', '/guides');
-    expect(
-      screen.getByRole('link', {
-        name: /find combos discover infinite and synergy combos for your cards\./i,
-      }),
-    ).toHaveAttribute('href', '/combos');
-    expect(
-      screen.getByRole('link', {
-        name: /track prices see market movers and card trends at a glance\./i,
-      }),
-    ).toHaveAttribute('href', '/market');
+    ).toHaveAttribute('href', '/guides/cards-like-x');
   });
 });
+
