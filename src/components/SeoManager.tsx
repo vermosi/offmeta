@@ -51,7 +51,7 @@ export function SeoManager({
       applySeoMeta({
         title: 'Search MTG cards in plain English | OffMeta',
         description:
-          'Find Magic: The Gathering cards without learning Scryfall syntax. Describe what you want in plain English and get real, filterable results plus the exact query.',
+          'Find Magic: The Gathering cards without Scryfall syntax. Describe what you want in plain English and get filterable results.',
 
         url: 'https://offmeta.app/',
         type: 'website',
