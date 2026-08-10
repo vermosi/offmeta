@@ -125,9 +125,11 @@ export function HomepageTour() {
     if (!step) return undefined;
     const el = document.querySelector(step.selector);
     if (!(el instanceof HTMLElement)) {
-      setPosition(null);
-      return undefined;
+      // Defer so the effect never triggers a synchronous cascading render.
+      const clear = window.requestAnimationFrame(() => setPosition(null));
+      return () => window.cancelAnimationFrame(clear);
     }
+
 
     el.classList.add(HIGHLIGHT_CLASS);
     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
