@@ -206,7 +206,7 @@ export function HomepageTour() {
     <div
       role="dialog"
       aria-label="Homepage tour"
-      className="absolute z-50 rounded-2xl border border-accent/40 bg-card/98 p-4 shadow-2xl backdrop-blur-sm"
+      className="absolute z-50 rounded-2xl border border-accent/40 bg-card p-4 shadow-2xl"
       style={
         popoverStyle ?? {
           top: window.scrollY + 80,
