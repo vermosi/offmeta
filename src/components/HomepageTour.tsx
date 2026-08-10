@@ -7,9 +7,11 @@
  * - Anchors a popover to real page elements and scrolls them into view.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowRight, Compass, X } from 'lucide-react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { ArrowLeft, ArrowRight, Compass, X } from 'lucide-react';
 import { trackTourEvent } from '@/lib/analytics/tour';
+import { useFocusTrap } from '@/hooks';
+
 
 
 interface TourStep {
@@ -75,8 +77,18 @@ export function HomepageTour() {
   const startedAtRef = useRef<number | null>(null);
   const stepStartedAtRef = useRef<number>(0);
   const maxStepRef = useRef(0);
+  const popoverRef = useRef<HTMLDivElement | null>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+
+  const titleId = useId();
+  const bodyId = useId();
+  const inviteTextId = useId();
+
+  // Trap Tab/Shift+Tab inside the popover while a step is open.
+  useFocusTrap(popoverRef, stepIndex !== null);
 
   const step = stepIndex === null ? null : (TOUR_STEPS[stepIndex] ?? null);
+
 
   useEffect(() => {
     if (readSeen()) return undefined;
@@ -183,6 +195,16 @@ export function HomepageTour() {
       setStepIndex(null);
       setInvitationVisible(false);
       markSeen();
+
+      // Return focus somewhere sensible: the element that opened the tour if
+      // it still exists, otherwise the search input.
+      window.requestAnimationFrame(() => {
+        const fallback = document.querySelector<HTMLElement>('#search-input');
+        const target = returnFocusRef.current?.isConnected
+          ? returnFocusRef.current
+          : fallback;
+        target?.focus({ preventScroll: true });
+      });
     },
     [stepIndex],
   );
@@ -192,12 +214,27 @@ export function HomepageTour() {
   }, [closeTour, stepIndex]);
 
   const startTour = useCallback(() => {
+    returnFocusRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     setInvitationVisible(false);
     startedAtRef.current = Date.now();
     maxStepRef.current = 0;
     trackTourEvent('tour_started', { total_steps: TOUR_STEPS.length });
     setStepIndex(0);
   }, []);
+
+  // Move focus into the popover whenever the step changes so screen readers
+  // and keyboard users follow along with the highlighted content.
+  useEffect(() => {
+    if (stepIndex === null) return;
+    const node = popoverRef.current;
+    if (!node) return;
+    node.setAttribute('tabindex', '-1');
+    node.focus({ preventScroll: true });
+  }, [stepIndex]);
+
 
   const next = useCallback(() => {
     if (stepIndex === null) return;
@@ -208,16 +245,45 @@ export function HomepageTour() {
     setStepIndex(stepIndex + 1);
   }, [stepIndex, closeTour]);
 
+  const previous = useCallback(() => {
+    setStepIndex((current) =>
+      current === null ? null : Math.max(0, current - 1),
+    );
+  }, []);
 
-
+  // Keyboard model: Escape exits, arrow keys move between steps,
+  // Home/End jump to the first/last step. Tab is trapped in the popover.
   useEffect(() => {
     if (stepIndex === null) return undefined;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') closeTour('escape');
+      switch (event.key) {
+        case 'Escape':
+          event.preventDefault();
+          closeTour('escape');
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          next();
+          break;
+        case 'ArrowLeft':
+          event.preventDefault();
+          previous();
+          break;
+        case 'Home':
+          event.preventDefault();
+          setStepIndex(0);
+          break;
+        case 'End':
+          event.preventDefault();
+          setStepIndex(TOUR_STEPS.length - 1);
+          break;
+        default:
+          break;
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [stepIndex, closeTour]);
+  }, [stepIndex, closeTour, next, previous]);
 
   const popoverStyle = useMemo(() => {
     if (!position) return undefined;
@@ -239,37 +305,47 @@ export function HomepageTour() {
 
   if (stepIndex === null) {
     return (
-      <div className="fixed bottom-4 right-4 z-40 max-w-[calc(100vw-2rem)]">
+      <aside
+        aria-label="Homepage tour invitation"
+        className="fixed bottom-4 right-4 z-40 max-w-[calc(100vw-2rem)]"
+      >
         <div className="flex items-center gap-2 rounded-full border border-border/70 bg-card/95 px-3 py-2 shadow-lg backdrop-blur-sm">
           <Compass className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
-          <span className="text-xs text-muted-foreground">
+          <p id={inviteTextId} className="text-xs text-muted-foreground">
             New here? Take a 20-second tour.
-          </span>
+          </p>
           <button
             type="button"
             onClick={startTour}
-            className="focus-ring inline-flex min-h-9 items-center gap-1 rounded-full bg-accent px-3 text-xs font-medium text-accent-foreground"
+            aria-describedby={inviteTextId}
+            className="focus-ring inline-flex min-h-11 items-center gap-1 rounded-full bg-accent px-4 text-xs font-medium text-accent-foreground"
           >
-            Start
+            Start tour
             <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
           <button
             type="button"
             onClick={endTour}
             aria-label="Dismiss tour invitation"
-            className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
+            className="focus-ring inline-flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
-      </div>
+      </aside>
     );
   }
 
+  const currentStep = (stepIndex ?? 0) + 1;
+  const isLastStep = currentStep === TOUR_STEPS.length;
+
   return (
     <div
+      ref={popoverRef}
       role="dialog"
-      aria-label="Homepage tour"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      aria-describedby={bodyId}
       className="absolute z-50 rounded-2xl border border-accent/40 bg-card p-4 shadow-2xl"
       style={
         popoverStyle ?? {
@@ -279,38 +355,63 @@ export function HomepageTour() {
         }
       }
     >
+      {/* Announces each step to screen readers as the tour advances. */}
+      <p aria-live="polite" className="sr-only">
+        {`Step ${currentStep} of ${TOUR_STEPS.length}: ${step?.title ?? ''}. ${
+          step?.body ?? ''
+        }`}
+      </p>
+
       <div className="flex items-start justify-between gap-3">
-        <p className="text-sm font-semibold text-foreground">{step?.title}</p>
+        <h2 id={titleId} className="text-sm font-semibold text-foreground">
+          <span className="sr-only">{`Step ${currentStep} of ${TOUR_STEPS.length}: `}</span>
+          {step?.title}
+        </h2>
         <button
           type="button"
           onClick={endTour}
           aria-label="Close tour"
-          className="focus-ring -mr-1 -mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
+          className="focus-ring -mr-1 -mt-1 inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
         >
           <X className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
-      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+      <p id={bodyId} className="mt-1 text-sm leading-relaxed text-muted-foreground">
         {step?.body}
       </p>
+      <p className="sr-only">
+        Use the left and right arrow keys to move between steps, or press
+        Escape to leave the tour.
+      </p>
       <div className="mt-3 flex items-center justify-between gap-3">
-        <span className="text-xs text-muted-foreground">
-          {(stepIndex ?? 0) + 1} / {TOUR_STEPS.length}
+        <span className="text-xs text-muted-foreground" aria-hidden="true">
+          {currentStep} / {TOUR_STEPS.length}
         </span>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={previous}
+            disabled={currentStep === 1}
+            aria-label="Previous step"
+            className="focus-ring inline-flex min-h-9 items-center gap-1 rounded-full px-3 text-xs font-medium text-muted-foreground hover:text-foreground disabled:opacity-40"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+            Back
+          </button>
           <button
             type="button"
             onClick={endTour}
             className="focus-ring rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
           >
-            Skip
+            Skip tour
           </button>
           <button
             type="button"
             onClick={next}
+            aria-label={isLastStep ? 'Finish tour' : 'Next step'}
             className="focus-ring inline-flex min-h-9 items-center gap-1 rounded-full bg-accent px-3 text-xs font-medium text-accent-foreground"
           >
-            {(stepIndex ?? 0) + 1 === TOUR_STEPS.length ? 'Done' : 'Next'}
+            {isLastStep ? 'Done' : 'Next'}
             <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
         </div>
@@ -318,3 +419,4 @@ export function HomepageTour() {
     </div>
   );
 }
+
