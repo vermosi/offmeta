@@ -11,8 +11,13 @@ import { trackFunnelStep } from '@/lib/analytics/funnels';
 import { useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getCardByName } from '@/lib/scryfall/client';
-import { slugToCardName, cardNameToSlug } from '@/lib/card-slug';
+import { getCardByName, resolveFuzzyCardName } from '@/lib/scryfall/client';
+import {
+  slugToCardName,
+  cardNameToSlug,
+  normalizeCardSlug,
+  slugNameCandidates,
+} from '@/lib/card-slug';
 import {
   applySeoMeta,
   injectJsonLd,
