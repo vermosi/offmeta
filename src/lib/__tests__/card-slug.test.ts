@@ -28,3 +28,39 @@ describe('slugToCardName', () => {
     expect(slugToCardName('swords-to-plowshares')).toBe('Swords To Plowshares');
   });
 });
+
+describe('normalizeCardSlug', () => {
+  it('normalizes case, underscores, and stray hyphens', async () => {
+    const { normalizeCardSlug } = await import('../card-slug');
+    expect(normalizeCardSlug('Sol_Ring')).toBe('sol-ring');
+    expect(normalizeCardSlug('-sol--ring-')).toBe('sol-ring');
+    expect(normalizeCardSlug('Sol Ring')).toBe('sol-ring');
+  });
+
+  it('decodes percent-encoding and strips punctuation', async () => {
+    const { normalizeCardSlug } = await import('../card-slug');
+    expect(normalizeCardSlug("Sensei%27s-Divining-Top")).toBe('senseis-divining-top');
+    expect(normalizeCardSlug('seance.html')).toBe('seance');
+  });
+
+  it('is idempotent for already-canonical slugs', async () => {
+    const { normalizeCardSlug } = await import('../card-slug');
+    expect(normalizeCardSlug('swords-to-plowshares')).toBe('swords-to-plowshares');
+  });
+});
+
+describe('slugNameCandidates', () => {
+  it('returns progressively shorter candidates', async () => {
+    const { slugNameCandidates } = await import('../card-slug');
+    expect(slugNameCandidates('sol-ring-mtg-card')).toEqual([
+      'Sol Ring Mtg Card',
+      'Sol Ring Mtg',
+      'Sol Ring',
+    ]);
+  });
+
+  it('returns an empty list for empty slugs', async () => {
+    const { slugNameCandidates } = await import('../card-slug');
+    expect(slugNameCandidates('---')).toEqual([]);
+  });
+});
