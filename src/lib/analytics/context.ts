@@ -88,12 +88,13 @@ function writeStored(
 /** Coarse channel bucket derived from the document referrer. */
 export function classifyReferrer(referrer: string, host: string): string {
   if (!referrer) return 'direct';
-  let refHost = '';
+  let refHost: string;
   try {
     refHost = new URL(referrer).hostname.toLowerCase();
   } catch {
     return 'unknown';
   }
+
   if (!refHost || refHost === host.toLowerCase()) return 'internal';
   if (/(^|\.)(google|bing|duckduckgo|yahoo|ecosia|brave)\./.test(refHost)) {
     return 'search';
