@@ -555,7 +555,7 @@ const Index = () => {
 
         <Header />
 
-        {!hasSearched && <HeroSection />}
+        {!showResultsMode && <HeroSection />}
         {!hasSearched && (
           <section className="relative border-y border-border/40 bg-card/25 px-4 py-7 sm:py-9">
             <div className="container-main">
