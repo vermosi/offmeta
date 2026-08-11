@@ -527,6 +527,24 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          count: number
+          ip: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          ip: string
+          window_start?: string
+        }
+        Update: {
+          count?: number
+          ip?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       search_feedback: {
         Row: {
           created_at: string
@@ -960,6 +978,10 @@ export type Database = {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
       }
+      increment_rate_limit: {
+        Args: { client_ip: string; limit_count: number; window_seconds: number }
+        Returns: Json
+      }
       match_concepts_by_alias: {
         Args: { match_count?: number; search_term: string }
         Returns: {
@@ -986,6 +1008,7 @@ export type Database = {
       }
       prune_old_error_events: { Args: never; Returns: undefined }
       prune_old_price_snapshots: { Args: never; Returns: undefined }
+      prune_old_rate_limits: { Args: never; Returns: undefined }
       prune_old_seo_health_checks: { Args: never; Returns: undefined }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }

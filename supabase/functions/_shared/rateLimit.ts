@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
 // Minimal type for Supabase client to avoid deep type instantiation
 type SupabaseClientLike = {

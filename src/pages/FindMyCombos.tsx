@@ -11,6 +11,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { invokeComboSearch } from '@/services/combo-search';
+import { supabase } from '@/integrations/supabase/client';
+import { FunctionsHttpError } from '@supabase/supabase-js';
+
 import { applySeoMeta, injectJsonLd } from '@/lib/seo';
 import { ManaSymbol } from '@/components/ManaSymbol';
 import { useTranslation } from '@/lib/i18n/useTranslation';
@@ -83,11 +86,12 @@ export default function FindMyCombos() {
     };
   }, []);
   const [moxfieldUrl, setMoxfieldUrl] = useState('');
-  const [moxfieldDeckName] = useState<string | null>(null);
-  const [fetchingDeck] = useState(false);
-  const [colorIdentity] = useState<string[]>([]);
-  const [commander] = useState<string | null>(null);
-  const [cardNames] = useState<string[]>([]);
+  const [moxfieldDeckName, setMoxfieldDeckName] = useState<string | null>(null);
+  const [fetchingDeck, setFetchingDeck] = useState(false);
+  const [colorIdentity, setColorIdentity] = useState<string[]>([]);
+  const [commander, setCommander] = useState<string | null>(null);
+  const [cardNames, setCardNames] = useState<string[]>([]);
+
   const [results, setResults] = useState<ComboResults | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -163,8 +167,49 @@ export default function FindMyCombos() {
   };
 
   const handleFetchMoxfield = async () => {
-    toast.error('Deck import is unavailable right now');
+    const url = moxfieldUrl.trim();
+    if (!url) return;
+    setFetchingDeck(true);
+    setError(null);
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke<{
+        deckName: string;
+        commanders: string[];
+        cards: string[];
+        colorIdentity: string[];
+      }>('fetch-moxfield-deck', { body: { url } });
+
+      if (fnError) {
+        const details =
+          fnError instanceof FunctionsHttpError
+            ? await fnError.context.text()
+            : fnError.message;
+        let message = 'Could not import that deck';
+        try {
+          message = (JSON.parse(details) as { error?: string }).error ?? message;
+        } catch {
+          /* non-JSON error body */
+        }
+        throw new Error(message);
+      }
+      if (!data) throw new Error('Could not import that deck');
+
+      setMoxfieldDeckName(data.deckName);
+      setCommander(data.commanders[0] ?? null);
+      setCardNames(data.cards);
+      setColorIdentity(data.colorIdentity ?? []);
+      setResults(null);
+      toast.success(`Imported ${data.deckName}`);
+    } catch (e: unknown) {
+      const message =
+        e instanceof Error ? e.message : 'Could not import that deck';
+      setError(message);
+      toast.error(message);
+    } finally {
+      setFetchingDeck(false);
+    }
   };
+
 
   const handleFindCombos = async () => {
     if (cardNames.length === 0) return;
