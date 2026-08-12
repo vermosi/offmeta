@@ -10,3 +10,12 @@ declare module 'https://esm.sh/@supabase/supabase-js@2' {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): any;
 }
+
+declare module 'https://esm.sh/@supabase/supabase-js@2.45.0' {
+  export function createClient(
+    url: string,
+    key: string,
+    options?: unknown,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): any;
+}
