@@ -21,6 +21,10 @@ export default defineConfig(() => ({
               __dirname,
               './src/test/stubs/supabase-esm.ts'
             ),
+            'https://esm.sh/@supabase/supabase-js@2.45.0': path.resolve(
+              __dirname,
+              './src/test/stubs/supabase-esm.ts'
+            ),
           }
         : {}),
     },
