@@ -23,6 +23,7 @@ const STATIC_PATHS = [
   '/',
   '/browse-searches',
   '/combos',
+  '/deck-check',
   '/guides',
   '/ai',
   '/docs',

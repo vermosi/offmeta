@@ -21,6 +21,7 @@ const STATIC_PAGES = [
   { loc: '/' },
   { loc: '/browse-searches' },
   { loc: '/combos' },
+  { loc: '/deck-check' },
   { loc: '/guides' },
   { loc: '/ai' },
   { loc: '/docs' },

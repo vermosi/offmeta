@@ -30,6 +30,7 @@ export function Header() {
   const CORE_LINKS = [
     { label: t('header.guides', 'Guides'), href: '/guides' },
     { label: t('nav.combos', 'Combos'), href: '/combos' },
+    { label: t('nav.deckCheck', 'Deck Check'), href: '/deck-check' },
     { label: t('header.about', 'About'), href: '/about' },
   ];
 
