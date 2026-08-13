@@ -41,6 +41,10 @@ import { renderIR } from './render.ts';
 // Re-export public types
 export type { ParsedIntent, NumericConstraint, SearchIR } from './types.ts';
 
+/** Guild/shard/wedge nicknames — never part of a card-name-only query. */
+const COLOR_NICKNAMES =
+  /\b(azorius|dimir|rakdos|gruul|selesnya|orzhov|izzet|golgari|boros|simic|esper|grixis|jund|naya|bant|abzan|jeskai|sultai|mardu|temur|colorless|mono[- ]?\w+|five[- ]color|5[- ]color)\b/i;
+
 /**
  * Detect if the query looks like an exact card name rather than a search description.
  * Card names are typically 1-5 title-cased words, often with possessives (e.g., "Thassa's Oracle").
@@ -57,6 +61,9 @@ function isLikelyCardName(query: string): boolean {
   ) {
     return false;
   }
+  // Color nicknames describe a category ("naya commanders"), never a card name.
+  if (COLOR_NICKNAMES.test(trimmed)) return false;
+
   // Must be 1-6 words
   if (words.length < 1 || words.length > 6) return false;
 
@@ -64,10 +71,10 @@ function isLikelyCardName(query: string): boolean {
   const hasPossessive = /\w's\b/.test(trimmed);
   const allCapitalized = words.every(w => /^[A-Z]/.test(w) || /^(of|the|and|to|in|for|a|an)$/i.test(w));
   // Must not contain search-like keywords
-  const hasSearchKeywords = /\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commander|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries|best|good|great|top|find|payoffs?|synerg(?:y|ies)|released|after|before|since|until|mana|rocks?|wipes?|board|ramp|removal|draw|produce|generate|create|make|search|tap|theme|build|outlet|outlets|lifegain|lifeloss|free|cost|tribal|staples?|format|standard|modern|pioneer|pauper|vintage|legacy|historic|hate|graveyard|exile|protection|counter|tutor|token|sacrifice|flicker|blink|bounce|mill|scry|reanimate|reanimation|aristocrats|pillowfort|voltron|stax|burn|aggro|combo|control|midrange|tempo)\b/i.test(trimmed);
+  const hasSearchKeywords = /\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commanders?|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries|best|good|great|top|find|payoffs?|synerg(?:y|ies)|released|after|before|since|until|mana|rocks?|wipes?|board|ramp|removal|draw|produce|generate|create|make|search|tap|theme|build|outlet|outlets|lifegain|lifeloss|free|cost|tribal|staples?|format|standard|modern|pioneer|pauper|vintage|legacy|historic|hate|graveyard|exile|protection|counter|tutor|token|sacrifice|flicker|blink|bounce|mill|scry|reanimate|reanimation|aristocrats|pillowfort|voltron|stax|burn|aggro|combo|control|midrange|tempo)\b/i.test(trimmed);
   if (hasSearchKeywords) return false;
   // Single capitalized word that looks like a proper noun (not a common MTG keyword or creature subtype)
-  const singleWordMtgTerms = /^(flying|trample|haste|deathtouch|lifelink|vigilance|reach|menace|flash|hexproof|indestructible|ward|defender|first|double|strike|prowess|cascade|storm|affinity|convoke|delve|dredge|infect|wither|persist|undying|annihilator|protection|shroud|regenerate|morph|suspend|evoke|unearth|exalted|devour|bloodthirst|modular|sunburst|equip|ninjutsu|bushido|flanking|phasing|banding|rampage|cumulative|echo|fading|vanishing|kicker|buyback|flashback|madness|retrace|rebound|overload|bestow|dash|surge|emerge|escalate|improvise|aftermath|embalm|eternalize|explore|ascend|adapt|riot|spectacle|escape|mutate|companion|foretell|boast|learn|disturb|daybound|nightbound|cleave|training|blitz|casualty|connive|ravenous|enlist|prototype|toxic|backup|bargain|craft|discover|collect|adventure|channel|cycling|landfall|mill|scry|proliferate|populate|manifest|amass|food|treasure|blood|clue|map|powerstone|incubate|transform|meld|partner|eminence|encore|demonstrate|decayed|exploit|skulk|changeling|devoid|ingest|rally|cohort|support|investigate|fabricate|crew|revolt|improvise|afflict|exert|eternalize|surveil|undergrowth|spectacle|afterlife|jump|red|blue|green|white|black|colorless|multicolor|mono|tribal|removal|ramp|draw|tutor|counter|burn|mill|blink|bounce|copy|clone|theft|discard|sacrifice|token|anthem|lord|stax|hatebear|pillowfort|voltron|aristocrats|reanimator|control|aggro|combo|midrange|tempo|prison|taxes|storm|dredge|infect|aura|equipment|ping|reskins?|angels?|dragons?|elves?|goblins?|zombies?|vampires?|merfolk|wizards?|knights?|demons?|elementals?|beasts?|soldiers?|spirits?|rogues?|clerics?|warriors?|shamans?|druids?|dinosaurs?|pirates?|cats?|dogs?|birds?|snakes?|spiders?|hydras?|phoenixes?|sphinxes?|wurms?|drakes?|faeries?|giants?|humans?|saprolings?|slivers?|treefolk|fungi|oozes?|ninjas?|samurais?)$/i;
+  const singleWordMtgTerms = /^(untap|untapper|untappers|flying|trample|haste|deathtouch|lifelink|vigilance|reach|menace|flash|hexproof|indestructible|ward|defender|first|double|strike|prowess|cascade|storm|affinity|convoke|delve|dredge|infect|wither|persist|undying|annihilator|protection|shroud|regenerate|morph|suspend|evoke|unearth|exalted|devour|bloodthirst|modular|sunburst|equip|ninjutsu|bushido|flanking|phasing|banding|rampage|cumulative|echo|fading|vanishing|kicker|buyback|flashback|madness|retrace|rebound|overload|bestow|dash|surge|emerge|escalate|improvise|aftermath|embalm|eternalize|explore|ascend|adapt|riot|spectacle|escape|mutate|companion|foretell|boast|learn|disturb|daybound|nightbound|cleave|training|blitz|casualty|connive|ravenous|enlist|prototype|toxic|backup|bargain|craft|discover|collect|adventure|channel|cycling|landfall|mill|scry|proliferate|populate|manifest|amass|food|treasure|blood|clue|map|powerstone|incubate|transform|meld|partner|eminence|encore|demonstrate|decayed|exploit|skulk|changeling|devoid|ingest|rally|cohort|support|investigate|fabricate|crew|revolt|improvise|afflict|exert|eternalize|surveil|undergrowth|spectacle|afterlife|jump|red|blue|green|white|black|colorless|multicolor|mono|tribal|removal|ramp|draw|tutor|counter|burn|mill|blink|bounce|copy|clone|theft|discard|sacrifice|token|anthem|lord|stax|hatebear|pillowfort|voltron|aristocrats|reanimator|control|aggro|combo|midrange|tempo|prison|taxes|storm|dredge|infect|aura|equipment|ping|reskins?|angels?|dragons?|elves?|goblins?|zombies?|vampires?|merfolk|wizards?|knights?|demons?|elementals?|beasts?|soldiers?|spirits?|rogues?|clerics?|warriors?|shamans?|druids?|dinosaurs?|pirates?|cats?|dogs?|birds?|snakes?|spiders?|hydras?|phoenixes?|sphinxes?|wurms?|drakes?|faeries?|giants?|humans?|saprolings?|slivers?|treefolk|fungi|oozes?|ninjas?|samurais?)$/i;
   if (words.length === 1 && !singleWordMtgTerms.test(trimmed)) {
     // For single lowercase words, check if they're at least 4 chars and not a common English word
     if (allCapitalized) return true;
@@ -309,18 +316,45 @@ export function buildDeterministicIntent(query: string, options?: { isKnownCardN
   // Short-circuit: if the query is a known card name (DB lookup) OR heuristic match, use name search
   if (options?.isKnownCardName || isLikelyCardName(query)) {
     const trimmed = query.trim();
-    const wordCount = trimmed.split(/\s+/).length;
-    // Single word → name:X, multi-word → name:"X Y"
     // IMPORTANT: Do NOT run normalizeQuery — slang mappings corrupt card names
     // (e.g. "bolt" → "Lightning Bolt" turns "Lightning Bolt" into "lightning Lightning Bolt")
     const safeName = trimmed.toLowerCase().replace(/\bgrey\b/g, 'gray').replace(/\bcolour\b/g, 'color').trim();
-    const exactQuery = wordCount === 1
+    // Punctuation-tolerant: users type "rune scarred demon" or "marchesa the black
+    // rose", while the printed names are "Rune-Scarred Demon" and "Marchesa, the
+    // Black Rose". A quoted phrase misses both, so match each word independently.
+    const nameTokens = safeName
+      .split(/[^\p{L}\p{N}'’]+/u)
+      .map((token) => token.replace(/^['’]+|['’]+$/g, ''))
+      .filter((token) => token.length > 0);
+    const exactQuery = nameTokens.length <= 1
       ? `name:${safeName}`
-      : `name:"${safeName}"`;
+      : nameTokens.map((token) => `name:${/[^\p{L}\p{N}]/u.test(token) ? `"${token}"` : token}`).join(' ');
     return { intent: emptyIntent(), deterministicQuery: exactQuery };
+
   }
 
   const ir = buildIR(query);
+
+  // Art-tag rescue: the query only produced generic qualifiers ("shirtless
+  // commanders" → is:commander) while the descriptive words went unmatched.
+  // Resolve those leftovers against the art-tag vocabulary before rendering.
+  const hasContent =
+    ir.types.length > 0 ||
+    ir.subtypes.length > 0 ||
+    ir.oracle.length > 0 ||
+    ir.tags.length > 0 ||
+    ir.artTags.length > 0 ||
+    ir.numeric.length > 0;
+  // "cards like X" is a similarity request, not an artwork request.
+  if (!hasContent && ir.remaining.trim() && !/\blike\b/i.test(query)) {
+    const leftoverArtMatch = matchArtTagQuery(ir.remaining);
+    if (leftoverArtMatch) {
+      ir.artTags.push(`atag:${leftoverArtMatch.tag}`);
+      ir.remaining = '';
+    }
+  }
+
+
   const deterministicQuery = renderIR(ir);
 
   // Art-tag fallback: nothing else in the pipeline understood the query, but it
@@ -332,6 +366,7 @@ export function buildDeterministicIntent(query: string, options?: { isKnownCardN
       return { intent: emptyIntent(), deterministicQuery: artMatch.query };
     }
   }
+
 
   const intent: ParsedIntent = {
     colors: null,

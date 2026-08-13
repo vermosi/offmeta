@@ -183,12 +183,20 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     description: 'Small cheap creatures',
   },
 
+  // Untap effects ("untap", "untapper", "untap my creatures")
+  {
+    pattern: /\buntapp?(?:er|ers|ing)?\b/gi,
+    syntax: 'otag:untapper',
+    description: 'Cards that untap permanents',
+  },
+
   // Sacrifice effects (NOT otag:sacrifice - use sacrifice-outlet)
   {
     pattern: /\bsac(?:rifice)?\s+outlets?\b/gi,
     syntax: 'otag:sacrifice-outlet',
     description: 'Cards that let you sacrifice permanents',
   },
+
   {
     pattern: /\bfree\s+sac(?:rifice)?\s+outlets?\b/gi,
     syntax: 'otag:free-sacrifice-outlet',
