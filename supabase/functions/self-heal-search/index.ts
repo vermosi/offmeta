@@ -59,7 +59,6 @@ const PROBATION_HOURS = 24;
 /** Consecutive verification failures before a rule is rolled back. */
 const MAX_RULE_FAILURES = 2;
 
-
 interface RuleRow {
   id: string;
   pattern: string;
@@ -76,6 +75,20 @@ interface Candidate {
 }
 
 type Detail = Record<string, unknown>;
+
+/** Exact-name Scryfall syntax matches a single card by name (e.g. !"..." or name:"..."). */
+function isExactNameSyntax(syntax: string): boolean {
+  const trimmed = syntax.trim().toLowerCase();
+  return (
+    trimmed.startsWith('!') ||
+    trimmed.startsWith('name:"') ||
+    /^"[^"]+"$/.test(trimmed)
+  );
+}
+
+function minResultsFor(syntax: string): number {
+  return isExactNameSyntax(syntax) ? MIN_RESULTS_EXACT_NAME : MIN_RESULTS;
+}
 
 /** Phase 1 — re-validate probationary rules and roll back the broken ones. */
 async function verifyProbationRules(details: Detail[]): Promise<{
@@ -108,7 +121,8 @@ async function verifyProbationRules(details: Detail[]): Promise<{
       .gte('created_at', rule.created_at)
       .filter('event_data->>query', 'ilike', rule.pattern);
 
-    const healthy = check.ok && check.totalCards >= MIN_RESULTS && !stillFailing;
+    const threshold = minResultsFor(rule.scryfall_syntax);
+    const healthy = check.ok && check.totalCards >= threshold && !stillFailing;
 
     if (healthy) {
       const ageHours =
@@ -268,7 +282,8 @@ async function repairCandidate(
 
     await sleep(SCRYFALL_DELAY_MS);
     const check = await checkScryfall(suggestion.scryfallSyntax);
-    if (check.ok && check.totalCards >= MIN_RESULTS) {
+    const threshold = minResultsFor(suggestion.scryfallSyntax);
+    if (check.ok && check.totalCards >= threshold) {
       best = suggestion;
       bestCount = check.totalCards;
       break;
