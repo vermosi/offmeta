@@ -99,9 +99,16 @@ export function classifyResults(
     selected.push(entry);
   }
 
+  // Fill remaining slots, but never let one intent dominate the row.
+  const perIntent = new Map<number, number>(
+    selected.map((entry) => [entry.intentIndex, 1]),
+  );
   for (const entry of matched) {
     if (selected.length >= max) break;
     if (selected.includes(entry)) continue;
+    const used = perIntent.get(entry.intentIndex) ?? 0;
+    if (used >= 2) continue;
+    perIntent.set(entry.intentIndex, used + 1);
     selected.push(entry);
   }
 
