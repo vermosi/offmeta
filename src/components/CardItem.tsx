@@ -217,5 +217,62 @@ export const CardItem = memo(function CardItem({
         )}
       </div>
     </div>
+
+    {/* Footer row — status/save/why live below the art so nothing covers
+        the card image or its printed mana cost. */}
+    <div className="flex min-h-7 items-center gap-1.5">
+      {isOwned && (
+        <span
+          className="h-5 w-5 rounded-full bg-success/90 flex items-center justify-center"
+          aria-label={t('card.ownedAria', 'Owned')}
+        >
+          <svg
+            className="h-3 w-3 text-success-foreground"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </span>
+      )}
+      <SaveCardButton card={toSavedCardInput(card)} />
+      {whyReport && (
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className="ml-auto border border-border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:border-foreground hover:text-foreground focus-visible:outline-none focus-visible:border-foreground"
+              aria-label={
+                t(
+                  'cardItem.whyBadgeAria',
+                  '{count} reasons this card matches your search. Activate to view details.',
+                ).replace('{count}', String(whyReport.reasons.length)) +
+                ` ${whyReport.reasons.map((r) => r.label).join('; ')}`
+              }
+            >
+              <span aria-hidden="true">{t('cardItem.whyBadge', 'why')}</span>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent
+            side="top"
+            align="end"
+            sideOffset={6}
+            className="w-64 rounded-none border-border p-3"
+            aria-label={t('whyItMatches.title', 'Why it matches')}
+          >
+            <WhyItMatches
+              report={whyReport}
+              onRefineWithMatch={onRefineWithMatch}
+            />
+          </PopoverContent>
+        </Popover>
+      )}
+    </div>
+    </div>
+
   );
 });
