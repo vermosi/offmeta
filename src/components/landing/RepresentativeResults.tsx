@@ -47,7 +47,7 @@ export function RepresentativeResults({
     retry: 1,
   });
 
-  const { cards, matchCount, scannedCount } = useMemo(() => {
+  const { cards, matchCount } = useMemo(() => {
     const results = data ?? [];
     const classification = classifyResults(results, intentPaths, MAX_CARDS);
 

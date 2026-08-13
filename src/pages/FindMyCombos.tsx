@@ -88,7 +88,7 @@ export default function FindMyCombos() {
       cleanupMeta();
       cleanupJsonLd();
     };
-  }, []);
+  }, [t]);
   const [moxfieldUrl, setMoxfieldUrl] = useState('');
   const [moxfieldDeckName, setMoxfieldDeckName] = useState<string | null>(null);
   const [fetchingDeck, setFetchingDeck] = useState(false);

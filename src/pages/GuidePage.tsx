@@ -139,17 +139,6 @@ export default function GuidePage() {
     );
   };
 
-  const handleCopySectionLink = async (sectionId: string, sectionLabel: string) => {
-    await copyTextToClipboard(
-      `${pageUrl}#${sectionId}`,
-      toast,
-      t('guide.sectionLinkCopied', 'Section link copied'),
-      t('guide.sectionLinkCopiedDesc', 'Copied {section} to your clipboard.', { section: sectionLabel }),
-      t('guide.copyFailed', 'Copy failed'),
-      t('guide.clipboardBlocked', 'Your browser blocked clipboard access.'),
-    );
-  };
-
   const handleShare = async () => {
     if (typeof navigator.share === 'function') {
       try {

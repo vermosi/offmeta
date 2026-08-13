@@ -77,7 +77,7 @@ export function AuthModal({ open, onOpenChange, description }: AuthModalProps) {
         setSuccess(t('auth.checkEmailConfirm', 'Check your email to confirm your account.'));
       }
     },
-    [email, password, signUp],
+    [email, password, signUp, t],
   );
 
   const handleForgot = useCallback(
@@ -93,7 +93,7 @@ export function AuthModal({ open, onOpenChange, description }: AuthModalProps) {
         setSuccess(t('auth.checkEmailResetLink', 'Check your email for a password reset link.'));
       }
     },
-    [email, resetPassword],
+    [email, resetPassword, t],
   );
 
   const switchView = useCallback((v: AuthView) => {

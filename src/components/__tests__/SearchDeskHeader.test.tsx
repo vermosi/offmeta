@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildInterpretation } from '@/components/SearchDeskHeader';
+import { buildInterpretation } from '@/lib/search/interpretation';
 import type { SearchIntent } from '@/types/search';
 
 const baseIntent: SearchIntent = {
