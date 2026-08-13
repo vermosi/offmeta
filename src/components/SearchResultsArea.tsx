@@ -213,8 +213,6 @@ export function SearchResultsArea({
                     isFetchingNextPage={isFetchingNextPage}
                     isError={isError || isFetchNextPageError}
                     onRetry={retryNextPage}
-                    getWhyReport={(card) => buildWhyItMatches(card, effectiveIntent)}
-                    onRefineWithMatch={onRefineWithMatch}
                   />
                 ) : viewMode === 'list' ? (
                   <div
