@@ -113,43 +113,63 @@ serve(withLogging('price-snapshot', async (req: Request): Promise<Response> => {
     const needScryfall = cardList.filter(([name]) => !localPriceMap.has(name));
     log.info(`Local prices: ${localPriceMap.size}, need Scryfall: ${needScryfall.length}`);
 
-    // Batch fetch remaining prices from Scryfall
-    for (let i = 0; i < needScryfall.length; i += BATCH_SIZE) {
-      const batch = needScryfall.slice(i, i + BATCH_SIZE);
-      const identifiers = batch.map(([name, id]) =>
-        id ? { id } : { name },
-      );
-
+    // Batch fetch remaining prices from Scryfall.
+    // Some stored scryfall_id values are synthetic (not real Scryfall UUIDs);
+    // Scryfall rejects the whole batch with a 400 when one is malformed, so we
+    // only send ids that look like real Scryfall UUIDs and fall back to a
+    // name-only retry if a batch is rejected anyway.
+    const collectPrices = async (
+      identifiers: Array<{ id: string } | { name: string }>,
+      label: string,
+    ): Promise<'ok' | 'rejected' | 'failed'> => {
       try {
         const resp = await fetch('https://api.scryfall.com/cards/collection', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ identifiers }),
         });
-
-        if (resp.ok) {
-          const data = await resp.json();
-          for (const card of data.data ?? []) {
-            snapshots.push({
-              card_name: card.name,
-              scryfall_id: card.id,
-              source: 'scryfall',
-              price_usd: card.prices?.usd ? parseFloat(card.prices.usd) : null,
-              price_usd_foil: card.prices?.usd_foil ? parseFloat(card.prices.usd_foil) : null,
-            });
-          }
-        } else {
+        if (!resp.ok) {
           const errText = await resp.text();
-          log.warn(`Scryfall batch ${i} returned ${resp.status}`, { body: errText.slice(0, 200) });
+          log.warn(`Scryfall batch ${label} returned ${resp.status}`, {
+            body: errText.slice(0, 200),
+          });
+          return 'rejected';
         }
+        const data = await resp.json();
+        for (const card of data.data ?? []) {
+          snapshots.push({
+            card_name: card.name,
+            scryfall_id: card.id,
+            source: 'scryfall',
+            price_usd: card.prices?.usd ? parseFloat(card.prices.usd) : null,
+            price_usd_foil: card.prices?.usd_foil ? parseFloat(card.prices.usd_foil) : null,
+          });
+        }
+        return 'ok';
       } catch (e) {
-        log.warn('Scryfall batch failed', { batch: i, error: String(e) });
+        log.warn('Scryfall batch failed', { batch: label, error: String(e) });
+        return 'failed';
+      }
+    };
+
+    for (let i = 0; i < needScryfall.length; i += BATCH_SIZE) {
+      const batch = needScryfall.slice(i, i + BATCH_SIZE);
+      const identifiers = batch.map(([name, id]) =>
+        id && SCRYFALL_UUID.test(id) ? { id } : { name },
+      );
+
+      const outcome = await collectPrices(identifiers, String(i));
+      if (outcome === 'rejected') {
+        // Retry the same batch by name only — never let one bad id zero out a run.
+        await new Promise((r) => setTimeout(r, SCRYFALL_DELAY_MS));
+        await collectPrices(batch.map(([name]) => ({ name })), `${i}:by-name`);
       }
 
       if (i + BATCH_SIZE < needScryfall.length) {
         await new Promise((r) => setTimeout(r, SCRYFALL_DELAY_MS));
       }
     }
+
 
     // ── Insert snapshots ────────────────────────────────────────────
 
