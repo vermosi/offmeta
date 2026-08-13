@@ -267,6 +267,10 @@ async function repairCandidate(
   details: Detail[],
 ): Promise<'repaired' | 'skipped'> {
   const priorAttempts: { syntax: string; reason: string }[] = [];
+  /** Normalized syntaxes already tried, so a repeat never burns a Scryfall call. */
+  const seenSyntax = new Set<string>();
+  const fingerprint = (syntax: string) =>
+    syntax.toLowerCase().replace(/["']/g, '').replace(/\s+/g, ' ').trim();
   let best: RepairSuggestion | null = null;
   let bestCount = 0;
 
@@ -276,7 +280,9 @@ async function repairCandidate(
         query: candidate.query,
         failedTranslation: candidate.last_translation,
         priorAttempts,
+        attempt,
       }),
+      ATTEMPT_TEMPERATURES[Math.min(attempt, ATTEMPT_TEMPERATURES.length - 1)],
     );
     if (!raw) break;
 
@@ -288,6 +294,38 @@ async function repairCandidate(
       });
       continue;
     }
+
+    // Identical retry: don't re-verify it, just tell the model it repeated itself.
+    const key = fingerprint(suggestion.scryfallSyntax);
+    if (seenSyntax.has(key)) {
+      priorAttempts.push({
+        syntax: suggestion.scryfallSyntax,
+        reason: 'repeated an earlier failed query — must use a different structure',
+      });
+      logger.warn('duplicate_repair_attempt', {
+        query: candidate.query,
+        syntax: suggestion.scryfallSyntax,
+        attempt,
+      });
+      continue;
+    }
+    seenSyntax.add(key);
+
+    // Reject hallucinated otag: values before spending a Scryfall round-trip.
+    const otagCheck = validateOtags(suggestion.scryfallSyntax);
+    if (!otagCheck.valid) {
+      priorAttempts.push({
+        syntax: suggestion.scryfallSyntax,
+        reason: otagCheck.reason ?? 'invalid oracle tag',
+      });
+      logger.warn('invalid_otag_rejected', {
+        query: candidate.query,
+        syntax: suggestion.scryfallSyntax,
+        invalidTags: otagCheck.unknownTags,
+      });
+      continue;
+    }
+
 
     // Reject hallucinated otag: values before spending a Scryfall round-trip.
     const otagCheck = validateOtags(suggestion.scryfallSyntax);
