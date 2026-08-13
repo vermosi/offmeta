@@ -48,7 +48,12 @@ const LOOKBACK_DAYS = 30;
 /** Max failing searches repaired per run (bounds AI + Scryfall spend). */
 const MAX_CANDIDATES = 12;
 /** Model attempts per candidate before giving up. */
-const MAX_ATTEMPTS = 2;
+const MAX_ATTEMPTS = 4;
+/**
+ * Temperature ladder: attempt 0 stays deterministic, later attempts diversify so
+ * retries explore new syntax instead of repeating the same failed query.
+ */
+const ATTEMPT_TEMPERATURES = [0.2, 0.6, 0.9, 1.0];
 /** A repair must return at least this many cards to be installed. */
 const MIN_RESULTS = 3;
 /** Exact-name (single-card) lookups should not be penalized for returning one match. */
