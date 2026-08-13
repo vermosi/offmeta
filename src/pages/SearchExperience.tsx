@@ -35,7 +35,9 @@ import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
 import { HomepageQuickPaths } from '@/components/HomepageQuickPaths';
 import { HomepageTour } from '@/components/HomepageTour';
+import { GoogleAdsConversionHelper } from '@/components/GoogleAdsConversionHelper';
 import { Link } from 'react-router-dom';
+
 import { ArrowRight, Search, SlidersHorizontal, Sparkles } from 'lucide-react';
 const ExampleQueriesCarousel = lazy(() =>
   import('@/components/ExampleQueriesCarousel').then((m) => ({
@@ -539,8 +541,10 @@ const Index = () => {
 
   return (
     <ErrorBoundary>
+      <GoogleAdsConversionHelper />
       <SkipLinks showSearchLink />
       <div className="min-h-screen min-h-[100dvh] flex flex-col relative overflow-x-hidden">
+
         {/* Shared page background stack — gradient wash, ambient glow, noise.
             Kept fixed so the hero and every section below share the same
             atmosphere instead of the hero's glow ending at its bottom edge. */}
