@@ -136,7 +136,7 @@ export default function DeckCheck() {
       if (names.length === 0) throw new Error('That deck looks empty.');
       const text = names.join('\n');
       setRaw(text);
-      await runAnalysis(text);
+      await runAnalysis(text, 'moxfield');
     } catch (err) {
       const message =
         err instanceof Error ? err.message : 'Could not import that deck';
