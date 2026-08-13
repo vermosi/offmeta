@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 
 import { applySeoMeta, injectJsonLd } from '@/lib/seo';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { ManaSymbol } from '@/components/ManaSymbol';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { SkipLinks } from '@/components/SkipLinks';
