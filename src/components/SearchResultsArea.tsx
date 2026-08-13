@@ -174,6 +174,11 @@ export function SearchResultsArea({
       intent,
     ],
   );
+  /** Fall back to intent parsed from the executed query on fast/cached paths. */
+  const effectiveIntent = useMemo(
+    () => intent ?? intentFromScryfallQuery(searchQuery),
+    [intent, searchQuery],
+  );
   const virtualizedGridKey = useMemo(
     () =>
       `${activeSort ?? 'relevance-desc'}:${rankedCards.length}:${rankedCards
@@ -208,7 +213,7 @@ export function SearchResultsArea({
                     isFetchingNextPage={isFetchingNextPage}
                     isError={isError || isFetchNextPageError}
                     onRetry={retryNextPage}
-                    getWhyReport={(card) => buildWhyItMatches(card, intent)}
+                    getWhyReport={(card) => buildWhyItMatches(card, effectiveIntent)}
                     onRefineWithMatch={onRefineWithMatch}
                   />
                 ) : viewMode === 'list' ? (
@@ -239,7 +244,7 @@ export function SearchResultsArea({
                             tabIndex={rovingProps.tabIndex}
                             isOwned={collectionLookup.has(card.name)}
                             sparklineData={sparklineMap?.get(card.name)}
-                            whyReport={buildWhyItMatches(card, intent)}
+                            whyReport={buildWhyItMatches(card, effectiveIntent)}
                           />
                         </div>
                       );
@@ -275,7 +280,7 @@ export function SearchResultsArea({
                             tabIndex={rovingProps.tabIndex}
                             isOwned={collectionLookup.has(card.name)}
                             sparklineData={sparklineMap?.get(card.name)}
-                            whyReport={buildWhyItMatches(card, intent)}
+                            whyReport={buildWhyItMatches(card, effectiveIntent)}
                             onRefineWithMatch={onRefineWithMatch}
                           />
                         </div>
