@@ -19,10 +19,10 @@ import {
   type ReactNode,
 } from 'react';
 
-import type { SupportedLocale } from './constants';
+import { SUPPORTED_LOCALES, type SupportedLocale } from './constants';
 import { I18nContext, type I18nContextValue } from './context';
 import { detectBrowserLocale } from './detect-locale';
-import enDictionary from './en.json' with { type: 'json' };
+import enDictionary from './en.json';
 
 // Re-export for unit tests
 // eslint-disable-next-line react-refresh/only-export-components
@@ -38,16 +38,16 @@ const LOCALE_LOADERS: Record<
   string,
   () => Promise<{ default: TranslationDictionary }>
 > = {
-  es: () => import('./es.json', { with: { type: 'json' } }),
-  fr: () => import('./fr.json', { with: { type: 'json' } }),
-  de: () => import('./de.json', { with: { type: 'json' } }),
-  it: () => import('./it.json', { with: { type: 'json' } }),
-  pt: () => import('./pt.json', { with: { type: 'json' } }),
-  ja: () => import('./ja.json', { with: { type: 'json' } }),
-  ko: () => import('./ko.json', { with: { type: 'json' } }),
-  ru: () => import('./ru.json', { with: { type: 'json' } }),
-  zhs: () => import('./zhs.json', { with: { type: 'json' } }),
-  zht: () => import('./zht.json', { with: { type: 'json' } }),
+  es: () => import('./es.json'),
+  fr: () => import('./fr.json'),
+  de: () => import('./de.json'),
+  it: () => import('./it.json'),
+  pt: () => import('./pt.json'),
+  ja: () => import('./ja.json'),
+  ko: () => import('./ko.json'),
+  ru: () => import('./ru.json'),
+  zhs: () => import('./zhs.json'),
+  zht: () => import('./zht.json'),
 };
 
 /** Cache loaded dictionaries so we only fetch each once. English ships in the entry. */
@@ -77,7 +77,9 @@ function scheduleIdle(cb: () => void): () => void {
 function resolveInitialLocale(): SupportedLocale {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored && stored in LOCALE_LOADERS) {
+    // 'en' is a valid stored choice even though it has no lazy loader —
+    // otherwise an explicit English selection gets overwritten by browser detection.
+    if (stored && SUPPORTED_LOCALES.some((l) => l.code === stored)) {
       return stored as SupportedLocale;
     }
     const detected = detectBrowserLocale() ?? 'en';
@@ -110,7 +112,8 @@ export function I18nProvider({ children }: I18nProviderProps) {
 
   const loadDictionary = useCallback((target: SupportedLocale) => {
     if (loadedDictionaries[target]) return;
-    const loader = LOCALE_LOADERS[target] ?? LOCALE_LOADERS.en;
+    const loader = LOCALE_LOADERS[target];
+    if (!loader) return;
     loader()
       .then((mod) => {
         loadedDictionaries[target] = mod.default;
