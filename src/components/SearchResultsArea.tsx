@@ -18,7 +18,7 @@ import { ExplanationPanel } from '@/components/ExplanationPanel';
 import { CLIENT_CONFIG } from '@/lib/config';
 
 import { rerankCardsWithIntelligence } from '@/lib/search/intelligence-ranking';
-import { explainCardMatch } from '@/lib/search/matchExplanation';
+import { buildWhyItMatches } from '@/lib/search/whyItMatches';
 import { getSearchRankingSignals } from '@/lib/search-ranking-signals';
 import type { ScryfallCard } from '@/types/card';
 import type { SearchIntent } from '@/types/search';
@@ -237,6 +237,7 @@ export function SearchResultsArea({
                             tabIndex={rovingProps.tabIndex}
                             isOwned={collectionLookup.has(card.name)}
                             sparklineData={sparklineMap?.get(card.name)}
+                            whyReport={buildWhyItMatches(card, intent)}
                           />
                         </div>
                       );
@@ -272,7 +273,7 @@ export function SearchResultsArea({
                             tabIndex={rovingProps.tabIndex}
                             isOwned={collectionLookup.has(card.name)}
                             sparklineData={sparklineMap?.get(card.name)}
-                            matchReasons={explainCardMatch(card, intent)}
+                            whyReport={buildWhyItMatches(card, intent)}
                             onRefineWithMatch={onRefineWithMatch}
                           />
                         </div>
