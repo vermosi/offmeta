@@ -253,6 +253,7 @@ Deno.serve(
     if (!lease.acquired) return lockBusyResponse(JOB_NAME, headers);
 
     runInvocations = new Map();
+    suppressedInvocations = 0;
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
