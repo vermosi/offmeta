@@ -28,6 +28,11 @@ const STATIC_PATHS = [
   '/docs',
   '/docs/syntax',
   '/about',
+  '/search-intents',
+  '/search-intents/budget',
+  '/search-intents/hate',
+  '/search-intents/similar',
+  '/cards-like',
 ];
 
 const GUIDE_SLUGS = [
@@ -43,6 +48,30 @@ const GUIDE_SLUGS = [
   'multi-constraint-complex-search',
   'cards-like-x',
 ];
+
+// Editorial landing pages. This node script cannot import the TypeScript
+// registry, so the indexable paths are read straight out of the config
+// sources — the registry stays the single source of truth.
+const LANDING_CONTENT_DIR = 'src/lib/landing/content';
+const MIN_EXPECTED_LANDING_PAGES = 28;
+
+async function readIndexableLandingPaths() {
+  const files = await fs.readdir(LANDING_CONTENT_DIR);
+  const paths = [];
+  for (const file of files) {
+    if (!file.endsWith('.ts')) continue;
+    const source = await fs.readFile(`${LANDING_CONTENT_DIR}/${file}`, 'utf8');
+    // Each config declares `path: '/...'` and, shortly after, `indexable: <bool>`.
+    const configRe = /path:\s*'([^']+)'[\s\S]{0,400}?indexable:\s*(true|false)/g;
+    let match;
+    while ((match = configRe.exec(source)) !== null) {
+      const [, path, indexable] = match;
+      if (indexable === 'true' && path.startsWith('/')) paths.push(path);
+    }
+  }
+  return [...new Set(paths)];
+}
+
 
 // Truly-offline fallback — only used when SUPABASE env vars are absent.
 // If env is present but a request fails, we throw so CI/build surfaces it.
