@@ -81,7 +81,7 @@ export default function DeckCheck() {
       url: 'https://offmeta.app/deck-check',
     });
     return cleanup;
-  }, []);
+  }, [t]);
 
   const parsed = useMemo(() => parseDecklist(raw), [raw]);
 

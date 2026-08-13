@@ -11,11 +11,17 @@ import {
   MOCK_SCRYFALL_SEARCH_RESPONSE,
   MOCK_BOLT_SEARCH_RESPONSE,
 } from './mock-responses';
-import { resetSearchRateLimitState } from '@/hooks/useSearchQuery';
 import { CLIENT_CONFIG } from '@/lib/config';
 import { queryToSlug } from '@/lib/search-slug';
 
-export { resetSearchRateLimitState };
+/**
+ * Playwright runs in Node, so the browser-side rate-limit module state is not
+ * reachable from here. Kept as a no-op for spec ergonomics; the effective
+ * relaxation happens through TEST_RATE_LIMIT below (shared config object).
+ */
+export function resetSearchRateLimitState() {
+  /* no-op in the Playwright (Node) process */
+}
 
 const SEARCH_INPUT_SELECTOR = '#search-input:visible';
 const SEARCH_RESULT_CARD_SELECTOR = '[data-testid="search-result-card"]';

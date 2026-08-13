@@ -91,7 +91,12 @@ export function useAdminOpsData(isAdmin: boolean, days: number) {
   }, [isAdmin, days]);
 
   useEffect(() => {
-    void load();
+    // Defer to a macrotask so the initial setState in `load` does not run
+    // synchronously inside the effect body (cascading renders).
+    const timer = setTimeout(() => {
+      void load();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [load]);
 
   return { metrics, opportunities, freshness, isLoading, reload: load };

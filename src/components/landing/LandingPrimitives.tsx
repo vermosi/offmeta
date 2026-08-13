@@ -4,7 +4,7 @@
  */
 
 import { Link, useNavigate } from 'react-router-dom';
-import { queryToSlug } from '@/lib/search-slug';
+import { searchHref } from '@/lib/landing/searchHref';
 import { useTranslation } from '@/lib/i18n';
 import type {
   AdjacentConcept,
@@ -14,9 +14,6 @@ import type {
 
 const pad = (value: number) => String(value).padStart(2, '0');
 
-export function searchHref(query: string): string {
-  return `/search/${queryToSlug(query)}`;
-}
 
 /** 01 — index / breadcrumb notation. */
 export function IndexHeader({

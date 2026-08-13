@@ -108,7 +108,7 @@ serve(
     const authCheck = await requireAdminJob(req);
     if (!authCheck.authorized) return authCheck.response;
 
-    let body: { domain?: string; database?: string; refresh?: boolean } = {};
+    let body: { domain?: string; database?: string; refresh?: boolean };
     try {
       body = await req.json();
     } catch {

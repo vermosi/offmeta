@@ -38,8 +38,7 @@ const log = createLogger('price-snapshot');
  * @returns names to force-refresh plus the error rows that asked for them.
  */
 async function collectBackfillTargets(
-  // deno-lint-ignore no-explicit-any
-  supabase: any,
+  supabase: ReturnType<typeof createClient>,
 ): Promise<{ names: Map<string, string | null>; errorIds: string[] }> {
   const names = new Map<string, string | null>();
   const errorIds: string[] = [];
