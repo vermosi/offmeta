@@ -9,6 +9,8 @@ import { useCallback, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { trackFunnelStep } from '@/lib/analytics/funnels';
 import type { SavedCardInput } from '@/lib/account';
 
 export interface SavedCard {
