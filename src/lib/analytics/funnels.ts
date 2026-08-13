@@ -186,6 +186,8 @@ export const FUNNEL_MILESTONES = [
   'first_card_view',
   'first_guide_open',
   'first_combo_save',
+  'first_card_save',
+  'first_deck_check',
 ] as const;
 
 export type FunnelMilestone = (typeof FUNNEL_MILESTONES)[number];
