@@ -19,6 +19,7 @@ const ApiDocs = lazy(() => import('./pages/ApiDocs'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
 const AdminAnalytics = lazy(() => import('./pages/AdminAnalytics'));
+const AdminConsole = lazy(() => import('./pages/AdminConsole'));
 const AdminCuratedSearches = lazy(() => import('./pages/AdminCuratedSearches'));
 const FindMyCombos = lazy(() => import('./pages/FindMyCombos'));
 const DeckCheck = lazy(() => import('./pages/DeckCheck'));
@@ -80,6 +81,12 @@ export default function AppRoutes() {
               element={withFullApp(<ResetPassword />)}
             />
             <Route path="/profile" element={withFullApp(<ProfileSettings />)} />
+            <Route path="/admin" element={withFullApp(<AdminConsole />)} />
+            <Route path="/admin/:area" element={withFullApp(<AdminConsole />)} />
+            <Route
+              path="/admin/:area/:section"
+              element={withFullApp(<AdminConsole />)}
+            />
             <Route
               path="/admin/analytics"
               element={withFullApp(<AdminAnalytics />)}
