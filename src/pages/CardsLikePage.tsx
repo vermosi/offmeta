@@ -5,6 +5,7 @@ import { applySeoMeta } from '@/lib/seo';
 import { useSimilarCards } from '@/hooks/useSimilarCards';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { SimilarCardsPanel } from '@/components/SimilarCardsPanel';
+import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { getCardByName } from '@/lib/scryfall/client';
 import { cardNameToSlug, slugToCardName } from '@/lib/card-slug';
