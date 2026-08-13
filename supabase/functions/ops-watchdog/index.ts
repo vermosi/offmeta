@@ -26,6 +26,7 @@ import { validateEnv } from '../_shared/env.ts';
 import { createLogger, withLogging } from '../_shared/logger.ts';
 import { reportEdgeError } from '../_shared/errorReporter.ts';
 import { acquireJobLock, lockBusyResponse } from '../_shared/jobLock.ts';
+import { claimDedupe, recordDedupeDecision } from '../_shared/dedupe.ts';
 
 const JOB_NAME = 'ops-watchdog';
 /** Lease held for a whole watchdog run; above its worst-case wall clock. */
@@ -100,8 +101,9 @@ function functionForJob(jobname: string): string | null {
  * A dispatch that is still running when the timeout fires counts as success.
  *
  * Dispatches are deduped twice over: once in-process (two checks in the same
- * run can want the same pipeline) and once across runs via a job lease, so an
- * hourly watchdog can't re-kick a pipeline that is still working.
+ * run can want the same pipeline) and once across runs via a persisted dedupe
+ * key, so an hourly watchdog — or a freshly redeployed one — can't re-kick a
+ * pipeline that is still working.
  */
 const dispatchedThisRun = new Map<string, { ok: boolean; detail: string }>();
 
@@ -111,9 +113,18 @@ async function invokeFunction(name: string): Promise<{ ok: boolean; detail: stri
   const already = dispatchedThisRun.get(name);
   if (already) return { ...already, detail: `deduped_in_run: ${already.detail}` };
 
-  const lease = await acquireJobLock(`dispatch:${name}`, DISPATCH_COOLDOWN_SECONDS);
-  if (!lease.acquired) {
-    const skipped = { ok: true, detail: 'skipped: dispatched recently' };
+  const dedupeKey = `dispatch:${name}`;
+  const claim = await claimDedupe<{ ok?: boolean; detail?: string }>(
+    dedupeKey,
+    DISPATCH_COOLDOWN_SECONDS,
+    { source: 'ops-watchdog', state: 'dispatching' },
+  );
+  if (!claim.claimed) {
+    const previous = claim.decision?.detail ?? '';
+    const skipped = {
+      ok: true,
+      detail: `skipped: dispatched recently (until ${claim.expiresAt ?? 'cooldown'})${previous ? `: ${previous}` : ''}`,
+    };
     dispatchedThisRun.set(name, skipped);
     return skipped;
   }
@@ -135,12 +146,14 @@ async function invokeFunction(name: string): Promise<{ ok: boolean; detail: stri
       logger.warn(`invoke ${name} failed [${res.status}]: ${body.slice(0, 400)}`);
       const failed = { ok: false, detail: `${detail}: ${body.slice(0, 200)}` };
       dispatchedThisRun.set(name, failed);
+      await recordDedupeDecision(dedupeKey, { source: 'ops-watchdog', state: 'dispatched', ...failed });
       return failed;
     }
     // Drain the body so the connection closes cleanly.
     await res.text();
     const done = { ok: true, detail };
     dispatchedThisRun.set(name, done);
+    await recordDedupeDecision(dedupeKey, { source: 'ops-watchdog', state: 'dispatched', ...done });
     return done;
   } catch (err) {
     const message = String(err);
@@ -148,9 +161,10 @@ async function invokeFunction(name: string): Promise<{ ok: boolean; detail: stri
       ? { ok: true, detail: 'dispatched (still running)' }
       : { ok: false, detail: message.slice(0, 200) };
     dispatchedThisRun.set(name, outcome);
+    await recordDedupeDecision(dedupeKey, { source: 'ops-watchdog', state: 'dispatched', ...outcome });
     return outcome;
   }
-  // The dispatch lease is intentionally left to expire: it is the cooldown
+  // The dedupe key is intentionally left to expire: it is the cooldown
   // that stops the next hourly run from re-kicking a pipeline still in flight.
 }
 
