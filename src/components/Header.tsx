@@ -7,6 +7,13 @@ import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { cn } from '@/lib/core/utils';
+import {
+  NAV_BRAND_CLASS,
+  NAV_LINK_CLASS,
+  NAV_LINK_GAP_CLASS,
+  NAV_LOGO_CLASS,
+  NAV_WORDMARK_CLASS,
+} from '@/lib/ui/nav-tokens';
 import { useTranslation } from '@/lib/i18n';
 
 const AuthModal = lazy(() =>
@@ -162,21 +169,21 @@ export function Header() {
         <div className="container-main flex h-14 items-center justify-between gap-6">
           <Link
             to="/"
-            className="group -ml-2 flex min-h-0 items-center gap-2.5 px-2 py-1 focus-ring"
+            className={cn(NAV_BRAND_CLASS, '-ml-2 min-h-0 px-2 py-1')}
             aria-label={t('header.home')}
           >
-            <Logo variant="gradient" className="h-7 w-7 sm:h-8 sm:w-8" />
-            <span className="font-display text-sm font-extrabold uppercase tracking-[0.22em] text-foreground">
+            <Logo variant="gradient" className={NAV_LOGO_CLASS} />
+            <span className={NAV_WORDMARK_CLASS}>
               OffMeta
             </span>
           </Link>
 
-          <nav className="ml-auto hidden items-center gap-6 md:flex" aria-label="Main navigation">
+          <nav className={cn('ml-auto hidden items-center md:flex', NAV_LINK_GAP_CLASS)} aria-label="Main navigation">
             {CORE_LINKS.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
-                className="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground transition-colors hover:text-foreground focus-ring"
+                className={NAV_LINK_CLASS}
               >
                 {link.label}
               </Link>
