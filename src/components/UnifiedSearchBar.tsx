@@ -329,7 +329,7 @@ export const UnifiedSearchBar = forwardRef<
             {isVoiceSupported && (
               <Suspense fallback={null}>
                 <VoiceSearchControl
-                  className="h-9 w-9 sm:h-10 sm:w-10"
+                  className="h-9 w-9 self-center sm:h-10 sm:w-10"
                   onTranscript={(transcript) => {
                     setQuery(transcript);
                   }}
@@ -341,7 +341,8 @@ export const UnifiedSearchBar = forwardRef<
               </Suspense>
             )}
 
-            <Button
+            <button
+              type="button"
               onClick={() => handleSearch()}
               disabled={
                 isSearching ||
@@ -349,9 +350,7 @@ export const UnifiedSearchBar = forwardRef<
                 !query.trim() ||
                 rateLimitCountdown > 0
               }
-              variant="accent"
-              size="sm"
-              className="h-10 flex-shrink-0 gap-2 rounded-full px-4 font-medium shadow-lg shadow-accent/20 sm:h-12 sm:px-5"
+              className="flex flex-shrink-0 items-center gap-2 border-l border-border bg-foreground px-5 font-mono text-[11px] uppercase tracking-[0.24em] text-background transition-opacity hover:opacity-85 disabled:opacity-40 sm:px-7"
               data-testid="search-submit-button"
               aria-label={
                 rateLimitCountdown > 0
@@ -366,35 +365,37 @@ export const UnifiedSearchBar = forwardRef<
             >
               {rateLimitCountdown > 0 ? (
                 <>
-                  <Clock className="h-4 w-4" aria-hidden="true" />
-                  <span className="text-xs">{rateLimitCountdown}s</span>
+                  <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>{rateLimitCountdown}s</span>
                 </>
               ) : isSearching ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
               ) : (
                 <>
-                  <Search className="h-4 w-4" aria-hidden="true" />
-                  <span className="hidden sm:inline">{t('search.button')}</span>
+                  <Search className="h-3.5 w-3.5 sm:hidden" aria-hidden="true" />
+                  <span className="hidden sm:inline">
+                    {t('search.button')} →
+                  </span>
                 </>
               )}
-            </Button>
-
-            {/* Desktop-only inline buttons */}
-            <div className="hidden sm:flex items-center gap-1 flex-shrink-0">
-              <Suspense fallback={null}>
-                <SearchFeedback
-                  originalQuery={query}
-                  translatedQuery={lastTranslatedQuery}
-                />
-                <SearchHelpModal
-                  onTryExample={(exampleQuery) => {
-                    setQuery(exampleQuery);
-                    handleSearch(exampleQuery);
-                  }}
-                />
-              </Suspense>
-            </div>
+            </button>
           </div>
+        </div>
+
+        {/* Auxiliary actions */}
+        <div className="flex flex-wrap items-center gap-2">
+          <Suspense fallback={null}>
+            <SearchFeedback
+              originalQuery={query}
+              translatedQuery={lastTranslatedQuery}
+            />
+            <SearchHelpModal
+              onTryExample={(exampleQuery) => {
+                setQuery(exampleQuery);
+                handleSearch(exampleQuery);
+              }}
+            />
+          </Suspense>
         </div>
 
         {/* Secondary row: Mobile-only auxiliary actions */}
