@@ -27,7 +27,7 @@ export interface Guide {
 }
 
 function clampMetaDescription(text: string): string {
-  return text.length <= 170 ? text : `${text.slice(0, 166).trimEnd()}…`;
+  return text.length <= 160 ? text : `${text.slice(0, 156).trimEnd()}…`;
 }
 
 export const GUIDES: Guide[] = [

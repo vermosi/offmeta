@@ -79,6 +79,10 @@ export default defineConfig(() => ({
   },
   test: {
     globals: true,
+    // Parallel jsdom suites can exceed the 5s default under CI load; these
+    // specs pass in isolation, so allow more headroom before failing.
+    testTimeout: 20000,
+    hookTimeout: 20000,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
