@@ -266,7 +266,7 @@ async function repairCandidate(
   candidate: Candidate,
   details: Detail[],
 ): Promise<'repaired' | 'skipped'> {
-  const priorAttempts: { syntax: string; reason: string }[] = [];
+  const priorAttempts: AttemptRecord[] = [];
   /** Normalized syntaxes already tried, so a repeat never burns a Scryfall call. */
   const seenSyntax = new Set<string>();
   const fingerprint = (syntax: string) =>
@@ -275,6 +275,17 @@ async function repairCandidate(
   let bestCount = 0;
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const temperature =
+      ATTEMPT_TEMPERATURES[Math.min(attempt, ATTEMPT_TEMPERATURES.length - 1)];
+    const record = (
+      code: ReasonCode,
+      syntax: string,
+      reason: string,
+      extra: Record<string, unknown> = {},
+    ) => {
+      priorAttempts.push({ attempt, temperature, syntax, code, reason, ...extra });
+    };
+
     const raw = await askModel(
       buildRepairPrompt({
         query: candidate.query,
@@ -282,26 +293,36 @@ async function repairCandidate(
         priorAttempts,
         attempt,
       }),
-      ATTEMPT_TEMPERATURES[Math.min(attempt, ATTEMPT_TEMPERATURES.length - 1)],
+      temperature,
     );
-    if (!raw) break;
+    if (!raw) {
+      record('no_model_response', '(none)', 'model returned no usable response');
+      break;
+    }
 
     const suggestion = parseRepairResponse(raw, candidate.query);
-    if (!suggestion || suggestion.confidence < MIN_CONFIDENCE) {
-      priorAttempts.push({
-        syntax: suggestion?.scryfallSyntax ?? '(none)',
-        reason: 'confidence too low',
-      });
+    if (!suggestion) {
+      record('unparseable_response', '(none)', 'model response was not valid JSON');
+      continue;
+    }
+    if (suggestion.confidence < MIN_CONFIDENCE) {
+      record(
+        'low_confidence',
+        suggestion.scryfallSyntax,
+        `model confidence ${suggestion.confidence} below ${MIN_CONFIDENCE}`,
+        { confidence: suggestion.confidence },
+      );
       continue;
     }
 
     // Identical retry: don't re-verify it, just tell the model it repeated itself.
     const key = fingerprint(suggestion.scryfallSyntax);
     if (seenSyntax.has(key)) {
-      priorAttempts.push({
-        syntax: suggestion.scryfallSyntax,
-        reason: 'repeated an earlier failed query — must use a different structure',
-      });
+      record(
+        'duplicate_syntax',
+        suggestion.scryfallSyntax,
+        'repeated an earlier failed query — must use a different structure',
+      );
       logger.warn('duplicate_repair_attempt', {
         query: candidate.query,
         syntax: suggestion.scryfallSyntax,
@@ -314,10 +335,12 @@ async function repairCandidate(
     // Reject hallucinated otag: values before spending a Scryfall round-trip.
     const otagCheck = validateOtags(suggestion.scryfallSyntax);
     if (!otagCheck.valid) {
-      priorAttempts.push({
-        syntax: suggestion.scryfallSyntax,
-        reason: otagCheck.reason ?? 'invalid oracle tag',
-      });
+      record(
+        'invalid_otag',
+        suggestion.scryfallSyntax,
+        otagCheck.reason ?? 'invalid oracle tag',
+        { invalidTags: otagCheck.unknownTags },
+      );
       logger.warn('invalid_otag_rejected', {
         query: candidate.query,
         syntax: suggestion.scryfallSyntax,
@@ -334,23 +357,48 @@ async function repairCandidate(
       bestCount = check.totalCards;
       break;
     }
-    priorAttempts.push({
-      syntax: suggestion.scryfallSyntax,
-      reason: check.error
-        ? `Scryfall rejected the query: ${check.error}`
-        : `only ${check.totalCards} results`,
-    });
+    if (check.error) {
+      record(
+        'scryfall_rejected',
+        suggestion.scryfallSyntax,
+        `Scryfall rejected the query: ${check.error}`,
+      );
+    } else if (check.totalCards === 0) {
+      record('zero_results', suggestion.scryfallSyntax, 'query returned no cards');
+    } else {
+      record(
+        'below_threshold',
+        suggestion.scryfallSyntax,
+        `only ${check.totalCards} results (needs ${threshold})`,
+        { resultCount: check.totalCards, threshold },
+      );
+    }
   }
 
   if (!best) {
+    const last = priorAttempts[priorAttempts.length - 1];
     details.push({
       phase: 'repair',
-      query: candidate.query,
       status: 'unrepairable',
+      query: candidate.query,
+      frequency: candidate.frequency,
+      // Before/after pair so a human can see what changed across the loop.
+      before: candidate.last_translation,
+      after: last?.syntax ?? null,
+      reasonCode: last?.code ?? 'no_model_response',
+      reason: last?.reason ?? 'no repair attempt produced a candidate query',
+      reasonCounts: countReasonCodes(priorAttempts),
+      attemptCount: priorAttempts.length,
       attempts: priorAttempts,
+    });
+    logger.warn('unrepairable_candidate', {
+      query: candidate.query,
+      reasonCode: last?.code ?? 'no_model_response',
+      attempts: priorAttempts.length,
     });
     return 'skipped';
   }
+
 
   const { error } = await supabase.from('translation_rules').insert({
     pattern: candidate.query,
