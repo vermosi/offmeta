@@ -1,5 +1,5 @@
 /**
- * Root guides index page - lists all 11 guides as visual cards.
+ * OffMeta Field Guide index — editorial table of contents for all guides.
  */
 
 import { useEffect, useState } from 'react';
@@ -9,84 +9,41 @@ import { GUIDES } from '@/data/guides';
 import { Footer } from '@/components/Footer';
 import { Header } from '@/components/Header';
 import { ScrollToTop } from '@/components/ScrollToTop';
-import { BookOpen, ArrowRight, Sparkles } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { useTranslation } from '@/lib/i18n';
 import { SkipLinks } from '@/components/SkipLinks';
-import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks';
-import { Copy, Share2 } from 'lucide-react';
 import { buildGuideUrl, copyTextToClipboard } from '@/lib/guide-actions';
 
-const LEVEL_COLORS: Record<string, string> = {
-  'guides.levelBeginner': 'bg-success/10 text-success border-success/20',
-  'guides.levelIntermediate': 'bg-info/10 text-info border-info/20',
-  'guides.levelAdvanced': 'bg-warning/10 text-warning border-warning/20',
-  'guides.levelExpert': 'bg-accent/10 text-accent border-accent/20',
-};
-
 const LEVEL_GROUPS = [
-  {
-    key: 'guides.levelBeginner',
-    label: 'guides.levelBeginner',
-    min: 1,
-    max: 3,
-  },
-  {
-    key: 'guides.levelIntermediate',
-    label: 'guides.levelIntermediate',
-    min: 4,
-    max: 6,
-  },
-  {
-    key: 'guides.levelAdvanced',
-    label: 'guides.levelAdvanced',
-    min: 7,
-    max: 8,
-  },
-  { key: 'guides.levelExpert', label: 'guides.levelExpert', min: 9, max: 11 },
+  { key: 'beginner', label: 'guides.levelBeginner', min: 1, max: 3 },
+  { key: 'intermediate', label: 'guides.levelIntermediate', min: 4, max: 6 },
+  { key: 'advanced', label: 'guides.levelAdvanced', min: 7, max: 8 },
+  { key: 'expert', label: 'guides.levelExpert', min: 9, max: 11 },
 ] as const;
 
 const GUIDE_FILTERS = [
-  { key: 'all', label: 'All guides', min: 1, max: 11 },
+  { key: 'all', label: 'All', min: 1, max: 11 },
   { key: 'beginner', label: 'Beginner', min: 1, max: 3 },
   { key: 'intermediate', label: 'Intermediate', min: 4, max: 6 },
   { key: 'advanced', label: 'Advanced', min: 7, max: 8 },
   { key: 'expert', label: 'Expert', min: 9, max: 11 },
 ] as const;
 
+const pad = (value: number) => String(value).padStart(2, '0');
+
 export default function GuidesIndex() {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const [activeFilter, setActiveFilter] = useState<(typeof GUIDE_FILTERS)[number]['key']>('all');
+  const [activeFilter, setActiveFilter] =
+    useState<(typeof GUIDE_FILTERS)[number]['key']>('all');
 
-  const copyGuideUrl = async (slug: string, title: string) => {
+  const copyGuideQuery = async (slug: string, title: string) => {
     await copyTextToClipboard(
-      GUIDES.find((guide) => guide.slug === slug)?.searchQuery ?? buildGuideUrl(slug),
+      GUIDES.find((guide) => guide.slug === slug)?.searchQuery ??
+        buildGuideUrl(slug),
       toast,
-      'Link copied',
-      `Copied ${title} to your clipboard.`,
-      'Copy failed',
-      'Your browser blocked clipboard access.',
-    );
-  };
-
-  const shareGuide = async (slug: string, title: string) => {
-    const url = buildGuideUrl(slug);
-    if (typeof navigator.share === 'function') {
-      try {
-        await navigator.share({ title, url });
-        return;
-      } catch {
-        // Fall through to clipboard.
-      }
-    }
-
-    await copyTextToClipboard(
-      url,
-      toast,
-      'Link copied',
-      `Copied ${title} to your clipboard.`,
+      'Copied',
+      `Copied ${title} query to your clipboard.`,
       'Copy failed',
       'Your browser blocked clipboard access.',
     );
@@ -129,7 +86,11 @@ export default function GuidesIndex() {
             '10 progressive guides teaching natural-language Magic: The Gathering card search on OffMeta.',
           url: 'https://offmeta.app/guides',
           inLanguage: 'en',
-          isPartOf: { '@type': 'WebSite', name: 'OffMeta', url: 'https://offmeta.app/' },
+          isPartOf: {
+            '@type': 'WebSite',
+            name: 'OffMeta',
+            url: 'https://offmeta.app/',
+          },
         },
         {
           '@type': 'ItemList',
@@ -154,9 +115,12 @@ export default function GuidesIndex() {
 
   const sorted = [...GUIDES].sort((a, b) => a.level - b.level);
   const activeBounds =
-    GUIDE_FILTERS.find((filter) => filter.key === activeFilter) ?? GUIDE_FILTERS[0];
-  const grouped = LEVEL_GROUPS.map((group) => ({
+    GUIDE_FILTERS.find((filter) => filter.key === activeFilter) ??
+    GUIDE_FILTERS[0];
+
+  const grouped = LEVEL_GROUPS.map((group, groupIndex) => ({
     ...group,
+    section: pad(groupIndex + 1),
     guides: sorted.filter(
       (guide) =>
         guide.level >= group.min &&
@@ -167,195 +131,154 @@ export default function GuidesIndex() {
   })).filter((group) => group.guides.length > 0);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
+    <div className="flex min-h-screen flex-col overflow-x-hidden bg-background">
       <SkipLinks />
       <Header />
 
-      <nav className="container-main pt-4 sm:pt-6 pb-2" aria-label="Breadcrumb">
-        <ol className="flex items-center gap-1.5 text-sm text-muted-foreground">
-          <li>
-            <Link to="/" className="hover:text-foreground transition-colors">
-              {t('nav.home')}
-            </Link>
-          </li>
-          <li aria-hidden="true">/</li>
-          <li className="text-foreground font-medium">{t('nav.guides')}</li>
-        </ol>
-      </nav>
+      <main id="main-content" className="container-main flex-1 pb-16 pt-8">
+        <nav aria-label="Breadcrumb" className="mb-10">
+          <ol className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+            <li>
+              <Link to="/" className="transition-colors hover:text-foreground">
+                OffMeta
+              </Link>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li className="text-foreground">Field Guide</li>
+          </ol>
+        </nav>
 
-      <main
-        id="main-content"
-        className="flex-1 container-main py-8 sm:py-10 lg:py-12"
-      >
-        <div className="max-w-4xl mx-auto space-y-8 sm:space-y-10 min-w-0">
-          <header className="rounded-3xl border border-border/60 bg-card/60 p-6 text-center shadow-sm space-y-4 sm:p-8">
-            <div className="flex items-center justify-center gap-2.5 text-primary">
-              <BookOpen className="h-6 w-6" />
-              <Sparkles className="h-5 w-5" />
-            </div>
-            <h1 className="text-2xl sm:text-3xl lg:text-5xl font-semibold text-foreground leading-tight">
-              {t('guides.pageTitle')}
+        <header className="border-b border-border/60 pb-10">
+          <div className="grid gap-8 lg:grid-cols-12 lg:items-end">
+            <h1 className="font-display text-[clamp(2.25rem,5.2vw,4rem)] font-extrabold uppercase leading-[0.88] tracking-tight text-foreground lg:col-span-7">
+              Learn to find
+              <br />
+              <span className="font-editorial text-[0.94em] font-normal normal-case italic tracking-normal text-accent">
+                anything in Magic.
+              </span>
             </h1>
-            <p className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto">
-              {t('guides.pageSubtitle')}
-            </p>
-            <p className="text-sm text-muted-foreground">{t('guides.count')}</p>
-          </header>
+            <div className="space-y-4 lg:col-span-5 lg:pb-2">
+              <p className="max-w-md text-base leading-snug text-muted-foreground">
+                {t('guides.pageSubtitle')}
+              </p>
+              <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
+                {GUIDES.length} Guides / Beginner → Expert
+              </p>
+            </div>
+          </div>
+        </header>
 
-          <div className="flex flex-wrap justify-center gap-2">
-            {GUIDE_FILTERS.map((filter) => (
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-b border-border/60 py-4">
+          {GUIDE_FILTERS.map((filter) => {
+            const isActive = activeFilter === filter.key;
+            return (
               <button
                 key={filter.key}
                 type="button"
                 onClick={() => setActiveFilter(filter.key)}
-                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-                  activeFilter === filter.key
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-border bg-card text-foreground hover:border-primary/30 hover:text-primary'
+                aria-pressed={isActive}
+                className={`font-mono text-[11px] uppercase tracking-[0.26em] underline-offset-[6px] transition-colors ${
+                  isActive
+                    ? 'text-foreground underline decoration-accent decoration-2'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {filter.label}
               </button>
-            ))}
-          </div>
+            );
+          })}
+        </div>
 
-          <div className="flex flex-wrap justify-center gap-2">
-            {grouped.map((group) => (
-              <a
-                key={group.key}
-                href={`#${group.key}`}
-                className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:border-primary/30 hover:text-primary transition-colors"
-              >
-                {t(group.label)}
-                <span className="text-muted-foreground">
-                  ({group.guides.length})
+        <div className="mt-12 space-y-14">
+          {grouped.map((group) => (
+            <section key={group.key} id={group.key} aria-labelledby={`${group.key}-title`}>
+              <div className="flex items-baseline gap-4">
+                <span className="font-mono text-[11px] tracking-[0.28em] text-muted-foreground">
+                  {group.section} /
                 </span>
-              </a>
-            ))}
-          </div>
+                <h2
+                  id={`${group.key}-title`}
+                  className="font-display text-lg font-extrabold uppercase tracking-tight text-foreground"
+                >
+                  {t(group.label)}
+                </h2>
+                <span className="font-mono text-[10px] tracking-[0.24em] text-muted-foreground">
+                  {group.guides.length} GUIDES
+                </span>
+              </div>
 
-          <div className="space-y-8">
-            {grouped.map((group) => {
-              const labelKey = group.label;
-              const colorClass =
-                LEVEL_COLORS[labelKey] || LEVEL_COLORS['guides.levelBeginner'];
+              <ul className="mt-4">
+                {group.guides.map((guide, index) => (
+                  <li
+                    key={guide.slug}
+                    className="border-b border-border/50 py-6 first:border-t"
+                  >
+                    <div className="grid gap-4 lg:grid-cols-12 lg:items-start">
+                      <span className="font-mono text-[11px] tracking-[0.24em] text-muted-foreground lg:col-span-1">
+                        {group.section}.{pad(index + 1)}
+                      </span>
 
-              return (
-                <section key={group.key} id={group.key} className="space-y-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="space-y-1">
-                      <h2 className="text-lg sm:text-xl font-semibold text-foreground">
-                        {t(group.label)}
-                      </h2>
-                      <p className="text-sm text-muted-foreground">
-                        {Number(group.min) === Number(group.max)
-                          ? `Level ${group.min}`
-                          : `Levels ${group.min}-${group.max}`}{' '}
-                        • {group.guides.length} guides
-                      </p>
-                    </div>
-                    <Badge
-                      variant="outline"
-                      className={`text-[10px] font-semibold uppercase tracking-wide ${colorClass}`}
-                    >
-                      {t(labelKey)}
-                    </Badge>
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    {group.guides.map((guide) => (
-                      <div
-                        key={guide.slug}
-                      className="group relative rounded-2xl border border-border/60 bg-card/80 hover:border-primary/30 hover:shadow-lg transition-all duration-200 p-5 sm:p-6 flex flex-col min-w-0 overflow-hidden shadow-sm"
-                      >
+                      <div className="min-w-0 lg:col-span-7">
                         <Link
                           to={`/guides/${guide.slug}`}
-                          className="contents"
+                          className="font-display text-base font-bold uppercase tracking-tight text-foreground underline-offset-[6px] hover:underline sm:text-lg"
                         >
-                          <div className="flex items-center justify-between mb-3">
-                            <Badge
-                              variant="outline"
-                              className={`text-[10px] font-semibold uppercase tracking-wide ${colorClass}`}
-                            >
-                              {t(labelKey)} • {t('guides.level')} {guide.level}
-                            </Badge>
-                          </div>
-
-                          <h3 className="text-base sm:text-lg font-semibold text-foreground group-hover:text-primary transition-colors mb-1.5">
-                            {t(`guide.title.${guide.slug}`, guide.title)}
-                          </h3>
-                          <p className="text-sm text-muted-foreground mb-4 flex-1">
-                            {t(`guide.sub.${guide.slug}`, guide.subheading)}
-                          </p>
+                          {t(`guide.title.${guide.slug}`, guide.title)}
                         </Link>
-
-                        <div className="rounded-lg bg-muted/40 border border-border/50 px-3 py-2 mb-4 min-w-0 overflow-hidden">
-                          <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
-                            {t('guides.exampleSearch')}
-                          </p>
-                          <p className="text-sm font-mono text-foreground/80 truncate">
-                            "{guide.searchQuery}"
-                          </p>
-                        </div>
-
-                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                          <Link
-                            to={`/guides/${guide.slug}`}
-                            className="flex items-center gap-1 text-sm text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            {t('guides.readGuide')}{' '}
-                            <ArrowRight className="h-3.5 w-3.5" />
-                          </Link>
-                          <div className="flex flex-wrap gap-2 sm:self-end">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="gap-2"
-                              onClick={() => {
-                                void copyGuideUrl(guide.slug, guide.title);
-                              }}
-                            >
-                              <Copy className="h-3.5 w-3.5" />
-                              Copy query
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="gap-2"
-                              onClick={() => {
-                                void shareGuide(guide.slug, guide.title);
-                              }}
-                            >
-                              <Share2 className="h-3.5 w-3.5" />
-                              Share guide
-                            </Button>
-                          </div>
-                        </div>
+                        <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-muted-foreground">
+                          {t(`guide.sub.${guide.slug}`, guide.subheading)}
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                </section>
-              );
-            })}
-          </div>
 
-          <div className="rounded-xl border border-primary/20 bg-primary/5 p-6 text-center space-y-3 overflow-hidden">
-            <h2 className="text-lg font-semibold text-foreground">
+                      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 lg:col-span-4 lg:justify-end">
+                        <Link
+                          to={`/search/${encodeURIComponent(guide.searchQuery)}`}
+                          className="min-h-[36px] font-mono text-[11px] tracking-[0.16em] text-foreground underline decoration-border underline-offset-[6px] transition-colors hover:decoration-foreground"
+                        >
+                          TRY → "{guide.searchQuery}"
+                        </Link>
+                        <Link
+                          to={`/guides/${guide.slug}`}
+                          className="min-h-[36px] font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                          Read guide →
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void copyGuideQuery(guide.slug, guide.title);
+                          }}
+                          className="min-h-[36px] font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground/70 transition-colors hover:text-foreground"
+                        >
+                          Copy query
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+
+        <section className="mt-16 border-t border-border/60 pt-10">
+          <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
+            <h2 className="font-display text-2xl font-extrabold uppercase tracking-tight text-foreground lg:col-span-7">
               {t('guides.readyToSearch')}
             </h2>
-            <p className="text-sm text-muted-foreground">
-              {t('guides.readyToSearchDesc')}
-            </p>
-            <Link
-              to="/"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-medium text-sm shadow-sm hover:opacity-90 transition-opacity"
-            >
-              {t('guides.startSearching')}
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+            <div className="lg:col-span-5">
+              <p className="text-sm text-muted-foreground">
+                {t('guides.readyToSearchDesc')}
+              </p>
+              <Link
+                to="/"
+                className="mt-4 inline-block font-mono text-[11px] uppercase tracking-[0.26em] text-foreground underline decoration-border underline-offset-[6px] transition-colors hover:decoration-foreground"
+              >
+                {t('guides.startSearching')} →
+              </Link>
+            </div>
           </div>
-        </div>
+        </section>
       </main>
 
       <Footer />
