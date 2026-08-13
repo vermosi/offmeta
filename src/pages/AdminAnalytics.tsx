@@ -59,6 +59,7 @@ import { AnalyticsChartsSection } from '@/pages/admin-analytics/components/Analy
 import { FeedbackQueuePanel } from '@/pages/admin-analytics/components/FeedbackQueuePanel';
 import { TranslationRulesPanel } from '@/pages/admin-analytics/components/TranslationRulesPanel';
 import { ErrorMonitorPanel } from '@/pages/admin-analytics/components/ErrorMonitorPanel';
+import { SemrushPanel } from '@/pages/admin-analytics/components/SemrushPanel';
 
 import { exportToCsv } from '@/pages/admin-analytics/utils/exportCsv';
 
@@ -334,6 +335,9 @@ export default function AdminAnalytics() {
           {/* Feedback queue */}
           {/* Error monitor + automated repairs */}
           <ErrorMonitorPanel />
+
+          {/* Semrush organic visibility + backlinks */}
+          <SemrushPanel />
 
           <FeedbackQueuePanel
 
