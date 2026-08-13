@@ -199,6 +199,19 @@ serve(withLogging('price-snapshot', async (req: Request): Promise<Response> => {
 
     log.info(`Captured ${snapshots.length} price snapshots`);
 
+    // A run that tracked cards but captured nothing is a silent failure —
+    // surface it so the auto-fix/watchdog loop can act on it.
+    if (snapshots.length === 0 && cardList.length > 0) {
+      await reportEdgeError({
+        source: 'price-snapshot',
+        errorType: 'price_snapshot_empty_capture',
+        message: `Tracked ${cardList.length} cards but captured 0 price snapshots`,
+        severity: 'error',
+        context: { trackedCards: cardList.length, neededScryfall: needScryfall.length },
+      });
+    }
+
+
     return new Response(
       JSON.stringify({
         success: true,
