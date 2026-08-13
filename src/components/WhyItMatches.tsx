@@ -10,7 +10,7 @@
  */
 
 import { useTranslation } from '@/lib/i18n';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/core/utils';
 import type { WhyItMatches as WhyItMatchesReport } from '@/lib/search/whyItMatches';
 
 interface WhyItMatchesProps {
