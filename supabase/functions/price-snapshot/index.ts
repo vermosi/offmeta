@@ -131,12 +131,20 @@ serve(withLogging('price-snapshot', async (req: Request): Promise<Response> => {
       }
     }
 
+    // Automatic backfill: pull back stale and previously-failed cards.
+    const backfill = await collectBackfillTargets(supabase);
+    for (const [name, id] of backfill.names) {
+      if (!uniqueCards.has(name)) uniqueCards.set(name, id);
+    }
+    log.info(`Backfill targets: ${backfill.names.size} (errors: ${backfill.errorIds.length})`);
+
     const cardList = Array.from(uniqueCards.entries());
     log.info(`Tracking ${cardList.length} cards`);
 
     if (cardList.length === 0) {
-      return new Response(JSON.stringify({ success: true, snapshotCount: 0 }), { status: 200, headers });
+      return new Response(JSON.stringify({ success: true, snapshotCount: 0, backfilled: 0 }), { status: 200, headers });
     }
+
 
     // ── Try local cards table for prices first ────────────────────
     const snapshots: Array<{
