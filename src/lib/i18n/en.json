@@ -1192,6 +1192,7 @@
   "search.hint": "Type your search query and press Enter or click Search",
   "search.inputLabel": "Search for Magic cards using natural language",
   "search.label": "Card search",
+  "search.moreExamples": "More",
   "search.phaseFetching": "Fetching cards…",
   "search.phaseTranslating": "Translating query…",
   "search.placeholder": "budget board wipes under $5",
