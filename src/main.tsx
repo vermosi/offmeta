@@ -68,6 +68,11 @@ function handleChunkError(reason: unknown) {
 window.addEventListener('error', (e) => handleChunkError(e.error ?? e.message));
 window.addEventListener('unhandledrejection', (e) => handleChunkError(e.reason));
 
+// The static SEO shell in index.html ships an <h1> and internal links for
+// crawlers that do not run JS. Once React mounts it would be a duplicate <h1>,
+// so remove it from the rendered DOM.
+document.getElementById('seo-content')?.remove();
+
 createRoot(document.getElementById('root')!).render(<App />);
 
 // The app booted successfully — clear the reload budget so a future stale
