@@ -249,7 +249,4 @@ describe('Index – search flow', () => {
       expect(document.title).toContain('treasure');
     });
   });
-
-    },
-  );
 });
