@@ -44,6 +44,15 @@ const SCANNED_EXTENSIONS = new Set(['.ts', '.tsx', '.css']);
 const SKIPPED_DIRS = new Set(['node_modules', 'dist', 'coverage', '.git']);
 const APPROVED_MTG_MARKER = 'APPROVED_MTG_COLOR_SYMBOL_MAPPING';
 
+/**
+ * Generated data modules hold Scryfall tag slugs (e.g. "protection-from-black")
+ * that look like Tailwind classes but are never rendered as class names.
+ */
+const GENERATED_DATA_FILES = [
+  /-vocabulary\.ts$/,
+  /(^|\/)src\/data\//,
+];
+
 function extensionOf(path: string) {
   const dotIndex = path.lastIndexOf('.');
   return dotIndex >= 0 ? path.slice(dotIndex) : '';
@@ -67,6 +76,8 @@ describe('Tailwind semantic color tokens', () => {
     const violations = collectFiles(SRC_ROOT).flatMap((file) => {
       const repoPath = relative(REPO_ROOT, file);
       if (repoPath === THIS_FILE) return [];
+      if (GENERATED_DATA_FILES.some((pattern) => pattern.test(repoPath)))
+        return [];
 
       return readFileSync(file, 'utf8')
         .split('\n')

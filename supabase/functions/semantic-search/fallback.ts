@@ -2,8 +2,74 @@ import { buildDeterministicIntent } from './deterministic/index.ts';
 import { validateQuery } from './validation.ts';
 
 /**
- * Builds a fallback Scryfall query using deterministic rules and basic transformations.
- * Used when AI translation remains unavailable or fails.
+ * Filler words that carry no Scryfall meaning. Left bare in a query they act
+ * as an implicit card-name match and produce nonsense results.
+ */
+const BARE_WORD_STOPWORDS = new Set([
+  'a', 'about', 'all', 'an', 'and', 'any', 'are', 'art', 'as', 'at', 'be',
+  'best', 'but', 'by', 'can', 'card', 'cards', 'depicted', 'do', 'does', 'each',
+  'example', 'find', 'for', 'from', 'give', 'gives', 'good', 'has', 'have',
+  'how', 'i', 'if', 'in', 'is', 'it', 'its', 'kind', 'like', 'looking', 'make',
+  'makes', 'me', 'more', 'most', 'my', 'need', 'of', 'on', 'or', 'otag', 'our',
+  'out', 'show', 'some', 'something', 'sort', 'tag', 'that', 'the',
+  'their', 'them', 'then', 'there', 'these', 'they', 'thing', 'things', 'this',
+  'those', 'to', 'up', 'use', 'used', 'want', 'was', 'what', 'when', 'which',
+  'who', 'will', 'with', 'would', 'you', 'your',
+]);
+
+/** Maximum number of leftover words promoted to oracle-text constraints. */
+const MAX_BARE_WORD_TERMS = 3;
+
+/**
+ * Converts leftover natural-language words into explicit oracle-text terms so
+ * a fallback query never leaks raw prose into Scryfall (where bare words are
+ * treated as a card-name match).
+ */
+export function wrapBareWords(segment: string): string {
+  const parts = segment.split(/\s+/).filter(Boolean);
+  const output: string[] = [];
+  let oracleTerms = 0;
+
+  for (const part of parts) {
+    // Preserve anything that is already Scryfall syntax or grouping.
+    if (/[:=<>()"/]/.test(part) || /^-/.test(part)) {
+      output.push(part);
+      continue;
+    }
+    const word = part.replace(/[^a-z0-9'-]/gi, '').toLowerCase();
+    // Boolean operators are query structure, not prose.
+    if (word === 'or' || word === 'and' || word === 'not') {
+      output.push(word);
+      continue;
+    }
+    if (!word || word.length < 3 || BARE_WORD_STOPWORDS.has(word)) continue;
+    if (oracleTerms >= MAX_BARE_WORD_TERMS) continue;
+    output.push(`o:"${word}"`);
+    oracleTerms += 1;
+  }
+
+  // Drop dangling/duplicated boolean operators left behind by removed prose.
+  const isOperator = (value: string) =>
+    value === 'or' || value === 'and' || value === 'not';
+  const cleaned: string[] = [];
+  for (const token of output) {
+    if (isOperator(token)) {
+      const previous = cleaned[cleaned.length - 1];
+      if (!previous || isOperator(previous) || previous.endsWith('(')) continue;
+    }
+    cleaned.push(token);
+  }
+  while (cleaned.length > 0 && isOperator(cleaned[cleaned.length - 1])) {
+    cleaned.pop();
+  }
+
+  return cleaned.join(' ').trim();
+}
+
+
+/**
+ * Builds a fallback Scryfall query using deterministic rules and basic
+ * transformations. Used when AI translation remains unavailable or fails.
  */
 export function buildFallbackQuery(
   query: string,
@@ -429,12 +495,14 @@ export function buildFallbackQuery(
         remainingQuery = remainingQuery.replace(pattern, replacement);
       }
     }
+    remainingQuery = wrapBareWords(remainingQuery);
   }
 
   fallbackQuery = [fallbackQuery, remainingQuery]
     .filter(Boolean)
     .join(' ')
     .trim();
+
 
   // Apply filters
   if (filters?.format) {

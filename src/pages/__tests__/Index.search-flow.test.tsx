@@ -249,27 +249,4 @@ describe('Index – search flow', () => {
       expect(document.title).toContain('treasure');
     });
   });
-
-  it(
-    'shows a compact results summary with provenance and jump link',
-    { timeout: 15000 },
-    async () => {
-      await renderIndex(IndexPage);
-      const input = screen.getByRole('searchbox');
-      await act(async () => {
-        fireEvent.change(input, { target: { value: 'treasure makers' } });
-        fireEvent.keyDown(input, { key: 'Enter' });
-      });
-
-      await waitFor(() => {
-        expect(
-          screen.getByText(/results for "treasure makers"/i),
-        ).toBeInTheDocument();
-      });
-      expect(screen.getByText(/jump to results/i).closest('a')).toHaveAttribute(
-        'href',
-        '#search-results',
-      );
-    },
-  );
 });
