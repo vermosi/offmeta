@@ -313,6 +313,18 @@ export function buildDeterministicIntent(query: string, options?: { isKnownCardN
     return { intent: emptyIntent(), deterministicQuery: setMatch.query };
   }
 
+  // Mixed intent: a set name plus card criteria ("the hobbit red dwarf").
+  // Scope the rest of the parse to that set instead of losing either half.
+  const setPhrase = matchSetPhrase(query);
+  if (setPhrase) {
+    const rest = buildDeterministicIntent(setPhrase.remainder, options);
+    const restQuery = rest.deterministicQuery.trim();
+    return {
+      intent: rest.intent,
+      deterministicQuery: restQuery ? `${setPhrase.query} ${restQuery}` : setPhrase.query,
+    };
+  }
+
   // Short-circuit: if the query is a known card name (DB lookup) OR heuristic match, use name search
   if (options?.isKnownCardName || isLikelyCardName(query)) {
     const trimmed = query.trim();
