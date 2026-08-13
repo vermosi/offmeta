@@ -20,6 +20,15 @@ import { intentFromScryfallQuery } from '@/lib/search/whyItMatches';
 import type { SearchIntent } from '@/types/search';
 import { buildInterpretation } from '@/lib/search/interpretation';
 
+const COLOR_NAMES: Record<string, string> = {
+  W: 'white',
+  U: 'blue',
+  B: 'black',
+  R: 'red',
+  G: 'green',
+  C: 'colorless',
+};
+
 interface SearchDeskHeaderProps {
   /** Plain-English query typed by the user. */
   originalQuery: string;
