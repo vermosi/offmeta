@@ -213,12 +213,23 @@ export function validateQuery(query: string): {
     .replace(/\s+/g, ' ')
     .trim();
 
+  // Modern Oracle wording dropped "the battlefield" from enter triggers, so an
+  // exact phrase search now matches almost nothing. Broaden it to both wordings.
+  if (/o:"enters the battlefield"/i.test(sanitized)) {
+    sanitized = sanitized.replace(
+      /o:"enters the battlefield"/gi,
+      '(o:"enters the battlefield" or o:"enters")',
+    );
+    issues.push('Broadened legacy enters-the-battlefield wording');
+  }
+
   // Normalize boolean precedence (wrap OR groups)
   const normalizedOr = normalizeOrGroups(sanitized);
   if (normalizedOr !== sanitized) {
     sanitized = normalizedOr;
     issues.push('Normalized OR groups with parentheses');
   }
+
 
   // Enforce max length
   if (sanitized.length > 500) {
@@ -347,6 +358,12 @@ export function validateQuery(query: string): {
     issues.push('Added missing closing quote');
   }
 
+  const strippedBareWords = stripBareWordTokens(sanitized);
+  if (strippedBareWords !== sanitized) {
+    sanitized = strippedBareWords;
+    issues.push('Removed untranslated plain-text words');
+  }
+
   if (sanitized.length > 500) {
     sanitized = sanitized.substring(0, 500);
   }
@@ -355,6 +372,55 @@ export function validateQuery(query: string): {
 
   return { valid: issues.length === 0, sanitized, issues };
 }
+
+/**
+ * Removes leftover plain-English words from an otherwise structured query.
+ *
+ * Scryfall treats a bare word as a card-name filter, so residue such as
+ * `c=b id=b lots of black pips` matches nothing. When the query already
+ * contains at least one operator clause, untranslated words are dropped
+ * rather than allowed to zero out the result set.
+ */
+export function stripBareWordTokens(query: string): string {
+  const tokens: string[] = [];
+  let current = '';
+  let inQuote = false;
+  let depth = 0;
+
+  for (const char of query) {
+    if (char === '"') inQuote = !inQuote;
+    if (!inQuote && char === '(') depth++;
+    if (!inQuote && char === ')') depth = Math.max(0, depth - 1);
+    if (!inQuote && depth === 0 && char === ' ') {
+      if (current) tokens.push(current);
+      current = '';
+      continue;
+    }
+    current += char;
+  }
+  if (current) tokens.push(current);
+
+  const isBareWord = (token: string) =>
+    /^[a-zA-Z][a-zA-Z'-]*$/.test(token) &&
+    !/^(or|and|not)$/i.test(token);
+
+  const hasOperatorClause = tokens.some(
+    (token) => !isBareWord(token) && token.trim().length > 0,
+  );
+  if (!hasOperatorClause) return query;
+
+  const kept = tokens.filter((token) => !isBareWord(token));
+  const rebuilt = kept
+    .join(' ')
+    .replace(/\b(or|and)(\s+(or|and))+\b/gi, '$1')
+    .replace(/^\s*(or|and)\b/i, '')
+    .replace(/\b(or|and)\s*$/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return rebuilt || query;
+}
+
 
 /**
  * Normalize OR groups by wrapping them in parentheses for Scryfall.
