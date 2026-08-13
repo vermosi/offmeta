@@ -4,8 +4,6 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Search, Sparkles } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
 const DEMO_QUERY = 'budget board wipes under $5';
