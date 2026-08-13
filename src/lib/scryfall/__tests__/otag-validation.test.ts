@@ -5,7 +5,7 @@ import {
   isKnownOracleTag,
   suggestOracleTags,
   validateOtags,
-} from './otagValidation.ts';
+} from '../../../../supabase/functions/_shared/otagValidation.ts';
 
 describe('otag validation', () => {
   it('extracts otag, oracletag and function values', () => {
