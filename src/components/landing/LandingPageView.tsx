@@ -6,8 +6,8 @@
 
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
 import { SkipLinks } from '@/components/SkipLinks';
 import { PageSearchBar } from '@/components/PageSearchBar';
 import { applySeoMeta, buildBreadcrumbJsonLd, injectJsonLd } from '@/lib/seo';
