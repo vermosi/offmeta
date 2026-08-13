@@ -418,10 +418,12 @@ serve(
         JSON.stringify({ success: false, error: 'Self-heal run failed' }),
         {
           status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: jsonHeaders,
         },
       );
-      );
+    } finally {
+      await lease.release();
+    }
     } finally {
       await lease.release();
     }
