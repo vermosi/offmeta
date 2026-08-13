@@ -178,7 +178,7 @@ export const GUIDES: Guide[] = [
     title: 'MTG Keyword Ability Search',
     metaTitle: 'MTG Keywords List — Flying, Deathtouch & 100+ | OffMeta',
     metaDescription:
-      'Complete MTG keyword list: flying, deathtouch, haste, trample, lifelink, ward & 100+ more. Search every card with any keyword ability — no Scryfall syntax needed.',
+      'MTG keyword search: flying, deathtouch, haste, trample, lifelink, ward and 100+ more. Find any card with a keyword ability — no Scryfall syntax needed.',
     heading: 'Magic: The Gathering Keywords List & Search',
     subheading: 'Find any card by keyword ability — flying, deathtouch, trample, and 100+ more',
     intro: `Magic: The Gathering has over 100 keyword abilities. From evergreen staples like Flying, Haste, and Deathtouch to set-specific mechanics like Connive, Casualty, and Offspring — OffMeta maps all of them to Scryfall's dedicated keyword operator (kw:) for precise results. This is far more accurate than searching oracle text, which produces false positives. If you've been searching for a full list of MTG keywords or a way to search by keyword, this guide explains exactly how.`,
