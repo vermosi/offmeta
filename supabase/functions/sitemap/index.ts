@@ -134,6 +134,18 @@ serve(withLogging('sitemap', async (req) => {
 `;
     }
 
+    // Editorial landing pages (roles, problems, colors, commander, alternatives).
+    // Keep in sync with src/lib/landing/registry.ts (indexable pages only).
+    for (const path of LANDING_PAGES) {
+      xml += `  <url>
+    <loc>${BASE_URL}${path}</loc>
+    <lastmod>${today}</lastmod>
+  </url>
+`;
+    }
+
+
+
     // Curated search pages (high-value SEO targets)
     if (curatedSearches) {
       for (const search of curatedSearches) {
