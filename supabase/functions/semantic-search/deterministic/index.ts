@@ -10,6 +10,7 @@
 import type { ParsedIntent, SearchIR } from './types.ts';
 import { normalizeQuery } from './normalize.ts';
 import { matchSetQuery } from '../../_shared/setMatching.ts';
+import { matchArtTagQuery } from '../../_shared/artTagMatching.ts';
 import {
   parseCardsLike,
   parseSlangTerms,
