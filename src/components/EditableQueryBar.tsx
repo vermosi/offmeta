@@ -1,7 +1,8 @@
 /**
  * Editable query bar that shows the compiled Scryfall query above results.
- * Always visible, editable, with Re-run, Copy query, and Open in Scryfall buttons.
- * Mobile-optimized with icon-only buttons and dropdown menu.
+ * Always visible and editable: the input plus Re-run stay inline, while
+ * secondary actions (copy, open in Scryfall, regenerate) live in an overflow
+ * menu. Sharing lives in the results toolbar, not here.
  */
 
 import { useState, useCallback, memo } from 'react';
@@ -23,7 +24,6 @@ import {
   X,
   RotateCcw,
   MoreHorizontal,
-  Share2,
 } from 'lucide-react';
 import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n';
@@ -33,7 +33,6 @@ interface EditableQueryBarProps {
   confidence?: number;
   isLoading?: boolean;
   validationError?: string | null;
-  originalQuery?: string;
   onRerun: (editedQuery: string) => void;
   onRegenerate?: () => void;
 }
@@ -43,7 +42,6 @@ export const EditableQueryBar = memo(function EditableQueryBar({
   confidence,
   isLoading,
   validationError,
-  originalQuery,
   onRerun,
   onRegenerate,
 }: EditableQueryBarProps) {
@@ -51,7 +49,6 @@ export const EditableQueryBar = memo(function EditableQueryBar({
   const [editedQuery, setEditedQuery] = useState(scryfallQuery);
   const [isEditing, setIsEditing] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [shared, setShared] = useState(false);
 
   // Sync with incoming query changes (render-phase adjustment)
   const [prevScryfallQuery, setPrevScryfallQuery] = useState(scryfallQuery);
@@ -78,34 +75,6 @@ export const EditableQueryBar = memo(function EditableQueryBar({
     const url = `https://scryfall.com/search?q=${encodeURIComponent(editedQuery)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   }, [editedQuery]);
-
-  const handleShare = useCallback(async () => {
-    const shareQuery = originalQuery || editedQuery;
-    const shareUrl = `${window.location.origin}/?q=${encodeURIComponent(shareQuery)}`;
-    const shareData = {
-      title: `${shareQuery} — OffMeta MTG Search`,
-      text: `Check out these Magic cards: "${shareQuery}"`,
-      url: shareUrl,
-    };
-
-    try {
-      if (navigator.share && navigator.canShare?.(shareData)) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(shareUrl);
-        setShared(true);
-        toast.success(t('queryBar.linkCopied', 'Link copied!'));
-        setTimeout(() => setShared(false), 2000);
-      }
-    } catch (err) {
-      if ((err as Error)?.name !== 'AbortError') {
-        await navigator.clipboard.writeText(shareUrl);
-        setShared(true);
-        toast.success(t('queryBar.linkCopied', 'Link copied!'));
-        setTimeout(() => setShared(false), 2000);
-      }
-    }
-  }, [originalQuery, editedQuery, t]);
 
   const handleRerun = useCallback(() => {
     if (!editedQuery.trim()) {
@@ -136,63 +105,20 @@ export const EditableQueryBar = memo(function EditableQueryBar({
       className="w-full mx-auto space-y-2"
       style={{ maxWidth: 'clamp(320px, 90vw, 672px)' }}
     >
-      {/* Header - simplified */}
-      <div className="flex items-center justify-between px-1">
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="text-muted-foreground">
-            {t('queryBar.label', 'Scryfall query · click to edit')}
+      {/* Header — status only; actions live in the overflow menu */}
+      <div className="flex items-center gap-2 px-1 text-xs">
+        <span className="text-muted-foreground">
+          {t('queryBar.label', 'Scryfall query · click to edit')}
+        </span>
+        {showConfidenceWarning && (
+          <span className="text-warning font-medium">
+            {t('queryBar.lowConfidence', 'Low confidence')}
           </span>
-          {showConfidenceWarning && (
-            <span className="text-warning font-medium">
-              {t('queryBar.lowConfidence', 'Low confidence')}
-            </span>
-          )}
-          {hasChanges && (
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20">
-              {t('queryBar.edited', 'edited')}
-            </span>
-          )}
-        </div>
-
-        {/* Desktop: inline buttons; Mobile: dropdown menu */}
-        <div className="hidden sm:flex items-center gap-1">
-          {onRegenerate && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onRegenerate}
-              className="h-6 px-2 text-xs gap-1 text-muted-foreground hover:text-foreground"
-            >
-              <RotateCcw className="h-3 w-3" />
-              {t('queryBar.regenerate', 'Regenerate')}
-            </Button>
-          )}
-        </div>
-
-        {/* Mobile: dropdown menu for secondary actions */}
-        {onRegenerate && (
-          <div className="sm:hidden">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  aria-label={t('queryBar.moreOptions', 'More options')}
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                {onRegenerate && (
-                  <DropdownMenuItem onClick={onRegenerate}>
-                    <RotateCcw className="h-4 w-4 mr-2" />
-                    {t('queryBar.regenerate', 'Regenerate')}
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+        )}
+        {hasChanges && (
+          <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20">
+            {t('queryBar.edited', 'edited')}
+          </span>
         )}
       </div>
 
@@ -204,9 +130,9 @@ export const EditableQueryBar = memo(function EditableQueryBar({
         </div>
       )}
 
-      {/* Editable query input - stacked layout on mobile */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-        <div className="relative flex-1">
+      {/* Query input + the only two query-focused actions */}
+      <div className="flex items-center gap-1.5">
+        <div className="relative flex-1 min-w-0">
           <Input
             value={editedQuery}
             onChange={(e) => {
@@ -246,64 +172,50 @@ export const EditableQueryBar = memo(function EditableQueryBar({
           )}
         </div>
 
-        {/* Action buttons - full width row on mobile */}
-        <div className="flex items-center gap-1.5 sm:gap-1">
-          <Button
-            variant={hasChanges ? 'accent' : 'secondary'}
-            size="sm"
-            onClick={handleRerun}
-            disabled={isLoading || !editedQuery.trim()}
-            className="h-10 px-3 gap-1.5"
-            title={t('queryBar.rerunTitle', 'Re-run query (Enter)')}
-          >
-            <Play className="h-3.5 w-3.5" />
-            <span>{t('queryBar.rerun', 'Re-run')}</span>
-          </Button>
+        <Button
+          variant={hasChanges ? 'accent' : 'secondary'}
+          size="sm"
+          onClick={handleRerun}
+          disabled={isLoading || !editedQuery.trim()}
+          className="h-10 px-3 gap-1.5 shrink-0"
+          title={t('queryBar.rerunTitle', 'Re-run query (Enter)')}
+        >
+          <Play className="h-3.5 w-3.5" />
+          <span>{t('queryBar.rerun', 'Re-run')}</span>
+        </Button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCopy}
-            className="h-10 w-10 sm:w-auto sm:px-2.5 p-0 sm:p-2"
-            title={t('queryBar.copy', 'Copy query')}
-          >
-            {copied ? (
-              <Check className="h-3.5 w-3.5" />
-            ) : (
-              <Copy className="h-3.5 w-3.5" />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10 w-10 p-0 shrink-0"
+              aria-label={t('queryBar.moreOptions', 'More options')}
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={handleCopy}>
+              {copied ? (
+                <Check className="h-4 w-4 mr-2" />
+              ) : (
+                <Copy className="h-4 w-4 mr-2" />
+              )}
+              {t('queryBar.copy', 'Copy query')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleOpenInScryfall}>
+              <ExternalLink className="h-4 w-4 mr-2" />
+              {t('queryBar.openInScryfall', 'Open in Scryfall')}
+            </DropdownMenuItem>
+            {onRegenerate && (
+              <DropdownMenuItem onClick={onRegenerate}>
+                <RotateCcw className="h-4 w-4 mr-2" />
+                {t('queryBar.regenerate', 'Regenerate')}
+              </DropdownMenuItem>
             )}
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleShare}
-            className="h-10 px-2.5 gap-1.5"
-            title={t('queryBar.shareTitle', 'Share this search')}
-          >
-            {shared ? (
-              <Check className="h-3.5 w-3.5" />
-            ) : (
-              <Share2 className="h-3.5 w-3.5" />
-            )}
-            <span className="hidden sm:inline">
-              {t('queryBar.share', 'Share')}
-            </span>
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleOpenInScryfall}
-            className="h-10 px-2.5 gap-1.5"
-            title={t('queryBar.openInScryfall', 'Open in Scryfall')}
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">
-              {t('queryBar.scryfall', 'Scryfall')}
-            </span>
-          </Button>
-        </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
