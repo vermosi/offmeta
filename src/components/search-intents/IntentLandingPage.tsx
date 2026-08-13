@@ -2,6 +2,7 @@ import { useEffect, type ComponentType } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { applySeoMeta, buildBreadcrumbJsonLd, injectJsonLd } from '@/lib/seo';
+import { Header } from '@/components/Header';
 
 export type IntentSearchLink = {
   title: string;
@@ -81,6 +82,7 @@ export function IntentLandingPage({
 
   return (
     <div className="min-h-screen bg-background">
+      <Header />
       <main className="mx-auto max-w-5xl px-4 py-8 sm:py-12">
         <nav
           className="mb-6 text-sm text-muted-foreground"
