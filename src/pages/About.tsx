@@ -8,7 +8,7 @@ import { useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Link } from 'react-router-dom';
-import { Search, Code2, BookOpen, Sparkles, TrendingUp } from 'lucide-react';
+
 import { useTranslation } from '@/lib/i18n';
 
 const ABOUT_META = {
