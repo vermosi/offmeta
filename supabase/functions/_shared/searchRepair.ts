@@ -61,8 +61,24 @@ export function isRepairableQuery(query: string): boolean {
   return true;
 }
 
-/** Ask Scryfall whether a candidate query actually returns cards. */
+/**
+ * Ask Scryfall whether a candidate query actually returns cards.
+ *
+ * Queries containing hallucinated `otag:` values are rejected locally — they
+ * always return zero cards on Scryfall, and the local rejection carries a
+ * precise reason (plus real tag suggestions) back into the repair prompt.
+ */
 export async function checkScryfall(query: string): Promise<ScryfallCheck> {
+  const otagCheck = validateOtags(query);
+  if (!otagCheck.valid) {
+    return {
+      ok: false,
+      totalCards: 0,
+      error: otagCheck.reason,
+      invalidOtags: otagCheck.unknownTags,
+    };
+  }
+
   try {
     const url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(
       `${query} game:paper`,
