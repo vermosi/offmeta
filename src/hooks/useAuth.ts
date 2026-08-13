@@ -98,6 +98,12 @@ export function useAuthProvider(): AuthContextValue {
     avatarUrl: null,
   });
 
+  // Keep the latest tracker in a ref so the auth subscription effect never
+  // re-subscribes when analytics identity changes.
+  const { trackEvent } = useAnalytics();
+  const trackEventRef = useRef(trackEvent);
+  trackEventRef.current = trackEvent;
+
   const fetchProfile = useCallback(async (userId: string) => {
     const { data } = await supabase
       .from('profiles')
