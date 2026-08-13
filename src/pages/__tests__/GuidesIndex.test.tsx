@@ -36,9 +36,11 @@ describe('GuidesIndex', () => {
     });
   });
 
-  it('renders the page title', () => {
+  it('renders the editorial masthead heading', () => {
     renderGuidesIndex();
-    expect(screen.getByText('Search Guides')).toBeInTheDocument();
+    const heading = screen.getByRole('heading', { level: 1 });
+    expect(heading).toHaveTextContent(/learn to find/i);
+    expect(heading).toHaveTextContent(/anything in magic/i);
   });
 
   it('renders 11 guide cards', () => {
@@ -50,30 +52,28 @@ describe('GuidesIndex', () => {
     expect(new Set(guideLinks).size).toBe(11);
   });
 
-  it('renders grouped level sections with jump links', () => {
+  it('renders a level section for every difficulty band', () => {
     renderGuidesIndex();
-    expect(
-      screen.getByRole('link', { name: /beginner\s*\(3\)/i }),
-    ).toHaveAttribute('href', '#guides.levelBeginner');
-    expect(
-      screen.getByRole('link', { name: /intermediate\s*\(3\)/i }),
-    ).toHaveAttribute('href', '#guides.levelIntermediate');
-    expect(
-      screen.getByRole('link', { name: /advanced\s*\(2\)/i }),
-    ).toHaveAttribute('href', '#guides.levelAdvanced');
-    expect(
-      screen.getByRole('link', { name: /expert\s*\(3\)/i }),
-    ).toHaveAttribute('href', '#guides.levelExpert');
+    for (const key of ['beginner', 'intermediate', 'advanced', 'expert']) {
+      expect(document.getElementById(key)).toBeInTheDocument();
+    }
   });
 
-  it('renders difficulty badges for all guides', () => {
+  it('renders difficulty filter buttons', () => {
     renderGuidesIndex();
-    expect(screen.getAllByText(/Beginner/i).length).toBeGreaterThanOrEqual(3);
-    expect(screen.getAllByText(/Intermediate/i).length).toBeGreaterThanOrEqual(
-      3,
+    for (const label of [
+      'All',
+      'Beginner',
+      'Intermediate',
+      'Advanced',
+      'Expert',
+    ]) {
+      expect(screen.getByRole('button', { name: label })).toBeInTheDocument();
+    }
+    expect(screen.getByRole('button', { name: 'All' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
     );
-    expect(screen.getAllByText(/Advanced/i).length).toBeGreaterThanOrEqual(2);
-    expect(screen.getAllByText(/Expert/i).length).toBeGreaterThanOrEqual(2);
   });
 
   it('renders guide titles', () => {
@@ -91,13 +91,10 @@ describe('GuidesIndex', () => {
     expect(screen.getByText(/"mono red creatures"/)).toBeInTheDocument();
   });
 
-  it('renders copy and share actions on guide cards', () => {
+  it('renders a copy-query action for every guide row', () => {
     renderGuidesIndex();
     expect(
       screen.getAllByRole('button', { name: /copy query/i }).length,
-    ).toBeGreaterThanOrEqual(10);
-    expect(
-      screen.getAllByRole('button', { name: /share guide/i }).length,
     ).toBeGreaterThanOrEqual(10);
   });
 
@@ -105,25 +102,30 @@ describe('GuidesIndex', () => {
     renderGuidesIndex();
     const breadcrumb = screen.getByLabelText('Breadcrumb');
     expect(breadcrumb).toBeInTheDocument();
-    expect(screen.getByText('Home')).toBeInTheDocument();
-    expect(screen.getByText('Guides')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'OffMeta' })).toHaveAttribute(
+      'href',
+      '/',
+    );
+    expect(screen.getByText('Field Guide')).toBeInTheDocument();
   });
 
-  it('renders the bottom CTA with Start Searching link', () => {
+  it('renders the closing CTA linking back to search', () => {
     renderGuidesIndex();
-    expect(screen.getByText('Ready to search?')).toBeInTheDocument();
-    expect(screen.getByText('Start Searching')).toBeInTheDocument();
+    const cta = screen
+      .getAllByRole('link')
+      .filter((el) => /start searching/i.test(el.textContent ?? ''));
+    expect(cta.length).toBeGreaterThan(0);
+    expect(cta[0]).toHaveAttribute('href', '/');
   });
 
-  it('renders guides sorted by level (ascending)', () => {
+  it('orders level sections from beginner to expert', () => {
     renderGuidesIndex();
-    const badges = screen.getAllByText(/Level \d+/);
-    const levels = badges.map((el) => {
-      const match = el.textContent?.match(/Level (\d+)/);
-      return match ? parseInt(match[1], 10) : 0;
-    });
-    const sortedLevels = [...levels].sort((a, b) => a - b);
-    expect(levels).toEqual(sortedLevels);
+    const order = Array.from(document.querySelectorAll('section[id]'))
+      .map((el) => el.id)
+      .filter((id) =>
+        ['beginner', 'intermediate', 'advanced', 'expert'].includes(id),
+      );
+    expect(order).toEqual(['beginner', 'intermediate', 'advanced', 'expert']);
   });
 
   it('sets the document title', () => {
@@ -146,6 +148,6 @@ describe('GuidesIndex', () => {
 
   it('renders guide count text', () => {
     renderGuidesIndex();
-    expect(screen.getByText(/11 guides/)).toBeInTheDocument();
+    expect(screen.getByText(/11 Guides \/ Beginner/i)).toBeInTheDocument();
   });
 });

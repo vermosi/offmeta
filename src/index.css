@@ -249,7 +249,6 @@
     @apply bg-background text-foreground antialiased;
     font-family:
       'Manrope',
-      'Inter',
       system-ui,
       -apple-system,
       BlinkMacSystemFont,
@@ -265,7 +264,8 @@
   h4,
   h5,
   h6 {
-    font-family: 'Archivo', 'Manrope', system-ui, sans-serif;
+    font-family: 'Archivo', system-ui, -apple-system, sans-serif;
+
     @apply font-semibold tracking-tight;
     letter-spacing: -0.02em;
   }
