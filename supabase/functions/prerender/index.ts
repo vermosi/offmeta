@@ -378,7 +378,7 @@ function buildFullHtml(opts: FullHtmlOptions): string {
 
   <link rel="icon" type="image/svg+xml" href="${SITE_URL}/favicon.svg" />
   <style>
-    body { font-family: system-ui, -apple-system, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; color: #e0e0e0; background: #0a0a0a; }
+    body { font-family: 'Manrope', system-ui, -apple-system, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; color: #e0e0e0; background: #0a0a0a; }
     a { color: #7c3aed; }
     h1 { font-size: 1.5rem; }
     ol { padding-left: 1.2rem; }
