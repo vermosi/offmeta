@@ -106,7 +106,11 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
             {view === 'signup' && 'Create Account'}
             {view === 'forgot' && 'Reset Password'}
           </DialogTitle>
+          {description && (
+            <p className="text-sm text-muted-foreground">{description}</p>
+          )}
         </DialogHeader>
+
 
         {success ? (
           <div className="flex flex-col items-center gap-3 py-6 text-center">
