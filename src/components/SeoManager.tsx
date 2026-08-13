@@ -12,6 +12,7 @@ import {
   
   injectJsonLd,
   buildSearchResultsJsonLd,
+  buildSeoTitle,
 } from '@/lib/seo';
 import type { ScryfallCard } from '@/types/card';
 
@@ -91,7 +92,8 @@ export function SeoManager({
       displayCards[0]?.image_uris?.art_crop ??
       displayCards[0]?.card_faces?.[0]?.image_uris?.art_crop;
 
-    // SEO title + description - must stay within 60 chars including suffix.
+    // SEO title + description - must stay within 60 chars including the
+    // " | OffMeta" suffix that applySeoMeta appends.
     const MAX_TITLE = 60;
     const candidates = [
       `${originalQuery} - MTG Card Search`,
@@ -99,8 +101,9 @@ export function SeoManager({
       `${originalQuery}`,
     ];
     const title =
-      candidates.find((c) => c.length <= MAX_TITLE) ??
+      candidates.find((c) => buildSeoTitle(c).length <= MAX_TITLE) ??
       buildCappedTitle(originalQuery, ' | OffMeta', MAX_TITLE);
+
     const desc = `Find ${totalCards} Magic: The Gathering cards matching "${originalQuery}" - off-meta picks, alternatives & synergies.`;
     applySeoMeta({
       title,
