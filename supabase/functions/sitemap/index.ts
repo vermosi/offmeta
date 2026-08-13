@@ -26,6 +26,11 @@ const STATIC_PAGES = [
   { loc: '/docs' },
   { loc: '/docs/syntax' },
   { loc: '/about' },
+  { loc: '/search-intents' },
+  { loc: '/search-intents/budget' },
+  { loc: '/search-intents/hate' },
+  { loc: '/search-intents/similar' },
+  { loc: '/cards-like' },
 ];
 
 // Static guide slugs — keep in sync with src/data/guides.ts
@@ -82,6 +87,17 @@ function slugify(name: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
+}
+
+/**
+ * Emit <lastmod> only from an authoritative, row-specific timestamp.
+ * Never fall back to the generation date — see sitemap lastmod policy.
+ */
+function lastmodLine(updatedAt?: string | null): string {
+  if (!updatedAt) return '';
+  const parsed = new Date(updatedAt);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return `    <lastmod>${parsed.toISOString().split('T')[0]}</lastmod>\n`;
 }
 
 function escapeXml(str: string): string {
@@ -154,7 +170,6 @@ serve(withLogging('sitemap', async (req) => {
     for (const page of STATIC_PAGES) {
       xml += `  <url>
     <loc>${BASE_URL}${page.loc}</loc>
-    <lastmod>${today}</lastmod>
   </url>
 `;
     }
@@ -163,7 +178,6 @@ serve(withLogging('sitemap', async (req) => {
     for (const slug of GUIDE_SLUGS) {
       xml += `  <url>
     <loc>${BASE_URL}/guides/${escapeXml(slug)}</loc>
-    <lastmod>${today}</lastmod>
   </url>
 `;
     }
@@ -173,7 +187,6 @@ serve(withLogging('sitemap', async (req) => {
     for (const path of LANDING_PAGES) {
       xml += `  <url>
     <loc>${BASE_URL}${path}</loc>
-    <lastmod>${today}</lastmod>
   </url>
 `;
     }
@@ -183,13 +196,9 @@ serve(withLogging('sitemap', async (req) => {
     // Curated search pages (high-value SEO targets)
     if (curatedSearches) {
       for (const search of curatedSearches) {
-        const lastmod = search.updated_at
-          ? new Date(search.updated_at).toISOString().split('T')[0]
-          : today;
         xml += `  <url>
     <loc>${BASE_URL}/search/${escapeXml(search.slug)}</loc>
-    <lastmod>${lastmod}</lastmod>
-  </url>
+${lastmodLine(search.updated_at)}  </url>
 `;
       }
     }
@@ -198,13 +207,9 @@ serve(withLogging('sitemap', async (req) => {
     if (cards) {
       for (const card of cards) {
         const slug = slugify(card.name);
-        const lastmod = card.updated_at
-          ? new Date(card.updated_at).toISOString().split('T')[0]
-          : today;
         xml += `  <url>
     <loc>${BASE_URL}/cards/${escapeXml(slug)}</loc>
-    <lastmod>${lastmod}</lastmod>
-  </url>
+${lastmodLine(card.updated_at)}  </url>
 `;
       }
     }
@@ -214,13 +219,9 @@ serve(withLogging('sitemap', async (req) => {
     // AI SEO pages (high priority — AI-optimized content)
     if (seoPages) {
       for (const page of seoPages) {
-        const lastmod = page.updated_at
-          ? new Date(page.updated_at).toISOString().split('T')[0]
-          : today;
         xml += `  <url>
     <loc>${BASE_URL}/ai/${escapeXml(page.slug)}</loc>
-    <lastmod>${lastmod}</lastmod>
-  </url>
+${lastmodLine(page.updated_at)}  </url>
 `;
       }
     }
