@@ -229,6 +229,62 @@ export function SelfHealPanel() {
               Nothing to repair in the last run.
             </p>
           )}
+
+          {buckets.length || diagnosticItems.length ? (
+            <div className="space-y-2 border-t border-border/60 pt-3">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Why repairs fail (last 7 days ·{' '}
+                {diagnostics?.totals?.unrepairable ?? 0} unrepairable)
+              </h3>
+
+              {buckets.length ? (
+                <ul className="flex flex-wrap gap-1.5">
+                  {buckets.map((bucket) => (
+                    <li key={bucket.code}>
+                      <Badge variant="outline" className="font-normal">
+                        {REASON_LABELS[bucket.code] ?? bucket.code} ·{' '}
+                        {bucket.attempt_count} attempts / {bucket.final_count} final
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+
+              {diagnosticItems.length ? (
+                <ul className="space-y-1.5">
+                  {diagnosticItems.map((item, index) => (
+                    <li
+                      key={`${item.query ?? 'item'}-${index}`}
+                      className="rounded-lg border border-border/60 bg-background/40 px-3 py-2 text-xs"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="destructive">
+                          {item.reason_code
+                            ? (REASON_LABELS[item.reason_code] ?? item.reason_code)
+                            : 'unknown'}
+                        </Badge>
+                        <span className="font-medium text-foreground">
+                          {item.query}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {item.attempt_count} attempts
+                        </span>
+                      </div>
+                      <code className="mt-1 block break-all text-muted-foreground">
+                        before: {item.before_query ?? '—'}
+                      </code>
+                      <code className="block break-all text-muted-foreground">
+                        after: {item.after_query ?? '—'}
+                      </code>
+                      {item.reason ? (
+                        <p className="mt-1 text-muted-foreground">{item.reason}</p>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          ) : null}
         </>
       )}
     </section>
