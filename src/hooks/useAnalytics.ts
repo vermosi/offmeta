@@ -49,6 +49,26 @@ const getSessionId = (): string => {
   return sessionId;
 };
 
+/**
+ * Durable per-browser visitor id. Unlike the session id (sessionStorage), this
+ * survives tab closes so retention / returning-searcher metrics can be computed
+ * server-side. Falls back to the session id when localStorage is unavailable.
+ */
+const VISITOR_ID_KEY = 'offmeta_visitor_id';
+
+export const getVisitorId = (): string => {
+  try {
+    let visitorId = localStorage.getItem(VISITOR_ID_KEY);
+    if (!visitorId) {
+      visitorId = `v-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 11)}`;
+      localStorage.setItem(VISITOR_ID_KEY, visitorId);
+    }
+    return visitorId;
+  } catch {
+    return getSessionId();
+  }
+};
+
 // ---------------------------------------------------------------------------
 // Bot detection
 // ---------------------------------------------------------------------------
@@ -594,6 +614,7 @@ export async function trackEventDirect(
     );
     const eventPayload: Record<string, string | number | boolean | null> = {
       ...sanitizedData,
+      visitor_id: getVisitorId(),
       searches_per_session: searchCount,
       ...(internal && { is_internal: true }),
       ...(utm.utm_source && { utm_source: utm.utm_source }),
@@ -674,6 +695,7 @@ export function useAnalytics() {
         const utm = utmRef.current;
         const eventPayload: Record<string, string | number | boolean | null> = {
           ...sanitizedData,
+          visitor_id: getVisitorId(),
           searches_per_session: searchCount,
           ...(internal && { is_internal: true }),
           ...(utm.utm_source && { utm_source: utm.utm_source }),
