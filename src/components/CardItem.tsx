@@ -33,7 +33,8 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 
-import type { MatchReason } from '@/lib/search/matchExplanation';
+import { WhyItMatches } from '@/components/WhyItMatches';
+import type { WhyItMatches as WhyItMatchesReport } from '@/lib/search/whyItMatches';
 
 interface CardItemProps {
   card: ScryfallCard;
@@ -42,8 +43,8 @@ interface CardItemProps {
   tabIndex?: number;
   isOwned?: boolean;
   sparklineData?: SparklinePoint[];
-  /** Short reasons explaining why this card matched the current query. */
-  matchReasons?: MatchReason[];
+  /** Deterministic report explaining why this card matched the current query. */
+  whyReport?: WhyItMatchesReport | null;
   /**
    * Optional handler invoked when the user clicks a match reason chip that
    * carries a Scryfall refine token. Receives the token to append to the
@@ -73,7 +74,7 @@ export const CardItem = memo(function CardItem({
   tabIndex = 0,
   isOwned,
   sparklineData,
-  matchReasons,
+  whyReport,
   onRefineWithMatch,
 }: CardItemProps) {
   const imageUrl = getCardImage(card, 'small');
