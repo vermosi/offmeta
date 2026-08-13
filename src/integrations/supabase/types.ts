@@ -92,6 +92,38 @@ export type Database = {
         }
         Relationships: []
       }
+      card_ontology: {
+        Row: {
+          classified_at: string
+          dimension: string
+          matched_signature: string | null
+          oracle_id: string
+          tag_key: string
+        }
+        Insert: {
+          classified_at?: string
+          dimension: string
+          matched_signature?: string | null
+          oracle_id: string
+          tag_key: string
+        }
+        Update: {
+          classified_at?: string
+          dimension?: string
+          matched_signature?: string | null
+          oracle_id?: string
+          tag_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_ontology_tag_key_fkey"
+            columns: ["tag_key"]
+            isOneToOne: false
+            referencedRelation: "ontology_tags"
+            referencedColumns: ["tag_key"]
+          },
+        ]
+      }
       card_printings: {
         Row: {
           artist: string | null
@@ -380,6 +412,60 @@ export type Database = {
           holder?: string
           job_name?: string
           locked_at?: string
+        }
+        Relationships: []
+      }
+      ontology_tags: {
+        Row: {
+          created_at: string
+          description: string | null
+          dimension: string
+          exclusions: string[]
+          is_active: boolean
+          label: string
+          max_cmc: number | null
+          max_colors: number | null
+          min_cmc: number | null
+          min_colors: number | null
+          priority: number
+          signatures: string[]
+          tag_key: string
+          type_pattern: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          dimension: string
+          exclusions?: string[]
+          is_active?: boolean
+          label: string
+          max_cmc?: number | null
+          max_colors?: number | null
+          min_cmc?: number | null
+          min_colors?: number | null
+          priority?: number
+          signatures?: string[]
+          tag_key: string
+          type_pattern?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          dimension?: string
+          exclusions?: string[]
+          is_active?: boolean
+          label?: string
+          max_cmc?: number | null
+          max_colors?: number | null
+          min_cmc?: number | null
+          min_colors?: number | null
+          priority?: number
+          signatures?: string[]
+          tag_key?: string
+          type_pattern?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1039,6 +1125,10 @@ export type Database = {
         Args: { p_decision?: Json; p_key: string; p_ttl_seconds: number }
         Returns: Json
       }
+      classify_card_ontology: {
+        Args: { p_limit?: number; p_since?: string }
+        Returns: Json
+      }
       cleanup_expired_cache: { Args: never; Returns: undefined }
       compute_query_quality: {
         Args: {
@@ -1065,6 +1155,18 @@ export type Database = {
         Returns: number
       }
       get_ai_usage_stats: { Args: { days_back?: number }; Returns: Json }
+      get_card_ontology: {
+        Args: { p_oracle_ids: string[] }
+        Returns: {
+          description: string
+          dimension: string
+          label: string
+          matched_signature: string
+          oracle_id: string
+          priority: number
+          tag_key: string
+        }[]
+      }
       get_card_recommendations: {
         Args: {
           result_limit?: number
