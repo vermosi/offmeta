@@ -18,7 +18,7 @@ import { SaveSearchButton } from '@/components/SaveSearchButton';
 import { cn } from '@/lib/core/utils';
 import { intentFromScryfallQuery } from '@/lib/search/whyItMatches';
 import type { SearchIntent } from '@/types/search';
-import { buildInterpretation, type Constraint } from '@/lib/search/interpretation';
+import { buildInterpretation } from '@/lib/search/interpretation';
 
 interface SearchDeskHeaderProps {
   /** Plain-English query typed by the user. */
