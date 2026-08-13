@@ -20,9 +20,12 @@ type AuthView = 'signin' | 'signup' | 'forgot';
 interface AuthModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Contextual pitch, e.g. why signing in matters for the action just taken. */
+  description?: string;
 }
 
-export function AuthModal({ open, onOpenChange }: AuthModalProps) {
+export function AuthModal({ open, onOpenChange, description }: AuthModalProps) {
+
   const { signIn, signUp, resetPassword } = useAuth();
   const [view, setView] = useState<AuthView>('signin');
   const [email, setEmail] = useState('');
