@@ -1,7 +1,8 @@
 /**
  * Editable query bar that shows the compiled Scryfall query above results.
- * Always visible, editable, with Re-run, Copy query, and Open in Scryfall buttons.
- * Mobile-optimized with icon-only buttons and dropdown menu.
+ * Always visible and editable: the input plus Re-run stay inline, while
+ * secondary actions (copy, open in Scryfall, regenerate) live in an overflow
+ * menu. Sharing lives in the results toolbar, not here.
  */
 
 import { useState, useCallback, memo } from 'react';
@@ -23,7 +24,6 @@ import {
   X,
   RotateCcw,
   MoreHorizontal,
-  Share2,
 } from 'lucide-react';
 import { cn } from '@/lib/core/utils';
 import { useTranslation } from '@/lib/i18n';
@@ -33,7 +33,6 @@ interface EditableQueryBarProps {
   confidence?: number;
   isLoading?: boolean;
   validationError?: string | null;
-  originalQuery?: string;
   onRerun: (editedQuery: string) => void;
   onRegenerate?: () => void;
 }
@@ -43,7 +42,6 @@ export const EditableQueryBar = memo(function EditableQueryBar({
   confidence,
   isLoading,
   validationError,
-  originalQuery,
   onRerun,
   onRegenerate,
 }: EditableQueryBarProps) {
@@ -51,7 +49,6 @@ export const EditableQueryBar = memo(function EditableQueryBar({
   const [editedQuery, setEditedQuery] = useState(scryfallQuery);
   const [isEditing, setIsEditing] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [shared, setShared] = useState(false);
 
   // Sync with incoming query changes (render-phase adjustment)
   const [prevScryfallQuery, setPrevScryfallQuery] = useState(scryfallQuery);
@@ -78,34 +75,6 @@ export const EditableQueryBar = memo(function EditableQueryBar({
     const url = `https://scryfall.com/search?q=${encodeURIComponent(editedQuery)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   }, [editedQuery]);
-
-  const handleShare = useCallback(async () => {
-    const shareQuery = originalQuery || editedQuery;
-    const shareUrl = `${window.location.origin}/?q=${encodeURIComponent(shareQuery)}`;
-    const shareData = {
-      title: `${shareQuery} — OffMeta MTG Search`,
-      text: `Check out these Magic cards: "${shareQuery}"`,
-      url: shareUrl,
-    };
-
-    try {
-      if (navigator.share && navigator.canShare?.(shareData)) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(shareUrl);
-        setShared(true);
-        toast.success(t('queryBar.linkCopied', 'Link copied!'));
-        setTimeout(() => setShared(false), 2000);
-      }
-    } catch (err) {
-      if ((err as Error)?.name !== 'AbortError') {
-        await navigator.clipboard.writeText(shareUrl);
-        setShared(true);
-        toast.success(t('queryBar.linkCopied', 'Link copied!'));
-        setTimeout(() => setShared(false), 2000);
-      }
-    }
-  }, [originalQuery, editedQuery, t]);
 
   const handleRerun = useCallback(() => {
     if (!editedQuery.trim()) {

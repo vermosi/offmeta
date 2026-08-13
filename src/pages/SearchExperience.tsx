@@ -703,7 +703,6 @@ const Index = () => {
                       ).trim()}
                       confidence={lastSearchResult?.explanation?.confidence}
                       isLoading={isSearching}
-                      originalQuery={originalQuery}
                       onRerun={handleRerunEditedQuery}
                       onRegenerate={handleRegenerateTranslation}
                       validationError={
