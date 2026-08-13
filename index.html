@@ -164,40 +164,35 @@
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "WebApplication",
-        "name": "OffMeta",
-        "url": "https://offmeta.app/",
-        "description": "Natural language search translator for Magic: The Gathering cards. Describe what you need in plain English and get real card results from Scryfall.",
-        "applicationCategory": "UtilitiesApplication",
-        "operatingSystem": "Web",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD"
-        },
-        "browserRequirements": "Requires JavaScript",
-        "author": {
-          "@type": "Organization",
-          "name": "OffMeta"
-        }
-      }
-    </script>
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "OffMeta",
-        "url": "https://offmeta.app/",
-        "potentialAction": {
-          "@type": "SearchAction",
-          "target": {
-            "@type": "EntryPoint",
-            "urlTemplate": "https://offmeta.app/search/{search_term_string}"
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://offmeta.app/#organization",
+            "name": "OffMeta",
+            "url": "https://offmeta.app/",
+            "logo": "https://offmeta.app/logo.svg"
           },
-          "query-input": "required name=search_term_string"
-        }
+          {
+            "@type": "WebSite",
+            "@id": "https://offmeta.app/#website",
+            "name": "OffMeta",
+            "url": "https://offmeta.app/",
+            "description": "Natural language search translator for Magic: The Gathering cards. Describe what you need in plain English and get real card results from Scryfall.",
+            "publisher": { "@id": "https://offmeta.app/#organization" },
+            "inLanguage": "en",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://offmeta.app/search/{search_term_string}"
+              },
+              "query-input": "required name=search_term_string"
+            }
+          }
+        ]
       }
     </script>
+
     <!-- Critical inline CSS: prevents render-blocking on the main stylesheet -->
     <style>
       html, body { overscroll-behavior-y: contain; margin: 0; }
