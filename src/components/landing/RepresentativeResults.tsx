@@ -21,15 +21,19 @@ export function RepresentativeResults({
   query: string;
   label?: string;
 }) {
+  // Popularity ordering keeps these recognisable rather than alphabetical.
+  const orderedQuery = /\border:/.test(query) ? query : `${query} order:edhrec`;
+
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['landing-representative', query],
+    queryKey: ['landing-representative', orderedQuery],
     queryFn: async () => {
-      const result = await searchCards(query);
+      const result = await searchCards(orderedQuery);
       return result.data.slice(0, MAX_CARDS);
     },
     staleTime: 30 * 60 * 1000,
     retry: 1,
   });
+
 
   if (isError) {
     logger.debug?.('[Landing] representative results unavailable', { query });
