@@ -50,12 +50,15 @@ const MAX_CANDIDATES = 12;
 const MAX_ATTEMPTS = 2;
 /** A repair must return at least this many cards to be installed. */
 const MIN_RESULTS = 3;
+/** Exact-name (single-card) lookups should not be penalized for returning one match. */
+const MIN_RESULTS_EXACT_NAME = 1;
 /** Model confidence floor for installing a repair. */
 const MIN_CONFIDENCE = 0.6;
 /** How long a new rule stays on probation before it can graduate. */
 const PROBATION_HOURS = 24;
 /** Consecutive verification failures before a rule is rolled back. */
 const MAX_RULE_FAILURES = 2;
+
 
 interface RuleRow {
   id: string;
