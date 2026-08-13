@@ -29,7 +29,41 @@ const STATIC_PAGES = [
 ];
 
 // Static guide slugs — keep in sync with src/data/guides.ts
+// Editorial landing pages — mirrors the indexable entries in
+// src/lib/landing/registry.ts. Update both when adding a page.
+const LANDING_PAGES = [
+  '/mtg/card-draw',
+  '/mtg/ramp',
+  '/mtg/removal',
+  '/mtg/board-wipes',
+  '/mtg/protection',
+  '/mtg/recursion',
+  '/mtg/tutors',
+  '/mtg/treasure-hate',
+  '/mtg/graveyard-hate',
+  '/mtg/artifact-hate',
+  '/mtg/token-hate',
+  '/mtg/lifegain-hate',
+  '/mtg/red/card-draw',
+  '/mtg/white/card-draw',
+  '/mtg/black/ramp',
+  '/mtg/red/ramp',
+  '/mtg/green/removal',
+  '/commander/card-draw',
+  '/commander/ramp',
+  '/commander/removal',
+  '/commander/board-wipes',
+  '/commander/protection',
+  '/alternatives/rhystic-study',
+  '/alternatives/smothering-tithe',
+  '/alternatives/cyclonic-rift',
+  '/alternatives/demonic-tutor',
+  '/alternatives/dockside-extortionist',
+  '/scryfall-alternative',
+] as const;
+
 const GUIDE_SLUGS = [
+
   'search-by-creature-type',
   'filter-by-color',
   'budget-price-filters',
@@ -133,6 +167,18 @@ serve(withLogging('sitemap', async (req) => {
   </url>
 `;
     }
+
+    // Editorial landing pages (roles, problems, colors, commander, alternatives).
+    // Keep in sync with src/lib/landing/registry.ts (indexable pages only).
+    for (const path of LANDING_PAGES) {
+      xml += `  <url>
+    <loc>${BASE_URL}${path}</loc>
+    <lastmod>${today}</lastmod>
+  </url>
+`;
+    }
+
+
 
     // Curated search pages (high-value SEO targets)
     if (curatedSearches) {

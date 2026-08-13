@@ -36,6 +36,8 @@ const AdminSeoPages = lazy(() => import('./pages/AdminSeoPages'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const SearchExperience = lazy(() => import('./pages/SearchExperience'));
 const OAuthConsent = lazy(() => import('./pages/OAuthConsent'));
+const LandingRoute = lazy(() => import('./pages/LandingRoute'));
+
 
 const routeFallback = <div className="min-h-screen bg-background" />;
 // Per-route ErrorBoundary so a lazy-chunk load failure or render crash on one
@@ -129,7 +131,23 @@ export default function AppRoutes() {
               path="/.lovable/oauth/consent"
               element={withFullApp(<OAuthConsent />)}
             />
+            {/* Registry-declared landing pages (roles, problems, colors,
+                commander, alternatives, comparison). Unknown slugs render 404. */}
+            <Route path="/mtg/*" element={withFullApp(<LandingRoute />)} />
+            <Route
+              path="/commander/*"
+              element={withFullApp(<LandingRoute />)}
+            />
+            <Route
+              path="/alternatives/*"
+              element={withFullApp(<LandingRoute />)}
+            />
+            <Route
+              path="/scryfall-alternative"
+              element={withFullApp(<LandingRoute />)}
+            />
             <Route path="*" element={withFullApp(<NotFound />)} />
+
           </Route>
         </Routes>
       </Suspense>
