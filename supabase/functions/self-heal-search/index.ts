@@ -337,6 +337,12 @@ serve(
     const authCheck = await requireServiceOrPipelineKey(req, corsHeaders);
     if (!authCheck.authorized) return authCheck.response;
 
+    const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
+    // One self-heal run at a time; overlapping runs would re-repair the same
+    // queries and double-count probation failures.
+    const lease = await acquireJobLock('self-heal-search', 900);
+    if (!lease.acquired) return lockBusyResponse('self-heal-search', jsonHeaders);
+
     const startedAt = Date.now();
     const details: Detail[] = [];
 
