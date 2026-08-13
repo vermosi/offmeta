@@ -220,8 +220,14 @@ async function loadRegistryFromApi(): Promise<TagRegistry> {
 }
 
 function loadFallbackRegistry(): TagRegistry {
-  const knownOtags = new Set<string>(LEGACY_TAGS.map((tag) => tag.toLowerCase()));
+  // The generated Tagger vocabulary is the offline source of truth so a failed
+  // Scryfall fetch never shrinks validation down to the tiny legacy list.
+  const knownOtags = new Set<string>([
+    ...SCRYFALL_ORACLE_TAGS,
+    ...LEGACY_TAGS.map((tag) => tag.toLowerCase()),
+  ]);
   const canonicalByAlias = new Map<string, string>();
+
 
   for (const tag of knownOtags) {
     canonicalByAlias.set(tag, tag);
