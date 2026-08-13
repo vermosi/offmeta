@@ -316,7 +316,7 @@ export const UnifiedSearchBar = forwardRef<
               <button
                 aria-label={t('search.clear')}
                 data-testid="search-clear-button"
-                className="flex min-h-[36px] min-w-[36px] flex-shrink-0 items-center justify-center rounded-full p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                className="flex min-h-[36px] min-w-[36px] flex-shrink-0 items-center justify-center self-center p-2 text-muted-foreground transition-colors hover:text-foreground"
                 onClick={() => {
                   setQuery('');
                   inputRef.current?.focus();
