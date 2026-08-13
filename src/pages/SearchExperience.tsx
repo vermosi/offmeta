@@ -889,6 +889,7 @@ const Index = () => {
             <ScryfallComparison onTrySearch={handleTryExample} />
           </Suspense>
         )}
+        </main>
 
         <Suspense fallback={null}>
           <Footer />
