@@ -64,7 +64,7 @@ export function ResultsToolbar({
       : totalCards.toLocaleString();
 
   return (
-    <div className="animate-reveal rounded-3xl border border-border/60 bg-card/75 p-2 shadow-xl backdrop-blur-2xl">
+    <div className="animate-reveal">
       {/* Row 1 — controls */}
       <div className="flex flex-wrap items-center gap-1.5 px-0.5 sm:flex-nowrap">
         {/* Refinement group: format · filters · sort */}
