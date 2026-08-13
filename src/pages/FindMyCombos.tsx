@@ -68,9 +68,11 @@ export default function FindMyCombos() {
     // Previously only title/description were set — canonical/og:url were left pointing at the homepage,
     // so /combos shared on Reddit/Discord/Slack showed the homepage preview.
     const cleanupMeta = applySeoMeta({
-      title: 'MTG Combo Finder for Commander Decks | OffMeta',
-      description:
+      title: t('combos.seoTitle', 'MTG Combo Finder for Commander Decks | OffMeta'),
+      description: t(
+        'combos.seoDescription',
         'Paste a decklist or Moxfield URL to find infinite combos, near-combos, prices, and color identity with Commander Spellbook data.',
+      ),
       url: 'https://offmeta.app/combos',
       type: 'website',
     });
@@ -186,7 +188,7 @@ export default function FindMyCombos() {
           fnError instanceof FunctionsHttpError
             ? await fnError.context.text()
             : fnError.message;
-        let message = 'Could not import that deck';
+        let message = t('combos.importError', 'Could not import that deck');
         try {
           message = (JSON.parse(details) as { error?: string }).error ?? message;
         } catch {
@@ -194,17 +196,17 @@ export default function FindMyCombos() {
         }
         throw new Error(message);
       }
-      if (!data) throw new Error('Could not import that deck');
+      if (!data) throw new Error(t('combos.importError', 'Could not import that deck'));
 
       setMoxfieldDeckName(data.deckName);
       setCommander(data.commanders[0] ?? null);
       setCardNames(data.cards);
       setColorIdentity(data.colorIdentity ?? []);
       setResults(null);
-      toast.success(`Imported ${data.deckName}`);
+      toast.success(t('combos.importedToast', 'Imported {name}', { name: data.deckName }));
     } catch (e: unknown) {
       const message =
-        e instanceof Error ? e.message : 'Could not import that deck';
+        e instanceof Error ? e.message : t('combos.importError', 'Could not import that deck');
       setError(message);
       toast.error(message);
     } finally {
@@ -228,7 +230,9 @@ export default function FindMyCombos() {
         {
           onRetry: (delayMs) => {
             toast.info(
-              `Too many requests — retrying in ${Math.ceil(delayMs / 1000)}s`,
+              t('combos.retryToast', 'Too many requests — retrying in {seconds}s', {
+                seconds: Math.ceil(delayMs / 1000),
+              }),
             );
           },
         },
@@ -242,7 +246,7 @@ export default function FindMyCombos() {
         almost_included: data?.almostIncluded?.length ?? 0,
       });
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to find combos');
+      setError(e instanceof Error ? e.message : t('combos.findError', 'Failed to find combos'));
     } finally {
       setLoading(false);
     }
@@ -253,7 +257,7 @@ export default function FindMyCombos() {
       <SkipLinks />
       <Header />
       <main id="main-content" className="container-main flex-1 py-8 space-y-8">
-        <PageSearchBar placeholder="Search Magic cards in plain English…" />
+        <PageSearchBar placeholder={t('combos.searchPlaceholder', 'Search Magic cards in plain English…')} />
         <div>
           <div className="flex items-center gap-2">
             <Zap className="h-6 w-6 text-primary" />
@@ -410,7 +414,7 @@ export default function FindMyCombos() {
                 <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border/50 bg-muted/30 p-3">
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs text-muted-foreground mr-1">
-                      Colors:
+                      {t('combos.colorsLabel', 'Colors:')}
                     </span>
                     {WUBRG.map((c) => (
                       <button
@@ -432,7 +436,7 @@ export default function FindMyCombos() {
 
                   <div className="flex items-center gap-1">
                     <span className="text-xs text-muted-foreground mr-1">
-                      Cards:
+                      {t('combos.cardsLabel', 'Cards:')}
                     </span>
                     {(['any', '2', '3', '4+'] as const).map((v) => (
                       <button
@@ -444,7 +448,7 @@ export default function FindMyCombos() {
                             : 'bg-secondary/60 text-muted-foreground hover:text-foreground'
                         }`}
                       >
-                        {v === 'any' ? 'Any' : v}
+                        {v === 'any' ? t('combos.any', 'Any') : v}
                       </button>
                     ))}
                   </div>
@@ -453,7 +457,7 @@ export default function FindMyCombos() {
 
                   <div className="flex items-center gap-1">
                     <span className="text-xs text-muted-foreground mr-1">
-                      Budget:
+                      {t('combos.budgetLabel', 'Budget:')}
                     </span>
                     {(['any', '10', '25', '50', '100'] as const).map((v) => (
                       <button
@@ -465,7 +469,7 @@ export default function FindMyCombos() {
                             : 'bg-secondary/60 text-muted-foreground hover:text-foreground'
                         }`}
                       >
-                        {v === 'any' ? 'Any' : `≤$${v}`}
+                        {v === 'any' ? t('combos.any', 'Any') : `≤$${v}`}
                       </button>
                     ))}
                   </div>
@@ -475,16 +479,16 @@ export default function FindMyCombos() {
                   <div className="flex items-center gap-1">
                     <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
                     <select
-                      aria-label="Sort combos"
+                      aria-label={t('combos.sortLabel', 'Sort combos')}
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value as SortMode)}
                       className="text-xs bg-secondary/60 border-none rounded px-2 py-1 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                     >
-                      <option value="popularity">Popularity</option>
-                      <option value="price-asc">Price: Low → High</option>
-                      <option value="price-desc">Price: High → Low</option>
-                      <option value="cards-asc">Fewest cards</option>
-                      <option value="cards-desc">Most cards</option>
+                      <option value="popularity">{t('combos.sort.popularity', 'Popularity')}</option>
+                      <option value="price-asc">{t('combos.sort.priceAsc', 'Price: Low → High')}</option>
+                      <option value="price-desc">{t('combos.sort.priceDesc', 'Price: High → Low')}</option>
+                      <option value="cards-asc">{t('combos.sort.cardsAsc', 'Fewest cards')}</option>
+                      <option value="cards-desc">{t('combos.sort.cardsDesc', 'Most cards')}</option>
                     </select>
                   </div>
 
@@ -494,15 +498,17 @@ export default function FindMyCombos() {
                       className="ml-auto flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                     >
                       <X className="h-3 w-3" />
-                      Clear
+                      {t('combos.clear', 'Clear')}
                     </button>
                   )}
                 </div>
 
                 {nullPriceCount > 0 && (
                   <p className="text-xs text-muted-foreground italic">
-                    {nullPriceCount} combo{nullPriceCount > 1 ? 's' : ''}{' '}
-                    included with unknown price data.
+                    {t('combos.unknownPriceNote', '{count} combo{plural} included with unknown price data.', {
+                      count: nullPriceCount,
+                      plural: nullPriceCount > 1 ? 's' : '',
+                    })}
                   </p>
                 )}
 
@@ -515,16 +521,16 @@ export default function FindMyCombos() {
                     </h2>
                     <div className="ml-auto">
                       <SharePageButton
-                        title="MTG Combo Finder — OffMeta"
-                        text={`Found ${filteredIncluded.length} combos in this deck on OffMeta`}
-                        label="Share results"
+                        title={t('combos.shareTitle', 'MTG Combo Finder — OffMeta')}
+                        text={t('combos.shareText', 'Found {count} combos in this deck on OffMeta', { count: filteredIncluded.length })}
+                        label={t('combos.shareLabel', 'Share results')}
                       />
                     </div>
                   </div>
                   {filteredIncluded.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
                       {hasActiveFilters
-                        ? 'No combos match the current filters.'
+                        ? t('combos.noMatchFilters', 'No combos match the current filters.')
                         : t('combos.noCombos')}
                     </p>
                   ) : (

@@ -62,13 +62,13 @@ export const CardListItem = memo(function CardListItem({
       tabIndex={tabIndex}
       data-testid="search-result-card"
       className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/50 bg-card/60 hover:bg-card/80 hover:border-border cursor-pointer transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      aria-label={`View details for ${displayName}`}
+      aria-label={t('card.viewDetailsAria', 'View details for {name}', { name: displayName })}
     >
       {/* Owned indicator */}
       {isOwned && (
         <span
           className="h-4 w-4 rounded-full bg-success/90 flex items-center justify-center shrink-0"
-          aria-label="Owned"
+          aria-label={t('card.ownedAria', 'Owned')}
         >
           <svg
             className="h-2.5 w-2.5 text-success-foreground"
@@ -90,7 +90,7 @@ export const CardListItem = memo(function CardListItem({
           to={`/cards/${cardNameToSlug(card.name)}`}
           className="block truncate text-sm font-medium text-foreground transition-colors hover:text-primary"
           onClick={(e) => e.stopPropagation()}
-          title={`View ${displayName} off-meta alternatives`}
+          title={t('card.viewAlternativesTitle', 'View {name} off-meta alternatives', { name: displayName })}
         >
           {displayName}
         </Link>
@@ -156,11 +156,11 @@ export const CardListItem = memo(function CardListItem({
             onSearchSimilar(card.name);
           }}
         className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-background/70 px-2 py-1 text-[10px] font-medium text-foreground transition-colors hover:border-accent/40 hover:bg-accent/10"
-        aria-label={`Search cards similar to ${displayName}`}
-        title={`Search cards similar to ${displayName}`}
+        aria-label={t('card.searchSimilarAria', 'Search cards similar to {name}', { name: displayName })}
+        title={t('card.searchSimilarAria', 'Search cards similar to {name}', { name: displayName })}
       >
           <Search className="h-3 w-3 text-accent" aria-hidden="true" />
-          Similar
+          {t('card.similarButton', 'Similar')}
         </button>
       )}
     </div>

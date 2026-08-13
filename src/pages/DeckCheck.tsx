@@ -30,6 +30,7 @@ import { trackFunnelStep } from '@/lib/analytics/funnels';
 import { queryToSlug } from '@/lib/search-slug';
 import { Loader2, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/i18n';
 
 const COLOR_QUERY: Record<string, string> = {
   W: 'white',
@@ -61,6 +62,7 @@ function CoverageBar({ ratio }: { ratio: number }) {
 }
 
 export default function DeckCheck() {
+  const { t } = useTranslation();
   const [raw, setRaw] = useState('');
   const [moxfieldUrl, setMoxfieldUrl] = useState('');
   const [importing, setImporting] = useState(false);
@@ -71,9 +73,11 @@ export default function DeckCheck() {
 
   useEffect(() => {
     const cleanup = applySeoMeta({
-      title: 'MTG Deck Check — Find the Gaps in Your Deck | OffMeta',
-      description:
+      title: t('deckCheck.seoTitle', 'MTG Deck Check — Find the Gaps in Your Deck | OffMeta'),
+      description: t(
+        'deckCheck.seoDescription',
         'Paste a Commander decklist and OffMeta classifies every card by role, method and problem answered, then shows which functional slots are missing.',
+      ),
       url: 'https://offmeta.app/deck-check',
     });
     return cleanup;
@@ -84,7 +88,7 @@ export default function DeckCheck() {
   const runAnalysis = async (text: string, source: 'paste' | 'moxfield' = 'paste') => {
     const deck = parseDecklist(text);
     if (deck.cards.length === 0) {
-      setError('No cards found in that list.');
+      setError(t('deckCheck.noCardsFound', 'No cards found in that list.'));
       return;
     }
     setAnalyzing(true);
@@ -101,7 +105,7 @@ export default function DeckCheck() {
       trackFunnelStep('deck_check', { source, card_count: deck.cards.length });
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'Could not analyse that decklist.',
+        err instanceof Error ? err.message : t('deckCheck.analyseError', 'Could not analyse that decklist.'),
       );
     } finally {
       setAnalyzing(false);
@@ -124,7 +128,7 @@ export default function DeckCheck() {
           fnError instanceof FunctionsHttpError
             ? await fnError.context.text()
             : fnError.message;
-        let message = 'Could not import that deck';
+        let message = t('deckCheck.importError', 'Could not import that deck');
         try {
           message = (JSON.parse(details) as { error?: string }).error ?? message;
         } catch {
@@ -133,13 +137,13 @@ export default function DeckCheck() {
         throw new Error(message);
       }
       const names = [...(data?.commanders ?? []), ...(data?.cards ?? [])];
-      if (names.length === 0) throw new Error('That deck looks empty.');
+      if (names.length === 0) throw new Error(t('deckCheck.emptyDeck', 'That deck looks empty.'));
       const text = names.join('\n');
       setRaw(text);
       await runAnalysis(text, 'moxfield');
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : 'Could not import that deck';
+        err instanceof Error ? err.message : t('deckCheck.importError', 'Could not import that deck');
       setError(message);
       toast.error(message);
     } finally {
@@ -155,16 +159,13 @@ export default function DeckCheck() {
       <Header />
       <main id="main-content" className="mx-auto max-w-4xl px-4 pb-24">
         <p className="pt-10 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-          OffMeta / Deck check
+          {t('deckCheck.eyebrow', 'OffMeta / Deck check')}
         </p>
         <h1 className="mt-4 font-display text-4xl uppercase leading-[0.95] tracking-tight md:text-5xl">
-          What is your deck missing?
+          {t('deckCheck.heading', 'What is your deck missing?')}
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-          Paste a decklist. OffMeta classifies every card with its deterministic
-          ontology — roles, methods and the problems each card answers — then
-          measures coverage against the slots a functional deck needs. Nothing is
-          stored.
+          {t('deckCheck.description', 'Paste a decklist. OffMeta classifies every card with its deterministic ontology — roles, methods and the problems each card answers — then measures coverage against the slots a functional deck needs. Nothing is stored.')}
         </p>
 
         <section className="mt-10 border-t border-border pt-8">
@@ -172,14 +173,14 @@ export default function DeckCheck() {
             htmlFor="deck-moxfield"
             className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground"
           >
-            01 / Import from Moxfield
+            {t('deckCheck.step1Label', '01 / Import from Moxfield')}
           </label>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row">
             <Input
               id="deck-moxfield"
               value={moxfieldUrl}
               onChange={(e) => setMoxfieldUrl(e.target.value)}
-              placeholder="https://moxfield.com/decks/..."
+              placeholder={t('deckCheck.moxfieldPlaceholder', 'https://moxfield.com/decks/...')}
               className="rounded-none"
             />
             <Button
@@ -190,7 +191,7 @@ export default function DeckCheck() {
               {importing ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                'Import'
+                t('deckCheck.import', 'Import')
               )}
             </Button>
           </div>
@@ -199,14 +200,14 @@ export default function DeckCheck() {
             htmlFor="deck-raw"
             className="mt-8 block font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground"
           >
-            02 / Or paste a decklist
+            {t('deckCheck.step2Label', '02 / Or paste a decklist')}
           </label>
           <Textarea
             id="deck-raw"
             value={raw}
             onChange={(e) => setRaw(e.target.value)}
             rows={10}
-            placeholder={'1 Sol Ring\n1 Cultivate\n1 Swords to Plowshares'}
+            placeholder={t('deckCheck.decklistPlaceholder', '1 Sol Ring\n1 Cultivate\n1 Swords to Plowshares')}
             className="mt-3 rounded-none font-mono text-xs"
           />
           <div className="mt-3 flex items-center gap-4">
@@ -218,11 +219,11 @@ export default function DeckCheck() {
               {analyzing ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                'Analyse deck'
+                t('deckCheck.analyseDeck', 'Analyse deck')
               )}
             </Button>
             <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-              {parsed.totalCards} cards detected
+              {t('deckCheck.cardsDetected', '{count} cards detected', { count: parsed.totalCards })}
             </span>
           </div>
           {error && (
@@ -236,11 +237,14 @@ export default function DeckCheck() {
           <>
             <section className="mt-14 border-t border-border pt-8">
               <h2 className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-                03 / Deck profile
+                {t('deckCheck.step3Label', '03 / Deck profile')}
               </h2>
               <p className="mt-3 font-mono text-xs text-muted-foreground">
-                {profile.totalCards} cards · {profile.landCount} lands ·{' '}
-                {profile.spellCount} spells
+                {t('deckCheck.profileSummary', '{total} cards · {lands} lands · {spells} spells', {
+                  total: profile.totalCards,
+                  lands: profile.landCount,
+                  spells: profile.spellCount,
+                })}
                 {profile.colorIdentity.length > 0 &&
                   ` · ${profile.colorIdentity.join('')}`}
               </p>
@@ -264,12 +268,11 @@ export default function DeckCheck() {
 
             <section className="mt-14 border-t border-border pt-8">
               <h2 className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-                04 / Low coverage
+                {t('deckCheck.step4Label', '04 / Low coverage')}
               </h2>
               {profile.gaps.length === 0 ? (
                 <p className="mt-4 text-sm text-muted-foreground">
-                  No pillar falls below benchmark. This deck is functionally
-                  well-rounded.
+                  {t('deckCheck.wellRounded', 'No pillar falls below benchmark. This deck is functionally well-rounded.')}
                 </p>
               ) : (
                 <ul className="mt-6 space-y-8">
@@ -279,14 +282,16 @@ export default function DeckCheck() {
                         {gap.pillar.label}
                       </p>
                       <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-                        {gap.pillar.rationale} You are running {gap.count} where
-                        a comparable list usually wants around {gap.benchmark}.
+                        {gap.pillar.rationale} {t('deckCheck.runningCount', 'You are running {count} where a comparable list usually wants around {benchmark}.', {
+                          count: gap.count,
+                          benchmark: gap.benchmark,
+                        })}
                       </p>
                       <Link
                         to={gapHref(gap.pillar.gapQuery, profile.colorIdentity)}
                         className="mt-3 inline-flex items-center gap-2 border-b border-foreground pb-0.5 font-mono text-[11px] uppercase tracking-[0.25em] transition-opacity hover:opacity-70"
                       >
-                        Find options
+                        {t('deckCheck.findOptions', 'Find options')}
                         <ArrowRight className="h-3 w-3" />
                       </Link>
                     </li>
@@ -298,18 +303,22 @@ export default function DeckCheck() {
             {(profile.unresolved.length > 0 || profile.untagged.length > 0) && (
               <section className="mt-14 border-t border-border pt-8">
                 <h2 className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-                  05 / Notes
+                  {t('deckCheck.step5Label', '05 / Notes')}
                 </h2>
                 {profile.unresolved.length > 0 && (
                   <p className="mt-3 text-sm text-muted-foreground">
-                    Not recognised ({profile.unresolved.length}):{' '}
-                    {profile.unresolved.slice(0, 12).join(', ')}
+                    {t('deckCheck.notRecognised', 'Not recognised ({count}): {names}', {
+                      count: profile.unresolved.length,
+                      names: profile.unresolved.slice(0, 12).join(', '),
+                    })}
                   </p>
                 )}
                 {profile.untagged.length > 0 && (
                   <p className="mt-3 text-sm text-muted-foreground">
-                    No functional tags ({profile.untagged.length}):{' '}
-                    {profile.untagged.slice(0, 12).join(', ')}
+                    {t('deckCheck.noFunctionalTags', 'No functional tags ({count}): {names}', {
+                      count: profile.untagged.length,
+                      names: profile.untagged.slice(0, 12).join(', '),
+                    })}
                   </p>
                 )}
               </section>

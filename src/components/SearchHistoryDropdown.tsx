@@ -4,6 +4,7 @@
  */
 
 import { Clock, X } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 import {
   Popover,
   PopoverContent,
@@ -30,6 +31,7 @@ export function SearchHistoryDropdown({
   onClearAll,
   children,
 }: SearchHistoryDropdownProps) {
+  const { t } = useTranslation();
   if (history.length === 0) {
     return <>{children}</>;
   }
@@ -49,7 +51,7 @@ export function SearchHistoryDropdown({
         >
           <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-muted/30">
             <span className="text-xs font-medium text-foreground">
-              Recent Searches
+              {t('search.history.recentSearches', 'Recent Searches')}
             </span>
             <Button
               variant="ghost"
@@ -59,9 +61,9 @@ export function SearchHistoryDropdown({
                 onClearAll();
               }}
               className="h-6 px-2 text-xs text-foreground hover:text-foreground hover:bg-accent"
-              aria-label="Clear all search history"
+              aria-label={t('search.history.clearAllAria', 'Clear all search history')}
             >
-              Clear all
+              {t('search.history.clearAll', 'Clear all')}
             </Button>
           </div>
 
@@ -73,7 +75,7 @@ export function SearchHistoryDropdown({
                     type="button"
                     onClick={() => onSelectQuery(query)}
                     className="flex-1 flex items-center gap-2 text-left min-w-0"
-                    aria-label={`Search for ${query}`}
+                    aria-label={t('search.history.searchForAria', 'Search for {query}', { query })}
                   >
                     <Clock
                       className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0"
@@ -90,7 +92,7 @@ export function SearchHistoryDropdown({
                       onRemoveQuery(query);
                     }}
                     className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-70 group-hover:opacity-100 transition-all focus:opacity-100"
-                    aria-label={`Remove "${query}" from history`}
+                    aria-label={t('search.history.removeAria', 'Remove "{query}" from history', { query })}
                   >
                     <X className="h-3.5 w-3.5" aria-hidden="true" />
                   </button>

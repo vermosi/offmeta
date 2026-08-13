@@ -12,16 +12,17 @@ import { Footer } from '@/components/Footer';
 import { SkipLinks } from '@/components/SkipLinks';
 import { applySeoMeta, injectJsonLd } from '@/lib/seo';
 import { listConcepts, type ConceptDirectoryEntry } from '@/lib/semantic';
+import { useTranslation } from '@/lib/i18n';
 
 const API_BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/offmeta-api`;
 
 const DIMENSION_ORDER = ['ROLE', 'METHOD', 'PROBLEM', 'CHARACTERISTIC'] as const;
 
-const DIMENSION_BLURB: Record<string, string> = {
-  ROLE: 'What job the card does in a deck.',
-  METHOD: 'How the card does it.',
-  PROBLEM: 'What the card answers.',
-  CHARACTERISTIC: 'Shape and constraints of the effect.',
+const DIMENSION_BLURB_KEYS: Record<string, [string, string]> = {
+  ROLE: ['apiDocs.dimension.role', 'What job the card does in a deck.'],
+  METHOD: ['apiDocs.dimension.method', 'How the card does it.'],
+  PROBLEM: ['apiDocs.dimension.problem', 'What the card answers.'],
+  CHARACTERISTIC: ['apiDocs.dimension.characteristic', 'Shape and constraints of the effect.'],
 };
 
 interface EndpointDoc {
@@ -107,6 +108,7 @@ const SAMPLE_RESPONSE = `{
 }`;
 
 export default function ApiDocs() {
+  const { t } = useTranslation();
   const [concepts, setConcepts] = useState<ConceptDirectoryEntry[]>([]);
 
   useEffect(() => {
@@ -190,26 +192,25 @@ export default function ApiDocs() {
               </Link>
             </li>
             <li aria-hidden="true">/</li>
-            <li className="text-foreground">API</li>
+            <li className="text-foreground">{t('apiDocs.breadcrumb', 'API')}</li>
           </ol>
         </nav>
 
         <header className="border-b border-border/60 pb-12">
           <div className="grid gap-8 lg:grid-cols-12 lg:items-end">
             <h1 className="font-display text-[clamp(2.25rem,5.6vw,4rem)] font-extrabold uppercase leading-[0.9] tracking-tight text-foreground lg:col-span-7">
-              The semantic
+              {t('apiDocs.heroLine1', 'The semantic')}
               <br />
               <span className="font-editorial text-[0.94em] font-normal normal-case italic tracking-normal text-accent">
-                layer, exposed.
+                {t('apiDocs.heroLine2', 'layer, exposed.')}
               </span>
             </h1>
             <div className="space-y-4 lg:col-span-5 lg:pb-2">
               <p className="max-w-md text-base leading-snug text-muted-foreground sm:text-lg">
-                Card databases tell you what a card says. OffMeta records what it
-                does — and this API hands that dataset to your tools.
+                {t('apiDocs.heroSub', 'Card databases tell you what a card says. OffMeta records what it does — and this API hands that dataset to your tools.')}
               </p>
               <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
-                Read-only / No key required / 60 requests per minute
+                {t('apiDocs.heroTags', 'Read-only / No key required / 60 requests per minute')}
               </p>
             </div>
           </div>
@@ -219,7 +220,7 @@ export default function ApiDocs() {
           <div className="grid gap-6 lg:grid-cols-12">
             <div className="lg:col-span-3">
               <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
-                00 / Base URL
+                {t('apiDocs.section00Label', '00 / Base URL')}
               </p>
             </div>
             <div className="space-y-4 lg:col-span-9">
@@ -227,10 +228,7 @@ export default function ApiDocs() {
                 {API_BASE}
               </pre>
               <p className="text-sm leading-relaxed text-muted-foreground">
-                Every endpoint is a plain <code className="font-mono">GET</code>, returns JSON, and
-                sends permissive CORS headers so browser clients work without a proxy. Responses are
-                cacheable for an hour; classification is recomputed nightly. Card data comes from
-                Scryfall — the functional classification is OffMeta&rsquo;s.
+                {t('apiDocs.baseUrlBlurb', "Every endpoint is a plain GET, returns JSON, and sends permissive CORS headers so browser clients work without a proxy. Responses are cacheable for an hour; classification is recomputed nightly. Card data comes from Scryfall — the functional classification is OffMeta's.")}
               </p>
             </div>
           </div>
@@ -241,7 +239,7 @@ export default function ApiDocs() {
             <div className="grid gap-6 lg:grid-cols-12">
               <div className="lg:col-span-3">
                 <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
-                  {endpoint.index} / Endpoint
+                  {endpoint.index} / {t('apiDocs.endpointLabel', 'Endpoint')}
                 </p>
               </div>
               <div className="space-y-5 lg:col-span-9">
@@ -261,7 +259,7 @@ export default function ApiDocs() {
                       <div key={param.name} className="grid gap-1 py-3 sm:grid-cols-4 sm:gap-4">
                         <dt className="font-mono text-xs text-foreground">
                           {param.name}
-                          {param.required && <span className="ml-2 text-accent">required</span>}
+                          {param.required && <span className="ml-2 text-accent">{t('apiDocs.required', 'required')}</span>}
                         </dt>
                         <dd className="text-sm text-muted-foreground sm:col-span-3">
                           {param.description}
@@ -283,7 +281,7 @@ export default function ApiDocs() {
           <div className="grid gap-6 lg:grid-cols-12">
             <div className="lg:col-span-3">
               <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
-                05 / Response shape
+                {t('apiDocs.section05Label', '05 / Response shape')}
               </p>
             </div>
             <div className="lg:col-span-9">
@@ -298,14 +296,12 @@ export default function ApiDocs() {
           <div className="grid gap-6 lg:grid-cols-12">
             <div className="lg:col-span-3">
               <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
-                06 / The ontology
+                {t('apiDocs.section06Label', '06 / The ontology')}
               </p>
             </div>
             <div className="space-y-8 lg:col-span-9">
               <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-                Concepts are assigned deterministically — the same card always produces the same
-                classification. Four dimensions, {concepts.length || '60+'} concepts, applied across
-                every paper card.
+                {t('apiDocs.ontologyBlurb', 'Concepts are assigned deterministically — the same card always produces the same classification. Four dimensions, {count} concepts, applied across every paper card.').replace('{count}', String(concepts.length || '60+'))}
               </p>
               {DIMENSION_ORDER.map((dimension) => {
                 const entries = byDimension.get(dimension) ?? [];
@@ -315,7 +311,7 @@ export default function ApiDocs() {
                     <h3 className="font-mono text-[11px] uppercase tracking-[0.28em] text-foreground">
                       {dimension}
                       <span className="ml-3 text-muted-foreground">
-                        {DIMENSION_BLURB[dimension]}
+                        {t(...DIMENSION_BLURB_KEYS[dimension])}
                       </span>
                     </h3>
                     <ul className="flex flex-wrap gap-2">

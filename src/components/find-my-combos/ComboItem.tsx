@@ -9,6 +9,7 @@ import { OracleText } from '@/components/ManaSymbol';
 import { Bookmark, BookmarkCheck, ChevronDown, ChevronUp, ExternalLink, Sparkles } from 'lucide-react';
 import { useSavedCombos } from '@/hooks/useSavedCombos';
 import type { Combo } from '@/components/find-my-combos/types';
+import { useTranslation } from '@/lib/i18n';
 
 interface ComboItemProps {
   combo: Combo;
@@ -17,6 +18,7 @@ interface ComboItemProps {
 }
 
 export function ComboItem({ combo, expanded, onToggle }: ComboItemProps) {
+  const { t } = useTranslation();
   const { isSaved, toggleSave } = useSavedCombos();
   const saved = isSaved(combo.id);
 
@@ -65,7 +67,7 @@ export function ComboItem({ combo, expanded, onToggle }: ComboItemProps) {
                 ))}
                 {combo.produces.length > 3 && (
                   <span className="text-xs text-muted-foreground">
-                    +{combo.produces.length - 3} more
+                    {t('comboItem.more', '+{count} more', { count: combo.produces.length - 3 })}
                   </span>
                 )}
               </div>
@@ -105,7 +107,7 @@ export function ComboItem({ combo, expanded, onToggle }: ComboItemProps) {
           {combo.description && (
             <div>
               <p className="text-xs font-medium text-muted-foreground mb-1">
-                Steps
+                {t('comboItem.steps', 'Steps')}
               </p>
               <ol className="text-xs space-y-0.5 list-decimal list-inside text-foreground/90">
                 {combo.description
@@ -126,7 +128,7 @@ export function ComboItem({ combo, expanded, onToggle }: ComboItemProps) {
           {combo.prerequisites && (
             <div>
               <p className="text-xs font-medium text-muted-foreground mb-1">
-                Prerequisites
+                {t('comboItem.prerequisites', 'Prerequisites')}
               </p>
               <ul className="text-xs space-y-0.5 list-disc list-inside text-foreground/70">
                 {combo.prerequisites
@@ -144,7 +146,7 @@ export function ComboItem({ combo, expanded, onToggle }: ComboItemProps) {
           <div className="flex items-center justify-between">
             {combo.prices?.tcgplayer && (
               <span className="text-xs text-muted-foreground">
-                Combo cost: ~${combo.prices.tcgplayer}
+                {t('comboItem.comboCost', 'Combo cost: ~${price}', { price: combo.prices.tcgplayer })}
               </span>
             )}
             <div className="flex items-center gap-1">
@@ -153,7 +155,7 @@ export function ComboItem({ combo, expanded, onToggle }: ComboItemProps) {
               size="sm"
               className="h-7 text-xs gap-1"
               aria-pressed={saved}
-              aria-label={saved ? 'Remove saved combo' : 'Save combo'}
+              aria-label={saved ? t('comboItem.removeSaved', 'Remove saved combo') : t('comboItem.saveCombo', 'Save combo')}
               onClick={() => toggleSave(combo)}
             >
               {saved ? (
@@ -161,7 +163,7 @@ export function ComboItem({ combo, expanded, onToggle }: ComboItemProps) {
               ) : (
                 <Bookmark className="h-3 w-3" />
               )}
-              {saved ? 'Saved' : 'Save'}
+              {saved ? t('comboItem.saved', 'Saved') : t('comboItem.save', 'Save')}
             </Button>
             <Button
               variant="ghost"

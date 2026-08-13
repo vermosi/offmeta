@@ -164,25 +164,25 @@ export default function About() {
               </Link>
             </li>
             <li aria-hidden="true">/</li>
-            <li className="text-foreground">About</li>
+            <li className="text-foreground">{t('about.breadcrumb', 'About')}</li>
           </ol>
         </nav>
 
         <header className="border-b border-border/60 pb-12">
           <div className="grid gap-8 lg:grid-cols-12 lg:items-end">
             <h1 className="font-display text-[clamp(2.25rem,5.6vw,4.25rem)] font-extrabold uppercase leading-[0.88] tracking-tight text-foreground lg:col-span-7">
-              Search Magic
+              {t('about.heroLine1', 'Search Magic')}
               <br />
               <span className="font-editorial text-[0.94em] font-normal normal-case italic tracking-normal text-accent">
-                the way you think.
+                {t('about.heroLine2', 'the way you think.')}
               </span>
             </h1>
             <div className="space-y-4 lg:col-span-5 lg:pb-2">
               <p className="max-w-md text-base leading-snug text-muted-foreground sm:text-lg">
-                Not the way a query language expects you to.
+                {t('about.heroSub', 'Not the way a query language expects you to.')}
               </p>
               <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
-                Search by intent / See the real query / Stay in control
+                {t('about.heroTags', 'Search by intent / See the real query / Stay in control')}
               </p>
             </div>
           </div>
@@ -192,12 +192,12 @@ export default function About() {
           <div className="grid gap-6 lg:grid-cols-12">
             <div className="lg:col-span-3">
               <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
-                01 / The problem
+                {t('about.section01Label', '01 / The problem')}
               </p>
             </div>
             <div className="space-y-4 lg:col-span-9">
               <h2 className="font-display text-xl font-extrabold uppercase tracking-tight text-foreground sm:text-2xl">
-                Scryfall is extraordinarily powerful.
+                {t('about.problemHeading', 'Scryfall is extraordinarily powerful.')}
               </h2>
               <p className="max-w-2xl leading-relaxed text-muted-foreground">
                 {t(
@@ -219,18 +219,17 @@ export default function About() {
           <div className="grid gap-6 lg:grid-cols-12">
             <div className="lg:col-span-3">
               <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
-                02 / The translation
+                {t('about.section02Label', '02 / The translation')}
               </p>
             </div>
             <div className="lg:col-span-9">
               <div className="space-y-8">
                 <div>
                   <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
-                    You say
+                    {t('about.youSay', 'You say')}
                   </p>
                   <p className="mt-2 font-display text-lg font-bold uppercase leading-tight tracking-tight text-foreground sm:text-2xl">
-                    “Blue and white creatures with flying or vigilance, mana
-                    value 3 or less”
+                    {t('about.exampleQuery', '“Blue and white creatures with flying or vigilance, mana value 3 or less”')}
                   </p>
                 </div>
 
@@ -243,14 +242,14 @@ export default function About() {
 
                 <div>
                   <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
-                    OffMeta reads
+                    {t('about.offmetaReads', 'OffMeta reads')}
                   </p>
                   <dl className="mt-3 max-w-lg">
                     {[
-                      ['Color', 'WU'],
-                      ['Type', 'Creature'],
-                      ['Ability', 'Flying or vigilance'],
-                      ['MV', '≤ 3'],
+                      [t('about.field.color', 'Color'), 'WU'],
+                      [t('about.field.type', 'Type'), 'Creature'],
+                      [t('about.field.ability', 'Ability'), t('about.field.flyingOrVigilance', 'Flying or vigilance')],
+                      [t('about.field.mv', 'MV'), '≤ 3'],
                     ].map(([label, value]) => (
                       <div
                         key={label}
@@ -276,7 +275,7 @@ export default function About() {
 
                 <div>
                   <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
-                    Scryfall gets
+                    {t('about.scryfallGets', 'Scryfall gets')}
                   </p>
                   <code className="mt-2 block overflow-x-auto border-l-2 border-accent/60 py-1 pl-4 font-mono text-sm text-foreground sm:text-base">
                     (c:wu) t:creature (o:flying or o:vigilance) mv&lt;=3
@@ -285,7 +284,7 @@ export default function About() {
                     to="/search/blue%20and%20white%20creatures%20with%20flying%20or%20vigilance%20mana%20value%203%20or%20less"
                     className="mt-5 inline-block font-mono text-[11px] uppercase tracking-[0.26em] text-foreground underline decoration-border underline-offset-[6px] transition-colors hover:decoration-foreground"
                   >
-                    Try this search →
+                    {t('about.tryThisSearch', 'Try this search →')}
                   </Link>
                 </div>
               </div>
@@ -297,15 +296,15 @@ export default function About() {
           <div className="grid gap-6 lg:grid-cols-12">
             <div className="lg:col-span-3">
               <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
-                03 / The principle
+                {t('about.section03Label', '03 / The principle')}
               </p>
             </div>
             <div className="space-y-4 lg:col-span-9">
               <h2 className="font-display text-2xl font-extrabold uppercase leading-[0.95] tracking-tight text-foreground sm:text-3xl">
-                Search help should be visible.
+                {t('about.principleHeading', 'Search help should be visible.')}
                 <br />
                 <span className="font-editorial text-[0.9em] font-normal normal-case italic tracking-normal text-accent">
-                  not hidden behind the search.
+                  {t('about.principleHeading2', 'not hidden behind the search.')}
                 </span>
               </h2>
               <p className="max-w-2xl leading-relaxed text-muted-foreground">
@@ -328,12 +327,12 @@ export default function About() {
           <div className="grid gap-6 lg:grid-cols-12">
             <div className="lg:col-span-3">
               <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
-                04 / The relationship
+                {t('about.section04Label', '04 / The relationship')}
               </p>
             </div>
             <div className="space-y-4 lg:col-span-9">
               <h2 className="font-display text-xl font-extrabold uppercase tracking-tight text-foreground sm:text-2xl">
-                A layer on top of Scryfall, not a replacement for it.
+                {t('about.relationshipHeading', 'A layer on top of Scryfall, not a replacement for it.')}
               </h2>
               <p className="max-w-2xl leading-relaxed text-muted-foreground">
                 {t(
@@ -353,7 +352,7 @@ export default function About() {
                 rel="noopener noreferrer"
                 className="inline-block font-mono text-[11px] uppercase tracking-[0.26em] text-muted-foreground underline decoration-border underline-offset-[6px] transition-colors hover:text-foreground"
               >
-                Scryfall syntax reference ↗
+                {t('about.scryfallSyntaxReference', 'Scryfall syntax reference ↗')}
               </a>
             </div>
           </div>
@@ -363,25 +362,25 @@ export default function About() {
           <div className="grid gap-6 lg:grid-cols-12">
             <div className="lg:col-span-3">
               <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
-                05 / Keep exploring
+                {t('about.section05Label', '05 / Keep exploring')}
               </p>
             </div>
             <ul className="lg:col-span-9">
               {[
                 {
                   to: '/guides',
-                  title: 'Field guide',
-                  copy: 'Learn how to search better.',
+                  title: t('about.explore.fieldGuideTitle', 'Field guide'),
+                  copy: t('about.explore.fieldGuideCopy', 'Learn how to search better.'),
                 },
                 {
                   to: '/combos',
-                  title: 'Combos',
-                  copy: 'Explore interactions and engines.',
+                  title: t('about.explore.combosTitle', 'Combos'),
+                  copy: t('about.explore.combosCopy', 'Explore interactions and engines.'),
                 },
                 {
                   to: '/browse-searches',
-                  title: 'Curated searches',
-                  copy: 'Start with useful ideas.',
+                  title: t('about.explore.curatedSearchesTitle', 'Curated searches'),
+                  copy: t('about.explore.curatedSearchesCopy', 'Start with useful ideas.'),
                 },
               ].map((row) => (
                 <li key={row.to}>

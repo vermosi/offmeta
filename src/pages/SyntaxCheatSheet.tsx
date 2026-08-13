@@ -186,28 +186,22 @@ export default function SyntaxCheatSheet() {
 
           <header className="space-y-4">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-foreground">
-              Scryfall Syntax Cheat Sheet — Natural Language to MTG Search
+              {t('cheatSheet.pageHeading', 'Scryfall Syntax Cheat Sheet — Natural Language to MTG Search')}
             </h1>
             <p className="text-muted-foreground">
               {t('syntax.subtitle')}
             </p>
             <div className="text-sm text-foreground/90 leading-relaxed space-y-2 border-b border-border/30 pb-6">
               <p>
-                Scryfall uses a powerful query language to filter the entire Magic: The Gathering
-                card database. Operators like <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">t:</code> (type),{' '}
-                <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">c:</code> (color),{' '}
-                <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">f:</code> (format),{' '}
-                <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">kw:</code> (keyword),{' '}
-                <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">usd&lt;</code> (price), and{' '}
-                <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">otag:</code> (community tag) can be combined to
-                build precise searches. OffMeta generates this syntax automatically from plain
-                English descriptions — the table below shows what each phrase maps to so you can
-                understand and edit the generated queries.
+                {t('cheatSheet.introPart1Pre', 'Scryfall uses a powerful query language to filter the entire Magic: The Gathering card database. Operators like')} <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">t:</code> {t('cheatSheet.introType', '(type),')}{' '}
+                <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">c:</code> {t('cheatSheet.introColor', '(color),')}{' '}
+                <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">f:</code> {t('cheatSheet.introFormat', '(format),')}{' '}
+                <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">kw:</code> {t('cheatSheet.introKeyword', '(keyword),')}{' '}
+                <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">usd&lt;</code> {t('cheatSheet.introPrice', '(price), and')}{' '}
+                <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">otag:</code> {t('cheatSheet.introPart1Post', '(community tag) can be combined to build precise searches. OffMeta generates this syntax automatically from plain English descriptions — the table below shows what each phrase maps to so you can understand and edit the generated queries.')}
               </p>
               <p>
-                Each row shows an example natural language phrase you might type into OffMeta on
-                the left, and the Scryfall syntax it produces on the right. Click the copy icon
-                to copy any syntax string directly to your clipboard.
+                {t('cheatSheet.introPart2', 'Each row shows an example natural language phrase you might type into OffMeta on the left, and the Scryfall syntax it produces on the right. Click the copy icon to copy any syntax string directly to your clipboard.')}
               </p>
             </div>
           </header>
@@ -254,38 +248,33 @@ export default function SyntaxCheatSheet() {
           {/* Closing explanatory section — gives Googlebot substantive prose */}
           <section className="space-y-3 border-t border-border/30 pt-6 text-sm text-foreground/90 leading-relaxed">
             <h2 className="text-base font-semibold text-foreground">
-              Why Use Natural Language Instead of Scryfall Syntax Directly?
+              {t('cheatSheet.whyHeading', 'Why Use Natural Language Instead of Scryfall Syntax Directly?')}
             </h2>
             <p>
-              Scryfall's query syntax is powerful but has a learning curve. You need to know that
-              color identity uses <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">id:</code> not{' '}
-              <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">c:</code> for Commander, that ramp spells are{' '}
-              <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">otag:mana-ramp</code> not{' '}
-              <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">o:ramp</code>, and that keyword abilities
-              should use <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">kw:</code> rather than oracle text
-              search for accuracy. OffMeta handles all of this for you — just describe what you
-              need and the correct query is generated automatically.
+              {t('cheatSheet.whyPart1Pre', "Scryfall's query syntax is powerful but has a learning curve. You need to know that color identity uses")} <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">id:</code> {t('cheatSheet.whyNot', 'not')}{' '}
+              <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">c:</code> {t('cheatSheet.whyForCommander', 'for Commander, that ramp spells are')}{' '}
+              <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">otag:mana-ramp</code> {t('cheatSheet.whyNot', 'not')}{' '}
+              <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">o:ramp</code>, {t('cheatSheet.whyKeywordAbilities', 'and that keyword abilities should use')}{' '}
+              <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">kw:</code> {t('cheatSheet.whyPart1Post', 'rather than oracle text search for accuracy. OffMeta handles all of this for you — just describe what you need and the correct query is generated automatically.')}
             </p>
             <p>
-              The cheat sheet above is useful for understanding what OffMeta generates, for
-              learning Scryfall syntax if you want to write queries manually, and for editing
-              the generated query in OffMeta's editable query bar to make precise adjustments.
+              {t('cheatSheet.whyPart2', "The cheat sheet above is useful for understanding what OffMeta generates, for learning Scryfall syntax if you want to write queries manually, and for editing the generated query in OffMeta's editable query bar to make precise adjustments.")}
             </p>
             <h2 className="text-base font-semibold text-foreground mt-4">
-              Common Scryfall Syntax Operators Reference
+              {t('cheatSheet.operatorsHeading', 'Common Scryfall Syntax Operators Reference')}
             </h2>
             <ul className="space-y-1 list-disc list-inside">
-              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">t:</code> — card type or subtype (creature, instant, dragon, elf…)</li>
-              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">c:</code> — color (r=red, u=blue, b=black, g=green, w=white)</li>
-              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">id:</code> — color identity (for Commander deck building)</li>
-              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">f:</code> — format legality (commander, modern, standard, pauper…)</li>
-              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">kw:</code> — keyword ability (flying, haste, deathtouch, lifelink…)</li>
-              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">otag:</code> — community function tag (ramp, removal, boardwipe, tutor…)</li>
-              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">usd&lt;</code> — price in US dollars (usd&lt;5 means under $5)</li>
-              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">mv</code> — mana value / converted mana cost (mv&lt;=3 means 3 or less)</li>
-              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">pow / tou</code> — power and toughness (pow&gt;=5 means 5 or more power)</li>
-              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">r:</code> — rarity (common, uncommon, rare, mythic)</li>
-              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">order:</code> — sort results (edhrec, usd, released, name…)</li>
+              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">t:</code> — {t('cheatSheet.op.type', 'card type or subtype (creature, instant, dragon, elf…)')}</li>
+              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">c:</code> — {t('cheatSheet.op.color', 'color (r=red, u=blue, b=black, g=green, w=white)')}</li>
+              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">id:</code> — {t('cheatSheet.op.identity', 'color identity (for Commander deck building)')}</li>
+              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">f:</code> — {t('cheatSheet.op.format', 'format legality (commander, modern, standard, pauper…)')}</li>
+              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">kw:</code> — {t('cheatSheet.op.keyword', 'keyword ability (flying, haste, deathtouch, lifelink…)')}</li>
+              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">otag:</code> — {t('cheatSheet.op.otag', 'community function tag (ramp, removal, boardwipe, tutor…)')}</li>
+              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">usd&lt;</code> — {t('cheatSheet.op.usd', 'price in US dollars (usd<5 means under $5)')}</li>
+              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">mv</code> — {t('cheatSheet.op.mv', 'mana value / converted mana cost (mv<=3 means 3 or less)')}</li>
+              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">pow / tou</code> — {t('cheatSheet.op.powTou', 'power and toughness (pow>=5 means 5 or more power)')}</li>
+              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">r:</code> — {t('cheatSheet.op.rarity', 'rarity (common, uncommon, rare, mythic)')}</li>
+              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">order:</code> — {t('cheatSheet.op.order', 'sort results (edhrec, usd, released, name…)')}</li>
             </ul>
           </section>
         </div>

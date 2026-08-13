@@ -32,6 +32,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { CardDetailView } from '@/components/card-detail/CardDetailView';
 import { PageSearchBar } from '@/components/PageSearchBar';
 import { ArrowLeft } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 import type { ScryfallCard } from '@/types/card';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -70,6 +71,7 @@ async function resolveCardFromSlug(slug: string): Promise<ScryfallCard> {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const CardPage = () => {
+  const { t } = useTranslation();
   const { slug: rawSlug } = useParams<{ slug: string }>();
   // Route-level slug normalization: `/cards/Sol_Ring`, `/cards/sol--ring/`, and
   // percent-encoded variants all collapse onto the canonical slug shape.
@@ -205,7 +207,7 @@ const CardPage = () => {
           className="relative flex-1 py-4 sm:py-10"
           role="status"
           aria-busy="true"
-          aria-label="Loading card details"
+          aria-label={t('card.loadingAriaLabel', 'Loading card details')}
         >
           <div className="container-main space-y-6 sm:space-y-10 animate-fade-in">
             {/* Search bar placeholder */}
@@ -257,7 +259,7 @@ const CardPage = () => {
               </div>
             </div>
 
-            <span className="sr-only">Loading card details…</span>
+            <span className="sr-only">{t('card.loadingSrText', 'Loading card details…')}</span>
           </div>
         </main>
         <Footer />
@@ -270,7 +272,7 @@ const CardPage = () => {
     // Invalid/unknown card slug — mark noindex so crawlers drop it, but keep
     // the response accessible for users who followed a broken link.
     if (typeof document !== 'undefined') {
-      document.title = `Card not found | OffMeta`;
+      document.title = t('card.notFoundTitle', 'Card not found | OffMeta');
       let robots = document.querySelector('meta[name="robots"]') as HTMLMetaElement | null;
       if (!robots) {
         robots = document.createElement('meta');
@@ -285,16 +287,16 @@ const CardPage = () => {
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <main className="flex-1 container-main py-16 text-center space-y-4">
-          <h1 className="text-2xl font-bold text-foreground">Card Not Found</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t('card.notFoundHeading', 'Card Not Found')}</h1>
           <p className="text-muted-foreground">
-            We couldn't find a card matching "{guessedName}".
+            {t('card.notFoundDesc', 'We couldn\'t find a card matching "{name}".', { name: guessedName })}
           </p>
           <Link
             to="/"
             className="inline-flex items-center gap-2 text-primary hover:underline"
           >
             <ArrowLeft className="h-4 w-4" />
-            Search for cards
+            {t('card.searchForCards', 'Search for cards')}
           </Link>
         </main>
         <Footer />
@@ -321,12 +323,12 @@ const CardPage = () => {
           <div className="container-main space-y-6 sm:space-y-10 animate-fade-in">
             {/* Persistent search funnel */}
             <PageSearchBar
-              placeholder={`Search cards like ${card.name}…`}
+              placeholder={t('card.searchLikePlaceholder', 'Search cards like {name}…', { name: card.name })}
               initialValue=""
             />
 
             {/* Breadcrumb */}
-            <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
+            <nav aria-label={t('card.breadcrumbAria', 'Breadcrumb')} className="text-sm text-muted-foreground">
               <ol className="flex items-center gap-1.5">
                 <li><Link to="/" className="hover:text-foreground transition-colors">OffMeta</Link></li>
                 <li aria-hidden="true">/</li>

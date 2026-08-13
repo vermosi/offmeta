@@ -13,6 +13,7 @@ import { PageSearchBar } from '@/components/PageSearchBar';
 import { applySeoMeta, buildBreadcrumbJsonLd, injectJsonLd } from '@/lib/seo';
 import type { LandingPageConfig } from '@/lib/landing/types';
 import { getLandingPage } from '@/lib/landing/registry';
+import { useTranslation } from '@/lib/i18n';
 import {
   AdjacentConcepts,
   EditorialExplanation,
@@ -27,14 +28,17 @@ import { RepresentativeResults } from './RepresentativeResults';
 
 const SITE = 'https://offmeta.app';
 
-function buildCrumbs(config: LandingPageConfig) {
+function buildCrumbs(config: LandingPageConfig, t: (key: string, fallback?: string) => string) {
   const segments = config.path.split('/').filter(Boolean);
   const crumbs: Array<{ label: string; href?: string }> = [];
 
   if (segments.length > 1) {
     const root = segments[0];
     crumbs.push({
-      label: root === 'mtg' ? 'Card index' : root.replace(/-/g, ' '),
+      label:
+        root === 'mtg'
+          ? t('landing.cardIndex', 'Card index')
+          : root.replace(/-/g, ' '),
       // Only link the parent when a real page exists there.
       href: getLandingPage(`/${root}`) ? `/${root}` : undefined,
     });
@@ -44,6 +48,7 @@ function buildCrumbs(config: LandingPageConfig) {
 }
 
 export function LandingPageView({ config }: { config: LandingPageConfig }) {
+  const { t } = useTranslation();
   const url = `${SITE}${config.path}`;
 
   useEffect(() => {
@@ -57,7 +62,7 @@ export function LandingPageView({ config }: { config: LandingPageConfig }) {
         : { robots: 'noindex, follow' },
     });
 
-    const crumbs = buildCrumbs(config);
+    const crumbs = buildCrumbs(config, t);
     const cleanupLd = injectJsonLd({
       '@context': 'https://schema.org',
       '@graph': [
@@ -79,7 +84,7 @@ export function LandingPageView({ config }: { config: LandingPageConfig }) {
           // them so the CollectionPage is not an empty shell.
           mainEntity: {
             '@type': 'ItemList',
-            name: config.intentPathsTitle ?? 'Explore',
+            name: config.intentPathsTitle ?? t('landing.explore', 'Explore'),
             numberOfItems: config.intentPaths.length,
             itemListElement: config.intentPaths.map((path, index) => ({
               '@type': 'ListItem',
@@ -98,7 +103,7 @@ export function LandingPageView({ config }: { config: LandingPageConfig }) {
       cleanupSeo();
       cleanupLd();
     };
-  }, [config, url]);
+  }, [config, url, t]);
 
   const indexLine = ['OffMeta', ...config.indexTrail].join(' / ');
 
@@ -108,7 +113,7 @@ export function LandingPageView({ config }: { config: LandingPageConfig }) {
       <Header />
 
       <main id="main-content" className="container-main flex-1 pb-16">
-        <IndexHeader trail={config.indexTrail} crumbs={buildCrumbs(config)} />
+        <IndexHeader trail={config.indexTrail} crumbs={buildCrumbs(config, t)} />
 
         <EditorialHero
           headline={config.headline}
@@ -125,19 +130,22 @@ export function LandingPageView({ config }: { config: LandingPageConfig }) {
             size="lg"
           />
           <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
-            Edit the query, or start from a path below
+            {t('landing.editQueryHint', 'Edit the query, or start from a path below')}
           </p>
         </section>
 
         <IntentPaths
-          title={config.intentPathsTitle ?? 'Explore'}
+          title={config.intentPathsTitle ?? t('landing.explore', 'Explore')}
           paths={config.intentPaths}
         />
 
         {config.representativeQuery ? (
           <RepresentativeResults
             query={config.representativeQuery}
-            label={config.representativeLabel ?? 'Representative results'}
+            label={
+              config.representativeLabel ??
+              t('landing.representativeResults', 'Representative results')
+            }
             intentPaths={config.intentPaths}
             summaryTopic={config.summaryTopic ?? config.breadcrumbLabel}
           />
@@ -163,17 +171,19 @@ export function LandingPageView({ config }: { config: LandingPageConfig }) {
         {/* 09 — search again. */}
         <section className="py-10">
           <h2 className="font-display text-xl font-extrabold uppercase tracking-tight text-foreground">
-            Search again
+            {t('landing.searchAgain', 'Search again')}
           </h2>
           <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-            Describe what your deck needs. OffMeta shows the Scryfall query it
-            ran, so you can keep refining it.
+            {t(
+              'landing.searchAgainDesc',
+              'Describe what your deck needs. OffMeta shows the Scryfall query it ran, so you can keep refining it.',
+            )}
           </p>
           <Link
             to={searchHref(config.searchQuery)}
             className="mt-4 inline-block font-mono text-[11px] uppercase tracking-[0.26em] text-foreground underline decoration-border underline-offset-[6px] transition-colors hover:decoration-foreground"
           >
-            Run "{config.searchQuery}" →
+            {t('landing.runQuery', 'Run "{query}" →', { query: config.searchQuery })}
           </Link>
         </section>
       </main>

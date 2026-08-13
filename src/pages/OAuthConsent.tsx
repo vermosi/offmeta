@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Lock, Mail, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 // The Supabase JS `auth.oauth` namespace is beta; type it locally rather than
 // depending on typings in @supabase/supabase-js catching up.
@@ -48,6 +49,7 @@ function getOAuthApi(): OAuthNamespace {
 }
 
 export default function OAuthConsent() {
+  const { t } = useTranslation();
   const [params] = useSearchParams();
   const authorizationId = params.get('authorization_id') ?? '';
   const returnTo = window.location.pathname + window.location.search;
@@ -94,7 +96,7 @@ export default function OAuthConsent() {
   const authed = authorizationState?.authed ?? (authorizationId ? null : false);
   const details = authorizationState?.details ?? null;
   const errorMessage = !authorizationId
-    ? 'Missing authorization_id in URL.'
+    ? t('auth.oauth.missingAuthorizationId', 'Missing authorization_id in URL.')
     : error instanceof Error
       ? error.message
       : null;
@@ -162,7 +164,7 @@ export default function OAuthConsent() {
         <div className="flex items-center gap-2 mb-4">
           <ShieldCheck className="h-5 w-5 text-primary" aria-hidden="true" />
           <h1 className="text-lg font-semibold text-foreground">
-            Connect to OffMeta
+            {t('auth.oauth.connectTitle', 'Connect to OffMeta')}
           </h1>
         </div>
 
@@ -175,27 +177,27 @@ export default function OAuthConsent() {
               size="sm"
               onClick={() => void refetchAuthorization()}
             >
-              Retry
+              {t('auth.oauth.retry', 'Retry')}
             </Button>
           </div>
         )}
 
         {isLoading && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" /> Loading…
+            <Loader2 className="h-4 w-4 animate-spin" /> {t('auth.oauth.loading', 'Loading…')}
           </div>
         )}
 
         {isFetching && !isLoading && !errorMessage && (
           <div className="rounded-lg border border-border/60 bg-muted/30 p-4 text-sm text-muted-foreground">
-            Fetching authorization details…
+            {t('auth.oauth.fetchingDetails', 'Fetching authorization details…')}
           </div>
         )}
 
         {authed === false && !errorMessage && (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Sign in to authorize this MCP client to act as you on OffMeta.
+              {t('auth.oauth.signInToAuthorize', 'Sign in to authorize this MCP client to act as you on OffMeta.')}
             </p>
             <Button
               type="button"
@@ -207,7 +209,7 @@ export default function OAuthConsent() {
               {googleBusy ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                'Continue with Google'
+                t('auth.google')
               )}
             </Button>
             <div className="relative">
@@ -215,12 +217,12 @@ export default function OAuthConsent() {
                 <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">or</span>
+                <span className="bg-card px-2 text-muted-foreground">{t('auth.or')}</span>
               </div>
             </div>
             <form onSubmit={handlePasswordSignIn} className="space-y-3">
               <div className="space-y-1.5">
-                <Label htmlFor="consent-email">Email</Label>
+                <Label htmlFor="consent-email">{t('auth.email')}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -234,7 +236,7 @@ export default function OAuthConsent() {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="consent-password">Password</Label>
+                <Label htmlFor="consent-password">{t('auth.password')}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -252,13 +254,13 @@ export default function OAuthConsent() {
                 {signInBusy && (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 )}
-                Sign in
+                {t('auth.signIn')}
               </Button>
             </form>
             <Button asChild variant="ghost" className="w-full gap-2">
               <Link to="/">
                 <ArrowLeft className="h-4 w-4" />
-                Back to OffMeta
+                {t('auth.oauth.backToOffMeta', 'Back to OffMeta')}
               </Link>
             </Button>
           </div>
@@ -266,7 +268,7 @@ export default function OAuthConsent() {
 
         {authed === true && !details && !errorMessage && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" /> Loading authorization…
+            <Loader2 className="h-4 w-4 animate-spin" /> {t('auth.oauth.loadingAuthorization', 'Loading authorization…')}
           </div>
         )}
 
@@ -274,16 +276,14 @@ export default function OAuthConsent() {
           <div className="space-y-4">
             <p className="text-sm text-foreground">
               <span className="font-medium">
-                {details.client?.name ?? 'An application'}
+                {details.client?.name ?? t('auth.oauth.anApplication', 'An application')}
               </span>{' '}
-              is requesting access to act as you on OffMeta. It will be able to
-              use the tools this app exposes (search cards, read your decks,
-              saved searches, and collection).
+              {t('auth.oauth.requestingAccess', 'is requesting access to act as you on OffMeta. It will be able to use the tools this app exposes (search cards, read your decks, saved searches, and collection).')}
             </p>
             {scopeList.length > 0 && (
               <div className="rounded-lg border border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground">
                 <p className="font-medium text-foreground mb-2">
-                  Requested access
+                  {t('auth.oauth.requestedAccess', 'Requested access')}
                 </p>
                 <ul className="space-y-1">
                   {scopeList.map((scope) => (
@@ -303,7 +303,7 @@ export default function OAuthConsent() {
                 disabled={busy}
                 onClick={() => decide(false)}
               >
-                Deny
+                {t('auth.oauth.deny', 'Deny')}
               </Button>
               <Button
                 type="button"
@@ -312,13 +312,13 @@ export default function OAuthConsent() {
                 onClick={() => decide(true)}
               >
                 {busy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Approve
+                {t('auth.oauth.approve', 'Approve')}
               </Button>
             </div>
             <Button asChild variant="ghost" className="w-full gap-2">
               <Link to="/">
                 <ArrowLeft className="h-4 w-4" />
-                Return to OffMeta
+                {t('auth.oauth.returnToOffMeta', 'Return to OffMeta')}
               </Link>
             </Button>
           </div>
