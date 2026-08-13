@@ -213,12 +213,23 @@ export function validateQuery(query: string): {
     .replace(/\s+/g, ' ')
     .trim();
 
+  // Modern Oracle wording dropped "the battlefield" from enter triggers, so an
+  // exact phrase search now matches almost nothing. Broaden it to both wordings.
+  if (/o:"enters the battlefield"/i.test(sanitized)) {
+    sanitized = sanitized.replace(
+      /o:"enters the battlefield"/gi,
+      '(o:"enters the battlefield" or o:"enters")',
+    );
+    issues.push('Broadened legacy enters-the-battlefield wording');
+  }
+
   // Normalize boolean precedence (wrap OR groups)
   const normalizedOr = normalizeOrGroups(sanitized);
   if (normalizedOr !== sanitized) {
     sanitized = normalizedOr;
     issues.push('Normalized OR groups with parentheses');
   }
+
 
   // Enforce max length
   if (sanitized.length > 500) {
