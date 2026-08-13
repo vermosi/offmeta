@@ -140,7 +140,7 @@ export default function GuidesIndex() {
       <SkipLinks />
       <Header />
 
-      <main id="main-content" className="container-main flex-1 pb-16 pt-8">
+      <main id="main-content" className="container-main w-full min-w-0 flex-1 pb-16 pt-8">
         <nav aria-label="Breadcrumb" className="mb-10">
           <ol className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
             <li>
@@ -182,7 +182,7 @@ export default function GuidesIndex() {
                 type="button"
                 onClick={() => setActiveFilter(filter.key)}
                 aria-pressed={isActive}
-                className={`font-mono text-[11px] uppercase tracking-[0.26em] underline-offset-[6px] transition-colors ${
+                className={`inline-flex min-h-9 items-center font-mono text-[11px] uppercase tracking-[0.26em] underline-offset-[6px] transition-colors ${
                   isActive
                     ? 'text-foreground underline decoration-accent decoration-2'
                     : 'text-muted-foreground hover:text-foreground'
@@ -218,7 +218,7 @@ export default function GuidesIndex() {
                     key={guide.slug}
                     className="border-b border-border/50 py-6 first:border-t"
                   >
-                    <div className="grid gap-4 lg:grid-cols-12 lg:items-start">
+                    <div className="grid min-w-0 gap-4 lg:grid-cols-12 lg:items-start">
                       <span className="font-mono text-[11px] tracking-[0.24em] text-muted-foreground lg:col-span-1">
                         {group.section}.{pad(index + 1)}
                       </span>
@@ -235,7 +235,7 @@ export default function GuidesIndex() {
                         </p>
                       </div>
 
-                      <div className="flex flex-col gap-1.5 lg:col-span-4 lg:items-end">
+                      <div className="flex min-w-0 flex-col gap-1.5 lg:col-span-4 lg:items-end">
                         <Link
                           to={`/search/${encodeURIComponent(guide.searchQuery)}`}
                           className="block max-w-full truncate font-mono text-[11px] tracking-[0.16em] text-foreground underline decoration-border underline-offset-[6px] transition-colors hover:decoration-foreground"

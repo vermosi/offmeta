@@ -23,7 +23,7 @@ export function LanguageSelector() {
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 rounded-none text-muted-foreground hover:bg-transparent hover:text-foreground"
+          className="h-9 w-9 rounded-none text-muted-foreground hover:bg-transparent hover:text-foreground"
           aria-label={t('language.label')}
         >
           <Globe className="h-4 w-4" aria-hidden="true" />
