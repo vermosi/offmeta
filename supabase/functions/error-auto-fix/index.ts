@@ -61,8 +61,17 @@ interface FixOutcome {
  * Repair invocations already made during the current run, keyed by function
  * name. Ten sitemap rows must not fire ten sitemap regenerations — every
  * repair here is whole-pipeline, so one call per run per function is enough.
+ *
+ * This is only the cheap first layer: it dies with the isolate. The durable
+ * cooldown lives in `public.job_dedupe` so a redeploy or cold start can't
+ * re-kick a pipeline that was already repaired minutes ago.
  */
 let runInvocations = new Map<string, Promise<FixOutcome>>();
+/** Invocations suppressed by the persisted cooldown during this run. */
+let suppressedInvocations = 0;
+
+/** Minimum gap between two invocations of the same repair pipeline. */
+const INVOKE_COOLDOWN_SECONDS = 30 * 60;
 
 async function invokeFunctionUncached(name: string, body: unknown): Promise<FixOutcome> {
   const url = Deno.env.get('SUPABASE_URL');
@@ -87,6 +96,34 @@ async function invokeFunctionUncached(name: string, body: unknown): Promise<FixO
   }
 }
 
+async function invokeFunctionDeduped(name: string, body: unknown): Promise<FixOutcome> {
+  const key = `invoke:${name}`;
+  const claim = await claimDedupe<{ ok?: boolean; detail?: string }>(
+    key,
+    INVOKE_COOLDOWN_SECONDS,
+    { source: 'error-auto-fix', state: 'dispatching' },
+  );
+
+  if (!claim.claimed) {
+    suppressedInvocations += 1;
+    const previous = claim.decision?.detail ?? 'dispatched recently';
+    return {
+      action: `invoke:${name}`,
+      ok: claim.decision?.ok ?? true,
+      detail: `deduped_persisted until ${claim.expiresAt ?? 'cooldown'}: ${previous}`,
+    };
+  }
+
+  const outcome = await invokeFunctionUncached(name, body);
+  await recordDedupeDecision(key, {
+    source: 'error-auto-fix',
+    state: 'dispatched',
+    ok: outcome.ok,
+    detail: outcome.detail ?? '',
+  });
+  return outcome;
+}
+
 async function invokeFunction(name: string, body: unknown): Promise<FixOutcome> {
   if (!REPAIRABLE_FUNCTIONS.has(name)) {
     return { action: `invoke:${name}`, ok: false, detail: 'function_not_allowed' };
@@ -96,10 +133,11 @@ async function invokeFunction(name: string, body: unknown): Promise<FixOutcome> 
     const outcome = await existing;
     return { ...outcome, detail: `deduped_in_run: ${outcome.detail ?? ''}`.trim() };
   }
-  const pending = invokeFunctionUncached(name, body);
+  const pending = invokeFunctionDeduped(name, body);
   runInvocations.set(name, pending);
   return await pending;
 }
+
 
 
 /** Verify the live sitemap is servable and non-trivial. */
