@@ -13,6 +13,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, requireServiceOrPipelineKey } from '../_shared/auth.ts';
 import { createLogger, withLogging } from '../_shared/logger.ts';
+import { reportEdgeError } from '../_shared/errorReporter.ts';
 
 const BATCH_SIZE = 75;
 const SCRYFALL_DELAY_MS = 120;
