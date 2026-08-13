@@ -190,6 +190,27 @@ export default function GuidePage() {
     { name: guide.title, url: pageUrl },
   ]);
 
+  const pad = (value: number) => String(value).padStart(2, '0');
+  const sectionIndex =
+    guide.level <= 3 ? 1 : guide.level <= 6 ? 2 : guide.level <= 8 ? 3 : 4;
+  const sectionStart = [1, 1, 4, 7, 9][sectionIndex];
+  const guideNumber = `${pad(sectionIndex)}.${pad(guide.level - sectionStart + 1)}`;
+  const levelLabel =
+    sectionIndex === 1
+      ? 'Beginner'
+      : sectionIndex === 2
+        ? 'Intermediate'
+        : sectionIndex === 3
+          ? 'Advanced'
+          : 'Expert';
+
+  const tocSections: Array<[string, string]> = [
+    ['search', 'Try it'],
+    ['tips', 'Go further'],
+    ['faq', 'FAQ'],
+    ['related', 'Related guides'],
+  ];
+
   return (
     <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
       <script
@@ -204,321 +225,250 @@ export default function GuidePage() {
       <SkipLinks />
       <Header />
 
-      <nav className="container-main pt-4 sm:pt-6 pb-2" aria-label="Breadcrumb">
-        <ol className="flex items-center gap-1.5 text-sm text-muted-foreground">
+      <nav className="container-main pt-8" aria-label="Breadcrumb">
+        <ol className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
           <li>
-            <Link to="/" className="hover:text-foreground transition-colors">
-              {t('nav.home')}
+            <Link to="/" className="transition-colors hover:text-foreground">
+              OffMeta
             </Link>
           </li>
           <li aria-hidden="true">/</li>
           <li>
-            <Link
-              to="/guides"
-              className="hover:text-foreground transition-colors"
-            >
-              {t('nav.guides')}
+            <Link to="/guides" className="transition-colors hover:text-foreground">
+              Field Guide
             </Link>
           </li>
           <li aria-hidden="true">/</li>
-          <li className="text-foreground font-medium truncate">
-            {t(`guide.title.${guide.slug}`, guide.heading)}
-          </li>
+          <li className="text-foreground">{guideNumber}</li>
         </ol>
       </nav>
 
-      <main
-        id="main-content"
-        className="flex-1 container-main py-8 sm:py-10 lg:py-12"
-      >
-        <div className="max-w-2xl mx-auto mb-6">
-          <PageSearchBar placeholder={`Search: ${guide.searchQuery}`} />
-        </div>
-        <article className="max-w-2xl mx-auto space-y-8 sm:space-y-10 min-w-0">
-          <header className="space-y-4 min-w-0">
-            <h1 className="text-2xl sm:text-3xl lg:text-5xl font-semibold text-foreground leading-tight break-words">
+      <main id="main-content" className="container-main flex-1 pb-16 pt-8">
+        <article className="mx-auto min-w-0 max-w-2xl">
+          <header className="border-b border-border/60 pb-8">
+            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              {levelLabel} / Level {pad(guide.level)}
+            </p>
+            <h1 className="mt-4 break-words font-display text-[clamp(2rem,5vw,3.25rem)] font-extrabold uppercase leading-[0.9] tracking-tight text-foreground">
               {t(`guide.title.${guide.slug}`, guide.heading)}
             </h1>
-            <p className="text-lg text-muted-foreground break-words">
+            <p className="mt-4 break-words text-base leading-relaxed text-muted-foreground sm:text-lg">
               {t(`guide.sub.${guide.slug}`, guide.subheading)}
             </p>
-            <div className="flex flex-wrap gap-2">
-              <Button
+            <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2">
+              <button
                 type="button"
-                variant="outline"
-                size="sm"
                 onClick={() => void handleCopyLink()}
-                className="gap-2"
+                className="min-h-[36px] font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground transition-colors hover:text-foreground"
               >
-                <Copy className="h-4 w-4" />
                 Copy link
-              </Button>
-              <Button
+              </button>
+              <button
                 type="button"
-                variant="outline"
-                size="sm"
                 onClick={() => void handleShare()}
-                className="gap-2"
+                className="min-h-[36px] font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground transition-colors hover:text-foreground"
               >
-                <Share2 className="h-4 w-4" />
                 Share guide
-              </Button>
+              </button>
             </div>
           </header>
 
-          <section
-            aria-label="On this page"
-            className="rounded-xl border border-border bg-card p-4 sm:p-5 space-y-4"
-          >
-            <div className="flex items-center gap-2">
-              <List className="h-5 w-5 text-primary" />
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">
-                On this page
-              </h2>
-            </div>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {[
-                ['search', 'Search this guide'],
-                ['tips', 'Tips & strategy'],
-                ['faq', 'FAQ'],
-                ['related', 'Related guides'],
-              ].map(([sectionId, sectionLabel]) => (
-                <div
-                  key={sectionId}
-                  className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2"
-                >
+          <nav aria-label="In this guide" className="border-b border-border/50 py-6">
+            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              In this guide
+            </p>
+            <ol className="mt-3 space-y-1.5">
+              {tocSections.map(([sectionId, sectionLabel], index) => (
+                <li key={sectionId} className="flex items-baseline gap-3">
+                  <span className="font-mono text-[11px] tracking-[0.24em] text-muted-foreground">
+                    {pad(index + 1)} /
+                  </span>
                   <a
                     href={`#${sectionId}`}
-                    className="min-w-0 flex-1 text-sm text-foreground hover:text-primary transition-colors"
+                    className="text-sm text-foreground underline-offset-[6px] transition-colors hover:underline"
                   >
                     {sectionLabel}
                   </a>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 px-2 gap-1.5 text-muted-foreground hover:text-foreground"
-                    onClick={() => {
-                      void handleCopySectionLink(sectionId, sectionLabel);
-                    }}
-                  >
-                    <Copy className="h-3.5 w-3.5" />
-                    Copy
-                  </Button>
-                </div>
+                </li>
               ))}
-            </div>
-          </section>
+            </ol>
+          </nav>
 
-          <div
-            id="search"
-            className="rounded-xl border border-border bg-card p-5 sm:p-6 space-y-3 overflow-hidden"
-          >
-            <p className="text-sm text-muted-foreground">
-              {t('guide.searchInstantly')}
-            </p>
-            <Button
-              onClick={handleSearchClick}
-              className="w-full sm:w-auto gap-2 max-w-full !whitespace-normal text-left"
-              size="lg"
-            >
-              <Search className="h-4 w-4 flex-shrink-0" />
-              <span className="line-clamp-1">
-                {t('guide.search')} "{guide.searchQuery}"
-              </span>
-              <ArrowRight className="h-4 w-4 flex-shrink-0" />
-            </Button>
-          </div>
-
-          <section className="min-w-0">
-            <p className="text-base leading-relaxed text-foreground/90 break-words">
+          <section className="min-w-0 py-8">
+            <p className="break-words text-base leading-relaxed text-foreground/90">
               {t(`guide.intro.${guide.slug}`, guide.intro)}
             </p>
           </section>
 
-          {'howOffmetaHelps' in guide && guide.howOffmetaHelps && (
-            <section className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                <h2 className="text-xl font-semibold text-foreground">
-                  {t('guide.howOffmetaHelps')}
-                </h2>
-              </div>
-              <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 overflow-hidden">
-                <div className="flex flex-wrap items-center gap-2 mb-2 text-xs text-muted-foreground min-w-0">
-                  <span>{t('guide.youType')}</span>
-                  <code className="px-2 py-0.5 rounded bg-muted text-foreground font-mono text-xs break-all max-w-full">
-                    {guide.searchQuery}
-                  </code>
-                </div>
+          <section id="search" className="border-t border-border/50 py-8">
+            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              Example 01
+            </p>
+            <div className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-2">
+              <p className="min-w-0 break-words font-mono text-lg text-foreground sm:text-xl">
+                "{guide.searchQuery}"
+              </p>
+              <button
+                type="button"
+                onClick={handleSearchClick}
+                className="min-h-[36px] font-mono text-[11px] uppercase tracking-[0.26em] text-foreground underline decoration-border underline-offset-[6px] transition-colors hover:decoration-foreground"
+              >
+                Run →
+              </button>
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">
+              {t('guide.searchInstantly')}
+            </p>
+
+            {'howOffmetaHelps' in guide && guide.howOffmetaHelps && (
+              <div className="mt-8 space-y-3 border-l-2 border-accent/50 pl-5">
+                <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+                  Interpreted as
+                </p>
                 {'translatedQuery' in guide && (
-                  <div className="flex flex-wrap items-center gap-2 mb-3 text-xs text-muted-foreground">
-                    <span>{t('guide.offmetaGenerates')}</span>
-                    <code className="px-2 py-0.5 rounded bg-muted text-foreground font-mono text-xs break-all">
-                      {(guide as { translatedQuery: string }).translatedQuery}
-                    </code>
-                  </div>
+                  <code className="block break-all font-mono text-sm text-foreground">
+                    {(guide as { translatedQuery: string }).translatedQuery}
+                  </code>
                 )}
-                <p className="text-sm text-foreground/85 leading-relaxed break-words">
+                <p className="break-words text-sm leading-relaxed text-foreground/85">
                   {t(`guide.howHelps.${guide.slug}`, guide.howOffmetaHelps)}
                 </p>
               </div>
-            </section>
-          )}
+            )}
 
-          <section id="tips" className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Lightbulb className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold text-foreground">
-                {t('guide.tipsStrategy')}
-              </h2>
+            <div className="mt-8">
+              <PageSearchBar placeholder={`Search: ${guide.searchQuery}`} />
             </div>
-            <ul className="space-y-3">
+          </section>
+
+          <section id="tips" className="border-t border-border/50 py-8">
+            <h2 className="font-display text-lg font-extrabold uppercase tracking-tight text-foreground">
+              {t('guide.tipsStrategy')}
+            </h2>
+            <ul className="mt-4">
               {guide.tips.map((tip, i) => (
                 <li
                   key={i}
-                  className="flex gap-3 text-sm text-foreground/85 leading-relaxed"
+                  className="flex gap-4 border-b border-border/40 py-3 first:border-t"
                 >
-                  <span className="flex-shrink-0 mt-1 h-5 w-5 rounded-full bg-primary/10 text-primary text-xs font-medium flex items-center justify-center">
-                    {i + 1}
+                  <span className="font-mono text-[11px] tracking-[0.24em] text-muted-foreground">
+                    {pad(i + 1)}
                   </span>
-                  {t(`guide.tip${i + 1}.${guide.slug}`, tip)}
+                  <span className="text-sm leading-relaxed text-foreground/85">
+                    {t(`guide.tip${i + 1}.${guide.slug}`, tip)}
+                  </span>
                 </li>
               ))}
             </ul>
           </section>
 
-          <section id="faq" className="space-y-4">
-            <div className="flex items-center gap-2">
-              <HelpCircle className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold text-foreground">
-                {t('guide.faqHeading')}
-              </h2>
-            </div>
-            <div className="space-y-4">
+          <section id="faq" className="border-t border-border/50 py-8">
+            <h2 className="font-display text-lg font-extrabold uppercase tracking-tight text-foreground">
+              {t('guide.faqHeading')}
+            </h2>
+            <dl className="mt-4">
               {guide.faq.map((f, i) => (
-                <div
-                  key={i}
-                  className="rounded-lg border border-border bg-card p-4 space-y-2"
-                >
-                  <h3 className="font-medium text-foreground">
+                <div key={i} className="border-b border-border/40 py-4 first:border-t">
+                  <dt className="font-medium text-foreground">
                     {t(`guide.faq${i + 1}q.${guide.slug}`, f.question)}
-                  </h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
+                  </dt>
+                  <dd className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
                     {t(`guide.faq${i + 1}a.${guide.slug}`, f.answer)}
-                  </p>
+                  </dd>
                 </div>
               ))}
-            </div>
+            </dl>
           </section>
 
           {relatedGuides.length > 0 && (
-            <section id="related" className="space-y-4">
-              <div className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-primary" />
-                <h2 className="text-xl font-semibold text-foreground">
-                  {t('guide.relatedGuides')}
-                </h2>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
+            <section id="related" className="border-t border-border/50 py-8">
+              <h2 className="font-display text-lg font-extrabold uppercase tracking-tight text-foreground">
+                {t('guide.relatedGuides')}
+              </h2>
+              <ul className="mt-4">
                 {relatedGuides.map(
                   (rg) =>
                     rg && (
-                      <Link
-                        key={rg.slug}
-                        to={`/guides/${rg.slug}`}
-                        className="group rounded-lg border border-border bg-card p-4 hover:border-primary/30 transition-colors"
-                      >
-                        <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">
-                          {t(`guide.title.${rg.slug}`, rg.title)}
-                        </h3>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {t(`guide.sub.${rg.slug}`, rg.subheading)}
-                        </p>
-                      </Link>
+                      <li key={rg.slug}>
+                        <Link
+                          to={`/guides/${rg.slug}`}
+                          className="group flex items-baseline justify-between gap-6 border-b border-border/40 py-4 first:border-t"
+                        >
+                          <span className="min-w-0">
+                            <span className="block font-display text-sm font-bold uppercase tracking-tight text-foreground">
+                              {t(`guide.title.${rg.slug}`, rg.title)}
+                            </span>
+                            <span className="mt-1 block text-sm text-muted-foreground">
+                              {t(`guide.sub.${rg.slug}`, rg.subheading)}
+                            </span>
+                          </span>
+                          <span
+                            aria-hidden="true"
+                            className="font-mono text-xs text-muted-foreground transition-transform group-hover:translate-x-1"
+                          >
+                            →
+                          </span>
+                        </Link>
+                      </li>
                     ),
                 )}
-              </div>
+              </ul>
             </section>
           )}
 
-          <section className="grid gap-3 sm:grid-cols-2">
-            {previousGuide ? (
-              <Link
-                to={`/guides/${previousGuide.slug}`}
-                className="group rounded-xl border border-border bg-card p-4 hover:border-primary/30 transition-colors"
-              >
-                <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
-                  <ArrowLeft className="h-3.5 w-3.5" />
-                  Previous guide
-                </div>
-                <h2 className="mt-2 font-medium text-foreground group-hover:text-primary transition-colors">
-                  {t(`guide.title.${previousGuide.slug}`, previousGuide.title)}
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {t(
-                    `guide.sub.${previousGuide.slug}`,
-                    previousGuide.subheading,
-                  )}
+          <section className="border-t border-border/50 py-8">
+            <div className="grid gap-6 sm:grid-cols-2">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+                  Previous
                 </p>
-              </Link>
-            ) : (
-              <div className="rounded-xl border border-border bg-card p-4 opacity-80">
-                <div className="text-xs uppercase tracking-wide text-muted-foreground">
-                  Starting point
-                </div>
-                <h2 className="mt-2 font-medium text-foreground">
-                  This is the first guide
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Begin here, then move through the rest in order.
-                </p>
+                {previousGuide ? (
+                  <Link
+                    to={`/guides/${previousGuide.slug}`}
+                    className="mt-2 block font-display text-sm font-bold uppercase tracking-tight text-foreground underline-offset-[6px] hover:underline"
+                  >
+                    ← {t(`guide.title.${previousGuide.slug}`, previousGuide.title)}
+                  </Link>
+                ) : (
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    This is the first guide.
+                  </p>
+                )}
               </div>
-            )}
-
-            {nextGuide ? (
-              <Link
-                to={`/guides/${nextGuide.slug}`}
-                className="group rounded-xl border border-border bg-card p-4 hover:border-primary/30 transition-colors"
-              >
-                <div className="flex items-center justify-between gap-2 text-xs uppercase tracking-wide text-muted-foreground">
-                  <span>Next guide</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </div>
-                <h2 className="mt-2 font-medium text-foreground group-hover:text-primary transition-colors">
-                  {t(`guide.title.${nextGuide.slug}`, nextGuide.title)}
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {t(`guide.sub.${nextGuide.slug}`, nextGuide.subheading)}
+              <div className="sm:text-right">
+                <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+                  Next field guide
                 </p>
-              </Link>
-            ) : (
-              <div className="rounded-xl border border-border bg-card p-4 opacity-80">
-                <div className="text-xs uppercase tracking-wide text-muted-foreground">
-                  Finished the path
-                </div>
-                <h2 className="mt-2 font-medium text-foreground">
-                  You&apos;ve reached the final guide
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Return to search and try combining everything you learned.
-                </p>
+                {nextGuide ? (
+                  <Link
+                    to={`/guides/${nextGuide.slug}`}
+                    className="mt-2 block font-display text-sm font-bold uppercase tracking-tight text-foreground underline-offset-[6px] hover:underline"
+                  >
+                    {t(`guide.title.${nextGuide.slug}`, nextGuide.title)} →
+                  </Link>
+                ) : (
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    You&apos;ve reached the final guide.
+                  </p>
+                )}
               </div>
-            )}
+            </div>
           </section>
 
-          <div className="rounded-xl border border-primary/20 bg-primary/5 p-6 text-center space-y-3">
-            <h2 className="text-lg font-semibold text-foreground">
+          <section className="border-t border-border/50 py-8">
+            <h2 className="font-display text-xl font-extrabold uppercase tracking-tight text-foreground">
               {t('guide.readyToFind')}
             </h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="mt-2 text-sm text-muted-foreground">
               {t('guide.readyToFindDesc')}
             </p>
-            <Button onClick={() => navigate('/')} size="lg" className="gap-2">
-              <Search className="h-4 w-4" />
-              {t('guides.startSearching')}
-            </Button>
-          </div>
+            <Link
+              to="/"
+              className="mt-4 inline-block font-mono text-[11px] uppercase tracking-[0.26em] text-foreground underline decoration-border underline-offset-[6px] transition-colors hover:decoration-foreground"
+            >
+              {t('guides.startSearching')} →
+            </Link>
+          </section>
         </article>
       </main>
 
@@ -527,3 +477,4 @@ export default function GuidePage() {
     </div>
   );
 }
+
