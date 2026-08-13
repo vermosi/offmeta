@@ -382,6 +382,23 @@ export function parseTypes(query: string, ir: SearchIR): string {
     remaining = remaining.replace(/\butility\s+lands?\b/gi, '').trim();
   }
 
+  // Types that are the OBJECT of an action ("goblins that sacrifice artifacts")
+  // describe oracle text, not the card's own type. Emitting `t:artifact`
+  // alongside `t:goblin` produces an impossible query, so translate the phrase
+  // to oracle text instead and consume it before type extraction.
+  const actionObjectPattern =
+    /\b(sacrifice|sacrifices|sacrificing|destroy|destroys|exile|exiles|discard|discards|steal|steals|return|returns|tap|taps)\s+(?:an?\s+|your\s+|their\s+|target\s+|each\s+)*(artifact|creature|enchantment|land|planeswalker|permanent)s?\b/gi;
+  for (const match of [...remaining.matchAll(actionObjectPattern)]) {
+    const verb = match[1].toLowerCase().replace(/(es|s)$/, '');
+    const object = match[2].toLowerCase();
+    const article = /^[aeiou]/.test(object) ? 'an' : 'a';
+    ir.specials.push(
+      `(o:"${verb} ${article} ${object}" or o:"${verb} ${object}" or o:"${verb} ${object}s")`,
+    );
+    remaining = remaining.replace(match[0], ' ').trim();
+  }
+
+
   // FIRST: Check for "X or Y" type patterns
   const orPatterns = [
     /\b(artifact|creature|instant|sorcery|land|enchantment|planeswalker)s?\s+or\s+(artifact|creature|instant|sorcery|land|enchantment|planeswalker)s?\b/gi,
