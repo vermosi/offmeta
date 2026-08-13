@@ -55,6 +55,12 @@ const ScryfallComparison = lazy(() =>
     default: m.ScryfallComparison,
   })),
 );
+const InstantDemoPreview = lazy(() =>
+  import('@/components/InstantDemoPreview').then((m) => ({
+    default: m.InstantDemoPreview,
+  })),
+);
+
 const StickySearchNudge = lazy(() =>
   import('@/components/StickySearchNudge').then((m) => ({
     default: m.StickySearchNudge,
