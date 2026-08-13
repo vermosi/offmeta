@@ -89,7 +89,11 @@ async function callSemrush(
     };
   }
 
-  return toReport(await response.json());
+  const requestedCodes = (params.export_columns ?? '')
+    .split(',')
+    .map((code) => code.trim())
+    .filter(Boolean);
+  return toReport(await response.json(), requestedCodes);
 }
 
 serve(
