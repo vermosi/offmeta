@@ -22,8 +22,8 @@ import {
   IntentPaths,
   RelatedIndexPages,
   RelatedSearches,
-  searchHref,
 } from './LandingPrimitives';
+import { searchHref } from '@/lib/landing/searchHref';
 import { RepresentativeResults } from './RepresentativeResults';
 
 const SITE = 'https://offmeta.app';
