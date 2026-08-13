@@ -81,7 +81,9 @@
     <link rel="dns-prefetch" href="https://nxmzyykkzwomkcentctt.supabase.co" />
 
     <!-- Preload webfonts statically so the browser's preload scanner
-         discovers them during HTML parse, not after main.tsx executes. -->
+         discovers them during HTML parse, not after main.tsx executes.
+         These URLs are the latin subsets served by the stylesheet below —
+         keep them in sync with it, or each file downloads twice. -->
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="preload"
@@ -89,7 +91,7 @@
       type="font/woff2"
       crossorigin="anonymous"
       fetchpriority="high"
-      href="https://fonts.gstatic.com/s/archivo/v25/k3k6o8UDI-1M0wlSV9XAw6lQkqWY8Q82sJaRE-NWIDdgffTTtDRZ9xdp.woff2"
+      href="https://fonts.gstatic.com/s/archivo/v25/k3kPo8UDI-1M0wlSV9XAw6lQkqWY8Q82sLydOxI.woff2"
     />
 
     <link
@@ -98,7 +100,7 @@
       type="font/woff2"
       crossorigin="anonymous"
       fetchpriority="high"
-      href="https://fonts.gstatic.com/s/manrope/v15/xn7gYHE41ni1AdIRpA.woff2"
+      href="https://fonts.gstatic.com/s/manrope/v20/xn7gYHE41ni1AdIRggexSg.woff2"
     />
     <link
       rel="preload"
