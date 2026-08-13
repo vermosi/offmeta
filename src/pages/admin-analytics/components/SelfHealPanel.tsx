@@ -33,6 +33,39 @@ interface RepairDetail {
   reason?: string;
 }
 
+interface DiagnosticsBucket {
+  code: string;
+  attempt_count: number;
+  final_count: number;
+}
+
+interface DiagnosticsItem {
+  query: string | null;
+  before_query: string | null;
+  after_query: string | null;
+  reason_code: string | null;
+  reason: string | null;
+  attempt_count: number;
+}
+
+interface Diagnostics {
+  totals?: { unrepairable?: number; total_attempts?: number; runs?: number };
+  buckets?: DiagnosticsBucket[];
+  items?: DiagnosticsItem[];
+}
+
+/** Plain-English explanation for each stable reason code from the repair loop. */
+const REASON_LABELS: Record<string, string> = {
+  no_model_response: 'Model returned nothing',
+  unparseable_response: 'Unparseable model output',
+  low_confidence: 'Confidence below threshold',
+  duplicate_syntax: 'Repeated an earlier failed query',
+  invalid_otag: 'Hallucinated oracle tag',
+  scryfall_rejected: 'Scryfall rejected the syntax',
+  zero_results: 'Zero results',
+  below_threshold: 'Too few results',
+};
+
 function formatRelative(iso: string | null): string {
   if (!iso) return 'never';
   const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
@@ -69,6 +102,7 @@ function Stat({
 export function SelfHealPanel() {
   const [runs, setRuns] = useState<SelfHealRun[]>([]);
   const [probationCount, setProbationCount] = useState(0);
+  const [diagnostics, setDiagnostics] = useState<Diagnostics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,7 +110,7 @@ export function SelfHealPanel() {
     setLoading(true);
     setError(null);
     try {
-      const [runsResult, probationResult] = await Promise.all([
+      const [runsResult, probationResult, diagnosticsResult] = await Promise.all([
         supabase
           .from('self_heal_runs')
           .select('*')
@@ -88,11 +122,20 @@ export function SelfHealPanel() {
           .eq('auto_generated', true)
           .eq('verification_state', 'probation')
           .is('archived_at', null),
+        supabase.rpc('get_self_heal_diagnostics' as never, {
+          days_back: 7,
+          max_items: 25,
+        } as never),
       ]);
 
       if (runsResult.error) throw new Error(runsResult.error.message);
       setRuns((runsResult.data ?? []) as SelfHealRun[]);
       setProbationCount(probationResult.count ?? 0);
+      setDiagnostics(
+        diagnosticsResult.error
+          ? null
+          : ((diagnosticsResult.data ?? null) as Diagnostics | null),
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load repair runs');
     } finally {
@@ -106,6 +149,8 @@ export function SelfHealPanel() {
 
   const latest = runs[0];
   const details = toDetails(latest?.details).slice(0, 8);
+  const buckets: DiagnosticsBucket[] = diagnostics?.buckets ?? [];
+  const diagnosticItems: DiagnosticsItem[] = (diagnostics?.items ?? []).slice(0, 8);
 
   return (
     <section className="rounded-xl border border-border bg-card p-4 space-y-4">
@@ -186,6 +231,62 @@ export function SelfHealPanel() {
               Nothing to repair in the last run.
             </p>
           )}
+
+          {buckets.length || diagnosticItems.length ? (
+            <div className="space-y-2 border-t border-border/60 pt-3">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Why repairs fail (last 7 days ·{' '}
+                {diagnostics?.totals?.unrepairable ?? 0} unrepairable)
+              </h3>
+
+              {buckets.length ? (
+                <ul className="flex flex-wrap gap-1.5">
+                  {buckets.map((bucket) => (
+                    <li key={bucket.code}>
+                      <Badge variant="outline" className="font-normal">
+                        {REASON_LABELS[bucket.code] ?? bucket.code} ·{' '}
+                        {bucket.attempt_count} attempts / {bucket.final_count} final
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+
+              {diagnosticItems.length ? (
+                <ul className="space-y-1.5">
+                  {diagnosticItems.map((item, index) => (
+                    <li
+                      key={`${item.query ?? 'item'}-${index}`}
+                      className="rounded-lg border border-border/60 bg-background/40 px-3 py-2 text-xs"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="destructive">
+                          {item.reason_code
+                            ? (REASON_LABELS[item.reason_code] ?? item.reason_code)
+                            : 'unknown'}
+                        </Badge>
+                        <span className="font-medium text-foreground">
+                          {item.query}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {item.attempt_count} attempts
+                        </span>
+                      </div>
+                      <code className="mt-1 block break-all text-muted-foreground">
+                        before: {item.before_query ?? '—'}
+                      </code>
+                      <code className="block break-all text-muted-foreground">
+                        after: {item.after_query ?? '—'}
+                      </code>
+                      {item.reason ? (
+                        <p className="mt-1 text-muted-foreground">{item.reason}</p>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          ) : null}
         </>
       )}
     </section>
