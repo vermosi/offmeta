@@ -60,6 +60,7 @@ const getComboPrice = (combo: Combo): number | null => {
 
 export default function FindMyCombos() {
   const { t } = useTranslation();
+  const { trackEvent } = useAnalytics();
 
   useEffect(() => {
     // Per-route SEO: title, description, canonical, og:url + BreadcrumbList JSON-LD.
