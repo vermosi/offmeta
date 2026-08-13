@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { buildWhyItMatches, detectMethod, detectRole, deriveConcept } from './whyItMatches';
+import {
+  buildWhyItMatches,
+  detectMethod,
+  detectRole,
+  deriveConcept,
+  intentFromScryfallQuery,
+} from './whyItMatches';
 import type { ScryfallCard } from '@/types/card';
 import type { SearchIntent } from '@/types/search';
 
@@ -114,5 +120,22 @@ describe('buildWhyItMatches', () => {
     );
     expect(report).not.toBeNull();
     expect(report!.directness).toBe('structural');
+  });
+});
+
+describe('intentFromScryfallQuery', () => {
+  it('parses oracle phrases, tags, types and mana value', () => {
+    const intent = intentFromScryfallQuery(
+      'otag:artifact-removal t:instant o:"destroy target artifact" mv<=3',
+    );
+    expect(intent).not.toBeNull();
+    expect(intent!.tags).toContain('otag:artifact-removal');
+    expect(intent!.types).toContain('instant');
+    expect(intent!.oraclePatterns).toContain('o:"destroy target artifact"');
+  });
+
+  it('returns null when the query carries no usable constraints', () => {
+    expect(intentFromScryfallQuery('game:paper')).toBeNull();
+    expect(intentFromScryfallQuery('')).toBeNull();
   });
 });
