@@ -1,4 +1,5 @@
 import type { FilterState } from '@/types/filters';
+import { SCRYFALL_ORACLE_TAGS } from './otag-vocabulary';
 
 /**
  * Valid Scryfall search keys (without operators) for validation.
