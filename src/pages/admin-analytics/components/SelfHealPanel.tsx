@@ -149,6 +149,8 @@ export function SelfHealPanel() {
 
   const latest = runs[0];
   const details = toDetails(latest?.details).slice(0, 8);
+  const buckets: DiagnosticsBucket[] = diagnostics?.buckets ?? [];
+  const diagnosticItems: DiagnosticsItem[] = (diagnostics?.items ?? []).slice(0, 8);
 
   return (
     <section className="rounded-xl border border-border bg-card p-4 space-y-4">
