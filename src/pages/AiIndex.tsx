@@ -13,6 +13,7 @@ import { applySeoMeta, injectJsonLd } from '@/lib/seo';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search, BookOpen, ArrowRight } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 interface SeoPageSummary {
   slug: string;
@@ -25,6 +26,7 @@ interface SeoPageSummary {
 }
 
 export default function AiIndex() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
 
   const { data: pages, isLoading } = useQuery({
@@ -88,13 +90,11 @@ export default function AiIndex() {
           <div className="flex items-center gap-2 mb-2">
             <BookOpen className="h-5 w-5 text-accent" />
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              MTG Card Guides
+              {t('ai.indexTitle', 'MTG Card Guides')}
             </h1>
           </div>
           <p className="text-muted-foreground text-sm sm:text-base max-w-2xl">
-            AI-generated guides answering common Magic: The Gathering card
-            searches. Each guide includes curated card lists, strategic
-            explanations, and FAQs.
+            {t('ai.indexSubtitle', 'AI-generated guides answering common Magic: The Gathering card searches. Each guide includes curated card lists, strategic explanations, and FAQs.')}
           </p>
         </div>
 
@@ -104,7 +104,7 @@ export default function AiIndex() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Filter guides..."
+            placeholder={t('ai.filterGuides', 'Filter guides...')}
             className="pl-10"
           />
         </div>
@@ -120,14 +120,14 @@ export default function AiIndex() {
           <div className="text-center py-16 text-muted-foreground">
             <p>
               {search
-                ? 'No guides match your search.'
-                : 'No guides published yet.'}
+                ? t('ai.noGuidesMatch', 'No guides match your search.')
+                : t('ai.noGuidesPublished', 'No guides published yet.')}
             </p>
           </div>
         ) : (
           <>
             <p className="text-xs text-muted-foreground mb-4">
-              {filtered.length} guide{filtered.length !== 1 ? 's' : ''}
+              {filtered.length} {filtered.length !== 1 ? t('ai.guidesPlural', 'guides') : t('ai.guideSingular', 'guide')}
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
               {filtered.map((page) => (
@@ -145,7 +145,7 @@ export default function AiIndex() {
                   </p>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">
-                      {page.content_json?.cards?.length ?? 0} cards
+                      {page.content_json?.cards?.length ?? 0} {t('ai.cards', 'cards')}
                     </span>
                     <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-accent transition-colors" />
                   </div>
@@ -158,11 +158,11 @@ export default function AiIndex() {
         {/* Citation */}
         <footer className="mt-12 pt-6 border-t border-border/30 text-sm text-muted-foreground">
           <p>
-            Source:{' '}
+            {t('ai.sourcePrefix', 'Source:')}{' '}
             <Link to="/" className="text-accent hover:underline">
               OffMeta
             </Link>{' '}
-            — AI-powered MTG card search and discovery.
+            — {t('ai.sourceSuffix', 'AI-powered MTG card search and discovery.')}
           </p>
         </footer>
       </main>

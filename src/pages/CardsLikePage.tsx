@@ -8,6 +8,7 @@ import { SimilarCardsPanel } from '@/components/SimilarCardsPanel';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { getCardByName } from '@/lib/scryfall/client';
+import { useTranslation } from '@/lib/i18n';
 import { cardNameToSlug, slugToCardName } from '@/lib/card-slug';
 import type { ScryfallCard } from '@/types/card';
 
@@ -60,6 +61,7 @@ function writeCompletedCount(count: number): void {
 }
 
 export default function CardsLikePage() {
+  const { t } = useTranslation();
   const { cardSlug } = useParams<{ cardSlug?: string }>();
   const navigate = useNavigate();
   const { trackEvent } = useAnalytics();
@@ -190,7 +192,7 @@ export default function CardsLikePage() {
       setSubmittedQuery(nextQuery);
       navigate(`/cards-like/${cardNameToSlug(card.name)}`, { replace: true });
     } catch {
-      setSearchError('We could not find that card. Try the exact card name.');
+      setSearchError(t('search.cardsLike.notFound', 'We could not find that card. Try the exact card name.'));
     } finally {
       setIsResolving(false);
     }
@@ -204,20 +206,19 @@ export default function CardsLikePage() {
           <header className="space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/70 px-3 py-1.5 text-xs font-medium text-muted-foreground">
               <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-              Find Cards Like Any MTG Card
+              {t('search.cardsLike.badge', 'Find Cards Like Any MTG Card')}
             </div>
             <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-5xl">
-              Search a card, see similar cards, and move on.
+              {t('search.cardsLike.heading', 'Search a card, see similar cards, and move on.')}
             </h1>
             <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-              Type a Magic card name to find close matches and alternatives. This
-              is the fastest way to see what else plays the same role.
+              {t('search.cardsLike.subheading', 'Type a Magic card name to find close matches and alternatives. This is the fastest way to see what else plays the same role.')}
             </p>
           </header>
 
           <form onSubmit={handleSubmit} className="space-y-3 rounded-3xl border border-border/60 bg-card/70 p-4 shadow-sm sm:p-5">
             <label htmlFor="cards-like-input" className="text-sm font-medium text-foreground">
-              Search for a Magic card
+              {t('search.cardsLike.inputLabel', 'Search for a Magic card')}
             </label>
             <div className="flex flex-col gap-3 sm:flex-row">
               <input
@@ -231,11 +232,11 @@ export default function CardsLikePage() {
               />
               <Button type="submit" className="h-12 rounded-2xl px-5" disabled={isResolving || !inputValue.trim()}>
                 <Search className="h-4 w-4" aria-hidden="true" />
-                Find similar cards
+                {t('search.cardsLike.submitButton', 'Find similar cards')}
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              Try a card name like Sol Ring or Rhystic Study.
+              {t('search.cardsLike.hint', 'Try a card name like Sol Ring or Rhystic Study.')}
             </p>
           </form>
 
@@ -256,17 +257,17 @@ export default function CardsLikePage() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                    Results
+                    {t('search.cardsLike.resultsLabel', 'Results')}
                   </p>
                   <h2 className="text-lg font-semibold text-foreground">
-                    Cards like {query}
+                    {t('search.cardsLike.resultsHeading', 'Cards like {query}', { query })}
                   </h2>
                 </div>
                 <a
                   href="#cards-like-results"
                   className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background px-3 py-1.5 text-xs font-medium text-foreground"
                 >
-                  Jump to results
+                  {t('search.cardsLike.jumpToResults', 'Jump to results')}
                   <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                 </a>
               </div>

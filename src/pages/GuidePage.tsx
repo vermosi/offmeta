@@ -82,8 +82,10 @@ export default function GuidePage() {
               {t('guide.notFound')}
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground">
-              We could not find that guide, but you can still keep learning or
-              jump straight back into search.
+              {t(
+                'guide.notFoundDesc',
+                'We could not find that guide, but you can still keep learning or jump straight back into search.',
+              )}
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-3">
               <Link
@@ -130,10 +132,10 @@ export default function GuidePage() {
     await copyTextToClipboard(
       pageUrl,
       toast,
-      'Link copied',
-      'Guide link copied to your clipboard.',
-      'Copy failed',
-      'Your browser blocked clipboard access.',
+      t('guide.linkCopied', 'Link copied'),
+      t('guide.linkCopiedDesc', 'Guide link copied to your clipboard.'),
+      t('guide.copyFailed', 'Copy failed'),
+      t('guide.clipboardBlocked', 'Your browser blocked clipboard access.'),
     );
   };
 
@@ -141,10 +143,10 @@ export default function GuidePage() {
     await copyTextToClipboard(
       `${pageUrl}#${sectionId}`,
       toast,
-      'Section link copied',
-      `Copied ${sectionLabel} to your clipboard.`,
-      'Copy failed',
-      'Your browser blocked clipboard access.',
+      t('guide.sectionLinkCopied', 'Section link copied'),
+      t('guide.sectionLinkCopiedDesc', 'Copied {section} to your clipboard.', { section: sectionLabel }),
+      t('guide.copyFailed', 'Copy failed'),
+      t('guide.clipboardBlocked', 'Your browser blocked clipboard access.'),
     );
   };
 
@@ -174,8 +176,8 @@ export default function GuidePage() {
     modifiedTime: GUIDE_MODIFIED_AT,
   });
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
-    { name: 'Home', url: 'https://offmeta.app/' },
-    { name: 'Guides', url: 'https://offmeta.app/guides' },
+    { name: t('nav.home', 'Home'), url: 'https://offmeta.app/' },
+    { name: t('nav.guides', 'Guides'), url: 'https://offmeta.app/guides' },
     { name: guide.title, url: pageUrl },
   ]);
 
@@ -186,18 +188,18 @@ export default function GuidePage() {
   const guideNumber = `${pad(sectionIndex)}.${pad(guide.level - sectionStart + 1)}`;
   const levelLabel =
     sectionIndex === 1
-      ? 'Beginner'
+      ? t('guides.levelBeginner', 'Beginner')
       : sectionIndex === 2
-        ? 'Intermediate'
+        ? t('guides.levelIntermediate', 'Intermediate')
         : sectionIndex === 3
-          ? 'Advanced'
-          : 'Expert';
+          ? t('guides.levelAdvanced', 'Advanced')
+          : t('guides.levelExpert', 'Expert');
 
   const tocSections: Array<[string, string]> = [
-    ['search', 'Try it'],
-    ['tips', 'Go further'],
-    ['faq', 'FAQ'],
-    ['related', 'Related guides'],
+    ['search', t('guide.tocTryIt', 'Try it')],
+    ['tips', t('guide.tocGoFurther', 'Go further')],
+    ['faq', t('guide.tocFaq', 'FAQ')],
+    ['related', t('guide.tocRelatedGuides', 'Related guides')],
   ];
 
   return (
@@ -218,13 +220,13 @@ export default function GuidePage() {
         <ol className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
           <li>
             <Link to="/" className="transition-colors hover:text-foreground">
-              OffMeta
+              {t('landing.offMeta', 'OffMeta')}
             </Link>
           </li>
           <li aria-hidden="true">/</li>
           <li>
             <Link to="/guides" className="transition-colors hover:text-foreground">
-              Field Guide
+              {t('guides.fieldGuide', 'Field Guide')}
             </Link>
           </li>
           <li aria-hidden="true">/</li>
@@ -236,7 +238,7 @@ export default function GuidePage() {
         <article className="mx-auto min-w-0 max-w-2xl">
           <header className="border-b border-border/60 pb-8">
             <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-              {levelLabel} / Level {pad(guide.level)}
+              {t('guide.levelLine', '{level} / Level {number}', { level: levelLabel, number: pad(guide.level) })}
             </p>
             <h1 className="mt-4 break-words font-display text-[clamp(2rem,5vw,3.25rem)] font-extrabold uppercase leading-[0.9] tracking-tight text-foreground">
               {t(`guide.title.${guide.slug}`, guide.heading)}
@@ -250,21 +252,21 @@ export default function GuidePage() {
                 onClick={() => void handleCopyLink()}
                 className="min-h-[36px] font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground transition-colors hover:text-foreground"
               >
-                Copy link
+                {t('guide.copyLink', 'Copy link')}
               </button>
               <button
                 type="button"
                 onClick={() => void handleShare()}
                 className="min-h-[36px] font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground transition-colors hover:text-foreground"
               >
-                Share guide
+                {t('guide.shareGuide', 'Share guide')}
               </button>
             </div>
           </header>
 
           <nav aria-label="In this guide" className="border-b border-border/50 py-6">
             <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-              In this guide
+              {t('guide.inThisGuide', 'In this guide')}
             </p>
             <ol className="mt-3 space-y-1.5">
               {tocSections.map(([sectionId, sectionLabel], index) => (
@@ -291,7 +293,7 @@ export default function GuidePage() {
 
           <section id="search" className="border-t border-border/50 py-8">
             <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-              Example 01
+              {t('guide.example01', 'Example 01')}
             </p>
             <div className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-2">
               <p className="min-w-0 break-words font-mono text-lg text-foreground sm:text-xl">
@@ -302,7 +304,7 @@ export default function GuidePage() {
                 onClick={handleSearchClick}
                 className="min-h-[36px] font-mono text-[11px] uppercase tracking-[0.26em] text-foreground underline decoration-border underline-offset-[6px] transition-colors hover:decoration-foreground"
               >
-                Run →
+                {t('guide.runArrow', 'Run →')}
               </button>
             </div>
             <p className="mt-3 text-sm text-muted-foreground">
@@ -312,7 +314,7 @@ export default function GuidePage() {
             {'howOffmetaHelps' in guide && guide.howOffmetaHelps && (
               <div className="mt-8 space-y-3 border-l-2 border-accent/50 pl-5">
                 <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-                  Interpreted as
+                  {t('guide.interpretedAs', 'Interpreted as')}
                 </p>
                 {'translatedQuery' in guide && (
                   <code className="block break-all font-mono text-sm text-foreground">
@@ -326,7 +328,9 @@ export default function GuidePage() {
             )}
 
             <div className="mt-8">
-              <PageSearchBar placeholder={`Search: ${guide.searchQuery}`} />
+              <PageSearchBar
+                placeholder={t('guide.searchPlaceholder', 'Search: {query}', { query: guide.searchQuery })}
+              />
             </div>
           </section>
 
@@ -409,7 +413,7 @@ export default function GuidePage() {
             <div className="grid gap-6 sm:grid-cols-2">
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-                  Previous
+                  {t('guide.previous', 'Previous')}
                 </p>
                 {previousGuide ? (
                   <Link
@@ -420,13 +424,13 @@ export default function GuidePage() {
                   </Link>
                 ) : (
                   <p className="mt-2 text-sm text-muted-foreground">
-                    This is the first guide.
+                    {t('guide.firstGuide', 'This is the first guide.')}
                   </p>
                 )}
               </div>
               <div className="sm:text-right">
                 <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-                  Next field guide
+                  {t('guide.nextFieldGuide', 'Next field guide')}
                 </p>
                 {nextGuide ? (
                   <Link
@@ -437,7 +441,7 @@ export default function GuidePage() {
                   </Link>
                 ) : (
                   <p className="mt-2 text-sm text-muted-foreground">
-                    You&apos;ve reached the final guide.
+                    {t('guide.finalGuide', "You've reached the final guide.")}
                   </p>
                 )}
               </div>

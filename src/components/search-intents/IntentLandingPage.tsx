@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { applySeoMeta, buildBreadcrumbJsonLd, injectJsonLd } from '@/lib/seo';
 import { Header } from '@/components/Header';
+import { useTranslation } from '@/lib/i18n';
 
 export type IntentSearchLink = {
   title: string;
@@ -41,6 +42,7 @@ export function IntentLandingPage({
   commonTitle,
   commonSections,
 }: IntentLandingPageProps) {
+  const { t } = useTranslation();
   const BadgeIcon = searches[0]?.icon;
 
   useEffect(() => {
@@ -113,7 +115,7 @@ export function IntentLandingPage({
                 to="/search-intents"
                 className="transition-colors hover:text-foreground"
               >
-                Search Intents
+                {t('intents.hub.breadcrumb', 'Search Intents')}
               </Link>
             </li>
             <li>/</li>
@@ -156,14 +158,14 @@ export function IntentLandingPage({
               </h2>
               <div className="mt-4 rounded-xl border border-border/50 bg-background/60 px-3 py-2">
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                  Example
+                  {t('intents.example', 'Example')}
                 </p>
                 <p className="mt-1 text-sm font-medium text-foreground">
                   "{query}"
                 </p>
               </div>
               <div className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-accent">
-                Open in search
+                {t('intents.openInSearch', 'Open in search')}
                 <ArrowRight className="h-4 w-4" aria-hidden={true} />
               </div>
             </Link>

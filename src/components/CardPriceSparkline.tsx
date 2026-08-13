@@ -7,6 +7,7 @@ import { useMemo, useState } from 'react';
 import { PriceSparkline, type SparklinePoint } from '@/components/PriceSparkline';
 import { usePriceHistory, type PriceSnapshot } from '@/hooks/usePriceHistory';
 import { cn } from '@/lib/core/utils';
+import { useTranslation } from '@/lib/i18n';
 
 interface CardPriceSparklineProps {
   cardName: string;
@@ -22,13 +23,6 @@ interface CardPriceSparklineProps {
 
 type PriceSeries = 'low' | 'average' | 'market' | 'foil';
 
-const SERIES_LABELS: Record<PriceSeries, string> = {
-  low: 'Low',
-  average: 'Average',
-  market: 'Market',
-  foil: 'Foil',
-};
-
 export function CardPriceSparkline({
   cardName,
   scryfallId,
@@ -37,6 +31,13 @@ export function CardPriceSparkline({
   className,
   showSeriesToggle = true,
 }: CardPriceSparklineProps) {
+  const { t } = useTranslation();
+  const SERIES_LABELS: Record<PriceSeries, string> = {
+    low: t('card.priceSeriesLow', 'Low'),
+    average: t('card.priceSeriesAverage', 'Average'),
+    market: t('card.priceSeriesMarket', 'Market'),
+    foil: t('card.priceSeriesFoil', 'Foil'),
+  };
 
   const { data } = usePriceHistory(cardName, 30, scryfallId);
   const [series, setSeries] = useState<PriceSeries>('market');
@@ -91,7 +92,7 @@ export function CardPriceSparkline({
       {points.length >= 2 ? (
         <PriceSparkline data={points} width={width} height={height} />
       ) : (
-        <span className="text-[10px] text-muted-foreground">Coming soon</span>
+        <span className="text-[10px] text-muted-foreground">{t('card.priceComingSoon', 'Coming soon')}</span>
       )}
     </div>
   );

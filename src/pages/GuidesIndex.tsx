@@ -22,11 +22,11 @@ const LEVEL_GROUPS = [
 ] as const;
 
 const GUIDE_FILTERS = [
-  { key: 'all', label: 'All', min: 1, max: 11 },
-  { key: 'beginner', label: 'Beginner', min: 1, max: 3 },
-  { key: 'intermediate', label: 'Intermediate', min: 4, max: 6 },
-  { key: 'advanced', label: 'Advanced', min: 7, max: 8 },
-  { key: 'expert', label: 'Expert', min: 9, max: 11 },
+  { key: 'all', label: 'guides.filterAll', min: 1, max: 11 },
+  { key: 'beginner', label: 'guides.levelBeginner', min: 1, max: 3 },
+  { key: 'intermediate', label: 'guides.levelIntermediate', min: 4, max: 6 },
+  { key: 'advanced', label: 'guides.levelAdvanced', min: 7, max: 8 },
+  { key: 'expert', label: 'guides.levelExpert', min: 9, max: 11 },
 ] as const;
 
 const pad = (value: number) => String(value).padStart(2, '0');
@@ -42,18 +42,23 @@ export default function GuidesIndex() {
       GUIDES.find((guide) => guide.slug === slug)?.searchQuery ??
         buildGuideUrl(slug),
       toast,
-      'Copied',
-      `Copied ${title} query to your clipboard.`,
-      'Copy failed',
-      'Your browser blocked clipboard access.',
+      t('guides.copied', 'Copied'),
+      t('guides.copiedQueryDesc', 'Copied {title} query to your clipboard.', { title }),
+      t('guide.copyFailed', 'Copy failed'),
+      t('guide.clipboardBlocked', 'Your browser blocked clipboard access.'),
     );
   };
 
   useEffect(() => {
     const cleanupMeta = applySeoMeta({
-      title: 'MTG Search Guides — Learn to Find Any Magic Card | OffMeta',
-      description:
+      title: t(
+        'guides.seoTitle',
+        'MTG Search Guides — Learn to Find Any Magic Card | OffMeta',
+      ),
+      description: t(
+        'guides.seoDescription',
         'Learn how to find Magic cards faster with 10 progressive OffMeta guides, from tribe searches and budget filters to advanced multi-constraint queries.',
+      ),
       url: 'https://offmeta.app/guides',
       type: 'website',
       section: 'Guides',
@@ -111,7 +116,7 @@ export default function GuidesIndex() {
       cleanupLd();
       cleanupMeta();
     };
-  }, []);
+  }, [t]);
 
   const sorted = [...GUIDES].sort((a, b) => a.level - b.level);
   const activeBounds =
@@ -140,21 +145,21 @@ export default function GuidesIndex() {
           <ol className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
             <li>
               <Link to="/" className="transition-colors hover:text-foreground">
-                OffMeta
+                {t('landing.offMeta', 'OffMeta')}
               </Link>
             </li>
             <li aria-hidden="true">/</li>
-            <li className="text-foreground">Field Guide</li>
+            <li className="text-foreground">{t('guides.fieldGuide', 'Field Guide')}</li>
           </ol>
         </nav>
 
         <header className="border-b border-border/60 pb-10">
           <div className="grid gap-8 lg:grid-cols-12 lg:items-end">
             <h1 className="font-display text-[clamp(2.25rem,5.2vw,4rem)] font-extrabold uppercase leading-[0.88] tracking-tight text-foreground lg:col-span-7">
-              Learn to find
+              {t('guides.learnToFind', 'Learn to find')}
               <br />
               <span className="font-editorial text-[0.94em] font-normal normal-case italic tracking-normal text-accent">
-                anything in Magic.
+                {t('guides.anythingInMagic', 'anything in Magic.')}
               </span>
             </h1>
             <div className="space-y-4 lg:col-span-5 lg:pb-2">
@@ -162,7 +167,7 @@ export default function GuidesIndex() {
                 {t('guides.pageSubtitle')}
               </p>
               <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
-                {GUIDES.length} Guides / Beginner → Expert
+                {t('guides.countBeginnerExpert', '{count} Guides / Beginner → Expert', { count: GUIDES.length })}
               </p>
             </div>
           </div>
@@ -183,7 +188,7 @@ export default function GuidesIndex() {
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                {filter.label}
+                {t(filter.label)}
               </button>
             );
           })}
@@ -203,7 +208,7 @@ export default function GuidesIndex() {
                   {t(group.label)}
                 </h2>
                 <span className="font-mono text-[10px] tracking-[0.24em] text-muted-foreground">
-                  {group.guides.length} GUIDES
+                  {t('guides.guidesCount', '{count} GUIDES', { count: group.guides.length })}
                 </span>
               </div>
 
@@ -235,14 +240,14 @@ export default function GuidesIndex() {
                           to={`/search/${encodeURIComponent(guide.searchQuery)}`}
                           className="block max-w-full truncate font-mono text-[11px] tracking-[0.16em] text-foreground underline decoration-border underline-offset-[6px] transition-colors hover:decoration-foreground"
                         >
-                          TRY → "{guide.searchQuery}"
+                          {t('guides.tryQuery', 'TRY → "{query}"', { query: guide.searchQuery })}
                         </Link>
                         <div className="flex items-center gap-5 lg:justify-end">
                           <Link
                             to={`/guides/${guide.slug}`}
                             className="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground transition-colors hover:text-foreground"
                           >
-                            Read guide →
+                            {t('guides.readGuideArrow', 'Read guide →')}
                           </Link>
                           <button
                             type="button"
@@ -251,7 +256,7 @@ export default function GuidesIndex() {
                             }}
                             className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground/70 transition-colors hover:text-foreground"
                           >
-                            Copy query
+                            {t('guides.copyQuery', 'Copy query')}
                           </button>
                         </div>
                       </div>

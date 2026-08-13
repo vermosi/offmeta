@@ -137,7 +137,7 @@ export const CardItem = memo(function CardItem({
         onClick={onClick}
         onKeyDown={handleCardKeyDown}
         tabIndex={tabIndex}
-        aria-label={`View details for ${displayName}`}
+        aria-label={t('card.viewDetailsAria', 'View details for {name}', { name: displayName })}
         className="absolute inset-0 z-10 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-transform duration-200 hover:scale-[1.02]"
       />
       {imgError ? (
@@ -165,7 +165,7 @@ export const CardItem = memo(function CardItem({
       {isOwned && (
         <div
           className="absolute top-1.5 left-1.5 z-20 h-5 w-5 rounded-full bg-success/90 flex items-center justify-center shadow-sm"
-          aria-label="Owned"
+          aria-label={t('card.ownedAria', 'Owned')}
         >
           <svg
             className="h-3 w-3 text-success-foreground"
@@ -238,7 +238,7 @@ export const CardItem = memo(function CardItem({
               to={`/cards/${cardNameToSlug(card.name)}`}
               className="text-[10px] sm:text-[11px] leading-tight font-semibold text-contrast truncate hover:underline pointer-events-auto"
               onClick={(e) => e.stopPropagation()}
-              title={`View ${displayName} off-meta alternatives`}
+              title={t('card.viewAlternativesTitle', 'View {name} off-meta alternatives', { name: displayName })}
             >
               {displayName}
             </Link>
@@ -258,8 +258,8 @@ export const CardItem = memo(function CardItem({
                 <button
                   onClick={handleBuyClick}
                   className="flex items-center gap-0.5 text-[9px] sm:text-[10px] font-medium text-success tabular-nums hover:text-success/80 transition-colors pointer-events-auto"
-                  aria-label={`Buy ${displayName} for ${price}`}
-                  title={`Buy on TCGplayer for ${price}`}
+                  aria-label={t('card.buyForPriceAria', 'Buy {name} for {price}', { name: displayName, price })}
+                  title={t('card.buyOnTcgplayerTitle', 'Buy on TCGplayer for {price}', { price })}
                 >
                   <ShoppingCart className="h-2.5 w-2.5" />
                   {price}
@@ -276,10 +276,10 @@ export const CardItem = memo(function CardItem({
               onSearchSimilar(card.name);
             }}
             className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-background/70 px-2.5 py-1 text-[10px] font-medium text-foreground pointer-events-auto transition-colors hover:border-accent/40 hover:bg-accent/10"
-            aria-label={`Search cards similar to ${displayName}`}
+            aria-label={t('card.searchSimilarAria', 'Search cards similar to {name}', { name: displayName })}
           >
             <Search className="h-3 w-3 text-accent" aria-hidden="true" />
-            Similar
+            {t('card.similarButton', 'Similar')}
           </button>
         )}
       </div>

@@ -13,6 +13,7 @@ import { Footer } from '@/components/Footer';
 
 
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTranslation } from '@/lib/i18n';
 import { CardPriceSparkline } from '@/components/CardPriceSparkline';
 import { useMarketTrends, type PriceMover } from '@/hooks';
 import { useNoIndex } from '@/hooks';
@@ -55,32 +56,32 @@ const TIME_RANGES = [
 ] as const;
 
 const DIRECTION_OPTIONS = [
-  { label: 'All', value: 'all' },
-  { label: 'Gainers', value: 'up' },
-  { label: 'Losers', value: 'down' },
+  { key: 'market.direction.all', label: 'All', value: 'all' },
+  { key: 'market.direction.gainers', label: 'Gainers', value: 'up' },
+  { key: 'market.direction.losers', label: 'Losers', value: 'down' },
 ] as const;
 
 const FORMAT_OPTIONS = [
-  { label: 'All Formats', value: '' },
-  { label: 'Standard', value: 'standard' },
-  { label: 'Pioneer', value: 'pioneer' },
-  { label: 'Modern', value: 'modern' },
-  { label: 'Legacy', value: 'legacy' },
-  { label: 'Vintage', value: 'vintage' },
-  { label: 'Commander', value: 'commander' },
-  { label: 'Pauper', value: 'pauper' },
+  { key: 'market.format.all', label: 'All Formats', value: '' },
+  { key: 'market.format.standard', label: 'Standard', value: 'standard' },
+  { key: 'market.format.pioneer', label: 'Pioneer', value: 'pioneer' },
+  { key: 'market.format.modern', label: 'Modern', value: 'modern' },
+  { key: 'market.format.legacy', label: 'Legacy', value: 'legacy' },
+  { key: 'market.format.vintage', label: 'Vintage', value: 'vintage' },
+  { key: 'market.format.commander', label: 'Commander', value: 'commander' },
+  { key: 'market.format.pauper', label: 'Pauper', value: 'pauper' },
 ] as const;
 
 const RARITY_OPTIONS = [
-  { label: 'All Rarities', value: '' },
-  { label: 'Mythic', value: 'mythic' },
-  { label: 'Rare', value: 'rare' },
-  { label: 'Uncommon', value: 'uncommon' },
-  { label: 'Common', value: 'common' },
+  { key: 'market.rarity.all', label: 'All Rarities', value: '' },
+  { key: 'market.rarity.mythic', label: 'Mythic', value: 'mythic' },
+  { key: 'market.rarity.rare', label: 'Rare', value: 'rare' },
+  { key: 'market.rarity.uncommon', label: 'Uncommon', value: 'uncommon' },
+  { key: 'market.rarity.common', label: 'Common', value: 'common' },
 ] as const;
 
 const TYPE_OPTIONS = [
-  { label: 'All Types', value: '' },
+  { key: 'market.type.all', label: 'All Types', value: '' },
   { label: 'Creature', value: 'Creature' },
   { label: 'Instant', value: 'Instant' },
   { label: 'Sorcery', value: 'Sorcery' },
@@ -91,12 +92,16 @@ const TYPE_OPTIONS = [
 ] as const;
 
 const MIN_CHANGE_OPTIONS = [
-  { label: 'Any %', value: 0 },
+  { key: 'market.minChange.any', label: 'Any %', value: 0 },
   { label: '>= 5%', value: 5 },
   { label: '>= 10%', value: 10 },
   { label: '>= 20%', value: 20 },
   { label: '>= 50%', value: 50 },
 ] as const;
+
+function trOpt(t: (k: string, d: string) => string, opt: { key?: string; label: string }): string {
+  return opt.key ? t(opt.key, opt.label) : opt.label;
+}
 
 function FilterSelect({
   label,
@@ -271,6 +276,7 @@ function MoverSkeleton() {
 
 
 export default function MarketTrends() {
+  const { t } = useTranslation();
   const [daysBack, setDaysBack] = useState(7);
   const [filters, setFilters] = useState<MarketFilters>(DEFAULT_FILTERS);
   const [sortField, setSortField] = useState<SortField>('change');
@@ -352,9 +358,11 @@ export default function MarketTrends() {
 
   useEffect(() => {
     return applySeoMeta({
-      title: 'MTG Price Movers and Market Trends | OffMeta',
-      description:
+      title: t('market.seoTitle', 'MTG Price Movers and Market Trends | OffMeta'),
+      description: t(
+        'market.seoDescription',
         'Track Magic card price movers, biggest gainers and losers, with filterable time ranges, formats, and rarity.',
+      ),
       url: 'https://offmeta.app/market',
       extraMeta: { robots: 'noindex, follow' },
     });
@@ -367,22 +375,22 @@ export default function MarketTrends() {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-              Market Trends
+              {t('market.title', 'Market Trends')}
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Biggest price movers over the last {daysBack} days
+              {t('market.subtitle', 'Biggest price movers over the last {days} days', { days: daysBack })}
               {filteredMovers.length > 0 && (
-                <span className="ml-1">· {filteredMovers.length} cards</span>
+                <span className="ml-1">· {t('market.cardsCount', '{count} cards', { count: filteredMovers.length })}</span>
               )}
             </p>
             {updatedLabel && !isLoading && (
               <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
-                <span>Last updated {updatedLabel}</span>
+                <span>{t('market.lastUpdated', 'Last updated {time}', { time: updatedLabel })}</span>
                 <span
                   title={
                     isCacheHit
-                      ? 'Served from the in-memory session cache'
-                      : 'Freshly fetched from the backend'
+                      ? t('market.cacheHitTitle', 'Served from the in-memory session cache')
+                      : t('market.freshFetchTitle', 'Freshly fetched from the backend')
                   }
                   className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-medium ${
                     isCacheHit
@@ -395,7 +403,7 @@ export default function MarketTrends() {
                   ) : (
                     <Cloud className="h-3 w-3" />
                   )}
-                  {isCacheHit ? 'Cache hit' : 'Fresh fetch'}
+                  {isCacheHit ? t('market.cacheHit', 'Cache hit') : t('market.freshFetch', 'Fresh fetch')}
                 </span>
               </div>
             )}
@@ -425,7 +433,7 @@ export default function MarketTrends() {
               }`}
             >
               <Filter className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Filters</span>
+              <span className="hidden sm:inline">{t('market.filters', 'Filters')}</span>
               {activeFilterCount > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
                   {activeFilterCount}
@@ -438,7 +446,7 @@ export default function MarketTrends() {
           <div className="rounded-xl border border-border bg-card/50 p-4 mb-6 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-foreground">
-                Filters
+                {t('market.filters', 'Filters')}
               </span>
               {activeFilterCount > 0 && (
                 <button
@@ -446,7 +454,7 @@ export default function MarketTrends() {
                   className="text-[10px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
                 >
                   <X className="h-3 w-3" />
-                  Clear all
+                  {t('market.clearAll', 'Clear all')}
                 </button>
               )}
             </div>
@@ -472,30 +480,30 @@ export default function MarketTrends() {
                     {opt.value === 'down' && (
                       <TrendingDown className="h-3 w-3 inline mr-1" />
                     )}
-                    {opt.label}
+                    {trOpt(t, opt)}
                   </button>
                 ))}
               </div>
               <FilterSelect
-                label="Format"
+                label={t('market.format.label', 'Format')}
                 value={filters.format}
-                options={FORMAT_OPTIONS}
+                options={FORMAT_OPTIONS.map((o) => ({ label: trOpt(t, o), value: o.value }))}
                 onChange={(v) => updateFilter('format', v)}
               />
               <FilterSelect
-                label="Rarity"
+                label={t('market.rarity.label', 'Rarity')}
                 value={filters.rarity}
-                options={RARITY_OPTIONS}
+                options={RARITY_OPTIONS.map((o) => ({ label: trOpt(t, o), value: o.value }))}
                 onChange={(v) => updateFilter('rarity', v)}
               />
               <FilterSelect
-                label="Card Type"
+                label={t('market.type.label', 'Card Type')}
                 value={filters.cardType}
-                options={TYPE_OPTIONS}
+                options={TYPE_OPTIONS.map((o) => ({ label: trOpt(t, o), value: o.value }))}
                 onChange={(v) => updateFilter('cardType', v)}
               />
               <FilterSelect
-                label="Price Range"
+                label={t('market.priceRange.label', 'Price Range')}
                 value={String(filters.priceRange)}
                 options={PRICE_RANGES.map((r, i) => ({
                   label: r.label,
@@ -504,10 +512,10 @@ export default function MarketTrends() {
                 onChange={(v) => updateFilter('priceRange', Number(v))}
               />
               <FilterSelect
-                label="Min % Change"
+                label={t('market.minChange.label', 'Min % Change')}
                 value={String(filters.minChange)}
                 options={MIN_CHANGE_OPTIONS.map((o) => ({
-                  label: o.label,
+                  label: trOpt(t, o),
                   value: String(o.value),
                 }))}
                 onChange={(v) => updateFilter('minChange', Number(v))}
@@ -519,8 +527,8 @@ export default function MarketTrends() {
                   <FilterChip
                     label={
                       filters.direction === 'up'
-                        ? 'Gainers only'
-                        : 'Losers only'
+                        ? t('market.gainersOnly', 'Gainers only')
+                        : t('market.losersOnly', 'Losers only')
                     }
                     onRemove={() => updateFilter('direction', 'all')}
                   />
@@ -569,7 +577,7 @@ export default function MarketTrends() {
           >
             <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />
             <span className="flex-1">
-              {errorMessage} Your filters are still applied — retry when ready.
+              {errorMessage} {t('market.errorSuffix', 'Your filters are still applied — retry when ready.')}
             </span>
             <button
               onClick={() => retry()}
@@ -579,14 +587,14 @@ export default function MarketTrends() {
               <RefreshCw
                 className={`h-3.5 w-3.5 ${isRefetching ? 'animate-spin' : ''}`}
               />
-              {isRefetching ? 'Retrying…' : 'Try again'}
+              {isRefetching ? t('market.retrying', 'Retrying…') : t('market.tryAgain', 'Try again')}
             </button>
           </div>
         )}
         {isEmpty && !isLoading && !isError && (
           <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-4 py-3 mb-4 text-sm text-muted-foreground">
             <AlertTriangle className="h-4 w-4 shrink-0" />
-            <span>No significant price movers in this window yet.</span>
+            <span>{t('market.noMovers', 'No significant price movers in this window yet.')}</span>
           </div>
         )}
         {isRefetching && !isError && (
@@ -595,7 +603,7 @@ export default function MarketTrends() {
             className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-4 py-2 mb-4 text-xs text-muted-foreground"
           >
             <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-            Refreshing price movers…
+            {t('market.refreshing', 'Refreshing price movers…')}
           </div>
         )}
         <div className="rounded-xl border border-border bg-card/40 overflow-hidden">
@@ -606,18 +614,18 @@ export default function MarketTrends() {
               #
             </span>
             <SortButton
-              label="Card"
+              label={t('market.column.card', 'Card')}
               field="name"
               activeField={sortField}
               activeDir={sortDir}
               onSort={handleSort}
             />
             <span className="text-[10px] text-muted-foreground hidden sm:block">
-              Trend
+              {t('market.column.trend', 'Trend')}
             </span>
             <span className="hidden sm:flex justify-end">
               <SortButton
-                label="Old"
+                label={t('market.column.old', 'Old')}
                 field="previous"
                 activeField={sortField}
                 activeDir={sortDir}
@@ -626,7 +634,7 @@ export default function MarketTrends() {
             </span>
             <span className="flex justify-end">
               <SortButton
-                label="New"
+                label={t('market.column.new', 'New')}
                 field="current"
                 activeField={sortField}
                 activeDir={sortDir}
@@ -635,7 +643,7 @@ export default function MarketTrends() {
             </span>
             <span className="flex justify-end">
               <SortButton
-                label="%"
+                label={t('market.column.percent', '%')}
                 field="change"
                 activeField={sortField}
                 activeDir={sortDir}
@@ -648,14 +656,14 @@ export default function MarketTrends() {
           ) : filteredMovers.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-sm text-muted-foreground">
-                No cards match the current filters.
+                {t('market.noMatch', 'No cards match the current filters.')}
               </p>
               {activeFilterCount > 0 && (
                 <button
                   onClick={clearFilters}
                   className="mt-2 text-xs text-primary hover:text-primary/80 transition-colors"
                 >
-                  Clear all filters
+                  {t('market.clearAllFilters', 'Clear all filters')}
                 </button>
               )}
             </div>
@@ -672,7 +680,7 @@ export default function MarketTrends() {
 
         {!isLoading && filteredMovers.length > PAGE_SIZE && (
           <nav
-            aria-label="Market trends pagination"
+            aria-label={t('market.pagination.label', 'Market trends pagination')}
             className="mt-4 flex items-center justify-between gap-3"
           >
             <button
@@ -681,12 +689,12 @@ export default function MarketTrends() {
               className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
-              Previous
+              {t('market.pagination.previous', 'Previous')}
             </button>
             <span className="text-xs text-muted-foreground tabular-nums">
-              Page {currentPage} of {totalPages}
+              {t('market.pagination.page', 'Page {current} of {total}', { current: currentPage, total: totalPages })}
               <span className="hidden sm:inline">
-                {' '}· {filteredMovers.length} cards
+                {' '}· {t('market.cardsCount', '{count} cards', { count: filteredMovers.length })}
               </span>
             </span>
             <button
@@ -694,7 +702,7 @@ export default function MarketTrends() {
               disabled={currentPage >= totalPages || isRefetching}
               className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Next
+              {t('market.pagination.next', 'Next')}
               <ChevronRight className="h-3.5 w-3.5" />
             </button>
           </nav>

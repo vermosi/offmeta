@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks';
 import { Mail, Lock, Loader2, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 type AuthView = 'signin' | 'signup' | 'forgot';
 
@@ -26,6 +27,7 @@ interface AuthModalProps {
 
 export function AuthModal({ open, onOpenChange, description }: AuthModalProps) {
 
+  const { t } = useTranslation();
   const { signIn, signUp, resetPassword } = useAuth();
   const [view, setView] = useState<AuthView>('signin');
   const [email, setEmail] = useState('');
@@ -63,7 +65,7 @@ export function AuthModal({ open, onOpenChange, description }: AuthModalProps) {
       e.preventDefault();
       setError(null);
       if (password.length < 6) {
-        setError('Password must be at least 6 characters');
+        setError(t('auth.passwordMinLengthError', 'Password must be at least 6 characters'));
         return;
       }
       setLoading(true);
@@ -72,7 +74,7 @@ export function AuthModal({ open, onOpenChange, description }: AuthModalProps) {
       if (error) {
         setError(error);
       } else if (needsConfirmation) {
-        setSuccess('Check your email to confirm your account.');
+        setSuccess(t('auth.checkEmailConfirm', 'Check your email to confirm your account.'));
       }
     },
     [email, password, signUp],
@@ -88,7 +90,7 @@ export function AuthModal({ open, onOpenChange, description }: AuthModalProps) {
       if (error) {
         setError(error);
       } else {
-        setSuccess('Check your email for a password reset link.');
+        setSuccess(t('auth.checkEmailResetLink', 'Check your email for a password reset link.'));
       }
     },
     [email, resetPassword],
@@ -105,9 +107,9 @@ export function AuthModal({ open, onOpenChange, description }: AuthModalProps) {
       <DialogContent className="sm:max-w-[400px]" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>
-            {view === 'signin' && 'Sign In'}
-            {view === 'signup' && 'Create Account'}
-            {view === 'forgot' && 'Reset Password'}
+            {view === 'signin' && t('auth.signIn')}
+            {view === 'signup' && t('auth.createAccount', 'Create Account')}
+            {view === 'forgot' && t('auth.resetPassword')}
           </DialogTitle>
           {description && (
             <p className="text-sm text-muted-foreground">{description}</p>
@@ -127,7 +129,7 @@ export function AuthModal({ open, onOpenChange, description }: AuthModalProps) {
                 switchView('signin');
               }}
             >
-              Back to Sign In
+              {t('auth.backToSignIn', 'Back to Sign In')}
             </Button>
           </div>
         ) : view === 'forgot' ? (
@@ -137,10 +139,10 @@ export function AuthModal({ open, onOpenChange, description }: AuthModalProps) {
               onClick={() => switchView('signin')}
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              <ArrowLeft className="h-3 w-3" /> Back
+              <ArrowLeft className="h-3 w-3" /> {t('auth.back', 'Back')}
             </button>
             <div className="space-y-2">
-              <Label htmlFor="reset-email">Email</Label>
+              <Label htmlFor="reset-email">{t('auth.email')}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -148,7 +150,7 @@ export function AuthModal({ open, onOpenChange, description }: AuthModalProps) {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder={t('auth.emailPlaceholder', 'you@example.com')}
                   className="pl-9"
                   required
                 />
@@ -157,7 +159,7 @@ export function AuthModal({ open, onOpenChange, description }: AuthModalProps) {
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Send Reset Link
+              {t('auth.sendResetLink')}
             </Button>
           </form>
         ) : (
@@ -168,7 +170,7 @@ export function AuthModal({ open, onOpenChange, description }: AuthModalProps) {
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-background px-2 text-muted-foreground">
-                  or
+                  {t('auth.or')}
                 </span>
               </div>
             </div>
@@ -178,7 +180,7 @@ export function AuthModal({ open, onOpenChange, description }: AuthModalProps) {
               className="space-y-4"
             >
               <div className="space-y-2">
-                <Label htmlFor="auth-email">Email</Label>
+                <Label htmlFor="auth-email">{t('auth.email')}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -186,14 +188,14 @@ export function AuthModal({ open, onOpenChange, description }: AuthModalProps) {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
+                    placeholder={t('auth.emailPlaceholder', 'you@example.com')}
                     className="pl-9"
                     required
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="auth-password">Password</Label>
+                <Label htmlFor="auth-password">{t('auth.password')}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -202,7 +204,9 @@ export function AuthModal({ open, onOpenChange, description }: AuthModalProps) {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder={
-                      view === 'signup' ? 'Min 6 characters' : '••••••••'
+                      view === 'signup'
+                        ? t('auth.minCharsPlaceholder', 'Min 6 characters')
+                        : '••••••••'
                     }
                     className="pl-9"
                     required
@@ -215,7 +219,7 @@ export function AuthModal({ open, onOpenChange, description }: AuthModalProps) {
 
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                {view === 'signin' ? 'Sign In' : 'Create Account'}
+                {view === 'signin' ? t('auth.signIn') : t('auth.createAccount', 'Create Account')}
               </Button>
 
               {view === 'signin' && (
@@ -224,31 +228,31 @@ export function AuthModal({ open, onOpenChange, description }: AuthModalProps) {
                   onClick={() => switchView('forgot')}
                   className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Forgot password?
+                  {t('auth.forgotPassword')}
                 </button>
               )}
 
               <div className="text-center text-sm text-muted-foreground">
                 {view === 'signin' ? (
                   <>
-                    Don&apos;t have an account?{' '}
+                    {t('auth.dontHaveAccount')}{' '}
                     <button
                       type="button"
                       onClick={() => switchView('signup')}
                       className="text-primary hover:underline font-medium"
                     >
-                      Sign Up
+                      {t('auth.signUp')}
                     </button>
                   </>
                 ) : (
                   <>
-                    Already have an account?{' '}
+                    {t('auth.alreadyHaveAccount')}{' '}
                     <button
                       type="button"
                       onClick={() => switchView('signin')}
                       className="text-primary hover:underline font-medium"
                     >
-                      Sign In
+                      {t('auth.signIn')}
                     </button>
                   </>
                 )}

@@ -5,6 +5,7 @@
 
 import { Link, useNavigate } from 'react-router-dom';
 import { queryToSlug } from '@/lib/search-slug';
+import { useTranslation } from '@/lib/i18n';
 import type {
   AdjacentConcept,
   IntentPath,
@@ -25,12 +26,13 @@ export function IndexHeader({
   trail: string[];
   crumbs: Array<{ label: string; href?: string }>;
 }) {
+  const { t } = useTranslation();
   return (
     <nav aria-label="Breadcrumb" className="pt-8">
       <ol className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
         <li>
           <Link to="/" className="transition-colors hover:text-foreground">
-            OffMeta
+            {t('landing.offMeta', 'OffMeta')}
           </Link>
         </li>
         {crumbs.map((crumb, index) => (
@@ -94,7 +96,7 @@ export function EditorialHero({
 
 /** 04 — intent paths: different ways of meaning the same search. */
 export function IntentPaths({
-  title = 'Explore',
+  title,
   paths,
   onNavigate,
 }: {
@@ -103,11 +105,13 @@ export function IntentPaths({
   onNavigate?: (query: string) => void;
 }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const resolvedTitle = title ?? t('landing.explore', 'Explore');
 
   return (
     <section className="border-b border-border/50 py-10">
       <h2 className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-        {title}
+        {resolvedTitle}
       </h2>
       <ul className="mt-4">
         {paths.map((path, index) => (
@@ -135,7 +139,7 @@ export function IntentPaths({
                 </span>
               </span>
               <span className="shrink-0 whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground/50 transition-colors group-hover:text-foreground group-focus-visible:text-foreground">
-                Search this{' '}
+                {t('landing.searchThis', 'Search this')}{' '}
                 <span
                   aria-hidden="true"
                   className="inline-block transition-transform motion-safe:group-hover:translate-x-1 motion-safe:group-focus-visible:translate-x-1"
@@ -198,10 +202,11 @@ export function EditorialExplanation({
 
 /** 07 — related searches as flat mono links. */
 export function RelatedSearches({ queries }: { queries: readonly string[] }) {
+  const { t } = useTranslation();
   return (
     <section className="border-b border-border/50 py-10">
       <h2 className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-        More like this →
+        {t('landing.moreLikeThis', 'More like this →')}
       </h2>
       <ul className="mt-4 space-y-2">
         {queries.map((query) => (
@@ -229,12 +234,13 @@ export function AdjacentConcepts({
 }: {
   concepts: readonly AdjacentConcept[];
 }) {
+  const { t } = useTranslation();
   if (concepts.length === 0) return null;
 
   return (
     <section className="border-b border-border/50 py-10">
       <h2 className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-        More like this →
+        {t('landing.moreLikeThis', 'More like this →')}
       </h2>
       <ul className="mt-4">
         {concepts.map((concept, index) => (
@@ -255,7 +261,9 @@ export function AdjacentConcepts({
                 </span>
               </span>
               <span className="shrink-0 whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground/50 transition-colors group-hover:text-foreground">
-                {concept.href ? 'Open index' : 'Search this'}{' '}
+                {concept.href
+                  ? t('landing.openIndex', 'Open index')
+                  : t('landing.searchThis', 'Search this')}{' '}
                 <span
                   aria-hidden="true"
                   className="inline-block transition-transform motion-safe:group-hover:translate-x-1"
@@ -277,10 +285,11 @@ export function RelatedIndexPages({
 }: {
   pages: readonly RelatedPageLink[];
 }) {
+  const { t } = useTranslation();
   return (
     <section className="border-b border-border/50 py-10">
       <h2 className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-        Related index
+        {t('landing.relatedIndex', 'Related index')}
       </h2>
       <ul className="mt-4">
         {pages.map((page) => (
