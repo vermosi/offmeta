@@ -35,6 +35,7 @@ import {
   sleep,
   type RepairSuggestion,
 } from '../_shared/searchRepair.ts';
+import { validateOtags } from '../_shared/otagValidation.ts';
 
 const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, LOVABLE_API_KEY } =
   validateEnv(['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'LOVABLE_API_KEY']);
@@ -276,6 +277,21 @@ async function repairCandidate(
       priorAttempts.push({
         syntax: suggestion?.scryfallSyntax ?? '(none)',
         reason: 'confidence too low',
+      });
+      continue;
+    }
+
+    // Reject hallucinated otag: values before spending a Scryfall round-trip.
+    const otagCheck = validateOtags(suggestion.scryfallSyntax);
+    if (!otagCheck.valid) {
+      priorAttempts.push({
+        syntax: suggestion.scryfallSyntax,
+        reason: otagCheck.reason ?? 'invalid oracle tag',
+      });
+      logger.warn('invalid_otag_rejected', {
+        query: candidate.query,
+        syntax: suggestion.scryfallSyntax,
+        invalidTags: otagCheck.unknownTags,
       });
       continue;
     }

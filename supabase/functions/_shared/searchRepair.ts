@@ -7,6 +7,8 @@
  * @module _shared/searchRepair
  */
 
+import { validateOtags } from './otagValidation.ts';
+
 /** Curated Scryfall oracle tags the repair model is allowed to reach for. */
 export const SCRYFALL_OTAGS = [
   'otag:ramp', 'otag:mana-rock', 'otag:mana-dork', 'otag:mana-doubler',
@@ -29,6 +31,8 @@ export interface ScryfallCheck {
   totalCards: number;
   /** Scryfall's error text when the query itself was rejected. */
   error?: string;
+  /** otag values rejected locally because Scryfall does not index them. */
+  invalidOtags?: string[];
 }
 
 export interface RepairSuggestion {
@@ -61,8 +65,24 @@ export function isRepairableQuery(query: string): boolean {
   return true;
 }
 
-/** Ask Scryfall whether a candidate query actually returns cards. */
+/**
+ * Ask Scryfall whether a candidate query actually returns cards.
+ *
+ * Queries containing hallucinated `otag:` values are rejected locally — they
+ * always return zero cards on Scryfall, and the local rejection carries a
+ * precise reason (plus real tag suggestions) back into the repair prompt.
+ */
 export async function checkScryfall(query: string): Promise<ScryfallCheck> {
+  const otagCheck = validateOtags(query);
+  if (!otagCheck.valid) {
+    return {
+      ok: false,
+      totalCards: 0,
+      error: otagCheck.reason,
+      invalidOtags: otagCheck.unknownTags,
+    };
+  }
+
   try {
     const url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(
       `${query} game:paper`,
