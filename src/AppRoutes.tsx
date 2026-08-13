@@ -72,6 +72,7 @@ export default function AppRoutes() {
               path="/docs/syntax"
               element={withFullApp(<SyntaxCheatSheet />)}
             />
+            <Route path="/api" element={withFullApp(<ApiDocs />)} />
             <Route path="/guides" element={withFullApp(<GuidesIndex />)} />
             <Route path="/guides/:slug" element={withFullApp(<GuidePage />)} />
             <Route
