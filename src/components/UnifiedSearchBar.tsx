@@ -210,15 +210,21 @@ export const UnifiedSearchBar = forwardRef<
   const showExamples = !query;
   const [showAllExamples, setShowAllExamples] = useState(false);
 
-  const visibleExamples = useMemo(() => {
-    const maxVisible = isMobile && !showAllExamples ? 4 : EXAMPLE_QUERIES.length;
-    return EXAMPLE_QUERIES.slice(0, maxVisible).map((q, i) => ({
-      query: q,
-      position: i,
-    }));
-  }, [isMobile, showAllExamples]);
+  const collapsedCount = isMobile ? 4 : 6;
 
-  const hasHiddenExamples = isMobile && !showAllExamples && EXAMPLE_QUERIES.length > 4;
+  const visibleExamples = useMemo(() => {
+    const maxVisible = showAllExamples
+      ? EXAMPLE_QUERIES.length
+      : collapsedCount;
+    return EXAMPLE_QUERIES.slice(0, maxVisible).map((query, position) => ({
+      query,
+      position,
+    }));
+  }, [collapsedCount, showAllExamples]);
+
+  const hasHiddenExamples =
+    !showAllExamples && EXAMPLE_QUERIES.length > collapsedCount;
+
 
   const flattenedVisibleExamples = visibleExamples;
 
