@@ -19,6 +19,7 @@ import {
   getLocalizedTypeLine,
 } from '@/lib/scryfall/localized';
 import { useTranslation } from '@/lib/i18n';
+import type { WhyItMatches as WhyItMatchesReport } from '@/lib/search/whyItMatches';
 
 interface CardListItemProps {
   card: ScryfallCard;
@@ -27,6 +28,8 @@ interface CardListItemProps {
   tabIndex?: number;
   isOwned?: boolean;
   sparklineData?: SparklinePoint[];
+  /** Deterministic report explaining why this card matched the current query. */
+  whyReport?: WhyItMatchesReport | null;
 }
 
 export const CardListItem = memo(function CardListItem({
@@ -36,6 +39,7 @@ export const CardListItem = memo(function CardListItem({
   tabIndex = 0,
   isOwned,
   sparklineData,
+  whyReport,
 }: CardListItemProps) {
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -46,7 +50,7 @@ export const CardListItem = memo(function CardListItem({
 
   const price = card.prices?.usd ? `$${card.prices.usd}` : '';
   const manaCost = card.mana_cost || card.card_faces?.[0]?.mana_cost || '';
-  const { locale } = useTranslation();
+  const { locale, t } = useTranslation();
   const displayName = getLocalizedName(card, locale);
   const displayType = getLocalizedTypeLine(card, locale);
 
@@ -80,15 +84,38 @@ export const CardListItem = memo(function CardListItem({
         </span>
       )}
 
-      {/* Name */}
-      <Link
-        to={`/cards/${cardNameToSlug(card.name)}`}
-        className="flex-1 min-w-0 text-sm font-medium text-foreground truncate hover:text-primary transition-colors"
-        onClick={(e) => e.stopPropagation()}
-        title={`View ${displayName} off-meta alternatives`}
-      >
-        {displayName}
-      </Link>
+      {/* Name + why it matches */}
+      <span className="flex-1 min-w-0">
+        <Link
+          to={`/cards/${cardNameToSlug(card.name)}`}
+          className="block truncate text-sm font-medium text-foreground transition-colors hover:text-primary"
+          onClick={(e) => e.stopPropagation()}
+          title={`View ${displayName} off-meta alternatives`}
+        >
+          {displayName}
+        </Link>
+        {whyReport && (
+          <span
+            className="mt-0.5 block truncate font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground"
+            title={whyReport.summary ?? undefined}
+          >
+            {[
+              whyReport.concept,
+              whyReport.directness === 'direct'
+                ? t('whyItMatches.direct', 'Direct')
+                : t('whyItMatches.structural', 'Structural'),
+              whyReport.method
+                ? t(
+                    `whyItMatches.methodValue.${whyReport.method}`,
+                    whyReport.method.replace(/_/g, ' '),
+                  )
+                : null,
+            ]
+              .filter(Boolean)
+              .join(' / ')}
+          </span>
+        )}
+      </span>
 
       {/* Mana cost */}
       {manaCost && (
