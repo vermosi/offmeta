@@ -71,7 +71,7 @@ export default function DeckCheck() {
       title: 'MTG Deck Check — Find the Gaps in Your Deck | OffMeta',
       description:
         'Paste a Commander decklist and OffMeta classifies every card by role, method and problem answered, then shows which functional slots are missing.',
-      canonical: 'https://offmeta.app/deck-check',
+      url: 'https://offmeta.app/deck-check',
     });
     return cleanup;
   }, []);
