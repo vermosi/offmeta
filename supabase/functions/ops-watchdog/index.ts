@@ -340,6 +340,14 @@ serve(
     const auth = await requireServiceOrPipelineKey(req, corsHeaders);
     if (!auth.authorized) return auth.response;
 
+    const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
+
+    // One watchdog at a time: cron and a manual trigger can overlap.
+    const lease = await acquireJobLock(JOB_NAME, LOCK_TTL_SECONDS);
+    if (!lease.acquired) return lockBusyResponse(JOB_NAME, jsonHeaders);
+
+    dispatchedThisRun.clear();
+
     // Close out any earlier run that never reported back (cold shutdown).
     await supabase
       .from('ops_watchdog_runs')
@@ -385,9 +393,11 @@ serve(
         .eq('id', runId);
     }
 
+    await lease.release();
+
     return new Response(
       JSON.stringify({ success: true, status, problems, remediations, checks }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      { headers: jsonHeaders },
     );
   }),
 );
