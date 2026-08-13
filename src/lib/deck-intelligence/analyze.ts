@@ -19,6 +19,8 @@ export interface ResolvedDeckCard {
   quantity: number;
   oracleId: string | null;
   typeLine: string | null;
+  /** Card colors (WUBRG letters). */
+  colors: string[];
   /** Ontology tag keys assigned to this card. */
   tags: string[];
 }
@@ -46,6 +48,8 @@ export interface DeckProfile {
   unresolved: string[];
   /** Cards matched but carrying no ontology tags. */
   untagged: string[];
+  /** Combined colors across the decklist, in WUBRG order. */
+  colorIdentity: string[];
   coverage: PillarCoverage[];
   /** Pillars below benchmark, weakest first. */
   gaps: PillarCoverage[];
@@ -90,10 +94,14 @@ export function analyzeDeck(cards: ResolvedDeckCard[]): DeckProfile {
     .filter((c) => c.level === 'very-low' || c.level === 'low')
     .sort((a, b) => a.ratio - b.ratio);
 
+  const colorSet = new Set(cards.flatMap((c) => c.colors));
+  const colorIdentity = ['W', 'U', 'B', 'R', 'G'].filter((c) => colorSet.has(c));
+
   return {
     totalCards,
     landCount,
     spellCount,
+    colorIdentity,
     unresolved: cards.filter((c) => !c.oracleId).map((c) => c.name),
     untagged: cards
       .filter((c) => c.oracleId && c.tags.length === 0 && !isLand(c.typeLine))

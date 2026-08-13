@@ -48,11 +48,11 @@ export async function resolveDeckCards(
   const canonicalNames = Array.from(new Set([...canonical.values()]));
 
   // 2. Look up oracle metadata.
-  const byName = new Map<string, { oracleId: string; typeLine: string | null }>();
+  const byName = new Map<string, { oracleId: string; typeLine: string | null; colors: string[] }>();
   for (const batch of chunked(canonicalNames, CHUNK)) {
     const { data, error } = await supabase
       .from('cards')
-      .select('oracle_id, name, type_line')
+      .select('oracle_id, name, type_line, colors')
       .in('name', batch);
     if (error) throw new Error(error.message);
     for (const row of data ?? []) {
@@ -60,6 +60,7 @@ export async function resolveDeckCards(
         byName.set(row.name, {
           oracleId: row.oracle_id,
           typeLine: row.type_line,
+          colors: row.colors ?? [],
         });
       }
     }
@@ -88,6 +89,7 @@ export async function resolveDeckCards(
       quantity: entry.quantity,
       oracleId: meta?.oracleId ?? null,
       typeLine: meta?.typeLine ?? null,
+      colors: meta?.colors ?? [],
       tags: meta ? (tagsByOracle.get(meta.oracleId) ?? []) : [],
     };
   });
