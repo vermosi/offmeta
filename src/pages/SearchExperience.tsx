@@ -618,41 +618,6 @@ const Index = () => {
               />
             </div>
 
-            {!hasSearched && showFirstUseHint && (
-              <div className="mx-auto max-w-3xl rounded-2xl border border-border/60 bg-card/60 px-4 py-3 text-sm text-muted-foreground shadow-sm">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="leading-relaxed">
-                    Try a plain-English search like{' '}
-                    <span className="font-medium text-foreground">
-                      "cards that punish treasure decks"
-                    </span>{' '}
-                    or{' '}
-                    <span className="font-medium text-foreground">
-                      "cards similar to Seedborn Muse"
-                    </span>
-                    .
-                  </p>
-                  <button
-                    type="button"
-                    className="self-start rounded-full border border-border/60 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5"
-                    onClick={() => {
-                      setShowFirstUseHint(false);
-                      try {
-                        localStorage.setItem(
-                          'offmeta_home_hint_dismissed',
-                          '1',
-                        );
-                      } catch {
-                        // ignore storage failures
-                      }
-                    }}
-                  >
-                    Dismiss
-                  </button>
-                </div>
-              </div>
-            )}
-
             <SearchProgressIndicator
               isSearching={isSearching}
               hasSearched={hasSearched}
@@ -667,6 +632,15 @@ const Index = () => {
                 </Suspense>
               </div>
             )}
+
+            {/* Real cards, immediately — the index should look like Magic
+                before it looks like marketing. */}
+            {!hasSearched && (
+              <Suspense fallback={null}>
+                <InstantDemoPreview onTrySearch={handleTryExample} />
+              </Suspense>
+            )}
+
 
             {isSearching && originalQuery && (
               <Suspense fallback={null}>
