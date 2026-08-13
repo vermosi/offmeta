@@ -1,0 +1,1 @@
+SELECT public.classify_card_ontology();
