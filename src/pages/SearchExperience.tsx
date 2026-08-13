@@ -650,41 +650,45 @@ const Index = () => {
             )}
 
             {showResultsMode && (
-              <div className="animate-reveal mb-5 sm:mb-7">
-                <div className="rounded-2xl border border-border/60 bg-gradient-to-r from-card/85 via-background/80 to-card/85 px-4 py-3.5 shadow-sm backdrop-blur">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                        Search results
-                      </p>
-                      <h1 className="mt-1 text-lg font-semibold tracking-tight text-foreground sm:text-xl">
-                        {t('search.resultsFor', 'Results for "{query}"').replace(
-                          '{query}',
-                          originalQuery || searchQuery || '',
-                        )}
-                      </h1>
-                      {hasSearched && totalCards > 0 && (
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          {t('results.summaryCards', '{count} cards').replace(
-                            '{count}',
-                            totalCards.toLocaleString(),
-                          )}
-                        </p>
-                      )}
-                    </div>
-                    <a
-                      href="#search-results"
-                      className="inline-flex items-center rounded-full border border-border/60 bg-background/70 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5"
-                    >
-                      Jump to results
-                    </a>
-                  </div>
-                </div>
-              </div>
+              <SearchDeskHeader
+                originalQuery={originalQuery || searchQuery}
+                scryfallQuery={(lastSearchResult?.scryfallQuery || searchQuery).trim()}
+                intent={lastSearchResult?.intent || lastIntent}
+                totalCards={totalCards}
+                shownCards={displayCards.length}
+                sourceLabel={translationSourceLabel}
+                confidence={
+                  typeof translationConfidence === 'number' ? translationConfidence : null
+                }
+                warnings={
+                  lastSearchResult?.validationIssues?.length
+                    ? lastSearchResult.validationIssues
+                    : (lastSearchResult?.intent?.warnings ?? [])
+                }
+                editor={
+                  <Suspense fallback={null}>
+                    <EditableQueryBar
+                      scryfallQuery={(
+                        lastSearchResult?.scryfallQuery || searchQuery
+                      ).trim()}
+                      confidence={lastSearchResult?.explanation?.confidence}
+                      isLoading={isSearching}
+                      originalQuery={originalQuery}
+                      onRerun={handleRerunEditedQuery}
+                      onRegenerate={handleRegenerateTranslation}
+                      validationError={
+                        lastSearchResult?.validationIssues?.length
+                          ? lastSearchResult.validationIssues.join(' • ')
+                          : null
+                      }
+                    />
+                  </Suspense>
+                }
+              />
             )}
 
             {cards.length > 0 && !isSearching && (
-              <div className="sticky top-[56px] sm:top-[68px] z-30 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-2 bg-background/80 backdrop-blur-xl border-b border-border/40">
+              <div className="sticky top-[56px] z-30 -mx-4 border-b border-border/40 bg-background/85 px-4 py-1.5 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
                 <ResultsToolbar
                   cards={cards}
                   displayCards={displayCards}
@@ -697,37 +701,10 @@ const Index = () => {
                   onViewModeChange={setViewMode}
                   pendingFilterOverride={pendingFilterOverride}
                   filterOverrideKey={filterOverrideKey}
-                  queryStrip={
-                    <ScryfallQueryDisclosure
-                      scryfallQuery={(
-                        lastSearchResult?.scryfallQuery || searchQuery
-                      ).trim()}
-                      metaLabel={
-                        typeof translationConfidence === 'number'
-                          ? `${translationSourceLabel} · ${Math.round(translationConfidence * 100)}%`
-                          : translationSourceLabel
-                      }
-                    >
-                      <EditableQueryBar
-                        scryfallQuery={(
-                          lastSearchResult?.scryfallQuery || searchQuery
-                        ).trim()}
-                        confidence={lastSearchResult?.explanation?.confidence}
-                        isLoading={isSearching}
-                        originalQuery={originalQuery}
-                        onRerun={handleRerunEditedQuery}
-                        onRegenerate={handleRegenerateTranslation}
-                        validationError={
-                          lastSearchResult?.validationIssues?.length
-                            ? lastSearchResult.validationIssues.join(' • ')
-                            : null
-                        }
-                      />
-                    </ScryfallQueryDisclosure>
-                  }
                 />
               </div>
             )}
+
           </div>
 
           {/* Tab content area */}
