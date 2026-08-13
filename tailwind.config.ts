@@ -36,18 +36,20 @@ export default {
     },
     extend: {
       fontFamily: {
+        // Four-family system only. No Inter/Sora fallbacks — an unstyled
+        // fallback should be the platform UI font, not a lookalike webfont.
         sans: [
           'Manrope',
-          'Inter',
           'system-ui',
           '-apple-system',
           'BlinkMacSystemFont',
           'Segoe UI',
-          'Roboto',
           'sans-serif',
         ],
-        display: ['Archivo', 'Sora', 'Inter', 'system-ui', 'sans-serif'],
-        editorial: ['Fraunces', 'Georgia', 'serif'],
+        display: ['Archivo', 'system-ui', '-apple-system', 'sans-serif'],
+        editorial: ['Fraunces', 'Iowan Old Style', 'Georgia', 'serif'],
+        serif: ['Fraunces', 'Iowan Old Style', 'Georgia', 'serif'],
+
         mono: [
           'JetBrains Mono',
           'SF Mono',
