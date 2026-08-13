@@ -58,6 +58,8 @@ const STUCK_RUN_HOURS = 2;
 const MAX_TOTAL_FIX_ATTEMPTS = 6;
 /** Cooldown before an exhausted error_event gets another repair window. */
 const RETRY_COOLDOWN_HOURS = 24;
+/** How long to wait on a dispatched repair job before moving on. */
+const DISPATCH_TIMEOUT_MS = 5_000;
 
 type Check = {
   check: string;
