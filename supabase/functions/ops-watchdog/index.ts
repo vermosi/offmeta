@@ -25,6 +25,13 @@ import { getCorsHeaders, requireServiceOrPipelineKey } from '../_shared/auth.ts'
 import { validateEnv } from '../_shared/env.ts';
 import { createLogger, withLogging } from '../_shared/logger.ts';
 import { reportEdgeError } from '../_shared/errorReporter.ts';
+import { acquireJobLock, lockBusyResponse } from '../_shared/jobLock.ts';
+
+const JOB_NAME = 'ops-watchdog';
+/** Lease held for a whole watchdog run; above its worst-case wall clock. */
+const LOCK_TTL_SECONDS = 300;
+/** Minimum gap between two dispatches of the same repair pipeline. */
+const DISPATCH_COOLDOWN_SECONDS = 3 * 60 * 60;
 
 const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = validateEnv([
   'SUPABASE_URL',
@@ -91,9 +98,26 @@ function functionForJob(jobname: string): string | null {
  * Dispatch a repair job. The watchdog never waits for the target to finish —
  * some pipelines run for minutes and would blow the watchdog's own wall clock.
  * A dispatch that is still running when the timeout fires counts as success.
+ *
+ * Dispatches are deduped twice over: once in-process (two checks in the same
+ * run can want the same pipeline) and once across runs via a job lease, so an
+ * hourly watchdog can't re-kick a pipeline that is still working.
  */
+const dispatchedThisRun = new Map<string, { ok: boolean; detail: string }>();
+
 async function invokeFunction(name: string): Promise<{ ok: boolean; detail: string }> {
   if (!INVOKABLE.has(name)) return { ok: false, detail: 'function_not_allowed' };
+
+  const already = dispatchedThisRun.get(name);
+  if (already) return { ...already, detail: `deduped_in_run: ${already.detail}` };
+
+  const lease = await acquireJobLock(`dispatch:${name}`, DISPATCH_COOLDOWN_SECONDS);
+  if (!lease.acquired) {
+    const skipped = { ok: true, detail: 'skipped: dispatched recently' };
+    dispatchedThisRun.set(name, skipped);
+    return skipped;
+  }
+
   try {
     const res = await fetch(`${SUPABASE_URL}/functions/v1/${name}`, {
       method: 'POST',
@@ -109,18 +133,25 @@ async function invokeFunction(name: string): Promise<{ ok: boolean; detail: stri
     if (!res.ok) {
       const body = await res.text();
       logger.warn(`invoke ${name} failed [${res.status}]: ${body.slice(0, 400)}`);
-      return { ok: false, detail: `${detail}: ${body.slice(0, 200)}` };
+      const failed = { ok: false, detail: `${detail}: ${body.slice(0, 200)}` };
+      dispatchedThisRun.set(name, failed);
+      return failed;
     }
     // Drain the body so the connection closes cleanly.
     await res.text();
-    return { ok: true, detail };
+    const done = { ok: true, detail };
+    dispatchedThisRun.set(name, done);
+    return done;
   } catch (err) {
     const message = String(err);
-    if (message.includes('Timeout') || message.includes('aborted')) {
-      return { ok: true, detail: 'dispatched (still running)' };
-    }
-    return { ok: false, detail: message.slice(0, 200) };
+    const outcome = message.includes('Timeout') || message.includes('aborted')
+      ? { ok: true, detail: 'dispatched (still running)' }
+      : { ok: false, detail: message.slice(0, 200) };
+    dispatchedThisRun.set(name, outcome);
+    return outcome;
   }
+  // The dispatch lease is intentionally left to expire: it is the cooldown
+  // that stops the next hourly run from re-kicking a pipeline still in flight.
 }
 
 
@@ -309,6 +340,14 @@ serve(
     const auth = await requireServiceOrPipelineKey(req, corsHeaders);
     if (!auth.authorized) return auth.response;
 
+    const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
+
+    // One watchdog at a time: cron and a manual trigger can overlap.
+    const lease = await acquireJobLock(JOB_NAME, LOCK_TTL_SECONDS);
+    if (!lease.acquired) return lockBusyResponse(JOB_NAME, jsonHeaders);
+
+    dispatchedThisRun.clear();
+
     // Close out any earlier run that never reported back (cold shutdown).
     await supabase
       .from('ops_watchdog_runs')
@@ -354,9 +393,11 @@ serve(
         .eq('id', runId);
     }
 
+    await lease.release();
+
     return new Response(
       JSON.stringify({ success: true, status, problems, remediations, checks }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      { headers: jsonHeaders },
     );
   }),
 );

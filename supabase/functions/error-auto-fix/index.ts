@@ -18,9 +18,17 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { withLogging } from '../_shared/logger.ts';
 import { requireServiceOrPipelineKey } from '../_shared/auth.ts';
+import { acquireJobLock, lockBusyResponse } from '../_shared/jobLock.ts';
 
+const JOB_NAME = 'error-auto-fix';
+/** Above the worst-case run time so a slow run is never lapped by cron. */
+const LOCK_TTL_SECONDS = 600;
 const MAX_ROWS_PER_RUN = 15;
 const MAX_FIX_ATTEMPTS = 3;
+/** Backoff floor between two repair attempts on the same issue. */
+const BASE_BACKOFF_MINUTES = 15;
+/** Rows with no repair strategy are parked rather than re-read every cycle. */
+const NO_STRATEGY_BACKOFF_MINUTES = 24 * 60;
 
 /** Edge functions this job is allowed to invoke as a repair action. */
 const REPAIRABLE_FUNCTIONS = new Set([
@@ -49,10 +57,14 @@ interface FixOutcome {
   detail?: string;
 }
 
-async function invokeFunction(name: string, body: unknown): Promise<FixOutcome> {
-  if (!REPAIRABLE_FUNCTIONS.has(name)) {
-    return { action: `invoke:${name}`, ok: false, detail: 'function_not_allowed' };
-  }
+/**
+ * Repair invocations already made during the current run, keyed by function
+ * name. Ten sitemap rows must not fire ten sitemap regenerations — every
+ * repair here is whole-pipeline, so one call per run per function is enough.
+ */
+let runInvocations = new Map<string, Promise<FixOutcome>>();
+
+async function invokeFunctionUncached(name: string, body: unknown): Promise<FixOutcome> {
   const url = Deno.env.get('SUPABASE_URL');
   const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   if (!url || !key) {
@@ -74,6 +86,21 @@ async function invokeFunction(name: string, body: unknown): Promise<FixOutcome> 
     return { action: `invoke:${name}`, ok: false, detail: String(err).slice(0, 300) };
   }
 }
+
+async function invokeFunction(name: string, body: unknown): Promise<FixOutcome> {
+  if (!REPAIRABLE_FUNCTIONS.has(name)) {
+    return { action: `invoke:${name}`, ok: false, detail: 'function_not_allowed' };
+  }
+  const existing = runInvocations.get(name);
+  if (existing) {
+    const outcome = await existing;
+    return { ...outcome, detail: `deduped_in_run: ${outcome.detail ?? ''}`.trim() };
+  }
+  const pending = invokeFunctionUncached(name, body);
+  runInvocations.set(name, pending);
+  return await pending;
+}
+
 
 /** Verify the live sitemap is servable and non-trivial. */
 async function verifySitemap(): Promise<FixOutcome> {
@@ -160,6 +187,18 @@ async function repair(row: ErrorRow): Promise<FixOutcome[]> {
   return [{ action: 'none', ok: false, detail: 'no_strategy' }];
 }
 
+/**
+ * Exponential backoff for the next attempt on a row: 15m, 30m, 1h, 2h…
+ * capped at a day. Keeps a permanently broken issue from being ground on
+ * every cycle while still letting transient failures recover quickly.
+ */
+function nextAttemptAt(attempts: number, noStrategy: boolean): string {
+  const minutes = noStrategy
+    ? NO_STRATEGY_BACKOFF_MINUTES
+    : Math.min(BASE_BACKOFF_MINUTES * 2 ** Math.max(attempts, 0), 24 * 60);
+  return new Date(Date.now() + minutes * 60_000).toISOString();
+}
+
 Deno.serve(
   withLogging('error-auto-fix', async (req: Request): Promise<Response> => {
     if (req.method === 'OPTIONS') {
@@ -170,78 +209,108 @@ Deno.serve(
     const authCheck = await requireServiceOrPipelineKey(req, corsHeaders);
     if (!authCheck.authorized) return authCheck.response;
 
+    // Cron, the watchdog and the admin panel can all fire this at once.
+    const lease = await acquireJobLock(JOB_NAME, LOCK_TTL_SECONDS);
+    if (!lease.acquired) return lockBusyResponse(JOB_NAME, headers);
+
+    runInvocations = new Map();
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     );
 
-    const { data: rows, error } = await supabase
-      .from('error_events')
-      .select('id,source,error_type,message,url,status,fix_attempts,context')
-      .in('status', ['open', 'failed'])
-      .lt('fix_attempts', MAX_FIX_ATTEMPTS)
-      .order('occurrence_count', { ascending: false })
-      .limit(MAX_ROWS_PER_RUN);
-
-    if (error) {
-      return new Response(
-        JSON.stringify({ error: 'query_failed', details: error.message }),
-        { status: 500, headers },
-      );
-    }
-
-    const results: Array<Record<string, unknown>> = [];
-
-    for (const row of (rows ?? []) as ErrorRow[]) {
-      await supabase
-        .from('error_events')
-        .update({ status: 'repairing' })
-        .eq('id', row.id);
-
-      const outcomes = await repair(row);
-      const ok = outcomes.every((o) => o.ok);
-      const noStrategy = outcomes.some((o) => o.detail === 'no_strategy');
-      const ignored = outcomes.some((o) => o.action === 'ignore');
-
-      await supabase
-        .from('error_events')
-        .update({
-          status: ignored
-            ? 'ignored'
-            : noStrategy
-              ? 'open'
-              : ok
-                ? 'repaired'
-                : 'failed',
-          fix_attempts: row.fix_attempts + 1,
-          last_fix_at: new Date().toISOString(),
-          last_fix_result: { outcomes },
-        })
-        .eq('id', row.id);
-
-      results.push({
-        id: row.id,
-        error_type: row.error_type,
-        repaired: ok && !noStrategy,
-        outcomes,
-      });
-    }
-
-    // Retention: drop long-resolved rows.
     try {
-      await supabase.rpc('prune_old_error_events');
-    } catch {
-      /* best effort */
-    }
+      // Un-stick rows whose repair run died before it could write an outcome.
+      await supabase
+        .from('error_events')
+        .update({ status: 'failed' })
+        .eq('status', 'repairing')
+        .lt('updated_at', new Date(Date.now() - 60 * 60_000).toISOString());
 
-    return new Response(
-      JSON.stringify({
-        examined: results.length,
-        repaired: results.filter((r) => r.repaired).length,
-        results,
-      }),
-      { status: 200, headers },
-    );
+
+      const { data: rows, error } = await supabase
+        .from('error_events')
+        .select('id,source,error_type,message,url,status,fix_attempts,context')
+        .in('status', ['open', 'failed'])
+        .lt('fix_attempts', MAX_FIX_ATTEMPTS)
+        .lte('next_attempt_at', new Date().toISOString())
+        .order('occurrence_count', { ascending: false })
+        .limit(MAX_ROWS_PER_RUN);
+
+      if (error) {
+        return new Response(
+          JSON.stringify({ error: 'query_failed', details: error.message }),
+          { status: 500, headers },
+        );
+      }
+
+      const results: Array<Record<string, unknown>> = [];
+
+      for (const row of (rows ?? []) as ErrorRow[]) {
+        // Claim the row so a parallel path can't pick it up mid-repair.
+        const { data: claimed } = await supabase
+          .from('error_events')
+          .update({ status: 'repairing' })
+          .eq('id', row.id)
+          .eq('status', row.status)
+          .select('id')
+          .maybeSingle();
+
+        if (!claimed) {
+          results.push({ id: row.id, error_type: row.error_type, repaired: false, skipped: 'claimed_elsewhere' });
+          continue;
+        }
+
+        const outcomes = await repair(row);
+        const ok = outcomes.every((o) => o.ok);
+        const noStrategy = outcomes.some((o) => o.detail === 'no_strategy');
+        const ignored = outcomes.some((o) => o.action === 'ignore');
+        const attempts = row.fix_attempts + 1;
+
+        await supabase
+          .from('error_events')
+          .update({
+            status: ignored
+              ? 'ignored'
+              : noStrategy
+                ? 'open'
+                : ok
+                  ? 'repaired'
+                  : 'failed',
+            fix_attempts: attempts,
+            last_fix_at: new Date().toISOString(),
+            next_attempt_at: nextAttemptAt(attempts, noStrategy),
+            last_fix_result: { outcomes },
+          })
+          .eq('id', row.id);
+
+        results.push({
+          id: row.id,
+          error_type: row.error_type,
+          repaired: ok && !noStrategy,
+          outcomes,
+        });
+      }
+
+      // Retention: drop long-resolved rows.
+      try {
+        await supabase.rpc('prune_old_error_events');
+      } catch {
+        /* best effort */
+      }
+
+      return new Response(
+        JSON.stringify({
+          examined: results.length,
+          repaired: results.filter((r) => r.repaired).length,
+          dedupedInvocations: runInvocations.size,
+          results,
+        }),
+        { status: 200, headers },
+      );
+    } finally {
+      await lease.release();
+    }
   }),
 );

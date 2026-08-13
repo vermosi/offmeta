@@ -25,6 +25,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, requireServiceOrPipelineKey } from '../_shared/auth.ts';
 import { validateEnv } from '../_shared/env.ts';
 import { createLogger, withLogging } from '../_shared/logger.ts';
+import { acquireJobLock, lockBusyResponse } from '../_shared/jobLock.ts';
 import {
   buildRepairPrompt,
   checkScryfall,
@@ -337,6 +338,12 @@ serve(
     const authCheck = await requireServiceOrPipelineKey(req, corsHeaders);
     if (!authCheck.authorized) return authCheck.response;
 
+    const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
+    // One self-heal run at a time; overlapping runs would re-repair the same
+    // queries and double-count probation failures.
+    const lease = await acquireJobLock('self-heal-search', 900);
+    if (!lease.acquired) return lockBusyResponse('self-heal-search', jsonHeaders);
+
     const startedAt = Date.now();
     const details: Detail[] = [];
 
@@ -412,9 +419,11 @@ serve(
         JSON.stringify({ success: false, error: 'Self-heal run failed' }),
         {
           status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: jsonHeaders,
         },
       );
+    } finally {
+      await lease.release();
     }
   }),
 );
