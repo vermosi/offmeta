@@ -43,12 +43,11 @@ describe('GuidePage', () => {
   });
 
   describe('valid guide rendering', () => {
-    it('renders the guide heading', () => {
+    it('renders the guide heading as the only h1', () => {
       renderGuidePage('search-by-creature-type');
-      const headings = screen.getAllByText('Search by Creature Type');
-      expect(headings.length).toBeGreaterThanOrEqual(2);
-      const h1 = headings.find((el) => el.tagName === 'H1');
-      expect(h1).toBeTruthy();
+      const h1s = screen.getAllByRole('heading', { level: 1 });
+      expect(h1s).toHaveLength(1);
+      expect(h1s[0]).toHaveTextContent(/search by creature type/i);
     });
 
     it('renders the subheading', () => {
@@ -63,9 +62,10 @@ describe('GuidePage', () => {
       ).toBeInTheDocument();
     });
 
-    it('renders the search CTA button', () => {
+    it('renders the example query with a run action', () => {
       renderGuidePage('search-by-creature-type');
-      expect(screen.getByText(/Search "dragons"/)).toBeInTheDocument();
+      expect(screen.getByText('"dragons"')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /run/i })).toBeInTheDocument();
     });
 
     it('renders the copy and share actions', () => {
@@ -80,7 +80,7 @@ describe('GuidePage', () => {
 
     it('navigates to search when CTA is clicked', () => {
       renderGuidePage('search-by-creature-type');
-      fireEvent.click(screen.getByText(/Search "dragons"/));
+      fireEvent.click(screen.getByRole('button', { name: /run/i }));
       expect(mockNavigate).toHaveBeenCalledWith('/search/dragons');
     });
 
@@ -107,18 +107,19 @@ describe('GuidePage', () => {
       );
     });
 
-    it('renders the "How OffMeta Helps" section', () => {
+    it('renders the interpreted-query explainer', () => {
       renderGuidePage('search-by-creature-type');
-      expect(screen.getByText('How OffMeta Helps')).toBeInTheDocument();
+      expect(screen.getByText('Interpreted as')).toBeInTheDocument();
     });
 
     it('renders the on-page navigation links', () => {
       renderGuidePage('search-by-creature-type');
+      expect(screen.getByRole('link', { name: 'Try it' })).toHaveAttribute(
+        'href',
+        '#search',
+      );
       expect(
-        screen.getByRole('link', { name: 'Search this guide' }),
-      ).toHaveAttribute('href', '#search');
-      expect(
-        screen.getByRole('link', { name: 'Tips & strategy' }),
+        screen.getByRole('link', { name: 'Go further' }),
       ).toHaveAttribute('href', '#tips');
       expect(screen.getByRole('link', { name: 'FAQ' })).toHaveAttribute(
         'href',
@@ -129,14 +130,9 @@ describe('GuidePage', () => {
       ).toHaveAttribute('href', '#related');
     });
 
-    it('renders copy actions for on-page sections', () => {
+    it('shows the example input and its translated query', () => {
       renderGuidePage('search-by-creature-type');
-      expect(screen.getAllByRole('button', { name: 'Copy' }).length).toBe(4);
-    });
-
-    it('shows the user input and translated query', () => {
-      renderGuidePage('search-by-creature-type');
-      expect(screen.getByText('dragons')).toBeInTheDocument();
+      expect(screen.getByText('"dragons"')).toBeInTheDocument();
       expect(screen.getByText('t:dragon')).toBeInTheDocument();
     });
 
@@ -166,8 +162,8 @@ describe('GuidePage', () => {
 
     it('renders previous and next guide navigation', () => {
       renderGuidePage('search-by-creature-type');
-      expect(screen.getByText('Starting point')).toBeInTheDocument();
-      expect(screen.getByText('Next guide')).toBeInTheDocument();
+      expect(screen.getByText('Previous')).toBeInTheDocument();
+      expect(screen.getByText('Next field guide')).toBeInTheDocument();
       expect(
         screen.getAllByText('Filter by Color').length,
       ).toBeGreaterThanOrEqual(1);
@@ -177,8 +173,8 @@ describe('GuidePage', () => {
       renderGuidePage('search-by-creature-type');
       const breadcrumb = screen.getByLabelText('Breadcrumb');
       expect(breadcrumb).toBeInTheDocument();
-      expect(screen.getByText('Home')).toBeInTheDocument();
-      expect(breadcrumb).toHaveTextContent('Guides');
+      expect(breadcrumb).toHaveTextContent('OffMeta');
+      expect(breadcrumb).toHaveTextContent('Field Guide');
     });
 
     it('sets the document title for SEO', () => {
