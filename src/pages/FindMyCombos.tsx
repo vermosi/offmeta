@@ -233,6 +233,12 @@ export default function FindMyCombos() {
       );
       setResults(data);
       clearFilters();
+      void trackEvent('combo_search_run', {
+        deck_size: cardNames.length,
+        has_commander: Boolean(commander),
+        combos_found: data?.included?.length ?? 0,
+        almost_included: data?.almostIncluded?.length ?? 0,
+      });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to find combos');
     } finally {
