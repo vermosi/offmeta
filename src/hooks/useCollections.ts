@@ -55,6 +55,7 @@ export function collectionsQueryKey(userId: string | undefined) {
 export function useCollections() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { trackEvent } = useAnalytics();
   const userId = user?.id;
 
   const query = useQuery({
