@@ -161,37 +161,32 @@ export const CardItem = memo(function CardItem({
         />
       )}
 
-      {/* Owned badge */}
-      {isOwned && (
-        <div
-          className="absolute top-1.5 left-1.5 z-20 h-5 w-5 rounded-full bg-success/90 flex items-center justify-center shadow-sm"
-          aria-label={t('card.ownedAria', 'Owned')}
-        >
-          <svg
-            className="h-3 w-3 text-success-foreground"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+      {/* Top-left status stack — save button is placed here so it never
+          covers the mana cost printed in the top-right of the card art. */}
+      <div className="absolute top-1.5 left-1.5 z-20 flex flex-col gap-1.5">
+        {isOwned && (
+          <div
+            className="h-5 w-5 rounded-full bg-success/90 flex items-center justify-center shadow-sm"
+            aria-label={t('card.ownedAria', 'Owned')}
           >
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        </div>
-      )}
-
-      {/* SAVE — offset when the why badge occupies the top-right corner */}
-      <div
-        className={cn(
-          'absolute top-1.5 z-20',
-          whyReport ? 'right-12' : 'right-1.5',
+            <svg
+              className="h-3 w-3 text-success-foreground"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
         )}
-      >
         <SaveCardButton card={toSavedCardInput(card)} />
       </div>
 
       {/* WHY IT MATCHES — editorial notation tag opening the full report */}
+
       {whyReport && (
         <div className="absolute top-1.5 right-1.5 z-20">
           <Popover>
