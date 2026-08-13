@@ -230,28 +230,30 @@ export default function GuidesIndex() {
                         </p>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 lg:col-span-4 lg:justify-end">
+                      <div className="flex flex-col gap-1.5 lg:col-span-4 lg:items-end">
                         <Link
                           to={`/search/${encodeURIComponent(guide.searchQuery)}`}
-                          className="min-h-[36px] font-mono text-[11px] tracking-[0.16em] text-foreground underline decoration-border underline-offset-[6px] transition-colors hover:decoration-foreground"
+                          className="block max-w-full truncate font-mono text-[11px] tracking-[0.16em] text-foreground underline decoration-border underline-offset-[6px] transition-colors hover:decoration-foreground"
                         >
                           TRY → "{guide.searchQuery}"
                         </Link>
-                        <Link
-                          to={`/guides/${guide.slug}`}
-                          className="min-h-[36px] font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground transition-colors hover:text-foreground"
-                        >
-                          Read guide →
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            void copyGuideQuery(guide.slug, guide.title);
-                          }}
-                          className="min-h-[36px] font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground/70 transition-colors hover:text-foreground"
-                        >
-                          Copy query
-                        </button>
+                        <div className="flex items-center gap-5 lg:justify-end">
+                          <Link
+                            to={`/guides/${guide.slug}`}
+                            className="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground transition-colors hover:text-foreground"
+                          >
+                            Read guide →
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              void copyGuideQuery(guide.slug, guide.title);
+                            }}
+                            className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground/70 transition-colors hover:text-foreground"
+                          >
+                            Copy query
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </li>
