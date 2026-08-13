@@ -553,9 +553,14 @@ const Index = () => {
           aria-hidden="true"
         />
         <div
+          className="fixed inset-0 pointer-events-none bg-mana-ambience"
+          aria-hidden="true"
+        />
+        <div
           className="fixed inset-0 pointer-events-none bg-page-noise"
           aria-hidden="true"
         />
+
 
         <Header />
 
