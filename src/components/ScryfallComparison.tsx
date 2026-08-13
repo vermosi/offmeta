@@ -18,7 +18,8 @@ interface ScryfallComparisonProps {
 }
 
 interface ComparisonRow {
-  intent: string;
+  intentKey: string;
+  intentFallback: string;
   natural: string;
   scryfall: string;
 }
@@ -27,22 +28,26 @@ interface ComparisonRow {
 // against the current Scryfall grammar (verified via Scryfall docs).
 const ROWS: ReadonlyArray<ComparisonRow> = [
   {
-    intent: 'Budget board wipes',
+    intentKey: 'compare.intentBudgetWipes',
+    intentFallback: 'Budget board wipes',
     natural: 'budget board wipes under $5',
     scryfall: 't:sorcery o:destroy usd<5',
   },
   {
-    intent: 'Cards that punish a strategy',
+    intentKey: 'compare.intentStrategyHate',
+    intentFallback: 'Cards that punish a strategy',
     natural: 'cards that punish treasure decks',
     scryfall: 'o:treasure (o:sacrifice or o:destroy or o:exile)',
   },
   {
-    intent: 'Cards similar to a known staple',
+    intentKey: 'compare.intentSimilarCards',
+    intentFallback: 'Cards similar to a known staple',
     natural: 'cards similar to Seedborn Muse',
     scryfall: 'o:"untap all" o:"during each" -name:"Seedborn Muse"',
   },
   {
-    intent: 'Commander card draw',
+    intentKey: 'compare.intentCommanderDraw',
+    intentFallback: 'Commander card draw',
     natural: 'mono-white card draw for Commander',
     scryfall: 'c:w o:draw f:commander',
   },
@@ -80,7 +85,7 @@ export function ScryfallComparison({ onTrySearch }: ScryfallComparisonProps) {
               className="grid gap-2 border-b border-border/50 py-5 sm:grid-cols-12 sm:items-baseline sm:gap-6"
             >
               <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground/70 sm:col-span-3">
-                {row.intent}
+                {t(row.intentKey, row.intentFallback)}
               </p>
               <code className="block break-words font-mono text-xs leading-relaxed text-muted-foreground sm:col-span-5">
                 {row.scryfall}
