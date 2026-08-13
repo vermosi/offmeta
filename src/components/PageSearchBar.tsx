@@ -40,7 +40,7 @@ export function PageSearchBar({
       onSubmit={handleSubmit}
       role="search"
       className={
-        'flex items-center gap-2 rounded-xl border border-border/60 bg-card/60 backdrop-blur-sm px-3 py-2 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20 transition-all ' +
+        'flex items-center gap-3 border border-border/70 bg-background px-4 py-3 focus-within:border-foreground/60 transition-colors ' +
         (className ?? '')
       }
     >
@@ -61,7 +61,7 @@ export function PageSearchBar({
       />
       <button
         type="submit"
-        className="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors focus-ring"
+        className="shrink-0 inline-flex items-center gap-1 px-4 py-2 bg-foreground text-background font-mono text-[11px] uppercase tracking-[0.24em] hover:bg-foreground/90 transition-colors focus-ring"
       >
         Search
         <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />

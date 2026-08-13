@@ -8,7 +8,7 @@ import { useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Link } from 'react-router-dom';
-import { Search, Code2, BookOpen, Sparkles, TrendingUp } from 'lucide-react';
+
 import { useTranslation } from '@/lib/i18n';
 
 const ABOUT_META = {
@@ -73,6 +73,16 @@ export default function About() {
     setMeta('property', 'og:description', ABOUT_META.description);
     setMeta('property', 'og:url', ABOUT_META.url);
     setMeta('property', 'og:image', ABOUT_META.image);
+    setMeta(
+      'property',
+      'og:image:alt',
+      'OffMeta — search Magic cards by intent, see the real Scryfall query',
+    );
+    setMeta(
+      'name',
+      'twitter:image:alt',
+      'OffMeta — search Magic cards by intent, see the real Scryfall query',
+    );
     setMeta('property', 'og:type', 'website');
 
     setMeta('name', 'twitter:card', 'summary_large_image');
@@ -145,221 +155,262 @@ export default function About() {
 
       <Header />
 
-      <main id="main-content" className="flex-1">
-        <section className="relative overflow-hidden py-20 sm:py-28 px-4 border-b border-border/40 bg-gradient-to-b from-card/30 to-background">
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 h-[220px] w-[min(620px,90vw)] rounded-full bg-accent/10 blur-3xl sm:h-[320px] sm:w-[620px]" />
-          </div>
-          <div className="relative max-w-4xl mx-auto text-center">
-            <p className="inline-flex items-center rounded-full border border-border/60 bg-background/70 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-6 shadow-sm">
-              {t('about.badge', 'About OffMeta')}
-            </p>
-            <h1 className="mx-auto max-w-4xl text-4xl sm:text-6xl font-semibold tracking-tight text-foreground leading-tight mb-6">
-              {t('about.heroTitle', 'Search Magic cards in plain English.')}
-              {' '}
-              <br className="hidden sm:block" />
-              <span className="text-accent">
-                {t('about.heroAccent', 'Get a real Scryfall query you can edit.')}
+      <main id="main-content" className="container-main flex-1 pb-20 pt-8">
+        <nav aria-label="Breadcrumb" className="mb-10">
+          <ol className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+            <li>
+              <Link to="/" className="transition-colors hover:text-foreground">
+                OffMeta
+              </Link>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li className="text-foreground">About</li>
+          </ol>
+        </nav>
+
+        <header className="border-b border-border/60 pb-12">
+          <div className="grid gap-8 lg:grid-cols-12 lg:items-end">
+            <h1 className="font-display text-[clamp(2.25rem,5.6vw,4.25rem)] font-extrabold uppercase leading-[0.88] tracking-tight text-foreground lg:col-span-7">
+              Search Magic
+              <br />
+              <span className="font-editorial text-[0.94em] font-normal normal-case italic tracking-normal text-accent">
+                the way you think.
               </span>
             </h1>
-            <p className="max-w-3xl mx-auto text-lg sm:text-xl text-muted-foreground leading-relaxed mb-10">
-              {t(
-                'about.heroBody',
-                'OffMeta is a transparent AI-powered MTG search tool, not a decklist site, not an EDH content brand, and not a black-box AI toy. We help you search the way you naturally think, then show the exact Scryfall syntax behind the result so you stay in control.',
-              )}
-            </p>
-            <div className="flex flex-wrap justify-center gap-3">
-              <Link
-                to="/"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-medium shadow-sm hover:opacity-90 transition-opacity"
-              >
-                <Search className="h-4 w-4" />
-                {t('about.trySearch', 'Try OffMeta Search')}
-              </Link>
-              <a
-                href="https://scryfall.com/docs/syntax"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-border/70 bg-card text-foreground text-sm font-medium shadow-sm hover:bg-card/80 transition-colors"
-              >
-                <Code2 className="h-4 w-4" />
-                {t('about.learnSyntax', 'Learn Scryfall Syntax')}
-              </a>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-16 sm:py-20 px-4 border-b border-border/30">
-          <div className="max-w-3xl mx-auto space-y-5">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-              {t('about.whatDoes', 'What OffMeta does')}
-            </h2>
-            <p className="text-muted-foreground leading-relaxed">
-              {t(
-                'about.whatDoesBody',
-                'OffMeta turns natural language MTG search into production-ready Scryfall search. Type a request like, "cheap red instants that deal damage and can hit any target," and OffMeta translates it into a structured query immediately. You can run it, refine it, and iterate without memorizing every operator first.',
-              )}
-            </p>
-          </div>
-        </section>
-
-        <section className="py-16 sm:py-20 px-4 border-b border-border/30 bg-card/25">
-          <div className="max-w-3xl mx-auto space-y-5">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-              {t('about.why', 'Why OffMeta exists')}
-            </h2>
-            <p className="text-muted-foreground leading-relaxed">
-              {t(
-                'about.whyBody',
-                'Magic card search is powerful, but syntax can slow down discovery. OffMeta exists to remove that friction for brewers, grinders, and curious players who think in game concepts first and filters second. It gives you faster first results while still respecting the precision that makes Scryfall great.',
-              )}
-            </p>
-          </div>
-        </section>
-
-        <section className="py-16 sm:py-20 px-4 border-b border-border/30">
-          <div className="max-w-5xl mx-auto">
-            <div className="max-w-3xl mx-auto space-y-5 text-center">
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-                What to search for on OffMeta
-              </h2>
-              <p className="text-muted-foreground leading-relaxed">
-                The best results come from specific goals. Use OffMeta for
-                tribal searches, budget constraints, Commander staples,
-                keyword abilities, combo pieces, and search ideas that would be
-                annoying to write by hand.
+            <div className="space-y-4 lg:col-span-5 lg:pb-2">
+              <p className="max-w-md text-base leading-snug text-muted-foreground sm:text-lg">
+                Not the way a query language expects you to.
+              </p>
+              <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
+                Search by intent / See the real query / Stay in control
               </p>
             </div>
+          </div>
+        </header>
 
-            <div className="mt-8 grid gap-4 md:grid-cols-3">
-              <Link
-                to="/guides"
-                className="rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-card/80"
-              >
-                <BookOpen className="h-5 w-5 text-accent" aria-hidden="true" />
-                <h3 className="mt-3 text-base font-semibold text-foreground">
-                  Guide library
-                </h3>
-                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                  Learn step by step from creature types and color filters to
-                  advanced multi-constraint searches.
-                </p>
-              </Link>
-
-              <Link
-                to="/combos"
-                className="rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-card/80"
-              >
-                <Sparkles className="h-5 w-5 text-accent" aria-hidden="true" />
-                <h3 className="mt-3 text-base font-semibold text-foreground">
-                  Combo finder
-                </h3>
-                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                  Find synergy loops, engines, and payoff cards for Commander
-                  and other formats.
-                </p>
-              </Link>
-
-              <Link
-                to="/browse-searches"
-                className="rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-card/80"
-              >
-                <TrendingUp className="h-5 w-5 text-accent" aria-hidden="true" />
-                <h3 className="mt-3 text-base font-semibold text-foreground">
-                  Curated searches
-                </h3>
-                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                  Browse high-intent query ideas that point you toward the
-                  most useful starting points.
-                </p>
-              </Link>
+        <section className="border-b border-border/50 py-12">
+          <div className="grid gap-6 lg:grid-cols-12">
+            <div className="lg:col-span-3">
+              <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
+                01 / The problem
+              </p>
             </div>
-          </div>
-        </section>
-
-        <section className="py-16 sm:py-20 px-4 border-b border-border/30">
-          <div className="max-w-3xl mx-auto space-y-5">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-              {t('about.different', 'What makes it different')}
-            </h2>
-            <p className="text-muted-foreground leading-relaxed">
-              {t(
-                'about.differentBody',
-                'Most AI Magic card search experiences hide their logic. OffMeta does the opposite. You can always see the generated Scryfall query, edit it directly, and understand why results appeared. That transparency is the moat: better speed from AI, better trust from visible syntax, and better control for power users.',
-              )}
-            </p>
-            <p className="text-muted-foreground leading-relaxed">
-              {t(
-                'about.differentBody2',
-                'OffMeta is designed as a layer on top of Scryfall, not a replacement for it. We help you get to the right query faster, then hand control back to you.',
-              )}
-            </p>
-          </div>
-        </section>
-
-        <section className="py-16 sm:py-20 px-4 border-b border-border/30 bg-card/25">
-          <div className="max-w-3xl mx-auto space-y-6">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-              {t('about.demoTitle', 'Plain English in, real Scryfall query out')}
-            </h2>
-            <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-4">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">
-                  {t('about.demoInputLabel', 'Natural language input')}
-                </p>
-                <p className="text-foreground font-medium">
-                  {t(
-                    'about.demoInput',
-                    'Blue and white creatures with flying or vigilance, mana value 3 or less.',
-                  )}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">
-                  {t('about.demoQueryLabel', 'Generated query')}
-                </p>
-                <code className="block text-sm sm:text-base text-foreground bg-secondary rounded-lg px-3 py-2 overflow-x-auto">
-                  (c:wu) t:creature (o:flying or o:vigilance) mv&lt;=3
-                </code>
-              </div>
-              <p className="text-sm text-muted-foreground">
+            <div className="space-y-4 lg:col-span-9">
+              <h2 className="font-display text-xl font-extrabold uppercase tracking-tight text-foreground sm:text-2xl">
+                Scryfall is extraordinarily powerful.
+              </h2>
+              <p className="max-w-2xl leading-relaxed text-muted-foreground">
                 {t(
-                  'about.demoBody',
-                  'Then edit it however you want: add legality, narrow text, or tune mana cost. The query is yours.',
+                  'about.whyBody',
+                  'Magic card search is powerful, but syntax can slow down discovery. OffMeta exists to remove that friction for brewers, grinders, and curious players who think in game concepts first and filters second. It gives you faster first results while still respecting the precision that makes Scryfall great.',
+                )}
+              </p>
+              <p className="max-w-2xl leading-relaxed text-muted-foreground">
+                {t(
+                  'about.whatDoesBody',
+                  'OffMeta turns natural language MTG search into production-ready Scryfall search. Type a request like, "cheap red instants that deal damage and can hit any target," and OffMeta translates it into a structured query immediately. You can run it, refine it, and iterate without memorizing every operator first.',
                 )}
               </p>
             </div>
           </div>
         </section>
 
-        <section className="py-16 sm:py-20 px-4 border-b border-border/30">
-          <div className="max-w-3xl mx-auto space-y-5">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-              {t('about.who', 'Who it is for')}
-            </h2>
-            <p className="text-muted-foreground leading-relaxed">
-              {t(
-                'about.whoBody',
-                'OffMeta is for players who want fast, accurate Magic card search without giving up control. If you brew often, test weird ideas, compare options across formats, or just want an AI Magic card search tool that shows its work, OffMeta is built for you.',
-              )}
-            </p>
+        <section className="border-b border-border/50 py-12">
+          <div className="grid gap-6 lg:grid-cols-12">
+            <div className="lg:col-span-3">
+              <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
+                02 / The translation
+              </p>
+            </div>
+            <div className="lg:col-span-9">
+              <div className="space-y-8">
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+                    You say
+                  </p>
+                  <p className="mt-2 font-display text-lg font-bold uppercase leading-tight tracking-tight text-foreground sm:text-2xl">
+                    “Blue and white creatures with flying or vigilance, mana
+                    value 3 or less”
+                  </p>
+                </div>
+
+                <div
+                  aria-hidden="true"
+                  className="font-mono text-sm text-muted-foreground/60"
+                >
+                  ↓
+                </div>
+
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+                    OffMeta reads
+                  </p>
+                  <dl className="mt-3 max-w-lg">
+                    {[
+                      ['Color', 'WU'],
+                      ['Type', 'Creature'],
+                      ['Ability', 'Flying or vigilance'],
+                      ['MV', '≤ 3'],
+                    ].map(([label, value]) => (
+                      <div
+                        key={label}
+                        className="flex items-baseline justify-between gap-6 border-b border-border/50 py-2 first:border-t"
+                      >
+                        <dt className="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
+                          {label}
+                        </dt>
+                        <dd className="font-mono text-sm text-foreground">
+                          {value}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+
+                <div
+                  aria-hidden="true"
+                  className="font-mono text-sm text-muted-foreground/60"
+                >
+                  ↓
+                </div>
+
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+                    Scryfall gets
+                  </p>
+                  <code className="mt-2 block overflow-x-auto border-l-2 border-accent/60 py-1 pl-4 font-mono text-sm text-foreground sm:text-base">
+                    (c:wu) t:creature (o:flying or o:vigilance) mv&lt;=3
+                  </code>
+                  <Link
+                    to="/search/blue%20and%20white%20creatures%20with%20flying%20or%20vigilance%20mana%20value%203%20or%20less"
+                    className="mt-5 inline-block font-mono text-[11px] uppercase tracking-[0.26em] text-foreground underline decoration-border underline-offset-[6px] transition-colors hover:decoration-foreground"
+                  >
+                    Try this search →
+                  </Link>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
-        <section className="py-16 sm:py-20 px-4 border-b border-border/30 bg-card/20">
-          <div className="max-w-3xl mx-auto space-y-5">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-              {t('about.roadmap', 'Where we are going')}
-            </h2>
-            <p className="text-muted-foreground leading-relaxed">
-              {t(
-                'about.roadmapBody',
-                'Our focus is simple: keep improving natural language MTG search while staying transparent. We are investing in better query translation, clearer explanations, and tighter workflows for players who move from idea to card pool fast. The long-term vision is an MTG search engine that feels effortless for new users and still satisfies advanced deckbuilders.',
-              )}
-            </p>
+        <section className="border-b border-border/50 py-12">
+          <div className="grid gap-6 lg:grid-cols-12">
+            <div className="lg:col-span-3">
+              <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
+                03 / The principle
+              </p>
+            </div>
+            <div className="space-y-4 lg:col-span-9">
+              <h2 className="font-display text-2xl font-extrabold uppercase leading-[0.95] tracking-tight text-foreground sm:text-3xl">
+                Search help should be visible.
+                <br />
+                <span className="font-editorial text-[0.9em] font-normal normal-case italic tracking-normal text-accent">
+                  not hidden behind the search.
+                </span>
+              </h2>
+              <p className="max-w-2xl leading-relaxed text-muted-foreground">
+                {t(
+                  'about.differentBody',
+                  'Most AI Magic card search experiences hide their logic. OffMeta does the opposite. You can always see the generated Scryfall query, edit it directly, and understand why results appeared. That transparency is the moat: better speed from AI, better trust from visible syntax, and better control for power users.',
+                )}
+              </p>
+              <p className="max-w-2xl leading-relaxed text-muted-foreground">
+                {t(
+                  'about.whoBody',
+                  'OffMeta is for players who want fast, accurate Magic card search without giving up control. If you brew often, test weird ideas, compare options across formats, or just want an AI Magic card search tool that shows its work, OffMeta is built for you.',
+                )}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-b border-border/50 py-12">
+          <div className="grid gap-6 lg:grid-cols-12">
+            <div className="lg:col-span-3">
+              <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
+                04 / The relationship
+              </p>
+            </div>
+            <div className="space-y-4 lg:col-span-9">
+              <h2 className="font-display text-xl font-extrabold uppercase tracking-tight text-foreground sm:text-2xl">
+                A layer on top of Scryfall, not a replacement for it.
+              </h2>
+              <p className="max-w-2xl leading-relaxed text-muted-foreground">
+                {t(
+                  'about.differentBody2',
+                  'OffMeta is designed as a layer on top of Scryfall, not a replacement for it. We help you get to the right query faster, then hand control back to you.',
+                )}
+              </p>
+              <p className="max-w-2xl leading-relaxed text-muted-foreground">
+                {t(
+                  'about.roadmapBody',
+                  'Our focus is simple: keep improving natural language MTG search while staying transparent. We are investing in better query translation, clearer explanations, and tighter workflows for players who move from idea to card pool fast. The long-term vision is an MTG search engine that feels effortless for new users and still satisfies advanced deckbuilders.',
+                )}
+              </p>
+              <a
+                href="https://scryfall.com/docs/syntax"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block font-mono text-[11px] uppercase tracking-[0.26em] text-muted-foreground underline decoration-border underline-offset-[6px] transition-colors hover:text-foreground"
+              >
+                Scryfall syntax reference ↗
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-12">
+          <div className="grid gap-6 lg:grid-cols-12">
+            <div className="lg:col-span-3">
+              <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
+                05 / Keep exploring
+              </p>
+            </div>
+            <ul className="lg:col-span-9">
+              {[
+                {
+                  to: '/guides',
+                  title: 'Field guide',
+                  copy: 'Learn how to search better.',
+                },
+                {
+                  to: '/combos',
+                  title: 'Combos',
+                  copy: 'Explore interactions and engines.',
+                },
+                {
+                  to: '/browse-searches',
+                  title: 'Curated searches',
+                  copy: 'Start with useful ideas.',
+                },
+              ].map((row) => (
+                <li key={row.to}>
+                  <Link
+                    to={row.to}
+                    className="group flex items-baseline justify-between gap-6 border-b border-border/50 py-5 transition-colors first:border-t hover:bg-foreground/[0.02]"
+                  >
+                    <span className="min-w-0">
+                      <span className="font-display text-base font-bold uppercase tracking-tight text-foreground">
+                        {row.title}
+                      </span>
+                      <span className="ml-3 text-sm text-muted-foreground">
+                        {row.copy}
+                      </span>
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className="font-mono text-xs text-muted-foreground transition-transform group-hover:translate-x-1"
+                    >
+                      →
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
       </main>
+
 
       <Footer />
     </div>
