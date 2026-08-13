@@ -38,7 +38,6 @@ function handleExternalClick(
   if (typeof window.gtagSendEvent === 'function') {
     e.preventDefault();
     window.gtagSendEvent(href);
-    return false;
   }
 }
 
@@ -56,6 +55,7 @@ function ExternalAnchor({ href, children }: { href: string; children: React.Reac
     </a>
   );
 }
+
 
 
 export function Footer() {
