@@ -667,6 +667,54 @@ export type Database = {
           },
         ]
       }
+      search_intent_clusters: {
+        Row: {
+          canonical_query: string
+          click_count: number
+          first_seen_at: string
+          last_seen_at: string
+          opportunity_score: number
+          search_count: number
+          searcher_count: number
+          signature: string
+          status: string
+          suggested_slug: string
+          updated_at: string
+          variant_count: number
+          zero_result_count: number
+        }
+        Insert: {
+          canonical_query: string
+          click_count?: number
+          first_seen_at?: string
+          last_seen_at?: string
+          opportunity_score?: number
+          search_count?: number
+          searcher_count?: number
+          signature: string
+          status?: string
+          suggested_slug?: string
+          updated_at?: string
+          variant_count?: number
+          zero_result_count?: number
+        }
+        Update: {
+          canonical_query?: string
+          click_count?: number
+          first_seen_at?: string
+          last_seen_at?: string
+          opportunity_score?: number
+          search_count?: number
+          searcher_count?: number
+          signature?: string
+          status?: string
+          suggested_slug?: string
+          updated_at?: string
+          variant_count?: number
+          zero_result_count?: number
+        }
+        Relationships: []
+      }
       self_heal_runs: {
         Row: {
           candidates: number
@@ -1052,6 +1100,21 @@ export type Database = {
         }[]
       }
       get_error_monitor_summary: { Args: { days_back?: number }; Returns: Json }
+      get_intent_opportunities: {
+        Args: { max_results?: number; min_searchers?: number }
+        Returns: {
+          already_covered: boolean
+          canonical_query: string
+          last_seen_at: string
+          opportunity_score: number
+          search_count: number
+          searcher_count: number
+          signature: string
+          suggested_slug: string
+          variant_count: number
+          zero_result_count: number
+        }[]
+      }
       get_ops_freshness: { Args: never; Returns: Json }
       get_price_movers: {
         Args: { days_back?: number; limit_count?: number; min_price?: number }
@@ -1070,6 +1133,7 @@ export type Database = {
           type_line: string
         }[]
       }
+      get_product_metrics: { Args: { days_back?: number }; Returns: Json }
       get_promotion_candidates: {
         Args: {
           max_results?: number
@@ -1184,6 +1248,7 @@ export type Database = {
         }
         Returns: number
       }
+      normalize_intent_signature: { Args: { q: string }; Returns: string }
       prune_dedupe_and_locks: { Args: never; Returns: undefined }
       prune_old_error_events: { Args: never; Returns: undefined }
       prune_old_price_snapshots: { Args: never; Returns: undefined }
@@ -1202,6 +1267,10 @@ export type Database = {
         Returns: undefined
       }
       refresh_price_mover_stats: { Args: never; Returns: undefined }
+      refresh_search_intent_clusters: {
+        Args: { days_back?: number }
+        Returns: Json
+      }
       release_job_lock: {
         Args: { p_holder: string; p_job: string }
         Returns: undefined
