@@ -336,6 +336,9 @@ export default function AdminAnalytics() {
           {/* Error monitor + automated repairs */}
           <ErrorMonitorPanel />
 
+          {/* Semrush organic visibility + backlinks */}
+          <SemrushPanel />
+
           <FeedbackQueuePanel
 
             pendingFeedbackCount={hook.pendingFeedbackCount}
