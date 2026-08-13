@@ -53,7 +53,7 @@
     --destructive-foreground: 0 0% 100%;
 
     /* Semantic status tokens */
-    --success: 152 62% 32%;
+    --success: 152 62% 27%;
     --success-foreground: 0 0% 100%;
     --warning: 32 90% 33%;
     --warning-foreground: 0 0% 100%;
@@ -79,7 +79,7 @@
     --rarity-common-foreground: 250 12% 34%;
     --rarity-uncommon: 220 10% 42%;
     --rarity-uncommon-foreground: 0 0% 100%;
-    --rarity-rare: 38 88% 32%;
+    --rarity-rare: 38 88% 29%;
     --rarity-rare-foreground: 0 0% 100%;
     --rarity-mythic: 24 88% 36%;
     --rarity-mythic-foreground: 0 0% 100%;

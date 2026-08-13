@@ -22,8 +22,8 @@ export function Logo({ className, variant = 'gradient' }: LogoProps) {
       {variant === 'gradient' && (
         <defs>
           <linearGradient id={id} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="hsl(300, 90%, 60%)" />
-            <stop offset="100%" stopColor="hsl(195, 95%, 55%)" />
+            <stop offset="0%" stopColor="hsl(var(--gradient-start))" />
+            <stop offset="100%" stopColor="hsl(var(--gradient-end))" />
           </linearGradient>
         </defs>
       )}
