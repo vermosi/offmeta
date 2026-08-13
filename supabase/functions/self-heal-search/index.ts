@@ -25,6 +25,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, requireServiceOrPipelineKey } from '../_shared/auth.ts';
 import { validateEnv } from '../_shared/env.ts';
 import { createLogger, withLogging } from '../_shared/logger.ts';
+import { acquireJobLock, lockBusyResponse } from '../_shared/jobLock.ts';
 import {
   buildRepairPrompt,
   checkScryfall,
