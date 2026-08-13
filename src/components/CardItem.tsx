@@ -141,6 +141,24 @@ export const CardItem = memo(function CardItem({
         />
       )}
 
+      {isOwned && (
+        <span
+          className="absolute top-1.5 left-1.5 z-20 h-4 w-4 rounded-full bg-success/90 flex items-center justify-center shadow-sm"
+          aria-label={t('card.ownedAria', 'Owned')}
+        >
+          <svg
+            className="h-2.5 w-2.5 text-success-foreground"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </span>
+      )}
 
 
       {/* Info overlay — always visible on mobile, hover on desktop */}
