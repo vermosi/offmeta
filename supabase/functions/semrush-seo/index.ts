@@ -30,14 +30,22 @@ type SemrushReport = {
   error?: string;
 };
 
-function toReport(data: unknown): SemrushReport {
+/**
+ * Semrush returns human-readable column labels for domain reports but raw
+ * codes for backlink reports, so rows are keyed by both the requested
+ * `export_columns` code (positional) and the returned label.
+ */
+function toReport(data: unknown, requestedCodes: string[]): SemrushReport {
   const table = (data as { data?: SemrushTable })?.data;
   if (!table?.columnNames) return { columns: [], rows: [] };
   const columns = table.columnNames;
   const rows = (table.rows ?? []).map((row) => {
     const record: Record<string, string> = {};
     columns.forEach((column, index) => {
-      record[column] = String(row[index] ?? '');
+      const value = String(row[index] ?? '');
+      record[column] = value;
+      const code = requestedCodes[index];
+      if (code) record[code] = value;
     });
     return record;
   });
