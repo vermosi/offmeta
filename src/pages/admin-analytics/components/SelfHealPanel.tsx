@@ -102,6 +102,7 @@ function Stat({
 export function SelfHealPanel() {
   const [runs, setRuns] = useState<SelfHealRun[]>([]);
   const [probationCount, setProbationCount] = useState(0);
+  const [diagnostics, setDiagnostics] = useState<Diagnostics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -109,7 +110,7 @@ export function SelfHealPanel() {
     setLoading(true);
     setError(null);
     try {
-      const [runsResult, probationResult] = await Promise.all([
+      const [runsResult, probationResult, diagnosticsResult] = await Promise.all([
         supabase
           .from('self_heal_runs')
           .select('*')
@@ -121,11 +122,20 @@ export function SelfHealPanel() {
           .eq('auto_generated', true)
           .eq('verification_state', 'probation')
           .is('archived_at', null),
+        supabase.rpc('get_self_heal_diagnostics' as never, {
+          days_back: 7,
+          max_items: 25,
+        } as never),
       ]);
 
       if (runsResult.error) throw new Error(runsResult.error.message);
       setRuns((runsResult.data ?? []) as SelfHealRun[]);
       setProbationCount(probationResult.count ?? 0);
+      setDiagnostics(
+        diagnosticsResult.error
+          ? null
+          : ((diagnosticsResult.data ?? null) as Diagnostics | null),
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load repair runs');
     } finally {
