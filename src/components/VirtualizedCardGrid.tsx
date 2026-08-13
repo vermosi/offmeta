@@ -10,7 +10,6 @@ import { CardItem } from '@/components/CardItem';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n';
 import type { ScryfallCard } from '@/types/card';
-import type { WhyItMatches as WhyItMatchesReport } from '@/lib/search/whyItMatches';
 
 /** Track which card index has keyboard focus within the grid */
 function useGridKeyboardNav(
