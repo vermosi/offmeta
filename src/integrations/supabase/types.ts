@@ -1432,6 +1432,10 @@ export type Database = {
           sources: string
         }[]
       }
+      get_self_heal_diagnostics: {
+        Args: { days_back?: number; max_items?: number }
+        Returns: Json
+      }
       get_seo_health_summary: { Args: never; Returns: Json }
       get_system_status: { Args: never; Returns: Json }
       get_zero_result_candidates: {
