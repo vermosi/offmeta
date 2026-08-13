@@ -387,16 +387,21 @@ export function parseTypes(query: string, ir: SearchIR): string {
   // alongside `t:goblin` produces an impossible query, so translate the phrase
   // to oracle text instead and consume it before type extraction.
   const actionObjectPattern =
-    /\b(sacrifice|sacrifices|sacrificing|destroy|destroys|exile|exiles|discard|discards|steal|steals|return|returns|tap|taps)\s+(?:an?\s+|your\s+|their\s+|target\s+|each\s+)*(artifact|creature|enchantment|land|planeswalker|permanent)s?\b/gi;
-  for (const match of [...remaining.matchAll(actionObjectPattern)]) {
-    const verb = match[1].toLowerCase().replace(/(es|s)$/, '');
-    const object = match[2].toLowerCase();
-    const article = /^[aeiou]/.test(object) ? 'an' : 'a';
-    ir.specials.push(
-      `(o:"${verb} ${article} ${object}" or o:"${verb} ${object}" or o:"${verb} ${object}s")`,
-    );
-    remaining = remaining.replace(match[0], ' ').trim();
+    /\b(sacrifice|sacrifices|sacrificing|destroy|destroys|exile|exiles|discard|discards|steal|steals)\s+(?:an?\s+|your\s+|their\s+|target\s+|each\s+)*(artifact|creature|enchantment|land|planeswalker|permanent)s?\b/gi;
+  // Skipped when an oracle tag already captured the action (e.g. `otag:bounce`),
+  // so curated tags keep precedence over generated oracle text.
+  if (ir.tags.length === 0) {
+    for (const match of [...remaining.matchAll(actionObjectPattern)]) {
+      const verb = match[1].toLowerCase().replace(/(es|s)$/, '');
+      const object = match[2].toLowerCase();
+      const article = /^[aeiou]/.test(object) ? 'an' : 'a';
+      ir.specials.push(
+        `(o:"${verb} ${article} ${object}" or o:"${verb} ${object}" or o:"${verb} ${object}s")`,
+      );
+      remaining = remaining.replace(match[0], ' ').trim();
+    }
   }
+
 
 
   // FIRST: Check for "X or Y" type patterns
