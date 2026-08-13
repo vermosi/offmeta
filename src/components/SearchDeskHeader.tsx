@@ -116,6 +116,13 @@ export function SearchDeskHeader({
   let constraints = buildInterpretation(derivedIntent);
   if (constraints.length === 0) {
     constraints = buildInterpretation(intentFromScryfallQuery(query));
+    const mvMatch = query.match(/\b(?:mv|cmc)\s*(<=|>=|<|>|=|:)\s*(\d+)/i);
+    if (mvMatch && !constraints.some((c) => c.kind === 'mana value')) {
+      constraints.unshift({
+        kind: 'mana value',
+        value: `${mvMatch[1] === ':' ? '=' : mvMatch[1]} ${mvMatch[2]}`,
+      });
+    }
     const colorMatch = query.match(/\b(c|ci|id|color|identity)[:=]([wubrgc]+)\b/i);
     if (colorMatch) {
       const names = colorMatch[2]
