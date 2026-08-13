@@ -51,6 +51,7 @@ export function savedSearchesQueryKey(userId: string | undefined) {
 export function useSavedSearches() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { trackEvent } = useAnalytics();
   const userId = user?.id;
 
   const query = useQuery({
