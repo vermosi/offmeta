@@ -10,21 +10,10 @@ import { Footer } from '@/components/Footer';
 import { Header } from '@/components/Header';
 import { PageSearchBar } from '@/components/PageSearchBar';
 import { ScrollToTop } from '@/components/ScrollToTop';
-import {
-  Search,
-  ArrowRight,
-  ArrowLeft,
-  Lightbulb,
-  HelpCircle,
-  BookOpen,
-  Sparkles,
-  List,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Search, ArrowLeft, BookOpen } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { SkipLinks } from '@/components/SkipLinks';
 import { useToast } from '@/hooks';
-import { Copy, Share2 } from 'lucide-react';
 import { buildGuideUrl, copyTextToClipboard } from '@/lib/guide-actions';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { queryToSlug } from '@/lib/search-slug';
