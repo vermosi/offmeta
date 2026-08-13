@@ -1,3 +1,5 @@
+import { SCRYFALL_ORACLE_TAGS } from '../_shared/otag-vocabulary.ts';
+
 type ScryfallTagRecord = {
   label?: string;
   aliases?: string[];
@@ -195,7 +197,9 @@ async function loadRegistryFromApi(): Promise<TagRegistry> {
   }
 
   const tags = (await tagsResponse.json()) as ScryfallTagRecord[];
-  const knownOtags = new Set<string>();
+  // Seed with the generated Tagger vocabulary so validation stays complete even
+  // if the live payload is partial.
+  const knownOtags = new Set<string>(SCRYFALL_ORACLE_TAGS);
   const canonicalByAlias = new Map<string, string>();
 
   for (const tag of tags) {
