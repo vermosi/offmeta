@@ -168,9 +168,10 @@ export default function ApiDocs() {
   const byDimension = useMemo(() => {
     const map = new Map<string, ConceptDirectoryEntry[]>();
     for (const entry of concepts) {
-      const list = map.get(entry.dimension) ?? [];
+      const key = String(entry.dimension).toUpperCase();
+      const list = map.get(key) ?? [];
       list.push(entry);
-      map.set(entry.dimension, list);
+      map.set(key, list);
     }
     return map;
   }, [concepts]);
