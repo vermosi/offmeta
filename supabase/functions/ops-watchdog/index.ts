@@ -91,9 +91,26 @@ function functionForJob(jobname: string): string | null {
  * Dispatch a repair job. The watchdog never waits for the target to finish —
  * some pipelines run for minutes and would blow the watchdog's own wall clock.
  * A dispatch that is still running when the timeout fires counts as success.
+ *
+ * Dispatches are deduped twice over: once in-process (two checks in the same
+ * run can want the same pipeline) and once across runs via a job lease, so an
+ * hourly watchdog can't re-kick a pipeline that is still working.
  */
+const dispatchedThisRun = new Map<string, { ok: boolean; detail: string }>();
+
 async function invokeFunction(name: string): Promise<{ ok: boolean; detail: string }> {
   if (!INVOKABLE.has(name)) return { ok: false, detail: 'function_not_allowed' };
+
+  const already = dispatchedThisRun.get(name);
+  if (already) return { ...already, detail: `deduped_in_run: ${already.detail}` };
+
+  const lease = await acquireJobLock(`dispatch:${name}`, DISPATCH_COOLDOWN_SECONDS);
+  if (!lease.acquired) {
+    const skipped = { ok: true, detail: 'skipped: dispatched recently' };
+    dispatchedThisRun.set(name, skipped);
+    return skipped;
+  }
+
   try {
     const res = await fetch(`${SUPABASE_URL}/functions/v1/${name}`, {
       method: 'POST',
