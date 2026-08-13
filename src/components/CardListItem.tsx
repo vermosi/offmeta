@@ -24,7 +24,7 @@ import type { WhyItMatches as WhyItMatchesReport } from '@/lib/search/whyItMatch
 interface CardListItemProps {
   card: ScryfallCard;
   onClick: () => void;
-  onSearchSimilar?: (cardName: string) => void;
+  onSearchSimilar?: (query: string) => void;
   tabIndex?: number;
   isOwned?: boolean;
   sparklineData?: SparklinePoint[];

@@ -31,7 +31,7 @@ import {
 interface CardItemProps {
   card: ScryfallCard;
   onClick: () => void;
-  onSearchSimilar?: (cardName: string) => void;
+  onSearchSimilar?: (query: string) => void;
   tabIndex?: number;
   isOwned?: boolean;
   sparklineData?: SparklinePoint[];
