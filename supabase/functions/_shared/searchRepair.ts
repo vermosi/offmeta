@@ -7,6 +7,8 @@
  * @module _shared/searchRepair
  */
 
+import { validateOtags } from './otagValidation.ts';
+
 /** Curated Scryfall oracle tags the repair model is allowed to reach for. */
 export const SCRYFALL_OTAGS = [
   'otag:ramp', 'otag:mana-rock', 'otag:mana-dork', 'otag:mana-doubler',
@@ -29,6 +31,8 @@ export interface ScryfallCheck {
   totalCards: number;
   /** Scryfall's error text when the query itself was rejected. */
   error?: string;
+  /** otag values rejected locally because Scryfall does not index them. */
+  invalidOtags?: string[];
 }
 
 export interface RepairSuggestion {
