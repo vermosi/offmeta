@@ -171,6 +171,8 @@ serve(
           callSemrush('/backlinks/backlinks_overview', {
             target: domain,
             target_type: 'root_domain',
+            export_columns:
+              'ascore,total,domains_num,urls_num,ips_num,follows_num,nofollows_num',
           }),
           callSemrush('/user/limits', {}),
         ]);
