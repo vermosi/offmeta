@@ -339,12 +339,18 @@ Deno.serve(
       } catch {
         /* best effort */
       }
+      try {
+        await supabase.rpc('prune_dedupe_and_locks');
+      } catch {
+        /* best effort */
+      }
 
       return new Response(
         JSON.stringify({
           examined: results.length,
           repaired: results.filter((r) => r.repaired).length,
           dedupedInvocations: runInvocations.size,
+          suppressedInvocations,
           results,
         }),
         { status: 200, headers },
