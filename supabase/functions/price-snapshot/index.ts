@@ -293,11 +293,27 @@ serve(withLogging('price-snapshot', async (req: Request): Promise<Response> => {
       });
     }
 
+    // Backfill recovered the cards those errors were filed for — close them so
+    // the auto-fix loop stops retrying.
+    const capturedNames = new Set(snapshots.map((s) => s.card_name));
+    const backfilled = Array.from(backfill.names.keys()).filter((n) => capturedNames.has(n)).length;
+
+    if (backfill.errorIds.length > 0 && snapshots.length > 0) {
+      await supabase
+        .from('error_events')
+        .update({ status: 'resolved' })
+        .in('id', backfill.errorIds);
+    }
 
     return new Response(
       JSON.stringify({
         success: true,
         snapshotCount: snapshots.length,
+        backfill: {
+          targeted: backfill.names.size,
+          recovered: backfilled,
+          errorsResolved: snapshots.length > 0 ? backfill.errorIds.length : 0,
+        },
         sources: {
           uniqueTracked: cardList.length,
         },
