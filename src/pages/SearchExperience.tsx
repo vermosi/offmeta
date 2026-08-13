@@ -34,7 +34,6 @@ const Footer = lazy(() =>
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
 import { HomepageQuickPaths } from '@/components/HomepageQuickPaths';
-import { HomepageTour } from '@/components/HomepageTour';
 import { GoogleAdsConversionHelper } from '@/components/GoogleAdsConversionHelper';
 import { Link } from 'react-router-dom';
 
@@ -565,7 +564,6 @@ const Index = () => {
         <Header />
 
         {!showResultsMode && <HeroSection />}
-        {!hasSearched && <HomepageTour />}
 
 
         {/* Floating particles — hero area */}
