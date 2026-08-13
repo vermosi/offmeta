@@ -9,6 +9,7 @@ import { useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 export interface Collection {
   id: string;
@@ -54,6 +55,7 @@ export function collectionsQueryKey(userId: string | undefined) {
 export function useCollections() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { trackEvent } = useAnalytics();
   const userId = user?.id;
 
   const query = useQuery({
@@ -98,7 +100,13 @@ export function useCollections() {
       if (error) throw error;
       return mapRow(data as CollectionRow);
     },
-    onSuccess: invalidate,
+    onSuccess: (collection) => {
+      invalidate();
+      void trackEvent('collection_created', {
+        is_default: collection.isDefault,
+        kind: collection.kind,
+      });
+    },
   });
 
   const renameCollection = useMutation({

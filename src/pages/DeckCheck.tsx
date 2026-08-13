@@ -25,6 +25,8 @@ import {
   type DeckProfile,
 } from '@/lib/deck-intelligence';
 import { applySeoMeta } from '@/lib/seo';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { trackFunnelStep } from '@/lib/analytics/funnels';
 import { queryToSlug } from '@/lib/search-slug';
 import { Loader2, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
@@ -65,6 +67,7 @@ export default function DeckCheck() {
   const [analyzing, setAnalyzing] = useState(false);
   const [profile, setProfile] = useState<DeckProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { trackEvent } = useAnalytics();
 
   useEffect(() => {
     const cleanup = applySeoMeta({
@@ -78,7 +81,7 @@ export default function DeckCheck() {
 
   const parsed = useMemo(() => parseDecklist(raw), [raw]);
 
-  const runAnalysis = async (text: string) => {
+  const runAnalysis = async (text: string, source: 'paste' | 'moxfield' = 'paste') => {
     const deck = parseDecklist(text);
     if (deck.cards.length === 0) {
       setError('No cards found in that list.');
@@ -88,7 +91,14 @@ export default function DeckCheck() {
     setError(null);
     try {
       const resolved = await resolveDeckCards(deck.cards);
-      setProfile(analyzeDeck(resolved));
+      const analysed = analyzeDeck(resolved);
+      setProfile(analysed);
+      void trackEvent('deck_check_run', {
+        source,
+        card_count: deck.cards.length,
+        resolved_count: resolved.length,
+      });
+      trackFunnelStep('deck_check', { source, card_count: deck.cards.length });
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Could not analyse that decklist.',
@@ -126,7 +136,7 @@ export default function DeckCheck() {
       if (names.length === 0) throw new Error('That deck looks empty.');
       const text = names.join('\n');
       setRaw(text);
-      await runAnalysis(text);
+      await runAnalysis(text, 'moxfield');
     } catch (err) {
       const message =
         err instanceof Error ? err.message : 'Could not import that deck';

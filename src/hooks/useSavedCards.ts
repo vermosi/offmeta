@@ -9,6 +9,8 @@ import { useCallback, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { trackFunnelStep } from '@/lib/analytics/funnels';
 import type { SavedCardInput } from '@/lib/account';
 
 export interface SavedCard {
@@ -71,6 +73,7 @@ export function savedCardsQueryKey(userId: string | undefined) {
 export function useSavedCards() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { trackEvent } = useAnalytics();
   const userId = user?.id;
 
   const query = useQuery({
@@ -145,7 +148,15 @@ export function useSavedCards() {
 
       return saved;
     },
-    onSuccess: invalidate,
+    onSuccess: (saved) => {
+      invalidate();
+      void trackEvent('card_saved', {
+        oracle_id: saved.oracleId,
+        card_name: saved.cardName,
+        collection_count: saved.collectionIds.length,
+      });
+      trackFunnelStep('card_save', { card_name: saved.cardName });
+    },
   });
 
   const removeCard = useMutation({
@@ -169,6 +180,9 @@ export function useSavedCards() {
       if (context?.previous) {
         queryClient.setQueryData(savedCardsQueryKey(userId), context.previous);
       }
+    },
+    onSuccess: (_data, oracleId) => {
+      void trackEvent('card_unsaved', { oracle_id: oracleId });
     },
     onSettled: invalidate,
   });

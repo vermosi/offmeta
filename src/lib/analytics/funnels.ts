@@ -34,6 +34,8 @@ export const FUNNEL_STEPS = {
   guide_open: { event: 'funnel_guide_open', index: 2 },
   card_view: { event: 'funnel_card_view', index: 3 },
   combo_save: { event: 'funnel_combo_save', index: 4 },
+  card_save: { event: 'funnel_card_save', index: 5 },
+  deck_check: { event: 'funnel_deck_check', index: 6 },
 } as const;
 
 export type FunnelStep = keyof typeof FUNNEL_STEPS;
@@ -184,6 +186,8 @@ export const FUNNEL_MILESTONES = [
   'first_card_view',
   'first_guide_open',
   'first_combo_save',
+  'first_card_save',
+  'first_deck_check',
 ] as const;
 
 export type FunnelMilestone = (typeof FUNNEL_MILESTONES)[number];

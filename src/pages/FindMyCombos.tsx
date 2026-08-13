@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 
 import { applySeoMeta, injectJsonLd } from '@/lib/seo';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { ManaSymbol } from '@/components/ManaSymbol';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { SkipLinks } from '@/components/SkipLinks';
@@ -60,6 +61,7 @@ const getComboPrice = (combo: Combo): number | null => {
 
 export default function FindMyCombos() {
   const { t } = useTranslation();
+  const { trackEvent } = useAnalytics();
 
   useEffect(() => {
     // Per-route SEO: title, description, canonical, og:url + BreadcrumbList JSON-LD.
@@ -233,6 +235,12 @@ export default function FindMyCombos() {
       );
       setResults(data);
       clearFilters();
+      void trackEvent('combo_search_run', {
+        deck_size: cardNames.length,
+        has_commander: Boolean(commander),
+        combos_found: data?.included?.length ?? 0,
+        almost_included: data?.almostIncluded?.length ?? 0,
+      });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to find combos');
     } finally {

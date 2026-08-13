@@ -6,6 +6,7 @@ import { useCallback, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { normalizeQueryKey } from '@/lib/account';
 
 export interface SavedSearch {
@@ -50,6 +51,7 @@ export function savedSearchesQueryKey(userId: string | undefined) {
 export function useSavedSearches() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { trackEvent } = useAnalytics();
   const userId = user?.id;
 
   const query = useQuery({
@@ -98,7 +100,14 @@ export function useSavedSearches() {
       );
       if (error) throw error;
     },
-    onSuccess: invalidate,
+    onSuccess: (_data, input) => {
+      invalidate();
+      void trackEvent('saved_search_created', {
+        query: input.naturalQuery.slice(0, 200),
+        scryfall_query: input.scryfallQuery ?? undefined,
+        results_count: input.resultCount ?? undefined,
+      });
+    },
   });
 
   const removeSearch = useMutation({
@@ -106,7 +115,10 @@ export function useSavedSearches() {
       const { error } = await supabase.from('saved_searches').delete().eq('id', id);
       if (error) throw error;
     },
-    onSuccess: invalidate,
+    onSuccess: () => {
+      invalidate();
+      void trackEvent('saved_search_removed', {});
+    },
   });
 
   const isSearchSaved = useCallback(

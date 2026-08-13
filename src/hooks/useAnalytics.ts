@@ -333,6 +333,17 @@ const ALLOWED_EVENT_TYPES = [
   'quick_path_clicked',
   'search_intent_hub_clicked',
   'next_step_action_clicked',
+  // Accounts ("remember me") surface
+  'account_signed_in',
+  'account_signed_out',
+  'card_saved',
+  'card_unsaved',
+  'collection_created',
+  'saved_search_created',
+  'saved_search_removed',
+  // Tools
+  'deck_check_run',
+  'combo_search_run',
 ] as const;
 
 type EventType = (typeof ALLOWED_EVENT_TYPES)[number];

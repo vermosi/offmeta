@@ -7,10 +7,12 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   useCallback,
 } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import {
   identifyExternalUser,
   resetExternalUser,
@@ -98,6 +100,14 @@ export function useAuthProvider(): AuthContextValue {
     avatarUrl: null,
   });
 
+  // Keep the latest tracker in a ref so the auth subscription effect never
+  // re-subscribes when analytics identity changes.
+  const { trackEvent } = useAnalytics();
+  const trackEventRef = useRef(trackEvent);
+  useEffect(() => {
+    trackEventRef.current = trackEvent;
+  }, [trackEvent]);
+
   const fetchProfile = useCallback(async (userId: string) => {
     const { data } = await supabase
       .from('profiles')
@@ -163,8 +173,17 @@ export function useAuthProvider(): AuthContextValue {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       applySession(session);
+
+      // Account lifecycle analytics (best-effort, never blocks auth).
+      if (event === 'SIGNED_IN') {
+        void trackEventRef.current('account_signed_in', {
+          provider: session?.user?.app_metadata?.provider ?? 'unknown',
+        });
+      } else if (event === 'SIGNED_OUT') {
+        void trackEventRef.current('account_signed_out', {});
+      }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
