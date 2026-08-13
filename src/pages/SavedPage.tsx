@@ -21,7 +21,7 @@ import { useSavedSearches } from '@/hooks/useSavedSearches';
 import { requestSignIn } from '@/lib/account';
 import { applySeoMeta } from '@/lib/seo';
 import { queryToSlug } from '@/lib/search-slug';
-import { cardToSlug } from '@/lib/card-slug';
+import { cardNameToSlug } from '@/lib/card-slug';
 import { useTranslation } from '@/lib/i18n';
 import { cn } from '@/lib/core/utils';
 
@@ -39,11 +39,12 @@ export default function SavedPage() {
   const { savedSearches, removeSearch } = useSavedSearches();
 
   useEffect(() => {
-    applySeoMeta({
+    return applySeoMeta({
       title: 'Saved cards and searches | OffMeta',
       description:
         'Your saved Magic: The Gathering cards, collections, and searches on OffMeta.',
-      noindex: true,
+      url: 'https://offmeta.app/saved',
+      extraMeta: { robots: 'noindex, nofollow' },
     });
   }, []);
 
@@ -193,7 +194,7 @@ export default function SavedPage() {
                         )}
                         <div className="min-w-0 flex-1">
                           <Link
-                            to={`/cards/${cardToSlug(card.cardName)}`}
+                            to={`/cards/${cardNameToSlug(card.cardName)}`}
                             className="block truncate text-sm font-medium text-foreground hover:text-primary focus-ring"
                           >
                             {card.cardName}
