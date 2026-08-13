@@ -425,8 +425,5 @@ serve(
     } finally {
       await lease.release();
     }
-    } finally {
-      await lease.release();
-    }
   }),
 );
