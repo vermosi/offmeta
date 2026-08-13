@@ -37,7 +37,9 @@
 
     /* Muted — paper haze */
     --muted: 250 18% 94%;
-    --muted-foreground: 250 12% 38%;
+    /* Kept dark enough that /70 opacity variants still clear 4.5:1 on paper. */
+    --muted-foreground: 250 12% 22%;
+
 
     /* Accent — deep violet (the signature, readable on paper) */
     --accent: 265 62% 44%;
