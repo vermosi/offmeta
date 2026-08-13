@@ -27,16 +27,6 @@ import {
   useAffiliateConfig,
   wrapAffiliateUrl,
 } from '@/hooks/useAffiliateConfig';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-
-import { WhyItMatches } from '@/components/WhyItMatches';
-import type { WhyItMatches as WhyItMatchesReport } from '@/lib/search/whyItMatches';
-import { SaveCardButton } from '@/components/SaveCardButton';
-import { toSavedCardInput } from '@/lib/account';
 
 interface CardItemProps {
   card: ScryfallCard;
@@ -45,14 +35,6 @@ interface CardItemProps {
   tabIndex?: number;
   isOwned?: boolean;
   sparklineData?: SparklinePoint[];
-  /** Deterministic report explaining why this card matched the current query. */
-  whyReport?: WhyItMatchesReport | null;
-  /**
-   * Optional handler invoked when the user clicks a match reason chip that
-   * carries a Scryfall refine token. Receives the token to append to the
-   * current query (e.g. `otag:treasure`).
-   */
-  onRefineWithMatch?: (token: string, label: string) => void;
 }
 
 /** Format a price string to a compact display. */
@@ -76,8 +58,6 @@ export const CardItem = memo(function CardItem({
   tabIndex = 0,
   isOwned,
   sparklineData,
-  whyReport,
-  onRefineWithMatch,
 }: CardItemProps) {
   const imageUrl = getCardImage(card, 'small');
   const imageSrcSet = `${getCardImage(card, 'small')} 146w, ${getCardImage(card, 'normal')} 488w, ${getCardImage(card, 'large')} 672w`;
@@ -127,8 +107,8 @@ export const CardItem = memo(function CardItem({
   );
 
   return (
-    <div data-testid="search-result-card" className="flex w-full flex-col gap-1">
     <div
+      data-testid="search-result-card"
       className="group relative w-full aspect-[2.5/3.5] rounded-2xl overflow-hidden bg-secondary shadow-sm ring-1 ring-border/30"
     >
 
@@ -216,62 +196,6 @@ export const CardItem = memo(function CardItem({
           </button>
         )}
       </div>
-    </div>
-
-    {/* Footer row — status/save/why live below the art so nothing covers
-        the card image or its printed mana cost. */}
-    <div className="flex min-h-7 items-center gap-1.5">
-      {isOwned && (
-        <span
-          className="h-5 w-5 rounded-full bg-success/90 flex items-center justify-center"
-          aria-label={t('card.ownedAria', 'Owned')}
-        >
-          <svg
-            className="h-3 w-3 text-success-foreground"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        </span>
-      )}
-      <SaveCardButton card={toSavedCardInput(card)} />
-      {whyReport && (
-        <Popover>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className="ml-auto border border-border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:border-foreground hover:text-foreground focus-visible:outline-none focus-visible:border-foreground"
-              aria-label={
-                t(
-                  'cardItem.whyBadgeAria',
-                  '{count} reasons this card matches your search. Activate to view details.',
-                ).replace('{count}', String(whyReport.reasons.length)) +
-                ` ${whyReport.reasons.map((r) => r.label).join('; ')}`
-              }
-            >
-              <span aria-hidden="true">{t('cardItem.whyBadge', 'why')}</span>
-            </button>
-          </PopoverTrigger>
-          <PopoverContent
-            side="top"
-            align="end"
-            sideOffset={6}
-            className="w-64 rounded-none border-border p-3"
-            aria-label={t('whyItMatches.title', 'Why it matches')}
-          >
-            <WhyItMatches
-              report={whyReport}
-              onRefineWithMatch={onRefineWithMatch}
-            />
-          </PopoverContent>
-        </Popover>
-      )}
-    </div>
     </div>
 
   );
