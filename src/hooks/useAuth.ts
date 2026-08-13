@@ -163,8 +163,17 @@ export function useAuthProvider(): AuthContextValue {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       applySession(session);
+
+      // Account lifecycle analytics (best-effort, never blocks auth).
+      if (event === 'SIGNED_IN') {
+        void trackEventRef.current('account_signed_in', {
+          provider: session?.user?.app_metadata?.provider ?? 'unknown',
+        });
+      } else if (event === 'SIGNED_OUT') {
+        void trackEventRef.current('account_signed_out', {});
+      }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
