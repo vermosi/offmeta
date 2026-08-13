@@ -272,10 +272,38 @@ function buildIR(query: string): SearchIR {
   return ir;
 }
 
+/** Empty intent used by short-circuit paths that bypass the parser pipeline. */
+function emptyIntent(): ParsedIntent {
+  return {
+    colors: null,
+    types: [],
+    subtypes: [],
+    cmc: null,
+    power: null,
+    toughness: null,
+    isCommander: false,
+    format: null,
+    yearConstraint: null,
+    priceConstraint: null,
+    remainingQuery: '',
+    warnings: [],
+    oraclePatterns: [],
+    tagTokens: [],
+    statTotalApprox: null,
+  };
+}
+
 export function buildDeterministicIntent(query: string, options?: { isKnownCardName?: boolean }): {
   intent: ParsedIntent;
   deterministicQuery: string;
 } {
+  // Short-circuit: the whole query names a Scryfall set ("hobbit", "bloomburrow").
+  // Runs before the card-name path so upcoming sets aren't reduced to name: searches.
+  const setMatch = matchSetQuery(query);
+  if (setMatch) {
+    return { intent: emptyIntent(), deterministicQuery: setMatch.query };
+  }
+
   // Short-circuit: if the query is a known card name (DB lookup) OR heuristic match, use name search
   if (options?.isKnownCardName || isLikelyCardName(query)) {
     const trimmed = query.trim();
