@@ -21,9 +21,9 @@ export function LanguageSelector() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="outline"
+          variant="ghost"
           size="icon"
-          className="rounded-lg"
+          className="h-8 w-8 rounded-none text-muted-foreground hover:bg-transparent hover:text-foreground"
           aria-label={t('language.label')}
         >
           <Globe className="h-4 w-4" aria-hidden="true" />
