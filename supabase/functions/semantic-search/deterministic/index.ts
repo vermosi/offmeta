@@ -46,8 +46,18 @@ export type { ParsedIntent, NumericConstraint, SearchIR } from './types.ts';
 function isLikelyCardName(query: string): boolean {
   const trimmed = query.trim();
   const words = trimmed.split(/\s+/);
+  // Generic descriptor nouns mean the user is describing a category
+  // ("ritual effects", "etb combos"), never naming a specific card.
+  if (
+    /\b(effects?|combos?|pieces?|enablers?|outlets?|generators?|engines?|options?|choices?|ideas?|things?|stuff)\s*$/i.test(
+      trimmed,
+    )
+  ) {
+    return false;
+  }
   // Must be 1-6 words
   if (words.length < 1 || words.length > 6) return false;
+
   // Must contain a possessive or ALL words start with uppercase (case-insensitive for mixed input)
   const hasPossessive = /\w's\b/.test(trimmed);
   const allCapitalized = words.every(w => /^[A-Z]/.test(w) || /^(of|the|and|to|in|for|a|an)$/i.test(w));
