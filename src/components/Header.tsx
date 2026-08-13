@@ -151,31 +151,31 @@ export function Header() {
     <>
       <header
         className={cn(
-          'sticky top-0 z-50 safe-top transition-colors',
+          'sticky top-0 z-50 safe-top border-b transition-colors',
           isScrolled
-            ? 'border-b border-border/50 bg-background/90 backdrop-blur'
-            : 'border-b border-transparent bg-transparent',
+            ? 'border-border/60 bg-background/90 backdrop-blur'
+            : 'border-border/30 bg-transparent',
         )}
         role="banner"
       >
-        <div className="container-main py-3 sm:py-4 flex items-center justify-between">
+        <div className="container-main flex h-14 items-center justify-between gap-6">
           <Link
             to="/"
             className="group -ml-2 flex min-h-0 items-center gap-2.5 px-2 py-1 focus-ring"
             aria-label={t('header.home')}
           >
             <Logo variant="gradient" className="h-7 w-7 sm:h-8 sm:w-8" />
-            <span className="font-display text-base font-extrabold uppercase tracking-[0.16em] text-foreground">
+            <span className="font-display text-sm font-extrabold uppercase tracking-[0.22em] text-foreground">
               OffMeta
             </span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-0.5" aria-label="Main navigation">
+          <nav className="ml-auto hidden items-center gap-6 md:flex" aria-label="Main navigation">
             {CORE_LINKS.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
-                className="px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground transition-colors hover:text-foreground focus-ring"
+                className="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground transition-colors hover:text-foreground focus-ring"
               >
                 {link.label}
               </Link>
@@ -195,7 +195,7 @@ export function Header() {
 
           <button
             type="button"
-            className="p-2 text-muted-foreground transition-colors hover:text-foreground focus-ring md:hidden"
+            className="-mr-2 p-2 text-muted-foreground transition-colors hover:text-foreground focus-ring md:hidden"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
             aria-label={mobileMenuOpen ? t('header.closeMenu') : t('header.openMenu')}
             aria-expanded={mobileMenuOpen}

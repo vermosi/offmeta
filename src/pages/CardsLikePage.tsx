@@ -5,6 +5,7 @@ import { applySeoMeta } from '@/lib/seo';
 import { useSimilarCards } from '@/hooks/useSimilarCards';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { SimilarCardsPanel } from '@/components/SimilarCardsPanel';
+import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { getCardByName } from '@/lib/scryfall/client';
 import { cardNameToSlug, slugToCardName } from '@/lib/card-slug';
@@ -160,7 +161,8 @@ export default function CardsLikePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="mx-auto flex min-h-screen max-w-5xl flex-col px-4 py-8 sm:py-12">
+      <Header />
+      <main className="mx-auto flex max-w-5xl flex-col px-4 py-8 sm:py-12">
         <div className="mx-auto w-full max-w-3xl space-y-6">
           <header className="space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/70 px-3 py-1.5 text-xs font-medium text-muted-foreground">

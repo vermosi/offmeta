@@ -20,6 +20,7 @@ import {
 import { ArrowRight, ExternalLink, Copy, Check } from 'lucide-react';
 import { cardNameToSlug } from '@/lib/card-slug';
 import { useTranslation } from '@/lib/i18n';
+import { Header } from '@/components/Header';
 
 interface SeoPageContent {
   tldr: string;
@@ -214,6 +215,7 @@ export default function AiPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
+        <Header />
         <div className="mx-auto max-w-3xl space-y-6 px-4 py-12">
           <Skeleton className="h-10 w-3/4" />
           <Skeleton className="h-24 w-full" />
@@ -226,13 +228,16 @@ export default function AiPage() {
 
   if (error || !page || !content) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="space-y-4 text-center">
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="space-y-4 text-center">
           <h1 className="text-2xl font-semibold">{t('ai.pageNotFoundTitle')}</h1>
           <p className="text-muted-foreground">{t('ai.pageNotFoundDesc')}</p>
-          <Link to="/" className="text-accent hover:underline">
-            {t('ai.searchForCards')}
-          </Link>
+            <Link to="/" className="text-accent hover:underline">
+              {t('ai.searchForCards')}
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -240,6 +245,7 @@ export default function AiPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Header />
       <article className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
         <nav className="mb-6 text-sm text-muted-foreground" aria-label={t('ai.breadcrumbLabel')}>
           <ol className="flex items-center gap-1.5">
